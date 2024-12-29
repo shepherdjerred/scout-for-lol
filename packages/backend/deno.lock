@@ -385,6 +385,7 @@
     "https://deno.land/std@0.150.0/media_types/vendor/mime-db.v1.52.0.ts": "724cee25fa40f1a52d3937d6b4fbbfdd7791ff55e1b7ac08d9319d5632c7f5af",
     "https://deno.land/x/sentry@8.44.0/index.mjs": "6702480ae1b7615d18dfebef72253d3d6dd9be78582424fcd811ffd3d2a853ab",
     "https://deno.land/x/sentry@8.45.1/index.mjs": "7fc5541fb9b48b3f94e0cac3291ca40c5176011d085ab2f81c5aa728c5c3448a",
+    "https://deno.land/x/sentry@8.47.0/index.mjs": "5682d1206d54bd626ddc0ac52d9548be58a0e0f4a8496229019de8701e288977",
     "https://deno.land/x/which_runtime@0.2.0/mod.ts": "3e8f1ddb3a043818264a8035c0132aaf72d94977d45cd23ecfb03b2156f06126",
     "https://deno.land/x/xhr@0.3.0/mod.ts": "094aacd627fd9635cd942053bf8032b5223b909858fa9dc8ffa583752ff63b20",
     "https://esm.sh/cron@3.3.1": "61b46230e045ad6ab3cafb0f4d936a1816077995839c1c6bc536566c7368ff82",
