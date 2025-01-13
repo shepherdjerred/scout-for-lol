@@ -29,7 +29,7 @@
     "cron": "https://esm.sh/cron@3.3.2",
     "crypto": "node:crypto",
     "date-fns": "https://esm.sh/date-fns@4.1.0",
-    "discord.js": "npm:discord.js@14.17.2",
+    "discord.js": "npm:discord.js@14.17.3",
     "dns": "node:dns",
     "dns/promises": "node:dns/promises",
     "dotenv": "https://esm.sh/dotenv@16.4.7",
