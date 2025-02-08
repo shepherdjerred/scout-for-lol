@@ -50,8 +50,8 @@
   "remote": {
     "https://esm.sh/remeda@2.19.0": "82bb3c58a62de1ee0303acbab815dbe6ddc625ed6305b92005c2b74c04e19c75",
     "https://esm.sh/remeda@2.19.0/denonext/remeda.mjs": "4772fc423152a082b5bf40c83d3486a8223c38e824eef144a7cfd491597e8913",
-    "https://esm.sh/ts-pattern@5.6.0": "0200f12fddef676fdd4823ddb58f6ffc11b7c5dfe8d348b59a9b9ccb2769eec1",
-    "https://esm.sh/ts-pattern@5.6.0/denonext/ts-pattern.mjs": "ef961b0f9db560a3a1f9e1c1b8c792be6aea75c38644e2720612cbb23899f612",
+    "https://esm.sh/ts-pattern@5.6.2": "2b50c3eefb22a25c46f75d79418cc44f2fe8f22e081e3d2762f1f9f05ed4aa3d",
+    "https://esm.sh/ts-pattern@5.6.2/denonext/ts-pattern.mjs": "d22461345e05a1dc51f6fea52163619abc795b9ccc7ea3d1f631600df1bef9fc",
     "https://esm.sh/zod@3.24.1": "d8f5c6cf2c4ed543003211dcd9278e94544788f5cb36549ee0490dd27238fe82",
     "https://esm.sh/zod@3.24.1/denonext/zod.mjs": "32cf72ac44d794592028cb8e423d1f0c80525c49acf01f702c7dc6195b94eda3"
   },
