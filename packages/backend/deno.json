@@ -27,7 +27,7 @@
     "async_hooks": "node:async_hooks",
     "buffer": "node:buffer",
     "child_process": "node:child_process",
-    "cron": "https://esm.sh/cron@3.3.2",
+    "cron": "https://esm.sh/cron@3.5.0",
     "crypto": "node:crypto",
     "date-fns": "https://esm.sh/date-fns@4.1.0",
     "discord.js": "npm:discord.js@14.17.3",
