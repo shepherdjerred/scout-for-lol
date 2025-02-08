@@ -60,7 +60,7 @@
     "twisted": "https://esm.sh/twisted@1.61.5",
     "twisted/": "https://esm.sh/twisted@1.61.5/",
     "url": "node:url",
-    "uuid": "https://esm.sh/uuid@11.0.4",
+    "uuid": "https://esm.sh/uuid@11.0.5",
     "yoga-wasm-web": "npm:yoga-wasm-web@0.3.3",
     "zod": "https://esm.sh/zod@3.24.1",
     "zod-validation-error": "https://esm.sh/zod-validation-error@3.4.0"
