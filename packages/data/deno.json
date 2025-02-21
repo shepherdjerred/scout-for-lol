@@ -1,6 +1,6 @@
 {
   "imports": {
-    "@std/assert": "jsr:@std/assert@1.0.10",
+    "@std/assert": "jsr:@std/assert@1.0.11",
     "@std/testing": "jsr:@std/testing@1.0.9",
     "remeda": "https://esm.sh/remeda@2.20.0",
     "ts-pattern": "https://esm.sh/ts-pattern@5.6.2",
