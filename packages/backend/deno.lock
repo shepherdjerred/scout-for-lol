@@ -7,8 +7,8 @@
     "jsr:@denosaurs/plug@1": "1.0.6",
     "jsr:@std/assert@0.217": "0.217.0",
     "jsr:@std/assert@0.221": "0.221.0",
-    "jsr:@std/assert@1.0.10": "1.0.10",
-    "jsr:@std/assert@^1.0.10": "1.0.10",
+    "jsr:@std/assert@1.0.11": "1.0.11",
+    "jsr:@std/assert@^1.0.10": "1.0.11",
     "jsr:@std/async@^1.0.9": "1.0.10",
     "jsr:@std/bytes@^1.0.5": "1.0.5",
     "jsr:@std/data-structures@^1.0.5": "1.0.6",
@@ -18,8 +18,8 @@
     "jsr:@std/fmt@0.221": "0.221.0",
     "jsr:@std/fmt@^1.0.3": "1.0.5",
     "jsr:@std/fs@0.221": "0.221.0",
-    "jsr:@std/fs@^1.0.6": "1.0.11",
-    "jsr:@std/fs@^1.0.8": "1.0.11",
+    "jsr:@std/fs@^1.0.6": "1.0.13",
+    "jsr:@std/fs@^1.0.8": "1.0.13",
     "jsr:@std/internal@^1.0.5": "1.0.5",
     "jsr:@std/io@0.225": "0.225.2",
     "jsr:@std/path@0.217": "0.217.0",
@@ -68,8 +68,8 @@
     "@std/assert@0.221.0": {
       "integrity": "a5f1aa6e7909dbea271754fd4ab3f4e687aeff4873b4cef9a320af813adb489a"
     },
-    "@std/assert@1.0.10": {
-      "integrity": "59b5cbac5bd55459a19045d95cc7c2ff787b4f8527c0dd195078ff6f9481fbb3",
+    "@std/assert@1.0.11": {
+      "integrity": "2461ef3c368fe88bc60e186e7744a93112f16fd110022e113a0849e94d1c83c1",
       "dependencies": [
         "jsr:@std/internal"
       ]
@@ -105,8 +105,8 @@
         "jsr:@std/path@0.221"
       ]
     },
-    "@std/fs@1.0.11": {
-      "integrity": "ba674672693340c5ebdd018b4fe1af46cb08741f42b4c538154e97d217b55bdd",
+    "@std/fs@1.0.13": {
+      "integrity": "756d3ff0ade91c9e72b228e8012b6ff00c3d4a4ac9c642c4dac083536bf6c605",
       "dependencies": [
         "jsr:@std/path@^1.0.8"
       ]
@@ -148,8 +148,8 @@
     }
   },
   "npm": {
-    "@discordjs/builders@1.10.0": {
-      "integrity": "sha512-ikVZsZP+3shmVJ5S1oM+7SveUCK3L9fTyfA8aJ7uD9cNQlTqF+3Irbk2Y22KXTb3C3RNUahRkSInClJMkHrINg==",
+    "@discordjs/builders@1.10.1": {
+      "integrity": "sha512-OWo1fY4ztL1/M/DUyRPShB4d/EzVfuUvPTRRHRIt/YxBrUYSz0a+JicD5F5zHFoNs2oTuWavxCOVFV1UljHTng==",
       "dependencies": [
         "@discordjs/formatters",
         "@discordjs/util",
@@ -172,8 +172,8 @@
         "discord-api-types"
       ]
     },
-    "@discordjs/rest@2.4.2": {
-      "integrity": "sha512-9bOvXYLQd5IBg/kKGuEFq3cstVxAMJ6wMxO2U3wjrgO+lHv8oNCT+BBRpuzVQh7BoXKvk/gpajceGvQUiRoJ8g==",
+    "@discordjs/rest@2.4.3": {
+      "integrity": "sha512-+SO4RKvWsM+y8uFHgYQrcTl/3+cY02uQOH7/7bKbVZsTfrfpoE62o5p+mmV+s7FVhTX82/kQUGGbu4YlV60RtA==",
       "dependencies": [
         "@discordjs/collection@2.1.1",
         "@discordjs/util",
@@ -183,14 +183,14 @@
         "discord-api-types",
         "magic-bytes.js",
         "tslib",
-        "undici"
+        "undici@6.21.1"
       ]
     },
     "@discordjs/util@1.1.1": {
       "integrity": "sha512-eddz6UnOBEB1oITPinyrB2Pttej49M9FZQY8NxgEvc3tq6ZICZ19m70RsmzRdDHk80O9NoYN/25AqJl8vPVf/g=="
     },
-    "@discordjs/ws@1.2.0": {
-      "integrity": "sha512-QH5CAFe3wHDiedbO+EI3OOiyipwWd+Q6BdoFZUw/Wf2fw5Cv2fgU/9UEtJRmJa9RecI+TAhdGPadMaEIur5yJg==",
+    "@discordjs/ws@1.2.1": {
+      "integrity": "sha512-PBvenhZG56a6tMWF/f4P6f4GxZKJTBG95n7aiGSPTnodmz4N5g60t79rSIAq7ywMbv8A4jFtexMruH+oe51aQQ==",
       "dependencies": [
         "@discordjs/collection@2.1.1",
         "@discordjs/rest",
@@ -305,8 +305,8 @@
         "string.prototype.codepointat"
       ]
     },
-    "@types/node@22.5.4": {
-      "integrity": "sha512-FDuKUJQm/ju9fT/SeX/6+gBzoPzlVCzfzmGkwKvRHQVxi4BntVbyIwf6a4Xn62mrvndLiml6z/UBXIdEVjQLXg==",
+    "@types/node@22.12.0": {
+      "integrity": "sha512-Fll2FZ1riMjNmlmJOdAyY5pUbkftXslB5DgEzlIuNaiWhXd00FhWxVC/r4yV/4wBb9JfImTu+jiSvXTkJ7F/gA==",
       "dependencies": [
         "undici-types"
       ]
@@ -366,7 +366,7 @@
         "fast-deep-equal",
         "lodash.snakecase",
         "tslib",
-        "undici"
+        "undici@6.19.8"
       ]
     },
     "emoji-regex@10.4.0": {
@@ -451,11 +451,14 @@
     "tslib@2.8.1": {
       "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="
     },
-    "undici-types@6.19.8": {
-      "integrity": "sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw=="
+    "undici-types@6.20.0": {
+      "integrity": "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="
     },
     "undici@6.19.8": {
       "integrity": "sha512-U8uCCl2x9TK3WANvmBavymRzxbfFYG+tAu+fgx3zxQy3qdagQqBLwJVrdyO1TBfUXvfKveMKJZhpvUYoOjM+4g=="
+    },
+    "undici@6.21.1": {
+      "integrity": "sha512-q/1rj5D0/zayJB2FraXdaWxbhWiNKDvu8naDT2dl1yTlvJp4BLtOcp2a5BvgGNQpYYJzau7tf1WgKv3b+7mqpQ=="
     },
     "unicode-trie@2.0.0": {
       "integrity": "sha512-x7bc76x0bm4prf1VLg79uhAzKw8DVboClSN5VxJuQ+LKDOVEW9CdH+VY7SP+vX7xCYQqzzgQpFqz15zeLvAtZQ==",
@@ -464,8 +467,8 @@
         "tiny-inflate"
       ]
     },
-    "ws@8.18.0": {
-      "integrity": "sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw=="
+    "ws@8.18.1": {
+      "integrity": "sha512-RKW2aJZMXeMxVpnZ6bck+RswznaxmzdULiBr6KY7XkTnW8uvt0iT9H5DkHUChXrc+uurzwa0rVI16n/Xzjdz1w=="
     },
     "yoga-wasm-web@0.3.3": {
       "integrity": "sha512-N+d4UJSJbt/R3wqY7Coqs5pcV0aUj2j9IaQ3rNj9bVCLld8tTGKRa2USARjnvZJWVx1NDmQev8EknoczaOQDOA=="
@@ -480,7 +483,7 @@
     "https://esm.sh/@types/mime-types@~2.1.4/index.d.ts": "https://esm.sh/@types/mime-types@2.1.4/index.d.ts",
     "https://esm.sh/@types/promise-queue@~2.2.3/index.d.ts": "https://esm.sh/@types/promise-queue@2.2.3/index.d.ts",
     "https://esm.sh/@types/proxy-from-env@~1.0.4/index.d.ts": "https://esm.sh/@types/proxy-from-env@1.0.4/index.d.ts",
-    "https://esm.sh/@types/react@~19.0.7/index.d.ts": "https://esm.sh/@types/react@19.0.8/index.d.ts",
+    "https://esm.sh/@types/react@~19.0.7/index.d.ts": "https://esm.sh/@types/react@19.0.10/index.d.ts",
     "https://esm.sh/asynckit@^0.4.0?target=denonext": "https://esm.sh/asynckit@0.4.0?target=denonext",
     "https://esm.sh/axios@^1.6.2?target=denonext": "https://esm.sh/axios@1.7.9?target=denonext",
     "https://esm.sh/combined-stream@^1.0.8?target=denonext": "https://esm.sh/combined-stream@1.0.8?target=denonext",
@@ -488,7 +491,7 @@
     "https://esm.sh/delayed-stream@~1.0.0?target=denonext": "https://esm.sh/delayed-stream@1.0.0?target=denonext",
     "https://esm.sh/dotenv@^16.3.1?target=denonext": "https://esm.sh/dotenv@16.4.7?target=denonext",
     "https://esm.sh/follow-redirects@^1.15.6?target=denonext": "https://esm.sh/follow-redirects@1.15.9?target=denonext",
-    "https://esm.sh/form-data@^4.0.0?target=denonext": "https://esm.sh/form-data@4.0.1?target=denonext",
+    "https://esm.sh/form-data@^4.0.0?target=denonext": "https://esm.sh/form-data@4.0.2?target=denonext",
     "https://esm.sh/http-status-codes@^2.3.0?target=denonext": "https://esm.sh/http-status-codes@2.3.0?target=denonext",
     "https://esm.sh/lodash@^4.17.21?target=denonext": "https://esm.sh/lodash@4.17.21?target=denonext",
     "https://esm.sh/luxon@~3.5.0?target=denonext": "https://esm.sh/luxon@3.5.0?target=denonext",
@@ -497,13 +500,12 @@
     "https://esm.sh/promise-queue@^2.2.5?target=denonext": "https://esm.sh/promise-queue@2.2.5?target=denonext",
     "https://esm.sh/proxy-from-env@^1.1.0?target=denonext": "https://esm.sh/proxy-from-env@1.1.0?target=denonext",
     "https://esm.sh/supports-color?target=denonext": "https://esm.sh/supports-color@10.0.0?target=denonext",
-    "https://esm.sh/zod@^3.18.0?target=denonext": "https://esm.sh/zod@3.24.1?target=denonext"
+    "https://esm.sh/zod@^3.18.0?target=denonext": "https://esm.sh/zod@3.24.2?target=denonext"
   },
   "remote": {
     "https://deno.land/std@0.150.0/media_types/_util.ts": "ce9b4fc4ba1c447dafab619055e20fd88236ca6bdd7834a21f98bd193c3fbfa1",
     "https://deno.land/std@0.150.0/media_types/mod.ts": "2d4b6f32a087029272dc59e0a55ae3cc4d1b27b794ccf528e94b1925795b3118",
     "https://deno.land/std@0.150.0/media_types/vendor/mime-db.v1.52.0.ts": "724cee25fa40f1a52d3937d6b4fbbfdd7791ff55e1b7ac08d9319d5632c7f5af",
-    "https://deno.land/x/sentry@8.53.0/index.mjs": "d013b4d284d111fa2e3db2df1d37bb2630b86fa6f7937fb9ccd7ea078fa888a1",
     "https://deno.land/x/xhr@0.3.0/mod.ts": "094aacd627fd9635cd942053bf8032b5223b909858fa9dc8ffa583752ff63b20",
     "https://esm.sh/@total-typescript/ts-reset@0.6.1?pin=v135": "baa21fa8bb9aa10b9378ad99b2b60ece24af376d990a01e0658733970a63d3f3",
     "https://esm.sh/asynckit@0.4.0/denonext/asynckit.mjs": "4ef3be6eb52c104699b90ca5524db55ec15bc76b361432f05c16b6106279ba72",
@@ -812,8 +814,8 @@
     "https://esm.sh/env-var@7.5.0/denonext/env-var.mjs": "58e930fc400216fd3866d35d7d29d2ab5a51deaba1888ce341067ed9baf8baed",
     "https://esm.sh/follow-redirects@1.15.9/denonext/follow-redirects.mjs": "90866d22d80eface74d3161906835600fbb1d5c9ded05dc72fd55b40960cfce7",
     "https://esm.sh/follow-redirects@1.15.9?target=denonext": "c8028ec9d980a1974362377614a4978d1556ba85a75bc32526e8917bede535d1",
-    "https://esm.sh/form-data@4.0.1/denonext/form-data.mjs": "b51c64cee153fb3b94f437444007a134523e3b16d2713a3b8b7ef97bbe46dd12",
-    "https://esm.sh/form-data@4.0.1?target=denonext": "12c5cd01c82458738f858b5f94f2a9a44732aa6b03f755f00cb655d6faed1077",
+    "https://esm.sh/form-data@4.0.2/denonext/form-data.mjs": "ad3c492eef1c6153bcfa02eb3041894e8bc8e4aa241ad4d9bd53a385f36d2c6f",
+    "https://esm.sh/form-data@4.0.2?target=denonext": "83cf111a2e6f0f7b6c045508635ceae449c5d43d8d22df23693e5b996cc65899",
     "https://esm.sh/http-status-codes@2.3.0/denonext/http-status-codes.mjs": "0a0dda862407f616a2e699a66aa4284d78a4ddb0088a1351dd890fd27e93c13a",
     "https://esm.sh/http-status-codes@2.3.0?target=denonext": "e0ad8b8cb27da543373b3b15a1456820d715d05b03375aaf1b2f63016aa5280c",
     "https://esm.sh/lodash@4.17.21/denonext/lodash.mjs": "9d2a44e584d91008f61f974c6d0a32bf9afb1563761e60c366af0a293e8c759b",
@@ -839,25 +841,21 @@
     "https://esm.sh/ts-pattern@5.6.2/denonext/ts-pattern.mjs": "d22461345e05a1dc51f6fea52163619abc795b9ccc7ea3d1f631600df1bef9fc",
     "https://esm.sh/twisted@1.61.5": "dfbe4cb11ed9757b9937b0eff383810c78576eaa8a2869177e40e6e903cb0c6b",
     "https://esm.sh/twisted@1.61.5/denonext/twisted.mjs": "65f2eca62b112dbd3574522deddd65252b4337e549e27e76e559276d67cab1be",
-    "https://esm.sh/twisted@1.61.5/dist/constants/champions.js": "f416e1a7a48e9dd916b2cb0ea9ef30ba61aef99352216f2f9b1eb294eecb2bba",
-    "https://esm.sh/twisted@1.61.5/dist/constants/index.js": "11212d9ffb9daba22e86d2c1699e3fe9faa638b81ef77fb761b88b50c85db83f",
-    "https://esm.sh/twisted@1.61.5/dist/constants/regions.js": "326db12c6657f2f55e1d50e2d5bd51d9593c194e07aa9df6780885f256fa16d2",
-    "https://esm.sh/twisted@1.61.5/dist/models-dto/index.js": "2bbacd14546006d6d400857dde10b4a5bd7cfa4074b91df723b3139360f0e123",
     "https://esm.sh/uuid@11.0.5": "f5a04b628cced1e4f139ece800be173ad2cdffec8114e91b966346b59e9abaf5",
     "https://esm.sh/uuid@11.0.5/denonext/uuid.mjs": "441f9711cf2eaf6e199f81c37a0210b862c443a27e0ff81859137314c100db36",
     "https://esm.sh/v135/@total-typescript/ts-reset@0.6.1/denonext/ts-reset.mjs": "4beaccba6a2b1e9d1d9b43318482657968441a695589d9c7c7a54e6f65d6505d",
-    "https://esm.sh/v135/twisted@1.61.5/dist/models-dto/index.js": "e1337e86c637de1b8b17d57b180ebd8229462a3205e66cb404fb7fe302df6a92",
     "https://esm.sh/zod-validation-error@3.4.0": "a39f0fcb32e1e81bdcf47cd6389a00d4b5803061a0ae533933c9e6d10b003c1c",
     "https://esm.sh/zod-validation-error@3.4.0/denonext/zod-validation-error.mjs": "c9da1e6d68459bb4164db3107ec11e6ca67c45aaefa9c4f52952469ccbb39db2",
     "https://esm.sh/zod@3.24.1": "d8f5c6cf2c4ed543003211dcd9278e94544788f5cb36549ee0490dd27238fe82",
     "https://esm.sh/zod@3.24.1/denonext/zod.mjs": "32cf72ac44d794592028cb8e423d1f0c80525c49acf01f702c7dc6195b94eda3",
-    "https://esm.sh/zod@3.24.1?target=denonext": "d8f5c6cf2c4ed543003211dcd9278e94544788f5cb36549ee0490dd27238fe82"
+    "https://esm.sh/zod@3.24.2/denonext/zod.mjs": "742680b93730f63c3a3160f75475b69f661bd353d6b8b46f602c7a685837e76d",
+    "https://esm.sh/zod@3.24.2?target=denonext": "634dc151ffdec010f55988d783c024d926124f7e943e00c27004f73bc5543902"
   },
   "workspace": {
     "dependencies": [
       "jsr:@db/sqlite@0.12.0",
       "jsr:@deno/cache-dir@0.16.0",
-      "jsr:@std/assert@1.0.10",
+      "jsr:@std/assert@1.0.11",
       "jsr:@std/dotenv@0.225.3",
       "jsr:@std/encoding@1.0.6",
       "jsr:@std/testing@1.0.8",
