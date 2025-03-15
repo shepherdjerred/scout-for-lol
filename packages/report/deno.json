@@ -29,7 +29,7 @@
     "satori": "npm:satori@0.12.1",
     "ts-pattern": "https://esm.sh/ts-pattern@5.6.2",
     "yoga-wasm-web": "npm:yoga-wasm-web@0.3.3",
-    "zod": "https://esm.sh/zod@3.24.1"
+    "zod": "https://esm.sh/zod@3.24.2"
   },
   "tasks": {
     "check": "deno check src/index.ts",

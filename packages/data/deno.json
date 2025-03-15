@@ -4,7 +4,7 @@
     "@std/testing": "jsr:@std/testing@1.0.9",
     "remeda": "https://esm.sh/remeda@2.20.0",
     "ts-pattern": "https://esm.sh/ts-pattern@5.6.2",
-    "zod": "https://esm.sh/zod@3.24.1"
+    "zod": "https://esm.sh/zod@3.24.2"
   },
   "tasks": {
     "check": "deno check src/index.ts",
