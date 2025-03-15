@@ -47,7 +47,7 @@
     "react": "https://esm.sh/react@19.0.0",
     "readline": "node:readline",
     "readline/promises": "node:readline/promises",
-    "remeda": "https://esm.sh/remeda@2.20.0",
+    "remeda": "https://esm.sh/remeda@2.21.0",
     "satori": "npm:satori@0.12.1",
     "sentry/": "https://deno.land/x/sentry@8.53.0/",
     "sqlite": "jsr:@db/sqlite@0.12.0",
