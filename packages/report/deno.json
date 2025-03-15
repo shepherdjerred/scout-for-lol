@@ -16,7 +16,7 @@
   "exclude": ["test"],
   "imports": {
     "@types/node": "npm:@types/node@22.10.2",
-    "@deno/cache-dir": "jsr:@deno/cache-dir@0.16.0",
+    "@deno/cache-dir": "jsr:@deno/cache-dir@0.18.0",
     "@deno/dnt": "jsr:@deno/dnt@0.41.3",
     "@resvg/resvg-js": "npm:@resvg/resvg-js@2.6.2",
     "@scout/data": "../data/src/index.ts",
