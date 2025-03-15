@@ -42,7 +42,7 @@
     "http2": "node:http2",
     "https": "node:https",
     "net": "node:net",
-    "prisma": "npm:prisma@6.3.0",
+    "prisma": "npm:prisma@6.4.1",
     "querystring": "node:querystring",
     "react": "https://esm.sh/react@19.0.0",
     "readline": "node:readline",
