@@ -1,4 +1,4 @@
-import type { MatchV5DTOs } from "https://esm.sh/v135/twisted@1.61.5/dist/models-dto/index.js";
+import type { MatchV5DTOs } from "https://esm.sh/v135/twisted@1.62.2/dist/models-dto/index.js";
 import { filter, first, map, pipe } from "remeda";
 import {
   type CompletedMatch,
