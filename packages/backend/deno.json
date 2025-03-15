@@ -49,7 +49,7 @@
     "readline/promises": "node:readline/promises",
     "remeda": "https://esm.sh/remeda@2.20.0",
     "satori": "npm:satori@0.12.1",
-    "sentry/": "https://deno.land/x/sentry@8.53.0/",
+    "sentry/": "https://deno.land/x/sentry@8.55.0/",
     "sqlite": "jsr:@db/sqlite@0.12.0",
     "stream": "node:stream",
     "stream/consumers": "node:stream/consumers",
