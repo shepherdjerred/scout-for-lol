@@ -37,9 +37,17 @@
     "jsr:@ts-morph/bootstrap@0.24": "0.24.0",
     "jsr:@ts-morph/common@0.24": "0.24.0",
     "npm:@resvg/resvg-js@2.6.2": "2.6.2",
+    "npm:@resvg/resvg-js@^2.6.2": "2.6.2",
     "npm:@types/node@22.10.2": "22.10.2",
+    "npm:@types/react@19": "19.0.10",
+    "npm:react@19": "19.0.0",
+    "npm:remeda@^2.18.0": "2.21.2",
+    "npm:satori@0.12": "0.12.1",
     "npm:satori@0.12.1": "0.12.1",
-    "npm:yoga-wasm-web@0.3.3": "0.3.3"
+    "npm:ts-pattern@^5.6.0": "5.6.2",
+    "npm:yoga-wasm-web@0.3.3": "0.3.3",
+    "npm:yoga-wasm-web@~0.3.3": "0.3.3",
+    "npm:zod@^3.24.1": "3.24.2"
   },
   "jsr": {
     "@david/code-block-writer@13.0.3": {
@@ -256,6 +264,12 @@
         "undici-types"
       ]
     },
+    "@types/react@19.0.10": {
+      "integrity": "sha512-JuRQ9KXLEjaUNjTWpzuR231Z2WpIwczOkBEIvbHNCzQefFIT0L8IqE6NV6ULLyC1SI/i234JnDoMkfg+RjQj2g==",
+      "dependencies": [
+        "csstype"
+      ]
+    },
     "base64-js@0.0.8": {
       "integrity": "sha512-3XSA2cR/h/73EzlXXdU6YNycmYI7+kicTxks4eJg2g39biHR84slg2+des+p7iHYhbRg/udIS4TD53WabcOUkw=="
     },
@@ -284,6 +298,9 @@
         "css-color-keywords",
         "postcss-value-parser"
       ]
+    },
+    "csstype@3.1.3": {
+      "integrity": "sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw=="
     },
     "emoji-regex@10.4.0": {
       "integrity": "sha512-EC+0oUMY1Rqm4O6LLrgjtYDvcVYTy7chDnM4Q7030tP4Kwj3u/pR6gP9ygnp2CJMK5Gq+9Q2oqmrFJAz01DXjw=="
@@ -317,6 +334,15 @@
     "postcss-value-parser@4.2.0": {
       "integrity": "sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ=="
     },
+    "react@19.0.0": {
+      "integrity": "sha512-V8AVnmPIICiWpGfm6GLzCR/W5FXLchHop40W4nXBmdlEceh16rCN8O8LNWm5bh5XUX91fh7KpA+W0TgMKmgTpQ=="
+    },
+    "remeda@2.21.2": {
+      "integrity": "sha512-wdhkMDou8HRpD7RnxKJ/FHJWEGXRH7jV/pb0NsdLLSoBo+G9RjtxcY41hVhogLfEMkThk6aySKjs+Yd6PnpzBA==",
+      "dependencies": [
+        "type-fest"
+      ]
+    },
     "satori@0.12.1": {
       "integrity": "sha512-0SbjchvDrDbeXeQgxWVtSWxww7qcFgk3DtSE2/blHOSlLsSHwIqO2fCrtVa/EudJ7Eqno8A33QNx56rUyGbLuw==",
       "dependencies": [
@@ -339,6 +365,12 @@
     "tiny-inflate@1.0.3": {
       "integrity": "sha512-pkY1fj1cKHb2seWDy0B16HeWyczlJA9/WW3u3c4z/NiWDsO3DOU5D7nhTLE9CF0yXv/QZFY7sEJmj24dK+Rrqw=="
     },
+    "ts-pattern@5.6.2": {
+      "integrity": "sha512-d4IxJUXROL5NCa3amvMg6VQW2HVtZYmUTPfvVtO7zJWGYLJ+mry9v2OmYm+z67aniQoQ8/yFNadiEwtNS9qQiw=="
+    },
+    "type-fest@4.37.0": {
+      "integrity": "sha512-S/5/0kFftkq27FPNye0XM1e2NsnoD/3FS+pBmbjmmtLT6I+i344KoOf7pvXreaFsDamWeaJX55nczA1m5PsBDg=="
+    },
     "undici-types@6.20.0": {
       "integrity": "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg=="
     },
@@ -351,16 +383,19 @@
     },
     "yoga-wasm-web@0.3.3": {
       "integrity": "sha512-N+d4UJSJbt/R3wqY7Coqs5pcV0aUj2j9IaQ3rNj9bVCLld8tTGKRa2USARjnvZJWVx1NDmQev8EknoczaOQDOA=="
+    },
+    "zod@3.24.2": {
+      "integrity": "sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ=="
     }
   },
   "redirects": {
-    "https://esm.sh/@types/react@~19.0.7/index.d.ts": "https://esm.sh/@types/react@19.0.7/index.d.ts"
+    "https://esm.sh/@types/react@~19.0.7/index.d.ts": "https://esm.sh/@types/react@19.0.10/index.d.ts"
   },
   "remote": {
     "https://esm.sh/react@19.0.0": "ab1f4aa20ac56c237bbb204632bdb55f03a0ab005d21944eeb447e5e37879637",
     "https://esm.sh/react@19.0.0/denonext/react.mjs": "87fdb28d39ca8983bdba3e7ec329305f95463cfc70c015b2620b4900fa15efdd",
-    "https://esm.sh/remeda@2.20.0": "f826c1e6ed1356b0776089abae5e0337bb569b1e81ce419ac44fc254f0067ce7",
-    "https://esm.sh/remeda@2.20.0/denonext/remeda.mjs": "094dff84bc8e3dc8f2c2f07002ff34af6c0fcfc991227c76a71f60f29b81b6e5",
+    "https://esm.sh/remeda@2.21.0": "5d3946df17e0fbb6df425a5db2a5c7e96138f2c771624b8073a48290be50b919",
+    "https://esm.sh/remeda@2.21.0/denonext/remeda.mjs": "aeed27cfed40e07cf9ec93c6a6b4d5254e20640d6e1675c55641b58d0c956f0a",
     "https://esm.sh/ts-pattern@5.6.2": "2b50c3eefb22a25c46f75d79418cc44f2fe8f22e081e3d2762f1f9f05ed4aa3d",
     "https://esm.sh/ts-pattern@5.6.2/denonext/ts-pattern.mjs": "d22461345e05a1dc51f6fea52163619abc795b9ccc7ea3d1f631600df1bef9fc",
     "https://esm.sh/zod@3.24.1": "d8f5c6cf2c4ed543003211dcd9278e94544788f5cb36549ee0490dd27238fe82",
@@ -378,6 +413,18 @@
       "npm:@types/node@22.10.2",
       "npm:satori@0.12.1",
       "npm:yoga-wasm-web@0.3.3"
-    ]
+    ],
+    "packageJson": {
+      "dependencies": [
+        "npm:@resvg/resvg-js@^2.6.2",
+        "npm:@types/react@19",
+        "npm:react@19",
+        "npm:remeda@^2.18.0",
+        "npm:satori@0.12",
+        "npm:ts-pattern@^5.6.0",
+        "npm:yoga-wasm-web@~0.3.3",
+        "npm:zod@^3.24.1"
+      ]
+    }
   }
 }
