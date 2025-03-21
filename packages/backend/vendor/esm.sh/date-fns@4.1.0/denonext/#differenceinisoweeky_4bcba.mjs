@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/differenceInISOWeekYears */
+import{normalizeDates as l}from"./_lib/normalizeDates.mjs";import{compareAsc as n}from"./compareAsc.mjs";import{differenceInCalendarISOWeekYears as u}from"./differenceInCalendarISOWeekYears.mjs";import{subISOWeekYears as d}from"./subISOWeekYears.mjs";function I(f,c,e){let[r,t]=l(e?.in,f,c),a=n(r,t),o=Math.abs(u(r,t,e)),i=d(r,a*o,e),m=+(n(i,t)===-a),s=a*(o-m);return s===0?0:s}var S=I;export{S as default,I as differenceInISOWeekYears};
+//# sourceMappingURL=differenceInISOWeekYears.mjs.map

@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/eachQuarterOfInterval */
+import{normalizeInterval as u}from"./_lib/normalizeInterval.mjs";import{addQuarters as d}from"./addQuarters.mjs";import{constructFrom as l}from"./constructFrom.mjs";import{startOfQuarter as a}from"./startOfQuarter.mjs";function p(f,m){let{start:e,end:n}=u(m?.in,f),r=+e>+n,i=r?+a(e):+a(n),o=r?a(n):a(e),t=m?.step??1;if(!t)return[];t<0&&(t=-t,r=!r);let s=[];for(;+o<=i;)s.push(l(e,o)),o=d(o,t);return r?s.reverse():s}var x=p;export{x as default,p as eachQuarterOfInterval};
+//# sourceMappingURL=eachQuarterOfInterval.mjs.map

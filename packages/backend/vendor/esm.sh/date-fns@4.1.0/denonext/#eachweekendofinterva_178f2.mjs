@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/eachWeekendOfInterval */
+import{normalizeInterval as c}from"./_lib/normalizeInterval.mjs";import{constructFrom as f}from"./constructFrom.mjs";import{eachDayOfInterval as l}from"./eachDayOfInterval.mjs";import{isWeekend as d}from"./isWeekend.mjs";function s(i,e){let{start:t,end:m}=c(e?.in,i),r=l({start:t,end:m},e),n=[],o=0;for(;o<r.length;){let a=r[o++];d(a)&&n.push(f(t,a))}return n}var I=s;export{I as default,s as eachWeekendOfInterval};
+//# sourceMappingURL=eachWeekendOfInterval.mjs.map

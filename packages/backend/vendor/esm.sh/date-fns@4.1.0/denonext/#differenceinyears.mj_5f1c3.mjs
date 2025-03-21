@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/differenceInYears */
+import{normalizeDates as c}from"./_lib/normalizeDates.mjs";import{compareAsc as n}from"./compareAsc.mjs";import{differenceInCalendarYears as m}from"./differenceInCalendarYears.mjs";function p(o,s,i){let[e,r]=c(i?.in,o,s),t=n(e,r),f=Math.abs(m(e,r));e.setFullYear(1584),r.setFullYear(1584);let l=n(e,r)===-t,a=t*(f-+l);return a===0?0:a}var D=p;export{D as default,p as differenceInYears};
+//# sourceMappingURL=differenceInYears.mjs.map

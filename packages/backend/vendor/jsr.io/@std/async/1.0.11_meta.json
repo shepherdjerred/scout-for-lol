@@ -1,0 +1,379 @@
+{
+  "manifest": {
+    "/pool_test.ts": {
+      "size": 2358,
+      "checksum": "sha256-415b3d9abddc14cdb8f98758628156b6461b0056130670abf7c6795b416d22ad"
+    },
+    "/mux_async_iterator.ts": {
+      "size": 4276,
+      "checksum": "sha256-0506de6a392ded94576e2dc2d50c152320167586452112993da1bb079e57e0e7"
+    },
+    "/unstable_retry.ts": {
+      "size": 4453,
+      "checksum": "sha256-416ad05c9045da61aa793128b4bc44131c6c3430147695da55b4ea8679894e8d"
+    },
+    "/unstable_retry_test.ts": {
+      "size": 1976,
+      "checksum": "sha256-9052e7d91ee1d0e27c23855044af22dd3d781e6e908cb829736ac2ffa0d95a9d"
+    },
+    "/abortable.ts": {
+      "size": 4876,
+      "checksum": "sha256-0e215d1913a9f6691b2c398de1495dcf8bbc883224440609d3e1ed633222e7ee"
+    },
+    "/unstable_throttle_test.ts": {
+      "size": 2481,
+      "checksum": "sha256-0c8915b26bf2d13ae16f5f40ec7967328746520d16973497df6de63285d461e8"
+    },
+    "/deadline_test.ts": {
+      "size": 2747,
+      "checksum": "sha256-10f153759d98e01727e15f7664384823831ab4bc2359ab1435563566eba9cb0c"
+    },
+    "/tee_test.ts": {
+      "size": 1607,
+      "checksum": "sha256-953c2beb394b69b111bcf02d673e088b1ddea20bb761311bcfbd9e517943c908"
+    },
+    "/unstable_mux_async_iterator_test.ts": {
+      "size": 660,
+      "checksum": "sha256-053592421ec0722917aeaaf6476f99106477b48cc57ad45380519a0493705178"
+    },
+    "/unstable_wait_for.ts": {
+      "size": 1900,
+      "checksum": "sha256-c14055c77b870362e139427c156bd9c2b5e20fcba427e1e996a86d076a21be8a"
+    },
+    "/delay.ts": {
+      "size": 2064,
+      "checksum": "sha256-82ec92942203daab6121abb2a8de1572dd070719ce134d430123323b65c118f6"
+    },
+    "/deno.json": {
+      "size": 588,
+      "checksum": "sha256-9b66c1827217c589f1d83b4bbd34785ba0628573d6a8084d96fcbf4ea3feea9b"
+    },
+    "/delay_test.ts": {
+      "size": 4403,
+      "checksum": "sha256-3b348ef68370dde631ab4d2e7fd7ce645fa7b70106d97f7acefe5638ef0656d9"
+    },
+    "/mod.ts": {
+      "size": 671,
+      "checksum": "sha256-a22ca9a7ce3ff323f50002839bf9418ee7aba6cd25c91dd271828418b9a5ce5b"
+    },
+    "/tee.ts": {
+      "size": 2600,
+      "checksum": "sha256-ef6405d20f9412b746609ccabc54a76cf0cf706f20a0254b94fc25b0668e421f"
+    },
+    "/debounce_test.ts": {
+      "size": 2251,
+      "checksum": "sha256-3d26e77747adbe4d987f6558c8d68d3c7b5cb382245182c138c99c648f5ddf72"
+    },
+    "/unstable_throttle.ts": {
+      "size": 3122,
+      "checksum": "sha256-7138c00b1d419c848dddd00a882724a61a4ef935dd205200f09f8ad6b07f5d78"
+    },
+    "/abortable_test.ts": {
+      "size": 6504,
+      "checksum": "sha256-40ae4fd846fe234a1d56d2820671cea7a1c44be3a2c525038bab2d728aee7d45"
+    },
+    "/_util.ts": {
+      "size": 339,
+      "checksum": "sha256-698bc2c414d5ce5dfb8644c56909ab553dcb10d227af4d2a46cc212de5547705"
+    },
+    "/pool.ts": {
+      "size": 3903,
+      "checksum": "sha256-92218fda46e57a0d9499afa2f43815b54127bed794d01621fe0722eabaee359a"
+    },
+    "/retry_test.ts": {
+      "size": 3932,
+      "checksum": "sha256-27e3a51099580e2c9f1257c152ac368730fa606aff43d20ff087d8dde12fd25a"
+    },
+    "/debounce.ts": {
+      "size": 2285,
+      "checksum": "sha256-24a39a6cd67584083e6db114ae515798bf16d1f6f89d32e4e80961b37f816790"
+    },
+    "/deadline.ts": {
+      "size": 1768,
+      "checksum": "sha256-b5dc5938db62c97eea638192fb6859e5a710b6d06a27ddc3b38cb173893b8205"
+    },
+    "/retry.ts": {
+      "size": 4555,
+      "checksum": "sha256-45c0866349fe45672a427b08b0e22f220d3560b61faa7154658ecb7492075378"
+    },
+    "/mux_async_iterator_test.ts": {
+      "size": 2550,
+      "checksum": "sha256-616d0fdc1d55a4ad2b12c8460abd7886d2cff2fce755fcf0bb9932949f381067"
+    },
+    "/_util_test.ts": {
+      "size": 1866,
+      "checksum": "sha256-92471a207107f04be3a1029316afbad94a79df8e3fe4ba203d594e1411c1c1f3"
+    },
+    "/unstable_wait_for_test.ts": {
+      "size": 937,
+      "checksum": "sha256-71c50782afa0343c3b419fa83909231972b7213ea015d839aad0b480703eaf96"
+    },
+    "/unstable_mux_async_iterator.ts": {
+      "size": 1439,
+      "checksum": "sha256-021f93e6597b9eda464b8f6ca9d25385fc2d04af6b55c1d7f6cb227dad47ad44"
+    },
+    "/LICENSE": {
+      "size": 1075,
+      "checksum": "sha256-0961f97da6619d5fe9ddb98649191d5ca6e958856ea5252f4cce7c9b85513819"
+    }
+  },
+  "moduleGraph2": {
+    "/deadline.ts": {
+      "dependencies": [
+        {
+          "type": "static",
+          "kind": "import",
+          "specifier": "./abortable.ts",
+          "specifierRange": [
+            [
+              3,
+              26
+            ],
+            [
+              3,
+              42
+            ]
+          ]
+        }
+      ]
+    },
+    "/mux_async_iterator.ts": {},
+    "/debounce.ts": {},
+    "/unstable_retry.ts": {
+      "dependencies": [
+        {
+          "type": "static",
+          "kind": "import",
+          "specifier": "./_util.ts",
+          "specifierRange": [
+            [
+              3,
+              45
+            ],
+            [
+              3,
+              57
+            ]
+          ]
+        },
+        {
+          "type": "static",
+          "kind": "import",
+          "specifier": "./retry.ts",
+          "specifierRange": [
+            [
+              4,
+              27
+            ],
+            [
+              4,
+              39
+            ]
+          ]
+        }
+      ]
+    },
+    "/mod.ts": {
+      "dependencies": [
+        {
+          "type": "static",
+          "kind": "export",
+          "specifier": "./abortable.ts",
+          "specifierRange": [
+            [
+              17,
+              14
+            ],
+            [
+              17,
+              30
+            ]
+          ]
+        },
+        {
+          "type": "static",
+          "kind": "export",
+          "specifier": "./deadline.ts",
+          "specifierRange": [
+            [
+              18,
+              14
+            ],
+            [
+              18,
+              29
+            ]
+          ]
+        },
+        {
+          "type": "static",
+          "kind": "export",
+          "specifier": "./debounce.ts",
+          "specifierRange": [
+            [
+              19,
+              14
+            ],
+            [
+              19,
+              29
+            ]
+          ]
+        },
+        {
+          "type": "static",
+          "kind": "export",
+          "specifier": "./delay.ts",
+          "specifierRange": [
+            [
+              20,
+              14
+            ],
+            [
+              20,
+              26
+            ]
+          ]
+        },
+        {
+          "type": "static",
+          "kind": "export",
+          "specifier": "./mux_async_iterator.ts",
+          "specifierRange": [
+            [
+              21,
+              14
+            ],
+            [
+              21,
+              39
+            ]
+          ]
+        },
+        {
+          "type": "static",
+          "kind": "export",
+          "specifier": "./pool.ts",
+          "specifierRange": [
+            [
+              22,
+              14
+            ],
+            [
+              22,
+              25
+            ]
+          ]
+        },
+        {
+          "type": "static",
+          "kind": "export",
+          "specifier": "./tee.ts",
+          "specifierRange": [
+            [
+              23,
+              14
+            ],
+            [
+              23,
+              24
+            ]
+          ]
+        },
+        {
+          "type": "static",
+          "kind": "export",
+          "specifier": "./retry.ts",
+          "specifierRange": [
+            [
+              24,
+              14
+            ],
+            [
+              24,
+              26
+            ]
+          ]
+        }
+      ]
+    },
+    "/tee.ts": {},
+    "/unstable_mux_async_iterator.ts": {
+      "dependencies": [
+        {
+          "type": "static",
+          "kind": "import",
+          "specifier": "./mux_async_iterator.ts",
+          "specifierRange": [
+            [
+              3,
+              54
+            ],
+            [
+              3,
+              79
+            ]
+          ]
+        }
+      ]
+    },
+    "/_util.ts": {},
+    "/pool.ts": {},
+    "/retry.ts": {
+      "dependencies": [
+        {
+          "type": "static",
+          "kind": "import",
+          "specifier": "./_util.ts",
+          "specifierRange": [
+            [
+              3,
+              45
+            ],
+            [
+              3,
+              57
+            ]
+          ]
+        }
+      ]
+    },
+    "/delay.ts": {},
+    "/abortable.ts": {},
+    "/unstable_wait_for.ts": {
+      "dependencies": [
+        {
+          "type": "static",
+          "kind": "import",
+          "specifier": "./deadline.ts",
+          "specifierRange": [
+            [
+              3,
+              25
+            ],
+            [
+              3,
+              40
+            ]
+          ]
+        }
+      ]
+    },
+    "/unstable_throttle.ts": {}
+  },
+  "exports": {
+    ".": "./mod.ts",
+    "./abortable": "./abortable.ts",
+    "./deadline": "./deadline.ts",
+    "./debounce": "./debounce.ts",
+    "./delay": "./delay.ts",
+    "./mux-async-iterator": "./mux_async_iterator.ts",
+    "./unstable-mux-async-iterator": "./unstable_mux_async_iterator.ts",
+    "./pool": "./pool.ts",
+    "./retry": "./retry.ts",
+    "./unstable-retry": "./unstable_retry.ts",
+    "./tee": "./tee.ts",
+    "./unstable-throttle": "./unstable_throttle.ts",
+    "./unstable-wait-for": "./unstable_wait_for.ts"
+  }
+}

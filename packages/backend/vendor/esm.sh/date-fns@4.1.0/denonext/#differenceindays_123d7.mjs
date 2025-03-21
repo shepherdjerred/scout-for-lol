@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/differenceInDays */
+import{normalizeDates as r}from"./_lib/normalizeDates.mjs";import{differenceInCalendarDays as d}from"./differenceInCalendarDays.mjs";function m(n,t,o){let[s,e]=r(o?.in,n,t),c=f(s,e),g=Math.abs(d(s,e));s.setDate(s.getDate()-c*g);let i=+(f(s,e)===-c),u=c*(g-i);return u===0?0:u}function f(n,t){let o=n.getFullYear()-t.getFullYear()||n.getMonth()-t.getMonth()||n.getDate()-t.getDate()||n.getHours()-t.getHours()||n.getMinutes()-t.getMinutes()||n.getSeconds()-t.getSeconds()||n.getMilliseconds()-t.getMilliseconds();return o<0?-1:o>0?1:o}var p=m;export{p as default,m as differenceInDays};
+//# sourceMappingURL=differenceInDays.mjs.map

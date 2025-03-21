@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/eachMonthOfInterval */
+import{normalizeInterval as f}from"./_lib/normalizeInterval.mjs";import{constructFrom as l}from"./constructFrom.mjs";function m(c,a){let{start:n,end:o}=f(a?.in,c),e=+n>+o,i=e?+n:+o,t=e?o:n;t.setHours(0,0,0,0),t.setDate(1);let r=a?.step??1;if(!r)return[];r<0&&(r=-r,e=!e);let s=[];for(;+t<=i;)s.push(l(n,t)),t.setMonth(t.getMonth()+r);return e?s.reverse():s}var h=m;export{h as default,m as eachMonthOfInterval};
+//# sourceMappingURL=eachMonthOfInterval.mjs.map

@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/getWeekYear */
+import{getDefaultOptions as k}from"./_lib/defaultOptions.mjs";import{constructFrom as i}from"./constructFrom.mjs";import{startOfWeek as l}from"./startOfWeek.mjs";import{toDate as m}from"./toDate.mjs";function W(r,e){let s=m(r,e?.in),t=s.getFullYear(),o=k(),f=e?.firstWeekContainsDate??e?.locale?.options?.firstWeekContainsDate??o.firstWeekContainsDate??o.locale?.options?.firstWeekContainsDate??1,a=i(e?.in||r,0);a.setFullYear(t+1,0,f),a.setHours(0,0,0,0);let c=l(a,e),n=i(e?.in||r,0);n.setFullYear(t,0,f),n.setHours(0,0,0,0);let u=l(n,e);return+s>=+c?t+1:+s>=+u?t:t-1}var p=W;export{p as default,W as getWeekYear};
+//# sourceMappingURL=getWeekYear.mjs.map

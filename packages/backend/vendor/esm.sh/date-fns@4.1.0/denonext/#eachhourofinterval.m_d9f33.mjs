@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/eachHourOfInterval */
+import{normalizeInterval as c}from"./_lib/normalizeInterval.mjs";import{constructFrom as f}from"./constructFrom.mjs";function l(i,u){let{start:s,end:n}=c(u?.in,i),e=+s>+n,a=e?+s:+n,t=e?n:s;t.setMinutes(0,0,0);let r=u?.step??1;if(!r)return[];r<0&&(r=-r,e=!e);let o=[];for(;+t<=a;)o.push(f(s,t)),t.setHours(t.getHours()+r);return e?o.reverse():o}var p=l;export{p as default,l as eachHourOfInterval};
+//# sourceMappingURL=eachHourOfInterval.mjs.map

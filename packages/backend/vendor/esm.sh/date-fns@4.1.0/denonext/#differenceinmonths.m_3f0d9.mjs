@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/differenceInMonths */
+import{normalizeDates as l}from"./_lib/normalizeDates.mjs";import{compareAsc as r}from"./compareAsc.mjs";import{differenceInCalendarMonths as h}from"./differenceInCalendarMonths.mjs";import{isLastDayOfMonth as M}from"./isLastDayOfMonth.mjs";function p(a,c,m){let[i,t,e]=l(m?.in,a,a,c),n=r(t,e),o=Math.abs(h(t,e));if(o<1)return 0;t.getMonth()===1&&t.getDate()>27&&t.setDate(30),t.setMonth(t.getMonth()-n*o);let s=r(t,e)===-n;M(i)&&o===1&&r(i,e)===1&&(s=!1);let f=n*(o-+s);return f===0?0:f}var L=p;export{L as default,p as differenceInMonths};
+//# sourceMappingURL=differenceInMonths.mjs.map

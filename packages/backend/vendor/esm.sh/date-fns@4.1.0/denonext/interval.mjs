@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/interval */
+import{normalizeDates as n}from"./_lib/normalizeDates.mjs";function o(a,i,e){let[t,r]=n(e?.in,a,i);if(isNaN(+t))throw new TypeError("Start date is invalid");if(isNaN(+r))throw new TypeError("End date is invalid");if(e?.assertPositive&&+t>+r)throw new TypeError("End date must be after start date");return{start:t,end:r}}var d=o;export{d as default,o as interval};
+//# sourceMappingURL=interval.mjs.map

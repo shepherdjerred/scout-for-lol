@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/differenceInHours */
+import{getRoundingMethod as f}from"./_lib/getRoundingMethod.mjs";import{normalizeDates as d}from"./_lib/normalizeDates.mjs";import{millisecondsInHour as m}from"./constants.mjs";function a(r,o,e){let[t,n]=d(e?.in,r,o),i=(+t-+n)/m;return f(e?.roundingMethod)(i)}var s=a;export{s as default,a as differenceInHours};
+//# sourceMappingURL=differenceInHours.mjs.map

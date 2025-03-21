@@ -154,6 +154,7 @@
     "https://esm.sh/zod@3.24.2/lib/helpers/errorUtil.d.ts": {},
     "https://esm.sh/zod@3.24.2/lib/helpers/parseUtil.d.ts": {},
     "https://esm.sh/zod@3.24.2/lib/helpers/partialUtil.d.ts": {},
-    "https://esm.sh/zod@3.24.2/lib/helpers/typeAliases.d.ts": {}
+    "https://esm.sh/zod@3.24.2/lib/helpers/typeAliases.d.ts": {},
+    "https://jsr.io/@std/data-structures/1.0.6/_binary_search_tree_internals.ts": {}
   }
 }

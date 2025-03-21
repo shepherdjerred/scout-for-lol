@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/set */
+import{constructFrom as r}from"./constructFrom.mjs";import{setMonth as e}from"./setMonth.mjs";import{toDate as f}from"./toDate.mjs";function m(i,t,o){let n=f(i,o?.in);return isNaN(+n)?r(o?.in||i,NaN):(t.year!=null&&n.setFullYear(t.year),t.month!=null&&(n=e(n,t.month)),t.date!=null&&n.setDate(t.date),t.hours!=null&&n.setHours(t.hours),t.minutes!=null&&n.setMinutes(t.minutes),t.seconds!=null&&n.setSeconds(t.seconds),t.milliseconds!=null&&n.setMilliseconds(t.milliseconds),n)}var d=m;export{d as default,m as set};
+//# sourceMappingURL=set.mjs.map
