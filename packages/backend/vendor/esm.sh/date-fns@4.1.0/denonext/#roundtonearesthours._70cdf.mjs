@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/roundToNearestHours */
+import{getRoundingMethod as a}from"./_lib/getRoundingMethod.mjs";import{constructFrom as f}from"./constructFrom.mjs";import{toDate as g}from"./toDate.mjs";function l(r,t){let n=t?.nearestTo??1;if(n<1||n>12)return f(t?.in||r,NaN);let o=g(r,t?.in),e=o.getMinutes()/60,s=o.getSeconds()/60/60,c=o.getMilliseconds()/1e3/60/60,u=o.getHours()+e+s+c,d=t?.roundingMethod??"round",i=a(d)(u/n)*n;return o.setHours(i,0,0,0),o}var N=l;export{N as default,l as roundToNearestHours};
+//# sourceMappingURL=roundToNearestHours.mjs.map

@@ -3,6 +3,11 @@
     "https://jsr.io/@deno/cache-dir/0.10.3/lib/snippets/deno_cache_dir-be1befe246e02081/": "jsr.io/@deno/cache-dir/0.10.3/lib/snippets/#deno_cache_dir-be1be_1fcd0"
   },
   "modules": {
+    "https://esm.sh/@types/react@~19.0.7/index.d.ts": {
+      "headers": {
+        "location": "https://esm.sh/@types/react@19.0.12/index.d.ts"
+      }
+    },
     "https://esm.sh/react@19.0.0": {
       "headers": {
         "content-type": "application/javascript; charset=utf-8",

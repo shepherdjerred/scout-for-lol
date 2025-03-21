@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/getWeeksInMonth */
+import{differenceInCalendarWeeks as o}from"./differenceInCalendarWeeks.mjs";import{lastDayOfMonth as f}from"./lastDayOfMonth.mjs";import{startOfMonth as n}from"./startOfMonth.mjs";import{toDate as a}from"./toDate.mjs";function m(r,t){let e=a(r,t?.in);return o(f(e,t),n(e,t),t)+1}var l=m;export{l as default,m as getWeeksInMonth};
+//# sourceMappingURL=getWeeksInMonth.mjs.map

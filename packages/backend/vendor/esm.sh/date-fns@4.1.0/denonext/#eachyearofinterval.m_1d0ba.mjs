@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/eachYearOfInterval */
+import{normalizeInterval as c}from"./_lib/normalizeInterval.mjs";import{constructFrom as i}from"./constructFrom.mjs";function f(l,a){let{start:n,end:s}=c(a?.in,l),t=+n>+s,u=t?+n:+s,e=t?s:n;e.setHours(0,0,0,0),e.setMonth(0,1);let r=a?.step??1;if(!r)return[];r<0&&(r=-r,t=!t);let o=[];for(;+e<=u;)o.push(i(n,e)),e.setFullYear(e.getFullYear()+r);return t?o.reverse():o}var p=f;export{p as default,f as eachYearOfInterval};
+//# sourceMappingURL=eachYearOfInterval.mjs.map

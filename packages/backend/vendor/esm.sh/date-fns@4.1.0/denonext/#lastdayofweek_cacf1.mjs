@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/lastDayOfWeek */
+import{getDefaultOptions as f}from"./_lib/defaultOptions.mjs";import{toDate as c}from"./toDate.mjs";function l(s,e){let a=f(),o=e?.weekStartsOn??e?.locale?.options?.weekStartsOn??a.weekStartsOn??a.locale?.options?.weekStartsOn??0,t=c(s,e?.in),n=t.getDay(),r=(n<o?-7:0)+6-(n-o);return t.setHours(0,0,0,0),t.setDate(t.getDate()+r),t}var k=l;export{k as default,l as lastDayOfWeek};
+//# sourceMappingURL=lastDayOfWeek.mjs.map

@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/eachWeekOfInterval */
+import{normalizeInterval as l}from"./_lib/normalizeInterval.mjs";import{addWeeks as i}from"./addWeeks.mjs";import{constructFrom as k}from"./constructFrom.mjs";import{startOfWeek as n}from"./startOfWeek.mjs";function W(f,e){let{start:a,end:o}=l(e?.in,f),r=+a>+o,u=r?n(o,e):n(a,e),c=r?n(a,e):n(o,e);u.setHours(15),c.setHours(15);let d=+c.getTime(),t=u,s=e?.step??1;if(!s)return[];s<0&&(s=-s,r=!r);let m=[];for(;+t<=d;)t.setHours(0),m.push(k(a,t)),t=i(t,s),t.setHours(15);return r?m.reverse():m}var D=W;export{D as default,W as eachWeekOfInterval};
+//# sourceMappingURL=eachWeekOfInterval.mjs.map

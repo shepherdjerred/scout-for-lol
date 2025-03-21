@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/setDefaultOptions */
+import{getDefaultOptions as n,setDefaultOptions as p}from"./_lib/defaultOptions.mjs";function f(e){let o={},r=n();for(let t in r)Object.prototype.hasOwnProperty.call(r,t)&&(o[t]=r[t]);for(let t in e)Object.prototype.hasOwnProperty.call(e,t)&&(e[t]===void 0?delete o[t]:o[t]=e[t]);p(o)}var s=f;export{s as default,f as setDefaultOptions};
+//# sourceMappingURL=setDefaultOptions.mjs.map

@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/differenceInCalendarISOWeeks */
+import{getTimezoneOffsetInMilliseconds as r}from"./_lib/getTimezoneOffsetInMilliseconds.mjs";import{normalizeDates as l}from"./_lib/normalizeDates.mjs";import{millisecondsInWeek as p}from"./constants.mjs";import{startOfISOWeek as o}from"./startOfISOWeek.mjs";function O(n,i,s){let[a,f]=l(s?.in,n,i),e=o(a),t=o(f),m=+e-r(e),c=+t-r(t);return Math.round((m-c)/p)}var u=O;export{u as default,O as differenceInCalendarISOWeeks};
+//# sourceMappingURL=differenceInCalendarISOWeeks.mjs.map

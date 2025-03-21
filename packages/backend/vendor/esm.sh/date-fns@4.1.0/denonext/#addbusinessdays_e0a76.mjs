@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/addBusinessDays */
+import{constructFrom as n}from"./constructFrom.mjs";import{isSaturday as u}from"./isSaturday.mjs";import{isSunday as o}from"./isSunday.mjs";import{isWeekend as a}from"./isWeekend.mjs";import{toDate as m}from"./toDate.mjs";function g(f,r,t){let e=m(f,t?.in),D=a(e,t);if(isNaN(r))return n(t?.in,NaN);let c=e.getHours(),s=r<0?-1:1,d=Math.trunc(r/5);e.setDate(e.getDate()+d*7);let i=Math.abs(r%5);for(;i>0;)e.setDate(e.getDate()+s),a(e,t)||(i-=1);return D&&a(e,t)&&r!==0&&(u(e,t)&&e.setDate(e.getDate()+(s<0?2:-1)),o(e,t)&&e.setDate(e.getDate()+(s<0?1:-2))),e.setHours(c),e}var W=g;export{g as addBusinessDays,W as default};
+//# sourceMappingURL=addBusinessDays.mjs.map

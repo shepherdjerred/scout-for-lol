@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/locale/_lib/buildMatchFn */
+function P(t){return(n,e={})=>{let l=e.width,h=l&&t.matchPatterns[l]||t.matchPatterns[t.defaultMatchWidth],i=n.match(h);if(!i)return null;let r=i[0],c=l&&t.parsePatterns[l]||t.parsePatterns[t.defaultParseWidth],d=Array.isArray(c)?o(c,u=>u.test(r)):s(c,u=>u.test(r)),a;a=t.valueCallback?t.valueCallback(d):d,a=e.valueCallback?e.valueCallback(a):a;let f=n.slice(r.length);return{value:a,rest:f}}}function s(t,n){for(let e in t)if(Object.prototype.hasOwnProperty.call(t,e)&&n(t[e]))return e}function o(t,n){for(let e=0;e<t.length;e++)if(n(t[e]))return e}export{P as buildMatchFn};
+//# sourceMappingURL=buildMatchFn.mjs.map

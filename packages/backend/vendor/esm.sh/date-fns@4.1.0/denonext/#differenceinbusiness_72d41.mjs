@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/differenceInBusinessDays */
+import{normalizeDates as c}from"./_lib/normalizeDates.mjs";import{addDays as f}from"./addDays.mjs";import{differenceInCalendarDays as D}from"./differenceInCalendarDays.mjs";import{isSameDay as p}from"./isSameDay.mjs";import{isValid as m}from"./isValid.mjs";import{isWeekend as u}from"./isWeekend.mjs";function y(l,d,a){let[r,t]=c(a?.in,l,d);if(!m(r)||!m(t))return NaN;let n=D(r,t),o=n<0?-1:1,s=Math.trunc(n/7),i=s*5,e=f(t,s*7);for(;!p(r,e);)i+=u(e,a)?0:o,e=f(e,o);return i===0?0:i}var N=y;export{N as default,y as differenceInBusinessDays};
+//# sourceMappingURL=differenceInBusinessDays.mjs.map

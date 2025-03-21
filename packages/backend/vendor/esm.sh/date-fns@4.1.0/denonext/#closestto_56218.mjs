@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/closestTo */
+import{normalizeDates as m}from"./_lib/normalizeDates.mjs";import{closestIndexTo as s}from"./closestIndexTo.mjs";import{constructFrom as f}from"./constructFrom.mjs";function a(r,n,i){let[t,...e]=m(i?.in,r,...n),o=s(t,e);if(typeof o=="number"&&isNaN(o))return f(t,NaN);if(o!==void 0)return e[o]}var u=a;export{a as closestTo,u as default};
+//# sourceMappingURL=closestTo.mjs.map

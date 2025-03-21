@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/sub */
+import{constructFrom as d}from"./constructFrom.mjs";import{subDays as y}from"./subDays.mjs";import{subMonths as S}from"./subMonths.mjs";function T(s,t,o){let{years:n=0,months:u=0,weeks:r=0,days:c=0,hours:e=0,minutes:m=0,seconds:b=0}=t,i=S(s,u+n*12,o),h=y(i,c+r*7,o),f=m+e*60,a=(b+f*60)*1e3;return d(o?.in||s,+h-a)}var M=T;export{M as default,T as sub};
+//# sourceMappingURL=sub.mjs.map

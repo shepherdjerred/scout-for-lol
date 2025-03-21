@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/formatISO9075 */
+import{addLeadingZeros as t}from"./_lib/addLeadingZeros.mjs";import{isValid as f}from"./isValid.mjs";import{toDate as l}from"./toDate.mjs";function u($,r){let e=l($,r?.in);if(!f(e))throw new RangeError("Invalid time value");let i=r?.format??"extended",s=r?.representation??"complete",o="",d=i==="extended"?"-":"",m=i==="extended"?":":"";if(s!=="time"){let n=t(e.getDate(),2),a=t(e.getMonth()+1,2);o=`${t(e.getFullYear(),4)}${d}${a}${d}${n}`}if(s!=="date"){let n=t(e.getHours(),2),a=t(e.getMinutes(),2),c=t(e.getSeconds(),2);o=`${o}${o===""?"":" "}${n}${m}${a}${m}${c}`}return o}var D=u;export{D as default,u as formatISO9075};
+//# sourceMappingURL=formatISO9075.mjs.map

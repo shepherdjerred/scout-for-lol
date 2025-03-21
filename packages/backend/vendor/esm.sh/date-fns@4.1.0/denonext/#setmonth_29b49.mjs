@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/setMonth */
+import{constructFrom as m}from"./constructFrom.mjs";import{getDaysInMonth as i}from"./getDaysInMonth.mjs";import{toDate as u}from"./toDate.mjs";function M(n,e,r){let t=u(n,r?.in),s=t.getFullYear(),a=t.getDate(),o=m(r?.in||n,0);o.setFullYear(s,e,15),o.setHours(0,0,0,0);let c=i(o);return t.setMonth(e,Math.min(a,c)),t}var d=M;export{d as default,M as setMonth};
+//# sourceMappingURL=setMonth.mjs.map

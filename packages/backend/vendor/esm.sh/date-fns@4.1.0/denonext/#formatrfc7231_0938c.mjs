@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/formatRFC7231 */
+import{addLeadingZeros as o}from"./_lib/addLeadingZeros.mjs";import{isValid as i}from"./isValid.mjs";import{toDate as m}from"./toDate.mjs";var g=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],T=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];function f(e){let t=m(e);if(!i(t))throw new RangeError("Invalid time value");let n=g[t.getUTCDay()],a=o(t.getUTCDate(),2),r=T[t.getUTCMonth()],s=t.getUTCFullYear(),c=o(t.getUTCHours(),2),u=o(t.getUTCMinutes(),2),d=o(t.getUTCSeconds(),2);return`${n}, ${a} ${r} ${s} ${c}:${u}:${d} GMT`}var p=f;export{p as default,f as formatRFC7231};
+//# sourceMappingURL=formatRFC7231.mjs.map
