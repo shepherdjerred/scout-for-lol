@@ -1,0 +1,4 @@
+/* esm.sh - axios@1.8.4/unsafe/helpers/buildURL */
+import a from"../utils.mjs";import d from"../../lib/helpers/AxiosURLSearchParams.mjs";function l(e){return encodeURIComponent(e).replace(/%3A/gi,":").replace(/%24/g,"$").replace(/%2C/gi,",").replace(/%20/g,"+").replace(/%5B/gi,"[").replace(/%5D/gi,"]")}function g(e,c,i){if(!c)return e;let f=i&&i.encode||l;a.isFunction(i)&&(i={serialize:i});let n=i&&i.serialize,r;if(n?r=n(c,i):r=a.isURLSearchParams(c)?c.toString():new d(c,i).toString(f),r){let t=e.indexOf("#");t!==-1&&(e=e.slice(0,t)),e+=(e.indexOf("?")===-1?"?":"&")+r}return e}export{g as default};
+
+import "https://deno.land/x/xhr@0.3.0/mod.ts";//# sourceMappingURL=buildURL.mjs.map

@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/eachMinuteOfInterval */
+import{normalizeInterval as m}from"./_lib/normalizeInterval.mjs";import{addMinutes as c}from"./addMinutes.mjs";import{constructFrom as f}from"./constructFrom.mjs";function l(a,i){let{start:e,end:o}=m(i?.in,a);e.setSeconds(0,0);let t=+e>+o,d=t?+e:+o,n=t?o:e,r=i?.step??1;if(!r)return[];r<0&&(r=-r,t=!t);let s=[];for(;+n<=d;)s.push(f(e,n)),n=c(n,r);return t?s.reverse():s}var h=l;export{h as default,l as eachMinuteOfInterval};
+//# sourceMappingURL=eachMinuteOfInterval.mjs.map

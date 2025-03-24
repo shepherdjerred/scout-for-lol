@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/parseJSON */
+import{toDate as d}from"./toDate.mjs";function a(e,r){let t=e.match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})(?:\.(\d{0,7}))?(?:Z|(.)(\d{2}):?(\d{2})?)?/);return t?d(Date.UTC(+t[1],+t[2]-1,+t[3],+t[4]-(+t[9]||0)*(t[8]=="-"?-1:1),+t[5]-(+t[10]||0)*(t[8]=="-"?-1:1),+t[6],+((t[7]||"0")+"00").substring(0,3)),r?.in):d(NaN,r?.in)}var i=a;export{i as default,a as parseJSON};
+//# sourceMappingURL=parseJSON.mjs.map

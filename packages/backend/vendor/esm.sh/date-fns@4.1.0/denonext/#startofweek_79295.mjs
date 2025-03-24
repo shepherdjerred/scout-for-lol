@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/startOfWeek */
+import{getDefaultOptions as f}from"./_lib/defaultOptions.mjs";import{toDate as c}from"./toDate.mjs";function O(s,e){let o=f(),a=e?.weekStartsOn??e?.locale?.options?.weekStartsOn??o.weekStartsOn??o.locale?.options?.weekStartsOn??0,t=c(s,e?.in),n=t.getDay(),r=(n<a?7:0)+n-a;return t.setDate(t.getDate()-r),t.setHours(0,0,0,0),t}var k=O;export{k as default,O as startOfWeek};
+//# sourceMappingURL=startOfWeek.mjs.map

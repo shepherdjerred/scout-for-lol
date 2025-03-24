@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/formatRFC3339 */
+import{addLeadingZeros as o}from"./_lib/addLeadingZeros.mjs";import{isValid as M}from"./isValid.mjs";import{toDate as p}from"./toDate.mjs";function O(f,r){let t=p(f,r?.in);if(!M(t))throw new RangeError("Invalid time value");let n=r?.fractionDigits??0,l=o(t.getDate(),2),d=o(t.getMonth()+1,2),g=t.getFullYear(),u=o(t.getHours(),2),m=o(t.getMinutes(),2),$=o(t.getSeconds(),2),a="";if(n>0){let e=t.getMilliseconds(),c=Math.trunc(e*Math.pow(10,n-3));a="."+o(c,n)}let s="",i=t.getTimezoneOffset();if(i!==0){let e=Math.abs(i),c=o(Math.trunc(e/60),2),h=o(e%60,2);s=`${i<0?"+":"-"}${c}:${h}`}else s="Z";return`${g}-${d}-${l}T${u}:${m}:${$}${a}${s}`}var v=O;export{v as default,O as formatRFC3339};
+//# sourceMappingURL=formatRFC3339.mjs.map

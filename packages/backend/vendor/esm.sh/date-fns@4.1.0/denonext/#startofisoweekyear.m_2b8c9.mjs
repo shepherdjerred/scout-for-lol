@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/startOfISOWeekYear */
+import{constructFrom as f}from"./constructFrom.mjs";import{getISOWeekYear as a}from"./getISOWeekYear.mjs";import{startOfISOWeek as u}from"./startOfISOWeek.mjs";function m(t,e){let o=a(t,e),r=f(e?.in||t,0);return r.setFullYear(o,0,4),r.setHours(0,0,0,0),u(r)}var c=m;export{c as default,m as startOfISOWeekYear};
+//# sourceMappingURL=startOfISOWeekYear.mjs.map

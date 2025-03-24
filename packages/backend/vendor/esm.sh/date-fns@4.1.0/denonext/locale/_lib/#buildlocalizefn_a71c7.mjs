@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/locale/_lib/buildLocalizeFn */
+function c(t){return(l,e)=>{let u=e?.context?String(e.context):"standalone",d;if(u==="formatting"&&t.formattingValues){let n=t.defaultFormattingWidth||t.defaultWidth,i=e?.width?String(e.width):n;d=t.formattingValues[i]||t.formattingValues[n]}else{let n=t.defaultWidth,i=e?.width?String(e.width):t.defaultWidth;d=t.values[i]||t.values[n]}let a=t.argumentCallback?t.argumentCallback(l):l;return d[a]}}export{c as buildLocalizeFn};
+//# sourceMappingURL=buildLocalizeFn.mjs.map

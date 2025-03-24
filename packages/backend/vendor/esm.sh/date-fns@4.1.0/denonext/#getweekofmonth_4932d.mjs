@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/getWeekOfMonth */
+import{getDefaultOptions as i}from"./_lib/defaultOptions.mjs";import{getDate as m}from"./getDate.mjs";import{getDay as O}from"./getDay.mjs";import{startOfMonth as c}from"./startOfMonth.mjs";import{toDate as l}from"./toDate.mjs";function k(r,t){let o=i(),n=t?.weekStartsOn??t?.locale?.options?.weekStartsOn??o.weekStartsOn??o.locale?.options?.weekStartsOn??0,a=m(l(r,t?.in));if(isNaN(a))return NaN;let s=O(c(r,t)),e=n-s;e<=0&&(e+=7);let f=a-e;return Math.ceil(f/7)+1}var y=k;export{y as default,k as getWeekOfMonth};
+//# sourceMappingURL=getWeekOfMonth.mjs.map

@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/eachDayOfInterval */
+import{normalizeInterval as u}from"./_lib/normalizeInterval.mjs";import{constructFrom as f}from"./constructFrom.mjs";function l(c,a){let{start:s,end:n}=u(a?.in,c),t=+s>+n,i=t?+s:+n,e=t?n:s;e.setHours(0,0,0,0);let r=a?.step??1;if(!r)return[];r<0&&(r=-r,t=!t);let o=[];for(;+e<=i;)o.push(f(s,e)),e.setDate(e.getDate()+r),e.setHours(0,0,0,0);return t?o.reverse():o}var p=l;export{p as default,l as eachDayOfInterval};
+//# sourceMappingURL=eachDayOfInterval.mjs.map

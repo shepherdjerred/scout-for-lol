@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/getOverlappingDaysInIntervals */
+import{getTimezoneOffsetInMilliseconds as f}from"./_lib/getTimezoneOffsetInMilliseconds.mjs";import{millisecondsInDay as d}from"./constants.mjs";import{toDate as t}from"./toDate.mjs";function h(a,l){let[r,o]=[+t(a.start),+t(a.end)].sort((s,i)=>s-i),[e,n]=[+t(l.start),+t(l.end)].sort((s,i)=>s-i);if(!(r<n&&e<o))return 0;let p=e<r?r:e,g=p-f(p),c=n>o?o:n,m=c-f(c);return Math.ceil((m-g)/d)}var D=h;export{D as default,h as getOverlappingDaysInIntervals};
+//# sourceMappingURL=getOverlappingDaysInIntervals.mjs.map

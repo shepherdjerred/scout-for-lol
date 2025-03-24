@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/lightFormat */
+import{lightFormatters as i}from"./_lib/format/lightFormatters.mjs";import{isValid as m}from"./isValid.mjs";import{toDate as f}from"./toDate.mjs";var p=/(\w)\1*|''|'(''|[^'])+('|$)|./g,s=/^'([^]*?)'?$/,l=/''/g,u=/[a-zA-Z]/;function h(r,e){let n=f(r);if(!m(n))throw new RangeError("Invalid time value");let o=e.match(p);return o?o.map(t=>{if(t==="''")return"'";let a=t[0];if(a==="'")return g(t);let c=i[a];if(c)return c(n,t);if(a.match(u))throw new RangeError("Format string contains an unescaped latin alphabet character `"+a+"`");return t}).join(""):""}function g(r){let e=r.match(s);return e?e[1].replace(l,"'"):r}var w=h;export{w as default,h as lightFormat,i as lightFormatters};
+//# sourceMappingURL=lightFormat.mjs.map

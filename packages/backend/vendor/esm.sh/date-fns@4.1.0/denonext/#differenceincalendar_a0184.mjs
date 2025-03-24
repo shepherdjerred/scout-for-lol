@@ -1,0 +1,3 @@
+/* esm.sh - date-fns@4.1.0/differenceInCalendarDays */
+import{getTimezoneOffsetInMilliseconds as r}from"./_lib/getTimezoneOffsetInMilliseconds.mjs";import{normalizeDates as c}from"./_lib/normalizeDates.mjs";import{millisecondsInDay as p}from"./constants.mjs";import{startOfDay as a}from"./startOfDay.mjs";function D(o,n,i){let[m,s]=c(i?.in,o,n),t=a(m),e=a(s),f=+t-r(t),l=+e-r(e);return Math.round((f-l)/p)}var I=D;export{I as default,D as differenceInCalendarDays};
+//# sourceMappingURL=differenceInCalendarDays.mjs.map
