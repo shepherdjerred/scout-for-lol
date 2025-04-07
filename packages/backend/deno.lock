@@ -393,8 +393,8 @@
         "undici-types"
       ]
     },
-    "@types/ws@8.18.0": {
-      "integrity": "sha512-8svvI3hMyvN0kKCJMvTJP/x6Y/EoQbepff882wL+Sn5QsXb3etnamgrJq4isrBxSJj5L2AuXcI0+bgkoAXGUJw==",
+    "@types/ws@8.18.1": {
+      "integrity": "sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==",
       "dependencies": [
         "@types/node"
       ]
@@ -966,16 +966,16 @@
     "https://esm.sh/supports-color@10.0.0?target=denonext": "4895255248e4ba0cbcce9437003dccf3658b1ac1d1e8eba5225fb8194c454ee1",
     "https://esm.sh/ts-pattern@5.6.2": "2b50c3eefb22a25c46f75d79418cc44f2fe8f22e081e3d2762f1f9f05ed4aa3d",
     "https://esm.sh/ts-pattern@5.6.2/denonext/ts-pattern.mjs": "5b79fcdde303b371bb7ae4fd5b71baa3b11bb3e0a98ad2c54a9cffbce7c0c41b",
-    "https://esm.sh/twisted@1.63.2": "45686a0c0212a75b3db3d69a646d49639efeb2a2767f68479562c9d12c34d5e5",
-    "https://esm.sh/twisted@1.63.2/denonext/twisted.mjs": "09b54bd5f1dd40fcbd7d7096a99607a7a529c4591a7e780049f2df0a12b6a12e",
-    "https://esm.sh/twisted@1.63.2/dist/constants/champions.js": "f3cd4c90c5ad567d7c1bfcabdda2da9da0e42eddb15a58490fbb2d38abdf3445",
-    "https://esm.sh/twisted@1.63.2/dist/constants/index.js": "cf1e81dd7f229be0e4b1ff64c3ccca61aa3c3991aa61aedbcc581f6c47ba22df",
-    "https://esm.sh/twisted@1.63.2/dist/constants/regions.js": "ea4df67784956bb7c00a66c5dc42c65b0d2fcf0045abdc1badd64242c4abd7e2",
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/index.js": "dd6febe7dc37a07f15e0ba20cfa311497b1e81579334790b9ba3e1765a6068f7",
+    "https://esm.sh/twisted@1.63.3": "ff57c5f6a227dfbda0bc589f1eae97538ed9f6df214c1948c4a1865d372def16",
+    "https://esm.sh/twisted@1.63.3/denonext/twisted.mjs": "de4690522cf7630c5f14128970505d930abff54b07973aefe43e75636b2d3fed",
+    "https://esm.sh/twisted@1.63.3/dist/constants/champions.js": "5d9fe623ff26f0941980dd6fc1281a1bcc4e6d7cf5d05875899d9e911bd3ca49",
+    "https://esm.sh/twisted@1.63.3/dist/constants/index.js": "d8ff4ce7d9046164e04f7d0d6a4ba5313f332e5c4df49c172c8825aea83826d7",
+    "https://esm.sh/twisted@1.63.3/dist/constants/regions.js": "61171860d52355e10365770c02dfa6d7ccfc615e5ba19c232be766f0f98162d4",
+    "https://esm.sh/twisted@1.63.3/dist/models-dto/index.js": "3e373256e8d01eabaeb932f3677c43733e6103cdfabc527316f62918a125a579",
     "https://esm.sh/uuid@11.1.0": "f634be98fe29b44fbce6958430967079fcaf8f3430a3225105fff2d60c26eeae",
     "https://esm.sh/uuid@11.1.0/denonext/uuid.mjs": "d1ed270e6b13dbb0e6cec619b49a9a230d1bb71645108138f6d7e6349805e3af",
     "https://esm.sh/v135/@total-typescript/ts-reset@0.6.1/denonext/ts-reset.mjs": "4beaccba6a2b1e9d1d9b43318482657968441a695589d9c7c7a54e6f65d6505d",
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/index.js": "b79e5228f2d6077856a4b1b0667b128932390722740e5d789259f376cb278ac1",
+    "https://esm.sh/v135/twisted@1.63.3/dist/models-dto/index.js": "5481e55a80aa213e5a6c25024b501914609ebddf738949ac76814b3219e98f40",
     "https://esm.sh/zod-validation-error@3.4.0": "a39f0fcb32e1e81bdcf47cd6389a00d4b5803061a0ae533933c9e6d10b003c1c",
     "https://esm.sh/zod-validation-error@3.4.0/denonext/zod-validation-error.mjs": "81e4cb185c936f6225d59c3c2c244938e4b87cc9948b1f493affcc9c13675b84",
     "https://esm.sh/zod@3.24.2": "634dc151ffdec010f55988d783c024d926124f7e943e00c27004f73bc5543902",
