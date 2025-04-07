@@ -38,7 +38,7 @@
     "jsr:@ts-morph/common@0.24": "0.24.0",
     "npm:@resvg/resvg-js@2.6.2": "2.6.2",
     "npm:@types/node@22.13.11": "22.13.11",
-    "npm:satori@0.12.1": "0.12.1",
+    "npm:satori@0.12.2": "0.12.2",
     "npm:yoga-wasm-web@0.3.3": "0.3.3"
   },
   "jsr": {
@@ -317,8 +317,8 @@
     "postcss-value-parser@4.2.0": {
       "integrity": "sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ=="
     },
-    "satori@0.12.1": {
-      "integrity": "sha512-0SbjchvDrDbeXeQgxWVtSWxww7qcFgk3DtSE2/blHOSlLsSHwIqO2fCrtVa/EudJ7Eqno8A33QNx56rUyGbLuw==",
+    "satori@0.12.2": {
+      "integrity": "sha512-3C/laIeE6UUe9A+iQ0A48ywPVCCMKCNSTU5Os101Vhgsjd3AAxGNjyq0uAA8kulMPK5n0csn8JlxPN9riXEjLA==",
       "dependencies": [
         "@shuding/opentype.js",
         "css-background-parser",
@@ -376,7 +376,7 @@
       "jsr:@std/testing@1.0.9",
       "npm:@resvg/resvg-js@2.6.2",
       "npm:@types/node@22.13.11",
-      "npm:satori@0.12.1",
+      "npm:satori@0.12.2",
       "npm:yoga-wasm-web@0.3.3"
     ]
   }
