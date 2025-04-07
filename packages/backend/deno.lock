@@ -393,8 +393,8 @@
         "undici-types"
       ]
     },
-    "@types/ws@8.18.0": {
-      "integrity": "sha512-8svvI3hMyvN0kKCJMvTJP/x6Y/EoQbepff882wL+Sn5QsXb3etnamgrJq4isrBxSJj5L2AuXcI0+bgkoAXGUJw==",
+    "@types/ws@8.18.1": {
+      "integrity": "sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==",
       "dependencies": [
         "@types/node"
       ]
@@ -964,8 +964,8 @@
     "https://esm.sh/remeda@2.21.2/denonext/remeda.mjs": "ccc7f29c4e3179001426ebdd5a77bd2331b1d7ecbe539cc3b67050e7ce0ffe85",
     "https://esm.sh/supports-color@10.0.0/denonext/supports-color.mjs": "286d5019b7d0adb9a771ae8152a583b7dc9714ee743a26650a68a86e1557ea27",
     "https://esm.sh/supports-color@10.0.0?target=denonext": "4895255248e4ba0cbcce9437003dccf3658b1ac1d1e8eba5225fb8194c454ee1",
-    "https://esm.sh/ts-pattern@5.6.2": "2b50c3eefb22a25c46f75d79418cc44f2fe8f22e081e3d2762f1f9f05ed4aa3d",
-    "https://esm.sh/ts-pattern@5.6.2/denonext/ts-pattern.mjs": "5b79fcdde303b371bb7ae4fd5b71baa3b11bb3e0a98ad2c54a9cffbce7c0c41b",
+    "https://esm.sh/ts-pattern@5.7.0": "c82d82c236a4d625e7eb2a119498bba8615170a59b46204ebbbc0a5f4eb9c216",
+    "https://esm.sh/ts-pattern@5.7.0/denonext/ts-pattern.mjs": "08e04638a80294941540c68054399ecdff0896eee76d8dba5d99144af36b52cb",
     "https://esm.sh/twisted@1.63.2": "45686a0c0212a75b3db3d69a646d49639efeb2a2767f68479562c9d12c34d5e5",
     "https://esm.sh/twisted@1.63.2/denonext/twisted.mjs": "09b54bd5f1dd40fcbd7d7096a99607a7a529c4591a7e780049f2df0a12b6a12e",
     "https://esm.sh/twisted@1.63.2/dist/constants/champions.js": "f3cd4c90c5ad567d7c1bfcabdda2da9da0e42eddb15a58490fbb2d38abdf3445",
