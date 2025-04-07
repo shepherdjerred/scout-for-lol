@@ -10,11 +10,8 @@
     "jsr:@std/assert@0.223": "0.223.0",
     "jsr:@std/assert@0.226": "0.226.0",
     "jsr:@std/assert@1.0.11": "1.0.11",
-    "jsr:@std/assert@^1.0.10": "1.0.11",
-    "jsr:@std/async@^1.0.9": "1.0.11",
     "jsr:@std/bytes@0.223": "0.223.0",
     "jsr:@std/bytes@^1.0.5": "1.0.5",
-    "jsr:@std/data-structures@^1.0.6": "1.0.6",
     "jsr:@std/encoding@1.0.6": "1.0.6",
     "jsr:@std/fmt@0.223": "0.223.0",
     "jsr:@std/fmt@1": "1.0.6",
@@ -23,7 +20,6 @@
     "jsr:@std/fs@1": "1.0.14",
     "jsr:@std/fs@1.0.14": "1.0.14",
     "jsr:@std/fs@^1.0.6": "1.0.14",
-    "jsr:@std/fs@^1.0.9": "1.0.14",
     "jsr:@std/fs@~0.229.3": "0.229.3",
     "jsr:@std/internal@^1.0.5": "1.0.5",
     "jsr:@std/io@0.223": "0.223.0",
@@ -33,7 +29,6 @@
     "jsr:@std/path@1.0.0-rc.1": "1.0.0-rc.1",
     "jsr:@std/path@^1.0.8": "1.0.8",
     "jsr:@std/path@~0.225.2": "0.225.2",
-    "jsr:@std/testing@1.0.9": "1.0.9",
     "jsr:@ts-morph/bootstrap@0.24": "0.24.0",
     "jsr:@ts-morph/common@0.24": "0.24.0",
     "npm:@resvg/resvg-js@2.6.2": "2.6.2",
@@ -94,17 +89,11 @@
         "jsr:@std/internal"
       ]
     },
-    "@std/async@1.0.11": {
-      "integrity": "a5717eac814391a3eea4f671167875e7579222dc05a3120054fcf0e26070b9b0"
-    },
     "@std/bytes@0.223.0": {
       "integrity": "58bbfa2da8827af50976fb2048516a04a2e08e0641676cbb9008a81a7df94976"
     },
     "@std/bytes@1.0.5": {
       "integrity": "72918ad0134024d2d986f8f773790311df7772c3f57efc275ebcb12481ae6f6e"
-    },
-    "@std/data-structures@1.0.6": {
-      "integrity": "9bf6d39a7b0ca76729a3f0806ee79e7a7abbe03a9cb85527c092d6823aa526eb"
     },
     "@std/encoding@1.0.6": {
       "integrity": "45ff6c42e99e54fa3427db85fab1b3013da403e366ae27d70ab6fa2cf1a45715"
@@ -163,17 +152,6 @@
     },
     "@std/path@1.0.8": {
       "integrity": "81f12cb505c89b56afe707d8d0b99af44f2a79c42f79d8a95ba3933de8db1b66"
-    },
-    "@std/testing@1.0.9": {
-      "integrity": "0f51a98e608c011a74d6816f751445713765ace83a78ae46a3cf9e7c828cc561",
-      "dependencies": [
-        "jsr:@std/assert@^1.0.10",
-        "jsr:@std/async",
-        "jsr:@std/data-structures",
-        "jsr:@std/fs@^1.0.9",
-        "jsr:@std/internal",
-        "jsr:@std/path@^1.0.8"
-      ]
     },
     "@ts-morph/bootstrap@0.24.0": {
       "integrity": "3fc85a47493dbb1da20e658d802137037f629d24a8098ddbace207c54e09cc0b",
@@ -373,7 +351,7 @@
       "jsr:@std/assert@1.0.11",
       "jsr:@std/encoding@1.0.6",
       "jsr:@std/fs@1.0.14",
-      "jsr:@std/testing@1.0.9",
+      "jsr:@std/testing@1.0.10",
       "npm:@resvg/resvg-js@2.6.2",
       "npm:@types/node@22.13.11",
       "npm:satori@0.12.1",

@@ -8,10 +8,7 @@
     "jsr:@std/assert@0.217": "0.217.0",
     "jsr:@std/assert@0.221": "0.221.0",
     "jsr:@std/assert@1.0.11": "1.0.11",
-    "jsr:@std/assert@^1.0.10": "1.0.11",
-    "jsr:@std/async@^1.0.9": "1.0.12",
     "jsr:@std/bytes@^1.0.5": "1.0.5",
-    "jsr:@std/data-structures@^1.0.6": "1.0.6",
     "jsr:@std/dotenv@0.225.3": "0.225.3",
     "jsr:@std/encoding@0.221": "0.221.0",
     "jsr:@std/encoding@1.0.7": "1.0.7",
@@ -19,13 +16,11 @@
     "jsr:@std/fmt@^1.0.3": "1.0.6",
     "jsr:@std/fs@0.221": "0.221.0",
     "jsr:@std/fs@^1.0.6": "1.0.14",
-    "jsr:@std/fs@^1.0.9": "1.0.14",
     "jsr:@std/internal@^1.0.5": "1.0.5",
     "jsr:@std/io@0.225": "0.225.2",
     "jsr:@std/path@0.217": "0.217.0",
     "jsr:@std/path@0.221": "0.221.0",
     "jsr:@std/path@^1.0.8": "1.0.8",
-    "jsr:@std/testing@1.0.9": "1.0.9",
     "npm:@resvg/resvg-js@2.6.2": "2.6.2",
     "npm:discord.js@14.18.0": "14.18.0",
     "npm:prisma@6.5.0": "6.5.0",
@@ -74,14 +69,8 @@
         "jsr:@std/internal"
       ]
     },
-    "@std/async@1.0.12": {
-      "integrity": "d1bfcec459e8012846fe4e38dfc4241ab23240ecda3d8d6dfcf6d81a632e803d"
-    },
     "@std/bytes@1.0.5": {
       "integrity": "4465dd739d7963d964c809202ebea6d5c6b8e3829ef25c6a224290fbb8a1021e"
-    },
-    "@std/data-structures@1.0.6": {
-      "integrity": "76a7fd8080c66604c0496220a791860492ab21a04a63a969c0b9a0609bbbb760"
     },
     "@std/dotenv@0.225.3": {
       "integrity": "7030dcf7e5509e05ff589d922b50c86000967ff69f542f0d794fefb46dbb035e"
@@ -106,10 +95,7 @@
       ]
     },
     "@std/fs@1.0.14": {
-      "integrity": "33eed9071074e3509f2ced80c831c1c53be111c368cb7180aabae1f226112587",
-      "dependencies": [
-        "jsr:@std/path@^1.0.8"
-      ]
+      "integrity": "33eed9071074e3509f2ced80c831c1c53be111c368cb7180aabae1f226112587"
     },
     "@std/internal@1.0.5": {
       "integrity": "dd405d856b94c05421af1fffc9bc50339d9b797214d6cead9acc4ce799b42fd4"
@@ -134,17 +120,6 @@
     },
     "@std/path@1.0.8": {
       "integrity": "81f12cb505c89b56afe707d8d0b99af44f2a79c42f79d8a95ba3933de8db1b66"
-    },
-    "@std/testing@1.0.9": {
-      "integrity": "0f51a98e608c011a74d6816f751445713765ace83a78ae46a3cf9e7c828cc561",
-      "dependencies": [
-        "jsr:@std/assert@^1.0.10",
-        "jsr:@std/async",
-        "jsr:@std/data-structures",
-        "jsr:@std/fs@^1.0.9",
-        "jsr:@std/internal",
-        "jsr:@std/path@^1.0.8"
-      ]
     }
   },
   "npm": {
@@ -393,8 +368,8 @@
         "undici-types"
       ]
     },
-    "@types/ws@8.18.0": {
-      "integrity": "sha512-8svvI3hMyvN0kKCJMvTJP/x6Y/EoQbepff882wL+Sn5QsXb3etnamgrJq4isrBxSJj5L2AuXcI0+bgkoAXGUJw==",
+    "@types/ws@8.18.1": {
+      "integrity": "sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==",
       "dependencies": [
         "@types/node"
       ]
@@ -989,7 +964,7 @@
       "jsr:@std/assert@1.0.11",
       "jsr:@std/dotenv@0.225.3",
       "jsr:@std/encoding@1.0.7",
-      "jsr:@std/testing@1.0.9",
+      "jsr:@std/testing@1.0.10",
       "npm:@resvg/resvg-js@2.6.2",
       "npm:discord.js@14.18.0",
       "npm:prisma@6.5.0",
