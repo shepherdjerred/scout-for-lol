@@ -29,7 +29,7 @@
     "npm:@resvg/resvg-js@2.6.2": "2.6.2",
     "npm:discord.js@14.18.0": "14.18.0",
     "npm:prisma@6.5.0": "6.5.0",
-    "npm:satori@0.12.1": "0.12.1",
+    "npm:satori@0.12.2": "0.12.2",
     "npm:yoga-wasm-web@0.3.3": "0.3.3"
   },
   "jsr": {
@@ -552,8 +552,8 @@
         "fsevents"
       ]
     },
-    "satori@0.12.1": {
-      "integrity": "sha512-0SbjchvDrDbeXeQgxWVtSWxww7qcFgk3DtSE2/blHOSlLsSHwIqO2fCrtVa/EudJ7Eqno8A33QNx56rUyGbLuw==",
+    "satori@0.12.2": {
+      "integrity": "sha512-3C/laIeE6UUe9A+iQ0A48ywPVCCMKCNSTU5Os101Vhgsjd3AAxGNjyq0uAA8kulMPK5n0csn8JlxPN9riXEjLA==",
       "dependencies": [
         "@shuding/opentype.js",
         "css-background-parser",
@@ -993,7 +993,7 @@
       "npm:@resvg/resvg-js@2.6.2",
       "npm:discord.js@14.18.0",
       "npm:prisma@6.5.0",
-      "npm:satori@0.12.1",
+      "npm:satori@0.12.2",
       "npm:yoga-wasm-web@0.3.3"
     ]
   }
