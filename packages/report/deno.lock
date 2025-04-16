@@ -10,8 +10,8 @@
     "jsr:@std/assert@0.223": "0.223.0",
     "jsr:@std/assert@0.226": "0.226.0",
     "jsr:@std/assert@1.0.11": "1.0.11",
-    "jsr:@std/assert@^1.0.10": "1.0.11",
-    "jsr:@std/async@^1.0.9": "1.0.12",
+    "jsr:@std/assert@^1.0.12": "1.0.12",
+    "jsr:@std/async@^1.0.12": "1.0.12",
     "jsr:@std/bytes@0.223": "0.223.0",
     "jsr:@std/bytes@^1.0.5": "1.0.5",
     "jsr:@std/data-structures@^1.0.6": "1.0.6",
@@ -22,10 +22,11 @@
     "jsr:@std/fs@0.223": "0.223.0",
     "jsr:@std/fs@1": "1.0.14",
     "jsr:@std/fs@1.0.14": "1.0.14",
-    "jsr:@std/fs@^1.0.6": "1.0.14",
-    "jsr:@std/fs@^1.0.9": "1.0.14",
+    "jsr:@std/fs@^1.0.16": "1.0.16",
+    "jsr:@std/fs@^1.0.6": "1.0.16",
     "jsr:@std/fs@~0.229.3": "0.229.3",
     "jsr:@std/internal@^1.0.5": "1.0.6",
+    "jsr:@std/internal@^1.0.6": "1.0.6",
     "jsr:@std/io@0.223": "0.223.0",
     "jsr:@std/io@0.225": "0.225.2",
     "jsr:@std/path@0.223": "0.223.0",
@@ -33,7 +34,7 @@
     "jsr:@std/path@1.0.0-rc.1": "1.0.0-rc.1",
     "jsr:@std/path@^1.0.8": "1.0.8",
     "jsr:@std/path@~0.225.2": "0.225.2",
-    "jsr:@std/testing@1.0.9": "1.0.9",
+    "jsr:@std/testing@1.0.11": "1.0.11",
     "jsr:@ts-morph/bootstrap@0.24": "0.24.0",
     "jsr:@ts-morph/common@0.24": "0.24.0",
     "npm:@resvg/resvg-js@2.6.2": "2.6.2",
@@ -91,7 +92,13 @@
     "@std/assert@1.0.11": {
       "integrity": "2461ef3c368fe88bc60e186e7744a93112f16fd110022e113a0849e94d1c83c1",
       "dependencies": [
-        "jsr:@std/internal"
+        "jsr:@std/internal@^1.0.5"
+      ]
+    },
+    "@std/assert@1.0.12": {
+      "integrity": "08009f0926dda9cbd8bef3a35d3b6a4b964b0ab5c3e140a4e0351fbf34af5b9a",
+      "dependencies": [
+        "jsr:@std/internal@^1.0.6"
       ]
     },
     "@std/async@1.0.12": {
@@ -130,6 +137,12 @@
         "jsr:@std/path@^1.0.8"
       ]
     },
+    "@std/fs@1.0.16": {
+      "integrity": "81878f62b6eeda0bf546197fc3daa5327c132fee1273f6113f940784a468b036",
+      "dependencies": [
+        "jsr:@std/path@^1.0.8"
+      ]
+    },
     "@std/internal@1.0.6": {
       "integrity": "9533b128f230f73bd209408bb07a4b12f8d4255ab2a4d22a1fd6d87304aca9a4"
     },
@@ -164,14 +177,14 @@
     "@std/path@1.0.8": {
       "integrity": "548fa456bb6a04d3c1a1e7477986b6cffbce95102d0bb447c67c4ee70e0364be"
     },
-    "@std/testing@1.0.9": {
-      "integrity": "9bdd4ac07cb13e7594ac30e90f6ceef7254ac83a9aeaa089be0008f33aab5cd4",
+    "@std/testing@1.0.11": {
+      "integrity": "12b3db12d34f0f385a26248933bde766c0f8c5ad8b6ab34d4d38f528ab852f48",
       "dependencies": [
-        "jsr:@std/assert@^1.0.10",
+        "jsr:@std/assert@^1.0.12",
         "jsr:@std/async",
         "jsr:@std/data-structures",
-        "jsr:@std/fs@^1.0.9",
-        "jsr:@std/internal",
+        "jsr:@std/fs@^1.0.16",
+        "jsr:@std/internal@^1.0.6",
         "jsr:@std/path@^1.0.8"
       ]
     },
@@ -373,7 +386,7 @@
       "jsr:@std/assert@1.0.11",
       "jsr:@std/encoding@1.0.6",
       "jsr:@std/fs@1.0.14",
-      "jsr:@std/testing@1.0.9",
+      "jsr:@std/testing@1.0.11",
       "npm:@resvg/resvg-js@2.6.2",
       "npm:@types/node@22.13.11",
       "npm:satori@0.12.1",
