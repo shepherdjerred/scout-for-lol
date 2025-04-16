@@ -19,10 +19,7 @@
  * @dataFirst
  * @category Array
  */
-declare function findLastIndex<T>(
-  data: ReadonlyArray<T>,
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean,
-): number;
+declare function findLastIndex<T>(data: ReadonlyArray<T>, predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean): number;
 /**
  * Iterates the array in reverse order and returns the index of the first
  * element that satisfies the provided testing function. If no elements satisfy
@@ -46,8 +43,6 @@ declare function findLastIndex<T>(
  * @dataLast
  * @category Array
  */
-declare function findLastIndex<T>(
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean,
-): (array: ReadonlyArray<T>) => number;
+declare function findLastIndex<T>(predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean): (array: ReadonlyArray<T>) => number;
 
 export { findLastIndex };

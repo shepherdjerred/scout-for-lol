@@ -1,4 +1,4 @@
 export declare class GameTypesDataDragonDTO {
-  gametype: string;
-  description: string;
+    gametype: string;
+    description: string;
 }

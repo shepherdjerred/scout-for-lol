@@ -1,4 +1,4 @@
-import { IsEqual } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { IsEqual } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 /**
  * Takes an array and returns the types that make up its parts. The prefix is
@@ -19,35 +19,19 @@ import { IsEqual } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
  *   ...TupleParts<T>["suffix"],
  * ]`.
  */
-type TupleParts<
-  T,
-  PrefixRequired extends Array<unknown> = [],
-  PrefixOptionals extends Array<unknown> = [],
-  Suffix extends Array<unknown> = [],
-> = T extends readonly [infer Head, ...infer Tail]
-  ? TupleParts<Tail, [...PrefixRequired, Head], PrefixOptionals, Suffix>
-  : T extends readonly [...infer Head, infer Tail]
-    ? TupleParts<Head, PrefixRequired, PrefixOptionals, [Tail, ...Suffix]>
-  : IsTupleRestOnly<T> extends true ? T extends ReadonlyArray<infer Item> ? {
-        prefix: [...PrefixRequired, ...Partial<PrefixOptionals>];
-        required: PrefixRequired;
-        optional: PrefixOptionals;
-        item: Item;
-        suffix: Suffix;
-      }
-    : never
-  : T extends readonly [(infer OptionalHead)?, ...infer Tail]
-    ? TupleParts<Tail, PrefixRequired, [
-      ...PrefixOptionals,
-      OptionalHead,
-    ], Suffix>
-  : never;
+type TupleParts<T, PrefixRequired extends Array<unknown> = [], PrefixOptionals extends Array<unknown> = [], Suffix extends Array<unknown> = []> = T extends readonly [infer Head, ...infer Tail] ? TupleParts<Tail, [...PrefixRequired, Head], PrefixOptionals, Suffix> : T extends readonly [...infer Head, infer Tail] ? TupleParts<Head, PrefixRequired, PrefixOptionals, [Tail, ...Suffix]> : IsTupleRestOnly<T> extends true ? T extends ReadonlyArray<infer Item> ? {
+    prefix: [...PrefixRequired, ...Partial<PrefixOptionals>];
+    required: PrefixRequired;
+    optional: PrefixOptionals;
+    item: Item;
+    suffix: Suffix;
+} : never : T extends readonly [(infer OptionalHead)?, ...infer Tail] ? TupleParts<Tail, PrefixRequired, [
+    ...PrefixOptionals,
+    OptionalHead
+], Suffix> : never;
 /**
  * Helper type for `TupleParts`. Checks if T = ReadonlyArray<U> for some U.
  */
-type IsTupleRestOnly<T> = T extends readonly [] ? true
-  : T extends readonly [unknown?, ...infer Tail]
-    ? IsEqual<Readonly<T>, Readonly<Tail>>
-  : false;
+type IsTupleRestOnly<T> = T extends readonly [] ? true : T extends readonly [unknown?, ...infer Tail] ? IsEqual<Readonly<T>, Readonly<Tail>> : false;
 
 export type { TupleParts as T };

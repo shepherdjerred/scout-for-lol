@@ -1,5 +1,5 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
-import { M as Mapped } from "./Mapped-oLjj1faZ.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
+import { M as Mapped } from './Mapped-oLjj1faZ.d.ts';
 
 /**
  * Creates a new array populated with the results of calling a provided function
@@ -20,10 +20,7 @@ import { M as Mapped } from "./Mapped-oLjj1faZ.d.ts";
  * @lazy
  * @category Array
  */
-declare function map<T extends IterableContainer, U>(
-  data: T,
-  callbackfn: (value: T[number], index: number, data: T) => U,
-): Mapped<T, U>;
+declare function map<T extends IterableContainer, U>(data: T, callbackfn: (value: T[number], index: number, data: T) => U): Mapped<T, U>;
 /**
  * Creates a new array populated with the results of calling a provided function
  * on every element in the calling array. Equivalent to `Array.prototype.map`.
@@ -42,8 +39,6 @@ declare function map<T extends IterableContainer, U>(
  * @lazy
  * @category Array
  */
-declare function map<T extends IterableContainer, U>(
-  callbackfn: (value: T[number], index: number, data: T) => U,
-): (data: T) => Mapped<T, U>;
+declare function map<T extends IterableContainer, U>(callbackfn: (value: T[number], index: number, data: T) => U): (data: T) => Mapped<T, U>;
 
 export { map };

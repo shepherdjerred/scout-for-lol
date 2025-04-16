@@ -1,21 +1,8 @@
-import {
-  GreaterThan,
-  GreaterThanOrEqual,
-  IsEqual,
-  IsNever,
-  NonNegativeInteger,
-  Or,
-} from "https://esm.sh/type-fest@4.37.0/index.d.ts";
-import { I as IntRangeInclusive } from "./IntRangeInclusive-Cn-qsrAN.d.ts";
+import { Or, IsNever, NonNegativeInteger, IsEqual, GreaterThan, GreaterThanOrEqual } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
+import { I as IntRangeInclusive } from './IntRangeInclusive-Cn-qsrAN.d.ts';
 
 type MaxLiteral = 1000;
-type RandomInteger<From extends number, To extends number> =
-  Or<IsNever<NonNegativeInteger<From>>, IsNever<NonNegativeInteger<To>>> extends
-    true ? number
-    : IsEqual<From, To> extends true ? From
-    : GreaterThan<From, To> extends true ? never
-    : GreaterThanOrEqual<To, MaxLiteral> extends true ? number
-    : IntRangeInclusive<From, To>;
+type RandomInteger<From extends number, To extends number> = Or<IsNever<NonNegativeInteger<From>>, IsNever<NonNegativeInteger<To>>> extends true ? number : IsEqual<From, To> extends true ? From : GreaterThan<From, To> extends true ? never : GreaterThanOrEqual<To, MaxLiteral> extends true ? number : IntRangeInclusive<From, To>;
 /**
  * Generate a random integer between `from` and `to` (inclusive).
  *
@@ -37,9 +24,6 @@ type RandomInteger<From extends number, To extends number> =
  * @dataFirst
  * @category Number
  */
-declare function randomInteger<From extends number, To extends number>(
-  from: From,
-  to: To,
-): RandomInteger<From, To>;
+declare function randomInteger<From extends number, To extends number>(from: From, to: To): RandomInteger<From, To>;
 
 export { randomInteger };

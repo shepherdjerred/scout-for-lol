@@ -97,11 +97,10 @@ class DenoRuntimeFileSystem {
       const stat = await Deno.stat(filePath);
       return this.#toStat(stat);
     } catch (err) {
-      if (err instanceof Deno.errors.NotFound) {
+      if (err instanceof Deno.errors.NotFound)
         return undefined;
-      } else {
+      else
         throw err;
-      }
     }
   }
 
@@ -110,11 +109,10 @@ class DenoRuntimeFileSystem {
       const stat = Deno.statSync(path);
       return this.#toStat(stat);
     } catch (err) {
-      if (err instanceof Deno.errors.NotFound) {
+      if (err instanceof Deno.errors.NotFound)
         return undefined;
-      } else {
+      else
         throw err;
-      }
     }
   }
 
@@ -148,9 +146,8 @@ class DenoRuntimeFileSystem {
       exclude: excludePatterns,
     });
     for await (const globEntry of globEntries) {
-      if (globEntry.isFile) {
+      if (globEntry.isFile)
         result.push(globEntry.path);
-      }
     }
     return result;
   }
@@ -165,9 +162,8 @@ class DenoRuntimeFileSystem {
       exclude: excludePatterns,
     });
     for (const globEntry of globEntries) {
-      if (globEntry.isFile) {
+      if (globEntry.isFile)
         result.push(globEntry.path);
-      }
     }
     return result;
   }
@@ -183,20 +179,15 @@ function globPatternsToPattern(patterns: ReadonlyArray<string>) {
   const includePatterns = [];
 
   for (const pattern of patterns) {
-    if (isNegatedGlob(pattern)) {
+    if (isNegatedGlob(pattern))
       excludePatterns.push(pattern);
-    } else {
+    else
       includePatterns.push(pattern);
-    }
   }
 
   return {
     excludePatterns,
-    pattern: includePatterns.length === 0
-      ? "."
-      : includePatterns.length === 1
-      ? includePatterns[0]
-      : `{${includePatterns.join(",")}}`,
+    pattern: includePatterns.length === 0 ? "." : includePatterns.length === 1 ? includePatterns[0] : `{${includePatterns.join(",")}}`,
   };
 
   function isNegatedGlob(glob: string) {

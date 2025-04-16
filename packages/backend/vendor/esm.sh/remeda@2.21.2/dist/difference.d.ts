@@ -14,10 +14,7 @@
  * @lazy
  * @category Array
  */
-declare function difference<T>(
-  data: ReadonlyArray<T>,
-  other: ReadonlyArray<T>,
-): Array<T>;
+declare function difference<T>(data: ReadonlyArray<T>, other: ReadonlyArray<T>): Array<T>;
 /**
  * Excludes the values from `other` array. The output maintains the same order
  * as the input. The inputs are treated as multi-sets/bags (multiple copies of
@@ -33,8 +30,6 @@ declare function difference<T>(
  * @lazy
  * @category Array
  */
-declare function difference<T>(
-  other: ReadonlyArray<T>,
-): (data: ReadonlyArray<T>) => Array<T>;
+declare function difference<T>(other: ReadonlyArray<T>): (data: ReadonlyArray<T>) => Array<T>;
 
 export { difference };

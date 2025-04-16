@@ -1,5 +1,5 @@
-import { N as NarrowedTo } from "./NarrowedTo-CDIykNaN.d.ts";
-import "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { N as NarrowedTo } from './NarrowedTo-CDIykNaN.d.ts';
+import 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 /**
  * A function that checks if the passed parameter is a string and narrows its type accordingly.

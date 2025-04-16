@@ -1,6 +1,6 @@
-import type { IsTuple } from "./is-tuple.d.ts";
-import type { UnknownArray } from "./unknown-array.d.ts";
-import type { IfAny } from "./if-any.d.ts";
+import type {IsTuple} from './is-tuple.d.ts';
+import type {UnknownArray} from './unknown-array.d.ts';
+import type {IfAny} from './if-any.d.ts';
 
 /**
 Transforms a tuple into an object, mapping each tuple index to its corresponding type as a key-value pair.
@@ -35,14 +35,8 @@ type Example6 = TupleToObject<[x: number, y: number]>;
 
 @category Array
 */
-export type TupleToObject<TArray extends UnknownArray> = IfAny<
-  TArray,
-  any,
-  {
-    [
-      Key in keyof TArray as
-        & Key
-        & (`${number}` | (IsTuple<TArray> extends true ? never : number))
-    ]: TArray[Key];
-  }
->;
+export type TupleToObject<TArray extends UnknownArray> = IfAny<TArray, any, {
+	[
+	Key in keyof TArray as Key & (`${number}` | (IsTuple<TArray> extends true ? never : number))
+	]: TArray[Key];
+}>;

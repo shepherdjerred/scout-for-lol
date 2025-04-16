@@ -35,8 +35,6 @@ declare function tap<T>(value: T, fn: (value: T) => void): T;
  * @dataLast
  * @category Other
  */
-declare function tap<T, F extends (value: T) => unknown>(
-  fn: F,
-): (value: T) => T;
+declare function tap<T, F extends (value: T) => unknown>(fn: F): (value: T) => T;
 
 export { tap };

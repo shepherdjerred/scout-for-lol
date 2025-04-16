@@ -1,1 +1,1 @@
-export * from "./api-response.d.ts";
+export * from './api-response.d.ts';

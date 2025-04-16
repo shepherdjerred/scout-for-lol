@@ -1,4 +1,4 @@
-import { G as GuardType } from "./GuardType-C8IpVeqb.d.ts";
+import { G as GuardType } from './GuardType-C8IpVeqb.d.ts';
 
 /**
  * Conditionally run a function based on a predicate, returning it's result (similar to
@@ -28,40 +28,11 @@ import { G as GuardType } from "./GuardType-C8IpVeqb.d.ts";
  * @dataLast
  * @category Function
  */
-declare function when<
-  T,
-  ExtraArgs extends Array<any>,
-  Predicate extends (data: T, ...extraArgs: ExtraArgs) => boolean,
-  OnTrue extends (
-    data: GuardType<Predicate, T>,
-    ...extraArgs: ExtraArgs
-  ) => unknown,
->(
-  predicate: Predicate,
-  onTrue: OnTrue,
-): (
-  data: T,
-  ...extraArgs: ExtraArgs
-) => Exclude<T, GuardType<Predicate>> | ReturnType<OnTrue>;
-declare function when<
-  T,
-  ExtraArgs extends Array<any>,
-  Predicate extends (data: T, ...extraArgs: ExtraArgs) => boolean,
-  OnTrue extends (
-    data: GuardType<Predicate, T>,
-    ...extraArgs: ExtraArgs
-  ) => unknown,
-  OnFalse extends (
-    data: Exclude<T, GuardType<Predicate>>,
-    ...extraArgs: ExtraArgs
-  ) => unknown,
->(predicate: Predicate, branches: {
-  readonly onTrue: OnTrue;
-  readonly onFalse: OnFalse;
-}): (
-  data: T,
-  ...extraArgs: ExtraArgs
-) => ReturnType<OnFalse> | ReturnType<OnTrue>;
+declare function when<T, ExtraArgs extends Array<any>, Predicate extends (data: T, ...extraArgs: ExtraArgs) => boolean, OnTrue extends (data: GuardType<Predicate, T>, ...extraArgs: ExtraArgs) => unknown>(predicate: Predicate, onTrue: OnTrue): (data: T, ...extraArgs: ExtraArgs) => Exclude<T, GuardType<Predicate>> | ReturnType<OnTrue>;
+declare function when<T, ExtraArgs extends Array<any>, Predicate extends (data: T, ...extraArgs: ExtraArgs) => boolean, OnTrue extends (data: GuardType<Predicate, T>, ...extraArgs: ExtraArgs) => unknown, OnFalse extends (data: Exclude<T, GuardType<Predicate>>, ...extraArgs: ExtraArgs) => unknown>(predicate: Predicate, branches: {
+    readonly onTrue: OnTrue;
+    readonly onFalse: OnFalse;
+}): (data: T, ...extraArgs: ExtraArgs) => ReturnType<OnFalse> | ReturnType<OnTrue>;
 /**
  * Conditionally run a function based on a predicate, returning it's result (similar to
  * the [`?:` (ternary) operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Conditional_operator).)
@@ -94,35 +65,10 @@ declare function when<
  * @dataFirst
  * @category Function
  */
-declare function when<
-  T,
-  ExtraArgs extends Array<any>,
-  Predicate extends (data: T, ...extraArgs: ExtraArgs) => boolean,
-  OnTrue extends (
-    data: GuardType<Predicate, T>,
-    ...extraArgs: ExtraArgs
-  ) => unknown,
->(
-  data: T,
-  predicate: Predicate,
-  onTrue: OnTrue,
-  ...extraArgs: ExtraArgs
-): Exclude<T, GuardType<Predicate>> | ReturnType<OnTrue>;
-declare function when<
-  T,
-  ExtraArgs extends Array<any>,
-  Predicate extends (data: T, ...extraArgs: ExtraArgs) => boolean,
-  OnTrue extends (
-    data: GuardType<Predicate, T>,
-    ...extraArgs: ExtraArgs
-  ) => unknown,
-  OnFalse extends (
-    data: Exclude<T, GuardType<Predicate>>,
-    ...extraArgs: ExtraArgs
-  ) => unknown,
->(data: T, predicate: Predicate, branches: {
-  readonly onTrue: OnTrue;
-  readonly onFalse: OnFalse;
+declare function when<T, ExtraArgs extends Array<any>, Predicate extends (data: T, ...extraArgs: ExtraArgs) => boolean, OnTrue extends (data: GuardType<Predicate, T>, ...extraArgs: ExtraArgs) => unknown>(data: T, predicate: Predicate, onTrue: OnTrue, ...extraArgs: ExtraArgs): Exclude<T, GuardType<Predicate>> | ReturnType<OnTrue>;
+declare function when<T, ExtraArgs extends Array<any>, Predicate extends (data: T, ...extraArgs: ExtraArgs) => boolean, OnTrue extends (data: GuardType<Predicate, T>, ...extraArgs: ExtraArgs) => unknown, OnFalse extends (data: Exclude<T, GuardType<Predicate>>, ...extraArgs: ExtraArgs) => unknown>(data: T, predicate: Predicate, branches: {
+    readonly onTrue: OnTrue;
+    readonly onFalse: OnFalse;
 }, ...extraArgs: ExtraArgs): ReturnType<OnFalse> | ReturnType<OnTrue>;
 
 export { when };

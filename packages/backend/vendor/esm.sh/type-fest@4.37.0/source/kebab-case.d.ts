@@ -1,5 +1,5 @@
-import type { DelimiterCase } from "./delimiter-case.d.ts";
-import type { WordsOptions } from "./words.d.ts";
+import type {DelimiterCase} from './delimiter-case.d.ts';
+import type {WordsOptions} from './words.d.ts';
 
 /**
 Convert a string literal to kebab-case.
@@ -38,6 +38,6 @@ const rawCliOptions: KebabCasedProperties<CliOptions> = {
 @category Template literal
 */
 export type KebabCase<
-  Value,
-  Options extends WordsOptions = { splitOnNumbers: false },
-> = DelimiterCase<Value, "-", Options>;
+	Value,
+	Options extends WordsOptions = {splitOnNumbers: false},
+> = DelimiterCase<Value, '-', Options>;

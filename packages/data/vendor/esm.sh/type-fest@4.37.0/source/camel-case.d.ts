@@ -1,4 +1,4 @@
-import type { Words } from "./words.d.ts";
+import type {Words} from './words.d.ts';
 
 /**
 CamelCase options.
@@ -6,32 +6,29 @@ CamelCase options.
 @see {@link CamelCase}
 */
 export type CamelCaseOptions = {
-  /**
+	/**
 	Whether to preserved consecutive uppercase letter.
 
 	@default true
 	*/
-  preserveConsecutiveUppercase?: boolean;
+	preserveConsecutiveUppercase?: boolean;
 };
 
 /**
 Convert an array of words to camel-case.
 */
 type CamelCaseFromArray<
-  Words extends string[],
-  Options extends CamelCaseOptions,
-  OutputString extends string = "",
+	Words extends string[],
+	Options extends CamelCaseOptions,
+	OutputString extends string = '',
 > = Words extends [
-  infer FirstWord extends string,
-  ...infer RemainingWords extends string[],
+	infer FirstWord extends string,
+	...infer RemainingWords extends string[],
 ]
-  ? Options["preserveConsecutiveUppercase"] extends true
-    ? `${Capitalize<FirstWord>}${CamelCaseFromArray<RemainingWords, Options>}`
-  : `${Capitalize<Lowercase<FirstWord>>}${CamelCaseFromArray<
-    RemainingWords,
-    Options
-  >}`
-  : OutputString;
+	? Options['preserveConsecutiveUppercase'] extends true
+		? `${Capitalize<FirstWord>}${CamelCaseFromArray<RemainingWords, Options>}`
+		: `${Capitalize<Lowercase<FirstWord>>}${CamelCaseFromArray<RemainingWords, Options>}`
+	: OutputString;
 
 /**
 Convert a string literal to camel-case.
@@ -76,14 +73,8 @@ const dbResult: CamelCasedProperties<RawOptions> = {
 @category Change case
 @category Template literal
 */
-export type CamelCase<
-  Type,
-  Options extends CamelCaseOptions = { preserveConsecutiveUppercase: true },
-> = Type extends string ? string extends Type ? Type
-  : Uncapitalize<
-    CamelCaseFromArray<
-      Words<Type extends Uppercase<Type> ? Lowercase<Type> : Type>,
-      Options
-    >
-  >
-  : Type;
+export type CamelCase<Type, Options extends CamelCaseOptions = {preserveConsecutiveUppercase: true}> = Type extends string
+	? string extends Type
+		? Type
+		: Uncapitalize<CamelCaseFromArray<Words<Type extends Uppercase<Type> ? Lowercase<Type> : Type>, Options>>
+	: Type;

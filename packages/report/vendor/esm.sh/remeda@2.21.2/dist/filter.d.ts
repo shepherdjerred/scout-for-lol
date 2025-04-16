@@ -17,14 +17,8 @@
  * @lazy
  * @category Array
  */
-declare function filter<T, S extends T>(
-  data: ReadonlyArray<T>,
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => value is S,
-): Array<S>;
-declare function filter<T>(
-  data: ReadonlyArray<T>,
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean,
-): Array<T>;
+declare function filter<T, S extends T>(data: ReadonlyArray<T>, predicate: (value: T, index: number, data: ReadonlyArray<T>) => value is S): Array<S>;
+declare function filter<T>(data: ReadonlyArray<T>, predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean): Array<T>;
 /**
  * Creates a shallow copy of a portion of a given array, filtered down to just
  * the elements from the given array that pass the test implemented by the
@@ -43,11 +37,7 @@ declare function filter<T>(
  * @lazy
  * @category Array
  */
-declare function filter<T, S extends T>(
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => value is S,
-): (data: ReadonlyArray<T>) => Array<S>;
-declare function filter<T>(
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean,
-): (data: ReadonlyArray<T>) => Array<T>;
+declare function filter<T, S extends T>(predicate: (value: T, index: number, data: ReadonlyArray<T>) => value is S): (data: ReadonlyArray<T>) => Array<S>;
+declare function filter<T>(predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean): (data: ReadonlyArray<T>) => Array<T>;
 
 export { filter };

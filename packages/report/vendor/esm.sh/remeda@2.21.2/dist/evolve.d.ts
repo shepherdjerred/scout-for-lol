@@ -1,4 +1,4 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
 /**
  * Creates an assumed `evolver` type from the type of `data` argument.
@@ -22,19 +22,14 @@ import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
  * // };
  */
 type Evolver<T> = T extends object ? T extends IterableContainer ? never : {
-    readonly [K in keyof T]?: K extends symbol ? never
-      : Evolver<T[K]> | ((data: Required<T>[K]) => unknown);
-  }
-  : never;
+    readonly [K in keyof T]?: K extends symbol ? never : Evolver<T[K]> | ((data: Required<T>[K]) => unknown);
+} : never;
 /**
  * Creates return type from the type of arguments of `evolve`.
  */
 type Evolved<T, E> = T extends object ? {
-    -readonly [K in keyof T]: K extends keyof E
-      ? E[K] extends (...arg: any) => infer R ? R : Evolved<T[K], E[K]>
-      : Required<T>[K];
-  }
-  : T;
+    -readonly [K in keyof T]: K extends keyof E ? E[K] extends (...arg: any) => infer R ? R : Evolved<T[K], E[K]> : Required<T>[K];
+} : T;
 /**
  * Creates a new object by applying functions that is included in `evolver` object parameter
  * to the `data` object parameter according to their corresponding path.
@@ -69,10 +64,7 @@ type Evolved<T, E> = T extends object ? {
  * @dataFirst
  * @category Object
  */
-declare function evolve<T extends object, E extends Evolver<T>>(
-  object: T,
-  evolver: E,
-): Evolved<T, E>;
+declare function evolve<T extends object, E extends Evolver<T>>(object: T, evolver: E): Evolved<T, E>;
 /**
  * Creates a new object by applying functions that is included in `evolver` object parameter
  * to the `data` object parameter according to their corresponding path.
@@ -105,8 +97,6 @@ declare function evolve<T extends object, E extends Evolver<T>>(
  * @dataLast
  * @category Object
  */
-declare function evolve<T extends object, E extends Evolver<T>>(
-  evolver: E,
-): (object: T) => Evolved<T, E>;
+declare function evolve<T extends object, E extends Evolver<T>>(evolver: E): (object: T) => Evolved<T, E>;
 
 export { evolve };

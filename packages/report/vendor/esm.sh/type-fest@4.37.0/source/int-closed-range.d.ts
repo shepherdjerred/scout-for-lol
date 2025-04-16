@@ -1,5 +1,5 @@
-import type { IntRange } from "./int-range.d.ts";
-import type { Sum } from "./sum.d.ts";
+import type {IntRange} from './int-range.d.ts';
+import type {Sum} from './sum.d.ts';
 
 /**
 Generate a union of numbers.
@@ -32,8 +32,4 @@ type Hundreds = IntClosedRange<100, 900, 100>;
 
 @see IntRange
 */
-export type IntClosedRange<
-  Start extends number,
-  End extends number,
-  Skip extends number = 1,
-> = IntRange<Start, Sum<End, 1>, Skip>;
+export type IntClosedRange<Start extends number, End extends number, Skip extends number = 1> = IntRange<Start, Sum<End, 1>, Skip>;

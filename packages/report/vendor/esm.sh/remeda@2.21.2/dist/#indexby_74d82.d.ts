@@ -1,6 +1,6 @@
-import { E as ExactRecord } from "./ExactRecord-or8-oNP7.d.ts";
-import "./IfBoundedRecord-WIX9x_oz.d.ts";
-import "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { E as ExactRecord } from './ExactRecord-or8-oNP7.d.ts';
+import './IfBoundedRecord-WIX9x_oz.d.ts';
+import 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 /**
  * Converts a list of objects into an object indexing the objects by the given
@@ -23,10 +23,7 @@ import "https://esm.sh/type-fest@4.37.0/index.d.ts";
  * @dataFirst
  * @category Array
  */
-declare function indexBy<T, K extends PropertyKey>(
-  data: ReadonlyArray<T>,
-  mapper: (item: T, index: number, data: ReadonlyArray<T>) => K,
-): ExactRecord<K, T>;
+declare function indexBy<T, K extends PropertyKey>(data: ReadonlyArray<T>, mapper: (item: T, index: number, data: ReadonlyArray<T>) => K): ExactRecord<K, T>;
 /**
  * Converts a list of objects into an object indexing the objects by the given
  * key.
@@ -50,8 +47,6 @@ declare function indexBy<T, K extends PropertyKey>(
  * @dataLast
  * @category Array
  */
-declare function indexBy<T, K extends PropertyKey>(
-  mapper: (item: T, index: number, data: ReadonlyArray<T>) => K,
-): (data: ReadonlyArray<T>) => ExactRecord<K, T>;
+declare function indexBy<T, K extends PropertyKey>(mapper: (item: T, index: number, data: ReadonlyArray<T>) => K): (data: ReadonlyArray<T>) => ExactRecord<K, T>;
 
 export { indexBy };

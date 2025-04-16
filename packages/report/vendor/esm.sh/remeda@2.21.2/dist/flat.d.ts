@@ -1,34 +1,19 @@
-import { IsNumericLiteral } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { IsNumericLiteral } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
-type FlatArray<
-  T,
-  Depth extends number,
-  Iteration extends ReadonlyArray<unknown> = [],
-> = Depth extends Iteration["length"] ? T
-  : T extends readonly [] ? []
-  : T extends readonly [infer Item, ...infer Rest] ? [
-      ...(Item extends IterableContainer
-        ? FlatArray<Item, Depth, [...Iteration, unknown]>
-        : [
-          Item,
-        ]),
-      ...FlatArray<Rest, Depth, Iteration>,
-    ]
-  : Array<FlatSimpleArrayItems<T, Depth, Iteration>>;
-type FlatSimpleArrayItems<
-  T,
-  Depth extends number,
-  Iteration extends ReadonlyArray<unknown> = [],
-  IsDone extends boolean = false,
-> = {
-  done: T;
-  recur: T extends ReadonlyArray<infer InnerArr>
-    ? FlatSimpleArrayItems<InnerArr, Depth, [
-      ...Iteration,
-      unknown,
-    ], Iteration["length"] extends Depth ? true : false>
-    : T;
+type FlatArray<T, Depth extends number, Iteration extends ReadonlyArray<unknown> = []> = Depth extends Iteration["length"] ? T : T extends readonly [] ? [
+] : T extends readonly [infer Item, ...infer Rest] ? [
+    ...(Item extends IterableContainer ? FlatArray<Item, Depth, [...Iteration, unknown]> : [
+        Item
+    ]),
+    ...FlatArray<Rest, Depth, Iteration>
+] : Array<FlatSimpleArrayItems<T, Depth, Iteration>>;
+type FlatSimpleArrayItems<T, Depth extends number, Iteration extends ReadonlyArray<unknown> = [], IsDone extends boolean = false> = {
+    done: T;
+    recur: T extends ReadonlyArray<infer InnerArr> ? FlatSimpleArrayItems<InnerArr, Depth, [
+        ...Iteration,
+        unknown
+    ], Iteration["length"] extends Depth ? true : false> : T;
 }[IsDone extends true ? "done" : "recur"];
 /**
  * Creates a new array with all sub-array elements concatenated into it
@@ -52,10 +37,7 @@ type FlatSimpleArrayItems<
  * @lazy
  * @category Array
  */
-declare function flat<T extends IterableContainer, Depth extends number = 1>(
-  data: T,
-  depth?: IsNumericLiteral<Depth> extends true ? Depth : never,
-): FlatArray<T, Depth>;
+declare function flat<T extends IterableContainer, Depth extends number = 1>(data: T, depth?: IsNumericLiteral<Depth> extends true ? Depth : never): FlatArray<T, Depth>;
 /**
  * Creates a new array with all sub-array elements concatenated into it
  * recursively up to the specified depth. Equivalent to the built-in
@@ -73,8 +55,6 @@ declare function flat<T extends IterableContainer, Depth extends number = 1>(
  * @lazy
  * @category Array
  */
-declare function flat<Depth extends number = 1>(
-  depth?: IsNumericLiteral<Depth> extends true ? Depth : never,
-): <T extends IterableContainer>(data: T) => FlatArray<T, Depth>;
+declare function flat<Depth extends number = 1>(depth?: IsNumericLiteral<Depth> extends true ? Depth : never): <T extends IterableContainer>(data: T) => FlatArray<T, Depth>;
 
 export { flat };

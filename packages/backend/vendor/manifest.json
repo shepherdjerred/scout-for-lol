@@ -52,7 +52,7 @@
     },
     "https://esm.sh/@types/react@~19.0.7/index.d.ts": {
       "headers": {
-        "location": "https://esm.sh/@types/react@19.0.12/index.d.ts"
+        "location": "https://esm.sh/@types/react@19.0.14/index.d.ts"
       }
     },
     "https://esm.sh/asynckit@0.4.0?target=denonext": {
@@ -63,24 +63,6 @@
     "https://esm.sh/asynckit@^0.4.0?target=denonext": {
       "headers": {
         "location": "https://esm.sh/asynckit@0.4.0?target=denonext"
-      }
-    },
-    "https://esm.sh/axios@1.8.3/denonext/lib/cancel/CanceledError.mjs": {},
-    "https://esm.sh/axios@1.8.3/denonext/lib/core/AxiosError.mjs": {},
-    "https://esm.sh/axios@1.8.3/denonext/lib/core/AxiosHeaders.mjs": {},
-    "https://esm.sh/axios@1.8.3/denonext/lib/core/mergeConfig.mjs": {},
-    "https://esm.sh/axios@1.8.3/denonext/lib/helpers/AxiosURLSearchParams.mjs": {},
-    "https://esm.sh/axios@1.8.3/denonext/lib/helpers/progressEventReducer.mjs": {},
-    "https://esm.sh/axios@1.8.3/denonext/lib/helpers/resolveConfig.mjs": {},
-    "https://esm.sh/axios@1.8.3/denonext/lib/helpers/toFormData.mjs": {},
-    "https://esm.sh/axios@1.8.3/denonext/unsafe/core/buildFullPath.mjs": {},
-    "https://esm.sh/axios@1.8.3/denonext/unsafe/helpers/buildURL.mjs": {},
-    "https://esm.sh/axios@1.8.3/denonext/unsafe/helpers/combineURLs.mjs": {},
-    "https://esm.sh/axios@1.8.3/denonext/unsafe/helpers/isAbsoluteURL.mjs": {},
-    "https://esm.sh/axios@1.8.3?target=denonext": {
-      "headers": {
-        "content-type": "application/javascript; charset=utf-8",
-        "x-typescript-types": "https://esm.sh/axios@1.8.3/index.d.ts"
       }
     },
     "https://esm.sh/axios@1.8.4/denonext/lib/cancel/CanceledError.mjs": {},
@@ -115,12 +97,6 @@
     "https://esm.sh/combined-stream@^1.0.8?target=denonext": {
       "headers": {
         "location": "https://esm.sh/combined-stream@1.0.8?target=denonext"
-      }
-    },
-    "https://esm.sh/cron@4.1.0": {
-      "headers": {
-        "content-type": "application/javascript; charset=utf-8",
-        "x-typescript-types": "https://esm.sh/cron@4.1.0/dist/index.d.ts"
       }
     },
     "https://esm.sh/cron@4.1.4": {
@@ -646,15 +622,15 @@
         "location": "https://esm.sh/delayed-stream@1.0.0?target=denonext"
       }
     },
-    "https://esm.sh/dotenv@16.4.7?target=denonext": {
+    "https://esm.sh/dotenv@16.5.0?target=denonext": {
       "headers": {
         "content-type": "application/javascript; charset=utf-8",
-        "x-typescript-types": "https://esm.sh/dotenv@16.4.7/lib/main.d.ts"
+        "x-typescript-types": "https://esm.sh/dotenv@16.5.0/lib/main.d.ts"
       }
     },
     "https://esm.sh/dotenv@^16.3.1?target=denonext": {
       "headers": {
-        "location": "https://esm.sh/dotenv@16.4.7?target=denonext"
+        "location": "https://esm.sh/dotenv@16.5.0?target=denonext"
       }
     },
     "https://esm.sh/empty-npm-package@1.0.0": {
@@ -712,21 +688,10 @@
         "location": "https://esm.sh/lodash@4.17.21?target=denonext"
       }
     },
-    "https://esm.sh/luxon@3.5.0?target=denonext": {
-      "headers": {
-        "content-type": "application/javascript; charset=utf-8",
-        "x-typescript-types": "https://esm.sh/@types/luxon@~3.4.2/index.d.ts"
-      }
-    },
     "https://esm.sh/luxon@3.6.1?target=denonext": {
       "headers": {
         "content-type": "application/javascript; charset=utf-8",
         "x-typescript-types": "https://esm.sh/@types/luxon@~3.4.2/index.d.ts"
-      }
-    },
-    "https://esm.sh/luxon@~3.5.0?target=denonext": {
-      "headers": {
-        "location": "https://esm.sh/luxon@3.5.0?target=denonext"
       }
     },
     "https://esm.sh/luxon@~3.6.0?target=denonext": {

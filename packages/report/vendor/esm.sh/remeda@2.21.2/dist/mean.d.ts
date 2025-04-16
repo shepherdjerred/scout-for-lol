@@ -1,8 +1,6 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
-type Mean<T extends IterableContainer<number>> =
-  | (T extends readonly [] ? never : number)
-  | (T extends readonly [unknown, ...Array<unknown>] ? never : undefined);
+type Mean<T extends IterableContainer<number>> = (T extends readonly [] ? never : number) | (T extends readonly [unknown, ...Array<unknown>] ? never : undefined);
 /**
  * Returns the mean of the elements of an array.
  *
@@ -43,8 +41,6 @@ declare function mean<T extends IterableContainer<number>>(data: T): Mean<T>;
  * @dataLast
  * @category Number
  */
-declare function mean(): <T extends IterableContainer<number>>(
-  data: T,
-) => Mean<T>;
+declare function mean(): <T extends IterableContainer<number>>(data: T) => Mean<T>;
 
 export { mean };

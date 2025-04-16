@@ -4,8 +4,8 @@
 //                 Maple Miao <https://github.com/mapleeit>
 
 // ignored <reference types="node" />
-import * as stream from "node:stream";
-import * as http from "node:http";
+import * as stream from 'node:stream';
+import * as http from 'node:http';
 
 export = FormData;
 
@@ -15,11 +15,7 @@ interface ReadableOptions {
   encoding?: string;
   objectMode?: boolean;
   read?(this: stream.Readable, size: number): void;
-  destroy?(
-    this: stream.Readable,
-    error: Error | null,
-    callback: (error: Error | null) => void,
-  ): void;
+  destroy?(this: stream.Readable, error: Error | null, callback: (error: Error | null) => void): void;
   autoDestroy?: boolean;
 }
 
@@ -33,15 +29,11 @@ interface Options extends ReadableOptions {
 
 declare class FormData extends stream.Readable {
   constructor(options?: Options);
-  append(
-    key: string,
-    value: any,
-    options?: FormData.AppendOptions | string,
-  ): void;
+  append(key: string, value: any, options?: FormData.AppendOptions | string): void;
   getHeaders(userHeaders?: FormData.Headers): FormData.Headers;
   submit(
     params: string | FormData.SubmitOptions,
-    callback?: (error: Error | null, response: http.IncomingMessage) => void,
+    callback?: (error: Error | null, response: http.IncomingMessage) => void
   ): http.ClientRequest;
   getBuffer(): Buffer;
   setBoundary(boundary: string): void;
@@ -65,6 +57,6 @@ declare namespace FormData {
   }
 
   interface SubmitOptions extends http.RequestOptions {
-    protocol?: "https:" | "http:";
+    protocol?: 'https:' | 'http:';
   }
 }

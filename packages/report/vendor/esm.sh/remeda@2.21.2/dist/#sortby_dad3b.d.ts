@@ -1,7 +1,7 @@
-import { O as OrderRule } from "./purryOrderRules-BKXCPBNx.d.ts";
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
-import { N as NonEmptyArray } from "./NonEmptyArray-C9Od1wmF.d.ts";
-import { R as ReorderedArray } from "./ReorderedArray-DFPIAkRH.d.ts";
+import { O as OrderRule } from './purryOrderRules-BKXCPBNx.d.ts';
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
+import { N as NonEmptyArray } from './NonEmptyArray-C9Od1wmF.d.ts';
+import { R as ReorderedArray } from './ReorderedArray-DFPIAkRH.d.ts';
 
 /**
  * Sorts `data` using the provided ordering rules. The `sort` is done via the
@@ -33,9 +33,7 @@ import { R as ReorderedArray } from "./ReorderedArray-DFPIAkRH.d.ts";
  * @dataLast
  * @category Array
  */
-declare function sortBy<T extends IterableContainer>(
-  ...sortRules: Readonly<NonEmptyArray<OrderRule<T[number]>>>
-): (array: T) => ReorderedArray<T>;
+declare function sortBy<T extends IterableContainer>(...sortRules: Readonly<NonEmptyArray<OrderRule<T[number]>>>): (array: T) => ReorderedArray<T>;
 /**
  * Sorts `data` using the provided ordering rules. The `sort` is done via the
  * native `Array.prototype.sort` but is performed on a shallow copy of the array
@@ -82,9 +80,6 @@ declare function sortBy<T extends IterableContainer>(
  * @dataFirst
  * @category Array
  */
-declare function sortBy<T extends IterableContainer>(
-  array: T,
-  ...sortRules: Readonly<NonEmptyArray<OrderRule<T[number]>>>
-): ReorderedArray<T>;
+declare function sortBy<T extends IterableContainer>(array: T, ...sortRules: Readonly<NonEmptyArray<OrderRule<T[number]>>>): ReorderedArray<T>;
 
 export { sortBy };

@@ -1,4 +1,4 @@
-import { Merge } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { Merge } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 /**
  * Merges two objects into one by combining their properties, effectively
@@ -49,8 +49,6 @@ declare function merge<T, Source>(data: T, source: Source): Merge<T, Source>;
  * @dataLast
  * @category Object
  */
-declare function merge<Source>(
-  source: Source,
-): <T>(data: T) => Merge<T, Source>;
+declare function merge<Source>(source: Source): <T>(data: T) => Merge<T, Source>;
 
 export { merge };

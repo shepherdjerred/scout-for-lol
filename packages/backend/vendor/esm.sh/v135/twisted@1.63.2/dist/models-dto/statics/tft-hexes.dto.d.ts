@@ -1,4 +1,4 @@
 export declare class TFTHexesDto {
-  name: string;
-  description: string;
+    name: string;
+    description: string;
 }

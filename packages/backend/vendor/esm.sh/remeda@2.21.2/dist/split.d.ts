@@ -1,21 +1,7 @@
-import {
-  ArraySlice,
-  IsFloat,
-  NonNegative,
-  Split as Split$1,
-} from "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { IsFloat, ArraySlice, Split as Split$1, NonNegative } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 type BuiltInReturnType = ReturnType<typeof String.prototype.split>;
-type Split<
-  S extends string,
-  Separator extends string,
-  N extends number | undefined = undefined,
-> = string extends S ? BuiltInReturnType
-  : string extends Separator ? BuiltInReturnType
-  : number extends N ? BuiltInReturnType
-  : IsFloat<N> extends true ? BuiltInReturnType
-  : N extends number ? ArraySlice<Split$1<S, Separator>, 0, NonNegative<N>>
-  : Split$1<S, Separator>;
+type Split<S extends string, Separator extends string, N extends number | undefined = undefined> = string extends S ? BuiltInReturnType : string extends Separator ? BuiltInReturnType : number extends N ? BuiltInReturnType : IsFloat<N> extends true ? BuiltInReturnType : N extends number ? ArraySlice<Split$1<S, Separator>, 0, NonNegative<N>> : Split$1<S, Separator>;
 /**
  * Takes a pattern and divides this string into an ordered list of substrings by
  * searching for the pattern, puts these substrings into an array, and returns
@@ -42,16 +28,8 @@ type Split<
  * @dataFirst
  * @category String
  */
-declare function split(
-  data: string,
-  separator: RegExp,
-  limit?: number,
-): Array<string>;
-declare function split<
-  S extends string,
-  Separator extends string,
-  N extends number | undefined = undefined,
->(data: S, separator: Separator, limit?: N): Split<S, Separator, N>;
+declare function split(data: string, separator: RegExp, limit?: number): Array<string>;
+declare function split<S extends string, Separator extends string, N extends number | undefined = undefined>(data: S, separator: Separator, limit?: N): Split<S, Separator, N>;
 /**
  * Takes a pattern and divides this string into an ordered list of substrings by
  * searching for the pattern, puts these substrings into an array, and returns
@@ -77,14 +55,7 @@ declare function split<
  * @dataLast
  * @category String
  */
-declare function split(
-  separator: RegExp,
-  limit?: number,
-): (data: string) => Array<string>;
-declare function split<
-  S extends string,
-  Separator extends string,
-  N extends number | undefined = undefined,
->(separator: Separator, limit?: N): (data: S) => Split<S, Separator, N>;
+declare function split(separator: RegExp, limit?: number): (data: string) => Array<string>;
+declare function split<S extends string, Separator extends string, N extends number | undefined = undefined>(separator: Separator, limit?: N): (data: S) => Split<S, Separator, N>;
 
 export { split };

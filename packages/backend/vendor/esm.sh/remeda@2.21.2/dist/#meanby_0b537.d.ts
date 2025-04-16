@@ -12,9 +12,7 @@
  * @dataLast
  * @category Array
  */
-declare function meanBy<T>(
-  fn: (value: T, index: number, data: ReadonlyArray<T>) => number,
-): (items: ReadonlyArray<T>) => number;
+declare function meanBy<T>(fn: (value: T, index: number, data: ReadonlyArray<T>) => number): (items: ReadonlyArray<T>) => number;
 /**
  * Returns the mean of the elements of an array using the provided predicate.
  *
@@ -30,9 +28,6 @@ declare function meanBy<T>(
  * @dataFirst
  * @category Array
  */
-declare function meanBy<T>(
-  items: ReadonlyArray<T>,
-  fn: (value: T, index: number, data: ReadonlyArray<T>) => number,
-): number;
+declare function meanBy<T>(items: ReadonlyArray<T>, fn: (value: T, index: number, data: ReadonlyArray<T>) => number): number;
 
 export { meanBy };

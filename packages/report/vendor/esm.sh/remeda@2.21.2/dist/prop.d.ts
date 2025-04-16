@@ -23,8 +23,6 @@ declare function prop<T, K extends keyof T>(data: T, key: K): T[K];
  * @category Object
  */
 declare function prop<T, K extends keyof T>(key: K): (data: T) => T[K];
-declare function prop<K extends PropertyKey>(
-  key: K,
-): <T extends Partial<Record<K, unknown>>>(data: T) => T[K];
+declare function prop<K extends PropertyKey>(key: K): <T extends Partial<Record<K, unknown>>>(data: T) => T[K];
 
 export { prop };

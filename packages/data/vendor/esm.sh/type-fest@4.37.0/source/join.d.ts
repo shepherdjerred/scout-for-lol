@@ -4,8 +4,8 @@ type JoinableItem = string | number | bigint | boolean | undefined | null;
 // `null` and `undefined` are treated uniquely in the built-in join method, in a way that differs from the default `toString` that would result in the type `${undefined}`. That's why we need to handle it specifically with this helper.
 // @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/join#description
 type NullishCoalesce<
-  Value extends JoinableItem,
-  Fallback extends string,
+	Value extends JoinableItem,
+	Fallback extends string,
 > = Value extends undefined | null ? NonNullable<Value> | Fallback : Value;
 
 /**
@@ -49,16 +49,20 @@ const path: Join<['hello' | undefined, 'world' | null], '.'> = ['hello', 'world'
 @category Template literal
 */
 export type Join<
-  Items extends readonly JoinableItem[],
-  Delimiter extends string,
-> = Items extends readonly [] ? ""
-  : Items extends readonly [JoinableItem?] ? `${NullishCoalesce<Items[0], "">}`
-  : Items extends readonly [
-    infer First extends JoinableItem,
-    ...infer Tail extends readonly JoinableItem[],
-  ] ? `${NullishCoalesce<First, "">}${Delimiter}${Join<Tail, Delimiter>}`
-  : Items extends readonly [
-    ...infer Head extends readonly JoinableItem[],
-    infer Last extends JoinableItem,
-  ] ? `${Join<Head, Delimiter>}${Delimiter}${NullishCoalesce<Last, "">}`
-  : string;
+	Items extends readonly JoinableItem[],
+	Delimiter extends string,
+> = Items extends readonly []
+	? ''
+	: Items extends readonly [JoinableItem?]
+		? `${NullishCoalesce<Items[0], ''>}`
+		: Items extends readonly [
+			infer First extends JoinableItem,
+			...infer Tail extends readonly JoinableItem[],
+		]
+			? `${NullishCoalesce<First, ''>}${Delimiter}${Join<Tail, Delimiter>}`
+			: Items extends readonly [
+				...infer Head extends readonly JoinableItem[],
+				infer Last extends JoinableItem,
+			]
+				? `${Join<Head, Delimiter>}${Delimiter}${NullishCoalesce<Last, ''>}`
+				: string;

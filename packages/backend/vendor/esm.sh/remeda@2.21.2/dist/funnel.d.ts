@@ -1,60 +1,49 @@
-import { RequireAtLeastOne } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { RequireAtLeastOne } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 type FunnelOptions<Args extends RestArguments, R> = {
-  readonly reducer?: (accumulator: R | undefined, ...params: Args) => R;
+    readonly reducer?: (accumulator: R | undefined, ...params: Args) => R;
 } & FunnelTimingOptions;
-type FunnelTimingOptions =
-  | (
-    & {
-      readonly triggerAt?: "end";
-    }
-    & (
-      | (
-        & {
-          readonly minGapMs: number;
-        }
-        & RequireAtLeastOne<{
-          readonly minQuietPeriodMs: number;
-          readonly maxBurstDurationMs: number;
-        }>
-      )
-      | {
-        readonly minQuietPeriodMs?: number;
-        readonly maxBurstDurationMs?: number;
-        readonly minGapMs?: never;
-      }
-    )
-  )
-  | {
+type FunnelTimingOptions = ({
+    readonly triggerAt?: "end";
+} & (({
+    readonly minGapMs: number;
+} & RequireAtLeastOne<{
+    readonly minQuietPeriodMs: number;
+    readonly maxBurstDurationMs: number;
+}>) | {
+    readonly minQuietPeriodMs?: number;
+    readonly maxBurstDurationMs?: number;
+    readonly minGapMs?: never;
+})) | {
     readonly triggerAt: "start" | "both";
     readonly minQuietPeriodMs?: number;
     readonly maxBurstDurationMs?: number;
     readonly minGapMs?: number;
-  };
+};
 type RestArguments = Array<any>;
 type Funnel<Args extends RestArguments = []> = {
-  /**
-   * Call the function. This might result in the `execute` function being called
-   * now or later, depending on it's configuration and it's current state.
-   *
-   * @param args - The args are defined by the `reducer` function.
-   */
-  readonly call: (...args: Args) => void;
-  /**
-   * Resets the funnel to it's initial state. Any calls made since the last
-   * invocation will be discarded.
-   */
-  readonly cancel: () => void;
-  /**
-   * Triggers an invocation regardless of the current state of the funnel.
-   * Like any other invocation, The funnel will also be reset to it's initial
-   * state afterwards.
-   */
-  readonly flush: () => void;
-  /**
-   * The funnel is in it's initial state (there are no active timeouts).
-   */
-  readonly isIdle: boolean;
+    /**
+     * Call the function. This might result in the `execute` function being called
+     * now or later, depending on it's configuration and it's current state.
+     *
+     * @param args - The args are defined by the `reducer` function.
+     */
+    readonly call: (...args: Args) => void;
+    /**
+     * Resets the funnel to it's initial state. Any calls made since the last
+     * invocation will be discarded.
+     */
+    readonly cancel: () => void;
+    /**
+     * Triggers an invocation regardless of the current state of the funnel.
+     * Like any other invocation, The funnel will also be reset to it's initial
+     * state afterwards.
+     */
+    readonly flush: () => void;
+    /**
+     * The funnel is in it's initial state (there are no active timeouts).
+     */
+    readonly isIdle: boolean;
 };
 /**
  * Creates a funnel that controls the timing and execution of `callback`. Its
@@ -148,10 +137,6 @@ type Funnel<Args extends RestArguments = []> = {
  *   throttle.call();
  * @category Function
  */
-declare function funnel<Args extends RestArguments = [], R = never>(
-  callback: (data: R) => void,
-  { triggerAt, minQuietPeriodMs, maxBurstDurationMs, minGapMs, reducer }:
-    FunnelOptions<Args, R>,
-): Funnel<Args>;
+declare function funnel<Args extends RestArguments = [], R = never>(callback: (data: R) => void, { triggerAt, minQuietPeriodMs, maxBurstDurationMs, minGapMs, reducer, }: FunnelOptions<Args, R>): Funnel<Args>;
 
 export { funnel };

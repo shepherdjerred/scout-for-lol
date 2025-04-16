@@ -1,15 +1,7 @@
-import { Simplify } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
-import { T as TupleParts } from "./TupleParts-CP0H7BrE.d.ts";
+import { Simplify } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
+import { T as TupleParts } from './TupleParts-CP0H7BrE.d.ts';
 
-type PickFromArray<T, Keys extends ReadonlyArray<keyof T>> = Simplify<
-  & Pick<
-    T,
-    TupleParts<Keys>["required"][number] | TupleParts<Keys>["suffix"][number]
-  >
-  & Partial<
-    Pick<T, TupleParts<Keys>["optional"][number] | TupleParts<Keys>["item"]>
-  >
->;
+type PickFromArray<T, Keys extends ReadonlyArray<keyof T>> = Simplify<Pick<T, TupleParts<Keys>["required"][number] | TupleParts<Keys>["suffix"][number]> & Partial<Pick<T, TupleParts<Keys>["optional"][number] | TupleParts<Keys>["item"]>>>;
 /**
  * Creates an object composed of the picked `data` properties.
  *
@@ -20,10 +12,7 @@ type PickFromArray<T, Keys extends ReadonlyArray<keyof T>> = Simplify<
  * @dataLast
  * @category Object
  */
-declare function pick<
-  T extends object,
-  const Keys extends ReadonlyArray<keyof T>,
->(keys: Keys): (data: T) => PickFromArray<T, Keys>;
+declare function pick<T extends object, const Keys extends ReadonlyArray<keyof T>>(keys: Keys): (data: T) => PickFromArray<T, Keys>;
 /**
  * Creates an object composed of the picked `data` properties.
  *
@@ -35,9 +24,6 @@ declare function pick<
  * @dataFirst
  * @category Object
  */
-declare function pick<
-  T extends object,
-  const Keys extends ReadonlyArray<keyof T>,
->(data: T, keys: Keys): PickFromArray<T, Keys>;
+declare function pick<T extends object, const Keys extends ReadonlyArray<keyof T>>(data: T, keys: Keys): PickFromArray<T, Keys>;
 
 export { pick };

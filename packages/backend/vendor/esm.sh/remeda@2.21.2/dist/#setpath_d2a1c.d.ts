@@ -1,15 +1,11 @@
-type Path<T, Prefix extends ReadonlyArray<unknown> = []> = T extends
-  ReadonlyArray<unknown> ? Path<T[number], [...Prefix, number]> | Prefix
-  : T extends Record<PropertyKey, unknown> ? PathsOfObject<T, Prefix> | Prefix
-  : Prefix;
+type Path<T, Prefix extends ReadonlyArray<unknown> = []> = T extends ReadonlyArray<unknown> ? Path<T[number], [...Prefix, number]> | Prefix : T extends Record<PropertyKey, unknown> ? PathsOfObject<T, Prefix> | Prefix : Prefix;
 type PathsOfObject<T, Prefix extends ReadonlyArray<unknown>> = {
-  [K in keyof T]-?: Path<T[K], readonly [...Prefix, K]>;
+    [K in keyof T]-?: Path<T[K], readonly [...Prefix, K]>;
 }[keyof T];
 type ValueAtPath<T, TPath> = TPath extends readonly [
-  infer Head extends keyof T,
-  ...infer Rest,
-] ? ValueAtPath<T[Head], Rest>
-  : T;
+    infer Head extends keyof T,
+    ...infer Rest
+] ? ValueAtPath<T[Head], Rest> : T;
 /**
  * Sets the value at `path` of `object`.
  *
@@ -25,11 +21,7 @@ type ValueAtPath<T, TPath> = TPath extends readonly [
  * @dataFirst
  * @category Object
  */
-declare function setPath<T, TPath extends Path<T>>(
-  data: T,
-  path: TPath,
-  value: ValueAtPath<T, TPath>,
-): T;
+declare function setPath<T, TPath extends Path<T>>(data: T, path: TPath, value: ValueAtPath<T, TPath>): T;
 /**
  * Sets the value at `path` of `object`.
  *
@@ -42,10 +34,6 @@ declare function setPath<T, TPath extends Path<T>>(
  * @dataLast
  * @category Object
  */
-declare function setPath<
-  T,
-  TPath extends Path<T>,
-  Value extends ValueAtPath<T, TPath>,
->(path: TPath, value: Value): (data: T) => T;
+declare function setPath<T, TPath extends Path<T>, Value extends ValueAtPath<T, TPath>>(path: TPath, value: Value): (data: T) => T;
 
 export { setPath };

@@ -1,5 +1,5 @@
 type ReplaceOptions = {
-  all?: boolean;
+	all?: boolean;
 };
 
 /**
@@ -56,29 +56,24 @@ replaceAll('My Cool Title', ' ', '');
 @category Template literal
 */
 export type Replace<
-  Input extends string,
-  Search extends string,
-  Replacement extends string,
-  Options extends ReplaceOptions = {},
+	Input extends string,
+	Search extends string,
+	Replacement extends string,
+	Options extends ReplaceOptions = {},
 > = _Replace<Input, Search, Replacement, Options>;
 
 type _Replace<
-  Input extends string,
-  Search extends string,
-  Replacement extends string,
-  Options extends ReplaceOptions,
-  Accumulator extends string = "",
+	Input extends string,
+	Search extends string,
+	Replacement extends string,
+	Options extends ReplaceOptions,
+	Accumulator extends string = '',
 > = Search extends string // For distributing `Search`
-  ? Replacement extends string // For distributing `Replacement`
-    ? Input extends `${infer Head}${Search}${infer Tail}`
-      ? Options["all"] extends true ? _Replace<
-          Tail,
-          Search,
-          Replacement,
-          Options,
-          `${Accumulator}${Head}${Replacement}`
-        >
-      : `${Head}${Replacement}${Tail}`
-    : `${Accumulator}${Input}`
-  : never
-  : never;
+	? Replacement extends string // For distributing `Replacement`
+		? Input extends `${infer Head}${Search}${infer Tail}`
+			? Options['all'] extends true
+				? _Replace<Tail, Search, Replacement, Options, `${Accumulator}${Head}${Replacement}`>
+				: `${Head}${Replacement}${Tail}`
+			: `${Accumulator}${Input}`
+		: never
+	: never;

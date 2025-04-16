@@ -33,7 +33,7 @@
     "discord.js": "npm:discord.js@14.18.0",
     "dns": "node:dns",
     "dns/promises": "node:dns/promises",
-    "dotenv@16.4.7/package.json?module": "https://esm.sh/empty-npm-package@1.0.0",
+    "dotenv@16.5.0/package.json?module": "https://esm.sh/empty-npm-package@1.0.0",
     "env-var": "https://esm.sh/env-var@7.5.0",
     "events": "node:events",
     "fs": "node:fs",

@@ -1,6 +1,6 @@
 declare const COMPARATORS: {
-  readonly asc: <T>(x: T, y: T) => boolean;
-  readonly desc: <T>(x: T, y: T) => boolean;
+    readonly asc: <T>(x: T, y: T) => boolean;
+    readonly desc: <T>(x: T, y: T) => boolean;
 };
 /**
  * An order rule defines a projection/extractor that returns a comparable from
@@ -23,16 +23,14 @@ declare const COMPARATORS: {
  * projection function and therefore no guarantee that it would only be called
  * once.
  */
-type OrderRule<T> =
-  | Projection<T>
-  | readonly [projection: Projection<T>, direction: keyof typeof COMPARATORS];
+type OrderRule<T> = Projection<T> | readonly [projection: Projection<T>, direction: keyof typeof COMPARATORS];
 type Projection<T> = (x: T) => Comparable;
 type Comparable = ComparablePrimitive | {
-  [Symbol.toPrimitive]: (hint: string) => ComparablePrimitive;
+    [Symbol.toPrimitive]: (hint: string) => ComparablePrimitive;
 } | {
-  toString: () => string;
+    toString: () => string;
 } | {
-  valueOf: () => ComparablePrimitive;
+    valueOf: () => ComparablePrimitive;
 };
 type ComparablePrimitive = bigint | boolean | number | string;
 

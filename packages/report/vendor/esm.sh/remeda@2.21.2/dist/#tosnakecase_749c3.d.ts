@@ -1,7 +1,6 @@
-import { Join, Words } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { Join, Words } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
-type SnakeCase<S extends string> = string extends S ? string
-  : Lowercase<Join<Words<S>, "_">>;
+type SnakeCase<S extends string> = string extends S ? string : Lowercase<Join<Words<S>, "_">>;
 /**
  * Convert a text to snake-case by splitting it into words and joining them back
  * together with "_", and then lowering the case of the result.

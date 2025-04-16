@@ -1,5 +1,5 @@
-import { N as NarrowedTo } from "./NarrowedTo-CDIykNaN.d.ts";
-import "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { N as NarrowedTo } from './NarrowedTo-CDIykNaN.d.ts';
+import 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 /**
  * A function that checks if the passed parameter is an Array and narrows its type accordingly.
@@ -14,8 +14,6 @@ import "https://esm.sh/type-fest@4.37.0/index.d.ts";
  *    R.isArray('somethingElse') //=> false
  * @category Guard
  */
-declare function isArray<T>(
-  data: ArrayLike<unknown> | T,
-): data is NarrowedTo<T, ReadonlyArray<unknown>>;
+declare function isArray<T>(data: ArrayLike<unknown> | T): data is NarrowedTo<T, ReadonlyArray<unknown>>;
 
 export { isArray };

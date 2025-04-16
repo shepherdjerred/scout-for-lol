@@ -31,15 +31,7 @@
  * @dataFirst
  * @category Array
  */
-declare function sortedLastIndexBy<T>(
-  data: ReadonlyArray<T>,
-  item: T,
-  valueFunction: (
-    item: T,
-    index: number | undefined,
-    data: ReadonlyArray<T>,
-  ) => NonNullable<unknown>,
-): number;
+declare function sortedLastIndexBy<T>(data: ReadonlyArray<T>, item: T, valueFunction: (item: T, index: number | undefined, data: ReadonlyArray<T>) => NonNullable<unknown>): number;
 /**
  * Find the insertion position (index) of an item in an array with items sorted
  * in ascending order using a value function; so that
@@ -73,13 +65,6 @@ declare function sortedLastIndexBy<T>(
  * @category Array
  * @see sortedIndex, sortedIndexBy, sortedIndexWith, sortedLastIndex
  */
-declare function sortedLastIndexBy<T>(
-  item: T,
-  valueFunction: (
-    item: T,
-    index: number | undefined,
-    data: ReadonlyArray<T>,
-  ) => NonNullable<unknown>,
-): (data: ReadonlyArray<T>) => number;
+declare function sortedLastIndexBy<T>(item: T, valueFunction: (item: T, index: number | undefined, data: ReadonlyArray<T>) => NonNullable<unknown>): (data: ReadonlyArray<T>) => number;
 
 export { sortedLastIndexBy };

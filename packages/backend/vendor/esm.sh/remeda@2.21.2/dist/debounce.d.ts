@@ -1,43 +1,38 @@
-type Debouncer<
-  F extends (...args: any) => unknown,
-  IsNullable extends boolean = true,
-> = {
-  /**
-   * Invoke the debounced function.
-   *
-   * @param args - Same as the args for the debounced function.
-   * @returns The last computed value of the debounced function with the
-   * latest args provided to it. If `timing` does not include `leading` then the
-   * the function would return `undefined` until the first cool-down period is
-   * over, otherwise the function would always return the return type of the
-   * debounced function.
-   */
-  readonly call: (
-    ...args: Parameters<F>
-  ) => ReturnType<F> | (true extends IsNullable ? undefined : never);
-  /**
-   * Cancels any debounced functions without calling them, effectively resetting
-   * the debouncer to the same state it is when initially created.
-   */
-  readonly cancel: () => void;
-  /**
-   * Similar to `cancel`, but would also trigger the `trailing` invocation if
-   * the debouncer would run one at the end of the cool-down period.
-   */
-  readonly flush: () => ReturnType<F> | undefined;
-  /**
-   * Is `true` when there is an active cool-down period currently debouncing
-   * invocations.
-   */
-  readonly isPending: boolean;
-  /**
-   * The last computed value of the debounced function.
-   */
-  readonly cachedValue: ReturnType<F> | undefined;
+type Debouncer<F extends (...args: any) => unknown, IsNullable extends boolean = true> = {
+    /**
+     * Invoke the debounced function.
+     *
+     * @param args - Same as the args for the debounced function.
+     * @returns The last computed value of the debounced function with the
+     * latest args provided to it. If `timing` does not include `leading` then the
+     * the function would return `undefined` until the first cool-down period is
+     * over, otherwise the function would always return the return type of the
+     * debounced function.
+     */
+    readonly call: (...args: Parameters<F>) => ReturnType<F> | (true extends IsNullable ? undefined : never);
+    /**
+     * Cancels any debounced functions without calling them, effectively resetting
+     * the debouncer to the same state it is when initially created.
+     */
+    readonly cancel: () => void;
+    /**
+     * Similar to `cancel`, but would also trigger the `trailing` invocation if
+     * the debouncer would run one at the end of the cool-down period.
+     */
+    readonly flush: () => ReturnType<F> | undefined;
+    /**
+     * Is `true` when there is an active cool-down period currently debouncing
+     * invocations.
+     */
+    readonly isPending: boolean;
+    /**
+     * The last computed value of the debounced function.
+     */
+    readonly cachedValue: ReturnType<F> | undefined;
 };
 type DebounceOptions = {
-  readonly waitMs?: number;
-  readonly maxWaitMs?: number;
+    readonly waitMs?: number;
+    readonly maxWaitMs?: number;
 };
 /**
  * Wraps `func` with a debouncer object that "debounces" (delays) invocations of the function during a defined cool-down period (`waitMs`). It can be configured to invoke the function either at the start of the cool-down period, the end of it, or at both ends (`timing`).
@@ -46,7 +41,7 @@ type DebounceOptions = {
  * It stores the value returned by `func` whenever its invoked. This value is returned on every call, and is accessible via the `cachedValue` property of the debouncer. Its important to note that the value might be different from the value that would be returned from running `func` with the current arguments as it is a cached value from a previous invocation.
  * **Important**: The cool-down period defines the minimum between two invocations, and not the maximum. The period will be **extended** each time a call is made until a full cool-down period has elapsed without any additional calls.
  *
- * ! **DEPRECATED**: This implementation of debounce is known to have issues and might not behave as expected. It should be replaced with the `funnel` utility instead. The test file [funnel.remeda-debounce.test.ts](https://github.com/remeda/remeda/blob/main/packages/remeda/src/funnel.remeda-debounce.test.ts) offers a reference implementation that replicates `debounce` via `funnel`!
+ *! **DEPRECATED**: This implementation of debounce is known to have issues and might not behave as expected. It should be replaced with the `funnel` utility instead. The test file [funnel.remeda-debounce.test.ts](https://github.com/remeda/remeda/blob/main/packages/remeda/src/funnel.remeda-debounce.test.ts) offers a reference implementation that replicates `debounce` via `funnel`!
  *
  * @param func - The function to debounce, the returned `call` function will have
  * the exact same signature.
@@ -93,21 +88,13 @@ type DebounceOptions = {
  * implementation that replicates `debounce` via `funnel`.
  * @see https://css-tricks.com/debouncing-throttling-explained-examples/
  */
-declare function debounce<F extends (...args: any) => any>(
-  func: F,
-  options: DebounceOptions & {
+declare function debounce<F extends (...args: any) => any>(func: F, options: DebounceOptions & {
     readonly timing?: "trailing";
-  },
-): Debouncer<F>;
-declare function debounce<F extends (...args: any) => any>(
-  func: F,
-  options:
-    | (DebounceOptions & {
-      readonly timing: "both";
-    })
-    | (Omit<DebounceOptions, "maxWaitMs"> & {
-      readonly timing: "leading";
-    }),
-): Debouncer<F, false>;
+}): Debouncer<F>;
+declare function debounce<F extends (...args: any) => any>(func: F, options: (DebounceOptions & {
+    readonly timing: "both";
+}) | (Omit<DebounceOptions, "maxWaitMs"> & {
+    readonly timing: "leading";
+})): Debouncer<F, false>;
 
 export { debounce };

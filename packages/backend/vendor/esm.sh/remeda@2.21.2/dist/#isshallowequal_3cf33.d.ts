@@ -34,10 +34,7 @@
  * @dataFirst
  * @category Guard
  */
-declare function isShallowEqual<T, S extends T>(
-  data: T,
-  other: T extends Exclude<T, S> ? S : never,
-): data is S;
+declare function isShallowEqual<T, S extends T>(data: T, other: T extends Exclude<T, S> ? S : never): data is S;
 declare function isShallowEqual<T>(data: T, other: T): boolean;
 /**
  * Performs a *shallow structural* comparison between two values to determine if
@@ -74,9 +71,7 @@ declare function isShallowEqual<T>(data: T, other: T): boolean;
  * @dataFirst
  * @category Guard
  */
-declare function isShallowEqual<T, S extends T>(
-  other: T extends Exclude<T, S> ? S : never,
-): (data: T) => data is S;
+declare function isShallowEqual<T, S extends T>(other: T extends Exclude<T, S> ? S : never): (data: T) => data is S;
 declare function isShallowEqual<T>(other: T): (data: T) => boolean;
 
 export { isShallowEqual };

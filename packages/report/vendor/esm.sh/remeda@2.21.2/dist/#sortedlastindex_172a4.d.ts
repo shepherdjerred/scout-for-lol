@@ -38,8 +38,6 @@ declare function sortedLastIndex<T>(data: ReadonlyArray<T>, item: T): number;
  * @category Array
  * @see sortedIndex, sortedIndexBy, sortedIndexWith, sortedLastIndexBy
  */
-declare function sortedLastIndex<T>(
-  item: T,
-): (data: ReadonlyArray<T>) => number;
+declare function sortedLastIndex<T>(item: T): (data: ReadonlyArray<T>) => number;
 
 export { sortedLastIndex };

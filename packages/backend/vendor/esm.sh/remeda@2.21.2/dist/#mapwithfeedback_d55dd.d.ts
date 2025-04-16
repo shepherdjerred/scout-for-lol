@@ -1,5 +1,5 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
-import { M as Mapped } from "./Mapped-oLjj1faZ.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
+import { M as Mapped } from './Mapped-oLjj1faZ.d.ts';
 
 /**
  * Applies a function on each element of the array, using the result of the
@@ -24,16 +24,7 @@ import { M as Mapped } from "./Mapped-oLjj1faZ.d.ts";
  * @lazy
  * @category Array
  */
-declare function mapWithFeedback<T extends IterableContainer, U>(
-  data: T,
-  callbackfn: (
-    previousValue: U,
-    currentValue: T[number],
-    currentIndex: number,
-    data: T,
-  ) => U,
-  initialValue: U,
-): Mapped<T, U>;
+declare function mapWithFeedback<T extends IterableContainer, U>(data: T, callbackfn: (previousValue: U, currentValue: T[number], currentIndex: number, data: T) => U, initialValue: U): Mapped<T, U>;
 /**
  * Applies a function on each element of the array, using the result of the
  * previous application, and returns an array of the successively computed
@@ -55,14 +46,6 @@ declare function mapWithFeedback<T extends IterableContainer, U>(
  * @lazy
  * @category Array
  */
-declare function mapWithFeedback<T extends IterableContainer, U>(
-  callbackfn: (
-    previousValue: U,
-    currentValue: T[number],
-    currentIndex: number,
-    data: T,
-  ) => U,
-  initialValue: U,
-): (data: T) => Mapped<T, U>;
+declare function mapWithFeedback<T extends IterableContainer, U>(callbackfn: (previousValue: U, currentValue: T[number], currentIndex: number, data: T) => U, initialValue: U): (data: T) => Mapped<T, U>;
 
 export { mapWithFeedback };

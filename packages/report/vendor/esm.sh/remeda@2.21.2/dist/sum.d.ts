@@ -1,10 +1,6 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
-type Sum<T extends IterableContainer<bigint> | IterableContainer<number>> =
-  T extends readonly [] ? 0
-    : T extends readonly [bigint, ...ReadonlyArray<unknown>] ? bigint
-    : T[number] extends bigint ? bigint | 0
-    : number;
+type Sum<T extends IterableContainer<bigint> | IterableContainer<number>> = T extends readonly [] ? 0 : T extends readonly [bigint, ...ReadonlyArray<unknown>] ? bigint : T[number] extends bigint ? bigint | 0 : number;
 /**
  * Sums the numbers in the array, or return 0 for an empty array.
  *
@@ -26,9 +22,7 @@ type Sum<T extends IterableContainer<bigint> | IterableContainer<number>> =
  * @dataFirst
  * @category Number
  */
-declare function sum<
-  T extends IterableContainer<bigint> | IterableContainer<number>,
->(data: T): Sum<T>;
+declare function sum<T extends IterableContainer<bigint> | IterableContainer<number>>(data: T): Sum<T>;
 /**
  * Sums the numbers in the array, or return 0 for an empty array.
  *
@@ -49,8 +43,6 @@ declare function sum<
  * @dataLast
  * @category Number
  */
-declare function sum(): <
-  T extends IterableContainer<bigint> | IterableContainer<number>,
->(data: T) => Sum<T>;
+declare function sum(): <T extends IterableContainer<bigint> | IterableContainer<number>>(data: T) => Sum<T>;
 
 export { sum };

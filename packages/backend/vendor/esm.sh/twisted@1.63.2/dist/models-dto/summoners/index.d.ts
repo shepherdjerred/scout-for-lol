@@ -1,1 +1,1 @@
-export * from "./summoner.dto.d.ts";
+export * from './summoner.dto.d.ts';

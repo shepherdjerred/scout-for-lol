@@ -1,5 +1,5 @@
-import type { IsNever } from "./is-never.d.ts";
-import type { UnionToIntersection } from "./union-to-intersection.d.ts";
+import type {IsNever} from './is-never.d.ts';
+import type {UnionToIntersection} from './union-to-intersection.d.ts';
 
 /**
 Returns the last element of a union type.
@@ -11,8 +11,9 @@ type Last = LastOfUnion<1 | 2 | 3>;
 ```
 */
 type LastOfUnion<T> =
-  UnionToIntersection<T extends any ? () => T : never> extends () => infer R ? R
-    : never;
+UnionToIntersection<T extends any ? () => T : never> extends () => (infer R)
+	? R
+	: never;
 
 /**
 Convert a union type into an unordered tuple type of its elements.
@@ -49,6 +50,7 @@ const petList = Object.keys(pets) as UnionToTuple<Pet>;
 
 @category Array
 */
-export type UnionToTuple<T, L = LastOfUnion<T>> = IsNever<T> extends false
-  ? [...UnionToTuple<Exclude<T, L>>, L]
-  : [];
+export type UnionToTuple<T, L = LastOfUnion<T>> =
+IsNever<T> extends false
+	? [...UnionToTuple<Exclude<T, L>>, L]
+	: [];

@@ -24,6 +24,8 @@ type Includes<Value extends readonly any[], Item> =
 @category Type Guard
 @category Utilities
 */
-export type IsEqual<A, B> = (<G>() => G extends A & G | G ? 1 : 2) extends
-  (<G>() => G extends B & G | G ? 1 : 2) ? true
-  : false;
+export type IsEqual<A, B> =
+	(<G>() => G extends A & G | G ? 1 : 2) extends
+	(<G>() => G extends B & G | G ? 1 : 2)
+		? true
+		: false;

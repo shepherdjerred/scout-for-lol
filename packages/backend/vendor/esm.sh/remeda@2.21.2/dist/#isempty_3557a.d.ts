@@ -1,4 +1,4 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
 /**
  * A function that checks if the passed parameter is empty.
@@ -25,14 +25,8 @@ import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
  *    R.isEmpty({ length: 0 }) //=> false
  * @category Guard
  */
-declare function isEmpty<T extends string | undefined>(
-  data: T,
-): data is
-  | ("" extends T ? "" : never)
-  | (undefined extends T ? undefined : never);
+declare function isEmpty<T extends string | undefined>(data: T): data is ("" extends T ? "" : never) | (undefined extends T ? undefined : never);
 declare function isEmpty(data: IterableContainer): data is [];
-declare function isEmpty<T extends object>(
-  data: T,
-): data is Record<keyof T, never>;
+declare function isEmpty<T extends object>(data: T): data is Record<keyof T, never>;
 
 export { isEmpty };

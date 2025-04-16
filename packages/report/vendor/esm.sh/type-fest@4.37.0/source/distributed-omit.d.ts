@@ -1,4 +1,4 @@
-import type { KeysOfUnion } from "./keys-of-union.d.ts";
+import type {KeysOfUnion} from './keys-of-union.d.ts';
 
 /**
 Omits keys from a type, distributing the operation over a union.
@@ -83,8 +83,7 @@ if (omittedUnion.discriminant === 'A') {
 
 @category Object
 */
-export type DistributedOmit<
-  ObjectType,
-  KeyType extends KeysOfUnion<ObjectType>,
-> = ObjectType extends unknown ? Omit<ObjectType, KeyType>
-  : never;
+export type DistributedOmit<ObjectType, KeyType extends KeysOfUnion<ObjectType>> =
+	ObjectType extends unknown
+		? Omit<ObjectType, KeyType>
+		: never;

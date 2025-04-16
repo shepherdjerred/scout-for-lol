@@ -21,8 +21,6 @@
  * @category Function
  */
 declare function doNothing(): typeof doesNothing;
-declare function doesNothing<Args extends ReadonlyArray<unknown>>(
-  ..._args: Args
-): void;
+declare function doesNothing<Args extends ReadonlyArray<unknown>>(..._args: Args): void;
 
 export { doNothing };

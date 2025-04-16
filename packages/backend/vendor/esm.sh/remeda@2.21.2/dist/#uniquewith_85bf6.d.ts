@@ -1,6 +1,6 @@
-import { D as Deduped } from "./Deduped-BcgFsruc.d.ts";
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
-import "./NonEmptyArray-C9Od1wmF.d.ts";
+import { D as Deduped } from './Deduped-BcgFsruc.d.ts';
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
+import './NonEmptyArray-C9Od1wmF.d.ts';
 
 type IsEquals<T> = (a: T, b: T) => boolean;
 /**
@@ -20,10 +20,7 @@ type IsEquals<T> = (a: T, b: T) => boolean;
  * @lazy
  * @category Array
  */
-declare function uniqueWith<T extends IterableContainer>(
-  data: T,
-  isEquals: IsEquals<T[number]>,
-): Deduped<T>;
+declare function uniqueWith<T extends IterableContainer>(data: T, isEquals: IsEquals<T[number]>): Deduped<T>;
 /**
  * Returns a new array containing only one copy of each element in the original
  * list. Elements are compared by custom comparator isEquals.
@@ -43,8 +40,6 @@ declare function uniqueWith<T extends IterableContainer>(
  * @lazy
  * @category Array
  */
-declare function uniqueWith<T extends IterableContainer>(
-  isEquals: IsEquals<T[number]>,
-): (data: T) => Deduped<T>;
+declare function uniqueWith<T extends IterableContainer>(isEquals: IsEquals<T[number]>): (data: T) => Deduped<T>;
 
 export { uniqueWith };

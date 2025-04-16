@@ -1,8 +1,5 @@
 // Copyright 2018-2024 the Deno authors. All rights reserved. MIT license.
-import {
-  type GlobOptions,
-  globToRegExp,
-} from "jsr:/@std/path@1.0.0-rc.1/glob-to-regexp";
+import { type GlobOptions, globToRegExp } from "jsr:/@std/path@1.0.0-rc.1/glob-to-regexp";
 import { joinGlobs } from "jsr:/@std/path@1.0.0-rc.1/join-globs";
 import { isGlob } from "jsr:/@std/path@1.0.0-rc.1/is-glob";
 import { isAbsolute } from "jsr:/@std/path@1.0.0-rc.1/is-absolute";

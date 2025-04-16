@@ -1,12 +1,10 @@
 declare const tag: unique symbol;
 
 export type TagContainer<Token> = {
-  readonly [tag]: Token;
+	readonly [tag]: Token;
 };
 
-type Tag<Token extends PropertyKey, TagMetadata> = TagContainer<
-  { [K in Token]: TagMetadata }
->;
+type Tag<Token extends PropertyKey, TagMetadata> = TagContainer<{[K in Token]: TagMetadata}>;
 
 /**
 Attach a "tag" to an arbitrary type. This allows you to create distinct types, that aren't assignable to one another, for distinct concepts in your program that should not be interchangeable, even if their runtime values have the same type. (See examples.)
@@ -70,9 +68,7 @@ type SpecialCacheKey2 = Tagged<string, 'URL' | 'SpecialCacheKey'>;
 
 @category Type
 */
-export type Tagged<Type, TagName extends PropertyKey, TagMetadata = never> =
-  & Type
-  & Tag<TagName, TagMetadata>;
+export type Tagged<Type, TagName extends PropertyKey, TagMetadata = never> = Type & Tag<TagName, TagMetadata>;
 
 /**
 Given a type and a tag name, returns the metadata associated with that tag on that type.
@@ -101,10 +97,7 @@ const parsed = parse(x); // The type of `parsed` is { hello: string }
 
 @category Type
 */
-export type GetTagMetadata<
-  Type extends Tag<TagName, unknown>,
-  TagName extends PropertyKey,
-> = Type[typeof tag][TagName];
+export type GetTagMetadata<Type extends Tag<TagName, unknown>, TagName extends PropertyKey> = Type[typeof tag][TagName];
 
 /**
 Revert a tagged type back to its original type by removing all tags.
@@ -135,14 +128,15 @@ type WontWork = UnwrapTagged<string>;
 @category Type
 */
 export type UnwrapTagged<TaggedType extends Tag<PropertyKey, any>> =
-  RemoveAllTags<TaggedType>;
+RemoveAllTags<TaggedType>;
 
-type RemoveAllTags<T> = T extends Tag<PropertyKey, any> ? {
-    [ThisTag in keyof T[typeof tag]]: T extends
-      Tagged<infer Type, ThisTag, T[typeof tag][ThisTag]> ? RemoveAllTags<Type>
-      : never;
-  }[keyof T[typeof tag]]
-  : T;
+type RemoveAllTags<T> = T extends Tag<PropertyKey, any>
+	? {
+		[ThisTag in keyof T[typeof tag]]: T extends Tagged<infer Type, ThisTag, T[typeof tag][ThisTag]>
+			? RemoveAllTags<Type>
+			: never
+	}[keyof T[typeof tag]]
+	: T;
 
 /**
 Note: The `Opaque` type is deprecated in favor of `Tagged`.
@@ -255,6 +249,8 @@ type WillWork = UnwrapOpaque<Tagged<number, 'AccountNumber'>>; // number
 @deprecated Use {@link UnwrapTagged} instead
 */
 export type UnwrapOpaque<OpaqueType extends TagContainer<unknown>> =
-  OpaqueType extends Tag<PropertyKey, any> ? RemoveAllTags<OpaqueType>
-    : OpaqueType extends Opaque<infer Type, OpaqueType[typeof tag]> ? Type
-    : OpaqueType;
+	OpaqueType extends Tag<PropertyKey, any>
+		? RemoveAllTags<OpaqueType>
+		: OpaqueType extends Opaque<infer Type, OpaqueType[typeof tag]>
+			? Type
+			: OpaqueType;

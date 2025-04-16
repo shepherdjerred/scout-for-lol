@@ -1,4 +1,4 @@
-import type { ConditionalKeys } from "./conditional-keys.d.ts";
+import type {ConditionalKeys} from './conditional-keys.d.ts';
 
 /**
 Pick keys from the shape that matches the given `Condition`.
@@ -39,6 +39,6 @@ type StringKeysOnly = ConditionalPick<Example, string>;
 @category Object
 */
 export type ConditionalPick<Base, Condition> = Pick<
-  Base,
-  ConditionalKeys<Base, Condition>
+Base,
+ConditionalKeys<Base, Condition>
 >;

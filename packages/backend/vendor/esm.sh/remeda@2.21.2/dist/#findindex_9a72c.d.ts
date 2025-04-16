@@ -19,10 +19,7 @@
  * @dataFirst
  * @category Array
  */
-declare function findIndex<T>(
-  data: ReadonlyArray<T>,
-  predicate: (value: T, index: number, obj: ReadonlyArray<T>) => boolean,
-): number;
+declare function findIndex<T>(data: ReadonlyArray<T>, predicate: (value: T, index: number, obj: ReadonlyArray<T>) => boolean): number;
 /**
  * Returns the index of the first element in an array that satisfies the
  * provided testing function. If no elements satisfy the testing function, -1 is
@@ -46,8 +43,6 @@ declare function findIndex<T>(
  * @dataLast
  * @category Array
  */
-declare function findIndex<T>(
-  predicate: (value: T, index: number, obj: ReadonlyArray<T>) => boolean,
-): (data: ReadonlyArray<T>) => number;
+declare function findIndex<T>(predicate: (value: T, index: number, obj: ReadonlyArray<T>) => boolean): (data: ReadonlyArray<T>) => number;
 
 export { findIndex };

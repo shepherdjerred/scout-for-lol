@@ -1,4 +1,4 @@
-import type { IsEqual } from "./is-equal.d.ts";
+import type {IsEqual} from './is-equal.d.ts';
 
 /**
 Extract all writable keys from the given type.
@@ -25,10 +25,6 @@ const update1: UpdateRequest<User> = {
 
 @category Utilities
 */
-export type WritableKeysOf<T> = NonNullable<
-  {
-    [P in keyof T]:
-      IsEqual<{ [Q in P]: T[P] }, { readonly [Q in P]: T[P] }> extends false ? P
-        : never;
-  }[keyof T]
->;
+export type WritableKeysOf<T> = NonNullable<{
+	[P in keyof T]: IsEqual<{[Q in P]: T[P]}, {readonly [Q in P]: T[P]}> extends false ? P : never
+}[keyof T]>;

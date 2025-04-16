@@ -1,4 +1,4 @@
-import { MergeDeep } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { MergeDeep } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 /**
  * Merges the `source` object into the `destination` object. The merge is similar to performing `{ ...destination, ... source }` (where disjoint values from each object would be copied as-is, and for any overlapping props the value from `source` would be used); But for *each prop* (`p`), if **both** `destination` and `source` have a **plain-object** as a value, the value would be taken as the result of recursively deepMerging them (`result.p === deepMerge(destination.p, source.p)`).
@@ -13,10 +13,7 @@ import { MergeDeep } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
  * @dataFirst
  * @category Object
  */
-declare function mergeDeep<Destination extends object, Source extends object>(
-  destination: Destination,
-  source: Source,
-): MergeDeep<Destination, Source>;
+declare function mergeDeep<Destination extends object, Source extends object>(destination: Destination, source: Source): MergeDeep<Destination, Source>;
 /**
  * Merges the `source` object into the `destination` object. The merge is similar to performing `{ ...destination, ... source }` (where disjoint values from each object would be copied as-is, and for any overlapping props the value from `source` would be used); But for *each prop* (`p`), if **both** `destination` and `source` have a **plain-object** as a value, the value would be taken as the result of recursively deepMerging them (`result.p === deepMerge(destination.p, source.p)`).
  *
@@ -32,10 +29,6 @@ declare function mergeDeep<Destination extends object, Source extends object>(
  * @dataLast
  * @category Object
  */
-declare function mergeDeep<Source extends object>(
-  source: Source,
-): <Destination extends object>(
-  target: Destination,
-) => MergeDeep<Destination, Source>;
+declare function mergeDeep<Source extends object>(source: Source): <Destination extends object>(target: Destination) => MergeDeep<Destination, Source>;
 
 export { mergeDeep };

@@ -1,4 +1,4 @@
-import type { IsNull } from "./is-null.d.ts";
+import type {IsNull} from './is-null.d.ts';
 
 /**
 Returns a boolean for whether the given type is `unknown`.
@@ -43,8 +43,10 @@ store.execute((state, payload) => ({value: state.value + payload}), someExternal
 
 @category Utilities
 */
-export type IsUnknown<T> = unknown extends T // `T` can be `unknown` or `any`
-  ? IsNull<T> extends false // `any` can be `null`, but `unknown` can't be
-    ? true
-  : false
-  : false;
+export type IsUnknown<T> = (
+	unknown extends T // `T` can be `unknown` or `any`
+		? IsNull<T> extends false // `any` can be `null`, but `unknown` can't be
+			? true
+			: false
+		: false
+);

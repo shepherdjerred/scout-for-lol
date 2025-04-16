@@ -1,5 +1,5 @@
-import type { IsNumericLiteral } from "./is-literal.d.ts";
-import type { IsNegative } from "./numeric.d.ts";
+import type {IsNumericLiteral} from './is-literal.d.ts';
+import type {IsNegative} from './numeric.d.ts';
 
 /**
 Returns a new string which contains the specified number of copies of a given string, just like `String#repeat()`.
@@ -26,22 +26,22 @@ stringRepeat('=', 3);
 @category Template literal
 */
 export type StringRepeat<
-  Input extends string,
-  Count extends number,
+	Input extends string,
+	Count extends number,
 > = StringRepeatHelper<Input, Count>;
 
 type StringRepeatHelper<
-  Input extends string,
-  Count extends number,
-  Counter extends never[] = [],
-  Accumulator extends string = "",
-> = IsNegative<Count> extends true ? never
-  : Input extends "" ? ""
-  : Count extends Counter["length"] ? Accumulator
-  : IsNumericLiteral<Count> extends false ? string
-  : StringRepeatHelper<
-    Input,
-    Count,
-    [...Counter, never],
-    `${Accumulator}${Input}`
-  >;
+	Input extends string,
+	Count extends number,
+	Counter extends never[] = [],
+	Accumulator extends string = '',
+> =
+	IsNegative<Count> extends true
+		? never
+		: Input extends ''
+			? ''
+			: Count extends Counter['length']
+				? Accumulator
+				: IsNumericLiteral<Count> extends false
+					? string
+					: StringRepeatHelper<Input, Count, [...Counter, never], `${Accumulator}${Input}`>;

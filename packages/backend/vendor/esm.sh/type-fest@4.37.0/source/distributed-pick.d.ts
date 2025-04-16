@@ -1,4 +1,4 @@
-import type { KeysOfUnion } from "./keys-of-union.d.ts";
+import type {KeysOfUnion} from './keys-of-union.d.ts';
 
 /**
 Pick keys from a type, distributing the operation over a union.
@@ -79,9 +79,7 @@ if (pickedUnion.discriminant === 'A') {
 
 @category Object
 */
-export type DistributedPick<
-  ObjectType,
-  KeyType extends KeysOfUnion<ObjectType>,
-> = ObjectType extends unknown
-  ? Pick<ObjectType, Extract<KeyType, keyof ObjectType>>
-  : never;
+export type DistributedPick<ObjectType, KeyType extends KeysOfUnion<ObjectType>> =
+	ObjectType extends unknown
+		? Pick<ObjectType, Extract<KeyType, keyof ObjectType>>
+		: never;

@@ -1,5 +1,5 @@
-import { N as NarrowedTo } from "./NarrowedTo-CDIykNaN.d.ts";
-import "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { N as NarrowedTo } from './NarrowedTo-CDIykNaN.d.ts';
+import 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 /**
  * A function that checks if the passed parameter is a boolean and narrows its type accordingly.
@@ -14,8 +14,6 @@ import "https://esm.sh/type-fest@4.37.0/index.d.ts";
  *    R.isBoolean('somethingElse') //=> false
  * @category Guard
  */
-declare function isBoolean<T>(
-  data: T | boolean,
-): data is NarrowedTo<T, boolean>;
+declare function isBoolean<T>(data: T | boolean): data is NarrowedTo<T, boolean>;
 
 export { isBoolean };

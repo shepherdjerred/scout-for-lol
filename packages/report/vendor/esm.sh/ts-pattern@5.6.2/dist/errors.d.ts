@@ -3,6 +3,6 @@
  * and .exhaustive() was specified
  */
 export declare class NonExhaustiveError extends Error {
-  input: unknown;
-  constructor(input: unknown);
+    input: unknown;
+    constructor(input: unknown);
 }

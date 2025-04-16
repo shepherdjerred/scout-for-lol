@@ -16,11 +16,7 @@
  * @dataLast
  * @category String
  */
-declare function sliceString(
-  data: string,
-  indexStart: number,
-  indexEnd?: number,
-): string;
+declare function sliceString(data: string, indexStart: number, indexEnd?: number): string;
 /**
  * Extracts a section of this string and returns it as a new string, without
  * modifying the original string. Equivalent to `String.prototype.slice`.
@@ -38,9 +34,6 @@ declare function sliceString(
  * @dataLast
  * @category String
  */
-declare function sliceString(
-  indexStart: number,
-  indexEnd?: number,
-): (data: string) => string;
+declare function sliceString(indexStart: number, indexEnd?: number): (data: string) => string;
 
 export { sliceString };

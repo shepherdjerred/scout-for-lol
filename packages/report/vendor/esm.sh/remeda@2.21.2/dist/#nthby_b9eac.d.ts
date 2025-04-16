@@ -1,6 +1,6 @@
-import { O as OrderRule } from "./purryOrderRules-BKXCPBNx.d.ts";
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
-import { N as NonEmptyArray } from "./NonEmptyArray-C9Od1wmF.d.ts";
+import { O as OrderRule } from './purryOrderRules-BKXCPBNx.d.ts';
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
+import { N as NonEmptyArray } from './NonEmptyArray-C9Od1wmF.d.ts';
 
 /**
  * Retrieves the element that would be at the given index if the array were sorted according to specified rules. This function uses the *QuickSelect* algorithm running at an average complexity of *O(n)*. Semantically it is equivalent to `sortBy(data, ...rules).at(index)` which would run at *O(nlogn)*.
@@ -18,11 +18,7 @@ import { N as NonEmptyArray } from "./NonEmptyArray-C9Od1wmF.d.ts";
  * @dataFirst
  * @category Array
  */
-declare function nthBy<T extends IterableContainer>(
-  data: T,
-  index: number,
-  ...rules: Readonly<NonEmptyArray<OrderRule<T[number]>>>
-): T[number] | undefined;
+declare function nthBy<T extends IterableContainer>(data: T, index: number, ...rules: Readonly<NonEmptyArray<OrderRule<T[number]>>>): T[number] | undefined;
 /**
  * Retrieves the element that would be at the given index if the array were sorted according to specified rules. This function uses the *QuickSelect* algorithm running at an average complexity of *O(n)*. Semantically it is equivalent to `sortBy(data, ...rules)[index]` which would run at *O(nlogn)*.
  *
@@ -38,9 +34,6 @@ declare function nthBy<T extends IterableContainer>(
  * @dataLast
  * @category Array
  */
-declare function nthBy<T extends IterableContainer>(
-  index: number,
-  ...rules: Readonly<NonEmptyArray<OrderRule<T[number]>>>
-): (data: T) => T[number] | undefined;
+declare function nthBy<T extends IterableContainer>(index: number, ...rules: Readonly<NonEmptyArray<OrderRule<T[number]>>>): (data: T) => T[number] | undefined;
 
 export { nthBy };

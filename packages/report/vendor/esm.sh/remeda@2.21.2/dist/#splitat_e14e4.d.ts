@@ -11,10 +11,7 @@
  * @dataFirst
  * @category Array
  */
-declare function splitAt<T>(
-  array: ReadonlyArray<T>,
-  index: number,
-): [Array<T>, Array<T>];
+declare function splitAt<T>(array: ReadonlyArray<T>, index: number): [Array<T>, Array<T>];
 /**
  * Splits a given array at a given index.
  *
@@ -27,8 +24,6 @@ declare function splitAt<T>(
  * @dataLast
  * @category Array
  */
-declare function splitAt<T>(
-  index: number,
-): (array: ReadonlyArray<T>) => [Array<T>, Array<T>];
+declare function splitAt<T>(index: number): (array: ReadonlyArray<T>) => [Array<T>, Array<T>];
 
 export { splitAt };

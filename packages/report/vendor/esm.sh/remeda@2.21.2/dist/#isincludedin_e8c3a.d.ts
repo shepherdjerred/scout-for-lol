@@ -1,6 +1,6 @@
-import { IsLiteral } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
-import { I as IsUnion } from "./IsUnion-Bx34mF34.d.ts";
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { IsLiteral } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
+import { I as IsUnion } from './IsUnion-Bx34mF34.d.ts';
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
 /**
  * A "constant" tuple is a type that has a single runtime value that can fulfil
@@ -15,10 +15,7 @@ import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
  *   type T2 = IsConstantTuple<["cat" | "dog"]>; // false;
  *   type T2 = IsConstantTuple<["cat", ...Array<"cat">]>; // false;
  */
-type IsConstantTuple<T extends IterableContainer> = T extends readonly [] ? true
-  : T extends readonly [infer Head, ...infer Rest]
-    ? IsUnion<Head> extends true ? false : IsConstantTuple<Rest>
-  : false;
+type IsConstantTuple<T extends IterableContainer> = T extends readonly [] ? true : T extends readonly [infer Head, ...infer Rest] ? IsUnion<Head> extends true ? false : IsConstantTuple<Rest> : false;
 /**
  * There is no way to tell Typescript to only narrow the "accepted" side of a
  * type-predicate and so in many cases the negated side is also affected, this
@@ -49,9 +46,7 @@ type IsConstantTuple<T extends IterableContainer> = T extends readonly [] ? true
  *   }
  * }
  */
-type IsNarrowable<T, S extends IterableContainer<T>> = IsLiteral<T> extends true
-  ? IsConstantTuple<S>
-  : IsLiteral<S[number]>;
+type IsNarrowable<T, S extends IterableContainer<T>> = IsLiteral<T> extends true ? IsConstantTuple<S> : IsLiteral<S[number]>;
 /**
  * Checks if the item is included in the container. This is a wrapper around
  * `Array.prototype.includes` and `Set.prototype.has` and thus relies on the
@@ -77,14 +72,8 @@ type IsNarrowable<T, S extends IterableContainer<T>> = IsLiteral<T> extends true
  * @dataFirst
  * @category Guard
  */
-declare function isIncludedIn<T, S extends IterableContainer<T>>(
-  data: T,
-  container: IsNarrowable<T, S> extends true ? S : never,
-): data is S[number];
-declare function isIncludedIn<T, S extends T>(
-  data: T,
-  container: IterableContainer<S>,
-): boolean;
+declare function isIncludedIn<T, S extends IterableContainer<T>>(data: T, container: IsNarrowable<T, S> extends true ? S : never): data is S[number];
+declare function isIncludedIn<T, S extends T>(data: T, container: IterableContainer<S>): boolean;
 /**
  * Checks if the item is included in the container. This is a wrapper around
  * `Array.prototype.includes` and `Set.prototype.has` and thus relies on the
@@ -112,11 +101,7 @@ declare function isIncludedIn<T, S extends T>(
  * @dataLast
  * @category Guard
  */
-declare function isIncludedIn<T, S extends IterableContainer<T>>(
-  container: IsNarrowable<T, S> extends true ? S : never,
-): (data: T) => data is S[number];
-declare function isIncludedIn<T, S extends T>(
-  container: IterableContainer<S>,
-): (data: T) => boolean;
+declare function isIncludedIn<T, S extends IterableContainer<T>>(container: IsNarrowable<T, S> extends true ? S : never): (data: T) => data is S[number];
+declare function isIncludedIn<T, S extends T>(container: IterableContainer<S>): (data: T) => boolean;
 
 export { isIncludedIn };

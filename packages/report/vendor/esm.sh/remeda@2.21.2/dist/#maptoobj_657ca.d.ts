@@ -19,10 +19,7 @@
  * @dataFirst
  * @category Array
  */
-declare function mapToObj<T, K extends PropertyKey, V>(
-  array: ReadonlyArray<T>,
-  fn: (value: T, index: number, data: ReadonlyArray<T>) => [K, V],
-): Record<K, V>;
+declare function mapToObj<T, K extends PropertyKey, V>(array: ReadonlyArray<T>, fn: (value: T, index: number, data: ReadonlyArray<T>) => [K, V]): Record<K, V>;
 /**
  * Map each element of an array into an object using a defined callback function.
  *
@@ -46,8 +43,6 @@ declare function mapToObj<T, K extends PropertyKey, V>(
  * @dataLast
  * @category Array
  */
-declare function mapToObj<T, K extends PropertyKey, V>(
-  fn: (value: T, index: number, data: ReadonlyArray<T>) => [K, V],
-): (array: ReadonlyArray<T>) => Record<K, V>;
+declare function mapToObj<T, K extends PropertyKey, V>(fn: (value: T, index: number, data: ReadonlyArray<T>) => [K, V]): (array: ReadonlyArray<T>) => Record<K, V>;
 
 export { mapToObj };

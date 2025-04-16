@@ -1,7 +1,6 @@
-import { Join, Words } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { Join, Words } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
-type KebabCase<S extends string> = string extends S ? string
-  : Lowercase<Join<Words<S>, "-">>;
+type KebabCase<S extends string> = string extends S ? string : Lowercase<Join<Words<S>, "-">>;
 /**
  * Convert a text to kebab-Case by splitting it into words and joining them back
  * together with "-", and then lowering the case of the result.

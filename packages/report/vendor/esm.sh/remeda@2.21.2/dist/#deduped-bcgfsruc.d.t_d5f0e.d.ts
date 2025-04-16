@@ -1,5 +1,5 @@
-import { N as NonEmptyArray } from "./NonEmptyArray-C9Od1wmF.d.ts";
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { N as NonEmptyArray } from './NonEmptyArray-C9Od1wmF.d.ts';
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
 /**
  * The result of running a function that would dedupe an array (`unique`,
@@ -15,12 +15,9 @@ import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
  * first), but to make this utility the most useful we kept it simple and
  * generic for now.
  */
-type Deduped<T extends IterableContainer> = T extends readonly [] ? []
-  : T extends readonly [infer Head, ...infer Rest] ? [
-      Head,
-      ...Array<Rest[number]>,
-    ]
-  : T extends readonly [...Array<unknown>, unknown] ? NonEmptyArray<T[number]>
-  : Array<T[number]>;
+type Deduped<T extends IterableContainer> = T extends readonly [] ? [] : T extends readonly [infer Head, ...infer Rest] ? [
+    Head,
+    ...Array<Rest[number]>
+] : T extends readonly [...Array<unknown>, unknown] ? NonEmptyArray<T[number]> : Array<T[number]>;
 
 export type { Deduped as D };

@@ -1,42 +1,24 @@
-import { IfNever, Simplify } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
-import { E as EnumerableStringKeyOf } from "./EnumerableStringKeyOf-BQ4aR5ep.d.ts";
-import { E as EnumerableStringKeyedValueOf } from "./EnumerableStringKeyedValueOf-CLzltniW.d.ts";
-import { I as IfBoundedRecord } from "./IfBoundedRecord-WIX9x_oz.d.ts";
-import { R as ReconstructedRecord } from "./ReconstructedRecord-D5917eE2.d.ts";
+import { Simplify, IfNever } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
+import { E as EnumerableStringKeyOf } from './EnumerableStringKeyOf-BQ4aR5ep.d.ts';
+import { E as EnumerableStringKeyedValueOf } from './EnumerableStringKeyedValueOf-CLzltniW.d.ts';
+import { I as IfBoundedRecord } from './IfBoundedRecord-WIX9x_oz.d.ts';
+import { R as ReconstructedRecord } from './ReconstructedRecord-D5917eE2.d.ts';
 
 type PickSymbolKeys<T extends object> = {
-  -readonly [P in keyof T as P extends symbol ? P : never]: T[P];
+    -readonly [P in keyof T as P extends symbol ? P : never]: T[P];
 };
-type PartialEnumerableKeys<T extends object> = T extends unknown ? Simplify<
-    IfBoundedRecord<
-      T,
-      & PickSymbolKeys<T>
-      & {
-        -readonly [P in keyof T as P extends symbol ? never : P]?: Required<
-          T
-        >[P];
-      },
-      ReconstructedRecord<T>
-    >
-  >
-  : never;
-type PartialEnumerableKeysNarrowed<T extends object, S> = Simplify<
-  ExactProps<T, S> & PartialProps<T, S> & PickSymbolKeys<T>
->;
+type PartialEnumerableKeys<T extends object> = T extends unknown ? Simplify<IfBoundedRecord<T, PickSymbolKeys<T> & {
+    -readonly [P in keyof T as P extends symbol ? never : P]?: Required<T>[P];
+}, ReconstructedRecord<T>>> : never;
+type PartialEnumerableKeysNarrowed<T extends object, S> = Simplify<ExactProps<T, S> & PartialProps<T, S> & PickSymbolKeys<T>>;
 type ExactProps<T, S> = {
-  -readonly [P in keyof T as IsExactProp<T, P, S> extends true ? P : never]:
-    Exclude<T[P], S>;
+    -readonly [P in keyof T as IsExactProp<T, P, S> extends true ? P : never]: Exclude<T[P], S>;
 };
 type PartialProps<T, S> = {
-  -readonly [P in keyof T as IsPartialProp<T, P, S> extends true ? P : never]?:
-    Exclude<T[P], S>;
+    -readonly [P in keyof T as IsPartialProp<T, P, S> extends true ? P : never]?: Exclude<T[P], S>;
 };
-type IsExactProp<T, P extends keyof T, S> = P extends symbol ? false
-  : T[P] extends Exclude<T[P], S> ? S extends T[P] ? false : true
-  : false;
-type IsPartialProp<T, P extends keyof T, S> = P extends symbol ? false
-  : IsExactProp<T, P, S> extends true ? false
-  : IfNever<Exclude<Required<T>[P], S>, false, true>;
+type IsExactProp<T, P extends keyof T, S> = P extends symbol ? false : T[P] extends Exclude<T[P], S> ? S extends T[P] ? false : true : false;
+type IsPartialProp<T, P extends keyof T, S> = P extends symbol ? false : IsExactProp<T, P, S> extends true ? false : IfNever<Exclude<Required<T>[P], S>, false, true>;
 /**
  * Creates a shallow copy of the data, and then removes any keys that the
  * predicate rejects. Symbol keys are not passed to the predicate and would be
@@ -59,25 +41,8 @@ type IsPartialProp<T, P extends keyof T, S> = P extends symbol ? false
  * @dataFirst
  * @category Object
  */
-declare function omitBy<
-  T extends object,
-  S extends EnumerableStringKeyedValueOf<T>,
->(
-  data: T,
-  predicate: (
-    value: EnumerableStringKeyedValueOf<T>,
-    key: EnumerableStringKeyOf<T>,
-    data: T,
-  ) => value is S,
-): PartialEnumerableKeysNarrowed<T, S>;
-declare function omitBy<T extends object>(
-  data: T,
-  predicate: (
-    value: EnumerableStringKeyedValueOf<T>,
-    key: EnumerableStringKeyOf<T>,
-    data: T,
-  ) => boolean,
-): PartialEnumerableKeys<T>;
+declare function omitBy<T extends object, S extends EnumerableStringKeyedValueOf<T>>(data: T, predicate: (value: EnumerableStringKeyedValueOf<T>, key: EnumerableStringKeyOf<T>, data: T) => value is S): PartialEnumerableKeysNarrowed<T, S>;
+declare function omitBy<T extends object>(data: T, predicate: (value: EnumerableStringKeyedValueOf<T>, key: EnumerableStringKeyOf<T>, data: T) => boolean): PartialEnumerableKeys<T>;
 /**
  * Returns a partial copy of an object omitting the keys matching predicate.
  *
@@ -88,22 +53,7 @@ declare function omitBy<T extends object>(
  * @dataLast
  * @category Object
  */
-declare function omitBy<
-  T extends object,
-  S extends EnumerableStringKeyedValueOf<T>,
->(
-  predicate: (
-    value: EnumerableStringKeyedValueOf<T>,
-    key: EnumerableStringKeyOf<T>,
-    data: T,
-  ) => value is S,
-): (data: T) => PartialEnumerableKeysNarrowed<T, S>;
-declare function omitBy<T extends object>(
-  predicate: (
-    value: EnumerableStringKeyedValueOf<T>,
-    key: EnumerableStringKeyOf<T>,
-    data: T,
-  ) => boolean,
-): (data: T) => PartialEnumerableKeys<T>;
+declare function omitBy<T extends object, S extends EnumerableStringKeyedValueOf<T>>(predicate: (value: EnumerableStringKeyedValueOf<T>, key: EnumerableStringKeyOf<T>, data: T) => value is S): (data: T) => PartialEnumerableKeysNarrowed<T, S>;
+declare function omitBy<T extends object>(predicate: (value: EnumerableStringKeyedValueOf<T>, key: EnumerableStringKeyOf<T>, data: T) => boolean): (data: T) => PartialEnumerableKeys<T>;
 
 export { omitBy };

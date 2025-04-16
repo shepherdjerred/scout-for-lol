@@ -1,7 +1,7 @@
-import type { Except } from "./except.d.ts";
-import type { HomomorphicPick } from "./internal/index.d.ts";
-import type { KeysOfUnion } from "./keys-of-union.d.ts";
-import type { Simplify } from "./simplify.d.ts";
+import type {Except} from './except.d.ts';
+import type {HomomorphicPick} from './internal/index.d.ts';
+import type {KeysOfUnion} from './keys-of-union.d.ts';
+import type {Simplify} from './simplify.d.ts';
 
 /**
 Create a type that makes the given keys readonly. The remaining keys are kept as is.
@@ -29,11 +29,12 @@ type SomeReadonly = SetReadonly<Foo, 'b' | 'c'>;
 @category Object
 */
 export type SetReadonly<BaseType, Keys extends keyof BaseType> =
-  // `extends unknown` is always going to be the case and is used to convert any
-  // union into a [distributive conditional
-  // type](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-8.html#distributive-conditional-types).
-  BaseType extends unknown ? Simplify<
-      & Except<BaseType, Keys>
-      & Readonly<HomomorphicPick<BaseType, Keys>>
-    >
-    : never;
+	// `extends unknown` is always going to be the case and is used to convert any
+	// union into a [distributive conditional
+	// type](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-8.html#distributive-conditional-types).
+	BaseType extends unknown
+		? Simplify<
+		Except<BaseType, Keys> &
+		Readonly<HomomorphicPick<BaseType, Keys>>
+		>
+		: never;

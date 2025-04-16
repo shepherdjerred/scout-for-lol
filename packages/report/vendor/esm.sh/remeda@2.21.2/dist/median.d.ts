@@ -1,8 +1,6 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
-type Median<T extends IterableContainer<number>> =
-  | (T extends readonly [] ? never : number)
-  | (T extends readonly [unknown, ...Array<unknown>] ? never : undefined);
+type Median<T extends IterableContainer<number>> = (T extends readonly [] ? never : number) | (T extends readonly [unknown, ...Array<unknown>] ? never : undefined);
 /**
  * Returns the median of the elements of an array.
  *
@@ -23,9 +21,7 @@ type Median<T extends IterableContainer<number>> =
  * @dataFirst
  * @category Number
  */
-declare function median<T extends IterableContainer<number>>(
-  data: T,
-): Median<T>;
+declare function median<T extends IterableContainer<number>>(data: T): Median<T>;
 /**
  * Returns the median of the elements of an array.
  *
@@ -45,8 +41,6 @@ declare function median<T extends IterableContainer<number>>(
  * @dataLast
  * @category Number
  */
-declare function median(): <T extends IterableContainer<number>>(
-  data: T,
-) => Median<T>;
+declare function median(): <T extends IterableContainer<number>>(data: T) => Median<T>;
 
 export { median };

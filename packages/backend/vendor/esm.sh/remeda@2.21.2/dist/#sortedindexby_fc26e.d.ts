@@ -31,15 +31,7 @@
  * @dataFirst
  * @category Array
  */
-declare function sortedIndexBy<T>(
-  data: ReadonlyArray<T>,
-  item: T,
-  valueFunction: (
-    item: T,
-    index: number | undefined,
-    data: ReadonlyArray<T>,
-  ) => NonNullable<unknown>,
-): number;
+declare function sortedIndexBy<T>(data: ReadonlyArray<T>, item: T, valueFunction: (item: T, index: number | undefined, data: ReadonlyArray<T>) => NonNullable<unknown>): number;
 /**
  * Find the insertion position (index) of an item in an array with items sorted
  * in ascending order using a value function; so that
@@ -71,13 +63,6 @@ declare function sortedIndexBy<T>(
  * @dataLast
  * @category Array
  */
-declare function sortedIndexBy<T>(
-  item: T,
-  valueFunction: (
-    item: T,
-    index: number | undefined,
-    data: ReadonlyArray<T>,
-  ) => NonNullable<unknown>,
-): (data: ReadonlyArray<T>) => number;
+declare function sortedIndexBy<T>(item: T, valueFunction: (item: T, index: number | undefined, data: ReadonlyArray<T>) => NonNullable<unknown>): (data: ReadonlyArray<T>) => number;
 
 export { sortedIndexBy };

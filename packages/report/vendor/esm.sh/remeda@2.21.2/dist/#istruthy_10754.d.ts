@@ -14,8 +14,6 @@
  *    R.isTruthy('') //=> false
  * @category Guard
  */
-declare function isTruthy<T>(
-  data: T,
-): data is Exclude<T, "" | 0 | false | null | undefined>;
+declare function isTruthy<T>(data: T): data is Exclude<T, "" | 0 | false | null | undefined>;
 
 export { isTruthy };

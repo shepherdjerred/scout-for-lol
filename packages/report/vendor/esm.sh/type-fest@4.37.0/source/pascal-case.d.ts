@@ -1,4 +1,4 @@
-import type { CamelCase, CamelCaseOptions } from "./camel-case.d.ts";
+import type {CamelCase, CamelCaseOptions} from './camel-case.d.ts';
 
 /**
 Converts a string literal to pascal-case.
@@ -33,9 +33,6 @@ const dbResult: CamelCasedProperties<ModelProps> = {
 @category Change case
 @category Template literal
 */
-export type PascalCase<
-  Value,
-  Options extends CamelCaseOptions = { preserveConsecutiveUppercase: true },
-> = CamelCase<Value, Options> extends string
-  ? Capitalize<CamelCase<Value, Options>>
-  : CamelCase<Value, Options>;
+export type PascalCase<Value, Options extends CamelCaseOptions = {preserveConsecutiveUppercase: true}> = CamelCase<Value, Options> extends string
+	? Capitalize<CamelCase<Value, Options>>
+	: CamelCase<Value, Options>;

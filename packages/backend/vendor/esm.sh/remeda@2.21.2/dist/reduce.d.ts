@@ -22,16 +22,7 @@
  * @dataFirst
  * @category Array
  */
-declare function reduce<T, U>(
-  data: ReadonlyArray<T>,
-  callbackfn: (
-    previousValue: U,
-    currentValue: T,
-    currentIndex: number,
-    data: ReadonlyArray<T>,
-  ) => U,
-  initialValue: U,
-): U;
+declare function reduce<T, U>(data: ReadonlyArray<T>, callbackfn: (previousValue: U, currentValue: T, currentIndex: number, data: ReadonlyArray<T>) => U, initialValue: U): U;
 /**
  * Executes a user-supplied "reducer" callback function on each element of the
  * array, in order, passing in the return value from the calculation on the
@@ -55,14 +46,6 @@ declare function reduce<T, U>(
  * @dataLast
  * @category Array
  */
-declare function reduce<T, U>(
-  callbackfn: (
-    previousValue: U,
-    currentValue: T,
-    currentIndex: number,
-    data: ReadonlyArray<T>,
-  ) => U,
-  initialValue: U,
-): (data: ReadonlyArray<T>) => U;
+declare function reduce<T, U>(callbackfn: (previousValue: U, currentValue: T, currentIndex: number, data: ReadonlyArray<T>) => U, initialValue: U): (data: ReadonlyArray<T>) => U;
 
 export { reduce };

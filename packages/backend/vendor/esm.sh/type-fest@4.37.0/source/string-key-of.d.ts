@@ -22,7 +22,4 @@ type StringKeysOfFoo = StringKeyOf<Foo>;
 
 @category Object
 */
-export type StringKeyOf<BaseType> = `${Extract<
-  keyof BaseType,
-  string | number
->}`;
+export type StringKeyOf<BaseType> = `${Extract<keyof BaseType, string | number>}`;

@@ -1,9 +1,6 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
-type SumBy<T extends IterableContainer, U extends bigint | number> = T extends
-  readonly [] ? 0
-  : T extends readonly [unknown, ...ReadonlyArray<unknown>] ? U
-  : U | 0;
+type SumBy<T extends IterableContainer, U extends bigint | number> = T extends readonly [] ? 0 : T extends readonly [unknown, ...ReadonlyArray<unknown>] ? U : U | 0;
 /**
  * Returns the sum of the elements of an array using the provided mapper.
  *
@@ -31,12 +28,8 @@ type SumBy<T extends IterableContainer, U extends bigint | number> = T extends
  * @dataLast
  * @category Array
  */
-declare function sumBy<T extends IterableContainer>(
-  callbackfn: (value: T[number], index: number, data: T) => number,
-): (items: T) => SumBy<T, number>;
-declare function sumBy<T extends IterableContainer>(
-  callbackfn: (value: T[number], index: number, data: T) => bigint,
-): (items: T) => SumBy<T, bigint>;
+declare function sumBy<T extends IterableContainer>(callbackfn: (value: T[number], index: number, data: T) => number): (items: T) => SumBy<T, number>;
+declare function sumBy<T extends IterableContainer>(callbackfn: (value: T[number], index: number, data: T) => bigint): (items: T) => SumBy<T, bigint>;
 /**
  * Returns the sum of the elements of an array using the provided mapper.
  *
@@ -64,13 +57,7 @@ declare function sumBy<T extends IterableContainer>(
  * @dataFirst
  * @category Array
  */
-declare function sumBy<T extends IterableContainer>(
-  data: T,
-  callbackfn: (value: T[number], index: number, data: T) => number,
-): SumBy<T, number>;
-declare function sumBy<T extends IterableContainer>(
-  data: T,
-  callbackfn: (value: T[number], index: number, data: T) => bigint,
-): SumBy<T, bigint>;
+declare function sumBy<T extends IterableContainer>(data: T, callbackfn: (value: T[number], index: number, data: T) => number): SumBy<T, number>;
+declare function sumBy<T extends IterableContainer>(data: T, callbackfn: (value: T[number], index: number, data: T) => bigint): SumBy<T, bigint>;
 
 export { sumBy };

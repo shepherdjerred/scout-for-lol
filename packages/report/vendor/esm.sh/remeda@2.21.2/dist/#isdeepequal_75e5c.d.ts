@@ -31,10 +31,7 @@
  * @dataFirst
  * @category Guard
  */
-declare function isDeepEqual<T, S extends T>(
-  data: T,
-  other: T extends Exclude<T, S> ? S : never,
-): data is S;
+declare function isDeepEqual<T, S extends T>(data: T, other: T extends Exclude<T, S> ? S : never): data is S;
 declare function isDeepEqual<T>(data: T, other: T): boolean;
 /**
  * Performs a *deep structural* comparison between two values to determine if
@@ -68,9 +65,7 @@ declare function isDeepEqual<T>(data: T, other: T): boolean;
  * @dataLast
  * @category Guard
  */
-declare function isDeepEqual<T, S extends T>(
-  other: T extends Exclude<T, S> ? S : never,
-): (data: T) => data is S;
+declare function isDeepEqual<T, S extends T>(other: T extends Exclude<T, S> ? S : never): (data: T) => data is S;
 declare function isDeepEqual<T>(other: T): (data: T) => boolean;
 
 export { isDeepEqual };

@@ -1,4 +1,4 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
 /**
  * Removes last `n` elements from the `array`.
@@ -12,10 +12,7 @@ import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
  * @dataFirst
  * @category Array
  */
-declare function dropLast<T extends IterableContainer>(
-  array: T,
-  n: number,
-): Array<T[number]>;
+declare function dropLast<T extends IterableContainer>(array: T, n: number): Array<T[number]>;
 /**
  * Removes last `n` elements from the `array`.
  *
@@ -27,8 +24,6 @@ declare function dropLast<T extends IterableContainer>(
  * @dataLast
  * @category Array
  */
-declare function dropLast(
-  n: number,
-): <T extends IterableContainer>(array: T) => Array<T[number]>;
+declare function dropLast(n: number): <T extends IterableContainer>(array: T) => Array<T[number]>;
 
 export { dropLast };

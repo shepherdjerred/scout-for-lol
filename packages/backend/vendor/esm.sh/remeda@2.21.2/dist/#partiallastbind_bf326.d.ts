@@ -1,29 +1,16 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
-import { R as RemedaTypeError } from "./RemedaTypeError-C4mozr3m.d.ts";
-import { T as TupleSplits } from "./TupleSplits-eRE__Ilo.d.ts";
-import "https://esm.sh/type-fest@4.37.0/index.d.ts";
-import "./TupleParts-CP0H7BrE.d.ts";
-import "./CoercedArray-DRz3tqda.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
+import { R as RemedaTypeError } from './RemedaTypeError-C4mozr3m.d.ts';
+import { T as TupleSplits } from './TupleSplits-eRE__Ilo.d.ts';
+import 'https://esm.sh/type-fest@4.37.0/index.d.ts';
+import './TupleParts-CP0H7BrE.d.ts';
+import './CoercedArray-DRz3tqda.d.ts';
 
-type PartialLastBindError<Message extends string | number> = RemedaTypeError<
-  "partialLastBind",
-  Message
->;
+type PartialLastBindError<Message extends string | number> = RemedaTypeError<"partialLastBind", Message>;
 type TupleSuffix<T extends IterableContainer> = TupleSplits<T>["right"];
-type RemoveSuffix<T extends IterableContainer, Suffix extends TupleSuffix<T>> =
-  Suffix extends readonly [] ? T
-    : T extends readonly [...infer TRest, infer TLast]
-      ? Suffix extends readonly [...infer SuffixRest, infer _SuffixLast]
-        ? RemoveSuffix<TRest, SuffixRest>
-      : [
-        ...RemoveSuffix<TRest, Suffix>,
-        TLast?,
-      ]
-    : T extends readonly [...infer TRest, (infer _TLast)?]
-      ? Suffix extends readonly [...infer SuffixRest, infer _SuffixLast]
-        ? RemoveSuffix<TRest, SuffixRest>
-      : TRest
-    : PartialLastBindError<1>;
+type RemoveSuffix<T extends IterableContainer, Suffix extends TupleSuffix<T>> = Suffix extends readonly [] ? T : T extends readonly [...infer TRest, infer TLast] ? Suffix extends readonly [...infer SuffixRest, infer _SuffixLast] ? RemoveSuffix<TRest, SuffixRest> : [
+    ...RemoveSuffix<TRest, Suffix>,
+    TLast?
+] : T extends readonly [...infer TRest, (infer _TLast)?] ? Suffix extends readonly [...infer SuffixRest, infer _SuffixLast] ? RemoveSuffix<TRest, SuffixRest> : TRest : PartialLastBindError<1>;
 /**
  * Creates a function that calls `func` with `partial` put after the arguments
  * it receives. Note that this doesn't support functions with both optional
@@ -56,15 +43,6 @@ type RemoveSuffix<T extends IterableContainer, Suffix extends TupleSuffix<T>> =
  * @category Function
  * @see partialBind
  */
-declare function partialLastBind<
-  F extends (...args: any) => any,
-  SuffixArgs extends TupleSuffix<Parameters<F>>,
-  RemovedSuffix extends RemoveSuffix<Parameters<F>, SuffixArgs>,
->(
-  func: F,
-  ...partial: SuffixArgs
-): (
-  ...rest: RemovedSuffix extends IterableContainer ? RemovedSuffix : never
-) => ReturnType<F>;
+declare function partialLastBind<F extends (...args: any) => any, SuffixArgs extends TupleSuffix<Parameters<F>>, RemovedSuffix extends RemoveSuffix<Parameters<F>, SuffixArgs>>(func: F, ...partial: SuffixArgs): (...rest: RemovedSuffix extends IterableContainer ? RemovedSuffix : never) => ReturnType<F>;
 
 export { partialLastBind };

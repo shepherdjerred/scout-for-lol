@@ -1,7 +1,7 @@
-import { E as ExactRecord } from "./ExactRecord-or8-oNP7.d.ts";
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
-import "./IfBoundedRecord-WIX9x_oz.d.ts";
-import "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { E as ExactRecord } from './ExactRecord-or8-oNP7.d.ts';
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
+import './IfBoundedRecord-WIX9x_oz.d.ts';
+import 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 /**
  * Creates an object that maps the result of `valueExtractor` with a key
@@ -34,15 +34,7 @@ import "https://esm.sh/type-fest@4.37.0/index.d.ts";
  * @dataFirst
  * @category Object
  */
-declare function pullObject<
-  T extends IterableContainer,
-  K extends PropertyKey,
-  V,
->(
-  data: T,
-  keyExtractor: (item: T[number], index: number, data: T) => K,
-  valueExtractor: (item: T[number], index: number, data: T) => V,
-): ExactRecord<K, V>;
+declare function pullObject<T extends IterableContainer, K extends PropertyKey, V>(data: T, keyExtractor: (item: T[number], index: number, data: T) => K, valueExtractor: (item: T[number], index: number, data: T) => V): ExactRecord<K, V>;
 /**
  * Creates an object that maps the result of `valueExtractor` with a key
  * resulting from running `keyExtractor` on each item in `data`. Duplicate keys
@@ -72,13 +64,6 @@ declare function pullObject<
  * @dataLast
  * @category Object
  */
-declare function pullObject<
-  T extends IterableContainer,
-  K extends PropertyKey,
-  V,
->(
-  keyExtractor: (item: T[number], index: number, data: T) => K,
-  valueExtractor: (item: T[number], index: number, data: T) => V,
-): (data: T) => ExactRecord<K, V>;
+declare function pullObject<T extends IterableContainer, K extends PropertyKey, V>(keyExtractor: (item: T[number], index: number, data: T) => K, valueExtractor: (item: T[number], index: number, data: T) => V): (data: T) => ExactRecord<K, V>;
 
 export { pullObject };

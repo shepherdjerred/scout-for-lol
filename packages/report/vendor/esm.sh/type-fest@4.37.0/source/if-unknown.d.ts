@@ -1,4 +1,4 @@
-import type { IsUnknown } from "./is-unknown.d.ts";
+import type {IsUnknown} from './is-unknown.d.ts';
 
 /**
 An if-else-like type that resolves depending on whether the given type is `unknown`.
@@ -19,5 +19,6 @@ type ShouldBeBar = IfUnknown<'not unknown', 'foo', 'bar'>;
 @category Type Guard
 @category Utilities
 */
-export type IfUnknown<T, TypeIfUnknown = true, TypeIfNotUnknown = false> =
-  IsUnknown<T> extends true ? TypeIfUnknown : TypeIfNotUnknown;
+export type IfUnknown<T, TypeIfUnknown = true, TypeIfNotUnknown = false> = (
+	IsUnknown<T> extends true ? TypeIfUnknown : TypeIfNotUnknown
+);

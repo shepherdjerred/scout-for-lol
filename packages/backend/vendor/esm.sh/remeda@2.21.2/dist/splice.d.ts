@@ -13,12 +13,7 @@
  * @dataFirst
  * @category Array
  */
-declare function splice<T>(
-  items: ReadonlyArray<T>,
-  start: number,
-  deleteCount: number,
-  replacement: ReadonlyArray<T>,
-): Array<T>;
+declare function splice<T>(items: ReadonlyArray<T>, start: number, deleteCount: number, replacement: ReadonlyArray<T>): Array<T>;
 /**
  * Removes elements from an array and, inserts new elements in their place.
  *
@@ -33,10 +28,6 @@ declare function splice<T>(
  * @dataLast
  * @category Array
  */
-declare function splice<T>(
-  start: number,
-  deleteCount: number,
-  replacement: ReadonlyArray<T>,
-): (items: ReadonlyArray<T>) => Array<T>;
+declare function splice<T>(start: number, deleteCount: number, replacement: ReadonlyArray<T>): (items: ReadonlyArray<T>) => Array<T>;
 
 export { splice };

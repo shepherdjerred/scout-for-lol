@@ -1,5 +1,5 @@
-import { Match } from "./types/Match.d.ts";
-import * as symbols from "./internals/symbols.d.ts";
+import { Match } from './types/Match.d.ts';
+import * as symbols from './internals/symbols.d.ts';
 /**
  * `match` creates a **pattern matching expression**.
  *  * Use `.with(pattern, handler)` to pattern match on the input.
@@ -14,7 +14,6 @@ import * as symbols from "./internals/symbols.d.ts";
  *    .with("A", () => "It's an A!")
  *    .with("B", () => "It's a B!")
  *    .exhaustive();
+ *
  */
-export declare function match<const input, output = symbols.unset>(
-  value: input,
-): Match<input, output>;
+export declare function match<const input, output = symbols.unset>(value: input): Match<input, output>;

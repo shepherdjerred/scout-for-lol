@@ -1,6 +1,6 @@
-import { E as EnumerableStringKeyOf } from "./EnumerableStringKeyOf-BQ4aR5ep.d.ts";
-import { E as EnumerableStringKeyedValueOf } from "./EnumerableStringKeyedValueOf-CLzltniW.d.ts";
-import "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { E as EnumerableStringKeyOf } from './EnumerableStringKeyOf-BQ4aR5ep.d.ts';
+import { E as EnumerableStringKeyedValueOf } from './EnumerableStringKeyedValueOf-CLzltniW.d.ts';
+import 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 /**
  * Iterate an object using a defined callback function.
@@ -20,14 +20,7 @@ import "https://esm.sh/type-fest@4.37.0/index.d.ts";
  * @dataFirst
  * @category Object
  */
-declare function forEachObj<T extends object>(
-  data: T,
-  callbackfn: (
-    value: EnumerableStringKeyedValueOf<T>,
-    key: EnumerableStringKeyOf<T>,
-    obj: T,
-  ) => void,
-): void;
+declare function forEachObj<T extends object>(data: T, callbackfn: (value: EnumerableStringKeyedValueOf<T>, key: EnumerableStringKeyOf<T>, obj: T) => void): void;
 /**
  * Iterate an object using a defined callback function.
  *
@@ -47,12 +40,6 @@ declare function forEachObj<T extends object>(
  * @dataLast
  * @category Object
  */
-declare function forEachObj<T extends object>(
-  callbackfn: (
-    value: EnumerableStringKeyedValueOf<T>,
-    key: EnumerableStringKeyOf<T>,
-    obj: T,
-  ) => void,
-): (object: T) => T;
+declare function forEachObj<T extends object>(callbackfn: (value: EnumerableStringKeyedValueOf<T>, key: EnumerableStringKeyOf<T>, obj: T) => void): (object: T) => T;
 
 export { forEachObj };

@@ -1,8 +1,6 @@
-import type { ArrayEntry, MapEntry, ObjectEntry, SetEntry } from "./entry.d.ts";
+import type {ArrayEntry, MapEntry, ObjectEntry, SetEntry} from './entry.d.ts';
 
-type ArrayEntries<BaseType extends readonly unknown[]> = Array<
-  ArrayEntry<BaseType>
->;
+type ArrayEntries<BaseType extends readonly unknown[]> = Array<ArrayEntry<BaseType>>;
 type MapEntries<BaseType> = Array<MapEntry<BaseType>>;
 type ObjectEntries<BaseType> = Array<ObjectEntry<BaseType>>;
 type SetEntries<BaseType extends Set<unknown>> = Array<SetEntry<BaseType>>;
@@ -56,9 +54,9 @@ const setEntries: Entries<typeof setExample> = [['a', 'a'], [1, 1]];
 @category Set
 @category Array
 */
-export type Entries<BaseType> = BaseType extends Map<unknown, unknown>
-  ? MapEntries<BaseType>
-  : BaseType extends Set<unknown> ? SetEntries<BaseType>
-  : BaseType extends readonly unknown[] ? ArrayEntries<BaseType>
-  : BaseType extends object ? ObjectEntries<BaseType>
-  : never;
+export type Entries<BaseType> =
+	BaseType extends Map<unknown, unknown> ? MapEntries<BaseType>
+		: BaseType extends Set<unknown> ? SetEntries<BaseType>
+			: BaseType extends readonly unknown[] ? ArrayEntries<BaseType>
+				: BaseType extends object ? ObjectEntries<BaseType>
+					: never;

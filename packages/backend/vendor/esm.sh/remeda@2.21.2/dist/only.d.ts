@@ -1,12 +1,6 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
-type Only<T extends IterableContainer> = T extends
-  | readonly [...Array<unknown>, unknown, unknown]
-  | readonly []
-  | readonly [unknown, ...Array<unknown>, unknown]
-  | readonly [unknown, unknown, ...Array<unknown>] ? undefined
-  : T extends readonly [unknown] ? T[number]
-  : T[number] | undefined;
+type Only<T extends IterableContainer> = T extends readonly [...Array<unknown>, unknown, unknown] | readonly [] | readonly [unknown, ...Array<unknown>, unknown] | readonly [unknown, unknown, ...Array<unknown>] ? undefined : T extends readonly [unknown] ? T[number] : T[number] | undefined;
 /**
  * Returns the first and only element of `array`, or undefined otherwise.
  *
@@ -33,8 +27,6 @@ declare function only<T extends IterableContainer>(array: Readonly<T>): Only<T>;
  * @dataLast
  * @category Array
  */
-declare function only<T extends IterableContainer>(): (
-  array: Readonly<T>,
-) => Only<T>;
+declare function only<T extends IterableContainer>(): (array: Readonly<T>) => Only<T>;
 
 export { only };

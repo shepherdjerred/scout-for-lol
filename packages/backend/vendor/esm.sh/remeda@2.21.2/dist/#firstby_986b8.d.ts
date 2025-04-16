@@ -1,12 +1,8 @@
-import { O as OrderRule } from "./purryOrderRules-BKXCPBNx.d.ts";
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
-import { N as NonEmptyArray } from "./NonEmptyArray-C9Od1wmF.d.ts";
+import { O as OrderRule } from './purryOrderRules-BKXCPBNx.d.ts';
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
+import { N as NonEmptyArray } from './NonEmptyArray-C9Od1wmF.d.ts';
 
-type FirstBy<T extends IterableContainer> =
-  | T[number]
-  | (T extends readonly [unknown, ...ReadonlyArray<unknown>] ? never
-    : T extends readonly [...ReadonlyArray<unknown>, unknown] ? never
-    : undefined);
+type FirstBy<T extends IterableContainer> = T[number] | (T extends readonly [unknown, ...ReadonlyArray<unknown>] ? never : T extends readonly [...ReadonlyArray<unknown>, unknown] ? never : undefined);
 /**
  * Find the first element in the array that adheres to the order rules provided. This is a superset of what a typical `maxBy` or `minBy` function would do as it allows defining "tie-breaker" rules when values are equal, and allows comparing items using any logic. This function is equivalent to calling `R.first(R.sortBy(...))` but runs at *O(n)* instead of *O(nlogn)*.
  *
@@ -31,9 +27,7 @@ type FirstBy<T extends IterableContainer> =
  * @dataLast
  * @category Array
  */
-declare function firstBy<T extends IterableContainer>(
-  ...rules: Readonly<NonEmptyArray<OrderRule<T[number]>>>
-): (data: T) => FirstBy<T>;
+declare function firstBy<T extends IterableContainer>(...rules: Readonly<NonEmptyArray<OrderRule<T[number]>>>): (data: T) => FirstBy<T>;
 /**
  * Find the first element in the array that adheres to the order rules provided. This is a superset of what a typical `maxBy` or `minBy` function would do as it allows defining "tie-breaker" rules when values are equal, and allows comparing items using any logic. This function is equivalent to calling `R.first(R.sortBy(...))` but runs at *O(n)* instead of *O(nlogn)*.
  *
@@ -59,9 +53,6 @@ declare function firstBy<T extends IterableContainer>(
  * @dataFirst
  * @category Array
  */
-declare function firstBy<T extends IterableContainer>(
-  data: T,
-  ...rules: Readonly<NonEmptyArray<OrderRule<T[number]>>>
-): FirstBy<T>;
+declare function firstBy<T extends IterableContainer>(data: T, ...rules: Readonly<NonEmptyArray<OrderRule<T[number]>>>): FirstBy<T>;
 
 export { firstBy };

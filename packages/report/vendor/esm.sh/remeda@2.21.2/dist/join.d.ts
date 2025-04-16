@@ -1,4 +1,4 @@
-import { Join } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { Join } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 type JoinableItem = bigint | boolean | number | string | null | undefined;
 /**
@@ -20,10 +20,7 @@ type JoinableItem = bigint | boolean | number | string | null | undefined;
  * @dataFirst
  * @category Array
  */
-declare function join<
-  T extends ReadonlyArray<JoinableItem> | [],
-  Glue extends string,
->(data: T, glue: Glue): Join<T, Glue>;
+declare function join<T extends ReadonlyArray<JoinableItem> | [], Glue extends string>(data: T, glue: Glue): Join<T, Glue>;
 /**
  * Joins the elements of the array by: casting them to a string and
  * concatenating them one to the other, with the provided glue string in between
@@ -42,9 +39,6 @@ declare function join<
  * @dataLast
  * @category Array
  */
-declare function join<
-  T extends ReadonlyArray<JoinableItem> | [],
-  Glue extends string,
->(glue: Glue): (data: T) => Join<T, Glue>;
+declare function join<T extends ReadonlyArray<JoinableItem> | [], Glue extends string>(glue: Glue): (data: T) => Join<T, Glue>;
 
 export { join };

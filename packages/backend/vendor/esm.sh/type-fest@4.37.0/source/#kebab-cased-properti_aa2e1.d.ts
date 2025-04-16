@@ -1,4 +1,4 @@
-import type { DelimiterCasedPropertiesDeep } from "./delimiter-cased-properties-deep.d.ts";
+import type {DelimiterCasedPropertiesDeep} from './delimiter-cased-properties-deep.d.ts';
 
 /**
 Convert object properties to kebab case recursively.
@@ -44,7 +44,4 @@ const result: KebabCasedPropertiesDeep<UserWithFriends> = {
 @category Template literal
 @category Object
 */
-export type KebabCasedPropertiesDeep<Value> = DelimiterCasedPropertiesDeep<
-  Value,
-  "-"
->;
+export type KebabCasedPropertiesDeep<Value> = DelimiterCasedPropertiesDeep<Value, '-'>;

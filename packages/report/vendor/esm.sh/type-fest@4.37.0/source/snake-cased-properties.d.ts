@@ -1,4 +1,4 @@
-import type { DelimiterCasedProperties } from "./delimiter-cased-properties.d.ts";
+import type {DelimiterCasedProperties} from './delimiter-cased-properties.d.ts';
 
 /**
 Convert object properties to snake case but not recursively.
@@ -27,4 +27,4 @@ const result: SnakeCasedProperties<User> = {
 @category Template literal
 @category Object
 */
-export type SnakeCasedProperties<Value> = DelimiterCasedProperties<Value, "_">;
+export type SnakeCasedProperties<Value> = DelimiterCasedProperties<Value, '_'>;

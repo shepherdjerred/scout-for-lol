@@ -1,7 +1,5 @@
 // Helper type. Not useful on its own.
-type Without<FirstType, SecondType> = {
-  [KeyType in Exclude<keyof FirstType, keyof SecondType>]?: never;
-};
+type Without<FirstType, SecondType> = {[KeyType in Exclude<keyof FirstType, keyof SecondType>]?: never};
 
 /**
 Create a type that has mutually exclusive keys.
@@ -37,7 +35,7 @@ exclusiveOptions = {exclusive1: true, exclusive2: 'hi'};
 @category Object
 */
 export type MergeExclusive<FirstType, SecondType> =
-  (FirstType | SecondType) extends object ?
-      | (Without<FirstType, SecondType> & SecondType)
-      | (Without<SecondType, FirstType> & FirstType)
-    : FirstType | SecondType;
+	(FirstType | SecondType) extends object ?
+		(Without<FirstType, SecondType> & SecondType) | (Without<SecondType, FirstType> & FirstType) :
+		FirstType | SecondType;
+

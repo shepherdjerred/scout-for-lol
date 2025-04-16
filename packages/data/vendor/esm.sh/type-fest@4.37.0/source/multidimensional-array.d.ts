@@ -1,5 +1,5 @@
-import type { Subtract } from "./subtract.d.ts";
-import type { IsEqual } from "./is-equal.d.ts";
+import type {Subtract} from './subtract.d.ts';
+import type {IsEqual} from './is-equal.d.ts';
 
 type Recursive<T> = Array<Recursive<T>>;
 
@@ -37,7 +37,8 @@ matrix[0][0][0] = 42;
 
 @category Array
 */
-export type MultidimensionalArray<Element, Dimensions extends number> =
-  number extends Dimensions ? Recursive<Element>
-    : IsEqual<Dimensions, 0> extends true ? Element
-    : Array<MultidimensionalArray<Element, Subtract<Dimensions, 1>>>;
+export type MultidimensionalArray<Element, Dimensions extends number> = number extends Dimensions
+	? Recursive<Element>
+	: IsEqual<Dimensions, 0> extends true
+		? Element
+		: Array<MultidimensionalArray<Element, Subtract<Dimensions, 1>>>;

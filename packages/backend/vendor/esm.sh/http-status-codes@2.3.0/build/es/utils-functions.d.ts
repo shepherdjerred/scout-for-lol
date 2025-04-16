@@ -4,16 +4,16 @@
  *
  * @param {number|string} statusCode The HTTP status code
  * @returns {string} The associated reason phrase (e.g. "Bad Request", "OK")
- */
-export declare function getReasonPhrase(statusCode: number | string): string;
+ * */
+export declare function getReasonPhrase(statusCode: (number | string)): (string);
 /**
  * Returns the status code for the given reason phrase.
  * If the given reason phrase does not exist, undefined is returned.
  *
  * @param {string} reasonPhrase The HTTP reason phrase (e.g. "Bad Request", "OK")
  * @returns {string} The associated status code
- */
-export declare function getStatusCode(reasonPhrase: string): number;
+ * */
+export declare function getStatusCode(reasonPhrase: string): (number);
 /**
  * @deprecated
  *
@@ -24,5 +24,5 @@ export declare function getStatusCode(reasonPhrase: string): number;
  *
  * @param {number|string} statusCode The HTTP status code
  * @returns {string|undefined} The associated reason phrase (e.g. "Bad Request", "OK")
- */
+ * */
 export declare const getStatusText: typeof getReasonPhrase;

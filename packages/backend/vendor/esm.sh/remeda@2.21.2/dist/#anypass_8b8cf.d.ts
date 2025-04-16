@@ -14,10 +14,7 @@
  * @dataFirst
  * @category Array
  */
-declare function anyPass<T>(
-  data: T,
-  fns: ReadonlyArray<(data: T) => boolean>,
-): boolean;
+declare function anyPass<T>(data: T, fns: ReadonlyArray<(data: T) => boolean>): boolean;
 /**
  * Determines whether any predicate returns true for the input data.
  *
@@ -33,8 +30,6 @@ declare function anyPass<T>(
  * @dataLast
  * @category Array
  */
-declare function anyPass<T>(
-  fns: ReadonlyArray<(data: T) => boolean>,
-): (data: T) => boolean;
+declare function anyPass<T>(fns: ReadonlyArray<(data: T) => boolean>): (data: T) => boolean;
 
 export { anyPass };

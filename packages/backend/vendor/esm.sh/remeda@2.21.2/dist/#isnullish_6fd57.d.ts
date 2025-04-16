@@ -1,5 +1,5 @@
-import { N as NarrowedTo } from "./NarrowedTo-CDIykNaN.d.ts";
-import "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { N as NarrowedTo } from './NarrowedTo-CDIykNaN.d.ts';
+import 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 /**
  * A function that checks if the passed parameter is either `null` or
@@ -16,8 +16,6 @@ import "https://esm.sh/type-fest@4.37.0/index.d.ts";
  *    R.isNullish('somethingElse') //=> false
  * @category Guard
  */
-declare function isNullish<T>(
-  data: T | null | undefined,
-): data is NarrowedTo<T, null | undefined>;
+declare function isNullish<T>(data: T | null | undefined): data is NarrowedTo<T, null | undefined>;
 
 export { isNullish };

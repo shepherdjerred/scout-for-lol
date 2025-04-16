@@ -1,5 +1,5 @@
 type SwappedProps<T, K1 extends keyof T, K2 extends keyof T> = {
-  [K in keyof T]: T[K1 extends K ? K2 : K2 extends K ? K1 : K];
+    [K in keyof T]: T[K1 extends K ? K2 : K2 extends K ? K1 : K];
 };
 /**
  * Swaps the positions of two properties in an object based on the provided keys.
@@ -15,11 +15,7 @@ type SwappedProps<T, K1 extends keyof T, K2 extends keyof T> = {
  * @dataFirst
  * @category Object
  */
-declare function swapProps<
-  T extends object,
-  K1 extends keyof T,
-  K2 extends keyof T,
->(data: T, key1: K1, key2: K2): SwappedProps<T, K1, K2>;
+declare function swapProps<T extends object, K1 extends keyof T, K2 extends keyof T>(data: T, key1: K1, key2: K2): SwappedProps<T, K1, K2>;
 /**
  * Swaps the positions of two properties in an object based on the provided keys.
  *
@@ -33,10 +29,6 @@ declare function swapProps<
  * @dataLast
  * @category Object
  */
-declare function swapProps<
-  T extends object,
-  K1 extends keyof T,
-  K2 extends keyof T,
->(key1: K1, key2: K2): (data: T) => SwappedProps<T, K1, K2>;
+declare function swapProps<T extends object, K1 extends keyof T, K2 extends keyof T>(key1: K1, key2: K2): (data: T) => SwappedProps<T, K1, K2>;
 
 export { swapProps };

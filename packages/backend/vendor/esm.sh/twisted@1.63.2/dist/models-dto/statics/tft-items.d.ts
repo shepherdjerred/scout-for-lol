@@ -1,4 +1,4 @@
 export declare class TFTItemsDTO {
-  id: number;
-  name: string;
+    id: number;
+    name: string;
 }

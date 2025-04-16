@@ -1,1 +1,1 @@
-export * from "./rate-limit.dto.d.ts";
+export * from './rate-limit.dto.d.ts';

@@ -1,5 +1,5 @@
-import type { LiteralToPrimitive } from "./literal-to-primitive.d.ts";
-import type { OmitIndexSignature } from "./omit-index-signature.d.ts";
+import type {LiteralToPrimitive} from './literal-to-primitive.d.ts';
+import type {OmitIndexSignature} from './omit-index-signature.d.ts';
 
 /**
 Like `LiteralToPrimitive` except it converts literal types inside an object or array deeply.
@@ -28,8 +28,9 @@ doSomethingWithTSConfig(tsconfig as TsConfigJson);
 @category Object
 */
 export type LiteralToPrimitiveDeep<T> = T extends object
-  ? T extends Array<infer U> ? Array<LiteralToPrimitiveDeep<U>>
-  : {
-    [K in keyof OmitIndexSignature<T>]: LiteralToPrimitiveDeep<T[K]>;
-  }
-  : LiteralToPrimitive<T>;
+	? T extends Array<infer U>
+		? Array<LiteralToPrimitiveDeep<U>>
+		: {
+			[K in keyof OmitIndexSignature<T>]: LiteralToPrimitiveDeep<T[K]>;
+		}
+	: LiteralToPrimitive<T>;

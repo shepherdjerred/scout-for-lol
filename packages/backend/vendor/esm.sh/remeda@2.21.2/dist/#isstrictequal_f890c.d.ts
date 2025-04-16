@@ -28,10 +28,7 @@
  * @dataFirst
  * @category Guard
  */
-declare function isStrictEqual<T, S extends T>(
-  data: T,
-  other: T extends Exclude<T, S> ? S : never,
-): data is S;
+declare function isStrictEqual<T, S extends T>(data: T, other: T extends Exclude<T, S> ? S : never): data is S;
 declare function isStrictEqual<T>(data: T, other: T): boolean;
 /**
  * Determines whether two values are *functionally identical* in all contexts.
@@ -62,9 +59,7 @@ declare function isStrictEqual<T>(data: T, other: T): boolean;
  * @dataLast
  * @category Guard
  */
-declare function isStrictEqual<T, S extends T>(
-  other: T extends Exclude<T, S> ? S : never,
-): (data: T) => data is S;
+declare function isStrictEqual<T, S extends T>(other: T extends Exclude<T, S> ? S : never): (data: T) => data is S;
 declare function isStrictEqual<T>(other: T): (data: T) => boolean;
 
 export { isStrictEqual };

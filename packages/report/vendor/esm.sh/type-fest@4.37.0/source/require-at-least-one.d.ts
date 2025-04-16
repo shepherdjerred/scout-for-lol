@@ -1,4 +1,4 @@
-import type { Except } from "./except.d.ts";
+import type {Except} from './except.d.ts';
 
 /**
 Create a type that requires at least one of the given keys. The remaining keys are kept as is.
@@ -22,16 +22,13 @@ const responder: RequireAtLeastOne<Responder, 'text' | 'json'> = {
 @category Object
 */
 export type RequireAtLeastOne<
-  ObjectType,
-  KeysType extends keyof ObjectType = keyof ObjectType,
-> =
-  & {
-    // For each `Key` in `KeysType` make a mapped type:
-    [Key in KeysType]-?:
-      & Required<Pick<ObjectType, Key>>
-      & // 1. Make `Key`'s type required
-      // 2. Make all other keys in `KeysType` optional
-      Partial<Pick<ObjectType, Exclude<KeysType, Key>>>;
-  }[KeysType]
-  & // 3. Add the remaining keys not in `KeysType`
-  Except<ObjectType, KeysType>;
+	ObjectType,
+	KeysType extends keyof ObjectType = keyof ObjectType,
+> = {
+	// For each `Key` in `KeysType` make a mapped type:
+	[Key in KeysType]-?: Required<Pick<ObjectType, Key>> & // 1. Make `Key`'s type required
+	// 2. Make all other keys in `KeysType` optional
+	Partial<Pick<ObjectType, Exclude<KeysType, Key>>>;
+}[KeysType] &
+// 3. Add the remaining keys not in `KeysType`
+Except<ObjectType, KeysType>;

@@ -1,28 +1,24 @@
 type LazyResult<T> = LazyEmpty | LazyMany<T> | LazyNext<T>;
 type LazyEmpty = {
-  done: boolean;
-  hasNext: false;
-  hasMany?: false | undefined;
-  next?: undefined;
+    done: boolean;
+    hasNext: false;
+    hasMany?: false | undefined;
+    next?: undefined;
 };
 type LazyNext<T> = {
-  done: boolean;
-  hasNext: true;
-  hasMany?: false | undefined;
-  next: T;
+    done: boolean;
+    hasNext: true;
+    hasMany?: false | undefined;
+    next: T;
 };
 type LazyMany<T> = {
-  done: boolean;
-  hasNext: true;
-  hasMany: true;
-  next: ReadonlyArray<T>;
+    done: boolean;
+    hasNext: true;
+    hasMany: true;
+    next: ReadonlyArray<T>;
 };
 
-type LazyEvaluator<T = unknown, R = T> = (
-  item: T,
-  index: number,
-  data: ReadonlyArray<T>,
-) => LazyResult<R>;
+type LazyEvaluator<T = unknown, R = T> = (item: T, index: number, data: ReadonlyArray<T>) => LazyResult<R>;
 
 /**
  * Creates a function with `dataFirst` and `dataLast` signatures.
@@ -63,10 +59,6 @@ type LazyEvaluator<T = unknown, R = T> = (
  *    }
  * @category Function
  */
-declare function purry(
-  fn: (...args: any) => unknown,
-  args: ReadonlyArray<unknown>,
-  lazy?: (...args: any) => LazyEvaluator,
-): unknown;
+declare function purry(fn: (...args: any) => unknown, args: ReadonlyArray<unknown>, lazy?: (...args: any) => LazyEvaluator): unknown;
 
 export { purry };

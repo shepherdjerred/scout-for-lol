@@ -1,4 +1,4 @@
-import type { RequiredKeysOf } from "./required-keys-of.d.ts";
+import type {RequiredKeysOf} from './required-keys-of.d.ts';
 
 /**
 Creates a type that represents `true` or `false` depending on whether the given type has any required fields.
@@ -56,5 +56,4 @@ const optD: Options2 = {
 
 @category Utilities
 */
-export type HasRequiredKeys<BaseType extends object> =
-  RequiredKeysOf<BaseType> extends never ? false : true;
+export type HasRequiredKeys<BaseType extends object> = RequiredKeysOf<BaseType> extends never ? false : true;

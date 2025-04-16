@@ -1,10 +1,7 @@
-import { LastArrayElement } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { LastArrayElement } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
-type Last<T extends IterableContainer> = LastArrayElement<
-  T,
-  T extends readonly [] ? never : undefined
->;
+type Last<T extends IterableContainer> = LastArrayElement<T, T extends readonly [] ? never : undefined>;
 /**
  * Gets the last element of `array`.
  *

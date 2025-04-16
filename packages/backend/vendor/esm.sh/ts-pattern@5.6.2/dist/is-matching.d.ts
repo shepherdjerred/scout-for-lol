@@ -1,13 +1,11 @@
-import { Pattern, UnknownProperties } from "./types/Pattern.d.ts";
-import * as P from "./patterns.d.ts";
+import { Pattern, UnknownProperties } from './types/Pattern.d.ts';
+import * as P from './patterns.d.ts';
 /**
  * This constraint allows using additional properties
  * in object patterns. See "should allow targetting unknown properties"
  * unit test in `is-matching.test.ts`.
  */
-type PatternConstraint<T> = T extends readonly any[] ? P.Pattern<T>
-  : T extends object ? P.Pattern<T> & UnknownProperties
-  : P.Pattern<T>;
+type PatternConstraint<T> = T extends readonly any[] ? P.Pattern<T> : T extends object ? P.Pattern<T> & UnknownProperties : P.Pattern<T>;
 /**
  * `isMatching` takes pattern and returns a **type guard** function, cheching if a value matches this pattern.
  *
@@ -23,9 +21,7 @@ type PatternConstraint<T> = T extends readonly any[] ? P.Pattern<T>
  *    return input.name
  *  }
  */
-export declare function isMatching<const p extends Pattern<unknown>>(
-  pattern: p,
-): (value: unknown) => value is P.infer<p>;
+export declare function isMatching<const p extends Pattern<unknown>>(pattern: p): (value: unknown) => value is P.infer<p>;
 /**
  * `isMatching` takes pattern and a value and checks if the value matches this pattern.
  *
@@ -39,8 +35,5 @@ export declare function isMatching<const p extends Pattern<unknown>>(
  *    return input.name
  *  }
  */
-export declare function isMatching<
-  const T,
-  const P extends PatternConstraint<T>,
->(pattern: P, value: T): value is P.infer<P>;
+export declare function isMatching<const T, const P extends PatternConstraint<T>>(pattern: P, value: T): value is P.infer<P>;
 export {};

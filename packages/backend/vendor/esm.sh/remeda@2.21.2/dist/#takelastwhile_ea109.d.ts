@@ -1,4 +1,4 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
 /**
  * Returns elements from the end of the array until the predicate returns false.
@@ -13,10 +13,7 @@ import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
  * @dataFirst
  * @category Array
  */
-declare function takeLastWhile<T extends IterableContainer>(
-  data: T,
-  predicate: (item: T[number], index: number, data: T) => boolean,
-): Array<T[number]>;
+declare function takeLastWhile<T extends IterableContainer>(data: T, predicate: (item: T[number], index: number, data: T) => boolean): Array<T[number]>;
 /**
  * Returns elements from the end of the array until the predicate returns false.
  * The returned elements will be in the same order as in the original array.
@@ -29,8 +26,6 @@ declare function takeLastWhile<T extends IterableContainer>(
  * @dataLast
  * @category Array
  */
-declare function takeLastWhile<T extends IterableContainer>(
-  predicate: (item: T[number], index: number, data: T) => boolean,
-): (data: T) => Array<T[number]>;
+declare function takeLastWhile<T extends IterableContainer>(predicate: (item: T[number], index: number, data: T) => boolean): (data: T) => Array<T[number]>;
 
 export { takeLastWhile };

@@ -1,4 +1,4 @@
-import type { SetReturnType } from "./set-return-type.d.ts";
+import type {SetReturnType} from './set-return-type.d.ts';
 
 /**
 Create an async version of the given function type, by boxing the return type in `Promise` while keeping the same parameter types.
@@ -29,5 +29,4 @@ const getFooAsync: AsyncifiedFooGetter = (someArg) => {
 
 @category Async
 */
-export type Asyncify<Function_ extends (...arguments_: any[]) => any> =
-  SetReturnType<Function_, Promise<Awaited<ReturnType<Function_>>>>;
+export type Asyncify<Function_ extends (...arguments_: any[]) => any> = SetReturnType<Function_, Promise<Awaited<ReturnType<Function_>>>>;

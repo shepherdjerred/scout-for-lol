@@ -1,3 +1,3 @@
 export declare class ChampionsScoreDTO {
-  score: number;
+    score: number;
 }

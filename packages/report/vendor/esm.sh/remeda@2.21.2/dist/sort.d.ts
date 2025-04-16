@@ -1,5 +1,5 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
-import { R as ReorderedArray } from "./ReorderedArray-DFPIAkRH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
+import { R as ReorderedArray } from './ReorderedArray-DFPIAkRH.d.ts';
 
 /**
  * Sorts an array. The comparator function should accept two values at a time
@@ -16,10 +16,7 @@ import { R as ReorderedArray } from "./ReorderedArray-DFPIAkRH.d.ts";
  * @dataFirst
  * @category Array
  */
-declare function sort<T extends IterableContainer>(
-  items: T,
-  cmp: (a: T[number], b: T[number]) => number,
-): ReorderedArray<T>;
+declare function sort<T extends IterableContainer>(items: T, cmp: (a: T[number], b: T[number]) => number): ReorderedArray<T>;
 /**
  * Sorts an array. The comparator function should accept two values at a time
  * and return a negative number if the first value is smaller, a positive number
@@ -34,8 +31,6 @@ declare function sort<T extends IterableContainer>(
  * @dataLast
  * @category Array
  */
-declare function sort<T extends IterableContainer>(
-  cmp: (a: T[number], b: T[number]) => number,
-): (items: T) => ReorderedArray<T>;
+declare function sort<T extends IterableContainer>(cmp: (a: T[number], b: T[number]) => number): (items: T) => ReorderedArray<T>;
 
 export { sort };

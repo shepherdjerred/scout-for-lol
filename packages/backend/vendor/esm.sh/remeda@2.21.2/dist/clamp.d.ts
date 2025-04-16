@@ -1,6 +1,6 @@
 type Limits = {
-  readonly min?: number;
-  readonly max?: number;
+    readonly min?: number;
+    readonly max?: number;
 };
 /**
  * Clamp the given value within the inclusive min and max bounds.

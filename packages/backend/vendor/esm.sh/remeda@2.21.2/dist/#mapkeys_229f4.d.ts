@@ -1,8 +1,8 @@
-import { E as EnumerableStringKeyOf } from "./EnumerableStringKeyOf-BQ4aR5ep.d.ts";
-import { E as EnumerableStringKeyedValueOf } from "./EnumerableStringKeyedValueOf-CLzltniW.d.ts";
-import { E as ExactRecord } from "./ExactRecord-or8-oNP7.d.ts";
-import "https://esm.sh/type-fest@4.37.0/index.d.ts";
-import "./IfBoundedRecord-WIX9x_oz.d.ts";
+import { E as EnumerableStringKeyOf } from './EnumerableStringKeyOf-BQ4aR5ep.d.ts';
+import { E as EnumerableStringKeyedValueOf } from './EnumerableStringKeyedValueOf-CLzltniW.d.ts';
+import { E as ExactRecord } from './ExactRecord-or8-oNP7.d.ts';
+import 'https://esm.sh/type-fest@4.37.0/index.d.ts';
+import './IfBoundedRecord-WIX9x_oz.d.ts';
 
 /**
  * Maps keys of `object` and keeps the same values.
@@ -16,14 +16,7 @@ import "./IfBoundedRecord-WIX9x_oz.d.ts";
  * @dataFirst
  * @category Object
  */
-declare function mapKeys<T extends {}, S extends PropertyKey>(
-  data: T,
-  keyMapper: (
-    key: EnumerableStringKeyOf<T>,
-    value: EnumerableStringKeyedValueOf<T>,
-    data: T,
-  ) => S,
-): ExactRecord<S, EnumerableStringKeyedValueOf<T>>;
+declare function mapKeys<T extends {}, S extends PropertyKey>(data: T, keyMapper: (key: EnumerableStringKeyOf<T>, value: EnumerableStringKeyedValueOf<T>, data: T) => S): ExactRecord<S, EnumerableStringKeyedValueOf<T>>;
 /**
  * Maps keys of `object` and keeps the same values.
  *
@@ -35,12 +28,6 @@ declare function mapKeys<T extends {}, S extends PropertyKey>(
  * @dataLast
  * @category Object
  */
-declare function mapKeys<T extends {}, S extends PropertyKey>(
-  keyMapper: (
-    key: EnumerableStringKeyOf<T>,
-    value: EnumerableStringKeyedValueOf<T>,
-    data: T,
-  ) => S,
-): (data: T) => ExactRecord<S, EnumerableStringKeyedValueOf<T>>;
+declare function mapKeys<T extends {}, S extends PropertyKey>(keyMapper: (key: EnumerableStringKeyOf<T>, value: EnumerableStringKeyedValueOf<T>, data: T) => S): (data: T) => ExactRecord<S, EnumerableStringKeyedValueOf<T>>;
 
 export { mapKeys };

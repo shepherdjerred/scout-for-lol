@@ -9,9 +9,7 @@
  * @dataLast
  * @category Object
  */
-declare function omit<T extends object, K extends keyof T>(
-  propNames: ReadonlyArray<K>,
-): (data: T) => Omit<T, K>;
+declare function omit<T extends object, K extends keyof T>(propNames: ReadonlyArray<K>): (data: T) => Omit<T, K>;
 /**
  * Returns a partial copy of an object omitting the keys specified.
  *
@@ -24,9 +22,6 @@ declare function omit<T extends object, K extends keyof T>(
  * @dataFirst
  * @category Object
  */
-declare function omit<T extends object, K extends keyof T>(
-  data: T,
-  propNames: ReadonlyArray<K>,
-): Omit<T, K>;
+declare function omit<T extends object, K extends keyof T>(data: T, propNames: ReadonlyArray<K>): Omit<T, K>;
 
 export { omit };

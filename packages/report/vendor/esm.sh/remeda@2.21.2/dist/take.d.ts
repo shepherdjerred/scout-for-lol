@@ -1,4 +1,4 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
 /**
  * Returns the first `n` elements of `array`.
@@ -13,10 +13,7 @@ import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
  * @lazy
  * @category Array
  */
-declare function take<T extends IterableContainer>(
-  array: T,
-  n: number,
-): Array<T[number]>;
+declare function take<T extends IterableContainer>(array: T, n: number): Array<T[number]>;
 /**
  * Returns the first `n` elements of `array`.
  *
@@ -29,8 +26,6 @@ declare function take<T extends IterableContainer>(
  * @lazy
  * @category Array
  */
-declare function take(
-  n: number,
-): <T extends IterableContainer>(array: T) => Array<T[number]>;
+declare function take(n: number): <T extends IterableContainer>(array: T) => Array<T[number]>;
 
 export { take };

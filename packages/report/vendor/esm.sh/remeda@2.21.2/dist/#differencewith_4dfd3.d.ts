@@ -18,11 +18,7 @@ type IsEquals<TFirst, TSecond> = (a: TFirst, b: TSecond) => boolean;
  * @lazy
  * @category Array
  */
-declare function differenceWith<TFirst, TSecond>(
-  array: ReadonlyArray<TFirst>,
-  other: ReadonlyArray<TSecond>,
-  isEquals: IsEquals<TFirst, TSecond>,
-): Array<TFirst>;
+declare function differenceWith<TFirst, TSecond>(array: ReadonlyArray<TFirst>, other: ReadonlyArray<TSecond>, isEquals: IsEquals<TFirst, TSecond>): Array<TFirst>;
 /**
  * Excludes the values from `other` array.
  * Elements are compared by custom comparator isEquals.
@@ -45,9 +41,6 @@ declare function differenceWith<TFirst, TSecond>(
  * @lazy
  * @category Array
  */
-declare function differenceWith<TFirst, TSecond>(
-  other: ReadonlyArray<TSecond>,
-  isEquals: IsEquals<TFirst, TSecond>,
-): (array: ReadonlyArray<TFirst>) => Array<TFirst>;
+declare function differenceWith<TFirst, TSecond>(other: ReadonlyArray<TSecond>, isEquals: IsEquals<TFirst, TSecond>): (array: ReadonlyArray<TFirst>) => Array<TFirst>;
 
 export { differenceWith };

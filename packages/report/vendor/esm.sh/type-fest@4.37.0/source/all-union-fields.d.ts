@@ -1,12 +1,8 @@
-import type {
-  NonRecursiveType,
-  ReadonlyKeysOfUnion,
-  ValueOfUnion,
-} from "./internal/index.d.ts";
-import type { KeysOfUnion } from "./keys-of-union.d.ts";
-import type { SharedUnionFields } from "./shared-union-fields.d.ts";
-import type { Simplify } from "./simplify.d.ts";
-import type { UnknownArray } from "./unknown-array.d.ts";
+import type {NonRecursiveType, ReadonlyKeysOfUnion, ValueOfUnion} from './internal/index.d.ts';
+import type {KeysOfUnion} from './keys-of-union.d.ts';
+import type {SharedUnionFields} from './shared-union-fields.d.ts';
+import type {Simplify} from './simplify.d.ts';
+import type {UnknownArray} from './unknown-array.d.ts';
 
 /**
 Create a type with all fields from a union of object types.
@@ -71,34 +67,22 @@ function displayPetInfo(petInfo: AllUnionFields<Cat | Dog>) {
 @category Object
 @category Union
 */
-export type AllUnionFields<Union> = Extract<
-  Union,
-  | NonRecursiveType
-  | ReadonlyMap<unknown, unknown>
-  | ReadonlySet<unknown>
-  | UnknownArray
-> extends infer SkippedMembers
-  ? Exclude<Union, SkippedMembers> extends infer RelevantMembers ?
-      | SkippedMembers
-      | Simplify<
-        // Include fields that are common in all union members
-        & SharedUnionFields<RelevantMembers>
-        & // Include readonly fields present in any union member
-        {
-          readonly [P in ReadonlyKeysOfUnion<RelevantMembers>]?: ValueOfUnion<
-            RelevantMembers,
-            P & KeysOfUnion<RelevantMembers>
-          >;
-        }
-        & // Include remaining fields that are neither common nor readonly
-        {
-          [
-            P in Exclude<
-              KeysOfUnion<RelevantMembers>,
-              ReadonlyKeysOfUnion<RelevantMembers> | keyof RelevantMembers
-            >
-          ]?: ValueOfUnion<RelevantMembers, P>;
-        }
-      >
-  : never
-  : never;
+export type AllUnionFields<Union> =
+Extract<Union, NonRecursiveType | ReadonlyMap<unknown, unknown> | ReadonlySet<unknown> | UnknownArray> extends infer SkippedMembers
+	? Exclude<Union, SkippedMembers> extends infer RelevantMembers
+		?
+		| SkippedMembers
+		| Simplify<
+		// Include fields that are common in all union members
+		SharedUnionFields<RelevantMembers> &
+		// Include readonly fields present in any union member
+		{
+			readonly [P in ReadonlyKeysOfUnion<RelevantMembers>]?: ValueOfUnion<RelevantMembers, P & KeysOfUnion<RelevantMembers>>
+		} &
+		// Include remaining fields that are neither common nor readonly
+		{
+			[P in Exclude<KeysOfUnion<RelevantMembers>, ReadonlyKeysOfUnion<RelevantMembers> | keyof RelevantMembers>]?: ValueOfUnion<RelevantMembers, P>
+		}
+		>
+		: never
+	: never;

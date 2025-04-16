@@ -17,6 +17,8 @@ lock:
   COPY --dir deno.json .
   RUN deno install --node-modules-dir=auto
   SAVE ARTIFACT deno.lock AS LOCAL deno.lock
+  SAVE ARTIFACT vendor AS LOCAL vendor
+
 
 check:
   FROM +deps

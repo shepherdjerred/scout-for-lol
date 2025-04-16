@@ -21,11 +21,7 @@ type Comparator<TFirst, TSecond> = (a: TFirst, b: TSecond) => boolean;
  * @lazy
  * @category Array
  */
-declare function intersectionWith<TFirst, TSecond>(
-  array: ReadonlyArray<TFirst>,
-  other: ReadonlyArray<TSecond>,
-  comparator: Comparator<TFirst, TSecond>,
-): Array<TFirst>;
+declare function intersectionWith<TFirst, TSecond>(array: ReadonlyArray<TFirst>, other: ReadonlyArray<TSecond>, comparator: Comparator<TFirst, TSecond>): Array<TFirst>;
 /**
  * Returns a list of intersecting values based on a custom
  * comparator function that compares elements of both arrays.
@@ -46,13 +42,11 @@ declare function intersectionWith<TFirst, TSecond>(
  * @lazy
  * @category Array
  */
-declare function intersectionWith<TFirst, TSecond>(
-  other: ReadonlyArray<TSecond>,
-  /**
-   * Type inference doesn't work properly for the comparator's first parameter
-   * in data last variant.
-   */
-  comparator: Comparator<TFirst, TSecond>,
-): (array: ReadonlyArray<TFirst>) => Array<TFirst>;
+declare function intersectionWith<TFirst, TSecond>(other: ReadonlyArray<TSecond>,
+/**
+ * Type inference doesn't work properly for the comparator's first parameter
+ * in data last variant.
+ */
+comparator: Comparator<TFirst, TSecond>): (array: ReadonlyArray<TFirst>) => Array<TFirst>;
 
 export { intersectionWith };

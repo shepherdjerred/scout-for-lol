@@ -12,10 +12,7 @@
  * @dataFirst
  * @category String
  */
-declare function endsWith<T extends string, Suffix extends string>(
-  data: T,
-  suffix: string extends Suffix ? never : Suffix,
-): data is T & `${string}${Suffix}`;
+declare function endsWith<T extends string, Suffix extends string>(data: T, suffix: string extends Suffix ? never : Suffix): data is T & `${string}${Suffix}`;
 declare function endsWith(data: string, suffix: string): boolean;
 /**
  * Determines whether the string ends with the provided suffix, and refines
@@ -30,9 +27,7 @@ declare function endsWith(data: string, suffix: string): boolean;
  * @dataLast
  * @category String
  */
-declare function endsWith<Suffix extends string>(
-  suffix: string extends Suffix ? never : Suffix,
-): <T extends string>(data: T) => data is T & `${string}${Suffix}`;
+declare function endsWith<Suffix extends string>(suffix: string extends Suffix ? never : Suffix): <T extends string>(data: T) => data is T & `${string}${Suffix}`;
 declare function endsWith(suffix: string): (data: string) => boolean;
 
 export { endsWith };

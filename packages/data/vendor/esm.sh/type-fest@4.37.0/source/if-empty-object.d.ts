@@ -1,4 +1,4 @@
-import type { IsEmptyObject } from "./empty-object.d.ts";
+import type {IsEmptyObject} from './empty-object.d.ts';
 
 /**
 An if-else-like type that resolves depending on whether the given type is `{}`.
@@ -20,7 +20,7 @@ type ShouldBeBar = IfEmptyObject<{key: any}, 'foo', 'bar'>;
 @category Utilities
 */
 export type IfEmptyObject<
-  T,
-  TypeIfEmptyObject = true,
-  TypeIfNotEmptyObject = false,
+	T,
+	TypeIfEmptyObject = true,
+	TypeIfNotEmptyObject = false,
 > = IsEmptyObject<T> extends true ? TypeIfEmptyObject : TypeIfNotEmptyObject;

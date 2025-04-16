@@ -4,8 +4,8 @@ Matches a [`class`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Refe
 @category Class
 */
 export type Class<T, Arguments extends unknown[] = any[]> = {
-  prototype: Pick<T, keyof T>;
-  new (...arguments_: Arguments): T;
+	prototype: Pick<T, keyof T>;
+	new(...arguments_: Arguments): T;
 };
 
 /**
@@ -13,9 +13,7 @@ Matches a [`class` constructor](https://developer.mozilla.org/en-US/docs/Web/Jav
 
 @category Class
 */
-export type Constructor<T, Arguments extends unknown[] = any[]> = new (
-  ...arguments_: Arguments
-) => T;
+export type Constructor<T, Arguments extends unknown[] = any[]> = new(...arguments_: Arguments) => T;
 
 /**
 Matches an [`abstract class`](https://www.typescriptlang.org/docs/handbook/classes.html#abstract-classes).
@@ -26,9 +24,8 @@ Matches an [`abstract class`](https://www.typescriptlang.org/docs/handbook/class
 We cannot use a `type` here because TypeScript throws: 'abstract' modifier cannot appear on a type member. (1070)
 */
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
-export interface AbstractClass<T, Arguments extends unknown[] = any[]>
-  extends AbstractConstructor<T, Arguments> {
-  prototype: Pick<T, keyof T>;
+export interface AbstractClass<T, Arguments extends unknown[] = any[]> extends AbstractConstructor<T, Arguments> {
+	prototype: Pick<T, keyof T>;
 }
 
 /**
@@ -36,8 +33,7 @@ Matches an [`abstract class`](https://www.typescriptlang.org/docs/handbook/relea
 
 @category Class
 */
-export type AbstractConstructor<T, Arguments extends unknown[] = any[]> =
-  abstract new (...arguments_: Arguments) => T;
+export type AbstractConstructor<T, Arguments extends unknown[] = any[]> = abstract new(...arguments_: Arguments) => T;
 
 /**
 Matches a JSON object.
@@ -46,9 +42,7 @@ This type can be useful to enforce some input to be JSON-compatible or as a supe
 
 @category JSON
 */
-export type JsonObject =
-  & { [Key in string]: JsonValue }
-  & { [Key in string]?: JsonValue | undefined };
+export type JsonObject = {[Key in string]: JsonValue} & {[Key in string]?: JsonValue | undefined};
 
 /**
 Matches a JSON array.

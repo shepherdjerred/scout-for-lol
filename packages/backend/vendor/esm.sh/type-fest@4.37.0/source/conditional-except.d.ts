@@ -1,5 +1,5 @@
-import type { Except } from "./except.d.ts";
-import type { ConditionalKeys } from "./conditional-keys.d.ts";
+import type {Except} from './except.d.ts';
+import type {ConditionalKeys} from './conditional-keys.d.ts';
 
 /**
 Exclude keys from a shape that matches the given `Condition`.
@@ -40,6 +40,6 @@ type NonStringKeysOnly = ConditionalExcept<Example, string>;
 @category Object
 */
 export type ConditionalExcept<Base, Condition> = Except<
-  Base,
-  ConditionalKeys<Base, Condition>
+Base,
+ConditionalKeys<Base, Condition>
 >;

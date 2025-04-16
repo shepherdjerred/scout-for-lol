@@ -20,14 +20,8 @@
  * @dataFirst
  * @category Array
  */
-declare function partition<T, S extends T>(
-  data: ReadonlyArray<T>,
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => value is S,
-): [Array<S>, Array<Exclude<T, S>>];
-declare function partition<T>(
-  data: ReadonlyArray<T>,
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean,
-): [Array<T>, Array<T>];
+declare function partition<T, S extends T>(data: ReadonlyArray<T>, predicate: (value: T, index: number, data: ReadonlyArray<T>) => value is S): [Array<S>, Array<Exclude<T, S>>];
+declare function partition<T>(data: ReadonlyArray<T>, predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean): [Array<T>, Array<T>];
 /**
  * Splits a collection into two groups, the first of which contains elements the
  * `predicate` type guard passes, and the second one containing the rest.
@@ -49,11 +43,7 @@ declare function partition<T>(
  * @dataLast
  * @category Array
  */
-declare function partition<T, S extends T>(
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => value is S,
-): (data: ReadonlyArray<T>) => [Array<S>, Array<Exclude<T, S>>];
-declare function partition<T>(
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean,
-): (data: ReadonlyArray<T>) => [Array<T>, Array<T>];
+declare function partition<T, S extends T>(predicate: (value: T, index: number, data: ReadonlyArray<T>) => value is S): (data: ReadonlyArray<T>) => [Array<S>, Array<Exclude<T, S>>];
+declare function partition<T>(predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean): (data: ReadonlyArray<T>) => [Array<T>, Array<T>];
 
 export { partition };

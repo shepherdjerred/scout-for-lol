@@ -1,5 +1,5 @@
-import { N as NarrowedTo } from "./NarrowedTo-CDIykNaN.d.ts";
-import "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { N as NarrowedTo } from './NarrowedTo-CDIykNaN.d.ts';
+import 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 /**
  * A function that checks if the passed parameter is a Promise and narrows its type accordingly.
@@ -14,8 +14,6 @@ import "https://esm.sh/type-fest@4.37.0/index.d.ts";
  *    R.isPromise('somethingElse') //=> false
  * @category Guard
  */
-declare function isPromise<T>(
-  data: Readonly<PromiseLike<unknown>> | T,
-): data is NarrowedTo<T, PromiseLike<unknown>>;
+declare function isPromise<T>(data: Readonly<PromiseLike<unknown>> | T): data is NarrowedTo<T, PromiseLike<unknown>>;
 
 export { isPromise };

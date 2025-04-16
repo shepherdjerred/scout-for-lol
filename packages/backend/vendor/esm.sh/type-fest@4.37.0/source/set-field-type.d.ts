@@ -1,14 +1,14 @@
-import type { Simplify } from "./simplify.d.ts";
+import type {Simplify} from './simplify.d.ts';
 
 type SetFieldTypeOptions = {
-  /**
+	/**
 	Preserve optional and readonly modifiers for properties being updated.
 
 	NOTE: Property modifiers will always be preserved for properties that are not being updated.
 
 	@default true
 	*/
-  preservePropertyModifiers?: boolean;
+	preservePropertyModifiers?: boolean;
 };
 
 /**
@@ -48,18 +48,10 @@ type MyModelApi = SetFieldType<MyModel, 'createdAt' | 'updatedAt', string, {pres
 
 @category Object
 */
-export type SetFieldType<
-  BaseType,
-  Keys extends keyof BaseType,
-  NewType,
-  Options extends SetFieldTypeOptions = { preservePropertyModifiers: true },
-> = Simplify<
-  & {
-    [P in keyof BaseType]: P extends Keys ? NewType : BaseType[P];
-  }
-  & (
-    // `Record` is used to remove property modifiers
-    Options["preservePropertyModifiers"] extends false ? Record<Keys, NewType>
-      : unknown
-  )
->;
+export type SetFieldType<BaseType, Keys extends keyof BaseType, NewType, Options extends SetFieldTypeOptions = {preservePropertyModifiers: true}> =
+	Simplify<{
+		[P in keyof BaseType]: P extends Keys ? NewType : BaseType[P];
+	} & (
+		// `Record` is used to remove property modifiers
+		Options['preservePropertyModifiers'] extends false ? Record<Keys, NewType> : unknown
+	)>;

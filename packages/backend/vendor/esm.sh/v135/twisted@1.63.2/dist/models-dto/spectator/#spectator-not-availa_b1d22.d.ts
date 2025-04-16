@@ -1,4 +1,4 @@
 export declare class SpectatorNotAvailableDTO {
-  message: string;
-  response?: any;
+    message: string;
+    response?: any;
 }

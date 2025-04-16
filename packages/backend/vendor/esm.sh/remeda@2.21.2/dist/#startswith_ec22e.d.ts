@@ -12,10 +12,7 @@
  * @dataFirst
  * @category String
  */
-declare function startsWith<T extends string, Prefix extends string>(
-  data: T,
-  prefix: string extends Prefix ? never : Prefix,
-): data is T & `${Prefix}${string}`;
+declare function startsWith<T extends string, Prefix extends string>(data: T, prefix: string extends Prefix ? never : Prefix): data is T & `${Prefix}${string}`;
 declare function startsWith(data: string, prefix: string): boolean;
 /**
  * Determines whether the string begins with the provided prefix, and refines
@@ -30,9 +27,7 @@ declare function startsWith(data: string, prefix: string): boolean;
  * @dataLast
  * @category String
  */
-declare function startsWith<Prefix extends string>(
-  prefix: string extends Prefix ? never : Prefix,
-): <T extends string>(data: T) => data is T & `${Prefix}${string}`;
+declare function startsWith<Prefix extends string>(prefix: string extends Prefix ? never : Prefix): <T extends string>(data: T) => data is T & `${Prefix}${string}`;
 declare function startsWith(prefix: string): (data: string) => boolean;
 
 export { startsWith };

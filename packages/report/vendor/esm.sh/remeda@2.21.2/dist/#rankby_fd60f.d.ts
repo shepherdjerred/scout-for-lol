@@ -1,5 +1,5 @@
-import { O as OrderRule } from "./purryOrderRules-BKXCPBNx.d.ts";
-import { N as NonEmptyArray } from "./NonEmptyArray-C9Od1wmF.d.ts";
+import { O as OrderRule } from './purryOrderRules-BKXCPBNx.d.ts';
+import { N as NonEmptyArray } from './NonEmptyArray-C9Od1wmF.d.ts';
 
 /**
  * Calculates the rank of an item in an array based on `rules`. The rank is the position where the item would appear in the sorted array. This function provides an efficient way to determine the rank in *O(n)* time, compared to *O(nlogn)* for the equivalent `sortedIndex(sortBy(data, ...rules), item)`.
@@ -19,11 +19,7 @@ import { N as NonEmptyArray } from "./NonEmptyArray-C9Od1wmF.d.ts";
  * @dataFirst
  * @category Array
  */
-declare function rankBy<T>(
-  data: ReadonlyArray<T>,
-  item: T,
-  ...rules: Readonly<NonEmptyArray<OrderRule<T>>>
-): number;
+declare function rankBy<T>(data: ReadonlyArray<T>, item: T, ...rules: Readonly<NonEmptyArray<OrderRule<T>>>): number;
 /**
  * Calculates the rank of an item in an array based on `rules`. The rank is the position where the item would appear in the sorted array. This function provides an efficient way to determine the rank in *O(n)* time, compared to *O(nlogn)* for the equivalent `sortedIndex(sortBy(data, ...rules), item)`.
  *
@@ -41,9 +37,6 @@ declare function rankBy<T>(
  * @dataLast
  * @category Array
  */
-declare function rankBy<T>(
-  item: T,
-  ...rules: Readonly<NonEmptyArray<OrderRule<T>>>
-): (data: ReadonlyArray<T>) => number;
+declare function rankBy<T>(item: T, ...rules: Readonly<NonEmptyArray<OrderRule<T>>>): (data: ReadonlyArray<T>) => number;
 
 export { rankBy };

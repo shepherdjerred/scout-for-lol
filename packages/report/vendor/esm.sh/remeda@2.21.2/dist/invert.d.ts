@@ -1,14 +1,8 @@
-import { Simplify } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { Simplify } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
-type Inverted<T extends object> = Simplify<
-  {
-    -readonly [
-      K in keyof T as K extends number | string
-        ? Required<T>[K] extends PropertyKey ? Required<T>[K] : never
-        : never
-    ]: `${K extends number | string ? K : never}`;
-  }
->;
+type Inverted<T extends object> = Simplify<{
+    -readonly [K in keyof T as K extends number | string ? Required<T>[K] extends PropertyKey ? Required<T>[K] : never : never]: `${K extends number | string ? K : never}`;
+}>;
 /**
  * Returns an object whose keys and values are swapped. If the object contains duplicate values,
  * subsequent values will overwrite previous values.

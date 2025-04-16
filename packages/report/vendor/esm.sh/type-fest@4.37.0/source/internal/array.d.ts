@@ -1,13 +1,12 @@
-import type { IfNever } from "../if-never.d.ts";
-import type { UnknownArray } from "../unknown-array.d.ts";
+import type {IfNever} from '../if-never.d.ts';
+import type {UnknownArray} from '../unknown-array.d.ts';
 
 /**
 Infer the length of the given array `<T>`.
 
 @link https://itnext.io/implementing-arithmetic-within-typescripts-type-system-a1ef140a6f6f
 */
-type ArrayLength<T extends readonly unknown[]> = T extends
-  { readonly length: infer L } ? L : never;
+type ArrayLength<T extends readonly unknown[]> = T extends {readonly length: infer L} ? L : never;
 
 /**
 Matches any unknown array or tuple.
@@ -18,9 +17,9 @@ export type UnknownArrayOrTuple = readonly [...unknown[]];
 /**
 Extracts the type of the first element of an array or tuple.
 */
-export type FirstArrayElement<TArray extends UnknownArrayOrTuple> =
-  TArray extends readonly [infer THead, ...unknown[]] ? THead
-    : never;
+export type FirstArrayElement<TArray extends UnknownArrayOrTuple> = TArray extends readonly [infer THead, ...unknown[]]
+	? THead
+	: never;
 
 /**
 Extract the element of an array that also works for array union.
@@ -41,16 +40,14 @@ type B = StaticPartOfArray<A>;
 //=> [string, number, boolean]
 ```
 */
-export type StaticPartOfArray<
-  T extends UnknownArray,
-  Result extends UnknownArray = [],
-> = T extends unknown
-  ? number extends T["length"]
-    ? T extends readonly [infer U, ...infer V]
-      ? StaticPartOfArray<V, [...Result, U]>
-    : Result
-  : T
-  : never; // Should never happen
+export type StaticPartOfArray<T extends UnknownArray, Result extends UnknownArray = []> =
+	T extends unknown
+		? number extends T['length'] ?
+			T extends readonly [infer U, ...infer V]
+				? StaticPartOfArray<V, [...Result, U]>
+				: Result
+			: T
+		: never; // Should never happen
 
 /**
 Returns the variable, non-fixed-length portion of the given array, excluding static-length parts.
@@ -62,10 +59,12 @@ type B = VariablePartOfArray<A>;
 //=> string[]
 ```
 */
-export type VariablePartOfArray<T extends UnknownArray> = T extends unknown
-  ? T extends readonly [...StaticPartOfArray<T>, ...infer U] ? U
-  : []
-  : never; // Should never happen
+export type VariablePartOfArray<T extends UnknownArray> =
+	T extends unknown
+		? T extends readonly [...StaticPartOfArray<T>, ...infer U]
+			? U
+			: []
+		: never; // Should never happen
 
 /**
 Set the given array to readonly if `IsReadonly` is `true`, otherwise set the given array to normal, then return the result.
@@ -83,18 +82,16 @@ type NormalResult = SetArrayAccess<ReadonlyArray, false>;
 ```
 */
 export type SetArrayAccess<T extends UnknownArray, IsReadonly extends boolean> =
-  T extends readonly [...infer U] ? IsReadonly extends true ? readonly [...U]
-    : [...U]
-    : T;
+T extends readonly [...infer U] ?
+	IsReadonly extends true
+		? readonly [...U]
+		: [...U]
+	: T;
 
 /**
 Returns whether the given array `T` is readonly.
 */
-export type IsArrayReadonly<T extends UnknownArray> = IfNever<
-  T,
-  false,
-  T extends unknown[] ? false : true
->;
+export type IsArrayReadonly<T extends UnknownArray> = IfNever<T, false, T extends unknown[] ? false : true>;
 
 /**
 An if-else-like type that resolves depending on whether the given array is readonly.
@@ -123,10 +120,7 @@ type ShouldBeBar = IfArrayReadonly<unknown[], 'foo', 'bar'>;
 //=> 'bar'
 ```
 */
-export type IfArrayReadonly<
-  T extends UnknownArray,
-  TypeIfArrayReadonly = true,
-  TypeIfNotArrayReadonly = false,
-> = IsArrayReadonly<T> extends infer Result
-  ? Result extends true ? TypeIfArrayReadonly : TypeIfNotArrayReadonly
-  : never; // Should never happen
+export type IfArrayReadonly<T extends UnknownArray, TypeIfArrayReadonly = true, TypeIfNotArrayReadonly = false> =
+	IsArrayReadonly<T> extends infer Result
+		? Result extends true ? TypeIfArrayReadonly : TypeIfNotArrayReadonly
+		: never; // Should never happen

@@ -24,14 +24,8 @@
  * @dataFirst
  * @category Array
  */
-declare function findLast<T, S extends T>(
-  data: ReadonlyArray<T>,
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => value is S,
-): S | undefined;
-declare function findLast<T>(
-  data: ReadonlyArray<T>,
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean,
-): T | undefined;
+declare function findLast<T, S extends T>(data: ReadonlyArray<T>, predicate: (value: T, index: number, data: ReadonlyArray<T>) => value is S): S | undefined;
+declare function findLast<T>(data: ReadonlyArray<T>, predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean): T | undefined;
 /**
  * Iterates the array in reverse order and returns the value of the first
  * element that satisfies the provided testing function. If no elements satisfy
@@ -60,11 +54,7 @@ declare function findLast<T>(
  * @dataLast
  * @category Array
  */
-declare function findLast<T, S extends T>(
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => value is S,
-): (data: ReadonlyArray<T>) => S | undefined;
-declare function findLast<T = never>(
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean,
-): (data: ReadonlyArray<T>) => T | undefined;
+declare function findLast<T, S extends T>(predicate: (value: T, index: number, data: ReadonlyArray<T>) => value is S): (data: ReadonlyArray<T>) => S | undefined;
+declare function findLast<T = never>(predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean): (data: ReadonlyArray<T>) => T | undefined;
 
 export { findLast };

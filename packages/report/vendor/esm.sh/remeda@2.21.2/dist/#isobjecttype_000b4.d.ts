@@ -1,5 +1,5 @@
-import { N as NarrowedTo } from "./NarrowedTo-CDIykNaN.d.ts";
-import "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { N as NarrowedTo } from './NarrowedTo-CDIykNaN.d.ts';
+import 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 /**
  * Checks if the given parameter is of type `"object"` via `typeof`, excluding `null`.
@@ -26,8 +26,6 @@ import "https://esm.sh/type-fest@4.37.0/index.d.ts";
  * @dataFirst
  * @category Guard
  */
-declare function isObjectType<T>(
-  data: T | object,
-): data is NarrowedTo<T, object>;
+declare function isObjectType<T>(data: T | object): data is NarrowedTo<T, object>;
 
 export { isObjectType };

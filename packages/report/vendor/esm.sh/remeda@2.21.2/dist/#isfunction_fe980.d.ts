@@ -1,5 +1,4 @@
-type DefinitelyFunction<T> = Extract<T, Function> extends never ? Function
-  : Extract<T, Function>;
+type DefinitelyFunction<T> = Extract<T, Function> extends never ? Function : Extract<T, Function>;
 /**
  * A function that checks if the passed parameter is a Function and narrows its type accordingly.
  *
@@ -12,8 +11,6 @@ type DefinitelyFunction<T> = Extract<T, Function> extends never ? Function
  *    R.isFunction('somethingElse') //=> false
  * @category Guard
  */
-declare function isFunction<T>(
-  data: Function | T,
-): data is DefinitelyFunction<T>;
+declare function isFunction<T>(data: Function | T): data is DefinitelyFunction<T>;
 
 export { isFunction };

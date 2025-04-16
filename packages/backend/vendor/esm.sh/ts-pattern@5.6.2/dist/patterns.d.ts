@@ -4,52 +4,26 @@
  *
  * @module
  */
-import * as symbols from "./internals/symbols.d.ts";
-import { matcher } from "./internals/symbols.d.ts";
-import { ExtractPreciseValue } from "./types/ExtractPreciseValue.d.ts";
-import { Fn } from "./types/helpers.d.ts";
-import { InvertPattern } from "./types/InvertPattern.d.ts";
-import {
-  AndP,
-  AnonymousSelectP,
-  AnyPattern,
-  ArrayChainable,
-  ArrayP,
-  BigIntPattern,
-  BooleanPattern,
-  Chainable,
-  CustomP,
-  GuardExcludeP,
-  GuardP,
-  MapP,
-  NonNullablePattern,
-  NotP,
-  NullishPattern,
-  NumberPattern,
-  OptionalP,
-  OrP,
-  Pattern,
-  SelectP,
-  SetP,
-  StringPattern,
-  SymbolPattern,
-  UnknownPattern,
-} from "./types/Pattern.d.ts";
+import * as symbols from './internals/symbols.d.ts';
+import { matcher } from './internals/symbols.d.ts';
+import { ExtractPreciseValue } from './types/ExtractPreciseValue.d.ts';
+import { Fn } from './types/helpers.d.ts';
+import { InvertPattern } from './types/InvertPattern.d.ts';
+import { Pattern, UnknownPattern, OptionalP, ArrayP, MapP, SetP, AndP, OrP, NotP, GuardP, SelectP, AnonymousSelectP, GuardExcludeP, CustomP, StringPattern, AnyPattern, NumberPattern, BooleanPattern, BigIntPattern, NullishPattern, SymbolPattern, Chainable, ArrayChainable, NonNullablePattern } from './types/Pattern.d.ts';
 export type {
-  /**
-   * `unstable_Fn` can be used to created a
-   * a Matchable instance – a custom type that
-   * can be used as a pattern.
-   *
-   * @experimental This feature is unstable.
-   */
-  Fn as unstable_Fn,
-  /**
-   * `Pattern<T>` is the type of all patterns
-   * that can match a value of type `T`.
-   */
-  Pattern,
-};
+/**
+ * `Pattern<T>` is the type of all patterns
+ * that can match a value of type `T`.
+ */
+Pattern,
+/**
+ * `unstable_Fn` can be used to created a
+ * a Matchable instance – a custom type that
+ * can be used as a pattern.
+ *
+ * @experimental This feature is unstable.
+ */
+Fn as unstable_Fn, };
 export { matcher };
 /**
  * A `Matchable` is an object implementing
@@ -65,8 +39,7 @@ export { matcher };
  * }
  * ```
  */
-export type unstable_Matchable<narrowedOrFn, input = unknown, pattern = never> =
-  CustomP<input, pattern, narrowedOrFn>;
+export type unstable_Matchable<narrowedOrFn, input = unknown, pattern = never> = CustomP<input, pattern, narrowedOrFn>;
 /**
  * A `Matcher` is an object with `match` function, which
  * defines how this object should be matched by TS-Pattern.
@@ -80,8 +53,7 @@ export type unstable_Matchable<narrowedOrFn, input = unknown, pattern = never> =
  * }
  * ```
  */
-export type unstable_Matcher<narrowedOrFn, input = unknown, pattern = never> =
-  ReturnType<CustomP<input, pattern, narrowedOrFn>[matcher]>;
+export type unstable_Matcher<narrowedOrFn, input = unknown, pattern = never> = ReturnType<CustomP<input, pattern, narrowedOrFn>[matcher]>;
 /**
  * `P.infer<typeof somePattern>` will return the type of the value
  * matched by this pattern.
@@ -106,10 +78,7 @@ export type infer<pattern> = InvertPattern<NoInfer<pattern>, unknown>;
  * type Narrowed = P.narrow<Input, typeof Pattern>
  * //     ^? ['a', 'a' | 'b']
  */
-export type narrow<input, pattern extends Pattern<any>> = ExtractPreciseValue<
-  input,
-  InvertPattern<pattern, input>
->;
+export type narrow<input, pattern extends Pattern<any>> = ExtractPreciseValue<input, InvertPattern<pattern, input>>;
 /**
  * `P.optional(subpattern)` takes a sub pattern and returns a pattern which matches if the
  * key is undefined or if it is defined and the sub pattern matches its value.
@@ -120,10 +89,7 @@ export type narrow<input, pattern extends Pattern<any>> = ExtractPreciseValue<
  *  match(value)
  *   .with({ greeting: P.optional('Hello') }, () => 'will match { greeting?: "Hello" }')
  */
-export declare function optional<
-  input,
-  const pattern extends unknown extends input ? UnknownPattern : Pattern<input>,
->(pattern: pattern): Chainable<OptionalP<input, pattern>, "optional">;
+export declare function optional<input, const pattern extends unknown extends input ? UnknownPattern : Pattern<input>>(pattern: pattern): Chainable<OptionalP<input, pattern>, 'optional'>;
 type UnwrapArray<xs> = xs extends readonly (infer x)[] ? x : never;
 type UnwrapSet<xs> = xs extends Set<infer x> ? x : never;
 type UnwrapMapKey<xs> = xs extends Map<infer k, any> ? k : never;
@@ -140,10 +106,7 @@ type WithDefault<a, b> = [a] extends [never] ? b : a;
  *   .with({ users: P.array({ name: P.string }) }, () => 'will match { name: string }[]')
  */
 export declare function array<input>(): ArrayChainable<ArrayP<input, unknown>>;
-export declare function array<
-  input,
-  const pattern extends Pattern<WithDefault<UnwrapArray<input>, unknown>>,
->(pattern: pattern): ArrayChainable<ArrayP<input, pattern>>;
+export declare function array<input, const pattern extends Pattern<WithDefault<UnwrapArray<input>, unknown>>>(pattern: pattern): ArrayChainable<ArrayP<input, pattern>>;
 /**
  * `P.set(subpattern)` takes a sub pattern and returns a pattern that matches
  * sets if all their elements match the sub pattern.
@@ -155,10 +118,7 @@ export declare function array<
  *   .with({ users: P.set(P.string) }, () => 'will match Set<string>')
  */
 export declare function set<input>(): Chainable<SetP<input, unknown>>;
-export declare function set<
-  input,
-  const pattern extends Pattern<WithDefault<UnwrapSet<input>, unknown>>,
->(pattern: pattern): Chainable<SetP<input, pattern>>;
+export declare function set<input, const pattern extends Pattern<WithDefault<UnwrapSet<input>, unknown>>>(pattern: pattern): Chainable<SetP<input, pattern>>;
 /**
  * `P.map(keyPattern, valuePattern)` takes a subpattern to match against the
  * key, a subpattern to match against the value and returns a pattern that
@@ -172,11 +132,7 @@ export declare function set<
  *   .with({ users: P.map(P.map(P.string, P.number)) }, (map) => `map's type is Map<string, number>`)
  */
 export declare function map<input>(): Chainable<MapP<input, unknown, unknown>>;
-export declare function map<
-  input,
-  const pkey extends Pattern<WithDefault<UnwrapMapKey<input>, unknown>>,
-  const pvalue extends Pattern<WithDefault<UnwrapMapValue<input>, unknown>>,
->(patternKey: pkey, patternValue: pvalue): Chainable<MapP<input, pkey, pvalue>>;
+export declare function map<input, const pkey extends Pattern<WithDefault<UnwrapMapKey<input>, unknown>>, const pvalue extends Pattern<WithDefault<UnwrapMapValue<input>, unknown>>>(patternKey: pkey, patternValue: pvalue): Chainable<MapP<input, pkey, pvalue>>;
 /**
  * `P.intersection(...patterns)` returns a pattern which matches
  * only if **every** patterns provided in parameter match the input.
@@ -196,10 +152,7 @@ export declare function map<
  *     ({ user }) => 'will match { firstname: string, lastname: string, age: number } if age > 21'
  *   )
  */
-export declare function intersection<
-  input,
-  const patterns extends readonly [Pattern<input>, ...Pattern<input>[]],
->(...patterns: patterns): Chainable<AndP<input, patterns>>;
+export declare function intersection<input, const patterns extends readonly [Pattern<input>, ...Pattern<input>[]]>(...patterns: patterns): Chainable<AndP<input, patterns>>;
 /**
  * `P.union(...patterns)` returns a pattern which matches
  * if **at least one** of the patterns provided in parameter match the input.
@@ -213,10 +166,7 @@ export declare function intersection<
  *     ({ type }) => 'will match { type: "a" | "b" | "c" }'
  *   )
  */
-export declare function union<
-  input,
-  const patterns extends readonly [Pattern<input>, ...Pattern<input>[]],
->(...patterns: patterns): Chainable<OrP<input, patterns>>;
+export declare function union<input, const patterns extends readonly [Pattern<input>, ...Pattern<input>[]]>(...patterns: patterns): Chainable<OrP<input, patterns>>;
 /**
  * `P.not(pattern)` returns a pattern which matches if the sub pattern
  * doesn't match.
@@ -228,10 +178,7 @@ export declare function union<
  *   .with({ a: P.not(P.string) }, (x) => 'will match { a: number }'
  *   )
  */
-export declare function not<
-  input,
-  const pattern extends Pattern<input> | UnknownPattern,
->(pattern: pattern): Chainable<NotP<input, pattern>>;
+export declare function not<input, const pattern extends Pattern<input> | UnknownPattern>(pattern: pattern): Chainable<NotP<input, pattern>>;
 /**
  * `P.when((value) => boolean)` returns a pattern which matches
  * if the predicate returns true for the current input.
@@ -243,18 +190,8 @@ export declare function not<
  *   .with({ age: P.when(age => age > 21) }, (x) => 'will match if value.age > 21'
  *   )
  */
-export declare function when<
-  input,
-  predicate extends (value: input) => unknown,
->(
-  predicate: predicate,
-): GuardP<
-  input,
-  predicate extends (value: any) => value is infer narrowed ? narrowed : never
->;
-export declare function when<input, narrowed extends input, excluded>(
-  predicate: (input: input) => input is narrowed,
-): GuardExcludeP<input, narrowed, excluded>;
+export declare function when<input, predicate extends (value: input) => unknown>(predicate: predicate): GuardP<input, predicate extends (value: any) => value is infer narrowed ? narrowed : never>;
+export declare function when<input, narrowed extends input, excluded>(predicate: (input: input) => input is narrowed): GuardExcludeP<input, narrowed, excluded>;
 /**
  * `P.select()` is a pattern which will always match,
  * and will inject the selected piece of input in the handler function.
@@ -266,31 +203,9 @@ export declare function when<input, narrowed extends input, excluded>(
  *   .with({ age: P.select() }, (age) => 'age: number'
  *   )
  */
-export declare function select(): Chainable<
-  AnonymousSelectP,
-  "select" | "or" | "and"
->;
-export declare function select<
-  input,
-  const patternOrKey extends
-    | string
-    | (unknown extends input ? UnknownPattern : Pattern<input>),
->(
-  patternOrKey: patternOrKey,
-): patternOrKey extends string
-  ? Chainable<SelectP<patternOrKey, "select" | "or" | "and">>
-  : Chainable<
-    SelectP<symbols.anonymousSelectKey, input, patternOrKey>,
-    "select" | "or" | "and"
-  >;
-export declare function select<
-  input,
-  const pattern extends unknown extends input ? UnknownPattern : Pattern<input>,
-  const k extends string,
->(
-  key: k,
-  pattern: pattern,
-): Chainable<SelectP<k, input, pattern>, "select" | "or" | "and">;
+export declare function select(): Chainable<AnonymousSelectP, 'select' | 'or' | 'and'>;
+export declare function select<input, const patternOrKey extends string | (unknown extends input ? UnknownPattern : Pattern<input>)>(patternOrKey: patternOrKey): patternOrKey extends string ? Chainable<SelectP<patternOrKey, 'select' | 'or' | 'and'>> : Chainable<SelectP<symbols.anonymousSelectKey, input, patternOrKey>, 'select' | 'or' | 'and'>;
+export declare function select<input, const pattern extends unknown extends input ? UnknownPattern : Pattern<input>, const k extends string>(key: k, pattern: pattern): Chainable<SelectP<k, input, pattern>, 'select' | 'or' | 'and'>;
 type AnyConstructor = abstract new (...args: any[]) => any;
 /**
  * `P.any` is a wildcard pattern, matching **any value**.
@@ -386,9 +301,7 @@ export declare const nonNullable: NonNullablePattern;
  *  @example
  *   .with(P.instanceOf(SomeClass), () => 'will match on SomeClass instances')
  */
-export declare function instanceOf<T extends AnyConstructor>(
-  classConstructor: T,
-): Chainable<GuardP<unknown, InstanceType<T>>>;
+export declare function instanceOf<T extends AnyConstructor>(classConstructor: T): Chainable<GuardP<unknown, InstanceType<T>>>;
 /**
  * `P.shape(somePattern)` lets you call methods like `.optional()`, `.and`, `.or` and `.select()`
  * On structural patterns, like objects and arrays.
@@ -403,6 +316,4 @@ export declare function instanceOf<T extends AnyConstructor>(
  *     (state) => 'match the success state, or undefined.'
  *   )
  */
-export declare function shape<input, const pattern extends Pattern<input>>(
-  pattern: pattern,
-): Chainable<GuardP<input, InvertPattern<pattern, input>>>;
+export declare function shape<input, const pattern extends Pattern<input>>(pattern: pattern): Chainable<GuardP<input, InvertPattern<pattern, input>>>;

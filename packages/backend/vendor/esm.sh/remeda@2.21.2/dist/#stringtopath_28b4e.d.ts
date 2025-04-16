@@ -1,11 +1,4 @@
-type StringToPath<T extends string> = string extends T ? never
-  : T extends "" ? []
-  : T extends `${infer Head}[${infer Nest}].${infer Tail}`
-    ? [...StringToPath<Head>, Nest, ...StringToPath<Tail>]
-  : T extends `${infer Head}[${infer Nest}]` ? [...StringToPath<Head>, Nest]
-  : T extends `${infer Head}.${infer Tail}`
-    ? [...StringToPath<Head>, ...StringToPath<Tail>]
-  : [T];
+type StringToPath<T extends string> = string extends T ? never : T extends "" ? [] : T extends `${infer Head}[${infer Nest}].${infer Tail}` ? [...StringToPath<Head>, Nest, ...StringToPath<Tail>] : T extends `${infer Head}[${infer Nest}]` ? [...StringToPath<Head>, Nest] : T extends `${infer Head}.${infer Tail}` ? [...StringToPath<Head>, ...StringToPath<Tail>] : [T];
 /**
  * Converts a path string to an array of string keys (including array index
  * access keys).
@@ -22,8 +15,6 @@ type StringToPath<T extends string> = string extends T ? never
  * @dataFirst
  * @category Utility
  */
-declare function stringToPath<Path extends string>(
-  path: Path,
-): StringToPath<Path>;
+declare function stringToPath<Path extends string>(path: Path): StringToPath<Path>;
 
 export { stringToPath };

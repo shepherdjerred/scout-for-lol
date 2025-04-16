@@ -1,8 +1,8 @@
 declare global {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- It has to be an `interface` so that it can be merged.
-  interface SymbolConstructor {
-    readonly observable: symbol;
-  }
+	// eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- It has to be an `interface` so that it can be merged.
+	interface SymbolConstructor {
+		readonly observable: symbol;
+	}
 }
 
 /**
@@ -16,7 +16,7 @@ As well, some guidance on making an `Observable` to not include `closed` propert
 @category Observable
 */
 export type Unsubscribable = {
-  unsubscribe(): void;
+	unsubscribe(): void;
 };
 
 /**
@@ -36,9 +36,9 @@ type OnComplete = () => void;
 @category Observable
 */
 export type Observer<ValueType> = {
-  next: OnNext<ValueType>;
-  error: OnError;
-  complete: OnComplete;
+	next: OnNext<ValueType>;
+	error: OnError;
+	complete: OnComplete;
 };
 
 /**
@@ -58,6 +58,6 @@ But `Observable` implementations have evolved to preferring case 2 and some impl
 @category Observable
 */
 export type ObservableLike<ValueType = unknown> = {
-  subscribe(observer?: Partial<Observer<ValueType>>): Unsubscribable;
-  [Symbol.observable](): ObservableLike<ValueType>;
+	subscribe(observer?: Partial<Observer<ValueType>>): Unsubscribable;
+	[Symbol.observable](): ObservableLike<ValueType>;
 };

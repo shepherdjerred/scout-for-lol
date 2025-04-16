@@ -1,5 +1,5 @@
-import { Writable } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { Writable } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
 /**
  * Executes a provided function once for each array element. Equivalent to
@@ -22,10 +22,7 @@ import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
  * @lazy
  * @category Array
  */
-declare function forEach<T extends IterableContainer>(
-  data: T,
-  callbackfn: (value: T[number], index: number, data: T) => void,
-): void;
+declare function forEach<T extends IterableContainer>(data: T, callbackfn: (value: T[number], index: number, data: T) => void): void;
 /**
  * Executes a provided function once for each array element. Equivalent to
  * `Array.prototype.forEach`.
@@ -49,8 +46,6 @@ declare function forEach<T extends IterableContainer>(
  * @lazy
  * @category Array
  */
-declare function forEach<T extends IterableContainer>(
-  callbackfn: (value: T[number], index: number, data: T) => void,
-): (data: T) => Writable<T>;
+declare function forEach<T extends IterableContainer>(callbackfn: (value: T[number], index: number, data: T) => void): (data: T) => Writable<T>;
 
 export { forEach };

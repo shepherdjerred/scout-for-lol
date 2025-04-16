@@ -19,8 +19,7 @@ type OtherType = FindGlobalType<'other'> //=> never (no global named 'other')
 
 @category Utilities
 */
-export type FindGlobalType<Name extends string> = typeof globalThis extends
-  Record<Name, infer T> ? T : never;
+export type FindGlobalType<Name extends string> = typeof globalThis extends Record<Name, infer T> ? T : never;
 
 /**
 Tries to find one or more types from their globally-defined constructors.
@@ -59,7 +58,7 @@ type FindBar = FindGlobalInstanceType<'Bar'>; // Works
 
 @category Utilities
 */
-export type FindGlobalInstanceType<Name extends string> = Name extends string
-  ? typeof globalThis extends
-    Record<Name, abstract new (...arguments: any[]) => infer T> ? T : never
-  : never;
+export type FindGlobalInstanceType<Name extends string> =
+	Name extends string
+		? typeof globalThis extends Record<Name, abstract new (...arguments: any[]) => infer T> ? T : never
+		: never;

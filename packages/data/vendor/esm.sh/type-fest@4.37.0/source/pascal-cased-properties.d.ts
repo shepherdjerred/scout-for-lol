@@ -1,5 +1,5 @@
-import type { CamelCaseOptions } from "./camel-case.d.ts";
-import type { PascalCase } from "./pascal-case.d.ts";
+import type {CamelCaseOptions} from './camel-case.d.ts';
+import type {PascalCase} from './pascal-case.d.ts';
 
 /**
 Convert object properties to pascal case but not recursively.
@@ -28,9 +28,8 @@ const result: PascalCasedProperties<User> = {
 @category Template literal
 @category Object
 */
-export type PascalCasedProperties<
-  Value,
-  Options extends CamelCaseOptions = { preserveConsecutiveUppercase: true },
-> = Value extends Function ? Value
-  : Value extends Array<infer U> ? Value
-  : { [K in keyof Value as PascalCase<K, Options>]: Value[K] };
+export type PascalCasedProperties<Value, Options extends CamelCaseOptions = {preserveConsecutiveUppercase: true}> = Value extends Function
+	? Value
+	: Value extends Array<infer U>
+		? Value
+		: {[K in keyof Value as PascalCase<K, Options>]: Value[K]};

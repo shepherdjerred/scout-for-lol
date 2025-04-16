@@ -1,6 +1,6 @@
-import { U as UpsertProp } from "./UpsertProp-Df3Rulpq.d.ts";
-import "https://esm.sh/type-fest@4.37.0/index.d.ts";
-import "./IsUnion-Bx34mF34.d.ts";
+import { U as UpsertProp } from './UpsertProp-Df3Rulpq.d.ts';
+import 'https://esm.sh/type-fest@4.37.0/index.d.ts';
+import './IsUnion-Bx34mF34.d.ts';
 
 /**
  * Add a new property to an object.
@@ -21,11 +21,7 @@ import "./IsUnion-Bx34mF34.d.ts";
  * @dataFirst
  * @category Object
  */
-declare function addProp<T, K extends PropertyKey, V>(
-  obj: T,
-  prop: K,
-  value: V,
-): UpsertProp<T, K, V>;
+declare function addProp<T, K extends PropertyKey, V>(obj: T, prop: K, value: V): UpsertProp<T, K, V>;
 /**
  * Add a new property to an object.
  *
@@ -44,9 +40,6 @@ declare function addProp<T, K extends PropertyKey, V>(
  * @dataLast
  * @category Object
  */
-declare function addProp<T, K extends PropertyKey, V>(
-  prop: K,
-  value: V,
-): (obj: T) => UpsertProp<T, K, V>;
+declare function addProp<T, K extends PropertyKey, V>(prop: K, value: V): (obj: T) => UpsertProp<T, K, V>;
 
 export { addProp };

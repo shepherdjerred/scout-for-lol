@@ -7,8 +7,6 @@
  *
  * @see EnumerableStringKeyedValueOf
  */
-type EnumerableStringKeyOf<T> = Required<T> extends Record<infer K, unknown>
-  ? `${Exclude<K, symbol>}`
-  : never;
+type EnumerableStringKeyOf<T> = Required<T> extends Record<infer K, unknown> ? `${Exclude<K, symbol>}` : never;
 
 export type { EnumerableStringKeyOf as E };

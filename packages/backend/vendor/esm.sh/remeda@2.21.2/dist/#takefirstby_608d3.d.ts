@@ -1,5 +1,5 @@
-import { O as OrderRule } from "./purryOrderRules-BKXCPBNx.d.ts";
-import { N as NonEmptyArray } from "./NonEmptyArray-C9Od1wmF.d.ts";
+import { O as OrderRule } from './purryOrderRules-BKXCPBNx.d.ts';
+import { N as NonEmptyArray } from './NonEmptyArray-C9Od1wmF.d.ts';
 
 /**
  * Take the first `n` items from `data` based on the provided ordering criteria. This allows you to avoid sorting the array before taking the items. The complexity of this function is *O(Nlogn)* where `N` is the length of the array.
@@ -17,11 +17,7 @@ import { N as NonEmptyArray } from "./NonEmptyArray-C9Od1wmF.d.ts";
  * @dataFirst
  * @category Array
  */
-declare function takeFirstBy<T>(
-  data: ReadonlyArray<T>,
-  n: number,
-  ...rules: Readonly<NonEmptyArray<OrderRule<T>>>
-): Array<T>;
+declare function takeFirstBy<T>(data: ReadonlyArray<T>, n: number, ...rules: Readonly<NonEmptyArray<OrderRule<T>>>): Array<T>;
 /**
  * Take the first `n` items from `data` based on the provided ordering criteria. This allows you to avoid sorting the array before taking the items. The complexity of this function is *O(Nlogn)* where `N` is the length of the array.
  *
@@ -37,9 +33,6 @@ declare function takeFirstBy<T>(
  * @dataLast
  * @category Array
  */
-declare function takeFirstBy<T>(
-  n: number,
-  ...rules: Readonly<NonEmptyArray<OrderRule<T>>>
-): (data: ReadonlyArray<T>) => Array<T>;
+declare function takeFirstBy<T>(n: number, ...rules: Readonly<NonEmptyArray<OrderRule<T>>>): (data: ReadonlyArray<T>) => Array<T>;
 
 export { takeFirstBy };

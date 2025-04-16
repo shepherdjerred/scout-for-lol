@@ -1,1 +1,1 @@
-export * from "./third-party-code.dto.d.ts";
+export * from './third-party-code.dto.d.ts';

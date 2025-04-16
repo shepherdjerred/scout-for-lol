@@ -1,4 +1,4 @@
-import type { DelimiterCase } from "./delimiter-case.d.ts";
+import type {DelimiterCase} from './delimiter-case.d.ts';
 
 /**
 Convert object properties to delimiter case but not recursively.
@@ -28,8 +28,10 @@ const result: DelimiterCasedProperties<User, '-'> = {
 @category Object
 */
 export type DelimiterCasedProperties<
-  Value,
-  Delimiter extends string,
-> = Value extends Function ? Value
-  : Value extends Array<infer U> ? Value
-  : { [K in keyof Value as DelimiterCase<K, Delimiter>]: Value[K] };
+	Value,
+	Delimiter extends string,
+> = Value extends Function
+	? Value
+	: Value extends Array<infer U>
+		? Value
+		: {[K in keyof Value as DelimiterCase<K, Delimiter>]: Value[K]};

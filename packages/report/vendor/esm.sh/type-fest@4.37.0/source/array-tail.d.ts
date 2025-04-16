@@ -1,4 +1,4 @@
-import type { UnknownArrayOrTuple } from "./internal/index.d.ts";
+import type {UnknownArrayOrTuple} from './internal/index.d.ts';
 
 /**
 Extracts the type of an array or tuple minus the first element.
@@ -22,8 +22,8 @@ add3(4);
 
 @category Array
 */
-export type ArrayTail<TArray extends UnknownArrayOrTuple> = TArray extends
-  readonly [unknown?, ...infer Tail]
-  ? keyof TArray & `${number}` extends never ? []
-  : Tail
-  : [];
+export type ArrayTail<TArray extends UnknownArrayOrTuple> = TArray extends readonly [unknown?, ...infer Tail]
+	? keyof TArray & `${number}` extends never
+		? []
+		: Tail
+	: [];

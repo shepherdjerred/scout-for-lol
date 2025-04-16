@@ -1,28 +1,11 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
-type Sampled<T extends IterableContainer, N extends number> = number extends N
-  ? SampledGeneric<T>
-  : undefined extends T[N] ? T
-  : SampledLiteral<T, N>;
-type SampledGeneric<T extends IterableContainer> = T[number] extends never ? T
-  : T extends readonly [infer First, ...infer Rest]
-    ? SampledGeneric<Rest> | [First, ...SampledGeneric<Rest>]
-  : Array<T[number]>;
-type SampledLiteral<
-  T extends IterableContainer,
-  N extends number,
-  Iteration extends Array<unknown> = [],
-> = Iteration["length"] extends N ? []
-  : T extends readonly [infer First, ...infer Tail] ? [
-      First | Tail[number],
-      ...SampledLiteral<Tail, N, [unknown, ...Iteration]>,
-    ]
-  : T extends readonly [...infer Head, infer Last]
-    ? [...SampledLiteral<Head, N, [unknown, ...Iteration]>, Last]
-  : SampledLiteral<T, N, [unknown, ...Iteration]> | [
-    T[number],
-    ...SampledLiteral<T, N, [unknown, ...Iteration]>,
-  ];
+type Sampled<T extends IterableContainer, N extends number> = number extends N ? SampledGeneric<T> : undefined extends T[N] ? T : SampledLiteral<T, N>;
+type SampledGeneric<T extends IterableContainer> = T[number] extends never ? T : T extends readonly [infer First, ...infer Rest] ? SampledGeneric<Rest> | [First, ...SampledGeneric<Rest>] : Array<T[number]>;
+type SampledLiteral<T extends IterableContainer, N extends number, Iteration extends Array<unknown> = []> = Iteration["length"] extends N ? [] : T extends readonly [infer First, ...infer Tail] ? [
+    First | Tail[number],
+    ...SampledLiteral<Tail, N, [unknown, ...Iteration]>
+] : T extends readonly [...infer Head, infer Last] ? [...SampledLiteral<Head, N, [unknown, ...Iteration]>, Last] : SampledLiteral<T, N, [unknown, ...Iteration]> | [T[number], ...SampledLiteral<T, N, [unknown, ...Iteration]>];
 /**
  * Returns a random subset of size `sampleSize` from `array`.
  *
@@ -44,10 +27,7 @@ type SampledLiteral<
  * @dataFirst
  * @category Array
  */
-declare function sample<T extends IterableContainer, N extends number = number>(
-  data: T,
-  sampleSize: N,
-): Sampled<T, N>;
+declare function sample<T extends IterableContainer, N extends number = number>(data: T, sampleSize: N): Sampled<T, N>;
 /**
  * Returns a random subset of size `sampleSize` from `array`.
  *
@@ -68,8 +48,6 @@ declare function sample<T extends IterableContainer, N extends number = number>(
  * @dataLast
  * @category Array
  */
-declare function sample<T extends IterableContainer, N extends number = number>(
-  sampleSize: N,
-): (data: T) => Sampled<T, N>;
+declare function sample<T extends IterableContainer, N extends number = number>(sampleSize: N): (data: T) => Sampled<T, N>;
 
 export { sample };

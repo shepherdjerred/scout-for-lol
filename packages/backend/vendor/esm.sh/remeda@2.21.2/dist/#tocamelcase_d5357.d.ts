@@ -1,10 +1,10 @@
-import { CamelCase } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { CamelCase } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 type CamelCaseOptions = {
-  readonly preserveConsecutiveUppercase?: boolean;
+    readonly preserveConsecutiveUppercase?: boolean;
 };
 declare const DEFAULT_OPTIONS: {
-  readonly preserveConsecutiveUppercase: true;
+    readonly preserveConsecutiveUppercase: true;
 };
 /**
  * Convert a text to camelCase by splitting it into words, un-capitalizing the
@@ -33,10 +33,7 @@ declare const DEFAULT_OPTIONS: {
  * @dataFirst
  * @category String
  */
-declare function toCamelCase<
-  T extends string,
-  Options extends CamelCaseOptions = typeof DEFAULT_OPTIONS,
->(data: T, options?: Options): CamelCase<T, Options>;
+declare function toCamelCase<T extends string, Options extends CamelCaseOptions = typeof DEFAULT_OPTIONS>(data: T, options?: Options): CamelCase<T, Options>;
 /**
  * Convert a text to camelCase by splitting it into words, un-capitalizing the
  * first word, capitalizing the rest, then joining them back together. This is
@@ -66,8 +63,6 @@ declare function toCamelCase<
  * @dataLast
  * @category String
  */
-declare function toCamelCase<
-  Options extends CamelCaseOptions = typeof DEFAULT_OPTIONS,
->(options?: Options): <T extends string>(data: T) => CamelCase<T, Options>;
+declare function toCamelCase<Options extends CamelCaseOptions = typeof DEFAULT_OPTIONS>(options?: Options): <T extends string>(data: T) => CamelCase<T, Options>;
 
 export { toCamelCase };

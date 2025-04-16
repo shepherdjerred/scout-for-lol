@@ -1,4 +1,4 @@
-import type { BuiltIns } from "./internal/index.d.ts";
+import type {BuiltIns} from './internal/index.d.ts';
 
 /**
 Create a deep version of another type where all optional keys are set to also accept `undefined`.
@@ -41,31 +41,40 @@ const testSettingsB: UndefinedOnPartialDeep<Settings> = {
 ```
 */
 export type UndefinedOnPartialDeep<T> =
-  // Handle built-in type and function
-  T extends BuiltIns | Function ? T
-    // Handle tuple and array
-    : T extends readonly unknown[] ? UndefinedOnPartialList<T>
-    // Handle map and readonly map
-    : T extends Map<infer K, infer V> ? Map<K, UndefinedOnPartialDeep<V>>
-    : T extends ReadonlyMap<infer K, infer V>
-      ? ReadonlyMap<K, UndefinedOnPartialDeep<V>>
-    // Handle set and readonly set
-    : T extends Set<infer K> ? Set<UndefinedOnPartialDeep<K>>
-    : T extends ReadonlySet<infer K> ? ReadonlySet<UndefinedOnPartialDeep<K>>
-    // Handle object
-    : T extends Record<any, any> ? {
-        [KeyType in keyof T]: undefined extends T[KeyType]
-          ? UndefinedOnPartialDeep<T[KeyType]> | undefined
-          : UndefinedOnPartialDeep<T[KeyType]>;
-      }
-    : T; // If T is not builtins / function / array / map / set / object, return T
+	// Handle built-in type and function
+	T extends BuiltIns | Function
+		? T
+		// Handle tuple and array
+		: T extends readonly unknown[]
+			? UndefinedOnPartialList<T>
+			// Handle map and readonly map
+			: T extends Map<infer K, infer V>
+				? Map<K, UndefinedOnPartialDeep<V>>
+				: T extends ReadonlyMap<infer K, infer V>
+					? ReadonlyMap<K, UndefinedOnPartialDeep<V>>
+					// Handle set and readonly set
+					: T extends Set<infer K>
+						? Set<UndefinedOnPartialDeep<K>>
+						: T extends ReadonlySet<infer K>
+							? ReadonlySet<UndefinedOnPartialDeep<K>>
+							// Handle object
+							: T extends Record<any, any>
+								? {
+									[KeyType in keyof T]: undefined extends T[KeyType]
+										? UndefinedOnPartialDeep<T[KeyType]> | undefined
+										: UndefinedOnPartialDeep<T[KeyType]>
+								}
+								: T; // If T is not builtins / function / array / map / set / object, return T
 
 // Handle tuples and arrays
-type UndefinedOnPartialList<T extends readonly unknown[]> = T extends [] ? []
-  : T extends [infer F, ...infer R]
-    ? [UndefinedOnPartialDeep<F>, ...UndefinedOnPartialDeep<R>]
-  : T extends readonly [infer F, ...infer R]
-    ? readonly [UndefinedOnPartialDeep<F>, ...UndefinedOnPartialDeep<R>]
-  : T extends Array<infer F> ? Array<UndefinedOnPartialDeep<F>>
-  : T extends ReadonlyArray<infer F> ? ReadonlyArray<UndefinedOnPartialDeep<F>>
-  : never;
+type UndefinedOnPartialList<T extends readonly unknown[]> = T extends []
+	? []
+	: T extends [infer F, ...infer R]
+		? [UndefinedOnPartialDeep<F>, ...UndefinedOnPartialDeep<R>]
+		: T extends readonly [infer F, ...infer R]
+			? readonly [UndefinedOnPartialDeep<F>, ...UndefinedOnPartialDeep<R>]
+			: T extends Array<infer F>
+				? Array<UndefinedOnPartialDeep<F>>
+				: T extends ReadonlyArray<infer F>
+					? ReadonlyArray<UndefinedOnPartialDeep<F>>
+					: never;

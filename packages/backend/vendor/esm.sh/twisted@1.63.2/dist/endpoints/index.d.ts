@@ -1,1 +1,1 @@
-export * from "./endpoints.d.ts";
+export * from './endpoints.d.ts';

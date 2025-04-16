@@ -1,4 +1,4 @@
-import type { IsNever } from "./is-never.d.ts";
+import type {IsNever} from './is-never.d.ts';
 
 /**
 An if-else-like type that resolves depending on whether the given type is `never`.
@@ -19,5 +19,6 @@ type ShouldBeBar = IfNever<'not never', 'foo', 'bar'>;
 @category Type Guard
 @category Utilities
 */
-export type IfNever<T, TypeIfNever = true, TypeIfNotNever = false> =
-  IsNever<T> extends true ? TypeIfNever : TypeIfNotNever;
+export type IfNever<T, TypeIfNever = true, TypeIfNotNever = false> = (
+	IsNever<T> extends true ? TypeIfNever : TypeIfNotNever
+);

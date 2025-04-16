@@ -1,7 +1,7 @@
-import type { IsUnion, NonRecursiveType } from "./internal/index.d.ts";
-import type { IsNever } from "./is-never.d.ts";
-import type { Simplify } from "./simplify.d.ts";
-import type { UnknownArray } from "./unknown-array.d.ts";
+import type {NonRecursiveType, IsUnion} from './internal/index.d.ts';
+import type {IsNever} from './is-never.d.ts';
+import type {Simplify} from './simplify.d.ts';
+import type {UnknownArray} from './unknown-array.d.ts';
 
 /**
 Create a type with shared fields from a union of object types.
@@ -64,16 +64,13 @@ function displayPetInfo(petInfo: SharedUnionFields<Cat | Dog>) {
 @category Object
 @category Union
 */
-export type SharedUnionFields<Union> = Extract<
-  Union,
-  | NonRecursiveType
-  | ReadonlyMap<unknown, unknown>
-  | ReadonlySet<unknown>
-  | UnknownArray
-> extends infer SkippedMembers
-  ? Exclude<Union, SkippedMembers> extends infer RelevantMembers ?
-      | SkippedMembers
-      | (IsNever<RelevantMembers> extends true ? never
-        : Simplify<Pick<RelevantMembers, keyof RelevantMembers>>)
-  : never
-  : never;
+export type SharedUnionFields<Union> =
+Extract<Union, NonRecursiveType | ReadonlyMap<unknown, unknown> | ReadonlySet<unknown> | UnknownArray> extends infer SkippedMembers
+	? Exclude<Union, SkippedMembers> extends infer RelevantMembers
+		?
+		| SkippedMembers
+		| (IsNever<RelevantMembers> extends true
+			? never
+			: Simplify<Pick<RelevantMembers, keyof RelevantMembers>>)
+		: never
+	: never;

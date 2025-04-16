@@ -1,20 +1,12 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
-type Zipped<Left extends IterableContainer, Right extends IterableContainer> =
-  Left extends readonly [] ? []
-    : Right extends readonly [] ? []
-    : Left extends readonly [infer LeftHead, ...infer LeftRest]
-      ? Right extends readonly [infer RightHead, ...infer RightRest] ? [
-          [LeftHead, RightHead],
-          ...Zipped<LeftRest, RightRest>,
-        ]
-      : [
-        [LeftHead, Right[number]],
-        ...Zipped<LeftRest, Right>,
-      ]
-    : Right extends readonly [infer RightHead, ...infer RightRest]
-      ? [[Left[number], RightHead], ...Zipped<Left, RightRest>]
-    : Array<[Left[number], Right[number]]>;
+type Zipped<Left extends IterableContainer, Right extends IterableContainer> = Left extends readonly [] ? [] : Right extends readonly [] ? [] : Left extends readonly [infer LeftHead, ...infer LeftRest] ? Right extends readonly [infer RightHead, ...infer RightRest] ? [
+    [LeftHead, RightHead],
+    ...Zipped<LeftRest, RightRest>
+] : [
+    [LeftHead, Right[number]],
+    ...Zipped<LeftRest, Right>
+] : Right extends readonly [infer RightHead, ...infer RightRest] ? [[Left[number], RightHead], ...Zipped<Left, RightRest>] : Array<[Left[number], Right[number]]>;
 /**
  * Creates a new list from two supplied lists by pairing up equally-positioned
  * items. The length of the returned list will match the shortest of the two
@@ -30,10 +22,7 @@ type Zipped<Left extends IterableContainer, Right extends IterableContainer> =
  * @lazy
  * @category Array
  */
-declare function zip<F extends IterableContainer, S extends IterableContainer>(
-  first: F,
-  second: S,
-): Zipped<F, S>;
+declare function zip<F extends IterableContainer, S extends IterableContainer>(first: F, second: S): Zipped<F, S>;
 /**
  * Creates a new list from two supplied lists by pairing up equally-positioned
  * items. The length of the returned list will match the shortest of the two
@@ -48,8 +37,6 @@ declare function zip<F extends IterableContainer, S extends IterableContainer>(
  * @lazy
  * @category Array
  */
-declare function zip<S extends IterableContainer>(
-  second: S,
-): <F extends IterableContainer>(first: F) => Zipped<F, S>;
+declare function zip<S extends IterableContainer>(second: S): <F extends IterableContainer>(first: F) => Zipped<F, S>;
 
 export { zip };

@@ -1,6 +1,6 @@
-import { U as UpsertProp } from "./UpsertProp-Df3Rulpq.d.ts";
-import "https://esm.sh/type-fest@4.37.0/index.d.ts";
-import "./IsUnion-Bx34mF34.d.ts";
+import { U as UpsertProp } from './UpsertProp-Df3Rulpq.d.ts';
+import 'https://esm.sh/type-fest@4.37.0/index.d.ts';
+import './IsUnion-Bx34mF34.d.ts';
 
 /**
  * Sets the `value` at `prop` of `object`.
@@ -18,11 +18,7 @@ import "./IsUnion-Bx34mF34.d.ts";
  * @dataFirst
  * @category Object
  */
-declare function set<T, K extends keyof T, V extends Required<T>[K]>(
-  obj: T,
-  prop: K,
-  value: V,
-): UpsertProp<T, K, V>;
+declare function set<T, K extends keyof T, V extends Required<T>[K]>(obj: T, prop: K, value: V): UpsertProp<T, K, V>;
 /**
  * Sets the `value` at `prop` of `object`.
  *
@@ -38,9 +34,6 @@ declare function set<T, K extends keyof T, V extends Required<T>[K]>(
  * @dataLast
  * @category Object
  */
-declare function set<T, K extends keyof T, V extends Required<T>[K]>(
-  prop: K,
-  value: V,
-): (obj: T) => UpsertProp<T, K, V>;
+declare function set<T, K extends keyof T, V extends Required<T>[K]>(prop: K, value: V): (obj: T) => UpsertProp<T, K, V>;
 
 export { set };

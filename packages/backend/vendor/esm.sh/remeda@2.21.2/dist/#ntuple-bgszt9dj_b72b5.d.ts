@@ -5,7 +5,6 @@
  * in a recurse depth error. For negative N the type would result in an infinite
  * recursion. None of these have protections because this is an internal type!
  */
-type NTuple<T, N extends number, Result extends Array<unknown> = []> =
-  Result["length"] extends N ? Result : NTuple<T, N, [...Result, T]>;
+type NTuple<T, N extends number, Result extends Array<unknown> = []> = Result["length"] extends N ? Result : NTuple<T, N, [...Result, T]>;
 
 export type { NTuple as N };

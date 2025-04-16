@@ -1,7 +1,7 @@
 /**
 Methods to exclude.
 */
-type ArrayLengthMutationKeys = "splice" | "push" | "pop" | "shift" | "unshift";
+type ArrayLengthMutationKeys = 'splice' | 'push' | 'pop' | 'shift' | 'unshift';
 
 /**
 Create a type that represents an array of the given type and length. The array's length and the `Array` prototype methods that manipulate its length are excluded in the resulting type.
@@ -33,17 +33,11 @@ guestFencingTeam.push('Sam');
 @category Array
 @see ReadonlyTuple
 */
-export type FixedLengthArray<
-  Element,
-  Length extends number,
-  ArrayPrototype = [Element, ...Element[]],
-> =
-  & Pick<
-    ArrayPrototype,
-    Exclude<keyof ArrayPrototype, ArrayLengthMutationKeys>
-  >
-  & {
-    [index: number]: Element;
-    [Symbol.iterator]: () => IterableIterator<Element>;
-    readonly length: Length;
-  };
+export type FixedLengthArray<Element, Length extends number, ArrayPrototype = [Element, ...Element[]]> = Pick<
+ArrayPrototype,
+Exclude<keyof ArrayPrototype, ArrayLengthMutationKeys>
+> & {
+	[index: number]: Element;
+	[Symbol.iterator]: () => IterableIterator<Element>;
+	readonly length: Length;
+};

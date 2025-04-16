@@ -1,1 +1,1 @@
-export * from "./LeagueEntryDTO.dto.d.ts";
+export * from './LeagueEntryDTO.dto.d.ts';

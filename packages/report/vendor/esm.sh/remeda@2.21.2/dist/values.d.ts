@@ -1,9 +1,8 @@
-import { E as EnumerableStringKeyedValueOf } from "./EnumerableStringKeyedValueOf-CLzltniW.d.ts";
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
-import "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { E as EnumerableStringKeyedValueOf } from './EnumerableStringKeyedValueOf-CLzltniW.d.ts';
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
+import 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
-type Values<T extends object> = T extends IterableContainer ? Array<T[number]>
-  : Array<EnumerableStringKeyedValueOf<T>>;
+type Values<T extends object> = T extends IterableContainer ? Array<T[number]> : Array<EnumerableStringKeyedValueOf<T>>;
 /**
  * Returns a new array containing the values of the array or object.
  *

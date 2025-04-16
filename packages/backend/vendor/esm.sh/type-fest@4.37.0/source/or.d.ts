@@ -1,4 +1,4 @@
-import type { IsEqual } from "./is-equal.d.ts";
+import type {IsEqual} from './is-equal.d.ts';
 
 /**
 Returns a boolean for whether either of two given types are true.
@@ -18,7 +18,8 @@ Or<false, false>;
 
 @see {@link And}
 */
-export type Or<A extends boolean, B extends boolean> = [A, B][number] extends
-  false ? false
-  : true extends [IsEqual<A, true>, IsEqual<B, true>][number] ? true
-  : never;
+export type Or<A extends boolean, B extends boolean> = [A, B][number] extends false
+	? false
+	: true extends [IsEqual<A, true>, IsEqual<B, true>][number]
+		? true
+		: never;

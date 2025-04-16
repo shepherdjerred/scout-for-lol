@@ -1,30 +1,19 @@
-import { IsNumericLiteral } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { IsNumericLiteral } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
-type ArraySetRequired<
-  T extends IterableContainer,
-  Min extends number,
-  Iteration extends ReadonlyArray<unknown> = [],
-> = number extends Min ? never
-  : Iteration["length"] extends Min ? T
-  : T extends readonly [] ? never
-  : T extends [infer Head, ...infer Rest] ? [
-      Head,
-      ...ArraySetRequired<Rest, Min, [unknown, ...Iteration]>,
-    ]
-  : T extends readonly [infer Head, ...infer Rest] ? readonly [
-      Head,
-      ...ArraySetRequired<Rest, Min, [unknown, ...Iteration]>,
-    ]
-  : T extends Array<infer Item> ? [
-      Item,
-      ...ArraySetRequired<T, Min, [unknown, ...Iteration]>,
-    ]
-  : T extends ReadonlyArray<infer Item> ? readonly [
-      Item,
-      ...ArraySetRequired<T, Min, [unknown, ...Iteration]>,
-    ]
-  : never;
+type ArraySetRequired<T extends IterableContainer, Min extends number, Iteration extends ReadonlyArray<unknown> = []> = number extends Min ? never : Iteration["length"] extends Min ? T : T extends readonly [] ? never : T extends [infer Head, ...infer Rest] ? [
+    Head,
+    ...ArraySetRequired<Rest, Min, [unknown, ...Iteration]>
+] : T extends readonly [infer Head, ...infer Rest] ? readonly [
+    Head,
+    ...ArraySetRequired<Rest, Min, [unknown, ...Iteration]>
+] : T extends Array<infer Item> ? [
+    Item,
+    ...ArraySetRequired<T, Min, [unknown, ...Iteration]>
+] : T extends ReadonlyArray<infer Item> ? readonly [
+    Item,
+    ...ArraySetRequired<T, Min, [unknown, ...Iteration]>
+] : never;
 /**
  * Checks if the given array has at least the defined number of elements. When
  * the minimum used is a literal (e.g. `3`) the output is refined accordingly so
@@ -47,10 +36,7 @@ type ArraySetRequired<
  * @dataFirst
  * @category Array
  */
-declare function hasAtLeast<T extends IterableContainer, N extends number>(
-  data: IterableContainer | T,
-  minimum: IsNumericLiteral<N> extends true ? N : never,
-): data is ArraySetRequired<T, N>;
+declare function hasAtLeast<T extends IterableContainer, N extends number>(data: IterableContainer | T, minimum: IsNumericLiteral<N> extends true ? N : never): data is ArraySetRequired<T, N>;
 declare function hasAtLeast(data: IterableContainer, minimum: number): boolean;
 /**
  * Checks if the given array has at least the defined number of elements. When
@@ -76,13 +62,7 @@ declare function hasAtLeast(data: IterableContainer, minimum: number): boolean;
  * @dataLast
  * @category Array
  */
-declare function hasAtLeast<N extends number>(
-  minimum: IsNumericLiteral<N> extends true ? N : never,
-): <T extends IterableContainer>(
-  data: IterableContainer | T,
-) => data is ArraySetRequired<T, N>;
-declare function hasAtLeast(
-  minimum: number,
-): (data: IterableContainer) => boolean;
+declare function hasAtLeast<N extends number>(minimum: IsNumericLiteral<N> extends true ? N : never): <T extends IterableContainer>(data: IterableContainer | T) => data is ArraySetRequired<T, N>;
+declare function hasAtLeast(minimum: number): (data: IterableContainer) => boolean;
 
 export { hasAtLeast };

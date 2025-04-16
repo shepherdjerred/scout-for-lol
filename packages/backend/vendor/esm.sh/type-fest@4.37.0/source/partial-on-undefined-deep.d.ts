@@ -1,17 +1,17 @@
-import type { IfUnknown } from "./if-unknown.d.ts";
-import type { BuiltIns, LiteralKeyOf } from "./internal/index.d.ts";
-import type { Merge } from "./merge.d.ts";
+import type {IfUnknown} from './if-unknown.d.ts';
+import type {BuiltIns, LiteralKeyOf} from './internal/index.d.ts';
+import type {Merge} from './merge.d.ts';
 
 /**
 @see PartialOnUndefinedDeep
 */
 export type PartialOnUndefinedDeepOptions = {
-  /**
+	/**
 	Whether to affect the individual elements of arrays and tuples.
 
 	@default false
 	*/
-  readonly recurseIntoArrays?: boolean;
+	readonly recurseIntoArrays?: boolean;
 };
 
 /**
@@ -47,45 +47,25 @@ const testSettings: PartialOnUndefinedDeep<Settings> = {
 
 @category Object
 */
-export type PartialOnUndefinedDeep<
-  T,
-  Options extends PartialOnUndefinedDeepOptions = {},
-> = T extends Record<any, any> | undefined ? {
-    [
-      KeyType in keyof T as undefined extends T[KeyType]
-        ? IfUnknown<T[KeyType], never, KeyType>
-        : never
-    ]?: PartialOnUndefinedDeepValue<T[KeyType], Options>;
-  } extends infer U // Make a partial type with all value types accepting undefined (and set them optional)
-    ? Merge<
-      {
-        [
-          KeyType in keyof T as KeyType extends LiteralKeyOf<U> ? never
-            : KeyType
-        ]: PartialOnUndefinedDeepValue<T[KeyType], Options>;
-      },
-      U
-    > // Join all remaining keys not treated in U
-  : never // Should not happen
-  : T;
+export type PartialOnUndefinedDeep<T, Options extends PartialOnUndefinedDeepOptions = {}> = T extends Record<any, any> | undefined
+	? {[KeyType in keyof T as undefined extends T[KeyType] ? IfUnknown<T[KeyType], never, KeyType> : never]?: PartialOnUndefinedDeepValue<T[KeyType], Options>} extends infer U // Make a partial type with all value types accepting undefined (and set them optional)
+		? Merge<{[KeyType in keyof T as KeyType extends LiteralKeyOf<U> ? never : KeyType]: PartialOnUndefinedDeepValue<T[KeyType], Options>}, U> // Join all remaining keys not treated in U
+		: never // Should not happen
+	: T;
 
 /**
 Utility type to get the value type by key and recursively call `PartialOnUndefinedDeep` to transform sub-objects.
 */
-type PartialOnUndefinedDeepValue<
-  T,
-  Options extends PartialOnUndefinedDeepOptions,
-> = T extends BuiltIns | ((...arguments_: any[]) => unknown) ? T
-  : T extends ReadonlyArray<infer U> // Test if type is array or tuple
-    ? Options["recurseIntoArrays"] extends true // Check if option is activated
-      ? U[] extends T // Check if array not tuple
-        ? readonly U[] extends T
-          ? ReadonlyArray<PartialOnUndefinedDeep<U, Options>> // Readonly array treatment
-        : Array<PartialOnUndefinedDeep<U, Options>> // Mutable array treatment
-      : PartialOnUndefinedDeep<
-        { [Key in keyof T]: PartialOnUndefinedDeep<T[Key], Options> },
-        Options
-      > // Tuple treatment
-    : T
-  : T extends Record<any, any> | undefined ? PartialOnUndefinedDeep<T, Options>
-  : unknown;
+type PartialOnUndefinedDeepValue<T, Options extends PartialOnUndefinedDeepOptions> = T extends BuiltIns | ((...arguments_: any[]) => unknown)
+	? T
+	: T extends ReadonlyArray<infer U> // Test if type is array or tuple
+		? Options['recurseIntoArrays'] extends true // Check if option is activated
+			? U[] extends T // Check if array not tuple
+				? readonly U[] extends T
+					? ReadonlyArray<PartialOnUndefinedDeep<U, Options>> // Readonly array treatment
+					: Array<PartialOnUndefinedDeep<U, Options>> // Mutable array treatment
+				: PartialOnUndefinedDeep<{[Key in keyof T]: PartialOnUndefinedDeep<T[Key], Options>}, Options> // Tuple treatment
+			: T
+		: T extends Record<any, any> | undefined
+			? PartialOnUndefinedDeep<T, Options>
+			: unknown;

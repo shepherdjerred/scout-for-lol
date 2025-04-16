@@ -1,19 +1,9 @@
-import { UUIDTypes } from "./types.d.ts";
-export { DNS, URL } from "./v35.d.ts";
-declare function v3(
-  value: string | Uint8Array,
-  namespace: UUIDTypes,
-  buf?: undefined,
-  offset?: number,
-): string;
-declare function v3<TBuf extends Uint8Array = Uint8Array>(
-  value: string | Uint8Array,
-  namespace: UUIDTypes,
-  buf: TBuf,
-  offset?: number,
-): TBuf;
+import { UUIDTypes } from './types.d.ts';
+export { DNS, URL } from './v35.d.ts';
+declare function v3(value: string | Uint8Array, namespace: UUIDTypes, buf?: undefined, offset?: number): string;
+declare function v3<TBuf extends Uint8Array = Uint8Array>(value: string | Uint8Array, namespace: UUIDTypes, buf: TBuf, offset?: number): TBuf;
 declare namespace v3 {
-  var DNS: string;
-  var URL: string;
+    var DNS: string;
+    var URL: string;
 }
 export default v3;

@@ -1,20 +1,20 @@
 export declare enum Regions {
-  BRAZIL = "BR1",
-  EU_EAST = "EUN1",
-  EU_WEST = "EUW1",
-  KOREA = "KR",
-  LAT_NORTH = "LA1",
-  LAT_SOUTH = "LA2",
-  AMERICA_NORTH = "NA1",
-  OCEANIA = "OC1",
-  TURKEY = "TR1",
-  RUSSIA = "RU",
-  JAPAN = "JP1",
-  VIETNAM = "VN2",
-  TAIWAN = "TW2",
-  SINGAPORE = "SG2",
-  MIDDLE_EAST = "ME1",
-  PBE = "PBE1",
+    BRAZIL = "BR1",
+    EU_EAST = "EUN1",
+    EU_WEST = "EUW1",
+    KOREA = "KR",
+    LAT_NORTH = "LA1",
+    LAT_SOUTH = "LA2",
+    AMERICA_NORTH = "NA1",
+    OCEANIA = "OC1",
+    TURKEY = "TR1",
+    RUSSIA = "RU",
+    JAPAN = "JP1",
+    VIETNAM = "VN2",
+    TAIWAN = "TW2",
+    SINGAPORE = "SG2",
+    MIDDLE_EAST = "ME1",
+    PBE = "PBE1"
 }
 /**
  * As per RIOT Api:
@@ -25,9 +25,9 @@ export declare enum Regions {
  * Use regionToRegionGroup() to convert them.
  */
 export declare enum RegionGroups {
-  ASIA = "ASIA",
-  AMERICAS = "AMERICAS",
-  EUROPE = "EUROPE",
-  SEA = "SEA",
+    ASIA = "ASIA",
+    AMERICAS = "AMERICAS",
+    EUROPE = "EUROPE",
+    SEA = "SEA"
 }
 export declare function regionToRegionGroup(region: Regions): RegionGroups;

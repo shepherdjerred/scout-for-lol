@@ -1,4 +1,4 @@
-import type { IsEqual } from "./is-equal.d.ts";
+import type {IsEqual} from './is-equal.d.ts';
 
 /**
 Filter out keys from an object.
@@ -27,19 +27,17 @@ type Filtered = Filter<'bar', 'foo'>;
 
 @see {Except}
 */
-type Filter<KeyType, ExcludeType> = IsEqual<KeyType, ExcludeType> extends true
-  ? never
-  : (KeyType extends ExcludeType ? never : KeyType);
+type Filter<KeyType, ExcludeType> = IsEqual<KeyType, ExcludeType> extends true ? never : (KeyType extends ExcludeType ? never : KeyType);
 
 type ExceptOptions = {
-  /**
+	/**
 	Disallow assigning non-specified properties.
 
 	Note that any omitted properties in the resulting type will be present in autocomplete as `undefined`.
 
 	@default false
 	*/
-  requireExactProps?: boolean;
+	requireExactProps?: boolean;
 };
 
 /**
@@ -95,15 +93,8 @@ type PostPayload = Except<UserData, 'email'>;
 
 @category Object
 */
-export type Except<
-  ObjectType,
-  KeysType extends keyof ObjectType,
-  Options extends ExceptOptions = { requireExactProps: false },
-> =
-  & {
-    [KeyType in keyof ObjectType as Filter<KeyType, KeysType>]:
-      ObjectType[KeyType];
-  }
-  & (Options["requireExactProps"] extends true
-    ? Partial<Record<KeysType, never>>
-    : {});
+export type Except<ObjectType, KeysType extends keyof ObjectType, Options extends ExceptOptions = {requireExactProps: false}> = {
+	[KeyType in keyof ObjectType as Filter<KeyType, KeysType>]: ObjectType[KeyType];
+} & (Options['requireExactProps'] extends true
+	? Partial<Record<KeysType, never>>
+	: {});

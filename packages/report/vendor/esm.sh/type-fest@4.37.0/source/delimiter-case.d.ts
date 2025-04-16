@@ -1,26 +1,23 @@
-import type { IsStringLiteral } from "./is-literal.d.ts";
-import type { Words, WordsOptions } from "./words.d.ts";
+import type {IsStringLiteral} from './is-literal.d.ts';
+import type {Words, WordsOptions} from './words.d.ts';
 
 /**
 Convert an array of words to delimiter case starting with a delimiter with input capitalization.
 */
 type DelimiterCaseFromArray<
-  Words extends string[],
-  Delimiter extends string,
-  OutputString extends string = "",
+	Words extends string[],
+	Delimiter extends string,
+	OutputString extends string = '',
 > = Words extends [
-  infer FirstWord extends string,
-  ...infer RemainingWords extends string[],
-] ? DelimiterCaseFromArray<
-    RemainingWords,
-    Delimiter,
-    `${OutputString}${Delimiter}${FirstWord}`
-  >
-  : OutputString;
+	infer FirstWord extends string,
+	...infer RemainingWords extends string[],
+]
+	? DelimiterCaseFromArray<RemainingWords, Delimiter, `${OutputString}${Delimiter}${FirstWord}`>
+	: OutputString;
 
 type RemoveFirstLetter<S extends string> = S extends `${infer _}${infer Rest}`
-  ? Rest
-  : "";
+	? Rest
+	: '';
 
 /**
 Convert a string literal to a custom string delimiter casing.
@@ -62,13 +59,15 @@ const rawCliOptions: OddlyCasedProperties<SomeOptions> = {
 @category Template literal
  */
 export type DelimiterCase<
-  Value,
-  Delimiter extends string,
-  Options extends WordsOptions = { splitOnNumbers: false },
-> = Value extends string ? IsStringLiteral<Value> extends false ? Value
-  : Lowercase<
-    RemoveFirstLetter<
-      DelimiterCaseFromArray<Words<Value, Options>, Delimiter>
-    >
-  >
-  : Value;
+	Value,
+	Delimiter extends string,
+	Options extends WordsOptions = {splitOnNumbers: false},
+> = Value extends string
+	? IsStringLiteral<Value> extends false
+		? Value
+		: Lowercase<
+		RemoveFirstLetter<
+		DelimiterCaseFromArray<Words<Value, Options>, Delimiter>
+		>
+		>
+	: Value;

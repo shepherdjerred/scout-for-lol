@@ -1,10 +1,6 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
-type Product<T extends IterableContainer<bigint> | IterableContainer<number>> =
-  T extends readonly [] ? 1
-    : T extends readonly [bigint, ...ReadonlyArray<unknown>] ? bigint
-    : T[number] extends bigint ? bigint | 1
-    : number;
+type Product<T extends IterableContainer<bigint> | IterableContainer<number>> = T extends readonly [] ? 1 : T extends readonly [bigint, ...ReadonlyArray<unknown>] ? bigint : T[number] extends bigint ? bigint | 1 : number;
 /**
  * Compute the product of the numbers in the array, or return 1 for an empty
  * array.
@@ -27,9 +23,7 @@ type Product<T extends IterableContainer<bigint> | IterableContainer<number>> =
  * @dataFirst
  * @category Number
  */
-declare function product<
-  T extends IterableContainer<bigint> | IterableContainer<number>,
->(data: T): Product<T>;
+declare function product<T extends IterableContainer<bigint> | IterableContainer<number>>(data: T): Product<T>;
 /**
  * Compute the product of the numbers in the array, or return 1 for an empty
  * array.
@@ -51,8 +45,6 @@ declare function product<
  * @dataLast
  * @category Number
  */
-declare function product(): <
-  T extends IterableContainer<bigint> | IterableContainer<number>,
->(data: T) => Product<T>;
+declare function product(): <T extends IterableContainer<bigint> | IterableContainer<number>>(data: T) => Product<T>;
 
 export { product };

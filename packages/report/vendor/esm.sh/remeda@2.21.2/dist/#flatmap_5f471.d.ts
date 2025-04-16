@@ -19,14 +19,7 @@
  * @lazy
  * @category Array
  */
-declare function flatMap<T, U>(
-  data: ReadonlyArray<T>,
-  callbackfn: (
-    input: T,
-    index: number,
-    data: ReadonlyArray<T>,
-  ) => ReadonlyArray<U> | U,
-): Array<U>;
+declare function flatMap<T, U>(data: ReadonlyArray<T>, callbackfn: (input: T, index: number, data: ReadonlyArray<T>) => ReadonlyArray<U> | U): Array<U>;
 /**
  * Returns a new array formed by applying a given callback function to each
  * element of the array, and then flattening the result by one level. It is
@@ -47,12 +40,6 @@ declare function flatMap<T, U>(
  * @lazy
  * @category Array
  */
-declare function flatMap<T, U>(
-  callbackfn: (
-    input: T,
-    index: number,
-    data: ReadonlyArray<T>,
-  ) => ReadonlyArray<U> | U,
-): (data: ReadonlyArray<T>) => Array<U>;
+declare function flatMap<T, U>(callbackfn: (input: T, index: number, data: ReadonlyArray<T>) => ReadonlyArray<U> | U): (data: ReadonlyArray<T>) => Array<U>;
 
 export { flatMap };

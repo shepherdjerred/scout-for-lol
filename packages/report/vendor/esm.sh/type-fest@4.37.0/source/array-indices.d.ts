@@ -19,7 +19,5 @@ const getWeekdayName = (day: Weekday): WeekdayName => weekdays[day];
 
 @category Array
 */
-export type ArrayIndices<Element extends readonly unknown[]> = Exclude<
-  Partial<Element>["length"],
-  Element["length"]
->;
+export type ArrayIndices<Element extends readonly unknown[]> =
+	Exclude<Partial<Element>['length'], Element['length']>;

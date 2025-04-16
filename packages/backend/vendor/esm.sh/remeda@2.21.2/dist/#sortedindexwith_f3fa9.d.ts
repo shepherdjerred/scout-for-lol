@@ -32,10 +32,7 @@
  * @category Array
  * @see findIndex, sortedIndex, sortedIndexBy, sortedLastIndex, sortedLastIndexBy
  */
-declare function sortedIndexWith<T>(
-  data: ReadonlyArray<T>,
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean,
-): number;
+declare function sortedIndexWith<T>(data: ReadonlyArray<T>, predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean): number;
 /**
  * Performs a **binary search** for the index of the item at which the predicate
  * stops returning `true`. This function assumes that the array is "sorted" in
@@ -68,8 +65,6 @@ declare function sortedIndexWith<T>(
  * @dataLast
  * @category Array
  */
-declare function sortedIndexWith<T>(
-  predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean,
-): (data: ReadonlyArray<T>) => number;
+declare function sortedIndexWith<T>(predicate: (value: T, index: number, data: ReadonlyArray<T>) => boolean): (data: ReadonlyArray<T>) => number;
 
 export { sortedIndexWith };

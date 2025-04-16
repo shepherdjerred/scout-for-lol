@@ -14,10 +14,7 @@
  * @lazy
  * @category Array
  */
-declare function intersection<T, S>(
-  data: ReadonlyArray<T>,
-  other: ReadonlyArray<S>,
-): Array<S & T>;
+declare function intersection<T, S>(data: ReadonlyArray<T>, other: ReadonlyArray<S>): Array<S & T>;
 /**
  * Returns a list of elements that exist in both array. The output maintains the
  * same order as the input. The inputs are treated as multi-sets/bags (multiple
@@ -33,8 +30,6 @@ declare function intersection<T, S>(
  * @lazy
  * @category Array
  */
-declare function intersection<S>(
-  other: ReadonlyArray<S>,
-): <T>(data: ReadonlyArray<T>) => Array<S & T>;
+declare function intersection<S>(other: ReadonlyArray<S>): <T>(data: ReadonlyArray<T>) => Array<S & T>;
 
 export { intersection };

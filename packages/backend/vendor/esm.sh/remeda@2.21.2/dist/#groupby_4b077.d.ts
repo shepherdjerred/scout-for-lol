@@ -1,7 +1,7 @@
-import { E as ExactRecord } from "./ExactRecord-or8-oNP7.d.ts";
-import { N as NonEmptyArray } from "./NonEmptyArray-C9Od1wmF.d.ts";
-import "./IfBoundedRecord-WIX9x_oz.d.ts";
-import "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { E as ExactRecord } from './ExactRecord-or8-oNP7.d.ts';
+import { N as NonEmptyArray } from './NonEmptyArray-C9Od1wmF.d.ts';
+import './IfBoundedRecord-WIX9x_oz.d.ts';
+import 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 /**
  * Groups the elements of a given iterable according to the string values
@@ -25,14 +25,7 @@ import "https://esm.sh/type-fest@4.37.0/index.d.ts";
  * @dataFirst
  * @category Array
  */
-declare function groupBy<T, Key extends PropertyKey = PropertyKey>(
-  data: ReadonlyArray<T>,
-  callbackfn: (
-    value: T,
-    index: number,
-    data: ReadonlyArray<T>,
-  ) => Key | undefined,
-): ExactRecord<Key, NonEmptyArray<T>>;
+declare function groupBy<T, Key extends PropertyKey = PropertyKey>(data: ReadonlyArray<T>, callbackfn: (value: T, index: number, data: ReadonlyArray<T>) => Key | undefined): ExactRecord<Key, NonEmptyArray<T>>;
 /**
  * Groups the elements of a given iterable according to the string values
  * returned by a provided callback function. The returned object has separate
@@ -60,12 +53,6 @@ declare function groupBy<T, Key extends PropertyKey = PropertyKey>(
  * @dataLast
  * @category Array
  */
-declare function groupBy<T, Key extends PropertyKey = PropertyKey>(
-  callbackfn: (
-    value: T,
-    index: number,
-    data: ReadonlyArray<T>,
-  ) => Key | undefined,
-): (items: ReadonlyArray<T>) => ExactRecord<Key, NonEmptyArray<T>>;
+declare function groupBy<T, Key extends PropertyKey = PropertyKey>(callbackfn: (value: T, index: number, data: ReadonlyArray<T>) => Key | undefined): (items: ReadonlyArray<T>) => ExactRecord<Key, NonEmptyArray<T>>;
 
 export { groupBy };

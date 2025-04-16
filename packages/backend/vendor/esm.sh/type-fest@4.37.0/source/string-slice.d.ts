@@ -1,6 +1,6 @@
-import type { Join } from "./join.d.ts";
-import type { ArraySlice } from "./array-slice.d.ts";
-import type { StringToArray } from "./internal/index.d.ts";
+import type {Join} from './join.d.ts';
+import type {ArraySlice} from './array-slice.d.ts';
+import type {StringToArray} from './internal/index.d.ts';
 
 /**
 Returns a string slice of a given range, just like `String#slice()`.
@@ -27,10 +27,11 @@ StringSlice<'abcde', -2, -1>;
 @category String
 */
 export type StringSlice<
-  S extends string,
-  Start extends number = 0,
-  End extends number = StringToArray<S>["length"],
-> = string extends S ? string
-  : ArraySlice<StringToArray<S>, Start, End> extends
-    infer R extends readonly string[] ? Join<R, "">
-  : never;
+	S extends string,
+	Start extends number = 0,
+	End extends number = StringToArray<S>['length'],
+> = string extends S
+	? string
+	: ArraySlice<StringToArray<S>, Start, End> extends infer R extends readonly string[]
+		? Join<R, ''>
+		: never;

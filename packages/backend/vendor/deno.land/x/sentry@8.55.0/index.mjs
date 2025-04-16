@@ -4,15 +4,14 @@
  *
  * ATTENTION: This constant must never cross package boundaries (i.e. be exported) to guarantee that it can be used for tree shaking.
  */
-const DEBUG_BUILD$1 = typeof __SENTRY_DEBUG__ === "undefined" ||
-  __SENTRY_DEBUG__;
+const DEBUG_BUILD$1 = (typeof __SENTRY_DEBUG__ === 'undefined' || __SENTRY_DEBUG__);
 
 // This is a magic string replaced by rollup
 
-const SDK_VERSION = "8.55.0";
+const SDK_VERSION = "8.55.0" ;
 
 /** Get's the global object for the current JavaScript runtime */
-const GLOBAL_OBJ = globalThis;
+const GLOBAL_OBJ = globalThis ;
 
 /**
  * Returns a global singleton contained in the global `__SENTRY__[]` object.
@@ -26,10 +25,9 @@ const GLOBAL_OBJ = globalThis;
  * @returns the singleton
  */
 function getGlobalSingleton(name, creator, obj) {
-  const gbl = GLOBAL_OBJ;
+  const gbl = (GLOBAL_OBJ) ;
   const __SENTRY__ = (gbl.__SENTRY__ = gbl.__SENTRY__ || {});
-  const versionedCarrier =
-    (__SENTRY__[SDK_VERSION] = __SENTRY__[SDK_VERSION] || {});
+  const versionedCarrier = (__SENTRY__[SDK_VERSION] = __SENTRY__[SDK_VERSION] || {});
   return versionedCarrier[name] || (versionedCarrier[name] = creator());
 }
 
@@ -38,23 +36,25 @@ function getGlobalSingleton(name, creator, obj) {
  *
  * ATTENTION: This constant must never cross package boundaries (i.e. be exported) to guarantee that it can be used for tree shaking.
  */
-const DEBUG_BUILD = typeof __SENTRY_DEBUG__ === "undefined" || __SENTRY_DEBUG__;
+const DEBUG_BUILD = (typeof __SENTRY_DEBUG__ === 'undefined' || __SENTRY_DEBUG__);
 
 /** Prefix for logging strings */
-const PREFIX = "Sentry Logger ";
+const PREFIX = 'Sentry Logger ';
 
 const CONSOLE_LEVELS = [
-  "debug",
-  "info",
-  "warn",
-  "error",
-  "log",
-  "assert",
-  "trace",
-];
+  'debug',
+  'info',
+  'warn',
+  'error',
+  'log',
+  'assert',
+  'trace',
+] ;
 
 /** This may be mutated by the console instrumentation. */
-const originalConsoleMethods = {};
+const originalConsoleMethods
+
+ = {};
 
 /** JSDoc */
 
@@ -65,19 +65,19 @@ const originalConsoleMethods = {};
  * @returns The results of the callback
  */
 function consoleSandbox(callback) {
-  if (!("console" in GLOBAL_OBJ)) {
+  if (!('console' in GLOBAL_OBJ)) {
     return callback();
   }
 
-  const console = GLOBAL_OBJ.console;
+  const console = GLOBAL_OBJ.console ;
   const wrappedFuncs = {};
 
-  const wrappedLevels = Object.keys(originalConsoleMethods);
+  const wrappedLevels = Object.keys(originalConsoleMethods) ;
 
   // Restore all wrapped console methods
-  wrappedLevels.forEach((level) => {
-    const originalConsoleMethod = originalConsoleMethods[level];
-    wrappedFuncs[level] = console[level];
+  wrappedLevels.forEach(level => {
+    const originalConsoleMethod = originalConsoleMethods[level] ;
+    wrappedFuncs[level] = console[level] ;
     console[level] = originalConsoleMethod;
   });
 
@@ -85,8 +85,8 @@ function consoleSandbox(callback) {
     return callback();
   } finally {
     // Revert restoration to wrapped state
-    wrappedLevels.forEach((level) => {
-      console[level] = wrappedFuncs[level];
+    wrappedLevels.forEach(level => {
+      console[level] = wrappedFuncs[level] ;
     });
   }
 }
@@ -104,7 +104,7 @@ function makeLogger() {
   };
 
   if (DEBUG_BUILD) {
-    CONSOLE_LEVELS.forEach((name) => {
+    CONSOLE_LEVELS.forEach(name => {
       logger[name] = (...args) => {
         if (enabled) {
           consoleSandbox(() => {
@@ -114,22 +114,22 @@ function makeLogger() {
       };
     });
   } else {
-    CONSOLE_LEVELS.forEach((name) => {
+    CONSOLE_LEVELS.forEach(name => {
       logger[name] = () => undefined;
     });
   }
 
-  return logger;
+  return logger ;
 }
 
 /**
  * This is a logger singleton which either logs things or no-ops if logging is not enabled.
  * The logger is a singleton on the carrier, to ensure that a consistent logger is used throughout the SDK.
  */
-const logger = getGlobalSingleton("logger", makeLogger);
+const logger = getGlobalSingleton('logger', makeLogger);
 
 const STACKTRACE_FRAME_LIMIT = 50;
-const UNKNOWN_FUNCTION = "?";
+const UNKNOWN_FUNCTION = '?';
 // Used to sanitize webpack (error: *) wrapped stack errors
 const WEBPACK_ERROR_REGEXP = /\(error: (.*)\)/;
 const STRIP_FRAME_REGEXP = /captureMessage|captureException/;
@@ -139,16 +139,17 @@ const STRIP_FRAME_REGEXP = /captureMessage|captureException/;
  *
  * StackFrames are returned in the correct order for Sentry Exception
  * frames and with Sentry SDK internal frames removed from the top and bottom
+ *
  */
 function createStackParser(...parsers) {
-  const sortedParsers = parsers.sort((a, b) => a[0] - b[0]).map((p) => p[1]);
+  const sortedParsers = parsers.sort((a, b) => a[0] - b[0]).map(p => p[1]);
 
   return (stack, skipFirstLines = 0, framesToPop = 0) => {
     const frames = [];
-    const lines = stack.split("\n");
+    const lines = stack.split('\n');
 
     for (let i = skipFirstLines; i < lines.length; i++) {
-      const line = lines[i];
+      const line = lines[i] ;
       // Ignore lines over 1kb as they are unlikely to be stack frames.
       // Many of the regular expressions use backtracking which results in run time that increases exponentially with
       // input size. Huge strings can result in hangs/Denial of Service:
@@ -159,9 +160,7 @@ function createStackParser(...parsers) {
 
       // https://github.com/getsentry/sentry-javascript/issues/5459
       // Remove webpack (error: *) wrappers
-      const cleanedLine = WEBPACK_ERROR_REGEXP.test(line)
-        ? line.replace(WEBPACK_ERROR_REGEXP, "$1")
-        : line;
+      const cleanedLine = WEBPACK_ERROR_REGEXP.test(line) ? line.replace(WEBPACK_ERROR_REGEXP, '$1') : line;
 
       // https://github.com/getsentry/sentry-javascript/issues/7813
       // Skip Error: lines
@@ -214,7 +213,7 @@ function stripSentryFramesAndReverse(stack) {
   const localStack = Array.from(stack);
 
   // If stack starts with one of our API calls, remove it (starts, meaning it's the top of the stack - aka last call)
-  if (/sentryWrapped/.test(getLastStackFrame(localStack).function || "")) {
+  if (/sentryWrapped/.test(getLastStackFrame(localStack).function || '')) {
     localStack.pop();
   }
 
@@ -222,7 +221,7 @@ function stripSentryFramesAndReverse(stack) {
   localStack.reverse();
 
   // If stack ends with one of our internal API calls, remove it (ends, meaning it's the bottom of the stack - aka top-most call)
-  if (STRIP_FRAME_REGEXP.test(getLastStackFrame(localStack).function || "")) {
+  if (STRIP_FRAME_REGEXP.test(getLastStackFrame(localStack).function || '')) {
     localStack.pop();
 
     // When using synthetic events, we will have a 2 levels deep stack, as `new Error('Sentry syntheticException')`
@@ -233,12 +232,12 @@ function stripSentryFramesAndReverse(stack) {
     //
     // instead of just the top `Sentry` call itself.
     // This forces us to possibly strip an additional frame in the exact same was as above.
-    if (STRIP_FRAME_REGEXP.test(getLastStackFrame(localStack).function || "")) {
+    if (STRIP_FRAME_REGEXP.test(getLastStackFrame(localStack).function || '')) {
       localStack.pop();
     }
   }
 
-  return localStack.slice(0, STACKTRACE_FRAME_LIMIT).map((frame) => ({
+  return localStack.slice(0, STACKTRACE_FRAME_LIMIT).map(frame => ({
     ...frame,
     filename: frame.filename || getLastStackFrame(localStack).filename,
     function: frame.function || UNKNOWN_FUNCTION,
@@ -249,14 +248,14 @@ function getLastStackFrame(arr) {
   return arr[arr.length - 1] || {};
 }
 
-const defaultFunctionName = "<anonymous>";
+const defaultFunctionName = '<anonymous>';
 
 /**
  * Safely extract function name from itself
  */
 function getFunctionName(fn) {
   try {
-    if (!fn || typeof fn !== "function") {
+    if (!fn || typeof fn !== 'function') {
       return defaultFunctionName;
     }
     return fn.name || defaultFunctionName;
@@ -277,7 +276,7 @@ function getFramesFromEvent(event) {
     const frames = [];
     try {
       // @ts-expect-error Object could be undefined
-      exception.values.forEach((value) => {
+      exception.values.forEach(value => {
         // @ts-expect-error Value could be undefined
         if (value.stacktrace.frames) {
           // @ts-expect-error Value could be undefined
@@ -299,7 +298,7 @@ const instrumented = {};
 /** Add a handler function. */
 function addHandler(type, handler) {
   handlers[type] = handlers[type] || [];
-  handlers[type].push(handler);
+  (handlers[type] ).push(handler);
 }
 
 /** Maybe run an instrumentation function, unless it was already called. */
@@ -327,9 +326,7 @@ function triggerHandlers(type, data) {
     } catch (e) {
       DEBUG_BUILD &&
         logger.error(
-          `Error while triggering instrumentation handler.\nType: ${type}\nName: ${
-            getFunctionName(handler)
-          }\nError:`,
+          `Error while triggering instrumentation handler.\nType: ${type}\nName: ${getFunctionName(handler)}\nError:`,
           e,
         );
     }
@@ -345,7 +342,7 @@ let _oldOnErrorHandler = null;
  * @hidden
  */
 function addGlobalErrorInstrumentationHandler(handler) {
-  const type = "error";
+  const type = 'error';
   addHandler(type, handler);
   maybeInstrument(type, instrumentError);
 }
@@ -369,7 +366,7 @@ function instrumentError() {
       msg,
       url,
     };
-    triggerHandlers("error", handlerData);
+    triggerHandlers('error', handlerData);
 
     if (_oldOnErrorHandler) {
       // eslint-disable-next-line prefer-rest-params
@@ -393,7 +390,7 @@ let _oldOnUnhandledRejectionHandler = null;
 function addGlobalUnhandledRejectionInstrumentationHandler(
   handler,
 ) {
-  const type = "unhandledrejection";
+  const type = 'unhandledrejection';
   addHandler(type, handler);
   maybeInstrument(type, instrumentUnhandledRejection);
 }
@@ -405,7 +402,7 @@ function instrumentUnhandledRejection() {
   // is that we are using this handler in the Loader Script, to handle buffered rejections consistently
   GLOBAL_OBJ.onunhandledrejection = function (e) {
     const handlerData = e;
-    triggerHandlers("unhandledrejection", handlerData);
+    triggerHandlers('unhandledrejection', handlerData);
 
     if (_oldOnUnhandledRejectionHandler) {
       // eslint-disable-next-line prefer-rest-params
@@ -429,7 +426,7 @@ function instrumentUnhandledRejection() {
  * FIXME: This function is problematic, because despite always returning a valid Carrier,
  * it has an optional `__SENTRY__` property, which then in turn requires us to always perform an unnecessary check
  * at the call-site. We always access the carrier through this function, so we can guarantee that `__SENTRY__` is there.
- */
+ **/
 function getMainCarrier() {
   // This ensures a Sentry carrier exists
   getSentryCarrier(GLOBAL_OBJ);
@@ -460,10 +457,10 @@ const objectToString = Object.prototype.toString;
  */
 function isError(wat) {
   switch (objectToString.call(wat)) {
-    case "[object Error]":
-    case "[object Exception]":
-    case "[object DOMException]":
-    case "[object WebAssembly.Exception]":
+    case '[object Error]':
+    case '[object Exception]':
+    case '[object DOMException]':
+    case '[object WebAssembly.Exception]':
       return true;
     default:
       return isInstanceOf(wat, Error);
@@ -488,7 +485,7 @@ function isBuiltin(wat, className) {
  * @returns A boolean representing the result.
  */
 function isErrorEvent$1(wat) {
-  return isBuiltin(wat, "ErrorEvent");
+  return isBuiltin(wat, 'ErrorEvent');
 }
 
 /**
@@ -499,7 +496,7 @@ function isErrorEvent$1(wat) {
  * @returns A boolean representing the result.
  */
 function isString(wat) {
-  return isBuiltin(wat, "String");
+  return isBuiltin(wat, 'String');
 }
 
 /**
@@ -511,10 +508,10 @@ function isString(wat) {
  */
 function isParameterizedString(wat) {
   return (
-    typeof wat === "object" &&
+    typeof wat === 'object' &&
     wat !== null &&
-    "__sentry_template_string__" in wat &&
-    "__sentry_template_values__" in wat
+    '__sentry_template_string__' in wat &&
+    '__sentry_template_values__' in wat
   );
 }
 
@@ -526,8 +523,7 @@ function isParameterizedString(wat) {
  * @returns A boolean representing the result.
  */
 function isPrimitive(wat) {
-  return wat === null || isParameterizedString(wat) ||
-    (typeof wat !== "object" && typeof wat !== "function");
+  return wat === null || isParameterizedString(wat) || (typeof wat !== 'object' && typeof wat !== 'function');
 }
 
 /**
@@ -538,7 +534,7 @@ function isPrimitive(wat) {
  * @returns A boolean representing the result.
  */
 function isPlainObject(wat) {
-  return isBuiltin(wat, "Object");
+  return isBuiltin(wat, 'Object');
 }
 
 /**
@@ -549,7 +545,7 @@ function isPlainObject(wat) {
  * @returns A boolean representing the result.
  */
 function isEvent(wat) {
-  return typeof Event !== "undefined" && isInstanceOf(wat, Event);
+  return typeof Event !== 'undefined' && isInstanceOf(wat, Event);
 }
 
 /**
@@ -560,7 +556,7 @@ function isEvent(wat) {
  * @returns A boolean representing the result.
  */
 function isElement(wat) {
-  return typeof Element !== "undefined" && isInstanceOf(wat, Element);
+  return typeof Element !== 'undefined' && isInstanceOf(wat, Element);
 }
 
 /**
@@ -571,7 +567,7 @@ function isElement(wat) {
  * @returns A boolean representing the result.
  */
 function isRegExp(wat) {
-  return isBuiltin(wat, "RegExp");
+  return isBuiltin(wat, 'RegExp');
 }
 
 /**
@@ -580,7 +576,7 @@ function isRegExp(wat) {
  */
 function isThenable(wat) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  return Boolean(wat && wat.then && typeof wat.then === "function");
+  return Boolean(wat && wat.then && typeof wat.then === 'function');
 }
 
 /**
@@ -591,8 +587,7 @@ function isThenable(wat) {
  * @returns A boolean representing the result.
  */
 function isSyntheticEvent(wat) {
-  return isPlainObject(wat) && "nativeEvent" in wat &&
-    "preventDefault" in wat && "stopPropagation" in wat;
+  return isPlainObject(wat) && 'nativeEvent' in wat && 'preventDefault' in wat && 'stopPropagation' in wat;
 }
 
 /**
@@ -619,11 +614,10 @@ function isInstanceOf(wat, base) {
  */
 function isVueViewModel(wat) {
   // Not using Object.prototype.toString because in Vue 3 it would read the instance's Symbol(Symbol.toStringTag) property.
-  return !!(typeof wat === "object" && wat !== null &&
-    (wat.__isVue || wat._isVue));
+  return !!(typeof wat === 'object' && wat !== null && ((wat ).__isVue || (wat )._isVue));
 }
 
-const WINDOW$1 = GLOBAL_OBJ;
+const WINDOW$1 = GLOBAL_OBJ ;
 
 const DEFAULT_MAX_STRING_LENGTH = 80;
 
@@ -638,7 +632,7 @@ function htmlTreeAsString(
   options = {},
 ) {
   if (!elem) {
-    return "<unknown>";
+    return '<unknown>';
   }
 
   // try/catch both:
@@ -646,18 +640,16 @@ function htmlTreeAsString(
   // - `htmlTreeAsString` because it's complex, and just accessing the DOM incorrectly
   // - can throw an exception in some circumstances.
   try {
-    let currentElem = elem;
+    let currentElem = elem ;
     const MAX_TRAVERSE_HEIGHT = 5;
     const out = [];
     let height = 0;
     let len = 0;
-    const separator = " > ";
+    const separator = ' > ';
     const sepLength = separator.length;
     let nextStr;
     const keyAttrs = Array.isArray(options) ? options : options.keyAttrs;
-    const maxStringLength =
-      (!Array.isArray(options) && options.maxStringLength) ||
-      DEFAULT_MAX_STRING_LENGTH;
+    const maxStringLength = (!Array.isArray(options) && options.maxStringLength) || DEFAULT_MAX_STRING_LENGTH;
 
     while (currentElem && height++ < MAX_TRAVERSE_HEIGHT) {
       nextStr = _htmlElementAsString(currentElem, keyAttrs);
@@ -665,11 +657,7 @@ function htmlTreeAsString(
       // - nextStr is the 'html' element
       // - the length of the string that would be created exceeds maxStringLength
       //   (ignore this limit if we are on the first iteration)
-      if (
-        nextStr === "html" ||
-        (height > 1 &&
-          len + out.length * sepLength + nextStr.length >= maxStringLength)
-      ) {
+      if (nextStr === 'html' || (height > 1 && len + out.length * sepLength + nextStr.length >= maxStringLength)) {
         break;
       }
 
@@ -681,7 +669,7 @@ function htmlTreeAsString(
 
     return out.reverse().join(separator);
   } catch (_oO) {
-    return "<unknown>";
+    return '<unknown>';
   }
 }
 
@@ -691,23 +679,25 @@ function htmlTreeAsString(
  * @returns generated DOM path
  */
 function _htmlElementAsString(el, keyAttrs) {
-  const elem = el;
+  const elem = el
+
+;
 
   const out = [];
 
   if (!elem || !elem.tagName) {
-    return "";
+    return '';
   }
 
   // @ts-expect-error WINDOW has HTMLElement
   if (WINDOW$1.HTMLElement) {
     // If using the component name annotation plugin, this value may be available on the DOM node
     if (elem instanceof HTMLElement && elem.dataset) {
-      if (elem.dataset["sentryComponent"]) {
-        return elem.dataset["sentryComponent"];
+      if (elem.dataset['sentryComponent']) {
+        return elem.dataset['sentryComponent'];
       }
-      if (elem.dataset["sentryElement"]) {
-        return elem.dataset["sentryElement"];
+      if (elem.dataset['sentryElement']) {
+        return elem.dataset['sentryElement'];
       }
     }
   }
@@ -715,14 +705,13 @@ function _htmlElementAsString(el, keyAttrs) {
   out.push(elem.tagName.toLowerCase());
 
   // Pairs of attribute keys defined in `serializeAttribute` and their values on element.
-  const keyAttrPairs = keyAttrs && keyAttrs.length
-    ? keyAttrs.filter((keyAttr) => elem.getAttribute(keyAttr)).map(
-      (keyAttr) => [keyAttr, elem.getAttribute(keyAttr)],
-    )
-    : null;
+  const keyAttrPairs =
+    keyAttrs && keyAttrs.length
+      ? keyAttrs.filter(keyAttr => elem.getAttribute(keyAttr)).map(keyAttr => [keyAttr, elem.getAttribute(keyAttr)])
+      : null;
 
   if (keyAttrPairs && keyAttrPairs.length) {
-    keyAttrPairs.forEach((keyAttrPair) => {
+    keyAttrPairs.forEach(keyAttrPair => {
       out.push(`[${keyAttrPair[0]}="${keyAttrPair[1]}"]`);
     });
   } else {
@@ -738,7 +727,7 @@ function _htmlElementAsString(el, keyAttrs) {
       }
     }
   }
-  const allowedAttrs = ["aria-label", "type", "name", "title", "alt"];
+  const allowedAttrs = ['aria-label', 'type', 'name', 'title', 'alt'];
   for (const k of allowedAttrs) {
     const attr = elem.getAttribute(k);
     if (attr) {
@@ -746,7 +735,7 @@ function _htmlElementAsString(el, keyAttrs) {
     }
   }
 
-  return out.join("");
+  return out.join('');
 }
 
 /**
@@ -757,7 +746,7 @@ function _htmlElementAsString(el, keyAttrs) {
  * @returns string Encoded
  */
 function truncate(str, max = 0) {
-  if (typeof str !== "string" || max === 0) {
+  if (typeof str !== 'string' || max === 0) {
     return str;
   }
   return str.length <= max ? str : `${str.slice(0, max)}...`;
@@ -800,7 +789,7 @@ function snipLine(line, colno) {
     newLine = `'{snip} ${newLine}`;
   }
   if (end < lineLength) {
-    newLine += " {snip}";
+    newLine += ' {snip}';
   }
 
   return newLine;
@@ -814,7 +803,7 @@ function snipLine(line, colno) {
  */
 function safeJoin(input, delimiter) {
   if (!Array.isArray(input)) {
-    return "";
+    return '';
   }
 
   const output = [];
@@ -828,12 +817,12 @@ function safeJoin(input, delimiter) {
       // Vue to issue another warning which repeats indefinitely.
       // see: https://github.com/getsentry/sentry-javascript/pull/8981
       if (isVueViewModel(value)) {
-        output.push("[VueViewModel]");
+        output.push('[VueViewModel]');
       } else {
         output.push(String(value));
       }
     } catch (e) {
-      output.push("[value cannot be serialized]");
+      output.push('[value cannot be serialized]');
     }
   }
 
@@ -861,9 +850,7 @@ function isMatchingPattern(
     return pattern.test(value);
   }
   if (isString(pattern)) {
-    return requireExactStringMatch
-      ? value === pattern
-      : value.includes(pattern);
+    return requireExactStringMatch ? value === pattern : value.includes(pattern);
   }
 
   return false;
@@ -884,9 +871,7 @@ function stringMatchesSomePattern(
   patterns = [],
   requireExactStringMatch = false,
 ) {
-  return patterns.some((pattern) =>
-    isMatchingPattern(testString, pattern, requireExactStringMatch)
-  );
+  return patterns.some(pattern => isMatchingPattern(testString, pattern, requireExactStringMatch));
 }
 
 /**
@@ -905,20 +890,19 @@ function fill(source, name, replacementFactory) {
     return;
   }
 
-  const original = source[name];
-  const wrapped = replacementFactory(original);
+  const original = source[name] ;
+  const wrapped = replacementFactory(original) ;
 
   // Make sure it's a function first, as we need to attach an empty prototype for `defineProperties` to work
   // otherwise it'll throw "TypeError: Object.defineProperties called on non-object"
-  if (typeof wrapped === "function") {
+  if (typeof wrapped === 'function') {
     markFunctionWrapped(wrapped, original);
   }
 
   try {
     source[name] = wrapped;
   } catch (e) {
-    DEBUG_BUILD &&
-      logger.log(`Failed to replace method "${name}" in object`, source);
+    DEBUG_BUILD && logger.log(`Failed to replace method "${name}" in object`, source);
   }
 }
 
@@ -938,11 +922,7 @@ function addNonEnumerableProperty(obj, name, value) {
       configurable: true,
     });
   } catch (o_O) {
-    DEBUG_BUILD &&
-      logger.log(
-        `Failed to add non-enumerable property "${name}" to object`,
-        obj,
-      );
+    DEBUG_BUILD && logger.log(`Failed to add non-enumerable property "${name}" to object`, obj);
   }
 }
 
@@ -957,7 +937,7 @@ function markFunctionWrapped(wrapped, original) {
   try {
     const proto = original.prototype || {};
     wrapped.prototype = original.prototype = proto;
-    addNonEnumerableProperty(wrapped, "__sentry_original__", original);
+    addNonEnumerableProperty(wrapped, '__sentry_original__', original);
   } catch (o_O) {} // eslint-disable-line no-empty
 }
 
@@ -981,7 +961,9 @@ function getOriginalFunction(func) {
  * @returns An Event or Error turned into an object - or the value argument itself, when value is neither an Event nor
  *  an Error.
  */
-function convertToPlainObject(value) {
+function convertToPlainObject(value)
+
+ {
   if (isError(value)) {
     return {
       message: value.message,
@@ -990,16 +972,16 @@ function convertToPlainObject(value) {
       ...getOwnProperties(value),
     };
   } else if (isEvent(value)) {
-    const newObj = {
+    const newObj
+
+ = {
       type: value.type,
       target: serializeEventTarget(value.target),
       currentTarget: serializeEventTarget(value.currentTarget),
       ...getOwnProperties(value),
     };
 
-    if (
-      typeof CustomEvent !== "undefined" && isInstanceOf(value, CustomEvent)
-    ) {
+    if (typeof CustomEvent !== 'undefined' && isInstanceOf(value, CustomEvent)) {
       newObj.detail = value.detail;
     }
 
@@ -1012,21 +994,19 @@ function convertToPlainObject(value) {
 /** Creates a string representation of the target of an `Event` object */
 function serializeEventTarget(target) {
   try {
-    return isElement(target)
-      ? htmlTreeAsString(target)
-      : Object.prototype.toString.call(target);
+    return isElement(target) ? htmlTreeAsString(target) : Object.prototype.toString.call(target);
   } catch (_oO) {
-    return "<unknown>";
+    return '<unknown>';
   }
 }
 
 /** Filters out all but an object's own properties */
 function getOwnProperties(obj) {
-  if (typeof obj === "object" && obj !== null) {
+  if (typeof obj === 'object' && obj !== null) {
     const extractedProps = {};
     for (const property in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, property)) {
-        extractedProps[property] = obj[property];
+        extractedProps[property] = (obj )[property];
       }
     }
     return extractedProps;
@@ -1047,7 +1027,7 @@ function extractExceptionKeysForMessage(exception, maxLength = 40) {
   const firstKey = keys[0];
 
   if (!firstKey) {
-    return "[object has no keys]";
+    return '[object has no keys]';
   }
 
   if (firstKey.length >= maxLength) {
@@ -1055,7 +1035,7 @@ function extractExceptionKeysForMessage(exception, maxLength = 40) {
   }
 
   for (let includedKeys = keys.length; includedKeys > 0; includedKeys--) {
-    const serialized = keys.slice(0, includedKeys).join(", ");
+    const serialized = keys.slice(0, includedKeys).join(', ');
     if (serialized.length > maxLength) {
       continue;
     }
@@ -1065,7 +1045,7 @@ function extractExceptionKeysForMessage(exception, maxLength = 40) {
     return truncate(serialized, maxLength);
   }
 
-  return "";
+  return '';
 }
 
 /**
@@ -1089,7 +1069,7 @@ function _dropUndefinedKeys(inputValue, memoizationMap) {
     // If this node has already been visited due to a circular reference, return the object it was mapped to in the new object
     const memoVal = memoizationMap.get(inputValue);
     if (memoVal !== undefined) {
-      return memoVal;
+      return memoVal ;
     }
 
     const returnValue = {};
@@ -1097,19 +1077,19 @@ function _dropUndefinedKeys(inputValue, memoizationMap) {
     memoizationMap.set(inputValue, returnValue);
 
     for (const key of Object.getOwnPropertyNames(inputValue)) {
-      if (typeof inputValue[key] !== "undefined") {
+      if (typeof inputValue[key] !== 'undefined') {
         returnValue[key] = _dropUndefinedKeys(inputValue[key], memoizationMap);
       }
     }
 
-    return returnValue;
+    return returnValue ;
   }
 
   if (Array.isArray(inputValue)) {
     // If this node has already been visited due to a circular reference, return the array it was mapped to in the new object
     const memoVal = memoizationMap.get(inputValue);
     if (memoVal !== undefined) {
-      return memoVal;
+      return memoVal ;
     }
 
     const returnValue = [];
@@ -1120,7 +1100,7 @@ function _dropUndefinedKeys(inputValue, memoizationMap) {
       returnValue.push(_dropUndefinedKeys(item, memoizationMap));
     });
 
-    return returnValue;
+    return returnValue ;
   }
 
   return inputValue;
@@ -1132,8 +1112,8 @@ function isPojo(input) {
   }
 
   try {
-    const name = (Object.getPrototypeOf(input)).constructor.name;
-    return !name || name === "Object";
+    const name = (Object.getPrototypeOf(input) ).constructor.name;
+    return !name || name === 'Object';
   } catch (e2) {
     return true;
   }
@@ -1162,7 +1142,7 @@ function dateTimestampInSeconds() {
  * Wrapping the native API works around differences in behavior from different browsers.
  */
 function createUnixTimestampInSecondsFunc() {
-  const { performance } = GLOBAL_OBJ;
+  const { performance } = GLOBAL_OBJ ;
   if (!performance || !performance.now) {
     return dateTimestampInSeconds;
   }
@@ -1170,9 +1150,7 @@ function createUnixTimestampInSecondsFunc() {
   // Some browser and environments don't have a timeOrigin, so we fallback to
   // using Date.now() to compute the starting time.
   const approxStartingTimeOrigin = Date.now() - performance.now();
-  const timeOrigin = performance.timeOrigin == undefined
-    ? approxStartingTimeOrigin
-    : performance.timeOrigin;
+  const timeOrigin = performance.timeOrigin == undefined ? approxStartingTimeOrigin : performance.timeOrigin;
 
   // performance.now() is a monotonic clock, which means it starts at 0 when the process begins. To get the current
   // wall clock time (actual UNIX timestamp), we need to add the starting time origin and the current time elapsed.
@@ -1208,7 +1186,7 @@ const timestampInSeconds = createUnixTimestampInSecondsFunc();
   // performance.timing.navigationStart, which results in poor results in performance data. We only treat time origin
   // data as reliable if they are within a reasonable threshold of the current time.
 
-  const { performance } = GLOBAL_OBJ;
+  const { performance } = GLOBAL_OBJ ;
   if (!performance || !performance.now) {
     return undefined;
   }
@@ -1229,13 +1207,10 @@ const timestampInSeconds = createUnixTimestampInSecondsFunc();
   // a valid fallback. In the absence of an initial time provided by the browser, fallback to the current time from the
   // Date API.
   // eslint-disable-next-line deprecation/deprecation
-  const navigationStart = performance.timing &&
-    performance.timing.navigationStart;
-  const hasNavigationStart = typeof navigationStart === "number";
+  const navigationStart = performance.timing && performance.timing.navigationStart;
+  const hasNavigationStart = typeof navigationStart === 'number';
   // if navigationStart isn't available set delta to threshold so it isn't used
-  const navigationStartDelta = hasNavigationStart
-    ? Math.abs(navigationStart + performanceNow - dateNow)
-    : threshold;
+  const navigationStartDelta = hasNavigationStart ? Math.abs(navigationStart + performanceNow - dateNow) : threshold;
   const navigationStartIsReliable = navigationStartDelta < threshold;
 
   if (timeOriginIsReliable || navigationStartIsReliable) {
@@ -1255,13 +1230,13 @@ const timestampInSeconds = createUnixTimestampInSecondsFunc();
  * @returns string Generated UUID4.
  */
 function uuid4() {
-  const gbl = GLOBAL_OBJ;
+  const gbl = GLOBAL_OBJ ;
   const crypto = gbl.crypto || gbl.msCrypto;
 
   let getRandomByte = () => Math.random() * 16;
   try {
     if (crypto && crypto.randomUUID) {
-      return crypto.randomUUID().replace(/-/g, "");
+      return crypto.randomUUID().replace(/-/g, '');
     }
     if (crypto && crypto.getRandomValues) {
       getRandomByte = () => {
@@ -1282,15 +1257,14 @@ function uuid4() {
 
   // http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript/2117523#2117523
   // Concatenating the following numbers as strings results in '10000000100040008000100000000000'
-  return ([1e7] + 1e3 + 4e3 + 8e3 + 1e11).replace(/[018]/g, (c) =>
+  return (([1e7] ) + 1e3 + 4e3 + 8e3 + 1e11).replace(/[018]/g, c =>
     // eslint-disable-next-line no-bitwise
-    (c ^ ((getRandomByte() & 15) >> (c / 4))).toString(16));
+    ((c ) ^ ((getRandomByte() & 15) >> ((c ) / 4))).toString(16),
+  );
 }
 
 function getFirstException(event) {
-  return event.exception && event.exception.values
-    ? event.exception.values[0]
-    : undefined;
+  return event.exception && event.exception.values ? event.exception.values[0] : undefined;
 }
 
 /**
@@ -1308,10 +1282,9 @@ function getEventDescription(event) {
     if (firstException.type && firstException.value) {
       return `${firstException.type}: ${firstException.value}`;
     }
-    return firstException.type || firstException.value || eventId ||
-      "<unknown>";
+    return firstException.type || firstException.value || eventId || '<unknown>';
   }
-  return eventId || "<unknown>";
+  return eventId || '<unknown>';
 }
 
 /**
@@ -1326,10 +1299,10 @@ function addExceptionTypeValue(event, value, type) {
   const values = (exception.values = exception.values || []);
   const firstException = (values[0] = values[0] || {});
   if (!firstException.value) {
-    firstException.value = "";
+    firstException.value = '';
   }
   if (!firstException.type) {
-    firstException.type = "Error";
+    firstException.type = 'Error';
   }
 }
 
@@ -1346,19 +1319,12 @@ function addExceptionMechanism(event, newMechanism) {
     return;
   }
 
-  const defaultMechanism = { type: "generic", handled: true };
+  const defaultMechanism = { type: 'generic', handled: true };
   const currentMechanism = firstException.mechanism;
-  firstException.mechanism = {
-    ...defaultMechanism,
-    ...currentMechanism,
-    ...newMechanism,
-  };
+  firstException.mechanism = { ...defaultMechanism, ...currentMechanism, ...newMechanism };
 
-  if (newMechanism && "data" in newMechanism) {
-    const mergedData = {
-      ...(currentMechanism && currentMechanism.data),
-      ...newMechanism.data,
-    };
+  if (newMechanism && 'data' in newMechanism) {
+    const mergedData = { ...(currentMechanism && currentMechanism.data), ...newMechanism.data };
     firstException.mechanism.data = mergedData;
   }
 }
@@ -1423,7 +1389,7 @@ function checkOrSetAlreadyCaught(exception) {
   try {
     // set it this way rather than by assignment so that it's not ennumerable and therefore isn't recorded by the
     // `ExtraErrorData` integration
-    addNonEnumerableProperty(exception, "__sentry_captured__", true);
+    addNonEnumerableProperty(exception , '__sentry_captured__', true);
   } catch (err) {
     // `exception` is a primitive, so we can't mark it seen
   }
@@ -1433,7 +1399,7 @@ function checkOrSetAlreadyCaught(exception) {
 
 function isAlreadyCaptured(exception) {
   try {
-    return exception.__sentry_captured__;
+    return (exception ).__sentry_captured__;
   } catch (e) {} // eslint-disable-line no-empty
 }
 
@@ -1441,17 +1407,13 @@ function isAlreadyCaptured(exception) {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /** SyncPromise internal states */
-var States;
-(function (States) {
+var States; (function (States) {
   /** Pending */
-  const PENDING = 0;
-  States[States["PENDING"] = PENDING] = "PENDING";
+  const PENDING = 0; States[States["PENDING"] = PENDING] = "PENDING";
   /** Resolved / OK */
-  const RESOLVED = 1;
-  States[States["RESOLVED"] = RESOLVED] = "RESOLVED";
+  const RESOLVED = 1; States[States["RESOLVED"] = RESOLVED] = "RESOLVED";
   /** Rejected / Error */
-  const REJECTED = 2;
-  States[States["REJECTED"] = REJECTED] = "REJECTED";
+  const REJECTED = 2; States[States["REJECTED"] = REJECTED] = "REJECTED";
 })(States || (States = {}));
 
 // Overloads so we can call resolvedSyncPromise without arguments and generic argument
@@ -1463,7 +1425,7 @@ var States;
  * @returns the resolved sync promise
  */
 function resolvedSyncPromise(value) {
-  return new SyncPromise((resolve) => {
+  return new SyncPromise(resolve => {
     resolve(value);
   });
 }
@@ -1485,13 +1447,10 @@ function rejectedSyncPromise(reason) {
  * but is not async internally
  */
 class SyncPromise {
-  constructor(
+
+   constructor(
     executor,
-  ) {
-    SyncPromise.prototype.__init.call(this);
-    SyncPromise.prototype.__init2.call(this);
-    SyncPromise.prototype.__init3.call(this);
-    SyncPromise.prototype.__init4.call(this);
+  ) {SyncPromise.prototype.__init.call(this);SyncPromise.prototype.__init2.call(this);SyncPromise.prototype.__init3.call(this);SyncPromise.prototype.__init4.call(this);
     this._state = States.PENDING;
     this._handlers = [];
 
@@ -1503,18 +1462,18 @@ class SyncPromise {
   }
 
   /** JSDoc */
-  then(
+   then(
     onfulfilled,
     onrejected,
   ) {
     return new SyncPromise((resolve, reject) => {
       this._handlers.push([
         false,
-        (result) => {
+        result => {
           if (!onfulfilled) {
             // TODO: ¯\_(ツ)_/¯
             // TODO: FIXME
-            resolve(result);
+            resolve(result );
           } else {
             try {
               resolve(onfulfilled(result));
@@ -1523,7 +1482,7 @@ class SyncPromise {
             }
           }
         },
-        (reason) => {
+        reason => {
           if (!onrejected) {
             reject(reason);
           } else {
@@ -1540,27 +1499,27 @@ class SyncPromise {
   }
 
   /** JSDoc */
-  catch(
+   catch(
     onrejected,
   ) {
-    return this.then((val) => val, onrejected);
+    return this.then(val => val, onrejected);
   }
 
   /** JSDoc */
-  finally(onfinally) {
+   finally(onfinally) {
     return new SyncPromise((resolve, reject) => {
       let val;
       let isRejected;
 
       return this.then(
-        (value) => {
+        value => {
           isRejected = false;
           val = value;
           if (onfinally) {
             onfinally();
           }
         },
-        (reason) => {
+        reason => {
           isRejected = true;
           val = reason;
           if (onfinally) {
@@ -1573,71 +1532,63 @@ class SyncPromise {
           return;
         }
 
-        resolve(val);
+        resolve(val );
       });
     });
   }
 
   /** JSDoc */
-  __init() {
-    this._resolve = (value) => {
-      this._setResult(States.RESOLVED, value);
-    };
-  }
+    __init() {this._resolve = (value) => {
+    this._setResult(States.RESOLVED, value);
+  };}
 
   /** JSDoc */
-  __init2() {
-    this._reject = (reason) => {
-      this._setResult(States.REJECTED, reason);
-    };
-  }
+    __init2() {this._reject = (reason) => {
+    this._setResult(States.REJECTED, reason);
+  };}
 
   /** JSDoc */
-  __init3() {
-    this._setResult = (state, value) => {
-      if (this._state !== States.PENDING) {
+    __init3() {this._setResult = (state, value) => {
+    if (this._state !== States.PENDING) {
+      return;
+    }
+
+    if (isThenable(value)) {
+      void (value ).then(this._resolve, this._reject);
+      return;
+    }
+
+    this._state = state;
+    this._value = value;
+
+    this._executeHandlers();
+  };}
+
+  /** JSDoc */
+    __init4() {this._executeHandlers = () => {
+    if (this._state === States.PENDING) {
+      return;
+    }
+
+    const cachedHandlers = this._handlers.slice();
+    this._handlers = [];
+
+    cachedHandlers.forEach(handler => {
+      if (handler[0]) {
         return;
       }
 
-      if (isThenable(value)) {
-        void value.then(this._resolve, this._reject);
-        return;
+      if (this._state === States.RESOLVED) {
+        handler[1](this._value );
       }
 
-      this._state = state;
-      this._value = value;
-
-      this._executeHandlers();
-    };
-  }
-
-  /** JSDoc */
-  __init4() {
-    this._executeHandlers = () => {
-      if (this._state === States.PENDING) {
-        return;
+      if (this._state === States.REJECTED) {
+        handler[2](this._value);
       }
 
-      const cachedHandlers = this._handlers.slice();
-      this._handlers = [];
-
-      cachedHandlers.forEach((handler) => {
-        if (handler[0]) {
-          return;
-        }
-
-        if (this._state === States.RESOLVED) {
-          handler[1](this._value);
-        }
-
-        if (this._state === States.REJECTED) {
-          handler[2](this._value);
-        }
-
-        handler[0] = true;
-      });
-    };
-  }
+      handler[0] = true;
+    });
+  };}
 }
 
 /**
@@ -1658,7 +1609,7 @@ function makeSession(context) {
     timestamp: startingTime,
     started: startingTime,
     duration: 0,
-    status: "ok",
+    status: 'ok',
     errors: 0,
     ignoreDuration: false,
     toJSON: () => sessionToJSON(session),
@@ -1690,8 +1641,7 @@ function updateSession(session, context = {}) {
     }
 
     if (!session.did && !context.did) {
-      session.did = context.user.id || context.user.email ||
-        context.user.username;
+      session.did = context.user.id || context.user.email || context.user.username;
     }
   }
 
@@ -1714,12 +1664,12 @@ function updateSession(session, context = {}) {
   if (!session.did && context.did) {
     session.did = `${context.did}`;
   }
-  if (typeof context.started === "number") {
+  if (typeof context.started === 'number') {
     session.started = context.started;
   }
   if (session.ignoreDuration) {
     session.duration = undefined;
-  } else if (typeof context.duration === "number") {
+  } else if (typeof context.duration === 'number') {
     session.duration = context.duration;
   } else {
     const duration = session.timestamp - session.started;
@@ -1737,7 +1687,7 @@ function updateSession(session, context = {}) {
   if (!session.userAgent && context.userAgent) {
     session.userAgent = context.userAgent;
   }
-  if (typeof context.errors === "number") {
+  if (typeof context.errors === 'number') {
     session.errors = context.errors;
   }
   if (context.status) {
@@ -1758,8 +1708,8 @@ function updateSession(session, context = {}) {
  */
 function closeSession(session, status) {
   let context = {};
-  if (session.status === "ok") {
-    context = { status: "exited" };
+  if (session.status === 'ok') {
+    context = { status: 'exited' };
   }
 
   updateSession(session, context);
@@ -1783,9 +1733,7 @@ function sessionToJSON(session) {
     timestamp: new Date(session.timestamp * 1000).toISOString(),
     status: session.status,
     errors: session.errors,
-    did: typeof session.did === "number" || typeof session.did === "string"
-      ? `${session.did}`
-      : undefined,
+    did: typeof session.did === 'number' || typeof session.did === 'string' ? `${session.did}` : undefined,
     duration: session.duration,
     abnormal_mechanism: session.abnormal_mechanism,
     attrs: {
@@ -1821,7 +1769,7 @@ function generateSpanId() {
 function merge(initialObj, mergeObj, levels = 2) {
   // If the merge value is not an object, or we have no merge levels left,
   // we just set the value to the merge value
-  if (!mergeObj || typeof mergeObj !== "object" || levels <= 0) {
+  if (!mergeObj || typeof mergeObj !== 'object' || levels <= 0) {
     return mergeObj;
   }
 
@@ -1843,7 +1791,7 @@ function merge(initialObj, mergeObj, levels = 2) {
   return output;
 }
 
-const SCOPE_SPAN_FIELD = "_sentrySpan";
+const SCOPE_SPAN_FIELD = '_sentrySpan';
 
 /**
  * Set the active span for a given scope.
@@ -1851,10 +1799,10 @@ const SCOPE_SPAN_FIELD = "_sentrySpan";
  */
 function _setSpanForScope(scope, span) {
   if (span) {
-    addNonEnumerableProperty(scope, SCOPE_SPAN_FIELD, span);
+    addNonEnumerableProperty(scope , SCOPE_SPAN_FIELD, span);
   } else {
     // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete scope[SCOPE_SPAN_FIELD];
+    delete (scope )[SCOPE_SPAN_FIELD];
   }
 }
 
@@ -1874,7 +1822,7 @@ const DEFAULT_MAX_BREADCRUMBS = 100;
 /**
  * Holds additional event information.
  */
-class ScopeClass {
+class ScopeClass  {
   /** Flag if notifying is happening. */
 
   /** Callback for client to receive scope changes. */
@@ -1922,7 +1870,7 @@ class ScopeClass {
 
   // NOTE: Any field which gets added here should get added not only to the constructor but also to the `clone` method.
 
-  constructor() {
+   constructor() {
     this._notifyingListeners = false;
     this._scopeListeners = [];
     this._eventProcessors = [];
@@ -1942,7 +1890,7 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  clone() {
+   clone() {
     const newScope = new ScopeClass();
     newScope._breadcrumbs = [...this._breadcrumbs];
     newScope._tags = { ...this._tags };
@@ -1977,42 +1925,42 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  setClient(client) {
+   setClient(client) {
     this._client = client;
   }
 
   /**
    * @inheritDoc
    */
-  setLastEventId(lastEventId) {
+   setLastEventId(lastEventId) {
     this._lastEventId = lastEventId;
   }
 
   /**
    * @inheritDoc
    */
-  getClient() {
-    return this._client;
+   getClient() {
+    return this._client ;
   }
 
   /**
    * @inheritDoc
    */
-  lastEventId() {
+   lastEventId() {
     return this._lastEventId;
   }
 
   /**
    * @inheritDoc
    */
-  addScopeListener(callback) {
+   addScopeListener(callback) {
     this._scopeListeners.push(callback);
   }
 
   /**
    * @inheritDoc
    */
-  addEventProcessor(callback) {
+   addEventProcessor(callback) {
     this._eventProcessors.push(callback);
     return this;
   }
@@ -2020,7 +1968,7 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  setUser(user) {
+   setUser(user) {
     // If null is passed we want to unset everything, but still define keys,
     // so that later down in the pipeline any existing values are cleared.
     this._user = user || {
@@ -2041,7 +1989,7 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  getUser() {
+   getUser() {
     return this._user;
   }
 
@@ -2049,7 +1997,7 @@ class ScopeClass {
    * @inheritDoc
    */
   // eslint-disable-next-line deprecation/deprecation
-  getRequestSession() {
+   getRequestSession() {
     return this._requestSession;
   }
 
@@ -2057,7 +2005,7 @@ class ScopeClass {
    * @inheritDoc
    */
   // eslint-disable-next-line deprecation/deprecation
-  setRequestSession(requestSession) {
+   setRequestSession(requestSession) {
     this._requestSession = requestSession;
     return this;
   }
@@ -2065,7 +2013,7 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  setTags(tags) {
+   setTags(tags) {
     this._tags = {
       ...this._tags,
       ...tags,
@@ -2077,7 +2025,7 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  setTag(key, value) {
+   setTag(key, value) {
     this._tags = { ...this._tags, [key]: value };
     this._notifyScopeListeners();
     return this;
@@ -2086,7 +2034,7 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  setExtras(extras) {
+   setExtras(extras) {
     this._extra = {
       ...this._extra,
       ...extras,
@@ -2098,7 +2046,7 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  setExtra(key, extra) {
+   setExtra(key, extra) {
     this._extra = { ...this._extra, [key]: extra };
     this._notifyScopeListeners();
     return this;
@@ -2107,7 +2055,7 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  setFingerprint(fingerprint) {
+   setFingerprint(fingerprint) {
     this._fingerprint = fingerprint;
     this._notifyScopeListeners();
     return this;
@@ -2116,7 +2064,7 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  setLevel(level) {
+   setLevel(level) {
     this._level = level;
     this._notifyScopeListeners();
     return this;
@@ -2133,7 +2081,7 @@ class ScopeClass {
    * By default, the SDK updates the scope's transaction name automatically on sensible
    * occasions, such as a page navigation or when handling a new request on the server.
    */
-  setTransactionName(name) {
+   setTransactionName(name) {
     this._transactionName = name;
     this._notifyScopeListeners();
     return this;
@@ -2142,7 +2090,7 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  setContext(key, context) {
+   setContext(key, context) {
     if (context === null) {
       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete this._contexts[key];
@@ -2157,7 +2105,7 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  setSession(session) {
+   setSession(session) {
     if (!session) {
       delete this._session;
     } else {
@@ -2170,38 +2118,29 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  getSession() {
+   getSession() {
     return this._session;
   }
 
   /**
    * @inheritDoc
    */
-  update(captureContext) {
+   update(captureContext) {
     if (!captureContext) {
       return this;
     }
 
-    const scopeToMerge = typeof captureContext === "function"
-      ? captureContext(this)
-      : captureContext;
+    const scopeToMerge = typeof captureContext === 'function' ? captureContext(this) : captureContext;
 
-    const [scopeInstance, requestSession] = scopeToMerge instanceof Scope
-      // eslint-disable-next-line deprecation/deprecation
-      ? [scopeToMerge.getScopeData(), scopeToMerge.getRequestSession()]
-      : isPlainObject(scopeToMerge)
-      ? [captureContext, captureContext.requestSession]
-      : [];
+    const [scopeInstance, requestSession] =
+      scopeToMerge instanceof Scope
+        ? // eslint-disable-next-line deprecation/deprecation
+          [scopeToMerge.getScopeData(), scopeToMerge.getRequestSession()]
+        : isPlainObject(scopeToMerge)
+          ? [captureContext , (captureContext ).requestSession]
+          : [];
 
-    const {
-      tags,
-      extra,
-      user,
-      contexts,
-      level,
-      fingerprint = [],
-      propagationContext,
-    } = scopeInstance || {};
+    const { tags, extra, user, contexts, level, fingerprint = [], propagationContext } = scopeInstance || {};
 
     this._tags = { ...this._tags, ...tags };
     this._extra = { ...this._extra, ...extra };
@@ -2233,7 +2172,7 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  clear() {
+   clear() {
     // client is not cleared here on purpose!
     this._breadcrumbs = [];
     this._tags = {};
@@ -2256,10 +2195,8 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  addBreadcrumb(breadcrumb, maxBreadcrumbs) {
-    const maxCrumbs = typeof maxBreadcrumbs === "number"
-      ? maxBreadcrumbs
-      : DEFAULT_MAX_BREADCRUMBS;
+   addBreadcrumb(breadcrumb, maxBreadcrumbs) {
+    const maxCrumbs = typeof maxBreadcrumbs === 'number' ? maxBreadcrumbs : DEFAULT_MAX_BREADCRUMBS;
 
     // No data has been changed, so don't notify scope listeners
     if (maxCrumbs <= 0) {
@@ -2275,7 +2212,7 @@ class ScopeClass {
     if (this._breadcrumbs.length > maxCrumbs) {
       this._breadcrumbs = this._breadcrumbs.slice(-maxCrumbs);
       if (this._client) {
-        this._client.recordDroppedEvent("buffer_overflow", "log_item");
+        this._client.recordDroppedEvent('buffer_overflow', 'log_item');
       }
     }
 
@@ -2287,14 +2224,14 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  getLastBreadcrumb() {
+   getLastBreadcrumb() {
     return this._breadcrumbs[this._breadcrumbs.length - 1];
   }
 
   /**
    * @inheritDoc
    */
-  clearBreadcrumbs() {
+   clearBreadcrumbs() {
     this._breadcrumbs = [];
     this._notifyScopeListeners();
     return this;
@@ -2303,7 +2240,7 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  addAttachment(attachment) {
+   addAttachment(attachment) {
     this._attachments.push(attachment);
     return this;
   }
@@ -2311,13 +2248,13 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  clearAttachments() {
+   clearAttachments() {
     this._attachments = [];
     return this;
   }
 
   /** @inheritDoc */
-  getScopeData() {
+   getScopeData() {
     return {
       breadcrumbs: this._breadcrumbs,
       attachments: this._attachments,
@@ -2338,19 +2275,15 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  setSDKProcessingMetadata(newData) {
-    this._sdkProcessingMetadata = merge(
-      this._sdkProcessingMetadata,
-      newData,
-      2,
-    );
+   setSDKProcessingMetadata(newData) {
+    this._sdkProcessingMetadata = merge(this._sdkProcessingMetadata, newData, 2);
     return this;
   }
 
   /**
    * @inheritDoc
    */
-  setPropagationContext(
+   setPropagationContext(
     context,
   ) {
     this._propagationContext = {
@@ -2364,24 +2297,22 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  getPropagationContext() {
+   getPropagationContext() {
     return this._propagationContext;
   }
 
   /**
    * @inheritDoc
    */
-  captureException(exception, hint) {
+   captureException(exception, hint) {
     const eventId = hint && hint.event_id ? hint.event_id : uuid4();
 
     if (!this._client) {
-      logger.warn(
-        "No client configured on scope - will not capture exception!",
-      );
+      logger.warn('No client configured on scope - will not capture exception!');
       return eventId;
     }
 
-    const syntheticException = new Error("Sentry syntheticException");
+    const syntheticException = new Error('Sentry syntheticException');
 
     this._client.captureException(
       exception,
@@ -2400,11 +2331,11 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  captureMessage(message, level, hint) {
+   captureMessage(message, level, hint) {
     const eventId = hint && hint.event_id ? hint.event_id : uuid4();
 
     if (!this._client) {
-      logger.warn("No client configured on scope - will not capture message!");
+      logger.warn('No client configured on scope - will not capture message!');
       return eventId;
     }
 
@@ -2428,11 +2359,11 @@ class ScopeClass {
   /**
    * @inheritDoc
    */
-  captureEvent(event, hint) {
+   captureEvent(event, hint) {
     const eventId = hint && hint.event_id ? hint.event_id : uuid4();
 
     if (!this._client) {
-      logger.warn("No client configured on scope - will not capture event!");
+      logger.warn('No client configured on scope - will not capture event!');
       return eventId;
     }
 
@@ -2444,13 +2375,13 @@ class ScopeClass {
   /**
    * This will be called on every set call.
    */
-  _notifyScopeListeners() {
+   _notifyScopeListeners() {
     // We need this check for this._notifyingListeners to be able to work on scope during updates
     // If this check is not here we'll produce endless recursion when something is done with the scope
     // during the callback.
     if (!this._notifyingListeners) {
       this._notifyingListeners = true;
-      this._scopeListeners.forEach((callback) => {
+      this._scopeListeners.forEach(callback => {
         callback(this);
       });
       this._notifyingListeners = false;
@@ -2465,19 +2396,20 @@ const Scope = ScopeClass;
 
 /** Get the default current scope. */
 function getDefaultCurrentScope() {
-  return getGlobalSingleton("defaultCurrentScope", () => new Scope());
+  return getGlobalSingleton('defaultCurrentScope', () => new Scope());
 }
 
 /** Get the default isolation scope. */
 function getDefaultIsolationScope() {
-  return getGlobalSingleton("defaultIsolationScope", () => new Scope());
+  return getGlobalSingleton('defaultIsolationScope', () => new Scope());
 }
 
 /**
  * This is an object that holds a stack of scopes.
  */
 class AsyncContextStack {
-  constructor(scope, isolationScope) {
+
+   constructor(scope, isolationScope) {
     let assignedScope;
     if (!scope) {
       assignedScope = new Scope();
@@ -2500,7 +2432,7 @@ class AsyncContextStack {
   /**
    * Fork a scope for the stack.
    */
-  withScope(callback) {
+   withScope(callback) {
     const scope = this._pushScope();
 
     let maybePromiseResult;
@@ -2514,11 +2446,11 @@ class AsyncContextStack {
     if (isThenable(maybePromiseResult)) {
       // @ts-expect-error - isThenable returns the wrong type
       return maybePromiseResult.then(
-        (res) => {
+        res => {
           this._popScope();
           return res;
         },
-        (e) => {
+        e => {
           this._popScope();
           throw e;
         },
@@ -2532,35 +2464,35 @@ class AsyncContextStack {
   /**
    * Get the client of the stack.
    */
-  getClient() {
-    return this.getStackTop().client;
+   getClient() {
+    return this.getStackTop().client ;
   }
 
   /**
    * Returns the scope of the top stack.
    */
-  getScope() {
+   getScope() {
     return this.getStackTop().scope;
   }
 
   /**
    * Get the isolation scope for the stack.
    */
-  getIsolationScope() {
+   getIsolationScope() {
     return this._isolationScope;
   }
 
   /**
    * Returns the topmost scope layer in the order domain > local > process.
    */
-  getStackTop() {
-    return this._stack[this._stack.length - 1];
+   getStackTop() {
+    return this._stack[this._stack.length - 1] ;
   }
 
   /**
    * Push a scope to the stack.
    */
-  _pushScope() {
+   _pushScope() {
     // We want to clone the content of prev scope
     const scope = this.getScope().clone();
     this._stack.push({
@@ -2573,7 +2505,7 @@ class AsyncContextStack {
   /**
    * Pop a scope from the stack.
    */
-  _popScope() {
+   _popScope() {
     if (this._stack.length <= 1) return false;
     return !!this._stack.pop();
   }
@@ -2587,11 +2519,7 @@ function getAsyncContextStack() {
   const registry = getMainCarrier();
   const sentry = getSentryCarrier(registry);
 
-  return (sentry.stack = sentry.stack ||
-    new AsyncContextStack(
-      getDefaultCurrentScope(),
-      getDefaultIsolationScope(),
-    ));
+  return (sentry.stack = sentry.stack || new AsyncContextStack(getDefaultCurrentScope(), getDefaultIsolationScope()));
 }
 
 function withScope$1(callback) {
@@ -2599,7 +2527,7 @@ function withScope$1(callback) {
 }
 
 function withSetScope(scope, callback) {
-  const stack = getAsyncContextStack();
+  const stack = getAsyncContextStack() ;
   return stack.withScope(() => {
     stack.getStackTop().scope = scope;
     return callback(scope);
@@ -2667,7 +2595,7 @@ function getIsolationScope() {
  * This scope is applied to _all_ events.
  */
 function getGlobalScope() {
-  return getGlobalSingleton("globalScope", () => new Scope());
+  return getGlobalSingleton('globalScope', () => new Scope());
 }
 
 /**
@@ -2715,6 +2643,7 @@ function withScope(
  */
 function withIsolationScope(
   ...rest
+
 ) {
   const carrier = getMainCarrier();
   const acs = getAsyncContextStrategy(carrier);
@@ -2764,13 +2693,13 @@ function getTraceContextFromScope(scope) {
  * value: [exportKey, MetricSummary]
  */
 
-const METRICS_SPAN_FIELD = "_sentryMetrics";
+const METRICS_SPAN_FIELD = '_sentryMetrics';
 
 /**
  * Fetches the metric summary if it exists for the passed span
  */
 function getMetricSummaryJsonForSpan(span) {
-  const storage = span[METRICS_SPAN_FIELD];
+  const storage = (span )[METRICS_SPAN_FIELD];
 
   if (!storage) {
     return undefined;
@@ -2797,9 +2726,10 @@ function updateMetricSummaryOnSpan(
   tags,
   bucketKey,
 ) {
-  const existingStorage = span[METRICS_SPAN_FIELD];
-  const storage = existingStorage ||
-    (span[METRICS_SPAN_FIELD] = new Map());
+  const existingStorage = (span )[METRICS_SPAN_FIELD];
+  const storage =
+    existingStorage ||
+    ((span )[METRICS_SPAN_FIELD] = new Map());
 
   const exportKey = `${metricType}:${sanitizedName}@${unit}`;
   const bucketItem = storage.get(bucketKey);
@@ -2833,29 +2763,30 @@ function updateMetricSummaryOnSpan(
 /**
  * Use this attribute to represent the source of a span.
  * Should be one of: custom, url, route, view, component, task, unknown
+ *
  */
-const SEMANTIC_ATTRIBUTE_SENTRY_SOURCE = "sentry.source";
+const SEMANTIC_ATTRIBUTE_SENTRY_SOURCE = 'sentry.source';
 
 /**
  * Use this attribute to represent the sample rate used for a span.
  */
-const SEMANTIC_ATTRIBUTE_SENTRY_SAMPLE_RATE = "sentry.sample_rate";
+const SEMANTIC_ATTRIBUTE_SENTRY_SAMPLE_RATE = 'sentry.sample_rate';
 
 /**
  * Use this attribute to represent the operation of a span.
  */
-const SEMANTIC_ATTRIBUTE_SENTRY_OP = "sentry.op";
+const SEMANTIC_ATTRIBUTE_SENTRY_OP = 'sentry.op';
 
 /**
  * Use this attribute to represent the origin of a span.
  */
-const SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN = "sentry.origin";
+const SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN = 'sentry.origin';
 
 /** The unit of a measurement, which may be stored as a TimedEvent. */
-const SEMANTIC_ATTRIBUTE_SENTRY_MEASUREMENT_UNIT = "sentry.measurement_unit";
+const SEMANTIC_ATTRIBUTE_SENTRY_MEASUREMENT_UNIT = 'sentry.measurement_unit';
 
 /** The value of a measurement, which may be stored as a TimedEvent. */
-const SEMANTIC_ATTRIBUTE_SENTRY_MEASUREMENT_VALUE = "sentry.measurement_value";
+const SEMANTIC_ATTRIBUTE_SENTRY_MEASUREMENT_VALUE = 'sentry.measurement_value';
 
 /**
  * A custom span name set by users guaranteed to be taken over any automatically
@@ -2864,14 +2795,14 @@ const SEMANTIC_ATTRIBUTE_SENTRY_MEASUREMENT_VALUE = "sentry.measurement_value";
  * @internal only meant for internal SDK usage
  * @hidden
  */
-const SEMANTIC_ATTRIBUTE_SENTRY_CUSTOM_SPAN_NAME = "sentry.custom_span_name";
+const SEMANTIC_ATTRIBUTE_SENTRY_CUSTOM_SPAN_NAME = 'sentry.custom_span_name';
 
 /**
  * The id of the profile that this span occurred in.
  */
-const SEMANTIC_ATTRIBUTE_PROFILE_ID = "sentry.profile_id";
+const SEMANTIC_ATTRIBUTE_PROFILE_ID = 'sentry.profile_id';
 
-const SEMANTIC_ATTRIBUTE_EXCLUSIVE_TIME = "sentry.exclusive_time";
+const SEMANTIC_ATTRIBUTE_EXCLUSIVE_TIME = 'sentry.exclusive_time';
 
 const SPAN_STATUS_UNSET = 0;
 const SPAN_STATUS_OK = 1;
@@ -2892,38 +2823,38 @@ function getSpanStatusFromHttpCode(httpStatus) {
   if (httpStatus >= 400 && httpStatus < 500) {
     switch (httpStatus) {
       case 401:
-        return { code: SPAN_STATUS_ERROR, message: "unauthenticated" };
+        return { code: SPAN_STATUS_ERROR, message: 'unauthenticated' };
       case 403:
-        return { code: SPAN_STATUS_ERROR, message: "permission_denied" };
+        return { code: SPAN_STATUS_ERROR, message: 'permission_denied' };
       case 404:
-        return { code: SPAN_STATUS_ERROR, message: "not_found" };
+        return { code: SPAN_STATUS_ERROR, message: 'not_found' };
       case 409:
-        return { code: SPAN_STATUS_ERROR, message: "already_exists" };
+        return { code: SPAN_STATUS_ERROR, message: 'already_exists' };
       case 413:
-        return { code: SPAN_STATUS_ERROR, message: "failed_precondition" };
+        return { code: SPAN_STATUS_ERROR, message: 'failed_precondition' };
       case 429:
-        return { code: SPAN_STATUS_ERROR, message: "resource_exhausted" };
+        return { code: SPAN_STATUS_ERROR, message: 'resource_exhausted' };
       case 499:
-        return { code: SPAN_STATUS_ERROR, message: "cancelled" };
+        return { code: SPAN_STATUS_ERROR, message: 'cancelled' };
       default:
-        return { code: SPAN_STATUS_ERROR, message: "invalid_argument" };
+        return { code: SPAN_STATUS_ERROR, message: 'invalid_argument' };
     }
   }
 
   if (httpStatus >= 500 && httpStatus < 600) {
     switch (httpStatus) {
       case 501:
-        return { code: SPAN_STATUS_ERROR, message: "unimplemented" };
+        return { code: SPAN_STATUS_ERROR, message: 'unimplemented' };
       case 503:
-        return { code: SPAN_STATUS_ERROR, message: "unavailable" };
+        return { code: SPAN_STATUS_ERROR, message: 'unavailable' };
       case 504:
-        return { code: SPAN_STATUS_ERROR, message: "deadline_exceeded" };
+        return { code: SPAN_STATUS_ERROR, message: 'deadline_exceeded' };
       default:
-        return { code: SPAN_STATUS_ERROR, message: "internal_error" };
+        return { code: SPAN_STATUS_ERROR, message: 'internal_error' };
     }
   }
 
-  return { code: SPAN_STATUS_ERROR, message: "unknown_error" };
+  return { code: SPAN_STATUS_ERROR, message: 'unknown_error' };
 }
 
 /**
@@ -2931,15 +2862,15 @@ function getSpanStatusFromHttpCode(httpStatus) {
  * Additionally, the span's status is updated, depending on the http code.
  */
 function setHttpStatus(span, httpStatus) {
-  span.setAttribute("http.response.status_code", httpStatus);
+  span.setAttribute('http.response.status_code', httpStatus);
 
   const spanStatus = getSpanStatusFromHttpCode(httpStatus);
-  if (spanStatus.message !== "unknown_error") {
+  if (spanStatus.message !== 'unknown_error') {
     span.setStatus(spanStatus);
   }
 }
 
-const SENTRY_BAGGAGE_KEY_PREFIX = "sentry-";
+const SENTRY_BAGGAGE_KEY_PREFIX = 'sentry-';
 
 const SENTRY_BAGGAGE_KEY_PREFIX_REGEX = /^sentry-/;
 
@@ -2968,21 +2899,18 @@ function baggageHeaderToDynamicSamplingContext(
   }
 
   // Read all "sentry-" prefixed values out of the baggage object and put it onto a dynamic sampling context object.
-  const dynamicSamplingContext = Object.entries(baggageObject).reduce(
-    (acc, [key, value]) => {
-      if (key.match(SENTRY_BAGGAGE_KEY_PREFIX_REGEX)) {
-        const nonPrefixedKey = key.slice(SENTRY_BAGGAGE_KEY_PREFIX.length);
-        acc[nonPrefixedKey] = value;
-      }
-      return acc;
-    },
-    {},
-  );
+  const dynamicSamplingContext = Object.entries(baggageObject).reduce((acc, [key, value]) => {
+    if (key.match(SENTRY_BAGGAGE_KEY_PREFIX_REGEX)) {
+      const nonPrefixedKey = key.slice(SENTRY_BAGGAGE_KEY_PREFIX.length);
+      acc[nonPrefixedKey] = value;
+    }
+    return acc;
+  }, {});
 
   // Only return a dynamic sampling context object if there are keys in it.
   // A keyless object means there were no sentry values on the header, which means that there is no DSC.
   if (Object.keys(dynamicSamplingContext).length > 0) {
-    return dynamicSamplingContext;
+    return dynamicSamplingContext ;
   } else {
     return undefined;
   }
@@ -3025,10 +2953,7 @@ function dynamicSamplingContextToSentryBaggageHeader(
 function parseBaggageHeader(
   baggageHeader,
 ) {
-  if (
-    !baggageHeader ||
-    (!isString(baggageHeader) && !Array.isArray(baggageHeader))
-  ) {
+  if (!baggageHeader || (!isString(baggageHeader) && !Array.isArray(baggageHeader))) {
     return undefined;
   }
 
@@ -3054,12 +2979,8 @@ function parseBaggageHeader(
  */
 function baggageHeaderToObject(baggageHeader) {
   return baggageHeader
-    .split(",")
-    .map((baggageEntry) =>
-      baggageEntry.split("=").map((keyOrValue) =>
-        decodeURIComponent(keyOrValue.trim())
-      )
-    )
+    .split(',')
+    .map(baggageEntry => baggageEntry.split('=').map(keyOrValue => decodeURIComponent(keyOrValue.trim())))
     .reduce((acc, [key, value]) => {
       if (key && value) {
         acc[key] = value;
@@ -3081,35 +3002,28 @@ function objectToBaggageHeader(object) {
     return undefined;
   }
 
-  return Object.entries(object).reduce(
-    (baggageHeader, [objectKey, objectValue], currentIndex) => {
-      const baggageEntry = `${encodeURIComponent(objectKey)}=${
-        encodeURIComponent(objectValue)
-      }`;
-      const newBaggageHeader = currentIndex === 0
-        ? baggageEntry
-        : `${baggageHeader},${baggageEntry}`;
-      if (newBaggageHeader.length > MAX_BAGGAGE_STRING_LENGTH) {
-        DEBUG_BUILD &&
-          logger.warn(
-            `Not adding key: ${objectKey} with val: ${objectValue} to baggage header due to exceeding baggage size limits.`,
-          );
-        return baggageHeader;
-      } else {
-        return newBaggageHeader;
-      }
-    },
-    "",
-  );
+  return Object.entries(object).reduce((baggageHeader, [objectKey, objectValue], currentIndex) => {
+    const baggageEntry = `${encodeURIComponent(objectKey)}=${encodeURIComponent(objectValue)}`;
+    const newBaggageHeader = currentIndex === 0 ? baggageEntry : `${baggageHeader},${baggageEntry}`;
+    if (newBaggageHeader.length > MAX_BAGGAGE_STRING_LENGTH) {
+      DEBUG_BUILD &&
+        logger.warn(
+          `Not adding key: ${objectKey} with val: ${objectValue} to baggage header due to exceeding baggage size limits.`,
+        );
+      return baggageHeader;
+    } else {
+      return newBaggageHeader;
+    }
+  }, '');
 }
 
 // eslint-disable-next-line @sentry-internal/sdk/no-regexp-constructor -- RegExp is used for readability here
 const TRACEPARENT_REGEXP = new RegExp(
-  "^[ \\t]*" + // whitespace
-    "([0-9a-f]{32})?" + // trace_id
-    "-?([0-9a-f]{16})?" + // span_id
-    "-?([01])?" + // sampled
-    "[ \\t]*$", // whitespace
+  '^[ \\t]*' + // whitespace
+    '([0-9a-f]{32})?' + // trace_id
+    '-?([0-9a-f]{16})?' + // span_id
+    '-?([01])?' + // sampled
+    '[ \\t]*$', // whitespace
 );
 
 /**
@@ -3130,9 +3044,9 @@ function extractTraceparentData(traceparent) {
   }
 
   let parentSampled;
-  if (matches[3] === "1") {
+  if (matches[3] === '1') {
     parentSampled = true;
-  } else if (matches[3] === "0") {
+  } else if (matches[3] === '0') {
     parentSampled = false;
   }
 
@@ -3179,9 +3093,9 @@ function generateSentryTraceHeader(
   spanId = generateSpanId(),
   sampled,
 ) {
-  let sampledString = "";
+  let sampledString = '';
   if (sampled !== undefined) {
-    sampledString = sampled ? "-1" : "-0";
+    sampledString = sampled ? '-1' : '-0';
   }
   return `${traceId}-${spanId}${sampledString}`;
 }
@@ -3244,7 +3158,7 @@ function spanToTraceHeader(span) {
  * Convert a span time input into a timestamp in seconds.
  */
 function spanTimeInputToSeconds(input) {
-  if (typeof input === "number") {
+  if (typeof input === 'number') {
     return ensureTimestampInSeconds(input);
   }
 
@@ -3284,8 +3198,7 @@ function spanToJSON(span) {
 
     // Handle a span from @opentelemetry/sdk-base-trace's `Span` class
     if (spanIsOpenTelemetrySdkTraceBaseSpan(span)) {
-      const { attributes, startTime, name, endTime, parentSpanId, status } =
-        span;
+      const { attributes, startTime, name, endTime, parentSpanId, status } = span;
 
       return dropUndefinedKeys({
         span_id,
@@ -3298,7 +3211,7 @@ function spanToJSON(span) {
         timestamp: spanTimeInputToSeconds(endTime) || undefined,
         status: getStatusMessage(status),
         op: attributes[SEMANTIC_ATTRIBUTE_SENTRY_OP],
-        origin: attributes[SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN],
+        origin: attributes[SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN] ,
         _metrics_summary: getMetricSummaryJsonForSpan(span),
       });
     }
@@ -3314,9 +3227,8 @@ function spanToJSON(span) {
 }
 
 function spanIsOpenTelemetrySdkTraceBaseSpan(span) {
-  const castSpan = span;
-  return !!castSpan.attributes && !!castSpan.startTime && !!castSpan.name &&
-    !!castSpan.endTime && !!castSpan.status;
+  const castSpan = span ;
+  return !!castSpan.attributes && !!castSpan.startTime && !!castSpan.name && !!castSpan.endTime && !!castSpan.status;
 }
 
 /** Exported only for tests. */
@@ -3326,7 +3238,7 @@ function spanIsOpenTelemetrySdkTraceBaseSpan(span) {
  * :( So instead we approximate this by checking if it has the `getSpanJSON` method.
  */
 function spanIsSentrySpan(span) {
-  return typeof span.getSpanJSON === "function";
+  return typeof (span ).getSpanJSON === 'function';
 }
 
 /**
@@ -3349,14 +3261,14 @@ function getStatusMessage(status) {
   }
 
   if (status.code === SPAN_STATUS_OK) {
-    return "ok";
+    return 'ok';
   }
 
-  return status.message || "unknown_error";
+  return status.message || 'unknown_error';
 }
 
-const CHILD_SPANS_FIELD = "_sentryChildSpans";
-const ROOT_SPAN_FIELD = "_sentryRootSpan";
+const CHILD_SPANS_FIELD = '_sentryChildSpans';
+const ROOT_SPAN_FIELD = '_sentryRootSpan';
 
 /**
  * Adds an opaque child span reference to a span.
@@ -3365,7 +3277,7 @@ function addChildSpanToSpan(span, childSpan) {
   // We store the root span reference on the child span
   // We need this for `getRootSpan()` to work
   const rootSpan = span[ROOT_SPAN_FIELD] || span;
-  addNonEnumerableProperty(childSpan, ROOT_SPAN_FIELD, rootSpan);
+  addNonEnumerableProperty(childSpan , ROOT_SPAN_FIELD, rootSpan);
 
   // We store a list of child spans on the parent span
   // We need this for `getSpanDescendants()` to work
@@ -3389,9 +3301,7 @@ function getSpanDescendants(span) {
       // We want to ignore unsampled spans (e.g. non recording spans)
     } else if (spanIsSampled(span)) {
       resultSet.add(span);
-      const childSpans = span[CHILD_SPANS_FIELD]
-        ? Array.from(span[CHILD_SPANS_FIELD])
-        : [];
+      const childSpans = span[CHILD_SPANS_FIELD] ? Array.from(span[CHILD_SPANS_FIELD]) : [];
       for (const childSpan of childSpans) {
         addSpanChildren(childSpan);
       }
@@ -3436,15 +3346,7 @@ function updateMetricSummaryOnActiveSpan(
 ) {
   const span = getActiveSpan();
   if (span) {
-    updateMetricSummaryOnSpan(
-      span,
-      metricType,
-      sanitizedName,
-      value,
-      unit,
-      tags,
-      bucketKey,
-    );
+    updateMetricSummaryOnSpan(span, metricType, sanitizedName, value, unit, tags, bucketKey);
   }
 }
 
@@ -3458,7 +3360,7 @@ function showSpanDropWarning() {
     consoleSandbox(() => {
       // eslint-disable-next-line no-console
       console.warn(
-        "[Sentry] Deprecation warning: Returning null from `beforeSendSpan` will be disallowed from SDK version 9.0.0 onwards. The callback will only support mutating spans. To drop certain spans, configure the respective integrations directly.",
+        '[Sentry] Deprecation warning: Returning null from `beforeSendSpan` will be disallowed from SDK version 9.0.0 onwards. The callback will only support mutating spans. To drop certain spans, configure the respective integrations directly.',
       );
     });
     hasShownSpanDropWarning = true;
@@ -3484,7 +3386,7 @@ function showSpanDropWarning() {
 function updateSpanName(span, name) {
   span.updateName(name);
   span.setAttributes({
-    [SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: "custom",
+    [SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: 'custom',
     [SEMANTIC_ATTRIBUTE_SENTRY_CUSTOM_SPAN_NAME]: name,
   });
 }
@@ -3511,28 +3413,23 @@ function errorCallback() {
   const activeSpan = getActiveSpan();
   const rootSpan = activeSpan && getRootSpan(activeSpan);
   if (rootSpan) {
-    const message = "internal_error";
-    DEBUG_BUILD$1 &&
-      logger.log(`[Tracing] Root span: ${message} -> Global error occurred`);
+    const message = 'internal_error';
+    DEBUG_BUILD$1 && logger.log(`[Tracing] Root span: ${message} -> Global error occurred`);
     rootSpan.setStatus({ code: SPAN_STATUS_ERROR, message });
   }
 }
 
 // The function name will be lost when bundling but we need to be able to identify this listener later to maintain the
 // node.js default exit behaviour
-errorCallback.tag = "sentry_tracingErrorCallback";
+errorCallback.tag = 'sentry_tracingErrorCallback';
 
-const SCOPE_ON_START_SPAN_FIELD = "_sentryScope";
-const ISOLATION_SCOPE_ON_START_SPAN_FIELD = "_sentryIsolationScope";
+const SCOPE_ON_START_SPAN_FIELD = '_sentryScope';
+const ISOLATION_SCOPE_ON_START_SPAN_FIELD = '_sentryIsolationScope';
 
 /** Store the scope & isolation scope for a span, which can the be used when it is finished. */
 function setCapturedScopesOnSpan(span, scope, isolationScope) {
   if (span) {
-    addNonEnumerableProperty(
-      span,
-      ISOLATION_SCOPE_ON_START_SPAN_FIELD,
-      isolationScope,
-    );
+    addNonEnumerableProperty(span, ISOLATION_SCOPE_ON_START_SPAN_FIELD, isolationScope);
     addNonEnumerableProperty(span, SCOPE_ON_START_SPAN_FIELD, scope);
   }
 }
@@ -3542,8 +3439,8 @@ function setCapturedScopesOnSpan(span, scope, isolationScope) {
  */
 function getCapturedScopesOnSpan(span) {
   return {
-    scope: span[SCOPE_ON_START_SPAN_FIELD],
-    isolationScope: span[ISOLATION_SCOPE_ON_START_SPAN_FIELD],
+    scope: (span )[SCOPE_ON_START_SPAN_FIELD],
+    isolationScope: (span )[ISOLATION_SCOPE_ON_START_SPAN_FIELD],
   };
 }
 
@@ -3557,29 +3454,28 @@ function getCapturedScopesOnSpan(span) {
 function hasTracingEnabled(
   maybeOptions,
 ) {
-  if (typeof __SENTRY_TRACING__ === "boolean" && !__SENTRY_TRACING__) {
+  if (typeof __SENTRY_TRACING__ === 'boolean' && !__SENTRY_TRACING__) {
     return false;
   }
 
   const client = getClient();
   const options = maybeOptions || (client && client.getOptions());
   // eslint-disable-next-line deprecation/deprecation
-  return !!options &&
-    (options.enableTracing || "tracesSampleRate" in options ||
-      "tracesSampler" in options);
+  return !!options && (options.enableTracing || 'tracesSampleRate' in options || 'tracesSampler' in options);
 }
 
 /**
  * A Sentry Span that is non-recording, meaning it will not be sent to Sentry.
  */
-class SentryNonRecordingSpan {
-  constructor(spanContext = {}) {
+class SentryNonRecordingSpan  {
+
+   constructor(spanContext = {}) {
     this._traceId = spanContext.traceId || generateTraceId();
     this._spanId = spanContext.spanId || generateSpanId();
   }
 
   /** @inheritdoc */
-  spanContext() {
+   spanContext() {
     return {
       spanId: this._spanId,
       traceId: this._traceId,
@@ -3589,35 +3485,35 @@ class SentryNonRecordingSpan {
 
   /** @inheritdoc */
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  end(_timestamp) {}
+   end(_timestamp) {}
 
   /** @inheritdoc */
-  setAttribute(_key, _value) {
+   setAttribute(_key, _value) {
     return this;
   }
 
   /** @inheritdoc */
-  setAttributes(_values) {
+   setAttributes(_values) {
     return this;
   }
 
   /** @inheritdoc */
-  setStatus(_status) {
+   setStatus(_status) {
     return this;
   }
 
   /** @inheritdoc */
-  updateName(_name) {
+   updateName(_name) {
     return this;
   }
 
   /** @inheritdoc */
-  isRecording() {
+   isRecording() {
     return false;
   }
 
   /** @inheritdoc */
-  addEvent(
+   addEvent(
     _name,
     _attributesOrStartTime,
     _startTime,
@@ -3632,7 +3528,7 @@ class SentryNonRecordingSpan {
    * @hidden
    * @internal
    */
-  addLink(_link) {
+   addLink(_link) {
     return this;
   }
 
@@ -3643,7 +3539,7 @@ class SentryNonRecordingSpan {
    * @hidden
    * @internal
    */
-  addLinks(_links) {
+   addLinks(_links) {
     return this;
   }
 
@@ -3654,7 +3550,7 @@ class SentryNonRecordingSpan {
    * @hidden
    * @internal
    */
-  recordException(_exception, _time) {
+   recordException(_exception, _time) {
     // noop
   }
 }
@@ -3670,7 +3566,9 @@ class SentryNonRecordingSpan {
  * else once the callback has finished executing.
  * The `onFinally` callback will _always_ be called, no matter if an error was thrown or not.
  */
-function handleCallbackErrors(
+function handleCallbackErrors
+
+(
   fn,
   onError,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -3702,11 +3600,11 @@ function maybeHandlePromiseRejection(
   if (isThenable(value)) {
     // @ts-expect-error - the isThenable check returns the "wrong" type here
     return value.then(
-      (res) => {
+      res => {
         onFinally();
         return res;
       },
-      (e) => {
+      e => {
         onError(e);
         onFinally();
         throw e;
@@ -3718,19 +3616,19 @@ function maybeHandlePromiseRejection(
   return value;
 }
 
-const DEFAULT_ENVIRONMENT = "production";
+const DEFAULT_ENVIRONMENT = 'production';
 
 /**
  * If you change this value, also update the terser plugin config to
  * avoid minification of the object property!
  */
-const FROZEN_DSC_FIELD = "_frozenDsc";
+const FROZEN_DSC_FIELD = '_frozenDsc';
 
 /**
  * Freeze the given DSC on the given span.
  */
 function freezeDscOnSpan(span, dsc) {
-  const spanWithMaybeDsc = span;
+  const spanWithMaybeDsc = span ;
   addNonEnumerableProperty(spanWithMaybeDsc, FROZEN_DSC_FIELD, dsc);
 }
 
@@ -3749,9 +3647,9 @@ function getDynamicSamplingContextFromClient(trace_id, client) {
     release: options.release,
     public_key,
     trace_id,
-  });
+  }) ;
 
-  client.emit("createDsc", dsc);
+  client.emit('createDsc', dsc);
 
   return dsc;
 }
@@ -3761,8 +3659,7 @@ function getDynamicSamplingContextFromClient(trace_id, client) {
  */
 function getDynamicSamplingContextFromScope(client, scope) {
   const propagationContext = scope.getPropagationContext();
-  return propagationContext.dsc ||
-    getDynamicSamplingContextFromClient(propagationContext.traceId, client);
+  return propagationContext.dsc || getDynamicSamplingContextFromClient(propagationContext.traceId, client);
 }
 
 /**
@@ -3781,28 +3678,24 @@ function getDynamicSamplingContextFromSpan(span) {
   const rootSpan = getRootSpan(span);
 
   // For core implementation, we freeze the DSC onto the span as a non-enumerable property
-  const frozenDsc = rootSpan[FROZEN_DSC_FIELD];
+  const frozenDsc = (rootSpan )[FROZEN_DSC_FIELD];
   if (frozenDsc) {
     return frozenDsc;
   }
 
   // For OpenTelemetry, we freeze the DSC on the trace state
   const traceState = rootSpan.spanContext().traceState;
-  const traceStateDsc = traceState && traceState.get("sentry.dsc");
+  const traceStateDsc = traceState && traceState.get('sentry.dsc');
 
   // If the span has a DSC, we want it to take precedence
-  const dscOnTraceState = traceStateDsc &&
-    baggageHeaderToDynamicSamplingContext(traceStateDsc);
+  const dscOnTraceState = traceStateDsc && baggageHeaderToDynamicSamplingContext(traceStateDsc);
 
   if (dscOnTraceState) {
     return dscOnTraceState;
   }
 
   // Else, we generate it from the span
-  const dsc = getDynamicSamplingContextFromClient(
-    span.spanContext().traceId,
-    client,
-  );
+  const dsc = getDynamicSamplingContextFromClient(span.spanContext().traceId, client);
   const jsonSpan = spanToJSON(rootSpan);
   const attributes = jsonSpan.data || {};
   const maybeSampleRate = attributes[SEMANTIC_ATTRIBUTE_SENTRY_SAMPLE_RATE];
@@ -3816,7 +3709,7 @@ function getDynamicSamplingContextFromSpan(span) {
 
   // after JSON conversion, txn.name becomes jsonSpan.description
   const name = jsonSpan.description;
-  if (source !== "url" && name) {
+  if (source !== 'url' && name) {
     dsc.transaction = name;
   }
 
@@ -3827,7 +3720,7 @@ function getDynamicSamplingContextFromSpan(span) {
     dsc.sampled = String(spanIsSampled(rootSpan));
   }
 
-  client.emit("createDsc", dsc, rootSpan);
+  client.emit('createDsc', dsc, rootSpan);
 
   return dsc;
 }
@@ -3846,20 +3739,14 @@ function spanToBaggageHeader(span) {
 function logSpanStart(span) {
   if (!DEBUG_BUILD$1) return;
 
-  const {
-    description = "< unknown name >",
-    op = "< unknown op >",
-    parent_span_id: parentSpanId,
-  } = spanToJSON(span);
+  const { description = '< unknown name >', op = '< unknown op >', parent_span_id: parentSpanId } = spanToJSON(span);
   const { spanId } = span.spanContext();
 
   const sampled = spanIsSampled(span);
   const rootSpan = getRootSpan(span);
   const isRootSpan = rootSpan === span;
 
-  const header = `[Tracing] Starting ${sampled ? "sampled" : "unsampled"} ${
-    isRootSpan ? "root " : ""
-  }span`;
+  const header = `[Tracing] Starting ${sampled ? 'sampled' : 'unsampled'} ${isRootSpan ? 'root ' : ''}span`;
 
   const infoParts = [`op: ${op}`, `name: ${description}`, `ID: ${spanId}`];
 
@@ -3879,7 +3766,7 @@ function logSpanStart(span) {
   }
 
   logger.log(`${header}
-  ${infoParts.join("\n  ")}`);
+  ${infoParts.join('\n  ')}`);
 }
 
 /**
@@ -3888,15 +3775,12 @@ function logSpanStart(span) {
 function logSpanEnd(span) {
   if (!DEBUG_BUILD$1) return;
 
-  const { description = "< unknown name >", op = "< unknown op >" } =
-    spanToJSON(span);
+  const { description = '< unknown name >', op = '< unknown op >' } = spanToJSON(span);
   const { spanId } = span.spanContext();
   const rootSpan = getRootSpan(span);
   const isRootSpan = rootSpan === span;
 
-  const msg = `[Tracing] Finishing "${op}" ${
-    isRootSpan ? "root " : ""
-  }span "${description}" with ID ${spanId}`;
+  const msg = `[Tracing] Finishing "${op}" ${isRootSpan ? 'root ' : ''}span "${description}" with ID ${spanId}`;
   logger.log(msg);
 }
 
@@ -3908,21 +3792,17 @@ function logSpanEnd(span) {
  * Any invalid sample rate will return `undefined`.
  */
 function parseSampleRate(sampleRate) {
-  if (typeof sampleRate === "boolean") {
+  if (typeof sampleRate === 'boolean') {
     return Number(sampleRate);
   }
 
-  const rate = typeof sampleRate === "string"
-    ? parseFloat(sampleRate)
-    : sampleRate;
-  if (typeof rate !== "number" || isNaN(rate) || rate < 0 || rate > 1) {
+  const rate = typeof sampleRate === 'string' ? parseFloat(sampleRate) : sampleRate;
+  if (typeof rate !== 'number' || isNaN(rate) || rate < 0 || rate > 1) {
     DEBUG_BUILD$1 &&
       logger.warn(
-        `[Tracing] Given sample rate is invalid. Sample rate must be a boolean or a number between 0 and 1. Got ${
-          JSON.stringify(
-            sampleRate,
-          )
-        } of type ${JSON.stringify(typeof sampleRate)}.`,
+        `[Tracing] Given sample rate is invalid. Sample rate must be a boolean or a number between 0 and 1. Got ${JSON.stringify(
+          sampleRate,
+        )} of type ${JSON.stringify(typeof sampleRate)}.`,
       );
     return undefined;
   }
@@ -3946,9 +3826,8 @@ function sampleSpan(
   }
 
   // Casting this from unknown, as the type of `sdkProcessingMetadata` is only changed in v9 and `normalizedRequest` is set in SentryHttpInstrumentation
-  const normalizedRequest =
-    getIsolationScope().getScopeData().sdkProcessingMetadata
-      .normalizedRequest;
+  const normalizedRequest = getIsolationScope().getScopeData().sdkProcessingMetadata
+    .normalizedRequest ;
 
   const enhancedSamplingContext = {
     ...samplingContext,
@@ -3958,11 +3837,11 @@ function sampleSpan(
   // we would have bailed already if neither `tracesSampler` nor `tracesSampleRate` nor `enableTracing` were defined, so one of these should
   // work; prefer the hook if so
   let sampleRate;
-  if (typeof options.tracesSampler === "function") {
+  if (typeof options.tracesSampler === 'function') {
     sampleRate = options.tracesSampler(enhancedSamplingContext);
   } else if (enhancedSamplingContext.parentSampled !== undefined) {
     sampleRate = enhancedSamplingContext.parentSampled;
-  } else if (typeof options.tracesSampleRate !== "undefined") {
+  } else if (typeof options.tracesSampleRate !== 'undefined') {
     sampleRate = options.tracesSampleRate;
   } else {
     // When `enableTracing === true`, we use a sample rate of 100%
@@ -3974,10 +3853,7 @@ function sampleSpan(
   const parsedSampleRate = parseSampleRate(sampleRate);
 
   if (parsedSampleRate === undefined) {
-    DEBUG_BUILD$1 &&
-      logger.warn(
-        "[Tracing] Discarding transaction because of invalid sample rate.",
-      );
+    DEBUG_BUILD$1 && logger.warn('[Tracing] Discarding transaction because of invalid sample rate.');
     return [false];
   }
 
@@ -3986,9 +3862,9 @@ function sampleSpan(
     DEBUG_BUILD$1 &&
       logger.log(
         `[Tracing] Discarding transaction because ${
-          typeof options.tracesSampler === "function"
-            ? "tracesSampler returned 0 or false"
-            : "a negative sampling decision was inherited or tracesSampleRate is set to 0"
+          typeof options.tracesSampler === 'function'
+            ? 'tracesSampler returned 0 or false'
+            : 'a negative sampling decision was inherited or tracesSampleRate is set to 0'
         }`,
       );
     return [false, parsedSampleRate];
@@ -4002,11 +3878,9 @@ function sampleSpan(
   if (!shouldSample) {
     DEBUG_BUILD$1 &&
       logger.log(
-        `[Tracing] Discarding transaction because it's not included in the random sample (sampling rate = ${
-          Number(
-            sampleRate,
-          )
-        })`,
+        `[Tracing] Discarding transaction because it's not included in the random sample (sampling rate = ${Number(
+          sampleRate,
+        )})`,
       );
     return [false, parsedSampleRate];
   }
@@ -4015,11 +3889,10 @@ function sampleSpan(
 }
 
 /** Regular expression used to parse a Dsn. */
-const DSN_REGEX =
-  /^(?:(\w+):)\/\/(?:(\w+)(?::(\w+)?)?@)([\w.-]+)(?::(\d+))?\/(.+)/;
+const DSN_REGEX = /^(?:(\w+):)\/\/(?:(\w+)(?::(\w+)?)?@)([\w.-]+)(?::(\d+))?\/(.+)/;
 
 function isValidProtocol(protocol) {
-  return protocol === "http" || protocol === "https";
+  return protocol === 'http' || protocol === 'https';
 }
 
 /**
@@ -4034,8 +3907,8 @@ function isValidProtocol(protocol) {
 function dsnToString(dsn, withPassword = false) {
   const { host, path, pass, port, projectId, protocol, publicKey } = dsn;
   return (
-    `${protocol}://${publicKey}${withPassword && pass ? `:${pass}` : ""}` +
-    `@${host}${port ? `:${port}` : ""}/${path ? `${path}/` : path}${projectId}`
+    `${protocol}://${publicKey}${withPassword && pass ? `:${pass}` : ''}` +
+    `@${host}${port ? `:${port}` : ''}/${path ? `${path}/` : path}${projectId}`
   );
 }
 
@@ -4057,15 +3930,14 @@ function dsnFromString(str) {
     return undefined;
   }
 
-  const [protocol, publicKey, pass = "", host = "", port = "", lastPath = ""] =
-    match.slice(1);
-  let path = "";
+  const [protocol, publicKey, pass = '', host = '', port = '', lastPath = ''] = match.slice(1);
+  let path = '';
   let projectId = lastPath;
 
-  const split = projectId.split("/");
+  const split = projectId.split('/');
   if (split.length > 1) {
-    path = split.slice(0, -1).join("/");
-    projectId = split.pop();
+    path = split.slice(0, -1).join('/');
+    projectId = split.pop() ;
   }
 
   if (projectId) {
@@ -4075,25 +3947,17 @@ function dsnFromString(str) {
     }
   }
 
-  return dsnFromComponents({
-    host,
-    pass,
-    path,
-    projectId,
-    port,
-    protocol: protocol,
-    publicKey,
-  });
+  return dsnFromComponents({ host, pass, path, projectId, port, protocol: protocol , publicKey });
 }
 
 function dsnFromComponents(components) {
   return {
     protocol: components.protocol,
-    publicKey: components.publicKey || "",
-    pass: components.pass || "",
+    publicKey: components.publicKey || '',
+    pass: components.pass || '',
     host: components.host,
-    port: components.port || "",
-    path: components.path || "",
+    port: components.port || '',
+    path: components.path || '',
     projectId: components.projectId,
   };
 }
@@ -4105,8 +3969,8 @@ function validateDsn(dsn) {
 
   const { port, projectId, protocol } = dsn;
 
-  const requiredComponents = ["protocol", "publicKey", "host", "projectId"];
-  const hasMissingRequiredComponent = requiredComponents.find((component) => {
+  const requiredComponents = ['protocol', 'publicKey', 'host', 'projectId'];
+  const hasMissingRequiredComponent = requiredComponents.find(component => {
     if (!dsn[component]) {
       logger.error(`Invalid Sentry Dsn: ${component} missing`);
       return true;
@@ -4141,9 +4005,7 @@ function validateDsn(dsn) {
  * @returns a valid DsnComponents object or `undefined` if @param from is an invalid DSN source
  */
 function makeDsn(from) {
-  const components = typeof from === "string"
-    ? dsnFromString(from)
-    : dsnFromComponents(from);
+  const components = typeof from === 'string' ? dsnFromString(from) : dsnFromComponents(from);
   if (!components || !validateDsn(components)) {
     return undefined;
   }
@@ -4160,7 +4022,7 @@ function makeDsn(from) {
  */
 // TODO(v9): Move this function into normalize() directly
 function memoBuilder() {
-  const hasWeakSet = typeof WeakSet === "function";
+  const hasWeakSet = typeof WeakSet === 'function';
   const inner = hasWeakSet ? new WeakSet() : [];
   function memoize(obj) {
     if (hasWeakSet) {
@@ -4219,7 +4081,7 @@ function memoBuilder() {
 function normalize(input, depth = 100, maxProperties = +Infinity) {
   try {
     // since we're at the outermost level, we don't provide a key
-    return visit("", input, depth, maxProperties);
+    return visit('', input, depth, maxProperties);
   } catch (err) {
     return { ERROR: `**non-serializable** (${err})` };
   }
@@ -4240,7 +4102,7 @@ function normalizeToSize(
     return normalizeToSize(object, depth - 1, maxSize);
   }
 
-  return normalized;
+  return normalized ;
 }
 
 /**
@@ -4265,17 +4127,17 @@ function visit(
   // Get the simple cases out of the way first
   if (
     value == null || // this matches null and undefined -> eqeq not eqeqeq
-    ["boolean", "string"].includes(typeof value) ||
-    (typeof value === "number" && Number.isFinite(value))
+    ['boolean', 'string'].includes(typeof value) ||
+    (typeof value === 'number' && Number.isFinite(value))
   ) {
-    return value;
+    return value ;
   }
 
   const stringified = stringifyValue(key, value);
 
   // Anything we could potentially dig into more (objects or arrays) will have come back as `"[object XXXX]"`.
   // Everything else will have already been serialized, so if we don't see that pattern, we're done.
-  if (!stringified.startsWith("[object ")) {
+  if (!stringified.startsWith('[object ')) {
     return stringified;
   }
 
@@ -4284,36 +4146,36 @@ function visit(
   // Do not normalize objects that we know have already been normalized. As a general rule, the
   // "__sentry_skip_normalization__" property should only be used sparingly and only should only be set on objects that
   // have already been normalized.
-  if (value["__sentry_skip_normalization__"]) {
-    return value;
+  if ((value )['__sentry_skip_normalization__']) {
+    return value ;
   }
 
   // We can set `__sentry_override_normalization_depth__` on an object to ensure that from there
   // We keep a certain amount of depth.
   // This should be used sparingly, e.g. we use it for the redux integration to ensure we get a certain amount of state.
   const remainingDepth =
-    typeof value["__sentry_override_normalization_depth__"] === "number"
-      ? (value["__sentry_override_normalization_depth__"])
+    typeof (value )['__sentry_override_normalization_depth__'] === 'number'
+      ? ((value )['__sentry_override_normalization_depth__'] )
       : depth;
 
   // We're also done if we've reached the max depth
   if (remainingDepth === 0) {
     // At this point we know `serialized` is a string of the form `"[object XXXX]"`. Clean it up so it's just `"[XXXX]"`.
-    return stringified.replace("object ", "");
+    return stringified.replace('object ', '');
   }
 
   // If we've already visited this branch, bail out, as it's circular reference. If not, note that we're seeing it now.
   if (memoize(value)) {
-    return "[Circular ~]";
+    return '[Circular ~]';
   }
 
   // If the value has a `toJSON` method, we call it to extract more information
-  const valueWithToJSON = value;
-  if (valueWithToJSON && typeof valueWithToJSON.toJSON === "function") {
+  const valueWithToJSON = value ;
+  if (valueWithToJSON && typeof valueWithToJSON.toJSON === 'function') {
     try {
       const jsonValue = valueWithToJSON.toJSON();
       // We need to normalize the return value of `.toJSON()` in case it has circular references
-      return visit("", jsonValue, remainingDepth - 1, maxProperties, memo);
+      return visit('', jsonValue, remainingDepth - 1, maxProperties, memo);
     } catch (err) {
       // pass (The built-in `toJSON` failed, but we can still try to do it ourselves)
     }
@@ -4322,12 +4184,12 @@ function visit(
   // At this point we know we either have an object or an array, we haven't seen it before, and we're going to recurse
   // because we haven't yet reached the max depth. Create an accumulator to hold the results of visiting each
   // property/entry, and keep track of the number of items we add to it.
-  const normalized = Array.isArray(value) ? [] : {};
+  const normalized = (Array.isArray(value) ? [] : {}) ;
   let numAdded = 0;
 
   // Before we begin, convert`Error` and`Event` instances into plain objects, since some of each of their relevant
   // properties are non-enumerable and otherwise would get missed.
-  const visitable = convertToPlainObject(value);
+  const visitable = convertToPlainObject(value );
 
   for (const visitKey in visitable) {
     // Avoid iterating over fields in the prototype if they've somehow been exposed to enumeration.
@@ -4336,19 +4198,13 @@ function visit(
     }
 
     if (numAdded >= maxProperties) {
-      normalized[visitKey] = "[MaxProperties ~]";
+      normalized[visitKey] = '[MaxProperties ~]';
       break;
     }
 
     // Recursively visit all the child nodes
     const visitValue = visitable[visitKey];
-    normalized[visitKey] = visit(
-      visitKey,
-      visitValue,
-      remainingDepth - 1,
-      maxProperties,
-      memo,
-    );
+    normalized[visitKey] = visit(visitKey, visitValue, remainingDepth - 1, maxProperties, memo);
 
     numAdded++;
   }
@@ -4377,56 +4233,54 @@ function stringifyValue(
   value,
 ) {
   try {
-    if (
-      key === "domain" && value && typeof value === "object" && value._events
-    ) {
-      return "[Domain]";
+    if (key === 'domain' && value && typeof value === 'object' && (value )._events) {
+      return '[Domain]';
     }
 
-    if (key === "domainEmitter") {
-      return "[DomainEmitter]";
+    if (key === 'domainEmitter') {
+      return '[DomainEmitter]';
     }
 
     // It's safe to use `global`, `window`, and `document` here in this manner, as we are asserting using `typeof` first
     // which won't throw if they are not present.
 
-    if (typeof global !== "undefined" && value === global) {
-      return "[Global]";
+    if (typeof global !== 'undefined' && value === global) {
+      return '[Global]';
     }
 
     // eslint-disable-next-line no-restricted-globals
-    if (typeof window !== "undefined" && value === window) {
-      return "[Window]";
+    if (typeof window !== 'undefined' && value === window) {
+      return '[Window]';
     }
 
     // eslint-disable-next-line no-restricted-globals
-    if (typeof document !== "undefined" && value === document) {
-      return "[Document]";
+    if (typeof document !== 'undefined' && value === document) {
+      return '[Document]';
     }
 
     if (isVueViewModel(value)) {
-      return "[VueViewModel]";
+      return '[VueViewModel]';
     }
 
     // React's SyntheticEvent thingy
     if (isSyntheticEvent(value)) {
-      return "[SyntheticEvent]";
+      return '[SyntheticEvent]';
     }
 
-    if (typeof value === "number" && !Number.isFinite(value)) {
+    if (typeof value === 'number' && !Number.isFinite(value)) {
       return `[${value}]`;
     }
 
-    if (typeof value === "function") {
+    if (typeof value === 'function') {
       return `[Function: ${getFunctionName(value)}]`;
     }
 
-    if (typeof value === "symbol") {
+    if (typeof value === 'symbol') {
       return `[${String(value)}]`;
     }
 
     // stringified BigInts are indistinguishable from regular numbers, so we need to label them to avoid confusion
-    if (typeof value === "bigint") {
+    if (typeof value === 'bigint') {
       return `[BigInt: ${String(value)}]`;
     }
 
@@ -4451,7 +4305,7 @@ function stringifyValue(
 function getConstructorName(value) {
   const prototype = Object.getPrototypeOf(value);
 
-  return prototype ? prototype.constructor.name : "null prototype";
+  return prototype ? prototype.constructor.name : 'null prototype';
 }
 
 /** Calculates bytes size of input string */
@@ -4472,7 +4326,7 @@ function jsonSize(value) {
  * so that the envelope types resolve correctly.
  */
 function createEnvelope(headers, items = []) {
-  return [headers, items];
+  return [headers, items] ;
 }
 
 /**
@@ -4482,7 +4336,7 @@ function createEnvelope(headers, items = []) {
  */
 function addItemToEnvelope(envelope, newItem) {
   const [headers, items] = envelope;
-  return [headers, [...items, newItem]];
+  return [headers, [...items, newItem]] ;
 }
 
 /**
@@ -4528,12 +4382,10 @@ function serializeEnvelope(envelope) {
   let parts = JSON.stringify(envHeaders);
 
   function append(next) {
-    if (typeof parts === "string") {
-      parts = typeof next === "string"
-        ? parts + next
-        : [encodeUTF8(parts), next];
+    if (typeof parts === 'string') {
+      parts = typeof next === 'string' ? parts + next : [encodeUTF8(parts), next];
     } else {
-      parts.push(typeof next === "string" ? encodeUTF8(next) : next);
+      parts.push(typeof next === 'string' ? encodeUTF8(next) : next);
     }
   }
 
@@ -4542,7 +4394,7 @@ function serializeEnvelope(envelope) {
 
     append(`\n${JSON.stringify(itemHeaders)}\n`);
 
-    if (typeof payload === "string" || payload instanceof Uint8Array) {
+    if (typeof payload === 'string' || payload instanceof Uint8Array) {
       append(payload);
     } else {
       let stringifiedPayload;
@@ -4558,7 +4410,7 @@ function serializeEnvelope(envelope) {
     }
   }
 
-  return typeof parts === "string" ? parts : concatBuffers(parts);
+  return typeof parts === 'string' ? parts : concatBuffers(parts);
 }
 
 function concatBuffers(buffers) {
@@ -4579,7 +4431,7 @@ function concatBuffers(buffers) {
  */
 function createSpanEnvelopeItem(spanJson) {
   const spanHeaders = {
-    type: "span",
+    type: 'span',
   };
 
   return [spanHeaders, spanJson];
@@ -4589,13 +4441,11 @@ function createSpanEnvelopeItem(spanJson) {
  * Creates attachment envelope items
  */
 function createAttachmentEnvelopeItem(attachment) {
-  const buffer = typeof attachment.data === "string"
-    ? encodeUTF8(attachment.data)
-    : attachment.data;
+  const buffer = typeof attachment.data === 'string' ? encodeUTF8(attachment.data) : attachment.data;
 
   return [
     dropUndefinedKeys({
-      type: "attachment",
+      type: 'attachment',
       length: buffer.length,
       filename: attachment.filename,
       content_type: attachment.contentType,
@@ -4606,22 +4456,22 @@ function createAttachmentEnvelopeItem(attachment) {
 }
 
 const ITEM_TYPE_TO_DATA_CATEGORY_MAP = {
-  session: "session",
-  sessions: "session",
-  attachment: "attachment",
-  transaction: "transaction",
-  event: "error",
-  client_report: "internal",
-  user_report: "default",
-  profile: "profile",
-  profile_chunk: "profile",
-  replay_event: "replay",
-  replay_recording: "replay",
-  check_in: "monitor",
-  feedback: "feedback",
-  span: "span",
-  statsd: "metric_bucket",
-  raw_security: "security",
+  session: 'session',
+  sessions: 'session',
+  attachment: 'attachment',
+  transaction: 'transaction',
+  event: 'error',
+  client_report: 'internal',
+  user_report: 'default',
+  profile: 'profile',
+  profile_chunk: 'profile',
+  replay_event: 'replay',
+  replay_recording: 'replay',
+  check_in: 'monitor',
+  feedback: 'feedback',
+  span: 'span',
+  statsd: 'metric_bucket',
+  raw_security: 'security',
 };
 
 /**
@@ -4650,10 +4500,9 @@ function createEventEnvelopeHeaders(
   tunnel,
   dsn,
 ) {
-  const dynamicSamplingContext = event.sdkProcessingMetadata &&
-    event.sdkProcessingMetadata.dynamicSamplingContext;
+  const dynamicSamplingContext = event.sdkProcessingMetadata && event.sdkProcessingMetadata.dynamicSamplingContext;
   return {
-    event_id: event.event_id,
+    event_id: event.event_id ,
     sent_at: new Date().toISOString(),
     ...(sdkInfo && { sdk: sdkInfo }),
     ...(!!tunnel && dsn && { dsn: dsnToString(dsn) }),
@@ -4666,7 +4515,7 @@ function createEventEnvelopeHeaders(
 /**
  * Apply SdkInfo (name, version, packages, integrations) to the corresponding event key.
  * Merge with existing data if any.
- */
+ **/
 function enhanceEventWithSdkInfo(event, sdkInfo) {
   if (!sdkInfo) {
     return event;
@@ -4674,14 +4523,8 @@ function enhanceEventWithSdkInfo(event, sdkInfo) {
   event.sdk = event.sdk || {};
   event.sdk.name = event.sdk.name || sdkInfo.name;
   event.sdk.version = event.sdk.version || sdkInfo.version;
-  event.sdk.integrations = [
-    ...(event.sdk.integrations || []),
-    ...(sdkInfo.integrations || []),
-  ];
-  event.sdk.packages = [
-    ...(event.sdk.packages || []),
-    ...(sdkInfo.packages || []),
-  ];
+  event.sdk.integrations = [...(event.sdk.integrations || []), ...(sdkInfo.integrations || [])];
+  event.sdk.packages = [...(event.sdk.packages || []), ...(sdkInfo.packages || [])];
   return event;
 }
 
@@ -4699,9 +4542,8 @@ function createSessionEnvelope(
     ...(!!tunnel && dsn && { dsn: dsnToString(dsn) }),
   };
 
-  const envelopeItem = "aggregates" in session
-    ? [{ type: "sessions" }, session]
-    : [{ type: "session" }, session.toJSON()];
+  const envelopeItem =
+    'aggregates' in session ? [{ type: 'sessions' }, session] : [{ type: 'session' }, session.toJSON()];
 
   return createEnvelope(envelopeHeaders, [envelopeItem]);
 }
@@ -4724,18 +4566,11 @@ function createEventEnvelope(
     We want to avoid casting this around, as that could lead to bugs (e.g. when we add another type)
     So the safe choice is to really guard against the replay_event type here.
   */
-  const eventType = event.type && event.type !== "replay_event"
-    ? event.type
-    : "event";
+  const eventType = event.type && event.type !== 'replay_event' ? event.type : 'event';
 
   enhanceEventWithSdkInfo(event, metadata && metadata.sdk);
 
-  const envelopeHeaders = createEventEnvelopeHeaders(
-    event,
-    sdkInfo,
-    tunnel,
-    dsn,
-  );
+  const envelopeHeaders = createEventEnvelopeHeaders(event, sdkInfo, tunnel, dsn);
 
   // Prevent this data (which, if it exists, was used in earlier steps in the processing pipeline) from being sent to
   // sentry. (Note: Our use of this property comes and goes with whatever we might be debugging, whatever hacks we may
@@ -4774,12 +4609,12 @@ function createSpanEnvelope(spans, client) {
   const beforeSendSpan = client && client.getOptions().beforeSendSpan;
   const convertToSpanJSON = beforeSendSpan
     ? (span) => {
-      const spanJson = beforeSendSpan(spanToJSON(span));
-      if (!spanJson) {
-        showSpanDropWarning();
+        const spanJson = beforeSendSpan(spanToJSON(span) );
+        if (!spanJson) {
+          showSpanDropWarning();
+        }
+        return spanJson;
       }
-      return spanJson;
-    }
     : (span) => spanToJSON(span);
 
   const items = [];
@@ -4801,13 +4636,10 @@ function setMeasurement(name, value, unit, activeSpan = getActiveSpan()) {
   const rootSpan = activeSpan && getRootSpan(activeSpan);
 
   if (rootSpan) {
-    DEBUG_BUILD$1 &&
-      logger.log(
-        `[Measurement] Setting measurement on root span: ${name} = ${value} ${unit}`,
-      );
+    DEBUG_BUILD$1 && logger.log(`[Measurement] Setting measurement on root span: ${name} = ${value} ${unit}`);
     rootSpan.addEvent(name, {
       [SEMANTIC_ATTRIBUTE_SENTRY_MEASUREMENT_VALUE]: value,
-      [SEMANTIC_ATTRIBUTE_SENTRY_MEASUREMENT_UNIT]: unit,
+      [SEMANTIC_ATTRIBUTE_SENTRY_MEASUREMENT_UNIT]: unit ,
     });
   }
 }
@@ -4821,12 +4653,12 @@ function timedEventsToMeasurements(events) {
   }
 
   const measurements = {};
-  events.forEach((event) => {
+  events.forEach(event => {
     const attributes = event.attributes || {};
-    const unit = attributes[SEMANTIC_ATTRIBUTE_SENTRY_MEASUREMENT_UNIT];
-    const value = attributes[SEMANTIC_ATTRIBUTE_SENTRY_MEASUREMENT_VALUE];
+    const unit = attributes[SEMANTIC_ATTRIBUTE_SENTRY_MEASUREMENT_UNIT] ;
+    const value = attributes[SEMANTIC_ATTRIBUTE_SENTRY_MEASUREMENT_VALUE] ;
 
-    if (typeof unit === "string" && typeof value === "number") {
+    if (typeof unit === 'string' && typeof value === 'number') {
       measurements[event.name] = { value, unit };
     }
   });
@@ -4839,7 +4671,8 @@ const MAX_SPAN_COUNT = 1000;
 /**
  * Span contains all data about a span
  */
-class SentrySpan {
+class SentrySpan  {
+
   /** Epoch timestamp in seconds when the span started. */
 
   /** Epoch timestamp in seconds when the span ended. */
@@ -4857,14 +4690,14 @@ class SentrySpan {
    * @hideconstructor
    * @hidden
    */
-  constructor(spanContext = {}) {
+   constructor(spanContext = {}) {
     this._traceId = spanContext.traceId || generateTraceId();
     this._spanId = spanContext.spanId || generateSpanId();
     this._startTime = spanContext.startTimestamp || timestampInSeconds();
 
     this._attributes = {};
     this.setAttributes({
-      [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: "manual",
+      [SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN]: 'manual',
       [SEMANTIC_ATTRIBUTE_SENTRY_OP]: spanContext.op,
       ...spanContext.attributes,
     });
@@ -4875,7 +4708,7 @@ class SentrySpan {
       this._parentSpanId = spanContext.parentSpanId;
     }
     // We want to include booleans as well here
-    if ("sampled" in spanContext) {
+    if ('sampled' in spanContext) {
       this._sampled = spanContext.sampled;
     }
     if (spanContext.endTimestamp) {
@@ -4899,7 +4732,7 @@ class SentrySpan {
    * @hidden
    * @internal
    */
-  addLink(_link) {
+   addLink(_link) {
     return this;
   }
 
@@ -4910,7 +4743,7 @@ class SentrySpan {
    * @hidden
    * @internal
    */
-  addLinks(_links) {
+   addLinks(_links) {
     return this;
   }
 
@@ -4921,12 +4754,12 @@ class SentrySpan {
    * @hidden
    * @internal
    */
-  recordException(_exception, _time) {
+   recordException(_exception, _time) {
     // noop
   }
 
   /** @inheritdoc */
-  spanContext() {
+   spanContext() {
     const { _spanId: spanId, _traceId: traceId, _sampled: sampled } = this;
     return {
       spanId,
@@ -4936,7 +4769,7 @@ class SentrySpan {
   }
 
   /** @inheritdoc */
-  setAttribute(key, value) {
+   setAttribute(key, value) {
     if (value === undefined) {
       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete this._attributes[key];
@@ -4948,10 +4781,8 @@ class SentrySpan {
   }
 
   /** @inheritdoc */
-  setAttributes(attributes) {
-    Object.keys(attributes).forEach((key) =>
-      this.setAttribute(key, attributes[key])
-    );
+   setAttributes(attributes) {
+    Object.keys(attributes).forEach(key => this.setAttribute(key, attributes[key]));
     return this;
   }
 
@@ -4963,14 +4794,14 @@ class SentrySpan {
    * @hidden
    * @internal
    */
-  updateStartTime(timeInput) {
+   updateStartTime(timeInput) {
     this._startTime = spanTimeInputToSeconds(timeInput);
   }
 
   /**
    * @inheritDoc
    */
-  setStatus(value) {
+   setStatus(value) {
     this._status = value;
     return this;
   }
@@ -4978,14 +4809,14 @@ class SentrySpan {
   /**
    * @inheritDoc
    */
-  updateName(name) {
+   updateName(name) {
     this._name = name;
-    this.setAttribute(SEMANTIC_ATTRIBUTE_SENTRY_SOURCE, "custom");
+    this.setAttribute(SEMANTIC_ATTRIBUTE_SENTRY_SOURCE, 'custom');
     return this;
   }
 
   /** @inheritdoc */
-  end(endTimestamp) {
+   end(endTimestamp) {
     // If already ended, skip
     if (this._endTime) {
       return;
@@ -5005,7 +4836,7 @@ class SentrySpan {
    * of SDK code. If you need to get a JSON representation of a span,
    * use `spanToJSON(span)` instead.
    */
-  getSpanJSON() {
+   getSpanJSON() {
     return dropUndefinedKeys({
       data: this._attributes,
       description: this._name,
@@ -5016,40 +4847,33 @@ class SentrySpan {
       status: getStatusMessage(this._status),
       timestamp: this._endTime,
       trace_id: this._traceId,
-      origin: this._attributes[SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN],
+      origin: this._attributes[SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN] ,
       _metrics_summary: getMetricSummaryJsonForSpan(this),
-      profile_id: this._attributes[SEMANTIC_ATTRIBUTE_PROFILE_ID],
-      exclusive_time: this._attributes[SEMANTIC_ATTRIBUTE_EXCLUSIVE_TIME],
+      profile_id: this._attributes[SEMANTIC_ATTRIBUTE_PROFILE_ID] ,
+      exclusive_time: this._attributes[SEMANTIC_ATTRIBUTE_EXCLUSIVE_TIME] ,
       measurements: timedEventsToMeasurements(this._events),
-      is_segment: (this._isStandaloneSpan && getRootSpan(this) === this) ||
-        undefined,
-      segment_id: this._isStandaloneSpan
-        ? getRootSpan(this).spanContext().spanId
-        : undefined,
+      is_segment: (this._isStandaloneSpan && getRootSpan(this) === this) || undefined,
+      segment_id: this._isStandaloneSpan ? getRootSpan(this).spanContext().spanId : undefined,
     });
   }
 
   /** @inheritdoc */
-  isRecording() {
+   isRecording() {
     return !this._endTime && !!this._sampled;
   }
 
   /**
    * @inheritdoc
    */
-  addEvent(
+   addEvent(
     name,
     attributesOrStartTime,
     startTime,
   ) {
-    DEBUG_BUILD$1 && logger.log("[Tracing] Adding an event to span:", name);
+    DEBUG_BUILD$1 && logger.log('[Tracing] Adding an event to span:', name);
 
-    const time = isSpanTimeInput(attributesOrStartTime)
-      ? attributesOrStartTime
-      : startTime || timestampInSeconds();
-    const attributes = isSpanTimeInput(attributesOrStartTime)
-      ? {}
-      : attributesOrStartTime || {};
+    const time = isSpanTimeInput(attributesOrStartTime) ? attributesOrStartTime : startTime || timestampInSeconds();
+    const attributes = isSpanTimeInput(attributesOrStartTime) ? {} : attributesOrStartTime || {};
 
     const event = {
       name,
@@ -5070,15 +4894,15 @@ class SentrySpan {
    * @hidden
    * @experimental
    */
-  isStandaloneSpan() {
+   isStandaloneSpan() {
     return !!this._isStandaloneSpan;
   }
 
   /** Emit `spanEnd` when the span is ended. */
-  _onSpanEnded() {
+   _onSpanEnded() {
     const client = getClient();
     if (client) {
-      client.emit("spanEnd", this);
+      client.emit('spanEnd', this);
     }
 
     // A segment span is basically the root span of a local span tree.
@@ -5096,11 +4920,9 @@ class SentrySpan {
         sendSpanEnvelope(createSpanEnvelope([this], client));
       } else {
         DEBUG_BUILD$1 &&
-          logger.log(
-            "[Tracing] Discarding standalone span because its trace was not chosen to be sampled.",
-          );
+          logger.log('[Tracing] Discarding standalone span because its trace was not chosen to be sampled.');
         if (client) {
-          client.recordDroppedEvent("sample_rate", "span");
+          client.recordDroppedEvent('sample_rate', 'span');
         }
       }
       return;
@@ -5116,56 +4938,43 @@ class SentrySpan {
   /**
    * Finish the transaction & prepare the event to send to Sentry.
    */
-  _convertSpanToTransaction() {
+   _convertSpanToTransaction() {
     // We can only convert finished spans
     if (!isFullFinishedSpan(spanToJSON(this))) {
       return undefined;
     }
 
     if (!this._name) {
-      DEBUG_BUILD$1 &&
-        logger.warn(
-          "Transaction has no name, falling back to `<unlabeled transaction>`.",
-        );
-      this._name = "<unlabeled transaction>";
+      DEBUG_BUILD$1 && logger.warn('Transaction has no name, falling back to `<unlabeled transaction>`.');
+      this._name = '<unlabeled transaction>';
     }
 
-    const {
-      scope: capturedSpanScope,
-      isolationScope: capturedSpanIsolationScope,
-    } = getCapturedScopesOnSpan(this);
+    const { scope: capturedSpanScope, isolationScope: capturedSpanIsolationScope } = getCapturedScopesOnSpan(this);
     const scope = capturedSpanScope || getCurrentScope();
     const client = scope.getClient() || getClient();
 
     if (this._sampled !== true) {
       // At this point if `sampled !== true` we want to discard the transaction.
-      DEBUG_BUILD$1 &&
-        logger.log(
-          "[Tracing] Discarding transaction because its trace was not chosen to be sampled.",
-        );
+      DEBUG_BUILD$1 && logger.log('[Tracing] Discarding transaction because its trace was not chosen to be sampled.');
 
       if (client) {
-        client.recordDroppedEvent("sample_rate", "transaction");
+        client.recordDroppedEvent('sample_rate', 'transaction');
       }
 
       return undefined;
     }
 
     // The transaction span itself as well as any potential standalone spans should be filtered out
-    const finishedSpans = getSpanDescendants(this).filter((span) =>
-      span !== this && !isStandaloneSpan(span)
-    );
+    const finishedSpans = getSpanDescendants(this).filter(span => span !== this && !isStandaloneSpan(span));
 
-    const spans = finishedSpans.map((span) => spanToJSON(span)).filter(
-      isFullFinishedSpan,
-    );
+    const spans = finishedSpans.map(span => spanToJSON(span)).filter(isFullFinishedSpan);
 
-    const source = this._attributes[SEMANTIC_ATTRIBUTE_SENTRY_SOURCE];
+    const source = this._attributes[SEMANTIC_ATTRIBUTE_SENTRY_SOURCE] ;
 
     // remove internal root span attributes we don't need to send.
     /* eslint-disable @typescript-eslint/no-dynamic-delete */
     delete this._attributes[SEMANTIC_ATTRIBUTE_SENTRY_CUSTOM_SPAN_NAME];
-    spans.forEach((span) => {
+    spans.forEach(span => {
       span.data && delete span.data[SEMANTIC_ATTRIBUTE_SENTRY_CUSTOM_SPAN_NAME];
     });
     // eslint-enabled-next-line @typescript-eslint/no-dynamic-delete
@@ -5178,15 +4987,12 @@ class SentrySpan {
         // spans.sort() mutates the array, but `spans` is already a copy so we can safely do this here
         // we do not use spans anymore after this point
         spans.length > MAX_SPAN_COUNT
-          ? spans.sort((a, b) => a.start_timestamp - b.start_timestamp).slice(
-            0,
-            MAX_SPAN_COUNT,
-          )
+          ? spans.sort((a, b) => a.start_timestamp - b.start_timestamp).slice(0, MAX_SPAN_COUNT)
           : spans,
       start_timestamp: this._startTime,
       timestamp: this._endTime,
       transaction: this._name,
-      type: "transaction",
+      type: 'transaction',
       sdkProcessingMetadata: {
         capturedSpanScope,
         capturedSpanIsolationScope,
@@ -5208,7 +5014,7 @@ class SentrySpan {
     if (hasMeasurements) {
       DEBUG_BUILD$1 &&
         logger.log(
-          "[Measurements] Adding measurements to transaction event",
+          '[Measurements] Adding measurements to transaction event',
           JSON.stringify(measurements, undefined, 2),
         );
       transaction.measurements = measurements;
@@ -5219,14 +5025,12 @@ class SentrySpan {
 }
 
 function isSpanTimeInput(value) {
-  return (value && typeof value === "number") || value instanceof Date ||
-    Array.isArray(value);
+  return (value && typeof value === 'number') || value instanceof Date || Array.isArray(value);
 }
 
 // We want to filter out any incomplete SpanJSON objects
 function isFullFinishedSpan(input) {
-  return !!input.start_timestamp && !!input.timestamp && !!input.span_id &&
-    !!input.trace_id;
+  return !!input.start_timestamp && !!input.timestamp && !!input.span_id && !!input.trace_id;
 }
 
 /** `SentrySpan`s can be sent as a standalone span rather than belonging to a transaction */
@@ -5248,7 +5052,7 @@ function sendSpanEnvelope(envelope) {
 
   const spanItems = envelope[1];
   if (!spanItems || spanItems.length === 0) {
-    client.recordDroppedEvent("before_send", "span");
+    client.recordDroppedEvent('before_send', 'span');
     return;
   }
 
@@ -5257,7 +5061,7 @@ function sendSpanEnvelope(envelope) {
   client.sendEnvelope(envelope);
 }
 
-const SUPPRESS_TRACING_KEY = "__SENTRY_SUPPRESS_TRACING__";
+const SUPPRESS_TRACING_KEY = '__SENTRY_SUPPRESS_TRACING__';
 
 /**
  * Wraps a function with a transaction/span and finishes the span after the function is done.
@@ -5290,11 +5094,11 @@ function startSpan(options, callback) {
       const activeSpan = shouldSkipSpan
         ? new SentryNonRecordingSpan()
         : createChildOrRootSpan({
-          parentSpan,
-          spanArguments,
-          forceTransaction,
-          scope,
-        });
+            parentSpan,
+            spanArguments,
+            forceTransaction,
+            scope,
+          });
 
       _setSpanForScope(scope, activeSpan);
 
@@ -5303,11 +5107,8 @@ function startSpan(options, callback) {
         () => {
           // Only update the span status if it hasn't been changed yet, and the span is not yet finished
           const { status } = spanToJSON(activeSpan);
-          if (activeSpan.isRecording() && (!status || status === "ok")) {
-            activeSpan.setStatus({
-              code: SPAN_STATUS_ERROR,
-              message: "internal_error",
-            });
+          if (activeSpan.isRecording() && (!status || status === 'ok')) {
+            activeSpan.setStatus({ code: SPAN_STATUS_ERROR, message: 'internal_error' });
           }
         },
         () => activeSpan.end(),
@@ -5347,11 +5148,11 @@ function startSpanManual(options, callback) {
       const activeSpan = shouldSkipSpan
         ? new SentryNonRecordingSpan()
         : createChildOrRootSpan({
-          parentSpan,
-          spanArguments,
-          forceTransaction,
-          scope,
-        });
+            parentSpan,
+            spanArguments,
+            forceTransaction,
+            scope,
+          });
 
       _setSpanForScope(scope, activeSpan);
 
@@ -5364,11 +5165,8 @@ function startSpanManual(options, callback) {
         () => {
           // Only update the span status if it hasn't been changed yet, and the span is not yet finished
           const { status } = spanToJSON(activeSpan);
-          if (activeSpan.isRecording() && (!status || status === "ok")) {
-            activeSpan.setStatus({
-              code: SPAN_STATUS_ERROR,
-              message: "internal_error",
-            });
+          if (activeSpan.isRecording() && (!status || status === 'ok')) {
+            activeSpan.setStatus({ code: SPAN_STATUS_ERROR, message: 'internal_error' });
           }
         },
       );
@@ -5399,8 +5197,8 @@ function startInactiveSpan(options) {
   const wrapper = options.scope
     ? (callback) => withScope(options.scope, callback)
     : customParentSpan !== undefined
-    ? (callback) => withActiveSpan(customParentSpan, callback)
-    : (callback) => callback();
+      ? (callback) => withActiveSpan(customParentSpan, callback)
+      : (callback) => callback();
 
   return wrapper(() => {
     const scope = getCurrentScope();
@@ -5430,7 +5228,9 @@ function startInactiveSpan(options) {
  * be attached to the incoming trace.
  */
 const continueTrace = (
-  options,
+  options
+
+,
   callback,
 ) => {
   const carrier = getMainCarrier();
@@ -5441,11 +5241,8 @@ const continueTrace = (
 
   const { sentryTrace, baggage } = options;
 
-  return withScope((scope) => {
-    const propagationContext = propagationContextFromHeaders(
-      sentryTrace,
-      baggage,
-    );
+  return withScope(scope => {
+    const propagationContext = propagationContextFromHeaders(sentryTrace, baggage);
     scope.setPropagationContext(propagationContext);
     return callback();
   });
@@ -5466,7 +5263,7 @@ function withActiveSpan(span, callback) {
     return acs.withActiveSpan(span, callback);
   }
 
-  return withScope((scope) => {
+  return withScope(scope => {
     _setSpanForScope(scope, span || undefined);
     return callback(scope);
   });
@@ -5480,7 +5277,7 @@ function suppressTracing(callback) {
     return acs.suppressTracing(callback);
   }
 
-  return withScope((scope) => {
+  return withScope(scope => {
     scope.setSDKProcessingMetadata({ [SUPPRESS_TRACING_KEY]: true });
     return callback();
   });
@@ -5503,12 +5300,9 @@ function suppressTracing(callback) {
  *            or page will automatically create a new trace.
  */
 function startNewTrace(callback) {
-  return withScope((scope) => {
+  return withScope(scope => {
     scope.setPropagationContext({ traceId: generateTraceId() });
-    DEBUG_BUILD$1 &&
-      logger.info(
-        `Starting a new trace with id ${scope.getPropagationContext().traceId}`,
-      );
+    DEBUG_BUILD$1 && logger.info(`Starting a new trace with id ${scope.getPropagationContext().traceId}`);
     return withActiveSpan(null, callback);
   });
 }
@@ -5518,7 +5312,9 @@ function createChildOrRootSpan({
   spanArguments,
   forceTransaction,
   scope,
-}) {
+}
+
+) {
   if (!hasTracingEnabled()) {
     return new SentryNonRecordingSpan();
   }
@@ -5610,11 +5406,10 @@ function _startRootSpan(spanArguments, scope, parentSampled) {
   const client = getClient();
   const options = (client && client.getOptions()) || {};
 
-  const { name = "", attributes } = spanArguments;
-  const [sampled, sampleRate] =
-    scope.getScopeData().sdkProcessingMetadata[SUPPRESS_TRACING_KEY]
-      ? [false]
-      : sampleSpan(options, {
+  const { name = '', attributes } = spanArguments;
+  const [sampled, sampleRate] = scope.getScopeData().sdkProcessingMetadata[SUPPRESS_TRACING_KEY]
+    ? [false]
+    : sampleSpan(options, {
         name,
         parentSampled,
         attributes,
@@ -5627,7 +5422,7 @@ function _startRootSpan(spanArguments, scope, parentSampled) {
   const rootSpan = new SentrySpan({
     ...spanArguments,
     attributes: {
-      [SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: "custom",
+      [SEMANTIC_ATTRIBUTE_SENTRY_SOURCE]: 'custom',
       ...spanArguments.attributes,
     },
     sampled,
@@ -5637,7 +5432,7 @@ function _startRootSpan(spanArguments, scope, parentSampled) {
   }
 
   if (client) {
-    client.emit("spanStart", rootSpan);
+    client.emit('spanStart', rootSpan);
   }
 
   return rootSpan;
@@ -5649,28 +5444,25 @@ function _startRootSpan(spanArguments, scope, parentSampled) {
  */
 function _startChildSpan(parentSpan, scope, spanArguments) {
   const { spanId, traceId } = parentSpan.spanContext();
-  const sampled =
-    scope.getScopeData().sdkProcessingMetadata[SUPPRESS_TRACING_KEY]
-      ? false
-      : spanIsSampled(parentSpan);
+  const sampled = scope.getScopeData().sdkProcessingMetadata[SUPPRESS_TRACING_KEY] ? false : spanIsSampled(parentSpan);
 
   const childSpan = sampled
     ? new SentrySpan({
-      ...spanArguments,
-      parentSpanId: spanId,
-      traceId,
-      sampled,
-    })
+        ...spanArguments,
+        parentSpanId: spanId,
+        traceId,
+        sampled,
+      })
     : new SentryNonRecordingSpan({ traceId });
 
   addChildSpanToSpan(parentSpan, childSpan);
 
   const client = getClient();
   if (client) {
-    client.emit("spanStart", childSpan);
+    client.emit('spanStart', childSpan);
     // If it has an endTimestamp, it's already ended
     if (spanArguments.endTimestamp) {
-      client.emit("spanEnd", childSpan);
+      client.emit('spanEnd', childSpan);
     }
   }
 
@@ -5678,7 +5470,7 @@ function _startChildSpan(parentSpan, scope, spanArguments) {
 }
 
 function getParentSpan(scope) {
-  const span = _getSpanForScope(scope);
+  const span = _getSpanForScope(scope) ;
 
   if (!span) {
     return undefined;
@@ -5687,7 +5479,7 @@ function getParentSpan(scope) {
   const client = getClient();
   const options = client ? client.getOptions() : {};
   if (options.parentSpanIsAlwaysRootSpan) {
-    return getRootSpan(span);
+    return getRootSpan(span) ;
   }
 
   return span;
@@ -5696,8 +5488,8 @@ function getParentSpan(scope) {
 function getActiveSpanWrapper(parentSpan) {
   return parentSpan !== undefined
     ? (callback) => {
-      return withActiveSpan(parentSpan, callback);
-    }
+        return withActiveSpan(parentSpan, callback);
+      }
     : (callback) => callback();
 }
 
@@ -5712,21 +5504,16 @@ function notifyEventProcessors(
 ) {
   return new SyncPromise((resolve, reject) => {
     const processor = processors[index];
-    if (event === null || typeof processor !== "function") {
+    if (event === null || typeof processor !== 'function') {
       resolve(event);
     } else {
-      const result = processor({ ...event }, hint);
+      const result = processor({ ...event }, hint) ;
 
-      DEBUG_BUILD$1 && processor.id && result === null &&
-        logger.log(`Event processor "${processor.id}" dropped event`);
+      DEBUG_BUILD$1 && processor.id && result === null && logger.log(`Event processor "${processor.id}" dropped event`);
 
       if (isThenable(result)) {
         void result
-          .then((final) =>
-            notifyEventProcessors(processors, final, hint, index + 1).then(
-              resolve,
-            )
-          )
+          .then(final => notifyEventProcessors(processors, final, hint, index + 1).then(resolve))
           .then(null, reject);
       } else {
         void notifyEventProcessors(processors, result, hint, index + 1)
@@ -5831,16 +5618,12 @@ function mergeScopeData(data, mergeData) {
     span,
   } = mergeData;
 
-  mergeAndOverwriteScopeData(data, "extra", extra);
-  mergeAndOverwriteScopeData(data, "tags", tags);
-  mergeAndOverwriteScopeData(data, "user", user);
-  mergeAndOverwriteScopeData(data, "contexts", contexts);
+  mergeAndOverwriteScopeData(data, 'extra', extra);
+  mergeAndOverwriteScopeData(data, 'tags', tags);
+  mergeAndOverwriteScopeData(data, 'user', user);
+  mergeAndOverwriteScopeData(data, 'contexts', contexts);
 
-  data.sdkProcessingMetadata = merge(
-    data.sdkProcessingMetadata,
-    sdkProcessingMetadata,
-    2,
-  );
+  data.sdkProcessingMetadata = merge(data.sdkProcessingMetadata, sdkProcessingMetadata, 2);
 
   if (level) {
     data.level = level;
@@ -5870,17 +5653,16 @@ function mergeScopeData(data, mergeData) {
     data.attachments = [...data.attachments, ...attachments];
   }
 
-  data.propagationContext = {
-    ...data.propagationContext,
-    ...propagationContext,
-  };
+  data.propagationContext = { ...data.propagationContext, ...propagationContext };
 }
 
 /**
  * Merges certain scope data. Undefined values will overwrite any existing values.
  * Exported only for tests.
  */
-function mergeAndOverwriteScopeData(data, prop, mergeVal) {
+function mergeAndOverwriteScopeData
+
+(data, prop, mergeVal) {
   data[prop] = merge(data[prop], mergeVal, 1);
 }
 
@@ -5912,7 +5694,7 @@ function applyDataToEvent(event, data) {
   }
 
   // transaction events get their `transaction` from the root span name
-  if (transactionName && event.type !== "transaction") {
+  if (transactionName && event.type !== 'transaction') {
     event.transaction = transactionName;
   }
 }
@@ -5942,7 +5724,7 @@ function applySpanToEvent(event, span) {
 
   const rootSpan = getRootSpan(span);
   const transactionName = spanToJSON(rootSpan).description;
-  if (transactionName && !event.transaction && event.type === "transaction") {
+  if (transactionName && !event.transaction && event.type === 'transaction') {
     event.transaction = transactionName;
   }
 }
@@ -5954,7 +5736,9 @@ function applySpanToEvent(event, span) {
 function applyFingerprintToEvent(event, fingerprint) {
   // Make sure it's an array first and we actually have something in place
   event.fingerprint = event.fingerprint
-    ? Array.isArray(event.fingerprint) ? event.fingerprint : [event.fingerprint]
+    ? Array.isArray(event.fingerprint)
+      ? event.fingerprint
+      : [event.fingerprint]
     : [];
 
   // If we have something on the scope, then merge it with event
@@ -6003,14 +5787,13 @@ function prepareEvent(
     event_id: event.event_id || hint.event_id || uuid4(),
     timestamp: event.timestamp || dateTimestampInSeconds(),
   };
-  const integrations = hint.integrations ||
-    options.integrations.map((i) => i.name);
+  const integrations = hint.integrations || options.integrations.map(i => i.name);
 
   applyClientOptions(prepared, options);
   applyIntegrationsMetadata(prepared, integrations);
 
   if (client) {
-    client.emit("applyFrameMetadata", event);
+    client.emit('applyFrameMetadata', event);
   }
 
   // Only put debug IDs onto frames for error events.
@@ -6058,7 +5841,7 @@ function prepareEvent(
 
   const result = notifyEventProcessors(eventProcessors, prepared, hint);
 
-  return result.then((evt) => {
+  return result.then(evt => {
     if (evt) {
       // We apply the debug_meta field only after all event processors have ran, so that if any event processors modified
       // file names (e.g.the RewriteFrames integration) the filename -> debug ID relationship isn't destroyed.
@@ -6067,7 +5850,7 @@ function prepareEvent(
       applyDebugMeta(evt);
     }
 
-    if (typeof normalizeDepth === "number" && normalizeDepth > 0) {
+    if (typeof normalizeDepth === 'number' && normalizeDepth > 0) {
       return normalizeEvent(evt, normalizeDepth, normalizeMaxBreadth);
     }
     return evt;
@@ -6102,8 +5885,7 @@ function applyClientOptions(event, options) {
     event.message = truncate(event.message, maxValueLength);
   }
 
-  const exception = event.exception && event.exception.values &&
-    event.exception.values[0];
+  const exception = event.exception && event.exception.values && event.exception.values[0];
   if (exception && exception.value) {
     exception.value = truncate(exception.value, maxValueLength);
   }
@@ -6123,9 +5905,9 @@ function applyDebugIds(event, stackParser) {
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    event.exception.values.forEach((exception) => {
+    event.exception.values.forEach(exception => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      exception.stacktrace.frames.forEach((frame) => {
+      exception.stacktrace.frames.forEach(frame => {
         if (filenameDebugIdMap && frame.filename) {
           frame.debug_id = filenameDebugIdMap[frame.filename];
         }
@@ -6144,9 +5926,9 @@ function applyDebugMeta(event) {
   const filenameDebugIdMap = {};
   try {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    event.exception.values.forEach((exception) => {
+    event.exception.values.forEach(exception => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      exception.stacktrace.frames.forEach((frame) => {
+      exception.stacktrace.frames.forEach(frame => {
         if (frame.debug_id) {
           if (frame.abs_path) {
             filenameDebugIdMap[frame.abs_path] = frame.debug_id;
@@ -6171,7 +5953,7 @@ function applyDebugMeta(event) {
   const images = event.debug_meta.images;
   Object.entries(filenameDebugIdMap).forEach(([filename, debug_id]) => {
     images.push({
-      type: "sourcemap",
+      type: 'sourcemap',
       code_file: filename,
       debug_id,
     });
@@ -6185,10 +5967,7 @@ function applyDebugMeta(event) {
 function applyIntegrationsMetadata(event, integrationNames) {
   if (integrationNames.length > 0) {
     event.sdk = event.sdk || {};
-    event.sdk.integrations = [
-      ...(event.sdk.integrations || []),
-      ...integrationNames,
-    ];
+    event.sdk.integrations = [...(event.sdk.integrations || []), ...integrationNames];
   }
 }
 
@@ -6210,7 +5989,7 @@ function normalizeEvent(event, depth, maxBreadth) {
   const normalized = {
     ...event,
     ...(event.breadcrumbs && {
-      breadcrumbs: event.breadcrumbs.map((b) => ({
+      breadcrumbs: event.breadcrumbs.map(b => ({
         ...b,
         ...(b.data && {
           data: normalize(b.data, depth, maxBreadth),
@@ -6240,17 +6019,13 @@ function normalizeEvent(event, depth, maxBreadth) {
 
     // event.contexts.trace.data may contain circular/dangerous data so we need to normalize it
     if (event.contexts.trace.data) {
-      normalized.contexts.trace.data = normalize(
-        event.contexts.trace.data,
-        depth,
-        maxBreadth,
-      );
+      normalized.contexts.trace.data = normalize(event.contexts.trace.data, depth, maxBreadth);
     }
   }
 
   // event.spans[].data may contain circular/dangerous data so we need to normalize it
   if (event.spans) {
-    normalized.spans = event.spans.map((span) => {
+    normalized.spans = event.spans.map(span => {
       return {
         ...span,
         ...(span.data && {
@@ -6312,22 +6087,22 @@ function parseEventHintOrCaptureContext(
 function hintIsScopeOrFunction(
   hint,
 ) {
-  return hint instanceof Scope || typeof hint === "function";
+  return hint instanceof Scope || typeof hint === 'function';
 }
 
 const captureContextKeys = [
-  "user",
-  "level",
-  "extra",
-  "contexts",
-  "tags",
-  "fingerprint",
-  "requestSession",
-  "propagationContext",
-];
+  'user',
+  'level',
+  'extra',
+  'contexts',
+  'tags',
+  'fingerprint',
+  'requestSession',
+  'propagationContext',
+] ;
 
 function hintIsScopeContext(hint) {
-  return Object.keys(hint).some((key) => captureContextKeys.includes(key));
+  return Object.keys(hint).some(key => captureContextKeys.includes(key ));
 }
 
 /**
@@ -6338,10 +6113,7 @@ function hintIsScopeContext(hint) {
  * @returns the id of the captured Sentry event.
  */
 function captureException(exception, hint) {
-  return getCurrentScope().captureException(
-    exception,
-    parseEventHintOrCaptureContext(hint),
-  );
+  return getCurrentScope().captureException(exception, parseEventHintOrCaptureContext(hint));
 }
 
 /**
@@ -6354,10 +6126,8 @@ function captureException(exception, hint) {
 function captureMessage(message, captureContext) {
   // This is necessary to provide explicit scopes upgrade, without changing the original
   // arity of the `captureMessage(message, level)` method.
-  const level = typeof captureContext === "string" ? captureContext : undefined;
-  const context = typeof captureContext !== "string"
-    ? { captureContext }
-    : undefined;
+  const level = typeof captureContext === 'string' ? captureContext : undefined;
+  const context = typeof captureContext !== 'string' ? { captureContext } : undefined;
   return getCurrentScope().captureMessage(message, level, context);
 }
 
@@ -6453,12 +6223,9 @@ function captureCheckIn(checkIn, upsertMonitorConfig) {
   const scope = getCurrentScope();
   const client = getClient();
   if (!client) {
-    DEBUG_BUILD$1 && logger.warn("Cannot capture check-in. No client defined.");
+    DEBUG_BUILD$1 && logger.warn('Cannot capture check-in. No client defined.');
   } else if (!client.captureCheckIn) {
-    DEBUG_BUILD$1 &&
-      logger.warn(
-        "Cannot capture check-in. Client does not support sending check-ins.",
-      );
+    DEBUG_BUILD$1 && logger.warn('Cannot capture check-in. Client does not support sending check-ins.');
   } else {
     return client.captureCheckIn(checkIn, upsertMonitorConfig, scope);
   }
@@ -6478,19 +6245,11 @@ function withMonitor(
   callback,
   upsertMonitorConfig,
 ) {
-  const checkInId = captureCheckIn(
-    { monitorSlug, status: "in_progress" },
-    upsertMonitorConfig,
-  );
+  const checkInId = captureCheckIn({ monitorSlug, status: 'in_progress' }, upsertMonitorConfig);
   const now = timestampInSeconds();
 
   function finishCheckIn(status) {
-    captureCheckIn({
-      monitorSlug,
-      status,
-      checkInId,
-      duration: timestampInSeconds() - now,
-    });
+    captureCheckIn({ monitorSlug, status, checkInId, duration: timestampInSeconds() - now });
   }
 
   return withIsolationScope(() => {
@@ -6498,22 +6257,22 @@ function withMonitor(
     try {
       maybePromiseResult = callback();
     } catch (e) {
-      finishCheckIn("error");
+      finishCheckIn('error');
       throw e;
     }
 
     if (isThenable(maybePromiseResult)) {
       Promise.resolve(maybePromiseResult).then(
         () => {
-          finishCheckIn("ok");
+          finishCheckIn('ok');
         },
-        (e) => {
-          finishCheckIn("error");
+        e => {
+          finishCheckIn('error');
           throw e;
         },
       );
     } else {
-      finishCheckIn("ok");
+      finishCheckIn('ok');
     }
 
     return maybePromiseResult;
@@ -6533,7 +6292,7 @@ async function flush(timeout) {
   if (client) {
     return client.flush(timeout);
   }
-  DEBUG_BUILD$1 && logger.warn("Cannot flush events. No client defined.");
+  DEBUG_BUILD$1 && logger.warn('Cannot flush events. No client defined.');
   return Promise.resolve(false);
 }
 
@@ -6550,8 +6309,7 @@ async function close(timeout) {
   if (client) {
     return client.close(timeout);
   }
-  DEBUG_BUILD$1 &&
-    logger.warn("Cannot flush events and disable SDK. No client defined.");
+  DEBUG_BUILD$1 && logger.warn('Cannot flush events and disable SDK. No client defined.');
   return Promise.resolve(false);
 }
 
@@ -6565,8 +6323,7 @@ function isInitialized() {
 /** If the SDK is initialized & enabled. */
 function isEnabled() {
   const client = getClient();
-  return !!client && client.getOptions().enabled !== false &&
-    !!client.getTransport();
+  return !!client && client.getOptions().enabled !== false && !!client.getTransport();
 }
 
 /**
@@ -6590,8 +6347,7 @@ function startSession(context) {
   const isolationScope = getIsolationScope();
   const currentScope = getCurrentScope();
 
-  const { release, environment = DEFAULT_ENVIRONMENT } =
-    (client && client.getOptions()) || {};
+  const { release, environment = DEFAULT_ENVIRONMENT } = (client && client.getOptions()) || {};
 
   // Will fetch userAgent if called from browser sdk
   const { userAgent } = GLOBAL_OBJ.navigator || {};
@@ -6606,8 +6362,8 @@ function startSession(context) {
 
   // End existing session if there's one
   const currentSession = isolationScope.getSession();
-  if (currentSession && currentSession.status === "ok") {
-    updateSession(currentSession, { status: "exited" });
+  if (currentSession && currentSession.status === 'ok') {
+    updateSession(currentSession, { status: 'exited' });
   }
 
   endSession();
@@ -6680,20 +6436,18 @@ function captureSession(end = false) {
  */
 // TODO(v9): The goal for the SessionFlusher is to become a stupidly simple mechanism to aggregate "Sessions" (actually "RequestSessions"). It should probably live directly inside the Http integration/instrumentation.
 // eslint-disable-next-line deprecation/deprecation
-class SessionFlusher {
+class SessionFlusher  {
+
   // We adjust the type here to add the `unref()` part, as setInterval can technically return a number or a NodeJS.Timer
 
-  constructor(client, attrs) {
+   constructor(client, attrs) {
     this._client = client;
     this.flushTimeout = 60;
     this._pendingAggregates = new Map();
     this._isEnabled = true;
 
     // Call to setInterval, so that flush is called every 60 seconds.
-    this._intervalId = setInterval(
-      () => this.flush(),
-      this.flushTimeout * 1000,
-    );
+    this._intervalId = setInterval(() => this.flush(), this.flushTimeout * 1000);
     if (this._intervalId.unref) {
       this._intervalId.unref();
     }
@@ -6701,7 +6455,7 @@ class SessionFlusher {
   }
 
   /** Checks if `pendingAggregates` has entries, and if it does flushes them by calling `sendSession` */
-  flush() {
+   flush() {
     const sessionAggregates = this.getSessionAggregates();
     if (sessionAggregates.aggregates.length === 0) {
       return;
@@ -6711,7 +6465,7 @@ class SessionFlusher {
   }
 
   /** Massages the entries in `pendingAggregates` and returns aggregated sessions */
-  getSessionAggregates() {
+   getSessionAggregates() {
     const aggregates = Array.from(this._pendingAggregates.values());
 
     const sessionAggregates = {
@@ -6722,7 +6476,7 @@ class SessionFlusher {
   }
 
   /** JSDoc */
-  close() {
+   close() {
     clearInterval(this._intervalId);
     this._isEnabled = false;
     this.flush();
@@ -6733,7 +6487,7 @@ class SessionFlusher {
    * fetches the session status of the request from `Scope.getRequestSession().status` on the scope and passes them to
    * `_incrementSessionStatusCount` along with the start date
    */
-  incrementSessionStatusCount() {
+   incrementSessionStatusCount() {
     if (!this._isEnabled) {
       return;
     }
@@ -6756,7 +6510,7 @@ class SessionFlusher {
    * the session received
    */
   // eslint-disable-next-line deprecation/deprecation
-  _incrementSessionStatusCount(status, date) {
+   _incrementSessionStatusCount(status, date) {
     // Truncate minutes and seconds on Session Started attribute to have one minute bucket keys
     const sessionStartedTrunc = new Date(date).setSeconds(0, 0);
 
@@ -6764,17 +6518,15 @@ class SessionFlusher {
     // for example, {"started":"2021-03-16T08:00:00.000Z","exited":4, "errored": 1}
     let aggregationCounts = this._pendingAggregates.get(sessionStartedTrunc);
     if (!aggregationCounts) {
-      aggregationCounts = {
-        started: new Date(sessionStartedTrunc).toISOString(),
-      };
+      aggregationCounts = { started: new Date(sessionStartedTrunc).toISOString() };
       this._pendingAggregates.set(sessionStartedTrunc, aggregationCounts);
     }
 
     switch (status) {
-      case "errored":
+      case 'errored':
         aggregationCounts.errored = (aggregationCounts.errored || 0) + 1;
         return aggregationCounts.errored;
-      case "ok":
+      case 'ok':
         aggregationCounts.exited = (aggregationCounts.exited || 0) + 1;
         return aggregationCounts.exited;
       default:
@@ -6784,15 +6536,13 @@ class SessionFlusher {
   }
 }
 
-const SENTRY_API_VERSION = "7";
+const SENTRY_API_VERSION = '7';
 
 /** Returns the prefix to construct Sentry ingestion API endpoints. */
 function getBaseApiEndpoint(dsn) {
-  const protocol = dsn.protocol ? `${dsn.protocol}:` : "";
-  const port = dsn.port ? `:${dsn.port}` : "";
-  return `${protocol}//${dsn.host}${port}${
-    dsn.path ? `/${dsn.path}` : ""
-  }/api/`;
+  const protocol = dsn.protocol ? `${dsn.protocol}:` : '';
+  const port = dsn.port ? `:${dsn.port}` : '';
+  return `${protocol}//${dsn.host}${port}${dsn.path ? `/${dsn.path}` : ''}/api/`;
 }
 
 /** Returns the ingest API endpoint for target. */
@@ -6825,9 +6575,7 @@ function _encodedAuth(dsn, sdkInfo) {
  * Sending auth as part of the query string and not as custom HTTP headers avoids CORS preflight requests.
  */
 function getEnvelopeEndpointWithUrlEncodedAuth(dsn, tunnel, sdkInfo) {
-  return tunnel
-    ? tunnel
-    : `${_getIngestEndpoint(dsn)}?${_encodedAuth(dsn, sdkInfo)}`;
+  return tunnel ? tunnel : `${_getIngestEndpoint(dsn)}?${_encodedAuth(dsn, sdkInfo)}`;
 }
 
 const installedIntegrations = [];
@@ -6850,10 +6598,7 @@ function filterDuplicates(integrations) {
 
     // We want integrations later in the array to overwrite earlier ones of the same type, except that we never want a
     // default instance to overwrite an existing user instance
-    if (
-      existingInstance && !existingInstance.isDefaultInstance &&
-      currentInstance.isDefaultInstance
-    ) {
+    if (existingInstance && !existingInstance.isDefaultInstance && currentInstance.isDefaultInstance) {
       return;
     }
 
@@ -6877,11 +6622,9 @@ function getIntegrationsToSetup(options) {
 
   if (Array.isArray(userIntegrations)) {
     integrations = [...defaultIntegrations, ...userIntegrations];
-  } else if (typeof userIntegrations === "function") {
+  } else if (typeof userIntegrations === 'function') {
     const resolvedUserIntegrations = userIntegrations(defaultIntegrations);
-    integrations = Array.isArray(resolvedUserIntegrations)
-      ? resolvedUserIntegrations
-      : [resolvedUserIntegrations];
+    integrations = Array.isArray(resolvedUserIntegrations) ? resolvedUserIntegrations : [resolvedUserIntegrations];
   } else {
     integrations = defaultIntegrations;
   }
@@ -6892,11 +6635,9 @@ function getIntegrationsToSetup(options) {
   // `beforeSendTransaction`. It therefore has to run after all other integrations, so that the changes of all event
   // processors will be reflected in the printed values. For lack of a more elegant way to guarantee that, we therefore
   // locate it and, assuming it exists, pop it out of its current spot and shove it onto the end of the array.
-  const debugIndex = finalIntegrations.findIndex((integration) =>
-    integration.name === "Debug"
-  );
+  const debugIndex = finalIntegrations.findIndex(integration => integration.name === 'Debug');
   if (debugIndex > -1) {
-    const [debugInstance] = finalIntegrations.splice(debugIndex, 1);
+    const [debugInstance] = finalIntegrations.splice(debugIndex, 1) ;
     finalIntegrations.push(debugInstance);
   }
 
@@ -6912,7 +6653,7 @@ function getIntegrationsToSetup(options) {
 function setupIntegrations(client, integrations) {
   const integrationIndex = {};
 
-  integrations.forEach((integration) => {
+  integrations.forEach(integration => {
     // guard against empty provided integrations
     if (integration) {
       setupIntegration(client, integration, integrationIndex);
@@ -6937,45 +6678,33 @@ function afterSetupIntegrations(client, integrations) {
 /** Setup a single integration.  */
 function setupIntegration(client, integration, integrationIndex) {
   if (integrationIndex[integration.name]) {
-    DEBUG_BUILD$1 &&
-      logger.log(
-        `Integration skipped because it was already installed: ${integration.name}`,
-      );
+    DEBUG_BUILD$1 && logger.log(`Integration skipped because it was already installed: ${integration.name}`);
     return;
   }
   integrationIndex[integration.name] = integration;
 
   // `setupOnce` is only called the first time
-  if (
-    installedIntegrations.indexOf(integration.name) === -1 &&
-    typeof integration.setupOnce === "function"
-  ) {
+  if (installedIntegrations.indexOf(integration.name) === -1 && typeof integration.setupOnce === 'function') {
     integration.setupOnce();
     installedIntegrations.push(integration.name);
   }
 
   // `setup` is run for each client
-  if (integration.setup && typeof integration.setup === "function") {
+  if (integration.setup && typeof integration.setup === 'function') {
     integration.setup(client);
   }
 
-  if (typeof integration.preprocessEvent === "function") {
-    const callback = integration.preprocessEvent.bind(integration);
-    client.on(
-      "preprocessEvent",
-      (event, hint) => callback(event, hint, client),
-    );
+  if (typeof integration.preprocessEvent === 'function') {
+    const callback = integration.preprocessEvent.bind(integration) ;
+    client.on('preprocessEvent', (event, hint) => callback(event, hint, client));
   }
 
-  if (typeof integration.processEvent === "function") {
-    const callback = integration.processEvent.bind(integration);
+  if (typeof integration.processEvent === 'function') {
+    const callback = integration.processEvent.bind(integration) ;
 
-    const processor = Object.assign(
-      (event, hint) => callback(event, hint, client),
-      {
-        id: integration.name,
-      },
-    );
+    const processor = Object.assign((event, hint) => callback(event, hint, client), {
+      id: integration.name,
+    });
 
     client.addEventProcessor(processor);
   }
@@ -7002,7 +6731,7 @@ function createClientReportEnvelope(
   timestamp,
 ) {
   const clientReportItem = [
-    { type: "client_report" },
+    { type: 'client_report' },
     {
       timestamp: dateTimestampInSeconds(),
       discarded_events,
@@ -7013,18 +6742,17 @@ function createClientReportEnvelope(
 
 /** An error emitted by Sentry SDKs and related utilities. */
 class SentryError extends Error {
-  constructor(
-    message,
-    logLevel = "warn",
+
+   constructor(
+     message,
+    logLevel = 'warn',
   ) {
-    super(message);
-    this.message = message;
+    super(message);this.message = message;
     this.logLevel = logLevel;
   }
 }
 
-const ALREADY_SEEN_ERROR =
-  "Not capturing exception because it's already been captured.";
+const ALREADY_SEEN_ERROR = "Not capturing exception because it's already been captured.";
 
 /**
  * Base implementation for all JavaScript SDK clients.
@@ -7075,7 +6803,7 @@ class BaseClient {
    *
    * @param options Options for the client.
    */
-  constructor(options) {
+   constructor(options) {
     this._options = options;
     this._integrations = {};
     this._numProcessing = 0;
@@ -7086,8 +6814,7 @@ class BaseClient {
     if (options.dsn) {
       this._dsn = makeDsn(options.dsn);
     } else {
-      DEBUG_BUILD$1 &&
-        logger.warn("No DSN provided, client will not send events.");
+      DEBUG_BUILD$1 && logger.warn('No DSN provided, client will not send events.');
     }
 
     if (this._dsn) {
@@ -7105,14 +6832,8 @@ class BaseClient {
     }
 
     // TODO(v9): Remove this deprecation warning
-    const tracingOptions = [
-      "enableTracing",
-      "tracesSampleRate",
-      "tracesSampler",
-    ];
-    const undefinedOption = tracingOptions.find((option) =>
-      option in options && options[option] == undefined
-    );
+    const tracingOptions = ['enableTracing', 'tracesSampleRate', 'tracesSampler'] ;
+    const undefinedOption = tracingOptions.find(option => option in options && options[option] == undefined);
     if (undefinedOption) {
       consoleSandbox(() => {
         // eslint-disable-next-line no-console
@@ -7126,7 +6847,7 @@ class BaseClient {
   /**
    * @inheritDoc
    */
-  captureException(exception, hint, scope) {
+   captureException(exception, hint, scope) {
     const eventId = uuid4();
 
     // ensure we haven't captured this very object before
@@ -7141,8 +6862,8 @@ class BaseClient {
     };
 
     this._process(
-      this.eventFromException(exception, hintWithEventId).then((event) =>
-        this._captureEvent(event, hintWithEventId, scope)
+      this.eventFromException(exception, hintWithEventId).then(event =>
+        this._captureEvent(event, hintWithEventId, scope),
       ),
     );
 
@@ -7152,7 +6873,7 @@ class BaseClient {
   /**
    * @inheritDoc
    */
-  captureMessage(
+   captureMessage(
     message,
     level,
     hint,
@@ -7163,19 +6884,13 @@ class BaseClient {
       ...hint,
     };
 
-    const eventMessage = isParameterizedString(message)
-      ? message
-      : String(message);
+    const eventMessage = isParameterizedString(message) ? message : String(message);
 
     const promisedEvent = isPrimitive(message)
       ? this.eventFromMessage(eventMessage, level, hintWithEventId)
       : this.eventFromException(message, hintWithEventId);
 
-    this._process(
-      promisedEvent.then((event) =>
-        this._captureEvent(event, hintWithEventId, currentScope)
-      ),
-    );
+    this._process(promisedEvent.then(event => this._captureEvent(event, hintWithEventId, currentScope)));
 
     return hintWithEventId.event_id;
   }
@@ -7183,14 +6898,11 @@ class BaseClient {
   /**
    * @inheritDoc
    */
-  captureEvent(event, hint, currentScope) {
+   captureEvent(event, hint, currentScope) {
     const eventId = uuid4();
 
     // ensure we haven't captured this very object before
-    if (
-      hint && hint.originalException &&
-      checkOrSetAlreadyCaught(hint.originalException)
-    ) {
+    if (hint && hint.originalException && checkOrSetAlreadyCaught(hint.originalException)) {
       DEBUG_BUILD$1 && logger.log(ALREADY_SEEN_ERROR);
       return eventId;
     }
@@ -7203,13 +6915,7 @@ class BaseClient {
     const sdkProcessingMetadata = event.sdkProcessingMetadata || {};
     const capturedSpanScope = sdkProcessingMetadata.capturedSpanScope;
 
-    this._process(
-      this._captureEvent(
-        event,
-        hintWithEventId,
-        capturedSpanScope || currentScope,
-      ),
-    );
+    this._process(this._captureEvent(event, hintWithEventId, capturedSpanScope || currentScope));
 
     return hintWithEventId.event_id;
   }
@@ -7217,12 +6923,9 @@ class BaseClient {
   /**
    * @inheritDoc
    */
-  captureSession(session) {
-    if (!(typeof session.release === "string")) {
-      DEBUG_BUILD$1 &&
-        logger.warn(
-          "Discarded session because of missing or non-string release",
-        );
+   captureSession(session) {
+    if (!(typeof session.release === 'string')) {
+      DEBUG_BUILD$1 && logger.warn('Discarded session because of missing or non-string release');
     } else {
       this.sendSession(session);
       // After sending, we set init false to indicate it's not the first occurrence
@@ -7233,14 +6936,14 @@ class BaseClient {
   /**
    * @inheritDoc
    */
-  getDsn() {
+   getDsn() {
     return this._dsn;
   }
 
   /**
    * @inheritDoc
    */
-  getOptions() {
+   getOptions() {
     return this._options;
   }
 
@@ -7249,28 +6952,26 @@ class BaseClient {
    *
    * @return The metadata of the SDK
    */
-  getSdkMetadata() {
+   getSdkMetadata() {
     return this._options._metadata;
   }
 
   /**
    * @inheritDoc
    */
-  getTransport() {
+   getTransport() {
     return this._transport;
   }
 
   /**
    * @inheritDoc
    */
-  flush(timeout) {
+   flush(timeout) {
     const transport = this._transport;
     if (transport) {
-      this.emit("flush");
-      return this._isClientDoneProcessing(timeout).then((clientFinished) => {
-        return transport.flush(timeout).then((transportFlushed) =>
-          clientFinished && transportFlushed
-        );
+      this.emit('flush');
+      return this._isClientDoneProcessing(timeout).then(clientFinished => {
+        return transport.flush(timeout).then(transportFlushed => clientFinished && transportFlushed);
       });
     } else {
       return resolvedSyncPromise(true);
@@ -7280,26 +6981,26 @@ class BaseClient {
   /**
    * @inheritDoc
    */
-  close(timeout) {
-    return this.flush(timeout).then((result) => {
+   close(timeout) {
+    return this.flush(timeout).then(result => {
       this.getOptions().enabled = false;
-      this.emit("close");
+      this.emit('close');
       return result;
     });
   }
 
   /** Get all installed event processors. */
-  getEventProcessors() {
+   getEventProcessors() {
     return this._eventProcessors;
   }
 
   /** @inheritDoc */
-  addEventProcessor(eventProcessor) {
+   addEventProcessor(eventProcessor) {
     this._eventProcessors.push(eventProcessor);
   }
 
   /** @inheritdoc */
-  init() {
+   init() {
     if (
       this._isEnabled() ||
       // Force integrations to be setup even if no DSN was set when we have
@@ -7307,9 +7008,7 @@ class BaseClient {
       // don't support the `spotlight` option there and rely on the users
       // adding the `spotlightBrowserIntegration()` to their integrations which
       // wouldn't get initialized with the check below when there's no DSN set.
-      this._options.integrations.some(({ name }) =>
-        name.startsWith("Spotlight")
-      )
+      this._options.integrations.some(({ name }) => name.startsWith('Spotlight'))
     ) {
       this._setupIntegrations();
     }
@@ -7320,14 +7019,14 @@ class BaseClient {
    *
    * @returns The installed integration or `undefined` if no integration with that `name` was installed.
    */
-  getIntegrationByName(integrationName) {
-    return this._integrations[integrationName];
+   getIntegrationByName(integrationName) {
+    return this._integrations[integrationName] ;
   }
 
   /**
    * @inheritDoc
    */
-  addIntegration(integration) {
+   addIntegration(integration) {
     const isAlreadyInstalled = this._integrations[integration.name];
 
     // This hook takes care of only installing if not already installed
@@ -7341,15 +7040,10 @@ class BaseClient {
   /**
    * @inheritDoc
    */
-  sendEvent(event, hint = {}) {
-    this.emit("beforeSendEvent", event, hint);
+   sendEvent(event, hint = {}) {
+    this.emit('beforeSendEvent', event, hint);
 
-    let env = createEventEnvelope(
-      event,
-      this._dsn,
-      this._options._metadata,
-      this._options.tunnel,
-    );
+    let env = createEventEnvelope(event, this._dsn, this._options._metadata, this._options.tunnel);
 
     for (const attachment of hint.attachments || []) {
       env = addItemToEnvelope(env, createAttachmentEnvelopeItem(attachment));
@@ -7357,23 +7051,15 @@ class BaseClient {
 
     const promise = this.sendEnvelope(env);
     if (promise) {
-      promise.then(
-        (sendResponse) => this.emit("afterSendEvent", event, sendResponse),
-        null,
-      );
+      promise.then(sendResponse => this.emit('afterSendEvent', event, sendResponse), null);
     }
   }
 
   /**
    * @inheritDoc
    */
-  sendSession(session) {
-    const env = createSessionEnvelope(
-      session,
-      this._dsn,
-      this._options._metadata,
-      this._options.tunnel,
-    );
+   sendSession(session) {
+    const env = createSessionEnvelope(session, this._dsn, this._options._metadata, this._options.tunnel);
 
     // sendEnvelope should not throw
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -7383,11 +7069,11 @@ class BaseClient {
   /**
    * @inheritDoc
    */
-  recordDroppedEvent(reason, category, eventOrCount) {
+   recordDroppedEvent(reason, category, eventOrCount) {
     if (this._options.sendClientReports) {
       // TODO v9: We do not need the `event` passed as third argument anymore, and can possibly remove this overload
       // If event is passed as third argument, we assume this is a count of 1
-      const count = typeof eventOrCount === "number" ? eventOrCount : 1;
+      const count = typeof eventOrCount === 'number' ? eventOrCount : 1;
 
       // We want to track each category (error, transaction, session, replay_event) separately
       // but still keep the distinction between different type of outcomes.
@@ -7396,10 +7082,7 @@ class BaseClient {
       // would be `Partial<Record<SentryRequestType, Partial<Record<Outcome, number>>>>`
       // With typescript 4.1 we could even use template literal types
       const key = `${reason}:${category}`;
-      DEBUG_BUILD$1 &&
-        logger.log(
-          `Recording outcome: "${key}"${count > 1 ? ` (${count} times)` : ""}`,
-        );
+      DEBUG_BUILD$1 && logger.log(`Recording outcome: "${key}"${count > 1 ? ` (${count} times)` : ''}`);
       this._outcomes[key] = (this._outcomes[key] || 0) + count;
     }
   }
@@ -7410,7 +7093,7 @@ class BaseClient {
   /** @inheritdoc */
 
   /** @inheritdoc */
-  on(hook, callback) {
+   on(hook, callback) {
     const hooks = (this._hooks[hook] = this._hooks[hook] || []);
 
     // @ts-expect-error We assume the types are correct
@@ -7432,27 +7115,27 @@ class BaseClient {
   /** @inheritdoc */
 
   /** @inheritdoc */
-  emit(hook, ...rest) {
+   emit(hook, ...rest) {
     const callbacks = this._hooks[hook];
     if (callbacks) {
-      callbacks.forEach((callback) => callback(...rest));
+      callbacks.forEach(callback => callback(...rest));
     }
   }
 
   /**
    * @inheritdoc
    */
-  sendEnvelope(envelope) {
-    this.emit("beforeEnvelope", envelope);
+   sendEnvelope(envelope) {
+    this.emit('beforeEnvelope', envelope);
 
     if (this._isEnabled() && this._transport) {
-      return this._transport.send(envelope).then(null, (reason) => {
-        DEBUG_BUILD$1 && logger.error("Error while sending envelope:", reason);
+      return this._transport.send(envelope).then(null, reason => {
+        DEBUG_BUILD$1 && logger.error('Error while sending envelope:', reason);
         return reason;
       });
     }
 
-    DEBUG_BUILD$1 && logger.error("Transport disabled");
+    DEBUG_BUILD$1 && logger.error('Transport disabled');
 
     return resolvedSyncPromise({});
   }
@@ -7460,15 +7143,15 @@ class BaseClient {
   /* eslint-enable @typescript-eslint/unified-signatures */
 
   /** Setup integrations for this client. */
-  _setupIntegrations() {
+   _setupIntegrations() {
     const { integrations } = this._options;
     this._integrations = setupIntegrations(this, integrations);
     afterSetupIntegrations(this, integrations);
   }
 
   /** Updates existing session based on the provided event */
-  _updateSessionFromEvent(session, event) {
-    let crashed = event.level === "fatal";
+   _updateSessionFromEvent(session, event) {
+    let crashed = event.level === 'fatal';
     let errored = false;
     const exceptions = event.exception && event.exception.values;
 
@@ -7487,13 +7170,12 @@ class BaseClient {
     // A session is updated and that session update is sent in only one of the two following scenarios:
     // 1. Session with non terminal status and 0 errors + an error occurred -> Will set error count to 1 and send update
     // 2. Session with non terminal status and 1 error + a crash occurred -> Will set status crashed and send update
-    const sessionNonTerminal = session.status === "ok";
-    const shouldUpdateAndSend = (sessionNonTerminal && session.errors === 0) ||
-      (sessionNonTerminal && crashed);
+    const sessionNonTerminal = session.status === 'ok';
+    const shouldUpdateAndSend = (sessionNonTerminal && session.errors === 0) || (sessionNonTerminal && crashed);
 
     if (shouldUpdateAndSend) {
       updateSession(session, {
-        ...(crashed && { status: "crashed" }),
+        ...(crashed && { status: 'crashed' }),
         errors: session.errors || Number(errored || crashed),
       });
       this.captureSession(session);
@@ -7510,8 +7192,8 @@ class BaseClient {
    * @returns A promise which will resolve to `true` if processing is already done or finishes before the timeout, and
    * `false` otherwise
    */
-  _isClientDoneProcessing(timeout) {
-    return new SyncPromise((resolve) => {
+   _isClientDoneProcessing(timeout) {
+    return new SyncPromise(resolve => {
       let ticked = 0;
       const tick = 1;
 
@@ -7531,7 +7213,7 @@ class BaseClient {
   }
 
   /** Determines whether this SDK is enabled and a transport is present. */
-  _isEnabled() {
+   _isEnabled() {
     return this.getOptions().enabled !== false && this._transport !== undefined;
   }
 
@@ -7549,7 +7231,7 @@ class BaseClient {
    * @param currentScope A scope containing event metadata.
    * @returns A new event with more information.
    */
-  _prepareEvent(
+   _prepareEvent(
     event,
     hint,
     currentScope = getCurrentScope(),
@@ -7561,20 +7243,13 @@ class BaseClient {
       hint.integrations = integrations;
     }
 
-    this.emit("preprocessEvent", event, hint);
+    this.emit('preprocessEvent', event, hint);
 
     if (!event.type) {
       isolationScope.setLastEventId(event.event_id || hint.event_id);
     }
 
-    return prepareEvent(
-      options,
-      event,
-      hint,
-      currentScope,
-      this,
-      isolationScope,
-    ).then((evt) => {
+    return prepareEvent(options, event, hint, currentScope, this, isolationScope).then(evt => {
       if (evt === null) {
         return evt;
       }
@@ -7584,10 +7259,7 @@ class BaseClient {
         ...evt.contexts,
       };
 
-      const dynamicSamplingContext = getDynamicSamplingContextFromScope(
-        this,
-        currentScope,
-      );
+      const dynamicSamplingContext = getDynamicSamplingContextFromScope(this, currentScope);
 
       evt.sdkProcessingMetadata = {
         dynamicSamplingContext,
@@ -7604,16 +7276,16 @@ class BaseClient {
    * @param hint
    * @param scope
    */
-  _captureEvent(event, hint = {}, scope) {
+   _captureEvent(event, hint = {}, scope) {
     return this._processEvent(event, hint, scope).then(
-      (finalEvent) => {
+      finalEvent => {
         return finalEvent.event_id;
       },
-      (reason) => {
+      reason => {
         if (DEBUG_BUILD$1) {
           // If something's gone wrong, log the error as a warning. If it's just us having used a `SentryError` for
           // control flow, log just the message (no stack) as a log-level log.
-          if (reason instanceof SentryError && reason.logLevel === "log") {
+          if (reason instanceof SentryError && reason.logLevel === 'log') {
             logger.log(reason.message);
           } else {
             logger.warn(reason);
@@ -7631,61 +7303,48 @@ class BaseClient {
    * platform specific meta data (such as the User's IP address) must be added
    * by the SDK implementor.
    *
+   *
    * @param event The event to send to Sentry.
    * @param hint May contain additional information about the original exception.
    * @param currentScope A scope containing event metadata.
    * @returns A SyncPromise that resolves with the event or rejects in case event was/will not be send.
    */
-  _processEvent(event, hint, currentScope) {
+   _processEvent(event, hint, currentScope) {
     const options = this.getOptions();
     const { sampleRate } = options;
 
     const isTransaction = isTransactionEvent(event);
     const isError = isErrorEvent(event);
-    const eventType = event.type || "error";
+    const eventType = event.type || 'error';
     const beforeSendLabel = `before send for type \`${eventType}\``;
 
     // 1.0 === 100% events are sent
     // 0.0 === 0% events are sent
     // Sampling for transaction happens somewhere else
-    const parsedSampleRate = typeof sampleRate === "undefined"
-      ? undefined
-      : parseSampleRate(sampleRate);
-    if (
-      isError && typeof parsedSampleRate === "number" &&
-      Math.random() > parsedSampleRate
-    ) {
-      this.recordDroppedEvent("sample_rate", "error", event);
+    const parsedSampleRate = typeof sampleRate === 'undefined' ? undefined : parseSampleRate(sampleRate);
+    if (isError && typeof parsedSampleRate === 'number' && Math.random() > parsedSampleRate) {
+      this.recordDroppedEvent('sample_rate', 'error', event);
       return rejectedSyncPromise(
         new SentryError(
           `Discarding event because it's not included in the random sample (sampling rate = ${sampleRate})`,
-          "log",
+          'log',
         ),
       );
     }
 
-    const dataCategory = eventType === "replay_event" ? "replay" : eventType;
+    const dataCategory = eventType === 'replay_event' ? 'replay' : eventType;
 
     const sdkProcessingMetadata = event.sdkProcessingMetadata || {};
-    const capturedSpanIsolationScope =
-      sdkProcessingMetadata.capturedSpanIsolationScope;
+    const capturedSpanIsolationScope = sdkProcessingMetadata.capturedSpanIsolationScope;
 
-    return this._prepareEvent(
-      event,
-      hint,
-      currentScope,
-      capturedSpanIsolationScope,
-    )
-      .then((prepared) => {
+    return this._prepareEvent(event, hint, currentScope, capturedSpanIsolationScope)
+      .then(prepared => {
         if (prepared === null) {
-          this.recordDroppedEvent("event_processor", dataCategory, event);
-          throw new SentryError(
-            "An event processor returned `null`, will not send event.",
-            "log",
-          );
+          this.recordDroppedEvent('event_processor', dataCategory, event);
+          throw new SentryError('An event processor returned `null`, will not send event.', 'log');
         }
 
-        const isInternalException = hint.data && hint.data.__sentry__ === true;
+        const isInternalException = hint.data && (hint.data ).__sentry__ === true;
         if (isInternalException) {
           return prepared;
         }
@@ -7693,19 +7352,16 @@ class BaseClient {
         const result = processBeforeSend(this, options, prepared, hint);
         return _validateBeforeSendResult(result, beforeSendLabel);
       })
-      .then((processedEvent) => {
+      .then(processedEvent => {
         if (processedEvent === null) {
-          this.recordDroppedEvent("before_send", dataCategory, event);
+          this.recordDroppedEvent('before_send', dataCategory, event);
           if (isTransaction) {
             const spans = event.spans || [];
             // the transaction itself counts as one span, plus all the child spans that are added
             const spanCount = 1 + spans.length;
-            this.recordDroppedEvent("before_send", "span", spanCount);
+            this.recordDroppedEvent('before_send', 'span', spanCount);
           }
-          throw new SentryError(
-            `${beforeSendLabel} returned \`null\`, will not send event.`,
-            "log",
-          );
+          throw new SentryError(`${beforeSendLabel} returned \`null\`, will not send event.`, 'log');
         }
 
         const session = currentScope && currentScope.getSession();
@@ -7714,16 +7370,14 @@ class BaseClient {
         }
 
         if (isTransaction) {
-          const spanCountBefore = (processedEvent.sdkProcessingMetadata &&
-            processedEvent.sdkProcessingMetadata.spanCountBeforeProcessing) ||
+          const spanCountBefore =
+            (processedEvent.sdkProcessingMetadata && processedEvent.sdkProcessingMetadata.spanCountBeforeProcessing) ||
             0;
-          const spanCountAfter = processedEvent.spans
-            ? processedEvent.spans.length
-            : 0;
+          const spanCountAfter = processedEvent.spans ? processedEvent.spans.length : 0;
 
           const droppedSpanCount = spanCountBefore - spanCountAfter;
           if (droppedSpanCount > 0) {
-            this.recordDroppedEvent("before_send", "span", droppedSpanCount);
+            this.recordDroppedEvent('before_send', 'span', droppedSpanCount);
           }
         }
 
@@ -7731,11 +7385,8 @@ class BaseClient {
         // so if the transaction name has been changed by an event processor, we know
         // it has to come from custom event processor added by a user
         const transactionInfo = processedEvent.transaction_info;
-        if (
-          isTransaction && transactionInfo &&
-          processedEvent.transaction !== event.transaction
-        ) {
-          const source = "custom";
+        if (isTransaction && transactionInfo && processedEvent.transaction !== event.transaction) {
+          const source = 'custom';
           processedEvent.transaction_info = {
             ...transactionInfo,
             source,
@@ -7745,7 +7396,7 @@ class BaseClient {
         this.sendEvent(processedEvent, hint);
         return processedEvent;
       })
-      .then(null, (reason) => {
+      .then(null, reason => {
         if (reason instanceof SentryError) {
           throw reason;
         }
@@ -7765,14 +7416,14 @@ class BaseClient {
   /**
    * Occupies the client with processing and event
    */
-  _process(promise) {
+   _process(promise) {
     this._numProcessing++;
     void promise.then(
-      (value) => {
+      value => {
         this._numProcessing--;
         return value;
       },
-      (reason) => {
+      reason => {
         this._numProcessing--;
         return reason;
       },
@@ -7782,11 +7433,11 @@ class BaseClient {
   /**
    * Clears outcomes on this client and returns them.
    */
-  _clearOutcomes() {
+   _clearOutcomes() {
     const outcomes = this._outcomes;
     this._outcomes = {};
     return Object.entries(outcomes).map(([key, quantity]) => {
-      const [reason, category] = key.split(":");
+      const [reason, category] = key.split(':') ;
       return {
         reason,
         category,
@@ -7798,28 +7449,25 @@ class BaseClient {
   /**
    * Sends client reports as an envelope.
    */
-  _flushOutcomes() {
-    DEBUG_BUILD$1 && logger.log("Flushing outcomes...");
+   _flushOutcomes() {
+    DEBUG_BUILD$1 && logger.log('Flushing outcomes...');
 
     const outcomes = this._clearOutcomes();
 
     if (outcomes.length === 0) {
-      DEBUG_BUILD$1 && logger.log("No outcomes to send");
+      DEBUG_BUILD$1 && logger.log('No outcomes to send');
       return;
     }
 
     // This is really the only place where we want to check for a DSN and only send outcomes then
     if (!this._dsn) {
-      DEBUG_BUILD$1 && logger.log("No dsn provided, will not send outcomes");
+      DEBUG_BUILD$1 && logger.log('No dsn provided, will not send outcomes');
       return;
     }
 
-    DEBUG_BUILD$1 && logger.log("Sending outcomes:", outcomes);
+    DEBUG_BUILD$1 && logger.log('Sending outcomes:', outcomes);
 
-    const envelope = createClientReportEnvelope(
-      outcomes,
-      this._options.tunnel && dsnToString(this._dsn),
-    );
+    const envelope = createClientReportEnvelope(outcomes, this._options.tunnel && dsnToString(this._dsn));
 
     // sendEnvelope should not throw
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -7829,6 +7477,7 @@ class BaseClient {
   /**
    * @inheritDoc
    */
+
 }
 
 /**
@@ -7838,17 +7487,16 @@ function _validateBeforeSendResult(
   beforeSendResult,
   beforeSendLabel,
 ) {
-  const invalidValueError =
-    `${beforeSendLabel} must return \`null\` or a valid event.`;
+  const invalidValueError = `${beforeSendLabel} must return \`null\` or a valid event.`;
   if (isThenable(beforeSendResult)) {
     return beforeSendResult.then(
-      (event) => {
+      event => {
         if (!isPlainObject(event) && event !== null) {
           throw new SentryError(invalidValueError);
         }
         return event;
       },
-      (e) => {
+      e => {
         throw new SentryError(`${beforeSendLabel} rejected with ${e}`);
       },
     );
@@ -7882,7 +7530,7 @@ function processBeforeSend(
           processedSpans.push(processedSpan);
         } else {
           showSpanDropWarning();
-          client.recordDroppedEvent("before_send", "span");
+          client.recordDroppedEvent('before_send', 'span');
         }
       }
       event.spans = processedSpans;
@@ -7910,7 +7558,7 @@ function isErrorEvent(event) {
 }
 
 function isTransactionEvent(event) {
-  return event.type === "transaction";
+  return event.type === 'transaction';
 }
 
 /**
@@ -7939,7 +7587,7 @@ function createCheckInEnvelope(
   }
 
   if (dynamicSamplingContext) {
-    headers.trace = dropUndefinedKeys(dynamicSamplingContext);
+    headers.trace = dropUndefinedKeys(dynamicSamplingContext) ;
   }
 
   const item = createCheckInEnvelopeItem(checkIn);
@@ -7948,7 +7596,7 @@ function createCheckInEnvelope(
 
 function createCheckInEnvelopeItem(checkIn) {
   const checkInHeaders = {
-    type: "check_in",
+    type: 'check_in',
   };
   return [checkInHeaders, checkIn];
 }
@@ -7957,7 +7605,7 @@ function createCheckInEnvelopeItem(checkIn) {
  * Extracts stack frames from the error.stack string
  */
 function parseStackFrames(stackParser, error) {
-  return stackParser(error.stack || "", 1);
+  return stackParser(error.stack || '', 1);
 }
 
 /**
@@ -7992,15 +7640,15 @@ function getErrorPropertyFromObject(obj) {
 }
 
 function getMessageForObject(exception) {
-  if ("name" in exception && typeof exception.name === "string") {
+  if ('name' in exception && typeof exception.name === 'string') {
     let message = `'${exception.name}' captured as exception`;
 
-    if ("message" in exception && typeof exception.message === "string") {
+    if ('message' in exception && typeof exception.message === 'string') {
       message += ` with message '${exception.message}'`;
     }
 
     return message;
-  } else if ("message" in exception && typeof exception.message === "string") {
+  } else if ('message' in exception && typeof exception.message === 'string') {
     return exception.message;
   }
 
@@ -8015,7 +7663,7 @@ function getMessageForObject(exception) {
   const className = getObjectClassName(exception);
 
   return `${
-    className && className !== "Object" ? `'${className}'` : "Object"
+    className && className !== 'Object' ? `'${className}'` : 'Object'
   } captured as exception with keys: ${keys}`;
 }
 
@@ -8043,9 +7691,7 @@ function getException(
 
   if (isPlainObject(exception)) {
     const normalizeDepth = client && client.getOptions().normalizeDepth;
-    const extras = {
-      ["__serialized__"]: normalizeToSize(exception, normalizeDepth),
-    };
+    const extras = { ['__serialized__']: normalizeToSize(exception , normalizeDepth) };
 
     const errorFromProp = getErrorPropertyFromObject(exception);
     if (errorFromProp) {
@@ -8061,7 +7707,7 @@ function getException(
 
   // This handles when someone does: `throw "something awesome";`
   // We use synthesized Error here so we can extract a (rough) stack trace.
-  const ex = (hint && hint.syntheticException) || new Error(exception);
+  const ex = (hint && hint.syntheticException) || new Error(exception );
   ex.message = `${exception}`;
 
   return [ex, undefined];
@@ -8077,10 +7723,11 @@ function eventFromUnknownInput(
   exception,
   hint,
 ) {
-  const providedMechanism = hint && hint.data && hint.data.mechanism;
+  const providedMechanism =
+    hint && hint.data && (hint.data ).mechanism;
   const mechanism = providedMechanism || {
     handled: true,
-    type: "generic",
+    type: 'generic',
   };
 
   const [ex, extras] = getException(client, mechanism, exception, hint);
@@ -8111,7 +7758,7 @@ function eventFromUnknownInput(
 function eventFromMessage(
   stackParser,
   message,
-  level = "info",
+  level = 'info',
   hint,
   attachStacktrace,
 ) {
@@ -8152,14 +7799,16 @@ function eventFromMessage(
 /**
  * The Sentry Server Runtime Client SDK.
  */
-class ServerRuntimeClient extends BaseClient {
+class ServerRuntimeClient
+
+ extends BaseClient {
   // eslint-disable-next-line deprecation/deprecation
 
   /**
    * Creates a new Edge SDK instance.
    * @param options Configuration options for this SDK.
    */
-  constructor(options) {
+   constructor(options) {
     // Server clients always support tracing
     registerSpanErrorInstrumentation();
 
@@ -8169,14 +7818,9 @@ class ServerRuntimeClient extends BaseClient {
   /**
    * @inheritDoc
    */
-  eventFromException(exception, hint) {
-    const event = eventFromUnknownInput(
-      this,
-      this._options.stackParser,
-      exception,
-      hint,
-    );
-    event.level = "error";
+   eventFromException(exception, hint) {
+    const event = eventFromUnknownInput(this, this._options.stackParser, exception, hint);
+    event.level = 'error';
 
     return resolvedSyncPromise(event);
   }
@@ -8184,26 +7828,20 @@ class ServerRuntimeClient extends BaseClient {
   /**
    * @inheritDoc
    */
-  eventFromMessage(
+   eventFromMessage(
     message,
-    level = "info",
+    level = 'info',
     hint,
   ) {
     return resolvedSyncPromise(
-      eventFromMessage(
-        this._options.stackParser,
-        message,
-        level,
-        hint,
-        this._options.attachStacktrace,
-      ),
+      eventFromMessage(this._options.stackParser, message, level, hint, this._options.attachStacktrace),
     );
   }
 
   /**
    * @inheritDoc
    */
-  captureException(exception, hint, scope) {
+   captureException(exception, hint, scope) {
     // Check if `_sessionFlusher` exists because it is initialized (defined) only when the `autoSessionTracking` is enabled.
     // The expectation is that session aggregates are only sent when `autoSessionTracking` is enabled.
     // TODO(v9): Our goal in the future is to not have the `autoSessionTracking` option and instead rely on integrations doing the creation and sending of sessions. We will not have a central kill-switch for sessions.
@@ -8215,8 +7853,8 @@ class ServerRuntimeClient extends BaseClient {
 
       // Necessary checks to ensure this is code block is executed only within a request
       // Should override the status only if `requestSession.status` is `Ok`, which is its initial stage
-      if (requestSession && requestSession.status === "ok") {
-        requestSession.status = "errored";
+      if (requestSession && requestSession.status === 'ok') {
+        requestSession.status = 'errored';
       }
     }
 
@@ -8226,16 +7864,16 @@ class ServerRuntimeClient extends BaseClient {
   /**
    * @inheritDoc
    */
-  captureEvent(event, hint, scope) {
+   captureEvent(event, hint, scope) {
     // Check if `_sessionFlusher` exists because it is initialized only when the `autoSessionTracking` is enabled.
     // The expectation is that session aggregates are only sent when `autoSessionTracking` is enabled.
     // TODO(v9): Our goal in the future is to not have the `autoSessionTracking` option and instead rely on integrations doing the creation and sending of sessions. We will not have a central kill-switch for sessions.
     // TODO(v9): This should move into the httpIntegration.
     // eslint-disable-next-line deprecation/deprecation
     if (this._options.autoSessionTracking && this._sessionFlusher) {
-      const eventType = event.type || "exception";
-      const isException = eventType === "exception" && event.exception &&
-        event.exception.values && event.exception.values.length > 0;
+      const eventType = event.type || 'exception';
+      const isException =
+        eventType === 'exception' && event.exception && event.exception.values && event.exception.values.length > 0;
 
       // If the event is of type Exception, then a request session should be captured
       if (isException) {
@@ -8244,8 +7882,8 @@ class ServerRuntimeClient extends BaseClient {
 
         // Ensure that this is happening within the bounds of a request, and make sure not to override
         // Session Status if Errored / Crashed
-        if (requestSession && requestSession.status === "ok") {
-          requestSession.status = "errored";
+        if (requestSession && requestSession.status === 'ok') {
+          requestSession.status = 'errored';
         }
       }
     }
@@ -8254,9 +7892,10 @@ class ServerRuntimeClient extends BaseClient {
   }
 
   /**
+   *
    * @inheritdoc
    */
-  close(timeout) {
+   close(timeout) {
     if (this._sessionFlusher) {
       this._sessionFlusher.close();
     }
@@ -8270,13 +7909,10 @@ class ServerRuntimeClient extends BaseClient {
    * To clean up this resources, call `.close()` when you no longer intend to use the client.
    * Not doing so will result in a memory leak.
    */
-  initSessionFlusher() {
+   initSessionFlusher() {
     const { release, environment } = this._options;
     if (!release) {
-      DEBUG_BUILD$1 &&
-        logger.warn(
-          "Cannot initialize an instance of SessionFlusher if no release is provided!",
-        );
+      DEBUG_BUILD$1 && logger.warn('Cannot initialize an instance of SessionFlusher if no release is provided!');
     } else {
       // eslint-disable-next-line deprecation/deprecation
       this._sessionFlusher = new SessionFlusher(this, {
@@ -8293,13 +7929,10 @@ class ServerRuntimeClient extends BaseClient {
    * @param upsertMonitorConfig An optional object that describes a monitor config. Use this if you want
    * to create a monitor automatically when sending a check in.
    */
-  captureCheckIn(checkIn, monitorConfig, scope) {
-    const id = "checkInId" in checkIn && checkIn.checkInId
-      ? checkIn.checkInId
-      : uuid4();
+   captureCheckIn(checkIn, monitorConfig, scope) {
+    const id = 'checkInId' in checkIn && checkIn.checkInId ? checkIn.checkInId : uuid4();
     if (!this._isEnabled()) {
-      DEBUG_BUILD$1 &&
-        logger.warn("SDK not enabled, will not capture checkin.");
+      DEBUG_BUILD$1 && logger.warn('SDK not enabled, will not capture checkin.');
       return id;
     }
 
@@ -8314,7 +7947,7 @@ class ServerRuntimeClient extends BaseClient {
       environment,
     };
 
-    if ("duration" in checkIn) {
+    if ('duration' in checkIn) {
       serializedCheckIn.duration = checkIn.duration;
     }
 
@@ -8329,9 +7962,7 @@ class ServerRuntimeClient extends BaseClient {
       };
     }
 
-    const [dynamicSamplingContext, traceContext] = this._getTraceInfoFromScope(
-      scope,
-    );
+    const [dynamicSamplingContext, traceContext] = this._getTraceInfoFromScope(scope);
     if (traceContext) {
       serializedCheckIn.contexts = {
         trace: traceContext,
@@ -8346,8 +7977,7 @@ class ServerRuntimeClient extends BaseClient {
       this.getDsn(),
     );
 
-    DEBUG_BUILD$1 &&
-      logger.info("Sending checkin:", checkIn.monitorSlug, checkIn.status);
+    DEBUG_BUILD$1 && logger.info('Sending checkin:', checkIn.monitorSlug, checkIn.status);
 
     // sendEnvelope should not throw
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -8362,12 +7992,9 @@ class ServerRuntimeClient extends BaseClient {
    *
    * @deprecated This method should not be used or extended. It's functionality will move into the `httpIntegration` and not be part of any public API.
    */
-  _captureRequestSession() {
+   _captureRequestSession() {
     if (!this._sessionFlusher) {
-      DEBUG_BUILD$1 &&
-        logger.warn(
-          "Discarded request mode session because autoSessionTracking option was disabled",
-        );
+      DEBUG_BUILD$1 && logger.warn('Discarded request mode session because autoSessionTracking option was disabled');
     } else {
       this._sessionFlusher.incrementSessionStatusCount();
     }
@@ -8376,7 +8003,7 @@ class ServerRuntimeClient extends BaseClient {
   /**
    * @inheritDoc
    */
-  _prepareEvent(
+   _prepareEvent(
     event,
     hint,
     scope,
@@ -8401,7 +8028,7 @@ class ServerRuntimeClient extends BaseClient {
   }
 
   /** Extract trace information from scope */
-  _getTraceInfoFromScope(
+   _getTraceInfoFromScope(
     scope,
   ) {
     if (!scope) {
@@ -8410,9 +8037,7 @@ class ServerRuntimeClient extends BaseClient {
 
     const span = _getSpanForScope(scope);
 
-    const traceContext = span
-      ? spanToTraceContext(span)
-      : getTraceContextFromScope(scope);
+    const traceContext = span ? spanToTraceContext(span) : getTraceContextFromScope(scope);
     const dynamicSamplingContext = span
       ? getDynamicSamplingContextFromSpan(span)
       : getDynamicSamplingContextFromScope(this, scope);
@@ -8440,9 +8065,7 @@ function initAndBind(
       // use `console.warn` rather than `logger.warn` since by non-debug bundles have all `logger.x` statements stripped
       consoleSandbox(() => {
         // eslint-disable-next-line no-console
-        console.warn(
-          "[Sentry] Cannot initialize SDK with `debug` option using a non-debug bundle.",
-        );
+        console.warn('[Sentry] Cannot initialize SDK with `debug` option using a non-debug bundle.');
       });
     }
   }
@@ -8480,8 +8103,7 @@ function makePromiseBuffer(limit) {
    * @returns Removed promise.
    */
   function remove(task) {
-    return buffer.splice(buffer.indexOf(task), 1)[0] ||
-      Promise.resolve(undefined);
+    return buffer.splice(buffer.indexOf(task), 1)[0] || Promise.resolve(undefined);
   }
 
   /**
@@ -8496,9 +8118,7 @@ function makePromiseBuffer(limit) {
    */
   function add(taskProducer) {
     if (!isReady()) {
-      return rejectedSyncPromise(
-        new SentryError("Not adding Promise because buffer limit was reached."),
-      );
+      return rejectedSyncPromise(new SentryError('Not adding Promise because buffer limit was reached.'));
     }
 
     // start the task and add its promise to the queue
@@ -8514,7 +8134,8 @@ function makePromiseBuffer(limit) {
       .then(null, () =>
         remove(task).then(null, () => {
           // We have to add another catch here because `remove()` starts a new promise chain.
-        }));
+        }),
+      );
     return task;
   }
 
@@ -8543,7 +8164,7 @@ function makePromiseBuffer(limit) {
       }, timeout);
 
       // if all promises resolve in time, cancel the timer and resolve to `true`
-      buffer.forEach((item) => {
+      buffer.forEach(item => {
         void resolvedSyncPromise(item).then(() => {
           if (!--counter) {
             clearTimeout(capturedSetTimeout);
@@ -8569,6 +8190,7 @@ const DEFAULT_RETRY_AFTER = 60 * 1000; // 60 seconds
  * Extracts Retry-After value from the request header or returns default value
  * @param header string representation of 'Retry-After' header
  * @param now current unix timestamp
+ *
  */
 function parseRetryAfterHeader(header, now = Date.now()) {
   const headerDelay = parseInt(`${header}`, 10);
@@ -8618,8 +8240,8 @@ function updateRateLimits(
 
   // "The name is case-insensitive."
   // https://developer.mozilla.org/en-US/docs/Web/API/Headers/get
-  const rateLimitHeader = headers && headers["x-sentry-rate-limits"];
-  const retryAfterHeader = headers && headers["retry-after"];
+  const rateLimitHeader = headers && headers['x-sentry-rate-limits'];
+  const retryAfterHeader = headers && headers['retry-after'];
 
   if (rateLimitHeader) {
     /**
@@ -8636,17 +8258,17 @@ function updateRateLimits(
      *     <namespaces> Semicolon-separated list of metric namespace identifiers. Defines which namespace(s) will be affected.
      *         Only present if rate limit applies to the metric_bucket data category.
      */
-    for (const limit of rateLimitHeader.trim().split(",")) {
-      const [retryAfter, categories, , , namespaces] = limit.split(":", 5);
+    for (const limit of rateLimitHeader.trim().split(',')) {
+      const [retryAfter, categories, , , namespaces] = limit.split(':', 5) ;
       const headerDelay = parseInt(retryAfter, 10);
       const delay = (!isNaN(headerDelay) ? headerDelay : 60) * 1000; // 60sec default
       if (!categories) {
         updatedRateLimits.all = now + delay;
       } else {
-        for (const category of categories.split(";")) {
-          if (category === "metric_bucket") {
+        for (const category of categories.split(';')) {
+          if (category === 'metric_bucket') {
             // namespaces will be present when category === 'metric_bucket'
-            if (!namespaces || namespaces.split(";").includes("custom")) {
+            if (!namespaces || namespaces.split(';').includes('custom')) {
               updatedRateLimits[category] = now + delay;
             }
           } else {
@@ -8690,7 +8312,7 @@ function createTransport(
       const dataCategory = envelopeItemTypeToDataCategory(type);
       if (isRateLimited(rateLimits, dataCategory)) {
         const event = getEventForEnvelopeItem(item, type);
-        options.recordDroppedEvent("ratelimit_backoff", dataCategory, event);
+        options.recordDroppedEvent('ratelimit_backoff', dataCategory, event);
       } else {
         filteredEnvelopeItems.push(item);
       }
@@ -8701,50 +8323,39 @@ function createTransport(
       return resolvedSyncPromise({});
     }
 
-    const filteredEnvelope = createEnvelope(envelope[0], filteredEnvelopeItems);
+    const filteredEnvelope = createEnvelope(envelope[0], filteredEnvelopeItems );
 
     // Creates client report for each item in an envelope
     const recordEnvelopeLoss = (reason) => {
       forEachEnvelopeItem(filteredEnvelope, (item, type) => {
         const event = getEventForEnvelopeItem(item, type);
-        options.recordDroppedEvent(
-          reason,
-          envelopeItemTypeToDataCategory(type),
-          event,
-        );
+        options.recordDroppedEvent(reason, envelopeItemTypeToDataCategory(type), event);
       });
     };
 
     const requestTask = () =>
       makeRequest({ body: serializeEnvelope(filteredEnvelope) }).then(
-        (response) => {
+        response => {
           // We don't want to throw on NOK responses, but we want to at least log them
-          if (
-            response.statusCode !== undefined &&
-            (response.statusCode < 200 || response.statusCode >= 300)
-          ) {
-            DEBUG_BUILD$1 &&
-              logger.warn(
-                `Sentry responded with status code ${response.statusCode} to sent event.`,
-              );
+          if (response.statusCode !== undefined && (response.statusCode < 200 || response.statusCode >= 300)) {
+            DEBUG_BUILD$1 && logger.warn(`Sentry responded with status code ${response.statusCode} to sent event.`);
           }
 
           rateLimits = updateRateLimits(rateLimits, response);
           return response;
         },
-        (error) => {
-          recordEnvelopeLoss("network_error");
+        error => {
+          recordEnvelopeLoss('network_error');
           throw error;
         },
       );
 
     return buffer.add(requestTask).then(
-      (result) => result,
-      (error) => {
+      result => result,
+      error => {
         if (error instanceof SentryError) {
-          DEBUG_BUILD$1 &&
-            logger.error("Skipped sending event because buffer is full.");
-          recordEnvelopeLoss("queue_overflow");
+          DEBUG_BUILD$1 && logger.error('Skipped sending event because buffer is full.');
+          recordEnvelopeLoss('queue_overflow');
           return resolvedSyncPromise({});
         } else {
           throw error;
@@ -8760,11 +8371,11 @@ function createTransport(
 }
 
 function getEventForEnvelopeItem(item, type) {
-  if (type !== "event" && type !== "transaction") {
+  if (type !== 'event' && type !== 'transaction') {
     return undefined;
   }
 
-  return Array.isArray(item) ? item[1] : undefined;
+  return Array.isArray(item) ? (item )[1] : undefined;
 }
 
 /**
@@ -8792,22 +8403,18 @@ function getTraceData(options = {}) {
 
   const scope = getCurrentScope();
   const span = options.span || getActiveSpan();
-  const sentryTrace = span
-    ? spanToTraceHeader(span)
-    : scopeToTraceHeader(scope);
-  const dsc = span
-    ? getDynamicSamplingContextFromSpan(span)
-    : getDynamicSamplingContextFromScope(client, scope);
+  const sentryTrace = span ? spanToTraceHeader(span) : scopeToTraceHeader(scope);
+  const dsc = span ? getDynamicSamplingContextFromSpan(span) : getDynamicSamplingContextFromScope(client, scope);
   const baggage = dynamicSamplingContextToSentryBaggageHeader(dsc);
 
   const isValidSentryTraceHeader = TRACEPARENT_REGEXP.test(sentryTrace);
   if (!isValidSentryTraceHeader) {
-    logger.warn("Invalid sentry-trace data. Cannot generate trace data");
+    logger.warn('Invalid sentry-trace data. Cannot generate trace data');
     return {};
   }
 
   return {
-    "sentry-trace": sentryTrace,
+    'sentry-trace': sentryTrace,
     baggage,
   };
 }
@@ -8841,11 +8448,12 @@ function scopeToTraceHeader(scope) {
  *   `;
  * }
  * ```
+ *
  */
 function getTraceMetaTags() {
   return Object.entries(getTraceData())
     .map(([key, value]) => `<meta name="${key}" content="${value}"/>`)
-    .join("\n");
+    .join('\n');
 }
 
 /**
@@ -8866,21 +8474,20 @@ function addBreadcrumb(breadcrumb, hint) {
 
   if (!client) return;
 
-  const { beforeBreadcrumb = null, maxBreadcrumbs = DEFAULT_BREADCRUMBS } =
-    client.getOptions();
+  const { beforeBreadcrumb = null, maxBreadcrumbs = DEFAULT_BREADCRUMBS } = client.getOptions();
 
   if (maxBreadcrumbs <= 0) return;
 
   const timestamp = dateTimestampInSeconds();
   const mergedBreadcrumb = { timestamp, ...breadcrumb };
   const finalBreadcrumb = beforeBreadcrumb
-    ? (consoleSandbox(() => beforeBreadcrumb(mergedBreadcrumb, hint)))
+    ? (consoleSandbox(() => beforeBreadcrumb(mergedBreadcrumb, hint)) )
     : mergedBreadcrumb;
 
   if (finalBreadcrumb === null) return;
 
   if (client.emit) {
-    client.emit("beforeAddBreadcrumb", finalBreadcrumb, hint);
+    client.emit('beforeAddBreadcrumb', finalBreadcrumb, hint);
   }
 
   isolationScope.addBreadcrumb(finalBreadcrumb, maxBreadcrumbs);
@@ -8888,11 +8495,11 @@ function addBreadcrumb(breadcrumb, hint) {
 
 let originalFunctionToString;
 
-const INTEGRATION_NAME$g = "FunctionToString";
+const INTEGRATION_NAME$g = 'FunctionToString';
 
 const SETUP_CLIENTS$1 = new WeakMap();
 
-const _functionToStringIntegration = () => {
+const _functionToStringIntegration = (() => {
   return {
     name: INTEGRATION_NAME$g,
     setupOnce() {
@@ -8902,12 +8509,10 @@ const _functionToStringIntegration = () => {
       // intrinsics (like Function.prototype) might be immutable in some environments
       // e.g. Node with --frozen-intrinsics, XS (an embedded JavaScript engine) or SES (a JavaScript proposal)
       try {
-        Function.prototype.toString = function (...args) {
+        Function.prototype.toString = function ( ...args) {
           const originalFunction = getOriginalFunction(this);
           const context =
-            SETUP_CLIENTS$1.has(getClient()) && originalFunction !== undefined
-              ? originalFunction
-              : this;
+            SETUP_CLIENTS$1.has(getClient() ) && originalFunction !== undefined ? originalFunction : this;
           return originalFunctionToString.apply(context, args);
         };
       } catch (e) {
@@ -8918,7 +8523,7 @@ const _functionToStringIntegration = () => {
       SETUP_CLIENTS$1.set(client, true);
     },
   };
-};
+}) ;
 
 /**
  * Patch toString calls to return proper name for wrapped functions.
@@ -8931,9 +8536,7 @@ const _functionToStringIntegration = () => {
  * });
  * ```
  */
-const functionToStringIntegration = defineIntegration(
-  _functionToStringIntegration,
-);
+const functionToStringIntegration = defineIntegration(_functionToStringIntegration);
 
 // "Script error." is hard coded into browsers for errors that it can't read.
 // this is the result of a script being pulled in from an external domain and CORS.
@@ -8951,8 +8554,8 @@ const DEFAULT_IGNORE_ERRORS = [
 
 /** Options for the InboundFilters integration */
 
-const INTEGRATION_NAME$f = "InboundFilters";
-const _inboundFiltersIntegration = (options = {}) => {
+const INTEGRATION_NAME$f = 'InboundFilters';
+const _inboundFiltersIntegration = ((options = {}) => {
   return {
     name: INTEGRATION_NAME$f,
     processEvent(event, _hint, client) {
@@ -8961,7 +8564,7 @@ const _inboundFiltersIntegration = (options = {}) => {
       return _shouldDropEvent$1(event, mergedOptions) ? null : event;
     },
   };
-};
+}) ;
 
 const inboundFiltersIntegration = defineIntegration(_inboundFiltersIntegration);
 
@@ -8970,87 +8573,62 @@ function _mergeOptions(
   clientOptions = {},
 ) {
   return {
-    allowUrls: [
-      ...(internalOptions.allowUrls || []),
-      ...(clientOptions.allowUrls || []),
-    ],
-    denyUrls: [
-      ...(internalOptions.denyUrls || []),
-      ...(clientOptions.denyUrls || []),
-    ],
+    allowUrls: [...(internalOptions.allowUrls || []), ...(clientOptions.allowUrls || [])],
+    denyUrls: [...(internalOptions.denyUrls || []), ...(clientOptions.denyUrls || [])],
     ignoreErrors: [
       ...(internalOptions.ignoreErrors || []),
       ...(clientOptions.ignoreErrors || []),
       ...(internalOptions.disableErrorDefaults ? [] : DEFAULT_IGNORE_ERRORS),
     ],
-    ignoreTransactions: [
-      ...(internalOptions.ignoreTransactions || []),
-      ...(clientOptions.ignoreTransactions || []),
-    ],
-    ignoreInternal: internalOptions.ignoreInternal !== undefined
-      ? internalOptions.ignoreInternal
-      : true,
+    ignoreTransactions: [...(internalOptions.ignoreTransactions || []), ...(clientOptions.ignoreTransactions || [])],
+    ignoreInternal: internalOptions.ignoreInternal !== undefined ? internalOptions.ignoreInternal : true,
   };
 }
 
 function _shouldDropEvent$1(event, options) {
   if (options.ignoreInternal && _isSentryError(event)) {
     DEBUG_BUILD$1 &&
-      logger.warn(
-        `Event dropped due to being internal Sentry Error.\nEvent: ${
-          getEventDescription(event)
-        }`,
-      );
+      logger.warn(`Event dropped due to being internal Sentry Error.\nEvent: ${getEventDescription(event)}`);
     return true;
   }
   if (_isIgnoredError(event, options.ignoreErrors)) {
     DEBUG_BUILD$1 &&
       logger.warn(
-        `Event dropped due to being matched by \`ignoreErrors\` option.\nEvent: ${
-          getEventDescription(event)
-        }`,
+        `Event dropped due to being matched by \`ignoreErrors\` option.\nEvent: ${getEventDescription(event)}`,
       );
     return true;
   }
   if (_isUselessError(event)) {
     DEBUG_BUILD$1 &&
       logger.warn(
-        `Event dropped due to not having an error message, error type or stacktrace.\nEvent: ${
-          getEventDescription(
-            event,
-          )
-        }`,
+        `Event dropped due to not having an error message, error type or stacktrace.\nEvent: ${getEventDescription(
+          event,
+        )}`,
       );
     return true;
   }
   if (_isIgnoredTransaction(event, options.ignoreTransactions)) {
     DEBUG_BUILD$1 &&
       logger.warn(
-        `Event dropped due to being matched by \`ignoreTransactions\` option.\nEvent: ${
-          getEventDescription(event)
-        }`,
+        `Event dropped due to being matched by \`ignoreTransactions\` option.\nEvent: ${getEventDescription(event)}`,
       );
     return true;
   }
   if (_isDeniedUrl(event, options.denyUrls)) {
     DEBUG_BUILD$1 &&
       logger.warn(
-        `Event dropped due to being matched by \`denyUrls\` option.\nEvent: ${
-          getEventDescription(
-            event,
-          )
-        }.\nUrl: ${_getEventFilterUrl(event)}`,
+        `Event dropped due to being matched by \`denyUrls\` option.\nEvent: ${getEventDescription(
+          event,
+        )}.\nUrl: ${_getEventFilterUrl(event)}`,
       );
     return true;
   }
   if (!_isAllowedUrl(event, options.allowUrls)) {
     DEBUG_BUILD$1 &&
       logger.warn(
-        `Event dropped due to not being matched by \`allowUrls\` option.\nEvent: ${
-          getEventDescription(
-            event,
-          )
-        }.\nUrl: ${_getEventFilterUrl(event)}`,
+        `Event dropped due to not being matched by \`allowUrls\` option.\nEvent: ${getEventDescription(
+          event,
+        )}.\nUrl: ${_getEventFilterUrl(event)}`,
       );
     return true;
   }
@@ -9063,16 +8641,11 @@ function _isIgnoredError(event, ignoreErrors) {
     return false;
   }
 
-  return _getPossibleEventMessages(event).some((message) =>
-    stringMatchesSomePattern(message, ignoreErrors)
-  );
+  return _getPossibleEventMessages(event).some(message => stringMatchesSomePattern(message, ignoreErrors));
 }
 
 function _isIgnoredTransaction(event, ignoreTransactions) {
-  if (
-    event.type !== "transaction" || !ignoreTransactions ||
-    !ignoreTransactions.length
-  ) {
+  if (event.type !== 'transaction' || !ignoreTransactions || !ignoreTransactions.length) {
     return false;
   }
 
@@ -9128,7 +8701,7 @@ function _getPossibleEventMessages(event) {
 function _isSentryError(event) {
   try {
     // @ts-expect-error can't be a sentry error if undefined
-    return event.exception.values[0].type === "SentryError";
+    return event.exception.values[0].type === 'SentryError';
   } catch (e) {
     // ignore
   }
@@ -9139,10 +8712,7 @@ function _getLastValidUrl(frames = []) {
   for (let i = frames.length - 1; i >= 0; i--) {
     const frame = frames[i];
 
-    if (
-      frame && frame.filename !== "<anonymous>" &&
-      frame.filename !== "[native code]"
-    ) {
+    if (frame && frame.filename !== '<anonymous>' && frame.filename !== '[native code]') {
       return frame.filename || null;
     }
   }
@@ -9161,10 +8731,7 @@ function _getEventFilterUrl(event) {
     }
     return frames ? _getLastValidUrl(frames) : null;
   } catch (oO) {
-    DEBUG_BUILD$1 &&
-      logger.error(
-        `Cannot extract url for event ${getEventDescription(event)}`,
-      );
+    DEBUG_BUILD$1 && logger.error(`Cannot extract url for event ${getEventDescription(event)}`);
     return null;
   }
 }
@@ -9176,10 +8743,7 @@ function _isUselessError(event) {
   }
 
   // We only want to consider events for dropping that actually have recorded exception values.
-  if (
-    !event.exception || !event.exception.values ||
-    event.exception.values.length === 0
-  ) {
+  if (!event.exception || !event.exception.values || event.exception.values.length === 0) {
     return false;
   }
 
@@ -9187,9 +8751,7 @@ function _isUselessError(event) {
     // No top-level message
     !event.message &&
     // There are no exception values that have a stacktrace, a non-generic-Error type or value
-    !event.exception.values.some((value) =>
-      value.stacktrace || (value.type && value.type !== "Error") || value.value
-    )
+    !event.exception.values.some(value => value.stacktrace || (value.type && value.type !== 'Error') || value.value)
   );
 }
 
@@ -9205,17 +8767,13 @@ function applyAggregateErrorsToEvent(
   event,
   hint,
 ) {
-  if (
-    !event.exception || !event.exception.values || !hint ||
-    !isInstanceOf(hint.originalException, Error)
-  ) {
+  if (!event.exception || !event.exception.values || !hint || !isInstanceOf(hint.originalException, Error)) {
     return;
   }
 
   // Generally speaking the last item in `event.exception.values` is the exception originating from the original Error
-  const originalException = event.exception.values.length > 0
-    ? event.exception.values[event.exception.values.length - 1]
-    : undefined;
+  const originalException =
+    event.exception.values.length > 0 ? event.exception.values[event.exception.values.length - 1] : undefined;
 
   // We only create exception grouping if there is an exception in the event.
   if (originalException) {
@@ -9224,7 +8782,7 @@ function applyAggregateErrorsToEvent(
         exceptionFromErrorImplementation,
         parser,
         limit,
-        hint.originalException,
+        hint.originalException ,
         key,
         event.exception.values,
         originalException,
@@ -9256,12 +8814,7 @@ function aggregateExceptionsFromError(
     applyExceptionGroupFieldsForParentException(exception, exceptionId);
     const newException = exceptionFromErrorImplementation(parser, error[key]);
     const newExceptionId = newExceptions.length;
-    applyExceptionGroupFieldsForChildException(
-      newException,
-      key,
-      newExceptionId,
-      exceptionId,
-    );
+    applyExceptionGroupFieldsForChildException(newException, key, newExceptionId, exceptionId);
     newExceptions = aggregateExceptionsFromError(
       exceptionFromErrorImplementation,
       parser,
@@ -9280,17 +8833,9 @@ function aggregateExceptionsFromError(
     error.errors.forEach((childError, i) => {
       if (isInstanceOf(childError, Error)) {
         applyExceptionGroupFieldsForParentException(exception, exceptionId);
-        const newException = exceptionFromErrorImplementation(
-          parser,
-          childError,
-        );
+        const newException = exceptionFromErrorImplementation(parser, childError);
         const newExceptionId = newExceptions.length;
-        applyExceptionGroupFieldsForChildException(
-          newException,
-          `errors[${i}]`,
-          newExceptionId,
-          exceptionId,
-        );
+        applyExceptionGroupFieldsForChildException(newException, `errors[${i}]`, newExceptionId, exceptionId);
         newExceptions = aggregateExceptionsFromError(
           exceptionFromErrorImplementation,
           parser,
@@ -9310,12 +8855,11 @@ function aggregateExceptionsFromError(
 
 function applyExceptionGroupFieldsForParentException(exception, exceptionId) {
   // Don't know if this default makes sense. The protocol requires us to set these values so we pick *some* default.
-  exception.mechanism = exception.mechanism ||
-    { type: "generic", handled: true };
+  exception.mechanism = exception.mechanism || { type: 'generic', handled: true };
 
   exception.mechanism = {
     ...exception.mechanism,
-    ...(exception.type === "AggregateError" && { is_exception_group: true }),
+    ...(exception.type === 'AggregateError' && { is_exception_group: true }),
     exception_id: exceptionId,
   };
 }
@@ -9327,12 +8871,11 @@ function applyExceptionGroupFieldsForChildException(
   parentId,
 ) {
   // Don't know if this default makes sense. The protocol requires us to set these values so we pick *some* default.
-  exception.mechanism = exception.mechanism ||
-    { type: "generic", handled: true };
+  exception.mechanism = exception.mechanism || { type: 'generic', handled: true };
 
   exception.mechanism = {
     ...exception.mechanism,
-    type: "chained",
+    type: 'chained',
     source,
     exception_id: exceptionId,
     parent_id: parentId,
@@ -9345,7 +8888,7 @@ function applyExceptionGroupFieldsForChildException(
  * we need to truncate the message of the added exceptions here.
  */
 function truncateAggregateExceptions(exceptions, maxValueLength) {
-  return exceptions.map((exception) => {
+  return exceptions.map(exception => {
     if (exception.value) {
       exception.value = truncate(exception.value, maxValueLength);
     }
@@ -9353,12 +8896,12 @@ function truncateAggregateExceptions(exceptions, maxValueLength) {
   });
 }
 
-const DEFAULT_KEY = "cause";
+const DEFAULT_KEY = 'cause';
 const DEFAULT_LIMIT$1 = 5;
 
-const INTEGRATION_NAME$e = "LinkedErrors";
+const INTEGRATION_NAME$e = 'LinkedErrors';
 
-const _linkedErrorsIntegration = (options = {}) => {
+const _linkedErrorsIntegration = ((options = {}) => {
   const limit = options.limit || DEFAULT_LIMIT$1;
   const key = options.key || DEFAULT_KEY;
 
@@ -9378,7 +8921,7 @@ const _linkedErrorsIntegration = (options = {}) => {
       );
     },
   };
-};
+}) ;
 
 const linkedErrorsIntegration = defineIntegration(_linkedErrorsIntegration);
 
@@ -9420,20 +8963,20 @@ function parseCookie(str) {
   let index = 0;
 
   while (index < str.length) {
-    const eqIdx = str.indexOf("=", index);
+    const eqIdx = str.indexOf('=', index);
 
     // no more cookie pairs
     if (eqIdx === -1) {
       break;
     }
 
-    let endIdx = str.indexOf(";", index);
+    let endIdx = str.indexOf(';', index);
 
     if (endIdx === -1) {
       endIdx = str.length;
     } else if (endIdx < eqIdx) {
       // backtrack on prior semicolon
-      index = str.lastIndexOf(";", eqIdx - 1) + 1;
+      index = str.lastIndexOf(';', eqIdx - 1) + 1;
       continue;
     }
 
@@ -9449,7 +8992,7 @@ function parseCookie(str) {
       }
 
       try {
-        obj[key] = val.indexOf("%") !== -1 ? decodeURIComponent(val) : val;
+        obj[key] = val.indexOf('%') !== -1 ? decodeURIComponent(val) : val;
       } catch (e) {
         obj[key] = val;
       }
@@ -9488,18 +9031,18 @@ function parseCookie(str) {
 
 // The headers to check, in priority order
 const ipHeaderNames = [
-  "X-Client-IP",
-  "X-Forwarded-For",
-  "Fly-Client-IP",
-  "CF-Connecting-IP",
-  "Fastly-Client-Ip",
-  "True-Client-Ip",
-  "X-Real-IP",
-  "X-Cluster-Client-IP",
-  "X-Forwarded",
-  "Forwarded-For",
-  "Forwarded",
-  "X-Vercel-Forwarded-For",
+  'X-Client-IP',
+  'X-Forwarded-For',
+  'Fly-Client-IP',
+  'CF-Connecting-IP',
+  'Fastly-Client-Ip',
+  'True-Client-Ip',
+  'X-Real-IP',
+  'X-Cluster-Client-IP',
+  'X-Forwarded',
+  'Forwarded-For',
+  'Forwarded',
+  'X-Vercel-Forwarded-For',
 ];
 
 /**
@@ -9519,13 +9062,13 @@ function getClientIPAddress(headers) {
   // can take
   const headerValues = ipHeaderNames.map((headerName) => {
     const rawValue = headers[headerName];
-    const value = Array.isArray(rawValue) ? rawValue.join(";") : rawValue;
+    const value = Array.isArray(rawValue) ? rawValue.join(';') : rawValue;
 
-    if (headerName === "Forwarded") {
+    if (headerName === 'Forwarded') {
       return parseForwardedHeader(value);
     }
 
-    return value && value.split(",").map((v) => v.trim());
+    return value && value.split(',').map((v) => v.trim());
   });
 
   // Flatten the array and filter out any falsy entries
@@ -9538,7 +9081,7 @@ function getClientIPAddress(headers) {
   }, []);
 
   // Find the first value which is a valid IP address, if any
-  const ipAddress = flattenedHeaderValues.find((ip) => ip !== null && isIP(ip));
+  const ipAddress = flattenedHeaderValues.find(ip => ip !== null && isIP(ip));
 
   return ipAddress || null;
 }
@@ -9548,8 +9091,8 @@ function parseForwardedHeader(value) {
     return null;
   }
 
-  for (const part of value.split(";")) {
-    if (part.startsWith("for=")) {
+  for (const part of value.split(';')) {
+    if (part.startsWith('for=')) {
       return part.slice(4);
     }
   }
@@ -9590,24 +9133,19 @@ const DEFAULT_INCLUDES = {
   request: true,
   user: true,
 };
-const DEFAULT_REQUEST_INCLUDES = [
-  "cookies",
-  "data",
-  "headers",
-  "method",
-  "query_string",
-  "url",
-];
-const DEFAULT_USER_INCLUDES = ["id", "username", "email"];
+const DEFAULT_REQUEST_INCLUDES = ['cookies', 'data', 'headers', 'method', 'query_string', 'url'];
+const DEFAULT_USER_INCLUDES = ['id', 'username', 'email'];
 
 function extractUserData(
-  user,
+  user
+
+,
   keys,
 ) {
   const extractedUser = {};
   const attributes = Array.isArray(keys) ? keys : DEFAULT_USER_INCLUDES;
 
-  attributes.forEach((key) => {
+  attributes.forEach(key => {
     if (user && key in user) {
       extractedUser[key] = user[key];
     }
@@ -9629,14 +9167,18 @@ function extractUserData(
  */
 function extractRequestData(
   req,
-  options = {},
+  options
+
+ = {},
 ) {
   const { include = DEFAULT_REQUEST_INCLUDES } = options;
   const requestData = {};
 
   // headers:
   //   node, express, koa, nextjs: req.headers
-  const headers = req.headers || {};
+  const headers = (req.headers || {})
+
+;
   // method:
   //   node, express, koa, nextjs: req.method
   const method = req.method;
@@ -9647,51 +9189,46 @@ function extractRequestData(
   // Express 4 mistakenly strips off port number from req.host / req.hostname so we can't rely on them
   // See: https://github.com/expressjs/express/issues/3047#issuecomment-236653223
   // Also: https://github.com/getsentry/sentry-javascript/issues/1917
-  const host = headers.host || req.hostname || req.host || "<no host>";
+  const host = headers.host || req.hostname || req.host || '<no host>';
   // protocol:
   //   node, nextjs: <n/a>
   //   express, koa: req.protocol
-  const protocol =
-    req.protocol === "https" || (req.socket && req.socket.encrypted)
-      ? "https"
-      : "http";
+  const protocol = req.protocol === 'https' || (req.socket && req.socket.encrypted) ? 'https' : 'http';
   // url (including path and query string):
   //   node, express: req.originalUrl
   //   koa, nextjs: req.url
-  const originalUrl = req.originalUrl || req.url || "";
+  const originalUrl = req.originalUrl || req.url || '';
   // absolute url
-  const absoluteUrl = originalUrl.startsWith(protocol)
-    ? originalUrl
-    : `${protocol}://${host}${originalUrl}`;
-  include.forEach((key) => {
+  const absoluteUrl = originalUrl.startsWith(protocol) ? originalUrl : `${protocol}://${host}${originalUrl}`;
+  include.forEach(key => {
     switch (key) {
-      case "headers": {
+      case 'headers': {
         requestData.headers = headers;
 
         // Remove the Cookie header in case cookie data should not be included in the event
-        if (!include.includes("cookies")) {
-          delete requestData.headers.cookie;
+        if (!include.includes('cookies')) {
+          delete (requestData.headers ).cookie;
         }
 
         // Remove IP headers in case IP data should not be included in the event
-        if (!include.includes("ip")) {
-          ipHeaderNames.forEach((ipHeaderName) => {
+        if (!include.includes('ip')) {
+          ipHeaderNames.forEach(ipHeaderName => {
             // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-            delete requestData.headers[ipHeaderName];
+            delete (requestData.headers )[ipHeaderName];
           });
         }
 
         break;
       }
-      case "method": {
+      case 'method': {
         requestData.method = method;
         break;
       }
-      case "url": {
+      case 'url': {
         requestData.url = absoluteUrl;
         break;
       }
-      case "cookies": {
+      case 'cookies': {
         // cookies:
         //   node, express, koa: req.headers.cookie
         //   vercel, sails.js, express (w/ cookie middleware), nextjs: req.cookies
@@ -9701,15 +9238,15 @@ function extractRequestData(
           req.cookies || (headers.cookie && parseCookie(headers.cookie)) || {};
         break;
       }
-      case "query_string": {
+      case 'query_string': {
         // query string:
         //   node: req.url (raw)
         //   express, koa, nextjs: req.query
         requestData.query_string = extractQueryParams(req);
         break;
       }
-      case "data": {
-        if (method === "GET" || method === "HEAD") {
+      case 'data': {
+        if (method === 'GET' || method === 'HEAD') {
           break;
         }
         // NOTE: As of v8, request is (unless a user sets this manually) ALWAYS a http request
@@ -9728,8 +9265,8 @@ function extractRequestData(
           const stringBody = isString(body)
             ? body
             : isPlainObject(body)
-            ? JSON.stringify(normalize(body))
-            : truncate(`${body}`, 1024);
+              ? JSON.stringify(normalize(body))
+              : truncate(`${body}`, 1024);
           if (stringBody) {
             requestData.data = stringBody;
           }
@@ -9738,7 +9275,7 @@ function extractRequestData(
       }
       default: {
         if ({}.hasOwnProperty.call(req, key)) {
-          requestData[key] = req[key];
+          requestData[key] = (req )[key];
         }
       }
     }
@@ -9764,16 +9301,12 @@ function addNormalizedRequestDataToEvent(
   };
 
   if (include.request) {
-    const includeRequest = Array.isArray(include.request)
-      ? [...include.request]
-      : [...DEFAULT_REQUEST_INCLUDES];
+    const includeRequest = Array.isArray(include.request) ? [...include.request] : [...DEFAULT_REQUEST_INCLUDES];
     if (include.ip) {
-      includeRequest.push("ip");
+      includeRequest.push('ip');
     }
 
-    const extractedRequestData = extractNormalizedRequestData(req, {
-      include: includeRequest,
-    });
+    const extractedRequestData = extractNormalizedRequestData(req, { include: includeRequest });
 
     event.request = {
       ...event.request,
@@ -9796,8 +9329,7 @@ function addNormalizedRequestDataToEvent(
   }
 
   if (include.ip) {
-    const ip = (req.headers && getClientIPAddress(req.headers)) ||
-      additionalData.ipAddress;
+    const ip = (req.headers && getClientIPAddress(req.headers)) || additionalData.ipAddress;
     if (ip) {
       event.user = {
         ...event.user,
@@ -9829,17 +9361,13 @@ function addRequestDataToEvent(
   };
 
   if (include.request) {
-    const includeRequest = Array.isArray(include.request)
-      ? [...include.request]
-      : [...DEFAULT_REQUEST_INCLUDES];
+    const includeRequest = Array.isArray(include.request) ? [...include.request] : [...DEFAULT_REQUEST_INCLUDES];
     if (include.ip) {
-      includeRequest.push("ip");
+      includeRequest.push('ip');
     }
 
     // eslint-disable-next-line deprecation/deprecation
-    const extractedRequestData = extractRequestData(req, {
-      include: includeRequest,
-    });
+    const extractedRequestData = extractRequestData(req, { include: includeRequest });
 
     event.request = {
       ...event.request,
@@ -9848,9 +9376,7 @@ function addRequestDataToEvent(
   }
 
   if (include.user) {
-    const extractedUser = req.user && isPlainObject(req.user)
-      ? extractUserData(req.user, include.user)
-      : {};
+    const extractedUser = req.user && isPlainObject(req.user) ? extractUserData(req.user, include.user) : {};
 
     if (Object.keys(extractedUser).length) {
       event.user = {
@@ -9865,8 +9391,7 @@ function addRequestDataToEvent(
   //   express, koa: req.ip
   //   It may also be sent by proxies as specified in X-Forwarded-For or similar headers
   if (include.ip) {
-    const ip = (req.headers && getClientIPAddress(req.headers)) || req.ip ||
-      (req.socket && req.socket.remoteAddress);
+    const ip = (req.headers && getClientIPAddress(req.headers)) || req.ip || (req.socket && req.socket.remoteAddress);
     if (ip) {
       event.user = {
         ...event.user,
@@ -9882,7 +9407,7 @@ function extractQueryParams(req) {
   // url (including path and query string):
   //   node, express: req.originalUrl
   //   koa, nextjs: req.url
-  let originalUrl = req.originalUrl || req.url || "";
+  let originalUrl = req.originalUrl || req.url || '';
 
   if (!originalUrl) {
     return;
@@ -9890,7 +9415,7 @@ function extractQueryParams(req) {
 
   // The `URL` constructor can't handle internal URLs of the form `/some/path/here`, so stick a dummy protocol and
   // hostname on the beginning. Since the point here is just to grab the query string, it doesn't matter what we use.
-  if (originalUrl.startsWith("/")) {
+  if (originalUrl.startsWith('/')) {
     originalUrl = `http://dogs.are.great${originalUrl}`;
   }
 
@@ -9906,49 +9431,46 @@ function extractNormalizedRequestData(
   normalizedRequest,
   { include },
 ) {
-  const includeKeys = include
-    ? (Array.isArray(include) ? include : DEFAULT_REQUEST_INCLUDES)
-    : [];
+  const includeKeys = include ? (Array.isArray(include) ? include : DEFAULT_REQUEST_INCLUDES) : [];
 
   const requestData = {};
   const headers = { ...normalizedRequest.headers };
 
-  if (includeKeys.includes("headers")) {
+  if (includeKeys.includes('headers')) {
     requestData.headers = headers;
 
     // Remove the Cookie header in case cookie data should not be included in the event
-    if (!include.includes("cookies")) {
-      delete headers.cookie;
+    if (!include.includes('cookies')) {
+      delete (headers ).cookie;
     }
 
     // Remove IP headers in case IP data should not be included in the event
-    if (!include.includes("ip")) {
-      ipHeaderNames.forEach((ipHeaderName) => {
+    if (!include.includes('ip')) {
+      ipHeaderNames.forEach(ipHeaderName => {
         // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete headers[ipHeaderName];
+        delete (headers )[ipHeaderName];
       });
     }
   }
 
-  if (includeKeys.includes("method")) {
+  if (includeKeys.includes('method')) {
     requestData.method = normalizedRequest.method;
   }
 
-  if (includeKeys.includes("url")) {
+  if (includeKeys.includes('url')) {
     requestData.url = normalizedRequest.url;
   }
 
-  if (includeKeys.includes("cookies")) {
-    const cookies = normalizedRequest.cookies ||
-      (headers && headers.cookie ? parseCookie(headers.cookie) : undefined);
+  if (includeKeys.includes('cookies')) {
+    const cookies = normalizedRequest.cookies || (headers && headers.cookie ? parseCookie(headers.cookie) : undefined);
     requestData.cookies = cookies || {};
   }
 
-  if (includeKeys.includes("query_string")) {
+  if (includeKeys.includes('query_string')) {
     requestData.query_string = normalizedRequest.query_string;
   }
 
-  if (includeKeys.includes("data")) {
+  if (includeKeys.includes('data')) {
     requestData.data = normalizedRequest.data;
   }
 
@@ -9969,25 +9491,26 @@ const DEFAULT_OPTIONS = {
       email: true,
     },
   },
-  transactionNamingScheme: "methodPath",
+  transactionNamingScheme: 'methodPath' ,
 };
 
-const INTEGRATION_NAME$d = "RequestData";
+const INTEGRATION_NAME$d = 'RequestData';
 
-const _requestDataIntegration = (options = {}) => {
+const _requestDataIntegration = ((options = {}) => {
   const _options = {
     ...DEFAULT_OPTIONS,
     ...options,
     include: {
       ...DEFAULT_OPTIONS.include,
       ...options.include,
-      user: options.include && typeof options.include.user === "boolean"
-        ? options.include.user
-        : {
-          ...DEFAULT_OPTIONS.include.user,
-          // Unclear why TS still thinks `options.include.user` could be a boolean at this point
-          ...((options.include || {}).user),
-        },
+      user:
+        options.include && typeof options.include.user === 'boolean'
+          ? options.include.user
+          : {
+              ...DEFAULT_OPTIONS.include.user,
+              // Unclear why TS still thinks `options.include.user` could be a boolean at this point
+              ...((options.include || {}).user ),
+            },
     },
   };
 
@@ -10002,21 +9525,15 @@ const _requestDataIntegration = (options = {}) => {
       const { sdkProcessingMetadata = {} } = event;
       const { request, normalizedRequest } = sdkProcessingMetadata;
 
-      const addRequestDataOptions =
-        convertReqDataIntegrationOptsToAddReqDataOpts(_options);
+      const addRequestDataOptions = convertReqDataIntegrationOptsToAddReqDataOpts(_options);
 
       // If this is set, it takes precedence over the plain request object
       if (normalizedRequest) {
         // Some other data is not available in standard HTTP requests, but can sometimes be augmented by e.g. Express or Next.js
-        const ipAddress = request
-          ? request.ip || (request.socket && request.socket.remoteAddress)
-          : undefined;
+        const ipAddress = request ? request.ip || (request.socket && request.socket.remoteAddress) : undefined;
         const user = request ? request.user : undefined;
 
-        addNormalizedRequestDataToEvent(event, normalizedRequest, {
-          ipAddress,
-          user,
-        }, addRequestDataOptions);
+        addNormalizedRequestDataToEvent(event, normalizedRequest, { ipAddress, user }, addRequestDataOptions);
         return event;
       }
 
@@ -10029,7 +9546,7 @@ const _requestDataIntegration = (options = {}) => {
       return addRequestDataToEvent(event, request, addRequestDataOptions);
     },
   };
-};
+}) ;
 
 /**
  * Add data about a request to an event. Primarily for use in Node-based SDKs, but included in `@sentry/core`
@@ -10048,7 +9565,7 @@ function convertReqDataIntegrationOptsToAddReqDataOpts(
     include: { ip, user, ...requestOptions },
   } = integrationOptions;
 
-  const requestIncludeKeys = ["method"];
+  const requestIncludeKeys = ['method'];
   for (const [key, value] of Object.entries(requestOptions)) {
     if (value) {
       requestIncludeKeys.push(key);
@@ -10058,7 +9575,7 @@ function convertReqDataIntegrationOptsToAddReqDataOpts(
   let addReqDataUserOpt;
   if (user === undefined) {
     addReqDataUserOpt = true;
-  } else if (typeof user === "boolean") {
+  } else if (typeof user === 'boolean') {
     addReqDataUserOpt = user;
   } else {
     const userIncludeKeys = [];
@@ -10087,13 +9604,13 @@ function convertReqDataIntegrationOptsToAddReqDataOpts(
  * @hidden
  */
 function addConsoleInstrumentationHandler(handler) {
-  const type = "console";
+  const type = 'console';
   addHandler(type, handler);
   maybeInstrument(type, instrumentConsole);
 }
 
 function instrumentConsole() {
-  if (!("console" in GLOBAL_OBJ)) {
+  if (!('console' in GLOBAL_OBJ)) {
     return;
   }
 
@@ -10107,7 +9624,7 @@ function instrumentConsole() {
 
       return function (...args) {
         const handlerData = { args, level };
-        triggerHandlers("console", handlerData);
+        triggerHandlers('console', handlerData);
 
         const log = originalConsoleMethods[level];
         log && log.apply(GLOBAL_OBJ.console, args);
@@ -10128,17 +9645,13 @@ function instrumentConsole() {
  */
 function severityLevelFromString(level) {
   return (
-    level === "warn"
-      ? "warning"
-      : ["fatal", "error", "warning", "log", "info", "debug"].includes(level)
-      ? level
-      : "log"
-  );
+    level === 'warn' ? 'warning' : ['fatal', 'error', 'warning', 'log', 'info', 'debug'].includes(level) ? level : 'log'
+  ) ;
 }
 
-const INTEGRATION_NAME$c = "CaptureConsole";
+const INTEGRATION_NAME$c = 'CaptureConsole';
 
-const _captureConsoleIntegration = (options = {}) => {
+const _captureConsoleIntegration = ((options = {}) => {
   const levels = options.levels || CONSOLE_LEVELS;
   // TODO(v9): Flip default value to `true`
   const handled = !!options.handled;
@@ -10146,7 +9659,7 @@ const _captureConsoleIntegration = (options = {}) => {
   return {
     name: INTEGRATION_NAME$c,
     setup(client) {
-      if (!("console" in GLOBAL_OBJ)) {
+      if (!('console' in GLOBAL_OBJ)) {
         return;
       }
 
@@ -10159,7 +9672,7 @@ const _captureConsoleIntegration = (options = {}) => {
       });
     },
   };
-};
+}) ;
 
 /**
  * Send Console API calls as Sentry Events.
@@ -10174,43 +9687,41 @@ function consoleHandler(args, level, handled) {
     },
   };
 
-  withScope((scope) => {
-    scope.addEventProcessor((event) => {
-      event.logger = "console";
+  withScope(scope => {
+    scope.addEventProcessor(event => {
+      event.logger = 'console';
 
       addExceptionMechanism(event, {
         handled,
-        type: "console",
+        type: 'console',
       });
 
       return event;
     });
 
-    if (level === "assert") {
+    if (level === 'assert') {
       if (!args[0]) {
-        const message = `Assertion failed: ${
-          safeJoin(args.slice(1), " ") || "console.assert"
-        }`;
-        scope.setExtra("arguments", args.slice(1));
+        const message = `Assertion failed: ${safeJoin(args.slice(1), ' ') || 'console.assert'}`;
+        scope.setExtra('arguments', args.slice(1));
         captureMessage(message, captureContext);
       }
       return;
     }
 
-    const error = args.find((arg) => arg instanceof Error);
+    const error = args.find(arg => arg instanceof Error);
     if (error) {
       captureException(error, captureContext);
       return;
     }
 
-    const message = safeJoin(args, " ");
+    const message = safeJoin(args, ' ');
     captureMessage(message, captureContext);
   });
 }
 
-const INTEGRATION_NAME$b = "Debug";
+const INTEGRATION_NAME$b = 'Debug';
 
-const _debugIntegration = (options = {}) => {
+const _debugIntegration = ((options = {}) => {
   const _options = {
     debugger: false,
     stringify: false,
@@ -10220,7 +9731,7 @@ const _debugIntegration = (options = {}) => {
   return {
     name: INTEGRATION_NAME$b,
     setup(client) {
-      client.on("beforeSendEvent", (event, hint) => {
+      client.on('beforeSendEvent', (event, hint) => {
         if (_options.debugger) {
           // eslint-disable-next-line no-debugger
           debugger;
@@ -10244,7 +9755,7 @@ const _debugIntegration = (options = {}) => {
       });
     },
   };
-};
+}) ;
 
 /**
  * Integration to debug sent Sentry events.
@@ -10255,9 +9766,9 @@ const _debugIntegration = (options = {}) => {
  */
 const debugIntegration = defineIntegration(_debugIntegration);
 
-const INTEGRATION_NAME$a = "Dedupe";
+const INTEGRATION_NAME$a = 'Dedupe';
 
-const _dedupeIntegration = () => {
+const _dedupeIntegration = (() => {
   let previousEvent;
 
   return {
@@ -10272,10 +9783,7 @@ const _dedupeIntegration = () => {
       // Juuust in case something goes wrong
       try {
         if (_shouldDropEvent(currentEvent, previousEvent)) {
-          DEBUG_BUILD$1 &&
-            logger.warn(
-              "Event dropped due to being a duplicate of previously captured event.",
-            );
+          DEBUG_BUILD$1 && logger.warn('Event dropped due to being a duplicate of previously captured event.');
           return null;
         }
       } catch (_oO) {} // eslint-disable-line no-empty
@@ -10283,7 +9791,7 @@ const _dedupeIntegration = () => {
       return (previousEvent = currentEvent);
     },
   };
-};
+}) ;
 
 /**
  * Deduplication filter.
@@ -10317,9 +9825,7 @@ function _isSameMessageEvent(currentEvent, previousEvent) {
   }
 
   // If only one event has a stacktrace, but not the other one, they are not the same
-  if (
-    (currentMessage && !previousMessage) || (!currentMessage && previousMessage)
-  ) {
+  if ((currentMessage && !previousMessage) || (!currentMessage && previousMessage)) {
     return false;
   }
 
@@ -10346,10 +9852,7 @@ function _isSameExceptionEvent(currentEvent, previousEvent) {
     return false;
   }
 
-  if (
-    previousException.type !== currentException.type ||
-    previousException.value !== currentException.value
-  ) {
+  if (previousException.type !== currentException.type || previousException.value !== currentException.value) {
     return false;
   }
 
@@ -10374,14 +9877,12 @@ function _isSameStacktrace(currentEvent, previousEvent) {
   }
 
   // If only one event has a stacktrace, but not the other one, they are not the same
-  if (
-    (currentFrames && !previousFrames) || (!currentFrames && previousFrames)
-  ) {
+  if ((currentFrames && !previousFrames) || (!currentFrames && previousFrames)) {
     return false;
   }
 
-  currentFrames = currentFrames;
-  previousFrames = previousFrames;
+  currentFrames = currentFrames ;
+  previousFrames = previousFrames ;
 
   // If number of frames differ, they are not the same
   if (previousFrames.length !== currentFrames.length) {
@@ -10418,19 +9919,16 @@ function _isSameFingerprint(currentEvent, previousEvent) {
   }
 
   // If only one event has a fingerprint, but not the other one, they are not the same
-  if (
-    (currentFingerprint && !previousFingerprint) ||
-    (!currentFingerprint && previousFingerprint)
-  ) {
+  if ((currentFingerprint && !previousFingerprint) || (!currentFingerprint && previousFingerprint)) {
     return false;
   }
 
-  currentFingerprint = currentFingerprint;
-  previousFingerprint = previousFingerprint;
+  currentFingerprint = currentFingerprint ;
+  previousFingerprint = previousFingerprint ;
 
   // Otherwise, compare the two
   try {
-    return !!(currentFingerprint.join("") === previousFingerprint.join(""));
+    return !!(currentFingerprint.join('') === previousFingerprint.join(''));
   } catch (_oO) {
     return false;
   }
@@ -10440,27 +9938,21 @@ function _getExceptionFromEvent(event) {
   return event.exception && event.exception.values && event.exception.values[0];
 }
 
-const INTEGRATION_NAME$9 = "ExtraErrorData";
+const INTEGRATION_NAME$9 = 'ExtraErrorData';
 
 /**
  * Extract additional data for from original exceptions.
  */
-const _extraErrorDataIntegration = (options = {}) => {
+const _extraErrorDataIntegration = ((options = {}) => {
   const { depth = 3, captureErrorCause = true } = options;
   return {
     name: INTEGRATION_NAME$9,
     processEvent(event, hint, client) {
       const { maxValueLength = 250 } = client.getOptions();
-      return _enhanceEventWithErrorData(
-        event,
-        hint,
-        depth,
-        captureErrorCause,
-        maxValueLength,
-      );
+      return _enhanceEventWithErrorData(event, hint, depth, captureErrorCause, maxValueLength);
     },
   };
-};
+}) ;
 
 const extraErrorDataIntegration = defineIntegration(_extraErrorDataIntegration);
 
@@ -10474,14 +9966,9 @@ function _enhanceEventWithErrorData(
   if (!hint.originalException || !isError(hint.originalException)) {
     return event;
   }
-  const exceptionName = hint.originalException.name ||
-    hint.originalException.constructor.name;
+  const exceptionName = (hint.originalException ).name || hint.originalException.constructor.name;
 
-  const errorData = _extractErrorData(
-    hint.originalException,
-    captureErrorCause,
-    maxValueLength,
-  );
+  const errorData = _extractErrorData(hint.originalException , captureErrorCause, maxValueLength);
 
   if (errorData) {
     const contexts = {
@@ -10493,11 +9980,7 @@ function _enhanceEventWithErrorData(
     if (isPlainObject(normalizedErrorData)) {
       // We mark the error data as "already normalized" here, because we don't want other normalization procedures to
       // potentially truncate the data we just already normalized, with a certain depth setting.
-      addNonEnumerableProperty(
-        normalizedErrorData,
-        "__sentry_skip_normalization__",
-        true,
-      );
+      addNonEnumerableProperty(normalizedErrorData, '__sentry_skip_normalization__', true);
       contexts[exceptionName] = normalizedErrorData;
     }
 
@@ -10521,15 +10004,15 @@ function _extractErrorData(
   // We are trying to enhance already existing event, so no harm done if it won't succeed
   try {
     const nativeKeys = [
-      "name",
-      "message",
-      "stack",
-      "line",
-      "column",
-      "fileName",
-      "lineNumber",
-      "columnNumber",
-      "toJSON",
+      'name',
+      'message',
+      'stack',
+      'line',
+      'column',
+      'fileName',
+      'lineNumber',
+      'columnNumber',
+      'toJSON',
     ];
 
     const extraErrorInfo = {};
@@ -10540,22 +10023,18 @@ function _extractErrorData(
         continue;
       }
       const value = error[key];
-      extraErrorInfo[key] = isError(value) || typeof value === "string"
-        ? truncate(`${value}`, maxValueLength)
-        : value;
+      extraErrorInfo[key] = isError(value) || typeof value === 'string' ? truncate(`${value}`, maxValueLength) : value;
     }
 
     // Error.cause is a standard property that is non enumerable, we therefore need to access it separately.
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause
     if (captureErrorCause && error.cause !== undefined) {
-      extraErrorInfo.cause = isError(error.cause)
-        ? error.cause.toString()
-        : error.cause;
+      extraErrorInfo.cause = isError(error.cause) ? error.cause.toString() : error.cause;
     }
 
     // Check if someone attached `toJSON` method to grab even more properties (eg. axios is doing that)
-    if (typeof error.toJSON === "function") {
-      const serializedError = error.toJSON();
+    if (typeof error.toJSON === 'function') {
+      const serializedError = error.toJSON() ;
 
       for (const key of Object.keys(serializedError)) {
         const value = serializedError[key];
@@ -10565,8 +10044,7 @@ function _extractErrorData(
 
     return extraErrorInfo;
   } catch (oO) {
-    DEBUG_BUILD$1 &&
-      logger.error("Unable to extract extra data from the Error object:", oO);
+    DEBUG_BUILD$1 && logger.error('Unable to extract extra data from the Error object:', oO);
   }
 
   return null;
@@ -10602,9 +10080,9 @@ function normalizeArray(parts, allowAboveRoot) {
   let up = 0;
   for (let i = parts.length - 1; i >= 0; i--) {
     const last = parts[i];
-    if (last === ".") {
+    if (last === '.') {
       parts.splice(i, 1);
-    } else if (last === "..") {
+    } else if (last === '..') {
       parts.splice(i, 1);
       up++;
     } else if (up) {
@@ -10616,7 +10094,7 @@ function normalizeArray(parts, allowAboveRoot) {
   // if the path is allowed to go above the root, restore leading ..s
   if (allowAboveRoot) {
     for (; up--; up) {
-      parts.unshift("..");
+      parts.unshift('..');
     }
   }
 
@@ -10625,15 +10103,12 @@ function normalizeArray(parts, allowAboveRoot) {
 
 // Split a filename into [root, dir, basename, ext], unix version
 // 'root' is just a slash, or nothing.
-const splitPathRe =
-  /^(\S+:\\|\/?)([\s\S]*?)((?:\.{1,2}|[^/\\]+?|)(\.[^./\\]*|))(?:[/\\]*)$/;
+const splitPathRe = /^(\S+:\\|\/?)([\s\S]*?)((?:\.{1,2}|[^/\\]+?|)(\.[^./\\]*|))(?:[/\\]*)$/;
 /** JSDoc */
 function splitPath(filename) {
   // Truncate files names greater than 1024 characters to avoid regex dos
   // https://github.com/getsentry/sentry-javascript/pull/8737#discussion_r1285719172
-  const truncated = filename.length > 1024
-    ? `<truncated>${filename.slice(-1024)}`
-    : filename;
+  const truncated = filename.length > 1024 ? `<truncated>${filename.slice(-1024)}` : filename;
   const parts = splitPathRe.exec(truncated);
   return parts ? parts.slice(1) : [];
 }
@@ -10642,11 +10117,11 @@ function splitPath(filename) {
 // posix version
 /** JSDoc */
 function resolve(...args) {
-  let resolvedPath = "";
+  let resolvedPath = '';
   let resolvedAbsolute = false;
 
   for (let i = args.length - 1; i >= -1 && !resolvedAbsolute; i--) {
-    const path = i >= 0 ? args[i] : "/";
+    const path = i >= 0 ? args[i] : '/';
 
     // Skip empty entries
     if (!path) {
@@ -10654,7 +10129,7 @@ function resolve(...args) {
     }
 
     resolvedPath = `${path}/${resolvedPath}`;
-    resolvedAbsolute = path.charAt(0) === "/";
+    resolvedAbsolute = path.charAt(0) === '/';
   }
 
   // At this point the path should be resolved to a full absolute path, but
@@ -10662,25 +10137,25 @@ function resolve(...args) {
 
   // Normalize the path
   resolvedPath = normalizeArray(
-    resolvedPath.split("/").filter((p) => !!p),
+    resolvedPath.split('/').filter(p => !!p),
     !resolvedAbsolute,
-  ).join("/");
+  ).join('/');
 
-  return (resolvedAbsolute ? "/" : "") + resolvedPath || ".";
+  return (resolvedAbsolute ? '/' : '') + resolvedPath || '.';
 }
 
 /** JSDoc */
 function trim(arr) {
   let start = 0;
   for (; start < arr.length; start++) {
-    if (arr[start] !== "") {
+    if (arr[start] !== '') {
       break;
     }
   }
 
   let end = arr.length - 1;
   for (; end >= 0; end--) {
-    if (arr[end] !== "") {
+    if (arr[end] !== '') {
       break;
     }
   }
@@ -10700,8 +10175,8 @@ function relative(from, to) {
   to = resolve(to).slice(1);
   /* eslint-enable no-param-reassign */
 
-  const fromParts = trim(from.split("/"));
-  const toParts = trim(to.split("/"));
+  const fromParts = trim(from.split('/'));
+  const toParts = trim(to.split('/'));
 
   const length = Math.min(fromParts.length, toParts.length);
   let samePartsLength = length;
@@ -10714,23 +10189,23 @@ function relative(from, to) {
 
   let outputParts = [];
   for (let i = samePartsLength; i < fromParts.length; i++) {
-    outputParts.push("..");
+    outputParts.push('..');
   }
 
   outputParts = outputParts.concat(toParts.slice(samePartsLength));
 
-  return outputParts.join("/");
+  return outputParts.join('/');
 }
 
 /** JSDoc */
 function dirname(path) {
   const result = splitPath(path);
-  const root = result[0] || "";
+  const root = result[0] || '';
   let dir = result[1];
 
   if (!root && !dir) {
     // No dirname whatsoever
-    return ".";
+    return '.';
   }
 
   if (dir) {
@@ -10743,23 +10218,22 @@ function dirname(path) {
 
 /** JSDoc */
 function basename(path, ext) {
-  let f = splitPath(path)[2] || "";
+  let f = splitPath(path)[2] || '';
   return f;
 }
 
-const INTEGRATION_NAME$8 = "RewriteFrames";
+const INTEGRATION_NAME$8 = 'RewriteFrames';
 
 /**
  * Rewrite event frames paths.
  */
 const rewriteFramesIntegration = defineIntegration((options = {}) => {
   const root = options.root;
-  const prefix = options.prefix || "app:///";
+  const prefix = options.prefix || 'app:///';
 
-  const isBrowser = "window" in GLOBAL_OBJ && GLOBAL_OBJ.window !== undefined;
+  const isBrowser = 'window' in GLOBAL_OBJ && GLOBAL_OBJ.window !== undefined;
 
-  const iteratee = options.iteratee ||
-    generateIteratee({ isBrowser, root, prefix });
+  const iteratee = options.iteratee || generateIteratee({ isBrowser, root, prefix });
 
   /** Process an exception event. */
   function _processExceptionsEvent(event) {
@@ -10770,10 +10244,9 @@ const rewriteFramesIntegration = defineIntegration((options = {}) => {
           ...event.exception,
           // The check for this is performed inside `process` call itself, safe to skip here
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          values: event.exception.values.map((value) => ({
+          values: event.exception.values.map(value => ({
             ...value,
-            ...(value.stacktrace &&
-              { stacktrace: _processStacktrace(value.stacktrace) }),
+            ...(value.stacktrace && { stacktrace: _processStacktrace(value.stacktrace) }),
           })),
         },
       };
@@ -10786,8 +10259,7 @@ const rewriteFramesIntegration = defineIntegration((options = {}) => {
   function _processStacktrace(stacktrace) {
     return {
       ...stacktrace,
-      frames: stacktrace && stacktrace.frames &&
-        stacktrace.frames.map((f) => iteratee(f)),
+      frames: stacktrace && stacktrace.frames && stacktrace.frames.map(f => iteratee(f)),
     };
   }
 
@@ -10796,9 +10268,7 @@ const rewriteFramesIntegration = defineIntegration((options = {}) => {
     processEvent(originalEvent) {
       let processedEvent = originalEvent;
 
-      if (
-        originalEvent.exception && Array.isArray(originalEvent.exception.values)
-      ) {
+      if (originalEvent.exception && Array.isArray(originalEvent.exception.values)) {
         processedEvent = _processExceptionsEvent(processedEvent);
       }
 
@@ -10814,16 +10284,19 @@ function generateIteratee({
   isBrowser,
   root,
   prefix,
-}) {
+}
+
+) {
   return (frame) => {
     if (!frame.filename) {
       return frame;
     }
 
     // Determine if this is a Windows frame by checking for a Windows-style prefix such as `C:\`
-    const isWindowsFrame = /^[a-zA-Z]:\\/.test(frame.filename) ||
+    const isWindowsFrame =
+      /^[a-zA-Z]:\\/.test(frame.filename) ||
       // or the presence of a backslash without a forward slash (which are not allowed on Windows)
-      (frame.filename.includes("\\") && !frame.filename.includes("/"));
+      (frame.filename.includes('\\') && !frame.filename.includes('/'));
 
     // Check if the frame filename begins with `/`
     const startsWithSlash = /^\//.test(frame.filename);
@@ -10839,8 +10312,8 @@ function generateIteratee({
       if (isWindowsFrame || startsWithSlash) {
         const filename = isWindowsFrame
           ? frame.filename
-            .replace(/^[a-zA-Z]:/, "") // remove Windows-style prefix
-            .replace(/\\/g, "/") // replace all `\\` instances with `/`
+              .replace(/^[a-zA-Z]:/, '') // remove Windows-style prefix
+              .replace(/\\/g, '/') // replace all `\\` instances with `/`
           : frame.filename;
         const base = root ? relative(root, filename) : basename(filename);
         frame.filename = `${prefix}${base}`;
@@ -10851,9 +10324,9 @@ function generateIteratee({
   };
 }
 
-const INTEGRATION_NAME$7 = "SessionTiming";
+const INTEGRATION_NAME$7 = 'SessionTiming';
 
-const _sessionTimingIntegration = () => {
+const _sessionTimingIntegration = (() => {
   const startTime = timestampInSeconds() * 1000;
 
   return {
@@ -10865,14 +10338,14 @@ const _sessionTimingIntegration = () => {
         ...event,
         extra: {
           ...event.extra,
-          ["session:start"]: startTime,
-          ["session:duration"]: now - startTime,
-          ["session:end"]: now,
+          ['session:start']: startTime,
+          ['session:duration']: now - startTime,
+          ['session:end']: now,
         },
       };
     },
   };
-};
+}) ;
 
 /**
  * This function adds duration since the sessionTimingIntegration was initialized
@@ -10884,7 +10357,7 @@ const _sessionTimingIntegration = () => {
 const sessionTimingIntegration = defineIntegration(_sessionTimingIntegration);
 
 const DEFAULT_LIMIT = 10;
-const INTEGRATION_NAME$6 = "ZodErrors";
+const INTEGRATION_NAME$6 = 'ZodErrors';
 
 /**
  * Simplified ZodIssue type definition
@@ -10893,8 +10366,8 @@ const INTEGRATION_NAME$6 = "ZodErrors";
 function originalExceptionIsZodError(originalException) {
   return (
     isError(originalException) &&
-    originalException.name === "ZodError" &&
-    Array.isArray(originalException.issues)
+    originalException.name === 'ZodError' &&
+    Array.isArray((originalException ).issues)
   );
 }
 
@@ -10914,13 +10387,9 @@ function originalExceptionIsZodError(originalException) {
 function flattenIssue(issue) {
   return {
     ...issue,
-    path: "path" in issue && Array.isArray(issue.path)
-      ? issue.path.join(".")
-      : undefined,
-    keys: "keys" in issue ? JSON.stringify(issue.keys) : undefined,
-    unionErrors: "unionErrors" in issue
-      ? JSON.stringify(issue.unionErrors)
-      : undefined,
+    path: 'path' in issue && Array.isArray(issue.path) ? issue.path.join('.') : undefined,
+    keys: 'keys' in issue ? JSON.stringify(issue.keys) : undefined,
+    unionErrors: 'unionErrors' in issue ? JSON.stringify(issue.unionErrors) : undefined,
   };
 }
 
@@ -10938,14 +10407,14 @@ function flattenIssue(issue) {
  */
 function flattenIssuePath(path) {
   return path
-    .map((p) => {
-      if (typeof p === "number") {
-        return "<array>";
+    .map(p => {
+      if (typeof p === 'number') {
+        return '<array>';
       } else {
         return p;
       }
     })
-    .join(".");
+    .join('.');
 }
 
 /**
@@ -10967,19 +10436,16 @@ function formatIssueMessage(zodError) {
     // variable rather than a key within an object. This attempts
     // to extract what type it was that failed to validate.
     // For example, z.string().parse(123) would return "string" here.
-    let rootExpectedType = "variable";
+    let rootExpectedType = 'variable';
     if (zodError.issues.length > 0) {
       const iss = zodError.issues[0];
-      if (
-        iss !== undefined && "expected" in iss &&
-        typeof iss.expected === "string"
-      ) {
+      if (iss !== undefined && 'expected' in iss && typeof iss.expected === 'string') {
         rootExpectedType = iss.expected;
       }
     }
     return `Failed to validate ${rootExpectedType}`;
   }
-  return `Failed to validate keys: ${truncate(errorKeys.join(", "), 100)}`;
+  return `Failed to validate keys: ${truncate(errorKeys.join(', '), 100)}`;
 }
 
 /**
@@ -11015,7 +10481,7 @@ function applyZodErrorsToEvent(
         hint.attachments = [];
       }
       hint.attachments.push({
-        filename: "zod_issues.json",
+        filename: 'zod_issues.json',
         data: JSON.stringify({
           issues: flattenedIssues,
         }),
@@ -11036,7 +10502,7 @@ function applyZodErrorsToEvent(
       },
       extra: {
         ...event.extra,
-        "zoderror.issues": flattenedIssues.slice(0, limit),
+        'zoderror.issues': flattenedIssues.slice(0, limit),
       },
     };
   } catch (e) {
@@ -11046,46 +10512,36 @@ function applyZodErrorsToEvent(
       ...event,
       extra: {
         ...event.extra,
-        "zoderrors sentry integration parse error": {
-          message:
-            "an exception was thrown while processing ZodError within applyZodErrorsToEvent()",
-          error: e instanceof Error
-            ? `${e.name}: ${e.message}\n${e.stack}`
-            : "unknown",
+        'zoderrors sentry integration parse error': {
+          message: 'an exception was thrown while processing ZodError within applyZodErrorsToEvent()',
+          error: e instanceof Error ? `${e.name}: ${e.message}\n${e.stack}` : 'unknown',
         },
       },
     };
   }
 }
 
-const _zodErrorsIntegration = (options = {}) => {
-  const limit = typeof options.limit === "undefined"
-    ? DEFAULT_LIMIT
-    : options.limit;
+const _zodErrorsIntegration = ((options = {}) => {
+  const limit = typeof options.limit === 'undefined' ? DEFAULT_LIMIT : options.limit;
 
   return {
     name: INTEGRATION_NAME$6,
     processEvent(originalEvent, hint) {
-      const processedEvent = applyZodErrorsToEvent(
-        limit,
-        options.saveZodIssuesAsAttachment,
-        originalEvent,
-        hint,
-      );
+      const processedEvent = applyZodErrorsToEvent(limit, options.saveZodIssuesAsAttachment, originalEvent, hint);
       return processedEvent;
     },
   };
-};
+}) ;
 
 /**
  * Sentry integration to process Zod errors, making them easier to work with in Sentry.
  */
 const zodErrorsIntegration = defineIntegration(_zodErrorsIntegration);
 
-const COUNTER_METRIC_TYPE = "c";
-const GAUGE_METRIC_TYPE = "g";
-const SET_METRIC_TYPE = "s";
-const DISTRIBUTION_METRIC_TYPE = "d";
+const COUNTER_METRIC_TYPE = 'c' ;
+const GAUGE_METRIC_TYPE = 'g' ;
+const SET_METRIC_TYPE = 's' ;
+const DISTRIBUTION_METRIC_TYPE = 'd' ;
 
 /**
  * SDKs are required to bucket into 10 second intervals (rollup in seconds)
@@ -11108,7 +10564,7 @@ function getMetricsAggregatorForClient$1(
   Aggregator,
 ) {
   const globalMetricsAggregators = getGlobalSingleton(
-    "globalMetricsAggregators",
+    'globalMetricsAggregators',
     () => new WeakMap(),
   );
 
@@ -11118,8 +10574,8 @@ function getMetricsAggregatorForClient$1(
   }
 
   const newAggregator = new Aggregator(client);
-  client.on("flush", () => newAggregator.flush());
-  client.on("close", () => newAggregator.close());
+  client.on('flush', () => newAggregator.flush());
+  client.on('close', () => newAggregator.close());
   globalMetricsAggregators.set(client, newAggregator);
 
   return newAggregator;
@@ -11155,18 +10611,10 @@ function addToMetricsAggregator(
     metricTags.transaction = transactionName;
   }
 
-  DEBUG_BUILD$1 &&
-    logger.log(`Adding value of ${value} to ${metricType} metric ${name}`);
+  DEBUG_BUILD$1 && logger.log(`Adding value of ${value} to ${metricType} metric ${name}`);
 
   const aggregator = getMetricsAggregatorForClient$1(client, Aggregator);
-  aggregator.add(
-    metricType,
-    name,
-    value,
-    unit,
-    { ...metricTags, ...tags },
-    timestamp,
-  );
+  aggregator.add(metricType, name, value, unit, { ...metricTags, ...tags }, timestamp);
 }
 
 /**
@@ -11175,13 +10623,7 @@ function addToMetricsAggregator(
  * @deprecated The Sentry metrics beta has ended. This method will be removed in a future release.
  */
 function increment$1(aggregator, name, value = 1, data) {
-  addToMetricsAggregator(
-    aggregator,
-    COUNTER_METRIC_TYPE,
-    name,
-    ensureNumber(value),
-    data,
-  );
+  addToMetricsAggregator(aggregator, COUNTER_METRIC_TYPE, name, ensureNumber(value), data);
 }
 
 /**
@@ -11190,13 +10632,7 @@ function increment$1(aggregator, name, value = 1, data) {
  * @deprecated The Sentry metrics beta has ended. This method will be removed in a future release.
  */
 function distribution$1(aggregator, name, value, data) {
-  addToMetricsAggregator(
-    aggregator,
-    DISTRIBUTION_METRIC_TYPE,
-    name,
-    ensureNumber(value),
-    data,
-  );
+  addToMetricsAggregator(aggregator, DISTRIBUTION_METRIC_TYPE, name, ensureNumber(value), data);
 }
 
 /**
@@ -11212,21 +10648,21 @@ function timing$1(
   aggregator,
   name,
   value,
-  unit = "second",
+  unit = 'second',
   data,
 ) {
   // callback form
-  if (typeof value === "function") {
+  if (typeof value === 'function') {
     const startTime = timestampInSeconds();
 
     return startSpanManual(
       {
-        op: "metrics.timing",
+        op: 'metrics.timing',
         name,
         startTime,
         onlyIfParent: true,
       },
-      (span) => {
+      span => {
         return handleCallbackErrors(
           () => value(),
           () => {
@@ -11236,10 +10672,7 @@ function timing$1(
             const endTime = timestampInSeconds();
             const timeDiff = endTime - startTime;
             // eslint-disable-next-line deprecation/deprecation
-            distribution$1(aggregator, name, timeDiff, {
-              ...data,
-              unit: "second",
-            });
+            distribution$1(aggregator, name, timeDiff, { ...data, unit: 'second' });
             span.end(endTime);
           },
         );
@@ -11267,13 +10700,7 @@ function set$1(aggregator, name, value, data) {
  * @deprecated The Sentry metrics beta has ended. This method will be removed in a future release.
  */
 function gauge$1(aggregator, name, value, data) {
-  addToMetricsAggregator(
-    aggregator,
-    GAUGE_METRIC_TYPE,
-    name,
-    ensureNumber(value),
-    data,
-  );
+  addToMetricsAggregator(aggregator, GAUGE_METRIC_TYPE, name, ensureNumber(value), data);
 }
 
 /**
@@ -11295,7 +10722,7 @@ const metrics = {
 
 // Although this is typed to be a number, we try to handle strings as well here
 function ensureNumber(number) {
-  return typeof number === "string" ? parseInt(number) : number;
+  return typeof number === 'string' ? parseInt(number) : number;
 }
 
 /**
@@ -11307,9 +10734,7 @@ function getBucketKey(
   unit,
   tags,
 ) {
-  const stringifiedTags = Object.entries(dropUndefinedKeys(tags)).sort((a, b) =>
-    a[0].localeCompare(b[0])
-  );
+  const stringifiedTags = Object.entries(dropUndefinedKeys(tags)).sort((a, b) => a[0].localeCompare(b[0]));
   return `${metricType}${name}${unit}${stringifiedTags}`;
 }
 
@@ -11342,14 +10767,11 @@ function simpleHash(s) {
  * timestamp: 12345677
  */
 function serializeMetricBuckets(metricBucketItems) {
-  let out = "";
+  let out = '';
   for (const item of metricBucketItems) {
     const tagEntries = Object.entries(item.tags);
-    const maybeTags = tagEntries.length > 0
-      ? `|#${tagEntries.map(([key, value]) => `${key}:${value}`).join(",")}`
-      : "";
-    out +=
-      `${item.name}@${item.unit}:${item.metric}|${item.metricType}${maybeTags}|T${item.timestamp}\n`;
+    const maybeTags = tagEntries.length > 0 ? `|#${tagEntries.map(([key, value]) => `${key}:${value}`).join(',')}` : '';
+    out += `${item.name}@${item.unit}:${item.metric}|${item.metricType}${maybeTags}|T${item.timestamp}\n`;
   }
   return out;
 }
@@ -11361,7 +10783,7 @@ function serializeMetricBuckets(metricBucketItems) {
  * https://develop.sentry.dev/sdk/metrics/#normalization
  */
 function sanitizeUnit(unit) {
-  return unit.replace(/[^\w]+/gi, "_");
+  return unit.replace(/[^\w]+/gi, '_');
 }
 
 /**
@@ -11371,7 +10793,7 @@ function sanitizeUnit(unit) {
  * https://develop.sentry.dev/sdk/metrics/#normalization
  */
 function sanitizeMetricKey(key) {
-  return key.replace(/[^\w\-.]+/gi, "_");
+  return key.replace(/[^\w\-.]+/gi, '_');
 }
 
 /**
@@ -11381,7 +10803,7 @@ function sanitizeMetricKey(key) {
  * https://develop.sentry.dev/sdk/metrics/#normalization
  */
 function sanitizeTagKey(key) {
-  return key.replace(/[^\w\-./]+/gi, "");
+  return key.replace(/[^\w\-./]+/gi, '');
 }
 
 /**
@@ -11389,12 +10811,12 @@ function sanitizeTagKey(key) {
  * https://develop.sentry.dev/sdk/metrics/#normalization
  */
 const tagValueReplacements = [
-  ["\n", "\\n"],
-  ["\r", "\\r"],
-  ["\t", "\\t"],
-  ["\\", "\\\\"],
-  ["|", "\\u{7c}"],
-  [",", "\\u{2c}"],
+  ['\n', '\\n'],
+  ['\r', '\\r'],
+  ['\t', '\\t'],
+  ['\\', '\\\\'],
+  ['|', '\\u{7c}'],
+  [',', '\\u{2c}'],
 ];
 
 function getCharOrReplacement(input) {
@@ -11408,7 +10830,7 @@ function getCharOrReplacement(input) {
 }
 
 function sanitizeTagValue(value) {
-  return [...value].reduce((acc, char) => acc + getCharOrReplacement(char), "");
+  return [...value].reduce((acc, char) => acc + getCharOrReplacement(char), '');
 }
 
 /**
@@ -11429,19 +10851,12 @@ function sanitizeTags(unsanitizedTags) {
  * Captures aggregated metrics to the supplied client.
  */
 function captureAggregateMetrics(client, metricBucketItems) {
-  logger.log(
-    `Flushing aggregated metrics, number of metrics: ${metricBucketItems.length}`,
-  );
+  logger.log(`Flushing aggregated metrics, number of metrics: ${metricBucketItems.length}`);
   const dsn = client.getDsn();
   const metadata = client.getSdkMetadata();
   const tunnel = client.getOptions().tunnel;
 
-  const metricsEnvelope = createMetricEnvelope(
-    metricBucketItems,
-    dsn,
-    metadata,
-    tunnel,
-  );
+  const metricsEnvelope = createMetricEnvelope(metricBucketItems, dsn, metadata, tunnel);
 
   // sendEnvelope should not throw
   // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -11479,7 +10894,7 @@ function createMetricEnvelope(
 function createMetricEnvelopeItem(metricBucketItems) {
   const payload = serializeMetricBuckets(metricBucketItems);
   const metricHeaders = {
-    type: "statsd",
+    type: 'statsd',
     length: payload.length,
   };
   return [metricHeaders, payload];
@@ -11488,23 +10903,21 @@ function createMetricEnvelopeItem(metricBucketItems) {
 /**
  * A metric instance representing a counter.
  */
-class CounterMetric {
-  constructor(_value) {
-    this._value = _value;
-  }
+class CounterMetric  {
+   constructor( _value) {this._value = _value;}
 
   /** @inheritDoc */
-  get weight() {
+   get weight() {
     return 1;
   }
 
   /** @inheritdoc */
-  add(value) {
+   add(value) {
     this._value += value;
   }
 
   /** @inheritdoc */
-  toString() {
+   toString() {
     return `${this._value}`;
   }
 }
@@ -11512,8 +10925,9 @@ class CounterMetric {
 /**
  * A metric instance representing a gauge.
  */
-class GaugeMetric {
-  constructor(value) {
+class GaugeMetric  {
+
+   constructor(value) {
     this._last = value;
     this._min = value;
     this._max = value;
@@ -11522,12 +10936,12 @@ class GaugeMetric {
   }
 
   /** @inheritDoc */
-  get weight() {
+   get weight() {
     return 5;
   }
 
   /** @inheritdoc */
-  add(value) {
+   add(value) {
     this._last = value;
     if (value < this._min) {
       this._min = value;
@@ -11540,7 +10954,7 @@ class GaugeMetric {
   }
 
   /** @inheritdoc */
-  toString() {
+   toString() {
     return `${this._last}:${this._min}:${this._max}:${this._sum}:${this._count}`;
   }
 }
@@ -11548,51 +10962,52 @@ class GaugeMetric {
 /**
  * A metric instance representing a distribution.
  */
-class DistributionMetric {
-  constructor(first) {
+class DistributionMetric  {
+
+   constructor(first) {
     this._value = [first];
   }
 
   /** @inheritDoc */
-  get weight() {
+   get weight() {
     return this._value.length;
   }
 
   /** @inheritdoc */
-  add(value) {
+   add(value) {
     this._value.push(value);
   }
 
   /** @inheritdoc */
-  toString() {
-    return this._value.join(":");
+   toString() {
+    return this._value.join(':');
   }
 }
 
 /**
  * A metric instance representing a set.
  */
-class SetMetric {
-  constructor(first) {
-    this.first = first;
+class SetMetric  {
+
+   constructor( first) {this.first = first;
     this._value = new Set([first]);
   }
 
   /** @inheritDoc */
-  get weight() {
+   get weight() {
     return this._value.size;
   }
 
   /** @inheritdoc */
-  add(value) {
+   add(value) {
     this._value.add(value);
   }
 
   /** @inheritdoc */
-  toString() {
+   toString() {
     return Array.from(this._value)
-      .map((val) => (typeof val === "string" ? simpleHash(val) : val))
-      .join(":");
+      .map(val => (typeof val === 'string' ? simpleHash(val) : val))
+      .join(':');
   }
 }
 
@@ -11606,7 +11021,7 @@ const METRIC_MAP = {
 /**
  * A metrics aggregator that aggregates metrics in memory and flushes them periodically.
  */
-class MetricsAggregator {
+class MetricsAggregator  {
   // TODO(@anonrig): Use FinalizationRegistry to have a proper way of flushing the buckets
   // when the aggregator is garbage collected.
   // Ref: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry
@@ -11626,8 +11041,7 @@ class MetricsAggregator {
   //
   // Force flush is used on either shutdown, flush() or when we exceed the max weight.
 
-  constructor(_client) {
-    this._client = _client;
+   constructor(  _client) {this._client = _client;
     this._buckets = new Map();
     this._bucketsTotalWeight = 0;
 
@@ -11636,35 +11050,31 @@ class MetricsAggregator {
       this._interval.unref();
     }
 
-    this._flushShift = Math.floor(
-      (Math.random() * DEFAULT_FLUSH_INTERVAL) / 1000,
-    );
+    this._flushShift = Math.floor((Math.random() * DEFAULT_FLUSH_INTERVAL) / 1000);
     this._forceFlush = false;
   }
 
   /**
    * @inheritDoc
    */
-  add(
+   add(
     metricType,
     unsanitizedName,
     value,
-    unsanitizedUnit = "none",
+    unsanitizedUnit = 'none',
     unsanitizedTags = {},
     maybeFloatTimestamp = timestampInSeconds(),
   ) {
     const timestamp = Math.floor(maybeFloatTimestamp);
     const name = sanitizeMetricKey(unsanitizedName);
     const tags = sanitizeTags(unsanitizedTags);
-    const unit = sanitizeUnit(unsanitizedUnit);
+    const unit = sanitizeUnit(unsanitizedUnit );
 
     const bucketKey = getBucketKey(metricType, name, unit, tags);
 
     let bucketItem = this._buckets.get(bucketKey);
     // If this is a set metric, we need to calculate the delta from the previous weight.
-    const previousWeight = bucketItem && metricType === SET_METRIC_TYPE
-      ? bucketItem.metric.weight
-      : 0;
+    const previousWeight = bucketItem && metricType === SET_METRIC_TYPE ? bucketItem.metric.weight : 0;
 
     if (bucketItem) {
       bucketItem.metric.add(value);
@@ -11686,17 +11096,8 @@ class MetricsAggregator {
     }
 
     // If value is a string, it's a set metric so calculate the delta from the previous weight.
-    const val = typeof value === "string"
-      ? bucketItem.metric.weight - previousWeight
-      : value;
-    updateMetricSummaryOnActiveSpan(
-      metricType,
-      name,
-      val,
-      unit,
-      unsanitizedTags,
-      bucketKey,
-    );
+    const val = typeof value === 'string' ? bucketItem.metric.weight - previousWeight : value;
+    updateMetricSummaryOnActiveSpan(metricType, name, val, unit, unsanitizedTags, bucketKey);
 
     // We need to keep track of the total weight of the buckets so that we can
     // flush them when we exceed the max weight.
@@ -11710,7 +11111,7 @@ class MetricsAggregator {
   /**
    * Flushes the current metrics to the transport via the transport.
    */
-  flush() {
+   flush() {
     this._forceFlush = true;
     this._flush();
   }
@@ -11718,7 +11119,7 @@ class MetricsAggregator {
   /**
    * Shuts down metrics aggregator and clears all metrics.
    */
-  close() {
+   close() {
     this._forceFlush = true;
     clearInterval(this._interval);
     this._flush();
@@ -11732,7 +11133,7 @@ class MetricsAggregator {
    *
    * This function mutates `_forceFlush` and `_bucketsTotalWeight` properties.
    */
-  _flush() {
+   _flush() {
     // TODO(@anonrig): Add Atomics for locking to avoid having force flush and regular flush
     // running at the same time.
     // Ref: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics
@@ -11746,8 +11147,7 @@ class MetricsAggregator {
       this._buckets.clear();
       return;
     }
-    const cutoffSeconds = Math.floor(timestampInSeconds()) -
-      DEFAULT_FLUSH_INTERVAL / 1000 - this._flushShift;
+    const cutoffSeconds = Math.floor(timestampInSeconds()) - DEFAULT_FLUSH_INTERVAL / 1000 - this._flushShift;
     // TODO(@anonrig): Optimization opportunity.
     // Convert this map to an array and store key in the bucketItem.
     const flushedBuckets = new Map();
@@ -11769,13 +11169,11 @@ class MetricsAggregator {
    * Only captures a subset of the buckets passed to this function.
    * @param flushedBuckets
    */
-  _captureMetrics(flushedBuckets) {
+   _captureMetrics(flushedBuckets) {
     if (flushedBuckets.size > 0) {
       // TODO(@anonrig): Optimization opportunity.
       // This copy operation can be avoided if we store the key in the bucketItem.
-      const buckets = Array.from(flushedBuckets).map(([, bucketItem]) =>
-        bucketItem
-      );
+      const buckets = Array.from(flushedBuckets).map(([, bucketItem]) => bucketItem);
       captureAggregateMetrics(this._client, buckets);
     }
   }
@@ -11834,7 +11232,7 @@ function gauge(name, value, data) {
 function timing(
   name,
   value,
-  unit = "second",
+  unit = 'second',
   data,
 ) {
   // eslint-disable-next-line deprecation/deprecation
@@ -11854,7 +11252,9 @@ function getMetricsAggregatorForClient(client) {
  *
  * @deprecated The Sentry metrics beta has ended. This export will be removed in a future release.
  */
-const metricsDefault = {
+const metricsDefault
+
+ = {
   increment,
   distribution,
   set,
@@ -11887,15 +11287,15 @@ function captureFeedback(
         associated_event_id: associatedEventId,
       }),
     },
-    type: "feedback",
-    level: "info",
+    type: 'feedback',
+    level: 'info',
     tags,
   };
 
   const client = (scope && scope.getClient()) || getClient();
 
   if (client) {
-    client.emit("beforeSendFeedback", feedbackEvent, hint);
+    client.emit('beforeSendFeedback', feedbackEvent, hint);
   }
 
   const eventId = scope.captureEvent(feedbackEvent, hint);
@@ -11911,15 +11311,15 @@ function getBreadcrumbLogLevelFromHttpStatusCode(statusCode) {
   if (statusCode === undefined) {
     return undefined;
   } else if (statusCode >= 400 && statusCode < 500) {
-    return "warning";
+    return 'warning';
   } else if (statusCode >= 500) {
-    return "error";
+    return 'error';
   } else {
     return undefined;
   }
 }
 
-const WINDOW = GLOBAL_OBJ;
+const WINDOW = GLOBAL_OBJ ;
 
 /**
  * Tells whether current environment supports Fetch API
@@ -11928,13 +11328,13 @@ const WINDOW = GLOBAL_OBJ;
  * @returns Answer to the given question.
  */
 function supportsFetch() {
-  if (!("fetch" in WINDOW)) {
+  if (!('fetch' in WINDOW)) {
     return false;
   }
 
   try {
     new Headers();
-    new Request("http://www.example.com");
+    new Request('http://www.example.com');
     new Response();
     return true;
   } catch (e) {
@@ -11947,8 +11347,7 @@ function supportsFetch() {
  */
 // eslint-disable-next-line @typescript-eslint/ban-types
 function isNativeFunction(func) {
-  return func &&
-    /^function\s+\w+\(\)\s+\{\s+\[native code\]\s+\}$/.test(func.toString());
+  return func && /^function\s+\w+\(\)\s+\{\s+\[native code\]\s+\}$/.test(func.toString());
 }
 
 /**
@@ -11958,7 +11357,7 @@ function isNativeFunction(func) {
  * @returns true if `window.fetch` is natively implemented, false otherwise
  */
 function supportsNativeFetch() {
-  if (typeof EdgeRuntime === "string") {
+  if (typeof EdgeRuntime === 'string') {
     return true;
   }
 
@@ -11977,9 +11376,9 @@ function supportsNativeFetch() {
   let result = false;
   const doc = WINDOW.document;
   // eslint-disable-next-line deprecation/deprecation
-  if (doc && typeof (doc.createElement) === "function") {
+  if (doc && typeof (doc.createElement ) === 'function') {
     try {
-      const sandbox = doc.createElement("iframe");
+      const sandbox = doc.createElement('iframe');
       sandbox.hidden = true;
       doc.head.appendChild(sandbox);
       if (sandbox.contentWindow && sandbox.contentWindow.fetch) {
@@ -11989,10 +11388,7 @@ function supportsNativeFetch() {
       doc.head.removeChild(sandbox);
     } catch (err) {
       DEBUG_BUILD &&
-        logger.warn(
-          "Could not create sandbox iframe for pure fetch check, bailing to window.fetch: ",
-          err,
-        );
+        logger.warn('Could not create sandbox iframe for pure fetch check, bailing to window.fetch: ', err);
     }
   }
 
@@ -12011,7 +11407,7 @@ function addFetchInstrumentationHandler(
   handler,
   skipNativeFetchCheck,
 ) {
-  const type = "fetch";
+  const type = 'fetch';
   addHandler(type, handler);
   maybeInstrument(type, () => instrumentFetch(undefined, skipNativeFetchCheck));
 }
@@ -12021,7 +11417,7 @@ function instrumentFetch(onFetchResolved, skipNativeFetchCheck = false) {
     return;
   }
 
-  fill(GLOBAL_OBJ, "fetch", function (originalFetch) {
+  fill(GLOBAL_OBJ, 'fetch', function (originalFetch) {
     return function (...args) {
       // We capture the error right here and not in the Promise error callback because Safari (and probably other
       // browsers too) will wipe the stack trace up to this point, only leaving us with this file which is useless.
@@ -12046,7 +11442,7 @@ function instrumentFetch(onFetchResolved, skipNativeFetchCheck = false) {
 
       // if there is no callback, fetch is instrumented directly
       {
-        triggerHandlers("fetch", {
+        triggerHandlers('fetch', {
           ...handlerData,
         });
       }
@@ -12055,7 +11451,7 @@ function instrumentFetch(onFetchResolved, skipNativeFetchCheck = false) {
       return originalFetch.apply(GLOBAL_OBJ, args).then(
         async (response) => {
           {
-            triggerHandlers("fetch", {
+            triggerHandlers('fetch', {
               ...handlerData,
               endTimestamp: timestampInSeconds() * 1000,
               response,
@@ -12065,7 +11461,7 @@ function instrumentFetch(onFetchResolved, skipNativeFetchCheck = false) {
           return response;
         },
         (error) => {
-          triggerHandlers("fetch", {
+          triggerHandlers('fetch', {
             ...handlerData,
             endTimestamp: timestampInSeconds() * 1000,
             error,
@@ -12077,7 +11473,7 @@ function instrumentFetch(onFetchResolved, skipNativeFetchCheck = false) {
             //       have a stack trace, so the SDK backfilled the stack trace so
             //       you can see which fetch call failed.
             error.stack = virtualError.stack;
-            addNonEnumerableProperty(error, "framesToPop", 1);
+            addNonEnumerableProperty(error, 'framesToPop', 1);
           }
 
           // NOTE: If you are a Sentry user, and you are seeing this stack frame,
@@ -12091,19 +11487,19 @@ function instrumentFetch(onFetchResolved, skipNativeFetchCheck = false) {
 }
 
 function hasProp(obj, prop) {
-  return !!obj && typeof obj === "object" && !!obj[prop];
+  return !!obj && typeof obj === 'object' && !!(obj )[prop];
 }
 
 function getUrlFromResource(resource) {
-  if (typeof resource === "string") {
+  if (typeof resource === 'string') {
     return resource;
   }
 
   if (!resource) {
-    return "";
+    return '';
   }
 
-  if (hasProp(resource, "url")) {
+  if (hasProp(resource, 'url')) {
     return resource.url;
   }
 
@@ -12111,7 +11507,7 @@ function getUrlFromResource(resource) {
     return resource.toString();
   }
 
-  return "";
+  return '';
 }
 
 /**
@@ -12120,24 +11516,22 @@ function getUrlFromResource(resource) {
  */
 function parseFetchArgs(fetchArgs) {
   if (fetchArgs.length === 0) {
-    return { method: "GET", url: "" };
+    return { method: 'GET', url: '' };
   }
 
   if (fetchArgs.length === 2) {
-    const [url, options] = fetchArgs;
+    const [url, options] = fetchArgs ;
 
     return {
       url: getUrlFromResource(url),
-      method: hasProp(options, "method")
-        ? String(options.method).toUpperCase()
-        : "GET",
+      method: hasProp(options, 'method') ? String(options.method).toUpperCase() : 'GET',
     };
   }
 
   const arg = fetchArgs[0];
   return {
-    url: getUrlFromResource(arg),
-    method: hasProp(arg, "method") ? String(arg.method).toUpperCase() : "GET",
+    url: getUrlFromResource(arg ),
+    method: hasProp(arg, 'method') ? String(arg.method).toUpperCase() : 'GET',
   };
 }
 
@@ -12145,14 +11539,15 @@ function parseFetchArgs(fetchArgs) {
  * Does this filename look like it's part of the app code?
  */
 function filenameIsInApp(filename, isNative = false) {
-  const isInternal = isNative ||
+  const isInternal =
+    isNative ||
     (filename &&
       // It's not internal if it's an absolute linux path
-      !filename.startsWith("/") &&
+      !filename.startsWith('/') &&
       // It's not internal if it's an absolute windows path
       !filename.match(/^[A-Z]:/) &&
       // It's not internal if the path is starting with a dot
-      !filename.startsWith(".") &&
+      !filename.startsWith('.') &&
       // It's not internal if the frame has a protocol. In node, this is usually the case if the file got pre-processed with a bundler like webpack
       !filename.match(/^[a-zA-Z]([a-zA-Z0-9.\-+])*:\/\//)); // Schema from: https://stackoverflow.com/a/3641782
 
@@ -12160,15 +11555,13 @@ function filenameIsInApp(filename, isNative = false) {
   // note that isNative appears to return true even for node core libraries
   // see https://github.com/getsentry/raven-node/issues/176
 
-  return !isInternal && filename !== undefined &&
-    !filename.includes("node_modules/");
+  return !isInternal && filename !== undefined && !filename.includes('node_modules/');
 }
 
 /** Node Stack line parser */
 function node(getModule) {
   const FILENAME_MATCH = /^\s*[-]{4,}$/;
-  const FULL_MATCH =
-    /at (?:async )?(?:(.+?)\s+\()?(?:(.+):(\d+):(\d+)?|([^)]+))\)?/;
+  const FULL_MATCH = /at (?:async )?(?:(.+?)\s+\()?(?:(.+):(\d+):(\d+)?|([^)]+))\)?/;
 
   // eslint-disable-next-line complexity
   return (line) => {
@@ -12184,15 +11577,15 @@ function node(getModule) {
       if (lineMatch[1]) {
         functionName = lineMatch[1];
 
-        let methodStart = functionName.lastIndexOf(".");
-        if (functionName[methodStart - 1] === ".") {
+        let methodStart = functionName.lastIndexOf('.');
+        if (functionName[methodStart - 1] === '.') {
           methodStart--;
         }
 
         if (methodStart > 0) {
           object = functionName.slice(0, methodStart);
           method = functionName.slice(methodStart + 1);
-          const objectEnd = object.indexOf(".Module");
+          const objectEnd = object.indexOf('.Module');
           if (objectEnd > 0) {
             functionName = functionName.slice(objectEnd + 1);
             object = object.slice(0, objectEnd);
@@ -12206,7 +11599,7 @@ function node(getModule) {
         methodName = method;
       }
 
-      if (method === "<anonymous>") {
+      if (method === '<anonymous>') {
         methodName = undefined;
         functionName = undefined;
       }
@@ -12216,10 +11609,8 @@ function node(getModule) {
         functionName = typeName ? `${typeName}.${methodName}` : methodName;
       }
 
-      let filename = lineMatch[2] && lineMatch[2].startsWith("file://")
-        ? lineMatch[2].slice(7)
-        : lineMatch[2];
-      const isNative = lineMatch[5] === "native";
+      let filename = lineMatch[2] && lineMatch[2].startsWith('file://') ? lineMatch[2].slice(7) : lineMatch[2];
+      const isNative = lineMatch[5] === 'native';
 
       // If it's a Windows path, trim the leading slash so that `/C:/foo` becomes `C:/foo`
       if (filename && filename.match(/\/[A-Z]:/)) {
@@ -12236,7 +11627,7 @@ function node(getModule) {
         function: functionName,
         lineno: _parseIntOrUndefined(lineMatch[3]),
         colno: _parseIntOrUndefined(lineMatch[4]),
-        in_app: filenameIsInApp(filename || "", isNative),
+        in_app: filenameIsInApp(filename || '', isNative),
       };
     }
 
@@ -12261,23 +11652,23 @@ function nodeStackLineParser(getModule) {
 }
 
 function _parseIntOrUndefined(input) {
-  return parseInt(input || "", 10) || undefined;
+  return parseInt(input || '', 10) || undefined;
 }
 
 /** A simple Least Recently Used map */
 class LRUMap {
-  constructor(_maxSize) {
-    this._maxSize = _maxSize;
+
+   constructor(  _maxSize) {this._maxSize = _maxSize;
     this._cache = new Map();
   }
 
   /** Get the current size of the cache */
-  get size() {
+   get size() {
     return this._cache.size;
   }
 
   /** Get an entry or undefined if it was not in the cache. Re-inserts to update the recently used order */
-  get(key) {
+   get(key) {
     const value = this._cache.get(key);
     if (value === undefined) {
       return undefined;
@@ -12289,7 +11680,7 @@ class LRUMap {
   }
 
   /** Insert an entry and evict an older entry if we've reached maxSize */
-  set(key, value) {
+   set(key, value) {
     if (this._cache.size >= this._maxSize) {
       // keys() returns an iterator in insertion order so keys().next() gives us the oldest key
       this._cache.delete(this._cache.keys().next().value);
@@ -12298,7 +11689,7 @@ class LRUMap {
   }
 
   /** Remove an entry and return the entry if it was in the cache */
-  remove(key) {
+   remove(key) {
     const value = this._cache.get(key);
     if (value) {
       this._cache.delete(key);
@@ -12307,19 +11698,19 @@ class LRUMap {
   }
 
   /** Clear all entries */
-  clear() {
+   clear() {
     this._cache.clear();
   }
 
   /** Get all the keys */
-  keys() {
+   keys() {
     return Array.from(this._cache.keys());
   }
 
   /** Get all the values */
-  values() {
+   values() {
     const values = [];
-    this._cache.forEach((value) => values.push(value));
+    this._cache.forEach(value => values.push(value));
     return values;
   }
 }
@@ -12330,8 +11721,8 @@ function getHostName() {
     return undefined;
   }
 
-  const result = Deno.permissions.querySync({ name: "sys", kind: "hostname" });
-  return result.state === "granted" ? Deno.hostname() : undefined;
+  const result = Deno.permissions.querySync({ name: 'sys', kind: 'hostname' });
+  return result.state === 'granted' ? Deno.hostname() : undefined;
 }
 
 /**
@@ -12345,13 +11736,13 @@ class DenoClient extends ServerRuntimeClient {
    * Creates a new Deno SDK instance.
    * @param options Configuration options for this SDK.
    */
-  constructor(options) {
+   constructor(options) {
     options._metadata = options._metadata || {};
     options._metadata.sdk = options._metadata.sdk || {
-      name: "sentry.javascript.deno",
+      name: 'sentry.javascript.deno',
       packages: [
         {
-          name: "denoland:sentry",
+          name: 'denoland:sentry',
           version: SDK_VERSION,
         },
       ],
@@ -12360,8 +11751,8 @@ class DenoClient extends ServerRuntimeClient {
 
     const clientOptions = {
       ...options,
-      platform: "javascript",
-      runtime: { name: "deno", version: Deno.version.deno },
+      platform: 'javascript',
+      runtime: { name: 'deno', version: Deno.version.deno },
       serverName: options.serverName || getHostName(),
     };
 
@@ -12369,13 +11760,13 @@ class DenoClient extends ServerRuntimeClient {
   }
 }
 
-const INTEGRATION_NAME$5 = "Breadcrumbs";
+const INTEGRATION_NAME$5 = 'Breadcrumbs';
 
 /**
  * Note: This `breadcrumbsIntegration` is almost the same as the one from @sentry/browser.
  * The Deno-version does not support browser-specific APIs like dom, xhr and history.
  */
-const _breadcrumbsIntegration = (options = {}) => {
+const _breadcrumbsIntegration = ((options = {}) => {
   const _options = {
     console: true,
     fetch: true,
@@ -12393,11 +11784,11 @@ const _breadcrumbsIntegration = (options = {}) => {
         addFetchInstrumentationHandler(_getFetchBreadcrumbHandler(client));
       }
       if (_options.sentry) {
-        client.on("beforeSendEvent", _getSentryBreadcrumbHandler(client));
+        client.on('beforeSendEvent', _getSentryBreadcrumbHandler(client));
       }
     },
   };
-};
+}) ;
 
 /**
  * Adds a breadcrumbs for console, fetch, and sentry events.
@@ -12416,6 +11807,7 @@ const breadcrumbsIntegration = defineIntegration(_breadcrumbsIntegration);
 
 /**
  * Adds a breadcrumb for Sentry events or transactions if this option is enabled.
+ *
  */
 function _getSentryBreadcrumbHandler(client) {
   return function addSentryBreadcrumb(event) {
@@ -12425,9 +11817,7 @@ function _getSentryBreadcrumbHandler(client) {
 
     addBreadcrumb(
       {
-        category: `sentry.${
-          event.type === "transaction" ? "transaction" : "event"
-        }`,
+        category: `sentry.${event.type === 'transaction' ? 'transaction' : 'event'}`,
         event_id: event.event_id,
         level: event.level,
         message: getEventDescription(event),
@@ -12449,20 +11839,18 @@ function _getConsoleBreadcrumbHandler(client) {
     }
 
     const breadcrumb = {
-      category: "console",
+      category: 'console',
       data: {
         arguments: handlerData.args,
-        logger: "console",
+        logger: 'console',
       },
       level: severityLevelFromString(handlerData.level),
-      message: safeJoin(handlerData.args, " "),
+      message: safeJoin(handlerData.args, ' '),
     };
 
-    if (handlerData.level === "assert") {
+    if (handlerData.level === 'assert') {
       if (handlerData.args[0] === false) {
-        breadcrumb.message = `Assertion failed: ${
-          safeJoin(handlerData.args.slice(1), " ") || "console.assert"
-        }`;
+        breadcrumb.message = `Assertion failed: ${safeJoin(handlerData.args.slice(1), ' ') || 'console.assert'}`;
         breadcrumb.data.arguments = handlerData.args.slice(1);
       } else {
         // Don't capture a breadcrumb for passed assertions
@@ -12493,10 +11881,7 @@ function _getFetchBreadcrumbHandler(client) {
       return;
     }
 
-    if (
-      handlerData.fetchData.url.match(/sentry_key/) &&
-      handlerData.fetchData.method === "POST"
-    ) {
+    if (handlerData.fetchData.url.match(/sentry_key/) && handlerData.fetchData.method === 'POST') {
       // We will not create breadcrumbs for fetch requests that contain `sentry_key` (internal sentry requests)
       return;
     }
@@ -12512,15 +11897,15 @@ function _getFetchBreadcrumbHandler(client) {
 
       addBreadcrumb(
         {
-          category: "fetch",
+          category: 'fetch',
           data,
-          level: "error",
-          type: "http",
+          level: 'error',
+          type: 'http',
         },
         hint,
       );
     } else {
-      const response = handlerData.response;
+      const response = handlerData.response ;
       const data = {
         ...handlerData.fetchData,
         status_code: response && response.status,
@@ -12535,9 +11920,9 @@ function _getFetchBreadcrumbHandler(client) {
 
       addBreadcrumb(
         {
-          category: "fetch",
+          category: 'fetch',
           data,
-          type: "http",
+          type: 'http',
           level,
         },
         hint,
@@ -12546,24 +11931,23 @@ function _getFetchBreadcrumbHandler(client) {
   };
 }
 
-const INTEGRATION_NAME$4 = "DenoContext";
+const INTEGRATION_NAME$4 = 'DenoContext';
 
 function getOSName() {
   switch (Deno.build.os) {
-    case "darwin":
-      return "macOS";
-    case "linux":
-      return "Linux";
-    case "windows":
-      return "Windows";
+    case 'darwin':
+      return 'macOS';
+    case 'linux':
+      return 'Linux';
+    case 'windows':
+      return 'Windows';
     default:
       return Deno.build.os;
   }
 }
 
 async function getOSRelease() {
-  return (await Deno.permissions.query({ name: "sys", kind: "osRelease" }))
-      .state === "granted"
+  return (await Deno.permissions.query({ name: 'sys', kind: 'osRelease' })).state === 'granted'
     ? Deno.osRelease()
     : undefined;
 }
@@ -12584,11 +11968,11 @@ async function addDenoRuntimeContext(event) {
         version: await getOSRelease(),
       },
       v8: {
-        name: "v8",
+        name: 'v8',
         version: Deno.version.v8,
       },
       typescript: {
-        name: "TypeScript",
+        name: 'TypeScript',
         version: Deno.version.typescript,
       },
     },
@@ -12598,14 +11982,14 @@ async function addDenoRuntimeContext(event) {
   return event;
 }
 
-const _denoContextIntegration = () => {
+const _denoContextIntegration = (() => {
   return {
     name: INTEGRATION_NAME$4,
     processEvent(event) {
       return addDenoRuntimeContext(event);
     },
   };
-};
+}) ;
 
 /**
  * Adds Deno related context to events. This includes contexts about app, device, os, v8, and TypeScript.
@@ -12622,7 +12006,7 @@ const _denoContextIntegration = () => {
  */
 const denoContextIntegration = defineIntegration(_denoContextIntegration);
 
-const INTEGRATION_NAME$3 = "ContextLines";
+const INTEGRATION_NAME$3 = 'ContextLines';
 const FILE_CONTENT_CACHE = new LRUMap(100);
 const DEFAULT_LINES_OF_CONTEXT = 7;
 
@@ -12649,10 +12033,18 @@ async function readSourceFile(filename) {
   return content;
 }
 
-const _contextLinesIntegration = (options = {}) => {
-  const contextLines = options.frameContextLines !== undefined
-    ? options.frameContextLines
-    : DEFAULT_LINES_OF_CONTEXT;
+
+
+
+
+
+
+
+
+
+
+const _contextLinesIntegration = ((options = {}) => {
+  const contextLines = options.frameContextLines !== undefined ? options.frameContextLines : DEFAULT_LINES_OF_CONTEXT;
 
   return {
     name: INTEGRATION_NAME$3,
@@ -12660,7 +12052,7 @@ const _contextLinesIntegration = (options = {}) => {
       return addSourceContext(event, contextLines);
     },
   };
-};
+}) ;
 
 /**
  * Adds source context to event stacktraces.
@@ -12682,10 +12074,7 @@ async function addSourceContext(event, contextLines) {
   if (contextLines > 0 && event.exception && event.exception.values) {
     for (const exception of event.exception.values) {
       if (exception.stacktrace && exception.stacktrace.frames) {
-        await addSourceContextToFrames(
-          exception.stacktrace.frames,
-          contextLines,
-        );
+        await addSourceContextToFrames(exception.stacktrace.frames, contextLines);
       }
     }
   }
@@ -12699,16 +12088,16 @@ async function addSourceContextToFrames(frames, contextLines) {
     // Only add context if we have a filename and it hasn't already been added
     if (frame.filename && frame.in_app && frame.context_line === undefined) {
       const permission = await Deno.permissions.query({
-        name: "read",
+        name: 'read',
         path: frame.filename,
       });
 
-      if (permission.state == "granted") {
+      if (permission.state == 'granted') {
         const sourceFile = await readSourceFile(frame.filename);
 
         if (sourceFile) {
           try {
-            const lines = sourceFile.split("\n");
+            const lines = sourceFile.split('\n');
             addContextToFrame(lines, frame, contextLines);
           } catch (_) {
             // anomaly, being defensive in case
@@ -12720,10 +12109,10 @@ async function addSourceContextToFrames(frames, contextLines) {
   }
 }
 
-const INTEGRATION_NAME$2 = "GlobalHandlers";
+const INTEGRATION_NAME$2 = 'GlobalHandlers';
 let isExiting = false;
 
-const _globalHandlersIntegration = (options) => {
+const _globalHandlersIntegration = ((options) => {
   const _options = {
     error: true,
     unhandledrejection: true,
@@ -12741,7 +12130,7 @@ const _globalHandlersIntegration = (options) => {
       }
     },
   };
-};
+}) ;
 
 /**
  * Instruments global `error` and `unhandledrejection` listeners in Deno.
@@ -12759,7 +12148,7 @@ const _globalHandlersIntegration = (options) => {
 const globalHandlersIntegration = defineIntegration(_globalHandlersIntegration);
 
 function installGlobalErrorHandler(client) {
-  globalThis.addEventListener("error", (data) => {
+  globalThis.addEventListener('error', data => {
     if (getClient() !== client || isExiting) {
       return;
     }
@@ -12770,13 +12159,13 @@ function installGlobalErrorHandler(client) {
 
     const event = eventFromUnknownInput(client, stackParser, error || message);
 
-    event.level = "fatal";
+    event.level = 'fatal';
 
     captureEvent(event, {
       originalException: error,
       mechanism: {
         handled: false,
-        type: "error",
+        type: 'error',
       },
     });
 
@@ -12798,7 +12187,7 @@ function installGlobalErrorHandler(client) {
 }
 
 function installGlobalUnhandledRejectionHandler(client) {
-  globalThis.addEventListener("unhandledrejection", (e) => {
+  globalThis.addEventListener('unhandledrejection', (e) => {
     if (getClient() !== client || isExiting) {
       return;
     }
@@ -12808,7 +12197,7 @@ function installGlobalUnhandledRejectionHandler(client) {
 
     // dig the object of the rejection out of known event types
     try {
-      if ("reason" in e) {
+      if ('reason' in e) {
         error = e.reason;
       }
     } catch (_oO) {
@@ -12819,13 +12208,13 @@ function installGlobalUnhandledRejectionHandler(client) {
       ? eventFromRejectionWithPrimitive(error)
       : eventFromUnknownInput(client, stackParser, error, undefined);
 
-    event.level = "fatal";
+    event.level = 'fatal';
 
     captureEvent(event, {
       originalException: error,
       mechanism: {
         handled: false,
-        type: "unhandledrejection",
+        type: 'unhandledrejection',
       },
     });
 
@@ -12857,11 +12246,9 @@ function eventFromRejectionWithPrimitive(reason) {
     exception: {
       values: [
         {
-          type: "UnhandledRejection",
+          type: 'UnhandledRejection',
           // String() is needed because the Primitive type includes symbols (which can't be automatically stringified)
-          value: `Non-Error promise rejection captured with value: ${
-            String(reason)
-          }`,
+          value: `Non-Error promise rejection captured with value: ${String(reason)}`,
         },
       ],
     },
@@ -12878,46 +12265,26 @@ function getStackParser() {
   return client.getOptions().stackParser;
 }
 
-function _optionalChain(ops) {
-  let lastAccessLHS = undefined;
-  let value = ops[0];
-  let i = 1;
-  while (i < ops.length) {
-    const op = ops[i];
-    const fn = ops[i + 1];
-    i += 2;
-    if ((op === "optionalAccess" || op === "optionalCall") && value == null) {
-      return undefined;
-    }
-    if (op === "access" || op === "optionalAccess") {
-      lastAccessLHS = value;
-      value = fn(value);
-    } else if (op === "call" || op === "optionalCall") {
-      value = fn((...args) => value.call(lastAccessLHS, ...args));
-      lastAccessLHS = undefined;
-    }
-  }
-  return value;
-}
+function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }
 
-const INTEGRATION_NAME$1 = "NormalizePaths";
+const INTEGRATION_NAME$1 = 'NormalizePaths';
 
 function appRootFromErrorStack(error) {
   // We know at the other end of the stack from here is the entry point that called 'init'
   // We assume that this stacktrace will traverse the root of the app
-  const frames = createStackParser(nodeStackLineParser())(error.stack || "");
+  const frames = createStackParser(nodeStackLineParser())(error.stack || '');
 
   const paths = frames
     // We're only interested in frames that are in_app with filenames
-    .filter((f) => f.in_app && f.filename)
+    .filter(f => f.in_app && f.filename)
     .map(
-      (f) =>
-        f.filename
-          .replace(/^[A-Z]:/, "") // remove Windows-style prefix
-          .replace(/\\/g, "/") // replace all `\` instances with `/`
-          .split("/")
-          .filter((seg) => seg !== ""), // remove empty segments
-    );
+      f =>
+        (f.filename )
+          .replace(/^[A-Z]:/, '') // remove Windows-style prefix
+          .replace(/\\/g, '/') // replace all `\` instances with `/`
+          .split('/')
+          .filter(seg => seg !== ''), // remove empty segments
+    ) ;
 
   const firstPath = paths[0];
 
@@ -12927,16 +12294,16 @@ function appRootFromErrorStack(error) {
 
   if (paths.length == 1) {
     // Assume the single file is in the root
-    return dirname(firstPath.join("/"));
+    return dirname(firstPath.join('/'));
   }
 
   // Iterate over the paths and bail out when they no longer have a common root
   let i = 0;
-  while (firstPath[i] && paths.every((w) => w[i] === firstPath[i])) {
+  while (firstPath[i] && paths.every(w => w[i] === firstPath[i])) {
     i++;
   }
 
-  return firstPath.slice(0, i).join("/");
+  return firstPath.slice(0, i).join('/');
 }
 
 function getCwd() {
@@ -12947,10 +12314,10 @@ function getCwd() {
 
   // We don't want to prompt for permissions so we only get the cwd if
   // permissions are already granted
-  const permission = Deno.permissions.querySync({ name: "read", path: "./" });
+  const permission = Deno.permissions.querySync({ name: 'read', path: './' });
 
   try {
-    if (permission.state == "granted") {
+    if (permission.state == 'granted') {
       return Deno.cwd();
     }
   } catch (_) {
@@ -12960,7 +12327,7 @@ function getCwd() {
   return undefined;
 }
 
-const _normalizePathsIntegration = () => {
+const _normalizePathsIntegration = (() => {
   // Cached here
   let appRoot;
 
@@ -12982,24 +12349,8 @@ const _normalizePathsIntegration = () => {
       const appRoot = getAppRoot(error);
 
       if (appRoot) {
-        for (
-          const exception of _optionalChain([
-            event,
-            "access",
-            (_2) => _2.exception,
-            "optionalAccess",
-            (_3) => _3.values,
-          ]) || []
-        ) {
-          for (
-            const frame of _optionalChain([
-              exception,
-              "access",
-              (_4) => _4.stacktrace,
-              "optionalAccess",
-              (_5) => _5.frames,
-            ]) || []
-          ) {
+        for (const exception of _optionalChain([event, 'access', _2 => _2.exception, 'optionalAccess', _3 => _3.values]) || []) {
+          for (const frame of _optionalChain([exception, 'access', _4 => _4.stacktrace, 'optionalAccess', _5 => _5.frames]) || []) {
             if (frame.filename && frame.in_app) {
               const startIndex = frame.filename.indexOf(appRoot);
 
@@ -13015,7 +12366,7 @@ const _normalizePathsIntegration = () => {
       return event;
     },
   };
-};
+}) ;
 
 /**
  * Normalises paths to the app root directory.
@@ -13039,9 +12390,9 @@ function makeFetchTransport(options) {
   const url = new URL(options.url);
 
   Deno.permissions
-    .query({ name: "net", host: url.host })
+    .query({ name: 'net', host: url.host })
     .then(({ state }) => {
-      if (state !== "granted") {
+      if (state !== 'granted') {
         consoleSandbox(() => {
           // eslint-disable-next-line no-console
           console.warn(`Sentry SDK requires 'net' permission to send events.
@@ -13056,21 +12407,19 @@ function makeFetchTransport(options) {
   function makeRequest(request) {
     const requestOptions = {
       body: request.body,
-      method: "POST",
-      referrerPolicy: "origin",
+      method: 'POST',
+      referrerPolicy: 'origin',
       headers: options.headers,
     };
 
     try {
       return suppressTracing(() => {
-        return fetch(options.url, requestOptions).then((response) => {
+        return fetch(options.url, requestOptions).then(response => {
           return {
             statusCode: response.status,
             headers: {
-              "x-sentry-rate-limits": response.headers.get(
-                "X-Sentry-Rate-Limits",
-              ),
-              "retry-after": response.headers.get("Retry-After"),
+              'x-sentry-rate-limits': response.headers.get('X-Sentry-Rate-Limits'),
+              'retry-after': response.headers.get('Retry-After'),
             },
           };
         });
@@ -13154,9 +12503,7 @@ function init(options = {}) {
 
   const clientOptions = {
     ...options,
-    stackParser: stackParserFromStackParserOptions(
-      options.stackParser || defaultStackParser,
-    ),
+    stackParser: stackParserFromStackParserOptions(options.stackParser || defaultStackParser),
     integrations: getIntegrationsToSetup(options),
     transport: options.transport || makeFetchTransport,
   };
@@ -13192,16 +12539,27 @@ function init(options = {}) {
  */
 
 function formatToCronSchedule(
-  value,
+  value
+
+
+
+
+
+
+,
 ) {
   if (value === undefined) {
-    return "*";
-  } else if (typeof value === "number") {
+    return '*';
+  } else if (typeof value === 'number') {
     return value.toString();
   } else {
-    const { exact } = value;
+    const { exact } = value ;
     if (exact === undefined) {
-      const { start, end, every } = value;
+      const { start, end, every } = value 
+
+
+
+;
       if (start !== undefined && end !== undefined && every !== undefined) {
         return `${start}-${end}/${every}`;
       } else if (start !== undefined && end !== undefined) {
@@ -13213,13 +12571,13 @@ function formatToCronSchedule(
       } else if (end === undefined && every !== undefined) {
         return `*/${every}`;
       } else {
-        throw new TypeError("Invalid cron schedule");
+        throw new TypeError('Invalid cron schedule');
       }
     } else {
-      if (typeof exact === "number") {
+      if (typeof exact === 'number') {
         return exact.toString();
       } else {
-        return exact.join(",");
+        return exact.join(',');
       }
     }
   }
@@ -13227,24 +12585,22 @@ function formatToCronSchedule(
 
 /** */
 function parseScheduleToString(schedule) {
-  if (typeof schedule === "string") {
+  if (typeof schedule === 'string') {
     return schedule;
   } else {
     const { minute, hour, dayOfMonth, month, dayOfWeek } = schedule;
 
-    return `${formatToCronSchedule(minute)} ${formatToCronSchedule(hour)} ${
-      formatToCronSchedule(
-        dayOfMonth,
-      )
-    } ${formatToCronSchedule(month)} ${formatToCronSchedule(dayOfWeek)}`;
+    return `${formatToCronSchedule(minute)} ${formatToCronSchedule(hour)} ${formatToCronSchedule(
+      dayOfMonth,
+    )} ${formatToCronSchedule(month)} ${formatToCronSchedule(dayOfWeek)}`;
   }
 }
 
-const INTEGRATION_NAME = "DenoCron";
+const INTEGRATION_NAME = 'DenoCron';
 
 const SETUP_CLIENTS = new WeakMap();
 
-const _denoCronIntegration = () => {
+const _denoCronIntegration = (() => {
   return {
     name: INTEGRATION_NAME,
     setupOnce() {
@@ -13261,24 +12617,21 @@ const _denoCronIntegration = () => {
           let options;
           let fn;
 
-          if (typeof opt1 === "function" && typeof opt2 !== "function") {
+          if (typeof opt1 === 'function' && typeof opt2 !== 'function') {
             fn = opt1;
             options = opt2;
-          } else if (typeof opt1 !== "function" && typeof opt2 === "function") {
+          } else if (typeof opt1 !== 'function' && typeof opt2 === 'function') {
             fn = opt2;
             options = opt1;
           }
 
           async function cronCalled() {
-            if (!SETUP_CLIENTS.has(getClient())) {
+            if (!SETUP_CLIENTS.has(getClient() )) {
               return fn();
             }
 
             await withMonitor(monitorSlug, async () => fn(), {
-              schedule: {
-                type: "crontab",
-                value: parseScheduleToString(schedule),
-              },
+              schedule: { type: 'crontab', value: parseScheduleToString(schedule) },
               // (minutes) so 12 hours - just a very high arbitrary number since we don't know the actual duration of the users cron job
               maxRuntime: 60 * 12,
               // Deno Deploy docs say that the cron job will be called within 1 minute of the scheduled time
@@ -13286,13 +12639,7 @@ const _denoCronIntegration = () => {
             });
           }
 
-          return target.call(
-            thisArg,
-            monitorSlug,
-            schedule,
-            options || {},
-            cronCalled,
-          );
+          return target.call(thisArg, monitorSlug, schedule, options || {}, cronCalled);
         },
       });
     },
@@ -13300,7 +12647,7 @@ const _denoCronIntegration = () => {
       SETUP_CLIENTS.set(client, true);
     },
   };
-};
+}) ;
 
 /**
  * Instruments Deno.cron to automatically capture cron check-ins.
@@ -13317,79 +12664,5 @@ const _denoCronIntegration = () => {
  */
 const denoCronIntegration = defineIntegration(_denoCronIntegration);
 
-export {
-  addBreadcrumb,
-  addEventProcessor,
-  breadcrumbsIntegration,
-  captureCheckIn,
-  captureConsoleIntegration,
-  captureEvent,
-  captureException,
-  captureFeedback,
-  captureMessage,
-  captureSession,
-  close,
-  contextLinesIntegration,
-  continueTrace,
-  createTransport,
-  debugIntegration,
-  dedupeIntegration,
-  DenoClient,
-  denoContextIntegration,
-  denoCronIntegration,
-  endSession,
-  extraErrorDataIntegration,
-  flush,
-  functionToStringIntegration,
-  getActiveSpan,
-  getClient,
-  getCurrentScope,
-  getDefaultIntegrations,
-  getGlobalScope,
-  getIsolationScope,
-  getRootSpan,
-  getSpanStatusFromHttpCode,
-  getTraceData,
-  getTraceMetaTags,
-  globalHandlersIntegration,
-  inboundFiltersIntegration,
-  init,
-  isInitialized,
-  lastEventId,
-  linkedErrorsIntegration,
-  metricsDefault as metrics,
-  normalizePathsIntegration,
-  requestDataIntegration,
-  rewriteFramesIntegration,
-  Scope,
-  SDK_VERSION,
-  SEMANTIC_ATTRIBUTE_SENTRY_OP,
-  SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN,
-  SEMANTIC_ATTRIBUTE_SENTRY_SAMPLE_RATE,
-  SEMANTIC_ATTRIBUTE_SENTRY_SOURCE,
-  sessionTimingIntegration,
-  setContext,
-  setCurrentClient,
-  setExtra,
-  setExtras,
-  setHttpStatus,
-  setMeasurement,
-  setTag,
-  setTags,
-  setUser,
-  spanToBaggageHeader,
-  spanToJSON,
-  spanToTraceHeader,
-  startInactiveSpan,
-  startNewTrace,
-  startSession,
-  startSpan,
-  startSpanManual,
-  suppressTracing,
-  updateSpanName,
-  withIsolationScope,
-  withMonitor,
-  withScope,
-  zodErrorsIntegration,
-};
+export { DenoClient, SDK_VERSION, SEMANTIC_ATTRIBUTE_SENTRY_OP, SEMANTIC_ATTRIBUTE_SENTRY_ORIGIN, SEMANTIC_ATTRIBUTE_SENTRY_SAMPLE_RATE, SEMANTIC_ATTRIBUTE_SENTRY_SOURCE, Scope, addBreadcrumb, addEventProcessor, breadcrumbsIntegration, captureCheckIn, captureConsoleIntegration, captureEvent, captureException, captureFeedback, captureMessage, captureSession, close, contextLinesIntegration, continueTrace, createTransport, debugIntegration, dedupeIntegration, denoContextIntegration, denoCronIntegration, endSession, extraErrorDataIntegration, flush, functionToStringIntegration, getActiveSpan, getClient, getCurrentScope, getDefaultIntegrations, getGlobalScope, getIsolationScope, getRootSpan, getSpanStatusFromHttpCode, getTraceData, getTraceMetaTags, globalHandlersIntegration, inboundFiltersIntegration, init, isInitialized, lastEventId, linkedErrorsIntegration, metricsDefault as metrics, normalizePathsIntegration, requestDataIntegration, rewriteFramesIntegration, sessionTimingIntegration, setContext, setCurrentClient, setExtra, setExtras, setHttpStatus, setMeasurement, setTag, setTags, setUser, spanToBaggageHeader, spanToJSON, spanToTraceHeader, startInactiveSpan, startNewTrace, startSession, startSpan, startSpanManual, suppressTracing, updateSpanName, withIsolationScope, withMonitor, withScope, zodErrorsIntegration };
 //# sourceMappingURL=index.mjs.map

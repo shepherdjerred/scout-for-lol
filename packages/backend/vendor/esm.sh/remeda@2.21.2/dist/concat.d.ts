@@ -1,4 +1,4 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
 /**
  * Merge two or more arrays. This method does not change the existing arrays,
@@ -17,10 +17,7 @@ import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
  * @dataFirst
  * @category Array
  */
-declare function concat<
-  T1 extends IterableContainer,
-  T2 extends IterableContainer,
->(data: T1, other: T2): [...T1, ...T2];
+declare function concat<T1 extends IterableContainer, T2 extends IterableContainer>(data: T1, other: T2): [...T1, ...T2];
 /**
  * Merge two or more arrays. This method does not change the existing arrays,
  * but instead returns a new array, even if the other array is empty.
@@ -36,8 +33,6 @@ declare function concat<
  * @dataLast
  * @category Array
  */
-declare function concat<T2 extends IterableContainer>(
-  other: T2,
-): <T1 extends IterableContainer>(data: T1) => [...T1, ...T2];
+declare function concat<T2 extends IterableContainer>(other: T2): <T1 extends IterableContainer>(data: T1) => [...T1, ...T2];
 
 export { concat };

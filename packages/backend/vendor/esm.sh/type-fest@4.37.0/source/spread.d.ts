@@ -1,22 +1,20 @@
-import type { RequiredKeysOf } from "./required-keys-of.d.ts";
-import type { Simplify } from "./simplify.d.ts";
+import type {RequiredKeysOf} from './required-keys-of.d.ts';
+import type {Simplify} from './simplify.d.ts';
 
-type SpreadObject<FirstType extends object, SecondType extends object> =
-  & {
-    [Key in keyof FirstType]: Key extends keyof SecondType
-      ? FirstType[Key] | Required<SecondType>[Key]
-      : FirstType[Key];
-  }
-  & Pick<
-    SecondType,
-    RequiredKeysOf<SecondType> | Exclude<keyof SecondType, keyof FirstType>
-  >;
+type SpreadObject<FirstType extends object, SecondType extends object> = {
+	[Key in keyof FirstType]: Key extends keyof SecondType
+		? FirstType[Key] | Required<SecondType>[Key]
+		: FirstType[Key];
+} & Pick<
+SecondType,
+RequiredKeysOf<SecondType> | Exclude<keyof SecondType, keyof FirstType>
+>;
 
 type TupleOrArray = readonly [...unknown[]];
 
 type SpreadTupleOrArray<
-  FirstType extends TupleOrArray,
-  SecondType extends TupleOrArray,
+	FirstType extends TupleOrArray,
+	SecondType extends TupleOrArray,
 > = Array<FirstType[number] | SecondType[number]>;
 
 type Spreadable = object | TupleOrArray;
@@ -77,9 +75,10 @@ baz(fooBar);
 @category Object
 */
 export type Spread<
-  FirstType extends Spreadable,
-  SecondType extends Spreadable,
+	FirstType extends Spreadable,
+	SecondType extends Spreadable,
 > = FirstType extends TupleOrArray
-  ? SecondType extends TupleOrArray ? SpreadTupleOrArray<FirstType, SecondType>
-  : Simplify<SpreadObject<FirstType, SecondType>>
-  : Simplify<SpreadObject<FirstType, SecondType>>;
+	? SecondType extends TupleOrArray
+		? SpreadTupleOrArray<FirstType, SecondType>
+		: Simplify<SpreadObject<FirstType, SecondType>>
+	: Simplify<SpreadObject<FirstType, SecondType>>;

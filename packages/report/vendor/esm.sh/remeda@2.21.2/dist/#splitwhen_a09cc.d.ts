@@ -10,10 +10,7 @@
  * @dataFirst
  * @category Array
  */
-declare function splitWhen<T>(
-  data: ReadonlyArray<T>,
-  predicate: (item: T, index: number, data: ReadonlyArray<T>) => boolean,
-): [Array<T>, Array<T>];
+declare function splitWhen<T>(data: ReadonlyArray<T>, predicate: (item: T, index: number, data: ReadonlyArray<T>) => boolean): [Array<T>, Array<T>];
 /**
  * Splits a given array at an index where the given predicate returns true.
  *
@@ -25,8 +22,6 @@ declare function splitWhen<T>(
  * @dataLast
  * @category Array
  */
-declare function splitWhen<T>(
-  predicate: (item: T, index: number, data: ReadonlyArray<T>) => boolean,
-): (array: ReadonlyArray<T>) => [Array<T>, Array<T>];
+declare function splitWhen<T>(predicate: (item: T, index: number, data: ReadonlyArray<T>) => boolean): (array: ReadonlyArray<T>) => [Array<T>, Array<T>];
 
 export { splitWhen };

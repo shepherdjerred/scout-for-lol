@@ -1,9 +1,8 @@
-import { G as GuardType } from "./GuardType-C8IpVeqb.d.ts";
+import { G as GuardType } from './GuardType-C8IpVeqb.d.ts';
 
-type Case<In, Out, When extends (x: In) => boolean = (x: In) => boolean> =
-  readonly [when: When, then: (x: GuardType<When, In> & In) => Out];
+type Case<In, Out, When extends (x: In) => boolean = (x: In) => boolean> = readonly [when: When, then: (x: GuardType<When, In> & In) => Out];
 declare const conditionalPlus: typeof conditional & {
-  defaultCase: typeof defaultCase;
+    defaultCase: typeof defaultCase;
 };
 
 /**
@@ -52,52 +51,7 @@ declare const conditionalPlus: typeof conditional & {
  * @dataLast
  * @category Function
  */
-declare function conditional<
-  T,
-  Fn0 extends (x: T) => boolean,
-  Fn1 extends (x: T) => boolean,
-  Fn2 extends (x: T) => boolean,
-  Fn3 extends (x: T) => boolean,
-  Fn4 extends (x: T) => boolean,
-  Fn5 extends (x: T) => boolean,
-  Fn6 extends (x: T) => boolean,
-  Fn7 extends (x: T) => boolean,
-  Fn8 extends (x: T) => boolean,
-  Fn9 extends (x: T) => boolean,
-  Return0,
-  Return1 = never,
-  Return2 = never,
-  Return3 = never,
-  Return4 = never,
-  Return5 = never,
-  Return6 = never,
-  Return7 = never,
-  Return8 = never,
-  Return9 = never,
->(
-  case0: Case<T, Return0, Fn0>,
-  case1?: Case<T, Return1, Fn1>,
-  case2?: Case<T, Return2, Fn2>,
-  case3?: Case<T, Return3, Fn3>,
-  case4?: Case<T, Return4, Fn4>,
-  case5?: Case<T, Return5, Fn5>,
-  case6?: Case<T, Return6, Fn6>,
-  case7?: Case<T, Return7, Fn7>,
-  case8?: Case<T, Return8, Fn8>,
-  case9?: Case<T, Return9, Fn9>,
-): (
-  data: T,
-) =>
-  | Return0
-  | Return1
-  | Return2
-  | Return3
-  | Return4
-  | Return5
-  | Return6
-  | Return7
-  | Return8
-  | Return9;
+declare function conditional<T, Fn0 extends (x: T) => boolean, Fn1 extends (x: T) => boolean, Fn2 extends (x: T) => boolean, Fn3 extends (x: T) => boolean, Fn4 extends (x: T) => boolean, Fn5 extends (x: T) => boolean, Fn6 extends (x: T) => boolean, Fn7 extends (x: T) => boolean, Fn8 extends (x: T) => boolean, Fn9 extends (x: T) => boolean, Return0, Return1 = never, Return2 = never, Return3 = never, Return4 = never, Return5 = never, Return6 = never, Return7 = never, Return8 = never, Return9 = never>(case0: Case<T, Return0, Fn0>, case1?: Case<T, Return1, Fn1>, case2?: Case<T, Return2, Fn2>, case3?: Case<T, Return3, Fn3>, case4?: Case<T, Return4, Fn4>, case5?: Case<T, Return5, Fn5>, case6?: Case<T, Return6, Fn6>, case7?: Case<T, Return7, Fn7>, case8?: Case<T, Return8, Fn8>, case9?: Case<T, Return9, Fn9>): (data: T) => Return0 | Return1 | Return2 | Return3 | Return4 | Return5 | Return6 | Return7 | Return8 | Return9;
 /**
  * Executes a transformer function based on the first matching predicate,
  * functioning like a series of `if...else if...` statements. It sequentially
@@ -143,51 +97,7 @@ declare function conditional<
  * @dataFirst
  * @category Function
  */
-declare function conditional<
-  T,
-  Fn0 extends (x: T) => boolean,
-  Fn1 extends (x: T) => boolean,
-  Fn2 extends (x: T) => boolean,
-  Fn3 extends (x: T) => boolean,
-  Fn4 extends (x: T) => boolean,
-  Fn5 extends (x: T) => boolean,
-  Fn6 extends (x: T) => boolean,
-  Fn7 extends (x: T) => boolean,
-  Fn8 extends (x: T) => boolean,
-  Fn9 extends (x: T) => boolean,
-  Return0,
-  Return1 = never,
-  Return2 = never,
-  Return3 = never,
-  Return4 = never,
-  Return5 = never,
-  Return6 = never,
-  Return7 = never,
-  Return8 = never,
-  Return9 = never,
->(
-  data: T,
-  case0: Case<T, Return0, Fn0>,
-  case1?: Case<T, Return1, Fn1>,
-  case2?: Case<T, Return2, Fn2>,
-  case3?: Case<T, Return3, Fn3>,
-  case4?: Case<T, Return4, Fn4>,
-  case5?: Case<T, Return5, Fn5>,
-  case6?: Case<T, Return6, Fn6>,
-  case7?: Case<T, Return7, Fn7>,
-  case8?: Case<T, Return8, Fn8>,
-  case9?: Case<T, Return9, Fn9>,
-):
-  | Return0
-  | Return1
-  | Return2
-  | Return3
-  | Return4
-  | Return5
-  | Return6
-  | Return7
-  | Return8
-  | Return9;
+declare function conditional<T, Fn0 extends (x: T) => boolean, Fn1 extends (x: T) => boolean, Fn2 extends (x: T) => boolean, Fn3 extends (x: T) => boolean, Fn4 extends (x: T) => boolean, Fn5 extends (x: T) => boolean, Fn6 extends (x: T) => boolean, Fn7 extends (x: T) => boolean, Fn8 extends (x: T) => boolean, Fn9 extends (x: T) => boolean, Return0, Return1 = never, Return2 = never, Return3 = never, Return4 = never, Return5 = never, Return6 = never, Return7 = never, Return8 = never, Return9 = never>(data: T, case0: Case<T, Return0, Fn0>, case1?: Case<T, Return1, Fn1>, case2?: Case<T, Return2, Fn2>, case3?: Case<T, Return3, Fn3>, case4?: Case<T, Return4, Fn4>, case5?: Case<T, Return5, Fn5>, case6?: Case<T, Return6, Fn6>, case7?: Case<T, Return7, Fn7>, case8?: Case<T, Return8, Fn8>, case9?: Case<T, Return9, Fn9>): Return0 | Return1 | Return2 | Return3 | Return4 | Return5 | Return6 | Return7 | Return8 | Return9;
 /**
  * A simplified case that accepts all data. Put this as the last case to
  * prevent an exception from being thrown when none of the previous cases
@@ -209,8 +119,6 @@ declare function conditional<
  *   ); //=> 'Hello ID: 3'
  */
 declare function defaultCase(): Case<unknown, undefined>;
-declare function defaultCase<In, Then extends (param: In) => unknown>(
-  then: Then,
-): Case<In, ReturnType<Then>>;
+declare function defaultCase<In, Then extends (param: In) => unknown>(then: Then): Case<In, ReturnType<Then>>;
 
 export { conditionalPlus as conditional };

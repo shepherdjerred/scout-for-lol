@@ -1,14 +1,10 @@
-import { Simplify } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
-import { E as ExactRecord } from "./ExactRecord-or8-oNP7.d.ts";
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
-import "./IfBoundedRecord-WIX9x_oz.d.ts";
+import { Simplify } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
+import { E as ExactRecord } from './ExactRecord-or8-oNP7.d.ts';
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
+import './IfBoundedRecord-WIX9x_oz.d.ts';
 
 type ExactlyOneKey<T, V> = T extends PropertyKey ? Record<T, V> : never;
-type FromKeys<T extends IterableContainer, V> = T extends readonly [] ? {}
-  : T extends readonly [infer Head, ...infer Rest]
-    ? ExactlyOneKey<Head, V> & FromKeys<Rest, V>
-  : T[number] extends PropertyKey ? ExactRecord<T[number], V>
-  : never;
+type FromKeys<T extends IterableContainer, V> = T extends readonly [] ? {} : T extends readonly [infer Head, ...infer Rest] ? ExactlyOneKey<Head, V> & FromKeys<Rest, V> : T[number] extends PropertyKey ? ExactRecord<T[number], V> : never;
 /**
  * Creates an object that maps each key in `data` to the result of `mapper` for
  * that key. Duplicate keys are overwritten, guaranteeing that `mapper` is run
@@ -34,10 +30,7 @@ type FromKeys<T extends IterableContainer, V> = T extends readonly [] ? {}
  * @dataFirst
  * @category Object
  */
-declare function fromKeys<T extends IterableContainer<PropertyKey>, V>(
-  data: T,
-  mapper: (item: T[number], index: number, data: T) => V,
-): Simplify<FromKeys<T, V>>;
+declare function fromKeys<T extends IterableContainer<PropertyKey>, V>(data: T, mapper: (item: T[number], index: number, data: T) => V): Simplify<FromKeys<T, V>>;
 /**
  * Creates an object that maps each key in `data` to the result of `mapper` for
  * that key. Duplicate keys are overwritten, guaranteeing that `mapper` is run
@@ -61,8 +54,6 @@ declare function fromKeys<T extends IterableContainer<PropertyKey>, V>(
  * @dataLast
  * @category Object
  */
-declare function fromKeys<T extends IterableContainer<PropertyKey>, V>(
-  mapper: (item: T[number], index: number, data: T) => V,
-): (data: T) => Simplify<FromKeys<T, V>>;
+declare function fromKeys<T extends IterableContainer<PropertyKey>, V>(mapper: (item: T[number], index: number, data: T) => V): (data: T) => Simplify<FromKeys<T, V>>;
 
 export { fromKeys };

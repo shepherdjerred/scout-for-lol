@@ -1,15 +1,6 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
-type ZippingFunction<
-  T1 extends IterableContainer = IterableContainer,
-  T2 extends IterableContainer = IterableContainer,
-  Value = unknown,
-> = (
-  first: T1[number],
-  second: T2[number],
-  index: number,
-  data: readonly [first: T1, second: T2],
-) => Value;
+type ZippingFunction<T1 extends IterableContainer = IterableContainer, T2 extends IterableContainer = IterableContainer, Value = unknown> = (first: T1[number], second: T2[number], index: number, data: readonly [first: T1, second: T2]) => Value;
 /**
  * Creates a new list from two supplied lists by calling the supplied function
  * with the same-positioned element from each list.
@@ -21,12 +12,7 @@ type ZippingFunction<
  *   R.zipWith((a: string, b: string) => a + b)(['1', '2', '3'], ['a', 'b', 'c']) // => ['1a', '2b', '3c']
  * @category Array
  */
-declare function zipWith<TItem1, TItem2, Value>(
-  fn: ZippingFunction<ReadonlyArray<TItem1>, ReadonlyArray<TItem2>, Value>,
-): (
-  first: ReadonlyArray<TItem1>,
-  second: ReadonlyArray<TItem2>,
-) => Array<Value>;
+declare function zipWith<TItem1, TItem2, Value>(fn: ZippingFunction<ReadonlyArray<TItem1>, ReadonlyArray<TItem2>, Value>): (first: ReadonlyArray<TItem1>, second: ReadonlyArray<TItem2>) => Array<Value>;
 /**
  * Creates a new list from two supplied lists by calling the supplied function
  * with the same-positioned element from each list.
@@ -41,11 +27,7 @@ declare function zipWith<TItem1, TItem2, Value>(
  * @lazy
  * @category Array
  */
-declare function zipWith<
-  T1 extends IterableContainer,
-  T2 extends IterableContainer,
-  Value,
->(second: T2, fn: ZippingFunction<T1, T2, Value>): (first: T1) => Array<Value>;
+declare function zipWith<T1 extends IterableContainer, T2 extends IterableContainer, Value>(second: T2, fn: ZippingFunction<T1, T2, Value>): (first: T1) => Array<Value>;
 /**
  * Creates a new list from two supplied lists by calling the supplied function
  * with the same-positioned element from each list.
@@ -61,10 +43,6 @@ declare function zipWith<
  * @lazy
  * @category Array
  */
-declare function zipWith<
-  T1 extends IterableContainer,
-  T2 extends IterableContainer,
-  Value,
->(first: T1, second: T2, fn: ZippingFunction<T1, T2, Value>): Array<Value>;
+declare function zipWith<T1 extends IterableContainer, T2 extends IterableContainer, Value>(first: T1, second: T2, fn: ZippingFunction<T1, T2, Value>): Array<Value>;
 
 export { zipWith };

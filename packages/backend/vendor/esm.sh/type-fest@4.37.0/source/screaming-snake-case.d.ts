@@ -1,5 +1,5 @@
-import type { SnakeCase } from "./snake-case.d.ts";
-import type { WordsOptions } from "./words.d.ts";
+import type {SnakeCase} from './snake-case.d.ts';
+import type {WordsOptions} from './words.d.ts';
 
 /**
 Convert a string literal to screaming-snake-case.
@@ -19,6 +19,6 @@ const someVariableNoSplitOnNumbers: ScreamingSnakeCase<'p2pNetwork', {splitOnNum
 @category Template literal
  */
 export type ScreamingSnakeCase<
-  Value,
-  Options extends WordsOptions = { splitOnNumbers: false },
+	Value,
+	Options extends WordsOptions = {splitOnNumbers: false},
 > = Value extends string ? Uppercase<SnakeCase<Value, Options>> : Value;

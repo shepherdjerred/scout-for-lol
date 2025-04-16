@@ -1,4 +1,4 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
 /**
  * Removes elements from the end of the array until the predicate returns false.
@@ -14,10 +14,7 @@ import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
  * @dataFirst
  * @category Array
  */
-declare function dropLastWhile<T extends IterableContainer>(
-  data: T,
-  predicate: (item: T[number], index: number, data: T) => boolean,
-): Array<T[number]>;
+declare function dropLastWhile<T extends IterableContainer>(data: T, predicate: (item: T[number], index: number, data: T) => boolean): Array<T[number]>;
 /**
  * Removes elements from the end of the array until the predicate returns false.
  *
@@ -31,8 +28,6 @@ declare function dropLastWhile<T extends IterableContainer>(
  * @dataLast
  * @category Array
  */
-declare function dropLastWhile<T extends IterableContainer>(
-  predicate: (item: T[number], index: number, data: T) => boolean,
-): (data: T) => Array<T[number]>;
+declare function dropLastWhile<T extends IterableContainer>(predicate: (item: T[number], index: number, data: T) => boolean): (data: T) => Array<T[number]>;
 
 export { dropLastWhile };

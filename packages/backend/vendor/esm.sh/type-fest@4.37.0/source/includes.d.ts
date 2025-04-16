@@ -1,4 +1,4 @@
-import type { IsEqual } from "./is-equal.d.ts";
+import type {IsEqual} from './is-equal.d.ts';
 
 /**
 Returns a boolean for whether the given array includes the given item.
@@ -14,8 +14,9 @@ type hasRed<array extends any[]> = Includes<array, 'red'>;
 
 @category Array
 */
-export type Includes<Value extends readonly any[], Item> = Value extends
-  readonly [Value[0], ...infer rest]
-  ? IsEqual<Value[0], Item> extends true ? true
-  : Includes<rest, Item>
-  : false;
+export type Includes<Value extends readonly any[], Item> =
+	Value extends readonly [Value[0], ...infer rest]
+		? IsEqual<Value[0], Item> extends true
+			? true
+			: Includes<rest, Item>
+		: false;

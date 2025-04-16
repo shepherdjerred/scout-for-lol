@@ -44,8 +44,8 @@ type EventMessage =
 @category Utilities
 */
 export type TaggedUnion<
-  TagKey extends string,
-  UnionMembers extends Record<string, Record<string, unknown>>,
+	TagKey extends string,
+	UnionMembers extends Record<string, Record<string, unknown>>,
 > = {
-  [Name in keyof UnionMembers]: { [Key in TagKey]: Name } & UnionMembers[Name];
+	[Name in keyof UnionMembers]: {[Key in TagKey]: Name} & UnionMembers[Name];
 }[keyof UnionMembers];

@@ -11,11 +11,7 @@
  * @dataLast
  * @category Guard
  */
-declare function isNot<T, S extends T>(
-  predicate: (data: T) => data is S,
-): (data: T) => data is Exclude<T, S>;
-declare function isNot<T>(
-  predicate: (data: T) => boolean,
-): (data: T) => boolean;
+declare function isNot<T, S extends T>(predicate: (data: T) => data is S): (data: T) => data is Exclude<T, S>;
+declare function isNot<T>(predicate: (data: T) => boolean): (data: T) => boolean;
 
 export { isNot };

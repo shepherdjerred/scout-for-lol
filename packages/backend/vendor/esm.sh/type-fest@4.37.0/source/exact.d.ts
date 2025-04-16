@@ -1,22 +1,16 @@
-import type { ArrayElement, ObjectValue } from "./internal/index.d.ts";
-import type { IsEqual } from "./is-equal.d.ts";
-import type { KeysOfUnion } from "./keys-of-union.d.ts";
-import type { IsUnknown } from "./is-unknown.d.ts";
-import type { Primitive } from "./primitive.d.ts";
+import type {ArrayElement, ObjectValue} from './internal/index.d.ts';
+import type {IsEqual} from './is-equal.d.ts';
+import type {KeysOfUnion} from './keys-of-union.d.ts';
+import type {IsUnknown} from './is-unknown.d.ts';
+import type {Primitive} from './primitive.d.ts';
 
 /**
 Create a type from `ParameterType` and `InputType` and change keys exclusive to `InputType` to `never`.
 - Generate a list of keys that exists in `InputType` but not in `ParameterType`.
 - Mark these excess keys as `never`.
 */
-type ExactObject<ParameterType, InputType> =
-  & {
-    [Key in keyof ParameterType]: Exact<
-      ParameterType[Key],
-      ObjectValue<InputType, Key>
-    >;
-  }
-  & Record<Exclude<keyof InputType, KeysOfUnion<ParameterType>>, never>;
+type ExactObject<ParameterType, InputType> = {[Key in keyof ParameterType]: Exact<ParameterType[Key], ObjectValue<InputType, Key>>}
+& Record<Exclude<keyof InputType, KeysOfUnion<ParameterType>>, never>;
 
 /**
 Create a type that does not allow extra properties, meaning it only allows properties that are explicitly declared.
@@ -59,19 +53,16 @@ onlyAcceptNameImproved(invalidInput); // Compilation error
 @category Utilities
 */
 export type Exact<ParameterType, InputType> =
-  // Before distributing, check if the two types are equal and if so, return the parameter type immediately
-  IsEqual<ParameterType, InputType> extends true ? ParameterType
-    // If the parameter is a primitive, return it as is immediately to avoid it being converted to a complex type
-    : ParameterType extends Primitive ? ParameterType
-    // If the parameter is an unknown, return it as is immediately to avoid it being converted to a complex type
-    : IsUnknown<ParameterType> extends true ? unknown
-    // If the parameter is a Function, return it as is because this type is not capable of handling function, leave it to TypeScript
-    : ParameterType extends Function ? ParameterType
-    // Convert union of array to array of union: A[] & B[] => (A & B)[]
-    : ParameterType extends unknown[]
-      ? Array<Exact<ArrayElement<ParameterType>, ArrayElement<InputType>>>
-    // In TypeScript, Array is a subtype of ReadonlyArray, so always test Array before ReadonlyArray.
-    : ParameterType extends readonly unknown[] ? ReadonlyArray<
-        Exact<ArrayElement<ParameterType>, ArrayElement<InputType>>
-      >
-    : ExactObject<ParameterType, InputType>;
+	// Before distributing, check if the two types are equal and if so, return the parameter type immediately
+	IsEqual<ParameterType, InputType> extends true ? ParameterType
+		// If the parameter is a primitive, return it as is immediately to avoid it being converted to a complex type
+		: ParameterType extends Primitive ? ParameterType
+			// If the parameter is an unknown, return it as is immediately to avoid it being converted to a complex type
+			: IsUnknown<ParameterType> extends true ? unknown
+				// If the parameter is a Function, return it as is because this type is not capable of handling function, leave it to TypeScript
+				: ParameterType extends Function ? ParameterType
+					// Convert union of array to array of union: A[] & B[] => (A & B)[]
+					: ParameterType extends unknown[] ? Array<Exact<ArrayElement<ParameterType>, ArrayElement<InputType>>>
+						// In TypeScript, Array is a subtype of ReadonlyArray, so always test Array before ReadonlyArray.
+						: ParameterType extends readonly unknown[] ? ReadonlyArray<Exact<ArrayElement<ParameterType>, ArrayElement<InputType>>>
+							: ExactObject<ParameterType, InputType>;

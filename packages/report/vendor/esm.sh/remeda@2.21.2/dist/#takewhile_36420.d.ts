@@ -1,4 +1,4 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
 
 /**
  * Returns elements from the array until predicate returns false.
@@ -12,10 +12,7 @@ import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
  * @dataFirst
  * @category Array
  */
-declare function takeWhile<T extends IterableContainer>(
-  data: T,
-  predicate: (item: T[number], index: number, data: T) => boolean,
-): Array<T[number]>;
+declare function takeWhile<T extends IterableContainer>(data: T, predicate: (item: T[number], index: number, data: T) => boolean): Array<T[number]>;
 /**
  * Returns elements from the array until predicate returns false.
  *
@@ -27,8 +24,6 @@ declare function takeWhile<T extends IterableContainer>(
  * @dataLast
  * @category Array
  */
-declare function takeWhile<T extends IterableContainer>(
-  predicate: (item: T[number], index: number, data: T) => boolean,
-): (array: T) => Array<T[number]>;
+declare function takeWhile<T extends IterableContainer>(predicate: (item: T[number], index: number, data: T) => boolean): (array: T) => Array<T[number]>;
 
 export { takeWhile };

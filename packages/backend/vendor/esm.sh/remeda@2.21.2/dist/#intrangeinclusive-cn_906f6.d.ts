@@ -1,4 +1,4 @@
-import { IntRange } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
+import { IntRange } from 'https://esm.sh/type-fest@4.37.0/index.d.ts';
 
 /**
  * Type fest offers IntClosedRange which is a similar offering, but is
@@ -7,8 +7,6 @@ import { IntRange } from "https://esm.sh/type-fest@4.37.0/index.d.ts";
  * instantiation is excessively deep and possibly infinite') errors when the
  * integers are large (even when the range itself is not).
  */
-type IntRangeInclusive<From extends number, To extends number> =
-  | IntRange<From, To>
-  | To;
+type IntRangeInclusive<From extends number, To extends number> = IntRange<From, To> | To;
 
 export type { IntRangeInclusive as I };

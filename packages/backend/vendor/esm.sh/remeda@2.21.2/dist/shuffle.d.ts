@@ -1,5 +1,5 @@
-import { I as IterableContainer } from "./IterableContainer-CtfinwiH.d.ts";
-import { R as ReorderedArray } from "./ReorderedArray-DFPIAkRH.d.ts";
+import { I as IterableContainer } from './IterableContainer-CtfinwiH.d.ts';
+import { R as ReorderedArray } from './ReorderedArray-DFPIAkRH.d.ts';
 
 /**
  * Shuffles the input array, returning a new array with the same elements in a random order.
@@ -12,9 +12,7 @@ import { R as ReorderedArray } from "./ReorderedArray-DFPIAkRH.d.ts";
  * @dataFirst
  * @category Array
  */
-declare function shuffle<T extends IterableContainer>(
-  items: T,
-): ReorderedArray<T>;
+declare function shuffle<T extends IterableContainer>(items: T): ReorderedArray<T>;
 /**
  * Shuffles the input array, returning a new array with the same elements in a random order.
  *
@@ -25,8 +23,6 @@ declare function shuffle<T extends IterableContainer>(
  * @dataLast
  * @category Array
  */
-declare function shuffle(): <T extends IterableContainer>(
-  items: T,
-) => ReorderedArray<T>;
+declare function shuffle(): <T extends IterableContainer>(items: T) => ReorderedArray<T>;
 
 export { shuffle };

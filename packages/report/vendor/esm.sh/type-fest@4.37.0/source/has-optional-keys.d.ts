@@ -1,4 +1,4 @@
-import type { OptionalKeysOf } from "./optional-keys-of.d.ts";
+import type {OptionalKeysOf} from './optional-keys-of.d.ts';
 
 /**
 Creates a type that represents `true` or `false` depending on whether the given type has any optional fields.
@@ -18,5 +18,4 @@ type UpdateService<Entity extends object> = {
 
 @category Utilities
 */
-export type HasOptionalKeys<BaseType extends object> =
-  OptionalKeysOf<BaseType> extends never ? false : true;
+export type HasOptionalKeys<BaseType extends object> = OptionalKeysOf<BaseType> extends never ? false : true;

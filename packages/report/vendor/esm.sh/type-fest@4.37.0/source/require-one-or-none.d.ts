@@ -1,5 +1,5 @@
-import type { RequireExactlyOne } from "./require-exactly-one.d.ts";
-import type { RequireNone } from "./internal/index.d.ts";
+import type {RequireExactlyOne} from './require-exactly-one.d.ts';
+import type {RequireNone} from './internal/index.d.ts';
 
 /**
 Create a type that requires exactly one of the given keys and disallows more, or none of the given keys. The remaining keys are kept as is.
@@ -31,12 +31,7 @@ const responder3: Responder = {
 
 @category Object
 */
-export type RequireOneOrNone<
-  ObjectType,
-  KeysType extends keyof ObjectType = keyof ObjectType,
-> =
-  & (
-    | RequireExactlyOne<ObjectType, KeysType>
-    | RequireNone<KeysType>
-  )
-  & Omit<ObjectType, KeysType>; // Ignore unspecified keys.
+export type RequireOneOrNone<ObjectType, KeysType extends keyof ObjectType = keyof ObjectType> = (
+	| RequireExactlyOne<ObjectType, KeysType>
+	| RequireNone<KeysType>
+) & Omit<ObjectType, KeysType>; // Ignore unspecified keys.
