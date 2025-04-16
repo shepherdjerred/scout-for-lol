@@ -1,7 +1,6 @@
 {
   "folders": {
     "https://esm.sh/date-fns@4.1.0/denonext/locale/en-US/": "esm.sh/date-fns@4.1.0/denonext/locale/#en-us_5c49f",
-    "https://esm.sh/twisted@1.63.2/dist/apis/lol/dataDragon/": "esm.sh/twisted@1.63.2/dist/apis/lol/#datadragon_6c0c9",
     "https://esm.sh/twisted@1.63.3/dist/apis/lol/dataDragon/": "esm.sh/twisted@1.63.3/dist/apis/lol/#datadragon_6c0c9"
   },
   "modules": {
@@ -52,11 +51,6 @@
       }
     },
     "https://esm.sh/@types/react@~19.0.12/index.d.ts": {
-      "headers": {
-        "location": "https://esm.sh/@types/react@19.0.14/index.d.ts"
-      }
-    },
-    "https://esm.sh/@types/react@~19.0.7/index.d.ts": {
       "headers": {
         "location": "https://esm.sh/@types/react@19.0.14/index.d.ts"
       }
@@ -748,12 +742,6 @@
         "location": "https://esm.sh/proxy-from-env@1.1.0?target=denonext"
       }
     },
-    "https://esm.sh/react@19.0.0": {
-      "headers": {
-        "content-type": "application/javascript; charset=utf-8",
-        "x-typescript-types": "https://esm.sh/@types/react@~19.0.7/index.d.ts"
-      }
-    },
     "https://esm.sh/react@19.1.0": {
       "headers": {
         "content-type": "application/javascript; charset=utf-8",
@@ -892,21 +880,6 @@
         "x-typescript-types": "https://esm.sh/supports-color@10.0.0/index.d.ts"
       }
     },
-    "https://esm.sh/ts-pattern@5.6.2": {
-      "headers": {
-        "content-type": "application/javascript; charset=utf-8",
-        "x-typescript-types": "https://esm.sh/ts-pattern@5.6.2/dist/index.d.ts"
-      }
-    },
-    "https://esm.sh/ts-pattern@5.6.2/dist/types/BuildMany.d.ts": {},
-    "https://esm.sh/ts-pattern@5.6.2/dist/types/DeepExclude.d.ts": {},
-    "https://esm.sh/ts-pattern@5.6.2/dist/types/DistributeUnions.d.ts": {},
-    "https://esm.sh/ts-pattern@5.6.2/dist/types/ExtractPreciseValue.d.ts": {},
-    "https://esm.sh/ts-pattern@5.6.2/dist/types/FindSelected.d.ts": {},
-    "https://esm.sh/ts-pattern@5.6.2/dist/types/InvertPattern.d.ts": {},
-    "https://esm.sh/ts-pattern@5.6.2/dist/types/IsMatching.d.ts": {},
-    "https://esm.sh/ts-pattern@5.6.2/dist/types/Match.d.ts": {},
-    "https://esm.sh/ts-pattern@5.6.2/dist/types/Pattern.d.ts": {},
     "https://esm.sh/ts-pattern@5.7.0": {
       "headers": {
         "content-type": "application/javascript; charset=utf-8",
@@ -922,53 +895,6 @@
     "https://esm.sh/ts-pattern@5.7.0/dist/types/IsMatching.d.ts": {},
     "https://esm.sh/ts-pattern@5.7.0/dist/types/Match.d.ts": {},
     "https://esm.sh/ts-pattern@5.7.0/dist/types/Pattern.d.ts": {},
-    "https://esm.sh/twisted@1.63.2": {
-      "headers": {
-        "content-type": "application/javascript; charset=utf-8",
-        "x-typescript-types": "https://esm.sh/twisted@1.63.2/dist/index.d.ts"
-      }
-    },
-    "https://esm.sh/twisted@1.63.2/dist/apis/lol/dataDragon/DataDragonService.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/constants/champions.js": {
-      "headers": {
-        "x-typescript-types": "https://esm.sh/twisted@1.63.2/dist/constants/champions.d.ts"
-      }
-    },
-    "https://esm.sh/twisted@1.63.2/dist/constants/dataSeed.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/constants/gameModes.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/constants/gameTypes.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/constants/index.js": {
-      "headers": {
-        "x-typescript-types": "https://esm.sh/twisted@1.63.2/dist/constants/index.d.ts"
-      }
-    },
-    "https://esm.sh/twisted@1.63.2/dist/constants/realmServers.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/constants/regions.js": {
-      "headers": {
-        "x-typescript-types": "https://esm.sh/twisted@1.63.2/dist/constants/regions.d.ts"
-      }
-    },
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/clash/tournament/tournament-schedule.clash.dto.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/index.js": {
-      "headers": {
-        "x-typescript-types": "https://esm.sh/twisted@1.63.2/dist/models-dto/index.d.ts"
-      }
-    },
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/league/tft-league/LeagueEntryDTO.dto.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/matches/match-timeline/match-participant-frame.dto.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/matches/match/match-participants-identities-player.dto.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/matches/match/match-participants-mastery.dto.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/matches/match/match-participants-rune.dto.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/matches/match/match-participants-stats.dto.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/matches/match/match-participants-timeline.dto.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/matches/match/match-participantsIdentities.dto.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/spectator/current-game-participant.dto.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/spectator/game-customization-object.dto.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/spectator/spectator-not-available.dto.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/status/lol-status-service-incidents-updates.dto.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/status/lol-status-service-indicents-updates-translations.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/status/lol-status-service-indicents.dto.d.ts": {},
-    "https://esm.sh/twisted@1.63.2/dist/models-dto/status/status-v4/lol-status-platform-data.dto.d.ts": {},
     "https://esm.sh/twisted@1.63.3": {
       "headers": {
         "content-type": "application/javascript; charset=utf-8",
@@ -1031,29 +957,6 @@
     },
     "https://esm.sh/uuid@11.1.0/dist/esm-browser/v1ToV6.d.ts": {},
     "https://esm.sh/uuid@11.1.0/dist/esm-browser/v6ToV1.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/constants/dataSeed.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/constants/gameModes.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/constants/gameTypes.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/constants/realmServers.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/index.js": {
-      "headers": {
-        "x-typescript-types": "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/index.d.ts"
-      }
-    },
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/matches/match-timeline/match-participant-frame.dto.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/matches/match/match-participants-identities-player.dto.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/matches/match/match-participants-mastery.dto.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/matches/match/match-participants-rune.dto.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/matches/match/match-participants-stats.dto.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/matches/match/match-participants-timeline.dto.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/matches/match/match-participantsIdentities.dto.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/spectator/current-game-participant.dto.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/spectator/game-customization-object.dto.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/spectator/spectator-not-available.dto.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/status/lol-status-service-incidents-updates.dto.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/status/lol-status-service-indicents-updates-translations.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/status/lol-status-service-indicents.dto.d.ts": {},
-    "https://esm.sh/v135/twisted@1.63.2/dist/models-dto/status/status-v4/lol-status-platform-data.dto.d.ts": {},
     "https://esm.sh/v135/twisted@1.63.3/dist/constants/dataSeed.d.ts": {},
     "https://esm.sh/v135/twisted@1.63.3/dist/constants/gameModes.d.ts": {},
     "https://esm.sh/v135/twisted@1.63.3/dist/constants/gameTypes.d.ts": {},

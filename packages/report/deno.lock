@@ -9,7 +9,7 @@
     "jsr:@deno/graph@~0.73.1": "0.73.1",
     "jsr:@std/assert@0.223": "0.223.0",
     "jsr:@std/assert@0.226": "0.226.0",
-    "jsr:@std/assert@1.0.11": "1.0.11",
+    "jsr:@std/assert@1.0.12": "1.0.12",
     "jsr:@std/assert@^1.0.12": "1.0.12",
     "jsr:@std/async@^1.0.12": "1.0.12",
     "jsr:@std/bytes@0.223": "0.223.0",
@@ -21,11 +21,10 @@
     "jsr:@std/fmt@^1.0.3": "1.0.6",
     "jsr:@std/fs@0.223": "0.223.0",
     "jsr:@std/fs@1": "1.0.16",
-    "jsr:@std/fs@1.0.14": "1.0.14",
+    "jsr:@std/fs@1.0.16": "1.0.16",
     "jsr:@std/fs@^1.0.16": "1.0.16",
     "jsr:@std/fs@^1.0.6": "1.0.16",
     "jsr:@std/fs@~0.229.3": "0.229.3",
-    "jsr:@std/internal@^1.0.5": "1.0.6",
     "jsr:@std/internal@^1.0.6": "1.0.6",
     "jsr:@std/io@0.223": "0.223.0",
     "jsr:@std/io@0.225": "0.225.2",
@@ -89,16 +88,10 @@
     "@std/assert@0.226.0": {
       "integrity": "0dfb5f7c7723c18cec118e080fec76ce15b4c31154b15ad2bd74822603ef75b3"
     },
-    "@std/assert@1.0.11": {
-      "integrity": "2461ef3c368fe88bc60e186e7744a93112f16fd110022e113a0849e94d1c83c1",
-      "dependencies": [
-        "jsr:@std/internal@^1.0.5"
-      ]
-    },
     "@std/assert@1.0.12": {
       "integrity": "08009f0926dda9cbd8bef3a35d3b6a4b964b0ab5c3e140a4e0351fbf34af5b9a",
       "dependencies": [
-        "jsr:@std/internal@^1.0.6"
+        "jsr:@std/internal"
       ]
     },
     "@std/async@1.0.12": {
@@ -129,12 +122,6 @@
       "integrity": "783bca21f24da92e04c3893c9e79653227ab016c48e96b3078377ebd5222e6eb",
       "dependencies": [
         "jsr:@std/path@1.0.0-rc.1"
-      ]
-    },
-    "@std/fs@1.0.14": {
-      "integrity": "1e84bf0b95fe08f41f1f4aea9717bbf29f45408a56ce073b0114474ce1c9fccf",
-      "dependencies": [
-        "jsr:@std/path@^1.0.8"
       ]
     },
     "@std/fs@1.0.16": {
@@ -184,7 +171,7 @@
         "jsr:@std/async",
         "jsr:@std/data-structures",
         "jsr:@std/fs@^1.0.16",
-        "jsr:@std/internal@^1.0.6",
+        "jsr:@std/internal",
         "jsr:@std/path@^1.0.8"
       ]
     },
@@ -383,9 +370,9 @@
     "dependencies": [
       "jsr:@deno/cache-dir@0.18.0",
       "jsr:@deno/dnt@0.41.3",
-      "jsr:@std/assert@1.0.11",
+      "jsr:@std/assert@1.0.12",
       "jsr:@std/encoding@1.0.9",
-      "jsr:@std/fs@1.0.14",
+      "jsr:@std/fs@1.0.16",
       "jsr:@std/testing@1.0.11",
       "npm:@resvg/resvg-js@2.6.2",
       "npm:@types/node@22.14.0",
