@@ -22,7 +22,7 @@
     "@std/assert": "jsr:@std/assert@1.0.11",
     "@std/dotenv": "jsr:@std/dotenv@0.225.3",
     "@std/encoding": "jsr:@std/encoding@1.0.7",
-    "@std/testing": "jsr:@std/testing@1.0.9",
+    "@std/testing": "jsr:@std/testing@1.0.11",
     "@total-typescript/ts-reset": "https://esm.sh/@total-typescript/ts-reset@0.6.1?pin=v135",
     "async_hooks": "node:async_hooks",
     "buffer": "node:buffer",
