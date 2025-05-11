@@ -1015,6 +1015,7 @@
         "location": "https://esm.sh/zod@3.24.2?target=denonext"
       }
     },
-    "https://jsr.io/@std/data-structures/1.0.6/_binary_search_tree_internals.ts": {}
+    "https://jsr.io/@std/data-structures/1.0.6/_binary_search_tree_internals.ts": {},
+    "https://jsr.io/@std/data-structures/1.0.7/_binary_search_tree_internals.ts": {}
   }
 }
