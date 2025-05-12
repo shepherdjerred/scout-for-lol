@@ -1010,6 +1010,18 @@
         "x-typescript-types": "https://esm.sh/zod@3.24.2/index.d.ts"
       }
     },
+    "https://esm.sh/zod@3.24.4": {
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8",
+        "x-typescript-types": "https://esm.sh/zod@3.24.4/index.d.ts"
+      }
+    },
+    "https://esm.sh/zod@3.24.4/lib/ZodError.d.ts": {},
+    "https://esm.sh/zod@3.24.4/lib/helpers/enumUtil.d.ts": {},
+    "https://esm.sh/zod@3.24.4/lib/helpers/errorUtil.d.ts": {},
+    "https://esm.sh/zod@3.24.4/lib/helpers/parseUtil.d.ts": {},
+    "https://esm.sh/zod@3.24.4/lib/helpers/partialUtil.d.ts": {},
+    "https://esm.sh/zod@3.24.4/lib/helpers/typeAliases.d.ts": {},
     "https://esm.sh/zod@^3.18.0?target=denonext": {
       "headers": {
         "location": "https://esm.sh/zod@3.24.2?target=denonext"
