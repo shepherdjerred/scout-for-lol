@@ -13,7 +13,7 @@ snapshot[`postmatch 1`] = `
   ],
   files: [
     AttachmentBuilder {
-      attachment: <Buffer 89 50 4e 47 0d 0a 1a 0a 00 00 00 0d 49 48 44 52 00 00 12 98 00 00 0d ac 08 06 00 00 00 10 64 79 50 00 2f 13 85 49 44 41 54 78 9c ec fc 6f 8c 5c d5 9d ... >,
+      attachment: <Buffer 89 50 4e 47 0d 0a 1a 0a 00 00 00 0d 49 48 44 52 00 00 12 98 00 00 0d ac 08 06 00 00 00 10 64 79 50 00 2f 5b 29 49 44 41 54 78 9c ec dc 7f 8c 95 f5 bd ... >,
       description: undefined,
       name: "match.png",
     },
