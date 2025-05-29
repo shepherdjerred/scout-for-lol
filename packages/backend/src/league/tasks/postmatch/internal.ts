@@ -43,6 +43,15 @@ export async function checkMatch(game: LoadingScreenState) {
         // game not done
         return undefined;
       }
+      if (result.data.status == 403) {
+        // Not recoverable: log and remove from queue
+        console.error(`403 Forbidden for match ${game.matchId}, removing from queue.`);
+        setState({
+          ...getState(),
+          gamesStarted: getState().gamesStarted.filter(g => g.matchId !== game.matchId),
+        });
+        return undefined;
+      }
     }
     console.error(e);
     return undefined;

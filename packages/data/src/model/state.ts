@@ -14,6 +14,7 @@ export const QueueTypeSchema = z.enum([
   "quickplay",
   "swiftplay",
   "arena",
+  "brawl",
   "draft pick",
 ]);
 
@@ -29,6 +30,7 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(490, () => "quickplay")
     .with(900, () => "arurf")
     .with(1700, () => "arena")
+    .with(2300, () => "brawl")
     .with(1900, () => "urf")
     .otherwise(() => {
       console.error(`unknown queue type: ${input}`);

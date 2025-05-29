@@ -18,7 +18,7 @@ import {
   map,
   mapValues,
   pipe,
-  unique,
+  uniqueBy,
   values,
   zip,
 } from "remeda";
@@ -85,16 +85,17 @@ export async function checkPreMatch() {
       };
 
       const message = createDiscordMessage(players, game, queueType);
+      
 
       // figure out what channels to send the message to
       // server, see if they have a player in the game
-      const servers = unique(
-        await getChannelsSubscribedToPlayers(
-          players.map((player) => player.league.leagueAccount.summonerId),
-        ),
+      const servers = await getChannelsSubscribedToPlayers(
+        players.map((player) => player.league.leagueAccount.summonerId),
       );
+      // Deduplicate by channel (string ID) using Remeda uniqueBy
+      const uniqueChannels = uniqueBy(servers, server => server.channel);
 
-      const promises = servers.map((server) => {
+      const promises = uniqueChannels.map((server) => {
         return send(message, server.channel);
       });
       Promise.all(promises);
