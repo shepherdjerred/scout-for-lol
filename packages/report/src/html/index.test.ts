@@ -10,7 +10,7 @@ import { assertSnapshot } from "@std/testing/snapshot";
 function getMatch(): CompletedMatch {
   return {
     "queueType": "solo",
-    "player": {
+    "players": [{
       "playerConfig": {
         "alias": "name",
         "league": {
@@ -99,7 +99,7 @@ function getMatch(): CompletedMatch {
         "gold": 17426,
         "level": 18,
       },
-    },
+    }],
     "durationInSeconds": 1851,
     "teams": {
       "blue": [
@@ -390,7 +390,9 @@ Deno.test("sanity check", async (t) => {
 
 Deno.test("no items test", async (t) => {
   const matchNoItems = getMatch();
-  matchNoItems.player.champion.items = [0, 0, 0, 0, 0, 0, 0];
+  if (matchNoItems.players[0]?.champion) {
+    matchNoItems.players[0].champion.items = [0, 0, 0, 0, 0, 0, 0];
+  }
   matchNoItems.teams.blue.forEach((
     player,
   ) => (player.items = [0, 0, 0, 0, 0, 0, 0]));
@@ -410,32 +412,34 @@ Deno.test("no items test", async (t) => {
 Deno.test("all fields zeroed out test", async (t) => {
   const matchZeroedOut = getMatch();
   matchZeroedOut.durationInSeconds = 0;
-  matchZeroedOut.player.rankBeforeMatch = {
-    wins: 0,
-    losses: 0,
-    tier: "iron",
-    division: 4,
-    lp: 0,
-  };
-  matchZeroedOut.player.rankAfterMatch = {
-    wins: 0,
-    losses: 0,
-    tier: "iron",
-    division: 4,
-    lp: 0,
-  };
-  matchZeroedOut.player.wins = 0;
-  matchZeroedOut.player.losses = 0;
+  matchZeroedOut.players.forEach((player) => {
+    player.rankBeforeMatch = {
+      wins: 0,
+      losses: 0,
+      tier: "iron",
+      division: 4,
+      lp: 0,
+    };
+    player.rankAfterMatch = {
+      wins: 0,
+      losses: 0,
+      tier: "iron",
+      division: 4,
+      lp: 0,
+    };
+    player.wins = 0;
+    player.losses = 0;
 
-  matchZeroedOut.player.champion.kills = 0;
-  matchZeroedOut.player.champion.deaths = 0;
-  matchZeroedOut.player.champion.assists = 0;
-  matchZeroedOut.player.champion.items = [0, 0, 0, 0, 0, 0, 0];
-  matchZeroedOut.player.champion.creepScore = 0;
-  matchZeroedOut.player.champion.visionScore = 0;
-  matchZeroedOut.player.champion.damage = 0;
-  matchZeroedOut.player.champion.gold = 0;
-  matchZeroedOut.player.champion.level = 0;
+    player.champion.kills = 0;
+    player.champion.deaths = 0;
+    player.champion.assists = 0;
+    player.champion.items = [0, 0, 0, 0, 0, 0, 0];
+    player.champion.creepScore = 0;
+    player.champion.visionScore = 0;
+    player.champion.damage = 0;
+    player.champion.gold = 0;
+    player.champion.level = 0;
+  });
   matchZeroedOut.teams.blue.forEach((player) => {
     player.kills = 0;
     player.deaths = 0;
@@ -471,8 +475,10 @@ Deno.test("all fields zeroed out test", async (t) => {
 
 Deno.test("no rank test", async (t) => {
   const matchNoRank = getMatch();
-  matchNoRank.player.rankBeforeMatch = undefined;
-  matchNoRank.player.rankAfterMatch = undefined;
+  matchNoRank.players.forEach((player) => {
+    player.rankBeforeMatch = undefined;
+    player.rankAfterMatch = undefined;
+  });
 
   const svg = await matchToSvg(matchNoRank);
   const png = svgToPng(svg);
@@ -486,10 +492,12 @@ Deno.test("no rank test", async (t) => {
 
 Deno.test("large values test", async (t) => {
   const matchLargeValues = getMatch();
-  matchLargeValues.player.playerConfig.alias = "SummonerName12345";
-  matchLargeValues.player.champion.championName = "Nunu & Willump";
+  matchLargeValues.players.forEach((player) => {
+    player.playerConfig.alias = "SummonerName12345";
+    player.champion.championName = "Nunu & Willump";
+    player.champion.kills = 45;
+  });
   matchLargeValues.durationInSeconds = 3660; // 1 hour and 1 minute
-  matchLargeValues.player.champion.kills = 45;
 
   matchLargeValues.teams.blue.forEach((player) => {
     player.riotIdGameName = "SummonerName12345";
@@ -531,7 +539,9 @@ Deno.test("large values test", async (t) => {
 
 Deno.test("victory test", async (t) => {
   const matchVictory = getMatch();
-  matchVictory.player.outcome = "Victory";
+  matchVictory.players.forEach((player) => {
+    player.outcome = "Victory";
+  });
 
   const svg = await matchToSvg(matchVictory);
   const png = svgToPng(svg);
@@ -545,7 +555,9 @@ Deno.test("victory test", async (t) => {
 
 Deno.test("surrender test", async (t) => {
   const matchSurrender = getMatch();
-  matchSurrender.player.outcome = "Surrender";
+  matchSurrender.players.forEach((player) => {
+    player.outcome = "Surrender";
+  });
 
   const svg = await matchToSvg(matchSurrender);
   const png = svgToPng(svg);
@@ -559,19 +571,106 @@ Deno.test("surrender test", async (t) => {
 
 Deno.test("no rank before match test", async (t) => {
   const matchNoRankBefore = getMatch();
-  matchNoRankBefore.player.rankBeforeMatch = undefined;
-  matchNoRankBefore.player.rankAfterMatch = {
-    wins: 50,
-    losses: 30,
-    tier: "gold",
-    division: 3,
-    lp: 0,
-  };
+  matchNoRankBefore.players.forEach((player) => {
+    player.rankBeforeMatch = undefined;
+    player.rankAfterMatch = {
+      wins: 50,
+      losses: 30,
+      tier: "gold",
+      division: 3,
+      lp: 0,
+    };
+  });
 
   const svg = await matchToSvg(matchNoRankBefore);
   const png = svgToPng(svg);
   Deno.writeFileSync(
     new URL("__snapshots__/match_no_rank_before.png", import.meta.url),
+    png,
+  );
+
+  await assertSnapshot(t, svg);
+});
+
+Deno.test("multiple highlighted players test", async (t) => {
+  const match: CompletedMatch = getMatch();
+  // Add a second highlighted player
+  match.players.push({
+    playerConfig: {
+      alias: "second player",
+      league: {
+        leagueAccount: {
+          puuid: LeaguePuuidSchema.parse(
+            "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDa9biieJ5ZRD049AUCBjLjyBeeezTaw",
+          ),
+          summonerId: LeagueSummonerIdSchema.parse("id2"),
+          region: "AMERICA_NORTH",
+        },
+      },
+      discordAccount: {
+        id: DiscordAccountIdSchema.parse("98765432109876543"),
+      },
+    },
+    rankBeforeMatch: {
+      division: 2,
+      tier: "silver",
+      lp: 50,
+      wins: 20,
+      losses: 10,
+    },
+    rankAfterMatch: {
+      division: 1,
+      tier: "silver",
+      lp: 0,
+      wins: 25,
+      losses: 12,
+    },
+    wins: 20,
+    losses: 10,
+    champion: {
+      riotIdGameName: "Mr Spaghetti",
+      championName: "Aatrox",
+      kills: 5,
+      deaths: 2,
+      assists: 15,
+      items: [1056, 3285, 3020, 3165, 3102, 3089, 3363],
+      spells: [4, 7],
+      runes: [],
+      lane: "middle",
+      creepScore: 210,
+      visionScore: 25,
+      damage: 22000,
+      gold: 13000,
+      level: 17,
+    },
+    outcome: "Victory",
+    team: "blue",
+    lane: "middle",
+    laneOpponent: {
+      riotIdGameName: "enemy mid",
+      championName: "Zed",
+      kills: 7,
+      deaths: 7,
+      assists: 7,
+      items: [3142, 6692, 3158, 3071, 3814, 6694, 3364],
+      spells: [4, 14],
+      runes: [],
+      lane: "middle",
+      creepScore: 185,
+      visionScore: 15,
+      damage: 18000,
+      gold: 12000,
+      level: 16,
+    },
+  });
+
+  const svg = await matchToSvg(match);
+  const png = svgToPng(svg);
+  Deno.writeFileSync(
+    new URL(
+      "__snapshots__/match_multiple_highlighted_players.png",
+      import.meta.url,
+    ),
     png,
   );
 

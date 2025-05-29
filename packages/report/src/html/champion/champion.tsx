@@ -13,6 +13,7 @@ import { Lane } from "../lane/index.tsx";
 import React from "react";
 import { first, keys, map, pickBy, round } from "remeda";
 
+// highlight should be true if this champion's riotIdGameName is in the highlightNames array (player-based highlight)
 export function renderChampion(
   champion: Champion,
   highlight: boolean,

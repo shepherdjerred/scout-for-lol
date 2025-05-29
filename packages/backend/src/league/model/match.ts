@@ -47,25 +47,28 @@ export function toMatch(
 
   return {
     queueType,
-    player: {
-      playerConfig: player.config,
-      rankBeforeMatch,
-      rankAfterMatch,
-      wins: queueType === "solo" || queueType === "flex"
-        ? player.ranks[queueType]?.wins || undefined
-        : undefined,
-      losses: queueType === "solo" || queueType === "flex"
-        ? player.ranks[queueType]?.losses || undefined
-        : undefined,
-      champion,
-      outcome: getOutcome(participant),
-      team: team,
-      lane: champion.lane,
-      laneOpponent: getLaneOpponent(champion, teams[enemyTeam]),
-    },
+    players: [
+      {
+        playerConfig: player.config,
+        rankBeforeMatch,
+        rankAfterMatch,
+        wins: queueType === "solo" || queueType === "flex"
+          ? player.ranks[queueType]?.wins || undefined
+          : undefined,
+        losses: queueType === "solo" || queueType === "flex"
+          ? player.ranks[queueType]?.losses || undefined
+          : undefined,
+        champion,
+        outcome: getOutcome(participant),
+        team: team,
+        lane: champion.lane,
+        laneOpponent: getLaneOpponent(champion, teams[enemyTeam]),
+      },
+    ],
     durationInSeconds: matchDto.info.gameDuration,
     teams,
   };
+
 }
 
 export function getOutcome(participant: MatchV5DTOs.ParticipantDto) {

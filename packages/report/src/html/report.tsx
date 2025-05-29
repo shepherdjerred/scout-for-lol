@@ -16,8 +16,13 @@ export function Report({ match }: { match: CompletedMatch }) {
     );
   }
 
-  const wins = match.player.wins;
-  const losses = match.player.losses;
+  // Use the first player for summary fields (backwards compatible)
+  const mainPlayer = match.players[0];
+  const wins = mainPlayer?.wins;
+  const losses = mainPlayer?.losses;
+
+  // Highlight all relevant players by name
+  const highlightNames = match.players.map(p => p.champion.riotIdGameName);
 
   return (
     <div
@@ -62,7 +67,7 @@ export function Report({ match }: { match: CompletedMatch }) {
             }}
           >
             <span style={{ color: palette.gold[4] }}>
-              {match.player.outcome}
+              {mainPlayer?.outcome}
             </span>
             <div
               style={{
@@ -84,12 +89,12 @@ export function Report({ match }: { match: CompletedMatch }) {
             >
               <span>
                 {/* Check both before and after a match; this handles placements */}
-                {match.player.rankBeforeMatch &&
-                  match.player.rankAfterMatch &&
+                {mainPlayer?.rankBeforeMatch &&
+                  mainPlayer?.rankAfterMatch &&
                   lpDiffToString(
                     leaguePointsDelta(
-                      match.player.rankBeforeMatch,
-                      match.player.rankAfterMatch,
+                      mainPlayer.rankBeforeMatch,
+                      mainPlayer.rankAfterMatch,
                     ),
                   )}
               </span>
@@ -106,10 +111,10 @@ export function Report({ match }: { match: CompletedMatch }) {
               )}
             </div>
           </div>
-          {match.player.rankAfterMatch && (
+          {mainPlayer?.rankAfterMatch && (
             <RankedBadge
-              oldRank={match.player.rankBeforeMatch}
-              newRank={match.player.rankAfterMatch}
+              oldRank={mainPlayer.rankBeforeMatch}
+              newRank={mainPlayer.rankAfterMatch}
             />
           )}
         </div>
@@ -124,13 +129,13 @@ export function Report({ match }: { match: CompletedMatch }) {
           {renderTeam(
             match.teams.blue,
             "blue",
-            match.player.champion.championName,
+            highlightNames,
             match.durationInSeconds / 60,
           )}
           {renderTeam(
             match.teams.red,
             "red",
-            match.player.champion.championName,
+            highlightNames,
             match.durationInSeconds / 60,
           )}
         </div>

@@ -12,10 +12,11 @@ export type CompletedMatch = z.infer<typeof CompletedMatchSchema>;
 export const CompletedMatchSchema = z.strictObject({
   durationInSeconds: z.number().nonnegative(),
   queueType: QueueTypeSchema.optional(),
-  // this field stores data specific to the player we care about
-  // TODO: it would be good to de-dupe this data w/ the teams info
-  // TODO: make this take a list of players to highlight for duo/flex support
-  player: z.strictObject({
+  /**
+   * Data specific to all players we care about (e.g. all subscribed players in this match).
+   * This was previously a single 'player' object, now an array for multi-player support.
+   */
+  players: z.array(z.strictObject({
     playerConfig: PlayerConfigEntrySchema,
     wins: z.number().nonnegative().optional(),
     losses: z.number().nonnegative().optional(),
@@ -26,11 +27,13 @@ export const CompletedMatchSchema = z.strictObject({
     laneOpponent: ChampionSchema.optional(),
     rankBeforeMatch: RankSchema.optional(),
     rankAfterMatch: RankSchema.optional(),
-  }),
+  })),
+
   teams: z.strictObject({
     red: RosterSchema,
     blue: RosterSchema,
   }),
+
 });
 
 export function getLaneOpponent(

@@ -9,7 +9,7 @@ import { sumBy } from "remeda";
 export function renderTeam(
   team: Roster,
   side: Team,
-  highlight: string,
+  highlightNames: string[],
   durationInMinutes: number,
 ) {
   const teamKills = sumBy(team, (champion) => champion.kills);
@@ -40,7 +40,7 @@ export function renderTeam(
       {team.map((champion) =>
         renderChampion(
           champion,
-          champion.championName === highlight,
+          highlightNames.includes(champion.riotIdGameName),
           durationInMinutes,
           mostDamage,
         )
