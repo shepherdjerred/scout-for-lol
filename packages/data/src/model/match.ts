@@ -33,7 +33,6 @@ export const CompletedMatchSchema = z.strictObject({
     red: RosterSchema,
     blue: RosterSchema,
   }),
-
 });
 
 export function getLaneOpponent(

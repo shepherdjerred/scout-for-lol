@@ -13,17 +13,22 @@ import {
   ApplicationState,
   CompletedMatch,
   type DiscordChannelId,
+  getLaneOpponent,
+  invertTeam,
   type LeagueSummonerId,
   LoadingScreenState,
+  parseQueueType,
+  parseTeam,
   Player,
   PlayerConfigEntry,
   type Rank,
 } from "@scout/data";
 import { getState, setState } from "../../model/state.ts";
-import { differenceWith, filter, first, map, pipe } from "remeda";
-import { toMatch } from "../../model/match.ts";
+import { differenceWith, filter, map, pipe } from "remeda";
+import { getOutcome } from "../../model/match.ts";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
 import { mapRegionToEnum } from "../../model/region.ts";
+import { participantToChampion } from "../../model/champion.ts";
 
 export async function checkMatch(game: LoadingScreenState) {
   try {
@@ -45,10 +50,14 @@ export async function checkMatch(game: LoadingScreenState) {
       }
       if (result.data.status == 403) {
         // Not recoverable: log and remove from queue
-        console.error(`403 Forbidden for match ${game.matchId}, removing from queue.`);
+        console.error(
+          `403 Forbidden for match ${game.matchId}, removing from queue.`,
+        );
         setState({
           ...getState(),
-          gamesStarted: getState().gamesStarted.filter(g => g.matchId !== game.matchId),
+          gamesStarted: getState().gamesStarted.filter((g) =>
+            g.matchId !== game.matchId
+          ),
         });
         return undefined;
       }
@@ -80,37 +89,69 @@ async function createMatchObj(
   match: MatchV5DTOs.MatchDto,
   getPlayerFn: (playerConfig: PlayerConfigEntry) => Promise<Player>,
 ) {
-  const player = pipe(
-    match.info.participants,
-    filter(
-      (participant) =>
-        // TODO: why are we grabbing player zero? -- I think it's because I was halfway through adding multi-player support e.g. for flex and duo queue
-        participant.puuid ===
-          state.players[0].player.league.leagueAccount.puuid,
-    ),
-    first(),
+  // Get teams using backend/model/match.ts helpers
+  const getTeams = (participants: MatchV5DTOs.ParticipantDto[]) => {
+    return {
+      blue: pipe(participants.slice(0, 5), map(participantToChampion)),
+      red: pipe(participants.slice(5, 10), map(participantToChampion)),
+    };
+  };
+  const teams = getTeams(match.info.participants);
+  const queueType = parseQueueType(match.info.queueId);
+
+  // Gather all relevant players
+  const players = await Promise.all(
+    state.players.map(async (playerState) => {
+      // Find the participant in the match by puuid
+      const participant = match.info.participants.find(
+        (p) =>
+          p.puuid === playerState.player.league.leagueAccount.puuid
+      );
+      if (!participant) {
+        throw new Error(
+          `unable to find participant for player ${JSON.stringify(playerState)}, match: ${JSON.stringify(match)}`
+        );
+      }
+      const fullPlayer = await getPlayerFn(playerState.player);
+      let rankBeforeMatch: Rank | undefined = undefined;
+      let rankAfterMatch: Rank | undefined = undefined;
+      if (state.queue === "solo" || state.queue === "flex") {
+        rankBeforeMatch = playerState.rank;
+        rankAfterMatch = fullPlayer.ranks[state.queue];
+      }
+      const champion = participantToChampion(participant);
+      const team = parseTeam(participant.teamId);
+      if (!team) {
+        throw new Error(`Could not determine team for participant: ${JSON.stringify(participant)}`);
+      }
+      const enemyTeam = invertTeam(team);
+      return {
+        playerConfig: fullPlayer.config,
+        rankBeforeMatch,
+        rankAfterMatch,
+        wins:
+          state.queue === "solo" || state.queue === "flex"
+            ? fullPlayer.ranks[state.queue]?.wins || undefined
+            : undefined,
+        losses:
+          state.queue === "solo" || state.queue === "flex"
+            ? fullPlayer.ranks[state.queue]?.losses || undefined
+            : undefined,
+        champion,
+        outcome: getOutcome(participant),
+        team: team,
+        lane: champion.lane,
+        laneOpponent: getLaneOpponent(champion, teams[enemyTeam]),
+      };
+    })
   );
 
-  if (player == undefined) {
-    throw new Error(
-      `unable to find player ${JSON.stringify(state)}, ${
-        JSON.stringify(match)
-      }`,
-    );
-  }
-
-  // TODO: support multiple players, e.g. for duo and flex queue
-  const fullPlayer = await getPlayerFn(state.players[0].player);
-
-  let rankBeforeMatch: Rank | undefined;
-  let rankAfterMatch: Rank | undefined;
-
-  if (state.queue === "solo" || state.queue === "flex") {
-    rankBeforeMatch = state.players[0].rank;
-    rankAfterMatch = fullPlayer.ranks[state.queue];
-  }
-
-  return toMatch(fullPlayer, match, rankBeforeMatch, rankAfterMatch);
+  return {
+    queueType,
+    players,
+    durationInSeconds: match.info.gameDuration,
+    teams,
+  };
 }
 
 export async function checkPostMatchInternal(
