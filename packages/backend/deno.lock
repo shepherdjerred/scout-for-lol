@@ -2,7 +2,7 @@
   "version": "5",
   "specifiers": {
     "jsr:@db/sqlite@0.12.0": "0.12.0",
-    "jsr:@deno/cache-dir@0.18.0": "0.18.0",
+    "jsr:@deno/cache-dir@0.21.0": "0.21.0",
     "jsr:@deno/graph@0.86": "0.86.9",
     "jsr:@denosaurs/plug@1": "1.1.0",
     "jsr:@std/assert@0.217": "0.217.0",
@@ -41,8 +41,8 @@
         "jsr:@std/path@0.217"
       ]
     },
-    "@deno/cache-dir@0.18.0": {
-      "integrity": "25ef3ef94fe9d0681201efd879f4b7d417262124a204a546afba91590b309182",
+    "@deno/cache-dir@0.21.0": {
+      "integrity": "6f2df01b4031bb140de91a74a6c5d44f5a70b3435b2d9183d43382121ced3456",
       "dependencies": [
         "jsr:@deno/graph",
         "jsr:@std/fmt@^1.0.3",
@@ -1041,7 +1041,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@db/sqlite@0.12.0",
-      "jsr:@deno/cache-dir@0.18.0",
+      "jsr:@deno/cache-dir@0.21.0",
       "jsr:@std/assert@1.0.12",
       "jsr:@std/dotenv@0.225.3",
       "jsr:@std/encoding@1.0.9",
