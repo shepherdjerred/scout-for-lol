@@ -12,8 +12,8 @@
     "jsr:@std/bytes@^1.0.5": "1.0.6",
     "jsr:@std/data-structures@^1.0.6": "1.0.8",
     "jsr:@std/dotenv@0.225.3": "0.225.3",
-    "jsr:@std/encoding@1": "1.0.9",
-    "jsr:@std/encoding@1.0.9": "1.0.9",
+    "jsr:@std/encoding@1": "1.0.10",
+    "jsr:@std/encoding@1.0.10": "1.0.10",
     "jsr:@std/fmt@1": "1.0.8",
     "jsr:@std/fmt@^1.0.3": "1.0.8",
     "jsr:@std/fs@1": "1.0.17",
@@ -84,8 +84,8 @@
     "@std/dotenv@0.225.3": {
       "integrity": "a95e5b812c27b0854c52acbae215856d9cce9d4bbf774d938c51d212711e8d4a"
     },
-    "@std/encoding@1.0.9": {
-      "integrity": "025b8f18eb1749bc30d1353bf48b77d1eb5e35610220fa226f5a046b9240c5d7"
+    "@std/encoding@1.0.10": {
+      "integrity": "8783c6384a2d13abd5e9e87a7ae0520a30e9f56aeeaa3bdf910a3eaaf5c811a1"
     },
     "@std/fmt@1.0.8": {
       "integrity": "71e1fc498787e4434d213647a6e43e794af4fd393ef8f52062246e06f7e372b7"
@@ -1044,7 +1044,7 @@
       "jsr:@deno/cache-dir@0.18.0",
       "jsr:@std/assert@1.0.12",
       "jsr:@std/dotenv@0.225.3",
-      "jsr:@std/encoding@1.0.9",
+      "jsr:@std/encoding@1.0.10",
       "jsr:@std/testing@1.0.11",
       "npm:@resvg/resvg-js@2.6.2",
       "npm:discord.js@14.18.0",
