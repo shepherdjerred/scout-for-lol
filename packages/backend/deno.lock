@@ -133,7 +133,7 @@
         "@discordjs/formatters",
         "@discordjs/util",
         "@sapphire/shapeshift",
-        "discord-api-types@0.38.8",
+        "discord-api-types@0.38.11",
         "fast-deep-equal",
         "ts-mixer",
         "tslib"
@@ -148,7 +148,7 @@
     "@discordjs/formatters@0.6.1": {
       "integrity": "sha512-5cnX+tASiPCqCWtFcFslxBVUaCetB0thvM/JyavhbXInP1HJIEU+Qv/zMrnuwSsX3yWH2lVXNJZeDK3EiP4HHg==",
       "dependencies": [
-        "discord-api-types@0.38.8"
+        "discord-api-types@0.38.11"
       ]
     },
     "@discordjs/rest@2.5.0": {
@@ -159,7 +159,7 @@
         "@sapphire/async-queue",
         "@sapphire/snowflake",
         "@vladfrangu/async_event_emitter",
-        "discord-api-types@0.38.8",
+        "discord-api-types@0.38.11",
         "magic-bytes.js",
         "tslib",
         "undici"
@@ -177,7 +177,7 @@
         "@sapphire/async-queue",
         "@types/ws",
         "@vladfrangu/async_event_emitter",
-        "discord-api-types@0.38.8",
+        "discord-api-types@0.38.11",
         "tslib",
         "ws"
       ]
@@ -495,8 +495,8 @@
     "discord-api-types@0.37.120": {
       "integrity": "sha512-7xpNK0EiWjjDFp2nAhHXezE4OUWm7s1zhc/UXXN6hnFFU8dfoPHgV0Hx0RPiCa3ILRpdeh152icc68DGCyXYIw=="
     },
-    "discord-api-types@0.38.8": {
-      "integrity": "sha512-xuRXPD44FcbKHrQK15FS1HFlMRNJtsaZou/SVws18vQ7zHqmlxyDktMkZpyvD6gE2ctGOVYC/jUyoMMAyBWfcw=="
+    "discord-api-types@0.38.11": {
+      "integrity": "sha512-XN0qhcQpetkyb/49hcDHuoeUPsQqOkb17wbV/t48gUkoEDi4ajhsxqugGcxvcN17BBtI9FPPWEgzv6IhQmCwyw=="
     },
     "discord.js@14.18.0": {
       "integrity": "sha512-SvU5kVUvwunQhN2/+0t55QW/1EHfB1lp0TtLZUSXVHDmyHTrdOj5LRKdR0zLcybaA15F+NtdWuWmGOX9lE+CAw==",
@@ -715,8 +715,8 @@
     "https://esm.sh/axios@1.9.0?target=denonext": "167b56e1ac1d60da90651778804dd677a0e70a0be2c6b773801350fc326fbb07",
     "https://esm.sh/combined-stream@1.0.8/denonext/combined-stream.mjs": "364b91aa4c33e5f0b4075949d93a3407b21a8695031e7c2be29999d588f9ca2c",
     "https://esm.sh/combined-stream@1.0.8?target=denonext": "a0c89b8b29494e966774c7a708e33cc2df16a0bbe2279c841d088e169e7ab3c4",
-    "https://esm.sh/cron@4.1.4": "8fafddaf523e8bd3352cf785c7f16142647aaca5a482e3bcedc2ebecab4629e0",
-    "https://esm.sh/cron@4.1.4/denonext/cron.mjs": "f294153b849b6f8e66a587e4138ffb45add7e7f67e6330e494ce15f5056d4c31",
+    "https://esm.sh/cron@4.3.1": "23605ef1aafddce3914a0731888ca71dfb23d1d140ba9f58186445f359cf52a4",
+    "https://esm.sh/cron@4.3.1/denonext/cron.mjs": "bc279fd5e4acdcc7663258be7e2d8e393ed4da971a25d7839b8863ce44ab02ca",
     "https://esm.sh/date-fns@4.1.0": "30d4361e1d5f73511334b17104dcbee040874d16ba41d92d5ff6157040188434",
     "https://esm.sh/date-fns@4.1.0/denonext/_lib/addLeadingZeros.mjs": "bc204546a6efca487ff669bdbda2ce2509e40112b8e4c76e9f4696b6540dd5c6",
     "https://esm.sh/date-fns@4.1.0/denonext/_lib/defaultLocale.mjs": "2e8e31cd8003edd48251b43f07ebe80659aa689ca96373358e0e85f092881ab7",
