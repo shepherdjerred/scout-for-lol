@@ -30,7 +30,7 @@
     "npm:@types/node@*": "22.15.15",
     "npm:discord.js@14.18.0": "14.18.0",
     "npm:prisma@6.5.0": "6.5.0",
-    "npm:satori@0.12.2": "0.12.2",
+    "npm:satori@0.14.0": "0.14.0",
     "npm:yoga-wasm-web@0.3.3": "0.3.3"
   },
   "jsr": {
@@ -133,7 +133,7 @@
         "@discordjs/formatters",
         "@discordjs/util",
         "@sapphire/shapeshift",
-        "discord-api-types@0.38.8",
+        "discord-api-types@0.38.11",
         "fast-deep-equal",
         "ts-mixer",
         "tslib"
@@ -148,7 +148,7 @@
     "@discordjs/formatters@0.6.1": {
       "integrity": "sha512-5cnX+tASiPCqCWtFcFslxBVUaCetB0thvM/JyavhbXInP1HJIEU+Qv/zMrnuwSsX3yWH2lVXNJZeDK3EiP4HHg==",
       "dependencies": [
-        "discord-api-types@0.38.8"
+        "discord-api-types@0.38.11"
       ]
     },
     "@discordjs/rest@2.5.0": {
@@ -159,7 +159,7 @@
         "@sapphire/async-queue",
         "@sapphire/snowflake",
         "@vladfrangu/async_event_emitter",
-        "discord-api-types@0.38.8",
+        "discord-api-types@0.38.11",
         "magic-bytes.js",
         "tslib",
         "undici"
@@ -177,7 +177,7 @@
         "@sapphire/async-queue",
         "@types/ws",
         "@vladfrangu/async_event_emitter",
-        "discord-api-types@0.38.8",
+        "discord-api-types@0.38.11",
         "tslib",
         "ws"
       ]
@@ -495,8 +495,8 @@
     "discord-api-types@0.37.120": {
       "integrity": "sha512-7xpNK0EiWjjDFp2nAhHXezE4OUWm7s1zhc/UXXN6hnFFU8dfoPHgV0Hx0RPiCa3ILRpdeh152icc68DGCyXYIw=="
     },
-    "discord-api-types@0.38.8": {
-      "integrity": "sha512-xuRXPD44FcbKHrQK15FS1HFlMRNJtsaZou/SVws18vQ7zHqmlxyDktMkZpyvD6gE2ctGOVYC/jUyoMMAyBWfcw=="
+    "discord-api-types@0.38.11": {
+      "integrity": "sha512-XN0qhcQpetkyb/49hcDHuoeUPsQqOkb17wbV/t48gUkoEDi4ajhsxqugGcxvcN17BBtI9FPPWEgzv6IhQmCwyw=="
     },
     "discord.js@14.18.0": {
       "integrity": "sha512-SvU5kVUvwunQhN2/+0t55QW/1EHfB1lp0TtLZUSXVHDmyHTrdOj5LRKdR0zLcybaA15F+NtdWuWmGOX9lE+CAw==",
@@ -515,8 +515,8 @@
         "undici"
       ]
     },
-    "emoji-regex@10.4.0": {
-      "integrity": "sha512-EC+0oUMY1Rqm4O6LLrgjtYDvcVYTy7chDnM4Q7030tP4Kwj3u/pR6gP9ygnp2CJMK5Gq+9Q2oqmrFJAz01DXjw=="
+    "emoji-regex-xs@2.0.1": {
+      "integrity": "sha512-1QFuh8l7LqUcKe24LsPUNzjrzJQ7pgRwp1QMcZ5MX6mFplk2zQ08NVCM84++1cveaUUYtcCYHmeFEuNg16sU4g=="
     },
     "esbuild-register@3.6.0_esbuild@0.25.5": {
       "integrity": "sha512-H2/S7Pm8a9CL1uhp9OvjwrBh5Pvx0H8qVOxNu8Wed9Y7qv56MPtq+GGM8RJpq6glYJn9Wspr8uw7l55uyinNeg==",
@@ -618,15 +618,15 @@
       "scripts": true,
       "bin": true
     },
-    "satori@0.12.2": {
-      "integrity": "sha512-3C/laIeE6UUe9A+iQ0A48ywPVCCMKCNSTU5Os101Vhgsjd3AAxGNjyq0uAA8kulMPK5n0csn8JlxPN9riXEjLA==",
+    "satori@0.14.0": {
+      "integrity": "sha512-s9tfkzlvZr9+KGfU17oPCrgz2rN5/juYi12xrMFKOC+ulxnlyUHnU8z3Yy9sR29bfHagz5skyNcbNI3xD+yotA==",
       "dependencies": [
         "@shuding/opentype.js",
         "css-background-parser",
         "css-box-shadow",
         "css-gradient-parser",
         "css-to-react-native",
-        "emoji-regex",
+        "emoji-regex-xs",
         "escape-html",
         "linebreak",
         "parse-css-color",
@@ -1049,7 +1049,7 @@
       "npm:@resvg/resvg-js@2.6.2",
       "npm:discord.js@14.18.0",
       "npm:prisma@6.5.0",
-      "npm:satori@0.12.2",
+      "npm:satori@0.14.0",
       "npm:yoga-wasm-web@0.3.3"
     ]
   }
