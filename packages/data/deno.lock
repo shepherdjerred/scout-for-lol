@@ -1,5 +1,5 @@
 {
-  "version": "4",
+  "version": "5",
   "specifiers": {
     "jsr:@std/assert@1.0.12": "1.0.12",
     "jsr:@std/assert@^1.0.12": "1.0.12",
@@ -52,8 +52,8 @@
     "https://esm.sh/remeda@2.21.2/denonext/remeda.mjs": "0e8f73cc86f70b55586d25c9caded73e4f28c06433afaf9f6cb1994c7e02c96c",
     "https://esm.sh/ts-pattern@5.7.0": "c82d82c236a4d625e7eb2a119498bba8615170a59b46204ebbbc0a5f4eb9c216",
     "https://esm.sh/ts-pattern@5.7.0/denonext/ts-pattern.mjs": "08e04638a80294941540c68054399ecdff0896eee76d8dba5d99144af36b52cb",
-    "https://esm.sh/zod@3.24.2": "634dc151ffdec010f55988d783c024d926124f7e943e00c27004f73bc5543902",
-    "https://esm.sh/zod@3.24.2/denonext/zod.mjs": "742680b93730f63c3a3160f75475b69f661bd353d6b8b46f602c7a685837e76d"
+    "https://esm.sh/zod@3.25.56": "82ecc40c47c5e4f29265d895e9937a4d027af77ac6feadc68facfba5c2be072c",
+    "https://esm.sh/zod@3.25.56/denonext/zod.mjs": "8bb0eb80070bfc5283289b16307553741b264f2866d04684d99c61b5d2289e67"
   },
   "workspace": {
     "dependencies": [
