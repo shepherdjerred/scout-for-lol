@@ -97,6 +97,12 @@
         "x-typescript-types": "https://esm.sh/cron@4.1.4/dist/index.d.ts"
       }
     },
+    "https://esm.sh/cron@4.3.1": {
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8",
+        "x-typescript-types": "https://esm.sh/cron@4.3.1/dist/index.d.ts"
+      }
+    },
     "https://esm.sh/date-fns@4.1.0": {
       "headers": {
         "content-type": "application/javascript; charset=utf-8",
