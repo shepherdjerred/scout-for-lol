@@ -4,7 +4,7 @@
     "@std/testing": "jsr:@std/testing@1.0.11",
     "remeda": "https://esm.sh/remeda@2.21.2",
     "ts-pattern": "https://esm.sh/ts-pattern@5.7.0",
-    "zod": "https://esm.sh/zod@3.24.2"
+    "zod": "https://esm.sh/zod@3.25.67"
   },
   "lock": true,
   "tasks": {

@@ -155,6 +155,18 @@
     "https://esm.sh/zod@3.24.2/lib/helpers/parseUtil.d.ts": {},
     "https://esm.sh/zod@3.24.2/lib/helpers/partialUtil.d.ts": {},
     "https://esm.sh/zod@3.24.2/lib/helpers/typeAliases.d.ts": {},
+    "https://esm.sh/zod@3.25.67": {
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8",
+        "x-typescript-types": "https://esm.sh/zod@3.25.67/dist/types/index.d.ts"
+      }
+    },
+    "https://esm.sh/zod@3.25.67/dist/types/v3/ZodError.d.ts": {},
+    "https://esm.sh/zod@3.25.67/dist/types/v3/helpers/enumUtil.d.ts": {},
+    "https://esm.sh/zod@3.25.67/dist/types/v3/helpers/errorUtil.d.ts": {},
+    "https://esm.sh/zod@3.25.67/dist/types/v3/helpers/parseUtil.d.ts": {},
+    "https://esm.sh/zod@3.25.67/dist/types/v3/helpers/partialUtil.d.ts": {},
+    "https://esm.sh/zod@3.25.67/dist/types/v3/helpers/typeAliases.d.ts": {},
     "https://jsr.io/@std/data-structures/1.0.6/_binary_search_tree_internals.ts": {}
   }
 }
