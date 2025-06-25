@@ -978,6 +978,12 @@
         "x-typescript-types": "https://esm.sh/zod-validation-error@3.4.0/dist/index.d.ts"
       }
     },
+    "https://esm.sh/zod-validation-error@3.5.2": {
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8",
+        "x-typescript-types": "https://esm.sh/zod-validation-error@3.5.2/v3/index.d.ts"
+      }
+    },
     "https://esm.sh/zod@3.24.1/lib/ZodError.d.ts": {},
     "https://esm.sh/zod@3.24.1/lib/helpers/enumUtil.d.ts": {},
     "https://esm.sh/zod@3.24.1/lib/helpers/errorUtil.d.ts": {},
@@ -1008,9 +1014,26 @@
         "x-typescript-types": "https://esm.sh/zod@3.25.34/dist/types/index.d.ts"
       }
     },
+    "https://esm.sh/zod@3.25.67/dist/types/v3/ZodError.d.ts": {},
+    "https://esm.sh/zod@3.25.67/dist/types/v3/helpers/enumUtil.d.ts": {},
+    "https://esm.sh/zod@3.25.67/dist/types/v3/helpers/errorUtil.d.ts": {},
+    "https://esm.sh/zod@3.25.67/dist/types/v3/helpers/parseUtil.d.ts": {},
+    "https://esm.sh/zod@3.25.67/dist/types/v3/helpers/partialUtil.d.ts": {},
+    "https://esm.sh/zod@3.25.67/dist/types/v3/helpers/typeAliases.d.ts": {},
+    "https://esm.sh/zod@3.25.67?target=denonext": {
+      "headers": {
+        "content-type": "application/javascript; charset=utf-8",
+        "x-typescript-types": "https://esm.sh/zod@3.25.67/dist/types/index.d.ts"
+      }
+    },
     "https://esm.sh/zod@^3.18.0?target=denonext": {
       "headers": {
         "location": "https://esm.sh/zod@3.25.34?target=denonext"
+      }
+    },
+    "https://esm.sh/zod@^3.25.0?target=denonext": {
+      "headers": {
+        "location": "https://esm.sh/zod@3.25.67?target=denonext"
       }
     },
     "https://jsr.io/@std/data-structures/1.0.8/_binary_search_tree_internals.ts": {}

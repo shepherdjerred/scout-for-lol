@@ -63,7 +63,7 @@
     "uuid": "https://esm.sh/uuid@11.1.0",
     "yoga-wasm-web": "npm:yoga-wasm-web@0.3.3",
     "zod": "https://esm.sh/zod@3.24.2",
-    "zod-validation-error": "https://esm.sh/zod-validation-error@3.4.0"
+    "zod-validation-error": "https://esm.sh/zod-validation-error@3.5.2"
   },
   "lock": true,
   "nodeModulesDir": "none",
