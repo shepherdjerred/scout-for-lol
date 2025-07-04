@@ -16,7 +16,8 @@ import { match } from "ts-pattern";
 // Champion conversion function - adapted to match the expected Champion type
 function participantToChampion(participant: MatchV5DTOs.ParticipantDto) {
   return {
-    riotIdGameName: participant.riotIdGameName || participant.summonerName || "Unknown",
+    riotIdGameName:
+      participant.riotIdGameName || participant.summonerName || "Unknown",
     championName: participant.championName,
     kills: participant.kills,
     deaths: participant.deaths,
@@ -29,11 +30,12 @@ function participantToChampion(participant: MatchV5DTOs.ParticipantDto) {
       participant.item3,
       participant.item4,
       participant.item5,
-    ].filter(item => item !== 0),
+    ].filter((item) => item !== 0),
     spells: [participant.summoner1Id, participant.summoner2Id],
     gold: participant.goldEarned,
     runes: [], // TODO: Extract runes from participant.perks if needed
-    creepScore: participant.totalMinionsKilled + participant.neutralMinionsKilled,
+    creepScore:
+      participant.totalMinionsKilled + participant.neutralMinionsKilled,
     visionScore: participant.visionScore,
     damage: participant.totalDamageDealtToChampions,
     lane: parseLane(participant.lane),

@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "test": "bun test",
-    "lint": "bunx eslint src --ext .ts",
+    "lint": "bunx eslint src",
     "format": "bunx prettier --check src",
     "format:write": "bunx prettier --write src",
     "typecheck": "bunx tsc --noEmit"
@@ -16,11 +16,13 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
+    "@eslint/js": "^9.30.1",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "bun-types": "latest",
     "eslint": "^8.0.0",
     "prettier": "^3.0.0",
-    "bun-types": "latest"
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.35.1"
   }
 }
