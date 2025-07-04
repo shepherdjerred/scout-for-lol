@@ -1,6 +1,6 @@
 import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { z } from "zod";
-import { api } from "../../api/api.ts";
+import { api } from "../../api/api";
 import {
   AttachmentBuilder,
   EmbedBuilder,
@@ -8,7 +8,7 @@ import {
   MessageCreateOptions,
   MessagePayload,
 } from "discord.js";
-import { matchToImage } from "@scout/report";
+import { matchToImage } from "@scout-for-lol/report";
 import {
   ApplicationState,
   CompletedMatch,
@@ -22,13 +22,13 @@ import {
   Player,
   PlayerConfigEntry,
   type Rank,
-} from "@scout/data";
-import { getState, setState } from "../../model/state.ts";
+} from "@scout-for-lol/data";
+import { getState, setState } from "../../model/state";
 import { differenceWith, filter, map, pipe } from "remeda";
-import { getOutcome } from "../../model/match.ts";
+import { getOutcome } from "../../model/match";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
-import { mapRegionToEnum } from "../../model/region.ts";
-import { participantToChampion } from "../../model/champion.ts";
+import { mapRegionToEnum } from "../../model/region";
+import { participantToChampion } from "../../model/champion";
 
 export async function checkMatch(game: LoadingScreenState) {
   try {
@@ -175,10 +175,11 @@ export async function checkPostMatchInternal(
   console.log("removing games in progress");
   const finishedGames = pipe(
     state.gamesStarted,
-    (gamesStarted) => gamesStarted.map((game, index) => [game, games[index]]),
+    (gamesStarted) => gamesStarted.map((game, index) => [game, games[index]] as const),
     filter(([_game, match]) => match != undefined),
-    // TODO: remove this cast
-  ) as [LoadingScreenState, MatchV5DTOs.MatchDto][];
+    // Cast to ensure TypeScript understands the filter removes undefined values
+    map(([game, match]) => [game, match as MatchV5DTOs.MatchDto] as const),
+  );
 
   // TODO: send duo queue message
   console.log("sending messages");

@@ -1,8 +1,8 @@
 import { REST, Routes } from "discord.js";
-import { subscribeCommand } from "./commands/subscribe.ts";
-import { unsubscribeCommand } from "./commands/unsubscribe.ts";
-import configuration from "../configuration.ts";
-import { listSubscriptionsCommand } from "./commands/listSubscriptions.ts";
+import { subscribeCommand } from "./commands/subscribe";
+import { unsubscribeCommand } from "./commands/unsubscribe";
+import configuration from "../configuration";
+import { listSubscriptionsCommand } from "./commands/listSubscriptions";
 
 const commands = [
   subscribeCommand.toJSON(),

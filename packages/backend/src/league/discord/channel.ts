@@ -4,7 +4,7 @@ import {
   MessagePayload,
   type TextChannel,
 } from "discord.js";
-import client from "../../discord/client.ts";
+import client from "../../discord/client";
 
 export async function send(
   options: string | MessagePayload | MessageCreateOptions,

@@ -13,11 +13,11 @@ import {
   RegionSchema,
   RiotIdSchema,
   toReadableRegion,
-} from "@scout/data";
-import { api, riotApi } from "../../league/api/api.ts";
-import { mapRegionToEnum } from "../../league/model/region.ts";
+} from "@scout-for-lol/data";
+import { api, riotApi } from "../../league/api/api";
+import { mapRegionToEnum } from "../../league/model/region";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
-import { prisma } from "../../database/index.ts";
+import { prisma } from "../../database/index";
 import { fromError } from "zod-validation-error";
 
 export const subscribeCommand = new SlashCommandBuilder()
@@ -101,7 +101,7 @@ export async function executeSubscribe(
     const account = await riotApi.Account.getByRiotId(
       riotId.game_name,
       riotId.tag_line,
-      regionToRegionGroup(mapRegionToEnum(region)),
+      regionToRegionGroup(mapRegionToEnum(region)) as any,
     );
     puuid = account.response.puuid;
   } catch (error) {

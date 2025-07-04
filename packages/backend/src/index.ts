@@ -1,5 +1,6 @@
-import configuration from "./configuration.ts";
-import * as Sentry from "sentry/index.mjs";
+import configuration from "./configuration.js";
+import * as Sentry from "@sentry/node";
+import "dotenv/config";
 
 Sentry.init({
   dsn: configuration.sentryDsn,
@@ -7,7 +8,7 @@ Sentry.init({
   release: configuration.gitSha,
 });
 
-import "./discord/index.ts";
-import { startCronJobs } from "./league/cron.ts";
+import "./discord/index.js";
+import { startCronJobs } from "./league/cron.js";
 
 startCronJobs();

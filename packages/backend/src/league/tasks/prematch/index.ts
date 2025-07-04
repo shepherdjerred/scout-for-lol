@@ -5,13 +5,12 @@ import {
   LoadingScreenPlayer,
   type LoadingScreenState,
   parseQueueType,
-  PlayerConfigEntry,
-} from "@scout/data";
-import { createDiscordMessage } from "./discord.ts";
-import { send } from "../../discord/channel.ts";
-import { getRanks } from "../../model/rank.ts";
-import { getState, setState } from "../../model/state.ts";
-import { getCurrentGame } from "../../api/index.ts";
+} from "@scout-for-lol/data";
+import { createDiscordMessage } from "./discord";
+import { send } from "../../discord/channel";
+import { getRanks } from "../../model/rank";
+import { getState, setState } from "../../model/state";
+import { getCurrentGame } from "../../api/index";
 import {
   filter,
   groupBy,
@@ -25,7 +24,7 @@ import {
 import {
   getAccounts,
   getChannelsSubscribedToPlayers,
-} from "../../../database/index.ts";
+} from "../../../database/index";
 
 export async function checkPreMatch() {
   const players = await getAccounts();
@@ -41,7 +40,8 @@ export async function checkPreMatch() {
     playersNotInGame,
     zip(playerStatus),
     filter(([_player, game]) => game != undefined),
-  ) as [PlayerConfigEntry, CurrentGameInfoDTO][];
+    map(([player, game]) => [player, game as CurrentGameInfoDTO] as const),
+  );
 
   console.log("removing games already seen");
   const newGames = filter(
@@ -85,7 +85,7 @@ export async function checkPreMatch() {
       };
 
       const message = createDiscordMessage(players, game, queueType);
-      
+
 
       // figure out what channels to send the message to
       // server, see if they have a player in the game

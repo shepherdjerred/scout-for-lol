@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { DivisionSchema, divisionToString } from "./division.ts";
-import { TierSchema } from "./tier.ts";
-import { rankToLeaguePoints, tierToOrdinal } from "./leaguePoints.ts";
-import { startCase } from "../util.ts";
+import { DivisionSchema, divisionToString } from "./division.js";
+import { TierSchema } from "./tier.js";
+import { rankToLeaguePoints, tierToOrdinal } from "./leaguePoints.js";
+import { startCase } from "../util.js";
 
 export type Rank = z.infer<typeof RankSchema>;
 export const RankSchema = z.strictObject({

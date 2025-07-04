@@ -3,21 +3,21 @@ import {
   ApplicationState,
   Player,
   PlayerConfigEntry,
-} from "../../../../../data/src/model/index.ts";
-import { send } from "../../discord/channel.ts";
-import { checkPostMatchInternal } from "./internal.ts";
-import { assertSnapshot } from "@std/testing/snapshot";
+} from "../../../../../data/src/model/index";
+import { send } from "../../discord/channel";
+import { checkPostMatchInternal } from "./internal";
+import { test, expect } from "bun:test";
 import { Message, MessageCreateOptions, MessagePayload } from "discord.js";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   LeaguePuuidSchema,
   LeagueSummonerIdSchema,
-} from "@scout/data";
+} from "@scout-for-lol/data";
 
 const testdataPath = new URL("testdata/match.json", import.meta.url);
 
-Deno.test("postmatch", async (t) => {
+test("postmatch", async () => {
   const state: ApplicationState = {
     gamesStarted: [
       {
@@ -51,12 +51,12 @@ Deno.test("postmatch", async (t) => {
   const sendFn = (async (
     message: string | MessagePayload | MessageCreateOptions,
   ): Promise<Message<true> | Message<false>> => {
-    await assertSnapshot(t, message);
+    expect(message).toMatchSnapshot();
     return Promise.resolve({} as Message<true> | Message<false>);
   }) satisfies typeof send;
   const checkMatchFn = async () => {
     const exampleMatch = JSON.parse(
-      (await Deno.readTextFile(testdataPath)).toString(),
+      await Bun.file(testdataPath).text(),
     ) as MatchV5DTOs.MatchDto;
     return exampleMatch;
   };

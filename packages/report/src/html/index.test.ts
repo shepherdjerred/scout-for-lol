@@ -3,9 +3,10 @@ import {
   DiscordAccountIdSchema,
   LeaguePuuidSchema,
   LeagueSummonerIdSchema,
-} from "@scout/data";
-import { matchToSvg, svgToPng } from "./index.tsx";
-import { assertSnapshot } from "@std/testing/snapshot";
+} from "@scout-for-lol/data";
+import { matchToSvg, svgToPng } from "./index.js";
+import { test, expect } from "bun:test";
+import { writeFileSync } from "fs";
 
 function getMatch(): CompletedMatch {
   return {
@@ -380,15 +381,15 @@ function getMatch(): CompletedMatch {
   };
 }
 
-Deno.test("sanity check", async (t) => {
+test("sanity check", async () => {
   const svg = await matchToSvg(getMatch());
   const png = svgToPng(svg);
-  Deno.writeFileSync(new URL("__snapshots__/match.png", import.meta.url), png);
+  writeFileSync(new URL("__snapshots__/match.png", import.meta.url), png);
 
-  await assertSnapshot(t, svg);
+  expect(svg).toMatchSnapshot();
 });
 
-Deno.test("no items test", async (t) => {
+test("no items test", async () => {
   const matchNoItems = getMatch();
   if (matchNoItems.players[0]?.champion) {
     matchNoItems.players[0].champion.items = [0, 0, 0, 0, 0, 0, 0];
@@ -402,14 +403,15 @@ Deno.test("no items test", async (t) => {
 
   const svg = await matchToSvg(matchNoItems);
   const png = svgToPng(svg);
-  Deno.writeFileSync(
+  writeFileSync(
     new URL("__snapshots__/match_no_items.png", import.meta.url),
     png,
   );
 
-  await assertSnapshot(t, svg);
+  expect(svg).toMatchSnapshot();
 });
-Deno.test("all fields zeroed out test", async (t) => {
+
+test("all fields zeroed out test", async () => {
   const matchZeroedOut = getMatch();
   matchZeroedOut.durationInSeconds = 0;
   matchZeroedOut.players.forEach((player) => {
@@ -465,15 +467,15 @@ Deno.test("all fields zeroed out test", async (t) => {
 
   const svg = await matchToSvg(matchZeroedOut);
   const png = svgToPng(svg);
-  Deno.writeFileSync(
+  writeFileSync(
     new URL("__snapshots__/match_zeroed_out.png", import.meta.url),
     png,
   );
 
-  await assertSnapshot(t, svg);
+  expect(svg).toMatchSnapshot();
 });
 
-Deno.test("no rank test", async (t) => {
+test("no rank test", async () => {
   const matchNoRank = getMatch();
   matchNoRank.players.forEach((player) => {
     player.rankBeforeMatch = undefined;
@@ -482,15 +484,15 @@ Deno.test("no rank test", async (t) => {
 
   const svg = await matchToSvg(matchNoRank);
   const png = svgToPng(svg);
-  Deno.writeFileSync(
+  writeFileSync(
     new URL("__snapshots__/match_no_rank.png", import.meta.url),
     png,
   );
 
-  await assertSnapshot(t, svg);
+  expect(svg).toMatchSnapshot();
 });
 
-Deno.test("large values test", async (t) => {
+test("large values test", async () => {
   const matchLargeValues = getMatch();
   matchLargeValues.players.forEach((player) => {
     player.playerConfig.alias = "SummonerName12345";
@@ -529,15 +531,15 @@ Deno.test("large values test", async (t) => {
 
   const svg = await matchToSvg(matchLargeValues);
   const png = svgToPng(svg);
-  Deno.writeFileSync(
+  writeFileSync(
     new URL("__snapshots__/match_large_values.png", import.meta.url),
     png,
   );
 
-  await assertSnapshot(t, svg);
+  expect(svg).toMatchSnapshot();
 });
 
-Deno.test("victory test", async (t) => {
+test("victory test", async () => {
   const matchVictory = getMatch();
   matchVictory.players.forEach((player) => {
     player.outcome = "Victory";
@@ -545,15 +547,15 @@ Deno.test("victory test", async (t) => {
 
   const svg = await matchToSvg(matchVictory);
   const png = svgToPng(svg);
-  Deno.writeFileSync(
+  writeFileSync(
     new URL("__snapshots__/match_victory.png", import.meta.url),
     png,
   );
 
-  await assertSnapshot(t, svg);
+  expect(svg).toMatchSnapshot();
 });
 
-Deno.test("surrender test", async (t) => {
+test("surrender test", async () => {
   const matchSurrender = getMatch();
   matchSurrender.players.forEach((player) => {
     player.outcome = "Surrender";
@@ -561,15 +563,15 @@ Deno.test("surrender test", async (t) => {
 
   const svg = await matchToSvg(matchSurrender);
   const png = svgToPng(svg);
-  Deno.writeFileSync(
+  writeFileSync(
     new URL("__snapshots__/match_surrender.png", import.meta.url),
     png,
   );
 
-  await assertSnapshot(t, svg);
+  expect(svg).toMatchSnapshot();
 });
 
-Deno.test("no rank before match test", async (t) => {
+test("no rank before match test", async () => {
   const matchNoRankBefore = getMatch();
   matchNoRankBefore.players.forEach((player) => {
     player.rankBeforeMatch = undefined;
@@ -584,15 +586,15 @@ Deno.test("no rank before match test", async (t) => {
 
   const svg = await matchToSvg(matchNoRankBefore);
   const png = svgToPng(svg);
-  Deno.writeFileSync(
+  writeFileSync(
     new URL("__snapshots__/match_no_rank_before.png", import.meta.url),
     png,
   );
 
-  await assertSnapshot(t, svg);
+  expect(svg).toMatchSnapshot();
 });
 
-Deno.test("multiple highlighted players test", async (t) => {
+test("multiple highlighted players test", async () => {
   const match: CompletedMatch = getMatch();
   // Add a second highlighted player
   match.players.push({
@@ -666,7 +668,7 @@ Deno.test("multiple highlighted players test", async (t) => {
 
   const svg = await matchToSvg(match);
   const png = svgToPng(svg);
-  Deno.writeFileSync(
+  writeFileSync(
     new URL(
       "__snapshots__/match_multiple_highlighted_players.png",
       import.meta.url,
@@ -674,5 +676,5 @@ Deno.test("multiple highlighted players test", async (t) => {
     png,
   );
 
-  await assertSnapshot(t, svg);
+  expect(svg).toMatchSnapshot();
 });

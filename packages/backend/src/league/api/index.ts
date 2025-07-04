@@ -4,8 +4,8 @@ import {
   SpectatorNotAvailableDTO,
 } from "twisted/dist/models-dto/index.js";
 import { z } from "zod";
-import { PlayerConfigEntry } from "@scout/data";
-import { api } from "./api.ts";
+import { PlayerConfigEntry } from "@scout-for-lol/data";
+import { api } from "./api.js";
 import { Constants } from "twisted";
 import { filter, find, pipe } from "remeda";
 

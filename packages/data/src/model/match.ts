@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { type Champion, ChampionSchema } from "./champion.ts";
-import { RosterSchema } from "./roster.ts";
-import { TeamSchema } from "./team.ts";
-import { LaneSchema } from "./lane.ts";
-import { QueueTypeSchema } from "./state.ts";
-import { RankSchema } from "./rank.ts";
-import { PlayerConfigEntrySchema } from "./playerConfig.ts";
+import { type Champion, ChampionSchema } from "./champion.js";
+import { RosterSchema } from "./roster.js";
+import { TeamSchema } from "./team.js";
+import { LaneSchema } from "./lane.js";
+import { QueueTypeSchema } from "./state.js";
+import { RankSchema } from "./rank.js";
+import { PlayerConfigEntrySchema } from "./playerConfig.js";
 import { filter, first, pipe } from "remeda";
 
 export type CompletedMatch = z.infer<typeof CompletedMatchSchema>;

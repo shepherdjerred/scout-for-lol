@@ -1,0 +1,26 @@
+{
+  "name": "@scout-for-lol/data",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "bun test",
+    "lint": "bunx eslint src --ext .ts",
+    "format": "bunx prettier --check src",
+    "format:write": "bunx prettier --write src",
+    "typecheck": "bunx tsc --noEmit"
+  },
+  "dependencies": {
+    "remeda": "^2.21.2",
+    "ts-pattern": "^5.7.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "bun-types": "latest"
+  }
+}

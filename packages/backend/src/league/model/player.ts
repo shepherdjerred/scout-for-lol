@@ -1,6 +1,6 @@
-import { Player } from "@scout/data";
-import { PlayerConfigEntry } from "@scout/data";
-import { getRanks } from "./rank.ts";
+import { Player } from "@scout-for-lol/data";
+import { PlayerConfigEntry } from "@scout-for-lol/data";
+import { getRanks } from "./rank";
 
 export async function getPlayer(
   playerConfig: PlayerConfigEntry,

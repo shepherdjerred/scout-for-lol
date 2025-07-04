@@ -1,5 +1,5 @@
 import React from "react";
-import { CompletedMatch, leaguePointsDelta, lpDiffToString } from "@scout/data";
+import { CompletedMatch, leaguePointsDelta, lpDiffToString } from "@scout-for-lol/data";
 import "react";
 import { palette } from "../assets/colors.ts";
 import { RankedBadge } from "./ranked/index.tsx";

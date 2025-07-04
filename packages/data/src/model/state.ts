@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { RankSchema } from "./rank.ts";
+import { RankSchema } from "./rank.js";
 import { match } from "ts-pattern";
-import { PlayerConfig, PlayerConfigEntrySchema } from "./playerConfig.ts";
+import { PlayerConfig, PlayerConfigEntrySchema } from "./playerConfig.js";
 import { filter, flatMap } from "remeda";
 
 export type QueueType = z.infer<typeof QueueTypeSchema>;

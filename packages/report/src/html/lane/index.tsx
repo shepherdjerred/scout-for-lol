@@ -1,6 +1,5 @@
 import React from "react";
-import { type Lane, LaneSchema } from "@scout/data";
-import { encodeBase64 } from "@std/encoding";
+import { type Lane, LaneSchema } from "@scout-for-lol/data";
 import { z } from "zod";
 
 const images: Record<Lane, string> = z
@@ -12,13 +11,13 @@ const images: Record<Lane, string> = z
     Object.fromEntries(
       await Promise.all(
         LaneSchema.options.map(async (lane): Promise<[Lane, string]> => {
-          const image = await Deno.readFile(
-            new URL(`assets/${lane}.svg`, import.meta.url),
-          );
-          return [lane, encodeBase64(image)];
-        }),
-      ),
-    ),
+          const image = await Bun.file(
+            new URL(`assets/${lane}.svg`, import.meta.url)
+          ).arrayBuffer();
+          return [lane, Buffer.from(image).toString("base64")];
+        })
+      )
+    )
   );
 
 export function Lane({ lane }: { lane: Lane }) {

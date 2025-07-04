@@ -1,28 +1,6 @@
-#!/usr/bin/env -S deno --allow-read --allow-run
-import { z } from "zod";
+#!/usr/bin/env bun
 
-// get the prisma version from deno.json
-const version = z.string().parse(
-  JSON.parse(await Deno.readTextFile("deno.json")).imports["prisma"].split(
-    "@",
-  )[1],
-);
+import { $ } from "bun";
 
-const command = new Deno.Command("deno", {
-  args: [
-    "run",
-    "--allow-read",
-    "--allow-env",
-    "--allow-write",
-    "--allow-sys",
-    "--allow-run",
-    "--allow-net",
-    `npm:prisma@${version}`,
-    "migrate",
-    "deploy",
-  ],
-  stdout: "inherit",
-  stderr: "inherit",
-});
-
-await command.output();
+// Run prisma migrate deploy using Bun
+await $`bunx prisma migrate deploy`;

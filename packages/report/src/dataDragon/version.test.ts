@@ -1,6 +1,6 @@
-import { latestVersion } from "./version.ts";
-import { assertSnapshot } from "@std/testing/snapshot";
+import { latestVersion } from "./version.js";
+import { test, expect } from "bun:test";
 
-Deno.test("should be able to get version", async (t) => {
-  await assertSnapshot(t, latestVersion);
+test("should be able to get version", async () => {
+  expect(latestVersion).toMatchSnapshot();
 });

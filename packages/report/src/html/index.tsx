@@ -2,11 +2,13 @@ import satori, { init } from "satori/wasm";
 import { Resvg } from "@resvg/resvg-js";
 import React from "react";
 import { fonts } from "../assets/index.ts";
-import { CompletedMatch } from "@scout/data";
+import { CompletedMatch } from "@scout-for-lol/data";
 import { Report } from "./report.tsx";
 import initYoga from "yoga-wasm-web";
 
-const wasm = await Deno.readFile(`node_modules/yoga-wasm-web/dist/yoga.wasm`);
+const wasm = await Bun.file(
+  `node_modules/yoga-wasm-web/dist/yoga.wasm`
+).arrayBuffer();
 const yoga = await initYoga(wasm);
 init(yoga);
 

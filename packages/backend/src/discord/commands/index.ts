@@ -1,7 +1,7 @@
 import { type Client, MessageFlags } from "discord.js";
-import { executeSubscribe } from "./subscribe.ts";
-import { executeUnsubscribe } from "./unsubscribe.ts";
-import { executeListSubscriptions } from "./listSubscriptions.ts";
+import { executeSubscribe } from "./subscribe";
+import { executeUnsubscribe } from "./unsubscribe";
+import { executeListSubscriptions } from "./listSubscriptions";
 
 export function handleCommands(client: Client) {
   client.on("interactionCreate", async (interaction) => {

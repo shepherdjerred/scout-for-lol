@@ -1,5 +1,5 @@
 import { type CommandInteraction, SlashCommandBuilder } from "discord.js";
-import { prisma } from "../../database/index.ts";
+import { prisma } from "../../database/index";
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
 
@@ -40,11 +40,11 @@ export async function executeListSubscriptions(
   }
 
   const subscriptionList = subscriptions
-    .map((sub) => {
+    .map((sub: any) => {
       const player = sub.player;
       return `${player.alias || player.discordId || "Unknown"} (Summoner IDs: ${
         player.accounts
-          .map((val) => val.summonerId)
+          .map((val: any) => val.summonerId)
           .join(", ")
       })`;
     })

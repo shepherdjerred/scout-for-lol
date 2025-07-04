@@ -1,86 +1,53 @@
-#!/usr/bin/env -S deno --allow-write --allow-run --allow-read
+#!/usr/bin/env bun
 
-import { z } from "zod";
+import { $ } from "bun";
+import { rmSync, existsSync, readdirSync, renameSync } from "fs";
+import { join } from "path";
 
 // clear the `generated` folder
 try {
-  await Deno.remove("./generated", { recursive: true });
+  rmSync("./generated", { recursive: true, force: true });
 } catch (error) {
-  if (error instanceof Deno.errors.NotFound) {
-    console.log("The 'generated' folder does not exist, skipping removal.");
-  } else {
-    throw error;
-  }
+  console.log("The 'generated' folder does not exist, skipping removal.");
 }
 
-// get the prisma version from deno.json
-const version = z
-  .string()
-  .parse(
-    JSON.parse(await Deno.readTextFile("deno.json")).imports["prisma"].split(
-      "@",
-    )[1],
-  );
+// Run prisma generate using Bun
+await $`bunx prisma generate`;
 
-const command = new Deno.Command("deno", {
-  args: [
-    "run",
-    "--allow-read",
-    "--allow-env",
-    "--allow-write",
-    "--allow-sys",
-    "--allow-run",
-    "--allow-net",
-    `npm:prisma@${version}`,
-    "generate",
-  ],
-  stdout: "inherit",
-  stderr: "inherit",
-});
-
-await command.output();
-
-// delete package.json, package-lock.json, and node_modules
+// delete package.json, package-lock.json, and node_modules (if they exist)
 try {
-  await Deno.remove("package.json");
+  rmSync("package.json");
 } catch (error) {
-  if (error instanceof Deno.errors.NotFound) {
-    console.log("package.json does not exist, skipping removal.");
-  } else {
-    throw error;
-  }
+  console.log("package.json does not exist, skipping removal.");
 }
 
 try {
-  await Deno.remove("package-lock.json");
+  rmSync("package-lock.json");
 } catch (error) {
-  if (error instanceof Deno.errors.NotFound) {
-    console.log("package-lock.json does not exist, skipping removal.");
-  } else {
-    throw error;
-  }
+  console.log("package-lock.json does not exist, skipping removal.");
 }
 
 try {
-  await Deno.remove("node_modules", { recursive: true });
+  rmSync("node_modules", { recursive: true, force: true });
 } catch (error) {
-  if (error instanceof Deno.errors.NotFound) {
-    console.log("node_modules does not exist, skipping removal.");
-  } else {
-    throw error;
-  }
+  console.log("node_modules does not exist, skipping removal.");
 }
 
 // in the `generated` folder name all `.js` files to `.cjs` recursively
 async function renameJsToCjs(dir: string) {
-  for await (const dirEntry of Deno.readDir(dir)) {
-    const fullPath = `${dir}/${dirEntry.name}`;
-    if (dirEntry.isFile && dirEntry.name.endsWith(".js")) {
+  if (!existsSync(dir)) return;
+
+  const entries = readdirSync(dir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name);
+
+    if (entry.isFile() && entry.name.endsWith(".js")) {
       const newPath = fullPath.replace(".js", ".cjs");
-      await Deno.rename(fullPath, newPath);
+      renameSync(fullPath, newPath);
 
       // add "// deno-lint-ignore-file" and "// @ts-nocheck" to the top of each file
-      let content = await Deno.readTextFile(newPath);
+      let content = await Bun.file(newPath).text();
       content = `// deno-lint-ignore-file\n// @ts-nocheck\n${content}`;
 
       // update any require('.js') statements to look for .cjs
@@ -88,8 +55,8 @@ async function renameJsToCjs(dir: string) {
         /require\(['"](.+?)\.js['"]\)/g,
         "require('$1.cjs')",
       );
-      await Deno.writeTextFile(newPath, content);
-    } else if (dirEntry.isDirectory) {
+      await Bun.write(newPath, content);
+    } else if (entry.isDirectory()) {
       await renameJsToCjs(fullPath);
     }
   }
@@ -99,33 +66,38 @@ await renameJsToCjs("./generated");
 
 // in the `generated` folder update `.d.ts` files to change imports and exports
 async function updateDtsImportsAndExports(dir: string) {
-  for await (const dirEntry of Deno.readDir(dir)) {
-    const fullPath = `${dir}/${dirEntry.name}`;
-    if (dirEntry.isFile && dirEntry.name.endsWith(".d.ts")) {
-      let content = await Deno.readTextFile(fullPath);
+  if (!existsSync(dir)) return;
+
+  const entries = readdirSync(dir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name);
+
+    if (entry.isFile() && entry.name.endsWith(".d.ts")) {
+      let content = await Bun.file(fullPath).text();
       content = `// deno-lint-ignore-file\n// @ts-nocheck\n${content}`;
       content = content.replace(
         /export \* from ['"](.+?)['"]/g,
-        (_match, p1) => `export * from "${p1}.d.ts"`,
+        (_match, p1) => `export * from "${p1}.d"`,
       );
       content = content.replace(
         /export \* from ['"](.+?)\.js['"]/g,
-        (_match, p1) => `export * from "${p1}.d.ts"`,
+        (_match, p1) => `export * from "${p1}.d"`,
       );
       content = content.replace(
         /import (.+?) from ['"](.+?)['"]/g,
-        (_match, p1, p2) => `import ${p1} from "${p2}.d.ts"`,
+        (_match, p1, p2) => `import ${p1} from "${p2}.d"`,
       );
       content = content.replace(
         /import (.+?) from ['"](.+?)\.js['"]/g,
-        (_match, p1, p2) => `import ${p1} from "${p2}.d.ts"`,
+        (_match, p1, p2) => `import ${p1} from "${p2}.d"`,
       );
       content = content.replace(
         /from ['"](.+?)\.js\.d\.ts['"]/g,
-        (_match, p1) => `from "${p1}.d.ts"`,
+        (_match, p1) => `from "${p1}.d"`,
       );
-      await Deno.writeTextFile(fullPath, content);
-    } else if (dirEntry.isDirectory) {
+      await Bun.write(fullPath, content);
+    } else if (entry.isDirectory()) {
       await updateDtsImportsAndExports(fullPath);
     }
   }

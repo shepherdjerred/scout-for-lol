@@ -1,7 +1,7 @@
 import "react";
 import { renderItems } from "./item.tsx";
 import { palette } from "../../assets/colors.ts";
-import { Champion } from "@scout/data";
+import { Champion } from "@scout-for-lol/data";
 import { summoner } from "../../dataDragon/summoner.ts";
 import { latestVersion } from "../../dataDragon/version.ts";
 import { CreepScore } from "./creepScore.tsx";

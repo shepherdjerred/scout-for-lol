@@ -7,9 +7,8 @@ import {
   TierSchema,
   wasDemoted,
   wasPromoted,
-} from "@scout/data";
+} from "@scout-for-lol/data";
 import { palette } from "../../assets/colors.ts";
-import { encodeBase64 } from "@std/encoding";
 import { z } from "zod";
 
 const images: Record<Tier, string> = z
@@ -21,16 +20,16 @@ const images: Record<Tier, string> = z
     Object.fromEntries(
       await Promise.all(
         TierSchema.options.map(async (tier): Promise<[Tier, string]> => {
-          const image = await Deno.readFile(
+          const image = await Bun.file(
             new URL(
               `assets/Rank=${tier.charAt(0).toUpperCase() + tier.slice(1)}.png`,
-              import.meta.url,
-            ),
-          );
-          return [tier, encodeBase64(image)];
-        }),
-      ),
-    ),
+              import.meta.url
+            )
+          ).arrayBuffer();
+          return [tier, Buffer.from(image).toString("base64")];
+        })
+      )
+    )
   );
 
 export function RankedBadge({
