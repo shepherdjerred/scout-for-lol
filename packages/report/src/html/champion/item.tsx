@@ -47,8 +47,8 @@ export function renderItems(items: number[], visionScore: number) {
       style={{
         display: "flex",
         position: "relative",
-        width: `${dimension}px`,
-        height: `${dimension}px`,
+        width: `${dimension.toString()}px`,
+        height: `${dimension.toString()}px`,
       }}
     >
       {renderItem(lastItem)}

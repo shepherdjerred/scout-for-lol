@@ -22,7 +22,7 @@ export const RanksSchema = z.strictObject({
 export function rankToString(rank: Rank): string {
   return `${startCase(rank.tier)} ${divisionToString(
     rank.division,
-  )}, ${rank.lp}LP`;
+  )}, ${rank.lp.toString()}LP`;
 }
 
 export function rankToSimpleString(rank: Rank): string {
@@ -65,10 +65,6 @@ export function wasPromoted(
 
   if (previousTier < currentTier) {
     return true;
-  }
-
-  if (previousDivision === undefined || currentDivision === undefined) {
-    return false;
   }
 
   if (previousTier == currentTier && previousDivision > currentDivision) {

@@ -33,7 +33,7 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(2300, () => "brawl")
     .with(1900, () => "urf")
     .otherwise(() => {
-      console.error(`unknown queue type: ${input}`);
+      console.error(`unknown queue type: ${input.toString()}`);
       return undefined;
     });
 }

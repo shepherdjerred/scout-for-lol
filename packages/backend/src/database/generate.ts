@@ -7,7 +7,7 @@ import { join } from "path";
 // clear the `generated` folder
 try {
   rmSync("./generated", { recursive: true, force: true });
-} catch (error) {
+} catch (_error) {
   console.log("The 'generated' folder does not exist, skipping removal.");
 }
 
@@ -17,19 +17,19 @@ await $`bunx prisma generate`;
 // delete package.json, package-lock.json, and node_modules (if they exist)
 try {
   rmSync("package.json");
-} catch (error) {
+} catch (_error) {
   console.log("package.json does not exist, skipping removal.");
 }
 
 try {
   rmSync("package-lock.json");
-} catch (error) {
+} catch (_error) {
   console.log("package-lock.json does not exist, skipping removal.");
 }
 
 try {
   rmSync("node_modules", { recursive: true, force: true });
-} catch (error) {
+} catch (_error) {
   console.log("node_modules does not exist, skipping removal.");
 }
 
@@ -78,23 +78,23 @@ async function updateDtsImportsAndExports(dir: string) {
       content = `// @ts-nocheck\n${content}`;
       content = content.replace(
         /export \* from ['"](.+?)['"]/g,
-        (_match, p1) => `export * from "${p1}.d"`,
+        (_match, p1: string) => `export * from "${p1}.d"`,
       );
       content = content.replace(
         /export \* from ['"](.+?)\.js['"]/g,
-        (_match, p1) => `export * from "${p1}.d"`,
+        (_match, p1: string) => `export * from "${p1}.d"`,
       );
       content = content.replace(
         /import (.+?) from ['"](.+?)['"]/g,
-        (_match, p1, p2) => `import ${p1} from "${p2}.d"`,
+        (_match, p1: string, p2: string) => `import ${p1} from "${p2}.d"`,
       );
       content = content.replace(
         /import (.+?) from ['"](.+?)\.js['"]/g,
-        (_match, p1, p2) => `import ${p1} from "${p2}.d"`,
+        (_match, p1: string, p2: string) => `import ${p1} from "${p2}.d"`,
       );
       content = content.replace(
         /from ['"](.+?)\.js\.d\.ts['"]/g,
-        (_match, p1) => `from "${p1}.d"`,
+        (_match, p1: string) => `from "${p1}.d"`,
       );
       await Bun.write(fullPath, content);
     } else if (entry.isDirectory()) {

@@ -30,7 +30,7 @@ export function renderChampion(
     );
 
     if (name === undefined) {
-      throw new Error(`Summoner spell ${spell} not found`);
+      throw new Error(`Summoner spell ${spell.toString()} not found`);
     }
 
     return (
@@ -67,7 +67,7 @@ export function renderChampion(
       >
         {champion.lane && <Lane lane={champion.lane} />}
         <span style={{ fontWeight: 700, width: "10rem" }}>
-          {champion.level}
+          {champion.level.toString()}
         </span>
       </div>
 

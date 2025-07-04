@@ -6,7 +6,7 @@ import { checkMatch, checkPostMatchInternal, saveMatch } from "./internal";
 
 export async function checkPostMatch() {
   const state = getState();
-  return await checkPostMatchInternal(
+  await checkPostMatchInternal(
     state,
     saveMatch,
     checkMatch,

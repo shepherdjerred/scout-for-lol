@@ -12,12 +12,6 @@ import { font } from "../assets/index.ts";
 export function Report({ match }: { match: CompletedMatch }) {
   const minutes = round(match.durationInSeconds / 60, 0);
 
-  if (!match.teams.red || !match.teams.blue) {
-    throw new Error(
-      `Match must have both teams: ${JSON.stringify(match.teams)}`,
-    );
-  }
-
   // Use the first player for summary fields (backwards compatible)
   const mainPlayer = match.players[0];
   const wins = mainPlayer?.wins;
@@ -91,7 +85,7 @@ export function Report({ match }: { match: CompletedMatch }) {
               <span>
                 {/* Check both before and after a match; this handles placements */}
                 {mainPlayer?.rankBeforeMatch &&
-                  mainPlayer?.rankAfterMatch &&
+                  mainPlayer.rankAfterMatch &&
                   lpDiffToString(
                     leaguePointsDelta(
                       mainPlayer.rankBeforeMatch,
@@ -99,7 +93,7 @@ export function Report({ match }: { match: CompletedMatch }) {
                     ),
                   )}
               </span>
-              {wins !== undefined && losses !== undefined && (
+              {wins != null && losses != null && (
                 <div
                   style={{
                     display: "flex",

@@ -26,7 +26,7 @@ export function Kda({
       <span
         style={{ fontWeight: 700, color: highlight ? palette.gold[1] : "" }}
       >
-        {`${kills} / ${deaths} / ${assists}`}
+        {`${kills.toString()} / ${deaths.toString()} / ${assists.toString()}`}
       </span>
       <span>{kdaRatio} KDA</span>
     </div>

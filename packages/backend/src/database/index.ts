@@ -1,5 +1,4 @@
-// @ts-types="../../generated/client/index.d.ts"
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '../../generated/prisma/client'
 import {
   DiscordAccountIdSchema,
   type DiscordChannelId,
@@ -36,12 +35,12 @@ export async function getChannelsSubscribedToPlayers(
   });
 
   return unique(
-    accounts.flatMap((account: any) =>
-      account.playerId.subscriptions.map((subscription: any) => ({
+    accounts.flatMap((account) =>
+      account.playerId.subscriptions.map((subscription) => ({
         channel: DiscordChannelIdSchema.parse(subscription.channelId),
       })),
     ),
-  ) as { channel: DiscordChannelId }[];
+  );
 }
 
 export async function getAccounts(): Promise<PlayerConfig> {
@@ -51,8 +50,8 @@ export async function getAccounts(): Promise<PlayerConfig> {
     },
   });
   // transform
-  return players.flatMap((player: any): PlayerConfigEntry[] => {
-    return player.accounts.map((account: any): PlayerConfigEntry => {
+  return players.flatMap((player): PlayerConfigEntry[] => {
+    return player.accounts.map((account): PlayerConfigEntry => {
       return {
         alias: player.alias,
         league: {

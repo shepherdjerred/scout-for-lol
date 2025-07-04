@@ -24,7 +24,7 @@ import {
   type Rank,
 } from "@scout-for-lol/data";
 import { getState, setState } from "../../model/state";
-import { differenceWith, filter, map, pipe } from "remeda";
+import { differenceWith, map, pipe } from "remeda";
 import { getOutcome } from "../../model/match";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
 import { mapRegionToEnum } from "../../model/region";
@@ -37,7 +37,7 @@ export async function checkMatch(game: LoadingScreenState) {
     );
 
     const response = await api.MatchV5.get(
-      `${region}_${game.matchId}`,
+      `${region}_${game.matchId.toString()}`,
       regionToRegionGroup(region),
     );
     return response.response;
@@ -51,7 +51,7 @@ export async function checkMatch(game: LoadingScreenState) {
       if (result.data.status == 403) {
         // Not recoverable: log and remove from queue
         console.error(
-          `403 Forbidden for match ${game.matchId}, removing from queue.`,
+          `403 Forbidden for match ${game.matchId.toString()}, removing from queue.`,
         );
         setState({
           ...getState(),
@@ -76,6 +76,9 @@ async function getImage(
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
   const image = await matchToImage(match);
   const attachment = new AttachmentBuilder(image).setName("match.png");
+  if (!attachment.name) {
+    throw new Error("Attachment name is required for embed image");
+  }
   const embed = {
     image: {
       url: `attachment://${attachment.name}`,
@@ -132,11 +135,11 @@ async function createMatchObj(
         rankAfterMatch,
         wins:
           state.queue === "solo" || state.queue === "flex"
-            ? fullPlayer.ranks[state.queue]?.wins || undefined
+            ? fullPlayer.ranks[state.queue]?.wins ?? undefined
             : undefined,
         losses:
           state.queue === "solo" || state.queue === "flex"
-            ? fullPlayer.ranks[state.queue]?.losses || undefined
+            ? fullPlayer.ranks[state.queue]?.losses ?? undefined
             : undefined,
         champion,
         outcome: getOutcome(participant),
@@ -177,10 +180,9 @@ export async function checkPostMatchInternal(
   const finishedGames = pipe(
     state.gamesStarted,
     (gamesStarted) =>
-      gamesStarted.map((game, index) => [game, games[index]] as const),
-    filter(([_game, match]) => match != undefined),
-    // Cast to ensure TypeScript understands the filter removes undefined values
-    map(([game, match]) => [game, match as MatchV5DTOs.MatchDto] as const),
+      gamesStarted
+        .map((game, index) => [game, games[index]] as const)
+        .filter((pair): pair is [LoadingScreenState, MatchV5DTOs.MatchDto] => pair[1] != undefined),
   );
 
   // TODO: send duo queue message

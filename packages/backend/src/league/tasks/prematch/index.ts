@@ -5,6 +5,7 @@ import {
   LoadingScreenPlayer,
   type LoadingScreenState,
   parseQueueType,
+  type PlayerConfigEntry,
 } from "@scout-for-lol/data";
 import { createDiscordMessage } from "./discord";
 import { send } from "../../discord/channel";
@@ -39,8 +40,7 @@ export async function checkPreMatch() {
   const playersInGame = pipe(
     playersNotInGame,
     zip(playerStatus),
-    filter(([_player, game]) => game != undefined),
-    map(([player, game]) => [player, game as CurrentGameInfoDTO] as const),
+    filter((pair): pair is [PlayerConfigEntry, CurrentGameInfoDTO] => pair[1] != undefined),
   );
 
   console.log("removing games already seen");
@@ -58,6 +58,9 @@ export async function checkPreMatch() {
     newGames,
     groupBy(([_player, game]) => game.gameId),
     mapValues(async (games) => {
+      if (games.length === 0) {
+        throw new Error("No games found in group");
+      }
       const players = map(games, ([player, _game]) => player);
       const game = games[0][1];
 
@@ -100,7 +103,7 @@ export async function checkPreMatch() {
       const promises = uniqueChannels.map((server) => {
         return send(message, server.channel);
       });
-      Promise.all(promises);
+      void Promise.all(promises);
 
       console.log("saving state");
       setState({

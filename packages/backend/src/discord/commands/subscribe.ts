@@ -1,5 +1,4 @@
 import {
-  type ChannelType,
   type ChatInputCommandInteraction,
   InteractionContextType,
   PermissionFlagsBits,
@@ -78,7 +77,7 @@ export async function executeSubscribe(
 
   try {
     args = ArgsSchema.parse({
-      channel: interaction.options.getChannel<ChannelType>("channel")?.id,
+      channel: interaction.options.getChannel("channel")?.id,
       region: interaction.options.getString("region"),
       riotId: interaction.options.getString("riot-id"),
       user: interaction.options.getUser("user")?.id,
@@ -98,15 +97,16 @@ export async function executeSubscribe(
 
   let puuid: string;
   try {
+    const regionGroup = regionToRegionGroup(mapRegionToEnum(region));
     const account = await riotApi.Account.getByRiotId(
       riotId.game_name,
       riotId.tag_line,
-      regionToRegionGroup(mapRegionToEnum(region)) as any,
+      regionGroup,
     );
     puuid = account.response.puuid;
   } catch (error) {
     await interaction.reply({
-      content: `Error looking up Riot ID: ${error}`,
+      content: `Error looking up Riot ID: ${error instanceof Error ? error.message : String(error)}`,
       ephemeral: true,
     });
     return;
@@ -121,7 +121,7 @@ export async function executeSubscribe(
     summonerId = leagueAccount.response.id;
   } catch (error) {
     await interaction.reply({
-      content: `Error looking up summoner ID: ${error}`,
+      content: `Error looking up summoner ID: ${error instanceof Error ? error.message : String(error)}`,
       ephemeral: true,
     });
     return;
@@ -183,7 +183,7 @@ export async function executeSubscribe(
     await prisma.subscription.create({
       data: {
         channelId: channel,
-        playerId: player.id,
+        playerId: player.playerId.id,
         createdTime: now,
         updatedTime: now,
         creatorDiscordId: interaction.user.id,
@@ -197,7 +197,7 @@ export async function executeSubscribe(
     });
   } catch (error) {
     await interaction.reply({
-      content: `Error creating database records: ${error}`,
+      content: `Error creating database records: ${error instanceof Error ? error.message : String(error)}`,
       ephemeral: true,
     });
   }

@@ -11,10 +11,11 @@ export async function send(
   channelId: string,
 ): Promise<Message<true> | Message<false>> {
   // TODO: check if the channel is a text channel
-  const channel = (await client.channels.fetch(channelId)) as TextChannel;
-  if (!channel) {
+  const fetchedChannel = await client.channels.fetch(channelId);
+  if (!fetchedChannel) {
     throw new Error("invalid channel");
   }
-  console.log(`Sending message: ${options}`);
+  const channel = fetchedChannel as TextChannel;
+  console.log(`Sending message: ${typeof options === "string" ? options : "[MessagePayload/MessageCreateOptions]"}`);
   return channel.send(options);
 }

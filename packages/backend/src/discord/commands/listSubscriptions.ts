@@ -39,10 +39,10 @@ export async function executeListSubscriptions(
   }
 
   const subscriptionList = subscriptions
-    .map((sub: any) => {
+    .map((sub) => {
       const player = sub.player;
-      return `${player.alias || player.discordId || "Unknown"} (Summoner IDs: ${player.accounts
-        .map((val: any) => val.summonerId)
+      return `${(player.alias || player.discordId) ?? "Unknown"} (Summoner IDs: ${player.accounts
+        .map((val) => val.summonerId)
         .join(", ")})`;
     })
     .join("\n");
