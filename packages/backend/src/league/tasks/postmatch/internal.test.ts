@@ -24,24 +24,26 @@ test("postmatch", async () => {
         uuid: "uuid",
         added: new Date(),
         matchId: 1,
-        players: [{
-          player: {
-            alias: "name",
-            league: {
-              leagueAccount: {
-                puuid: LeaguePuuidSchema.parse(
-                  "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
-                ),
-                summonerId: LeagueSummonerIdSchema.parse("id"),
-                region: "AMERICA_NORTH",
+        players: [
+          {
+            player: {
+              alias: "name",
+              league: {
+                leagueAccount: {
+                  puuid: LeaguePuuidSchema.parse(
+                    "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
+                  ),
+                  summonerId: LeagueSummonerIdSchema.parse("id"),
+                  region: "AMERICA_NORTH",
+                },
+              },
+              discordAccount: {
+                id: DiscordAccountIdSchema.parse("123456789012345678"),
               },
             },
-            discordAccount: {
-              id: DiscordAccountIdSchema.parse("123456789012345678"),
-            },
+            rank: { division: 3, tier: "gold", lp: 11, wins: 10, losses: 20 },
           },
-          rank: { division: 3, tier: "gold", lp: 11, wins: 10, losses: 20 },
-        }],
+        ],
       },
     ],
   };
@@ -60,31 +62,27 @@ test("postmatch", async () => {
     ) as MatchV5DTOs.MatchDto;
     return exampleMatch;
   };
-  const getPlayerFn = (
-    _: PlayerConfigEntry,
-  ): Promise<Player> => {
-    return Promise.resolve(
-      {
-        config: {
-          alias: "name",
-          league: {
-            leagueAccount: {
-              puuid: LeaguePuuidSchema.parse(
-                "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
-              ),
-              summonerId: LeagueSummonerIdSchema.parse("id"),
-              region: "AMERICA_NORTH",
-            },
-          },
-          discordAccount: {
-            id: DiscordAccountIdSchema.parse("12345678901234567"),
+  const getPlayerFn = (_: PlayerConfigEntry): Promise<Player> => {
+    return Promise.resolve({
+      config: {
+        alias: "name",
+        league: {
+          leagueAccount: {
+            puuid: LeaguePuuidSchema.parse(
+              "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
+            ),
+            summonerId: LeagueSummonerIdSchema.parse("id"),
+            region: "AMERICA_NORTH",
           },
         },
-        ranks: {
-          solo: { division: 3, tier: "gold", lp: 11, wins: 10, losses: 20 },
+        discordAccount: {
+          id: DiscordAccountIdSchema.parse("12345678901234567"),
         },
-      } satisfies Player,
-    );
+      },
+      ranks: {
+        solo: { division: 3, tier: "gold", lp: 11, wins: 10, losses: 20 },
+      },
+    } satisfies Player);
   };
   const getSubscriptionsFn = () => {
     return Promise.resolve([

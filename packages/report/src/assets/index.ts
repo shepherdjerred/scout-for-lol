@@ -166,10 +166,7 @@ export const fonts: Font[] = [
   {
     name: font.body,
     data: await Bun.file(
-      new URL(
-        `${fontPath}/Spiegel-TTF/Spiegel_TT_Bold.ttf`,
-        import.meta.url,
-      ),
+      new URL(`${fontPath}/Spiegel-TTF/Spiegel_TT_Bold.ttf`, import.meta.url),
     ).arrayBuffer(),
     weight: 700,
     style: "normal",

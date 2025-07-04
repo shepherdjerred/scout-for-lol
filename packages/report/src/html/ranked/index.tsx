@@ -12,7 +12,7 @@ import { z } from "zod";
 const images: Record<Tier, string> = z
   .record(TierSchema, z.string())
   .refine((obj): obj is Required<typeof obj> =>
-    TierSchema.options.every((key) => obj[key] != null)
+    TierSchema.options.every((key) => obj[key] != null),
   )
   .parse(
     Object.fromEntries(
@@ -21,13 +21,13 @@ const images: Record<Tier, string> = z
           const image = await Bun.file(
             new URL(
               `assets/Rank=${tier.charAt(0).toUpperCase() + tier.slice(1)}.png`,
-              import.meta.url
-            )
+              import.meta.url,
+            ),
           ).arrayBuffer();
           return [tier, Buffer.from(image).toString("base64")];
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 
 export function RankedBadge({

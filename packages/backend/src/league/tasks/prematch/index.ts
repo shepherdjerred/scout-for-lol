@@ -80,12 +80,14 @@ export async function checkPreMatch() {
         added: new Date(game.gameStartTime),
         matchId: game.gameId,
         uuid: uuid.v4(),
-        players: playersWithRank as [LoadingScreenPlayer, ...LoadingScreenPlayer[]],
+        players: playersWithRank as [
+          LoadingScreenPlayer,
+          ...LoadingScreenPlayer[],
+        ],
         queue: queueType,
       };
 
       const message = createDiscordMessage(players, game, queueType);
-
 
       // figure out what channels to send the message to
       // server, see if they have a player in the game
@@ -93,7 +95,7 @@ export async function checkPreMatch() {
         players.map((player) => player.league.leagueAccount.summonerId),
       );
       // Deduplicate by channel (string ID) using Remeda uniqueBy
-      const uniqueChannels = uniqueBy(servers, server => server.channel);
+      const uniqueChannels = uniqueBy(servers, (server) => server.channel);
 
       const promises = uniqueChannels.map((server) => {
         return send(message, server.channel);

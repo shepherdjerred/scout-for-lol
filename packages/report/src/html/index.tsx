@@ -6,7 +6,7 @@ import { Report } from "./report.tsx";
 import initYoga from "yoga-wasm-web";
 
 const wasm = await Bun.file(
-  `node_modules/yoga-wasm-web/dist/yoga.wasm`
+  `node_modules/yoga-wasm-web/dist/yoga.wasm`,
 ).arrayBuffer();
 const yoga = await initYoga(wasm);
 init(yoga);

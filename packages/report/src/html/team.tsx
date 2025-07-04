@@ -42,7 +42,7 @@ export function renderTeam(
           highlightNames.includes(champion.riotIdGameName),
           durationInMinutes,
           mostDamage,
-        )
+        ),
       )}
     </div>
   );

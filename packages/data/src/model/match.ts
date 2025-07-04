@@ -16,18 +16,20 @@ export const CompletedMatchSchema = z.strictObject({
    * Data specific to all players we care about (e.g. all subscribed players in this match).
    * This was previously a single 'player' object, now an array for multi-player support.
    */
-  players: z.array(z.strictObject({
-    playerConfig: PlayerConfigEntrySchema,
-    wins: z.number().nonnegative().optional(),
-    losses: z.number().nonnegative().optional(),
-    outcome: z.enum(["Victory", "Defeat", "Surrender"]),
-    champion: ChampionSchema,
-    team: TeamSchema,
-    lane: LaneSchema.optional(),
-    laneOpponent: ChampionSchema.optional(),
-    rankBeforeMatch: RankSchema.optional(),
-    rankAfterMatch: RankSchema.optional(),
-  })),
+  players: z.array(
+    z.strictObject({
+      playerConfig: PlayerConfigEntrySchema,
+      wins: z.number().nonnegative().optional(),
+      losses: z.number().nonnegative().optional(),
+      outcome: z.enum(["Victory", "Defeat", "Surrender"]),
+      champion: ChampionSchema,
+      team: TeamSchema,
+      lane: LaneSchema.optional(),
+      laneOpponent: ChampionSchema.optional(),
+      rankBeforeMatch: RankSchema.optional(),
+      rankAfterMatch: RankSchema.optional(),
+    }),
+  ),
 
   teams: z.strictObject({
     red: RosterSchema,

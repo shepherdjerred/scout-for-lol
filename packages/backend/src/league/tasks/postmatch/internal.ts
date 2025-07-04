@@ -55,8 +55,8 @@ export async function checkMatch(game: LoadingScreenState) {
         );
         setState({
           ...getState(),
-          gamesStarted: getState().gamesStarted.filter((g) =>
-            g.matchId !== game.matchId
+          gamesStarted: getState().gamesStarted.filter(
+            (g) => g.matchId !== game.matchId,
           ),
         });
         return undefined;
@@ -104,12 +104,11 @@ async function createMatchObj(
     state.players.map(async (playerState) => {
       // Find the participant in the match by puuid
       const participant = match.info.participants.find(
-        (p) =>
-          p.puuid === playerState.player.league.leagueAccount.puuid
+        (p) => p.puuid === playerState.player.league.leagueAccount.puuid,
       );
       if (!participant) {
         throw new Error(
-          `unable to find participant for player ${JSON.stringify(playerState)}, match: ${JSON.stringify(match)}`
+          `unable to find participant for player ${JSON.stringify(playerState)}, match: ${JSON.stringify(match)}`,
         );
       }
       const fullPlayer = await getPlayerFn(playerState.player);
@@ -122,7 +121,9 @@ async function createMatchObj(
       const champion = participantToChampion(participant);
       const team = parseTeam(participant.teamId);
       if (!team) {
-        throw new Error(`Could not determine team for participant: ${JSON.stringify(participant)}`);
+        throw new Error(
+          `Could not determine team for participant: ${JSON.stringify(participant)}`,
+        );
       }
       const enemyTeam = invertTeam(team);
       return {
@@ -143,7 +144,7 @@ async function createMatchObj(
         lane: champion.lane,
         laneOpponent: getLaneOpponent(champion, teams[enemyTeam]),
       };
-    })
+    }),
   );
 
   return {
@@ -175,7 +176,8 @@ export async function checkPostMatchInternal(
   console.log("removing games in progress");
   const finishedGames = pipe(
     state.gamesStarted,
-    (gamesStarted) => gamesStarted.map((game, index) => [game, games[index]] as const),
+    (gamesStarted) =>
+      gamesStarted.map((game, index) => [game, games[index]] as const),
     filter(([_game, match]) => match != undefined),
     // Cast to ensure TypeScript understands the filter removes undefined values
     map(([game, match]) => [game, match as MatchV5DTOs.MatchDto] as const),

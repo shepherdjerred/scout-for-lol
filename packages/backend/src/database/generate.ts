@@ -46,9 +46,9 @@ async function renameJsToCjs(dir: string) {
       const newPath = fullPath.replace(".js", ".cjs");
       renameSync(fullPath, newPath);
 
-      // add "// deno-lint-ignore-file" and "// @ts-nocheck" to the top of each file
+      // add "// @ts-nocheck" to the top of each file
       let content = await Bun.file(newPath).text();
-      content = `// deno-lint-ignore-file\n// @ts-nocheck\n${content}`;
+      content = `// @ts-nocheck\n${content}`;
 
       // update any require('.js') statements to look for .cjs
       content = content.replace(
@@ -75,7 +75,7 @@ async function updateDtsImportsAndExports(dir: string) {
 
     if (entry.isFile() && entry.name.endsWith(".d.ts")) {
       let content = await Bun.file(fullPath).text();
-      content = `// deno-lint-ignore-file\n// @ts-nocheck\n${content}`;
+      content = `// @ts-nocheck\n${content}`;
       content = content.replace(
         /export \* from ['"](.+?)['"]/g,
         (_match, p1) => `export * from "${p1}.d"`,

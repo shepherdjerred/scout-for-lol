@@ -3,12 +3,8 @@
   "automerge": true,
   "extends": [
     "config:recommended",
-    "github>Omochice/renovate-config:deno"
   ],
   "minimumReleaseAge": "7 days",
-  "pre-commit": {
-    "enabled": true
-  },
   "reviewers": [
     "shepherdjerred"
   ],

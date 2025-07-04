@@ -27,7 +27,7 @@ export const subscribeCommand = new SlashCommandBuilder()
     option
       .setName("channel")
       .setDescription("The channel to post messages to")
-      .setRequired(true)
+      .setRequired(true),
   )
   .addStringOption((option) =>
     option
@@ -38,7 +38,7 @@ export const subscribeCommand = new SlashCommandBuilder()
           return { name: toReadableRegion(region), value: region };
         }),
       )
-      .setRequired(true)
+      .setRequired(true),
   )
   .addStringOption((option) =>
     option
@@ -46,7 +46,7 @@ export const subscribeCommand = new SlashCommandBuilder()
       .setDescription(
         "The Riot ID to subscribe to in the format of <name>#<tag>",
       )
-      .setRequired(true)
+      .setRequired(true),
   )
   // TODO: differentiate between player and account alias
   .addStringOption((option) =>
@@ -54,10 +54,10 @@ export const subscribeCommand = new SlashCommandBuilder()
       .setName("alias")
       .setDescription("An alias for the player")
       // TODO: make this optional
-      .setRequired(true)
+      .setRequired(true),
   )
   .addUserOption((option) =>
-    option.setName("user").setDescription("The Discord user of the player")
+    option.setName("user").setDescription("The Discord user of the player"),
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .setContexts(InteractionContextType.Guild);
@@ -192,8 +192,7 @@ export async function executeSubscribe(
     });
 
     await interaction.reply({
-      content:
-        `Successfully subscribed to updates for ${riotId.game_name}#${riotId.tag_line}`,
+      content: `Successfully subscribed to updates for ${riotId.game_name}#${riotId.tag_line}`,
       ephemeral: true,
     });
   } catch (error) {

@@ -8,6 +8,5 @@ This is a fun way to see your friends climb the ranks in League of Legends.
 
 ## Technical Notes
 
-- Written in TypeScript with Deno
-- Report generation library supports Deno and Node
+- Written in TypeScript with Bun
 - Reports can be generated as SVGs, PNGs, or React components

@@ -8,10 +8,37 @@ import {
   parseTeam,
   type Player,
   type Rank,
+  parseLane,
 } from "@scout-for-lol/data";
 import { strict as assert } from "assert";
 import { match } from "ts-pattern";
-import { participantToChampion } from "./champion.js";
+
+// Champion conversion function - adapted to match the expected Champion type
+function participantToChampion(participant: MatchV5DTOs.ParticipantDto) {
+  return {
+    riotIdGameName: participant.riotIdGameName || participant.summonerName || "Unknown",
+    championName: participant.championName,
+    kills: participant.kills,
+    deaths: participant.deaths,
+    assists: participant.assists,
+    level: participant.champLevel,
+    items: [
+      participant.item0,
+      participant.item1,
+      participant.item2,
+      participant.item3,
+      participant.item4,
+      participant.item5,
+    ].filter(item => item !== 0),
+    spells: [participant.summoner1Id, participant.summoner2Id],
+    gold: participant.goldEarned,
+    runes: [], // TODO: Extract runes from participant.perks if needed
+    creepScore: participant.totalMinionsKilled + participant.neutralMinionsKilled,
+    visionScore: participant.visionScore,
+    damage: participant.totalDamageDealtToChampions,
+    lane: parseLane(participant.lane),
+  };
+}
 
 function getTeams(participants: MatchV5DTOs.ParticipantDto[]) {
   return {

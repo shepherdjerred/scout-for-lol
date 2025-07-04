@@ -32,26 +32,12 @@
       "arahata.linter-actionlint",
       "bradlc.vscode-tailwindcss",
       "lightyen.tailwindcss-intellisense-twin",
-      "denoland.vscode-deno",
       "glehmann.earthlyls",
       "prisma.prisma",
     ]
   },
   "settings": {
     "testing.automaticallyOpenPeekView": "never",
-    "deno.enable": true,
-    "deno.lint": true,
-    "deno.unstable": true,
-    "deno.cacheOnSave": true,
-    "deno.codeLens.implementations": true,
-    "deno.codeLens.references": true,
-    "deno.codeLens.referencesAllFunctions": true,
-    "deno.codeLens.test": true,
-    "deno.suggest.imports.autoDiscover": true,
-    "[typescript]": {
-      "editor.defaultFormatter": "denoland.vscode-deno"
-    },
-    "typescript.tsserver.experimental.enableProjectDiagnostics": false
   },
   "launch": {
     "configurations": [

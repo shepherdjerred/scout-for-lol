@@ -71,8 +71,9 @@ export function getPlayersInGame(
     playersInGame.some(
       (matchPlayer) =>
         matchPlayer.player.league.leagueAccount.puuid ===
-          player.league.leagueAccount.puuid,
-    ));
+        player.league.leagueAccount.puuid,
+    ),
+  );
 }
 
 export function getPlayersNotInGame(
@@ -86,7 +87,7 @@ export function getPlayersNotInGame(
       !playersInGame.some(
         (matchPlayer) =>
           matchPlayer.player.league.leagueAccount.puuid ===
-            player.league.leagueAccount.puuid,
+          player.league.leagueAccount.puuid,
       ),
   );
 }

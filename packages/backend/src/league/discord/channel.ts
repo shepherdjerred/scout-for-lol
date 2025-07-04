@@ -11,9 +11,7 @@ export async function send(
   channelId: string,
 ): Promise<Message<true> | Message<false>> {
   // TODO: check if the channel is a text channel
-  const channel = await client.channels.fetch(
-    channelId,
-  ) as TextChannel;
+  const channel = (await client.channels.fetch(channelId)) as TextChannel;
   if (!channel) {
     throw new Error("invalid channel");
   }

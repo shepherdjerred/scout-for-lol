@@ -39,8 +39,8 @@ export async function getChannelsSubscribedToPlayers(
     accounts.flatMap((account: any) =>
       account.playerId.subscriptions.map((subscription: any) => ({
         channel: DiscordChannelIdSchema.parse(subscription.channelId),
-      }))
-    )
+      })),
+    ),
   ) as { channel: DiscordChannelId }[];
 }
 

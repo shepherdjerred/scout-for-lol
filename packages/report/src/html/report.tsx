@@ -1,4 +1,8 @@
-import { CompletedMatch, leaguePointsDelta, lpDiffToString } from "@scout-for-lol/data";
+import {
+  CompletedMatch,
+  leaguePointsDelta,
+  lpDiffToString,
+} from "@scout-for-lol/data";
 import { palette } from "../assets/colors.ts";
 import { RankedBadge } from "./ranked/index.tsx";
 import { renderTeam } from "./team.tsx";
@@ -20,7 +24,7 @@ export function Report({ match }: { match: CompletedMatch }) {
   const losses = mainPlayer?.losses;
 
   // Highlight all relevant players by name
-  const highlightNames = match.players.map(p => p.champion.riotIdGameName);
+  const highlightNames = match.players.map((p) => p.champion.riotIdGameName);
 
   return (
     <div
@@ -35,8 +39,7 @@ export function Report({ match }: { match: CompletedMatch }) {
           display: "flex",
           padding: "5rem",
           color: palette.grey[1],
-          background:
-            `linear-gradient(90deg, ${palette.blue.gradient.dark.start} 0%, ${palette.blue.gradient.dark.end} 50%, ${palette.blue.gradient.dark.start} 100%)`,
+          background: `linear-gradient(90deg, ${palette.blue.gradient.dark.start} 0%, ${palette.blue.gradient.dark.end} 50%, ${palette.blue.gradient.dark.start} 100%)`,
           flexDirection: "column",
           fontSize: "5rem",
           justifyContent: "center",

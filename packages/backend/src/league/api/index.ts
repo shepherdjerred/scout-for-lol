@@ -40,8 +40,9 @@ export function findParticipant(
 ): CurrentGameParticipantDTO | undefined {
   return pipe(
     participants,
-    filter((participant) =>
-      participant.summonerId === player.league.leagueAccount.summonerId
+    filter(
+      (participant) =>
+        participant.summonerId === player.league.leagueAccount.summonerId,
     ),
     find(() => true),
   );

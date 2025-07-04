@@ -16,8 +16,7 @@ export async function executeListSubscriptions(
   } catch (error) {
     const validationError = fromError(error);
     await interaction.reply({
-      content:
-        `This command can only be used in a server (${validationError.toString()})`,
+      content: `This command can only be used in a server (${validationError.toString()})`,
       ephemeral: true,
     });
     return;
@@ -42,11 +41,9 @@ export async function executeListSubscriptions(
   const subscriptionList = subscriptions
     .map((sub: any) => {
       const player = sub.player;
-      return `${player.alias || player.discordId || "Unknown"} (Summoner IDs: ${
-        player.accounts
-          .map((val: any) => val.summonerId)
-          .join(", ")
-      })`;
+      return `${player.alias || player.discordId || "Unknown"} (Summoner IDs: ${player.accounts
+        .map((val: any) => val.summonerId)
+        .join(", ")})`;
     })
     .join("\n");
 
