@@ -1,3 +1,5 @@
 export const snapshot = {};
 
 snapshot[`should be able to get version 1`] = `"15.11.1"`;
+
+exports[`should be able to get version 1`] = `"15.13.1"`;

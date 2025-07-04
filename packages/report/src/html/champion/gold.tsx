@@ -1,4 +1,3 @@
-import React from "react";
 import { round } from "remeda";
 
 export function Gold({

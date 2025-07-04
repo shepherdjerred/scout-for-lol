@@ -3,7 +3,7 @@ import {
   ApplicationState,
   Player,
   PlayerConfigEntry,
-} from "../../../../../data/src/model/index";
+} from "@scout-for-lol/data";
 import { send } from "../../discord/channel";
 import { checkPostMatchInternal } from "./internal";
 import { test, expect } from "bun:test";

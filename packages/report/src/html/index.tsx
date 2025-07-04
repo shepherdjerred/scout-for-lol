@@ -1,6 +1,5 @@
 import satori, { init } from "satori/wasm";
 import { Resvg } from "@resvg/resvg-js";
-import React from "react";
 import { fonts } from "../assets/index.ts";
 import { CompletedMatch } from "@scout-for-lol/data";
 import { Report } from "./report.tsx";

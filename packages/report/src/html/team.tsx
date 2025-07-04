@@ -1,4 +1,3 @@
-import React from "react";
 import { renderChampion } from "./champion/champion.tsx";
 import { palette } from "../assets/colors.ts";
 import { font } from "../assets/index.ts";

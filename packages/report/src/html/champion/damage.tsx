@@ -1,5 +1,4 @@
 import { palette } from "../../assets/colors.ts";
-import React from "react";
 
 export function Damage({
   value,

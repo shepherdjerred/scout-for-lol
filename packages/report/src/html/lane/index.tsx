@@ -1,4 +1,3 @@
-import React from "react";
 import { type Lane, LaneSchema } from "@scout-for-lol/data";
 import { z } from "zod";
 

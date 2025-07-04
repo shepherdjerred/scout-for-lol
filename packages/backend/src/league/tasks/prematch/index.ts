@@ -80,7 +80,7 @@ export async function checkPreMatch() {
         added: new Date(game.gameStartTime),
         matchId: game.gameId,
         uuid: uuid.v4(),
-        players: playersWithRank,
+        players: playersWithRank as [LoadingScreenPlayer, ...LoadingScreenPlayer[]],
         queue: queueType,
       };
 
