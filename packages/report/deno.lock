@@ -1,11 +1,9 @@
 {
-  "version": "4",
+  "version": "5",
   "specifiers": {
     "jsr:@david/code-block-writer@^13.0.2": "13.0.3",
-    "jsr:@deno/cache-dir@0.18.0": "0.18.0",
     "jsr:@deno/cache-dir@~0.10.3": "0.10.3",
     "jsr:@deno/dnt@0.41.3": "0.41.3",
-    "jsr:@deno/graph@0.86": "0.86.9",
     "jsr:@deno/graph@~0.73.1": "0.73.1",
     "jsr:@std/assert@0.223": "0.223.0",
     "jsr:@std/assert@0.226": "0.226.0",
@@ -13,21 +11,17 @@
     "jsr:@std/assert@^1.0.12": "1.0.12",
     "jsr:@std/async@^1.0.12": "1.0.12",
     "jsr:@std/bytes@0.223": "0.223.0",
-    "jsr:@std/bytes@^1.0.5": "1.0.5",
     "jsr:@std/data-structures@^1.0.6": "1.0.6",
     "jsr:@std/encoding@1.0.9": "1.0.9",
     "jsr:@std/fmt@0.223": "0.223.0",
     "jsr:@std/fmt@1": "1.0.6",
-    "jsr:@std/fmt@^1.0.3": "1.0.6",
     "jsr:@std/fs@0.223": "0.223.0",
     "jsr:@std/fs@1": "1.0.16",
     "jsr:@std/fs@1.0.16": "1.0.16",
     "jsr:@std/fs@^1.0.16": "1.0.16",
-    "jsr:@std/fs@^1.0.6": "1.0.16",
     "jsr:@std/fs@~0.229.3": "0.229.3",
     "jsr:@std/internal@^1.0.6": "1.0.6",
     "jsr:@std/io@0.223": "0.223.0",
-    "jsr:@std/io@0.225": "0.225.2",
     "jsr:@std/path@0.223": "0.223.0",
     "jsr:@std/path@1": "1.0.8",
     "jsr:@std/path@1.0.0-rc.1": "1.0.0-rc.1",
@@ -48,28 +42,18 @@
     "@deno/cache-dir@0.10.3": {
       "integrity": "eb022f84ecc49c91d9d98131c6e6b118ff63a29e343624d058646b9d50404776",
       "dependencies": [
-        "jsr:@deno/graph@~0.73.1",
+        "jsr:@deno/graph",
         "jsr:@std/fmt@0.223",
         "jsr:@std/fs@0.223",
-        "jsr:@std/io@0.223",
+        "jsr:@std/io",
         "jsr:@std/path@0.223"
-      ]
-    },
-    "@deno/cache-dir@0.18.0": {
-      "integrity": "25ef3ef94fe9d0681201efd879f4b7d417262124a204a546afba91590b309182",
-      "dependencies": [
-        "jsr:@deno/graph@0.86",
-        "jsr:@std/fmt@^1.0.3",
-        "jsr:@std/fs@^1.0.6",
-        "jsr:@std/io@0.225",
-        "jsr:@std/path@^1.0.8"
       ]
     },
     "@deno/dnt@0.41.3": {
       "integrity": "b2ef2c8a5111eef86cb5bfcae103d6a2938e8e649e2461634a7befb7fc59d6d2",
       "dependencies": [
         "jsr:@david/code-block-writer",
-        "jsr:@deno/cache-dir@~0.10.3",
+        "jsr:@deno/cache-dir",
         "jsr:@std/fmt@1",
         "jsr:@std/fs@1",
         "jsr:@std/path@1",
@@ -78,9 +62,6 @@
     },
     "@deno/graph@0.73.1": {
       "integrity": "cd69639d2709d479037d5ce191a422eabe8d71bb68b0098344f6b07411c84d41"
-    },
-    "@deno/graph@0.86.9": {
-      "integrity": "c4f353a695bcc5246c099602977dabc6534eacea9999a35a8cb24e807192e6a1"
     },
     "@std/assert@0.223.0": {
       "integrity": "eb8d6d879d76e1cc431205bd346ed4d88dc051c6366365b1af47034b0670be24"
@@ -99,9 +80,6 @@
     },
     "@std/bytes@0.223.0": {
       "integrity": "84b75052cd8680942c397c2631318772b295019098f40aac5c36cead4cba51a8"
-    },
-    "@std/bytes@1.0.5": {
-      "integrity": "4465dd739d7963d964c809202ebea6d5c6b8e3829ef25c6a224290fbb8a1021e"
     },
     "@std/data-structures@1.0.6": {
       "integrity": "76a7fd8080c66604c0496220a791860492ab21a04a63a969c0b9a0609bbbb760"
@@ -137,13 +115,7 @@
       "integrity": "2d8c3c2ab3a515619b90da2c6ff5ea7b75a94383259ef4d02116b228393f84f1",
       "dependencies": [
         "jsr:@std/assert@0.223",
-        "jsr:@std/bytes@0.223"
-      ]
-    },
-    "@std/io@0.225.2": {
-      "integrity": "3c740cd4ee4c082e6cfc86458f47e2ab7cb353dc6234d5e9b1f91a2de5f4d6c7",
-      "dependencies": [
-        "jsr:@std/bytes@^1.0.5"
+        "jsr:@std/bytes"
       ]
     },
     "@std/path@0.223.0": {
@@ -191,44 +163,68 @@
   },
   "npm": {
     "@resvg/resvg-js-android-arm-eabi@2.6.2": {
-      "integrity": "sha512-FrJibrAk6v29eabIPgcTUMPXiEz8ssrAk7TXxsiZzww9UTQ1Z5KAbFJs+Z0Ez+VZTYgnE5IQJqBcoSiMebtPHA=="
+      "integrity": "sha512-FrJibrAk6v29eabIPgcTUMPXiEz8ssrAk7TXxsiZzww9UTQ1Z5KAbFJs+Z0Ez+VZTYgnE5IQJqBcoSiMebtPHA==",
+      "os": ["android"],
+      "cpu": ["arm"]
     },
     "@resvg/resvg-js-android-arm64@2.6.2": {
-      "integrity": "sha512-VcOKezEhm2VqzXpcIJoITuvUS/fcjIw5NA/w3tjzWyzmvoCdd+QXIqy3FBGulWdClvp4g+IfUemigrkLThSjAQ=="
+      "integrity": "sha512-VcOKezEhm2VqzXpcIJoITuvUS/fcjIw5NA/w3tjzWyzmvoCdd+QXIqy3FBGulWdClvp4g+IfUemigrkLThSjAQ==",
+      "os": ["android"],
+      "cpu": ["arm64"]
     },
     "@resvg/resvg-js-darwin-arm64@2.6.2": {
-      "integrity": "sha512-nmok2LnAd6nLUKI16aEB9ydMC6Lidiiq2m1nEBDR1LaaP7FGs4AJ90qDraxX+CWlVuRlvNjyYJTNv8qFjtL9+A=="
+      "integrity": "sha512-nmok2LnAd6nLUKI16aEB9ydMC6Lidiiq2m1nEBDR1LaaP7FGs4AJ90qDraxX+CWlVuRlvNjyYJTNv8qFjtL9+A==",
+      "os": ["darwin"],
+      "cpu": ["arm64"]
     },
     "@resvg/resvg-js-darwin-x64@2.6.2": {
-      "integrity": "sha512-GInyZLjgWDfsVT6+SHxQVRwNzV0AuA1uqGsOAW+0th56J7Nh6bHHKXHBWzUrihxMetcFDmQMAX1tZ1fZDYSRsw=="
+      "integrity": "sha512-GInyZLjgWDfsVT6+SHxQVRwNzV0AuA1uqGsOAW+0th56J7Nh6bHHKXHBWzUrihxMetcFDmQMAX1tZ1fZDYSRsw==",
+      "os": ["darwin"],
+      "cpu": ["x64"]
     },
     "@resvg/resvg-js-linux-arm-gnueabihf@2.6.2": {
-      "integrity": "sha512-YIV3u/R9zJbpqTTNwTZM5/ocWetDKGsro0SWp70eGEM9eV2MerWyBRZnQIgzU3YBnSBQ1RcxRZvY/UxwESfZIw=="
+      "integrity": "sha512-YIV3u/R9zJbpqTTNwTZM5/ocWetDKGsro0SWp70eGEM9eV2MerWyBRZnQIgzU3YBnSBQ1RcxRZvY/UxwESfZIw==",
+      "os": ["linux"],
+      "cpu": ["arm"]
     },
     "@resvg/resvg-js-linux-arm64-gnu@2.6.2": {
-      "integrity": "sha512-zc2BlJSim7YR4FZDQ8OUoJg5holYzdiYMeobb9pJuGDidGL9KZUv7SbiD4E8oZogtYY42UZEap7dqkkYuA91pg=="
+      "integrity": "sha512-zc2BlJSim7YR4FZDQ8OUoJg5holYzdiYMeobb9pJuGDidGL9KZUv7SbiD4E8oZogtYY42UZEap7dqkkYuA91pg==",
+      "os": ["linux"],
+      "cpu": ["arm64"]
     },
     "@resvg/resvg-js-linux-arm64-musl@2.6.2": {
-      "integrity": "sha512-3h3dLPWNgSsD4lQBJPb4f+kvdOSJHa5PjTYVsWHxLUzH4IFTJUAnmuWpw4KqyQ3NA5QCyhw4TWgxk3jRkQxEKg=="
+      "integrity": "sha512-3h3dLPWNgSsD4lQBJPb4f+kvdOSJHa5PjTYVsWHxLUzH4IFTJUAnmuWpw4KqyQ3NA5QCyhw4TWgxk3jRkQxEKg==",
+      "os": ["linux"],
+      "cpu": ["arm64"]
     },
     "@resvg/resvg-js-linux-x64-gnu@2.6.2": {
-      "integrity": "sha512-IVUe+ckIerA7xMZ50duAZzwf1U7khQe2E0QpUxu5MBJNao5RqC0zwV/Zm965vw6D3gGFUl7j4m+oJjubBVoftw=="
+      "integrity": "sha512-IVUe+ckIerA7xMZ50duAZzwf1U7khQe2E0QpUxu5MBJNao5RqC0zwV/Zm965vw6D3gGFUl7j4m+oJjubBVoftw==",
+      "os": ["linux"],
+      "cpu": ["x64"]
     },
     "@resvg/resvg-js-linux-x64-musl@2.6.2": {
-      "integrity": "sha512-UOf83vqTzoYQO9SZ0fPl2ZIFtNIz/Rr/y+7X8XRX1ZnBYsQ/tTb+cj9TE+KHOdmlTFBxhYzVkP2lRByCzqi4jQ=="
+      "integrity": "sha512-UOf83vqTzoYQO9SZ0fPl2ZIFtNIz/Rr/y+7X8XRX1ZnBYsQ/tTb+cj9TE+KHOdmlTFBxhYzVkP2lRByCzqi4jQ==",
+      "os": ["linux"],
+      "cpu": ["x64"]
     },
     "@resvg/resvg-js-win32-arm64-msvc@2.6.2": {
-      "integrity": "sha512-7C/RSgCa+7vqZ7qAbItfiaAWhyRSoD4l4BQAbVDqRRsRgY+S+hgS3in0Rxr7IorKUpGE69X48q6/nOAuTJQxeQ=="
+      "integrity": "sha512-7C/RSgCa+7vqZ7qAbItfiaAWhyRSoD4l4BQAbVDqRRsRgY+S+hgS3in0Rxr7IorKUpGE69X48q6/nOAuTJQxeQ==",
+      "os": ["win32"],
+      "cpu": ["arm64"]
     },
     "@resvg/resvg-js-win32-ia32-msvc@2.6.2": {
-      "integrity": "sha512-har4aPAlvjnLcil40AC77YDIk6loMawuJwFINEM7n0pZviwMkMvjb2W5ZirsNOZY4aDbo5tLx0wNMREp5Brk+w=="
+      "integrity": "sha512-har4aPAlvjnLcil40AC77YDIk6loMawuJwFINEM7n0pZviwMkMvjb2W5ZirsNOZY4aDbo5tLx0wNMREp5Brk+w==",
+      "os": ["win32"],
+      "cpu": ["ia32"]
     },
     "@resvg/resvg-js-win32-x64-msvc@2.6.2": {
-      "integrity": "sha512-ZXtYhtUr5SSaBrUDq7DiyjOFJqBVL/dOBN7N/qmi/pO0IgiWW/f/ue3nbvu9joWE5aAKDoIzy/CxsY0suwGosQ=="
+      "integrity": "sha512-ZXtYhtUr5SSaBrUDq7DiyjOFJqBVL/dOBN7N/qmi/pO0IgiWW/f/ue3nbvu9joWE5aAKDoIzy/CxsY0suwGosQ==",
+      "os": ["win32"],
+      "cpu": ["x64"]
     },
     "@resvg/resvg-js@2.6.2": {
       "integrity": "sha512-xBaJish5OeGmniDj9cW5PRa/PtmuVU3ziqrbr5xJj901ZDN4TosrVaNZpEiLZAxdfnhAe7uQ7QFWfjPe9d9K2Q==",
-      "dependencies": [
+      "optionalDependencies": [
         "@resvg/resvg-js-android-arm-eabi",
         "@resvg/resvg-js-android-arm64",
         "@resvg/resvg-js-darwin-arm64",
@@ -248,7 +244,8 @@
       "dependencies": [
         "fflate",
         "string.prototype.codepointat"
-      ]
+      ],
+      "bin": true
     },
     "@types/node@22.14.0": {
       "integrity": "sha512-Kmpl+z84ILoG+3T/zQFyAJsU6EPTmOCj8/2+83fSN6djd6I4o7uOuGIH6vq3PrjY5BGitSbFuMN18j3iknubbA==",
@@ -368,7 +365,7 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@deno/cache-dir@0.18.0",
+      "jsr:@deno/cache-dir@0.23.0",
       "jsr:@deno/dnt@0.41.3",
       "jsr:@std/assert@1.0.12",
       "jsr:@std/encoding@1.0.9",
