@@ -1,0 +1,69 @@
+{
+  "name": "@scout-for-lol/backend",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "test": "bun test",
+    "lint": "bunx eslint src",
+    "format": "bunx prettier --check src",
+    "format:write": "bunx prettier --write src",
+    "typecheck": "bunx tsc --noEmit",
+    "db:generate": "bunx prisma generate",
+    "db:push": "bunx prisma db push",
+    "db:migrate": "bunx prisma migrate dev",
+    "db:studio": "bunx prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "latest",
+    "@resvg/resvg-js": "^2.6.2",
+    "@sentry/node": "^8.55.0",
+    "cron": "^4.1.4",
+    "date-fns": "^4.1.0",
+    "discord.js": "^14.18.0",
+    "dotenv": "^16.5.0",
+    "env-var": "^7.5.0",
+    "prisma": "latest",
+    "react": "^19.1.0",
+    "remeda": "^2.21.2",
+    "satori": "^0.12.2",
+    "ts-pattern": "^5.7.0",
+    "twisted": "^1.63.3",
+    "uuid": "^11.1.0",
+    "yoga-wasm-web": "^0.3.3",
+    "zod": "^3.24.2",
+    "zod-validation-error": "^3.4.0",
+    "@scout-for-lol/data": "workspace:*",
+    "@scout-for-lol/report": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "bun-types": "latest",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "description": "Backend service for Scout for League of Legends Discord bot",
+  "keywords": [
+    "discord",
+    "bot",
+    "league-of-legends",
+    "typescript",
+    "bun"
+  ],
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shepherdjerred/scout-for-lol.git"
+  },
+  "homepage": "https://github.com/shepherdjerred/scout-for-lol",
+  "bugs": {
+    "url": "https://github.com/shepherdjerred/scout-for-lol/issues"
+  }
+}
