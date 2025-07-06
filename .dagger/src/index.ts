@@ -7,7 +7,7 @@ import {
   Container,
 } from "@dagger.io/dagger";
 import {
-  generatePrisma,
+  generatePrismaFromContainer,
   checkBackend,
   buildBackendImage,
   publishBackendImage,
@@ -19,7 +19,7 @@ import {
   publishReportToNpm,
 } from "./report";
 import { getDataSource, checkData } from "./data";
-import { getGitHubContainer } from "./base";
+import { getGitHubContainer, getBunNodeContainer } from "./base";
 
 // Helper function to log with timestamp
 function logWithTimestamp(message: string): void {
@@ -76,6 +76,7 @@ export class ScoutForLol {
     const backendSource = source.directory("packages/backend");
     const reportSource = source.directory("packages/report");
     const dataSource = source.directory("packages/data");
+    const frontendSource = source.directory("packages/frontend");
 
     logWithTimestamp("📁 Prepared source directories for all packages");
 
@@ -93,9 +94,7 @@ export class ScoutForLol {
           withTiming("backend check", () =>
             Promise.resolve(
               checkBackend(
-                backendSource,
-                dataSourceDir,
-                getReportSource(reportSource)
+                source
               )
             )
           ),
@@ -146,6 +145,7 @@ export class ScoutForLol {
     const backendSource = source.directory("packages/backend");
     const reportSource = source.directory("packages/report");
     const dataSource = source.directory("packages/data");
+    const frontendSource = source.directory("packages/frontend");
 
     logWithTimestamp("📁 Prepared source directories for build");
 
@@ -162,17 +162,16 @@ export class ScoutForLol {
           "🔄 Building backend image and report npm package in parallel..."
         );
         return Promise.all([
-          withTiming("backend Docker image build", () =>
-            Promise.resolve(
-              buildBackendImage(
-                backendSource,
-                dataSourceDir,
-                getReportSource(reportSource),
-                version,
-                gitSha
-              )
-            )
-          ),
+          withTiming("backend Docker image build", async () => {
+            const image = buildBackendImage(
+              source,
+              version,
+              gitSha
+            );
+            // Force the container to be evaluated by getting its ID
+            await image.id();
+            return image;
+          }),
           withTiming("report npm package build", () =>
             Promise.resolve(
               buildReportForNpm(reportSource, dataSourceDir, version)
@@ -243,12 +242,11 @@ export class ScoutForLol {
         const backendSource = source.directory("packages/backend");
         const reportSource = source.directory("packages/report");
         const dataSource = source.directory("packages/data");
+        const frontendSource = source.directory("packages/frontend");
 
         // Login to registry and publish
         const publishedRefs = await publishBackendImage(
-          backendSource,
-          getDataSource(dataSource),
-          getReportSource(reportSource),
+          source,
           version,
           gitSha,
           ghcrUsername,
@@ -420,9 +418,19 @@ export class ScoutForLol {
   ): Promise<Directory> {
     logWithTimestamp("⚙️ Generating Prisma client for backend package");
 
-    const result = await withTiming("Prisma client generation", () =>
-      Promise.resolve(generatePrisma(source))
-    );
+    const result = await withTiming("Prisma client generation", () => {
+      // Create a workspace container with dependencies
+      const workspaceContainer = getBunNodeContainer()
+        .withExec(["apt", "install", "-y", "openssl"])
+        .withWorkdir("/workspace")
+        .withFile("/workspace/package.json", source.file("../../package.json"))
+        .withFile("/workspace/bun.lock", source.file("../../bun.lock"))
+        .withDirectory("/workspace/packages/backend", source)
+        .withWorkdir("/workspace")
+        .withExec(["bun", "install", "--frozen-lockfile"]);
+
+      return Promise.resolve(generatePrismaFromContainer(workspaceContainer));
+    });
 
     logWithTimestamp("✅ Prisma client generated successfully");
     return result;
@@ -478,16 +486,28 @@ export class ScoutForLol {
       ],
       defaultPath: "packages/report",
     })
-    reportSource: Directory
+    reportSource: Directory,
+    @argument({
+      ignore: [
+        "node_modules",
+        "dist",
+        "build",
+        ".cache",
+        "*.log",
+        ".env*",
+        "!.env.example",
+        ".dagger",
+      ],
+      defaultPath: "packages/frontend",
+    })
+    frontendSource: Directory
   ): Promise<string> {
     logWithTimestamp("🔍 Starting backend package check");
 
     await withTiming("backend package check", () =>
       Promise.resolve(
         checkBackend(
-          source,
-          getDataSource(dataSource),
-          getReportSource(reportSource)
+          source
         )
       )
     );
@@ -549,6 +569,20 @@ export class ScoutForLol {
       defaultPath: "packages/report",
     })
     reportSource: Directory,
+    @argument({
+      ignore: [
+        "node_modules",
+        "dist",
+        "build",
+        ".cache",
+        "*.log",
+        ".env*",
+        "!.env.example",
+        ".dagger",
+      ],
+      defaultPath: "packages/frontend",
+    })
+    frontendSource: Directory,
     @argument() version: string,
     @argument() gitSha: string
   ): Promise<Container> {
@@ -560,8 +594,6 @@ export class ScoutForLol {
       Promise.resolve(
         buildBackendImage(
           source,
-          getDataSource(dataSource),
-          getReportSource(reportSource),
           version,
           gitSha
         )
@@ -627,6 +659,20 @@ export class ScoutForLol {
       defaultPath: "packages/report",
     })
     reportSource: Directory,
+    @argument({
+      ignore: [
+        "node_modules",
+        "dist",
+        "build",
+        ".cache",
+        "*.log",
+        ".env*",
+        "!.env.example",
+        ".dagger",
+      ],
+      defaultPath: "packages/frontend",
+    })
+    frontendSource: Directory,
     @argument() version: string,
     @argument() gitSha: string,
     registryUsername?: string,
@@ -639,8 +685,6 @@ export class ScoutForLol {
     const result = await withTiming("backend Docker image publish", () =>
       publishBackendImage(
         source,
-        getDataSource(dataSource),
-        getReportSource(reportSource),
         version,
         gitSha,
         registryUsername,

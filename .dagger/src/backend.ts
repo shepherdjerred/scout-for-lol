@@ -1,16 +1,13 @@
-import { Directory, Container, Secret } from "@dagger.io/dagger";
+import { Directory, Container, Secret, File } from "@dagger.io/dagger";
 import { getBunContainer, getBunNodeContainer } from "./base";
 
 /**
- * Generate Prisma client for the backend
- * @param source The source directory
+ * Generate Prisma client for the backend (without dependencies)
+ * @param baseContainer The container with dependencies already installed
  * @returns The generated Prisma client directory
  */
-export function generatePrisma(source: Directory): Directory {
-  return getBunNodeContainer()
-    .withExec(["apt", "install", "-y", "openssl"])
-    .withMountedDirectory("/workspace", source)
-    .withDirectory("/workspace/packages/backend", source)
+export function generatePrismaFromContainer(baseContainer: Container): Directory {
+  return baseContainer
     .withWorkdir("/workspace/packages/backend")
     .withExec(["bun", "run", "src/database/generate.ts"])
     .withExec(["rm", "-f", "generated/client/runtime/edge-esm.cjs"])
@@ -19,29 +16,30 @@ export function generatePrisma(source: Directory): Directory {
 
 /**
  * Install dependencies for the backend
- * @param source The source directory
- * @param dataSource The data package source
- * @param reportSource The report package source
+ * @param workspaceSource The full workspace source directory
  * @returns The container with dependencies installed
  */
 export function installBackendDeps(
-  source: Directory,
-  dataSource: Directory,
-  reportSource: Directory
+  workspaceSource: Directory
 ): Container {
-  return getBunContainer()
+  const baseContainer = getBunContainer()
     .withExec(["apt", "update"])
     .withExec(["apt", "install", "-y", "openssl"])
-    .withWorkdir("/workspace/packages/backend")
-    .withDirectory("/workspace/packages/data/src", dataSource)
-    .withDirectory("/workspace/packages/report/src", reportSource)
+    .withWorkdir("/workspace")
+    .withFile("/workspace/package.json", workspaceSource.file("package.json"))
+    .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
+    .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
+    .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
+    .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
+    .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
+    .withWorkdir("/workspace")
+    .withExec(["bun", "install", "--frozen-lockfile"]);
+
+  return baseContainer
     .withMountedDirectory(
       "/workspace/packages/backend/generated",
-      generatePrisma(source)
-    )
-    .withDirectory("/workspace/packages/backend", source)
-    .withWorkdir("/workspace/packages/backend")
-    .withExec(["bun", "install", "--frozen-lockfile"]);
+      generatePrismaFromContainer(baseContainer)
+    );
 }
 
 /**
@@ -59,67 +57,50 @@ export function updateLockfile(source: Directory): Directory {
 
 /**
  * Run type checking, linting, and tests for the backend
- * @param source The source directory
- * @param dataSource The data package source
- * @param reportSource The report package source
+ * @param workspaceSource The full workspace source directory
  * @returns The test results
  */
 export function checkBackend(
-  source: Directory,
-  dataSource: Directory,
-  reportSource: Directory
+  workspaceSource: Directory
 ): Container {
-  return installBackendDeps(source, dataSource, reportSource)
+  return installBackendDeps(workspaceSource)
     .withExec(["bun", "run", "type-check"])
     .withExec(["bun", "run", "lint"])
-    .withFile(".env", source.file("test.env"))
+    .withFile(".env", workspaceSource.directory("packages/backend").file("test.env"))
     .withExec(["bun", "test"]);
 }
 
 /**
  * Build the backend Docker image
- * @param source The source directory
- * @param dataSource The data package source
- * @param reportSource The report package source
+ * @param workspaceSource The full workspace source directory
  * @param version The version tag
  * @param gitSha The git SHA
  * @returns The built container
  */
 export function buildBackendImage(
-  source: Directory,
-  dataSource: Directory,
-  reportSource: Directory,
+  workspaceSource: Directory,
   version: string,
   gitSha: string
 ): Container {
-  return installBackendDeps(source, dataSource, reportSource)
+  return installBackendDeps(workspaceSource)
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
     .withDirectory(
       "/workspace/packages/backend/prisma",
-      source.directory("prisma")
+      workspaceSource.directory("packages/backend").directory("prisma")
     )
     .withEntrypoint([
       "sh",
       "-c",
       "bun run src/database/migrate.ts && bun run src/index.ts",
     ])
-    .withExec([
-      "healthcheck",
-      "--interval=30s",
-      "--timeout=5s",
-      "--start-period=5s",
-      "--retries=3",
-      "CMD",
-      "bun run /workspace/packages/backend/src/health.ts || exit 1",
-    ]);
+    .withLabel("org.opencontainers.image.title", "scout-for-lol-backend")
+    .withLabel("org.opencontainers.image.description", "Scout for LoL Discord bot backend");
 }
 
 /**
  * Publish the backend Docker image
- * @param source The source directory
- * @param dataSource The data package source
- * @param reportSource The report package source
+ * @param workspaceSource The full workspace source directory
  * @param version The version tag
  * @param gitSha The git SHA
  * @param registryUsername Optional registry username for authentication
@@ -127,18 +108,14 @@ export function buildBackendImage(
  * @returns The published image references
  */
 export async function publishBackendImage(
-  source: Directory,
-  dataSource: Directory,
-  reportSource: Directory,
+  workspaceSource: Directory,
   version: string,
   gitSha: string,
   registryUsername?: string,
   registryPassword?: Secret
 ): Promise<string[]> {
   let image = buildBackendImage(
-    source,
-    dataSource,
-    reportSource,
+    workspaceSource,
     version,
     gitSha
   );
