@@ -191,6 +191,9 @@ export class ScoutForLol {
    * @param source The source directory
    * @param version The version to build
    * @param gitSha The git SHA
+   * @param ghcrUsername The GitHub Container Registry username (optional)
+   * @param ghcrPassword The GitHub Container Registry password/token (optional)
+   * @param env The environment (prod/dev) - determines if images are published
    * @returns A message indicating completion
    */
   @func()
@@ -210,10 +213,13 @@ export class ScoutForLol {
     })
     source: Directory,
     @argument() version: string,
-    @argument() gitSha: string
+    @argument() gitSha: string,
+    ghcrUsername?: string,
+    ghcrPassword?: Secret,
+    env?: string
   ): Promise<string> {
     logWithTimestamp(
-      `🚀 Starting CI pipeline for version ${version} (${gitSha})`
+      `🚀 Starting CI pipeline for version ${version} (${gitSha}) in ${env || "dev"} environment`
     );
 
     // First run checks
@@ -228,9 +234,36 @@ export class ScoutForLol {
       return this.build(source, version, gitSha);
     });
 
+    // Publish images if credentials provided and environment is prod
+    const shouldPublish = ghcrUsername && ghcrPassword && env === "prod";
+    if (shouldPublish) {
+      await withTiming("CI publish phase", async () => {
+        logWithTimestamp("📦 Phase 3: Publishing Docker image to registry...");
+
+        const backendSource = source.directory("packages/backend");
+        const reportSource = source.directory("packages/report");
+        const dataSource = source.directory("packages/data");
+
+        // Login to registry and publish
+        const publishedRefs = await publishBackendImage(
+          backendSource,
+          getDataSource(dataSource),
+          getReportSource(reportSource),
+          version,
+          gitSha,
+          ghcrUsername,
+          ghcrPassword
+        );
+
+        logWithTimestamp(`✅ Images published: ${publishedRefs.join(", ")}`);
+      });
+    } else {
+      logWithTimestamp("⏭️ Phase 3: Skipping image publishing (no credentials or not prod environment)");
+    }
+
     // Finally deploy to beta
     await withTiming("CI deploy phase", () => {
-      logWithTimestamp("🚀 Phase 3: Deploying to beta...");
+      logWithTimestamp("🚀 Phase 4: Deploying to beta...");
       return this.deploy(source, version, "beta");
     });
 
@@ -546,6 +579,8 @@ export class ScoutForLol {
    * @param reportSource The report source directory
    * @param version The version to publish
    * @param gitSha The git SHA
+   * @param registryUsername Optional registry username for authentication
+   * @param registryPassword Optional registry password for authentication
    * @returns The published image references
    */
   @func()
@@ -593,7 +628,9 @@ export class ScoutForLol {
     })
     reportSource: Directory,
     @argument() version: string,
-    @argument() gitSha: string
+    @argument() gitSha: string,
+    registryUsername?: string,
+    registryPassword?: Secret
   ): Promise<string[]> {
     logWithTimestamp(
       `📦 Publishing backend Docker image for version ${version} (${gitSha})`
@@ -605,7 +642,9 @@ export class ScoutForLol {
         getDataSource(dataSource),
         getReportSource(reportSource),
         version,
-        gitSha
+        gitSha,
+        registryUsername,
+        registryPassword
       )
     );
 

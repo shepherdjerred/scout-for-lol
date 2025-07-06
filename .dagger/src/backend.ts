@@ -1,4 +1,4 @@
-import { Directory, Container } from "@dagger.io/dagger";
+import { Directory, Container, Secret } from "@dagger.io/dagger";
 import { getBunContainer, getBunNodeContainer } from "./base";
 
 /**
@@ -122,6 +122,8 @@ export function buildBackendImage(
  * @param reportSource The report package source
  * @param version The version tag
  * @param gitSha The git SHA
+ * @param registryUsername Optional registry username for authentication
+ * @param registryPassword Optional registry password for authentication
  * @returns The published image references
  */
 export async function publishBackendImage(
@@ -129,15 +131,26 @@ export async function publishBackendImage(
   dataSource: Directory,
   reportSource: Directory,
   version: string,
-  gitSha: string
+  gitSha: string,
+  registryUsername?: string,
+  registryPassword?: Secret
 ): Promise<string[]> {
-  const image = buildBackendImage(
+  let image = buildBackendImage(
     source,
     dataSource,
     reportSource,
     version,
     gitSha
   );
+
+  // Set up registry authentication if credentials provided
+  if (registryUsername && registryPassword) {
+    image = image.withRegistryAuth(
+      "ghcr.io",
+      registryUsername,
+      registryPassword
+    );
+  }
 
   const versionRef = await image.publish(
     `ghcr.io/shepherdjerred/scout-for-lol:${version}`
