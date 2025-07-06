@@ -1,21 +1,25 @@
 {
   "folders": [
     {
-      "path": "packages/backend"
+      "name": "dagger",
+      "path": ".dagger",
     },
     {
-      "path": "packages/report"
+      "path": "packages/backend",
     },
     {
-      "path": "packages/data"
+      "path": "packages/report",
     },
     {
-      "path": "packages/frontend"
+      "path": "packages/data",
+    },
+    {
+      "path": "packages/frontend",
     },
     {
       "name": "root",
-      "path": "."
-    }
+      "path": ".",
+    },
   ],
   "extensions": {
     "recommendations": [
@@ -35,7 +39,7 @@
       "glehmann.earthlyls",
       "prisma.prisma",
       "orta.vscode-jest",
-    ]
+    ],
   },
   "settings": {
     "testing.automaticallyOpenPeekView": "never",
@@ -46,8 +50,8 @@
         "type": "chrome",
         "name": "https://localhost:4321",
         "request": "launch",
-        "url": "https://localhost:4321"
-      }
-    ]
-  }
+        "url": "https://localhost:4321",
+      },
+    ],
+  },
 }

@@ -16,8 +16,6 @@ RUN mise use -g python@latest
 RUN mise install
 RUN mise reshim
 
-RUN /root/.local/share/mise/shims/pip install pre-commit
-
 RUN wget https://github.com/earthly/earthly/releases/latest/download/earthly-linux-amd64 -O /usr/local/bin/earthly
 RUN chmod +x /usr/local/bin/earthly
 RUN /usr/local/bin/earthly bootstrap --with-autocomplete

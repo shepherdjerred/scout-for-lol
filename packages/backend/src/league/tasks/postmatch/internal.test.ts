@@ -31,7 +31,7 @@ test("postmatch", async () => {
               league: {
                 leagueAccount: {
                   puuid: LeaguePuuidSchema.parse(
-                    "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw"
+                    "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
                   ),
                   summonerId: LeagueSummonerIdSchema.parse("id"),
                   region: "AMERICA_NORTH",
@@ -51,14 +51,14 @@ test("postmatch", async () => {
     // do nothing
   };
   const sendFn = (async (
-    message: string | MessagePayload | MessageCreateOptions
+    message: string | MessagePayload | MessageCreateOptions,
   ): Promise<Message<true> | Message<false>> => {
     expect(message).toMatchSnapshot();
     return Promise.resolve({} as Message<true> | Message<false>);
   }) satisfies typeof send;
   const checkMatchFn = async () => {
     const exampleMatch = JSON.parse(
-      await Bun.file(testdataPath).text()
+      await Bun.file(testdataPath).text(),
     ) as MatchV5DTOs.MatchDto;
     return exampleMatch;
   };
@@ -69,7 +69,7 @@ test("postmatch", async () => {
         league: {
           leagueAccount: {
             puuid: LeaguePuuidSchema.parse(
-              "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw"
+              "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
             ),
             summonerId: LeagueSummonerIdSchema.parse("id"),
             region: "AMERICA_NORTH",
@@ -96,6 +96,6 @@ test("postmatch", async () => {
     checkMatchFn,
     sendFn,
     getPlayerFn,
-    getSubscriptionsFn
+    getSubscriptionsFn,
   );
 });

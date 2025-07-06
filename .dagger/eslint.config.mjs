@@ -8,9 +8,6 @@ export default tseslint.config(
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
   {
-    ignores: ["generated/**/*"],
-  },
-  {
     languageOptions: {
       parserOptions: {
         projectService: true,
@@ -27,5 +24,5 @@ export default tseslint.config(
         },
       ],
     },
-  },
+  }
 );

@@ -42,8 +42,8 @@ export async function checkPreMatch() {
     zip(playerStatus),
     filter(
       (pair): pair is [PlayerConfigEntry, CurrentGameInfoDTO] =>
-        pair[1] != undefined
-    )
+        pair[1] != undefined,
+    ),
   );
 
   console.log("removing games already seen");
@@ -53,8 +53,8 @@ export async function checkPreMatch() {
       !pipe(
         getState().gamesStarted,
         map((game) => game.matchId),
-        (matchIds) => matchIds.some((candidate) => candidate === game.gameId)
-      )
+        (matchIds) => matchIds.some((candidate) => candidate === game.gameId),
+      ),
   );
 
   const promises = pipe(
@@ -78,7 +78,7 @@ export async function checkPreMatch() {
           } else {
             return { player, rank: undefined };
           }
-        })
+        }),
       );
 
       console.log("creating new state entries");
@@ -95,7 +95,7 @@ export async function checkPreMatch() {
       // figure out what channels to send the message to
       // server, see if they have a player in the game
       const servers = await getChannelsSubscribedToPlayers(
-        players.map((player) => player.league.leagueAccount.summonerId)
+        players.map((player) => player.league.leagueAccount.summonerId),
       );
       // Deduplicate by channel (string ID) using Remeda uniqueBy
       const uniqueChannels = uniqueBy(servers, (server) => server.channel);
@@ -110,7 +110,7 @@ export async function checkPreMatch() {
         ...getState(),
         gamesStarted: [...getState().gamesStarted, entry],
       });
-    })
+    }),
   );
 
   console.log("sending messages");

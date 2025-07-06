@@ -16,6 +16,8 @@ export async function send(
     throw new Error("invalid channel");
   }
   const channel = fetchedChannel as TextChannel;
-  console.log(`Sending message: ${typeof options === "string" ? options : "[MessagePayload/MessageCreateOptions]"}`);
+  console.log(
+    `Sending message: ${typeof options === "string" ? options : "[MessagePayload/MessageCreateOptions]"}`,
+  );
   return channel.send(options);
 }

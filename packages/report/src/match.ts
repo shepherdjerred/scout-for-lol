@@ -17,9 +17,9 @@ import { match } from "ts-pattern";
 function participantToChampion(participant: MatchV5DTOs.ParticipantDto) {
   return {
     riotIdGameName:
-      (participant.riotIdGameName && participant.riotIdGameName.length > 0)
+      participant.riotIdGameName && participant.riotIdGameName.length > 0
         ? participant.riotIdGameName
-        : (participant.summonerName && participant.summonerName.length > 0)
+        : participant.summonerName && participant.summonerName.length > 0
           ? participant.summonerName
           : "Unknown",
     championName: participant.championName,
@@ -87,11 +87,11 @@ export function toMatch(
         rankAfterMatch,
         wins:
           queueType === "solo" || queueType === "flex"
-            ? player.ranks[queueType]?.wins ?? undefined
+            ? (player.ranks[queueType]?.wins ?? undefined)
             : undefined,
         losses:
           queueType === "solo" || queueType === "flex"
-            ? player.ranks[queueType]?.losses ?? undefined
+            ? (player.ranks[queueType]?.losses ?? undefined)
             : undefined,
         champion,
         outcome: getOutcome(participant),

@@ -23,7 +23,9 @@ void (async () => {
       { body: commands },
     );
 
-    console.log(`Successfully reloaded application (/) commands: ${JSON.stringify(data)}`);
+    console.log(
+      `Successfully reloaded application (/) commands: ${JSON.stringify(data)}`,
+    );
   } catch (error) {
     console.error(error);
   }
