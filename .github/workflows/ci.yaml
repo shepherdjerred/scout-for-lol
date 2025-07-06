@@ -20,7 +20,7 @@ jobs:
       - name: Extract kubectl version
         id: kubectl-version
         run: |
-          KUBECTL_VERSION=1.31.2
+          KUBECTL_VERSION=v1.31.0
           echo "version=$KUBECTL_VERSION" >> $GITHUB_OUTPUT
 
       - name: Cache kubectl
