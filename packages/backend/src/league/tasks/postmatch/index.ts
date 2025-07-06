@@ -12,6 +12,6 @@ export async function checkPostMatch() {
     checkMatch,
     send,
     getPlayer,
-    getChannelsSubscribedToPlayers,
+    getChannelsSubscribedToPlayers
   );
 }

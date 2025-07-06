@@ -3,7 +3,7 @@
   "private": true,
   "workspaces": [
     "packages/backend",
-    "packages/data", 
+    "packages/data",
     "packages/report",
     "packages/frontend"
   ],
@@ -11,11 +11,12 @@
     "install:all": "bun install",
     "typecheck:all": "bun run --filter='*' typecheck",
     "lint:all": "bun run --filter='*' lint",
-    "format:all": "bun run --filter='*' format", 
+    "format:all": "bun run --filter='*' format",
     "test:all": "bun run --filter='*' test",
     "clean": "rm -rf node_modules packages/*/node_modules"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
-  }
+  },
+  "dependencies": {}
 }

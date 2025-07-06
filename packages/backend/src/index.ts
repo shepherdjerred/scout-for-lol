@@ -1,6 +1,5 @@
 import configuration from "./configuration.js";
 import * as Sentry from "@sentry/node";
-import "dotenv/config";
 
 if (configuration.sentryDsn) {
   Sentry.init({

@@ -20,11 +20,13 @@
   "dependencies": {
     "@prisma/client": "latest",
     "@resvg/resvg-js": "^2.6.2",
+    "@scout-for-lol/data": "workspace:*",
+    "@scout-for-lol/report": "workspace:*",
     "@sentry/node": "^8.55.0",
     "cron": "^4.1.4",
     "date-fns": "^4.1.0",
     "discord.js": "^14.18.0",
-    "dotenv": "^16.5.0",
+    "dotenv": "^17.0.1",
     "env-var": "^7.5.0",
     "prisma": "latest",
     "react": "^19.1.0",
@@ -35,9 +37,7 @@
     "uuid": "^11.1.0",
     "yoga-wasm-web": "^0.3.3",
     "zod": "^3.24.2",
-    "zod-validation-error": "^3.4.0",
-    "@scout-for-lol/data": "workspace:*",
-    "@scout-for-lol/report": "workspace:*"
+    "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
