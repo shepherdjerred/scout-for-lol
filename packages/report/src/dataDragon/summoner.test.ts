@@ -1,6 +1,6 @@
-import { summoner } from "./summoner.ts";
-import { assertSnapshot } from "@std/testing/snapshot";
+import { summoner } from "./summoner.js";
+import { test, expect } from "bun:test";
 
-Deno.test("should be able to get champion data", async (t) => {
-  await assertSnapshot(t, summoner);
+test("should be able to get champion data", () => {
+  expect(summoner).toMatchSnapshot();
 });

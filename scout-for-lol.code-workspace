@@ -1,21 +1,25 @@
 {
   "folders": [
     {
-      "path": "packages/backend"
+      "name": "dagger",
+      "path": ".dagger",
     },
     {
-      "path": "packages/report"
+      "path": "packages/backend",
     },
     {
-      "path": "packages/data"
+      "path": "packages/report",
     },
     {
-      "path": "packages/frontend"
+      "path": "packages/data",
+    },
+    {
+      "path": "packages/frontend",
     },
     {
       "name": "root",
-      "path": "."
-    }
+      "path": ".",
+    },
   ],
   "extensions": {
     "recommendations": [
@@ -32,26 +36,13 @@
       "arahata.linter-actionlint",
       "bradlc.vscode-tailwindcss",
       "lightyen.tailwindcss-intellisense-twin",
-      "denoland.vscode-deno",
       "glehmann.earthlyls",
       "prisma.prisma",
-    ]
+      "orta.vscode-jest",
+    ],
   },
   "settings": {
     "testing.automaticallyOpenPeekView": "never",
-    "deno.enable": true,
-    "deno.lint": true,
-    "deno.unstable": true,
-    "deno.cacheOnSave": true,
-    "deno.codeLens.implementations": true,
-    "deno.codeLens.references": true,
-    "deno.codeLens.referencesAllFunctions": true,
-    "deno.codeLens.test": true,
-    "deno.suggest.imports.autoDiscover": true,
-    "[typescript]": {
-      "editor.defaultFormatter": "denoland.vscode-deno"
-    },
-    "typescript.tsserver.experimental.enableProjectDiagnostics": false
   },
   "launch": {
     "configurations": [
@@ -59,8 +50,8 @@
         "type": "chrome",
         "name": "https://localhost:4321",
         "request": "launch",
-        "url": "https://localhost:4321"
-      }
-    ]
-  }
+        "url": "https://localhost:4321",
+      },
+    ],
+  },
 }

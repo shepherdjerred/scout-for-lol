@@ -1,7 +1,6 @@
-import "react";
 import { renderItems } from "./item.tsx";
 import { palette } from "../../assets/colors.ts";
-import { Champion } from "@scout/data";
+import { Champion } from "@scout-for-lol/data";
 import { summoner } from "../../dataDragon/summoner.ts";
 import { latestVersion } from "../../dataDragon/version.ts";
 import { CreepScore } from "./creepScore.tsx";
@@ -10,7 +9,6 @@ import { Damage } from "./damage.tsx";
 import { Kda } from "./kda.tsx";
 import { Names } from "./names.tsx";
 import { Lane } from "../lane/index.tsx";
-import React from "react";
 import { first, keys, map, pickBy, round } from "remeda";
 
 // highlight should be true if this champion's riotIdGameName is in the highlightNames array (player-based highlight)
@@ -32,7 +30,7 @@ export function renderChampion(
     );
 
     if (name === undefined) {
-      throw new Error(`Summoner spell ${spell} not found`);
+      throw new Error(`Summoner spell ${spell.toString()} not found`);
     }
 
     return (
@@ -69,7 +67,7 @@ export function renderChampion(
       >
         {champion.lane && <Lane lane={champion.lane} />}
         <span style={{ fontWeight: 700, width: "10rem" }}>
-          {champion.level}
+          {champion.level.toString()}
         </span>
       </div>
 

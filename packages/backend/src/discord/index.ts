@@ -1,2 +1,2 @@
-import "./rest.ts";
-import "./client.ts";
+import "./rest.js";
+import "./client.js";

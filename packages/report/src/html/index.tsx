@@ -1,14 +1,8 @@
-import satori, { init } from "satori/wasm";
+import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
-import React from "react";
 import { fonts } from "../assets/index.ts";
-import { CompletedMatch } from "@scout/data";
+import { CompletedMatch } from "@scout-for-lol/data";
 import { Report } from "./report.tsx";
-import initYoga from "yoga-wasm-web";
-
-const wasm = await Deno.readFile(`node_modules/yoga-wasm-web/dist/yoga.wasm`);
-const yoga = await initYoga(wasm);
-init(yoga);
 
 export async function matchToImage(match: CompletedMatch) {
   const svg = await matchToSvg(match);

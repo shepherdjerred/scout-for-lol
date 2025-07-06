@@ -1,1 +1,1 @@
-export * from "./model/index.ts";
+export * from "./model/index.js";

@@ -1,21 +1,19 @@
-import React from "react";
-import { type Lane, LaneSchema } from "@scout/data";
-import { encodeBase64 } from "@std/encoding";
+import { type Lane, LaneSchema } from "@scout-for-lol/data";
 import { z } from "zod";
 
 const images: Record<Lane, string> = z
   .record(LaneSchema, z.string())
   .refine((obj): obj is Required<typeof obj> =>
-    LaneSchema.options.every((key) => obj[key] != null)
+    LaneSchema.options.every((key) => obj[key] != null),
   )
   .parse(
     Object.fromEntries(
       await Promise.all(
         LaneSchema.options.map(async (lane): Promise<[Lane, string]> => {
-          const image = await Deno.readFile(
+          const image = await Bun.file(
             new URL(`assets/${lane}.svg`, import.meta.url),
-          );
-          return [lane, encodeBase64(image)];
+          ).arrayBuffer();
+          return [lane, Buffer.from(image).toString("base64")];
         }),
       ),
     ),

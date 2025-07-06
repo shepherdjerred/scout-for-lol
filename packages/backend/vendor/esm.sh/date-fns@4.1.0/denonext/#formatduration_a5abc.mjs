@@ -1,3 +1,0 @@
-/* esm.sh - date-fns@4.1.0/formatDuration */
-import{enUS as s}from"./locale/en-US.mjs";var p={};function l(){return p}var x=["years","months","weeks","days","hours","minutes","seconds"];function D(o,e){let f=l(),r=e?.locale??f.locale??s,c=e?.format??x,u=e?.zero??!1,i=e?.delimiter??" ";return r.formatDistance?c.reduce((n,t)=>{let m=`x${t.replace(/(^.)/,d=>d.toUpperCase())}`,a=o[t];return a!==void 0&&(u||o[t])?n.concat(r.formatDistance(m,a)):n},[]).join(i):""}var L=D;export{L as default,D as formatDuration};
-//# sourceMappingURL=formatDuration.mjs.map

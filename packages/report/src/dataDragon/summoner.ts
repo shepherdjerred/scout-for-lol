@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { latestVersion } from "./version.ts";
+import { latestVersion } from "./version.js";
 
 // schema created by https://transform.tools/json-to-zod
 export type Summoner = z.infer<typeof SummonerSchema>;

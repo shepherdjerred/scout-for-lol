@@ -1,5 +1,4 @@
 import { palette } from "../../assets/colors.ts";
-import React from "react";
 import { round } from "remeda";
 
 export function Kda({
@@ -13,9 +12,8 @@ export function Kda({
   assists: number;
   highlight: boolean;
 }) {
-  const kdaRatio = deaths === 0
-    ? kills + assists
-    : round((kills + assists) / deaths, 2);
+  const kdaRatio =
+    deaths === 0 ? kills + assists : round((kills + assists) / deaths, 2);
   return (
     <div
       style={{
@@ -28,7 +26,7 @@ export function Kda({
       <span
         style={{ fontWeight: 700, color: highlight ? palette.gold[1] : "" }}
       >
-        {`${kills} / ${deaths} / ${assists}`}
+        {`${kills.toString()} / ${deaths.toString()} / ${assists.toString()}`}
       </span>
       <span>{kdaRatio} KDA</span>
     </div>

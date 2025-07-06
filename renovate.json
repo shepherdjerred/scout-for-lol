@@ -1,18 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "automerge": true,
-  "extends": [
-    "config:recommended",
-    "github>Omochice/renovate-config:deno"
-  ],
+  "extends": ["config:recommended"],
   "minimumReleaseAge": "7 days",
-  "pre-commit": {
-    "enabled": true
-  },
-  "reviewers": [
-    "shepherdjerred"
-  ],
-  "schedule": [
-    "after 3am on Sunday"
-  ]
+  "reviewers": ["shepherdjerred"],
+  "schedule": ["after 3am on Sunday"]
 }

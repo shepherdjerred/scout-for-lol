@@ -1,4 +1,4 @@
-import * as Sentry from "sentry/index.mjs";
+import * as Sentry from "@sentry/node";
 
 export function logErrors(fn: () => Promise<unknown>) {
   return async () => {

@@ -8,7 +8,7 @@ import {
   MessageCreateOptions,
   MessagePayload,
 } from "discord.js";
-import { matchToImage } from "@scout/report";
+import { matchToImage } from "@scout-for-lol/report";
 import {
   ApplicationState,
   CompletedMatch,
@@ -22,7 +22,7 @@ import {
   Player,
   PlayerConfigEntry,
   type Rank,
-} from "@scout/data";
+} from "@scout-for-lol/data";
 import { getState, setState } from "../../model/state.ts";
 import { differenceWith, filter, map, pipe } from "remeda";
 import { getOutcome } from "../../model/match.ts";
@@ -37,7 +37,7 @@ export async function checkMatch(game: LoadingScreenState) {
     );
 
     const response = await api.MatchV5.get(
-      `${region}_${game.matchId}`,
+      `${region}_${game.matchId.toString()}`,
       regionToRegionGroup(region),
     );
     return response.response;
@@ -51,12 +51,12 @@ export async function checkMatch(game: LoadingScreenState) {
       if (result.data.status == 403) {
         // Not recoverable: log and remove from queue
         console.error(
-          `403 Forbidden for match ${game.matchId}, removing from queue.`,
+          `403 Forbidden for match ${game.matchId.toString()}, removing from queue.`,
         );
         setState({
           ...getState(),
-          gamesStarted: getState().gamesStarted.filter((g) =>
-            g.matchId !== game.matchId
+          gamesStarted: getState().gamesStarted.filter(
+            (g) => g.matchId !== game.matchId,
           ),
         });
         return undefined;
@@ -76,6 +76,9 @@ async function getImage(
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
   const image = await matchToImage(match);
   const attachment = new AttachmentBuilder(image).setName("match.png");
+  if (!attachment.name) {
+    throw new Error("Attachment name is null");
+  }
   const embed = {
     image: {
       url: `attachment://${attachment.name}`,
@@ -104,12 +107,11 @@ async function createMatchObj(
     state.players.map(async (playerState) => {
       // Find the participant in the match by puuid
       const participant = match.info.participants.find(
-        (p) =>
-          p.puuid === playerState.player.league.leagueAccount.puuid
+        (p) => p.puuid === playerState.player.league.leagueAccount.puuid,
       );
       if (!participant) {
         throw new Error(
-          `unable to find participant for player ${JSON.stringify(playerState)}, match: ${JSON.stringify(match)}`
+          `unable to find participant for player ${JSON.stringify(playerState)}, match: ${JSON.stringify(match)}`,
         );
       }
       const fullPlayer = await getPlayerFn(playerState.player);
@@ -122,7 +124,9 @@ async function createMatchObj(
       const champion = participantToChampion(participant);
       const team = parseTeam(participant.teamId);
       if (!team) {
-        throw new Error(`Could not determine team for participant: ${JSON.stringify(participant)}`);
+        throw new Error(
+          `Could not determine team for participant: ${JSON.stringify(participant)}`,
+        );
       }
       const enemyTeam = invertTeam(team);
       return {
@@ -131,11 +135,11 @@ async function createMatchObj(
         rankAfterMatch,
         wins:
           state.queue === "solo" || state.queue === "flex"
-            ? fullPlayer.ranks[state.queue]?.wins || undefined
+            ? (fullPlayer.ranks[state.queue]?.wins ?? undefined)
             : undefined,
         losses:
           state.queue === "solo" || state.queue === "flex"
-            ? fullPlayer.ranks[state.queue]?.losses || undefined
+            ? (fullPlayer.ranks[state.queue]?.losses ?? undefined)
             : undefined,
         champion,
         outcome: getOutcome(participant),
@@ -143,7 +147,7 @@ async function createMatchObj(
         lane: champion.lane,
         laneOpponent: getLaneOpponent(champion, teams[enemyTeam]),
       };
-    })
+    }),
   );
 
   return {
@@ -175,10 +179,16 @@ export async function checkPostMatchInternal(
   console.log("removing games in progress");
   const finishedGames = pipe(
     state.gamesStarted,
-    (gamesStarted) => gamesStarted.map((game, index) => [game, games[index]]),
+    map(
+      (game) =>
+        [
+          game,
+          games.find((g) => g?.metadata.matchId === game.matchId.toString()),
+        ] satisfies [LoadingScreenState, MatchV5DTOs.MatchDto | undefined],
+    ),
     filter(([_game, match]) => match != undefined),
-    // TODO: remove this cast
-  ) as [LoadingScreenState, MatchV5DTOs.MatchDto][];
+    // this case is required to get rid of the undefined type
+  ) as unknown as [LoadingScreenState, MatchV5DTOs.MatchDto][];
 
   // TODO: send duo queue message
   console.log("sending messages");

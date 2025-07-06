@@ -1,4 +1,3 @@
-import React from "react";
 import { palette } from "../../assets/colors.ts";
 
 export function Names({

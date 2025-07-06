@@ -10,13 +10,11 @@ RUN apt install -y mise
 RUN echo 'eval "$(mise activate bash --shims)"' >> ~/.bash_profile
 RUN echo 'eval "$(mise activate bash)"' >> ~/.bashrc
 
-RUN mise use -g deno@latest
+RUN mise use -g bun@latest
 RUN mise use -g node@lts
 RUN mise use -g python@latest
 RUN mise install
 RUN mise reshim
-
-RUN /root/.local/share/mise/shims/pip install pre-commit
 
 RUN wget https://github.com/earthly/earthly/releases/latest/download/earthly-linux-amd64 -O /usr/local/bin/earthly
 RUN chmod +x /usr/local/bin/earthly

@@ -1,7 +1,5 @@
-import "react";
 import { palette } from "../../assets/colors.ts";
 import { latestVersion } from "../../dataDragon/version.ts";
-import React from "react";
 import { last, map, pipe, take } from "remeda";
 
 const dimension = 120;
@@ -49,8 +47,8 @@ export function renderItems(items: number[], visionScore: number) {
       style={{
         display: "flex",
         position: "relative",
-        width: `${dimension}px`,
-        height: `${dimension}px`,
+        width: `${dimension.toString()}px`,
+        height: `${dimension.toString()}px`,
       }}
     >
       {renderItem(lastItem)}

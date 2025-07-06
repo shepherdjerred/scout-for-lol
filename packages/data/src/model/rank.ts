@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { DivisionSchema, divisionToString } from "./division.ts";
-import { TierSchema } from "./tier.ts";
-import { rankToLeaguePoints, tierToOrdinal } from "./leaguePoints.ts";
-import { startCase } from "../util.ts";
+import { DivisionSchema, divisionToString } from "./division.js";
+import { TierSchema } from "./tier.js";
+import { rankToLeaguePoints, tierToOrdinal } from "./leaguePoints.js";
+import { startCase } from "../util.js";
 
 export type Rank = z.infer<typeof RankSchema>;
 export const RankSchema = z.strictObject({
@@ -20,9 +20,9 @@ export const RanksSchema = z.strictObject({
 });
 
 export function rankToString(rank: Rank): string {
-  return `${startCase(rank.tier)} ${
-    divisionToString(rank.division)
-  }, ${rank.lp}LP`;
+  return `${startCase(rank.tier)} ${divisionToString(
+    rank.division,
+  )}, ${rank.lp.toString()}LP`;
 }
 
 export function rankToSimpleString(rank: Rank): string {
@@ -65,10 +65,6 @@ export function wasPromoted(
 
   if (previousTier < currentTier) {
     return true;
-  }
-
-  if (previousDivision === undefined || currentDivision === undefined) {
-    return false;
   }
 
   if (previousTier == currentTier && previousDivision > currentDivision) {

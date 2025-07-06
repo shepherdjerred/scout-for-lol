@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LaneSchema } from "./lane.ts";
+import { LaneSchema } from "./lane.js";
 
 export type Champion = z.infer<typeof ChampionSchema>;
 export const ChampionSchema = z.strictObject({

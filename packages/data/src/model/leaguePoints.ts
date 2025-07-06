@@ -1,8 +1,8 @@
 import { match, P } from "ts-pattern";
 import { z } from "zod";
-import { numberOfDivisions } from "./division.ts";
-import { Rank } from "./rank.ts";
-import { Tier } from "./tier.ts";
+import { numberOfDivisions } from "./division.js";
+import { Rank } from "./rank.js";
+import { Tier } from "./tier.js";
 
 export type LeaguePoints = z.infer<typeof LeaguePointsSchema>;
 export const LeaguePointsSchema = z.number().brand("League Points");
@@ -23,8 +23,8 @@ export function rankToLeaguePoints(rank: Rank | undefined): LeaguePoints {
     return LeaguePointsSchema.parse(0);
   }
 
-  const divisionLp = (numberOfDivisions - rank.division) *
-    leaguePointsPerDivision;
+  const divisionLp =
+    (numberOfDivisions - rank.division) * leaguePointsPerDivision;
   const tierLp = tierToLeaguePoints(rank.tier);
   return LeaguePointsSchema.parse(divisionLp + tierLp + rank.lp);
 }

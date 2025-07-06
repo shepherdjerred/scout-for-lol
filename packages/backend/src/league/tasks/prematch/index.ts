@@ -5,13 +5,13 @@ import {
   LoadingScreenPlayer,
   type LoadingScreenState,
   parseQueueType,
-  PlayerConfigEntry,
-} from "@scout/data";
-import { createDiscordMessage } from "./discord.ts";
-import { send } from "../../discord/channel.ts";
-import { getRanks } from "../../model/rank.ts";
-import { getState, setState } from "../../model/state.ts";
-import { getCurrentGame } from "../../api/index.ts";
+  type PlayerConfigEntry,
+} from "@scout-for-lol/data";
+import { createDiscordMessage } from "./discord";
+import { send } from "../../discord/channel";
+import { getRanks } from "../../model/rank";
+import { getState, setState } from "../../model/state";
+import { getCurrentGame } from "../../api/index";
 import {
   filter,
   groupBy,
@@ -25,7 +25,7 @@ import {
 import {
   getAccounts,
   getChannelsSubscribedToPlayers,
-} from "../../../database/index.ts";
+} from "../../../database/index";
 
 export async function checkPreMatch() {
   const players = await getAccounts();
@@ -40,8 +40,11 @@ export async function checkPreMatch() {
   const playersInGame = pipe(
     playersNotInGame,
     zip(playerStatus),
-    filter(([_player, game]) => game != undefined),
-  ) as [PlayerConfigEntry, CurrentGameInfoDTO][];
+    filter(
+      (pair): pair is [PlayerConfigEntry, CurrentGameInfoDTO] =>
+        pair[1] != undefined,
+    ),
+  );
 
   console.log("removing games already seen");
   const newGames = filter(
@@ -58,6 +61,9 @@ export async function checkPreMatch() {
     newGames,
     groupBy(([_player, game]) => game.gameId),
     mapValues(async (games) => {
+      if (games.length === 0) {
+        throw new Error("No games found in group");
+      }
       const players = map(games, ([player, _game]) => player);
       const game = games[0][1];
 
@@ -85,7 +91,6 @@ export async function checkPreMatch() {
       };
 
       const message = createDiscordMessage(players, game, queueType);
-      
 
       // figure out what channels to send the message to
       // server, see if they have a player in the game
@@ -93,12 +98,12 @@ export async function checkPreMatch() {
         players.map((player) => player.league.leagueAccount.summonerId),
       );
       // Deduplicate by channel (string ID) using Remeda uniqueBy
-      const uniqueChannels = uniqueBy(servers, server => server.channel);
+      const uniqueChannels = uniqueBy(servers, (server) => server.channel);
 
       const promises = uniqueChannels.map((server) => {
         return send(message, server.channel);
       });
-      Promise.all(promises);
+      void Promise.all(promises);
 
       console.log("saving state");
       setState({

@@ -1,13 +1,15 @@
-import configuration from "./configuration.ts";
-import * as Sentry from "sentry/index.mjs";
+import configuration from "./configuration.js";
+import * as Sentry from "@sentry/node";
 
-Sentry.init({
-  dsn: configuration.sentryDsn,
-  environment: configuration.environment,
-  release: configuration.gitSha,
-});
+if (configuration.sentryDsn) {
+  Sentry.init({
+    dsn: configuration.sentryDsn,
+    environment: configuration.environment,
+    release: configuration.gitSha,
+  });
+}
 
-import "./discord/index.ts";
-import { startCronJobs } from "./league/cron.ts";
+import "./discord/index.js";
+import { startCronJobs } from "./league/cron.js";
 
 startCronJobs();

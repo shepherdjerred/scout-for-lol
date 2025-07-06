@@ -1,9 +1,8 @@
-import React from "react";
 import { renderChampion } from "./champion/champion.tsx";
 import { palette } from "../assets/colors.ts";
 import { font } from "../assets/index.ts";
-import { Roster } from "@scout/data";
-import { Team } from "@scout/data";
+import { Roster } from "@scout-for-lol/data";
+import { Team } from "@scout-for-lol/data";
 import { sumBy } from "remeda";
 
 export function renderTeam(
@@ -43,7 +42,7 @@ export function renderTeam(
           highlightNames.includes(champion.riotIdGameName),
           durationInMinutes,
           mostDamage,
-        )
+        ),
       )}
     </div>
   );

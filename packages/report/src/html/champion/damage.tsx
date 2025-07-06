@@ -1,5 +1,4 @@
 import { palette } from "../../assets/colors.ts";
-import React from "react";
 
 export function Damage({
   value,
@@ -33,7 +32,7 @@ export function Damage({
         <span
           style={{
             display: "flex",
-            width: `${percent}%`,
+            width: `${percent.toString()}%`,
             height: "100%",
             backgroundColor: highlight ? palette.gold.bright : palette.white[1],
           }}

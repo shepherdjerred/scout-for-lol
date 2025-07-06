@@ -1,5 +1,4 @@
 import {
-  type ChannelType,
   type ChatInputCommandInteraction,
   InteractionContextType,
   PermissionFlagsBits,
@@ -13,11 +12,11 @@ import {
   RegionSchema,
   RiotIdSchema,
   toReadableRegion,
-} from "@scout/data";
-import { api, riotApi } from "../../league/api/api.ts";
-import { mapRegionToEnum } from "../../league/model/region.ts";
+} from "@scout-for-lol/data";
+import { api, riotApi } from "../../league/api/api";
+import { mapRegionToEnum } from "../../league/model/region";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
-import { prisma } from "../../database/index.ts";
+import { prisma } from "../../database/index";
 import { fromError } from "zod-validation-error";
 
 export const subscribeCommand = new SlashCommandBuilder()
@@ -27,7 +26,7 @@ export const subscribeCommand = new SlashCommandBuilder()
     option
       .setName("channel")
       .setDescription("The channel to post messages to")
-      .setRequired(true)
+      .setRequired(true),
   )
   .addStringOption((option) =>
     option
@@ -38,7 +37,7 @@ export const subscribeCommand = new SlashCommandBuilder()
           return { name: toReadableRegion(region), value: region };
         }),
       )
-      .setRequired(true)
+      .setRequired(true),
   )
   .addStringOption((option) =>
     option
@@ -46,7 +45,7 @@ export const subscribeCommand = new SlashCommandBuilder()
       .setDescription(
         "The Riot ID to subscribe to in the format of <name>#<tag>",
       )
-      .setRequired(true)
+      .setRequired(true),
   )
   // TODO: differentiate between player and account alias
   .addStringOption((option) =>
@@ -54,10 +53,10 @@ export const subscribeCommand = new SlashCommandBuilder()
       .setName("alias")
       .setDescription("An alias for the player")
       // TODO: make this optional
-      .setRequired(true)
+      .setRequired(true),
   )
   .addUserOption((option) =>
-    option.setName("user").setDescription("The Discord user of the player")
+    option.setName("user").setDescription("The Discord user of the player"),
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .setContexts(InteractionContextType.Guild);
@@ -78,7 +77,7 @@ export async function executeSubscribe(
 
   try {
     args = ArgsSchema.parse({
-      channel: interaction.options.getChannel<ChannelType>("channel")?.id,
+      channel: interaction.options.getChannel("channel")?.id,
       region: interaction.options.getString("region"),
       riotId: interaction.options.getString("riot-id"),
       user: interaction.options.getUser("user")?.id,
@@ -98,15 +97,16 @@ export async function executeSubscribe(
 
   let puuid: string;
   try {
+    const regionGroup = regionToRegionGroup(mapRegionToEnum(region));
     const account = await riotApi.Account.getByRiotId(
       riotId.game_name,
       riotId.tag_line,
-      regionToRegionGroup(mapRegionToEnum(region)),
+      regionGroup,
     );
     puuid = account.response.puuid;
   } catch (error) {
     await interaction.reply({
-      content: `Error looking up Riot ID: ${error}`,
+      content: `Error looking up Riot ID: ${error instanceof Error ? error.message : String(error)}`,
       ephemeral: true,
     });
     return;
@@ -121,7 +121,7 @@ export async function executeSubscribe(
     summonerId = leagueAccount.response.id;
   } catch (error) {
     await interaction.reply({
-      content: `Error looking up summoner ID: ${error}`,
+      content: `Error looking up summoner ID: ${error instanceof Error ? error.message : String(error)}`,
       ephemeral: true,
     });
     return;
@@ -183,7 +183,7 @@ export async function executeSubscribe(
     await prisma.subscription.create({
       data: {
         channelId: channel,
-        playerId: player.id,
+        playerId: player.playerId.id,
         createdTime: now,
         updatedTime: now,
         creatorDiscordId: interaction.user.id,
@@ -192,13 +192,12 @@ export async function executeSubscribe(
     });
 
     await interaction.reply({
-      content:
-        `Successfully subscribed to updates for ${riotId.game_name}#${riotId.tag_line}`,
+      content: `Successfully subscribed to updates for ${riotId.game_name}#${riotId.tag_line}`,
       ephemeral: true,
     });
   } catch (error) {
     await interaction.reply({
-      content: `Error creating database records: ${error}`,
+      content: `Error creating database records: ${error instanceof Error ? error.message : String(error)}`,
       ephemeral: true,
     });
   }

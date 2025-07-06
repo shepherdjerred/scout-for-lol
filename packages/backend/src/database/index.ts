@@ -1,5 +1,4 @@
-// @ts-types="../../generated/client/index.d.ts"
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../../generated/prisma/client";
 import {
   DiscordAccountIdSchema,
   type DiscordChannelId,
@@ -11,7 +10,7 @@ import {
   type PlayerConfig,
   type PlayerConfigEntry,
   RegionSchema,
-} from "@scout/data";
+} from "@scout-for-lol/data";
 import { unique } from "remeda";
 
 export const prisma = new PrismaClient();
@@ -39,7 +38,7 @@ export async function getChannelsSubscribedToPlayers(
     accounts.flatMap((account) =>
       account.playerId.subscriptions.map((subscription) => ({
         channel: DiscordChannelIdSchema.parse(subscription.channelId),
-      }))
+      })),
     ),
   );
 }

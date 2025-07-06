@@ -1,5 +1,5 @@
+import "dotenv/config";
 import env from "env-var";
-import "@std/dotenv/load";
 
 export default {
   version: env.get("VERSION").required().asString(),
@@ -13,4 +13,5 @@ export default {
   applicationId: env.get("APPLICATION_ID").required().asString(),
   riotApiToken: env.get("RIOT_API_TOKEN").required().asString(),
   databaseUrl: env.get("DATABASE_URL").required().asString(),
+  port: env.get("PORT").default("3000").asPortNumber(),
 };

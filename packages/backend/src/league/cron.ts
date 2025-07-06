@@ -1,7 +1,7 @@
 import { CronJob } from "cron";
-import { checkPreMatch } from "./tasks/prematch/index.ts";
-import { logErrors } from "./util.ts";
-import { checkPostMatch } from "./tasks/postmatch/index.ts";
+import { checkPreMatch } from "./tasks/prematch/index";
+import { logErrors } from "./util";
+import { checkPostMatch } from "./tasks/postmatch/index";
 
 export function startCronJobs() {
   // check spectate status every minute

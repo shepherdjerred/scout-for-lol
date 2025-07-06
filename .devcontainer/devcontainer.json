@@ -4,6 +4,5 @@
   },
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
-  },
-  "postStartCommand": "cd /workspaces/scout-for-lol && pre-commit install && pre-commit install -t commit-msg && (cd packages/backend/ && deno install && ./src/database/generate.ts)"
+  }
 }

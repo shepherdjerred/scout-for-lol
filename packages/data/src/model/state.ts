@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { RankSchema } from "./rank.ts";
+import { RankSchema } from "./rank.js";
 import { match } from "ts-pattern";
-import { PlayerConfig, PlayerConfigEntrySchema } from "./playerConfig.ts";
+import { PlayerConfig, PlayerConfigEntrySchema } from "./playerConfig.js";
 import { filter, flatMap } from "remeda";
 
 export type QueueType = z.infer<typeof QueueTypeSchema>;
@@ -33,7 +33,7 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(2300, () => "brawl")
     .with(1900, () => "urf")
     .otherwise(() => {
-      console.error(`unknown queue type: ${input}`);
+      console.error(`unknown queue type: ${input.toString()}`);
       return undefined;
     });
 }
@@ -71,8 +71,9 @@ export function getPlayersInGame(
     playersInGame.some(
       (matchPlayer) =>
         matchPlayer.player.league.leagueAccount.puuid ===
-          player.league.leagueAccount.puuid,
-    ));
+        player.league.leagueAccount.puuid,
+    ),
+  );
 }
 
 export function getPlayersNotInGame(
@@ -86,7 +87,7 @@ export function getPlayersNotInGame(
       !playersInGame.some(
         (matchPlayer) =>
           matchPlayer.player.league.leagueAccount.puuid ===
-            player.league.leagueAccount.puuid,
+          player.league.leagueAccount.puuid,
       ),
   );
 }

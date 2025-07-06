@@ -1,8 +1,8 @@
 import { getChampionName } from "twisted/dist/constants/champions.js";
 import { CurrentGameInfoDTO } from "twisted/dist/models-dto/index.js";
-import { findParticipant } from "../../api/index.ts";
-import { PlayerConfigEntry } from "@scout/data";
-import { QueueType } from "@scout/data";
+import { findParticipant } from "../../api/index";
+import { PlayerConfigEntry } from "@scout-for-lol/data";
+import { QueueType } from "@scout-for-lol/data";
 import { map } from "remeda";
 
 export function createDiscordMessage(
@@ -14,11 +14,9 @@ export function createDiscordMessage(
     const participant = findParticipant(player, game.participants);
     if (participant === undefined) {
       throw new Error(
-        `unable to find participants: ${
-          JSON.stringify(
-            participants,
-          )
-        }, ${JSON.stringify(game)}`,
+        `unable to find participants: ${JSON.stringify(
+          participants,
+        )}, ${JSON.stringify(game)}`,
       );
     }
     return { player, participant };
@@ -33,26 +31,22 @@ export function createDiscordMessage(
       console.error(error);
       championName = participant.participant.championId.toString();
     }
-    return `${participant.player.alias} (${
-      championName
-        .replaceAll("_", " ")
-        .toLowerCase()
-        .replace(/\b\w/g, (char) => char.toUpperCase())
-    })`;
+    return `${participant.player.alias} (${championName
+      .replaceAll("_", " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase())})`;
   });
 
   let messageString = messages.join(", ");
   if (messages.length > 1) {
     const lastCommaIndex = messageString.lastIndexOf(",");
-    messageString = `${
-      messageString.substring(
-        0,
-        lastCommaIndex,
-      )
-    }, and${messageString.substring(lastCommaIndex + 1)}`;
+    messageString = `${messageString.substring(
+      0,
+      lastCommaIndex,
+    )}, and${messageString.substring(lastCommaIndex + 1)}`;
   }
 
   return `${messageString} started a ${
-    queueType || game.gameQueueConfigId
+    queueType ?? game.gameQueueConfigId.toString()
   } game`;
 }

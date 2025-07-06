@@ -1,12 +1,12 @@
-import { getChannelsSubscribedToPlayers } from "../../../database/index.ts";
-import { send } from "../../discord/channel.ts";
-import { getPlayer } from "../../model/player.ts";
-import { getState } from "../../model/state.ts";
-import { checkMatch, checkPostMatchInternal, saveMatch } from "./internal.ts";
+import { getChannelsSubscribedToPlayers } from "../../../database/index";
+import { send } from "../../discord/channel";
+import { getPlayer } from "../../model/player";
+import { getState } from "../../model/state";
+import { checkMatch, checkPostMatchInternal, saveMatch } from "./internal";
 
 export async function checkPostMatch() {
   const state = getState();
-  return await checkPostMatchInternal(
+  await checkPostMatchInternal(
     state,
     saveMatch,
     checkMatch,

@@ -1,5 +1,5 @@
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { type Champion, parseLane } from "@scout/data";
+import { type Champion, parseLane } from "@scout-for-lol/data";
 
 export function participantToChampion(
   dto: MatchV5DTOs.ParticipantDto,

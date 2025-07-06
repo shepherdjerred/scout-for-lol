@@ -1,11 +1,13 @@
-import { assert } from "@std/assert";
-import configuration from "./configuration.ts";
+import { strict as assert } from "assert";
+import configuration from "./configuration.js";
 
 // health check used by Docker
 try {
-  const response = await fetch(`http://127.0.0.1:${configuration.port}/ping`);
+  const response = await fetch(
+    `http://127.0.0.1:${configuration.port.toString()}/ping`,
+  );
   assert(response.ok);
-  Deno.exit(0);
+  process.exit(0);
 } catch (_) {
-  Deno.exit(1);
+  process.exit(1);
 }

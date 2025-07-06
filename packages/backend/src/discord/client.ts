@@ -1,6 +1,6 @@
-import configuration from "../configuration.ts";
+import configuration from "../configuration";
 import { Client, GatewayIntentBits } from "discord.js";
-import { handleCommands } from "./commands/index.ts";
+import { handleCommands } from "./commands/index";
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],

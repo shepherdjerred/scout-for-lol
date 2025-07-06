@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { RankSchema, RanksSchema } from "./rank.ts";
-import { rankToLeaguePoints } from "./leaguePoints.ts";
-import { PlayerConfigEntrySchema } from "./playerConfig.ts";
+import { RankSchema, RanksSchema } from "./rank.js";
+import { rankToLeaguePoints } from "./leaguePoints.js";
+import { PlayerConfigEntrySchema } from "./playerConfig.js";
 import { flatMap, sortBy } from "remeda";
 
 export type Player = z.infer<typeof PlayerSchema>;
@@ -22,12 +22,10 @@ export const PlayerWithSoloQueueRankSchema = PlayerSchema.extend({
 export function filterPlayersWithSoloQueueRank(
   players: Player[],
 ): PlayerWithSoloQueueRank[] {
-  return flatMap(
-    players,
-    (player) =>
-      PlayerWithSoloQueueRankSchema.safeParse(player).success
-        ? [PlayerWithSoloQueueRankSchema.parse(player)]
-        : [],
+  return flatMap(players, (player) =>
+    PlayerWithSoloQueueRankSchema.safeParse(player).success
+      ? [PlayerWithSoloQueueRankSchema.parse(player)]
+      : [],
   );
 }
 
@@ -35,8 +33,7 @@ export function sortPlayersBySoloQueueRank(
   players: Player[],
 ): PlayerWithSoloQueueRank[] {
   const playersWithSoloQueueRank = filterPlayersWithSoloQueueRank(players);
-  return sortBy(
-    playersWithSoloQueueRank,
-    (player) => rankToLeaguePoints(player.ranks.solo),
+  return sortBy(playersWithSoloQueueRank, (player) =>
+    rankToLeaguePoints(player.ranks.solo),
   ).reverse();
 }
