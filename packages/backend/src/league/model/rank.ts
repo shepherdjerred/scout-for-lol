@@ -45,8 +45,8 @@ export function getRank(
 }
 
 export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
-  const response = await api.League.bySummoner(
-    player.league.leagueAccount.summonerId,
+  const response = await api.League.byPUUID(
+    player.league.leagueAccount.puuid,
     mapRegionToEnum(player.league.leagueAccount.region),
   );
 
