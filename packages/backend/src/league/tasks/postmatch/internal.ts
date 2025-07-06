@@ -1,224 +1,206 @@
-import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { z } from "zod";
-import { api } from "../../api/api";
 import {
-  AttachmentBuilder,
-  EmbedBuilder,
-  Message,
-  MessageCreateOptions,
-  MessagePayload,
+  type ChatInputCommandInteraction,
+  InteractionContextType,
+  PermissionFlagsBits,
+  SlashCommandBuilder,
 } from "discord.js";
-import { matchToImage } from "@scout-for-lol/report";
+import { z } from "zod";
 import {
-  ApplicationState,
-  CompletedMatch,
-  type DiscordChannelId,
-  getLaneOpponent,
-  invertTeam,
-  type LeagueSummonerId,
-  LoadingScreenState,
-  parseQueueType,
-  parseTeam,
-  Player,
-  PlayerConfigEntry,
-  type Rank,
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  RegionSchema,
+  RiotIdSchema,
+  toReadableRegion,
 } from "@scout-for-lol/data";
-import { getState, setState } from "../../model/state";
-import { differenceWith, map, pipe } from "remeda";
-import { getOutcome } from "../../model/match";
-import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
-import { mapRegionToEnum } from "../../model/region";
-import { participantToChampion } from "../../model/champion";
+import { api, riotApi } from "../../league/api/api";
+import { mapRegionToEnum } from "../../league/model/region";
+import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
+import { prisma } from "../../database/index";
+import { fromError } from "zod-validation-error";
 
-export async function checkMatch(game: LoadingScreenState) {
+export const subscribeCommand = new SlashCommandBuilder()
+  .setName("subscribe")
+  .setDescription("Subscribe to updates for a League of Legends account")
+  .addChannelOption((option) =>
+    option
+      .setName("channel")
+      .setDescription("The channel to post messages to")
+      .setRequired(true)
+  )
+  .addStringOption((option) =>
+    option
+      .setName("region")
+      .setDescription("The region of the League of Legends account")
+      .addChoices(
+        RegionSchema.options.map((region) => {
+          return { name: toReadableRegion(region), value: region };
+        })
+      )
+      .setRequired(true)
+  )
+  .addStringOption((option) =>
+    option
+      .setName("riot-id")
+      .setDescription(
+        "The Riot ID to subscribe to in the format of <name>#<tag>"
+      )
+      .setRequired(true)
+  )
+  // TODO: differentiate between player and account alias
+  .addStringOption((option) =>
+    option
+      .setName("alias")
+      .setDescription("An alias for the player")
+      // TODO: make this optional
+      .setRequired(true)
+  )
+  .addUserOption((option) =>
+    option.setName("user").setDescription("The Discord user of the player")
+  )
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .setContexts(InteractionContextType.Guild);
+
+export const ArgsSchema = z.object({
+  channel: DiscordChannelIdSchema,
+  region: RegionSchema,
+  riotId: RiotIdSchema,
+  user: DiscordAccountIdSchema.optional(),
+  alias: z.string(),
+  guildId: DiscordGuildIdSchema,
+});
+
+export async function executeSubscribe(
+  interaction: ChatInputCommandInteraction
+) {
+  let args: z.infer<typeof ArgsSchema>;
+
   try {
-    const region = mapRegionToEnum(
-      game.players[0].player.league.leagueAccount.region,
-    );
+    args = ArgsSchema.parse({
+      channel: interaction.options.getChannel("channel")?.id,
+      region: interaction.options.getString("region"),
+      riotId: interaction.options.getString("riot-id"),
+      user: interaction.options.getUser("user")?.id,
+      alias: interaction.options.getString("alias"),
+      guildId: interaction.guildId,
+    });
+  } catch (error) {
+    const validationError = fromError(error);
+    await interaction.reply({
+      content: validationError.toString(),
+      ephemeral: true,
+    });
+    return;
+  }
 
-    const response = await api.MatchV5.get(
-      `${region}_${game.matchId.toString()}`,
-      regionToRegionGroup(region),
+  const { channel, region, riotId, user, alias, guildId } = args;
+
+  let puuid: string;
+  try {
+    const regionGroup = regionToRegionGroupForAccountAPI(
+      mapRegionToEnum(region)
     );
-    return response.response;
-  } catch (e) {
-    const result = z.object({ status: z.number() }).safeParse(e);
-    if (result.success) {
-      if (result.data.status == 404) {
-        // game not done
-        return undefined;
-      }
-      if (result.data.status == 403) {
-        // Not recoverable: log and remove from queue
-        console.error(
-          `403 Forbidden for match ${game.matchId.toString()}, removing from queue.`,
-        );
-        setState({
-          ...getState(),
-          gamesStarted: getState().gamesStarted.filter(
-            (g) => g.matchId !== game.matchId,
-          ),
-        });
-        return undefined;
-      }
+    const account = await riotApi.Account.getByRiotId(
+      riotId.game_name,
+      riotId.tag_line,
+      regionGroup
+    );
+    puuid = account.response.puuid;
+  } catch (error) {
+    await interaction.reply({
+      content: `Error looking up Riot ID: ${error instanceof Error ? error.message : String(error)}`,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  let summonerId: string;
+  try {
+    const leagueAccount = await api.Summoner.getByPUUID(
+      puuid,
+      mapRegionToEnum(region)
+    );
+    summonerId = leagueAccount.response.id;
+  } catch (error) {
+    await interaction.reply({
+      content: `Error looking up summoner ID: ${error instanceof Error ? error.message : String(error)}`,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const now = new Date();
+
+  try {
+    // add a new account
+    const account = await prisma.account.create({
+      data: {
+        alias: alias,
+        summonerId: summonerId,
+        puuid: puuid,
+        region: region,
+        serverId: guildId,
+        creatorDiscordId: interaction.user.id,
+        playerId: {
+          connectOrCreate: {
+            where: {
+              serverId_alias: {
+                serverId: guildId,
+                alias: alias,
+              },
+            },
+            create: {
+              alias: alias,
+              discordId: user ?? null,
+              createdTime: now,
+              updatedTime: now,
+              creatorDiscordId: interaction.user.id,
+              serverId: guildId,
+            },
+          },
+        },
+        createdTime: now,
+        updatedTime: now,
+      },
+    });
+
+    // get the player for the account
+    const player = await prisma.account.findUnique({
+      where: {
+        id: account.id,
+      },
+      include: {
+        playerId: true,
+      },
+    });
+    if (!player) {
+      await interaction.reply({
+        content: "Error finding player for account",
+        ephemeral: true,
+      });
+      return;
     }
-    console.error(e);
-    return undefined;
+
+    // create a new subscription
+    await prisma.subscription.create({
+      data: {
+        channelId: channel,
+        playerId: player.playerId.id,
+        createdTime: now,
+        updatedTime: now,
+        creatorDiscordId: interaction.user.id,
+        serverId: guildId,
+      },
+    });
+
+    await interaction.reply({
+      content: `Successfully subscribed to updates for ${riotId.game_name}#${riotId.tag_line}`,
+      ephemeral: true,
+    });
+  } catch (error) {
+    await interaction.reply({
+      content: `Error creating database records: ${error instanceof Error ? error.message : String(error)}`,
+      ephemeral: true,
+    });
   }
-}
-
-export async function saveMatch(_match: MatchV5DTOs.MatchDto) {
-  // TODO
-}
-
-async function getImage(
-  match: CompletedMatch,
-): Promise<[AttachmentBuilder, EmbedBuilder]> {
-  const image = await matchToImage(match);
-  const attachment = new AttachmentBuilder(image).setName("match.png");
-  if (!attachment.name) {
-    throw new Error("Attachment name is required for embed image");
-  }
-  const embed = {
-    image: {
-      url: `attachment://${attachment.name}`,
-    },
-  };
-  return [attachment, new EmbedBuilder(embed)];
-}
-
-async function createMatchObj(
-  state: LoadingScreenState,
-  match: MatchV5DTOs.MatchDto,
-  getPlayerFn: (playerConfig: PlayerConfigEntry) => Promise<Player>,
-) {
-  // Get teams using backend/model/match.ts helpers
-  const getTeams = (participants: MatchV5DTOs.ParticipantDto[]) => {
-    return {
-      blue: pipe(participants.slice(0, 5), map(participantToChampion)),
-      red: pipe(participants.slice(5, 10), map(participantToChampion)),
-    };
-  };
-  const teams = getTeams(match.info.participants);
-  const queueType = parseQueueType(match.info.queueId);
-
-  // Gather all relevant players
-  const players = await Promise.all(
-    state.players.map(async (playerState) => {
-      // Find the participant in the match by puuid
-      const participant = match.info.participants.find(
-        (p) => p.puuid === playerState.player.league.leagueAccount.puuid,
-      );
-      if (!participant) {
-        throw new Error(
-          `unable to find participant for player ${JSON.stringify(playerState)}, match: ${JSON.stringify(match)}`,
-        );
-      }
-      const fullPlayer = await getPlayerFn(playerState.player);
-      let rankBeforeMatch: Rank | undefined = undefined;
-      let rankAfterMatch: Rank | undefined = undefined;
-      if (state.queue === "solo" || state.queue === "flex") {
-        rankBeforeMatch = playerState.rank;
-        rankAfterMatch = fullPlayer.ranks[state.queue];
-      }
-      const champion = participantToChampion(participant);
-      const team = parseTeam(participant.teamId);
-      if (!team) {
-        throw new Error(
-          `Could not determine team for participant: ${JSON.stringify(participant)}`,
-        );
-      }
-      const enemyTeam = invertTeam(team);
-      return {
-        playerConfig: fullPlayer.config,
-        rankBeforeMatch,
-        rankAfterMatch,
-        wins:
-          state.queue === "solo" || state.queue === "flex"
-            ? fullPlayer.ranks[state.queue]?.wins ?? undefined
-            : undefined,
-        losses:
-          state.queue === "solo" || state.queue === "flex"
-            ? fullPlayer.ranks[state.queue]?.losses ?? undefined
-            : undefined,
-        champion,
-        outcome: getOutcome(participant),
-        team: team,
-        lane: champion.lane,
-        laneOpponent: getLaneOpponent(champion, teams[enemyTeam]),
-      };
-    }),
-  );
-
-  return {
-    queueType,
-    players,
-    durationInSeconds: match.info.gameDuration,
-    teams,
-  };
-}
-
-export async function checkPostMatchInternal(
-  state: ApplicationState,
-  saveFn: (match: MatchV5DTOs.MatchDto) => Promise<void>,
-  checkFn: (
-    game: LoadingScreenState,
-  ) => Promise<MatchV5DTOs.MatchDto | undefined>,
-  sendFn: (
-    message: string | MessagePayload | MessageCreateOptions,
-    channelId: string,
-  ) => Promise<Message<true> | Message<false>>,
-  getPlayerFn: (playerConfig: PlayerConfigEntry) => Promise<Player>,
-  getSubscriptionsFn: (
-    playerIds: LeagueSummonerId[],
-  ) => Promise<{ channel: DiscordChannelId }[]>,
-) {
-  console.log("checking match api");
-  const games = await Promise.all(state.gamesStarted.map(checkFn));
-
-  console.log("removing games in progress");
-  const finishedGames = pipe(
-    state.gamesStarted,
-    (gamesStarted) =>
-      gamesStarted
-        .map((game, index) => [game, games[index]] as const)
-        .filter((pair): pair is [LoadingScreenState, MatchV5DTOs.MatchDto] => pair[1] != undefined),
-  );
-
-  // TODO: send duo queue message
-  console.log("sending messages");
-  await Promise.all(
-    map(finishedGames, async ([state, matchDto]) => {
-      await saveFn(matchDto);
-
-      const matchObj = await createMatchObj(state, matchDto, getPlayerFn);
-
-      const [attachment, embed] = await getImage(matchObj);
-
-      // figure out what channels to send the message to
-      // server, see if they have a player in the game
-      const servers = await getSubscriptionsFn([
-        state.players[0].player.league.leagueAccount.summonerId,
-      ]);
-
-      const promises = servers.map((server) => {
-        return sendFn({ embeds: [embed], files: [attachment] }, server.channel);
-      });
-      await Promise.all(promises);
-
-      console.log("calculating new state");
-      const newState = getState();
-      const newMatches = differenceWith(
-        newState.gamesStarted,
-        map(finishedGames, (game) => game[0]),
-        (left, right) => left.uuid === right.uuid,
-      );
-
-      console.log("saving state files");
-      setState({
-        ...state,
-        gamesStarted: newMatches,
-      });
-    }),
-  );
 }
