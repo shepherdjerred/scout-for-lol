@@ -15,7 +15,7 @@ import {
 } from "@scout-for-lol/data";
 import { api, riotApi } from "../../league/api/api";
 import { mapRegionToEnum } from "../../league/model/region";
-import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
+import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
 import { prisma } from "../../database/index";
 import { fromError } from "zod-validation-error";
 
@@ -26,7 +26,7 @@ export const subscribeCommand = new SlashCommandBuilder()
     option
       .setName("channel")
       .setDescription("The channel to post messages to")
-      .setRequired(true),
+      .setRequired(true)
   )
   .addStringOption((option) =>
     option
@@ -35,17 +35,17 @@ export const subscribeCommand = new SlashCommandBuilder()
       .addChoices(
         RegionSchema.options.map((region) => {
           return { name: toReadableRegion(region), value: region };
-        }),
+        })
       )
-      .setRequired(true),
+      .setRequired(true)
   )
   .addStringOption((option) =>
     option
       .setName("riot-id")
       .setDescription(
-        "The Riot ID to subscribe to in the format of <name>#<tag>",
+        "The Riot ID to subscribe to in the format of <name>#<tag>"
       )
-      .setRequired(true),
+      .setRequired(true)
   )
   // TODO: differentiate between player and account alias
   .addStringOption((option) =>
@@ -53,10 +53,10 @@ export const subscribeCommand = new SlashCommandBuilder()
       .setName("alias")
       .setDescription("An alias for the player")
       // TODO: make this optional
-      .setRequired(true),
+      .setRequired(true)
   )
   .addUserOption((option) =>
-    option.setName("user").setDescription("The Discord user of the player"),
+    option.setName("user").setDescription("The Discord user of the player")
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .setContexts(InteractionContextType.Guild);
@@ -71,7 +71,7 @@ export const ArgsSchema = z.object({
 });
 
 export async function executeSubscribe(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction
 ) {
   let args: z.infer<typeof ArgsSchema>;
 
@@ -97,11 +97,13 @@ export async function executeSubscribe(
 
   let puuid: string;
   try {
-    const regionGroup = regionToRegionGroup(mapRegionToEnum(region));
+    const regionGroup = regionToRegionGroupForAccountAPI(
+      mapRegionToEnum(region)
+    );
     const account = await riotApi.Account.getByRiotId(
       riotId.game_name,
       riotId.tag_line,
-      regionGroup,
+      regionGroup
     );
     puuid = account.response.puuid;
   } catch (error) {
@@ -116,7 +118,7 @@ export async function executeSubscribe(
   try {
     const leagueAccount = await api.Summoner.getByPUUID(
       puuid,
-      mapRegionToEnum(region),
+      mapRegionToEnum(region)
     );
     summonerId = leagueAccount.response.id;
   } catch (error) {
@@ -149,7 +151,7 @@ export async function executeSubscribe(
             },
             create: {
               alias: alias,
-              discordId: user,
+              discordId: user ?? null,
               createdTime: now,
               updatedTime: now,
               creatorDiscordId: interaction.user.id,

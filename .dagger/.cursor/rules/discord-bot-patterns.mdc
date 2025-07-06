@@ -1,0 +1,62 @@
+---
+description: Discord bot development patterns and best practices
+---
+
+# Discord Bot Development Standards
+
+## Command Structure
+- Commands in `packages/backend/src/discord/commands/`
+- Each command exports a `SlashCommandBuilder` and `execute` function
+- Use proper TypeScript interfaces for command interactions
+- Validate all user input with Zod schemas
+
+## Error Handling
+```typescript
+// Always handle Discord API errors gracefully
+try {
+  await interaction.reply({ content: 'Success!' });
+} catch (error) {
+  console.error('Discord API error:', error);
+  if (interaction.replied || interaction.deferred) {
+    await interaction.followUp({ content: 'An error occurred', ephemeral: true });
+  } else {
+    await interaction.reply({ content: 'An error occurred', ephemeral: true });
+  }
+}
+```
+
+## Database Integration
+- Use Prisma for all database operations
+- Validate database inputs with Zod schemas
+- Handle connection errors and timeouts
+- Use proper transactions for multi-step operations
+
+## League of Legends API Integration
+- Use the `twisted` library for Riot API calls
+- Implement proper rate limiting and retry logic
+- Cache API responses appropriately
+- Handle API errors and rate limits gracefully
+
+## Report Generation
+- Use the `@scout-for-lol/report` package for match reports
+- Generate reports as images using `satori` and `@resvg/resvg-js`
+- Optimize image generation performance
+- Handle report generation errors gracefully
+
+## Message Management
+- Use ephemeral responses for error messages
+- Provide clear, user-friendly error messages
+- Use embeds for rich content presentation
+- Handle message length limits appropriately
+
+## Configuration & Environment
+- Use `env-var` for type-safe environment configuration
+- Validate all configuration with Zod schemas
+- Use Dagger secrets for sensitive data in CI/CD
+- Separate development and production configurations
+
+## Performance Considerations
+- Lazy load heavy dependencies (image generation, API clients)
+- Use connection pooling for database connections
+- Implement proper caching strategies
+- Monitor memory usage and clean up resources

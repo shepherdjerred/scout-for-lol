@@ -1,0 +1,44 @@
+---
+globs: *.ts,*.tsx
+---
+
+# TypeScript Code Standards
+
+## Strict Type Safety Rules
+- **NEVER use `any`** - Always define proper types
+- **Avoid type assertions (`as`)** - Use type guards instead
+- **Use unknown for uncertain types** - Validate with Zod before processing
+- **Prefer advanced types** - Mapped types, conditional types, template literals
+- **Exhaustive pattern matching** - Use `ts-pattern` for complex branching
+
+## Validation Patterns
+```typescript
+// Always validate unknown input with Zod
+const result = SomeSchema.safeParse(unknownData);
+if (!result.success) {
+  throw new Error(fromZodError(result.error).toString());
+}
+
+// Use type guards instead of casting
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+```
+
+## Error Handling
+- Use `zod-validation-error` for user-friendly error messages
+- Handle errors at appropriate levels
+- Use Result patterns where appropriate
+- Proper async/await error handling
+
+## Performance & Memory
+- Lazy load heavy dependencies
+- Clean up resources and connections
+- Use proper caching strategies
+- Consider memory implications of data structures
+
+## Dependencies
+- Use `remeda` for functional data transformations
+- Use `ts-pattern` for complex control flow
+- Use `env-var` for type-safe environment configuration
+- Use `date-fns` for date operations

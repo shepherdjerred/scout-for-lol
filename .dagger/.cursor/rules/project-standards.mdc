@@ -1,0 +1,182 @@
+---
+alwaysApply: true
+---
+
+# Scout for LoL Project Standards & Development Guide
+
+## Project Structure
+This is a monorepo using **Bun workspaces** with packages:
+- `packages/backend` - Discord bot backend service
+- `packages/data` - Shared data models and utilities
+- `packages/report` - Report generation components
+- `packages/frontend` - Web frontend (Astro)
+
+## Core Tools & Technologies
+
+### Runtime & Package Manager
+- **Bun** - Primary runtime and package manager
+- **TypeScript** - Strict typing with `noEmit` checks
+- **ESLint** - Code linting with TypeScript rules
+- **Prettier** - Code formatting
+
+### Infrastructure & CI/CD
+- **Dagger** - CI/CD pipelines and containerization
+- **Prisma** - Database ORM and migrations
+- **Docker** - Container deployment
+
+### Application Stack
+- **Discord.js** - Discord bot framework
+- **Zod** - Runtime validation and type safety
+- **React** - UI components (for report generation)
+- **Astro** - Frontend framework
+
+## Development Commands
+
+### Root Level Commands
+```bash
+# Install dependencies across all packages
+bun run install:all
+
+# Type checking across all packages
+bun run typecheck:all
+
+# Linting across all packages
+bun run lint:all
+
+# Formatting across all packages
+bun run format:all
+
+# Testing across all packages
+bun run test:all
+
+# Generate Prisma client and other generated code
+bun run generate
+
+# Clean all node_modules
+bun run clean
+```
+
+### Package-Specific Commands
+```bash
+# Backend development
+cd packages/backend
+bun run dev              # Start with hot reload
+bun run build           # Build for production
+bun run db:generate     # Generate Prisma client
+bun run db:push         # Push schema to database
+bun run db:migrate      # Run migrations
+bun run db:studio       # Open Prisma Studio
+
+# Each package supports: dev, build, test, lint, format, typecheck
+```
+
+## Dagger CI/CD Pipeline
+
+### Discovering Available Targets
+```bash
+# List all available Dagger functions
+dagger functions
+
+# View specific function details
+dagger functions --help
+```
+
+### Main Dagger Targets
+```bash
+# Run comprehensive checks (lint, typecheck, test)
+dagger call check
+
+# Build all packages
+dagger call build --version="1.0.0" --git-sha="abc123"
+
+# Run full CI pipeline (check + build + deploy)
+dagger call ci --version="1.0.0" --git-sha="abc123"
+
+# Deploy to specific stage
+dagger call deploy --version="1.0.0" --stage="beta"
+
+# Package-specific operations
+dagger call check-backend
+dagger call build-backend-image --version="1.0.0" --git-sha="abc123"
+dagger call generate-prisma
+dagger call check-report
+dagger call build-report-for-npm --version="1.0.0"
+dagger call check-data
+```
+
+## Code Quality Standards
+
+### TypeScript Standards
+- **NO `any` types** - Always use proper typing
+- **Avoid type casting** - Use type guards and proper validation instead
+- **Prefer advanced types** - Use mapped types, conditional types, template literals over workarounds
+- **Strict null checks** - Handle undefined/null explicitly
+- **Exhaustive pattern matching** - Use `ts-pattern` for complex branching
+
+### Validation & Data Handling
+- **Zod for all unknown input** - Network requests, user input, environment variables
+- **Runtime validation** - Don't trust external data
+- **Proper error handling** - Use `zod-validation-error` for user-friendly messages
+
+### Code Organization
+- **Functional approach** - Use `remeda` for data transformations
+- **Modular design** - Each package has clear responsibilities
+- **Proper dependency injection** - Avoid global state
+- **Consistent naming** - Use TypeScript naming conventions
+
+## Database & Prisma
+- **Schema-first approach** - Define models in `schema.prisma`
+- **Migration strategy** - Use `prisma migrate` for production
+- **Type safety** - Generated client provides full type safety
+- **Connection management** - Proper connection pooling and cleanup
+
+## Testing Strategy
+- **Unit tests** - Test individual functions and components
+- **Integration tests** - Test package interactions
+- **Snapshot testing** - For report generation output
+- **Type testing** - Ensure type safety in complex scenarios
+
+## Development Best Practices
+
+### Error Handling
+```typescript
+// Use Result patterns or proper error boundaries
+// Validate with Zod before processing
+const result = UserSchema.safeParse(unknownInput);
+if (!result.success) {
+  // Handle validation errors properly
+}
+```
+
+### Type Safety
+```typescript
+// Instead of casting, use proper type guards
+function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+// Use advanced types for complex scenarios
+type DeepReadonly<T> = {
+  readonly [P in keyof T]: T[P] extends object ? DeepReadonly<T[P]> : T[P];
+};
+```
+
+### Async Patterns
+```typescript
+// Use proper async/await patterns
+// Handle errors at appropriate levels
+// Use proper cancellation for long-running operations
+```
+
+## Environment & Configuration
+- **Environment variables** - Use `env-var` for type-safe config
+- **Secrets management** - Use Dagger secrets for sensitive data
+- **Configuration validation** - Validate all config with Zod schemas
+
+## Performance Considerations
+- **Lazy loading** - Load heavy dependencies only when needed
+- **Proper caching** - Cache expensive operations appropriately
+- **Memory management** - Clean up resources and connections
+- **Bundle optimization** - Use proper bundling strategies
+
+This project maintains high standards for code quality, type safety, and maintainability. Always prefer explicit, type-safe approaches over quick hacks or workarounds.
