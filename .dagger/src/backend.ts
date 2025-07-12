@@ -113,8 +113,15 @@ export async function smokeTestBackendImage(
 ): Promise<string> {
   const image = buildBackendImage(workspaceSource, version, gitSha);
 
+  // Copy example.env to .env to provide required environment variables
+  const containerWithEnv = image
+    .withFile(
+      ".env",
+      workspaceSource.directory("packages/backend").file("example.env")
+    );
+
   // Run the container with a timeout and capture output using combined stdout/stderr
-  const container = image.withExec([
+  const container = containerWithEnv.withExec([
     "sh",
     "-c",
     "timeout 30s bun run src/database/migrate.ts && timeout 30s bun run src/index.ts 2>&1 || true"
