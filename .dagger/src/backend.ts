@@ -100,6 +100,75 @@ export function buildBackendImage(
 }
 
 /**
+ * Smoke test the backend Docker image
+ * @param workspaceSource The full workspace source directory
+ * @param version The version tag
+ * @param gitSha The git SHA
+ * @returns Test result with logs
+ */
+export async function smokeTestBackendImage(
+  workspaceSource: Directory,
+  version: string,
+  gitSha: string
+): Promise<string> {
+  const image = buildBackendImage(workspaceSource, version, gitSha);
+
+  // Run the container with a timeout and capture output using combined stdout/stderr
+  const container = image.withExec([
+    "sh",
+    "-c",
+    "timeout 30s bun run src/database/migrate.ts && timeout 30s bun run src/index.ts 2>&1 || true"
+  ]);
+
+  let output = "";
+
+  try {
+    output = await container.stdout();
+  } catch (error) {
+    // Try to get stderr if stdout fails
+    try {
+      output = await container.stderr();
+    } catch (stderrError) {
+      return `❌ Smoke test failed: Could not capture container output. Error: ${error}`;
+    }
+  }
+
+  // Check for expected success patterns
+  const expectedSuccessPatterns = [
+    "migrations have been successfully applied",
+    "Started refreshing",
+    "Logging into Discord",
+  ];
+
+  const expectedFailurePatterns = [
+    "401: Unauthorized",
+    "An invalid token was provided",
+    "TokenInvalid",
+  ];
+
+  const hasExpectedSuccess = expectedSuccessPatterns.some(pattern =>
+    output.includes(pattern)
+  );
+
+  const hasExpectedFailure = expectedFailurePatterns.some(pattern =>
+    output.includes(pattern)
+  );
+
+  if (hasExpectedSuccess && hasExpectedFailure) {
+    const foundSuccess = expectedSuccessPatterns.filter(p => output.includes(p));
+    const foundFailure = expectedFailurePatterns.filter(p => output.includes(p));
+
+    return `✅ Smoke test passed: Container started successfully and failed as expected due to auth issues.\n\nKey success indicators found:\n${foundSuccess.map(p => `- ${p}`).join('\n')}\n\nExpected failures found:\n${foundFailure.map(p => `- ${p}`).join('\n')}`;
+  } else if (hasExpectedSuccess && !hasExpectedFailure) {
+    return `⚠️ Smoke test partial: Container started successfully but didn't fail as expected.\nOutput:\n${output}`;
+  } else if (!hasExpectedSuccess && hasExpectedFailure) {
+    return `❌ Smoke test failed: Container failed but didn't show expected startup success.\nOutput:\n${output}`;
+  } else {
+    return `❌ Smoke test failed: Container behavior doesn't match expectations.\nOutput:\n${output}`;
+  }
+}
+
+/**
  * Publish the backend Docker image
  * @param workspaceSource The full workspace source directory
  * @param version The version tag

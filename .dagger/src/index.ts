@@ -10,6 +10,7 @@ import {
   checkBackend,
   buildBackendImage,
   publishBackendImage,
+  smokeTestBackendImage,
 } from "./backend";
 import { checkReport, buildReportForNpm, publishReportToNpm } from "./report";
 import { getDataSource, checkData } from "./data";
@@ -162,6 +163,22 @@ export class ScoutForLol {
         ]);
       }
     );
+
+    // Smoke test the backend image
+    await withTiming("backend image smoke test", async () => {
+      logWithTimestamp("🧪 Running smoke test on backend image...");
+      const smokeTestResult = await smokeTestBackendImage(
+        source,
+        version,
+        gitSha
+      );
+      logWithTimestamp(`Smoke test result: ${smokeTestResult}`);
+
+      // If smoke test indicates failure, throw an error
+      if (smokeTestResult.startsWith("❌")) {
+        throw new Error(`Backend image smoke test failed: ${smokeTestResult}`);
+      }
+    });
 
     logWithTimestamp("🎉 All packages built successfully");
     return "All packages built successfully";
@@ -586,6 +603,44 @@ export class ScoutForLol {
     logWithTimestamp(
       `✅ Backend Docker image published successfully: ${result.join(", ")}`
     );
+    return result;
+  }
+
+  /**
+   * Smoke test the backend Docker image
+   * @param source The workspace source directory
+   * @param version The version to test
+   * @param gitSha The git SHA
+   * @returns Test result with analysis
+   */
+  @func()
+  async smokeTestBackendImage(
+    @argument({
+      ignore: [
+        "node_modules",
+        "dist",
+        "build",
+        ".cache",
+        "*.log",
+        ".env*",
+        "!.env.example",
+        ".dagger",
+      ],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+    @argument() gitSha: string
+  ): Promise<string> {
+    logWithTimestamp(
+      `🧪 Smoke testing backend Docker image for version ${version} (${gitSha})`
+    );
+
+    const result = await withTiming("backend Docker image smoke test", () =>
+      smokeTestBackendImage(source, version, gitSha)
+    );
+
+    logWithTimestamp("✅ Backend Docker image smoke test completed");
     return result;
   }
 
