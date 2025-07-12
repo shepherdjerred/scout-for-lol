@@ -7,7 +7,6 @@ import {
   Container,
 } from "@dagger.io/dagger";
 import {
-  generatePrismaFromContainer,
   checkBackend,
   buildBackendImage,
   publishBackendImage,
@@ -412,7 +411,13 @@ export class ScoutForLol {
         .withWorkdir("/workspace")
         .withExec(["bun", "install", "--frozen-lockfile"]);
 
-      return Promise.resolve(generatePrismaFromContainer(workspaceContainer));
+      return Promise.resolve(
+        workspaceContainer
+          .withWorkdir("/workspace/packages/backend")
+          .withExec(["bun", "run", "src/database/generate.ts"])
+          .withExec(["rm", "-f", "generated/client/runtime/edge-esm.cjs"])
+          .directory("/workspace/packages/backend/generated")
+      );
     });
 
     logWithTimestamp("✅ Prisma client generated successfully");
@@ -498,10 +503,7 @@ export class ScoutForLol {
 
   /**
    * Build the backend Docker image
-   * @param source The backend source directory
-   * @param _dataSource The data source directory
-   * @param _reportSource The report source directory
-   * @param _frontendSource The frontend source directory
+   * @param source The workspace source directory
    * @param version The version to build
    * @param gitSha The git SHA
    * @returns The built container
@@ -519,51 +521,9 @@ export class ScoutForLol {
         "!.env.example",
         ".dagger",
       ],
-      defaultPath: "packages/backend",
+      defaultPath: ".",
     })
     source: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-      ],
-      defaultPath: "packages/data",
-    })
-    _dataSource: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-      ],
-      defaultPath: "packages/report",
-    })
-    _reportSource: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-      ],
-      defaultPath: "packages/frontend",
-    })
-    _frontendSource: Directory,
     @argument() version: string,
     @argument() gitSha: string
   ): Promise<Container> {
@@ -581,10 +541,7 @@ export class ScoutForLol {
 
   /**
    * Publish the backend Docker image
-   * @param source The backend source directory
-   * @param _dataSource The data source directory
-   * @param _reportSource The report source directory
-   * @param _frontendSource The frontend source directory
+   * @param source The workspace source directory
    * @param version The version to publish
    * @param gitSha The git SHA
    * @param registryUsername Optional registry username for authentication
@@ -604,51 +561,9 @@ export class ScoutForLol {
         "!.env.example",
         ".dagger",
       ],
-      defaultPath: "packages/backend",
+      defaultPath: ".",
     })
     source: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-      ],
-      defaultPath: "packages/data",
-    })
-    _dataSource: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-      ],
-      defaultPath: "packages/report",
-    })
-    _reportSource: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-      ],
-      defaultPath: "packages/frontend",
-    })
-    _frontendSource: Directory,
     @argument() version: string,
     @argument() gitSha: string,
     registryUsername?: string,
