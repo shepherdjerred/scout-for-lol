@@ -8,6 +8,7 @@ There seems to be a fair bit of coupling. Examples:
 
 ## Misc
 
+- [ ] Strict TS config for Dagger
 - [x] Fix KDA ratio
 - [x] Fix image width
 - [x] Show CS

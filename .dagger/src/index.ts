@@ -61,6 +61,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: ".",
     })
@@ -120,6 +121,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: ".",
     })
@@ -207,6 +209,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: ".",
     })
@@ -288,6 +291,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: ".",
     })
@@ -410,6 +414,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/backend",
     })
@@ -461,6 +466,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/backend",
     })
@@ -475,6 +481,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/data",
     })
@@ -489,6 +496,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/report",
     })
@@ -503,6 +511,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/frontend",
     })
@@ -537,6 +546,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: ".",
     })
@@ -577,6 +587,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: ".",
     })
@@ -625,6 +636,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: ".",
     })
@@ -662,6 +674,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/report",
     })
@@ -676,6 +689,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/data",
     })
@@ -710,6 +724,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/report",
     })
@@ -724,6 +739,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/data",
     })
@@ -762,6 +778,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/report",
     })
@@ -776,6 +793,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/data",
     })
@@ -812,6 +830,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/data",
     })
