@@ -449,9 +449,6 @@ export class ScoutForLol {
   /**
    * Check the backend package
    * @param source The backend source directory
-   * @param _dataSource The data source directory
-   * @param _reportSource The report source directory
-   * @param _frontendSource The frontend source directory
    * @returns A message indicating completion
    */
   @func()
@@ -470,52 +467,7 @@ export class ScoutForLol {
       ],
       defaultPath: "packages/backend",
     })
-    source: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-        "generated",
-      ],
-      defaultPath: "packages/data",
-    })
-    _dataSource: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-        "generated",
-      ],
-      defaultPath: "packages/report",
-    })
-    _reportSource: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-        "generated",
-      ],
-      defaultPath: "packages/frontend",
-    })
-    _frontendSource: Directory
+    source: Directory
   ): Promise<string> {
     logWithTimestamp("🔍 Starting backend package check");
 

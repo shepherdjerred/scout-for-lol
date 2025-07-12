@@ -114,17 +114,16 @@ export async function smokeTestBackendImage(
   const image = buildBackendImage(workspaceSource, version, gitSha);
 
   // Copy example.env to .env to provide required environment variables
-  const containerWithEnv = image
-    .withFile(
-      ".env",
-      workspaceSource.directory("packages/backend").file("example.env")
-    );
+  const containerWithEnv = image.withFile(
+    ".env",
+    workspaceSource.directory("packages/backend").file("example.env")
+  );
 
   // Run the container with a timeout and capture output using combined stdout/stderr
   const container = containerWithEnv.withExec([
     "sh",
     "-c",
-    "timeout 30s bun run src/database/migrate.ts && timeout 30s bun run src/index.ts 2>&1 || true"
+    "timeout 30s bun run src/database/migrate.ts && timeout 30s bun run src/index.ts 2>&1 || true",
   ]);
 
   let output = "";
@@ -135,8 +134,8 @@ export async function smokeTestBackendImage(
     // Try to get stderr if stdout fails
     try {
       output = await container.stderr();
-    } catch (stderrError) {
-      return `❌ Smoke test failed: Could not capture container output. Error: ${error}`;
+    } catch (_stderrError) {
+      return `❌ Smoke test failed: Could not capture container output. Error: ${String(error)}`;
     }
   }
 
@@ -153,19 +152,23 @@ export async function smokeTestBackendImage(
     "TokenInvalid",
   ];
 
-  const hasExpectedSuccess = expectedSuccessPatterns.some(pattern =>
+  const hasExpectedSuccess = expectedSuccessPatterns.some((pattern) =>
     output.includes(pattern)
   );
 
-  const hasExpectedFailure = expectedFailurePatterns.some(pattern =>
+  const hasExpectedFailure = expectedFailurePatterns.some((pattern) =>
     output.includes(pattern)
   );
 
   if (hasExpectedSuccess && hasExpectedFailure) {
-    const foundSuccess = expectedSuccessPatterns.filter(p => output.includes(p));
-    const foundFailure = expectedFailurePatterns.filter(p => output.includes(p));
+    const foundSuccess = expectedSuccessPatterns.filter((p) =>
+      output.includes(p)
+    );
+    const foundFailure = expectedFailurePatterns.filter((p) =>
+      output.includes(p)
+    );
 
-    return `✅ Smoke test passed: Container started successfully and failed as expected due to auth issues.\n\nKey success indicators found:\n${foundSuccess.map(p => `- ${p}`).join('\n')}\n\nExpected failures found:\n${foundFailure.map(p => `- ${p}`).join('\n')}`;
+    return `✅ Smoke test passed: Container started successfully and failed as expected due to auth issues.\n\nKey success indicators found:\n${foundSuccess.map((p) => `- ${p}`).join("\n")}\n\nExpected failures found:\n${foundFailure.map((p) => `- ${p}`).join("\n")}`;
   } else if (hasExpectedSuccess && !hasExpectedFailure) {
     return `⚠️ Smoke test partial: Container started successfully but didn't fail as expected.\nOutput:\n${output}`;
   } else if (!hasExpectedSuccess && hasExpectedFailure) {
