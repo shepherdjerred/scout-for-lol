@@ -1,5 +1,5 @@
-import { Directory, Container, Secret, File } from "@dagger.io/dagger";
-import { getBunContainer, getBunNodeContainer } from "./base";
+import { Directory, Container, Secret } from "@dagger.io/dagger";
+import { getBunContainer } from "./base";
 
 /**
  * Generate Prisma client for the backend (without dependencies)

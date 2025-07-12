@@ -67,16 +67,18 @@ jobs:
         env:
           GHCR_USERNAME: ${{ github.actor }}
           GHCR_PASSWORD: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
           _EXPERIMENTAL_DAGGER_RUNNER_HOST: kube-pod://${{ env.DAGGER_ENGINE_POD_NAME }}?namespace=dagger
         run: |
           dagger call ci \
             --source=. \
-            --version="1.0.0-${{ github.run_number }}" \
+            --version="1.0.${{ github.run_number }}" \
             --git-sha="${{ github.sha }}" \
             --ghcr-username="$GHCR_USERNAME" \
             --ghcr-password=env://GHCR_PASSWORD \
-            --env="prod"
+            --env="prod" \
+            --gh-token=env://GITHUB_TOKEN
 
       - name: Run Dagger CI pipeline (dev)
         if: github.event_name == 'pull_request' || github.ref != 'refs/heads/main'

@@ -12,12 +12,7 @@ import {
   buildBackendImage,
   publishBackendImage,
 } from "./backend";
-import {
-  getReportSource,
-  checkReport,
-  buildReportForNpm,
-  publishReportToNpm,
-} from "./report";
+import { checkReport, buildReportForNpm, publishReportToNpm } from "./report";
 import { getDataSource, checkData } from "./data";
 import { getGitHubContainer, getBunNodeContainer } from "./base";
 
@@ -73,10 +68,8 @@ export class ScoutForLol {
   ): Promise<string> {
     logWithTimestamp("🔍 Starting comprehensive check process");
 
-    const backendSource = source.directory("packages/backend");
     const reportSource = source.directory("packages/report");
     const dataSource = source.directory("packages/data");
-    const frontendSource = source.directory("packages/frontend");
 
     logWithTimestamp("📁 Prepared source directories for all packages");
 
@@ -92,11 +85,7 @@ export class ScoutForLol {
         logWithTimestamp("🔄 Running package checks in parallel...");
         return Promise.all([
           withTiming("backend check", () =>
-            Promise.resolve(
-              checkBackend(
-                source
-              )
-            )
+            Promise.resolve(checkBackend(source))
           ),
           withTiming("report check", () =>
             Promise.resolve(checkReport(reportSource, dataSourceDir))
@@ -142,10 +131,8 @@ export class ScoutForLol {
       `🔨 Starting build process for version ${version} (${gitSha})`
     );
 
-    const backendSource = source.directory("packages/backend");
     const reportSource = source.directory("packages/report");
     const dataSource = source.directory("packages/data");
-    const frontendSource = source.directory("packages/frontend");
 
     logWithTimestamp("📁 Prepared source directories for build");
 
@@ -163,11 +150,7 @@ export class ScoutForLol {
         );
         return Promise.all([
           withTiming("backend Docker image build", async () => {
-            const image = buildBackendImage(
-              source,
-              version,
-              gitSha
-            );
+            const image = buildBackendImage(source, version, gitSha);
             // Force the container to be evaluated by getting its ID
             await image.id();
             return image;
@@ -193,6 +176,7 @@ export class ScoutForLol {
    * @param ghcrUsername The GitHub Container Registry username (optional)
    * @param ghcrPassword The GitHub Container Registry password/token (optional)
    * @param env The environment (prod/dev) - determines if images are published
+   * @param ghToken The GitHub token for creating deployment PRs (optional)
    * @returns A message indicating completion
    */
   @func()
@@ -215,10 +199,11 @@ export class ScoutForLol {
     @argument() gitSha: string,
     ghcrUsername?: string,
     ghcrPassword?: Secret,
-    env?: string
+    env?: string,
+    ghToken?: Secret
   ): Promise<string> {
     logWithTimestamp(
-      `🚀 Starting CI pipeline for version ${version} (${gitSha}) in ${env || "dev"} environment`
+      `🚀 Starting CI pipeline for version ${version} (${gitSha}) in ${env ?? "dev"} environment`
     );
 
     // First run checks
@@ -239,11 +224,6 @@ export class ScoutForLol {
       await withTiming("CI publish phase", async () => {
         logWithTimestamp("📦 Phase 3: Publishing Docker image to registry...");
 
-        const backendSource = source.directory("packages/backend");
-        const reportSource = source.directory("packages/report");
-        const dataSource = source.directory("packages/data");
-        const frontendSource = source.directory("packages/frontend");
-
         // Login to registry and publish
         const publishedRefs = await publishBackendImage(
           source,
@@ -256,13 +236,16 @@ export class ScoutForLol {
         logWithTimestamp(`✅ Images published: ${publishedRefs.join(", ")}`);
       });
     } else {
-      logWithTimestamp("⏭️ Phase 3: Skipping image publishing (no credentials or not prod environment)");
+      logWithTimestamp(
+        "⏭️ Phase 3: Skipping image publishing (no credentials or not prod environment)"
+      );
     }
 
-    // Finally deploy to beta
+    // Deploy to beta - always deploy, but only create PR if GitHub token is provided
+    const deployStage = env === "prod" ? "beta" : "dev";
     await withTiming("CI deploy phase", () => {
-      logWithTimestamp("🚀 Phase 4: Deploying to beta...");
-      return this.deploy(source, version, "beta");
+      logWithTimestamp(`🚀 Phase 4: Deploying to ${deployStage}...`);
+      return this.deploy(source, version, deployStage, ghToken);
     });
 
     logWithTimestamp("🎉 CI pipeline completed successfully");
@@ -439,8 +422,9 @@ export class ScoutForLol {
   /**
    * Check the backend package
    * @param source The backend source directory
-   * @param dataSource The data source directory
-   * @param reportSource The report source directory
+   * @param _dataSource The data source directory
+   * @param _reportSource The report source directory
+   * @param _frontendSource The frontend source directory
    * @returns A message indicating completion
    */
   @func()
@@ -472,7 +456,7 @@ export class ScoutForLol {
       ],
       defaultPath: "packages/data",
     })
-    dataSource: Directory,
+    _dataSource: Directory,
     @argument({
       ignore: [
         "node_modules",
@@ -486,7 +470,7 @@ export class ScoutForLol {
       ],
       defaultPath: "packages/report",
     })
-    reportSource: Directory,
+    _reportSource: Directory,
     @argument({
       ignore: [
         "node_modules",
@@ -500,16 +484,12 @@ export class ScoutForLol {
       ],
       defaultPath: "packages/frontend",
     })
-    frontendSource: Directory
+    _frontendSource: Directory
   ): Promise<string> {
     logWithTimestamp("🔍 Starting backend package check");
 
     await withTiming("backend package check", () =>
-      Promise.resolve(
-        checkBackend(
-          source
-        )
-      )
+      Promise.resolve(checkBackend(source))
     );
 
     logWithTimestamp("✅ Backend check completed successfully");
@@ -519,8 +499,9 @@ export class ScoutForLol {
   /**
    * Build the backend Docker image
    * @param source The backend source directory
-   * @param dataSource The data source directory
-   * @param reportSource The report source directory
+   * @param _dataSource The data source directory
+   * @param _reportSource The report source directory
+   * @param _frontendSource The frontend source directory
    * @param version The version to build
    * @param gitSha The git SHA
    * @returns The built container
@@ -554,7 +535,7 @@ export class ScoutForLol {
       ],
       defaultPath: "packages/data",
     })
-    dataSource: Directory,
+    _dataSource: Directory,
     @argument({
       ignore: [
         "node_modules",
@@ -568,7 +549,7 @@ export class ScoutForLol {
       ],
       defaultPath: "packages/report",
     })
-    reportSource: Directory,
+    _reportSource: Directory,
     @argument({
       ignore: [
         "node_modules",
@@ -582,7 +563,7 @@ export class ScoutForLol {
       ],
       defaultPath: "packages/frontend",
     })
-    frontendSource: Directory,
+    _frontendSource: Directory,
     @argument() version: string,
     @argument() gitSha: string
   ): Promise<Container> {
@@ -591,13 +572,7 @@ export class ScoutForLol {
     );
 
     const result = await withTiming("backend Docker image build", () =>
-      Promise.resolve(
-        buildBackendImage(
-          source,
-          version,
-          gitSha
-        )
-      )
+      Promise.resolve(buildBackendImage(source, version, gitSha))
     );
 
     logWithTimestamp("✅ Backend Docker image built successfully");
@@ -607,8 +582,9 @@ export class ScoutForLol {
   /**
    * Publish the backend Docker image
    * @param source The backend source directory
-   * @param dataSource The data source directory
-   * @param reportSource The report source directory
+   * @param _dataSource The data source directory
+   * @param _reportSource The report source directory
+   * @param _frontendSource The frontend source directory
    * @param version The version to publish
    * @param gitSha The git SHA
    * @param registryUsername Optional registry username for authentication
@@ -644,7 +620,7 @@ export class ScoutForLol {
       ],
       defaultPath: "packages/data",
     })
-    dataSource: Directory,
+    _dataSource: Directory,
     @argument({
       ignore: [
         "node_modules",
@@ -658,7 +634,7 @@ export class ScoutForLol {
       ],
       defaultPath: "packages/report",
     })
-    reportSource: Directory,
+    _reportSource: Directory,
     @argument({
       ignore: [
         "node_modules",
@@ -672,7 +648,7 @@ export class ScoutForLol {
       ],
       defaultPath: "packages/frontend",
     })
-    frontendSource: Directory,
+    _frontendSource: Directory,
     @argument() version: string,
     @argument() gitSha: string,
     registryUsername?: string,
