@@ -324,6 +324,7 @@ export class ScoutForLol {
           ])
           .withExec(["git", "fetch", "--depth=2"])
           .withExec(["git", "checkout", "main"])
+          .withExec(["git", "pull", "origin", "main"])
       );
     });
 
