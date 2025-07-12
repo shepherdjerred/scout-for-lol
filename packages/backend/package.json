@@ -43,8 +43,8 @@
   "devDependencies": {
     "@types/node": "^24.0.0",
     "@types/uuid": "^10.0.0",
-    "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "bun-types": "latest",
     "eslint": "^8.0.0",
     "prettier": "^3.0.0",
