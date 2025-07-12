@@ -8,7 +8,7 @@ There seems to be a fair bit of coupling. Examples:
 
 ## Misc
 
-- [ ] Strict TS config for Dagger
+- [x] Strict TS config for Dagger
 - [x] Fix KDA ratio
 - [x] Fix image width
 - [x] Show CS
@@ -16,6 +16,8 @@ There seems to be a fair bit of coupling. Examples:
 - [x] Better rank support, show message for placements
 - [x] Better duo/flex squeue support
 - [x] Remove use of deprecated flags (--unstable)
+- [ ] Allow a user to be in multiple games at once (e.g. Arena games)
+- [ ] Allow Players to have multiple Accounts, e.g. maybe do a lookup on Account based on alias and append an Account?
 
 ## Bugs
 

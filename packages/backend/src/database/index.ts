@@ -5,8 +5,7 @@ import {
   DiscordChannelIdSchema,
   type LeagueAccount,
   LeaguePuuidSchema,
-  type LeagueSummonerId,
-  LeagueSummonerIdSchema,
+  type LeaguePuuid,
   type PlayerConfig,
   type PlayerConfigEntry,
   RegionSchema,
@@ -16,13 +15,13 @@ import { unique } from "remeda";
 export const prisma = new PrismaClient();
 
 export async function getChannelsSubscribedToPlayers(
-  summonerIds: LeagueSummonerId[],
+  puuids: LeaguePuuid[],
 ): Promise<{ channel: DiscordChannelId }[]> {
   // the accounts that are subscribed to the players
   const accounts = await prisma.account.findMany({
     where: {
-      summonerId: {
-        in: summonerIds,
+      puuid: {
+        in: puuids,
       },
     },
     include: {
@@ -66,16 +65,13 @@ export async function getAccounts(): Promise<PlayerConfig> {
 }
 
 function mapToAccount({
-  summonerId,
   puuid,
   region,
 }: {
-  summonerId: string;
   puuid: string;
   region: string;
 }): LeagueAccount {
   return {
-    summonerId: LeagueSummonerIdSchema.parse(summonerId),
     puuid: LeaguePuuidSchema.parse(puuid),
     region: RegionSchema.parse(region),
   };

@@ -79,7 +79,6 @@ export const RiotIdSchema = z
 
 export type LeagueAccount = z.infer<typeof LeagueAccountSchema>;
 export const LeagueAccountSchema = z.strictObject({
-  summonerId: LeagueSummonerIdSchema,
   puuid: LeaguePuuidSchema,
   region: RegionSchema,
 });

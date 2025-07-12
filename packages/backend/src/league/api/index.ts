@@ -42,7 +42,7 @@ export function findParticipant(
     participants,
     filter(
       (participant) =>
-        participant.summonerId === player.league.leagueAccount.summonerId,
+        participant.puuid === player.league.leagueAccount.puuid,
     ),
     find(() => true),
   );

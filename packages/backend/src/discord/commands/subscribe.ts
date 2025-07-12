@@ -13,7 +13,7 @@ import {
   RiotIdSchema,
   toReadableRegion,
 } from "@scout-for-lol/data";
-import { api, riotApi } from "../../league/api/api";
+import { riotApi } from "../../league/api/api";
 import { mapRegionToEnum } from "../../league/model/region";
 import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
 import { prisma } from "../../database/index";
@@ -114,20 +114,7 @@ export async function executeSubscribe(
     return;
   }
 
-  let summonerId: string;
-  try {
-    const leagueAccount = await api.Summoner.getByPUUID(
-      puuid,
-      mapRegionToEnum(region)
-    );
-    summonerId = leagueAccount.response.id;
-  } catch (error) {
-    await interaction.reply({
-      content: `Error looking up summoner ID: ${error instanceof Error ? error.message : String(error)}`,
-      ephemeral: true,
-    });
-    return;
-  }
+
 
   const now = new Date();
 
@@ -136,7 +123,6 @@ export async function executeSubscribe(
     const account = await prisma.account.create({
       data: {
         alias: alias,
-        summonerId: summonerId,
         puuid: puuid,
         region: region,
         serverId: guildId,

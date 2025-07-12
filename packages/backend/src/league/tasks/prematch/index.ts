@@ -95,7 +95,7 @@ export async function checkPreMatch() {
       // figure out what channels to send the message to
       // server, see if they have a player in the game
       const servers = await getChannelsSubscribedToPlayers(
-        players.map((player) => player.league.leagueAccount.summonerId),
+        players.map((player) => player.league.leagueAccount.puuid),
       );
       // Deduplicate by channel (string ID) using Remeda uniqueBy
       const uniqueChannels = uniqueBy(servers, (server) => server.channel);

@@ -15,7 +15,7 @@ import {
   type DiscordChannelId,
   getLaneOpponent,
   invertTeam,
-  type LeagueSummonerId,
+  type LeaguePuuid,
   LoadingScreenState,
   parseQueueType,
   parseTeam,
@@ -170,7 +170,7 @@ export async function checkPostMatchInternal(
   ) => Promise<Message<true> | Message<false>>,
   getPlayerFn: (playerConfig: PlayerConfigEntry) => Promise<Player>,
   getSubscriptionsFn: (
-    playerIds: LeagueSummonerId[],
+    playerIds: LeaguePuuid[],
   ) => Promise<{ channel: DiscordChannelId }[]>,
 ) {
   console.log("checking match api");
@@ -203,7 +203,7 @@ export async function checkPostMatchInternal(
       // figure out what channels to send the message to
       // server, see if they have a player in the game
       const servers = await getSubscriptionsFn([
-        state.players[0].player.league.leagueAccount.summonerId,
+        state.players[0].player.league.leagueAccount.puuid,
       ]);
 
       const promises = servers.map((server) => {
