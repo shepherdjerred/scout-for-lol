@@ -317,7 +317,7 @@ export class ScoutForLol {
             "sed",
             "-i",
             `s/"shepherdjerred\\/scout-for-lol\\/${stage}": ".*"/"shepherdjerred\\/scout-for-lol\\/${stage}": "${version}"/`,
-            "cdk8s/src/versions.ts",
+            "src/cdk8s/src/versions.ts",
           ])
           .withExec(["git", "add", "."])
           .withExec(["git", "checkout", "-b", `scout/${version}`])
