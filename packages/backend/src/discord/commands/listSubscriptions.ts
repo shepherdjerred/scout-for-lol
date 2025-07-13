@@ -41,9 +41,7 @@ export async function executeListSubscriptions(
   const subscriptionList = subscriptions
     .map((sub) => {
       const player = sub.player;
-      return `${(player.alias || player.discordId) ?? "Unknown"} (Summoner IDs: ${player.accounts
-        .map((val) => val.summonerId)
-        .join(", ")})`;
+      return `${(player.alias || player.discordId) ?? "Unknown"} (${player.accounts.length.toString()} account${player.accounts.length === 1 ? "" : "s"})`;
     })
     .join("\n");
 

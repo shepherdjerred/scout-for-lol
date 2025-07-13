@@ -12,7 +12,6 @@ import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   LeaguePuuidSchema,
-  LeagueSummonerIdSchema,
 } from "@scout-for-lol/data";
 
 const testdataPath = new URL("testdata/match.json", import.meta.url);
@@ -33,7 +32,6 @@ test("postmatch", async () => {
                   puuid: LeaguePuuidSchema.parse(
                     "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
                   ),
-                  summonerId: LeagueSummonerIdSchema.parse("id"),
                   region: "AMERICA_NORTH",
                 },
               },
@@ -71,7 +69,6 @@ test("postmatch", async () => {
             puuid: LeaguePuuidSchema.parse(
               "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
             ),
-            summonerId: LeagueSummonerIdSchema.parse("id"),
             region: "AMERICA_NORTH",
           },
         },

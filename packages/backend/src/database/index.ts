@@ -5,77 +5,116 @@ import {
   DiscordChannelIdSchema,
   type LeagueAccount,
   LeaguePuuidSchema,
-  type LeagueSummonerId,
-  LeagueSummonerIdSchema,
+  type LeaguePuuid,
   type PlayerConfig,
   type PlayerConfigEntry,
   RegionSchema,
 } from "@scout-for-lol/data";
 import { unique } from "remeda";
 
+console.log("🗄️  Initializing Prisma database client");
 export const prisma = new PrismaClient();
 
+console.log("✅ Database client initialized");
+
 export async function getChannelsSubscribedToPlayers(
-  summonerIds: LeagueSummonerId[],
+  puuids: LeaguePuuid[]
 ): Promise<{ channel: DiscordChannelId }[]> {
-  // the accounts that are subscribed to the players
-  const accounts = await prisma.account.findMany({
-    where: {
-      summonerId: {
-        in: summonerIds,
-      },
-    },
-    include: {
-      playerId: {
-        include: {
-          subscriptions: true,
+  console.log(
+    `🔍 Fetching channels subscribed to ${puuids.length.toString()} players`
+  );
+  console.log(`📋 PUUIDs: ${puuids.join(", ")}`);
+
+  try {
+    const startTime = Date.now();
+
+    // the accounts that are subscribed to the players
+    const accounts = await prisma.account.findMany({
+      where: {
+        puuid: {
+          in: puuids,
         },
       },
-    },
-  });
+      include: {
+        playerId: {
+          include: {
+            subscriptions: true,
+          },
+        },
+      },
+    });
 
-  return unique(
-    accounts.flatMap((account) =>
-      account.playerId.subscriptions.map((subscription) => ({
-        channel: DiscordChannelIdSchema.parse(subscription.channelId),
-      })),
-    ),
-  );
+    const queryTime = Date.now() - startTime;
+    console.log(
+      `📊 Found ${accounts.length.toString()} accounts in ${queryTime.toString()}ms`
+    );
+
+    const result = unique(
+      accounts.flatMap((account) =>
+        account.playerId.subscriptions.map((subscription) => ({
+          channel: DiscordChannelIdSchema.parse(subscription.channelId),
+        }))
+      )
+    );
+
+    console.log(`📺 Returning ${result.length.toString()} unique channels`);
+    return result;
+  } catch (error) {
+    console.error("❌ Error fetching subscribed channels:", error);
+    throw error;
+  }
 }
 
 export async function getAccounts(): Promise<PlayerConfig> {
-  const players = await prisma.player.findMany({
-    include: {
-      accounts: true,
-    },
-  });
-  // transform
-  return players.flatMap((player): PlayerConfigEntry[] => {
-    return player.accounts.map((account): PlayerConfigEntry => {
-      return {
-        alias: player.alias,
-        league: {
-          leagueAccount: mapToAccount(account),
-        },
-        discordAccount: {
-          id: DiscordAccountIdSchema.nullable().parse(player.discordId),
-        },
-      };
+  console.log("🔍 Fetching all player accounts");
+
+  try {
+    const startTime = Date.now();
+
+    const players = await prisma.player.findMany({
+      include: {
+        accounts: true,
+      },
     });
-  });
+
+    const queryTime = Date.now() - startTime;
+    console.log(
+      `📊 Found ${players.length.toString()} players in ${queryTime.toString()}ms`
+    );
+
+    // transform
+    const result = players.flatMap((player): PlayerConfigEntry[] => {
+      return player.accounts.map((account): PlayerConfigEntry => {
+        return {
+          alias: player.alias,
+          league: {
+            leagueAccount: mapToAccount(account),
+          },
+          discordAccount: {
+            id: DiscordAccountIdSchema.nullable().parse(player.discordId),
+          },
+        };
+      });
+    });
+
+    console.log(
+      `📋 Returning ${result.length.toString()} player config entries`
+    );
+    return result;
+  } catch (error) {
+    console.error("❌ Error fetching player accounts:", error);
+    throw error;
+  }
 }
 
 function mapToAccount({
-  summonerId,
   puuid,
   region,
 }: {
-  summonerId: string;
   puuid: string;
   region: string;
 }): LeagueAccount {
   return {
-    summonerId: LeagueSummonerIdSchema.parse(summonerId),
     puuid: LeaguePuuidSchema.parse(puuid),
     region: RegionSchema.parse(region),
   };

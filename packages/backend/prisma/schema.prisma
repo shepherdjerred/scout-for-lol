@@ -40,13 +40,12 @@ model Player {
 }
 
 model Account {
-  id         Int    @id @default(autoincrement())
-  alias      String
+  id       Int    @id @default(autoincrement())
+  alias    String
   // TODO: store riot ID for the sake of easier understanding
-  summonerId String
-  puuid      String
-  region     String
-  playerId   Player @relation(fields: [id], references: [id])
+  puuid    String
+  region   String
+  playerId Player @relation(fields: [id], references: [id])
 
   // metadata
   serverId         String
@@ -54,6 +53,5 @@ model Account {
   createdTime      DateTime
   updatedTime      DateTime
 
-  @@unique([serverId, summonerId])
   @@unique([serverId, puuid])
 }

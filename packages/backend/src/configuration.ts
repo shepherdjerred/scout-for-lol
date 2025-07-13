@@ -1,17 +1,49 @@
 import "dotenv/config";
 import env from "env-var";
 
+console.log("🔧 Loading application configuration");
+
+function getRequiredEnvVar(name: string): string {
+  try {
+    const value = env.get(name).required().asString();
+    console.log(`✅ ${name}: configured`);
+    return value;
+  } catch (error) {
+    console.error(`❌ Missing required environment variable: ${name}`);
+    throw error;
+  }
+}
+
+function getOptionalEnvVar(
+  name: string,
+  defaultValue?: string
+): string | undefined {
+  const value = env.get(name).asString();
+  if (value) {
+    console.log(`✅ ${name}: configured`);
+    return value;
+  } else if (defaultValue) {
+    console.log(`⚠️  ${name}: using default value (${defaultValue})`);
+    return defaultValue;
+  } else {
+    console.log(`⚠️  ${name}: not configured`);
+    return undefined;
+  }
+}
+
 export default {
-  version: env.get("VERSION").required().asString(),
-  gitSha: env.get("GIT_SHA").required().asString(),
-  sentryDsn: env.get("SENTRY_DSN").asString(),
+  version: getRequiredEnvVar("VERSION"),
+  gitSha: getRequiredEnvVar("GIT_SHA"),
+  sentryDsn: getOptionalEnvVar("SENTRY_DSN"),
   environment: env
     .get("ENVIRONMENT")
     .default("dev")
     .asEnum(["dev", "beta", "prod"]),
-  discordToken: env.get("DISCORD_TOKEN").required().asString(),
-  applicationId: env.get("APPLICATION_ID").required().asString(),
-  riotApiToken: env.get("RIOT_API_TOKEN").required().asString(),
-  databaseUrl: env.get("DATABASE_URL").required().asString(),
+  discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
+  applicationId: getRequiredEnvVar("APPLICATION_ID"),
+  riotApiToken: getRequiredEnvVar("RIOT_API_TOKEN"),
+  databaseUrl: getRequiredEnvVar("DATABASE_URL"),
   port: env.get("PORT").default("3000").asPortNumber(),
 };
+
+console.log("✅ Configuration loaded successfully");

@@ -7,17 +7,12 @@ import {
   Container,
 } from "@dagger.io/dagger";
 import {
-  generatePrismaFromContainer,
   checkBackend,
   buildBackendImage,
   publishBackendImage,
+  smokeTestBackendImage,
 } from "./backend";
-import {
-  getReportSource,
-  checkReport,
-  buildReportForNpm,
-  publishReportToNpm,
-} from "./report";
+import { checkReport, buildReportForNpm, publishReportToNpm } from "./report";
 import { getDataSource, checkData } from "./data";
 import { getGitHubContainer, getBunNodeContainer } from "./base";
 
@@ -66,17 +61,19 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: ".",
     })
     source: Directory
   ): Promise<string> {
     logWithTimestamp("🔍 Starting comprehensive check process");
+    logWithTimestamp(
+      "📋 This includes TypeScript type checking, ESLint, and tests for all packages"
+    );
 
-    const backendSource = source.directory("packages/backend");
     const reportSource = source.directory("packages/report");
     const dataSource = source.directory("packages/data");
-    const frontendSource = source.directory("packages/frontend");
 
     logWithTimestamp("📁 Prepared source directories for all packages");
 
@@ -87,21 +84,20 @@ export class ScoutForLol {
 
     // Run checks in parallel
     const [_backendCheck, _reportCheck, _dataCheck] = await withTiming(
-      "parallel package checks",
+      "parallel package checks (lint, typecheck, tests)",
       async () => {
-        logWithTimestamp("🔄 Running package checks in parallel...");
+        logWithTimestamp(
+          "🔄 Running lint, typecheck, and tests in parallel for all packages..."
+        );
+        logWithTimestamp("📦 Packages being checked: backend, report, data");
         return Promise.all([
-          withTiming("backend check", () =>
-            Promise.resolve(
-              checkBackend(
-                source
-              )
-            )
+          withTiming("backend check (lint + typecheck + tests)", () =>
+            Promise.resolve(checkBackend(source))
           ),
-          withTiming("report check", () =>
+          withTiming("report check (lint + typecheck + tests)", () =>
             Promise.resolve(checkReport(reportSource, dataSourceDir))
           ),
-          withTiming("data check", () =>
+          withTiming("data check (lint + typecheck)", () =>
             Promise.resolve(checkData(dataSource))
           ),
         ]);
@@ -109,6 +105,9 @@ export class ScoutForLol {
     );
 
     logWithTimestamp("🎉 All checks completed successfully");
+    logWithTimestamp(
+      "✅ All packages passed: TypeScript type checking, ESLint linting, and tests"
+    );
     return "All checks completed successfully";
   }
 
@@ -131,6 +130,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: ".",
     })
@@ -142,10 +142,8 @@ export class ScoutForLol {
       `🔨 Starting build process for version ${version} (${gitSha})`
     );
 
-    const backendSource = source.directory("packages/backend");
     const reportSource = source.directory("packages/report");
     const dataSource = source.directory("packages/data");
-    const frontendSource = source.directory("packages/frontend");
 
     logWithTimestamp("📁 Prepared source directories for build");
 
@@ -163,11 +161,7 @@ export class ScoutForLol {
         );
         return Promise.all([
           withTiming("backend Docker image build", async () => {
-            const image = buildBackendImage(
-              source,
-              version,
-              gitSha
-            );
+            const image = buildBackendImage(source, version, gitSha);
             // Force the container to be evaluated by getting its ID
             await image.id();
             return image;
@@ -181,6 +175,22 @@ export class ScoutForLol {
       }
     );
 
+    // Smoke test the backend image
+    await withTiming("backend image smoke test", async () => {
+      logWithTimestamp("🧪 Running smoke test on backend image...");
+      const smokeTestResult = await smokeTestBackendImage(
+        source,
+        version,
+        gitSha
+      );
+      logWithTimestamp(`Smoke test result: ${smokeTestResult}`);
+
+      // If smoke test indicates failure, throw an error
+      if (smokeTestResult.startsWith("❌")) {
+        throw new Error(`Backend image smoke test failed: ${smokeTestResult}`);
+      }
+    });
+
     logWithTimestamp("🎉 All packages built successfully");
     return "All packages built successfully";
   }
@@ -193,6 +203,7 @@ export class ScoutForLol {
    * @param ghcrUsername The GitHub Container Registry username (optional)
    * @param ghcrPassword The GitHub Container Registry password/token (optional)
    * @param env The environment (prod/dev) - determines if images are published
+   * @param ghToken The GitHub token for creating deployment PRs (optional)
    * @returns A message indicating completion
    */
   @func()
@@ -207,6 +218,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: ".",
     })
@@ -215,15 +227,20 @@ export class ScoutForLol {
     @argument() gitSha: string,
     ghcrUsername?: string,
     ghcrPassword?: Secret,
-    env?: string
+    env?: string,
+    ghToken?: Secret
   ): Promise<string> {
     logWithTimestamp(
-      `🚀 Starting CI pipeline for version ${version} (${gitSha}) in ${env || "dev"} environment`
+      `🚀 Starting CI pipeline for version ${version} (${gitSha}) in ${env ?? "dev"} environment`
     );
+    logWithTimestamp("⚠️  CI will FAIL if lint or typecheck errors are found");
 
     // First run checks
     await withTiming("CI checks phase", () => {
-      logWithTimestamp("📋 Phase 1: Running checks...");
+      logWithTimestamp(
+        "📋 Phase 1: Running checks (lint, typecheck, tests)..."
+      );
+      logWithTimestamp("❌ Pipeline will FAIL if any check fails");
       return this.check(source);
     });
 
@@ -239,11 +256,6 @@ export class ScoutForLol {
       await withTiming("CI publish phase", async () => {
         logWithTimestamp("📦 Phase 3: Publishing Docker image to registry...");
 
-        const backendSource = source.directory("packages/backend");
-        const reportSource = source.directory("packages/report");
-        const dataSource = source.directory("packages/data");
-        const frontendSource = source.directory("packages/frontend");
-
         // Login to registry and publish
         const publishedRefs = await publishBackendImage(
           source,
@@ -256,13 +268,16 @@ export class ScoutForLol {
         logWithTimestamp(`✅ Images published: ${publishedRefs.join(", ")}`);
       });
     } else {
-      logWithTimestamp("⏭️ Phase 3: Skipping image publishing (no credentials or not prod environment)");
+      logWithTimestamp(
+        "⏭️ Phase 3: Skipping image publishing (no credentials or not prod environment)"
+      );
     }
 
-    // Finally deploy to beta
+    // Deploy to beta - always deploy, but only create PR if GitHub token is provided
+    const deployStage = env === "prod" ? "beta" : "dev";
     await withTiming("CI deploy phase", () => {
-      logWithTimestamp("🚀 Phase 4: Deploying to beta...");
-      return this.deploy(source, version, "beta");
+      logWithTimestamp(`🚀 Phase 4: Deploying to ${deployStage}...`);
+      return this.deploy(source, version, deployStage, ghToken);
     });
 
     logWithTimestamp("🎉 CI pipeline completed successfully");
@@ -289,6 +304,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: ".",
     })
@@ -305,6 +321,7 @@ export class ScoutForLol {
       logWithTimestamp("📦 Setting up GitHub container...");
       return Promise.resolve(
         getGitHubContainer()
+          .withEnvVariable("CACHE_BUST", Date.now().toString())
           .withExec([
             "git",
             "clone",
@@ -321,6 +338,7 @@ export class ScoutForLol {
           ])
           .withExec(["git", "fetch", "--depth=2"])
           .withExec(["git", "checkout", "main"])
+          .withExec(["git", "pull", "origin", "main"])
       );
     });
 
@@ -330,12 +348,18 @@ export class ScoutForLol {
     const updatedContainer = await withTiming("version file update", () => {
       return Promise.resolve(
         container
+          // First, check if the file exists and show current content for debugging
+          .withExec(["ls", "-la", "src/cdk8s/src/versions.ts"])
+          .withExec(["cat", "src/cdk8s/src/versions.ts"])
+          // Use a more robust approach with proper file handling
           .withExec([
-            "sed",
-            "-i",
-            `s/"shepherdjerred\\/scout-for-lol\\/${stage}": ".*"/"shepherdjerred\\/scout-for-lol\\/${stage}": "${version}"/`,
-            "cdk8s/src/versions.ts",
+            "sh",
+            "-c",
+            `sed -i 's/"shepherdjerred\\/scout-for-lol\\/${stage}": "[^"]*"/"shepherdjerred\\/scout-for-lol\\/${stage}": "${version}"/g' src/cdk8s/src/versions.ts`,
           ])
+          // Verify the change was made correctly
+          .withExec(["echo", "=== After update ==="])
+          .withExec(["cat", "src/cdk8s/src/versions.ts"])
           .withExec(["git", "add", "."])
           .withExec(["git", "checkout", "-b", `scout/${version}`])
           .withExec([
@@ -411,6 +435,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/backend",
     })
@@ -429,7 +454,13 @@ export class ScoutForLol {
         .withWorkdir("/workspace")
         .withExec(["bun", "install", "--frozen-lockfile"]);
 
-      return Promise.resolve(generatePrismaFromContainer(workspaceContainer));
+      return Promise.resolve(
+        workspaceContainer
+          .withWorkdir("/workspace/packages/backend")
+          .withExec(["bun", "run", "src/database/generate.ts"])
+          .withExec(["rm", "-f", "generated/client/runtime/edge-esm.cjs"])
+          .directory("/workspace/packages/backend/generated")
+      );
     });
 
     logWithTimestamp("✅ Prisma client generated successfully");
@@ -439,8 +470,6 @@ export class ScoutForLol {
   /**
    * Check the backend package
    * @param source The backend source directory
-   * @param dataSource The data source directory
-   * @param reportSource The report source directory
    * @returns A message indicating completion
    */
   @func()
@@ -455,61 +484,16 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/backend",
     })
-    source: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-      ],
-      defaultPath: "packages/data",
-    })
-    dataSource: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-      ],
-      defaultPath: "packages/report",
-    })
-    reportSource: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-      ],
-      defaultPath: "packages/frontend",
-    })
-    frontendSource: Directory
+    source: Directory
   ): Promise<string> {
     logWithTimestamp("🔍 Starting backend package check");
 
     await withTiming("backend package check", () =>
-      Promise.resolve(
-        checkBackend(
-          source
-        )
-      )
+      Promise.resolve(checkBackend(source))
     );
 
     logWithTimestamp("✅ Backend check completed successfully");
@@ -518,9 +502,7 @@ export class ScoutForLol {
 
   /**
    * Build the backend Docker image
-   * @param source The backend source directory
-   * @param dataSource The data source directory
-   * @param reportSource The report source directory
+   * @param source The workspace source directory
    * @param version The version to build
    * @param gitSha The git SHA
    * @returns The built container
@@ -537,52 +519,11 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
-      defaultPath: "packages/backend",
+      defaultPath: ".",
     })
     source: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-      ],
-      defaultPath: "packages/data",
-    })
-    dataSource: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-      ],
-      defaultPath: "packages/report",
-    })
-    reportSource: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-      ],
-      defaultPath: "packages/frontend",
-    })
-    frontendSource: Directory,
     @argument() version: string,
     @argument() gitSha: string
   ): Promise<Container> {
@@ -591,13 +532,7 @@ export class ScoutForLol {
     );
 
     const result = await withTiming("backend Docker image build", () =>
-      Promise.resolve(
-        buildBackendImage(
-          source,
-          version,
-          gitSha
-        )
-      )
+      Promise.resolve(buildBackendImage(source, version, gitSha))
     );
 
     logWithTimestamp("✅ Backend Docker image built successfully");
@@ -606,9 +541,7 @@ export class ScoutForLol {
 
   /**
    * Publish the backend Docker image
-   * @param source The backend source directory
-   * @param dataSource The data source directory
-   * @param reportSource The report source directory
+   * @param source The workspace source directory
    * @param version The version to publish
    * @param gitSha The git SHA
    * @param registryUsername Optional registry username for authentication
@@ -627,52 +560,11 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
-      defaultPath: "packages/backend",
+      defaultPath: ".",
     })
     source: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-      ],
-      defaultPath: "packages/data",
-    })
-    dataSource: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-      ],
-      defaultPath: "packages/report",
-    })
-    reportSource: Directory,
-    @argument({
-      ignore: [
-        "node_modules",
-        "dist",
-        "build",
-        ".cache",
-        "*.log",
-        ".env*",
-        "!.env.example",
-        ".dagger",
-      ],
-      defaultPath: "packages/frontend",
-    })
-    frontendSource: Directory,
     @argument() version: string,
     @argument() gitSha: string,
     registryUsername?: string,
@@ -699,6 +591,45 @@ export class ScoutForLol {
   }
 
   /**
+   * Smoke test the backend Docker image
+   * @param source The workspace source directory
+   * @param version The version to test
+   * @param gitSha The git SHA
+   * @returns Test result with analysis
+   */
+  @func()
+  async smokeTestBackendImage(
+    @argument({
+      ignore: [
+        "node_modules",
+        "dist",
+        "build",
+        ".cache",
+        "*.log",
+        ".env*",
+        "!.env.example",
+        ".dagger",
+        "generated",
+      ],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+    @argument() gitSha: string
+  ): Promise<string> {
+    logWithTimestamp(
+      `🧪 Smoke testing backend Docker image for version ${version} (${gitSha})`
+    );
+
+    const result = await withTiming("backend Docker image smoke test", () =>
+      smokeTestBackendImage(source, version, gitSha)
+    );
+
+    logWithTimestamp("✅ Backend Docker image smoke test completed");
+    return result;
+  }
+
+  /**
    * Check the report package
    * @param source The report source directory
    * @param dataSource The data source directory
@@ -716,6 +647,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/report",
     })
@@ -730,6 +662,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/data",
     })
@@ -764,6 +697,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/report",
     })
@@ -778,6 +712,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/data",
     })
@@ -816,6 +751,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/report",
     })
@@ -830,6 +766,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/data",
     })
@@ -866,6 +803,7 @@ export class ScoutForLol {
         ".env*",
         "!.env.example",
         ".dagger",
+        "generated",
       ],
       defaultPath: "packages/data",
     })
