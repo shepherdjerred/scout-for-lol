@@ -184,7 +184,7 @@ export async function executeSubscribe(
       },
     });
 
-    console.log(`✅ Account created with ID: ${account.id}`);
+    console.log(`✅ Account created with ID: ${account.id.toString()}`);
 
     // get the player for the account
     const player = await prisma.account.findUnique({
@@ -197,7 +197,9 @@ export async function executeSubscribe(
     });
 
     if (!player) {
-      console.error(`❌ Failed to find player for account ID: ${account.id}`);
+      console.error(
+        `❌ Failed to find player for account ID: ${account.id.toString()}`
+      );
       await interaction.reply({
         content: "Error finding player for account",
         ephemeral: true,
@@ -206,7 +208,7 @@ export async function executeSubscribe(
     }
 
     console.log(
-      `📝 Found player record: ${player.playerId.alias} (ID: ${player.playerId.id})`
+      `📝 Found player record: ${player.playerId.alias} (ID: ${player.playerId.id.toString()})`
     );
 
     // create a new subscription
@@ -224,7 +226,7 @@ export async function executeSubscribe(
 
     const dbTime = Date.now() - dbStartTime;
     console.log(
-      `✅ Subscription created with ID: ${subscription.id} (${dbTime.toString()}ms)`
+      `✅ Subscription created with ID: ${subscription.id.toString()} (${dbTime.toString()}ms)`
     );
 
     const totalTime = Date.now() - startTime;

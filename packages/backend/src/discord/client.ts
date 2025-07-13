@@ -43,8 +43,8 @@ try {
 
 client.on("ready", (client) => {
   console.log(`✅ Discord bot ready! Logged in as ${client.user.tag}`);
-  console.log(`🏢 Bot is in ${client.guilds.cache.size} guilds`);
-  console.log(`👥 Bot can see ${client.users.cache.size} users`);
+  console.log(`🏢 Bot is in ${client.guilds.cache.size.toString()} guilds`);
+  console.log(`👥 Bot can see ${client.users.cache.size.toString()} users`);
 
   handleCommands(client);
   console.log("⚡ Discord command handler initialized");

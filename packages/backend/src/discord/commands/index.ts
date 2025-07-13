@@ -29,7 +29,7 @@ export function handleCommands(client: Client) {
         console.log(
           `📝 Command options:`,
           interaction.options.data
-            .map((opt) => `${opt.name}: ${opt.value}`)
+            .map((opt) => `${opt.name}: ${String(opt.value)}`)
             .join(", ")
         );
       }
@@ -68,16 +68,16 @@ export function handleCommands(client: Client) {
 
         const executionTime = Date.now() - startTime;
         console.log(
-          `✅ Command ${commandName} completed successfully in ${executionTime}ms`
+          `✅ Command ${commandName} completed successfully in ${executionTime.toString()}ms`
         );
       } catch (error) {
         const executionTime = Date.now() - startTime;
         console.error(
-          `❌ Command ${commandName} failed after ${executionTime}ms:`,
+          `❌ Command ${commandName} failed after ${executionTime.toString()}ms:`,
           error
         );
         console.error(
-          `❌ Error details - User: ${username} (${userId}), Guild: ${guildId}, Channel: ${channelId}`
+          `❌ Error details - User: ${username} (${userId}), Guild: ${String(guildId)}, Channel: ${channelId}`
         );
 
         if (interaction.replied || interaction.deferred) {

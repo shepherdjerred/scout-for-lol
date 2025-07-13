@@ -40,7 +40,7 @@ export async function getCurrentGame(
         `✅ Successfully fetched current game for ${playerAlias} (${apiTime.toString()}ms)`
       );
       console.log(
-        `📊 Game info: Match ID ${response.response.gameId}, Mode: ${response.response.gameMode}, Type: ${response.response.gameType}`
+        `📊 Game info: Match ID ${response.response.gameId.toString()}, Mode: ${response.response.gameMode}, Type: ${response.response.gameType}`
       );
       return response.response;
     }
