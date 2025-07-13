@@ -56,13 +56,27 @@ export function checkBackend(workspaceSource: Directory): Container {
     .withWorkdir("/workspace/packages/backend")
     .withExec(["bun", "run", "src/database/generate.ts"])
     .withExec(["rm", "-f", "generated/client/runtime/edge-esm.cjs"])
+    .withExec([
+      "sh",
+      "-c",
+      "echo '🔍 [CI] Running TypeScript type checking for backend...'",
+    ])
     .withExec(["bun", "run", "type-check"])
+    .withExec(["sh", "-c", "echo '✅ [CI] TypeScript type checking passed!'"])
+    .withExec(["sh", "-c", "echo '🔍 [CI] Running ESLint for backend...'"])
     .withExec(["bun", "run", "lint"])
+    .withExec(["sh", "-c", "echo '✅ [CI] ESLint passed!'"])
+    .withExec(["sh", "-c", "echo '🧪 [CI] Running tests for backend...'"])
     .withFile(
       ".env",
       workspaceSource.directory("packages/backend").file("test.env")
     )
-    .withExec(["bun", "test"]);
+    .withExec(["bun", "test"])
+    .withExec([
+      "sh",
+      "-c",
+      "echo '✅ [CI] All backend checks completed successfully!'",
+    ]);
 }
 
 /**

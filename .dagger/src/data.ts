@@ -43,8 +43,21 @@ export function updateDataLockfile(source: Directory): Directory {
  */
 export function checkData(source: Directory): Container {
   return installDataDeps(source)
+    .withExec([
+      "sh",
+      "-c",
+      "echo '🔍 [CI] Running TypeScript type checking for data...'",
+    ])
     .withExec(["bun", "run", "type-check"])
-    .withExec(["bun", "run", "lint"]);
+    .withExec(["sh", "-c", "echo '✅ [CI] TypeScript type checking passed!'"])
+    .withExec(["sh", "-c", "echo '🔍 [CI] Running ESLint for data...'"])
+    .withExec(["bun", "run", "lint"])
+    .withExec(["sh", "-c", "echo '✅ [CI] ESLint passed!'"])
+    .withExec([
+      "sh",
+      "-c",
+      "echo '✅ [CI] All data checks completed successfully!'",
+    ]);
   // Note: Tests are commented out in the original Earthfile
   // .withExec(["bun", "test"]);
 }

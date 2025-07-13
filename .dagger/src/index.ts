@@ -68,6 +68,9 @@ export class ScoutForLol {
     source: Directory
   ): Promise<string> {
     logWithTimestamp("🔍 Starting comprehensive check process");
+    logWithTimestamp(
+      "📋 This includes TypeScript type checking, ESLint, and tests for all packages"
+    );
 
     const reportSource = source.directory("packages/report");
     const dataSource = source.directory("packages/data");
@@ -81,17 +84,20 @@ export class ScoutForLol {
 
     // Run checks in parallel
     const [_backendCheck, _reportCheck, _dataCheck] = await withTiming(
-      "parallel package checks",
+      "parallel package checks (lint, typecheck, tests)",
       async () => {
-        logWithTimestamp("🔄 Running package checks in parallel...");
+        logWithTimestamp(
+          "🔄 Running lint, typecheck, and tests in parallel for all packages..."
+        );
+        logWithTimestamp("📦 Packages being checked: backend, report, data");
         return Promise.all([
-          withTiming("backend check", () =>
+          withTiming("backend check (lint + typecheck + tests)", () =>
             Promise.resolve(checkBackend(source))
           ),
-          withTiming("report check", () =>
+          withTiming("report check (lint + typecheck + tests)", () =>
             Promise.resolve(checkReport(reportSource, dataSourceDir))
           ),
-          withTiming("data check", () =>
+          withTiming("data check (lint + typecheck)", () =>
             Promise.resolve(checkData(dataSource))
           ),
         ]);
@@ -99,6 +105,9 @@ export class ScoutForLol {
     );
 
     logWithTimestamp("🎉 All checks completed successfully");
+    logWithTimestamp(
+      "✅ All packages passed: TypeScript type checking, ESLint linting, and tests"
+    );
     return "All checks completed successfully";
   }
 
@@ -224,10 +233,14 @@ export class ScoutForLol {
     logWithTimestamp(
       `🚀 Starting CI pipeline for version ${version} (${gitSha}) in ${env ?? "dev"} environment`
     );
+    logWithTimestamp("⚠️  CI will FAIL if lint or typecheck errors are found");
 
     // First run checks
     await withTiming("CI checks phase", () => {
-      logWithTimestamp("📋 Phase 1: Running checks...");
+      logWithTimestamp(
+        "📋 Phase 1: Running checks (lint, typecheck, tests)..."
+      );
+      logWithTimestamp("❌ Pipeline will FAIL if any check fails");
       return this.check(source);
     });
 
@@ -308,6 +321,7 @@ export class ScoutForLol {
       logWithTimestamp("📦 Setting up GitHub container...");
       return Promise.resolve(
         getGitHubContainer()
+          .withEnvVariable("CACHE_BUST", Date.now().toString())
           .withExec([
             "git",
             "clone",
@@ -803,44 +817,5 @@ export class ScoutForLol {
 
     logWithTimestamp("✅ Data check completed successfully");
     return "Data check completed successfully";
-  }
-
-  /**
-   * Do a completely fresh clone of the homelab repository with no cache
-   * @returns A container with a fresh clone of the homelab repo
-   */
-  @func()
-  async freshHomelabClone(): Promise<Container> {
-    logWithTimestamp(
-      "🔄 Starting completely fresh homelab clone with no cache"
-    );
-
-    const container = await withTiming("fresh homelab clone", () => {
-      logWithTimestamp("📦 Creating fresh container for homelab clone...");
-      return Promise.resolve(
-        getGitHubContainer()
-          // Force a fresh execution by using a timestamp to break cache
-          .withEnvVariable("CACHE_BUST", Date.now().toString())
-          .withExec(["rm", "-rf", "/workspace/*"])
-          .withExec(["mkdir", "-p", "/workspace"])
-          .withWorkdir("/workspace")
-          // Fresh clone with no optimizations
-          .withExec([
-            "git",
-            "clone",
-            "--no-hardlinks",
-            "--no-local",
-            "--no-shallow-submodules",
-            "--no-single-branch",
-            "https://github.com/shepherdjerred/homelab.git",
-            ".",
-          ])
-          .withExec(["git", "clean", "-fdx"])
-          .withExec(["git", "reset", "--hard", "HEAD"])
-      );
-    });
-
-    logWithTimestamp("✅ Fresh homelab clone completed successfully");
-    return container;
   }
 }

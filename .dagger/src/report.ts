@@ -52,9 +52,23 @@ export function checkReport(
   dataSource: Directory
 ): Container {
   return installReportDeps(source, dataSource)
+    .withExec([
+      "sh",
+      "-c",
+      "echo '🔍 [CI] Running TypeScript type checking for report...'",
+    ])
     .withExec(["bun", "run", "type-check"])
+    .withExec(["sh", "-c", "echo '✅ [CI] TypeScript type checking passed!'"])
+    .withExec(["sh", "-c", "echo '🔍 [CI] Running ESLint for report...'"])
     .withExec(["bun", "run", "lint"])
-    .withExec(["bun", "test"]);
+    .withExec(["sh", "-c", "echo '✅ [CI] ESLint passed!'"])
+    .withExec(["sh", "-c", "echo '🧪 [CI] Running tests for report...'"])
+    .withExec(["bun", "test"])
+    .withExec([
+      "sh",
+      "-c",
+      "echo '✅ [CI] All report checks completed successfully!'",
+    ]);
 }
 
 /**
