@@ -103,9 +103,7 @@ export async function checkMatch(game: LoadingScreenState) {
 export function saveMatch(_match: MatchV5DTOs.MatchDto) {
   console.log(`[saveMatch] Saving match: ${_match.metadata.matchId}`);
   // TODO
-  console.log(
-    `[saveMatch] Match saving not implemented yet for: ${_match.metadata.matchId}`
-  );
+  return Promise.resolve(undefined);
 }
 
 async function getImage(
@@ -335,13 +333,16 @@ export async function checkPostMatchInternal(
   console.log("[checkPostMatchInternal] Filtering finished games");
   const finishedGames = pipe(
     state.gamesStarted,
-    map(
-      (game) =>
-        [
-          game,
-          games.find((g) => g?.metadata.matchId === game.matchId.toString()),
-        ] satisfies [LoadingScreenState, MatchV5DTOs.MatchDto | undefined]
-    ),
+    map((game) => {
+      const region = mapRegionToEnum(
+        game.players[0].player.league.leagueAccount.region
+      );
+      const fullMatchId = `${region}_${game.matchId.toString()}`;
+      return [
+        game,
+        games.find((g) => g?.metadata.matchId === fullMatchId),
+      ] satisfies [LoadingScreenState, MatchV5DTOs.MatchDto | undefined];
+    }),
     filter(([_game, match]) => match != undefined)
     // this case is required to get rid of the undefined type
   ) as unknown as [LoadingScreenState, MatchV5DTOs.MatchDto][];

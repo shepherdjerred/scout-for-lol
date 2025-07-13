@@ -798,4 +798,43 @@ export class ScoutForLol {
     logWithTimestamp("✅ Data check completed successfully");
     return "Data check completed successfully";
   }
+
+  /**
+   * Do a completely fresh clone of the homelab repository with no cache
+   * @returns A container with a fresh clone of the homelab repo
+   */
+  @func()
+  async freshHomelabClone(): Promise<Container> {
+    logWithTimestamp(
+      "🔄 Starting completely fresh homelab clone with no cache"
+    );
+
+    const container = await withTiming("fresh homelab clone", () => {
+      logWithTimestamp("📦 Creating fresh container for homelab clone...");
+      return Promise.resolve(
+        getGitHubContainer()
+          // Force a fresh execution by using a timestamp to break cache
+          .withEnvVariable("CACHE_BUST", Date.now().toString())
+          .withExec(["rm", "-rf", "/workspace/*"])
+          .withExec(["mkdir", "-p", "/workspace"])
+          .withWorkdir("/workspace")
+          // Fresh clone with no optimizations
+          .withExec([
+            "git",
+            "clone",
+            "--no-hardlinks",
+            "--no-local",
+            "--no-shallow-submodules",
+            "--no-single-branch",
+            "https://github.com/shepherdjerred/homelab.git",
+            ".",
+          ])
+          .withExec(["git", "clean", "-fdx"])
+          .withExec(["git", "reset", "--hard", "HEAD"])
+      );
+    });
+
+    logWithTimestamp("✅ Fresh homelab clone completed successfully");
+    return container;
+  }
 }
