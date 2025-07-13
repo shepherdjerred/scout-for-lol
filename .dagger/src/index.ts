@@ -334,12 +334,18 @@ export class ScoutForLol {
     const updatedContainer = await withTiming("version file update", () => {
       return Promise.resolve(
         container
+          // First, check if the file exists and show current content for debugging
+          .withExec(["ls", "-la", "src/cdk8s/src/versions.ts"])
+          .withExec(["cat", "src/cdk8s/src/versions.ts"])
+          // Use a more robust approach with proper file handling
           .withExec([
-            "sed",
-            "-i",
-            `s/"shepherdjerred\\/scout-for-lol\\/${stage}": ".*"/"shepherdjerred\\/scout-for-lol\\/${stage}": "${version}"/`,
-            "src/cdk8s/src/versions.ts",
+            "sh",
+            "-c",
+            `sed -i 's/"shepherdjerred\\/scout-for-lol\\/${stage}": "[^"]*"/"shepherdjerred\\/scout-for-lol\\/${stage}": "${version}"/g' src/cdk8s/src/versions.ts`,
           ])
+          // Verify the change was made correctly
+          .withExec(["echo", "=== After update ==="])
+          .withExec(["cat", "src/cdk8s/src/versions.ts"])
           .withExec(["git", "add", "."])
           .withExec(["git", "checkout", "-b", `scout/${version}`])
           .withExec([
