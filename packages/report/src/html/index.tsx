@@ -1,16 +1,16 @@
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
 import { fonts } from "../assets/index.ts";
-import { CompletedMatch } from "@scout-for-lol/data";
+import { AnyMatch } from "@scout-for-lol/data";
 import { Report } from "./report.tsx";
 
-export async function matchToImage(match: CompletedMatch) {
+export async function matchToImage(match: AnyMatch) {
   const svg = await matchToSvg(match);
   const png = svgToPng(svg);
   return png;
 }
 
-export async function matchToSvg(match: CompletedMatch) {
+export async function matchToSvg(match: AnyMatch) {
   const svg = await satori(<Report match={match} />, {
     width: 4760,
     height: 3500,

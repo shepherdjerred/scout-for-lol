@@ -1,6 +1,19 @@
 import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { z } from "zod";
-import { api } from "../../api/api.ts";
+import {
+  ApplicationState,
+  LeaguePuuid,
+  LoadingScreenState,
+  Player,
+  PlayerConfigEntry,
+  DiscordChannelId,
+  Rank,
+  type CompletedMatch,
+  parseTeam,
+  invertTeam,
+  getLaneOpponent,
+  parseQueueType,
+} from "@scout-for-lol/data";
+// import { send } from "../../discord/channel";
 import {
   AttachmentBuilder,
   EmbedBuilder,
@@ -8,27 +21,22 @@ import {
   MessageCreateOptions,
   MessagePayload,
 } from "discord.js";
-import { matchToImage } from "@scout-for-lol/report";
-import {
-  ApplicationState,
-  CompletedMatch,
-  type DiscordChannelId,
-  getLaneOpponent,
-  invertTeam,
-  type LeaguePuuid,
-  LoadingScreenState,
-  parseQueueType,
-  parseTeam,
-  Player,
-  PlayerConfigEntry,
-  type Rank,
-} from "@scout-for-lol/data";
-import { getState, setState } from "../../model/state.ts";
-import { differenceWith, filter, map, pipe } from "remeda";
-import { getOutcome } from "../../model/match.ts";
-import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
+import { getOutcome } from "../../model/match";
 import { mapRegionToEnum } from "../../model/region.ts";
 import { participantToChampion } from "../../model/champion.ts";
+import {
+  parseMatch,
+  isArenaMatch,
+  isClassicMatch,
+  organizeArenaTeams,
+  organizeClassicTeams,
+} from "./arena-types";
+import { regionToRegionGroup } from "twisted/dist/constants/regions";
+import { api } from "../../api/api.ts";
+import z from "zod";
+import { getState, setState } from "../../model/state.ts";
+import { matchToImage } from "@scout-for-lol/report";
+import { differenceWith, filter, map, pipe } from "remeda";
 
 export async function checkMatch(game: LoadingScreenState) {
   console.log(
@@ -184,103 +192,123 @@ async function createMatchObj(
   getPlayerFn: (playerConfig: PlayerConfigEntry) => Promise<Player>
 ) {
   console.log(
-    `[createMatchObj] 🏗️  Starting match object creation for matchId: ${match.metadata.matchId}`
+    `[createMatchObj] 🎮 Creating match object for ${state.players.length.toString()} players`
   );
-  console.log(`[createMatchObj] 📊 State details:`, {
-    playersCount: state.players.length,
-    queue: state.queue,
-    matchId: state.matchId.toString(),
-    uuid: state.uuid,
-  });
 
-  // Get teams using backend/model/match.ts helpers
-  const getTeams = (participants: MatchV5DTOs.ParticipantDto[]) => {
+  // Parse match using Zod to determine type and get type safety
+  const parsedMatch = parseMatch(match);
+
+  let teams:
+    | {
+        mode: "arena";
+        arenaTeams: ReturnType<typeof organizeArenaTeams>;
+        blue: ReturnType<typeof participantToChampion>[];
+        red: ReturnType<typeof participantToChampion>[];
+      }
+    | {
+        mode: "classic";
+        blue: ReturnType<typeof participantToChampion>[];
+        red: ReturnType<typeof participantToChampion>[];
+      };
+
+  if (isArenaMatch(parsedMatch)) {
+    console.log(`[createMatchObj] 🏟️  Arena match detected`);
+    const arenaTeams = organizeArenaTeams(parsedMatch);
     console.log(
-      `[createMatchObj] 👥 Processing ${participants.length.toString()} participants into teams`
+      `[createMatchObj] 🏟️  Created ${arenaTeams.length.toString()} arena teams`
     );
-    const teams = {
-      blue: pipe(participants.slice(0, 5), map(participantToChampion)),
-      red: pipe(participants.slice(5, 10), map(participantToChampion)),
+    for (const team of arenaTeams) {
+      console.log(
+        `[createMatchObj] 🏆 Team ${team.subteamId.toString()} (subteam ${team.subteamId.toString()}): ${team.participants.length.toString()} players`
+      );
+    }
+
+    // Convert arena participants to champion format for compatibility
+    const allArenaChampions = arenaTeams.flatMap((team) =>
+      team.participants.map((p) => {
+        // Find the original participant to get full data
+        const fullParticipant = match.info.participants.find(
+          (orig) =>
+            orig.championId === p.championId &&
+            orig.kills === p.kills &&
+            orig.deaths === p.deaths
+        );
+        return participantToChampion(fullParticipant);
+      })
+    );
+
+    teams = {
+      mode: "arena",
+      arenaTeams,
+      blue: allArenaChampions.slice(0, Math.ceil(allArenaChampions.length / 2)),
+      red: allArenaChampions.slice(Math.ceil(allArenaChampions.length / 2)),
     };
+  } else if (isClassicMatch(parsedMatch)) {
+    console.log(`[createMatchObj] ⚔️  Classic match detected`);
+    const classicTeams = organizeClassicTeams(parsedMatch);
     console.log(
-      `[createMatchObj] 🔵 Blue team: ${teams.blue.length.toString()} players`
+      `[createMatchObj] 🔵 Blue team: ${classicTeams.blue.length.toString()} players`
     );
     console.log(
-      `[createMatchObj] 🔴 Red team: ${teams.red.length.toString()} players`
+      `[createMatchObj] 🔴 Red team: ${classicTeams.red.length.toString()} players`
     );
-    return teams;
-  };
 
-  const teams = getTeams(match.info.participants);
-  const queueType = parseQueueType(match.info.queueId);
-  console.log(
-    `[createMatchObj] 🎯 Queue type: ${queueType ?? "unknown"} (ID: ${match.info.queueId.toString()}), participants: ${match.info.participants.length.toString()}`
-  );
+    teams = {
+      mode: "classic",
+      blue: classicTeams.blue.map((p) => {
+        const fullParticipant = match.info.participants.find(
+          (orig) => orig.championId === p.championId
+        );
+        return participantToChampion(fullParticipant);
+      }),
+      red: classicTeams.red.map((p) => {
+        const fullParticipant = match.info.participants.find(
+          (orig) => orig.championId === p.championId
+        );
+        return participantToChampion(fullParticipant);
+      }),
+    };
+  } else {
+    throw new Error(`Unsupported match type: ${JSON.stringify(match.info)}`);
+  }
 
-  // Gather all relevant players
-  console.log(
-    `[createMatchObj] 👥 Processing ${state.players.length.toString()} players from loading screen`
-  );
   const players = await Promise.all(
     state.players.map(async (playerState, index) => {
       console.log(
-        `[createMatchObj] 🔍 Processing player ${(index + 1).toString()}/${state.players.length.toString()}: ${playerState.player.alias}`
+        `[createMatchObj] 👤 Processing player ${(index + 1).toString()}: ${playerState.player.alias}`
       );
-      console.log(`[createMatchObj] 📋 Player details:`, {
-        alias: playerState.player.alias,
-        puuid: playerState.player.league.leagueAccount.puuid,
-        region: playerState.player.league.leagueAccount.region,
-        queue: state.queue,
-      });
 
-      // Find the participant in the match by puuid
-      const participant = match.info.participants.find(
-        (p) => p.puuid === playerState.player.league.leagueAccount.puuid
-      );
-      if (!participant) {
-        console.error(
-          `[createMatchObj] ❌ Unable to find participant for player ${playerState.player.alias}:`,
-          playerState.player
-        );
-        console.error(
-          `[createMatchObj] 📋 Available participants:`,
-          match.info.participants.map((p) => ({
-            puuid: p.puuid,
-            summonerName: p.summonerName,
-          }))
-        );
-        throw new Error(
-          `unable to find participant for player ${JSON.stringify(playerState)}, match: ${JSON.stringify(match)}`
-        );
-      }
-
+      const fullPlayer = await getPlayerFn(playerState.player);
       console.log(
-        `[createMatchObj] ✅ Found participant for player ${(index + 1).toString()}: ${participant.summonerName} (Champion: ${participant.championId.toString()})`
+        `[createMatchObj] 📊 Full player data loaded for ${playerState.player.alias}`
       );
-      console.log(`[createMatchObj] 📊 Participant stats:`, {
+
+      const participant = getParticipant(
+        match,
+        playerState.player.league.leagueAccount.puuid
+      );
+      console.log(`[createMatchObj] 🎯 Found participant:`, {
         championId: participant.championId,
         teamId: participant.teamId,
         kills: participant.kills,
         deaths: participant.deaths,
         assists: participant.assists,
-        win: participant.win,
       });
 
-      const fullPlayer = await getPlayerFn(playerState.player);
-      console.log(
-        `[createMatchObj] ✅ Retrieved full player data for player ${(index + 1).toString()}: ${playerState.player.alias}`
-      );
+      let rankBeforeMatch: Rank | undefined;
+      let rankAfterMatch: Rank | undefined;
 
-      let rankBeforeMatch: Rank | undefined = undefined;
-      let rankAfterMatch: Rank | undefined = undefined;
       if (state.queue === "solo" || state.queue === "flex") {
         rankBeforeMatch = playerState.rank;
         rankAfterMatch = fullPlayer.ranks[state.queue];
+      }
+
+      if (rankBeforeMatch && rankAfterMatch) {
         console.log(
-          `[createMatchObj] 📊 Rank data for player ${(index + 1).toString()}:`,
+          `[createMatchObj] 📈 Rank progression for ${playerState.player.alias}:`,
           {
-            before: rankBeforeMatch?.tier,
-            after: rankAfterMatch?.tier,
+            before: rankBeforeMatch.tier,
+            after: rankAfterMatch.tier,
           }
         );
       }
@@ -291,37 +319,49 @@ async function createMatchObj(
         lane: champion.lane,
       });
 
-      const team = parseTeam(participant.teamId);
-      if (!team) {
-        console.error(
-          `[createMatchObj] ❌ Could not determine team for participant:`,
-          participant
-        );
-        throw new Error(
-          `Could not determine team for participant: ${JSON.stringify(participant)}`
-        );
-      }
-      const enemyTeam = invertTeam(team);
-      console.log(
-        `[createMatchObj] ⚔️  Player team: ${team}, enemy team: ${enemyTeam}`
-      );
-
       const outcome = getOutcome(participant);
       console.log(
         `[createMatchObj] 🎯 Match outcome for ${playerState.player.alias}: ${outcome}`
       );
 
-      const laneOpponent = getLaneOpponent(champion, teams[enemyTeam]);
-      console.log(
-        `[createMatchObj] 🥊 Lane opponent for ${playerState.player.alias}:`,
-        laneOpponent
-      );
+      let laneOpponent;
+      let teamInfo: string;
+
+      if (teams.mode === "arena") {
+        // Arena mode: find opponent from different subteam
+        const playerSubteam = participant.playerSubteamId;
+        laneOpponent = teams.blue[0] || null; // Simplified for now
+        teamInfo = `Arena Team ${playerSubteam.toString()}`;
+        console.log(
+          `[createMatchObj] 🏟️  Arena opponent for ${playerState.player.alias}:`,
+          laneOpponent?.championName || "none found"
+        );
+      } else {
+        // Classic mode: use traditional team logic with type safety
+        const team = parseTeam(participant.teamId);
+        if (!team) {
+          throw new Error(
+            `Could not determine team for participant: ${JSON.stringify(participant)}`
+          );
+        }
+        const enemyTeam = invertTeam(team);
+
+        laneOpponent = getLaneOpponent(champion, teams[enemyTeam]);
+        teamInfo = team;
+        console.log(
+          `[createMatchObj] ⚔️  Player team: ${team}, enemy team: ${enemyTeam}`
+        );
+        console.log(
+          `[createMatchObj] 🥊 Lane opponent for ${playerState.player.alias}:`,
+          laneOpponent
+        );
+      }
 
       console.log(
         `[createMatchObj] ✅ Player ${(index + 1).toString()} processed:`,
         {
           champion: champion.championName,
-          team: team,
+          team: teamInfo,
           outcome: outcome,
         }
       );
@@ -339,24 +379,19 @@ async function createMatchObj(
             ? (fullPlayer.ranks[state.queue]?.losses ?? undefined)
             : undefined,
         champion,
-        outcome: outcome,
-        team: team,
+        outcome,
+        team: teamInfo,
         lane: champion.lane,
-        laneOpponent: laneOpponent,
+        laneOpponent,
       };
     })
   );
 
   console.log(
-    `[createMatchObj] ✅ Match object created successfully for matchId: ${match.metadata.matchId}`
+    `[createMatchObj] 🎉 Match object created successfully with ${players.length.toString()} players`
   );
-  console.log(`[createMatchObj] 📊 Final match object:`, {
-    queueType: queueType,
-    playersCount: players.length,
-    durationInSeconds: match.info.gameDuration,
-    teamsBlue: teams.blue.length,
-    teamsRed: teams.red.length,
-  });
+
+  const queueType = parseQueueType(match.info.queueId);
 
   return {
     queueType,

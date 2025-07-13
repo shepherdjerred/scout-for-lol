@@ -1,5 +1,5 @@
 import {
-  CompletedMatch,
+  AnyMatch,
   leaguePointsDelta,
   lpDiffToString,
 } from "@scout-for-lol/data";
@@ -9,7 +9,7 @@ import { renderTeam } from "./team.tsx";
 import { round } from "remeda";
 import { font } from "../assets/index.ts";
 
-export function Report({ match }: { match: CompletedMatch }) {
+export function Report({ match }: { match: AnyMatch }) {
   const minutes = round(match.durationInSeconds / 60, 0);
 
   // Use the first player for summary fields (backwards compatible)
@@ -89,8 +89,8 @@ export function Report({ match }: { match: CompletedMatch }) {
                   lpDiffToString(
                     leaguePointsDelta(
                       mainPlayer.rankBeforeMatch,
-                      mainPlayer.rankAfterMatch,
-                    ),
+                      mainPlayer.rankAfterMatch
+                    )
                   )}
               </span>
               {wins != null && losses != null && (
@@ -121,17 +121,50 @@ export function Report({ match }: { match: CompletedMatch }) {
             flexDirection: "column",
           }}
         >
-          {renderTeam(
-            match.teams.blue,
-            "blue",
-            highlightNames,
-            match.durationInSeconds / 60,
-          )}
-          {renderTeam(
-            match.teams.red,
-            "red",
-            highlightNames,
-            match.durationInSeconds / 60,
+          {match.queueType === "arena" ? (
+            // Arena match - render all 8 teams
+            <>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((teamNum) => {
+                const teamKey = `team${teamNum}` as keyof typeof match.teams;
+                const team = match.teams[teamKey];
+                return (
+                  <div key={teamNum} style={{ marginBottom: "2rem" }}>
+                    <div
+                      style={{
+                        color: palette.gold.bright,
+                        fontFamily: font.title,
+                        fontWeight: 700,
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      Team {teamNum}
+                    </div>
+                    {renderTeam(
+                      team,
+                      teamNum <= 4 ? "blue" : "red", // Alternate colors for visual distinction
+                      highlightNames,
+                      match.durationInSeconds / 60
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          ) : (
+            // Regular match - render blue and red teams
+            <>
+              {renderTeam(
+                match.teams.blue,
+                "blue",
+                highlightNames,
+                match.durationInSeconds / 60
+              )}
+              {renderTeam(
+                match.teams.red,
+                "red",
+                highlightNames,
+                match.durationInSeconds / 60
+              )}
+            </>
           )}
         </div>
       </div>
