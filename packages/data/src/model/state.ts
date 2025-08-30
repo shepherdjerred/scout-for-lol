@@ -22,9 +22,10 @@ export const QueueTypeSchema = z.enum([
 export function parseQueueType(input: number): QueueType | undefined {
   return match(input)
     .returnType<QueueType | undefined>()
-    .with(420, () => "solo")
-    .with(400, () => "draft pick")
-    .with(440, () => "flex")
+    .with(0, () => "custom")
+    .with(420, () => "ranked solo")
+    .with(400, () => "unranked draft pick")
+    .with(440, () => "ranked flex")
     .with(450, () => "aram")
     .with(480, () => "swiftplay")
     .with(490, () => "quickplay")
@@ -32,6 +33,9 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(1700, () => "arena")
     .with(2300, () => "brawl")
     .with(1900, () => "urf")
+    .with(4250, () => "doom bots")
+    .with(4220 , () => "doom bots")
+    .with(4250, () => "doom bots (hardest)")
     .otherwise(() => {
       console.error(`unknown queue type: ${input.toString()}`);
       return undefined;
