@@ -16,7 +16,7 @@ export function renderChampion(
   champion: Champion,
   highlight: boolean,
   durationInMinutes: number,
-  damageMax: number,
+  damageMax: number
 ) {
   const items = renderItems(champion.items, champion.visionScore);
 
@@ -25,8 +25,8 @@ export function renderChampion(
   const summs = map(champion.spells, (spell) => {
     const name = first(
       keys(
-        pickBy(summoner.data, (summoner) => summoner.key === spell.toString()),
-      ),
+        pickBy(summoner.data, (summoner) => summoner.key === spell.toString())
+      )
     );
 
     if (name === undefined) {
@@ -36,8 +36,8 @@ export function renderChampion(
     return (
       <img
         src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/spell/${name}.png`}
-        width="59"
-        height="59"
+        width={59}
+        height={59}
         style={{
           backgroundColor: palette.blue[5],
           border: `1px solid ${palette.gold.bright}`,
