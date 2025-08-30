@@ -6,8 +6,8 @@ import { filter, flatMap } from "remeda";
 
 export type QueueType = z.infer<typeof QueueTypeSchema>;
 export const QueueTypeSchema = z.enum([
-  "solo",
-  "flex",
+  "ranked solo",
+  "ranked flex",
   "aram",
   "arurf",
   "urf",
@@ -16,6 +16,8 @@ export const QueueTypeSchema = z.enum([
   "arena",
   "brawl",
   "draft pick",
+  "doom bots",
+  "custom",
 ]);
 
 // from https://static.developer.riotgames.com/docs/lol/queues.json
@@ -24,7 +26,7 @@ export function parseQueueType(input: number): QueueType | undefined {
     .returnType<QueueType | undefined>()
     .with(0, () => "custom")
     .with(420, () => "ranked solo")
-    .with(400, () => "unranked draft pick")
+    .with(400, () => "draft pick")
     .with(440, () => "ranked flex")
     .with(450, () => "aram")
     .with(480, () => "swiftplay")
@@ -33,9 +35,9 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(1700, () => "arena")
     .with(2300, () => "brawl")
     .with(1900, () => "urf")
+    .with(3130, () => "doom bots")
+    .with(4220, () => "doom bots")
     .with(4250, () => "doom bots")
-    .with(4220 , () => "doom bots")
-    .with(4250, () => "doom bots (hardest)")
     .otherwise(() => {
       console.error(`unknown queue type: ${input.toString()}`);
       return undefined;
@@ -68,21 +70,21 @@ export const ApplicationStateSchema = z.strictObject({
 
 export function getPlayersInGame(
   players: PlayerConfig,
-  state: ApplicationState,
+  state: ApplicationState
 ) {
   const playersInGame = flatMap(state.gamesStarted, (game) => game.players);
   return filter(players, (player) =>
     playersInGame.some(
       (matchPlayer) =>
         matchPlayer.player.league.leagueAccount.puuid ===
-        player.league.leagueAccount.puuid,
-    ),
+        player.league.leagueAccount.puuid
+    )
   );
 }
 
 export function getPlayersNotInGame(
   players: PlayerConfig,
-  state: ApplicationState,
+  state: ApplicationState
 ) {
   const playersInGame = flatMap(state.gamesStarted, (game) => game.players);
   return filter(
@@ -91,7 +93,7 @@ export function getPlayersNotInGame(
       !playersInGame.some(
         (matchPlayer) =>
           matchPlayer.player.league.leagueAccount.puuid ===
-          player.league.leagueAccount.puuid,
-      ),
+          player.league.leagueAccount.puuid
+      )
   );
 }
