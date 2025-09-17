@@ -19,7 +19,5 @@
   "devDependencies": {
     "typescript": "^5.0.0"
   },
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.890.0"
-  }
+  "dependencies": {}
 }

@@ -3,9 +3,6 @@
   "workspaces": {
     "": {
       "name": "scout-for-lol",
-      "dependencies": {
-        "@aws-sdk/client-s3": "^3.890.0",
-      },
       "devDependencies": {
         "typescript": "^5.0.0",
       },
@@ -14,6 +11,7 @@
       "name": "@scout-for-lol/backend",
       "version": "0.1.0",
       "dependencies": {
+        "@aws-sdk/client-s3": "^3.890.0",
         "@prisma/client": "latest",
         "@resvg/resvg-js": "^2.6.2",
         "@scout-for-lol/data": "workspace:*",
