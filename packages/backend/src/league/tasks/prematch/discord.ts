@@ -1,7 +1,7 @@
 import { getChampionName } from "twisted/dist/constants/champions.js";
 import { CurrentGameInfoDTO } from "twisted/dist/models-dto/index.js";
 import { findParticipant } from "../../api/index";
-import { PlayerConfigEntry } from "@scout-for-lol/data";
+import { PlayerConfigEntry, queueTypeToDisplayString } from "@scout-for-lol/data";
 import { QueueType } from "@scout-for-lol/data";
 import { map } from "remeda";
 
@@ -96,8 +96,9 @@ export function createDiscordMessage(
     console.log(`📝 Formatted multi-player message: "${messageString}"`);
   }
 
-  const queueTypeDisplay = queueType ?? game.gameQueueConfigId.toString();
-  const finalMessage = `${messageString} started a ${queueTypeDisplay} game`;
+  const queueTypeDisplay = queueType ? queueTypeToDisplayString(queueType) : game.gameQueueConfigId.toString();
+  const article = /^[aeiouAEIOU]/.test(queueTypeDisplay) ? 'an' : 'a';
+  const finalMessage = `${messageString} started ${article} ${queueTypeDisplay} game`;
 
   console.log(`✅ Final Discord message created: "${finalMessage}"`);
   return finalMessage;

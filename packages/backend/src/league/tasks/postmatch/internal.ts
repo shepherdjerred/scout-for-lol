@@ -29,6 +29,7 @@ import { getOutcome } from "../../model/match.ts";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
 import { mapRegionToEnum } from "../../model/region.ts";
 import { participantToChampion } from "../../model/champion.ts";
+import { saveMatchToS3 } from "../../../storage/s3.ts";
 
 export async function checkMatch(game: LoadingScreenState) {
   console.log(
@@ -43,8 +44,13 @@ export async function checkMatch(game: LoadingScreenState) {
   });
 
   try {
+    const firstPlayer = game.players[0];
+    if (!firstPlayer) {
+      throw new Error("No players found in game");
+    }
+
     const region = mapRegionToEnum(
-      game.players[0].player.league.leagueAccount.region
+      firstPlayer.player.league.leagueAccount.region
     );
     console.log(`[checkMatch] 🌍 Mapped region: ${region}`);
 
@@ -119,19 +125,29 @@ export async function checkMatch(game: LoadingScreenState) {
   }
 }
 
-export function saveMatch(_match: MatchV5DTOs.MatchDto) {
-  console.log(`[saveMatch] 💾 Saving match: ${_match.metadata.matchId}`);
+export async function saveMatch(match: MatchV5DTOs.MatchDto): Promise<void> {
+  console.log(`[saveMatch] 💾 Saving match: ${match.metadata.matchId}`);
   console.log(`[saveMatch] 📊 Match details:`, {
-    matchId: _match.metadata.matchId,
-    participants: _match.info.participants.length,
-    gameMode: _match.info.gameMode,
-    queueId: _match.info.queueId,
-    gameEndTimestamp: _match.info.gameEndTimestamp,
-    gameDuration: _match.info.gameDuration,
+    matchId: match.metadata.matchId,
+    participants: match.info.participants.length,
+    gameMode: match.info.gameMode,
+    queueId: match.info.queueId,
+    gameEndTimestamp: match.info.gameEndTimestamp,
+    gameDuration: match.info.gameDuration,
   });
 
-  console.log(`[saveMatch] ⚠️  TODO: Implement actual match saving logic`);
-  return Promise.resolve(undefined);
+  try {
+    // Save the match to S3
+    await saveMatchToS3(match);
+
+    console.log(`[saveMatch] ✅ Successfully saved match: ${match.metadata.matchId}`);
+  } catch (error) {
+    console.error(`[saveMatch] ❌ Error saving match ${match.metadata.matchId}:`, error);
+
+    // Don't throw the error to prevent disrupting the entire post-match flow
+    // The match processing should continue even if S3 storage fails
+    console.warn(`[saveMatch] ⚠️  Continuing post-match processing despite storage failure`);
+  }
 }
 
 async function getImage(
@@ -422,8 +438,12 @@ export async function checkPostMatchInternal(
   const finishedGames = pipe(
     state.gamesStarted,
     map((game) => {
+      const firstPlayer = game.players[0];
+      if (!firstPlayer) {
+        throw new Error("No players found in game");
+      }
       const region = mapRegionToEnum(
-        game.players[0].player.league.leagueAccount.region
+        firstPlayer.player.league.leagueAccount.region
       );
       const fullMatchId = `${region}_${game.matchId.toString()}`;
       return [
@@ -486,8 +506,12 @@ export async function checkPostMatchInternal(
         console.log(
           `[checkPostMatchInternal] Getting subscriptions for match: ${matchDto.metadata.matchId}`
         );
+        const firstPlayer = state.players[0];
+        if (!firstPlayer) {
+          throw new Error("No players found in game");
+        }
         const servers = await getSubscriptionsFn([
-          state.players[0].player.league.leagueAccount.puuid,
+          firstPlayer.player.league.leagueAccount.puuid,
         ]);
         console.log(
           `[checkPostMatchInternal] Found ${servers.length.toString()} subscribed channels for match: ${matchDto.metadata.matchId.toString()}`

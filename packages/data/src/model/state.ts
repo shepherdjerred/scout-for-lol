@@ -6,8 +6,8 @@ import { filter, flatMap } from "remeda";
 
 export type QueueType = z.infer<typeof QueueTypeSchema>;
 export const QueueTypeSchema = z.enum([
-  "ranked solo",
-  "ranked flex",
+  "solo",
+  "flex",
   "aram",
   "arurf",
   "urf",
@@ -16,7 +16,9 @@ export const QueueTypeSchema = z.enum([
   "arena",
   "brawl",
   "draft pick",
-  "doom bots",
+  "easy doom bots",
+  "normal doom bots",
+  "hard doom bots",
   "custom",
 ]);
 
@@ -25,9 +27,9 @@ export function parseQueueType(input: number): QueueType | undefined {
   return match(input)
     .returnType<QueueType | undefined>()
     .with(0, () => "custom")
-    .with(420, () => "ranked solo")
+    .with(420, () => "solo")
     .with(400, () => "draft pick")
-    .with(440, () => "ranked flex")
+    .with(440, () => "flex")
     .with(450, () => "aram")
     .with(480, () => "swiftplay")
     .with(490, () => "quickplay")
@@ -35,13 +37,33 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(1700, () => "arena")
     .with(2300, () => "brawl")
     .with(1900, () => "urf")
-    .with(3130, () => "doom bots")
-    .with(4220, () => "doom bots")
-    .with(4250, () => "doom bots")
+    .with(3130, () => "easy doom bots")
+    .with(4220, () => "normal doom bots")
+    .with(4250, () => "hard doom bots")
     .otherwise(() => {
       console.error(`unknown queue type: ${input.toString()}`);
       return undefined;
     });
+}
+
+export function queueTypeToDisplayString(queueType: QueueType): string {
+  return match(queueType)
+    .returnType<string>()
+    .with("solo", () => "ranked solo")
+    .with("flex", () => "ranked flex")
+    .with("aram", () => "ARAM")
+    .with("arurf", () => "ARURF")
+    .with("urf", () => "URF")
+    .with("arena", () => "arena")
+    .with("brawl", () => "brawl")
+    .with("easy doom bots", () => "doom bots")
+    .with("normal doom bots", () => "doom bots")
+    .with("hard doom bots", () => "doom bots")
+    .with("custom", () => "custom")
+    .with("draft pick", () => "draft pick")
+    .with("quickplay", () => "quickplay")
+    .with("swiftplay", () => "swiftplay")
+    .exhaustive();
 }
 
 export type LoadingScreenPlayer = z.infer<typeof LoadingScreenPlayerSchema>;

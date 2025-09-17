@@ -43,6 +43,7 @@
   },
   "settings": {
     "testing.automaticallyOpenPeekView": "never",
+    "typescript.tsserver.experimental.enableProjectDiagnostics": true,
   },
   "launch": {
     "configurations": [
