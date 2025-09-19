@@ -1,3 +1,4 @@
+export * from "./arena.js";
 export * from "./champion.js";
 export * from "./discord.js";
 export * from "./division.js";
