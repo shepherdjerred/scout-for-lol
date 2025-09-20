@@ -8,7 +8,7 @@ import {
   MessageCreateOptions,
   MessagePayload,
 } from "discord.js";
-import { matchToImage } from "@scout-for-lol/report";
+import { matchToImage, arenaMatchToImage } from "@scout-for-lol/report";
 import {
   ApplicationState,
   CompletedMatch,
@@ -22,6 +22,7 @@ import {
   Player,
   PlayerConfigEntry,
   type Rank,
+  type ArenaMatch,
 } from "@scout-for-lol/data";
 import { getState, setState } from "../../model/state.ts";
 import { differenceWith, filter, map, pipe } from "remeda";
@@ -29,6 +30,7 @@ import { getOutcome } from "../../model/match.ts";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
 import { mapRegionToEnum } from "../../model/region.ts";
 import { participantToChampion } from "../../model/champion.ts";
+import { toArenaMatch } from "../../model/match.ts";
 import { saveMatchToS3 } from "../../../storage/s3.ts";
 
 export async function checkMatch(game: LoadingScreenState) {
@@ -151,20 +153,21 @@ export async function saveMatch(match: MatchV5DTOs.MatchDto): Promise<void> {
 }
 
 async function getImage(
-  match: CompletedMatch
+  match: CompletedMatch | ArenaMatch
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
   console.log(`[getImage] 🖼️  Starting image generation for match`);
   console.log(`[getImage] 📊 Match details:`, {
     queueType: match.queueType,
     playersCount: match.players.length,
     durationInSeconds: match.durationInSeconds,
-    teamsBlue: match.teams.blue.length,
-    teamsRed: match.teams.red.length,
   });
 
   try {
     const imageStartTime = Date.now();
-    const image = await matchToImage(match);
+    const image =
+      match.queueType === "arena"
+        ? await arenaMatchToImage(match)
+        : await matchToImage(match);
     const imageTime = Date.now() - imageStartTime;
 
     console.log(
@@ -227,8 +230,18 @@ async function createMatchObj(
     return teams;
   };
 
-  const teams = getTeams(match.info.participants);
   const queueType = parseQueueType(match.info.queueId);
+  if (queueType === "arena") {
+    // Build ArenaMatch and short-circuit traditional flow
+    const firstPlayerState = state.players[0];
+    if (!firstPlayerState) {
+      throw new Error("No players found in game state for arena match");
+    }
+    const player = await getPlayerFn(firstPlayerState.player);
+    const arena = toArenaMatch(player, match);
+    return arena as unknown as CompletedMatch;
+  }
+  const teams = getTeams(match.info.participants);
   console.log(
     `[createMatchObj] 🎯 Queue type: ${queueType ?? "unknown"} (ID: ${match.info.queueId.toString()}), participants: ${match.info.participants.length.toString()}`
   );
