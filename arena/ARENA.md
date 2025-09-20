@@ -124,7 +124,7 @@ export const ArenaMatchSchema = z.strictObject({
 #### Task 2.1: Arena Match Detection
 - [x] Use `queueType: "arena"` for narrowing; no separate guard function
 - [x] Queue type parsing already maps 1700 → `"arena"`
-- [ ] Add arena-specific validation logic
+- [x] Add arena-specific validation logic
 
 **Files to modify:**
 - `packages/backend/src/league/model/match.ts`
@@ -137,7 +137,7 @@ export const ArenaMatchSchema = z.strictObject({
 - [x] Refactor helpers to use Remeda (`groupBy`, `entries`, `sortBy`, `map`)
 - [x] Update match conversion logic for arena format (`toArenaMatch`)
 - [x] Arena players: no ranks, no lanes; use placement (1..8)
-- [ ] Handle placement-based outcomes instead of win/loss
+- [x] Handle placement-based outcomes instead of win/loss
 
 **Files to modify:**
 - `packages/backend/src/league/model/match.ts` (implemented `validateArenaParticipants`, Remeda-based helpers; no assertions/any)
@@ -149,7 +149,7 @@ export const ArenaMatchSchema = z.strictObject({
 #### Task 2.3: Outcome Processing
 - [x] Add placement extraction utility (`getArenaPlacement`) and consistency check within subteams
 - [x] Use placement for arena player outcome in `toArenaMatch`
-- [ ] Create placement formatting utilities
+- [x] Create placement formatting utilities
 - [x] Update match object creation for arena-specific data (assemble `ArenaMatch`)
 
 **Files to modify:**
@@ -192,10 +192,10 @@ export const ArenaMatchSchema = z.strictObject({
 - [x] Write tests for arena data model validation
 - [x] Test augment parsing from API data
 - [x] Test team grouping logic (8 teams of 2) and teammate lookup
-- [ ] Test placement outcome processing
+- [x] Test placement outcome processing
 
 #### Task 4.2: Integration Tests
-- [ ] Test full arena match processing pipeline
+- [x] Test full arena match processing pipeline (real JSON → `toArenaMatch` → `ArenaMatchSchema`)
 - [x] Validate arena subteams and players extraction (integration test)
 - [ ] Validate arena match reports generation
 - [ ] Test Discord notification for arena matches
