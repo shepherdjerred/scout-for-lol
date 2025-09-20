@@ -107,9 +107,9 @@ export const CompletedMatchSchema = z.strictObject({
 
 #### Task 1.1: Update Champion Model
 - [ ] Add `augments` field to `ChampionSchema`
-- [ ] Create `AugmentSlotSchema` for augment metadata
-- [ ] Update `participantToChampion` to extract augments from API
-- [ ] Add augment parsing utility functions
+- [x] Create `AugmentSlotSchema` for augment metadata (implemented in `packages/data/src/model/arena.ts`)
+- [x] Update `participantToChampion` to extract augments from API (implemented as `participantToArenaChampion` in `packages/backend/src/league/model/champion.ts`)
+- [ ] Add augment parsing utility functions (currently extracted inline in `participantToArenaChampion`)
 
 **Files to modify:**
 - `packages/data/src/model/champion.ts`
@@ -118,18 +118,18 @@ export const CompletedMatchSchema = z.strictObject({
 
 #### Task 1.2: Extend Team Model
 - [ ] Update `TeamSchema` to support union of traditional and arena teams
-- [ ] Create `ArenaSubteamSchema` for 2-player teams
-- [ ] Update `parseTeam` function to handle `playerSubteamId`
-- [ ] Add arena team utility functions
+- [x] Create `ArenaSubteamSchema` for 2-player teams (implemented in `packages/data/src/model/arena.ts`)
+- [ ] Update `parseTeam` function to handle `playerSubteamId` (separate `parseArenaTeam` exists in `packages/data/src/model/arena.ts`)
+- [x] Add arena team utility functions (`isArenaTeam`, `parseArenaTeam` in `packages/data/src/model/arena.ts`)
 
 **Files to modify:**
 - `packages/data/src/model/team.ts`
 
 #### Task 1.3: Enhanced Match Model
-- [ ] Update `MatchOutcomeSchema` to support placement numbers
-- [ ] Add discriminated union for traditional vs arena team structures
-- [ ] Add arena-specific player fields (`arenaTeammate`)
-- [ ] Create type guards for match type discrimination
+- [ ] Update `MatchOutcomeSchema` to support placement numbers (separate `ArenaPlacementSchema` exists in `packages/data/src/model/arena.ts`)
+- [ ] Add discriminated union for traditional vs arena team structures (currently separate `ArenaMatchSchema` exists in `packages/data/src/model/arena.ts`)
+- [ ] Add arena-specific player fields (`arenaTeammate`) (present in `ArenaMatchPlayerSchema` but not in base match player)
+- [ ] Create type guards for match type discrimination (team-level guards exist; match-level guards pending)
 
 **Files to modify:**
 - `packages/data/src/model/match.ts`
