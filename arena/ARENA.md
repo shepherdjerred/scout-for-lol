@@ -135,7 +135,8 @@ export const ArenaMatchSchema = z.strictObject({
 - [x] Add `toArenaSubteams` builder from participants
 - [x] Introduce one-time boundary validation (`validateArenaParticipants`) using Zod `.passthrough()`, then use static typing internally (no assertions/any)
 - [x] Refactor helpers to use Remeda (`groupBy`, `entries`, `sortBy`, `map`)
-- [ ] Update match conversion logic for arena format (`toArenaMatch`)
+- [x] Update match conversion logic for arena format (`toArenaMatch`)
+- [x] Arena players: no ranks, no lanes; use placement (1..8)
 - [ ] Handle placement-based outcomes instead of win/loss
 
 **Files to modify:**
@@ -147,13 +148,14 @@ export const ArenaMatchSchema = z.strictObject({
 
 #### Task 2.3: Outcome Processing
 - [x] Add placement extraction utility (`getArenaPlacement`) and consistency check within subteams
-- [ ] Update arena outcome handling in conversion path (branch on `queueType: 'arena'`)
+- [x] Use placement for arena player outcome in `toArenaMatch`
 - [ ] Create placement formatting utilities
-- [ ] Update match object creation for arena-specific data
+- [x] Update match object creation for arena-specific data (assemble `ArenaMatch`)
 
 **Files to modify:**
-- `packages/backend/src/league/model/match.ts` (added `getArenaPlacement`)
+- `packages/backend/src/league/model/match.ts` (added `getArenaPlacement`, `toArenaMatch`)
 - `packages/backend/src/league/model/__tests__/arena.teams.test.ts` (added placement consistency test)
+- `packages/backend/src/league/model/__tests__/arena.outcome.test.ts` (placement bounds tests)
 - `packages/report/src/match.ts`
 
 **Estimated effort:** 3-4 days

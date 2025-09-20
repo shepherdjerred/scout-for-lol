@@ -98,3 +98,14 @@ export const ArenaMatchSchema = z.strictObject({
   // Arena has 8 subteams instead of red/blue
   subteams: z.array(ArenaSubteamSchema).length(8), // 8 teams of 2 players each
 });
+
+// Placement formatting utility (e.g., 1 -> 1st, 2 -> 2nd)
+export function formatArenaPlacement(placement: number): string {
+  const j = placement % 10;
+  const k = placement % 100;
+  if (k >= 11 && k <= 13) return `${placement}th`;
+  if (j === 1) return `${placement}st`;
+  if (j === 2) return `${placement}nd`;
+  if (j === 3) return `${placement}rd`;
+  return `${placement}th`;
+}

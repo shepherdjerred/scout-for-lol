@@ -13,6 +13,7 @@ import {
 import { strict as assert } from "assert";
 import { match } from "ts-pattern";
 import { participantToArenaChampion, participantToChampion } from "./champion.js";
+import { type ArenaMatch } from "@scout-for-lol/data";
 import { type ArenaSubteam } from "@scout-for-lol/data";
 
 function getTeams(participants: MatchV5DTOs.ParticipantDto[]) {
@@ -134,12 +135,14 @@ export function groupArenaTeams(participants: MatchV5DTOs.ParticipantDto[]) {
 }
 
 export function getArenaTeammate(
-  participant: ArenaParticipantValidatedMin,
-  participants: ArenaParticipantValidatedMin[],
+  participant: MatchV5DTOs.ParticipantDto,
+  participants: MatchV5DTOs.ParticipantDto[],
 ) {
+  const sub = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
   for (const p of participants) {
     if (p === participant) continue;
-    if (p.playerSubteamId === participant.playerSubteamId) return p;
+    const otherSub = ArenaParticipantMinimalSchema.parse(p).playerSubteamId;
+    if (otherSub === sub) return p;
   }
   return undefined;
 }
@@ -166,4 +169,43 @@ export function toArenaSubteams(
 
 export function getArenaPlacement(participant: MatchV5DTOs.ParticipantDto) {
   return ArenaParticipantFieldsSchema.parse(participant).placement;
+}
+
+export function toArenaMatch(
+  player: Player,
+  matchDto: MatchV5DTOs.MatchDto,
+): ArenaMatch {
+  const subteams = toArenaSubteams(matchDto.info.participants);
+
+  // Build ArenaMatch.players for the tracked player only (can extend to multi-player later)
+  const participant = findParticipant(
+    player.config.league.leagueAccount.puuid,
+    matchDto.info.participants,
+  );
+  if (participant === undefined) {
+    throw new Error("participant not found for arena match");
+  }
+  const subteamId = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
+  const placement = getArenaPlacement(participant);
+  const champion = participantToArenaChampion(participant);
+  const teammateDto = getArenaTeammate(participant, matchDto.info.participants);
+  if (!teammateDto) {
+    throw new Error("arena teammate not found");
+  }
+  const arenaTeammate = participantToArenaChampion(teammateDto);
+
+  return {
+    durationInSeconds: matchDto.info.gameDuration,
+    queueType: "arena",
+    players: [
+      {
+        playerConfig: player.config,
+        placement,
+        champion,
+        team: subteamId,
+        arenaTeammate,
+      },
+    ],
+    subteams,
+  } satisfies ArenaMatch;
 }

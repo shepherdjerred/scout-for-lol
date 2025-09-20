@@ -4,6 +4,7 @@ import {
   ArenaChampionSchema,
   type ArenaChampion,
   ArenaSubteamSchema,
+  formatArenaPlacement,
 } from "@scout-for-lol/data";
 
 const arenaChamp = (): ArenaChampion =>
@@ -62,5 +63,16 @@ describe("ArenaMatchSchema", () => {
         subteams: [subteam(1, 1)],
       }),
     ).toThrow();
+  });
+
+  it("formats placement correctly", () => {
+    expect(formatArenaPlacement(1)).toBe("1st");
+    expect(formatArenaPlacement(2)).toBe("2nd");
+    expect(formatArenaPlacement(3)).toBe("3rd");
+    expect(formatArenaPlacement(4)).toBe("4th");
+    expect(formatArenaPlacement(11)).toBe("11th");
+    expect(formatArenaPlacement(12)).toBe("12th");
+    expect(formatArenaPlacement(13)).toBe("13th");
+    expect(formatArenaPlacement(21)).toBe("21st");
   });
 });

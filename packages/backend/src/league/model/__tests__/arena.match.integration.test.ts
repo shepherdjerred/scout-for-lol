@@ -1,8 +1,8 @@
 import { describe, it, expect } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { ArenaSubteamSchema } from "@scout-for-lol/data";
+import { ArenaMatchSchema, ArenaSubteamSchema } from "@scout-for-lol/data";
 import { participantToArenaChampion } from "../champion.js";
-import { toArenaSubteams } from "../match.js";
+import { toArenaMatch, toArenaSubteams } from "../match.js";
 
 function makeParticipant(overrides: Partial<MatchV5DTOs.ParticipantDto> & { playerSubteamId: number; placement: number; puuid: string; }): MatchV5DTOs.ParticipantDto {
   const base: Partial<MatchV5DTOs.ParticipantDto> = {
@@ -49,10 +49,11 @@ function makeParticipant(overrides: Partial<MatchV5DTOs.ParticipantDto> & { play
 }
 
 function makeArenaMatchDto(): MatchV5DTOs.MatchDto {
+  const longPuuid = (label: string) => (label + "-".repeat(80)).slice(0, 78);
   const participants: MatchV5DTOs.ParticipantDto[] = [];
   for (let sub = 1; sub <= 8; sub++) {
-    participants.push(makeParticipant({ playerSubteamId: sub, placement: sub, puuid: `A${sub}` }));
-    participants.push(makeParticipant({ playerSubteamId: sub, placement: sub, puuid: `B${sub}` }));
+    participants.push(makeParticipant({ playerSubteamId: sub, placement: sub, puuid: longPuuid(`A${sub}`) }));
+    participants.push(makeParticipant({ playerSubteamId: sub, placement: sub, puuid: longPuuid(`B${sub}`) }));
   }
   return {
     metadata: { dataVersion: "", matchId: "NA1_1", participants: participants.map(p => p.puuid) },
@@ -88,5 +89,29 @@ describe("arena match integration", () => {
     });
     expect(subteams.length).toBe(8);
     expect(players.length).toBe(16);
+  });
+
+  it("builds full ArenaMatch via toArenaMatch", () => {
+    const dto = makeArenaMatchDto();
+    const first = dto.info.participants[0];
+    if (!first) throw new Error("participants should not be empty in test dto");
+    const puuid = first.puuid;
+    const player = {
+      config: {
+        alias: "Test",
+        league: { leagueAccount: { puuid, region: "PBE" } },
+        discordAccount: null,
+      },
+      ranks: {},
+    } as any;
+    const arenaMatch = toArenaMatch(player, dto);
+    const parsed = ArenaMatchSchema.parse(arenaMatch);
+    expect(parsed.queueType).toBe("arena");
+    expect(parsed.subteams.length).toBe(8);
+    expect(parsed.players.length).toBe(1);
+    const firstPlayer = parsed.players[0];
+    if (!firstPlayer) throw new Error("parsed players should not be empty");
+    expect(firstPlayer.placement).toBeGreaterThanOrEqual(1);
+    expect(firstPlayer.placement).toBeLessThanOrEqual(8);
   });
 });
