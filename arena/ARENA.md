@@ -24,19 +24,16 @@ This document outlines the implementation plan for adding Arena mode support to 
 
 ## Data Model Design
 
-### 1. Enhanced Champion Model with Augments
+### 1. Arena Champion Model (separate schema)
 
 ```typescript
-// data/src/model/champion.ts - Add augments support
-export type Champion = z.infer<typeof ChampionSchema>;
-export const ChampionSchema = z.strictObject({
-  // ... existing fields ...
-
-  // Arena-specific fields
-  augments: z.array(z.number()).max(6).optional(), // playerAugment1-6
+// data/src/model/arena.ts - Arena-specific champion extends base Champion
+export const ArenaChampionSchema = ChampionSchema.extend({
+  augments: z.array(z.number()).max(6),
+  arenaMetrics: ArenaMetricsSchema,
+  teamSupport: TeamSupportMetricsSchema,
 });
 
-export type AugmentSlot = z.infer<typeof AugmentSlotSchema>;
 export const AugmentSlotSchema = z.strictObject({
   augmentId: z.number(),
   slot: z.number().int().min(1).max(6),
@@ -46,59 +43,45 @@ export const AugmentSlotSchema = z.strictObject({
 ### 2. Arena Team Structure
 
 ```typescript
-// data/src/model/team.ts - Support both traditional and arena teams
-export type Team = z.infer<typeof TeamSchema>;
-export const TeamSchema = z.union([
-  z.enum(["red", "blue"]), // Traditional 5v5 teams
-  z.number().int().min(1).max(8), // Arena subteam IDs (1-8)
-]);
+// data/src/model/arena.ts - Arena team types live alongside, not in TeamSchema
+export const ArenaTeamIdSchema = z.number().int().min(1).max(8);
 
-export type ArenaSubteam = z.infer<typeof ArenaSubteamSchema>;
 export const ArenaSubteamSchema = z.strictObject({
-  subteamId: z.number().int().min(1).max(8), // playerSubteamId
-  players: z.array(ChampionSchema).length(2), // Exactly 2 players
-  placement: z.number().int().min(1).max(8), // Final placement (1st-8th)
+  subteamId: ArenaTeamIdSchema,
+  players: z.array(ArenaChampionSchema).length(2),
+  placement: z.number().int().min(1).max(8),
 });
+
+export function parseArenaTeam(subteamId: number) {
+  return subteamId >= 1 && subteamId <= 8 ? subteamId : undefined;
+}
 ```
 
 ### 3. Enhanced Match Model with Arena Support
 
 ```typescript
-// data/src/model/match.ts - Discriminated union for match types
-export type MatchOutcome = z.infer<typeof MatchOutcomeSchema>;
-export const MatchOutcomeSchema = z.union([
-  z.enum(["Victory", "Defeat", "Surrender"]), // Traditional outcomes
-  z.number().int().min(1).max(8), // Arena placement (1st-8th)
-]);
-
-export type CompletedMatch = z.infer<typeof CompletedMatchSchema>;
-export const CompletedMatchSchema = z.strictObject({
-  // ... existing fields ...
-
-  players: z.array(
-    z.strictObject({
-      // ... existing fields ...
-      outcome: MatchOutcomeSchema,
-      team: TeamSchema,
-
-      // Arena-specific fields (optional for traditional)
-      arenaTeammate: ChampionSchema.optional(),
-    }),
-  ),
-
-  // Discriminated union for team structures
-  teams: z.discriminatedUnion("type", [
-    z.strictObject({
-      type: z.literal("traditional"),
-      red: RosterSchema, // 5 players
-      blue: RosterSchema, // 5 players
-    }),
-    z.strictObject({
-      type: z.literal("arena"),
-      subteams: z.array(ArenaSubteamSchema).length(8), // 8 teams of 2
-    }),
-  ]),
+// data/src/model/arena.ts - Separate ArenaMatch schema with queueType literal
+export const ArenaMatchPlayerSchema = z.strictObject({
+  playerConfig: PlayerConfigEntrySchema,
+  wins: z.number().nonnegative().optional(),
+  losses: z.number().nonnegative().optional(),
+  placement: z.number().int().min(1).max(8),
+  champion: ArenaChampionSchema,
+  team: ArenaTeamIdSchema,
+  lane: LaneSchema.optional(),
+  arenaTeammate: ArenaChampionSchema,
+  rankBeforeMatch: RankSchema.optional(),
+  rankAfterMatch: RankSchema.optional(),
 });
+
+export const ArenaMatchSchema = z.strictObject({
+  durationInSeconds: z.number().nonnegative(),
+  queueType: z.literal("arena"),
+  players: z.array(ArenaMatchPlayerSchema),
+  subteams: z.array(ArenaSubteamSchema).length(8),
+});
+
+// Consumers can narrow by match.queueType === 'arena' without changing base models
 ```
 
 ## Implementation Plan
@@ -106,33 +89,32 @@ export const CompletedMatchSchema = z.strictObject({
 ### 🚀 Priority 1: Core Data Model Updates (Required for any arena support)
 
 #### Task 1.1: Update Champion Model
-- [ ] Add `augments` field to `ChampionSchema`
+- [x] Keep augments only in `ArenaChampionSchema` (no base model changes)
 - [x] Create `AugmentSlotSchema` for augment metadata (implemented in `packages/data/src/model/arena.ts`)
 - [x] Update `participantToChampion` to extract augments from API (implemented as `participantToArenaChampion` in `packages/backend/src/league/model/champion.ts`)
-- [ ] Add augment parsing utility functions (currently extracted inline in `participantToArenaChampion`)
+- [x] Add augment parsing utility functions (`extractAugments`, `extractArenaMetrics`, `extractTeamSupport` in backend)
 
 **Files to modify:**
-- `packages/data/src/model/champion.ts`
+- `packages/data/src/model/arena.ts`
 - `packages/backend/src/league/model/champion.ts`
-- `packages/report/src/match.ts`
 
 #### Task 1.2: Extend Team Model
-- [ ] Update `TeamSchema` to support union of traditional and arena teams
+- [x] Keep `TeamSchema` unchanged; use `ArenaTeamIdSchema`/`ArenaSubteamSchema` in `arena.ts`
 - [x] Create `ArenaSubteamSchema` for 2-player teams (implemented in `packages/data/src/model/arena.ts`)
-- [ ] Update `parseTeam` function to handle `playerSubteamId` (separate `parseArenaTeam` exists in `packages/data/src/model/arena.ts`)
+- [x] Use separate `parseArenaTeam` for `playerSubteamId` (no changes to `parseTeam`)
 - [x] Add arena team utility functions (`isArenaTeam`, `parseArenaTeam` in `packages/data/src/model/arena.ts`)
 
 **Files to modify:**
-- `packages/data/src/model/team.ts`
+- `packages/data/src/model/arena.ts` (already implemented)
 
 #### Task 1.3: Enhanced Match Model
-- [ ] Update `MatchOutcomeSchema` to support placement numbers (separate `ArenaPlacementSchema` exists in `packages/data/src/model/arena.ts`)
-- [ ] Add discriminated union for traditional vs arena team structures (currently separate `ArenaMatchSchema` exists in `packages/data/src/model/arena.ts`)
-- [ ] Add arena-specific player fields (`arenaTeammate`) (present in `ArenaMatchPlayerSchema` but not in base match player)
-- [ ] Create type guards for match type discrimination (team-level guards exist; match-level guards pending)
+- [x] Keep base `MatchOutcomeSchema` unchanged; use `ArenaPlacementSchema` in arena module
+- [x] Use separate `ArenaMatchSchema` (no base discriminated union needed)
+- [x] Keep arena-specific player fields only in `ArenaMatchPlayerSchema`
+- [x] Use `queueType: "arena"` literal for narrowing (no custom type guard)
 
 **Files to modify:**
-- `packages/data/src/model/match.ts`
+- `packages/data/src/model/arena.ts` (already implemented)
 
 **Estimated effort:** 2-3 days
 **Risk:** Low (mostly type definitions)
@@ -140,32 +122,38 @@ export const CompletedMatchSchema = z.strictObject({
 ### 🔧 Priority 2: Match Processing Logic (Core functionality)
 
 #### Task 2.1: Arena Match Detection
-- [ ] Create `isArenaMatch` utility function
-- [ ] Update queue type parsing for proper arena detection
+- [x] Use `queueType: "arena"` for narrowing; no separate guard function
+- [x] Queue type parsing already maps 1700 → `"arena"`
 - [ ] Add arena-specific validation logic
 
 **Files to modify:**
-- `packages/data/src/model/state.ts`
 - `packages/backend/src/league/model/match.ts`
 
 #### Task 2.2: Arena Team Processing
-- [ ] Implement `getArenaTeams` function to group by `playerSubteamId`
-- [ ] Create `getArenaTeammate` function for teammate identification
-- [ ] Update match conversion logic for arena format
+- [x] Implement team grouping by `playerSubteamId` (backend `groupArenaTeams`)
+- [x] Create `getArenaTeammate` function for teammate identification
+- [x] Add `toArenaSubteams` builder from participants
+- [x] Introduce one-time boundary validation (`validateArenaParticipants`) using Zod `.passthrough()`, then use static typing internally (no assertions/any)
+- [x] Refactor helpers to use Remeda (`groupBy`, `entries`, `sortBy`, `map`)
+- [ ] Update match conversion logic for arena format (`toArenaMatch`)
 - [ ] Handle placement-based outcomes instead of win/loss
 
 **Files to modify:**
-- `packages/backend/src/league/model/match.ts`
+- `packages/backend/src/league/model/match.ts` (implemented `validateArenaParticipants`, Remeda-based helpers; no assertions/any)
+- `packages/backend/src/league/model/__tests__/arena.teams.test.ts` (added unit tests)
+ - `packages/backend/src/league/model/__tests__/arena.match.integration.test.ts` (added integration test for subteams + players)
 - `packages/report/src/match.ts`
 - `packages/backend/src/league/tasks/postmatch/internal.ts`
 
 #### Task 2.3: Outcome Processing
-- [ ] Update `getOutcome` to return placement for arena matches
+- [x] Add placement extraction utility (`getArenaPlacement`) and consistency check within subteams
+- [ ] Update arena outcome handling in conversion path (branch on `queueType: 'arena'`)
 - [ ] Create placement formatting utilities
 - [ ] Update match object creation for arena-specific data
 
 **Files to modify:**
-- `packages/backend/src/league/model/match.ts`
+- `packages/backend/src/league/model/match.ts` (added `getArenaPlacement`)
+- `packages/backend/src/league/model/__tests__/arena.teams.test.ts` (added placement consistency test)
 - `packages/report/src/match.ts`
 
 **Estimated effort:** 3-4 days
@@ -199,13 +187,14 @@ export const CompletedMatchSchema = z.strictObject({
 ### 🔍 Priority 4: Testing & Validation (Quality assurance)
 
 #### Task 4.1: Unit Tests
-- [ ] Write tests for arena data model validation
-- [ ] Test augment parsing from API data
-- [ ] Test team grouping logic (8 teams of 2)
+- [x] Write tests for arena data model validation
+- [x] Test augment parsing from API data
+- [x] Test team grouping logic (8 teams of 2) and teammate lookup
 - [ ] Test placement outcome processing
 
 #### Task 4.2: Integration Tests
 - [ ] Test full arena match processing pipeline
+- [x] Validate arena subteams and players extraction (integration test)
 - [ ] Validate arena match reports generation
 - [ ] Test Discord notification for arena matches
 - [ ] Verify backward compatibility with traditional matches

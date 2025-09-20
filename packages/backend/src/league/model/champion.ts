@@ -42,8 +42,21 @@ export function participantToArenaChampion(
 ): ArenaChampion {
   const baseChampion = participantToChampion(dto);
 
-  // Extract augments (playerAugment1-6, filter out zeros)
-  const augments: number[] = [];
+  const augments = extractAugments(dto);
+  const arenaMetrics = extractArenaMetrics(dto);
+  const teamSupport = extractTeamSupport(dto);
+
+  return {
+    ...baseChampion,
+    augments,
+    arenaMetrics,
+    teamSupport,
+  };
+}
+
+// Helpers for arena-specific fields
+export function extractAugments(dto: MatchV5DTOs.ParticipantDto): number[] {
+  const result: number[] = [];
   const augmentFields = [
     dto.playerAugment1,
     dto.playerAugment2,
@@ -52,15 +65,18 @@ export function participantToArenaChampion(
     dto.playerAugment5,
     dto.playerAugment6,
   ];
-
   for (const augment of augmentFields) {
     if (augment && augment !== 0) {
-      augments.push(augment);
+      result.push(augment);
     }
   }
+  return result;
+}
 
-  // Extract arena performance metrics (PlayerScore0-11)
-  const arenaMetrics = {
+export function extractArenaMetrics(
+  dto: MatchV5DTOs.ParticipantDto,
+) {
+  return {
     playerScore0: dto.PlayerScore0,
     playerScore1: dto.PlayerScore1,
     playerScore2: dto.PlayerScore2,
@@ -71,18 +87,14 @@ export function participantToArenaChampion(
     playerScore7: dto.PlayerScore7,
     playerScore8: dto.PlayerScore8,
   };
+}
 
-  // Extract team support metrics (arena 2v2 specific)
-  const teamSupport = {
+export function extractTeamSupport(
+  dto: MatchV5DTOs.ParticipantDto,
+)  {
+  return {
     damageShieldedOnTeammate: dto.totalDamageShieldedOnTeammates,
     healsOnTeammate: dto.totalHealsOnTeammates,
     damageTakenPercentage: dto.challenges?.damageTakenOnTeamPercentage,
-  };
-
-  return {
-    ...baseChampion,
-    augments,
-    arenaMetrics,
-    teamSupport,
   };
 }

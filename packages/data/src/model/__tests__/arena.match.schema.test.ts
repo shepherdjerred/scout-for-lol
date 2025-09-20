@@ -37,6 +37,7 @@ describe("ArenaMatchSchema", () => {
   it("accepts exactly 8 subteams of 2 players each", () => {
     const match = ArenaMatchSchema.parse({
       durationInSeconds: 900,
+      queueType: "arena",
       players: [],
       subteams: [
         subteam(1, 4),
@@ -56,6 +57,7 @@ describe("ArenaMatchSchema", () => {
     expect(() =>
       ArenaMatchSchema.parse({
         durationInSeconds: 900,
+        queueType: "arena",
         players: [],
         subteams: [subteam(1, 1)],
       }),

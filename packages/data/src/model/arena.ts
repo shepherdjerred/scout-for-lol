@@ -3,7 +3,6 @@ import { ChampionSchema } from "./champion.js";
 import { PlayerConfigEntrySchema } from "./playerConfig.js";
 import { RankSchema } from "./rank.js";
 import { LaneSchema } from "./lane.js";
-import { QueueTypeSchema } from "./state.js";
 
 // Arena-specific performance metrics (meanings inferred - need verification)
 export type ArenaMetrics = z.infer<typeof ArenaMetricsSchema>;
@@ -92,7 +91,7 @@ export const ArenaMatchPlayerSchema = z.strictObject({
 export type ArenaMatch = z.infer<typeof ArenaMatchSchema>;
 export const ArenaMatchSchema = z.strictObject({
   durationInSeconds: z.number().nonnegative(),
-  queueType: QueueTypeSchema.optional(),
+  queueType: z.literal("arena"),
 
   players: z.array(ArenaMatchPlayerSchema),
 
