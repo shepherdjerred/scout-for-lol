@@ -1,0 +1,78 @@
+import { describe, it, expect } from "bun:test";
+import {
+  ArenaMatchSchema,
+  ArenaChampionSchema,
+  type ArenaChampion,
+  ArenaSubteamSchema,
+  formatArenaPlacement,
+} from "@scout-for-lol/data";
+
+const arenaChamp = (): ArenaChampion =>
+  ArenaChampionSchema.parse({
+    riotIdGameName: "P#NA1",
+    championName: "Jhin",
+    kills: 6,
+    deaths: 2,
+    assists: 4,
+    level: 18,
+    items: [6671],
+    spells: [4, 7],
+    gold: 11000,
+    runes: [],
+    creepScore: 0,
+    visionScore: 0,
+    damage: 18000,
+    augments: [301, 401],
+    arenaMetrics: {},
+    teamSupport: {},
+  });
+
+const subteam = (id: number, placement: number) =>
+  ArenaSubteamSchema.parse({
+    subteamId: id,
+    players: [arenaChamp(), arenaChamp()],
+    placement,
+  });
+
+describe("ArenaMatchSchema", () => {
+  it("accepts exactly 8 subteams of 2 players each", () => {
+    const match = ArenaMatchSchema.parse({
+      durationInSeconds: 900,
+      queueType: "arena",
+      players: [],
+      subteams: [
+        subteam(1, 4),
+        subteam(2, 8),
+        subteam(3, 2),
+        subteam(4, 6),
+        subteam(5, 1),
+        subteam(6, 7),
+        subteam(7, 3),
+        subteam(8, 5),
+      ],
+    });
+    expect(match.subteams.length).toBe(8);
+  });
+
+  it("rejects when subteams length is not 8", () => {
+    expect(() =>
+      ArenaMatchSchema.parse({
+        durationInSeconds: 900,
+        queueType: "arena",
+        players: [],
+        subteams: [subteam(1, 1)],
+      }),
+    ).toThrow();
+  });
+
+  it("formats placement correctly", () => {
+    expect(formatArenaPlacement(1)).toBe("1st");
+    expect(formatArenaPlacement(2)).toBe("2nd");
+    expect(formatArenaPlacement(3)).toBe("3rd");
+    expect(formatArenaPlacement(4)).toBe("4th");
+    expect(formatArenaPlacement(11)).toBe("11th");
+    expect(formatArenaPlacement(12)).toBe("12th");
+    expect(formatArenaPlacement(13)).toBe("13th");
+    expect(formatArenaPlacement(21)).toBe("21st");
+  });
+});

@@ -1,5 +1,6 @@
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { filter, first, map, pipe } from "remeda";
+import { entries, filter, first, groupBy, map, pipe, sortBy } from "remeda";
+import { z } from "zod";
 import {
   type CompletedMatch,
   getLaneOpponent,
@@ -11,7 +12,9 @@ import {
 } from "@scout-for-lol/data";
 import { strict as assert } from "assert";
 import { match } from "ts-pattern";
-import { participantToChampion } from "./champion.js";
+import { participantToArenaChampion, participantToChampion } from "./champion.js";
+import { type ArenaMatch } from "@scout-for-lol/data";
+import { type ArenaSubteam } from "@scout-for-lol/data";
 
 function getTeams(participants: MatchV5DTOs.ParticipantDto[]) {
   return {
@@ -90,4 +93,119 @@ function findParticipant(
     filter((participant) => participant.puuid === puuid),
     first(),
   );
+}
+
+// Arena helpers
+const ArenaParticipantMinimalSchema = z.object({
+  playerSubteamId: z.number().int().min(1).max(8),
+}).passthrough();
+
+const ArenaParticipantFieldsSchema = z
+  .object({
+    playerSubteamId: z.number().int().min(1).max(8),
+    placement: z.number().int().min(1).max(8),
+  })
+  .passthrough();
+
+type ArenaParticipantValidatedMin = MatchV5DTOs.ParticipantDto & {
+  playerSubteamId: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+};
+
+export function groupArenaTeams(participants: MatchV5DTOs.ParticipantDto[]) {
+  const validated: ArenaParticipantValidatedMin[] = participants.map((p) => {
+    const parsed = ArenaParticipantMinimalSchema.parse(p);
+    return { ...p, playerSubteamId: parsed.playerSubteamId as ArenaParticipantValidatedMin["playerSubteamId"] };
+  });
+  const bySubteam = groupBy(validated, (e) => e.playerSubteamId);
+  const groups = pipe(
+    entries(bySubteam),
+    map(([key, entriesForKey]) => [Number(key), entriesForKey] as const),
+    sortBy(([subteamId]) => subteamId),
+    map(([subteamId, players]) => {
+      if (players.length !== 2) {
+        throw new Error(`subteam ${subteamId} must have exactly 2 players`);
+      }
+      return { subteamId, players };
+    }),
+  );
+  if (groups.length !== 8) {
+    throw new Error(`expected 8 subteams, got ${groups.length}`);
+  }
+  return groups;
+}
+
+export function getArenaTeammate(
+  participant: MatchV5DTOs.ParticipantDto,
+  participants: MatchV5DTOs.ParticipantDto[],
+) {
+  const sub = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
+  for (const p of participants) {
+    if (p === participant) continue;
+    const otherSub = ArenaParticipantMinimalSchema.parse(p).playerSubteamId;
+    if (otherSub === sub) return p;
+  }
+  return undefined;
+}
+
+export function toArenaSubteams(
+  participants: MatchV5DTOs.ParticipantDto[],
+): ArenaSubteam[] {
+  const grouped = groupArenaTeams(participants);
+  return grouped.map(({ subteamId, players }) => {
+    const placement0 = ArenaParticipantFieldsSchema.parse(players[0]).placement;
+    const placement1 = ArenaParticipantFieldsSchema.parse(players[1]).placement;
+    if (placement0 !== placement1) {
+      throw new Error(
+        `inconsistent placement for subteam ${subteamId}: ${placement0} !== ${placement1}`,
+      );
+    }
+    return {
+      subteamId,
+      players: players.map(participantToArenaChampion),
+      placement: placement0,
+    };
+  });
+}
+
+export function getArenaPlacement(participant: MatchV5DTOs.ParticipantDto) {
+  return ArenaParticipantFieldsSchema.parse(participant).placement;
+}
+
+export function toArenaMatch(
+  player: Player,
+  matchDto: MatchV5DTOs.MatchDto,
+): ArenaMatch {
+  const subteams = toArenaSubteams(matchDto.info.participants);
+
+  // Build ArenaMatch.players for the tracked player only (can extend to multi-player later)
+  const participant = findParticipant(
+    player.config.league.leagueAccount.puuid,
+    matchDto.info.participants,
+  );
+  if (participant === undefined) {
+    throw new Error("participant not found for arena match");
+  }
+  const subteamId = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
+  const placement = getArenaPlacement(participant);
+  const champion = participantToArenaChampion(participant);
+  const teammateDto = getArenaTeammate(participant, matchDto.info.participants);
+  if (!teammateDto) {
+    throw new Error("arena teammate not found");
+  }
+  const arenaTeammate = participantToArenaChampion(teammateDto);
+
+  return {
+    durationInSeconds: matchDto.info.gameDuration,
+    queueType: "arena",
+    players: [
+      {
+        playerConfig: player.config,
+        placement,
+        champion,
+        team: subteamId,
+        arenaTeammate,
+      },
+    ],
+    subteams,
+  } satisfies ArenaMatch;
 }
