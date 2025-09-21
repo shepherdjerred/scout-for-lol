@@ -72,9 +72,7 @@ export async function saveMatchToS3(
     console.log(
       `[S3Storage] ✅ Successfully saved match ${matchId} to S3 in ${uploadTime.toString()}ms`
     );
-    console.log(
-      `[S3Storage] 🔗 S3 location: s3://${bucket.toString()}/${key.toString()}`
-    );
+    console.log(`[S3Storage] 🔗 S3 location: s3://${bucket}/${key}`);
   } catch (error) {
     console.error(
       `[S3Storage] ❌ Failed to save match ${matchId} to S3:`,

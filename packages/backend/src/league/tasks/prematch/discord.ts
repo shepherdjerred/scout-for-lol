@@ -1,7 +1,10 @@
 import { getChampionName } from "twisted/dist/constants/champions.js";
 import { CurrentGameInfoDTO } from "twisted/dist/models-dto/index.js";
 import { findParticipant } from "../../api/index";
-import { PlayerConfigEntry, queueTypeToDisplayString } from "@scout-for-lol/data";
+import {
+  PlayerConfigEntry,
+  queueTypeToDisplayString,
+} from "@scout-for-lol/data";
 import { QueueType } from "@scout-for-lol/data";
 import { map } from "remeda";
 
@@ -32,7 +35,7 @@ export function createDiscordMessage(
       console.error(
         `❌ Available participants:`,
         game.participants.map((p) => ({
-          summonerName: p.summonerName,
+          riotId: p.riotId,
           puuid: p.puuid,
         }))
       );
@@ -44,7 +47,7 @@ export function createDiscordMessage(
     }
 
     console.log(
-      `✅ Found participant for ${player.alias}: ${participant.summonerName} (Champion ID: ${participant.championId.toString()})`
+      `✅ Found participant for ${player.alias}: ${participant.riotId} (Champion ID: ${participant.championId.toString()})`
     );
     return { player, participant };
   });
@@ -96,8 +99,10 @@ export function createDiscordMessage(
     console.log(`📝 Formatted multi-player message: "${messageString}"`);
   }
 
-  const queueTypeDisplay = queueType ? queueTypeToDisplayString(queueType) : game.gameQueueConfigId.toString();
-  const article = /^[aeiouAEIOU]/.test(queueTypeDisplay) ? 'an' : 'a';
+  const queueTypeDisplay = queueType
+    ? queueTypeToDisplayString(queueType)
+    : game.gameQueueConfigId.toString();
+  const article = /^[aeiouAEIOU]/.test(queueTypeDisplay) ? "an" : "a";
   const finalMessage = `${messageString} started ${article} ${queueTypeDisplay} game`;
 
   console.log(`✅ Final Discord message created: "${finalMessage}"`);

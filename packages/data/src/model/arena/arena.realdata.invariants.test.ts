@@ -35,7 +35,7 @@ const RawArenaMatchSchema = z.object({
 
 async function loadRawMatch(filePath: string) {
   const file = Bun.file(filePath);
-  const json = (await file.json());
+  const json = (await file.json()) as unknown;
   return RawArenaMatchSchema.parse(json);
 }
 

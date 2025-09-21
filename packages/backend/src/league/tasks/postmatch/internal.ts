@@ -142,13 +142,20 @@ export async function saveMatch(match: MatchV5DTOs.MatchDto): Promise<void> {
     // Save the match to S3
     await saveMatchToS3(match);
 
-    console.log(`[saveMatch] ✅ Successfully saved match: ${match.metadata.matchId}`);
+    console.log(
+      `[saveMatch] ✅ Successfully saved match: ${match.metadata.matchId}`
+    );
   } catch (error) {
-    console.error(`[saveMatch] ❌ Error saving match ${match.metadata.matchId}:`, error);
+    console.error(
+      `[saveMatch] ❌ Error saving match ${match.metadata.matchId}:`,
+      error
+    );
 
     // Don't throw the error to prevent disrupting the entire post-match flow
     // The match processing should continue even if S3 storage fails
-    console.warn(`[saveMatch] ⚠️  Continuing post-match processing despite storage failure`);
+    console.warn(
+      `[saveMatch] ⚠️  Continuing post-match processing despite storage failure`
+    );
   }
 }
 
@@ -275,7 +282,7 @@ async function createMatchObj(
           `[createMatchObj] 📋 Available participants:`,
           match.info.participants.map((p) => ({
             puuid: p.puuid,
-            summonerName: p.summonerName,
+            riotId: p.riotIdName,
           }))
         );
         throw new Error(
@@ -284,7 +291,7 @@ async function createMatchObj(
       }
 
       console.log(
-        `[createMatchObj] ✅ Found participant for player ${(index + 1).toString()}: ${participant.summonerName} (Champion: ${participant.championId.toString()})`
+        `[createMatchObj] ✅ Found participant for player ${(index + 1).toString()}: ${participant.riotIdName ?? "unknown"} (Champion: ${participant.championId.toString()})`
       );
       console.log(`[createMatchObj] 📊 Participant stats:`, {
         championId: participant.championId,
@@ -438,7 +445,7 @@ export async function checkPostMatchInternal(
   games.forEach((game, index) => {
     if (game) {
       console.log(
-        `[checkPostMatchInternal] Game ${(index + 1).toString()}: FINISHED - ${game.metadata.matchId.toString()}`
+        `[checkPostMatchInternal] Game ${(index + 1).toString()}: FINISHED - ${game.metadata.matchId}`
       );
     } else {
       console.log(
@@ -486,7 +493,7 @@ export async function checkPostMatchInternal(
   await Promise.all(
     map(finishedGames, async ([state, matchDto]) => {
       console.log(
-        `[checkPostMatchInternal] Processing finished game: ${matchDto.metadata.matchId.toString()}`
+        `[checkPostMatchInternal] Processing finished game: ${matchDto.metadata.matchId}`
       );
 
       try {
@@ -527,7 +534,7 @@ export async function checkPostMatchInternal(
           firstPlayer.player.league.leagueAccount.puuid,
         ]);
         console.log(
-          `[checkPostMatchInternal] Found ${servers.length.toString()} subscribed channels for match: ${matchDto.metadata.matchId.toString()}`
+          `[checkPostMatchInternal] Found ${servers.length.toString()} subscribed channels for match: ${matchDto.metadata.matchId}`
         );
 
         if (servers.length === 0) {

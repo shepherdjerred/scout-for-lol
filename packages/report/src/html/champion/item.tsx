@@ -31,7 +31,11 @@ export function renderItem(item: number) {
   }
 }
 
-export function renderItems(items: number[], visionScore: number, arena: boolean = false) {
+export function renderItems(
+  items: number[],
+  visionScore: number,
+  arena = false
+) {
   if (items.length !== 7 && !arena) {
     throw new Error(`Items must be length 7: ${items.toString()}`);
   }

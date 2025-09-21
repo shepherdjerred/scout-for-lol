@@ -2,24 +2,28 @@
   "folders": [
     {
       "name": "dagger",
-      "path": ".dagger",
+      "path": ".dagger"
     },
     {
-      "path": "packages/backend",
+      "name": "backend",
+      "path": "packages/backend"
     },
     {
-      "path": "packages/report",
+      "name": "report",
+      "path": "packages/report"
     },
     {
-      "path": "packages/data",
+      "name": "data",
+      "path": "packages/data"
     },
     {
-      "path": "packages/frontend",
+      "name": "frontend",
+      "path": "packages/frontend"
     },
     {
       "name": "root",
-      "path": ".",
-    },
+      "path": "."
+    }
   ],
   "extensions": {
     "recommendations": [
@@ -38,6 +42,7 @@
       "lightyen.tailwindcss-intellisense-twin",
       "prisma.prisma",
       "orta.vscode-jest",
+      "dbaeumer.vscode-eslint"
     ],
   },
   "settings": {

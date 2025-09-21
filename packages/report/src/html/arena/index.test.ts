@@ -29,7 +29,10 @@ function sampleArenaMatch(): ArenaMatch {
           damage: 12000,
           gold: 9000,
           level: 18,
-          augments: [{ id: 101 }, { id: 202 }],
+          augments: [
+            { id: 101, type: "id" },
+            { id: 202, type: "id" },
+          ],
         },
         team: 1,
         arenaTeammate: {
