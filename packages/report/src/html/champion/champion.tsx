@@ -18,7 +18,7 @@ export function renderChampion(
   durationInMinutes: number,
   damageMax: number
 ) {
-  const items = renderItems(champion.items, champion.visionScore);
+  const items = renderItems(champion.items, champion.visionScore, false);
 
   const damagePercent = round((champion.damage / damageMax || 0) * 100, 0);
 
