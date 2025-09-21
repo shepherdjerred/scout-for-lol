@@ -2,23 +2,25 @@ import { test, expect } from "bun:test";
 import { writeFileSync } from "fs";
 import { arenaMatchToImage } from "./index.tsx";
 import type { ArenaMatch, ArenaSubteam } from "@scout-for-lol/data";
+import { mapAugmentIdsToUnion } from "@scout-for-lol/data";
 
 const RAW_FILE_PATHS = [
   "/workspaces/scout-for-lol/arena/matches_2025_09_19_NA1_5370969615.json",
   "/workspaces/scout-for-lol/arena/matches_2025_09_19_NA1_5370986469.json",
 ];
 
-function toChampion(p: any) {
+async function toChampion(p: any) {
   const items = [p.item0, p.item1, p.item2, p.item3, p.item4, p.item5].filter((x: unknown) => typeof x === "number" && x !== 0);
   const spells = [p.summoner1Id, p.summoner2Id].filter((x: unknown) => typeof x === "number");
-  const augments = [
+  const augmentIds = [
     p.playerAugment1,
     p.playerAugment2,
     p.playerAugment3,
     p.playerAugment4,
     p.playerAugment5,
     p.playerAugment6,
-  ].filter((x: unknown) => typeof x === "number");
+  ].filter((x: unknown) => typeof x === "number" && x !== 0);
+  const augments = await mapAugmentIdsToUnion(augmentIds as number[]);
 
   return {
     riotIdGameName: typeof p.riotIdGameName === "string" && p.riotIdGameName.length > 0
@@ -44,7 +46,7 @@ function toChampion(p: any) {
   } as any;
 }
 
-function toSubteams(participants: any[]): ArenaSubteam[] {
+async function toSubteams(participants: any[]): Promise<ArenaSubteam[]> {
   const bySubteam = new Map<number, any[]>();
   for (const p of participants) {
     const subId = p.playerSubteamId as number;
@@ -55,7 +57,7 @@ function toSubteams(participants: any[]): ArenaSubteam[] {
   }
   const result: ArenaSubteam[] = [] as any;
   for (const [subteamId, players] of bySubteam) {
-    const champions = players.slice(0, 2).map(toChampion);
+    const champions = await Promise.all(players.slice(0, 2).map(toChampion));
     const placement = typeof players[0]?.placement === "number" ? players[0].placement : 8;
     result.push({ subteamId, players: champions as any, placement } as any);
   }
@@ -69,7 +71,7 @@ async function loadArenaMatch(path: string): Promise<ArenaMatch> {
   const participants = Array.isArray(info?.participants) ? info.participants : [];
   if (participants.length === 0) throw new Error("participants missing in real data file");
 
-  const subteams = toSubteams(participants);
+  const subteams = await toSubteams(participants);
 
   const tracked = participants[0];
   const trackedSubId = tracked.playerSubteamId as number;
@@ -86,9 +88,9 @@ async function loadArenaMatch(path: string): Promise<ArenaMatch> {
           discordAccount: null,
         } as any,
         placement: typeof tracked.placement === "number" ? tracked.placement : 8,
-        champion: toChampion(tracked) as any,
+        champion: await toChampion(tracked) as any,
         team: typeof tracked.playerSubteamId === "number" ? tracked.playerSubteamId : 1,
-        arenaTeammate: toChampion(teammate) as any,
+        arenaTeammate: await toChampion(teammate) as any,
       } as any,
     ],
     subteams,

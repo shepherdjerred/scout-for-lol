@@ -1,8 +1,6 @@
 import { z } from "zod";
 import { ChampionSchema } from "./champion.js";
 import { PlayerConfigEntrySchema } from "./playerConfig.js";
-import { RankSchema } from "./rank.js";
-import { LaneSchema } from "./lane.js";
 import { ArenaAugmentUnionSchema } from "./augment.js";
 
 // Arena-specific performance metrics (meanings inferred - need verification)
@@ -82,10 +80,7 @@ export const ArenaMatchPlayerSchema = z.strictObject({
   placement: ArenaPlacementSchema, // 1st-8th place instead of Victory/Defeat
   champion: ArenaChampionSchema,
   team: ArenaTeamIdSchema, // Arena subteam ID (1-8)
-  lane: LaneSchema.optional(),
   arenaTeammate: ArenaChampionSchema, // Required for arena - the other player in the 2v2 team
-  rankBeforeMatch: RankSchema.optional(),
-  rankAfterMatch: RankSchema.optional(),
 });
 
 // Complete arena match

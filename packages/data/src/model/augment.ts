@@ -1,11 +1,18 @@
 import { z } from "zod";
 
 // Full augment shape from CommunityDragon (accept entire object via passthrough)
+export const ArenaAugmentRaritySchema = z.union([
+	z.literal("prismatic"),
+	z.literal("gold"),
+	z.literal("silver"),
+]);
+export type ArenaAugmentRarity = z.infer<typeof ArenaAugmentRaritySchema>;
+
 export const ArenaAugmentSchema = z
 	.object({
 		id: z.number(),
 		name: z.string(),
-		rarity: z.number().int(),
+		rarity: ArenaAugmentRaritySchema,
 		apiName: z.string().optional(),
 		desc: z.string().optional(),
 		tooltip: z.string().optional(),
@@ -13,21 +20,30 @@ export const ArenaAugmentSchema = z
 		iconSmall: z.string().optional(),
 		calculations: z.unknown().optional(),
 		dataValues: z.record(z.string(), z.unknown()).optional(),
+		type: z.literal("full"),
 	})
 	.passthrough();
 export type ArenaAugment = z.infer<typeof ArenaAugmentSchema>;
 
-export const ArenaAugmentIdOnlySchema = z.strictObject({ id: z.number() });
+export const ArenaAugmentIdOnlySchema = z.strictObject({ id: z.number(), type: z.literal("id") });
 export type ArenaAugmentIdOnly = z.infer<typeof ArenaAugmentIdOnlySchema>;
 
-export const ArenaAugmentUnionSchema = z.union([
+export const ArenaAugmentUnionSchema = z.discriminatedUnion("type", [
 	ArenaAugmentSchema,
 	ArenaAugmentIdOnlySchema,
 ]);
 export type ArenaAugmentUnion = z.infer<typeof ArenaAugmentUnionSchema>;
 
+// API response objects do not include our internal discriminator `type`,
+// and provide rarity as a number (r1=prismatic, r2=gold, r3=silver).
+// Parse with an API-specific schema, then normalize to internal shape.
+const ArenaAugmentFromApiSchema = ArenaAugmentSchema
+	.omit({ type: true, rarity: true })
+	.extend({ rarity: z.number().int() });
+type ArenaAugmentFromApi = z.infer<typeof ArenaAugmentFromApiSchema>;
+
 const ArenaAugmentsResponseSchema = z.strictObject({
-	augments: z.array(ArenaAugmentSchema),
+	augments: z.array(ArenaAugmentFromApiSchema),
 });
 
 // CommunityDragon Arena augments endpoint
@@ -49,7 +65,21 @@ export async function initArenaAugmentsOnce(): Promise<Map<number, ArenaAugment>
 			}
 			const data = await res.json();
 			const parsed = ArenaAugmentsResponseSchema.parse(data);
-			augmentMapCache = new Map(parsed.augments.map((a) => [a.id, a] as const));
+			const rarityFromNumber = (n: number): ArenaAugmentRarity => {
+				if (n === 1) return "prismatic";
+				if (n === 2) return "gold";
+				if (n === 3) return "silver";
+				return "silver";
+			};
+			augmentMapCache = new Map(
+				parsed.augments.map(
+					(a: ArenaAugmentFromApi) =>
+						[
+							a.id,
+							{ ...a, rarity: rarityFromNumber(a.rarity), type: "full" } as ArenaAugment,
+						] as const,
+				),
+			);
 			return augmentMapCache;
 		})();
 	}
@@ -72,8 +102,15 @@ export async function mapAugmentIdsToUnion(
 	const result: ArenaAugmentUnion[] = [];
 	for (const id of augmentIds) {
 		const aug = map.get(id);
-		if (aug) result.push(aug);
-		else result.push({ id });
+		const parsed = ArenaAugmentUnionSchema.safeParse({
+			...aug,
+			type: "full",
+		});
+		if (parsed.success) {
+			result.push(parsed.data);
+		} else {
+			result.push({ id, type: "id" });
+		}
 	}
 	return result;
 }

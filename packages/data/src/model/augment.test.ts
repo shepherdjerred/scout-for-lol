@@ -1,7 +1,6 @@
 import { expect, test, mock } from "bun:test";
 import {
 	__resetArenaAugmentsCacheForTestsOnly,
-	ArenaAugmentSchema,
 	ArenaAugmentUnionSchema,
 	getArenaAugmentMap,
 	getArenaAugmentMapSync,
@@ -11,15 +10,25 @@ import {
 
 const sampleApi = {
 	augments: [
-		{ id: 1, name: "Warmup Routine", rarity: 0, apiName: "WarmupRoutine" },
-		{ id: 2, name: "Vanish", rarity: 1, apiName: "Vanish" },
+		{ id: 1, name: "Warmup Routine", rarity: 1, apiName: "WarmupRoutine" },
+		{ id: 2, name: "Vanish", rarity: 2, apiName: "Vanish" },
 	],
 };
 
-test("parses full augment object", () => {
-	const parsed = ArenaAugmentSchema.parse(sampleApi.augments[0]);
-	expect(parsed.id).toBe(1);
-	expect(parsed.name).toBe("Warmup Routine");
+test("parses normalized augment object with string rarity", async () => {
+    __resetArenaAugmentsCacheForTestsOnly();
+    const fetchSpy = mock(async () => ({
+        ok: true,
+        status: 200,
+        statusText: "OK",
+        json: async () => sampleApi,
+    })) as unknown as typeof fetch;
+    // @ts-ignore
+    globalThis.fetch = fetchSpy;
+    const map = await initArenaAugmentsOnce();
+    const a = map.get(1)!;
+    expect(a.name).toBe("Warmup Routine");
+    expect(a.rarity).toBe("prismatic");
 });
 
 test("initializes cache once and maps by id", async () => {

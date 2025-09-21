@@ -1,15 +1,15 @@
-import { type ArenaMatch, formatArenaPlacement } from "@scout-for-lol/data";
+import { type ArenaAugmentUnion, type ArenaMatch, formatArenaPlacement } from "@scout-for-lol/data";
 
 export function ArenaReport(props: { match: ArenaMatch }) {
   const { match } = props;
-  const renderAugment = (a: any) => {
-    if (!a) return "";
-    if (typeof a === "object" && "name" in a && "rarity" in a) {
-      return `${(a as any).name} (R${(a as any).rarity})`;
+  const renderAugment = (a: ArenaAugmentUnion) => {
+    if (a.type === "full") {
+      const rarityName = a.rarity === "prismatic" ? "Prismatic" : a.rarity === "gold" ? "Gold" : "Silver";
+      return `${a.name} (${rarityName})`;
     }
-    if (typeof a === "object" && "id" in a) return `Augment ${(a as any).id}`;
-    return String(a);
+    return `Augment ${a.id}`;
   };
+  const filterDisplayAugments = (augs: ArenaAugmentUnion[]) => augs.filter((a) => (a.type === "full" ? true : a.id > 0));
   const renderHighlighted = (highlighted: ArenaMatch["players"][number]) => (
     <div
       style={{
@@ -27,9 +27,9 @@ export function ArenaReport(props: { match: ArenaMatch }) {
       <div style={{ display: "flex", fontSize: 40 }}>
         {highlighted.champion.championName} · KDA {highlighted.champion.kills}/{highlighted.champion.deaths}/{highlighted.champion.assists}
       </div>
-      {Array.isArray(highlighted.champion.augments) && highlighted.champion.augments.length > 0 ? (
+      {Array.isArray(highlighted.champion.augments) && filterDisplayAugments(highlighted.champion.augments).length > 0 ? (
         <div style={{ display: "flex", fontSize: 36, opacity: 0.9 }}>
-          Augments: {highlighted.champion.augments.map(renderAugment).join(", ")}
+          Augments: {filterDisplayAugments(highlighted.champion.augments).map(renderAugment).join(", ")}
         </div>
       ) : null}
     </div>
@@ -83,9 +83,9 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                   </span>
                   <span style={{ opacity: 0.9 }}>{" · "}{p.championName}</span>
                   <span style={{ opacity: 0.9 }}>{" · KDA "}{p.kills}/{p.deaths}/{p.assists}</span>
-                  {p.augments && p.augments.length > 0 ? (
+                  {p.augments && filterDisplayAugments(p.augments).length > 0 ? (
                     <span style={{ opacity: 0.8 }}>
-                      {" "}· Augments: {p.augments.map(renderAugment).join(", ")}
+                      {" "}· Augments: {filterDisplayAugments(p.augments).map(renderAugment).join(", ")}
                     </span>
                   ) : null}
                 </div>
