@@ -1,4 +1,4 @@
-export * from "./arena.js";
+export * from "./arena/index.js";
 export * from "./champion.js";
 export * from "./discord.js";
 export * from "./division.js";
@@ -13,4 +13,3 @@ export * from "./roster.js";
 export * from "./state.js";
 export * from "./team.js";
 export * from "./tier.js";
-export * from "./augment.js";

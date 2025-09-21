@@ -1,4 +1,9 @@
-import { PrismaClient, type Account, type Subscription, type Player } from "../../generated/prisma/client";
+import {
+  PrismaClient,
+  type Account,
+  type Subscription,
+  type Player,
+} from "../../generated/prisma/client";
 import {
   DiscordAccountIdSchema,
   type DiscordChannelId,

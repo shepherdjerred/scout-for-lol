@@ -1,18 +1,29 @@
-import { type ArenaAugmentUnion, type ArenaMatch, formatArenaPlacement } from "@scout-for-lol/data";
+import {
+  type ArenaMatch,
+  type Augment,
+  formatArenaPlacement,
+} from "@scout-for-lol/data";
 import { renderItems } from "../champion/item.tsx";
+import { startCase } from "@scout-for-lol/data/src/util.ts";
 
 export function ArenaReport(props: { match: ArenaMatch }) {
   const { match } = props;
-  const renderAugment = (a: ArenaAugmentUnion) => {
+  const renderAugment = (a: Augment) => {
     if (a.type === "full") {
-      const rarityName = a.rarity === "prismatic" ? "Prismatic" : a.rarity === "gold" ? "Gold" : "Silver";
+      const rarityName = startCase(a.rarity);
+
       return `${a.name} (${rarityName})`;
     }
-    return `Augment ${a.id}`;
+    return `Augment ${a.id.toString()}`;
   };
-  const filterDisplayAugments = (augs: ArenaAugmentUnion[]) => augs.filter((a) => (a.type === "full" ? true : a.id > 0));
+  const filterDisplayAugments = (augs: Augment[]) =>
+    augs.filter((a) => (a.type === "full" ? true : a.id > 0));
   const renderHighlighted = (highlighted: ArenaMatch["players"][number]) => {
-    const items = renderItems(highlighted.champion.items, highlighted.champion.visionScore, true);
+    const items = renderItems(
+      highlighted.champion.items,
+      highlighted.champion.visionScore,
+      true
+    );
 
     return (
       <div
@@ -26,18 +37,32 @@ export function ArenaReport(props: { match: ArenaMatch }) {
         }}
       >
         <div style={{ display: "flex", fontSize: 60, fontWeight: 700 }}>
-          {highlighted.playerConfig.alias} · Team {highlighted.team} · {formatArenaPlacement(highlighted.placement)}
+          {highlighted.playerConfig.alias} · Team {highlighted.teamId} ·{" "}
+          {formatArenaPlacement(highlighted.placement)}
         </div>
         <div style={{ display: "flex", fontSize: 48 }}>
-          Level {highlighted.champion.level} · {highlighted.champion.championName} · KDA {highlighted.champion.kills}/{highlighted.champion.deaths}/{highlighted.champion.assists}
+          Level {highlighted.champion.level} ·{" "}
+          {highlighted.champion.championName} · KDA {highlighted.champion.kills}
+          /{highlighted.champion.deaths}/{highlighted.champion.assists}
         </div>
-        {Array.isArray(highlighted.champion.augments) && filterDisplayAugments(highlighted.champion.augments).length > 0 ? (
+        {Array.isArray(highlighted.champion.augments) &&
+        filterDisplayAugments(highlighted.champion.augments).length > 0 ? (
           <div style={{ display: "flex", fontSize: 36, opacity: 0.9 }}>
-            Augments: {filterDisplayAugments(highlighted.champion.augments).map(renderAugment).join(", ")}
+            Augments:{" "}
+            {filterDisplayAugments(highlighted.champion.augments)
+              .map(renderAugment)
+              .join(", ")}
           </div>
         ) : null}
 
-        <div style={{ display: "flex", transform: "scale(0.6)", transformOrigin: "left center", marginTop: 8 }}>
+        <div
+          style={{
+            display: "flex",
+            transform: "scale(0.6)",
+            transformOrigin: "left center",
+            marginTop: 8,
+          }}
+        >
           {items}
         </div>
       </div>
@@ -56,17 +81,19 @@ export function ArenaReport(props: { match: ArenaMatch }) {
         background: "#0b1220",
       }}
     >
-      <div style={{ display: "flex", fontSize: 96, fontWeight: 800 }}>Arena Match</div>
+      <div style={{ display: "flex", fontSize: 96, fontWeight: 800 }}>
+        Arena Match
+      </div>
       <div style={{ display: "flex", fontSize: 48, opacity: 0.9 }}>
         Duration: {Math.round(match.durationInSeconds / 60)}m
       </div>
 
       {/* Highlighted player (first tracked player) */}
-      {hasHighlighted ? renderHighlighted(match.players[0] as ArenaMatch["players"][number]) : null}
+      {hasHighlighted ? renderHighlighted(match.players[0]) : null}
       <div style={{ display: "flex", flexWrap: "wrap" }}>
-        {match.subteams.map((team) => (
+        {match.teams.map((team) => (
           <div
-            key={team.subteamId}
+            key={team.teamId}
             style={{
               width: "24%",
               marginRight: "1%",
@@ -78,8 +105,15 @@ export function ArenaReport(props: { match: ArenaMatch }) {
               background: "#111827",
             }}
           >
-            <div style={{ display: "flex", fontSize: 40, fontWeight: 700, marginBottom: 8 }}>
-              Team {team.subteamId} · {formatArenaPlacement(team.placement)}
+            <div
+              style={{
+                display: "flex",
+                fontSize: 40,
+                fontWeight: 700,
+                marginBottom: 8,
+              }}
+            >
+              Team {team.teamId} · {formatArenaPlacement(team.placement)}
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
               {team.players.map((p, idx) => {
@@ -88,23 +122,52 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                 return (
                   <div
                     key={idx}
-                    style={{ display: "flex", flexDirection: "column", marginBottom: 16, gap: 8 }}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      marginBottom: 16,
+                      gap: 8,
+                    }}
                   >
                     <div style={{ display: "flex", flexDirection: "column" }}>
-                      <div style={{ display: "flex", fontSize: 32, fontWeight: 700 }}>
-                        Level {p.level} · {p.riotIdGameName ?? "Unknown"}
+                      <div
+                        style={{
+                          display: "flex",
+                          fontSize: 32,
+                          fontWeight: 700,
+                        }}
+                      >
+                        Level {p.level} · {p.riotIdGameName}
                       </div>
-                      <div style={{ display: "flex", fontSize: 28, opacity: 0.9 }}>
+                      <div
+                        style={{ display: "flex", fontSize: 28, opacity: 0.9 }}
+                      >
                         {p.championName} · KDA {p.kills}/{p.deaths}/{p.assists}
                       </div>
-                      {p.augments && filterDisplayAugments(p.augments).length > 0 ? (
-                        <div style={{ display: "flex", fontSize: 24, opacity: 0.8, marginTop: 4 }}>
-                          Augments: {filterDisplayAugments(p.augments).map(renderAugment).join(", ")}
+                      {filterDisplayAugments(p.augments).length > 0 ? (
+                        <div
+                          style={{
+                            display: "flex",
+                            fontSize: 24,
+                            opacity: 0.8,
+                            marginTop: 4,
+                          }}
+                        >
+                          Augments:{" "}
+                          {filterDisplayAugments(p.augments)
+                            .map(renderAugment)
+                            .join(", ")}
                         </div>
                       ) : null}
                     </div>
 
-                    <div style={{ display: "flex", transform: "scale(0.5)", transformOrigin: "left top" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        transform: "scale(0.5)",
+                        transformOrigin: "left top",
+                      }}
+                    >
                       {items}
                     </div>
                   </div>

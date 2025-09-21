@@ -1,10 +1,15 @@
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { type Champion, type ArenaChampion, parseLane } from "@scout-for-lol/data";
-import { mapAugmentIdsToUnion, type ArenaAugmentUnion } from "@scout-for-lol/data";
+import {
+  type Champion,
+  type ArenaChampion,
+  parseLane,
+  type Augment,
+} from "@scout-for-lol/data";
+import { mapAugmentIdsToUnion } from "../arena/augment";
 
 // Base champion conversion for traditional games
 export function participantToChampion(
-  dto: MatchV5DTOs.ParticipantDto,
+  dto: MatchV5DTOs.ParticipantDto
 ): Champion {
   if (!dto.riotIdGameName) {
     throw new Error("Missing riotIdGameName");
@@ -39,7 +44,7 @@ export function participantToChampion(
 
 // Arena champion conversion with arena-specific fields
 export async function participantToArenaChampion(
-  dto: MatchV5DTOs.ParticipantDto,
+  dto: MatchV5DTOs.ParticipantDto
 ): Promise<ArenaChampion> {
   const baseChampion = participantToChampion(dto);
 
@@ -56,7 +61,9 @@ export async function participantToArenaChampion(
 }
 
 // Helpers for arena-specific fields
-export async function extractAugments(dto: MatchV5DTOs.ParticipantDto): Promise<ArenaAugmentUnion[]> {
+export async function extractAugments(
+  dto: MatchV5DTOs.ParticipantDto
+): Promise<Augment[]> {
   const ids: number[] = [];
   const augmentFields = [
     dto.playerAugment1,
@@ -76,15 +83,16 @@ export async function extractAugments(dto: MatchV5DTOs.ParticipantDto): Promise<
     const result = await mapAugmentIdsToUnion(ids);
     return result;
   } catch {
-    const result: ArenaAugmentUnion[] = ids.map((id) => ({ id, type: "id" as const }));
+    const result: Augment[] = ids.map((id) => ({
+      id,
+      type: "id" as const,
+    }));
 
     return result;
   }
 }
 
-export function extractArenaMetrics(
-  dto: MatchV5DTOs.ParticipantDto,
-) {
+export function extractArenaMetrics(dto: MatchV5DTOs.ParticipantDto) {
   return {
     playerScore0: dto.PlayerScore0,
     playerScore1: dto.PlayerScore1,
@@ -98,12 +106,10 @@ export function extractArenaMetrics(
   };
 }
 
-export function extractTeamSupport(
-  dto: MatchV5DTOs.ParticipantDto,
-)  {
+export function extractTeamSupport(dto: MatchV5DTOs.ParticipantDto) {
   return {
     damageShieldedOnTeammate: dto.totalDamageShieldedOnTeammates,
     healsOnTeammate: dto.totalHealsOnTeammates,
-    damageTakenPercentage: dto.challenges?.damageTakenOnTeamPercentage,
+    damageTakenPercentage: dto.challenges.damageTakenOnTeamPercentage,
   };
 }

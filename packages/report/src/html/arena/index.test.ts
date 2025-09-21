@@ -11,7 +11,7 @@ function sampleArenaMatch(): ArenaMatch {
       {
         playerConfig: {
           alias: "Player#1",
-          league: { leagueAccount: { puuid: "x" as any, region: "PBE" } },
+          league: { leagueAccount: { puuid: "x", region: "PBE" } },
           discordAccount: null,
         },
         placement: 3,
@@ -30,7 +30,7 @@ function sampleArenaMatch(): ArenaMatch {
           gold: 9000,
           level: 18,
           augments: [{ id: 101 }, { id: 202 }],
-        } as any,
+        },
         team: 1,
         arenaTeammate: {
           riotIdGameName: "Mate#1",
@@ -47,12 +47,12 @@ function sampleArenaMatch(): ArenaMatch {
           gold: 8000,
           level: 18,
           augments: [{ id: 303 }],
-        } as any,
+        },
       },
     ],
     subteams: Array.from({ length: 8 }, (_, i) => ({
       subteamId: i + 1,
-      placement: (i + 3) % 8 + 1,
+      placement: ((i + 3) % 8) + 1,
       players: [
         {
           riotIdGameName: "A",
@@ -69,7 +69,7 @@ function sampleArenaMatch(): ArenaMatch {
           gold: 0,
           level: 1,
           augments: [{ id: 1 }],
-        } as any,
+        },
         {
           riotIdGameName: "B",
           championName: "Jhin",
@@ -85,7 +85,7 @@ function sampleArenaMatch(): ArenaMatch {
           gold: 0,
           level: 1,
           augments: [{ id: 2 }],
-        } as any,
+        },
       ],
     })),
   };
@@ -95,6 +95,9 @@ test("arena report renders svg and png", async () => {
   const match = sampleArenaMatch();
   const svg = await arenaMatchToSvg(match);
   const png = await arenaMatchToImage(match);
-  writeFileSync(new URL("__snapshots__/arena_sample.png", import.meta.url), png);
+  writeFileSync(
+    new URL("__snapshots__/arena_sample.png", import.meta.url),
+    png
+  );
   expect(svg).toMatchSnapshot();
 });

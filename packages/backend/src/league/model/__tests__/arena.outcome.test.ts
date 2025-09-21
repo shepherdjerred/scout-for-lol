@@ -44,7 +44,7 @@ function makeParticipant(extra: Record<string, unknown> = {}): MatchV5DTOs.Parti
     PlayerScore7: 0,
     PlayerScore8: 0,
     ...extra,
-  } as unknown as MatchV5DTOs.ParticipantDto;
+  } ;
 }
 
 describe("arena placement extraction", () => {

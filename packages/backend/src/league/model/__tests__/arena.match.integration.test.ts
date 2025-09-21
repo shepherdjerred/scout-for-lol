@@ -1,10 +1,20 @@
 import { describe, it, expect } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { ArenaMatchSchema, ArenaSubteamSchema } from "@scout-for-lol/data";
+import {
+  ArenaMatchSchema,
+  ArenaTeamIdSchema,
+  ArenaTeamSchema,
+} from "@scout-for-lol/data";
 import { participantToArenaChampion } from "../champion.js";
 import { toArenaMatch, toArenaSubteams } from "../match.js";
 
-function makeParticipant(overrides: Partial<MatchV5DTOs.ParticipantDto> & { playerSubteamId: number; placement: number; puuid: string; }): MatchV5DTOs.ParticipantDto {
+function makeParticipant(
+  overrides: Partial<MatchV5DTOs.ParticipantDto> & {
+    playerSubteamId: number;
+    placement: number;
+    puuid: string;
+  }
+): MatchV5DTOs.ParticipantDto {
   const base: Partial<MatchV5DTOs.ParticipantDto> = {
     riotIdGameName: "P#NA1",
     summonerName: "P",
@@ -45,18 +55,34 @@ function makeParticipant(overrides: Partial<MatchV5DTOs.ParticipantDto> & { play
     PlayerScore7: 0,
     PlayerScore8: 0,
   };
-  return { ...base, ...overrides } as MatchV5DTOs.ParticipantDto;
+  return { ...base, ...overrides };
 }
 
 function makeArenaMatchDto(): MatchV5DTOs.MatchDto {
   const longPuuid = (label: string) => (label + "-".repeat(80)).slice(0, 78);
   const participants: MatchV5DTOs.ParticipantDto[] = [];
   for (let sub = 1; sub <= 8; sub++) {
-    participants.push(makeParticipant({ playerSubteamId: sub, placement: sub, puuid: longPuuid(`A${sub}`) }));
-    participants.push(makeParticipant({ playerSubteamId: sub, placement: sub, puuid: longPuuid(`B${sub}`) }));
+    participants.push(
+      makeParticipant({
+        playerSubteamId: sub,
+        placement: sub,
+        puuid: longPuuid(`A${sub.toString()}`),
+      })
+    );
+    participants.push(
+      makeParticipant({
+        playerSubteamId: sub,
+        placement: sub,
+        puuid: longPuuid(`B${sub.toString()}`),
+      })
+    );
   }
   return {
-    metadata: { dataVersion: "", matchId: "NA1_1", participants: participants.map(p => p.puuid) },
+    metadata: {
+      dataVersion: "",
+      matchId: "NA1_1",
+      participants: participants.map((p) => p.puuid),
+    },
     info: {
       gameCreation: Date.now(),
       gameDuration: 900,
@@ -72,19 +98,21 @@ function makeArenaMatchDto(): MatchV5DTOs.MatchDto {
       queueId: 1700,
       teams: [],
       tournamentCode: "",
-    }
-  } as unknown as MatchV5DTOs.MatchDto;
+    },
+  };
 }
 
 describe("arena match integration", () => {
   it("builds valid arena subteams and players from MatchDto", async () => {
     const dto = makeArenaMatchDto();
     const subteams = await toArenaSubteams(dto.info.participants);
-    const players = await Promise.all(dto.info.participants.map(participantToArenaChampion));
+    const players = await Promise.all(
+      dto.info.participants.map(participantToArenaChampion)
+    );
 
     // Validate subteams against schema and basic expectations
     subteams.forEach((st) => {
-      const parsed = ArenaSubteamSchema.parse(st);
+      const parsed = ArenaTeamSchema.parse(st);
       expect(parsed.players.length).toBe(2);
     });
     expect(subteams.length).toBe(8);
@@ -103,7 +131,7 @@ describe("arena match integration", () => {
         discordAccount: null,
       },
       ranks: {},
-    } as any;
+    };
     const arenaMatch = await toArenaMatch(player, dto);
     const parsed = ArenaMatchSchema.parse(arenaMatch);
     expect(parsed.queueType).toBe("arena");

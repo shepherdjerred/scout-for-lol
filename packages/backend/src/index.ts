@@ -1,6 +1,5 @@
 import configuration from "./configuration.js";
 import * as Sentry from "@sentry/node";
-import { initArenaAugmentsOnce } from "@scout-for-lol/data";
 
 console.log("🚀 Starting Scout for LoL backend application");
 console.log(`📦 Version: ${configuration.version}`);
@@ -22,17 +21,20 @@ if (configuration.sentryDsn) {
 
 // Preload Arena augments once at startup; continue if it fails
 console.log("🧩 Initializing Arena augments cache");
-await initArenaAugmentsOnce().then(() => {
-  console.log("✅ Arena augments cache initialized");
-}).catch((e) => {
-  console.warn("⚠️  Failed to initialize Arena augments cache:", e);
-});
+await initArenaAugmentsOnce()
+  .then(() => {
+    console.log("✅ Arena augments cache initialized");
+  })
+  .catch((e: unknown) => {
+    console.warn("⚠️  Failed to initialize Arena augments cache:", e);
+  });
 
 console.log("🔌 Starting Discord bot initialization");
 import "./discord/index.js";
 
 console.log("⏰ Starting cron job scheduler");
 import { startCronJobs } from "./league/cron.js";
+import { initArenaAugmentsOnce } from "./league/arena/augment.js";
 startCronJobs();
 
 console.log("✅ Backend application startup complete");

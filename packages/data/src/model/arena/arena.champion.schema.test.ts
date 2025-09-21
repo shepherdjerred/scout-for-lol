@@ -3,7 +3,6 @@ import {
   type Champion,
   ArenaChampionSchema,
   ChampionSchema,
-  AugmentSlotSchema,
 } from "@scout-for-lol/data";
 
 describe("ArenaChampionSchema and augments", () => {
@@ -31,9 +30,7 @@ describe("ArenaChampionSchema and augments", () => {
       teamSupport: {},
     });
     expect(parsed.augments.map((a) => ("id" in a ? a.id : undefined))).toEqual([
-      11,
-      22,
-      33,
+      11, 22, 33,
     ]);
   });
 
@@ -52,7 +49,7 @@ describe("ArenaChampionSchema and augments", () => {
         ],
         arenaMetrics: {},
         teamSupport: {},
-      }),
+      })
     ).toThrow();
   });
 
@@ -62,7 +59,7 @@ describe("ArenaChampionSchema and augments", () => {
         ...baseChampion,
         arenaMetrics: {},
         teamSupport: {},
-      }),
+      })
     ).toThrow();
   });
 
@@ -90,19 +87,5 @@ describe("ArenaChampionSchema and augments", () => {
       level: 25,
     });
     expect(parsed.level).toBe(25);
-  });
-});
-
-describe("AugmentSlotSchema", () => {
-  it("accepts valid slots 1..6", () => {
-    for (let slot = 1; slot <= 6; slot++) {
-      const parsed = AugmentSlotSchema.parse({ augmentId: 123, slot });
-      expect(parsed.slot).toBe(slot);
-    }
-  });
-
-  it("rejects out-of-bounds slots", () => {
-    expect(() => AugmentSlotSchema.parse({ augmentId: 1, slot: 0 })).toThrow();
-    expect(() => AugmentSlotSchema.parse({ augmentId: 1, slot: 7 })).toThrow();
   });
 });

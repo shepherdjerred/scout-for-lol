@@ -1,9 +1,13 @@
 import { describe, it, expect } from "bun:test";
 import { z } from "zod";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const RAW_FILE_PATHS = [
-  "/workspaces/scout-for-lol/arena/matches_2025_09_19_NA1_5370969615.json",
-  "/workspaces/scout-for-lol/arena/matches_2025_09_19_NA1_5370986469.json",
+  join(__dirname, "testdata/matches_2025_09_19_NA1_5370969615.json"),
+  join(__dirname, "testdata/matches_2025_09_19_NA1_5370986469.json"),
 ];
 
 const RawArenaParticipantSchema = z.object({
@@ -17,7 +21,7 @@ const RawArenaParticipantSchema = z.object({
   playerAugment6: z.number().optional(),
   totalDamageShieldedOnTeammates: z.number().optional(),
   totalHealsOnTeammates: z.number().optional(),
-}).passthrough();
+});
 
 const RawArenaMatchSchema = z.object({
   info: z.object({
@@ -25,13 +29,13 @@ const RawArenaMatchSchema = z.object({
     mapId: z.number(),
     participants: z.array(RawArenaParticipantSchema),
     queueId: z.number().optional(),
-  }).passthrough(),
+  }),
   metadata: z.unknown().optional(),
-}).passthrough();
+});
 
 async function loadRawMatch(filePath: string) {
   const file = Bun.file(filePath);
-  const json = await file.json();
+  const json = (await file.json());
   return RawArenaMatchSchema.parse(json);
 }
 
@@ -51,9 +55,15 @@ describe("Real Arena JSON invariants", () => {
   it("groups into exactly 8 subteams of 2, with placement 1..8 and consistent within subteam", async () => {
     for (const path of RAW_FILE_PATHS) {
       const match = await loadRawMatch(path);
-      const groups = new Map<number, { count: number; placements: Set<number> }>();
+      const groups = new Map<
+        number,
+        { count: number; placements: Set<number> }
+      >();
       for (const p of match.info.participants) {
-        const g = groups.get(p.playerSubteamId) ?? { count: 0, placements: new Set<number>() };
+        const g = groups.get(p.playerSubteamId) ?? {
+          count: 0,
+          placements: new Set<number>(),
+        };
         g.count += 1;
         g.placements.add(p.placement);
         groups.set(p.playerSubteamId, g);

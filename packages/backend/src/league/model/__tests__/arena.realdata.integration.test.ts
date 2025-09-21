@@ -4,14 +4,14 @@ import { ArenaMatchSchema } from "@scout-for-lol/data";
 import { toArenaMatch } from "../match.js";
 
 const RAW_FILE_PATHS = [
-  "/workspaces/scout-for-lol/arena/matches_2025_09_19_NA1_5370969615.json",
+  "/scout-for-lol/arena/matches_2025_09_19_NA1_5370969615.json",
   "/workspaces/scout-for-lol/arena/matches_2025_09_19_NA1_5370986469.json",
 ];
 
 async function loadMatch(path: string): Promise<MatchV5DTOs.MatchDto> {
   const file = Bun.file(path);
   const json = await file.json();
-  return json as MatchV5DTOs.MatchDto;
+  return json;
 }
 
 describe("toArenaMatch with real arena JSON", () => {
@@ -24,7 +24,8 @@ describe("toArenaMatch with real arena JSON", () => {
       expect(matchDto.info.participants.length).toBe(16);
       // choose first participant as the tracked player
       const tracked = matchDto.info.participants[0];
-      if (!tracked) throw new Error("participants should not be empty in real data test");
+      if (!tracked)
+        throw new Error("participants should not be empty in real data test");
 
       const player = {
         config: {
@@ -33,7 +34,7 @@ describe("toArenaMatch with real arena JSON", () => {
           discordAccount: null,
         },
         ranks: {},
-      } as any;
+      };
 
       const arenaMatch = await toArenaMatch(player, matchDto);
       const parsed = ArenaMatchSchema.parse(arenaMatch);
@@ -43,11 +44,16 @@ describe("toArenaMatch with real arena JSON", () => {
       expect(parsed.players.length).toBe(1);
 
       // Placement/team should match participant
-      const rawTracked = tracked as unknown as Record<string, unknown>;
+      const rawTracked = tracked;
       const placementValue = rawTracked["placement"];
       const subteamIdValue = rawTracked["playerSubteamId"];
-      if (typeof placementValue !== "number" || typeof subteamIdValue !== "number") {
-        throw new Error("real data must include numeric placement and playerSubteamId");
+      if (
+        typeof placementValue !== "number" ||
+        typeof subteamIdValue !== "number"
+      ) {
+        throw new Error(
+          "real data must include numeric placement and playerSubteamId"
+        );
       }
       const firstPlayer = parsed.players[0];
       if (!firstPlayer) throw new Error("parsed players should not be empty");

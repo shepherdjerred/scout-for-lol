@@ -239,7 +239,7 @@ async function createMatchObj(
     }
     const player = await getPlayerFn(firstPlayerState.player);
     const arena = toArenaMatch(player, match);
-    return arena as unknown as CompletedMatch;
+    return arena;
   }
   const teams = getTeams(match.info.participants);
   console.log(

@@ -2,6 +2,9 @@ import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { entries, filter, first, groupBy, map, pipe, sortBy } from "remeda";
 import { z } from "zod";
 import {
+  ArenaPlacementSchema,
+  type ArenaTeam,
+  ArenaTeamIdSchema,
   type CompletedMatch,
   getLaneOpponent,
   invertTeam,
@@ -12,9 +15,11 @@ import {
 } from "@scout-for-lol/data";
 import { strict as assert } from "assert";
 import { match } from "ts-pattern";
-import { participantToArenaChampion, participantToChampion } from "./champion.js";
+import {
+  participantToArenaChampion,
+  participantToChampion,
+} from "./champion.js";
 import { type ArenaMatch } from "@scout-for-lol/data";
-import { type ArenaSubteam } from "@scout-for-lol/data";
 
 function getTeams(participants: MatchV5DTOs.ParticipantDto[]) {
   return {
@@ -27,11 +32,11 @@ export function toMatch(
   player: Player,
   matchDto: MatchV5DTOs.MatchDto,
   rankBeforeMatch: Rank | undefined,
-  rankAfterMatch: Rank | undefined,
+  rankAfterMatch: Rank | undefined
 ): CompletedMatch {
   const participant = findParticipant(
     player.config.league.leagueAccount.puuid,
-    matchDto.info.participants,
+    matchDto.info.participants
   );
   if (participant === undefined) {
     console.debug("Player PUUID:", player.config.league.leagueAccount.puuid);
@@ -90,19 +95,30 @@ export function getOutcome(participant: MatchV5DTOs.ParticipantDto) {
 
 function findParticipant(
   puuid: string,
-  participants: MatchV5DTOs.ParticipantDto[],
+  participants: MatchV5DTOs.ParticipantDto[]
 ): MatchV5DTOs.ParticipantDto | undefined {
   return pipe(
     participants,
     filter((participant) => participant.puuid === puuid),
-    first(),
+    first()
   );
 }
 
 // Arena helpers
-const ArenaParticipantMinimalSchema = z.object({
-  playerSubteamId: z.number().int().min(1).max(8),
-}).passthrough();
+const ArenaParticipantMinimalSchema = z
+  .object({
+    playerSubteamId: z.union([
+      z.literal(1),
+      z.literal(2),
+      z.literal(3),
+      z.literal(4),
+      z.literal(5),
+      z.literal(6),
+      z.literal(7),
+      z.literal(8),
+    ]),
+  })
+  .passthrough();
 
 const ArenaParticipantFieldsSchema = z
   .object({
@@ -118,7 +134,7 @@ type ArenaParticipantValidatedMin = MatchV5DTOs.ParticipantDto & {
 export function groupArenaTeams(participants: MatchV5DTOs.ParticipantDto[]) {
   const validated: ArenaParticipantValidatedMin[] = participants.map((p) => {
     const parsed = ArenaParticipantMinimalSchema.parse(p);
-    return { ...p, playerSubteamId: parsed.playerSubteamId as ArenaParticipantValidatedMin["playerSubteamId"] };
+    return { ...p, playerSubteamId: parsed.playerSubteamId };
   });
   const bySubteam = groupBy(validated, (e) => e.playerSubteamId);
   const groups = pipe(
@@ -127,20 +143,22 @@ export function groupArenaTeams(participants: MatchV5DTOs.ParticipantDto[]) {
     sortBy(([subteamId]) => subteamId),
     map(([subteamId, players]) => {
       if (players.length !== 2) {
-        throw new Error(`subteam ${subteamId} must have exactly 2 players`);
+        throw new Error(
+          `subteam ${subteamId.toString()} must have exactly 2 players`
+        );
       }
       return { subteamId, players };
-    }),
+    })
   );
   if (groups.length !== 8) {
-    throw new Error(`expected 8 subteams, got ${groups.length}`);
+    throw new Error(`expected 8 subteams, got ${groups.length.toString()}`);
   }
   return groups;
 }
 
 export function getArenaTeammate(
   participant: MatchV5DTOs.ParticipantDto,
-  participants: MatchV5DTOs.ParticipantDto[],
+  participants: MatchV5DTOs.ParticipantDto[]
 ) {
   const sub = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
   for (const p of participants) {
@@ -152,20 +170,26 @@ export function getArenaTeammate(
 }
 
 export async function toArenaSubteams(
-  participants: MatchV5DTOs.ParticipantDto[],
-): Promise<ArenaSubteam[]> {
+  participants: MatchV5DTOs.ParticipantDto[]
+): Promise<ArenaTeam[]> {
   const grouped = groupArenaTeams(participants);
-  const result: ArenaSubteam[] = [];
+  const result: ArenaTeam[] = [];
   for (const { subteamId, players } of grouped) {
     const placement0 = ArenaParticipantFieldsSchema.parse(players[0]).placement;
     const placement1 = ArenaParticipantFieldsSchema.parse(players[1]).placement;
     if (placement0 !== placement1) {
       throw new Error(
-        `inconsistent placement for subteam ${subteamId}: ${placement0} !== ${placement1}`,
+        `inconsistent placement for subteam ${subteamId.toString()}: ${placement0.toString()} !== ${placement1.toString()}`
       );
     }
-    const converted = await Promise.all(players.map((p) => participantToArenaChampion(p)));
-    result.push({ subteamId, players: converted, placement: placement0 });
+    const converted = await Promise.all(
+      players.map((p) => participantToArenaChampion(p))
+    );
+    result.push({
+      teamId: ArenaTeamIdSchema.parse(subteamId),
+      players: converted,
+      placement: ArenaPlacementSchema.parse(placement0),
+    });
   }
   return result;
 }
@@ -176,19 +200,20 @@ export function getArenaPlacement(participant: MatchV5DTOs.ParticipantDto) {
 
 export async function toArenaMatch(
   player: Player,
-  matchDto: MatchV5DTOs.MatchDto,
+  matchDto: MatchV5DTOs.MatchDto
 ): Promise<ArenaMatch> {
   const subteams = await toArenaSubteams(matchDto.info.participants);
 
   // Build ArenaMatch.players for the tracked player only (can extend to multi-player later)
   const participant = findParticipant(
     player.config.league.leagueAccount.puuid,
-    matchDto.info.participants,
+    matchDto.info.participants
   );
   if (participant === undefined) {
     throw new Error("participant not found for arena match");
   }
-  const subteamId = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
+  const subteamId =
+    ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
   const placement = getArenaPlacement(participant);
   const champion = await participantToArenaChampion(participant);
   const teammateDto = getArenaTeammate(participant, matchDto.info.participants);
@@ -203,12 +228,12 @@ export async function toArenaMatch(
     players: [
       {
         playerConfig: player.config,
-        placement,
+        placement: ArenaPlacementSchema.parse(placement),
         champion,
-        team: subteamId,
-        arenaTeammate,
+        teamId: ArenaTeamIdSchema.parse(subteamId),
+        teammate: arenaTeammate,
       },
     ],
-    subteams,
+    teams: subteams,
   } satisfies ArenaMatch;
 }

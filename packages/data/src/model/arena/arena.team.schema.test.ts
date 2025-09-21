@@ -1,8 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import {
-  ArenaSubteamSchema,
-  isArenaTeam,
-  parseArenaTeam,
+  ArenaTeamSchema,
   type ArenaChampion,
   ArenaChampionSchema,
 } from "@scout-for-lol/data";
@@ -29,7 +27,7 @@ const sampleArenaChampion = (): ArenaChampion =>
 
 describe("Arena team schemas and utilities", () => {
   it("validates ArenaSubteamSchema with exactly two players", () => {
-    const parsed = ArenaSubteamSchema.safeParse({
+    const parsed = ArenaTeamSchema.safeParse({
       subteamId: 1,
       players: [sampleArenaChampion(), sampleArenaChampion()],
       placement: 3,
@@ -38,14 +36,18 @@ describe("Arena team schemas and utilities", () => {
   });
 
   it("fails when players length is not 2", () => {
-    const one = ArenaSubteamSchema.safeParse({
+    const one = ArenaTeamSchema.safeParse({
       subteamId: 1,
       players: [sampleArenaChampion()],
       placement: 3,
     });
-    const three = ArenaSubteamSchema.safeParse({
+    const three = ArenaTeamSchema.safeParse({
       subteamId: 1,
-      players: [sampleArenaChampion(), sampleArenaChampion(), sampleArenaChampion()],
+      players: [
+        sampleArenaChampion(),
+        sampleArenaChampion(),
+        sampleArenaChampion(),
+      ],
       placement: 3,
     });
     expect(one.success).toBe(false);
@@ -54,35 +56,18 @@ describe("Arena team schemas and utilities", () => {
 
   it("enforces subteamId and placement bounds", () => {
     expect(
-      ArenaSubteamSchema.safeParse({
+      ArenaTeamSchema.safeParse({
         subteamId: 0,
         players: [sampleArenaChampion(), sampleArenaChampion()],
         placement: 3,
-      }).success,
+      }).success
     ).toBe(false);
     expect(
-      ArenaSubteamSchema.safeParse({
+      ArenaTeamSchema.safeParse({
         subteamId: 1,
         players: [sampleArenaChampion(), sampleArenaChampion()],
         placement: 9,
-      }).success,
+      }).success
     ).toBe(false);
-  });
-
-  it("isArenaTeam correctly identifies valid team IDs", () => {
-    for (let i = 1; i <= 8; i++) {
-      expect(isArenaTeam(i)).toBe(true);
-    }
-    expect(isArenaTeam(0)).toBe(false);
-    expect(isArenaTeam(9)).toBe(false);
-    expect(isArenaTeam("red")).toBe(false);
-  });
-
-  it("parseArenaTeam returns subteam for 1..8, undefined otherwise", () => {
-    for (let i = 1; i <= 8; i++) {
-      expect(parseArenaTeam(i)).toBe(i);
-    }
-    expect(parseArenaTeam(0)).toBeUndefined();
-    expect(parseArenaTeam(9)).toBeUndefined();
   });
 });

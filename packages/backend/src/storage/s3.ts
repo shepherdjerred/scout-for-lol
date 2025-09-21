@@ -12,14 +12,7 @@ function generateMatchKey(matchId: string): string {
   const day = String(now.getUTCDate()).padStart(2, "0");
 
   // Create hierarchical structure: matches/YYYY/MM/DD/matchId.json
-  return `matches/${year}/${month}/${day}/${matchId}.json`;
-}
-
-/**
- * Check if S3 storage is configured
- */
-function isS3Configured(): boolean {
-  return !!configuration.s3BucketName;
+  return `matches/${year.toString()}/${month}/${day}/${matchId}.json`;
 }
 
 /**
@@ -31,15 +24,14 @@ export async function saveMatchToS3(
   match: MatchV5DTOs.MatchDto
 ): Promise<void> {
   const matchId = match.metadata.matchId;
+  const bucket = configuration.s3BucketName;
 
-  if (!isS3Configured()) {
+  if (!bucket) {
     console.warn(
       `[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping save for match: ${matchId}`
     );
     return;
   }
-
-  const bucket = configuration.s3BucketName!;
 
   console.log(`[S3Storage] 💾 Saving match to S3: ${matchId}`);
 
@@ -78,9 +70,11 @@ export async function saveMatchToS3(
 
     const uploadTime = Date.now() - startTime;
     console.log(
-      `[S3Storage] ✅ Successfully saved match ${matchId} to S3 in ${uploadTime}ms`
+      `[S3Storage] ✅ Successfully saved match ${matchId} to S3 in ${uploadTime.toString()}ms`
     );
-    console.log(`[S3Storage] 🔗 S3 location: s3://${bucket}/${key}`);
+    console.log(
+      `[S3Storage] 🔗 S3 location: s3://${bucket.toString()}/${key.toString()}`
+    );
   } catch (error) {
     console.error(
       `[S3Storage] ❌ Failed to save match ${matchId} to S3:`,
