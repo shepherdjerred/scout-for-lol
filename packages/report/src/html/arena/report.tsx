@@ -1,9 +1,5 @@
 import { type ArenaAugmentUnion, type ArenaMatch, formatArenaPlacement } from "@scout-for-lol/data";
 import { renderItems } from "../champion/item.tsx";
-import { latestVersion } from "../../dataDragon/version.ts";
-import { summoner } from "../../dataDragon/summoner.ts";
-import { palette } from "../../assets/colors.ts";
-import { first, keys, map, pickBy } from "remeda";
 
 export function ArenaReport(props: { match: ArenaMatch }) {
   const { match } = props;
@@ -17,32 +13,6 @@ export function ArenaReport(props: { match: ArenaMatch }) {
   const filterDisplayAugments = (augs: ArenaAugmentUnion[]) => augs.filter((a) => (a.type === "full" ? true : a.id > 0));
   const renderHighlighted = (highlighted: ArenaMatch["players"][number]) => {
     const items = renderItems(highlighted.champion.items, highlighted.champion.visionScore, true);
-
-    const summs = map(highlighted.champion.spells, (spell) => {
-      const name = first(
-        keys(
-          pickBy(summoner.data, (summoner) => summoner.key === spell.toString())
-        )
-      );
-
-      if (name === undefined) {
-        return null;
-      }
-
-      return (
-        <img
-          key={spell}
-          src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/spell/${name}.png`}
-          width={40}
-          height={40}
-          style={{
-            backgroundColor: palette.blue[5],
-            border: `1px solid ${palette.gold.bright}`,
-            marginRight: 6,
-          }}
-        />
-      );
-    });
 
     return (
       <div
@@ -67,13 +37,8 @@ export function ArenaReport(props: { match: ArenaMatch }) {
           </div>
         ) : null}
 
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            {summs.filter(Boolean)}
-          </div>
-          <div style={{ display: "flex", transform: "scale(0.6)", transformOrigin: "left center" }}>
-            {items}
-          </div>
+        <div style={{ display: "flex", transform: "scale(0.6)", transformOrigin: "left center", marginTop: 8 }}>
+          {items}
         </div>
       </div>
     );
@@ -120,38 +85,12 @@ export function ArenaReport(props: { match: ArenaMatch }) {
               {team.players.map((p, idx) => {
                 const items = renderItems(p.items, p.visionScore, true);
 
-                const summs = map(p.spells, (spell) => {
-                  const name = first(
-                    keys(
-                      pickBy(summoner.data, (summoner) => summoner.key === spell.toString())
-                    )
-                  );
-
-                  if (name === undefined) {
-                    return null;
-                  }
-
-                  return (
-                    <img
-                      key={spell}
-                      src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/spell/${name}.png`}
-                      width={30}
-                      height={30}
-                      style={{
-                        backgroundColor: palette.blue[5],
-                        border: `1px solid ${palette.gold.bright}`,
-                        marginRight: 4,
-                      }}
-                    />
-                  );
-                });
-
                 return (
                   <div
                     key={idx}
-                    style={{ display: "flex", alignItems: "center", marginBottom: 16, gap: 16 }}
+                    style={{ display: "flex", flexDirection: "column", marginBottom: 16, gap: 8 }}
                   >
-                    <div style={{ display: "flex", flexDirection: "column", minWidth: 200 }}>
+                    <div style={{ display: "flex", flexDirection: "column" }}>
                       <div style={{ display: "flex", fontSize: 32, fontWeight: 700 }}>
                         Level {p.level} · {p.riotIdGameName ?? "Unknown"}
                       </div>
@@ -165,13 +104,8 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                       ) : null}
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                        {summs.filter(Boolean)}
-                      </div>
-                      <div style={{ display: "flex", transform: "scale(0.5)", transformOrigin: "left center" }}>
-                        {items}
-                      </div>
+                    <div style={{ display: "flex", transform: "scale(0.5)", transformOrigin: "left top" }}>
+                      {items}
                     </div>
                   </div>
                 );
