@@ -22,7 +22,7 @@ const sampleArenaChampion = (): ArenaChampion =>
     creepScore: 0,
     visionScore: 0,
     damage: 15000,
-    augments: [101, 202],
+    augments: [{ id: 101 }, { id: 202 }],
     arenaMetrics: {},
     teamSupport: {},
   });

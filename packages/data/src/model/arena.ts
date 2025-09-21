@@ -3,6 +3,7 @@ import { ChampionSchema } from "./champion.js";
 import { PlayerConfigEntrySchema } from "./playerConfig.js";
 import { RankSchema } from "./rank.js";
 import { LaneSchema } from "./lane.js";
+import { ArenaAugmentUnionSchema } from "./augment.js";
 
 // Arena-specific performance metrics (meanings inferred - need verification)
 export type ArenaMetrics = z.infer<typeof ArenaMetricsSchema>;
@@ -31,7 +32,7 @@ export const TeamSupportMetricsSchema = z.strictObject({
 export type ArenaChampion = z.infer<typeof ArenaChampionSchema>;
 export const ArenaChampionSchema = ChampionSchema.extend({
   // Arena-specific fields
-  augments: z.array(z.number()).max(6), // playerAugment1-6 (required for arena)
+  augments: z.array(ArenaAugmentUnionSchema).max(6), // playerAugment1-6 (required for arena)
   arenaMetrics: ArenaMetricsSchema, // Required for arena
   teamSupport: TeamSupportMetricsSchema, // Required for arena
 });

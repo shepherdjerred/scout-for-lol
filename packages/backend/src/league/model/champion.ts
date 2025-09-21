@@ -1,5 +1,6 @@
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { type Champion, type ArenaChampion, parseLane } from "@scout-for-lol/data";
+import { getArenaAugmentMap, type ArenaAugmentUnion } from "@scout-for-lol/data";
 
 // Base champion conversion for traditional games
 export function participantToChampion(
@@ -37,12 +38,12 @@ export function participantToChampion(
 }
 
 // Arena champion conversion with arena-specific fields
-export function participantToArenaChampion(
+export async function participantToArenaChampion(
   dto: MatchV5DTOs.ParticipantDto,
-): ArenaChampion {
+): Promise<ArenaChampion> {
   const baseChampion = participantToChampion(dto);
 
-  const augments = extractAugments(dto);
+  const augments = await extractAugments(dto);
   const arenaMetrics = extractArenaMetrics(dto);
   const teamSupport = extractTeamSupport(dto);
 
@@ -55,8 +56,8 @@ export function participantToArenaChampion(
 }
 
 // Helpers for arena-specific fields
-export function extractAugments(dto: MatchV5DTOs.ParticipantDto): number[] {
-  const result: number[] = [];
+export async function extractAugments(dto: MatchV5DTOs.ParticipantDto): Promise<ArenaAugmentUnion[]> {
+  const ids: number[] = [];
   const augmentFields = [
     dto.playerAugment1,
     dto.playerAugment2,
@@ -67,10 +68,12 @@ export function extractAugments(dto: MatchV5DTOs.ParticipantDto): number[] {
   ];
   for (const augment of augmentFields) {
     if (augment && augment !== 0) {
-      result.push(augment);
+      ids.push(augment);
     }
   }
-  return result;
+  const map = await getArenaAugmentMap().catch(() => null);
+  if (!map) return ids.map((id) => ({ id }));
+  return ids.map((id) => map.get(id) ?? { id });
 }
 
 export function extractArenaMetrics(

@@ -77,10 +77,10 @@ function makeArenaMatchDto(): MatchV5DTOs.MatchDto {
 }
 
 describe("arena match integration", () => {
-  it("builds valid arena subteams and players from MatchDto", () => {
+  it("builds valid arena subteams and players from MatchDto", async () => {
     const dto = makeArenaMatchDto();
-    const subteams = toArenaSubteams(dto.info.participants);
-    const players = dto.info.participants.map(participantToArenaChampion);
+    const subteams = await toArenaSubteams(dto.info.participants);
+    const players = await Promise.all(dto.info.participants.map(participantToArenaChampion));
 
     // Validate subteams against schema and basic expectations
     subteams.forEach((st) => {
@@ -91,7 +91,7 @@ describe("arena match integration", () => {
     expect(players.length).toBe(16);
   });
 
-  it("builds full ArenaMatch via toArenaMatch", () => {
+  it("builds full ArenaMatch via toArenaMatch", async () => {
     const dto = makeArenaMatchDto();
     const first = dto.info.participants[0];
     if (!first) throw new Error("participants should not be empty in test dto");
@@ -104,7 +104,7 @@ describe("arena match integration", () => {
       },
       ranks: {},
     } as any;
-    const arenaMatch = toArenaMatch(player, dto);
+    const arenaMatch = await toArenaMatch(player, dto);
     const parsed = ArenaMatchSchema.parse(arenaMatch);
     expect(parsed.queueType).toBe("arena");
     expect(parsed.subteams.length).toBe(8);

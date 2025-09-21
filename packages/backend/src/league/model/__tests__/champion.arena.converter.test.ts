@@ -49,15 +49,15 @@ const baseParticipant = (): MatchV5DTOs.ParticipantDto => ({
 } as unknown as MatchV5DTOs.ParticipantDto);
 
 describe("participantToArenaChampion", () => {
-  it("extracts and filters augments, keeps order", () => {
+  it("extracts and filters augments, keeps order", async () => {
     const dto = baseParticipant();
-    const champ = participantToArenaChampion(dto);
-    expect(champ.augments).toEqual([667, 123]);
+    const champ = await participantToArenaChampion(dto);
+    expect(champ.augments.map((a) => ("id" in a ? (a as any).id : undefined))).toEqual([667, 123]);
   });
 
-  it("copies base champion fields", () => {
+  it("copies base champion fields", async () => {
     const dto = baseParticipant();
-    const champ = participantToArenaChampion(dto);
+    const champ = await participantToArenaChampion(dto);
     expect(champ.championName).toBe("Lux");
     expect(champ.level).toBe(18);
     expect(champ.spells).toEqual([4, 7]);
@@ -65,9 +65,9 @@ describe("participantToArenaChampion", () => {
     expect(champ.damage).toBe(12000);
   });
 
-  it("maps team support and arena metrics", () => {
+  it("maps team support and arena metrics", async () => {
     const dto = baseParticipant();
-    const champ = participantToArenaChampion(dto);
+    const champ = await participantToArenaChampion(dto);
     expect(champ.teamSupport.damageShieldedOnTeammate).toBe(500);
     expect(champ.teamSupport.healsOnTeammate).toBe(300);
     expect(champ.arenaMetrics.playerScore0).toBe(1);

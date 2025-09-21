@@ -48,6 +48,10 @@ export function toMatch(
   const enemyTeam = invertTeam(team);
   const queueType = parseQueueType(matchDto.info.queueId);
 
+  if (queueType === "arena") {
+    throw new Error("arena matches are not supported");
+  }
+
   return {
     queueType,
     players: [
@@ -147,11 +151,12 @@ export function getArenaTeammate(
   return undefined;
 }
 
-export function toArenaSubteams(
+export async function toArenaSubteams(
   participants: MatchV5DTOs.ParticipantDto[],
-): ArenaSubteam[] {
+): Promise<ArenaSubteam[]> {
   const grouped = groupArenaTeams(participants);
-  return grouped.map(({ subteamId, players }) => {
+  const result: ArenaSubteam[] = [];
+  for (const { subteamId, players } of grouped) {
     const placement0 = ArenaParticipantFieldsSchema.parse(players[0]).placement;
     const placement1 = ArenaParticipantFieldsSchema.parse(players[1]).placement;
     if (placement0 !== placement1) {
@@ -159,23 +164,21 @@ export function toArenaSubteams(
         `inconsistent placement for subteam ${subteamId}: ${placement0} !== ${placement1}`,
       );
     }
-    return {
-      subteamId,
-      players: players.map(participantToArenaChampion),
-      placement: placement0,
-    };
-  });
+    const converted = await Promise.all(players.map((p) => participantToArenaChampion(p)));
+    result.push({ subteamId, players: converted, placement: placement0 });
+  }
+  return result;
 }
 
 export function getArenaPlacement(participant: MatchV5DTOs.ParticipantDto) {
   return ArenaParticipantFieldsSchema.parse(participant).placement;
 }
 
-export function toArenaMatch(
+export async function toArenaMatch(
   player: Player,
   matchDto: MatchV5DTOs.MatchDto,
-): ArenaMatch {
-  const subteams = toArenaSubteams(matchDto.info.participants);
+): Promise<ArenaMatch> {
+  const subteams = await toArenaSubteams(matchDto.info.participants);
 
   // Build ArenaMatch.players for the tracked player only (can extend to multi-player later)
   const participant = findParticipant(
@@ -187,12 +190,12 @@ export function toArenaMatch(
   }
   const subteamId = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
   const placement = getArenaPlacement(participant);
-  const champion = participantToArenaChampion(participant);
+  const champion = await participantToArenaChampion(participant);
   const teammateDto = getArenaTeammate(participant, matchDto.info.participants);
   if (!teammateDto) {
     throw new Error("arena teammate not found");
   }
-  const arenaTeammate = participantToArenaChampion(teammateDto);
+  const arenaTeammate = await participantToArenaChampion(teammateDto);
 
   return {
     durationInSeconds: matchDto.info.gameDuration,

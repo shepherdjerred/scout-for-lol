@@ -78,6 +78,10 @@ export function toMatch(
   const enemyTeam = invertTeam(team);
   const queueType = parseQueueType(matchDto.info.queueId);
 
+  if (queueType === "arena") {
+    throw new Error("arena matches are not supported");
+  }
+
   return {
     queueType,
     players: [

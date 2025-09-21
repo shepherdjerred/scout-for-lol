@@ -22,7 +22,7 @@ const arenaChamp = (): ArenaChampion =>
     creepScore: 0,
     visionScore: 0,
     damage: 18000,
-    augments: [301, 401],
+    augments: [{ id: 301 }, { id: 401 }],
     arenaMetrics: {},
     teamSupport: {},
   });

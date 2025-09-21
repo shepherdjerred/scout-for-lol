@@ -11,7 +11,7 @@ import { filter, first, pipe } from "remeda";
 export type CompletedMatch = z.infer<typeof CompletedMatchSchema>;
 export const CompletedMatchSchema = z.strictObject({
   durationInSeconds: z.number().nonnegative(),
-  queueType: QueueTypeSchema.optional(),
+  queueType: QueueTypeSchema.exclude(["arena"]).optional(),
   /**
    * Data specific to all players we care about (e.g. all subscribed players in this match).
    * This was previously a single 'player' object, now an array for multi-player support.

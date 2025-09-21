@@ -4,9 +4,8 @@ import {
   Player,
   PlayerConfigEntry,
 } from "@scout-for-lol/data";
-import { send } from "../../discord/channel";
 import { checkPostMatchInternal } from "./internal";
-import { test, expect } from "bun:test";
+import { test, expect, beforeAll } from "bun:test";
 import { Message, MessageCreateOptions, MessagePayload } from "discord.js";
 import {
   DiscordAccountIdSchema,
@@ -15,6 +14,16 @@ import {
 } from "@scout-for-lol/data";
 
 const testdataPath = new URL("testdata/match.json", import.meta.url);
+
+beforeAll(() => {
+  // Set required env vars for configuration during tests
+  process.env["VERSION"] = process.env["VERSION"] ?? "test-version";
+  process.env["GIT_SHA"] = process.env["GIT_SHA"] ?? "test-git-sha";
+  process.env["DISCORD_TOKEN"] = process.env["DISCORD_TOKEN"] ?? "test-token";
+  process.env["APPLICATION_ID"] = process.env["APPLICATION_ID"] ?? "12345678901234567";
+  process.env["RIOT_API_TOKEN"] = process.env["RIOT_API_TOKEN"] ?? "test-riot-token";
+  process.env["DATABASE_URL"] = process.env["DATABASE_URL"] ?? "postgres://user:pass@localhost:5432/db";
+});
 
 test("postmatch", async () => {
   const state: ApplicationState = {
@@ -53,7 +62,7 @@ test("postmatch", async () => {
   ): Promise<Message<true> | Message<false>> => {
     expect(message).toMatchSnapshot();
     return Promise.resolve({} as Message<true> | Message<false>);
-  }) satisfies typeof send;
+  });
   const checkMatchFn = async () => {
     const exampleMatch = JSON.parse(
       await Bun.file(testdataPath).text(),

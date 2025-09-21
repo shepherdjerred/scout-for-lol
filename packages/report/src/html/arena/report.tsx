@@ -2,6 +2,39 @@ import { type ArenaMatch, formatArenaPlacement } from "@scout-for-lol/data";
 
 export function ArenaReport(props: { match: ArenaMatch }) {
   const { match } = props;
+  const renderAugment = (a: any) => {
+    if (!a) return "";
+    if (typeof a === "object" && "name" in a && "rarity" in a) {
+      return `${(a as any).name} (R${(a as any).rarity})`;
+    }
+    if (typeof a === "object" && "id" in a) return `Augment ${(a as any).id}`;
+    return String(a);
+  };
+  const renderHighlighted = (highlighted: ArenaMatch["players"][number]) => (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        padding: 24,
+        borderRadius: 16,
+        background: "#111827",
+      }}
+    >
+      <div style={{ display: "flex", fontSize: 60, fontWeight: 700 }}>
+        {highlighted.playerConfig.alias} · Team {highlighted.team} · {formatArenaPlacement(highlighted.placement)}
+      </div>
+      <div style={{ display: "flex", fontSize: 40 }}>
+        {highlighted.champion.championName} · KDA {highlighted.champion.kills}/{highlighted.champion.deaths}/{highlighted.champion.assists}
+      </div>
+      {Array.isArray(highlighted.champion.augments) && highlighted.champion.augments.length > 0 ? (
+        <div style={{ display: "flex", fontSize: 36, opacity: 0.9 }}>
+          Augments: {highlighted.champion.augments.map(renderAugment).join(", ")}
+        </div>
+      ) : null}
+    </div>
+  );
+  const hasHighlighted = match.players.length > 0;
   return (
     <div
       style={{
@@ -20,33 +53,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
       </div>
 
       {/* Highlighted player (first tracked player) */}
-      {match.players.length > 0 ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-            padding: 24,
-            borderRadius: 16,
-            background: "#111827",
-          }}
-        >
-          <div style={{ display: "flex", fontSize: 60, fontWeight: 700 }}>
-            {match.players[0].playerConfig.alias} · Team {match.players[0].team} ·
-            {" "}
-            {formatArenaPlacement(match.players[0].placement)}
-          </div>
-          <div style={{ display: "flex", fontSize: 40 }}>
-            {match.players[0].champion.championName} · KDA {match.players[0].champion.kills}
-            /{match.players[0].champion.deaths}/{match.players[0].champion.assists}
-          </div>
-          {Array.isArray(match.players[0].champion.augments) && match.players[0].champion.augments.length > 0 ? (
-            <div style={{ display: "flex", fontSize: 36, opacity: 0.9 }}>
-              Augments: {match.players[0].champion.augments.join(", ")}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      {hasHighlighted ? renderHighlighted(match.players[0] as ArenaMatch["players"][number]) : null}
       <div style={{ display: "flex", flexWrap: "wrap" }}>
         {match.subteams.map((team) => (
           <div
@@ -78,7 +85,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                   <span style={{ opacity: 0.9 }}>{" · KDA "}{p.kills}/{p.deaths}/{p.assists}</span>
                   {p.augments && p.augments.length > 0 ? (
                     <span style={{ opacity: 0.8 }}>
-                      {" "}· Augments: {p.augments.join(", ")}
+                      {" "}· Augments: {p.augments.map(renderAugment).join(", ")}
                     </span>
                   ) : null}
                 </div>

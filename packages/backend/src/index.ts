@@ -1,5 +1,6 @@
 import configuration from "./configuration.js";
 import * as Sentry from "@sentry/node";
+import { initArenaAugmentsOnce } from "@scout-for-lol/data";
 
 console.log("🚀 Starting Scout for LoL backend application");
 console.log(`📦 Version: ${configuration.version}`);
@@ -18,6 +19,14 @@ if (configuration.sentryDsn) {
 } else {
   console.log("⚠️  Sentry DSN not configured, error tracking disabled");
 }
+
+// Preload Arena augments once at startup; continue if it fails
+console.log("🧩 Initializing Arena augments cache");
+await initArenaAugmentsOnce().then(() => {
+  console.log("✅ Arena augments cache initialized");
+}).catch((e) => {
+  console.warn("⚠️  Failed to initialize Arena augments cache:", e);
+});
 
 console.log("🔌 Starting Discord bot initialization");
 import "./discord/index.js";

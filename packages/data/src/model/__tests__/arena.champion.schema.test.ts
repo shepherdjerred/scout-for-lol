@@ -26,18 +26,30 @@ describe("ArenaChampionSchema and augments", () => {
   it("accepts augments up to 6 and preserves order", () => {
     const parsed = ArenaChampionSchema.parse({
       ...baseChampion,
-      augments: [11, 22, 33],
+      augments: [{ id: 11 }, { id: 22 }, { id: 33 }],
       arenaMetrics: {},
       teamSupport: {},
     });
-    expect(parsed.augments).toEqual([11, 22, 33]);
+    expect(parsed.augments.map((a) => ("id" in a ? a.id : undefined))).toEqual([
+      11,
+      22,
+      33,
+    ]);
   });
 
   it("fails when more than 6 augments provided", () => {
     expect(() =>
       ArenaChampionSchema.parse({
         ...baseChampion,
-        augments: [1, 2, 3, 4, 5, 6, 7],
+        augments: [
+          { id: 1 },
+          { id: 2 },
+          { id: 3 },
+          { id: 4 },
+          { id: 5 },
+          { id: 6 },
+          { id: 7 },
+        ],
         arenaMetrics: {},
         teamSupport: {},
       }),
@@ -57,7 +69,7 @@ describe("ArenaChampionSchema and augments", () => {
   it("accepts optional arena/team support metrics fields", () => {
     const parsed = ArenaChampionSchema.parse({
       ...baseChampion,
-      augments: [101, 202],
+      augments: [{ id: 101 }, { id: 202 }],
       arenaMetrics: {
         playerScore0: 1,
         playerScore3: 0.5,

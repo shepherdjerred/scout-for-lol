@@ -2,7 +2,6 @@ import {
   type CompletedMatch,
   DiscordAccountIdSchema,
   LeaguePuuidSchema,
-  LeagueSummonerIdSchema,
 } from "@scout-for-lol/data";
 import { matchToSvg, svgToPng } from "./index.js";
 import { test, expect } from "bun:test";
@@ -20,7 +19,6 @@ function getMatch(): CompletedMatch {
               puuid: LeaguePuuidSchema.parse(
                 "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
               ),
-              summonerId: LeagueSummonerIdSchema.parse("id"),
               region: "AMERICA_NORTH",
             },
           },
@@ -475,7 +473,6 @@ test("multiple highlighted players test", async () => {
           puuid: LeaguePuuidSchema.parse(
             "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDa9biieJ5ZRD049AUCBjLjyBeeezTaw",
           ),
-          summonerId: LeagueSummonerIdSchema.parse("id2"),
           region: "AMERICA_NORTH",
         },
       },

@@ -72,7 +72,7 @@ describe("arena team grouping and teammate lookup", () => {
     expect(() => groupArenaTeams(bad)).toThrow();
   });
 
-  it("throws when placements within a subteam are inconsistent", () => {
+  it("throws when placements within a subteam are inconsistent", async () => {
     const a = makeParticipant({ playerSubteamId: 2, placement: 1 });
     const b = makeParticipant({ playerSubteamId: 2, placement: 2 });
     const others = [
@@ -92,6 +92,6 @@ describe("arena team grouping and teammate lookup", () => {
       makeParticipant({ playerSubteamId: 8, placement: 1 }),
     ];
     const participants = [a, b, ...others];
-    expect(() => toArenaSubteams(participants)).toThrow();
+    await expect(async () => { await toArenaSubteams(participants); }).toThrow();
   });
 });
