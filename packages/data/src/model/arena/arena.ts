@@ -28,7 +28,13 @@ export const TeamSupportMetricsSchema = z.strictObject({
 });
 
 export type ArenaChampion = z.infer<typeof ArenaChampionSchema>;
-export const ArenaChampionSchema = ChampionSchema.extend({
+export const ArenaChampionSchema = ChampionSchema.omit({
+  lane: true,
+  spells: true,
+  visionScore: true,
+  creepScore: true,
+  runes: true,
+}).extend({
   augments: z.array(AugmentSchema).max(6),
   // TODO: perhaps these are in normal games, too
   arenaMetrics: PlayerMetricsSchema,

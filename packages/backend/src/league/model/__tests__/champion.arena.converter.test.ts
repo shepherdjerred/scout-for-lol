@@ -65,7 +65,6 @@ describe("participantToArenaChampion", () => {
     const champ = await participantToArenaChampion(dto);
     expect(champ.championName).toBe("Lux");
     expect(champ.level).toBe(18);
-    expect(champ.spells).toEqual([4, 7]);
     expect(champ.gold).toBe(9000);
     expect(champ.damage).toBe(12000);
   });

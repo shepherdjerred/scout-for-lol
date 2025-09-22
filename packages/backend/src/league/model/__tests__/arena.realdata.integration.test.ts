@@ -52,29 +52,7 @@ describe("toArenaMatch with real arena JSON", () => {
       const arenaMatch = await toArenaMatch(player, matchDto);
       const parsed = ArenaMatchSchema.parse(arenaMatch);
 
-      expect(parsed.queueType).toBe("arena");
-      expect(parsed.teams.length).toBe(8);
-      expect(parsed.players.length).toBe(1);
-
-      // Placement/team should match participant
-      const rawTracked = tracked;
-      const placementValue = rawTracked.placement;
-      const subteamIdValue = rawTracked.playerSubteamId;
-      if (
-        typeof placementValue !== "number" ||
-        typeof subteamIdValue !== "number"
-      ) {
-        throw new Error(
-          "real data must include numeric placement and playerSubteamId"
-        );
-      }
-      const firstPlayer = parsed.players[0];
-      if (!firstPlayer) throw new Error("parsed players should not be empty");
-      expect(firstPlayer.placement as number).toBe(placementValue);
-      expect(firstPlayer.teamId as number).toBe(subteamIdValue);
-
-      // snapshot is too sensitive due to augment object details; assert key invariants instead
-      expect(parsed.teams.every((st) => st.players.length === 2)).toBe(true);
+      expect(parsed).toMatchSnapshot();
     }
   });
 });

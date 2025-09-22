@@ -2,7 +2,7 @@ import { z } from "zod";
 import { LaneSchema } from "./lane.js";
 
 export type Champion = z.infer<typeof ChampionSchema>;
-export const ChampionSchema = z.strictObject({
+export const ChampionSchema = z.object({
   riotIdGameName: z.string().min(0),
   championName: z.string().min(0),
   kills: z.number().nonnegative(),

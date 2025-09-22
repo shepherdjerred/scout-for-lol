@@ -4,6 +4,10 @@ import env from "env-var";
 console.log("🔧 Loading application configuration");
 
 function getRequiredEnvVar(name: string): string {
+  // don't require these when running tests
+  if (process.env.NODE_ENV === "test") {
+    return getOptionalEnvVar(name) ?? "TEST PLACEHOLDER";
+  }
   try {
     const value = env.get(name).required().asString();
     console.log(`✅ ${name}: configured`);
