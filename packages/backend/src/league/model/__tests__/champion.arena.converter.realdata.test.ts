@@ -11,7 +11,7 @@ async function loadParticipants(
   path: string
 ): Promise<MatchV5DTOs.ParticipantDto[]> {
   const file = Bun.file(path);
-  const json = await file.json();
+  const json = (await file.json()) as unknown as MatchV5DTOs.MatchDto;
   return json.info.participants;
 }
 
@@ -34,13 +34,11 @@ describe("participantToArenaChampion with real arena JSON", () => {
         expect(typeof champ.level).toBe("number");
         // metrics present as numbers or undefined
         expect(
-          typeof champ.teamSupport.damageShieldedOnTeammate === "number" ||
-            champ.teamSupport.damageShieldedOnTeammate === undefined
+          typeof champ.teamSupport.damageShieldedOnTeammate === "number"
         ).toBe(true);
-        expect(
-          typeof champ.teamSupport.healsOnTeammate === "number" ||
-            champ.teamSupport.healsOnTeammate === undefined
-        ).toBe(true);
+        expect(typeof champ.teamSupport.healsOnTeammate === "number").toBe(
+          true
+        );
       }
     }
   });

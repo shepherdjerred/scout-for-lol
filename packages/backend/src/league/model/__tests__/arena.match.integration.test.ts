@@ -2,8 +2,9 @@ import { describe, it, expect } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import {
   ArenaMatchSchema,
-  ArenaTeamIdSchema,
   ArenaTeamSchema,
+  LeaguePuuidSchema,
+  type Player,
 } from "@scout-for-lol/data";
 import { participantToArenaChampion } from "../champion.js";
 import { toArenaMatch, toArenaSubteams } from "../match.js";
@@ -55,7 +56,10 @@ function makeParticipant(
     PlayerScore7: 0,
     PlayerScore8: 0,
   };
-  return { ...base, ...overrides };
+  return {
+    ...base,
+    ...overrides,
+  } satisfies Partial<MatchV5DTOs.ParticipantDto> as MatchV5DTOs.ParticipantDto;
 }
 
 function makeArenaMatchDto(): MatchV5DTOs.MatchDto {
@@ -98,6 +102,8 @@ function makeArenaMatchDto(): MatchV5DTOs.MatchDto {
       queueId: 1700,
       teams: [],
       tournamentCode: "",
+      endOfGameResult: "WIN",
+      gameVersion: "1.0.0",
     },
   };
 }
@@ -123,8 +129,8 @@ describe("arena match integration", () => {
     const dto = makeArenaMatchDto();
     const first = dto.info.participants[0];
     if (!first) throw new Error("participants should not be empty in test dto");
-    const puuid = first.puuid;
-    const player = {
+    const puuid = LeaguePuuidSchema.parse(first.puuid);
+    const player: Player = {
       config: {
         alias: "Test",
         league: { leagueAccount: { puuid, region: "PBE" } },
@@ -135,7 +141,7 @@ describe("arena match integration", () => {
     const arenaMatch = await toArenaMatch(player, dto);
     const parsed = ArenaMatchSchema.parse(arenaMatch);
     expect(parsed.queueType).toBe("arena");
-    expect(parsed.subteams.length).toBe(8);
+    expect(parsed.teams.length).toBe(8);
     expect(parsed.players.length).toBe(1);
     const firstPlayer = parsed.players[0];
     if (!firstPlayer) throw new Error("parsed players should not be empty");

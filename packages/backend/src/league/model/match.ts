@@ -118,14 +118,16 @@ const ArenaParticipantMinimalSchema = z
       z.literal(8),
     ]),
   })
-  .passthrough();
+  // TODO: remove
+  .loose();
 
 const ArenaParticipantFieldsSchema = z
   .object({
     playerSubteamId: z.number().int().min(1).max(8),
     placement: z.number().int().min(1).max(8),
   })
-  .passthrough();
+  // TODO: remove
+  .loose();
 
 type ArenaParticipantValidatedMin = MatchV5DTOs.ParticipantDto & {
   playerSubteamId: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;

@@ -1,6 +1,10 @@
 import { describe, it, expect } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { ArenaMatchSchema } from "@scout-for-lol/data";
+import {
+  ArenaMatchSchema,
+  LeaguePuuidSchema,
+  type Player,
+} from "@scout-for-lol/data";
 import { toArenaMatch } from "../match.js";
 
 const RAW_FILE_PATHS = [
@@ -10,8 +14,8 @@ const RAW_FILE_PATHS = [
 
 async function loadMatch(path: string): Promise<MatchV5DTOs.MatchDto> {
   const file = Bun.file(path);
-  const json = await file.json();
-  return json;
+  const json = (await file.json()) as unknown;
+  return json as MatchV5DTOs.MatchDto;
 }
 
 describe("toArenaMatch with real arena JSON", () => {
@@ -30,23 +34,28 @@ describe("toArenaMatch with real arena JSON", () => {
       const player = {
         config: {
           alias: "RealDataUser",
-          league: { leagueAccount: { puuid: tracked.puuid, region: "PBE" } },
+          league: {
+            leagueAccount: {
+              puuid: LeaguePuuidSchema.parse(tracked.puuid),
+              region: "PBE",
+            },
+          },
           discordAccount: null,
         },
         ranks: {},
-      };
+      } satisfies Player;
 
       const arenaMatch = await toArenaMatch(player, matchDto);
       const parsed = ArenaMatchSchema.parse(arenaMatch);
 
       expect(parsed.queueType).toBe("arena");
-      expect(parsed.subteams.length).toBe(8);
+      expect(parsed.teams.length).toBe(8);
       expect(parsed.players.length).toBe(1);
 
       // Placement/team should match participant
       const rawTracked = tracked;
-      const placementValue = rawTracked["placement"];
-      const subteamIdValue = rawTracked["playerSubteamId"];
+      const placementValue = rawTracked.placement;
+      const subteamIdValue = rawTracked.teamId;
       if (
         typeof placementValue !== "number" ||
         typeof subteamIdValue !== "number"
@@ -57,11 +66,11 @@ describe("toArenaMatch with real arena JSON", () => {
       }
       const firstPlayer = parsed.players[0];
       if (!firstPlayer) throw new Error("parsed players should not be empty");
-      expect(firstPlayer.placement).toBe(placementValue);
-      expect(firstPlayer.team).toBe(subteamIdValue);
+      expect(firstPlayer.placement as number).toBe(placementValue);
+      expect(firstPlayer.teamId as number).toBe(subteamIdValue);
 
       // snapshot is too sensitive due to augment object details; assert key invariants instead
-      expect(parsed.subteams.every((st) => st.players.length === 2)).toBe(true);
+      expect(parsed.teams.every((st) => st.players.length === 2)).toBe(true);
     }
   });
 });

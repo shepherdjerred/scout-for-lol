@@ -82,7 +82,7 @@ export function findParticipant(
 
   if (participant) {
     console.log(
-      `✅ Found participant ${playerAlias}: ${participant.summonerName} (Champion: ${participant.championId.toString()})`
+      `✅ Found participant ${playerAlias}: ${participant.riotId} (Champion: ${participant.championId.toString()})`
     );
   } else {
     console.log(`❌ Participant ${playerAlias} not found in game`);

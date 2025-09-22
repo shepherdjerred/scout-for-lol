@@ -69,6 +69,10 @@ export function ArenaReport(props: { match: ArenaMatch }) {
     );
   };
   const hasHighlighted = match.players.length > 0;
+  const firstPlayer = match.players[0];
+  if (!firstPlayer) {
+    throw new Error("first player not found");
+  }
   return (
     <div
       style={{
@@ -89,7 +93,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
       </div>
 
       {/* Highlighted player (first tracked player) */}
-      {hasHighlighted ? renderHighlighted(match.players[0]) : null}
+      {hasHighlighted ? renderHighlighted(firstPlayer) : null}
       <div style={{ display: "flex", flexWrap: "wrap" }}>
         {match.teams.map((team) => (
           <div

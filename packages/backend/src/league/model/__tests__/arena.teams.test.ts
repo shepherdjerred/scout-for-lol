@@ -1,8 +1,14 @@
 import { describe, it, expect } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { groupArenaTeams, getArenaTeammate, toArenaSubteams } from "../match.js";
+import {
+  groupArenaTeams,
+  getArenaTeammate,
+  toArenaSubteams,
+} from "../match.js";
 
-function makeParticipant(extra: Record<string, unknown> = {}): MatchV5DTOs.ParticipantDto {
+function makeParticipant(
+  extra: Record<string, unknown> = {}
+): MatchV5DTOs.ParticipantDto {
   return {
     puuid: crypto.randomUUID(),
     riotIdGameName: "P#NA1",
@@ -44,7 +50,7 @@ function makeParticipant(extra: Record<string, unknown> = {}): MatchV5DTOs.Parti
     PlayerScore7: 0,
     PlayerScore8: 0,
     ...extra,
-  };
+  } satisfies Partial<MatchV5DTOs.ParticipantDto> as MatchV5DTOs.ParticipantDto;
 }
 
 describe("arena team grouping and teammate lookup", () => {
@@ -72,7 +78,7 @@ describe("arena team grouping and teammate lookup", () => {
     expect(() => groupArenaTeams(bad)).toThrow();
   });
 
-  it("throws when placements within a subteam are inconsistent", async () => {
+  it("throws when placements within a subteam are inconsistent", () => {
     const a = makeParticipant({ playerSubteamId: 2, placement: 1 });
     const b = makeParticipant({ playerSubteamId: 2, placement: 2 });
     const others = [
@@ -92,6 +98,8 @@ describe("arena team grouping and teammate lookup", () => {
       makeParticipant({ playerSubteamId: 8, placement: 1 }),
     ];
     const participants = [a, b, ...others];
-    await expect(async () => { await toArenaSubteams(participants); }).toThrow();
+    expect(async () => {
+      await toArenaSubteams(participants);
+    }).toThrow();
   });
 });
