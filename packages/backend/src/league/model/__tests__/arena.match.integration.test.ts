@@ -55,8 +55,13 @@ function makeParticipant(
     PlayerScore6: 0,
     PlayerScore7: 0,
     PlayerScore8: 0,
+    challenges: {
+      damageTakenOnTeamPercentage: 0.2,
+    } satisfies Partial<MatchV5DTOs.ChallengesDto> as MatchV5DTOs.ChallengesDto,
   };
   return {
+    totalHealsOnTeammates: 300,
+    totalDamageShieldedOnTeammates: 500,
     ...base,
     ...overrides,
   } satisfies Partial<MatchV5DTOs.ParticipantDto> as MatchV5DTOs.ParticipantDto;

@@ -1,6 +1,9 @@
 import configuration from "./configuration.js";
 import * as Sentry from "@sentry/node";
 
+// Import type augmentations to extend third-party library types
+import "./types/twisted-augmentation.js";
+
 console.log("🚀 Starting Scout for LoL backend application");
 console.log(`📦 Version: ${configuration.version}`);
 console.log(`🔧 Environment: ${configuration.environment}`);

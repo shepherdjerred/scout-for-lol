@@ -6,10 +6,14 @@ import {
   type Player,
 } from "@scout-for-lol/data";
 import { toArenaMatch } from "../match.js";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const RAW_FILE_PATHS = [
-  "/scout-for-lol/arena/matches_2025_09_19_NA1_5370969615.json",
-  "/workspaces/scout-for-lol/arena/matches_2025_09_19_NA1_5370986469.json",
+  join(__dirname, "testdata/matches_2025_09_19_NA1_5370969615.json"),
+  join(__dirname, "testdata/matches_2025_09_19_NA1_5370986469.json"),
 ];
 
 async function loadMatch(path: string): Promise<MatchV5DTOs.MatchDto> {
@@ -55,7 +59,7 @@ describe("toArenaMatch with real arena JSON", () => {
       // Placement/team should match participant
       const rawTracked = tracked;
       const placementValue = rawTracked.placement;
-      const subteamIdValue = rawTracked.teamId;
+      const subteamIdValue = rawTracked.playerSubteamId;
       if (
         typeof placementValue !== "number" ||
         typeof subteamIdValue !== "number"
