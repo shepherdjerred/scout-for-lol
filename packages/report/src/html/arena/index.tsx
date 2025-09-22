@@ -6,8 +6,8 @@ import { ArenaReport } from "./report.tsx";
 
 export async function arenaMatchToSvg(match: ArenaMatch) {
   const svg = await satori(<ArenaReport match={match} />, {
-    width: 4760,
-    height: 3500,
+    width: 3000,
+    height: 6000,
     fonts,
   });
   return svg;
