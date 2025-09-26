@@ -48,7 +48,7 @@ export function checkData(source: Directory): Container {
       "-c",
       "echo '🔍 [CI] Running TypeScript type checking for data...'",
     ])
-    .withExec(["bun", "run", "type-check"])
+    .withExec(["bun", "run", "typecheck"])
     .withExec(["sh", "-c", "echo '✅ [CI] TypeScript type checking passed!'"])
     .withExec(["sh", "-c", "echo '🔍 [CI] Running ESLint for data...'"])
     .withExec(["bun", "run", "lint"])

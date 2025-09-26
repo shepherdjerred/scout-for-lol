@@ -57,7 +57,7 @@ export function checkReport(
       "-c",
       "echo '🔍 [CI] Running TypeScript type checking for report...'",
     ])
-    .withExec(["bun", "run", "type-check"])
+    .withExec(["bun", "run", "typecheck"])
     .withExec(["sh", "-c", "echo '✅ [CI] TypeScript type checking passed!'"])
     .withExec(["sh", "-c", "echo '🔍 [CI] Running ESLint for report...'"])
     .withExec(["bun", "run", "lint"])

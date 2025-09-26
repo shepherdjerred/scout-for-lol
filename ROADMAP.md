@@ -19,6 +19,7 @@ There seems to be a fair bit of coupling. Examples:
 - [ ] Allow a user to be in multiple games at once (e.g. Arena games)
 - [ ] Allow Players to have multiple Accounts, e.g. maybe do a lookup on Account based on alias and append an Account?
 - [ ] CI doesn't seem to be running tests, linter
+- [ ] Setup CI to deploy site
 
 ## Bugs
 

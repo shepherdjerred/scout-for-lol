@@ -24,5 +24,6 @@ export default tseslint.config(
         },
       ],
     },
+    ignores: ["sdk/**/*"],
   }
 );
