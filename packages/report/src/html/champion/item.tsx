@@ -13,7 +13,7 @@ export function renderItem(item: number) {
           src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/item/${item.toString()}.png`}
           style={{
             backgroundColor: palette.blue[5],
-            border: `1px solid ${palette.gold.bright}`,
+            border: `.01rem solid ${palette.gold.bright}`,
           }}
           width={"100%"}
           height={"100%"}
@@ -27,7 +27,7 @@ export function renderItem(item: number) {
           width: dimension,
           height: dimension,
           backgroundColor: palette.blue[5],
-          border: `1px solid ${palette.gold.bright}`,
+          border: `.01rem solid ${palette.gold.bright}`,
         }}
       />
     );

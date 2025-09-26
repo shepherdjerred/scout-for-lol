@@ -1,8 +1,8 @@
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
-import { fonts } from "../assets/index.ts";
 import { CompletedMatch } from "@scout-for-lol/data";
 import { Report } from "./report.tsx";
+import { bunBeaufortFonts, bunSpiegelFonts } from "../assets/index.ts";
 
 export async function matchToImage(match: CompletedMatch) {
   const svg = await matchToSvg(match);
@@ -11,6 +11,7 @@ export async function matchToImage(match: CompletedMatch) {
 }
 
 export async function matchToSvg(match: CompletedMatch) {
+  const fonts = [...(await bunBeaufortFonts()), ...(await bunSpiegelFonts())];
   const svg = await satori(<Report match={match} />, {
     width: 4760,
     height: 3500,

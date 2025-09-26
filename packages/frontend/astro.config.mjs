@@ -3,9 +3,9 @@ import { defineConfig } from "astro/config";
 
 import react from "@astrojs/react";
 import {
-  beauforFonts,
+  baseBeaufortFonts,
   font,
-  spiegelFonts,
+  baseSpiegelFonts,
 } from "@scout-for-lol/report/src/assets";
 
 // https://astro.build/config
@@ -17,20 +17,24 @@ export default defineConfig({
         provider: "local",
         name: font.title,
         cssVariable: "--font-beaufort-for-lol",
-        variants: beauforFonts.map((font) => {
-          delete font.data;
-          delete font.name;
-          return font;
+        variants: baseBeaufortFonts.map((font) => {
+          return {
+            src: [font.src],
+            weight: font.weight,
+            style: font.style,
+          };
         }),
       },
       {
         provider: "local",
         name: font.body,
         cssVariable: "--font-spiegel",
-        variants: spiegelFonts.map((font) => {
-          delete font.data;
-          delete font.name;
-          return font;
+        variants: baseSpiegelFonts.map((font) => {
+          return {
+            src: [font.src],
+            weight: font.weight,
+            style: font.style,
+          };
         }),
       },
     ],

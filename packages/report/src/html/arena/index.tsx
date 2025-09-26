@@ -1,10 +1,11 @@
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
-import { fonts } from "../../assets/index.ts";
 import { type ArenaMatch } from "@scout-for-lol/data";
 import { ArenaReport } from "./report.tsx";
+import { bunBeaufortFonts, bunSpiegelFonts } from "../../assets/index.ts";
 
 export async function arenaMatchToSvg(match: ArenaMatch) {
+  const fonts = [...(await bunBeaufortFonts()), ...(await bunSpiegelFonts())];
   const svg = await satori(<ArenaReport match={match} />, {
     width: 1600,
     height: 6000,
