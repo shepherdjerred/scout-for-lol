@@ -95,7 +95,12 @@ export async function RankedBadge({
               alignItems: "flex-end",
             }}
           >
-            {<img src={badge} style={{ width: "24rem" }} />}
+            <div style={{ width: "24rem", height: "24rem" }}>
+              <img
+                src={badge}
+                style={{ width: "100%", height: "100%", display: "block" }}
+              />
+            </div>
             <span style={{ position: "relative", left: "-8rem", top: "-2rem" }}>
               {divisionToString(newRank.division)}
             </span>

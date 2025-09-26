@@ -3,24 +3,26 @@ import { palette } from "../../assets/colors.ts";
 import { latestVersion } from "../../dataDragon/version.ts";
 import { last, map, pipe, take } from "remeda";
 
-const dimension = 120;
+const dimension = "7.5rem";
 
 export function renderItem(item: number) {
   if (item !== 0) {
     return (
-      <img
-        src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/item/${item.toString()}.png`}
-        style={{
-          backgroundColor: palette.blue[5],
-          border: `1px solid ${palette.gold.bright}`,
-        }}
-        width={dimension}
-        height={dimension}
-      />
+      <div style={{ width: dimension, height: dimension }}>
+        <img
+          src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/item/${item.toString()}.png`}
+          style={{
+            backgroundColor: palette.blue[5],
+            border: `1px solid ${palette.gold.bright}`,
+          }}
+          width={"100%"}
+          height={"100%"}
+        />
+      </div>
     );
   } else {
     return (
-      <span
+      <div
         style={{
           width: dimension,
           height: dimension,
@@ -55,8 +57,8 @@ export function renderItems(
           style={{
             display: "flex",
             position: "relative",
-            width: `${dimension.toString()}px`,
-            height: `${dimension.toString()}px`,
+            width: dimension,
+            height: dimension,
           }}
         >
           {renderItem(lastItem)}

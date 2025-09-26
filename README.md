@@ -6,6 +6,8 @@ game. Post-match report images are generated and posted to Discord.
 
 This is a fun way to see your friends climb the ranks in League of Legends.
 
+![](./assets/match.png)
+
 ## Technical Notes
 
 - Written in TypeScript with Bun

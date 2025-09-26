@@ -33,16 +33,22 @@ export function renderChampion(
       throw new Error(`Summoner spell ${spell.toString()} not found`);
     }
 
+    const size = "3.75rem";
+
     return (
-      <img
-        src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/spell/${name}.png`}
-        width={59}
-        height={59}
-        style={{
-          backgroundColor: palette.blue[5],
-          border: `1px solid ${palette.gold.bright}`,
-        }}
+      <div style={{ width: size, height: size }}>
+        <img
+          src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/spell/${name}.png`}
+          style={{
+            backgroundColor: palette.blue[5],
+            border: `1px solid ${palette.gold.bright}`,
+            objectFit: "contain",
+            width: "100%",
+            height: "100%",
+            display: "block"
+          }}
       />
+      </div>
     );
   });
 

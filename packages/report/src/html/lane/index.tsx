@@ -39,7 +39,12 @@ export async function Lane({ lane }: { lane: Lane }) {
     .exhaustive();
   return (
     <span style={{ width: "20rem", display: "flex", justifyContent: "center" }}>
-      <img src={image} style={{ width: "8rem" }} />
+      <div style={{ width: "8rem", height: "8rem" }}>
+        <img
+          src={image}
+          style={{ width: "100%", height: "100%", display: "block" }}
+        />
+      </div>
     </span>
   );
 }
