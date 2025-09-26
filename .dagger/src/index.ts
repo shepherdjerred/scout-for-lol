@@ -82,24 +82,32 @@ export class ScoutForLol {
       Promise.resolve(getDataSource(dataSource))
     );
 
-    // Run checks in parallel
-    const [_backendCheck, _reportCheck, _dataCheck] = await withTiming(
+    // Run checks in parallel - force container execution with .sync()
+    await withTiming(
       "parallel package checks (lint, typecheck, tests)",
       async () => {
         logWithTimestamp(
           "🔄 Running lint, typecheck, and tests in parallel for all packages..."
         );
         logWithTimestamp("📦 Packages being checked: backend, report, data");
-        return Promise.all([
-          withTiming("backend check (lint + typecheck + tests)", () =>
-            Promise.resolve(checkBackend(source))
-          ),
-          withTiming("report check (lint + typecheck + tests)", () =>
-            Promise.resolve(checkReport(reportSource, dataSourceDir))
-          ),
-          withTiming("data check (lint + typecheck)", () =>
-            Promise.resolve(checkData(dataSource))
-          ),
+
+        // Force execution of all containers in parallel
+        await Promise.all([
+          withTiming("backend check (lint + typecheck + tests)", async () => {
+            const container = checkBackend(source);
+            await container.sync();
+            return container;
+          }),
+          withTiming("report check (lint + typecheck + tests)", async () => {
+            const container = checkReport(reportSource, dataSourceDir);
+            await container.sync();
+            return container;
+          }),
+          withTiming("data check (lint + typecheck)", async () => {
+            const container = checkData(dataSource);
+            await container.sync();
+            return container;
+          }),
         ]);
       }
     );

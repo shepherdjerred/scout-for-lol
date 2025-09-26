@@ -1,6 +1,6 @@
 {
   "name": "scout-for-lol",
-  "engineVersion": "v0.18.12",
+  "engineVersion": "v0.18.19",
   "sdk": {
     "source": "typescript"
   },

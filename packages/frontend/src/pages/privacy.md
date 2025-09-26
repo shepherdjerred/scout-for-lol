@@ -1,14 +1,10 @@
-# Privacy policy
+# Privacy Policy
 
-_Last updated: April 20, 2023_
+**Last updated: September 26, 2025**
 
-The privacy of your data—and it is your data, not ours!—is a big deal to us. In
-this policy, we lay out: what data we collect and why; how your data is handled;
-and your rights with respect to your data. We promise we never sell your data:
-never have, never will.
+The privacy of your data is important to us. In this policy, we explain what data we collect and why, how your data is handled, and your rights. We never sell your data.
 
-This policy is split into sections. For your convenience, links to each of those
-sections is as follows:
+This policy is split into sections. For your convenience, links to each section:
 
 - [Privacy policy](#privacy-policy)
 - [What we collect and why](#what-we-collect-and-why)
@@ -21,245 +17,67 @@ sections is as follows:
 - [When transferring personal data from the EU](#when-transferring-personal-data-from-the-eu)
 - [Changes and questions](#changes-and-questions)
 
-This policy applies to all products built and maintained by 37signals LLC
-including Basecamp (all versions), HEY, Highrise, Campfire, Backpack, Ta-da
-List, and Writeboard (together, "37signals"). If you are applying for a job at
-37signals, please review our [Recruitment Privacy policy](recruitment/index.md).
+This policy applies to Scout for League of Legends, a Discord bot that helps you track and analyze your League of Legends gameplay.
 
-This policy applies to our handling of information about site visitors,
-prospective customers, and customers and authorized users (in relation to their
-procurement of the services and management of their relationship with
-37signals). We refer collectively to these categories of individuals as "you"
-throughout this policy.
-
-However, this policy does not cover information about a customer’s end users
-that 37signals receives from a customer, or otherwise processes on a customer’s
-behalf, in connection with the services provided by 37signals to the customer
-pursuant to an applicable services agreement (including the content of messages
-of customer end users ("End User Communications")). 37signals processes End User
-Communications under the instructions of the relevant customer, which is the
-"data controller" or "business" (or occupies a similar role as defined in
-applicable privacy laws), as described in the applicable services agreement
-between such customer and 37signals. 37signals’s obligations as a "data
-processor" or "service provider" with respect to such information are defined in
-such services agreement and applicable data protection addendum and are not made
-part of this policy.
-
-If you are a customer’s end user and you have questions about how your
-information is collected and processed through the services, please contact the
-organization who has provided your information to us for more information.
-
-If you are a California resident, please
-[click here to see our California Notice at Collection](regulations/ccpa/index.md),
-which includes additional disclosures as required by California law.
+This policy applies to our handling of information about Discord users who interact with our bot. We refer to these users as "you" throughout this policy.
 
 ## What we collect and why
 
-Our guiding principle is to collect only what we need. Here’s what that means in
-practice:
+Our guiding principle is to collect only what we need. Here's what that means in practice:
 
-### Identity and access
+### Discord Information
 
-When you sign up for a 37signals product, we ask for identifying information
-such as your name, email address, and maybe a company name. That’s so you can
-personalize your new account, and we can send you product updates and other
-essential information. We may also send you optional surveys from time to time
-to help us understand how you use our products and to make improvements. With
-your consent, we will send you our newsletter and other updates. We sometimes
-also give you the option to add a profile picture that displays in our products.
+When you interact with Scout for League of Legends in Discord, we may collect:
 
-We’ll never sell your personal information to third parties, and we won’t use
-your name or company in marketing statements without your permission either.
+- Your Discord user ID and username
+- Server/guild information where the bot is used
+- Commands you send to the bot
+- Your Discord profile information that is publicly available
 
-### Billing information
+This information helps the bot respond to your requests and provide personalized League of Legends data.
 
-If you sign up for a paid 37signals product, you will be asked to provide your
-payment information and billing address. Credit card information is submitted
-directly to our payment processor and doesn’t hit 37signals servers. We store a
-record of the payment transaction, including the last 4 digits of the credit
-card number, for purposes of account history, invoicing, and billing support. We
-store your billing address so we can charge you for service, calculate any sales
-tax due, send you invoices, and detect fraudulent credit card transactions. We
-occasionally use aggregate billing information to guide our marketing efforts.
+### League of Legends Data
 
-### Product interactions
+When you link your League of Legends account or request game data, we collect:
 
-We store on our servers the content that you upload or receive or maintain in
-your 37signals product accounts. This is so you can use our products as
-intended, for example, to create projects in Basecamp or to receive email in
-HEY. We keep this content as long as your account is active. If you delete your
-account, we’ll delete the content within 60 days.
+- Your League of Legends summoner name and account details
+- Match history and game statistics
+- Ranked information and performance metrics
+- Champion and item data from your games
 
-### General Geolocation data
+We collect this data through Riot Games' official API to provide you with gameplay analysis, statistics, and insights.
 
-For most of our products, we log the full IP address used to sign up a product
-account and retain that for use in mitigating future spammy signups. We also log
-all account access by full IP address for security and fraud prevention
-purposes, and we keep this login data for as long as your product account is
-active.
+We never sell your personal information to third parties.
 
-### Website interactions
+### Usage Data
 
-We collect information about your browsing activity for analytics and
-statistical purposes such as conversion rate testing and experimenting with new
-product designs. This includes, for example, your browser and operating system
-versions, your IP address, which web pages you visited and how long they took to
-load, and which website referred you to us. If you have an account and are
-signed in, these web analytics data are tied to your IP address and user account
-until your account is no longer active. The web analytics we use are described
-further in the Advertising and Cookies section.
+We may collect information about how you use the bot, such as:
 
-### Anti-bot assessments
+- Which commands you use most frequently
+- Error logs when something goes wrong
+- Basic usage statistics to help improve the service
 
-We use [CAPTCHA](https://en.wikipedia.org/wiki/CAPTCHA) across our applications
-to mitigate brute force logins and as a means of spam protection. We have a
-legitimate interest in protecting our apps and the broader Internet community
-from credential stuffing attacks and spam. When you log into your 37signals
-accounts and when you fill in certain forms in HEY, the CAPTCHA service
-evaluates various information (e.g., IP address, how long the visitor has been
-on the app, mouse movements) to try to detect if the activity is from an
-automated program instead of a human. The CAPTCHA service then provides
-37signals with the spam score results; we do not have access to the evaluated
-information.
+This helps us understand how the bot is being used and identify areas for improvement.
 
-### Advertising and Cookies
+### No Advertising or Cookies
 
-37signals runs contextual ads on various third-party platforms such as Google,
-Reddit, and LinkedIn. Users who click on one of our ads will be sent to the
-Basecamp marketing site. Where permissible under law, we may load an ad-company
-script on their browsers that sets a third-party cookie and sends information to
-the ad network to enable evaluation of the effectiveness of our ads, e.g., which
-ad they clicked and which keyword triggered the ad, and whether they performed
-certain actions such as clicking a button or submitting a form.
-
-We also use persistent first-party cookies and some third-party cookies to store
-certain preferences, make it easier for you to use our applications, and perform
-A/B testing as well as support some analytics.
-
-A cookie is a piece of text stored by your browser. It may help remember login
-information and site preferences. It might also collect information such as your
-browser type, operating system, web pages visited, duration of visit, content
-viewed, and other click-stream data. You can adjust cookie retention settings
-and accept or block individual cookies in your browser settings, although our
-apps won’t work and other aspects of our service may not function properly if
-you turn cookies off.
-
-### Voluntary correspondence
-
-When you email 37signals with a question or to ask for help, we keep that
-correspondence, including your email address, so that we have a history of past
-correspondence to reference if you reach out in the future.
-
-We also store information you may volunteer, for example, written responses to
-surveys. If you agree to a customer interview, we may ask for your permission to
-record the conversation for future reference or use. We will only do so with
-your express consent.
-
-### How we approach mobile app permissions
-
-We offer optional desktop and mobile apps for some of our products. Because of
-how the platforms are designed, our apps typically must request your consent
-before accessing contacts, calendar, camera, and other privacy-sensitive
-features of your device. Consent is always optional and our apps will function
-without it, though some features may be unavailable. There are a few exceptions,
-for example:
-
-- Our iOS apps will ask for permission to use push notifications upon first
-  sign-in.
-- Android apps do not require permission to send push notifications.
-- For our Basecamp 2 app on Android 5, the OS will prompt for permission upon
-  installation to read and write to your device files so that you can select
-  attachments from your device to upload to the app, and can download files from
-  the app to your device.
+Since Scout for League of Legends is a Discord bot, we do not use advertising, cookies, or web tracking. We do not collect browsing data or run advertisements.
 
 ## When we access or disclose your information
 
-**To provide products or services you’ve requested**. We use some third-party
-subprocessors to help run our applications and provide the Services to you. You
-can view the third-party subprocessors we use for each of our products:
-[Basecamp](https://basecamp.com/about/policies/privacy/basecamp-subprocessors/),
-[HEY](https://basecamp.com/about/policies/privacy/hey-subprocessors/),
-[Highrise](https://basecamp.com/about/policies/privacy/highrise-subprocessors/),
-[Campfire](https://basecamp.com/about/policies/privacy/campfire-subprocessors/),
-[Backpack](https://basecamp.com/about/policies/privacy/backpack-subprocessors/).
-We also use third-party processors for other business functions such as managing
-newsletter subscriptions, sending customer surveys, and providing our company
-storefront. You can view the list at
-[Company processors](https://basecamp.com/about/policies/privacy/company-processors/).
+**To provide the service you've requested**. We access Discord's API and Riot Games' API to provide the bot's functionality. Your Discord data is processed according to Discord's Terms of Service and Privacy Policy. Your League of Legends data is accessed through Riot Games' official API according to their Terms of Service.
 
-We may disclose your information at your direction if you integrate a
-third-party service into your use of our products. For example, we may allow
-you, at your option, to connect your Gmail account to your HEY account so that
-you can use HEY to receive and respond to your Gmail email. Email that you
-receive and respond to through HEY from your Gmail address will be stored by
-both HEY and Google and will be available to you from your Gmail account as well
-as your HEY account.
+**To fix problems with your permission**. If you report a bug or issue, we may need to look at logs or data related to your specific case to diagnose the problem. We'll only do this with your permission.
 
-No 37signals human looks at your content except for limited purposes with your
-express permission, for example, if an error occurs that stops an automated
-process from working and requires manual intervention to fix. These are rare
-cases, and when they happen, we look for root cause solutions as much as
-possible to avoid them recurring. We may also access your data if required in
-order to respond to legal process (see "When required under applicable law"
-below).
+**For safety and abuse prevention**. If we discover someone is using the bot in ways that violate our terms or to harm others, we may take appropriate action including restricting access.
 
-**To exclude you from seeing our ads.** Where permissible by law and if you have
-a Basecamp account, we may disclose a one-way hash of your email address with ad
-companies to exclude you from seeing our ads.
+**Aggregated data**. We may use aggregated, anonymous data for analytics and improving the service. This data cannot be used to identify individual users.
 
-**To help you troubleshoot or squash a software bug, with your permission.** If
-at any point we need to access your content to help you with a support case, we
-will ask for your consent before proceeding.
-
-**To investigate, prevent, or take action regarding
-[restricted uses](../abuse/index.md).** Accessing a customer’s account when
-investigating potential abuse is a measure of last resort. We want to protect
-the privacy and safety of both our customers and the people reporting issues to
-us, and we do our best to balance those responsibilities throughout the process.
-If we discover you are using our products for a restricted purpose, we will take
-action as necessary, including notifying appropriate authorities where
-warranted.
-
-**Aggregated and de-identified data.** We may aggregate and/or de-identify
-information collected through the services. We may use de-identified or
-aggregated data for any purpose, including marketing or analytics.
-
-**When required under applicable law.** 37signals is a U.S. company and all data
-infrastructure are located in the U.S.
-
-- Requests for user data. Our policy is to not respond to government requests
-  for user data unless we are compelled by legal process or in limited
-  circumstances in the event of an emergency request. However, if U.S. law
-  enforcement authorities have the necessary warrant, criminal subpoena, or
-  court order requiring us to disclose data, we must comply. Likewise, we will
-  only respond to requests from government authorities outside the U.S. if
-  compelled by the U.S. government through procedures outlined in a mutual legal
-  assistance treaty or agreement. It is 37signals’ policy to notify affected
-  users before we disclose data unless we are legally prohibited from doing so,
-  and except in some emergency cases.
-
-- Preservation requests. Similarly, 37signals’ policy is to comply with requests
-  to preserve data only if compelled by the U.S. Federal Stored Communications
-  Act, 18 U.S.C. Section 2703(f), or by a properly served U.S. subpoena for
-  civil matters. We do not disclose preserved data unless required by law or
-  compelled by a court order that we choose not to appeal. Furthermore, unless
-  we receive a proper warrant, court order, or subpoena before the required
-  preservation period expires, we will destroy any preserved copies of customer
-  data at the end of the preservation period.
-
-- If we are audited by a tax authority, we may be required to disclose
-  billing-related information. If that happens, we will disclose only the
-  minimum needed, such as billing addresses and tax exemption information.
-
-Finally, if 37signals is acquired by or merges with another company — we don’t
-plan on that, but if it happens — we’ll notify you well before any of your
-personal information is transferred or becomes subject to a different privacy
-policy.
+**When required by law**. If legally required to disclose information by valid legal process, we will comply with applicable laws.
 
 ## Your rights with respect to your information
 
-At 37signals, we strive to apply the same data rights to all customers,
-regardless of their location. Some of these rights include:
+We respect your data rights. Some of these rights include:
 
 - **Right to Know.** You have the right to know what personal information is
   collected, used, shared or sold. We outline both the categories and specific
@@ -273,9 +91,7 @@ regardless of their location. Some of these rights include:
   subject to certain limitations under applicable law, that your personal
   information be erased from our possession and, by extension, from all of our
   service providers. Fulfillment of some data deletion requests may prevent you
-  from using 37signals services because our applications may then no longer
-  work. In such cases, a data deletion request may result in closing your
-  account.
+  from using the service because the bot may no longer be able to provide personalized data.
 - **Right to Complain.** You have the right to make a complaint regarding our
   handling of your personal information with the appropriate supervisory
   authority.
@@ -319,11 +135,7 @@ before responding to a request, which may include, at a minimum, depending on
 the sensitivity of the information you are requesting and the type of request
 you are making, verifying your name and email address. If we are unable to
 verify you, we may be unable to respond to your requests. If you have questions
-about exercising these rights or need assistance, please contact us at
-[privacy@37signals.com](mailto:privacy@37signals.com) or at 37signals LLC, 2045
-W Grand Ave Ste B, PMB 53289, Chicago, IL 60612 USA. If an authorized agent is
-corresponding on your behalf, we will need written consent with a signature from
-the account holder before proceeding.
+about exercising these rights or need assistance, please reach out through the Discord server where you use Scout for League of Legends.
 
 Depending on applicable law, you may have the right to appeal our decision to
 deny your request, if applicable. We will provide information about how to
@@ -388,31 +200,10 @@ transfer.
 
 ## When transferring personal data from the EU
 
-The European Data Protection Board (EDPB) has issued guidance that personal data
-transferred out of the EU must be treated with the same level of protection that
-is granted under EU privacy law. UK law provides similar safeguards for UK user
-data that is transferred out of the UK. Accordingly, 37signals has adopted a
-data processing addendum with Standard Contractual Clauses to help ensure this
-protection. 37signals’ DPA is available at
-[https://basecamp.com/about/policies/privacy/regulations/basecamp-gdpr-dpa.pdf](https://basecamp.com/about/policies/privacy/regulations/basecamp-gdpr-dpa.pdf).
-
-There are also a few ad hoc cases where EU personal data may be transferred to
-the U.S. in connection with 37signals operations, for instance, if an EU user
-signs up for our newsletter or participates in one of our surveys or buys swag
-from our company online store. Such transfers are only occasional and data is
-transferred under the
-[Article 49(1)(b) derogation](https://gdpr-info.eu/art-49-gdpr/) under GDPR and
-the UK version of GDPR.
+If you are located in the EU and use Scout for League of Legends, your data may be processed in accordance with Discord's and Riot Games' respective privacy policies and data protection measures.
 
 ## Changes and questions
 
-We may update this policy as needed to comply with relevant regulations and
-reflect any new practices. You can view a history of the changes to our policies
-since mid-2018 [on GitHub](https://github.com/basecamp/policies/commits/master).
-Whenever we make a significant change to our policies, we will refresh the date
-at the top of this page and take any other appropriate steps to notify users.
+We may update this policy as needed to comply with relevant regulations and reflect any new practices. Whenever we make a significant change to our policies, we will refresh the date at the top of this page.
 
-Have any questions, comments, or concerns about this privacy policy, your data,
-or your rights with respect to your information? Please get in touch by emailing
-us at [privacy@37signals.com](mailto:privacy@37signals.com) and we’ll be happy
-to try to answer them!
+Have any questions, comments, or concerns about this privacy policy, your data, or your rights? You can reach out through the Discord server where you use the bot.
