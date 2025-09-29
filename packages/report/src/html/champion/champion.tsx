@@ -36,7 +36,7 @@ export function renderChampion(
     const size = "3.75rem";
 
     return (
-      <div style={{ width: size, height: size }}>
+      <div style={{ width: size, height: size, display: "flex" }}>
         <img
           src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/spell/${name}.png`}
           style={{

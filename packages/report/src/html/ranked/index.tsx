@@ -95,7 +95,7 @@ export async function RankedBadge({
               alignItems: "flex-end",
             }}
           >
-            <div style={{ width: "24rem", height: "24rem" }}>
+            <div style={{ width: "24rem", height: "24rem", display: "flex" }}>
               <img
                 src={badge}
                 style={{ width: "100%", height: "100%", display: "block" }}

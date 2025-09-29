@@ -8,7 +8,7 @@ const dimension = "7.5rem";
 export function renderItem(item: number) {
   if (item !== 0) {
     return (
-      <div style={{ width: dimension, height: dimension }}>
+      <div style={{ width: dimension, height: dimension, display: "flex" }}>
         <img
           src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/item/${item.toString()}.png`}
           style={{
