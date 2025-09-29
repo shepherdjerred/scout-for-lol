@@ -6,6 +6,11 @@ import {
 import { matchToSvg, svgToPng } from "./index.js";
 import { test, expect } from "bun:test";
 import { writeFileSync } from "fs";
+import { createHash } from "crypto";
+
+function hashSvg(svg: string): string {
+  return createHash('sha256').update(svg).digest('hex');
+}
 
 function getMatch(): CompletedMatch {
   return {
@@ -255,7 +260,8 @@ test("sanity check", async () => {
   writeFileSync(new URL("__snapshots__/match.png", import.meta.url), png);
   writeFileSync(new URL("__snapshots__/match.svg", import.meta.url), svg);
 
-  expect(svg).toMatchSnapshot();
+  const svgHash = hashSvg(svg);
+  expect(svgHash).toMatchSnapshot();
 });
 
 test("no items test", async () => {
@@ -281,7 +287,8 @@ test("no items test", async () => {
     svg
   );
 
-  expect(svg).toMatchSnapshot();
+  const svgHash = hashSvg(svg);
+  expect(svgHash).toMatchSnapshot();
 });
 
 test("all fields zeroed out test", async () => {
@@ -348,7 +355,8 @@ test("all fields zeroed out test", async () => {
     new URL("__snapshots__/match_zeroed_out.svg", import.meta.url),
     svg
   );
-  expect(svg).toMatchSnapshot();
+  const svgHash = hashSvg(svg);
+  expect(svgHash).toMatchSnapshot();
 });
 
 test("no rank test", async () => {
@@ -369,7 +377,8 @@ test("no rank test", async () => {
     new URL("__snapshots__/match_no_rank.svg", import.meta.url),
     svg
   );
-  expect(svg).toMatchSnapshot();
+  const svgHash = hashSvg(svg);
+  expect(svgHash).toMatchSnapshot();
 });
 
 test("large values test", async () => {
@@ -420,7 +429,8 @@ test("large values test", async () => {
     new URL("__snapshots__/match_large_values.svg", import.meta.url),
     svg
   );
-  expect(svg).toMatchSnapshot();
+  const svgHash = hashSvg(svg);
+  expect(svgHash).toMatchSnapshot();
 });
 
 test("victory test", async () => {
@@ -440,7 +450,8 @@ test("victory test", async () => {
     new URL("__snapshots__/match_victory.svg", import.meta.url),
     svg
   );
-  expect(svg).toMatchSnapshot();
+  const svgHash = hashSvg(svg);
+  expect(svgHash).toMatchSnapshot();
 });
 
 test("surrender test", async () => {
@@ -460,7 +471,8 @@ test("surrender test", async () => {
     new URL("__snapshots__/match_surrender.svg", import.meta.url),
     svg
   );
-  expect(svg).toMatchSnapshot();
+  const svgHash = hashSvg(svg);
+  expect(svgHash).toMatchSnapshot();
 });
 
 test("no rank before match test", async () => {
@@ -487,7 +499,8 @@ test("no rank before match test", async () => {
     new URL("__snapshots__/match_no_rank_before.svg", import.meta.url),
     svg
   );
-  expect(svg).toMatchSnapshot();
+  const svgHash = hashSvg(svg);
+  expect(svgHash).toMatchSnapshot();
 });
 
 test("multiple highlighted players test", async () => {
@@ -578,5 +591,7 @@ test("multiple highlighted players test", async () => {
     ),
     svg
   );
-  expect(svg).toMatchSnapshot();
+    // Hash the SVG for snapshot comparison instead of storing the full content
+    const svgHash = hashSvg(svg);
+    expect(svgHash).toMatchSnapshot();
 });
