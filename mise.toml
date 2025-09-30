@@ -4,3 +4,6 @@ bun = "latest"
 [tasks.local]
 description = "Create all files needed for development"
 run = "bun install && (cd packages/backend/ && bun db:generate) && dagger develop"
+
+[tasks.ci]
+run = "dagger call ci --git-sha='HEAD' --version='dev'"

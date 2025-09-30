@@ -1212,7 +1212,6 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
               "apiName": "Dreadbringer",
               "calculations": {
                 "BleedDamageTooltip": {
-                  "StaticTooltipCalculationDisplay": 4,
                   "__type": "GameCalculationModified",
                   "mExpandedTooltipCalculationDisplay": 4,
                   "mModifiedGameCalculation": "{0a242b94}",
@@ -1309,7 +1308,6 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
               "apiName": "FromBeginningToEnd",
               "calculations": {
                 "ChampRange": {
-                  "StaticTooltipCalculationDisplay": 5,
                   "__type": "GameCalculationConditional",
                   "mConditionalCalculationRequirements": {
                     "__type": "IsRangedCastRequirement",
@@ -1417,7 +1415,6 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
               "apiName": "Dreadbringer",
               "calculations": {
                 "BleedDamageTooltip": {
-                  "StaticTooltipCalculationDisplay": 4,
                   "__type": "GameCalculationModified",
                   "mExpandedTooltipCalculationDisplay": 4,
                   "mModifiedGameCalculation": "{0a242b94}",
@@ -2308,7 +2305,6 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
               "apiName": "Dreadbringer",
               "calculations": {
                 "BleedDamageTooltip": {
-                  "StaticTooltipCalculationDisplay": 4,
                   "__type": "GameCalculationModified",
                   "mExpandedTooltipCalculationDisplay": 4,
                   "mModifiedGameCalculation": "{0a242b94}",
@@ -4553,19 +4549,87 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
               "type": "full",
             },
             {
-              "apiName": "TankEngine",
-              "calculations": {},
-              "dataValues": {
-                "MaxHPIncrement": 0.05000000074505806,
-                "SizeIncrement": 0.15000000596046448,
+              "apiName": "ClownCollege",
+              "calculations": {
+                "BasicAttackDamage": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "ByCharLevelInterpolationCalculationPart",
+                      "mEndValue": 35,
+                      "mStartValue": 20,
+                    },
+                    {
+                      "__type": "StatByCoefficientCalculationPart",
+                      "mCoefficient": 0.3499999940395355,
+                    },
+                    {
+                      "__type": "StatByCoefficientCalculationPart",
+                      "mCoefficient": 0.5,
+                      "mStat": 2,
+                      "mStatFormula": 2,
+                    },
+                  ],
+                },
+                "QCritDamageMod": {
+                  "__type": "GameCalculation",
+                  "mDisplayAsPercent": true,
+                  "mFormulaParts": [
+                    {
+                      "__type": "SumOfSubPartsCalculationPart",
+                      "mSubparts": [
+                        {
+                          "__type": "NumberCalculationPart",
+                          "mNumber": 1.5499999523162842,
+                        },
+                        {
+                          "__type": "StatByCoefficientCalculationPart",
+                          "mCoefficient": 1,
+                          "mStat": 9,
+                          "mStatFormula": 2,
+                        },
+                      ],
+                    },
+                  ],
+                },
+                "TotalDamage": {
+                  "__type": "GameCalculation",
+                  "mFormulaParts": [
+                    {
+                      "__type": "NamedDataValueCalculationPart",
+                      "mDataValue": "BaseDamage",
+                    },
+                    {
+                      "__type": "StatByCoefficientCalculationPart",
+                      "mCoefficient": 1.5,
+                      "mStat": 2,
+                      "mStatFormula": 2,
+                    },
+                    {
+                      "__type": "StatByCoefficientCalculationPart",
+                      "mCoefficient": 0.550000011920929,
+                    },
+                  ],
+                },
               },
-              "desc": "Gain @SizeIncrement*100@% increase in size and <scaleHealth>@MaxHPIncrement*100@% max Health</scaleHealth> per takedown.",
-              "iconLarge": "assets/ux/cherry/augments/icons/tank_engine_large.png",
-              "iconSmall": "assets/ux/cherry/augments/icons/tank_engine_small.png",
+              "dataValues": {
+                "BaseDamage": 100,
+                "CastRange": 400,
+                "EDITDECEIVEFORREALVALUES": 0,
+                "ExtraAATime": 1,
+                "FearDamage": 0.25,
+                "FearDuration": 1,
+                "FearRadius": 350,
+                "PseudoCastTime": 0.125,
+                "StealthDuration": 3,
+              },
+              "desc": "Gain <spellName>Deceive</spellName> Summoner Spell.<br>Gain <spellName>Backstab</spellName> Passive.<br><br>When you die, spawn an exploding box that deals a large amount of <trueDamage>true damage</trueDamage> and <status>Fear</status> nearby enemies.",
+              "iconLarge": "assets/ux/cherry/augments/icons/clowncollege_large.png",
+              "iconSmall": "assets/ux/cherry/augments/icons/clowncollege_small.png",
               "id": 310,
-              "name": "Tank Engine",
-              "rarity": "prismatic",
-              "tooltip": "Gain @SizeIncrement*100@% increase in size and <scaleHealth>@f2@ Bonus Health</scaleHealth> (<scaleHealth>@MaxHPIncrement*100@% (@f1@)</scaleHealth> per takedown).<br><br>Takedowns: @f3@",
+              "name": "Clown College",
+              "rarity": "gold",
+              "tooltip": "<spellName>Backstab</spellName>: You deal @BasicAttackDamage@ <physicalDamage>bonus physical damage</physicalDamage> when striking from behind.<br><br><spellName>Deceive</spellName>: You teleport and become <keywordStealth>Invisible</keywordStealth> for @StealthDuration@ seconds. Your next Attack while <keywordStealth>Invisible</keywordStealth> deals an additional <physicalDamage>@TotalDamage@ physical damage</physicalDamage>. If striking from behind, this Attack critically strikes for @QCritDamageMod@ damage.<br><br><spellName>Hallucinate: Death</spellName>: On death, deal <trueDamage>@FearDamage*100@% maximum Health true damage</trueDamage> and fear for @FearDuration@s around you.",
               "type": "full",
             },
             {
