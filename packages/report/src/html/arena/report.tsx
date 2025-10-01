@@ -44,7 +44,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
           .map((team) => {
             // Get tracked player names for gold highlighting (same as regular matches)
             const highlightNames = match.players.map(
-              (p) => p.playerConfig.alias
+              (p) => p.champion.riotIdGameName
             );
 
             // Check if this team has any tracked players
