@@ -1,10 +1,11 @@
 import { test, expect } from "bun:test";
 import { writeFileSync } from "fs";
 import { createHash } from "crypto";
-import { arenaMatchToSvg, svgToPng } from "./index.tsx";
+import { arenaMatchToSvg } from "./index.tsx";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { ArenaMatchSchema } from "@scout-for-lol/data";
+import { svgToPng } from "../index.tsx";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 

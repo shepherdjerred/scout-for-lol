@@ -30,27 +30,75 @@ export function ArenaReport(props: { match: ArenaMatch }) {
         background: "#0b1220",
       }}
     >
-      <div style={{ display: "flex", fontSize: 96, fontWeight: 800 }}>
-        Arena Match
-      </div>
+      {(() => {
+        // Get tracked player names to check if we're only tracking one team
+        const highlightNames = match.players.map(
+          (p) => p.champion.riotIdGameName
+        );
+
+        const trackedTeams = match.teams.filter((team) =>
+          team.players.some((p) => highlightNames.includes(p.riotIdGameName))
+        );
+
+        // If we are only tracking one team, show victory if placement was <= 4, otherwise show loss
+        if (trackedTeams.length === 1) {
+          const trackedTeam = trackedTeams[0]!; // Safe to use ! since we checked length === 1
+          const isVictory = trackedTeam.placement <= 4;
+
+          return (
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 16,
+              marginBottom: 8
+            }}>
+              <div style={{
+                fontSize: 48,
+                fontWeight: 800,
+                color: isVictory ? "#10b981" : "#ef4444",
+                textShadow: "0 2px 4px rgba(0, 0, 0, 0.3)"
+              }}>
+                {isVictory ? "VICTORY" : "DEFEAT"}
+              </div>
+              <div style={{
+                fontSize: 32,
+                opacity: 0.8,
+                color: "#e5e7eb",
+                display: "flex",
+              }}>
+                {formatArenaPlacement(trackedTeam.placement)}
+              </div>
+            </div>
+          );
+        }
+
+        return null;
+      })()}
+
       <div style={{ display: "flex", fontSize: 48, opacity: 0.9 }}>
-        Duration: {Math.round(match.durationInSeconds / 60)}m
+        {Math.round(match.durationInSeconds / 60)}m {Math.round(match.durationInSeconds % 60)}s
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-        {/* Sort teams by placement (1st, 2nd, 3rd, etc.) */}
-        {[...match.teams]
-          .sort((a, b) => a.placement - b.placement)
-          .map((team) => {
-            // Get tracked player names for gold highlighting (same as regular matches)
-            const highlightNames = match.players.map(
-              (p) => p.champion.riotIdGameName
-            );
+        {/* Get tracked player names for gold highlighting (same as regular matches) */}
+        {(() => {
+          const highlightNames = match.players.map(
+            (p) => p.champion.riotIdGameName
+          );
 
-            // Check if this team has any tracked players
-            const hasTrackedPlayer = team.players.some((p) =>
-              highlightNames.includes(p.riotIdGameName)
-            );
+          return [...match.teams]
+            .sort((a, b) => a.placement - b.placement)
+            .filter((team) => {
+              // Only show teams that have tracked players
+              return team.players.some((p) =>
+                highlightNames.includes(p.riotIdGameName)
+              );
+            })
+            .map((team) => {
+              // Check if this team has any tracked players (will always be true now due to filter)
+              const hasTrackedPlayer = team.players.some((p) =>
+                highlightNames.includes(p.riotIdGameName)
+              );
 
             // Enhanced styling for teams with tracked players and medal accents
             const getTeamStyling = (placement: number, hasTracked: boolean) => {
@@ -151,48 +199,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                             : "none",
                       }}
                     >
-                      {team.placement === 1
-                        ? "🥇"
-                        : team.placement === 2
-                          ? "🥈"
-                          : team.placement === 3
-                            ? "🥉"
-                            : team.placement}
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column" }}>
-                      <div
-                        style={{
-                          display: "flex",
-                          fontSize: team.placement <= 3 ? 36 : 32,
-                          fontWeight: team.placement <= 3 ? 800 : 700,
-                          color: "#e5e7eb",
-                        }}
-                      >
-                        Team {team.teamId}
-                        {hasTrackedPlayer && (
-                          <span
-                            style={{
-                              marginLeft: 12,
-                              fontSize: 28,
-                              filter:
-                                "drop-shadow(0 0 4px rgba(251, 191, 36, 0.8))",
-                            }}
-                          >
-                            ⭐
-                          </span>
-                        )}
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          fontSize: team.placement <= 3 ? 22 : 20,
-                          opacity: 0.8,
-                          color: "#e5e7eb",
-                          fontWeight: team.placement <= 3 ? 600 : 400,
-                        }}
-                      >
-                        {formatArenaPlacement(team.placement)}
-                      </div>
+                      {formatArenaPlacement(team.placement)}
                     </div>
                   </div>
                 </div>
@@ -277,15 +284,44 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                             <div
                               style={{
                                 display: "flex",
-                                fontSize: 24,
-                                opacity: 0.8,
-                                marginTop: 4,
+                                flexDirection: "column",
+                                marginTop: 8,
+                                gap: 4,
                               }}
                             >
-                              Augments:{" "}
-                              {filterDisplayAugments(p.augments)
-                                .map(renderAugment)
-                                .join(", ")}
+                              <div
+                                style={{
+                                  fontSize: 24,
+                                  opacity: 0.8,
+                                  fontWeight: 600,
+                                  marginBottom: 4,
+                                }}
+                              >
+                                Augments:
+                              </div>
+                              {filterDisplayAugments(p.augments).map((augment, augIdx) => (
+                                <div
+                                  key={augIdx}
+                                  style={{
+                                    display: "flex",
+                                    fontSize: 22,
+                                    opacity: 0.75,
+                                    paddingLeft: 16,
+                                    position: "relative",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      position: "absolute",
+                                      left: 0,
+                                      color: "#9ca3af",
+                                    }}
+                                  >
+                                    •
+                                  </span>
+                                  {renderAugment(augment)}
+                                </div>
+                              ))}
                             </div>
                           ) : null}
                         </div>
@@ -305,7 +341,8 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                 </div>
               </div>
             );
-          })}
+        });
+        })()}
       </div>
     </div>
   );

@@ -26,7 +26,20 @@ export function svgToPng(svg: string) {
     shapeRendering: 2,
     textRendering: 2,
     imageRendering: 0,
+    fitTo: {
+      mode: 'original',
+    },
+    font: {
+      loadSystemFonts: false,
+    }
   });
+
+  // Automatically crop to bounding box to remove transparent background
+  const bbox = resvg.getBBox();
+  if (bbox) {
+    resvg.cropByBBox(bbox);
+  }
+
   const pngData = resvg.render();
   return pngData.asPng();
 }
