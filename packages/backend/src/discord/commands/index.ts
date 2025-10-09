@@ -3,6 +3,10 @@ import { executeSubscribe } from "./subscribe";
 import { executeUnsubscribe } from "./unsubscribe";
 import { executeListSubscriptions } from "./listSubscriptions";
 import { getState } from "../../league/model/state";
+import {
+  discordCommandsTotal,
+  discordCommandDuration,
+} from "../../metrics/index.js";
 
 export function handleCommands(client: Client) {
   console.log("⚡ Setting up Discord command handlers");
@@ -67,14 +71,30 @@ export function handleCommands(client: Client) {
         }
 
         const executionTime = Date.now() - startTime;
+        const executionTimeSeconds = executionTime / 1000;
         console.log(
           `✅ Command ${commandName} completed successfully in ${executionTime.toString()}ms`
         );
+
+        // Record successful command metrics
+        discordCommandsTotal.inc({ command: commandName, status: "success" });
+        discordCommandDuration.observe(
+          { command: commandName },
+          executionTimeSeconds
+        );
       } catch (error) {
         const executionTime = Date.now() - startTime;
+        const executionTimeSeconds = executionTime / 1000;
         console.error(
           `❌ Command ${commandName} failed after ${executionTime.toString()}ms:`,
           error
+        );
+
+        // Record failed command metrics
+        discordCommandsTotal.inc({ command: commandName, status: "error" });
+        discordCommandDuration.observe(
+          { command: commandName },
+          executionTimeSeconds
         );
         console.error(
           `❌ Error details - User: ${username} (${userId}), Guild: ${String(guildId)}, Channel: ${channelId}`

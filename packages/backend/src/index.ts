@@ -22,6 +22,14 @@ if (configuration.sentryDsn) {
   console.log("⚠️  Sentry DSN not configured, error tracking disabled");
 }
 
+// Initialize metrics (must be imported early to set up metrics collection)
+console.log("📊 Initializing metrics system");
+import "./metrics/index.js";
+
+// Initialize HTTP server for health checks and metrics
+console.log("🌐 Starting HTTP server for health checks and metrics");
+import { shutdownHttpServer } from "./http-server.js";
+
 // Preload Arena augments once at startup; continue if it fails
 console.log("🧩 Initializing Arena augments cache");
 await initArenaAugmentsOnce()
@@ -45,12 +53,16 @@ console.log("✅ Backend application startup complete");
 // Handle graceful shutdown
 process.on("SIGTERM", () => {
   console.log("🛑 Received SIGTERM, shutting down gracefully");
-  process.exit(0);
+  void shutdownHttpServer().then(() => {
+    process.exit(0);
+  });
 });
 
 process.on("SIGINT", () => {
   console.log("🛑 Received SIGINT, shutting down gracefully");
-  process.exit(0);
+  void shutdownHttpServer().then(() => {
+    process.exit(0);
+  });
 });
 
 // Handle unhandled promise rejections
@@ -58,11 +70,30 @@ process.on("unhandledRejection", (reason, promise) => {
   console.error("❌ Unhandled Promise Rejection:", reason);
   console.error("Promise:", promise);
   Sentry.captureException(reason);
+
+  // Track unhandled errors in metrics
+  import("./metrics/index.js")
+    .then((metrics) => {
+      metrics.unhandledErrorsTotal.inc({ error_type: "unhandled_rejection" });
+    })
+    .catch(() => {
+      // Ignore if metrics module fails to import
+    });
 });
 
 // Handle uncaught exceptions
 process.on("uncaughtException", (error) => {
   console.error("❌ Uncaught Exception:", error);
   Sentry.captureException(error);
+
+  // Track unhandled errors in metrics
+  import("./metrics/index.js")
+    .then((metrics) => {
+      metrics.unhandledErrorsTotal.inc({ error_type: "uncaught_exception" });
+    })
+    .catch(() => {
+      // Ignore if metrics module fails to import
+    });
+
   process.exit(1);
 });
