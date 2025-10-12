@@ -1,7 +1,7 @@
 [tools]
 bun = "latest"
 
-[tasks.local]
+[tasks.dev]
 description = "Create all files needed for development"
 run = "bun install && (cd packages/backend/ && bun db:generate) && dagger develop"
 

@@ -7,19 +7,58 @@
     "packages/report",
     "packages/frontend"
   ],
+  "trustedDependencies": [
+    "husky"
+  ],
   "scripts": {
-    "install:all": "bun install",
-    "typecheck:all": "bun run --filter='*' typecheck",
-    "lint:all": "bun run --filter='*' lint",
-    "format:all": "bun run --filter='*' format",
-    "test:all": "bun run --filter='*' test",
+    "typecheck": "bun run --filter='*' typecheck",
+    "lint": "bun run --filter='*' lint",
+    "format": "bun run --filter='*' format",
+    "test": "bun run --filter='*' test",
     "clean": "rm -rf node_modules packages/*/node_modules",
     "generate": "bun run --filter='*' generate"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "@typescript-eslint/utils": "^8.46.0",
+    "eslint": "^9.30.1",
+    "eslint-plugin-unicorn": "^61.0.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.3",
+    "@total-typescript/ts-reset": "^0.6.1",
+    "@types/bun": "^1.2.18",
+    "@commitlint/cli": "^20.0.0",
+    "@commitlint/config-conventional": "^20.0.0",
+    "@eslint/js": "^9.30.1",
+    "jiti": "^2.6.0",
+    "markdownlint-cli2": "^0.18.0",
+    "prettier": "3.6.2",
+    "typescript-eslint": "^8.35.1"
   },
-  "dependencies": {
-    "@typescript-eslint/utils": "^8.46.0"
-  }
+  "lint-staged": {
+    "*": "bunx prettier --ignore-unknown --write",
+    "*.md": "bunx markdownlint-cli2 --fix",
+    ".github/workflows/*.{yml,yaml}": "actionlint",
+    "packages/backend/**/*.{ts,tsx}": [
+      "bash -c 'cd packages/backend && bun run typecheck'",
+      "bash -c 'cd packages/backend && bunx eslint --cache --fix'",
+      "bash -c 'cd packages/backend && bun run test'"
+    ],
+    "packages/data/**/*.{ts,tsx}": [
+      "bash -c 'cd packages/data && bun run typecheck'",
+      "bash -c 'cd packages/data && bunx eslint --cache --fix'",
+      "bash -c 'cd packages/data && bun run test'"
+    ],
+    "packages/frontend/**/*.{ts,tsx}": [
+      "bash -c 'cd packages/frontend && bun run typecheck'",
+      "bash -c 'cd packages/frontend && bunx eslint --cache --fix'",
+      "bash -c 'cd packages/frontend && bun run test'"
+    ],
+    "packages/report/**/*.{ts,tsx}": [
+      "bash -c 'cd packages/report && bun run typecheck'",
+      "bash -c 'cd packages/report && bunx eslint --cache --fix'",
+      "bash -c 'cd packages/report && bun run test'"
+    ]
+  },
+  "dependencies": {}
 }

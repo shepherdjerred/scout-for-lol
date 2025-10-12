@@ -364,7 +364,7 @@ test("Foreign key constraints", async () => {
       },
     });
   } catch (e) {
-    error = e as Error;
+    error = e as unknown as Error;
   }
   expect(error).not.toBeNull();
   expect(error?.message).toContain("Foreign key constraint");
@@ -464,7 +464,7 @@ test("CompetitionParticipant unique constraint", async () => {
       },
     });
   } catch (e) {
-    error = e as Error;
+    error = e as unknown as Error;
   }
   expect(error).not.toBeNull();
   expect(error?.message).toContain("Unique constraint");
@@ -532,7 +532,7 @@ test("CompetitionSnapshot unique constraint", async () => {
       },
     });
   } catch (e) {
-    error = e as Error;
+    error = e as unknown as Error;
   }
   expect(error).not.toBeNull();
   expect(error?.message).toContain("Unique constraint");

@@ -15,7 +15,7 @@ import { type CompetitionDates } from "./validation.js";
  * Input for creating a competition
  * This is the simplified type used by query functions (not validation schema)
  */
-export interface CreateCompetitionInput {
+export type CreateCompetitionInput = {
   serverId: string;
   ownerId: string;
   channelId: string;
@@ -25,7 +25,7 @@ export interface CreateCompetitionInput {
   maxParticipants: number;
   dates: CompetitionDates;
   criteria: CompetitionCriteria;
-}
+};
 
 // ============================================================================
 // Create

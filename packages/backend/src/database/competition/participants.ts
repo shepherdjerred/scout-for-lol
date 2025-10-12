@@ -1,4 +1,4 @@
-import { type ParticipantStatus } from "@scout-for-lol/data";
+import { type ParticipantStatus, ParticipantStatusSchema } from "@scout-for-lol/data";
 import {
   type CompetitionParticipant,
   type PrismaClient,
@@ -257,7 +257,17 @@ export async function getParticipantStatus(
     },
   });
 
-  return participant ? (participant.status as ParticipantStatus) : null;
+  if (!participant) {
+    return null;
+  }
+
+  // Validate status with Zod schema
+  const statusResult = ParticipantStatusSchema.safeParse(participant.status);
+  if (!statusResult.success) {
+    throw new Error(`Invalid participant status in database: ${participant.status}`);
+  }
+
+  return statusResult.data;
 }
 
 // ============================================================================
