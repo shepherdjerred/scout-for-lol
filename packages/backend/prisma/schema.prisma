@@ -98,8 +98,9 @@ model CompetitionParticipant {
   playerId      Int
   status        String // INVITED, JOINED, LEFT
   invitedBy     String? // Discord user ID (nullable)
-  joinedAt      DateTime
-  leftAt        DateTime?
+  invitedAt     DateTime? // When invited (nullable - null if joined directly)
+  joinedAt      DateTime? // When joined (nullable - null if only invited)
+  leftAt        DateTime? // When left (nullable - null if still participating)
 
   // Relations
   competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)

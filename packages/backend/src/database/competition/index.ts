@@ -19,3 +19,13 @@ export {
   getCompetitionById,
   getCompetitionsByServer,
 } from "./queries.js";
+
+// Re-export participant functions
+export {
+  acceptInvitation,
+  addParticipant,
+  canJoinCompetition,
+  getParticipantStatus,
+  getParticipants,
+  removeParticipant,
+} from "./participants.js";
