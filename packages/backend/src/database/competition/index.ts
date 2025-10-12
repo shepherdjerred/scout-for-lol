@@ -29,3 +29,21 @@ export {
   getParticipants,
   removeParticipant,
 } from "./participants.js";
+
+// Re-export permission functions and types
+export {
+  type PermissionCheckResult,
+  canCreateCompetition,
+  grantPermission,
+  hasPermission,
+  revokePermission,
+} from "./permissions.js";
+
+// Re-export rate limit functions
+export {
+  checkRateLimit,
+  clearAllRateLimits,
+  clearRateLimit,
+  getTimeRemaining,
+  recordCreation,
+} from "./rate-limit.js";
