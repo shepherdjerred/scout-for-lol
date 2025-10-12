@@ -175,4 +175,3 @@ describe("clearAllRateLimits", () => {
     expect(checkRateLimit("server-2", "user-1")).toBe(true);
   });
 });
-

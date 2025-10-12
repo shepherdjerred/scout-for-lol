@@ -11,7 +11,7 @@ import { isCompetitionActive } from "./validation.js";
 
 /**
  * Add a participant to a competition with JOINED or INVITED status
- * 
+ *
  * @param prisma - Prisma client instance
  * @param competitionId - Competition ID
  * @param playerId - Player ID
@@ -91,7 +91,7 @@ export async function addParticipant(
       competitionId,
       playerId,
       status,
-      invitedBy: status === "INVITED" ? invitedBy ?? null : null,
+      invitedBy: status === "INVITED" ? (invitedBy ?? null) : null,
       invitedAt: status === "INVITED" ? now : null,
       joinedAt: status === "JOINED" ? now : null,
       leftAt: null,
@@ -105,7 +105,7 @@ export async function addParticipant(
 
 /**
  * Transition a participant from INVITED to JOINED
- * 
+ *
  * @param prisma - Prisma client instance
  * @param competitionId - Competition ID
  * @param playerId - Player ID
@@ -156,7 +156,7 @@ export async function acceptInvitation(
 
 /**
  * Remove a participant from a competition (soft delete - sets status to LEFT)
- * 
+ *
  * @param prisma - Prisma client instance
  * @param competitionId - Competition ID
  * @param playerId - Player ID
@@ -207,7 +207,7 @@ export async function removeParticipant(
 
 /**
  * Get all participants for a competition, optionally filtered by status
- * 
+ *
  * @param prisma - Prisma client instance
  * @param competitionId - Competition ID
  * @param statusFilter - Optional status filter (JOINED, INVITED, or LEFT)
@@ -234,7 +234,7 @@ export async function getParticipants(
 
 /**
  * Get participant status for a specific player in a competition
- * 
+ *
  * @param prisma - Prisma client instance
  * @param competitionId - Competition ID
  * @param playerId - Player ID
@@ -266,12 +266,12 @@ export async function getParticipantStatus(
 
 /**
  * Check if a player can join a competition
- * 
+ *
  * Validates:
  * - Competition exists and is active
  * - Under participant limit
  * - Player is not already a participant (or hasn't left)
- * 
+ *
  * @param prisma - Prisma client instance
  * @param competitionId - Competition ID
  * @param playerId - Player ID
@@ -345,4 +345,3 @@ export async function canJoinCompetition(
 
   return { canJoin: true };
 }
-

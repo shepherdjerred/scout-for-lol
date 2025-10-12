@@ -19,7 +19,7 @@ export interface PermissionCheckResult {
 
 /**
  * Check if user has a specific permission in the database
- * 
+ *
  * @param prisma - Prisma client instance
  * @param serverId - Discord server ID
  * @param userId - Discord user ID
@@ -47,7 +47,7 @@ export async function hasPermission(
 
 /**
  * Grant permission to a user
- * 
+ *
  * @param prisma - Prisma client instance
  * @param serverId - Discord server ID
  * @param userId - Discord user ID
@@ -88,7 +88,7 @@ export async function grantPermission(
 
 /**
  * Revoke permission from a user
- * 
+ *
  * @param prisma - Prisma client instance
  * @param serverId - Discord server ID
  * @param userId - Discord user ID
@@ -116,12 +116,12 @@ export async function revokePermission(
 
 /**
  * Check if user can create a competition
- * 
+ *
  * This combines:
  * 1. Admin bypass (Discord ADMINISTRATOR permission)
  * 2. ServerPermission check (CREATE_COMPETITION grant)
  * 3. Rate limit check (1 per hour)
- * 
+ *
  * @param prisma - Prisma client instance
  * @param serverId - Discord server ID
  * @param userId - Discord user ID
@@ -168,4 +168,3 @@ export async function canCreateCompetition(
 
   return { allowed: true };
 }
-

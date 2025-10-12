@@ -25,7 +25,7 @@ const MAX_ACTIVE_COMPETITIONS_PER_OWNER = 1;
 export function isCompetitionActive(
   isCancelled: boolean,
   endDate: Date | null,
-  now: Date = new Date()
+  now: Date = new Date(),
 ): boolean {
   if (isCancelled) {
     return false;
@@ -153,7 +153,7 @@ export const CompetitionCreationSchema = z
       message:
         "criteriaConfig must be valid JSON matching the criteriaType schema",
       path: ["criteriaConfig"],
-    }
+    },
   );
 
 export type CompetitionCreationInput = z.infer<
@@ -171,7 +171,7 @@ export type CompetitionCreationInput = z.infer<
 export async function validateOwnerLimit(
   prisma: PrismaClient,
   serverId: string,
-  ownerId: string
+  ownerId: string,
 ): Promise<void> {
   const now = new Date();
 
@@ -192,7 +192,7 @@ export async function validateOwnerLimit(
 
   if (activeCompetitionCount >= MAX_ACTIVE_COMPETITIONS_PER_OWNER) {
     throw new Error(
-      `You already have ${activeCompetitionCount.toString()} active competition(s). Please end or cancel your existing competition before creating a new one.`
+      `You already have ${activeCompetitionCount.toString()} active competition(s). Please end or cancel your existing competition before creating a new one.`,
     );
   }
 }
@@ -202,7 +202,7 @@ export async function validateOwnerLimit(
  */
 export async function validateServerLimit(
   prisma: PrismaClient,
-  serverId: string
+  serverId: string,
 ): Promise<void> {
   const now = new Date();
 
@@ -222,7 +222,7 @@ export async function validateServerLimit(
 
   if (activeCompetitionCount >= MAX_ACTIVE_COMPETITIONS_PER_SERVER) {
     throw new Error(
-      `This server already has ${activeCompetitionCount.toString()} active competitions. Maximum allowed is ${MAX_ACTIVE_COMPETITIONS_PER_SERVER.toString()}.`
+      `This server already has ${activeCompetitionCount.toString()} active competitions. Maximum allowed is ${MAX_ACTIVE_COMPETITIONS_PER_SERVER.toString()}.`,
     );
   }
 }
@@ -233,7 +233,7 @@ export async function validateServerLimit(
  */
 export async function validateCompetitionCreation(
   prisma: PrismaClient,
-  input: CompetitionCreationInput
+  input: CompetitionCreationInput,
 ): Promise<CompetitionCreationInput> {
   // First validate with Zod schema (throws ZodError if invalid)
   const result = CompetitionCreationSchema.safeParse(input);
@@ -247,7 +247,7 @@ export async function validateCompetitionCreation(
   await validateOwnerLimit(
     prisma,
     validatedInput.serverId,
-    validatedInput.ownerId
+    validatedInput.ownerId,
   );
   await validateServerLimit(prisma, validatedInput.serverId);
 

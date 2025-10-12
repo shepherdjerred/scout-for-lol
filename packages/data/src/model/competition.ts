@@ -197,7 +197,7 @@ export function getCompetitionStatus(competition: {
 
   // Invalid state: no dates and no seasonId
   throw new Error(
-    "Competition must have either (startDate AND endDate) OR seasonId"
+    "Competition must have either (startDate AND endDate) OR seasonId",
   );
 }
 
@@ -209,7 +209,7 @@ export function getCompetitionStatus(competition: {
  * Format queue type to human-readable string
  */
 export function competitionQueueTypeToString(
-  queueType: CompetitionQueueType
+  queueType: CompetitionQueueType,
 ): string {
   return match(queueType)
     .with("SOLO", () => "Solo Queue")
@@ -293,14 +293,14 @@ export function parseCompetition(raw: RawCompetition): CompetitionWithCriteria {
     criteriaConfig = JSON.parse(raw.criteriaConfig);
   } catch (error) {
     throw new Error(
-      `Invalid criteriaConfig JSON for competition ${raw.id.toString()}: ${error instanceof Error ? error.message : "unknown error"}`
+      `Invalid criteriaConfig JSON for competition ${raw.id.toString()}: ${error instanceof Error ? error.message : "unknown error"}`,
     );
   }
 
   // Validate it's an object
   if (typeof criteriaConfig !== "object" || criteriaConfig === null) {
     throw new Error(
-      `criteriaConfig must be an object for competition ${raw.id.toString()}`
+      `criteriaConfig must be an object for competition ${raw.id.toString()}`,
     );
   }
 
@@ -313,7 +313,7 @@ export function parseCompetition(raw: RawCompetition): CompetitionWithCriteria {
   const result = CompetitionCriteriaSchema.safeParse(criteriaData);
   if (!result.success) {
     throw new Error(
-      `Invalid criteria for competition ${raw.id.toString()}: ${result.error.message}`
+      `Invalid criteria for competition ${raw.id.toString()}: ${result.error.message}`,
     );
   }
 
@@ -381,7 +381,7 @@ export const WinsSnapshotDataSchema = z.object({
  * Uses exhaustive pattern matching to ensure all criteria types are handled.
  */
 export function getSnapshotSchemaForCriteria(
-  criteria: CompetitionCriteria
+  criteria: CompetitionCriteria,
 ):
   | typeof RankSnapshotDataSchema
   | typeof GamesPlayedSnapshotDataSchema

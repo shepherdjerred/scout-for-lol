@@ -339,7 +339,7 @@ describe("getCompetitionStatus - Error cases", () => {
       seasonId: null,
     };
     expect(() => getCompetitionStatus(competition)).toThrow(
-      "Competition must have either (startDate AND endDate) OR seasonId"
+      "Competition must have either (startDate AND endDate) OR seasonId",
     );
   });
 

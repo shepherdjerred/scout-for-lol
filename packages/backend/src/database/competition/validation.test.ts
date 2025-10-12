@@ -161,7 +161,7 @@ describe("CompetitionDatesSchema - date order", () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0]?.message).toContain(
-        "startDate must be before endDate"
+        "startDate must be before endDate",
       );
     }
   });
@@ -177,7 +177,7 @@ describe("CompetitionDatesSchema - date order", () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0]?.message).toContain(
-        "startDate must be before endDate"
+        "startDate must be before endDate",
       );
     }
   });
@@ -232,7 +232,7 @@ describe("CompetitionDatesSchema - duration limit", () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0]?.message).toContain(
-        "Competition duration cannot exceed 90 days"
+        "Competition duration cannot exceed 90 days",
       );
     }
   });
@@ -248,7 +248,7 @@ describe("CompetitionDatesSchema - duration limit", () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0]?.message).toContain(
-        "Competition duration cannot exceed 90 days"
+        "Competition duration cannot exceed 90 days",
       );
     }
   });
@@ -604,7 +604,7 @@ describe("CompetitionCreationSchema - criteria validation", () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues[0]?.message).toContain(
-        "criteriaConfig must be valid JSON"
+        "criteriaConfig must be valid JSON",
       );
     }
   });

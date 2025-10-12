@@ -182,7 +182,7 @@ describe("getCompetitionsByServer", () => {
 
     const competitions = await getCompetitionsByServer(
       prisma,
-      "123456789012345678"
+      "123456789012345678",
     );
     expect(competitions).toHaveLength(3);
   });
@@ -227,7 +227,7 @@ describe("getCompetitionsByServer", () => {
     const activeOnly = await getCompetitionsByServer(
       prisma,
       "123456789012345678",
-      { activeOnly: true }
+      { activeOnly: true },
     );
 
     expect(activeOnly).toHaveLength(1);
@@ -263,7 +263,7 @@ describe("getCompetitionsByServer", () => {
     const owner1Comps = await getCompetitionsByServer(
       prisma,
       "123456789012345678",
-      { ownerId: "111111111111111111" }
+      { ownerId: "111111111111111111" },
     );
 
     expect(owner1Comps).toHaveLength(1);

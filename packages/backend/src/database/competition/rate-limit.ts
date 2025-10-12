@@ -4,7 +4,7 @@
 
 /**
  * Rate limit store: Map<"serverId:userId", timestamp>
- * 
+ *
  * Note: This is an in-memory store suitable for single-instance deployments.
  * For multi-instance deployments, consider using Redis.
  */
@@ -18,7 +18,7 @@ const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
 
 /**
  * Check if user is within rate limit window
- * 
+ *
  * @param serverId - Discord server ID
  * @param userId - Discord user ID
  * @returns true if user can create competition, false if rate limited
@@ -39,7 +39,7 @@ export function checkRateLimit(serverId: string, userId: string): boolean {
 
 /**
  * Record competition creation timestamp for rate limiting
- * 
+ *
  * @param serverId - Discord server ID
  * @param userId - Discord user ID
  */
@@ -50,7 +50,7 @@ export function recordCreation(serverId: string, userId: string): void {
 
 /**
  * Get time remaining until user can create another competition
- * 
+ *
  * @param serverId - Discord server ID
  * @param userId - Discord user ID
  * @returns milliseconds remaining, or 0 if not rate limited
@@ -72,7 +72,7 @@ export function getTimeRemaining(serverId: string, userId: string): number {
 
 /**
  * Clear rate limit for user (useful for testing)
- * 
+ *
  * @param serverId - Discord server ID
  * @param userId - Discord user ID
  */
@@ -87,4 +87,3 @@ export function clearRateLimit(serverId: string, userId: string): void {
 export function clearAllRateLimits(): void {
   rateLimitStore.clear();
 }
-

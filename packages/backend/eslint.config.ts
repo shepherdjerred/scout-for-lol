@@ -1,8 +1,7 @@
-// @ts-check
-
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 import unicorn from "eslint-plugin-unicorn";
+import { zodSchemaNaming } from "../../eslint-rules/zod-schema-naming.ts";
 
 /**
  * Bridge typescript-eslint rule to ESLint plugin system

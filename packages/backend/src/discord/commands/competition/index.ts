@@ -21,14 +21,14 @@ export const competitionCommand = new SlashCommandBuilder()
           .setName("title")
           .setDescription("Competition title (max 100 chars)")
           .setRequired(true)
-          .setMaxLength(100)
+          .setMaxLength(100),
       )
       .addStringOption((option) =>
         option
           .setName("description")
           .setDescription("Competition description (max 500 chars)")
           .setRequired(true)
-          .setMaxLength(500)
+          .setMaxLength(500),
       )
       .addStringOption((option) =>
         option
@@ -41,33 +41,37 @@ export const competitionCommand = new SlashCommandBuilder()
             { name: "Most Rank Climb", value: "MOST_RANK_CLIMB" },
             { name: "Most Wins (Player)", value: "MOST_WINS_PLAYER" },
             { name: "Most Wins (Champion)", value: "MOST_WINS_CHAMPION" },
-            { name: "Highest Win Rate", value: "HIGHEST_WIN_RATE" }
-          )
+            { name: "Highest Win Rate", value: "HIGHEST_WIN_RATE" },
+          ),
       )
       .addChannelOption((option) =>
         option
           .setName("channel")
           .setDescription("Channel for daily leaderboard updates")
-          .setRequired(true)
+          .setRequired(true),
       )
       // Date options (mutually exclusive with season)
       .addStringOption((option) =>
         option
           .setName("start-date")
-          .setDescription("Start date (ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)")
-          .setRequired(false)
+          .setDescription(
+            "Start date (ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)",
+          )
+          .setRequired(false),
       )
       .addStringOption((option) =>
         option
           .setName("end-date")
-          .setDescription("End date (ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)")
-          .setRequired(false)
+          .setDescription(
+            "End date (ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)",
+          )
+          .setRequired(false),
       )
       .addStringOption((option) =>
         option
           .setName("season")
           .setDescription("Season ID (alternative to fixed dates)")
-          .setRequired(false)
+          .setRequired(false),
       )
       // Criteria-specific options
       .addStringOption((option) =>
@@ -81,15 +85,15 @@ export const competitionCommand = new SlashCommandBuilder()
             { name: "Any Ranked", value: "RANKED_ANY" },
             { name: "Arena", value: "ARENA" },
             { name: "ARAM", value: "ARAM" },
-            { name: "All Queues", value: "ALL" }
-          )
+            { name: "All Queues", value: "ALL" },
+          ),
       )
       .addIntegerOption((option) =>
         option
           .setName("champion-id")
           .setDescription("Champion ID (required for Most Wins Champion)")
           .setRequired(false)
-          .setMinValue(1)
+          .setMinValue(1),
       )
       .addIntegerOption((option) =>
         option
@@ -97,7 +101,7 @@ export const competitionCommand = new SlashCommandBuilder()
           .setDescription("Minimum games for win rate (default: 10)")
           .setRequired(false)
           .setMinValue(1)
-          .setMaxValue(100)
+          .setMaxValue(100),
       )
       // Configuration options
       .addStringOption((option) =>
@@ -108,8 +112,8 @@ export const competitionCommand = new SlashCommandBuilder()
           .addChoices(
             { name: "Open (anyone can join)", value: "OPEN" },
             { name: "Invite Only", value: "INVITE_ONLY" },
-            { name: "Server Wide (automatic)", value: "SERVER_WIDE" }
-          )
+            { name: "Server Wide (automatic)", value: "SERVER_WIDE" },
+          ),
       )
       .addIntegerOption((option) =>
         option
@@ -117,11 +121,10 @@ export const competitionCommand = new SlashCommandBuilder()
           .setDescription("Maximum participants (default: 50)")
           .setRequired(false)
           .setMinValue(2)
-          .setMaxValue(100)
-      )
+          .setMaxValue(100),
+      ),
   )
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .setContexts(InteractionContextType.Guild);
 
 export { executeCompetitionCreate };
-

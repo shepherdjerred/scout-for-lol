@@ -86,12 +86,22 @@ describe("hasPermission", () => {
 
     // Has permission on server1
     expect(
-      await hasPermission(prisma, "111111111111111111", userId, "CREATE_COMPETITION"),
+      await hasPermission(
+        prisma,
+        "111111111111111111",
+        userId,
+        "CREATE_COMPETITION",
+      ),
     ).toBe(true);
 
     // Does NOT have permission on server2
     expect(
-      await hasPermission(prisma, "222222222222222222", userId, "CREATE_COMPETITION"),
+      await hasPermission(
+        prisma,
+        "222222222222222222",
+        userId,
+        "CREATE_COMPETITION",
+      ),
     ).toBe(false);
   });
 });
@@ -429,4 +439,3 @@ describe("canCreateCompetition - rate limit", () => {
     expect(result.reason).toMatch(/Try again in \d+ minute/);
   });
 });
-

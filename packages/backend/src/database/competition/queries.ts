@@ -40,7 +40,7 @@ export interface CreateCompetitionInput {
  */
 export async function createCompetition(
   prisma: PrismaClient,
-  input: CreateCompetitionInput
+  input: CreateCompetitionInput,
 ): Promise<CompetitionWithCriteria> {
   const now = new Date();
 
@@ -96,7 +96,7 @@ export async function createCompetition(
  */
 export async function getCompetitionById(
   prisma: PrismaClient,
-  id: number
+  id: number,
 ): Promise<CompetitionWithCriteria | null> {
   const raw = await prisma.competition.findUnique({
     where: { id },
@@ -123,7 +123,7 @@ export async function getCompetitionsByServer(
   options?: {
     activeOnly?: boolean;
     ownerId?: string;
-  }
+  },
 ): Promise<CompetitionWithCriteria[]> {
   const now = new Date();
 
@@ -155,7 +155,7 @@ export async function getCompetitionsByServer(
  * @returns Array of active competitions with parsed criteria
  */
 export async function getActiveCompetitions(
-  prisma: PrismaClient
+  prisma: PrismaClient,
 ): Promise<CompetitionWithCriteria[]> {
   const now = new Date();
 
@@ -189,7 +189,7 @@ export async function getActiveCompetitions(
  */
 export async function cancelCompetition(
   prisma: PrismaClient,
-  id: number
+  id: number,
 ): Promise<CompetitionWithCriteria> {
   const now = new Date();
 

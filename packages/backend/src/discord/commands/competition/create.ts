@@ -1,4 +1,5 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { match } from "ts-pattern";
 import { z } from "zod";
 import {
   type CompetitionCriteria,
@@ -34,20 +35,33 @@ const CommonArgsSchema = z.object({
 });
 
 /**
- * Fixed dates variant
+ * Fixed dates variant with date string validation
  */
-const FixedDatesArgsSchema = z.object({
-  dateType: z.literal("FIXED"),
-  startDate: z.string(),
-  endDate: z.string(),
-});
+const FixedDatesArgsSchema = z
+  .object({
+    dateType: z.literal("FIXED"),
+    startDate: z.string(),
+    endDate: z.string(),
+  })
+  .refine(
+    (data) => {
+      const start = new Date(data.startDate);
+      const end = new Date(data.endDate);
+      return !isNaN(start.getTime()) && !isNaN(end.getTime());
+    },
+    {
+      message:
+        "Invalid date format. Use ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)",
+      path: ["startDate"],
+    },
+  );
 
 /**
- * Season variant
+ * Season variant with length limit
  */
 const SeasonArgsSchema = z.object({
   dateType: z.literal("SEASON"),
-  season: z.string(),
+  season: z.string().min(1).max(100),
 });
 
 /**
@@ -114,7 +128,7 @@ type CreateCommandArgs = z.infer<typeof CreateCommandArgsSchema>;
  * Execute /competition create command
  */
 export async function executeCompetitionCreate(
-  interaction: ChatInputCommandInteraction
+  interaction: ChatInputCommandInteraction,
 ): Promise<void> {
   const startTime = Date.now();
   const userId = interaction.user.id;
@@ -122,7 +136,7 @@ export async function executeCompetitionCreate(
   const guildId = interaction.guildId;
 
   console.log(
-    `🏆 Starting competition creation for user ${username} (${userId}) in guild ${guildId ?? "unknown"}`
+    `🏆 Starting competition creation for user ${username} (${userId}) in guild ${guildId ?? "unknown"}`,
   );
 
   // ============================================================================
@@ -143,7 +157,7 @@ export async function executeCompetitionCreate(
 
     if (!hasFixedDates && !hasSeason) {
       throw new Error(
-        "Must specify either (start-date AND end-date) OR season"
+        "Must specify either (start-date AND end-date) OR season",
       );
     }
     if (hasFixedDates && hasSeason) {
@@ -173,7 +187,7 @@ export async function executeCompetitionCreate(
 
     console.log(`✅ Command arguments validated successfully`);
     console.log(
-      `📋 Title: "${args.title}", Criteria: ${args.criteriaType}, Channel: ${args.channelId}`
+      `📋 Title: "${args.title}", Criteria: ${args.criteriaType}, Channel: ${args.channelId}`,
     );
   } catch (error) {
     console.error(`❌ Invalid command arguments from ${username}:`, error);
@@ -200,12 +214,12 @@ export async function executeCompetitionCreate(
       prisma,
       args.guildId,
       userId,
-      member.permissions
+      member.permissions,
     );
 
     if (!permissionCheck.allowed) {
       console.warn(
-        `⚠️  Permission denied for ${username}: ${permissionCheck.reason ?? "unknown reason"}`
+        `⚠️  Permission denied for ${username}: ${permissionCheck.reason ?? "unknown reason"}`,
       );
       await interaction.reply({
         content: `**Permission denied:**\n${permissionCheck.reason}`,
@@ -225,76 +239,54 @@ export async function executeCompetitionCreate(
   }
 
   // ============================================================================
-  // Step 3: Build criteria object (type-safe via discriminated union)
+  // Step 3: Build criteria object (schema already validated all fields!)
   // ============================================================================
 
-  // Build criteria with proper type narrowing
-  let criteria: CompetitionCriteria;
+  // Safe accessor - Zod validated the structure, but union types are too complex
+  type QueueType = "SOLO" | "FLEX" | "RANKED_ANY" | "ARENA" | "ARAM" | "ALL";
 
-  switch (args.criteriaType) {
-    case "MOST_GAMES_PLAYED":
-      // superRefine validated queue exists
-      if (!args.queue) {
-        throw new Error("Internal error: queue missing after validation");
-      }
-      criteria = {
-        type: "MOST_GAMES_PLAYED",
-        queue: args.queue,
-      };
-      break;
+  const validated = args as {
+    criteriaType:
+      | "MOST_GAMES_PLAYED"
+      | "HIGHEST_RANK"
+      | "MOST_RANK_CLIMB"
+      | "MOST_WINS_PLAYER"
+      | "MOST_WINS_CHAMPION"
+      | "HIGHEST_WIN_RATE";
+    queue?: QueueType;
+    championId?: number;
+    minGames?: number;
+  };
 
-    case "HIGHEST_RANK":
-      if (!args.queue || (args.queue !== "SOLO" && args.queue !== "FLEX")) {
-        throw new Error("Internal error: invalid queue after validation");
-      }
-      criteria = {
-        type: "HIGHEST_RANK",
-        queue: args.queue,
-      };
-      break;
-
-    case "MOST_RANK_CLIMB":
-      if (!args.queue || (args.queue !== "SOLO" && args.queue !== "FLEX")) {
-        throw new Error("Internal error: invalid queue after validation");
-      }
-      criteria = {
-        type: "MOST_RANK_CLIMB",
-        queue: args.queue,
-      };
-      break;
-
-    case "MOST_WINS_PLAYER":
-      if (!args.queue) {
-        throw new Error("Internal error: queue missing after validation");
-      }
-      criteria = {
-        type: "MOST_WINS_PLAYER",
-        queue: args.queue,
-      };
-      break;
-
-    case "MOST_WINS_CHAMPION":
-      if (!args.championId) {
-        throw new Error("Internal error: championId missing after validation");
-      }
-      criteria = {
-        type: "MOST_WINS_CHAMPION",
-        championId: args.championId,
-        queue: args.queue, // Optional
-      };
-      break;
-
-    case "HIGHEST_WIN_RATE":
-      if (!args.queue) {
-        throw new Error("Internal error: queue missing after validation");
-      }
-      criteria = {
-        type: "HIGHEST_WIN_RATE",
-        minGames: args.minGames ?? 10, // Default to 10
-        queue: args.queue,
-      };
-      break;
-  }
+  // Use ts-pattern for exhaustive matching
+  const criteria: CompetitionCriteria = match(validated.criteriaType)
+    .with("MOST_GAMES_PLAYED", () => ({
+      type: "MOST_GAMES_PLAYED" as const,
+      queue: validated.queue!,
+    }))
+    .with("HIGHEST_RANK", () => ({
+      type: "HIGHEST_RANK" as const,
+      queue: validated.queue! as "SOLO" | "FLEX",
+    }))
+    .with("MOST_RANK_CLIMB", () => ({
+      type: "MOST_RANK_CLIMB" as const,
+      queue: validated.queue! as "SOLO" | "FLEX",
+    }))
+    .with("MOST_WINS_PLAYER", () => ({
+      type: "MOST_WINS_PLAYER" as const,
+      queue: validated.queue!,
+    }))
+    .with("MOST_WINS_CHAMPION", () => ({
+      type: "MOST_WINS_CHAMPION" as const,
+      championId: validated.championId!,
+      queue: validated.queue,
+    }))
+    .with("HIGHEST_WIN_RATE", () => ({
+      type: "HIGHEST_WIN_RATE" as const,
+      minGames: validated.minGames ?? 10,
+      queue: validated.queue!,
+    }))
+    .exhaustive();
 
   console.log(`✅ Criteria built:`, criteria);
 
@@ -305,54 +297,47 @@ export async function executeCompetitionCreate(
   let competitionInput: CreateCompetitionInput;
 
   try {
-    // Parse dates based on discriminated union
-    let dates: CreateCompetitionInput["dates"];
+    // Safe accessor for dates - Zod validated but union types too complex
+    const validatedDates = args as {
+      dateType: "FIXED" | "SEASON";
+      startDate?: string;
+      endDate?: string;
+      season?: string;
+    };
 
-    if (args.dateType === "FIXED") {
-      // superRefine ensures these exist, but TypeScript doesn't narrow
-      if (!args.startDate || !args.endDate) {
-        throw new Error(
-          "Internal error: startDate/endDate missing after validation"
-        );
-      }
+    // Parse dates - schema already validated format and presence
+    const dates: CreateCompetitionInput["dates"] =
+      validatedDates.dateType === "FIXED"
+        ? {
+            type: "FIXED_DATES" as const,
+            startDate: new Date(validatedDates.startDate!),
+            endDate: new Date(validatedDates.endDate!),
+          }
+        : {
+            type: "SEASON" as const,
+            seasonId: validatedDates.season!,
+          };
 
-      const startDate = new Date(args.startDate);
-      const endDate = new Date(args.endDate);
-
-      // Check if dates are valid
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        throw new Error(
-          "Invalid date format. Use ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)"
-        );
-      }
-
-      dates = {
-        type: "FIXED_DATES",
-        startDate,
-        endDate,
-      };
-    } else {
-      // dateType === "SEASON"
-      if (!args.season) {
-        throw new Error("Internal error: season missing after validation");
-      }
-
-      dates = {
-        type: "SEASON",
-        seasonId: args.season,
-      };
-    }
+    // Safe accessor for common fields
+    const validatedCommon = args as {
+      guildId: string;
+      channelId: string;
+      title: string;
+      description: string;
+      visibility?: "OPEN" | "INVITE_ONLY" | "SERVER_WIDE";
+      maxParticipants?: number;
+    };
 
     competitionInput = {
-      serverId: args.guildId,
+      serverId: validatedCommon.guildId,
       ownerId: userId,
-      channelId: args.channelId,
-      title: args.title,
-      description: args.description,
-      visibility: args.visibility ?? "OPEN",
-      maxParticipants: args.maxParticipants ?? 50,
+      channelId: validatedCommon.channelId,
+      title: validatedCommon.title,
+      description: validatedCommon.description,
+      visibility: validatedCommon.visibility ?? "OPEN",
+      maxParticipants: validatedCommon.maxParticipants ?? 50,
       dates,
-      criteria, // Type-safe criteria object from Step 3
+      criteria,
     };
 
     console.log(`✅ Competition input built (fully type-safe)`);
@@ -370,7 +355,8 @@ export async function executeCompetitionCreate(
   // ============================================================================
 
   try {
-    const serverId = args.guildId;
+    // Safe accessor - Zod validated
+    const serverId = (args as { guildId: string }).guildId;
 
     // Check owner limit (1 active competition per owner)
     await validateOwnerLimit(prisma, serverId, userId);
@@ -399,15 +385,15 @@ export async function executeCompetitionCreate(
 
     const dbTime = Date.now() - dbStartTime;
     console.log(
-      `✅ Competition created with ID: ${competition.id.toString()} (${dbTime.toString()}ms)`
+      `✅ Competition created with ID: ${competition.id.toString()} (${dbTime.toString()}ms)`,
     );
 
     // Record creation for rate limiting
-    recordCreation(args.guildId, userId);
+    recordCreation((args as { guildId: string }).guildId, userId);
 
     const totalTime = Date.now() - startTime;
     console.log(
-      `🎉 Competition creation completed successfully in ${totalTime.toString()}ms`
+      `🎉 Competition creation completed successfully in ${totalTime.toString()}ms`,
     );
 
     // ============================================================================
