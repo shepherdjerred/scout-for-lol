@@ -1,0 +1,20 @@
+{
+    "extends": "./tsconfig.base.json",
+    "references": [
+        {
+            "path": "./data/tsconfig.json"
+        },
+        {
+            "path": "./report/tsconfig.json"
+        },
+        {
+            "path": "./backend/tsconfig.json"
+        },
+        {
+            "path": "./dagger/tsconfig.json"
+        },
+        {
+            "path": "./frontend/tsconfig.json"
+        }
+    ]
+}

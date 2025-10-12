@@ -14,6 +14,19 @@ import {
 import { prisma } from "../../../database/index.js";
 
 // ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Extract error message from unknown error value (avoids instanceof checks)
+ */
+function getErrorMessage(error: unknown): string {
+  const ErrorSchema = z.object({ message: z.string() });
+  const result = ErrorSchema.safeParse(error);
+  return result.success ? result.data.message : String(error);
+}
+
+// ============================================================================
 // Input Parsing Schema - Discriminated Unions
 // ============================================================================
 
@@ -210,74 +223,50 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     console.log(`✅ Permission check passed for ${username}`);
   } catch (error) {
     console.error(`❌ Permission check failed:`, error);
-    const errorMessage =
-      error && typeof error === "object" && "message" in error
-        ? String((error as { message: unknown }).message)
-        : String(error);
     await interaction.reply({
-      content: `**Error checking permissions:**\n${errorMessage}`,
+      content: `**Error checking permissions:**\n${getErrorMessage(error)}`,
       flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
-  // ============================================================================
-  // Step 3: Build criteria object (schema already validated all fields!)
-  // ============================================================================
-
-  // Safe accessor - Zod validated the structure, but union types are too complex
-  type QueueType = "SOLO" | "FLEX" | "RANKED_ANY" | "ARENA" | "ARAM" | "ALL";
-
-  const validated = args as unknown as {
-    criteriaType:
-      | "MOST_GAMES_PLAYED"
-      | "HIGHEST_RANK"
-      | "MOST_RANK_CLIMB"
-      | "MOST_WINS_PLAYER"
-      | "MOST_WINS_CHAMPION"
-      | "HIGHEST_WIN_RATE";
-    queue?: QueueType;
-    championId?: number;
-    minGames?: number;
-  };
-
   // Use ts-pattern for exhaustive matching
   // Note: Zod schema guarantees required fields exist, but linter doesn't know this
-  const criteria: CompetitionCriteria = match(validated.criteriaType)
+  const criteria: CompetitionCriteria = match(args.criteriaType)
     .with("MOST_GAMES_PLAYED", () => {
-      if (!validated.queue) throw new Error("queue required (validation error)");
-      return { type: "MOST_GAMES_PLAYED" as const, queue: validated.queue };
+      if (!args.queue) throw new Error("queue required (validation error)");
+      return { type: "MOST_GAMES_PLAYED" as const, queue: args.queue };
     })
     .with("HIGHEST_RANK", () => {
-      if (!validated.queue || (validated.queue !== "SOLO" && validated.queue !== "FLEX")) {
+      if (!args.queue || (args.queue !== "SOLO" && args.queue !== "FLEX")) {
         throw new Error("SOLO/FLEX queue required (validation error)");
       }
-      return { type: "HIGHEST_RANK" as const, queue: validated.queue };
+      return { type: "HIGHEST_RANK" as const, queue: args.queue };
     })
     .with("MOST_RANK_CLIMB", () => {
-      if (!validated.queue || (validated.queue !== "SOLO" && validated.queue !== "FLEX")) {
+      if (!args.queue || (args.queue !== "SOLO" && args.queue !== "FLEX")) {
         throw new Error("SOLO/FLEX queue required (validation error)");
       }
-      return { type: "MOST_RANK_CLIMB" as const, queue: validated.queue };
+      return { type: "MOST_RANK_CLIMB" as const, queue: args.queue };
     })
     .with("MOST_WINS_PLAYER", () => {
-      if (!validated.queue) throw new Error("queue required (validation error)");
-      return { type: "MOST_WINS_PLAYER" as const, queue: validated.queue };
+      if (!args.queue) throw new Error("queue required (validation error)");
+      return { type: "MOST_WINS_PLAYER" as const, queue: args.queue };
     })
     .with("MOST_WINS_CHAMPION", () => {
-      if (!validated.championId) throw new Error("championId required (validation error)");
+      if (!args.championId) throw new Error("championId required (validation error)");
       return {
         type: "MOST_WINS_CHAMPION" as const,
-        championId: validated.championId,
-        queue: validated.queue,
+        championId: args.championId,
+        queue: args.queue,
       };
     })
     .with("HIGHEST_WIN_RATE", () => {
-      if (!validated.queue) throw new Error("queue required (validation error)");
+      if (!args.queue) throw new Error("queue required (validation error)");
       return {
         type: "HIGHEST_WIN_RATE" as const,
-        minGames: validated.minGames ?? 10,
-        queue: validated.queue,
+        minGames: args.minGames ?? 10,
+        queue: args.queue,
       };
     })
     .exhaustive();
@@ -291,44 +280,37 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
   let competitionInput: CreateCompetitionInput;
 
   try {
-    // Safe accessor for dates - Zod validated but union types too complex
-    const validatedDates = args as {
-      dateType: "FIXED" | "SEASON";
-      startDate?: string;
-      endDate?: string;
-      season?: string;
-    };
-
     // Parse dates - schema already validated format and presence
     let dates: CreateCompetitionInput["dates"];
-    if (validatedDates.dateType === "FIXED") {
-      if (!validatedDates.startDate || !validatedDates.endDate) {
+    if (args.dateType === "FIXED") {
+      if (!args.startDate || !args.endDate) {
         throw new Error("startDate/endDate required for FIXED (validation error)");
       }
       dates = {
         type: "FIXED_DATES" as const,
-        startDate: new Date(validatedDates.startDate),
-        endDate: new Date(validatedDates.endDate),
+        startDate: new Date(args.startDate),
+        endDate: new Date(args.endDate),
       };
     } else {
-      if (!validatedDates.season) {
+      if (!args.season) {
         throw new Error("season required for SEASON (validation error)");
       }
       dates = {
         type: "SEASON" as const,
-        seasonId: validatedDates.season,
+        seasonId: args.season,
       };
     }
 
-    // Safe accessor for common fields
-    const validatedCommon = args as {
-      guildId: string;
-      channelId: string;
-      title: string;
-      description: string;
-      visibility?: "OPEN" | "INVITE_ONLY" | "SERVER_WIDE";
-      maxParticipants?: number;
-    };
+    // Extract common fields using Zod schema (no type assertions!)
+    const CommonFieldsExtractSchema = z.object({
+      guildId: z.string(),
+      channelId: z.string(),
+      title: z.string(),
+      description: z.string(),
+      visibility: CompetitionVisibilitySchema.optional(),
+      maxParticipants: z.number().int().optional(),
+    });
+    const validatedCommon = CommonFieldsExtractSchema.parse(args);
 
     competitionInput = {
       serverId: validatedCommon.guildId,
@@ -345,12 +327,8 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     console.log(`✅ Competition input built (fully type-safe)`);
   } catch (error) {
     console.error(`❌ Failed to build competition input:`, error);
-    const errorMessage =
-      error && typeof error === "object" && "message" in error
-        ? String((error as { message: unknown }).message)
-        : String(error);
     await interaction.reply({
-      content: `**Invalid competition data:**\n${errorMessage}`,
+      content: `**Invalid competition data:**\n${getErrorMessage(error)}`,
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -361,8 +339,9 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
   // ============================================================================
 
   try {
-    // Safe accessor - Zod validated
-    const serverId = (args as { guildId: string }).guildId;
+    // Extract serverId using Zod schema (no type assertions!)
+    const ServerIdSchema = z.object({ guildId: z.string() });
+    const { guildId: serverId } = ServerIdSchema.parse(args);
 
     // Check owner limit (1 active competition per owner)
     await validateOwnerLimit(prisma, serverId, userId);
@@ -373,12 +352,8 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     console.log(`✅ Business validation passed`);
   } catch (error) {
     console.error(`❌ Business validation failed:`, error);
-    const errorMessage =
-      error && typeof error === "object" && "message" in error
-        ? String((error as { message: unknown }).message)
-        : String(error);
     await interaction.reply({
-      content: `**Validation failed:**\n${errorMessage}`,
+      content: `**Validation failed:**\n${getErrorMessage(error)}`,
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -439,12 +414,8 @@ Users can join with:
     });
   } catch (error) {
     console.error(`❌ Database error during competition creation:`, error);
-    const errorMessage =
-      error && typeof error === "object" && "message" in error
-        ? String((error as { message: unknown }).message)
-        : String(error);
     await interaction.reply({
-      content: `**Error creating competition:**\n${errorMessage}`,
+      content: `**Error creating competition:**\n${getErrorMessage(error)}`,
       flags: MessageFlags.Ephemeral,
     });
   }
