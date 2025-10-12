@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { CompetitionDatesSchema, isCompetitionActive } from "./validation.js";
+import {
+  CompetitionCreationSchema,
+  CompetitionDatesSchema,
+  isCompetitionActive,
+} from "./validation.js";
 
 // ============================================================================
 // isCompetitionActive
@@ -256,5 +260,378 @@ describe("CompetitionDatesSchema - duration limit", () => {
       seasonId: "SEASON_2025",
     });
     expect(result.success).toBe(true);
+  });
+});
+
+// ============================================================================
+// CompetitionCreationSchema - Complete Validation
+// ============================================================================
+
+describe("CompetitionCreationSchema - Discord ID validation", () => {
+  const validInput = {
+    serverId: "123456789012345678",
+    ownerId: "987654321098765432",
+    channelId: "111111111111111111",
+    title: "Test Competition",
+    description: "Test description",
+    visibility: "OPEN" as const,
+    maxParticipants: 50,
+    dates: { type: "SEASON" as const, seasonId: "SEASON_2025" },
+    criteriaType: "MOST_GAMES_PLAYED",
+    criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+  };
+
+  test("accepts valid Discord snowflake IDs", () => {
+    const result = CompetitionCreationSchema.safeParse(validInput);
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects invalid serverId (too short)", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      serverId: "1234",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects invalid ownerId (contains letters)", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      ownerId: "abc123456789012345",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects invalid channelId (too long)", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      channelId: "12345678901234567890",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("CompetitionCreationSchema - title validation", () => {
+  const validInput = {
+    serverId: "123456789012345678",
+    ownerId: "987654321098765432",
+    channelId: "111111111111111111",
+    title: "Test Competition",
+    description: "Test description",
+    visibility: "OPEN" as const,
+    maxParticipants: 50,
+    dates: { type: "SEASON" as const, seasonId: "SEASON_2025" },
+    criteriaType: "MOST_GAMES_PLAYED",
+    criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+  };
+
+  test("accepts valid title", () => {
+    const result = CompetitionCreationSchema.safeParse(validInput);
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects empty title", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      title: "",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toContain("cannot be empty");
+    }
+  });
+
+  test("rejects title exceeding 100 characters", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      title: "a".repeat(101),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toContain("cannot exceed 100");
+    }
+  });
+
+  test("accepts title at 100 character limit", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      title: "a".repeat(100),
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("trims whitespace from title", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      title: "  Test Competition  ",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.title).toBe("Test Competition");
+    }
+  });
+});
+
+describe("CompetitionCreationSchema - description validation", () => {
+  const validInput = {
+    serverId: "123456789012345678",
+    ownerId: "987654321098765432",
+    channelId: "111111111111111111",
+    title: "Test Competition",
+    description: "Test description",
+    visibility: "OPEN" as const,
+    maxParticipants: 50,
+    dates: { type: "SEASON" as const, seasonId: "SEASON_2025" },
+    criteriaType: "MOST_GAMES_PLAYED",
+    criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+  };
+
+  test("accepts valid description", () => {
+    const result = CompetitionCreationSchema.safeParse(validInput);
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects empty description", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      description: "",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects description exceeding 500 characters", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      description: "a".repeat(501),
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toContain("cannot exceed 500");
+    }
+  });
+
+  test("accepts description at 500 character limit", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      description: "a".repeat(500),
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("trims whitespace from description", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      description: "  Test description  ",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.description).toBe("Test description");
+    }
+  });
+});
+
+describe("CompetitionCreationSchema - visibility validation", () => {
+  const validInput = {
+    serverId: "123456789012345678",
+    ownerId: "987654321098765432",
+    channelId: "111111111111111111",
+    title: "Test Competition",
+    description: "Test description",
+    visibility: "OPEN" as const,
+    maxParticipants: 50,
+    dates: { type: "SEASON" as const, seasonId: "SEASON_2025" },
+    criteriaType: "MOST_GAMES_PLAYED",
+    criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+  };
+
+  test("accepts OPEN visibility", () => {
+    const result = CompetitionCreationSchema.safeParse(validInput);
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts INVITE_ONLY visibility", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      visibility: "INVITE_ONLY",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts SERVER_WIDE visibility", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      visibility: "SERVER_WIDE",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects invalid visibility value", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      visibility: "INVALID",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("CompetitionCreationSchema - maxParticipants validation", () => {
+  const validInput = {
+    serverId: "123456789012345678",
+    ownerId: "987654321098765432",
+    channelId: "111111111111111111",
+    title: "Test Competition",
+    description: "Test description",
+    visibility: "OPEN" as const,
+    maxParticipants: 50,
+    dates: { type: "SEASON" as const, seasonId: "SEASON_2025" },
+    criteriaType: "MOST_GAMES_PLAYED",
+    criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+  };
+
+  test("accepts valid maxParticipants", () => {
+    const result = CompetitionCreationSchema.safeParse(validInput);
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts minimum maxParticipants (2)", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      maxParticipants: 2,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts maximum maxParticipants (100)", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      maxParticipants: 100,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects maxParticipants below minimum (1)", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      maxParticipants: 1,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toContain("at least 2");
+    }
+  });
+
+  test("rejects maxParticipants above maximum (101)", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      maxParticipants: 101,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toContain("cannot exceed 100");
+    }
+  });
+
+  test("rejects non-integer maxParticipants", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      maxParticipants: 50.5,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("defaults to 50 if not provided", () => {
+    const { maxParticipants: _, ...inputWithoutMax } = validInput;
+    const result = CompetitionCreationSchema.safeParse(inputWithoutMax);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.maxParticipants).toBe(50);
+    }
+  });
+});
+
+describe("CompetitionCreationSchema - criteria validation", () => {
+  const validInput = {
+    serverId: "123456789012345678",
+    ownerId: "987654321098765432",
+    channelId: "111111111111111111",
+    title: "Test Competition",
+    description: "Test description",
+    visibility: "OPEN" as const,
+    maxParticipants: 50,
+    dates: { type: "SEASON" as const, seasonId: "SEASON_2025" },
+    criteriaType: "MOST_GAMES_PLAYED",
+    criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+  };
+
+  test("accepts valid MOST_GAMES_PLAYED criteria", () => {
+    const result = CompetitionCreationSchema.safeParse(validInput);
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts valid HIGHEST_RANK criteria", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      criteriaType: "HIGHEST_RANK",
+      criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts valid MOST_WINS_CHAMPION criteria", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      criteriaType: "MOST_WINS_CHAMPION",
+      criteriaConfig: JSON.stringify({ championId: 157, queue: "SOLO" }),
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts valid HIGHEST_WIN_RATE criteria with minGames", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      criteriaType: "HIGHEST_WIN_RATE",
+      criteriaConfig: JSON.stringify({ minGames: 25, queue: "SOLO" }),
+    });
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects MOST_WINS_CHAMPION without championId", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      criteriaType: "MOST_WINS_CHAMPION",
+      criteriaConfig: JSON.stringify({ queue: "SOLO" }), // Missing championId!
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toContain(
+        "criteriaConfig must be valid JSON"
+      );
+    }
+  });
+
+  test("rejects HIGHEST_RANK with invalid queue (ARENA)", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      criteriaType: "HIGHEST_RANK",
+      criteriaConfig: JSON.stringify({ queue: "ARENA" }), // ARENA has no ranks!
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects invalid JSON in criteriaConfig", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      criteriaConfig: "not valid json",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects criteriaConfig that doesn't match criteriaType", () => {
+    const result = CompetitionCreationSchema.safeParse({
+      ...validInput,
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: JSON.stringify({ championId: 157 }), // Wrong config for this type
+    });
+    expect(result.success).toBe(false);
   });
 });

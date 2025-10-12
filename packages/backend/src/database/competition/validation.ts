@@ -1,4 +1,8 @@
 import { type PrismaClient } from "../../../generated/prisma/client/index.js";
+import {
+  CompetitionCriteriaSchema,
+  CompetitionVisibilitySchema,
+} from "@scout-for-lol/data";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 
@@ -66,8 +70,8 @@ const FixedDateCompetitionSchema = z
     const durationDays = getDurationInDays(data.startDate, data.endDate);
     if (durationDays > MAX_COMPETITION_DURATION_DAYS) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: `Competition duration cannot exceed ${MAX_COMPETITION_DURATION_DAYS} days (got ${Math.ceil(durationDays)} days)`,
+        code: "custom",
+        message: `Competition duration cannot exceed ${MAX_COMPETITION_DURATION_DAYS.toString()} days (got ${Math.ceil(durationDays).toString()} days)`,
         path: ["endDate"],
       });
     }
@@ -94,13 +98,63 @@ export const CompetitionDatesSchema = z.discriminatedUnion("type", [
 export type CompetitionDates = z.infer<typeof CompetitionDatesSchema>;
 
 /**
- * Schema for competition creation input with async database validations
+ * Schema for competition creation input with comprehensive validation
  */
-export const CompetitionCreationSchema = z.object({
-  serverId: z.string().min(1),
-  ownerId: z.string().min(1),
-  dates: CompetitionDatesSchema,
-});
+export const CompetitionCreationSchema = z
+  .object({
+    // Identity fields (Discord snowflakes - 17-19 digits)
+    serverId: z.string().regex(/^\d{17,19}$/, "Invalid Discord server ID"),
+    ownerId: z.string().regex(/^\d{17,19}$/, "Invalid Discord user ID"),
+    channelId: z.string().regex(/^\d{17,19}$/, "Invalid Discord channel ID"),
+
+    // Content fields
+    title: z
+      .string()
+      .min(1, "Title cannot be empty")
+      .max(100, "Title cannot exceed 100 characters")
+      .trim(),
+    description: z
+      .string()
+      .min(1, "Description cannot be empty")
+      .max(500, "Description cannot exceed 500 characters")
+      .trim(),
+
+    // Configuration
+    visibility: CompetitionVisibilitySchema,
+    maxParticipants: z
+      .number()
+      .int("Max participants must be an integer")
+      .min(2, "Competition must allow at least 2 participants")
+      .max(100, "Competition cannot exceed 100 participants")
+      .default(50),
+
+    // Dates (discriminated union enforces XOR)
+    dates: CompetitionDatesSchema,
+
+    // Criteria (type + config as JSON string)
+    criteriaType: z.string().min(1),
+    criteriaConfig: z.string().min(1), // JSON string
+  })
+  .refine(
+    (data) => {
+      // Validate criteriaConfig is valid JSON and matches criteriaType schema
+      try {
+        const config: unknown = JSON.parse(data.criteriaConfig);
+        if (typeof config !== "object" || config === null) {
+          return false;
+        }
+        const criteria = { type: data.criteriaType, ...config };
+        return CompetitionCriteriaSchema.safeParse(criteria).success;
+      } catch {
+        return false;
+      }
+    },
+    {
+      message:
+        "criteriaConfig must be valid JSON matching the criteriaType schema",
+      path: ["criteriaConfig"],
+    }
+  );
 
 export type CompetitionCreationInput = z.infer<
   typeof CompetitionCreationSchema
@@ -138,7 +192,7 @@ export async function validateOwnerLimit(
 
   if (activeCompetitionCount >= MAX_ACTIVE_COMPETITIONS_PER_OWNER) {
     throw new Error(
-      `You already have ${activeCompetitionCount} active competition(s). Please end or cancel your existing competition before creating a new one.`
+      `You already have ${activeCompetitionCount.toString()} active competition(s). Please end or cancel your existing competition before creating a new one.`
     );
   }
 }
@@ -168,7 +222,7 @@ export async function validateServerLimit(
 
   if (activeCompetitionCount >= MAX_ACTIVE_COMPETITIONS_PER_SERVER) {
     throw new Error(
-      `This server already has ${activeCompetitionCount} active competitions. Maximum allowed is ${MAX_ACTIVE_COMPETITIONS_PER_SERVER}.`
+      `This server already has ${activeCompetitionCount.toString()} active competitions. Maximum allowed is ${MAX_ACTIVE_COMPETITIONS_PER_SERVER.toString()}.`
     );
   }
 }
