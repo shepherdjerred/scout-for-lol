@@ -1,11 +1,7 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { match } from "ts-pattern";
 import { z } from "zod";
-import {
-  type CompetitionCriteria,
-  CompetitionQueueTypeSchema,
-  CompetitionVisibilitySchema,
-} from "@scout-for-lol/data";
+import { type CompetitionCriteria, CompetitionQueueTypeSchema, CompetitionVisibilitySchema } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import {
   type CreateCompetitionInput,
@@ -50,8 +46,7 @@ const FixedDatesArgsSchema = z
       return !isNaN(start.getTime()) && !isNaN(end.getTime());
     },
     {
-      message:
-        "Invalid date format. Use ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)",
+      message: "Invalid date format. Use ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)",
       path: ["startDate"],
     },
   );
@@ -127,17 +122,13 @@ type CreateCommandArgs = z.infer<typeof CreateCommandArgsSchema>;
 /**
  * Execute /competition create command
  */
-export async function executeCompetitionCreate(
-  interaction: ChatInputCommandInteraction,
-): Promise<void> {
+export async function executeCompetitionCreate(interaction: ChatInputCommandInteraction): Promise<void> {
   const startTime = Date.now();
   const userId = interaction.user.id;
   const username = interaction.user.username;
   const guildId = interaction.guildId;
 
-  console.log(
-    `🏆 Starting competition creation for user ${username} (${userId}) in guild ${guildId ?? "unknown"}`,
-  );
+  console.log(`🏆 Starting competition creation for user ${username} (${userId}) in guild ${guildId ?? "unknown"}`);
 
   // ============================================================================
   // Step 1: Parse and validate Discord command options
@@ -156,9 +147,7 @@ export async function executeCompetitionCreate(
     const hasSeason = seasonStr !== null;
 
     if (!hasFixedDates && !hasSeason) {
-      throw new Error(
-        "Must specify either (start-date AND end-date) OR season",
-      );
+      throw new Error("Must specify either (start-date AND end-date) OR season");
     }
     if (hasFixedDates && hasSeason) {
       throw new Error("Cannot specify both fixed dates and season");
@@ -181,14 +170,11 @@ export async function executeCompetitionCreate(
       championId: interaction.options.getInteger("champion-id") ?? undefined,
       minGames: interaction.options.getInteger("min-games") ?? undefined,
       visibility: interaction.options.getString("visibility") ?? undefined,
-      maxParticipants:
-        interaction.options.getInteger("max-participants") ?? undefined,
+      maxParticipants: interaction.options.getInteger("max-participants") ?? undefined,
     });
 
     console.log(`✅ Command arguments validated successfully`);
-    console.log(
-      `📋 Title: "${args.title}", Criteria: ${args.criteriaType}, Channel: ${args.channelId}`,
-    );
+    console.log(`📋 Title: "${args.title}", Criteria: ${args.criteriaType}, Channel: ${args.channelId}`);
   } catch (error) {
     console.error(`❌ Invalid command arguments from ${username}:`, error);
     const validationError = fromError(error);
@@ -210,19 +196,12 @@ export async function executeCompetitionCreate(
       throw new Error("Could not fetch member from guild");
     }
 
-    const permissionCheck = await canCreateCompetition(
-      prisma,
-      args.guildId,
-      userId,
-      member.permissions,
-    );
+    const permissionCheck = await canCreateCompetition(prisma, args.guildId, userId, member.permissions);
 
     if (!permissionCheck.allowed) {
-      console.warn(
-        `⚠️  Permission denied for ${username}: ${permissionCheck.reason ?? "unknown reason"}`,
-      );
+      console.warn(`⚠️  Permission denied for ${username}: ${permissionCheck.reason ?? "unknown reason"}`);
       await interaction.reply({
-        content: `**Permission denied:**\n${permissionCheck.reason}`,
+        content: `**Permission denied:**\n${permissionCheck.reason ?? "No permission"}`,
         flags: MessageFlags.Ephemeral,
       });
       return;
@@ -231,8 +210,12 @@ export async function executeCompetitionCreate(
     console.log(`✅ Permission check passed for ${username}`);
   } catch (error) {
     console.error(`❌ Permission check failed:`, error);
+    const errorMessage =
+      error && typeof error === "object" && "message" in error
+        ? String((error as { message: unknown }).message)
+        : String(error);
     await interaction.reply({
-      content: `**Error checking permissions:**\n${error instanceof Error ? error.message : String(error)}`,
+      content: `**Error checking permissions:**\n${errorMessage}`,
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -245,7 +228,7 @@ export async function executeCompetitionCreate(
   // Safe accessor - Zod validated the structure, but union types are too complex
   type QueueType = "SOLO" | "FLEX" | "RANKED_ANY" | "ARENA" | "ARAM" | "ALL";
 
-  const validated = args as {
+  const validated = args as unknown as {
     criteriaType:
       | "MOST_GAMES_PLAYED"
       | "HIGHEST_RANK"
@@ -259,33 +242,44 @@ export async function executeCompetitionCreate(
   };
 
   // Use ts-pattern for exhaustive matching
+  // Note: Zod schema guarantees required fields exist, but linter doesn't know this
   const criteria: CompetitionCriteria = match(validated.criteriaType)
-    .with("MOST_GAMES_PLAYED", () => ({
-      type: "MOST_GAMES_PLAYED" as const,
-      queue: validated.queue!,
-    }))
-    .with("HIGHEST_RANK", () => ({
-      type: "HIGHEST_RANK" as const,
-      queue: validated.queue! as "SOLO" | "FLEX",
-    }))
-    .with("MOST_RANK_CLIMB", () => ({
-      type: "MOST_RANK_CLIMB" as const,
-      queue: validated.queue! as "SOLO" | "FLEX",
-    }))
-    .with("MOST_WINS_PLAYER", () => ({
-      type: "MOST_WINS_PLAYER" as const,
-      queue: validated.queue!,
-    }))
-    .with("MOST_WINS_CHAMPION", () => ({
-      type: "MOST_WINS_CHAMPION" as const,
-      championId: validated.championId!,
-      queue: validated.queue,
-    }))
-    .with("HIGHEST_WIN_RATE", () => ({
-      type: "HIGHEST_WIN_RATE" as const,
-      minGames: validated.minGames ?? 10,
-      queue: validated.queue!,
-    }))
+    .with("MOST_GAMES_PLAYED", () => {
+      if (!validated.queue) throw new Error("queue required (validation error)");
+      return { type: "MOST_GAMES_PLAYED" as const, queue: validated.queue };
+    })
+    .with("HIGHEST_RANK", () => {
+      if (!validated.queue || (validated.queue !== "SOLO" && validated.queue !== "FLEX")) {
+        throw new Error("SOLO/FLEX queue required (validation error)");
+      }
+      return { type: "HIGHEST_RANK" as const, queue: validated.queue };
+    })
+    .with("MOST_RANK_CLIMB", () => {
+      if (!validated.queue || (validated.queue !== "SOLO" && validated.queue !== "FLEX")) {
+        throw new Error("SOLO/FLEX queue required (validation error)");
+      }
+      return { type: "MOST_RANK_CLIMB" as const, queue: validated.queue };
+    })
+    .with("MOST_WINS_PLAYER", () => {
+      if (!validated.queue) throw new Error("queue required (validation error)");
+      return { type: "MOST_WINS_PLAYER" as const, queue: validated.queue };
+    })
+    .with("MOST_WINS_CHAMPION", () => {
+      if (!validated.championId) throw new Error("championId required (validation error)");
+      return {
+        type: "MOST_WINS_CHAMPION" as const,
+        championId: validated.championId,
+        queue: validated.queue,
+      };
+    })
+    .with("HIGHEST_WIN_RATE", () => {
+      if (!validated.queue) throw new Error("queue required (validation error)");
+      return {
+        type: "HIGHEST_WIN_RATE" as const,
+        minGames: validated.minGames ?? 10,
+        queue: validated.queue,
+      };
+    })
     .exhaustive();
 
   console.log(`✅ Criteria built:`, criteria);
@@ -306,17 +300,25 @@ export async function executeCompetitionCreate(
     };
 
     // Parse dates - schema already validated format and presence
-    const dates: CreateCompetitionInput["dates"] =
-      validatedDates.dateType === "FIXED"
-        ? {
-            type: "FIXED_DATES" as const,
-            startDate: new Date(validatedDates.startDate!),
-            endDate: new Date(validatedDates.endDate!),
-          }
-        : {
-            type: "SEASON" as const,
-            seasonId: validatedDates.season!,
-          };
+    let dates: CreateCompetitionInput["dates"];
+    if (validatedDates.dateType === "FIXED") {
+      if (!validatedDates.startDate || !validatedDates.endDate) {
+        throw new Error("startDate/endDate required for FIXED (validation error)");
+      }
+      dates = {
+        type: "FIXED_DATES" as const,
+        startDate: new Date(validatedDates.startDate),
+        endDate: new Date(validatedDates.endDate),
+      };
+    } else {
+      if (!validatedDates.season) {
+        throw new Error("season required for SEASON (validation error)");
+      }
+      dates = {
+        type: "SEASON" as const,
+        seasonId: validatedDates.season,
+      };
+    }
 
     // Safe accessor for common fields
     const validatedCommon = args as {
@@ -343,8 +345,12 @@ export async function executeCompetitionCreate(
     console.log(`✅ Competition input built (fully type-safe)`);
   } catch (error) {
     console.error(`❌ Failed to build competition input:`, error);
+    const errorMessage =
+      error && typeof error === "object" && "message" in error
+        ? String((error as { message: unknown }).message)
+        : String(error);
     await interaction.reply({
-      content: `**Invalid competition data:**\n${error instanceof Error ? error.message : String(error)}`,
+      content: `**Invalid competition data:**\n${errorMessage}`,
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -367,8 +373,12 @@ export async function executeCompetitionCreate(
     console.log(`✅ Business validation passed`);
   } catch (error) {
     console.error(`❌ Business validation failed:`, error);
+    const errorMessage =
+      error && typeof error === "object" && "message" in error
+        ? String((error as { message: unknown }).message)
+        : String(error);
     await interaction.reply({
-      content: `**Validation failed:**\n${error instanceof Error ? error.message : String(error)}`,
+      content: `**Validation failed:**\n${errorMessage}`,
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -384,17 +394,13 @@ export async function executeCompetitionCreate(
     const competition = await createCompetition(prisma, competitionInput);
 
     const dbTime = Date.now() - dbStartTime;
-    console.log(
-      `✅ Competition created with ID: ${competition.id.toString()} (${dbTime.toString()}ms)`,
-    );
+    console.log(`✅ Competition created with ID: ${competition.id.toString()} (${dbTime.toString()}ms)`);
 
     // Record creation for rate limiting
     recordCreation((args as { guildId: string }).guildId, userId);
 
     const totalTime = Date.now() - startTime;
-    console.log(
-      `🎉 Competition creation completed successfully in ${totalTime.toString()}ms`,
-    );
+    console.log(`🎉 Competition creation completed successfully in ${totalTime.toString()}ms`);
 
     // ============================================================================
     // Step 7: Send success response
@@ -411,8 +417,8 @@ export async function executeCompetitionCreate(
     // Format date information
     const dateInfo =
       competition.startDate && competition.endDate
-        ? `**Starts:** <t:${Math.floor(competition.startDate.getTime() / 1000)}:F>\n**Ends:** <t:${Math.floor(competition.endDate.getTime() / 1000)}:F>`
-        : `**Season:** ${competition.seasonId}`;
+        ? `**Starts:** <t:${Math.floor(competition.startDate.getTime() / 1000).toString()}:F>\n**Ends:** <t:${Math.floor(competition.endDate.getTime() / 1000).toString()}:F>`
+        : `**Season:** ${competition.seasonId ?? "Unknown"}`;
 
     await interaction.reply({
       content: `✅ **Competition Created!**
@@ -433,8 +439,12 @@ Users can join with:
     });
   } catch (error) {
     console.error(`❌ Database error during competition creation:`, error);
+    const errorMessage =
+      error && typeof error === "object" && "message" in error
+        ? String((error as { message: unknown }).message)
+        : String(error);
     await interaction.reply({
-      content: `**Error creating competition:**\n${error instanceof Error ? error.message : String(error)}`,
+      content: `**Error creating competition:**\n${errorMessage}`,
       flags: MessageFlags.Ephemeral,
     });
   }

@@ -6,7 +6,7 @@
 declare module "twisted/dist/models-dto/index.js" {
   // eslint-disable-next-line @typescript-eslint/no-namespace -- Module augmentation requires namespace syntax
   namespace MatchV5DTOs {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- I think this needs to be an interface rather than a type, since the original is an interface
     interface ParticipantDto {
       /**
        * Player subteam ID - Arena mode specific field
