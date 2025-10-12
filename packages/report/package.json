@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",
+    "@scout-for-lol/data": "workspace:*",
     "react": "^19.0.0",
     "remeda": "^2.18.0",
     "satori": "^0.18.0",
