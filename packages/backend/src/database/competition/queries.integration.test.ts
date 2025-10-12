@@ -233,6 +233,42 @@ describe("getCompetitionsByServer", () => {
     expect(activeOnly).toHaveLength(1);
     expect(activeOnly[0]?.title).toBe("Active");
   });
+
+  test("filters by ownerId", async () => {
+    // Create competitions with different owners
+    await createCompetition(prisma, {
+      serverId: "123456789012345678",
+      ownerId: "111111111111111111",
+      channelId: "111222333444555666",
+      title: "Owner 1 Competition",
+      description: "Test",
+      visibility: "OPEN",
+      maxParticipants: 50,
+      dates: { type: "SEASON", seasonId: "S1" },
+      criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+    });
+
+    await createCompetition(prisma, {
+      serverId: "123456789012345678",
+      ownerId: "222222222222222222",
+      channelId: "111222333444555666",
+      title: "Owner 2 Competition",
+      description: "Test",
+      visibility: "OPEN",
+      maxParticipants: 50,
+      dates: { type: "SEASON", seasonId: "S2" },
+      criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+    });
+
+    const owner1Comps = await getCompetitionsByServer(
+      prisma,
+      "123456789012345678",
+      { ownerId: "111111111111111111" }
+    );
+
+    expect(owner1Comps).toHaveLength(1);
+    expect(owner1Comps[0]?.title).toBe("Owner 1 Competition");
+  });
 });
 
 // ============================================================================
@@ -285,6 +321,30 @@ describe("getActiveCompetitions", () => {
     });
 
     await cancelCompetition(prisma, created.id);
+
+    const active = await getActiveCompetitions(prisma);
+    expect(active).toHaveLength(0);
+  });
+
+  test("excludes ended competitions", async () => {
+    const now = new Date();
+
+    // Create ended competition
+    await createCompetition(prisma, {
+      serverId: "123456789012345678",
+      ownerId: "987654321098765432",
+      channelId: "111222333444555666",
+      title: "Ended",
+      description: "Test",
+      visibility: "OPEN",
+      maxParticipants: 50,
+      dates: {
+        type: "FIXED_DATES",
+        startDate: new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000),
+        endDate: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000), // Yesterday
+      },
+      criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
+    });
 
     const active = await getActiveCompetitions(prisma);
     expect(active).toHaveLength(0);

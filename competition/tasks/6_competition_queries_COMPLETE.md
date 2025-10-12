@@ -62,7 +62,7 @@ Successfully implemented type-safe database query functions for competitions wit
 ### ✅ Integration Tests
 **File**: `packages/backend/src/database/competition/queries.integration.test.ts`
 
-**11 comprehensive integration tests**:
+**13 comprehensive integration tests**:
 1. Create competition with fixed dates and MOST_GAMES_PLAYED
 2. Create competition with season ID and HIGHEST_RANK
 3. Criteria round-trips correctly with MOST_WINS_CHAMPION
@@ -70,10 +70,14 @@ Successfully implemented type-safe database query functions for competitions wit
 5. Get competition by ID (not found returns null)
 6. Get competitions by server (returns all)
 7. Get competitions by server (filters by activeOnly)
-8. Get active competitions (multiple servers)
-9. Get active competitions (excludes cancelled)
-10. Cancel competition (sets flag)
-11. Cancel competition (throws for non-existent)
+8. Get competitions by server (filters by ownerId) ⭐
+9. Get active competitions (multiple servers)
+10. Get active competitions (excludes cancelled)
+11. Get active competitions (excludes ended) ⭐
+12. Cancel competition (sets flag)
+13. Cancel competition (throws for non-existent)
+
+⭐ = Added during verification phase for complete coverage
 
 All tests use proper `CreateCompetitionInput` structure with inline criteria.
 
@@ -98,12 +102,16 @@ All tests use proper `CreateCompetitionInput` structure with inline criteria.
 ✅ No type errors
 ```
 
-### Backend Package (Integration Tests)
+### Backend Package (Competition Module Tests)
 ```
-✅ 11 tests pass
+✅ 79 tests pass across 3 files
+  - validation.test.ts: 58 tests
+  - competition.integration.test.ts: 8 tests (from Task 1)
+  - queries.integration.test.ts: 13 tests (Task 6)
 ✅ 0 failures  
 ✅ No lint errors
 ✅ No type errors
+✅ Dagger CI: Backend check passed
 ```
 
 ## Key Design Decisions
