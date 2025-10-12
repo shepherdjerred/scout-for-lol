@@ -50,6 +50,98 @@ export const CompetitionQueueTypeSchema = z.enum([
 ]);
 
 // ============================================================================
+// Competition Criteria (Discriminated Union)
+// ============================================================================
+
+/**
+ * Criteria: Most games played in specified queue
+ */
+export const MostGamesPlayedCriteriaSchema = z.object({
+  type: z.literal("MOST_GAMES_PLAYED"),
+  queue: CompetitionQueueTypeSchema,
+});
+
+export type MostGamesPlayedCriteria = z.infer<
+  typeof MostGamesPlayedCriteriaSchema
+>;
+
+/**
+ * Criteria: Highest rank achieved in SOLO or FLEX queue
+ */
+export const HighestRankCriteriaSchema = z.object({
+  type: z.literal("HIGHEST_RANK"),
+  queue: z.enum(["SOLO", "FLEX"]), // Only ranked queues
+});
+
+export type HighestRankCriteria = z.infer<typeof HighestRankCriteriaSchema>;
+
+/**
+ * Criteria: Most rank climb (LP gained) in SOLO or FLEX queue
+ */
+export const MostRankClimbCriteriaSchema = z.object({
+  type: z.literal("MOST_RANK_CLIMB"),
+  queue: z.enum(["SOLO", "FLEX"]), // Only ranked queues
+});
+
+export type MostRankClimbCriteria = z.infer<
+  typeof MostRankClimbCriteriaSchema
+>;
+
+/**
+ * Criteria: Most wins in specified queue (for a player)
+ */
+export const MostWinsPlayerCriteriaSchema = z.object({
+  type: z.literal("MOST_WINS_PLAYER"),
+  queue: CompetitionQueueTypeSchema,
+});
+
+export type MostWinsPlayerCriteria = z.infer<
+  typeof MostWinsPlayerCriteriaSchema
+>;
+
+/**
+ * Criteria: Most wins with a specific champion
+ * Queue is optional - if not specified, counts wins across all queues
+ */
+export const MostWinsChampionCriteriaSchema = z.object({
+  type: z.literal("MOST_WINS_CHAMPION"),
+  championId: z.number().int().positive(),
+  queue: CompetitionQueueTypeSchema.optional(),
+});
+
+export type MostWinsChampionCriteria = z.infer<
+  typeof MostWinsChampionCriteriaSchema
+>;
+
+/**
+ * Criteria: Highest win rate (minimum games required)
+ */
+export const HighestWinRateCriteriaSchema = z.object({
+  type: z.literal("HIGHEST_WIN_RATE"),
+  minGames: z.number().int().positive().default(10),
+  queue: CompetitionQueueTypeSchema,
+});
+
+export type HighestWinRateCriteria = z.infer<
+  typeof HighestWinRateCriteriaSchema
+>;
+
+/**
+ * Discriminated union of all competition criteria types.
+ * The 'type' field is the discriminator that allows TypeScript to narrow the type.
+ */
+export const CompetitionCriteriaSchema = z.discriminatedUnion("type", [
+  MostGamesPlayedCriteriaSchema,
+  HighestRankCriteriaSchema,
+  MostRankClimbCriteriaSchema,
+  MostWinsPlayerCriteriaSchema,
+  MostWinsChampionCriteriaSchema,
+  HighestWinRateCriteriaSchema,
+]);
+
+export type CompetitionCriteria = z.infer<typeof CompetitionCriteriaSchema>;
+
+// ============================================================================
 // Competition Status (Calculated, Not Stored)
 // ============================================================================
 
