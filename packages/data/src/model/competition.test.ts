@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   type CompetitionCriteria,
+  type RawCompetition,
   CompetitionCriteriaSchema,
   CompetitionIdSchema,
   CompetitionQueueTypeSchema,
@@ -21,6 +22,7 @@ import {
   competitionQueueTypeToString,
   getCompetitionStatus,
   getSnapshotSchemaForCriteria,
+  parseCompetition,
   participantStatusToString,
   visibilityToString,
 } from "./competition.js";
@@ -1261,5 +1263,183 @@ describe("getSnapshotSchemaForCriteria", () => {
     };
     const result = schema.safeParse(validData);
     expect(result.success).toBe(true);
+  });
+});
+
+// ============================================================================
+// parseCompetition - Database to Domain Type Conversion
+// ============================================================================
+
+describe("parseCompetition", () => {
+  const baseRawCompetition: RawCompetition = {
+    id: 42,
+    serverId: "123456789012345678",
+    ownerId: "987654321098765432",
+    title: "Test Competition",
+    description: "A test competition",
+    channelId: "111222333444555666",
+    isCancelled: false,
+    visibility: "OPEN",
+    criteriaType: "MOST_GAMES_PLAYED",
+    criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+    maxParticipants: 50,
+    startDate: new Date("2025-01-01"),
+    endDate: new Date("2025-01-31"),
+    seasonId: null,
+    creatorDiscordId: "987654321098765432",
+    createdTime: new Date("2024-12-01"),
+    updatedTime: new Date("2024-12-01"),
+  };
+
+  test("parses MOST_GAMES_PLAYED criteria correctly", () => {
+    const raw: RawCompetition = {
+      ...baseRawCompetition,
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+    };
+
+    const parsed = parseCompetition(raw);
+
+    expect(parsed.id).toBe(42);
+    expect(parsed.title).toBe("Test Competition");
+    expect(parsed.criteria).toEqual({
+      type: "MOST_GAMES_PLAYED",
+      queue: "SOLO",
+    });
+  });
+
+  test("parses HIGHEST_RANK criteria correctly", () => {
+    const raw: RawCompetition = {
+      ...baseRawCompetition,
+      criteriaType: "HIGHEST_RANK",
+      criteriaConfig: JSON.stringify({ queue: "FLEX" }),
+    };
+
+    const parsed = parseCompetition(raw);
+
+    expect(parsed.criteria).toEqual({
+      type: "HIGHEST_RANK",
+      queue: "FLEX",
+    });
+  });
+
+  test("parses MOST_WINS_CHAMPION criteria correctly", () => {
+    const raw: RawCompetition = {
+      ...baseRawCompetition,
+      criteriaType: "MOST_WINS_CHAMPION",
+      criteriaConfig: JSON.stringify({ championId: 157, queue: "SOLO" }),
+    };
+
+    const parsed = parseCompetition(raw);
+
+    expect(parsed.criteria).toEqual({
+      type: "MOST_WINS_CHAMPION",
+      championId: 157,
+      queue: "SOLO",
+    });
+  });
+
+  test("parses HIGHEST_WIN_RATE criteria with default minGames", () => {
+    const raw: RawCompetition = {
+      ...baseRawCompetition,
+      criteriaType: "HIGHEST_WIN_RATE",
+      criteriaConfig: JSON.stringify({ queue: "FLEX" }),
+    };
+
+    const parsed = parseCompetition(raw);
+
+    expect(parsed.criteria).toEqual({
+      type: "HIGHEST_WIN_RATE",
+      minGames: 10, // default value
+      queue: "FLEX",
+    });
+  });
+
+  test("preserves all original fields except criteriaType and criteriaConfig", () => {
+    const parsed = parseCompetition(baseRawCompetition);
+
+    expect(parsed.id).toBe(baseRawCompetition.id);
+    expect(parsed.serverId).toBe(baseRawCompetition.serverId);
+    expect(parsed.ownerId).toBe(baseRawCompetition.ownerId);
+    expect(parsed.title).toBe(baseRawCompetition.title);
+    expect(parsed.description).toBe(baseRawCompetition.description);
+    expect(parsed.channelId).toBe(baseRawCompetition.channelId);
+    expect(parsed.isCancelled).toBe(baseRawCompetition.isCancelled);
+    expect(parsed.visibility).toBe(baseRawCompetition.visibility);
+    expect(parsed.maxParticipants).toBe(baseRawCompetition.maxParticipants);
+    expect(parsed.startDate).toBe(baseRawCompetition.startDate);
+    expect(parsed.endDate).toBe(baseRawCompetition.endDate);
+    expect(parsed.seasonId).toBe(baseRawCompetition.seasonId);
+    expect(parsed.creatorDiscordId).toBe(baseRawCompetition.creatorDiscordId);
+    expect(parsed.createdTime).toBe(baseRawCompetition.createdTime);
+    expect(parsed.updatedTime).toBe(baseRawCompetition.updatedTime);
+
+    // Should not have these fields
+    expect("criteriaType" in parsed).toBe(false);
+    expect("criteriaConfig" in parsed).toBe(false);
+
+    // Should have criteria instead
+    expect(parsed.criteria).toBeDefined();
+  });
+
+  test("throws on invalid JSON in criteriaConfig", () => {
+    const raw: RawCompetition = {
+      ...baseRawCompetition,
+      criteriaConfig: "{ invalid json",
+    };
+
+    expect(() => parseCompetition(raw)).toThrow(/Invalid criteriaConfig JSON/);
+  });
+
+  test("throws when criteriaConfig is not an object", () => {
+    const raw: RawCompetition = {
+      ...baseRawCompetition,
+      criteriaConfig: JSON.stringify("not an object"),
+    };
+
+    expect(() => parseCompetition(raw)).toThrow(
+      /criteriaConfig must be an object/,
+    );
+  });
+
+  test("throws when criteriaConfig is null", () => {
+    const raw: RawCompetition = {
+      ...baseRawCompetition,
+      criteriaConfig: JSON.stringify(null),
+    };
+
+    expect(() => parseCompetition(raw)).toThrow(
+      /criteriaConfig must be an object/,
+    );
+  });
+
+  test("throws when criteriaType doesn't match config", () => {
+    const raw: RawCompetition = {
+      ...baseRawCompetition,
+      criteriaType: "MOST_WINS_CHAMPION",
+      criteriaConfig: JSON.stringify({ queue: "SOLO" }), // missing championId
+    };
+
+    expect(() => parseCompetition(raw)).toThrow(/Invalid criteria/);
+  });
+
+  test("throws when criteria has missing required fields", () => {
+    const raw: RawCompetition = {
+      ...baseRawCompetition,
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: JSON.stringify({}), // missing queue
+    };
+
+    expect(() => parseCompetition(raw)).toThrow(/Invalid criteria/);
+  });
+
+  test("throws when criteria has invalid queue for HIGHEST_RANK", () => {
+    const raw: RawCompetition = {
+      ...baseRawCompetition,
+      criteriaType: "HIGHEST_RANK",
+      criteriaConfig: JSON.stringify({ queue: "ARENA" }), // not SOLO/FLEX
+    };
+
+    expect(() => parseCompetition(raw)).toThrow(/Invalid criteria/);
   });
 });

@@ -244,6 +244,88 @@ export function participantStatusToString(status: ParticipantStatus): string {
 }
 
 // ============================================================================
+// Competition Parsing - Database to Domain Type
+// ============================================================================
+
+/**
+ * Raw competition data from database (Prisma model)
+ * Criteria is stored as separate type + JSON config fields
+ */
+export interface RawCompetition {
+  id: number;
+  serverId: string;
+  ownerId: string;
+  title: string;
+  description: string;
+  channelId: string;
+  isCancelled: boolean;
+  visibility: string;
+  criteriaType: string;
+  criteriaConfig: string; // JSON string
+  maxParticipants: number;
+  startDate: Date | null;
+  endDate: Date | null;
+  seasonId: string | null;
+  creatorDiscordId: string;
+  createdTime: Date;
+  updatedTime: Date;
+}
+
+/**
+ * Competition with parsed criteria (domain type)
+ * This is what we use in application code
+ */
+export interface CompetitionWithCriteria
+  extends Omit<RawCompetition, "criteriaType" | "criteriaConfig"> {
+  criteria: CompetitionCriteria;
+}
+
+/**
+ * Parse raw competition from database to domain type
+ * Validates and parses criteriaConfig JSON
+ *
+ * @throws {Error} if criteriaConfig is invalid JSON or doesn't match schema
+ */
+export function parseCompetition(raw: RawCompetition): CompetitionWithCriteria {
+  // Parse the JSON config
+  let criteriaConfig: unknown;
+  try {
+    criteriaConfig = JSON.parse(raw.criteriaConfig);
+  } catch (error) {
+    throw new Error(
+      `Invalid criteriaConfig JSON for competition ${raw.id.toString()}: ${error instanceof Error ? error.message : "unknown error"}`
+    );
+  }
+
+  // Validate it's an object
+  if (typeof criteriaConfig !== "object" || criteriaConfig === null) {
+    throw new Error(
+      `criteriaConfig must be an object for competition ${raw.id.toString()}`
+    );
+  }
+
+  // Combine type + config and validate
+  const criteriaData = {
+    type: raw.criteriaType,
+    ...criteriaConfig,
+  };
+
+  const result = CompetitionCriteriaSchema.safeParse(criteriaData);
+  if (!result.success) {
+    throw new Error(
+      `Invalid criteria for competition ${raw.id.toString()}: ${result.error.message}`
+    );
+  }
+
+  // Return domain type with parsed criteria
+  const { criteriaType: _criteriaType, criteriaConfig: _, ...rest } = raw;
+  return {
+    ...rest,
+    criteria: result.data,
+  };
+}
+
+// ============================================================================
 // Snapshot Data Schemas
 // ============================================================================
 
