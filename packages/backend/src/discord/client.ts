@@ -1,12 +1,7 @@
 import configuration from "../configuration";
 import { Client, GatewayIntentBits } from "discord.js";
 import { handleCommands } from "./commands/index";
-import {
-  discordConnectionStatus,
-  discordGuildsGauge,
-  discordUsersGauge,
-  discordLatency,
-} from "../metrics/index.js";
+import { discordConnectionStatus, discordGuildsGauge, discordUsersGauge, discordLatency } from "../metrics/index.js";
 
 console.log("🔌 Initializing Discord client");
 

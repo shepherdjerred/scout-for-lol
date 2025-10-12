@@ -6,7 +6,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { canCreateCompetition, grantPermission, hasPermission, revokePermission } from "./permissions.js";
-import { clearAllRateLimits, type recordCreation } from "./rate-limit.js";
+import { clearAllRateLimits, recordCreation } from "./rate-limit.js";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "permissions-test-"));

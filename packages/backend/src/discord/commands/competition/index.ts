@@ -1,8 +1,4 @@
-import {
-  InteractionContextType,
-  PermissionFlagsBits,
-  SlashCommandBuilder,
-} from "discord.js";
+import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { executeCompetitionCreate } from "./create.js";
 
 /**
@@ -17,11 +13,7 @@ export const competitionCommand = new SlashCommandBuilder()
       .setDescription("Create a new competition")
       // Required fields
       .addStringOption((option) =>
-        option
-          .setName("title")
-          .setDescription("Competition title (max 100 chars)")
-          .setRequired(true)
-          .setMaxLength(100),
+        option.setName("title").setDescription("Competition title (max 100 chars)").setRequired(true).setMaxLength(100),
       )
       .addStringOption((option) =>
         option
@@ -45,33 +37,23 @@ export const competitionCommand = new SlashCommandBuilder()
           ),
       )
       .addChannelOption((option) =>
-        option
-          .setName("channel")
-          .setDescription("Channel for daily leaderboard updates")
-          .setRequired(true),
+        option.setName("channel").setDescription("Channel for daily leaderboard updates").setRequired(true),
       )
       // Date options (mutually exclusive with season)
       .addStringOption((option) =>
         option
           .setName("start-date")
-          .setDescription(
-            "Start date (ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)",
-          )
+          .setDescription("Start date (ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)")
           .setRequired(false),
       )
       .addStringOption((option) =>
         option
           .setName("end-date")
-          .setDescription(
-            "End date (ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)",
-          )
+          .setDescription("End date (ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)")
           .setRequired(false),
       )
       .addStringOption((option) =>
-        option
-          .setName("season")
-          .setDescription("Season ID (alternative to fixed dates)")
-          .setRequired(false),
+        option.setName("season").setDescription("Season ID (alternative to fixed dates)").setRequired(false),
       )
       // Criteria-specific options
       .addStringOption((option) =>

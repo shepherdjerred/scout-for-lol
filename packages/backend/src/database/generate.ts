@@ -51,10 +51,7 @@ async function renameJsToCjs(dir: string) {
       content = `// @ts-nocheck\n${content}`;
 
       // update any require('.js') statements to look for .cjs
-      content = content.replace(
-        /require\(['"](.+?)\.js['"]\)/g,
-        "require('$1.cjs')",
-      );
+      content = content.replace(/require\(['"](.+?)\.js['"]\)/g, "require('$1.cjs')");
       await Bun.write(newPath, content);
     } else if (entry.isDirectory()) {
       await renameJsToCjs(fullPath);
@@ -76,14 +73,8 @@ async function updateDtsImportsAndExports(dir: string) {
     if (entry.isFile() && entry.name.endsWith(".d.ts")) {
       let content = await Bun.file(fullPath).text();
       content = `// @ts-nocheck\n${content}`;
-      content = content.replace(
-        /export \* from ['"](.+?)['"]/g,
-        (_match, p1: string) => `export * from "${p1}.d"`,
-      );
-      content = content.replace(
-        /export \* from ['"](.+?)\.js['"]/g,
-        (_match, p1: string) => `export * from "${p1}.d"`,
-      );
+      content = content.replace(/export \* from ['"](.+?)['"]/g, (_match, p1: string) => `export * from "${p1}.d"`);
+      content = content.replace(/export \* from ['"](.+?)\.js['"]/g, (_match, p1: string) => `export * from "${p1}.d"`);
       content = content.replace(
         /import (.+?) from ['"](.+?)['"]/g,
         (_match, p1: string, p2: string) => `import ${p1} from "${p2}.d"`,
@@ -92,10 +83,7 @@ async function updateDtsImportsAndExports(dir: string) {
         /import (.+?) from ['"](.+?)\.js['"]/g,
         (_match, p1: string, p2: string) => `import ${p1} from "${p2}.d"`,
       );
-      content = content.replace(
-        /from ['"](.+?)\.js\.d\.ts['"]/g,
-        (_match, p1: string) => `from "${p1}.d"`,
-      );
+      content = content.replace(/from ['"](.+?)\.js\.d\.ts['"]/g, (_match, p1: string) => `from "${p1}.d"`);
       await Bun.write(fullPath, content);
     } else if (entry.isDirectory()) {
       await updateDtsImportsAndExports(fullPath);

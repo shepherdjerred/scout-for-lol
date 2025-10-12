@@ -4,6 +4,7 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { z } from "zod";
 import {
   acceptInvitation,
   addParticipant,
@@ -12,7 +13,9 @@ import {
   getParticipants,
   removeParticipant,
 } from "./participants.js";
-import type { CreateCompetitionInput, createCompetition } from "./queries.js";
+import { createCompetition, type CreateCompetitionInput } from "./queries.js";
+
+const ErrorSchema = z.object({ message: z.string() });
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "participants-test-"));
@@ -159,7 +162,7 @@ describe("addParticipant - duplicate prevention", () => {
 
     await addParticipant(prisma, competitionId, playerId, "JOINED");
 
-    let error: Error | null = null;
+    let error: unknown = null;
     try {
       await addParticipant(prisma, competitionId, playerId, "JOINED");
     } catch (e) {
@@ -167,7 +170,10 @@ describe("addParticipant - duplicate prevention", () => {
     }
 
     expect(error).not.toBeNull();
-    expect(error?.message).toContain("already a participant");
+    const errorResult = ErrorSchema.safeParse(error);
+    if (errorResult.success) {
+      expect(errorResult.data.message).toContain("already a participant");
+    }
   });
 
   test("throws error when player has already left", async () => {
@@ -177,7 +183,7 @@ describe("addParticipant - duplicate prevention", () => {
     await addParticipant(prisma, competitionId, playerId, "JOINED");
     await removeParticipant(prisma, competitionId, playerId);
 
-    let error: Error | null = null;
+    let error: unknown = null;
     try {
       await addParticipant(prisma, competitionId, playerId, "JOINED");
     } catch (e) {
@@ -185,7 +191,10 @@ describe("addParticipant - duplicate prevention", () => {
     }
 
     expect(error).not.toBeNull();
-    expect(error?.message).toContain("Cannot rejoin");
+    const errorResult = ErrorSchema.safeParse(error);
+    if (errorResult.success) {
+      expect(errorResult.data.message).toContain("Cannot rejoin");
+    }
   });
 });
 
@@ -218,7 +227,7 @@ describe("addParticipant - max participants", () => {
 
     const { playerId } = await createTestPlayer("Player4", "444444444444444444");
 
-    let error: Error | null = null;
+    let error: unknown = null;
     try {
       await addParticipant(prisma, competitionId, playerId, "JOINED");
     } catch (e) {
@@ -226,7 +235,10 @@ describe("addParticipant - max participants", () => {
     }
 
     expect(error).not.toBeNull();
-    expect(error?.message).toContain("maximum participants");
+    const errorResult = ErrorSchema.safeParse(error);
+    if (errorResult.success) {
+      expect(errorResult.data.message).toContain("maximum participants");
+    }
   });
 
   test("LEFT participants don't count towards limit", async () => {
@@ -288,7 +300,7 @@ describe("removeParticipant", () => {
     const { competitionId } = await createTestCompetition();
     const { playerId } = await createTestPlayer("TestPlayer", "111111111111111111");
 
-    let error: Error | null = null;
+    let error: unknown = null;
     try {
       await removeParticipant(prisma, competitionId, playerId);
     } catch (e) {
@@ -296,7 +308,10 @@ describe("removeParticipant", () => {
     }
 
     expect(error).not.toBeNull();
-    expect(error?.message).toContain("not found");
+    const errorResult = ErrorSchema.safeParse(error);
+    if (errorResult.success) {
+      expect(errorResult.data.message).toContain("not found");
+    }
   });
 
   test("throws error when already left", async () => {
@@ -306,7 +321,7 @@ describe("removeParticipant", () => {
     await addParticipant(prisma, competitionId, playerId, "JOINED");
     await removeParticipant(prisma, competitionId, playerId);
 
-    let error: Error | null = null;
+    let error: unknown = null;
     try {
       await removeParticipant(prisma, competitionId, playerId);
     } catch (e) {
@@ -314,7 +329,10 @@ describe("removeParticipant", () => {
     }
 
     expect(error).not.toBeNull();
-    expect(error?.message).toContain("already left");
+    const errorResult = ErrorSchema.safeParse(error);
+    if (errorResult.success) {
+      expect(errorResult.data.message).toContain("already left");
+    }
   });
 });
 

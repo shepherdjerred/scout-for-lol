@@ -10,10 +10,7 @@ import { mapRegionToEnum } from "./region";
 const solo = "RANKED_SOLO_5x5";
 const flex = "RANKED_FLEX_SR";
 
-export function getDto(
-  dto: SummonerLeagueDto[],
-  queue: string,
-): SummonerLeagueDto | undefined {
+export function getDto(dto: SummonerLeagueDto[], queue: string): SummonerLeagueDto | undefined {
   return pipe(
     dto,
     filter((entry: SummonerLeagueDto) => entry.queueType === queue),
@@ -21,10 +18,7 @@ export function getDto(
   );
 }
 
-export function getRank(
-  dto: SummonerLeagueDto[],
-  queue: string,
-): Rank | undefined {
+export function getRank(dto: SummonerLeagueDto[], queue: string): Rank | undefined {
   const entry = getDto(dto, queue);
   if (entry == undefined) {
     return undefined;

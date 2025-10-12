@@ -1,0 +1,308 @@
+---
+globs: *.test.ts,*.integration.test.ts,*.spec.ts
+description: Testing patterns and best practices
+---
+
+# Testing Patterns
+
+## Error Testing Pattern
+
+When testing functions that should throw errors, use this pattern:
+
+```typescript
+// ✅ CORRECT:
+test("should throw error on invalid input", async () => {
+  let error: unknown = null;
+
+  try {
+    await functionThatShouldThrow(invalidInput);
+  } catch (e) {
+    error = e;
+  }
+
+  expect(error).not.toBeNull();
+
+  const ErrorSchema = z.object({ message: z.string() });
+  const errorResult = ErrorSchema.safeParse(error);
+  if (errorResult.success) {
+    expect(errorResult.data.message).toContain("expected error text");
+  }
+});
+
+// ❌ WRONG:
+test("should throw error on invalid input", async () => {
+  let error: Error | null = null;
+
+  try {
+    await functionThatShouldThrow(invalidInput);
+  } catch (e) {
+    error = e as Error;  // Type assertion!
+  }
+
+  expect(error?.message).toContain("expected error text");
+});
+```
+
+## Import Types in Tests
+
+Use proper imports for test utilities vs runtime code:
+
+```typescript
+// ✅ CORRECT:
+import { describe, test, expect, beforeEach } from "bun:test";
+import { createCompetition, type CreateCompetitionInput } from "./queries.js";
+import type { Competition } from "./types.js";
+
+// ❌ WRONG:
+import type { createCompetition } from "./queries.js";  // Function used at runtime!
+```
+
+## Test Data Patterns
+
+Create helper functions for test data:
+
+```typescript
+// ✅ CORRECT:
+function createTestUser(name: string, discordId: string) {
+  return prisma.user.create({
+    data: {
+      discordId,
+      discordUsername: name,
+      // ... other fields
+    },
+  });
+}
+
+test("user creation", async () => {
+  const user = await createTestUser("TestUser", "123456789");
+  expect(user.discordUsername).toBe("TestUser");
+});
+
+// ❌ WRONG (duplicated test data):
+test("user creation", async () => {
+  const user = await prisma.user.create({
+    data: {
+      discordId: "123456789",
+      discordUsername: "TestUser",
+      // ... repeated in every test
+    },
+  });
+});
+```
+
+## Reusable Error Schema
+
+Define the error schema once per test file:
+
+```typescript
+import { z } from "zod";
+
+const ErrorSchema = z.object({ message: z.string() });
+
+// Use throughout the file:
+test("handles error case 1", async () => {
+  let error: unknown = null;
+  try {
+    await operation1();
+  } catch (e) {
+    error = e;
+  }
+
+  const result = ErrorSchema.safeParse(error);
+  if (result.success) {
+    expect(result.data.message).toContain("error 1");
+  }
+});
+
+test("handles error case 2", async () => {
+  let error: unknown = null;
+  try {
+    await operation2();
+  } catch (e) {
+    error = e;
+  }
+
+  const result = ErrorSchema.safeParse(error);
+  if (result.success) {
+    expect(result.data.message).toContain("error 2");
+  }
+});
+```
+
+## Database Test Setup
+
+Use beforeEach for test isolation:
+
+```typescript
+let prisma: PrismaClient;
+
+beforeEach(async () => {
+  // Clear relevant tables
+  await prisma.competition.deleteMany();
+  await prisma.player.deleteMany();
+  // Reset in-memory state if needed
+  clearAllRateLimits();
+});
+
+afterEach(async () => {
+  // Cleanup if needed
+});
+```
+
+## Testing Async Functions
+
+Always await async operations and handle errors:
+
+```typescript
+// ✅ CORRECT:
+test("async operation", async () => {
+  const result = await asyncOperation();
+  expect(result).toBeDefined();
+});
+
+test("async error", async () => {
+  let error: unknown = null;
+  try {
+    await operationThatFails();
+  } catch (e) {
+    error = e;
+  }
+  expect(error).not.toBeNull();
+});
+
+// ❌ WRONG (not awaiting):
+test("async operation", () => {
+  const result = asyncOperation();  // Promise, not result!
+  expect(result).toBeDefined();
+});
+```
+
+## Testing Validation Functions
+
+Test both success and failure cases:
+
+```typescript
+describe("validation function", () => {
+  test("accepts valid input", () => {
+    const result = Schema.safeParse(validInput);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.field).toBe(expectedValue);
+    }
+  });
+
+  test("rejects invalid input", () => {
+    const result = Schema.safeParse(invalidInput);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.message).toContain("expected error");
+    }
+  });
+});
+```
+
+## Integration Test Patterns
+
+For integration tests with database:
+
+```typescript
+describe("Feature Integration", () => {
+  test("complete flow", async () => {
+    // 1. Setup
+    const user = await createTestUser("Test", "123");
+    const competition = await createTestCompetition();
+
+    // 2. Execute
+    await addParticipant(prisma, competition.id, user.id, "JOINED");
+
+    // 3. Verify
+    const participants = await getParticipants(prisma, competition.id);
+    expect(participants).toHaveLength(1);
+    expect(participants[0]?.playerId).toBe(user.id);
+
+    // 4. Verify side effects
+    const status = await getParticipantStatus(prisma, competition.id, user.id);
+    expect(status).toBe("JOINED");
+  });
+});
+```
+
+## Snapshot Testing
+
+Use snapshots for complex output:
+
+```typescript
+test("generates correct report", () => {
+  const report = generateReport(data);
+  expect(report).toMatchSnapshot();
+});
+
+// Update snapshots when output intentionally changes:
+// bun test --update-snapshots
+```
+
+## Test Organization
+
+Group related tests with describe blocks:
+
+```typescript
+describe("Feature Name", () => {
+  describe("sub-feature or method", () => {
+    test("specific behavior 1", () => {
+      // ...
+    });
+
+    test("specific behavior 2", () => {
+      // ...
+    });
+  });
+
+  describe("error cases", () => {
+    test("handles error A", async () => {
+      // ...
+    });
+
+    test("handles error B", async () => {
+      // ...
+    });
+  });
+});
+```
+
+## Test Naming
+
+Use descriptive test names that explain the behavior:
+
+```typescript
+// ✅ CORRECT:
+test("throws error when adding participant to full competition", async () => {});
+test("allows adding participant after another leaves", async () => {});
+test("returns only JOINED participants when status filter applied", async () => {});
+
+// ❌ WRONG:
+test("test 1", async () => {});
+test("works", async () => {});
+test("participant", async () => {});
+```
+
+## Avoid Test Interdependence
+
+Each test should be independent:
+
+```typescript
+// ❌ WRONG (tests depend on each other):
+test("step 1", async () => {
+  globalState.value = await setup();
+});
+
+test("step 2", async () => {
+  await process(globalState.value);  // Depends on step 1!
+});
+
+// ✅ CORRECT (independent tests):
+test("complete flow", async () => {
+  const state = await setup();
+  await process(state);
+  expect(state).toBeDefined();
+});
+```

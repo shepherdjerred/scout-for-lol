@@ -94,10 +94,7 @@ export async function createCompetition(
  * @param id - Competition ID
  * @returns Competition with parsed criteria, or null if not found
  */
-export async function getCompetitionById(
-  prisma: PrismaClient,
-  id: number,
-): Promise<CompetitionWithCriteria | null> {
+export async function getCompetitionById(prisma: PrismaClient, id: number): Promise<CompetitionWithCriteria | null> {
   const raw = await prisma.competition.findUnique({
     where: { id },
   });
@@ -154,9 +151,7 @@ export async function getCompetitionsByServer(
  * @param prisma - Prisma client instance
  * @returns Array of active competitions with parsed criteria
  */
-export async function getActiveCompetitions(
-  prisma: PrismaClient,
-): Promise<CompetitionWithCriteria[]> {
+export async function getActiveCompetitions(prisma: PrismaClient): Promise<CompetitionWithCriteria[]> {
   const now = new Date();
 
   const raw = await prisma.competition.findMany({
@@ -187,10 +182,7 @@ export async function getActiveCompetitions(
  * @returns Updated competition with parsed criteria
  * @throws {Error} if competition not found
  */
-export async function cancelCompetition(
-  prisma: PrismaClient,
-  id: number,
-): Promise<CompetitionWithCriteria> {
+export async function cancelCompetition(prisma: PrismaClient, id: number): Promise<CompetitionWithCriteria> {
   const now = new Date();
 
   const raw = await prisma.competition.update({

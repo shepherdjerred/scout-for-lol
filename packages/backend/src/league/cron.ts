@@ -2,11 +2,7 @@ import { CronJob } from "cron";
 import { checkPreMatch } from "./tasks/prematch/index";
 import { logErrors } from "./util";
 import { checkPostMatch } from "./tasks/postmatch/index";
-import {
-  cronJobExecutionsTotal,
-  cronJobDuration,
-  cronJobLastSuccess,
-} from "../metrics/index.js";
+import { cronJobExecutionsTotal, cronJobDuration, cronJobLastSuccess } from "../metrics/index.js";
 
 export function startCronJobs() {
   console.log("⏰ Initializing cron job scheduler");
@@ -24,9 +20,7 @@ export function startCronJobs() {
         await checkPreMatch();
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
-        console.log(
-          `✅ Pre-match check completed in ${executionTime.toString()}ms`,
-        );
+        console.log(`✅ Pre-match check completed in ${executionTime.toString()}ms`);
 
         // Record successful execution metrics
         cronJobExecutionsTotal.inc({ job_name: jobName, status: "success" });
@@ -63,9 +57,7 @@ export function startCronJobs() {
         await checkPostMatch();
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
-        console.log(
-          `✅ Post-match check completed in ${executionTime.toString()}ms`,
-        );
+        console.log(`✅ Post-match check completed in ${executionTime.toString()}ms`);
 
         // Record successful execution metrics
         cronJobExecutionsTotal.inc({ job_name: jobName, status: "success" });

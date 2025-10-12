@@ -7,9 +7,7 @@ export const listSubscriptionsCommand = new SlashCommandBuilder()
   .setName("listsubscriptions")
   .setDescription("Lists all users that the server is subscribed to");
 
-export async function executeListSubscriptions(
-  interaction: CommandInteraction,
-) {
+export async function executeListSubscriptions(interaction: CommandInteraction) {
   let guildId: string;
   try {
     guildId = z.string().parse(interaction.guildId);

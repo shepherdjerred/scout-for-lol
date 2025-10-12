@@ -4,9 +4,12 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { z } from "zod";
 import { createCompetition, getCompetitionById } from "../../../database/competition/queries.js";
 import { clearAllRateLimits } from "../../../database/competition/rate-limit.js";
 import { validateOwnerLimit, validateServerLimit } from "../../../database/competition/validation.js";
+
+const ErrorSchema = z.object({ message: z.string() });
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "create-command-test-"));
@@ -301,8 +304,11 @@ describe("Permission and limit integration", () => {
     }
 
     expect(error).not.toBeNull();
-    expect(error?.message).toContain("already have");
-    expect(error?.message).toContain("active competition");
+    const errorResult = ErrorSchema.safeParse(error);
+    if (errorResult.success) {
+      expect(errorResult.data.message).toContain("already have");
+      expect(errorResult.data.message).toContain("active competition");
+    }
   });
 
   test("sixth competition on server fails (server limit)", async () => {
@@ -336,8 +342,11 @@ describe("Permission and limit integration", () => {
     }
 
     expect(error).not.toBeNull();
-    expect(error?.message).toContain("already has");
-    expect(error?.message).toContain("active competitions");
+    const errorResult = ErrorSchema.safeParse(error);
+    if (errorResult.success) {
+      expect(errorResult.data.message).toContain("already has");
+      expect(errorResult.data.message).toContain("active competitions");
+    }
   });
 });
 

@@ -10,19 +10,18 @@ export function logErrors(fn: () => Promise<unknown>) {
       const startTime = Date.now();
       await fn();
       const executionTime = Date.now() - startTime;
-      console.log(
-        `✅ Function ${functionName} completed successfully in ${executionTime.toString()}ms`,
-      );
+      console.log(`✅ Function ${functionName} completed successfully in ${executionTime.toString()}ms`);
     } catch (e) {
       console.error(`❌ Function ${functionName} failed:`, e);
 
       // Log additional error context
-      if (z.instanceof(Error).safeParse(e).success) {
-        const err = e as Error;
-        console.error(`❌ Error name: ${err.name}`);
-        console.error(`❌ Error message: ${err.message}`);
-        if (err.stack) {
-          console.error(`❌ Error stack: ${err.stack}`);
+      const ErrorDetailsSchema = z.object({ name: z.string(), message: z.string(), stack: z.string().optional() });
+      const errorResult = ErrorDetailsSchema.safeParse(e);
+      if (errorResult.success) {
+        console.error(`❌ Error name: ${errorResult.data.name}`);
+        console.error(`❌ Error message: ${errorResult.data.message}`);
+        if (errorResult.data.stack) {
+          console.error(`❌ Error stack: ${errorResult.data.stack}`);
         }
       }
 

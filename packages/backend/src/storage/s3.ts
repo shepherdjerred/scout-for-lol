@@ -3,6 +3,12 @@ import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { z } from "zod";
 import configuration from "../configuration.js";
 
+const ErrorSchema = z.object({ message: z.string() });
+function getErrorMessage(error: unknown): string {
+  const result = ErrorSchema.safeParse(error);
+  return result.success ? result.data.message : String(error);
+}
+
 /**
  * Generate S3 key (path) for a match file
  */
@@ -72,8 +78,6 @@ export async function saveMatchToS3(match: MatchV5DTOs.MatchDto): Promise<void> 
     console.error(`[S3Storage] ❌ Failed to save match ${matchId} to S3:`, error);
 
     // Re-throw the error so the caller can handle it appropriately
-    throw new Error(
-      `Failed to save match ${matchId} to S3: ${z.instanceof(Error).safeParse(error).success ? error.message : String(error)}`,
-    );
+    throw new Error(`Failed to save match ${matchId} to S3: ${getErrorMessage(error)}`);
   }
 }

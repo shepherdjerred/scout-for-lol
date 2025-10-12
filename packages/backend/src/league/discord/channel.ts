@@ -12,8 +12,14 @@ export async function send(
     throw new Error("invalid channel");
   }
   const channel = fetchedChannel as unknown as TextChannel;
-  console.log(
-    `Sending message: ${z.string().safeParse(options).success ? options : "[MessagePayload/MessageCreateOptions]"}`,
-  );
+
+  // Log message info - only log string messages to avoid object stringification
+  const stringResult = z.string().safeParse(options);
+  if (stringResult.success) {
+    console.log(`Sending message: ${stringResult.data}`);
+  } else {
+    console.log("Sending message: [MessagePayload/MessageCreateOptions]");
+  }
+
   return channel.send(options);
 }

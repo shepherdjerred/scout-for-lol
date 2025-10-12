@@ -1,8 +1,5 @@
 import { type ParticipantStatus, ParticipantStatusSchema } from "@scout-for-lol/data";
-import {
-  type CompetitionParticipant,
-  type PrismaClient,
-} from "../../../generated/prisma/client/index.js";
+import { type CompetitionParticipant, type PrismaClient } from "../../../generated/prisma/client/index.js";
 import { isCompetitionActive } from "./validation.js";
 
 // ============================================================================
@@ -39,11 +36,7 @@ export async function addParticipant(
   }
 
   // Check if competition is active (not cancelled, not ended)
-  const active = isCompetitionActive(
-    competition.isCancelled,
-    competition.endDate,
-    now,
-  );
+  const active = isCompetitionActive(competition.isCancelled, competition.endDate, now);
 
   if (!active) {
     throw new Error("Cannot join an inactive competition");
@@ -58,9 +51,7 @@ export async function addParticipant(
   });
 
   if (activeParticipantCount >= competition.maxParticipants) {
-    throw new Error(
-      `Competition has reached maximum participants (${competition.maxParticipants.toString()})`,
-    );
+    throw new Error(`Competition has reached maximum participants (${competition.maxParticipants.toString()})`);
   }
 
   // Check if participant already exists
@@ -80,9 +71,7 @@ export async function addParticipant(
     }
 
     // If they're already joined or invited, this is a duplicate
-    throw new Error(
-      `Player ${playerId.toString()} is already a participant with status ${existing.status}`,
-    );
+    throw new Error(`Player ${playerId.toString()} is already a participant with status ${existing.status}`);
   }
 
   // Create the participant
@@ -131,9 +120,7 @@ export async function acceptInvitation(
   }
 
   if (participant.status !== "INVITED") {
-    throw new Error(
-      `Cannot accept invitation - current status is ${participant.status}`,
-    );
+    throw new Error(`Cannot accept invitation - current status is ${participant.status}`);
   }
 
   return await prisma.competitionParticipant.update({
@@ -303,11 +290,7 @@ export async function canJoinCompetition(
 
   // Check if competition is active
   const now = new Date();
-  const active = isCompetitionActive(
-    competition.isCancelled,
-    competition.endDate,
-    now,
-  );
+  const active = isCompetitionActive(competition.isCancelled, competition.endDate, now);
 
   if (!active) {
     if (competition.isCancelled) {

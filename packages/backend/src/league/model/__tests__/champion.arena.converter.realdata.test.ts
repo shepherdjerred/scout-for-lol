@@ -12,11 +12,9 @@ const RAW_FILE_PATHS = [
   join(currentDir, "testdata/matches_2025_09_19_NA1_5370986469.json"),
 ];
 
-async function loadParticipants(
-  path: string,
-): Promise<MatchV5DTOs.ParticipantDto[]> {
+async function loadParticipants(path: string): Promise<MatchV5DTOs.ParticipantDto[]> {
   const file = Bun.file(path);
-   
+
   const json = (await file.json()) as unknown as MatchV5DTOs.MatchDto;
   return json.info.participants;
 }
@@ -47,9 +45,7 @@ describe("participantToArenaChampion with real arena JSON", () => {
           typeof champ.teamSupport.damageShieldedOnTeammate === "number",
         ).toBe(true);
         // eslint-disable-next-line no-restricted-syntax -- Testing runtime type of healsOnTeammate
-        expect(typeof champ.teamSupport.healsOnTeammate === "number").toBe(
-          true,
-        );
+        expect(typeof champ.teamSupport.healsOnTeammate === "number").toBe(true);
       }
     }
   });

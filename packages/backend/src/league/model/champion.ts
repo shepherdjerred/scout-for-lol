@@ -1,16 +1,9 @@
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import {
-  type Champion,
-  type ArenaChampion,
-  parseLane,
-  type Augment,
-} from "@scout-for-lol/data";
+import { type Champion, type ArenaChampion, parseLane, type Augment } from "@scout-for-lol/data";
 import { mapAugmentIdsToUnion } from "../arena/augment";
 
 // Base champion conversion for traditional games
-export function participantToChampion(
-  dto: MatchV5DTOs.ParticipantDto,
-): Champion {
+export function participantToChampion(dto: MatchV5DTOs.ParticipantDto): Champion {
   if (!dto.riotIdGameName) {
     throw new Error("Missing riotIdGameName");
   }
@@ -21,15 +14,7 @@ export function participantToChampion(
     kills: dto.kills,
     deaths: dto.deaths,
     assists: dto.assists,
-    items: [
-      dto.item0,
-      dto.item1,
-      dto.item2,
-      dto.item3,
-      dto.item4,
-      dto.item5,
-      dto.item6,
-    ],
+    items: [dto.item0, dto.item1, dto.item2, dto.item3, dto.item4, dto.item5, dto.item6],
     spells: [dto.summoner1Id, dto.summoner2Id],
     // TODO: parse runes
     runes: [],
@@ -43,9 +28,7 @@ export function participantToChampion(
 }
 
 // Arena champion conversion with arena-specific fields
-export async function participantToArenaChampion(
-  dto: MatchV5DTOs.ParticipantDto,
-): Promise<ArenaChampion> {
+export async function participantToArenaChampion(dto: MatchV5DTOs.ParticipantDto): Promise<ArenaChampion> {
   const baseChampion = participantToChampion(dto);
 
   const augments = await extractAugments(dto);
@@ -61,9 +44,7 @@ export async function participantToArenaChampion(
 }
 
 // Helpers for arena-specific fields
-export async function extractAugments(
-  dto: MatchV5DTOs.ParticipantDto,
-): Promise<Augment[]> {
+export async function extractAugments(dto: MatchV5DTOs.ParticipantDto): Promise<Augment[]> {
   const ids: number[] = [];
   const augmentFields = [
     dto.playerAugment1,

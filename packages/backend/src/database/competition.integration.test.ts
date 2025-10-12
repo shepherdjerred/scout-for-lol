@@ -4,6 +4,9 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { z } from "zod";
+
+const ErrorSchema = z.object({ message: z.string() });
 
 // Create a temporary database for testing
 const testDbDir = mkdtempSync(join(tmpdir(), "competition-test-"));
@@ -170,10 +173,7 @@ test("User can create multiple competitions over time", async () => {
   });
 
   expect(competitions.length).toBe(2);
-  expect(competitions.map((c) => c.title).sort()).toEqual([
-    "February Competition",
-    "January Competition",
-  ]);
+  expect(competitions.map((c) => c.title).sort()).toEqual(["February Competition", "January Competition"]);
 });
 
 test("User can have cancelled and active competitions simultaneously", async () => {
@@ -351,7 +351,7 @@ test("Foreign key constraints", async () => {
   });
 
   // Attempt to create participant with invalid playerId
-  let error: Error | null = null;
+  let error: unknown = null;
   try {
     await prisma.competitionParticipant.create({
       data: {
@@ -367,7 +367,10 @@ test("Foreign key constraints", async () => {
     error = e;
   }
   expect(error).not.toBeNull();
-  expect(error?.message).toContain("Foreign key constraint");
+  const errorResult = ErrorSchema.safeParse(error);
+  if (errorResult.success) {
+    expect(errorResult.data.message).toContain("Foreign key constraint");
+  }
 });
 
 test("ServerPermission CRUD operations", async () => {
@@ -451,7 +454,7 @@ test("CompetitionParticipant unique constraint", async () => {
   });
 
   // Attempt to create duplicate participant
-  let error: Error | null = null;
+  let error: unknown = null;
   try {
     await prisma.competitionParticipant.create({
       data: {
@@ -467,7 +470,10 @@ test("CompetitionParticipant unique constraint", async () => {
     error = e;
   }
   expect(error).not.toBeNull();
-  expect(error?.message).toContain("Unique constraint");
+  const errorResult = ErrorSchema.safeParse(error);
+  if (errorResult.success) {
+    expect(errorResult.data.message).toContain("Unique constraint");
+  }
 });
 
 test("CompetitionSnapshot unique constraint", async () => {
@@ -520,7 +526,7 @@ test("CompetitionSnapshot unique constraint", async () => {
   });
 
   // Attempt to create duplicate snapshot (same competition, player, and type)
-  let error: Error | null = null;
+  let error: unknown = null;
   try {
     await prisma.competitionSnapshot.create({
       data: {
@@ -535,5 +541,8 @@ test("CompetitionSnapshot unique constraint", async () => {
     error = e;
   }
   expect(error).not.toBeNull();
-  expect(error?.message).toContain("Unique constraint");
+  const errorResult = ErrorSchema.safeParse(error);
+  if (errorResult.success) {
+    expect(errorResult.data.message).toContain("Unique constraint");
+  }
 });

@@ -4,10 +4,7 @@ import { executeUnsubscribe } from "./unsubscribe";
 import { executeListSubscriptions } from "./list-subscriptions";
 import { executeCompetitionCreate } from "./competition/index.js";
 import { getState } from "../../league/model/state";
-import {
-  discordCommandsTotal,
-  discordCommandDuration,
-} from "../../metrics/index.js";
+import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
 
 export function handleCommands(client: Client) {
   console.log("⚡ Setting up Discord command handlers");
@@ -33,9 +30,7 @@ export function handleCommands(client: Client) {
       if (interaction.options.data.length > 0) {
         console.log(
           `📝 Command options:`,
-          interaction.options.data
-            .map((opt) => `${opt.name}: ${String(opt.value)}`)
-            .join(", "),
+          interaction.options.data.map((opt) => `${opt.name}: ${String(opt.value)}`).join(", "),
         );
       }
 
@@ -56,9 +51,7 @@ export function handleCommands(client: Client) {
           if (subcommandName === "create") {
             await executeCompetitionCreate(interaction);
           } else {
-            console.warn(
-              `⚠️  Unknown competition subcommand: ${subcommandName}`,
-            );
+            console.warn(`⚠️  Unknown competition subcommand: ${subcommandName}`);
             await interaction.reply({
               content: "Unknown competition subcommand",
               flags: MessageFlags.Ephemeral,
@@ -88,30 +81,19 @@ export function handleCommands(client: Client) {
 
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
-        console.log(
-          `✅ Command ${commandName} completed successfully in ${executionTime.toString()}ms`,
-        );
+        console.log(`✅ Command ${commandName} completed successfully in ${executionTime.toString()}ms`);
 
         // Record successful command metrics
         discordCommandsTotal.inc({ command: commandName, status: "success" });
-        discordCommandDuration.observe(
-          { command: commandName },
-          executionTimeSeconds,
-        );
+        discordCommandDuration.observe({ command: commandName }, executionTimeSeconds);
       } catch (error) {
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
-        console.error(
-          `❌ Command ${commandName} failed after ${executionTime.toString()}ms:`,
-          error,
-        );
+        console.error(`❌ Command ${commandName} failed after ${executionTime.toString()}ms:`, error);
 
         // Record failed command metrics
         discordCommandsTotal.inc({ command: commandName, status: "error" });
-        discordCommandDuration.observe(
-          { command: commandName },
-          executionTimeSeconds,
-        );
+        discordCommandDuration.observe({ command: commandName }, executionTimeSeconds);
         console.error(
           `❌ Error details - User: ${username} (${userId}), Guild: ${String(guildId)}, Channel: ${channelId}`,
         );

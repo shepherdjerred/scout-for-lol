@@ -9,55 +9,51 @@ import { api } from "./api.js";
 import { Constants } from "twisted";
 import { filter, find, pipe } from "remeda";
 
-export async function getCurrentGame(
-  player: PlayerConfigEntry,
-): Promise<undefined | CurrentGameInfoDTO> {
+export async function getCurrentGame(player: PlayerConfigEntry): Promise<undefined | CurrentGameInfoDTO> {
   const playerAlias = player.alias;
   const playerPuuid = player.league.leagueAccount.puuid;
   const playerRegion = player.league.leagueAccount.region;
 
-  console.log(
-    `🎮 Fetching current game for player: ${playerAlias} (${playerPuuid}) in region ${playerRegion}`,
-  );
+  console.log(`🎮 Fetching current game for player: ${playerAlias} (${playerPuuid}) in region ${playerRegion}`);
 
   try {
     const startTime = Date.now();
 
-    const response = await api.SpectatorV5.activeGame(
-      playerPuuid,
-      Constants.Regions[playerRegion],
-    );
+    const response = await api.SpectatorV5.activeGame(playerPuuid, Constants.Regions[playerRegion]);
 
     const apiTime = Date.now() - startTime;
 
     if (z.instanceof(SpectatorNotAvailableDTO).safeParse(response).success) {
-      console.log(
-        `❌ Spectator API unavailable for ${playerAlias} (${apiTime.toString()}ms)`,
-      );
+      console.log(`❌ Spectator API unavailable for ${playerAlias} (${apiTime.toString()}ms)`);
       return undefined;
-    } else {
-      console.log(
-        `✅ Successfully fetched current game for ${playerAlias} (${apiTime.toString()}ms)`,
-      );
-      console.log(
-        `📊 Game info: Match ID ${response.response.gameId.toString()}, Mode: ${response.response.gameMode}, Type: ${response.response.gameType}`,
-      );
-      return response.response;
     }
+
+    // Validate the response has the expected structure
+    const GameInfoSchema = z.object({
+      gameId: z.number(),
+      gameMode: z.string(),
+      gameType: z.string(),
+    });
+
+    const ResponseSchema = z.object({ response: GameInfoSchema });
+    const validatedResponse = ResponseSchema.parse(response);
+
+    console.log(`✅ Successfully fetched current game for ${playerAlias} (${apiTime.toString()}ms)`);
+    console.log(
+      `📊 Game info: Match ID ${validatedResponse.response.gameId.toString()}, Mode: ${validatedResponse.response.gameMode}, Type: ${validatedResponse.response.gameType}`,
+    );
+    // TODO: remove type assertion
+    return response.response as unknown as CurrentGameInfoDTO;
   } catch (e) {
     console.error(`❌ Error fetching current game for ${playerAlias}:`, e);
 
     const result = z.object({ status: z.number() }).safeParse(e);
     if (result.success) {
       if (result.data.status === 404) {
-        console.log(
-          `ℹ️  Player ${playerAlias} is not currently in a game (404)`,
-        );
+        console.log(`ℹ️  Player ${playerAlias} is not currently in a game (404)`);
         return undefined;
       }
-      console.error(
-        `❌ HTTP Error ${result.data.status.toString()} for ${playerAlias}`,
-      );
+      console.error(`❌ HTTP Error ${result.data.status.toString()} for ${playerAlias}`);
     }
     throw e;
   }

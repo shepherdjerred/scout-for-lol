@@ -1,11 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import {
-  checkRateLimit,
-  clearAllRateLimits,
-  clearRateLimit,
-  getTimeRemaining,
-  recordCreation,
-} from "./rate-limit.js";
+import { checkRateLimit, clearAllRateLimits, clearRateLimit, getTimeRemaining, recordCreation } from "./rate-limit.js";
 
 // Clean up before each test
 beforeEach(() => {

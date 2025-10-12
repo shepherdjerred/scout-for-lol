@@ -19,6 +19,12 @@ import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions
 import { prisma } from "../../database/index";
 import { fromError } from "zod-validation-error";
 
+const ErrorSchema = z.object({ message: z.string() });
+function getErrorMessage(error: unknown): string {
+  const result = ErrorSchema.safeParse(error);
+  return result.success ? result.data.message : String(error);
+}
+
 export const subscribeCommand = new SlashCommandBuilder()
   .setName("subscribe")
   .setDescription("Subscribe to updates for a League of Legends account")
@@ -116,7 +122,7 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
   } catch (error) {
     console.error(`❌ Failed to resolve Riot ID ${riotId.game_name}#${riotId.tag_line}:`, error);
     await interaction.reply({
-      content: `Error looking up Riot ID: ${z.instanceof(Error).safeParse(error).success ? (error as Error).message : String(error)}`,
+      content: `Error looking up Riot ID: ${getErrorMessage(error)}`,
       ephemeral: true,
     });
     return;
@@ -209,7 +215,7 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
   } catch (error) {
     console.error(`❌ Database error during subscription:`, error);
     await interaction.reply({
-      content: `Error creating database records: ${z.instanceof(Error).safeParse(error).success ? (error as Error).message : String(error)}`,
+      content: `Error creating database records: ${getErrorMessage(error)}`,
       ephemeral: true,
     });
   }

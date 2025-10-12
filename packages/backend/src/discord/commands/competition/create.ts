@@ -1,5 +1,4 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
-import { match } from "ts-pattern";
 import { z } from "zod";
 import { type CompetitionCriteria, CompetitionQueueTypeSchema, CompetitionVisibilitySchema } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
@@ -226,46 +225,32 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     return;
   }
 
-  // Use ts-pattern for exhaustive matching
-  // Note: Zod schema guarantees required fields exist, but linter doesn't know this
-  const criteria: CompetitionCriteria = match(args.criteriaType)
-    .with("MOST_GAMES_PLAYED", () => {
-      if (!args.queue) throw new Error("queue required (validation error)");
-      return { type: "MOST_GAMES_PLAYED" as const, queue: args.queue };
-    })
-    .with("HIGHEST_RANK", () => {
-      if (!args.queue || (args.queue !== "SOLO" && args.queue !== "FLEX")) {
-        throw new Error("SOLO/FLEX queue required (validation error)");
-      }
-      return { type: "HIGHEST_RANK" as const, queue: args.queue };
-    })
-    .with("MOST_RANK_CLIMB", () => {
-      if (!args.queue || (args.queue !== "SOLO" && args.queue !== "FLEX")) {
-        throw new Error("SOLO/FLEX queue required (validation error)");
-      }
-      return { type: "MOST_RANK_CLIMB" as const, queue: args.queue };
-    })
-    .with("MOST_WINS_PLAYER", () => {
-      if (!args.queue) throw new Error("queue required (validation error)");
-      return { type: "MOST_WINS_PLAYER" as const, queue: args.queue };
-    })
-    .with("MOST_WINS_CHAMPION", () => {
-      if (!args.championId) throw new Error("championId required (validation error)");
-      return {
-        type: "MOST_WINS_CHAMPION" as const,
-        championId: args.championId,
-        queue: args.queue,
-      };
-    })
-    .with("HIGHEST_WIN_RATE", () => {
-      if (!args.queue) throw new Error("queue required (validation error)");
-      return {
-        type: "HIGHEST_WIN_RATE" as const,
-        minGames: args.minGames ?? 10,
-        queue: args.queue,
-      };
-    })
-    .exhaustive();
+  // TypeScript narrows the union based on criteriaType!
+  let criteria: CompetitionCriteria;
+
+  // TODO: use pattern matching to remove else
+  if (args.criteriaType === "MOST_GAMES_PLAYED") {
+    criteria = { type: "MOST_GAMES_PLAYED", queue: args.queue };
+  } else if (args.criteriaType === "HIGHEST_RANK") {
+    criteria = { type: "HIGHEST_RANK", queue: args.queue };
+  } else if (args.criteriaType === "MOST_RANK_CLIMB") {
+    criteria = { type: "MOST_RANK_CLIMB", queue: args.queue };
+  } else if (args.criteriaType === "MOST_WINS_PLAYER") {
+    criteria = { type: "MOST_WINS_PLAYER", queue: args.queue };
+  } else if (args.criteriaType === "MOST_WINS_CHAMPION") {
+    criteria = {
+      type: "MOST_WINS_CHAMPION",
+      championId: args.championId,
+      queue: args.queue,
+    };
+  } else {
+    // Last case: HIGHEST_WIN_RATE
+    criteria = {
+      type: "HIGHEST_WIN_RATE",
+      minGames: args.minGames ?? 10,
+      queue: args.queue,
+    };
+  }
 
   console.log(`✅ Criteria built:`, criteria);
 

@@ -30,7 +30,7 @@ export async function hasPermission(
   prisma: PrismaClient,
   serverId: string,
   userId: string,
-  permission: PermissionType
+  permission: PermissionType,
 ): Promise<boolean> {
   const record = await prisma.serverPermission.findUnique({
     where: {
@@ -60,7 +60,7 @@ export async function grantPermission(
   serverId: string,
   userId: string,
   permission: PermissionType,
-  grantedBy: string
+  grantedBy: string,
 ): Promise<void> {
   // Upsert to make this idempotent
   await prisma.serverPermission.upsert({
@@ -98,7 +98,7 @@ export async function revokePermission(
   prisma: PrismaClient,
   serverId: string,
   userId: string,
-  permission: PermissionType
+  permission: PermissionType,
 ): Promise<void> {
   // Delete if exists - idempotent (no error if not found)
   await prisma.serverPermission.deleteMany({
@@ -132,7 +132,7 @@ export async function canCreateCompetition(
   prisma: PrismaClient,
   serverId: string,
   userId: string,
-  memberPermissions: Readonly<PermissionsBitField>
+  memberPermissions: Readonly<PermissionsBitField>,
 ): Promise<PermissionCheckResult> {
   // 1. Admin bypass - always allowed
   if (memberPermissions.has(PermissionFlagsBits.Administrator)) {
@@ -140,18 +140,12 @@ export async function canCreateCompetition(
   }
 
   // 2. Check ServerPermission grant
-  const hasGrant = await hasPermission(
-    prisma,
-    serverId,
-    userId,
-    "CREATE_COMPETITION"
-  );
+  const hasGrant = await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION");
 
   if (!hasGrant) {
     return {
       allowed: false,
-      reason:
-        "Missing CREATE_COMPETITION permission. Ask a server admin to grant you permission.",
+      reason: "Missing CREATE_COMPETITION permission. Ask a server admin to grant you permission.",
     };
   }
 

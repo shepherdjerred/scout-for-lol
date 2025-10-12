@@ -12,20 +12,8 @@ import { send } from "../../discord/channel";
 import { getRanks } from "../../model/rank";
 import { getState, setState } from "../../model/state";
 import { getCurrentGame } from "../../api/index";
-import {
-  filter,
-  groupBy,
-  map,
-  mapValues,
-  pipe,
-  uniqueBy,
-  values,
-  zip,
-} from "remeda";
-import {
-  getAccounts,
-  getChannelsSubscribedToPlayers,
-} from "../../../database/index";
+import { filter, groupBy, map, mapValues, pipe, uniqueBy, values, zip } from "remeda";
+import { getAccounts, getChannelsSubscribedToPlayers } from "../../../database/index";
 
 export async function checkPreMatch() {
   console.log("=== PRE-MATCH CHECK START ===");
@@ -37,14 +25,10 @@ export async function checkPreMatch() {
 
   console.log("🎮 Filtering out players already in tracked games");
   const currentState = getState();
-  console.log(
-    `📋 Current state has ${currentState.gamesStarted.length.toString()} games in progress`,
-  );
+  console.log(`📋 Current state has ${currentState.gamesStarted.length.toString()} games in progress`);
 
   const playersNotInGame = getPlayersNotInGame(players, currentState);
-  console.log(
-    `🔍 ${playersNotInGame.length.toString()} players not in tracked games`,
-  );
+  console.log(`🔍 ${playersNotInGame.length.toString()} players not in tracked games`);
 
   if (playersNotInGame.length === 0) {
     console.log("⏸️  No players to check, skipping pre-match check");
@@ -63,19 +47,14 @@ export async function checkPreMatch() {
     zip(playerStatus),
     filter(
       // eslint-disable-next-line no-restricted-syntax -- Type guard needed for filtering undefined values
-      (pair): pair is [PlayerConfigEntry, CurrentGameInfoDTO] =>
-        pair[1] != undefined,
+      (pair): pair is [PlayerConfigEntry, CurrentGameInfoDTO] => pair[1] != undefined,
     ),
   );
 
-  console.log(
-    `🎯 Found ${playersInGame.length.toString()} players currently in games`,
-  );
+  console.log(`🎯 Found ${playersInGame.length.toString()} players currently in games`);
 
   if (playersInGame.length === 0) {
-    console.log(
-      "⏸️  No players currently in games, skipping further processing",
-    );
+    console.log("⏸️  No players currently in games, skipping further processing");
     const totalTime = Date.now() - startTime;
     console.log(`=== PRE-MATCH CHECK COMPLETE (${totalTime.toString()}ms) ===`);
     return;
@@ -90,9 +69,7 @@ export async function checkPreMatch() {
     );
 
     if (!isNewGame) {
-      console.log(
-        `⏭️  Player ${player.alias} is in already tracked game ${game.gameId.toString()}`,
-      );
+      console.log(`⏭️  Player ${player.alias} is in already tracked game ${game.gameId.toString()}`);
     }
 
     return isNewGame;
@@ -109,9 +86,7 @@ export async function checkPreMatch() {
 
   console.log("🎮 Grouping players by game and processing each game");
   const gameGroups = groupBy(newGames, ([, game]) => game.gameId);
-  console.log(
-    `📊 Processing ${Object.keys(gameGroups).length.toString()} unique games`,
-  );
+  console.log(`📊 Processing ${Object.keys(gameGroups).length.toString()} unique games`);
 
   const promises = pipe(
     gameGroups,
@@ -124,17 +99,11 @@ export async function checkPreMatch() {
       const game = games[0][1];
       const gameId = game.gameId.toString();
 
-      console.log(
-        `⚡ Processing game ${gameId} with ${players.length.toString()} players`,
-      );
-      console.log(
-        `📋 Players in game: ${players.map((p) => p.alias).join(", ")}`,
-      );
+      console.log(`⚡ Processing game ${gameId} with ${players.length.toString()} players`);
+      console.log(`📋 Players in game: ${players.map((p) => p.alias).join(", ")}`);
 
       const queueType = parseQueueType(game.gameQueueConfigId);
-      console.log(
-        `🎯 Queue type: ${queueType ?? "unknown"} (ID: ${game.gameQueueConfigId.toString()})`,
-      );
+      console.log(`🎯 Queue type: ${queueType ?? "unknown"} (ID: ${game.gameQueueConfigId.toString()})`);
 
       // record the rank of each player before the game
       console.log(`📊 Fetching ranks for ${players.length.toString()} players`);
@@ -149,9 +118,7 @@ export async function checkPreMatch() {
             console.log(`✅ Got ${queueType} rank for ${player.alias}`);
             return { player, rank: rank[queueType] };
           } else {
-            console.log(
-              `⚠️  No rank data needed for queue type ${queueType ?? "unknown"}`,
-            );
+            console.log(`⚠️  No rank data needed for queue type ${queueType ?? "unknown"}`);
             return { player, rank: undefined };
           }
         }),
@@ -176,25 +143,19 @@ export async function checkPreMatch() {
       // figure out what channels to send the message to
       console.log(`🔍 Finding subscribed channels for game ${gameId}`);
       const puuids = players.map((player) => player.league.leagueAccount.puuid);
-      console.log(
-        `📋 Looking up subscriptions for ${puuids.length.toString()} PUUIDs`,
-      );
+      console.log(`📋 Looking up subscriptions for ${puuids.length.toString()} PUUIDs`);
 
       const servers = await getChannelsSubscribedToPlayers(puuids);
       console.log(`📺 Found ${servers.length.toString()} subscribed channels`);
 
       // Deduplicate by channel (string ID) using Remeda uniqueBy
       const uniqueChannels = uniqueBy(servers, (server) => server.channel);
-      console.log(
-        `📺 After deduplication: ${uniqueChannels.length.toString()} unique channels`,
-      );
+      console.log(`📺 After deduplication: ${uniqueChannels.length.toString()} unique channels`);
 
       if (uniqueChannels.length === 0) {
         console.log(`⚠️  No channels to send message to for game ${gameId}`);
       } else {
-        console.log(
-          `📤 Sending messages to ${uniqueChannels.length.toString()} channels for game ${gameId}`,
-        );
+        console.log(`📤 Sending messages to ${uniqueChannels.length.toString()} channels for game ${gameId}`);
         const promises = uniqueChannels.map((server) => {
           console.log(`📤 Sending to channel: ${server.channel}`);
           return send(message, server.channel);
@@ -216,8 +177,6 @@ export async function checkPreMatch() {
   await Promise.all(values(promises));
 
   const totalTime = Date.now() - startTime;
-  console.log(
-    `✅ Successfully processed ${Object.keys(gameGroups).length.toString()} new games`,
-  );
+  console.log(`✅ Successfully processed ${Object.keys(gameGroups).length.toString()} new games`);
   console.log(`=== PRE-MATCH CHECK COMPLETE (${totalTime.toString()}ms) ===`);
 }
