@@ -363,11 +363,11 @@ describe("cancelCompetition", () => {
   });
 
   test("throws for non-existent competition", async () => {
-    let error: Error | null = null;
+    let error: unknown = null;
     try {
       await cancelCompetition(prisma, 99999);
     } catch (e) {
-      error = e as Error;
+      error = e;
     }
     expect(error).not.toBeNull();
   });

@@ -368,7 +368,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     console.log(`✅ Competition created with ID: ${competition.id.toString()} (${dbTime.toString()}ms)`);
 
     // Record creation for rate limiting
-    recordCreation((args as { guildId: string }).guildId, userId);
+    recordCreation(args.guildId, userId);
 
     const totalTime = Date.now() - startTime;
     console.log(`🎉 Competition creation completed successfully in ${totalTime.toString()}ms`);

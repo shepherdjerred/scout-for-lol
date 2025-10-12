@@ -140,10 +140,11 @@ export const CompetitionCreationSchema = z
       // Validate criteriaConfig is valid JSON and matches criteriaType schema
       try {
         const config: unknown = JSON.parse(data.criteriaConfig);
-        if (typeof config !== "object" || config === null) {
+        const objectResult = z.record(z.unknown()).safeParse(config);
+        if (!objectResult.success) {
           return false;
         }
-        const criteria = { type: data.criteriaType, ...config };
+        const criteria = { type: data.criteriaType, ...objectResult.data };
         return CompetitionCriteriaSchema.safeParse(criteria).success;
       } catch {
         return false;

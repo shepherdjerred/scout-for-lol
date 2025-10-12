@@ -281,8 +281,7 @@ export function parseCompetition(raw: RawCompetition): CompetitionWithCriteria {
   }
 
   // Return domain type with parsed criteria
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { criteriaType, criteriaConfig, ...rest } = raw;
+  const { criteriaType: _, criteriaConfig: __, ...rest } = raw;
   return {
     ...rest,
     criteria: result.data,

@@ -7,7 +7,7 @@ import { join } from "path";
 // clear the `generated` folder
 try {
   rmSync("./generated", { recursive: true, force: true });
-} catch (_error) {
+} catch {
   console.log("The 'generated' folder does not exist, skipping removal.");
 }
 
@@ -17,19 +17,19 @@ await $`bunx prisma generate`;
 // delete package.json, package-lock.json, and node_modules (if they exist)
 try {
   rmSync("package.json");
-} catch (_error) {
+} catch {
   console.log("package.json does not exist, skipping removal.");
 }
 
 try {
   rmSync("package-lock.json");
-} catch (_error) {
+} catch {
   console.log("package-lock.json does not exist, skipping removal.");
 }
 
 try {
   rmSync("node_modules", { recursive: true, force: true });
-} catch (_error) {
+} catch {
   console.log("node_modules does not exist, skipping removal.");
 }
 

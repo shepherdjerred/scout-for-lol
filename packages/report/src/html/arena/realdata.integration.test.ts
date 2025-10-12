@@ -7,15 +7,15 @@ import { fileURLToPath } from "url";
 import { ArenaMatchSchema } from "@scout-for-lol/data";
 import { svgToPng } from "../index.tsx";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const currentDir = dirname(fileURLToPath(import.meta.url));
 
 function hashSvg(svg: string): string {
   return createHash("sha256").update(svg).digest("hex");
 }
 
 const RAW_FILE_PATHS = [
-  join(__dirname, "testdata/1.json"),
-  join(__dirname, "testdata/2.json"),
+  join(currentDir, "testdata/1.json"),
+  join(currentDir, "testdata/2.json"),
 ];
 
 for (const path of RAW_FILE_PATHS) {

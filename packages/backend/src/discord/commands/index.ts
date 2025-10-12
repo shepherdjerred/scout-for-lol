@@ -1,7 +1,7 @@
 import { type Client, MessageFlags } from "discord.js";
 import { executeSubscribe } from "./subscribe";
 import { executeUnsubscribe } from "./unsubscribe";
-import { executeListSubscriptions } from "./listSubscriptions";
+import { executeListSubscriptions } from "./list-subscriptions";
 import { executeCompetitionCreate } from "./competition/index.js";
 import { getState } from "../../league/model/state";
 import {

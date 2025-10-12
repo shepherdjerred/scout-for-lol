@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { z } from "zod";
 
 // We'll test the schemas directly by importing them
 // Since they're not exported, we'll create minimal versions for testing validation logic
@@ -94,12 +95,12 @@ describe("Criteria type requirements", () => {
     const championId = 157; // Yasuo
 
     expect(championId).toBeGreaterThan(0);
-    expect(Number.isInteger(championId)).toBe(true);
+    expect(z.number().int().safeParse(championId).success).toBe(true);
   });
 
   test("HIGHEST_WIN_RATE requires queue and has default minGames", () => {
     const queue = "FLEX";
-    const minGames = undefined;
+    const minGames: number | undefined = undefined;
     const defaultMinGames = 10;
 
     const finalMinGames = minGames ?? defaultMinGames;
@@ -176,7 +177,7 @@ describe("Max participants validation", () => {
   });
 
   test("defaults to 50", () => {
-    const maxParticipants = undefined;
+    const maxParticipants: number | undefined = undefined;
     const defaultValue = 50;
 
     const final = maxParticipants ?? defaultValue;
@@ -195,7 +196,7 @@ describe("Visibility validation", () => {
   });
 
   test("defaults to OPEN", () => {
-    const visibility = undefined;
+    const visibility: string | undefined = undefined;
     const defaultValue = "OPEN";
 
     const final = visibility ?? defaultValue;

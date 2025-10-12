@@ -30,7 +30,7 @@ export async function getCurrentGame(
 
     const apiTime = Date.now() - startTime;
 
-    if (response instanceof SpectatorNotAvailableDTO) {
+    if (z.instanceof(SpectatorNotAvailableDTO).safeParse(response).success) {
       console.log(
         `❌ Spectator API unavailable for ${playerAlias} (${apiTime.toString()}ms)`,
       );

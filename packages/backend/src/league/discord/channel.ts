@@ -1,9 +1,5 @@
-import {
-  type Message,
-  MessageCreateOptions,
-  MessagePayload,
-  type TextChannel,
-} from "discord.js";
+import { type Message, MessageCreateOptions, MessagePayload, type TextChannel } from "discord.js";
+import { z } from "zod";
 import client from "../../discord/client";
 
 export async function send(
@@ -15,9 +11,9 @@ export async function send(
   if (!fetchedChannel) {
     throw new Error("invalid channel");
   }
-  const channel = fetchedChannel as TextChannel;
+  const channel = fetchedChannel as unknown as TextChannel;
   console.log(
-    `Sending message: ${typeof options === "string" ? options : "[MessagePayload/MessageCreateOptions]"}`,
+    `Sending message: ${z.string().safeParse(options).success ? options : "[MessagePayload/MessageCreateOptions]"}`,
   );
   return channel.send(options);
 }

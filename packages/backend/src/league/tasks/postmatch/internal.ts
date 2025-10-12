@@ -1,13 +1,8 @@
+/* eslint-disable max-lines -- Complex postmatch processing logic, will be refactored in future */
 import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { z } from "zod";
 import { api } from "../../api/api.ts";
-import {
-  AttachmentBuilder,
-  EmbedBuilder,
-  Message,
-  MessageCreateOptions,
-  MessagePayload,
-} from "discord.js";
+import { AttachmentBuilder, EmbedBuilder, Message, MessageCreateOptions, MessagePayload } from "discord.js";
 import { matchToImage, arenaMatchToImage } from "@scout-for-lol/report";
 import {
   ApplicationState,
@@ -34,9 +29,7 @@ import { toArenaMatch } from "../../model/match.ts";
 import { saveMatchToS3 } from "../../../storage/s3.ts";
 
 export async function checkMatch(game: LoadingScreenState) {
-  console.log(
-    `[checkMatch] 🔍 Starting match check for matchId: ${game.matchId.toString()}`,
-  );
+  console.log(`[checkMatch] 🔍 Starting match check for matchId: ${game.matchId.toString()}`);
   console.log(`[checkMatch] 📊 Game details:`, {
     matchId: game.matchId.toString(),
     playersCount: game.players.length,
@@ -51,9 +44,7 @@ export async function checkMatch(game: LoadingScreenState) {
       throw new Error("No players found in game");
     }
 
-    const region = mapRegionToEnum(
-      firstPlayer.player.league.leagueAccount.region,
-    );
+    const region = mapRegionToEnum(firstPlayer.player.league.leagueAccount.region);
     console.log(`[checkMatch] 🌍 Mapped region: ${region}`);
 
     const regionGroup = regionToRegionGroup(region);
@@ -77,52 +68,34 @@ export async function checkMatch(game: LoadingScreenState) {
       console.log(
         `[checkMatch] 🏁 Match finished at: ${new Date(response.response.info.gameEndTimestamp).toISOString()}`,
       );
-      console.log(
-        `[checkMatch] ⏱️  Game duration: ${response.response.info.gameDuration.toString()}s`,
-      );
+      console.log(`[checkMatch] ⏱️  Game duration: ${response.response.info.gameDuration.toString()}s`);
     }
 
     return response.response;
   } catch (e) {
-    console.error(
-      `[checkMatch] ❌ Error occurred for match ${game.matchId.toString()}:`,
-      e,
-    );
+    console.error(`[checkMatch] ❌ Error occurred for match ${game.matchId.toString()}:`, e);
     const result = z.object({ status: z.number() }).safeParse(e);
     if (result.success) {
-      console.log(
-        `[checkMatch] 🔢 HTTP status code: ${result.data.status.toString()}`,
-      );
+      console.log(`[checkMatch] 🔢 HTTP status code: ${result.data.status.toString()}`);
       if (result.data.status === 404) {
         // game not done
-        console.log(
-          `[checkMatch] ⏳ Match ${game.matchId.toString()} not finished yet (404)`,
-        );
+        console.log(`[checkMatch] ⏳ Match ${game.matchId.toString()} not finished yet (404)`);
         return undefined;
       }
       if (result.data.status === 403) {
         // Not recoverable: log and remove from queue
-        console.error(
-          `[checkMatch] 🚫 403 Forbidden for match ${game.matchId.toString()}, removing from queue`,
-        );
+        console.error(`[checkMatch] 🚫 403 Forbidden for match ${game.matchId.toString()}, removing from queue`);
         const currentState = getState();
-        const newGamesStarted = currentState.gamesStarted.filter(
-          (g) => g.matchId !== game.matchId,
-        );
+        const newGamesStarted = currentState.gamesStarted.filter((g) => g.matchId !== game.matchId);
         setState({
           ...currentState,
           gamesStarted: newGamesStarted,
         });
-        console.log(
-          `[checkMatch] 🗑️  Removed match ${game.matchId.toString()} from tracking`,
-        );
+        console.log(`[checkMatch] 🗑️  Removed match ${game.matchId.toString()} from tracking`);
         return undefined;
       }
     }
-    console.error(
-      `[checkMatch] 💥 Unhandled error for match ${game.matchId.toString()}:`,
-      e,
-    );
+    console.error(`[checkMatch] 💥 Unhandled error for match ${game.matchId.toString()}:`, e);
     return undefined;
   }
 }
@@ -142,26 +115,17 @@ export async function saveMatch(match: MatchV5DTOs.MatchDto): Promise<void> {
     // Save the match to S3
     await saveMatchToS3(match);
 
-    console.log(
-      `[saveMatch] ✅ Successfully saved match: ${match.metadata.matchId}`,
-    );
+    console.log(`[saveMatch] ✅ Successfully saved match: ${match.metadata.matchId}`);
   } catch (error) {
-    console.error(
-      `[saveMatch] ❌ Error saving match ${match.metadata.matchId}:`,
-      error,
-    );
+    console.error(`[saveMatch] ❌ Error saving match ${match.metadata.matchId}:`, error);
 
     // Don't throw the error to prevent disrupting the entire post-match flow
     // The match processing should continue even if S3 storage fails
-    console.warn(
-      `[saveMatch] ⚠️  Continuing post-match processing despite storage failure`,
-    );
+    console.warn(`[saveMatch] ⚠️  Continuing post-match processing despite storage failure`);
   }
 }
 
-async function getImage(
-  match: CompletedMatch | ArenaMatch,
-): Promise<[AttachmentBuilder, EmbedBuilder]> {
+async function getImage(match: CompletedMatch | ArenaMatch): Promise<[AttachmentBuilder, EmbedBuilder]> {
   console.log(`[getImage] 🖼️  Starting image generation for match`);
   console.log(`[getImage] 📊 Match details:`, {
     queueType: match.queueType,
@@ -171,10 +135,7 @@ async function getImage(
 
   try {
     const imageStartTime = Date.now();
-    const image =
-      match.queueType === "arena"
-        ? await arenaMatchToImage(match)
-        : await matchToImage(match);
+    const image = match.queueType === "arena" ? await arenaMatchToImage(match) : await matchToImage(match);
     const imageTime = Date.now() - imageStartTime;
 
     console.log(
@@ -186,9 +147,7 @@ async function getImage(
       console.error(`[getImage] ❌ Attachment name is null`);
       throw new Error("[getImage] Attachment name is null");
     }
-    console.log(
-      `[getImage] 📎 Attachment created with name: ${attachment.name}`,
-    );
+    console.log(`[getImage] 📎 Attachment created with name: ${attachment.name}`);
 
     const embed = {
       image: {
@@ -209,9 +168,7 @@ async function createMatchObj(
   match: MatchV5DTOs.MatchDto,
   getPlayerFn: (playerConfig: PlayerConfigEntry) => Promise<Player>,
 ) {
-  console.log(
-    `[createMatchObj] 🏗️  Starting match object creation for matchId: ${match.metadata.matchId}`,
-  );
+  console.log(`[createMatchObj] 🏗️  Starting match object creation for matchId: ${match.metadata.matchId}`);
   console.log(`[createMatchObj] 📊 State details:`, {
     playersCount: state.players.length,
     queue: state.queue,
@@ -221,19 +178,13 @@ async function createMatchObj(
 
   // Get teams using backend/model/match.ts helpers
   const getTeams = (participants: MatchV5DTOs.ParticipantDto[]) => {
-    console.log(
-      `[createMatchObj] 👥 Processing ${participants.length.toString()} participants into teams`,
-    );
+    console.log(`[createMatchObj] 👥 Processing ${participants.length.toString()} participants into teams`);
     const teams = {
       blue: pipe(participants.slice(0, 5), map(participantToChampion)),
       red: pipe(participants.slice(5, 10), map(participantToChampion)),
     };
-    console.log(
-      `[createMatchObj] 🔵 Blue team: ${teams.blue.length.toString()} players`,
-    );
-    console.log(
-      `[createMatchObj] 🔴 Red team: ${teams.red.length.toString()} players`,
-    );
+    console.log(`[createMatchObj] 🔵 Blue team: ${teams.blue.length.toString()} players`);
+    console.log(`[createMatchObj] 🔴 Red team: ${teams.red.length.toString()} players`);
     return teams;
   };
 
@@ -254,9 +205,7 @@ async function createMatchObj(
   );
 
   // Gather all relevant players
-  console.log(
-    `[createMatchObj] 👥 Processing ${state.players.length.toString()} players from loading screen`,
-  );
+  console.log(`[createMatchObj] 👥 Processing ${state.players.length.toString()} players from loading screen`);
   const players = await Promise.all(
     state.players.map(async (playerState, index) => {
       console.log(
@@ -312,13 +261,10 @@ async function createMatchObj(
       if (state.queue === "solo" || state.queue === "flex") {
         rankBeforeMatch = playerState.rank;
         rankAfterMatch = fullPlayer.ranks[state.queue];
-        console.log(
-          `[createMatchObj] 📊 Rank data for player ${(index + 1).toString()}:`,
-          {
-            before: rankBeforeMatch?.tier,
-            after: rankAfterMatch?.tier,
-          },
-        );
+        console.log(`[createMatchObj] 📊 Rank data for player ${(index + 1).toString()}:`, {
+          before: rankBeforeMatch?.tier,
+          after: rankAfterMatch?.tier,
+        });
       }
 
       const champion = participantToChampion(participant);
@@ -329,38 +275,23 @@ async function createMatchObj(
 
       const team = parseTeam(participant.teamId);
       if (!team) {
-        console.error(
-          `[createMatchObj] ❌ Could not determine team for participant:`,
-          participant,
-        );
-        throw new Error(
-          `Could not determine team for participant: ${JSON.stringify(participant)}`,
-        );
+        console.error(`[createMatchObj] ❌ Could not determine team for participant:`, participant);
+        throw new Error(`Could not determine team for participant: ${JSON.stringify(participant)}`);
       }
       const enemyTeam = invertTeam(team);
-      console.log(
-        `[createMatchObj] ⚔️  Player team: ${team}, enemy team: ${enemyTeam}`,
-      );
+      console.log(`[createMatchObj] ⚔️  Player team: ${team}, enemy team: ${enemyTeam}`);
 
       const outcome = getOutcome(participant);
-      console.log(
-        `[createMatchObj] 🎯 Match outcome for ${playerState.player.alias}: ${outcome}`,
-      );
+      console.log(`[createMatchObj] 🎯 Match outcome for ${playerState.player.alias}: ${outcome}`);
 
       const laneOpponent = getLaneOpponent(champion, teams[enemyTeam]);
-      console.log(
-        `[createMatchObj] 🥊 Lane opponent for ${playerState.player.alias}:`,
-        laneOpponent,
-      );
+      console.log(`[createMatchObj] 🥊 Lane opponent for ${playerState.player.alias}:`, laneOpponent);
 
-      console.log(
-        `[createMatchObj] ✅ Player ${(index + 1).toString()} processed:`,
-        {
-          champion: champion.championName,
-          team: team,
-          outcome: outcome,
-        },
-      );
+      console.log(`[createMatchObj] ✅ Player ${(index + 1).toString()} processed:`, {
+        champion: champion.championName,
+        team: team,
+        outcome: outcome,
+      });
 
       return {
         playerConfig: fullPlayer.config,
@@ -383,9 +314,7 @@ async function createMatchObj(
     }),
   );
 
-  console.log(
-    `[createMatchObj] ✅ Match object created successfully for matchId: ${match.metadata.matchId}`,
-  );
+  console.log(`[createMatchObj] ✅ Match object created successfully for matchId: ${match.metadata.matchId}`);
   console.log(`[createMatchObj] 📊 Final match object:`, {
     queueType: queueType,
     playersCount: players.length,
@@ -405,27 +334,19 @@ async function createMatchObj(
 export async function checkPostMatchInternal(
   state: ApplicationState,
   saveFn: (match: MatchV5DTOs.MatchDto) => Promise<void>,
-  checkFn: (
-    game: LoadingScreenState,
-  ) => Promise<MatchV5DTOs.MatchDto | undefined>,
+  checkFn: (game: LoadingScreenState) => Promise<MatchV5DTOs.MatchDto | undefined>,
   sendFn: (
     message: string | MessagePayload | MessageCreateOptions,
     channelId: string,
   ) => Promise<Message<true> | Message<false>>,
   getPlayerFn: (playerConfig: PlayerConfigEntry) => Promise<Player>,
-  getSubscriptionsFn: (
-    playerIds: LeaguePuuid[],
-  ) => Promise<{ channel: DiscordChannelId }[]>,
+  getSubscriptionsFn: (playerIds: LeaguePuuid[]) => Promise<{ channel: DiscordChannelId }[]>,
 ) {
   console.log("=== POST-MATCH CHECK START ===");
-  console.log(
-    `[checkPostMatchInternal] Found ${state.gamesStarted.length.toString()} games in progress`,
-  );
+  console.log(`[checkPostMatchInternal] Found ${state.gamesStarted.length.toString()} games in progress`);
 
   if (state.gamesStarted.length === 0) {
-    console.log(
-      "[checkPostMatchInternal] No games to check, skipping post-match processing",
-    );
+    console.log("[checkPostMatchInternal] No games to check, skipping post-match processing");
     return;
   }
 
@@ -439,18 +360,12 @@ export async function checkPostMatchInternal(
   console.log("[checkPostMatchInternal] Checking match API for all games");
   const games = await Promise.all(state.gamesStarted.map(checkFn));
 
-  console.log(
-    `[checkPostMatchInternal] API check results: ${games.length.toString()} responses`,
-  );
+  console.log(`[checkPostMatchInternal] API check results: ${games.length.toString()} responses`);
   games.forEach((game, index) => {
     if (game) {
-      console.log(
-        `[checkPostMatchInternal] Game ${(index + 1).toString()}: FINISHED - ${game.metadata.matchId}`,
-      );
+      console.log(`[checkPostMatchInternal] Game ${(index + 1).toString()}: FINISHED - ${game.metadata.matchId}`);
     } else {
-      console.log(
-        `[checkPostMatchInternal] Game ${(index + 1).toString()}: STILL IN PROGRESS or ERROR`,
-      );
+      console.log(`[checkPostMatchInternal] Game ${(index + 1).toString()}: STILL IN PROGRESS or ERROR`);
     }
   });
 
@@ -462,77 +377,51 @@ export async function checkPostMatchInternal(
       if (!firstPlayer) {
         throw new Error("No players found in game");
       }
-      const region = mapRegionToEnum(
-        firstPlayer.player.league.leagueAccount.region,
-      );
+      const region = mapRegionToEnum(firstPlayer.player.league.leagueAccount.region);
       const fullMatchId = `${region}_${game.matchId.toString()}`;
-      return [
-        game,
-        games.find((g) => g?.metadata.matchId === fullMatchId),
-      ] satisfies [LoadingScreenState, MatchV5DTOs.MatchDto | undefined];
+      return [game, games.find((g) => g?.metadata.matchId === fullMatchId)] satisfies [
+        LoadingScreenState,
+        MatchV5DTOs.MatchDto | undefined,
+      ];
     }),
-    filter(([_game, match]) => match != undefined),
+    filter(([, match]) => match != undefined),
     // this case is required to get rid of the undefined type
   ) as unknown as [LoadingScreenState, MatchV5DTOs.MatchDto][];
 
-  console.log(
-    `[checkPostMatchInternal] Found ${finishedGames.length.toString()} finished games to process`,
-  );
+  console.log(`[checkPostMatchInternal] Found ${finishedGames.length.toString()} finished games to process`);
 
   if (finishedGames.length === 0) {
-    console.log(
-      "[checkPostMatchInternal] No finished games to process, ending post-match check",
-    );
+    console.log("[checkPostMatchInternal] No finished games to process, ending post-match check");
     return;
   }
 
   // TODO: send duo queue message
-  console.log(
-    "[checkPostMatchInternal] Processing finished games and sending messages",
-  );
+  console.log("[checkPostMatchInternal] Processing finished games and sending messages");
   await Promise.all(
     map(finishedGames, async ([state, matchDto]) => {
-      console.log(
-        `[checkPostMatchInternal] Processing finished game: ${matchDto.metadata.matchId}`,
-      );
+      console.log(`[checkPostMatchInternal] Processing finished game: ${matchDto.metadata.matchId}`);
 
       try {
-        console.log(
-          `[checkPostMatchInternal] Saving match: ${matchDto.metadata.matchId}`,
-        );
+        console.log(`[checkPostMatchInternal] Saving match: ${matchDto.metadata.matchId}`);
         await saveFn(matchDto);
-        console.log(
-          `[checkPostMatchInternal] Successfully saved match: ${matchDto.metadata.matchId}`,
-        );
+        console.log(`[checkPostMatchInternal] Successfully saved match: ${matchDto.metadata.matchId}`);
 
-        console.log(
-          `[checkPostMatchInternal] Creating match object for: ${matchDto.metadata.matchId}`,
-        );
+        console.log(`[checkPostMatchInternal] Creating match object for: ${matchDto.metadata.matchId}`);
         const matchObj = await createMatchObj(state, matchDto, getPlayerFn);
-        console.log(
-          `[checkPostMatchInternal] Successfully created match object for: ${matchDto.metadata.matchId}`,
-        );
+        console.log(`[checkPostMatchInternal] Successfully created match object for: ${matchDto.metadata.matchId}`);
 
-        console.log(
-          `[checkPostMatchInternal] Generating image for: ${matchDto.metadata.matchId}`,
-        );
+        console.log(`[checkPostMatchInternal] Generating image for: ${matchDto.metadata.matchId}`);
         const [attachment, embed] = await getImage(matchObj);
-        console.log(
-          `[checkPostMatchInternal] Successfully generated image for: ${matchDto.metadata.matchId}`,
-        );
+        console.log(`[checkPostMatchInternal] Successfully generated image for: ${matchDto.metadata.matchId}`);
 
         // figure out what channels to send the message to
         // server, see if they have a player in the game
-        console.log(
-          `[checkPostMatchInternal] Getting subscriptions for match: ${matchDto.metadata.matchId}`,
-        );
+        console.log(`[checkPostMatchInternal] Getting subscriptions for match: ${matchDto.metadata.matchId}`);
         const firstPlayer = state.players[0];
         if (!firstPlayer) {
           throw new Error("No players found in game");
         }
-        const servers = await getSubscriptionsFn([
-          firstPlayer.player.league.leagueAccount.puuid,
-        ]);
+        const servers = await getSubscriptionsFn([firstPlayer.player.league.leagueAccount.puuid]);
         console.log(
           `[checkPostMatchInternal] Found ${servers.length.toString()} subscribed channels for match: ${matchDto.metadata.matchId}`,
         );
@@ -549,10 +438,7 @@ export async function checkPostMatchInternal(
             console.log(
               `[checkPostMatchInternal] Sending message to channel: ${server.channel} for match: ${matchDto.metadata.matchId}`,
             );
-            return sendFn(
-              { embeds: [embed], files: [attachment] },
-              server.channel,
-            );
+            return sendFn({ embeds: [embed], files: [attachment] }, server.channel);
           });
           await Promise.all(promises);
           console.log(
@@ -581,10 +467,7 @@ export async function checkPostMatchInternal(
           `[checkPostMatchInternal] Successfully updated state, removed ${finishedGames.length.toString()} finished games`,
         );
       } catch (error) {
-        console.error(
-          `[checkPostMatchInternal] Error processing match ${matchDto.metadata.matchId}:`,
-          error,
-        );
+        console.error(`[checkPostMatchInternal] Error processing match ${matchDto.metadata.matchId}:`, error);
         throw error; // Re-throw so it gets caught by logErrors
       }
     }),

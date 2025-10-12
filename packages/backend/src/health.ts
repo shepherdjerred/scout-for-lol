@@ -1,4 +1,5 @@
 import { strict as assert } from "assert";
+import { z } from "zod";
 import configuration from "./configuration.js";
 
 console.log("🏥 Starting health check");
@@ -24,9 +25,10 @@ try {
 } catch (error) {
   console.error("❌ Health check failed:", error);
 
-  if (error instanceof Error) {
-    console.error(`❌ Error name: ${error.name}`);
-    console.error(`❌ Error message: ${error.message}`);
+  if (z.instanceof(Error).safeParse(error).success) {
+    const err = error as Error;
+    console.error(`❌ Error name: ${err.name}`);
+    console.error(`❌ Error message: ${err.message}`);
   }
 
   process.exit(1);

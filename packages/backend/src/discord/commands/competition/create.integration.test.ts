@@ -4,8 +4,9 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { createCompetition, getCompetitionById } from "../../../database/competition/queries.js";
+import { createCompetition, getCompetitionById } from "../../../database/competition/queries.js";
 import { clearAllRateLimits } from "../../../database/competition/rate-limit.js";
+import { validateOwnerLimit, validateServerLimit } from "../../../database/competition/validation.js";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "create-command-test-"));
@@ -292,14 +293,11 @@ describe("Permission and limit integration", () => {
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
-    // Try to create second competition
-    const { validateOwnerLimit } = await import("../../../database/competition/index.js");
-
-    let error: Error | null = null;
+    let error: unknown = null;
     try {
       await validateOwnerLimit(prisma, "123456789012345678", ownerId);
     } catch (e) {
-      error = e as Error;
+      error = e;
     }
 
     expect(error).not.toBeNull();
@@ -330,14 +328,11 @@ describe("Permission and limit integration", () => {
       });
     }
 
-    // Try to create 6th competition
-    const { validateServerLimit } = await import("../../../database/competition/index.js");
-
-    let error: Error | null = null;
+    let error: unknown = null;
     try {
       await validateServerLimit(prisma, serverId);
     } catch (e) {
-      error = e as Error;
+      error = e;
     }
 
     expect(error).not.toBeNull();

@@ -62,6 +62,7 @@ export async function checkPreMatch() {
     playersNotInGame,
     zip(playerStatus),
     filter(
+      // eslint-disable-next-line no-restricted-syntax -- Type guard needed for filtering undefined values
       (pair): pair is [PlayerConfigEntry, CurrentGameInfoDTO] =>
         pair[1] != undefined,
     ),
@@ -107,7 +108,7 @@ export async function checkPreMatch() {
   }
 
   console.log("🎮 Grouping players by game and processing each game");
-  const gameGroups = groupBy(newGames, ([_player, game]) => game.gameId);
+  const gameGroups = groupBy(newGames, ([, game]) => game.gameId);
   console.log(
     `📊 Processing ${Object.keys(gameGroups).length.toString()} unique games`,
   );
@@ -119,7 +120,7 @@ export async function checkPreMatch() {
         throw new Error("No games found in group");
       }
 
-      const players = map(games, ([player, _game]) => player);
+      const players = map(games, ([player]) => player);
       const game = games[0][1];
       const gameId = game.gameId.toString();
 
