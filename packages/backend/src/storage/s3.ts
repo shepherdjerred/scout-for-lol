@@ -73,7 +73,7 @@ export async function saveMatchToS3(match: MatchV5DTOs.MatchDto): Promise<void> 
 
     // Re-throw the error so the caller can handle it appropriately
     throw new Error(
-      `Failed to save match ${matchId} to S3: ${z.instanceof(Error).safeParse(error).success ? (error as Error).message : String(error)}`,
+      `Failed to save match ${matchId} to S3: ${z.instanceof(Error).safeParse(error).success ? error.message : String(error)}`,
     );
   }
 }

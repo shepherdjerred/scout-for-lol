@@ -116,7 +116,7 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
   } catch (error) {
     console.error(`❌ Failed to resolve Riot ID ${riotId.game_name}#${riotId.tag_line}:`, error);
     await interaction.reply({
-      content: `Error looking up Riot ID: ${z.instanceof(Error).safeParse(error).success ? (error as unknown as Error).message : String(error)}`,
+      content: `Error looking up Riot ID: ${z.instanceof(Error).safeParse(error).success ? (error as Error).message : String(error)}`,
       ephemeral: true,
     });
     return;
@@ -209,7 +209,7 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
   } catch (error) {
     console.error(`❌ Database error during subscription:`, error);
     await interaction.reply({
-      content: `Error creating database records: ${z.instanceof(Error).safeParse(error).success ? (error as unknown as Error).message : String(error)}`,
+      content: `Error creating database records: ${z.instanceof(Error).safeParse(error).success ? (error as Error).message : String(error)}`,
       ephemeral: true,
     });
   }

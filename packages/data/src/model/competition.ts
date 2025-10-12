@@ -264,7 +264,7 @@ export function parseCompetition(raw: RawCompetition): CompetitionWithCriteria {
   }
 
   // Validate it's an object using Zod
-  const objectResult = z.record(z.unknown()).safeParse(criteriaConfig);
+  const objectResult = z.record(z.string(), z.unknown()).safeParse(criteriaConfig);
   if (!objectResult.success) {
     throw new Error(`criteriaConfig must be an object for competition ${raw.id.toString()}`);
   }
@@ -281,9 +281,8 @@ export function parseCompetition(raw: RawCompetition): CompetitionWithCriteria {
   }
 
   // Return domain type with parsed criteria
-  const { criteriaType: _, criteriaConfig: __, ...rest } = raw;
   return {
-    ...rest,
+    ...raw,
     criteria: result.data,
   };
 }

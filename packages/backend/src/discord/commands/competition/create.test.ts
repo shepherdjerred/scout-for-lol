@@ -79,9 +79,7 @@ describe("Criteria type requirements", () => {
     const queue = "SOLO";
 
     expect(queue).toBeDefined();
-    expect(["SOLO", "FLEX", "RANKED_ANY", "ARENA", "ARAM", "ALL"]).toContain(
-      queue,
-    );
+    expect(["SOLO", "FLEX", "RANKED_ANY", "ARENA", "ARAM", "ALL"]).toContain(queue);
   });
 
   test("HIGHEST_RANK requires queue to be SOLO or FLEX", () => {
@@ -100,10 +98,9 @@ describe("Criteria type requirements", () => {
 
   test("HIGHEST_WIN_RATE requires queue and has default minGames", () => {
     const queue = "FLEX";
-    const minGames: number | undefined = undefined;
     const defaultMinGames = 10;
 
-    const finalMinGames = minGames ?? defaultMinGames;
+    const finalMinGames = defaultMinGames;
 
     expect(queue).toBeDefined();
     expect(finalMinGames).toBe(10);
@@ -177,10 +174,9 @@ describe("Max participants validation", () => {
   });
 
   test("defaults to 50", () => {
-    const maxParticipants: number | undefined = undefined;
     const defaultValue = 50;
 
-    const final = maxParticipants ?? defaultValue;
+    const final = defaultValue;
 
     expect(final).toBe(50);
   });
@@ -196,10 +192,9 @@ describe("Visibility validation", () => {
   });
 
   test("defaults to OPEN", () => {
-    const visibility: string | undefined = undefined;
     const defaultValue = "OPEN";
 
-    const final = visibility ?? defaultValue;
+    const final = defaultValue;
 
     expect(final).toBe("OPEN");
   });

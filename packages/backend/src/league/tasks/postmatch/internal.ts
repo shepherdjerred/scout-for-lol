@@ -1,4 +1,4 @@
-/* eslint-disable max-lines -- Complex postmatch processing logic, will be refactored in future */
+ 
 import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { z } from "zod";
 import { api } from "../../api/api.ts";

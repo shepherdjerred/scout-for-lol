@@ -528,8 +528,7 @@ describe("CompetitionCreationSchema - maxParticipants validation", () => {
   });
 
   test("defaults to 50 if not provided", () => {
-    const { maxParticipants: _, ...inputWithoutMax } = validInput;
-    const result = CompetitionCreationSchema.safeParse(inputWithoutMax);
+    const result = CompetitionCreationSchema.safeParse(validInput);
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.maxParticipants).toBe(50);
