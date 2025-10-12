@@ -1,5 +1,6 @@
 import { match } from "ts-pattern";
 import { z } from "zod";
+import { RankSchema } from "./rank.js";
 
 // ============================================================================
 // Branded ID Types
@@ -83,9 +84,7 @@ export const MostRankClimbCriteriaSchema = z.object({
   queue: z.enum(["SOLO", "FLEX"]), // Only ranked queues
 });
 
-export type MostRankClimbCriteria = z.infer<
-  typeof MostRankClimbCriteriaSchema
->;
+export type MostRankClimbCriteria = z.infer<typeof MostRankClimbCriteriaSchema>;
 
 /**
  * Criteria: Most wins in specified queue (for a player)
@@ -198,7 +197,7 @@ export function getCompetitionStatus(competition: {
 
   // Invalid state: no dates and no seasonId
   throw new Error(
-    "Competition must have either (startDate AND endDate) OR seasonId",
+    "Competition must have either (startDate AND endDate) OR seasonId"
   );
 }
 
@@ -210,7 +209,7 @@ export function getCompetitionStatus(competition: {
  * Format queue type to human-readable string
  */
 export function competitionQueueTypeToString(
-  queueType: CompetitionQueueType,
+  queueType: CompetitionQueueType
 ): string {
   return match(queueType)
     .with("SOLO", () => "Solo Queue")
@@ -241,5 +240,76 @@ export function participantStatusToString(status: ParticipantStatus): string {
     .with("INVITED", () => "Invited")
     .with("JOINED", () => "Joined")
     .with("LEFT", () => "Left")
+    .exhaustive();
+}
+
+// ============================================================================
+// Snapshot Data Schemas
+// ============================================================================
+
+/**
+ * Rank data for snapshot - captures tier, division, and LP for solo/flex
+ *
+ * Uses existing RankSchema for consistency and to leverage existing utilities:
+ * - tier: lowercase enum ("iron", "bronze", "gold", etc.)
+ * - division: numeric 1-4 (4=IV, 3=III, 2=II, 1=I)
+ * - lp: league points (0-100 for most ranks, unlimited for Master+)
+ * - wins/losses: included for additional statistics
+ *
+ * Note: When fetching from Riot API, convert:
+ * - API tier "GOLD" → "gold"
+ * - API rank "II" → division 2
+ */
+export type RankSnapshotData = z.infer<typeof RankSnapshotDataSchema>;
+export const RankSnapshotDataSchema = z.object({
+  soloRank: RankSchema.optional(),
+  flexRank: RankSchema.optional(),
+});
+
+/**
+ * Games played data for snapshot - captures game counts per queue
+ */
+export type GamesPlayedSnapshotData = z.infer<
+  typeof GamesPlayedSnapshotDataSchema
+>;
+export const GamesPlayedSnapshotDataSchema = z.object({
+  soloGames: z.number().int().nonnegative().optional(),
+  flexGames: z.number().int().nonnegative().optional(),
+  arenaGames: z.number().int().nonnegative().optional(),
+  aramGames: z.number().int().nonnegative().optional(),
+});
+
+/**
+ * Wins data for snapshot - captures wins and total games, optionally per champion/queue
+ */
+export type WinsSnapshotData = z.infer<typeof WinsSnapshotDataSchema>;
+export const WinsSnapshotDataSchema = z.object({
+  wins: z.number().int().nonnegative(),
+  games: z.number().int().nonnegative(),
+  championId: z.number().int().positive().optional(),
+  queue: CompetitionQueueTypeSchema.optional(),
+});
+
+// ============================================================================
+// Snapshot Schema Factory
+// ============================================================================
+
+/**
+ * Returns the appropriate snapshot schema based on criteria type.
+ * Uses exhaustive pattern matching to ensure all criteria types are handled.
+ */
+export function getSnapshotSchemaForCriteria(
+  criteria: CompetitionCriteria
+):
+  | typeof RankSnapshotDataSchema
+  | typeof GamesPlayedSnapshotDataSchema
+  | typeof WinsSnapshotDataSchema {
+  return match(criteria)
+    .with({ type: "HIGHEST_RANK" }, () => RankSnapshotDataSchema)
+    .with({ type: "MOST_RANK_CLIMB" }, () => RankSnapshotDataSchema)
+    .with({ type: "MOST_GAMES_PLAYED" }, () => GamesPlayedSnapshotDataSchema)
+    .with({ type: "MOST_WINS_PLAYER" }, () => WinsSnapshotDataSchema)
+    .with({ type: "MOST_WINS_CHAMPION" }, () => WinsSnapshotDataSchema)
+    .with({ type: "HIGHEST_WIN_RATE" }, () => WinsSnapshotDataSchema)
     .exhaustive();
 }

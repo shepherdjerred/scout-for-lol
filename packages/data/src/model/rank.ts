@@ -8,7 +8,7 @@ export type Rank = z.infer<typeof RankSchema>;
 export const RankSchema = z.strictObject({
   division: DivisionSchema,
   tier: TierSchema,
-  lp: z.number().nonnegative().max(100),
+  lp: z.number().nonnegative(), // No max - Master+ can have LP > 100
   wins: z.number().nonnegative(),
   losses: z.number().nonnegative(),
 });

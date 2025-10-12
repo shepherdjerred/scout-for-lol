@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import {
+  type CompetitionCriteria,
   CompetitionCriteriaSchema,
   CompetitionIdSchema,
   CompetitionQueueTypeSchema,
   CompetitionVisibilitySchema,
+  GamesPlayedSnapshotDataSchema,
   HighestRankCriteriaSchema,
   HighestWinRateCriteriaSchema,
   MostGamesPlayedCriteriaSchema,
@@ -13,9 +15,12 @@ import {
   ParticipantIdSchema,
   ParticipantStatusSchema,
   PermissionTypeSchema,
+  RankSnapshotDataSchema,
   SnapshotTypeSchema,
+  WinsSnapshotDataSchema,
   competitionQueueTypeToString,
   getCompetitionStatus,
+  getSnapshotSchemaForCriteria,
   participantStatusToString,
   visibilityToString,
 } from "./competition.js";
@@ -813,5 +818,448 @@ describe("CompetitionCriteria discriminated union", () => {
     if (criteria3.type === "HIGHEST_WIN_RATE") {
       expect(criteria3.minGames).toBe(10); // default value
     }
+  });
+});
+
+// ============================================================================
+// Snapshot Data Schemas
+// ============================================================================
+
+describe("RankSnapshotDataSchema", () => {
+  test("accepts valid solo rank data", () => {
+    const data = {
+      soloRank: {
+        tier: "diamond",
+        division: 2, // II
+        lp: 67,
+        wins: 50,
+        losses: 45,
+      },
+    };
+    const result = RankSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts valid flex rank data", () => {
+    const data = {
+      flexRank: {
+        tier: "gold",
+        division: 1, // I
+        lp: 0,
+        wins: 20,
+        losses: 18,
+      },
+    };
+    const result = RankSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts both ranks together", () => {
+    const data = {
+      soloRank: {
+        tier: "platinum",
+        division: 3, // III
+        lp: 45,
+        wins: 100,
+        losses: 95,
+      },
+      flexRank: {
+        tier: "diamond",
+        division: 4, // IV
+        lp: 12,
+        wins: 30,
+        losses: 25,
+      },
+    };
+    const result = RankSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts empty object (both ranks optional)", () => {
+    const data = {};
+    const result = RankSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects negative LP", () => {
+    const data = {
+      soloRank: {
+        tier: "gold",
+        division: 2,
+        lp: -10,
+        wins: 50,
+        losses: 45,
+      },
+    };
+    const result = RankSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects invalid tier", () => {
+    const data = {
+      soloRank: {
+        tier: "INVALID_TIER",
+        division: 2,
+        lp: 45,
+        wins: 50,
+        losses: 45,
+      },
+    };
+    const result = RankSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects invalid division (0)", () => {
+    const data = {
+      soloRank: {
+        tier: "gold",
+        division: 0,
+        lp: 50,
+        wins: 50,
+        losses: 45,
+      },
+    };
+    const result = RankSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects invalid division (5)", () => {
+    const data = {
+      soloRank: {
+        tier: "gold",
+        division: 5,
+        lp: 50,
+        wins: 50,
+        losses: 45,
+      },
+    };
+    const result = RankSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects missing required fields", () => {
+    const data = {
+      soloRank: {
+        tier: "gold",
+        division: 2,
+        // missing lp, wins, losses
+      },
+    };
+    const result = RankSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(false);
+  });
+
+  test("accepts Master tier with high LP", () => {
+    const data = {
+      soloRank: {
+        tier: "master",
+        division: 1,
+        lp: 500, // Master+ can have LP > 100
+        wins: 200,
+        losses: 180,
+      },
+    };
+    const result = RankSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("GamesPlayedSnapshotDataSchema", () => {
+  test("accepts valid games data with all queues", () => {
+    const data = {
+      soloGames: 50,
+      flexGames: 25,
+      arenaGames: 10,
+      aramGames: 100,
+    };
+    const result = GamesPlayedSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts games data with some queues", () => {
+    const data = {
+      soloGames: 30,
+      arenaGames: 5,
+    };
+    const result = GamesPlayedSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts empty object (all queues optional)", () => {
+    const data = {};
+    const result = GamesPlayedSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts zero games", () => {
+    const data = {
+      soloGames: 0,
+      flexGames: 0,
+      arenaGames: 0,
+      aramGames: 0,
+    };
+    const result = GamesPlayedSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects negative games", () => {
+    const data = {
+      soloGames: -5,
+      flexGames: 10,
+    };
+    const result = GamesPlayedSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects non-integer games", () => {
+    const data = {
+      soloGames: 10.5,
+      flexGames: 20,
+    };
+    const result = GamesPlayedSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("WinsSnapshotDataSchema", () => {
+  test("accepts valid wins data", () => {
+    const data = {
+      wins: 30,
+      games: 50,
+    };
+    const result = WinsSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts wins without championId", () => {
+    const data = {
+      wins: 15,
+      games: 25,
+      queue: "SOLO",
+    };
+    const result = WinsSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts wins with championId", () => {
+    const data = {
+      wins: 8,
+      games: 12,
+      championId: 157,
+      queue: "FLEX",
+    };
+    const result = WinsSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts wins = games (100% win rate)", () => {
+    const data = {
+      wins: 20,
+      games: 20,
+    };
+    const result = WinsSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+
+  test("accepts wins = 0", () => {
+    const data = {
+      wins: 0,
+      games: 10,
+    };
+    const result = WinsSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects negative wins", () => {
+    const data = {
+      wins: -5,
+      games: 20,
+    };
+    const result = WinsSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects negative games", () => {
+    const data = {
+      wins: 10,
+      games: -20,
+    };
+    const result = WinsSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects non-integer wins", () => {
+    const data = {
+      wins: 10.5,
+      games: 20,
+    };
+    const result = WinsSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects missing wins field", () => {
+    const data = {
+      games: 50,
+    };
+    const result = WinsSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(false);
+  });
+
+  test("rejects missing games field", () => {
+    const data = {
+      wins: 30,
+    };
+    const result = WinsSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(false);
+  });
+
+  test("accepts wins > games at schema level (validation happens elsewhere)", () => {
+    // Schema doesn't enforce wins <= games, that's business logic
+    const data = {
+      wins: 60,
+      games: 50,
+    };
+    const result = WinsSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(true);
+  });
+
+  test("rejects zero or negative championId", () => {
+    const data1 = {
+      wins: 5,
+      games: 10,
+      championId: 0,
+    };
+    expect(WinsSnapshotDataSchema.safeParse(data1).success).toBe(false);
+
+    const data2 = {
+      wins: 5,
+      games: 10,
+      championId: -1,
+    };
+    expect(WinsSnapshotDataSchema.safeParse(data2).success).toBe(false);
+  });
+
+  test("rejects invalid queue type", () => {
+    const data = {
+      wins: 10,
+      games: 20,
+      queue: "INVALID_QUEUE",
+    };
+    const result = WinsSnapshotDataSchema.safeParse(data);
+    expect(result.success).toBe(false);
+  });
+});
+
+// ============================================================================
+// Snapshot Schema Factory
+// ============================================================================
+
+describe("getSnapshotSchemaForCriteria", () => {
+  test("returns RankSnapshotDataSchema for HIGHEST_RANK", () => {
+    const criteria: CompetitionCriteria = {
+      type: "HIGHEST_RANK",
+      queue: "SOLO",
+    };
+    const schema = getSnapshotSchemaForCriteria(criteria);
+    expect(schema).toBe(RankSnapshotDataSchema);
+  });
+
+  test("returns RankSnapshotDataSchema for MOST_RANK_CLIMB", () => {
+    const criteria: CompetitionCriteria = {
+      type: "MOST_RANK_CLIMB",
+      queue: "FLEX",
+    };
+    const schema = getSnapshotSchemaForCriteria(criteria);
+    expect(schema).toBe(RankSnapshotDataSchema);
+  });
+
+  test("returns GamesPlayedSnapshotDataSchema for MOST_GAMES_PLAYED", () => {
+    const criteria: CompetitionCriteria = {
+      type: "MOST_GAMES_PLAYED",
+      queue: "RANKED_ANY",
+    };
+    const schema = getSnapshotSchemaForCriteria(criteria);
+    expect(schema).toBe(GamesPlayedSnapshotDataSchema);
+  });
+
+  test("returns WinsSnapshotDataSchema for MOST_WINS_PLAYER", () => {
+    const criteria: CompetitionCriteria = {
+      type: "MOST_WINS_PLAYER",
+      queue: "ARENA",
+    };
+    const schema = getSnapshotSchemaForCriteria(criteria);
+    expect(schema).toBe(WinsSnapshotDataSchema);
+  });
+
+  test("returns WinsSnapshotDataSchema for MOST_WINS_CHAMPION", () => {
+    const criteria: CompetitionCriteria = {
+      type: "MOST_WINS_CHAMPION",
+      championId: 157,
+    };
+    const schema = getSnapshotSchemaForCriteria(criteria);
+    expect(schema).toBe(WinsSnapshotDataSchema);
+  });
+
+  test("returns WinsSnapshotDataSchema for HIGHEST_WIN_RATE", () => {
+    const criteria: CompetitionCriteria = {
+      type: "HIGHEST_WIN_RATE",
+      minGames: 10,
+      queue: "SOLO",
+    };
+    const schema = getSnapshotSchemaForCriteria(criteria);
+    expect(schema).toBe(WinsSnapshotDataSchema);
+  });
+
+  test("factory returns working schema - HIGHEST_RANK", () => {
+    const criteria: CompetitionCriteria = {
+      type: "HIGHEST_RANK",
+      queue: "SOLO",
+    };
+    const schema = getSnapshotSchemaForCriteria(criteria);
+
+    const validData = {
+      soloRank: {
+        tier: "gold",
+        division: 2, // II
+        lp: 45,
+        wins: 50,
+        losses: 45,
+      },
+    };
+    const result = schema.safeParse(validData);
+    expect(result.success).toBe(true);
+  });
+
+  test("factory returns working schema - MOST_GAMES_PLAYED", () => {
+    const criteria: CompetitionCriteria = {
+      type: "MOST_GAMES_PLAYED",
+      queue: "ALL",
+    };
+    const schema = getSnapshotSchemaForCriteria(criteria);
+
+    const validData = {
+      soloGames: 50,
+      flexGames: 25,
+    };
+    const result = schema.safeParse(validData);
+    expect(result.success).toBe(true);
+  });
+
+  test("factory returns working schema - MOST_WINS_CHAMPION", () => {
+    const criteria: CompetitionCriteria = {
+      type: "MOST_WINS_CHAMPION",
+      championId: 157,
+      queue: "SOLO",
+    };
+    const schema = getSnapshotSchemaForCriteria(criteria);
+
+    const validData = {
+      wins: 20,
+      games: 30,
+      championId: 157,
+      queue: "SOLO",
+    };
+    const result = schema.safeParse(validData);
+    expect(result.success).toBe(true);
   });
 });
