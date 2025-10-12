@@ -2,6 +2,21 @@
 
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
+import unicorn from "eslint-plugin-unicorn";
+
+/**
+ * Bridge typescript-eslint rule to ESLint plugin system
+ *
+ * Type assertion required: @typescript-eslint/utils RuleContext includes extra methods
+ * (getAncestors, getDeclaredVariables, getScope, markVariableAsUsed) that base ESLint
+ * RuleContext doesn't have. At runtime, typescript-eslint provides a compatible context,
+ * but TypeScript sees the types as incompatible. The rule works correctly at runtime.
+ */
+const customRulesPlugin = {
+  rules: {
+    "zod-schema-naming": zodSchemaNaming,
+  },
+};
 
 export default tseslint.config(
   eslint.configs.recommended,
@@ -17,15 +32,153 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
+  },
+  {
     rules: {
-      "@typescript-eslint/no-unused-vars": [
+      "max-lines": [
+        "error",
+        { max: 1000, skipBlankLines: false, skipComments: false },
+      ],
+      "@typescript-eslint/consistent-type-definitions": ["error", "type"],
+      "@typescript-eslint/no-non-null-assertion": "error",
+      "@typescript-eslint/consistent-type-assertions": [
         "error",
         {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
+          assertionStyle: "as",
+          objectLiteralTypeAssertions: "never",
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "UnaryExpression[operator='typeof']",
+          message:
+            "Prefer Zod schema validation over typeof operator. Use z.string(), z.number(), etc. instead.",
+        },
+        {
+          selector:
+            "CallExpression[callee.object.name='Array'][callee.property.name='isArray']",
+          message:
+            "Prefer Zod schema validation over Array.isArray(). Use z.array() instead.",
+        },
+        {
+          selector: "BinaryExpression[operator='instanceof']",
+          message:
+            "Prefer Zod schema validation over instanceof operator. Use appropriate z.instanceof() or custom Zod schemas instead.",
+        },
+        {
+          selector:
+            "CallExpression[callee.object.name='Number'][callee.property.name='isInteger']",
+          message:
+            "Prefer Zod schema validation over Number.isInteger(). Use z.number().int() instead.",
+        },
+        {
+          selector:
+            "CallExpression[callee.object.name='Number'][callee.property.name='isNaN']",
+          message:
+            "Prefer Zod schema validation over Number.isNaN(). Use z.number() with proper error handling instead.",
+        },
+        {
+          selector:
+            "CallExpression[callee.object.name='Number'][callee.property.name='isFinite']",
+          message:
+            "Prefer Zod schema validation over Number.isFinite(). Use z.number().finite() instead.",
+        },
+        {
+          selector: "TSTypePredicate",
+          message:
+            "Prefer Zod schema validation over type guard functions. Use z.schema.safeParse() instead of custom type guards.",
+        },
+        {
+          selector:
+            "TSTypeAssertion:not([typeAnnotation.type='TSUnknownKeyword'])",
+          message:
+            "Type assertions are not allowed except for casting to 'unknown'. Use 'value as unknown' if you need to cast to unknown, otherwise use Zod schema validation.",
+        },
+        {
+          selector:
+            "TSAsExpression:not([typeAnnotation.type='TSUnknownKeyword']):not([typeAnnotation.type='TSTypeReference'][typeAnnotation.typeName.name='const'])",
+          message:
+            "Type assertions are not allowed except for casting to 'unknown' or 'as const'. Use 'value as unknown' if you need to cast to unknown, 'value as const' for const assertions, otherwise use Zod schema validation.",
         },
       ],
     },
   },
+  // File naming conventions
+  {
+    plugins: {
+      unicorn,
+    },
+    rules: {
+      "unicorn/filename-case": [
+        "error",
+        {
+          case: "kebabCase",
+        },
+      ],
+    },
+  },
+  // Custom rules for Zod schema naming
+  {
+    plugins: {
+      "custom-rules": customRulesPlugin,
+    },
+    rules: {
+      "custom-rules/zod-schema-naming": "error",
+    },
+  },
+  // Variable and identifier naming conventions
+  {
+    rules: {
+      "@typescript-eslint/naming-convention": [
+        "error",
+        // Functions: camelCase
+        {
+          selector: "function",
+          format: ["camelCase"],
+          leadingUnderscore: "allow",
+          trailingUnderscore: "allow",
+        },
+        // Constants: UPPER_SNAKE_CASE or camelCase (excluding *Schema variables - handled by custom rule)
+        {
+          selector: "variable",
+          modifiers: ["const"],
+          filter: {
+            regex: "Schema$",
+            match: false,
+          },
+          format: ["camelCase", "UPPER_CASE"],
+          leadingUnderscore: "allow",
+          trailingUnderscore: "allow",
+        },
+        // All other variables: camelCase (excluding *Schema variables - handled by custom rule)
+        {
+          selector: "variable",
+          filter: {
+            regex: "Schema$",
+            match: false,
+          },
+          format: ["camelCase"],
+          leadingUnderscore: "allow",
+          trailingUnderscore: "allow",
+        },
+        // Parameters: camelCase
+        {
+          selector: "parameter",
+          format: ["camelCase"],
+          leadingUnderscore: "allow",
+        },
+        // Types, interfaces, classes: PascalCase
+        {
+          selector: ["typeLike"],
+          format: ["PascalCase"],
+        },
+        // Enum members: PascalCase or UPPER_CASE
+        {
+          selector: "enumMember",
+          format: ["PascalCase", "UPPER_CASE"],
+        },
+      ],
+    },
+  }
 );

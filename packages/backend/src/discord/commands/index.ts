@@ -2,6 +2,7 @@ import { type Client, MessageFlags } from "discord.js";
 import { executeSubscribe } from "./subscribe";
 import { executeUnsubscribe } from "./unsubscribe";
 import { executeListSubscriptions } from "./listSubscriptions";
+import { executeCompetitionCreate } from "./competition/index.js";
 import { getState } from "../../league/model/state";
 import {
   discordCommandsTotal,
@@ -25,7 +26,7 @@ export function handleCommands(client: Client) {
       const channelId = interaction.channelId;
 
       console.log(
-        `📥 Command received: ${commandName} from ${username} (${userId}) in guild ${guildId ?? "DM"} channel ${channelId}`,
+        `📥 Command received: ${commandName} from ${username} (${userId}) in guild ${guildId ?? "DM"} channel ${channelId}`
       );
 
       // Log command options if any
@@ -34,7 +35,7 @@ export function handleCommands(client: Client) {
           `📝 Command options:`,
           interaction.options.data
             .map((opt) => `${opt.name}: ${String(opt.value)}`)
-            .join(", "),
+            .join(", ")
         );
       }
 
@@ -48,6 +49,21 @@ export function handleCommands(client: Client) {
         } else if (commandName === "listsubscriptions") {
           console.log("📋 Executing list subscriptions command");
           await executeListSubscriptions(interaction);
+        } else if (commandName === "competition") {
+          const subcommandName = interaction.options.getSubcommand();
+          console.log(`🏆 Executing competition ${subcommandName} command`);
+
+          if (subcommandName === "create") {
+            await executeCompetitionCreate(interaction);
+          } else {
+            console.warn(
+              `⚠️  Unknown competition subcommand: ${subcommandName}`
+            );
+            await interaction.reply({
+              content: "Unknown competition subcommand",
+              flags: MessageFlags.Ephemeral,
+            });
+          }
         } else if (commandName === "debug") {
           console.log("🐛 Executing debug command");
           const state = getState();
@@ -73,31 +89,31 @@ export function handleCommands(client: Client) {
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
         console.log(
-          `✅ Command ${commandName} completed successfully in ${executionTime.toString()}ms`,
+          `✅ Command ${commandName} completed successfully in ${executionTime.toString()}ms`
         );
 
         // Record successful command metrics
         discordCommandsTotal.inc({ command: commandName, status: "success" });
         discordCommandDuration.observe(
           { command: commandName },
-          executionTimeSeconds,
+          executionTimeSeconds
         );
       } catch (error) {
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
         console.error(
           `❌ Command ${commandName} failed after ${executionTime.toString()}ms:`,
-          error,
+          error
         );
 
         // Record failed command metrics
         discordCommandsTotal.inc({ command: commandName, status: "error" });
         discordCommandDuration.observe(
           { command: commandName },
-          executionTimeSeconds,
+          executionTimeSeconds
         );
         console.error(
-          `❌ Error details - User: ${username} (${userId}), Guild: ${String(guildId)}, Channel: ${channelId}`,
+          `❌ Error details - User: ${username} (${userId}), Guild: ${String(guildId)}, Channel: ${channelId}`
         );
 
         if (interaction.replied || interaction.deferred) {
