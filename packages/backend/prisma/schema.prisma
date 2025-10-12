@@ -24,11 +24,13 @@ model Subscription {
 }
 
 model Player {
-  id            Int            @id @default(autoincrement())
-  alias         String
-  discordId     String?
-  accounts      Account[]
-  subscriptions Subscription[]
+  id                       Int                       @id @default(autoincrement())
+  alias                    String
+  discordId                String?
+  accounts                 Account[]
+  subscriptions            Subscription[]
+  competitionParticipants  CompetitionParticipant[]
+  competitionSnapshots     CompetitionSnapshot[]
 
   // metadata
   serverId         String
@@ -54,4 +56,81 @@ model Account {
   updatedTime      DateTime
 
   @@unique([serverId, puuid])
+}
+
+model Competition {
+  id               Int                       @id @default(autoincrement())
+  serverId         String
+  ownerId          String // Discord user ID
+  title            String
+  description      String
+  channelId        String
+  isCancelled      Boolean                   @default(false)
+  visibility       String // OPEN, INVITE_ONLY, SERVER_WIDE
+  criteriaType     String // Enum stored as string
+  criteriaConfig   String // JSON stored as string
+  maxParticipants  Int                       @default(50)
+
+  // Time configuration (XOR: either fixed dates OR season)
+  startDate        DateTime?
+  endDate          DateTime?
+  seasonId         String?
+
+  // Relations
+  participants     CompetitionParticipant[]
+  snapshots        CompetitionSnapshot[]
+
+  // Metadata
+  creatorDiscordId String
+  createdTime      DateTime
+  updatedTime      DateTime
+
+  // Note: We do NOT have a unique constraint on [serverId, ownerId]
+  // This allows users to create multiple competitions over time
+  // The "one active competition per owner" rule is enforced in application logic
+  @@index([serverId, isCancelled])
+  @@index([serverId, ownerId, isCancelled])
+}
+
+model CompetitionParticipant {
+  id            Int         @id @default(autoincrement())
+  competitionId Int
+  playerId      Int
+  status        String // INVITED, JOINED, LEFT
+  invitedBy     String? // Discord user ID (nullable)
+  joinedAt      DateTime
+  leftAt        DateTime?
+
+  // Relations
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  player        Player      @relation(fields: [playerId], references: [id])
+
+  @@unique([competitionId, playerId])
+  @@index([competitionId, status])
+}
+
+model CompetitionSnapshot {
+  id           Int         @id @default(autoincrement())
+  competitionId Int
+  playerId     Int
+  snapshotType String // START, END
+  snapshotData String // JSON stored as string
+  snapshotTime DateTime
+
+  // Relations
+  competition  Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  player       Player      @relation(fields: [playerId], references: [id])
+
+  @@unique([competitionId, playerId, snapshotType])
+}
+
+model ServerPermission {
+  id            Int      @id @default(autoincrement())
+  serverId      String
+  discordUserId String
+  permission    String // CREATE_COMPETITION (can add more later)
+  grantedBy     String // Discord user ID
+  grantedAt     DateTime
+
+  @@unique([serverId, discordUserId, permission])
 }
