@@ -37,7 +37,7 @@ export function renderItem(item: number) {
 export function renderItems(
   items: number[],
   visionScore: number,
-  isArena = false
+  isArena = false,
 ) {
   const mainItems = pipe(items, take(6), map(renderItem));
 
@@ -45,7 +45,7 @@ export function renderItems(
   const visionItem = match([lastItem, isArena])
     .with([undefined, false], () => {
       throw new Error(
-        `Last item must exist in normal games: ${items.toString()}`
+        `Last item must exist in normal games: ${items.toString()}`,
       );
     })
     .with([P.any, true], () => {

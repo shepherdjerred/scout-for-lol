@@ -16,7 +16,7 @@ export function renderChampion(
   champion: Champion,
   highlight: boolean,
   durationInMinutes: number,
-  damageMax: number
+  damageMax: number,
 ) {
   const items = renderItems(champion.items, champion.visionScore, false);
 
@@ -25,8 +25,8 @@ export function renderChampion(
   const summs = map(champion.spells, (spell) => {
     const name = first(
       keys(
-        pickBy(summoner.data, (summoner) => summoner.key === spell.toString())
-      )
+        pickBy(summoner.data, (summoner) => summoner.key === spell.toString()),
+      ),
     );
 
     if (name === undefined) {

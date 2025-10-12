@@ -25,7 +25,7 @@ export function startCronJobs() {
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
         console.log(
-          `✅ Pre-match check completed in ${executionTime.toString()}ms`
+          `✅ Pre-match check completed in ${executionTime.toString()}ms`,
         );
 
         // Record successful execution metrics
@@ -46,7 +46,7 @@ export function startCronJobs() {
     true,
     "America/Los_Angeles",
     undefined,
-    true
+    true,
   );
 
   // check match status every minute, offset by 30 seconds
@@ -64,7 +64,7 @@ export function startCronJobs() {
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
         console.log(
-          `✅ Post-match check completed in ${executionTime.toString()}ms`
+          `✅ Post-match check completed in ${executionTime.toString()}ms`,
         );
 
         // Record successful execution metrics
@@ -85,7 +85,7 @@ export function startCronJobs() {
     true,
     "America/Los_Angeles",
     undefined,
-    true
+    true,
   );
 
   console.log("✅ Cron jobs initialized successfully");

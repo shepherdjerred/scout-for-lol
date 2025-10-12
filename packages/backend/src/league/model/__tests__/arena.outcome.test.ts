@@ -3,7 +3,7 @@ import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { getArenaPlacement } from "../match.js";
 
 function makeParticipant(
-  extra: Record<string, unknown> = {}
+  extra: Record<string, unknown> = {},
 ): MatchV5DTOs.ParticipantDto {
   return {
     puuid: crypto.randomUUID(),

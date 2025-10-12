@@ -62,9 +62,10 @@ const server = Bun.serve({
   },
 });
 
-console.log(`✅ HTTP server started on http://0.0.0.0:${server.port}`);
-console.log(`🏥 Health check: http://0.0.0.0:${server.port}/ping`);
-console.log(`📊 Metrics endpoint: http://0.0.0.0:${server.port}/metrics`);
+const port = server.port?.toString() ?? "unknown";
+console.log(`✅ HTTP server started on http://0.0.0.0:${port}`);
+console.log(`🏥 Health check: http://0.0.0.0:${port}/ping`);
+console.log(`📊 Metrics endpoint: http://0.0.0.0:${port}/metrics`);
 
 /**
  * Gracefully shut down the HTTP server
@@ -76,4 +77,3 @@ export async function shutdownHttpServer(): Promise<void> {
 }
 
 export default server;
-

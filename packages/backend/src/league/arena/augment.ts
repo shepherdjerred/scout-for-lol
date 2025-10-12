@@ -36,7 +36,7 @@ export async function initArenaAugmentsOnce(): Promise<
     const res = await fetch(ARENA_AUGMENTS_URL, { cache: "force-cache" });
     if (!res.ok) {
       throw new Error(
-        `Failed to fetch Arena augments: ${res.status.toString()} ${res.statusText}`
+        `Failed to fetch Arena augments: ${res.status.toString()} ${res.statusText}`,
       );
     }
     const data = await res.json();
@@ -57,8 +57,8 @@ export async function initArenaAugmentsOnce(): Promise<
               rarity: rarityFromNumber(a.rarity),
               type: "full",
             },
-          ] as const
-      )
+          ] as const,
+      ),
     );
     return augmentMapCache;
   })();
@@ -75,7 +75,7 @@ export async function getArenaAugmentMap(): Promise<Map<number, FullAugment>> {
 }
 
 export async function mapAugmentIdsToUnion(
-  augmentIds: number[]
+  augmentIds: number[],
 ): Promise<Augment[]> {
   const map = await getArenaAugmentMap();
   const result: Augment[] = [];

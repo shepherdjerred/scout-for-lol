@@ -9,7 +9,7 @@ import { mapAugmentIdsToUnion } from "../arena/augment";
 
 // Base champion conversion for traditional games
 export function participantToChampion(
-  dto: MatchV5DTOs.ParticipantDto
+  dto: MatchV5DTOs.ParticipantDto,
 ): Champion {
   if (!dto.riotIdGameName) {
     throw new Error("Missing riotIdGameName");
@@ -44,7 +44,7 @@ export function participantToChampion(
 
 // Arena champion conversion with arena-specific fields
 export async function participantToArenaChampion(
-  dto: MatchV5DTOs.ParticipantDto
+  dto: MatchV5DTOs.ParticipantDto,
 ): Promise<ArenaChampion> {
   const baseChampion = participantToChampion(dto);
 
@@ -62,7 +62,7 @@ export async function participantToArenaChampion(
 
 // Helpers for arena-specific fields
 export async function extractAugments(
-  dto: MatchV5DTOs.ParticipantDto
+  dto: MatchV5DTOs.ParticipantDto,
 ): Promise<Augment[]> {
   const ids: number[] = [];
   const augmentFields = [

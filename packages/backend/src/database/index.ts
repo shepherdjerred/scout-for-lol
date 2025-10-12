@@ -18,10 +18,10 @@ export const prisma = new PrismaClient();
 console.log("✅ Database client initialized");
 
 export async function getChannelsSubscribedToPlayers(
-  puuids: LeaguePuuid[]
+  puuids: LeaguePuuid[],
 ): Promise<{ channel: DiscordChannelId }[]> {
   console.log(
-    `🔍 Fetching channels subscribed to ${puuids.length.toString()} players`
+    `🔍 Fetching channels subscribed to ${puuids.length.toString()} players`,
   );
   console.log(`📋 PUUIDs: ${puuids.join(", ")}`);
 
@@ -46,15 +46,15 @@ export async function getChannelsSubscribedToPlayers(
 
     const queryTime = Date.now() - startTime;
     console.log(
-      `📊 Found ${accounts.length.toString()} accounts in ${queryTime.toString()}ms`
+      `📊 Found ${accounts.length.toString()} accounts in ${queryTime.toString()}ms`,
     );
 
     const result = unique(
       accounts.flatMap((account) =>
         account.playerId.subscriptions.map((subscription) => ({
           channel: DiscordChannelIdSchema.parse(subscription.channelId),
-        }))
-      )
+        })),
+      ),
     );
 
     console.log(`📺 Returning ${result.length.toString()} unique channels`);
@@ -79,7 +79,7 @@ export async function getAccounts(): Promise<PlayerConfig> {
 
     const queryTime = Date.now() - startTime;
     console.log(
-      `📊 Found ${players.length.toString()} players in ${queryTime.toString()}ms`
+      `📊 Found ${players.length.toString()} players in ${queryTime.toString()}ms`,
     );
 
     // transform
@@ -98,7 +98,7 @@ export async function getAccounts(): Promise<PlayerConfig> {
     });
 
     console.log(
-      `📋 Returning ${result.length.toString()} player config entries`
+      `📋 Returning ${result.length.toString()} player config entries`,
     );
     return result;
   } catch (error) {

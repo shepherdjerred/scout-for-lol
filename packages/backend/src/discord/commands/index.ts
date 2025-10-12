@@ -25,7 +25,7 @@ export function handleCommands(client: Client) {
       const channelId = interaction.channelId;
 
       console.log(
-        `📥 Command received: ${commandName} from ${username} (${userId}) in guild ${guildId ?? "DM"} channel ${channelId}`
+        `📥 Command received: ${commandName} from ${username} (${userId}) in guild ${guildId ?? "DM"} channel ${channelId}`,
       );
 
       // Log command options if any
@@ -34,7 +34,7 @@ export function handleCommands(client: Client) {
           `📝 Command options:`,
           interaction.options.data
             .map((opt) => `${opt.name}: ${String(opt.value)}`)
-            .join(", ")
+            .join(", "),
         );
       }
 
@@ -73,31 +73,31 @@ export function handleCommands(client: Client) {
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
         console.log(
-          `✅ Command ${commandName} completed successfully in ${executionTime.toString()}ms`
+          `✅ Command ${commandName} completed successfully in ${executionTime.toString()}ms`,
         );
 
         // Record successful command metrics
         discordCommandsTotal.inc({ command: commandName, status: "success" });
         discordCommandDuration.observe(
           { command: commandName },
-          executionTimeSeconds
+          executionTimeSeconds,
         );
       } catch (error) {
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
         console.error(
           `❌ Command ${commandName} failed after ${executionTime.toString()}ms:`,
-          error
+          error,
         );
 
         // Record failed command metrics
         discordCommandsTotal.inc({ command: commandName, status: "error" });
         discordCommandDuration.observe(
           { command: commandName },
-          executionTimeSeconds
+          executionTimeSeconds,
         );
         console.error(
-          `❌ Error details - User: ${username} (${userId}), Guild: ${String(guildId)}, Channel: ${channelId}`
+          `❌ Error details - User: ${username} (${userId}), Guild: ${String(guildId)}, Channel: ${channelId}`,
         );
 
         if (interaction.replied || interaction.deferred) {

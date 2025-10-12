@@ -13,7 +13,7 @@ const RAW_FILE_PATHS = [
 ];
 
 async function loadParticipants(
-  path: string
+  path: string,
 ): Promise<MatchV5DTOs.ParticipantDto[]> {
   const file = Bun.file(path);
   const json = (await file.json()) as unknown as MatchV5DTOs.MatchDto;
@@ -29,8 +29,8 @@ describe("participantToArenaChampion with real arena JSON", () => {
         // all augments non-zero (for id-only fallback and full augment objects)
         expect(
           champ.augments.every(
-            (a) => (typeof a === "object" && "id" in a ? a.id : 0) !== 0
-          )
+            (a) => (typeof a === "object" && "id" in a ? a.id : 0) !== 0,
+          ),
         ).toBe(true);
         // at most 6
         expect(champ.augments.length).toBeLessThanOrEqual(6);
@@ -39,10 +39,10 @@ describe("participantToArenaChampion with real arena JSON", () => {
         expect(typeof champ.level).toBe("number");
         // metrics present as numbers or undefined
         expect(
-          typeof champ.teamSupport.damageShieldedOnTeammate === "number"
+          typeof champ.teamSupport.damageShieldedOnTeammate === "number",
         ).toBe(true);
         expect(typeof champ.teamSupport.healsOnTeammate === "number").toBe(
-          true
+          true,
         );
       }
     }

@@ -10,12 +10,12 @@ if (typeof Bun !== "undefined") {
       await Promise.all(
         LaneSchema.options.map(async (lane): Promise<[Lane, string]> => {
           const image = await Bun.file(
-            new URL(`assets/${lane}.svg`, import.meta.url)
+            new URL(`assets/${lane}.svg`, import.meta.url),
           ).arrayBuffer();
           return [lane, Buffer.from(image).toString("base64")];
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 }
 
@@ -23,7 +23,7 @@ export async function Lane({ lane }: { lane: Lane }) {
   const environment = typeof Bun !== "undefined" ? "bun" : "browser";
   const image = await match(environment)
     .with("bun", () =>
-      Promise.resolve(`data:image/svg+xml;base64,${images[lane]}`)
+      Promise.resolve(`data:image/svg+xml;base64,${images[lane]}`),
     )
     .with("browser", async () => {
       const module = (await import(`./assets/${lane}.svg`)) as {

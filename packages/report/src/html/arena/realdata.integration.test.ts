@@ -10,7 +10,7 @@ import { svgToPng } from "../index.tsx";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function hashSvg(svg: string): string {
-  return createHash('sha256').update(svg).digest('hex');
+  return createHash("sha256").update(svg).digest("hex");
 }
 
 const RAW_FILE_PATHS = [

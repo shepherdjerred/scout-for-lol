@@ -21,13 +21,13 @@ if (typeof Bun !== "undefined") {
           const image = await Bun.file(
             new URL(
               `assets/Rank=${tier.charAt(0).toUpperCase() + tier.slice(1)}.png`,
-              import.meta.url
-            )
+              import.meta.url,
+            ),
           ).arrayBuffer();
           return [tier, Buffer.from(image).toString("base64")];
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 }
 
@@ -41,7 +41,7 @@ export async function RankedBadge({
   const environment = typeof Bun !== "undefined" ? "bun" : "browser";
   const badge = await match(environment)
     .with("bun", () =>
-      Promise.resolve(`data:image/png;base64,${images[newRank.tier]}`)
+      Promise.resolve(`data:image/png;base64,${images[newRank.tier]}`),
     )
     .with("browser", async () => {
       const module = (await import(

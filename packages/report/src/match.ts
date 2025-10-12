@@ -55,11 +55,11 @@ export function toMatch(
   player: Player,
   matchDto: MatchV5DTOs.MatchDto,
   rankBeforeMatch: Rank | undefined,
-  rankAfterMatch: Rank | undefined
+  rankAfterMatch: Rank | undefined,
 ): CompletedMatch {
   const participant = findParticipant(
     player.config.league.leagueAccount.puuid,
-    matchDto.info.participants
+    matchDto.info.participants,
   );
   if (participant === undefined) {
     console.debug("Player PUUID:", player.config.league.leagueAccount.puuid);
@@ -118,11 +118,11 @@ export function getOutcome(participant: MatchV5DTOs.ParticipantDto) {
 
 function findParticipant(
   puuid: string,
-  participants: MatchV5DTOs.ParticipantDto[]
+  participants: MatchV5DTOs.ParticipantDto[],
 ): MatchV5DTOs.ParticipantDto | undefined {
   return pipe(
     participants,
     filter((participant) => participant.puuid === puuid),
-    first()
+    first(),
   );
 }

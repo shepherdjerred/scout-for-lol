@@ -20,9 +20,12 @@ beforeAll(() => {
   process.env["VERSION"] = process.env["VERSION"] ?? "test-version";
   process.env["GIT_SHA"] = process.env["GIT_SHA"] ?? "test-git-sha";
   process.env["DISCORD_TOKEN"] = process.env["DISCORD_TOKEN"] ?? "test-token";
-  process.env["APPLICATION_ID"] = process.env["APPLICATION_ID"] ?? "12345678901234567";
-  process.env["RIOT_API_TOKEN"] = process.env["RIOT_API_TOKEN"] ?? "test-riot-token";
-  process.env["DATABASE_URL"] = process.env["DATABASE_URL"] ?? "postgres://user:pass@localhost:5432/db";
+  process.env["APPLICATION_ID"] =
+    process.env["APPLICATION_ID"] ?? "12345678901234567";
+  process.env["RIOT_API_TOKEN"] =
+    process.env["RIOT_API_TOKEN"] ?? "test-riot-token";
+  process.env["DATABASE_URL"] =
+    process.env["DATABASE_URL"] ?? "postgres://user:pass@localhost:5432/db";
 });
 
 test("postmatch", async () => {
@@ -57,12 +60,12 @@ test("postmatch", async () => {
   const saveMatchFn = async (_: MatchV5DTOs.MatchDto) => {
     // do nothing
   };
-  const sendFn = (async (
+  const sendFn = async (
     message: string | MessagePayload | MessageCreateOptions,
   ): Promise<Message<true> | Message<false>> => {
     expect(message).toMatchSnapshot();
     return Promise.resolve({} as Message<true> | Message<false>);
-  });
+  };
   const checkMatchFn = async () => {
     const exampleMatch = JSON.parse(
       await Bun.file(testdataPath).text(),

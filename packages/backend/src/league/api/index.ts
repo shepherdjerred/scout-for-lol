@@ -10,14 +10,14 @@ import { Constants } from "twisted";
 import { filter, find, pipe } from "remeda";
 
 export async function getCurrentGame(
-  player: PlayerConfigEntry
+  player: PlayerConfigEntry,
 ): Promise<undefined | CurrentGameInfoDTO> {
   const playerAlias = player.alias;
   const playerPuuid = player.league.leagueAccount.puuid;
   const playerRegion = player.league.leagueAccount.region;
 
   console.log(
-    `🎮 Fetching current game for player: ${playerAlias} (${playerPuuid}) in region ${playerRegion}`
+    `🎮 Fetching current game for player: ${playerAlias} (${playerPuuid}) in region ${playerRegion}`,
   );
 
   try {
@@ -25,22 +25,22 @@ export async function getCurrentGame(
 
     const response = await api.SpectatorV5.activeGame(
       playerPuuid,
-      Constants.Regions[playerRegion]
+      Constants.Regions[playerRegion],
     );
 
     const apiTime = Date.now() - startTime;
 
     if (response instanceof SpectatorNotAvailableDTO) {
       console.log(
-        `❌ Spectator API unavailable for ${playerAlias} (${apiTime.toString()}ms)`
+        `❌ Spectator API unavailable for ${playerAlias} (${apiTime.toString()}ms)`,
       );
       return undefined;
     } else {
       console.log(
-        `✅ Successfully fetched current game for ${playerAlias} (${apiTime.toString()}ms)`
+        `✅ Successfully fetched current game for ${playerAlias} (${apiTime.toString()}ms)`,
       );
       console.log(
-        `📊 Game info: Match ID ${response.response.gameId.toString()}, Mode: ${response.response.gameMode}, Type: ${response.response.gameType}`
+        `📊 Game info: Match ID ${response.response.gameId.toString()}, Mode: ${response.response.gameMode}, Type: ${response.response.gameType}`,
       );
       return response.response;
     }
@@ -51,12 +51,12 @@ export async function getCurrentGame(
     if (result.success) {
       if (result.data.status === 404) {
         console.log(
-          `ℹ️  Player ${playerAlias} is not currently in a game (404)`
+          `ℹ️  Player ${playerAlias} is not currently in a game (404)`,
         );
         return undefined;
       }
       console.error(
-        `❌ HTTP Error ${result.data.status.toString()} for ${playerAlias}`
+        `❌ HTTP Error ${result.data.status.toString()} for ${playerAlias}`,
       );
     }
     throw e;
@@ -65,24 +65,24 @@ export async function getCurrentGame(
 
 export function findParticipant(
   player: PlayerConfigEntry,
-  participants: CurrentGameParticipantDTO[]
+  participants: CurrentGameParticipantDTO[],
 ): CurrentGameParticipantDTO | undefined {
   const playerAlias = player.alias;
   const playerPuuid = player.league.leagueAccount.puuid;
 
   console.log(
-    `🔍 Looking for participant ${playerAlias} (${playerPuuid}) in ${participants.length.toString()} participants`
+    `🔍 Looking for participant ${playerAlias} (${playerPuuid}) in ${participants.length.toString()} participants`,
   );
 
   const participant = pipe(
     participants,
     filter((participant) => participant.puuid === playerPuuid),
-    find(() => true)
+    find(() => true),
   );
 
   if (participant) {
     console.log(
-      `✅ Found participant ${playerAlias}: ${participant.riotId} (Champion: ${participant.championId.toString()})`
+      `✅ Found participant ${playerAlias}: ${participant.riotId} (Champion: ${participant.championId.toString()})`,
     );
   } else {
     console.log(`❌ Participant ${playerAlias} not found in game`);

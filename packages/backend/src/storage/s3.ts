@@ -21,14 +21,14 @@ function generateMatchKey(matchId: string): string {
  * @returns Promise that resolves when the match is saved
  */
 export async function saveMatchToS3(
-  match: MatchV5DTOs.MatchDto
+  match: MatchV5DTOs.MatchDto,
 ): Promise<void> {
   const matchId = match.metadata.matchId;
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
     console.warn(
-      `[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping save for match: ${matchId}`
+      `[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping save for match: ${matchId}`,
     );
     return;
   }
@@ -70,18 +70,18 @@ export async function saveMatchToS3(
 
     const uploadTime = Date.now() - startTime;
     console.log(
-      `[S3Storage] ✅ Successfully saved match ${matchId} to S3 in ${uploadTime.toString()}ms`
+      `[S3Storage] ✅ Successfully saved match ${matchId} to S3 in ${uploadTime.toString()}ms`,
     );
     console.log(`[S3Storage] 🔗 S3 location: s3://${bucket}/${key}`);
   } catch (error) {
     console.error(
       `[S3Storage] ❌ Failed to save match ${matchId} to S3:`,
-      error
+      error,
     );
 
     // Re-throw the error so the caller can handle it appropriately
     throw new Error(
-      `Failed to save match ${matchId} to S3: ${error instanceof Error ? error.message : String(error)}`
+      `Failed to save match ${matchId} to S3: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 }

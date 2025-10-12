@@ -17,7 +17,7 @@ const commands = [
 console.log("📋 Commands to register:");
 commands.forEach((command, index) => {
   console.log(
-    `  ${(index + 1).toString()}. ${command.name}: ${command.description}`
+    `  ${(index + 1).toString()}. ${command.name}: ${command.description}`,
   );
 });
 
@@ -27,19 +27,19 @@ const rest = new REST().setToken(configuration.discordToken);
 void (async () => {
   try {
     console.log(
-      `🚀 Starting registration of ${commands.length.toString()} application (/) commands`
+      `🚀 Starting registration of ${commands.length.toString()} application (/) commands`,
     );
     console.log(`🎯 Target application ID: ${configuration.applicationId}`);
 
     const startTime = Date.now();
     const data = await rest.put(
       Routes.applicationCommands(configuration.applicationId),
-      { body: commands }
+      { body: commands },
     );
     const registrationTime = Date.now() - startTime;
 
     console.log(
-      `✅ Successfully registered ${commands.length.toString()} application (/) commands in ${registrationTime.toString()}ms`
+      `✅ Successfully registered ${commands.length.toString()} application (/) commands in ${registrationTime.toString()}ms`,
     );
 
     // Log details about registered commands
@@ -47,7 +47,7 @@ void (async () => {
       console.log("📝 Registered commands details:");
       data.forEach((command: { name: string; id: string }, index: number) => {
         console.log(
-          `  ${(index + 1).toString()}. ${command.name} (ID: ${command.id})`
+          `  ${(index + 1).toString()}. ${command.name} (ID: ${command.id})`,
         );
       });
     }
@@ -75,7 +75,7 @@ void (async () => {
       console.error("❌ HTTP Status:", discordError.status);
       console.error(
         "❌ Response body:",
-        discordError.rawError ?? discordError.body
+        discordError.rawError ?? discordError.body,
       );
     }
 

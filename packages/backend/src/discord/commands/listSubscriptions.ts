@@ -2,7 +2,6 @@ import { type CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { prisma } from "../../database/index";
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
-import type { Subscription } from "../../../generated/prisma/client";
 
 export const listSubscriptionsCommand = new SlashCommandBuilder()
   .setName("listsubscriptions")
@@ -40,7 +39,7 @@ export async function executeListSubscriptions(
   }
 
   const subscriptionList = subscriptions
-    .map((sub: Subscription) => {
+    .map((sub) => {
       const player = sub.player;
       return `${(player.alias || player.discordId) ?? "Unknown"} (${player.accounts.length.toString()} account${player.accounts.length === 1 ? "" : "s"})`;
     })

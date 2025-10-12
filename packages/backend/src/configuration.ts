@@ -20,7 +20,7 @@ function getRequiredEnvVar(name: string): string {
 
 function getOptionalEnvVar(
   name: string,
-  defaultValue?: string
+  defaultValue?: string,
 ): string | undefined {
   const value = env.get(name).asString();
   if (value) {

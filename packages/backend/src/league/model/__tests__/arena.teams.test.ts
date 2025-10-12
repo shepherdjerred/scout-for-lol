@@ -7,7 +7,7 @@ import {
 } from "../match.js";
 
 function makeParticipant(
-  extra: Record<string, unknown> = {}
+  extra: Record<string, unknown> = {},
 ): MatchV5DTOs.ParticipantDto {
   return {
     puuid: crypto.randomUUID(),

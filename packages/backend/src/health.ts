@@ -3,7 +3,7 @@ import configuration from "./configuration.js";
 
 console.log("🏥 Starting health check");
 console.log(
-  `🔍 Health check URL: http://127.0.0.1:${configuration.port.toString()}/ping`
+  `🔍 Health check URL: http://127.0.0.1:${configuration.port.toString()}/ping`,
 );
 
 // health check used by Docker
@@ -11,7 +11,7 @@ try {
   const startTime = Date.now();
 
   const response = await fetch(
-    `http://127.0.0.1:${configuration.port.toString()}/ping`
+    `http://127.0.0.1:${configuration.port.toString()}/ping`,
   );
 
   const responseTime = Date.now() - startTime;

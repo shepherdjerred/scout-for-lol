@@ -119,10 +119,7 @@
           "landSkillShotsEarlyGame": 0,
           "laneMinionsFirst10Minutes": 0,
           "legendaryCount": 0,
-          "legendaryItemUsed": [
-            226665,
-            223084
-          ],
+          "legendaryItemUsed": [226665, 223084],
           "lostAnInhibitor": 0,
           "maxKillDeficit": 20,
           "mejaisFullStackInTime": 0,
@@ -460,14 +457,7 @@
           "landSkillShotsEarlyGame": 10,
           "laneMinionsFirst10Minutes": 0,
           "legendaryCount": 1,
-          "legendaryItemUsed": [
-            223004,
-            223042,
-            223091,
-            223153,
-            223124,
-            226672
-          ],
+          "legendaryItemUsed": [223004, 223042, 223091, 223153, 223124, 226672],
           "lostAnInhibitor": 0,
           "maxKillDeficit": 20,
           "mejaisFullStackInTime": 0,
@@ -803,11 +793,7 @@
           "landSkillShotsEarlyGame": 0,
           "laneMinionsFirst10Minutes": 0,
           "legendaryCount": 0,
-          "legendaryItemUsed": [
-            223074,
-            223074,
-            223075
-          ],
+          "legendaryItemUsed": [223074, 223074, 223075],
           "lostAnInhibitor": 0,
           "maxKillDeficit": 0,
           "mejaisFullStackInTime": 0,
@@ -1477,9 +1463,7 @@
           "landSkillShotsEarlyGame": 3,
           "laneMinionsFirst10Minutes": 0,
           "legendaryCount": 0,
-          "legendaryItemUsed": [
-            223153
-          ],
+          "legendaryItemUsed": [223153],
           "lostAnInhibitor": 0,
           "maxKillDeficit": 23,
           "mejaisFullStackInTime": 0,
@@ -2150,11 +2134,7 @@
           "landSkillShotsEarlyGame": 1,
           "laneMinionsFirst10Minutes": 0,
           "legendaryCount": 0,
-          "legendaryItemUsed": [
-            223161,
-            226692,
-            226609
-          ],
+          "legendaryItemUsed": [223161, 226692, 226609],
           "lostAnInhibitor": 0,
           "maxKillDeficit": 0,
           "mejaisFullStackInTime": 0,
@@ -2489,11 +2469,7 @@
           "landSkillShotsEarlyGame": 0,
           "laneMinionsFirst10Minutes": 0,
           "legendaryCount": 0,
-          "legendaryItemUsed": [
-            224645,
-            224646,
-            223089
-          ],
+          "legendaryItemUsed": [224645, 224646, 223089],
           "lostAnInhibitor": 0,
           "maxKillDeficit": 0,
           "mejaisFullStackInTime": 0,
@@ -3499,10 +3475,7 @@
           "landSkillShotsEarlyGame": 3,
           "laneMinionsFirst10Minutes": 0,
           "legendaryCount": 1,
-          "legendaryItemUsed": [
-            223146,
-            226333
-          ],
+          "legendaryItemUsed": [223146, 226333],
           "lostAnInhibitor": 0,
           "maxKillDeficit": 23,
           "mejaisFullStackInTime": 0,
@@ -4174,11 +4147,7 @@
           "landSkillShotsEarlyGame": 11,
           "laneMinionsFirst10Minutes": 0,
           "legendaryCount": 0,
-          "legendaryItemUsed": [
-            226653,
-            3430,
-            223118
-          ],
+          "legendaryItemUsed": [226653, 3430, 223118],
           "lostAnInhibitor": 0,
           "maxKillDeficit": 0,
           "mejaisFullStackInTime": 0,
@@ -4514,13 +4483,7 @@
           "laneMinionsFirst10Minutes": 0,
           "legendaryCount": 0,
           "legendaryItemUsed": [
-            223031,
-            223031,
-            223031,
-            223033,
-            223031,
-            223033,
-            223153
+            223031, 223031, 223031, 223033, 223031, 223033, 223153
           ],
           "lostAnInhibitor": 0,
           "maxKillDeficit": 0,
@@ -4856,10 +4819,7 @@
           "landSkillShotsEarlyGame": 1,
           "laneMinionsFirst10Minutes": 0,
           "legendaryCount": 0,
-          "legendaryItemUsed": [
-            223031,
-            223033
-          ],
+          "legendaryItemUsed": [223031, 223033],
           "lostAnInhibitor": 0,
           "maxKillDeficit": 7,
           "mejaisFullStackInTime": 0,
@@ -5194,13 +5154,7 @@
           "landSkillShotsEarlyGame": 0,
           "laneMinionsFirst10Minutes": 0,
           "legendaryCount": 0,
-          "legendaryItemUsed": [
-            226653,
-            222503,
-            223116,
-            223068,
-            223068
-          ],
+          "legendaryItemUsed": [226653, 222503, 223116, 223068, 223068],
           "lostAnInhibitor": 0,
           "maxKillDeficit": 7,
           "mejaisFullStackInTime": 0,

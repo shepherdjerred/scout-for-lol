@@ -106,7 +106,7 @@ export function getCompetitionStatus(competition: {
 
   // Invalid state: no dates and no seasonId
   throw new Error(
-    "Competition must have either (startDate AND endDate) OR seasonId"
+    "Competition must have either (startDate AND endDate) OR seasonId",
   );
 }
 
@@ -118,7 +118,7 @@ export function getCompetitionStatus(competition: {
  * Format queue type to human-readable string
  */
 export function competitionQueueTypeToString(
-  queueType: CompetitionQueueType
+  queueType: CompetitionQueueType,
 ): string {
   return match(queueType)
     .with("SOLO", () => "Solo Queue")

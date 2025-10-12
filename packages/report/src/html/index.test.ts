@@ -9,7 +9,7 @@ import { writeFileSync } from "fs";
 import { createHash } from "crypto";
 
 function hashSvg(svg: string): string {
-  return createHash('sha256').update(svg).digest('hex');
+  return createHash("sha256").update(svg).digest("hex");
 }
 
 function getMatch(): CompletedMatch {
@@ -22,7 +22,7 @@ function getMatch(): CompletedMatch {
           league: {
             leagueAccount: {
               puuid: LeaguePuuidSchema.parse(
-                "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw"
+                "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
               ),
               region: "AMERICA_NORTH",
             },
@@ -270,21 +270,21 @@ test("no items test", async () => {
     matchNoItems.players[0].champion.items = [0, 0, 0, 0, 0, 0, 0];
   }
   matchNoItems.teams.blue.forEach(
-    (player) => (player.items = [0, 0, 0, 0, 0, 0, 0])
+    (player) => (player.items = [0, 0, 0, 0, 0, 0, 0]),
   );
   matchNoItems.teams.red.forEach(
-    (player) => (player.items = [0, 0, 0, 0, 0, 0, 0])
+    (player) => (player.items = [0, 0, 0, 0, 0, 0, 0]),
   );
 
   const svg = await matchToSvg(matchNoItems);
   const png = svgToPng(svg);
   writeFileSync(
     new URL("__snapshots__/match_no_items.png", import.meta.url),
-    png
+    png,
   );
   writeFileSync(
     new URL("__snapshots__/match_no_items.svg", import.meta.url),
-    svg
+    svg,
   );
 
   const svgHash = hashSvg(svg);
@@ -349,11 +349,11 @@ test("all fields zeroed out test", async () => {
   const png = svgToPng(svg);
   writeFileSync(
     new URL("__snapshots__/match_zeroed_out.png", import.meta.url),
-    png
+    png,
   );
   writeFileSync(
     new URL("__snapshots__/match_zeroed_out.svg", import.meta.url),
-    svg
+    svg,
   );
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -370,12 +370,12 @@ test("no rank test", async () => {
   const png = svgToPng(svg);
   writeFileSync(
     new URL("__snapshots__/match_no_rank.png", import.meta.url),
-    png
+    png,
   );
 
   writeFileSync(
     new URL("__snapshots__/match_no_rank.svg", import.meta.url),
-    svg
+    svg,
   );
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -422,12 +422,12 @@ test("large values test", async () => {
   const png = svgToPng(svg);
   writeFileSync(
     new URL("__snapshots__/match_large_values.png", import.meta.url),
-    png
+    png,
   );
 
   writeFileSync(
     new URL("__snapshots__/match_large_values.svg", import.meta.url),
-    svg
+    svg,
   );
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -443,12 +443,12 @@ test("victory test", async () => {
   const png = svgToPng(svg);
   writeFileSync(
     new URL("__snapshots__/match_victory.png", import.meta.url),
-    png
+    png,
   );
 
   writeFileSync(
     new URL("__snapshots__/match_victory.svg", import.meta.url),
-    svg
+    svg,
   );
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -464,12 +464,12 @@ test("surrender test", async () => {
   const png = svgToPng(svg);
   writeFileSync(
     new URL("__snapshots__/match_surrender.png", import.meta.url),
-    png
+    png,
   );
 
   writeFileSync(
     new URL("__snapshots__/match_surrender.svg", import.meta.url),
-    svg
+    svg,
   );
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -492,12 +492,12 @@ test("no rank before match test", async () => {
   const png = svgToPng(svg);
   writeFileSync(
     new URL("__snapshots__/match_no_rank_before.png", import.meta.url),
-    png
+    png,
   );
 
   writeFileSync(
     new URL("__snapshots__/match_no_rank_before.svg", import.meta.url),
-    svg
+    svg,
   );
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -512,7 +512,7 @@ test("multiple highlighted players test", async () => {
       league: {
         leagueAccount: {
           puuid: LeaguePuuidSchema.parse(
-            "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDa9biieJ5ZRD049AUCBjLjyBeeezTaw"
+            "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDa9biieJ5ZRD049AUCBjLjyBeeezTaw",
           ),
           region: "AMERICA_NORTH",
         },
@@ -579,19 +579,19 @@ test("multiple highlighted players test", async () => {
   writeFileSync(
     new URL(
       "__snapshots__/match_multiple_highlighted_players.png",
-      import.meta.url
+      import.meta.url,
     ),
-    png
+    png,
   );
 
   writeFileSync(
     new URL(
       "__snapshots__/match_multiple_highlighted_players.svg",
-      import.meta.url
+      import.meta.url,
     ),
-    svg
+    svg,
   );
-    // Hash the SVG for snapshot comparison instead of storing the full content
-    const svgHash = hashSvg(svg);
-    expect(svgHash).toMatchSnapshot();
+  // Hash the SVG for snapshot comparison instead of storing the full content
+  const svgHash = hashSvg(svg);
+  expect(svgHash).toMatchSnapshot();
 });

@@ -11,7 +11,7 @@ export async function checkPostMatch() {
   try {
     const state = getState();
     console.log(
-      `📊 Current state: ${state.gamesStarted.length.toString()} games in progress`
+      `📊 Current state: ${state.gamesStarted.length.toString()} games in progress`,
     );
 
     await checkPostMatchInternal(
@@ -20,18 +20,18 @@ export async function checkPostMatch() {
       checkMatch,
       send,
       getPlayer,
-      getChannelsSubscribedToPlayers
+      getChannelsSubscribedToPlayers,
     );
 
     const executionTime = Date.now() - startTime;
     console.log(
-      `✅ Post-match check completed successfully in ${executionTime.toString()}ms`
+      `✅ Post-match check completed successfully in ${executionTime.toString()}ms`,
     );
   } catch (error) {
     const executionTime = Date.now() - startTime;
     console.error(
       `❌ Post-match check failed after ${executionTime.toString()}ms:`,
-      error
+      error,
     );
     throw error;
   }

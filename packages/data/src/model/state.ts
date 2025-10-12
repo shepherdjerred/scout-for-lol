@@ -92,21 +92,21 @@ export const ApplicationStateSchema = z.strictObject({
 
 export function getPlayersInGame(
   players: PlayerConfig,
-  state: ApplicationState
+  state: ApplicationState,
 ) {
   const playersInGame = flatMap(state.gamesStarted, (game) => game.players);
   return filter(players, (player) =>
     playersInGame.some(
       (matchPlayer) =>
         matchPlayer.player.league.leagueAccount.puuid ===
-        player.league.leagueAccount.puuid
-    )
+        player.league.leagueAccount.puuid,
+    ),
   );
 }
 
 export function getPlayersNotInGame(
   players: PlayerConfig,
-  state: ApplicationState
+  state: ApplicationState,
 ) {
   const playersInGame = flatMap(state.gamesStarted, (game) => game.players);
   return filter(
@@ -115,7 +115,7 @@ export function getPlayersNotInGame(
       !playersInGame.some(
         (matchPlayer) =>
           matchPlayer.player.league.leagueAccount.puuid ===
-          player.league.leagueAccount.puuid
-      )
+          player.league.leagueAccount.puuid,
+      ),
   );
 }

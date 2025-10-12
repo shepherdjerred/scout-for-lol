@@ -14,7 +14,7 @@ function makeParticipant(
     playerSubteamId: number;
     placement: number;
     puuid: string;
-  }
+  },
 ): MatchV5DTOs.ParticipantDto {
   const base: Partial<MatchV5DTOs.ParticipantDto> = {
     riotIdGameName: "P#NA1",
@@ -76,14 +76,14 @@ function makeArenaMatchDto(): MatchV5DTOs.MatchDto {
         playerSubteamId: sub,
         placement: sub,
         puuid: longPuuid(`A${sub.toString()}`),
-      })
+      }),
     );
     participants.push(
       makeParticipant({
         playerSubteamId: sub,
         placement: sub,
         puuid: longPuuid(`B${sub.toString()}`),
-      })
+      }),
     );
   }
   return {
@@ -118,7 +118,7 @@ describe("arena match integration", () => {
     const dto = makeArenaMatchDto();
     const subteams = await toArenaSubteams(dto.info.participants);
     const players = await Promise.all(
-      dto.info.participants.map(participantToArenaChampion)
+      dto.info.participants.map(participantToArenaChampion),
     );
 
     // Validate subteams against schema and basic expectations

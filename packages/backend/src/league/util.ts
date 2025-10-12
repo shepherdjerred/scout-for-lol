@@ -9,7 +9,9 @@ export function logErrors(fn: () => Promise<unknown>) {
       const startTime = Date.now();
       await fn();
       const executionTime = Date.now() - startTime;
-      console.log(`✅ Function ${functionName} completed successfully in ${executionTime.toString()}ms`);
+      console.log(
+        `✅ Function ${functionName} completed successfully in ${executionTime.toString()}ms`,
+      );
     } catch (e) {
       console.error(`❌ Function ${functionName} failed:`, e);
 
@@ -26,8 +28,8 @@ export function logErrors(fn: () => Promise<unknown>) {
       Sentry.captureException(e, {
         tags: {
           function: functionName,
-          source: "cron-job"
-        }
+          source: "cron-job",
+        },
       });
 
       // Re-throw to maintain original behavior
