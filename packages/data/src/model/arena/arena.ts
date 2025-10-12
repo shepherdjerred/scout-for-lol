@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { ChampionSchema } from "../champion.js";
-import { PlayerConfigEntrySchema } from "../playerConfig.js";
+import { PlayerConfigEntrySchema } from "../player-config.js";
 import { match } from "ts-pattern";
 import { AugmentSchema } from "./augment.js";
 

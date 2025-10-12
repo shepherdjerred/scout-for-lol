@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { RankSchema, RanksSchema } from "./rank.js";
-import { rankToLeaguePoints } from "./leaguePoints.js";
-import { PlayerConfigEntrySchema } from "./playerConfig.js";
+import { rankToLeaguePoints } from "./league-points.js";
+import { PlayerConfigEntrySchema } from "./player-config.js";
 import { flatMap, sortBy } from "remeda";
 
 export type Player = z.infer<typeof PlayerSchema>;

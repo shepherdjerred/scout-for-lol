@@ -47,7 +47,7 @@ export default tseslint.config(
       "no-restricted-syntax": [
         "error",
         {
-          selector: "UnaryExpression[operator='typeof']",
+          selector: "UnaryExpression[operator='typeof']:not([argument.name='Bun'])",
           message: "Prefer Zod schema validation over typeof operator. Use z.string(), z.number(), etc. instead.",
         },
         {
@@ -91,6 +91,13 @@ export default tseslint.config(
       ],
     },
   },
+  // Test files can be longer
+  {
+    files: ["**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts"],
+    rules: {
+      "max-lines": ["error", { max: 1500, skipBlankLines: false, skipComments: false }],
+    },
+  },
   // File naming conventions
   {
     plugins: {
@@ -119,10 +126,10 @@ export default tseslint.config(
     rules: {
       "@typescript-eslint/naming-convention": [
         "error",
-        // Functions: camelCase
+        // Functions: camelCase (React components can be PascalCase)
         {
           selector: "function",
-          format: ["camelCase"],
+          format: ["camelCase", "PascalCase"],
           leadingUnderscore: "allow",
           trailingUnderscore: "allow",
         },

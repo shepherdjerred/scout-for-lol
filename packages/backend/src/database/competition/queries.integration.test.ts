@@ -11,7 +11,7 @@ import {
   getActiveCompetitions,
   getCompetitionById,
   getCompetitionsByServer,
-} from "./index.js";
+} from "./queries.js";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "competition-queries-test-"));
@@ -180,10 +180,7 @@ describe("getCompetitionsByServer", () => {
       });
     }
 
-    const competitions = await getCompetitionsByServer(
-      prisma,
-      "123456789012345678",
-    );
+    const competitions = await getCompetitionsByServer(prisma, "123456789012345678");
     expect(competitions).toHaveLength(3);
   });
 
@@ -224,11 +221,7 @@ describe("getCompetitionsByServer", () => {
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
-    const activeOnly = await getCompetitionsByServer(
-      prisma,
-      "123456789012345678",
-      { activeOnly: true },
-    );
+    const activeOnly = await getCompetitionsByServer(prisma, "123456789012345678", { activeOnly: true });
 
     expect(activeOnly).toHaveLength(1);
     expect(activeOnly[0]?.title).toBe("Active");
@@ -260,11 +253,7 @@ describe("getCompetitionsByServer", () => {
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
-    const owner1Comps = await getCompetitionsByServer(
-      prisma,
-      "123456789012345678",
-      { ownerId: "111111111111111111" },
-    );
+    const owner1Comps = await getCompetitionsByServer(prisma, "123456789012345678", { ownerId: "111111111111111111" });
 
     expect(owner1Comps).toHaveLength(1);
     expect(owner1Comps[0]?.title).toBe("Owner 1 Competition");

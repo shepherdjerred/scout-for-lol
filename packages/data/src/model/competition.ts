@@ -7,29 +7,17 @@ import { RankSchema } from "./rank.js";
 // ============================================================================
 
 export type CompetitionId = z.infer<typeof CompetitionIdSchema>;
-export const CompetitionIdSchema = z
-  .number()
-  .int()
-  .positive()
-  .brand("CompetitionId");
+export const CompetitionIdSchema = z.number().int().positive().brand("CompetitionId");
 
 export type ParticipantId = z.infer<typeof ParticipantIdSchema>;
-export const ParticipantIdSchema = z
-  .number()
-  .int()
-  .positive()
-  .brand("ParticipantId");
+export const ParticipantIdSchema = z.number().int().positive().brand("ParticipantId");
 
 // ============================================================================
 // Enums
 // ============================================================================
 
 export type CompetitionVisibility = z.infer<typeof CompetitionVisibilitySchema>;
-export const CompetitionVisibilitySchema = z.enum([
-  "OPEN",
-  "INVITE_ONLY",
-  "SERVER_WIDE",
-]);
+export const CompetitionVisibilitySchema = z.enum(["OPEN", "INVITE_ONLY", "SERVER_WIDE"]);
 
 export type ParticipantStatus = z.infer<typeof ParticipantStatusSchema>;
 export const ParticipantStatusSchema = z.enum(["INVITED", "JOINED", "LEFT"]);
@@ -41,14 +29,7 @@ export type PermissionType = z.infer<typeof PermissionTypeSchema>;
 export const PermissionTypeSchema = z.enum(["CREATE_COMPETITION"]);
 
 export type CompetitionQueueType = z.infer<typeof CompetitionQueueTypeSchema>;
-export const CompetitionQueueTypeSchema = z.enum([
-  "SOLO",
-  "FLEX",
-  "RANKED_ANY",
-  "ARENA",
-  "ARAM",
-  "ALL",
-]);
+export const CompetitionQueueTypeSchema = z.enum(["SOLO", "FLEX", "RANKED_ANY", "ARENA", "ARAM", "ALL"]);
 
 // ============================================================================
 // Competition Criteria (Discriminated Union)
@@ -62,9 +43,7 @@ export const MostGamesPlayedCriteriaSchema = z.object({
   queue: CompetitionQueueTypeSchema,
 });
 
-export type MostGamesPlayedCriteria = z.infer<
-  typeof MostGamesPlayedCriteriaSchema
->;
+export type MostGamesPlayedCriteria = z.infer<typeof MostGamesPlayedCriteriaSchema>;
 
 /**
  * Criteria: Highest rank achieved in SOLO or FLEX queue
@@ -94,9 +73,7 @@ export const MostWinsPlayerCriteriaSchema = z.object({
   queue: CompetitionQueueTypeSchema,
 });
 
-export type MostWinsPlayerCriteria = z.infer<
-  typeof MostWinsPlayerCriteriaSchema
->;
+export type MostWinsPlayerCriteria = z.infer<typeof MostWinsPlayerCriteriaSchema>;
 
 /**
  * Criteria: Most wins with a specific champion
@@ -108,9 +85,7 @@ export const MostWinsChampionCriteriaSchema = z.object({
   queue: CompetitionQueueTypeSchema.optional(),
 });
 
-export type MostWinsChampionCriteria = z.infer<
-  typeof MostWinsChampionCriteriaSchema
->;
+export type MostWinsChampionCriteria = z.infer<typeof MostWinsChampionCriteriaSchema>;
 
 /**
  * Criteria: Highest win rate (minimum games required)
@@ -121,9 +96,7 @@ export const HighestWinRateCriteriaSchema = z.object({
   queue: CompetitionQueueTypeSchema,
 });
 
-export type HighestWinRateCriteria = z.infer<
-  typeof HighestWinRateCriteriaSchema
->;
+export type HighestWinRateCriteria = z.infer<typeof HighestWinRateCriteriaSchema>;
 
 /**
  * Discriminated union of all competition criteria types.
@@ -196,9 +169,7 @@ export function getCompetitionStatus(competition: {
   }
 
   // Invalid state: no dates and no seasonId
-  throw new Error(
-    "Competition must have either (startDate AND endDate) OR seasonId",
-  );
+  throw new Error("Competition must have either (startDate AND endDate) OR seasonId");
 }
 
 // ============================================================================
@@ -208,9 +179,7 @@ export function getCompetitionStatus(competition: {
 /**
  * Format queue type to human-readable string
  */
-export function competitionQueueTypeToString(
-  queueType: CompetitionQueueType,
-): string {
+export function competitionQueueTypeToString(queueType: CompetitionQueueType): string {
   return match(queueType)
     .with("SOLO", () => "Solo Queue")
     .with("FLEX", () => "Flex Queue")
@@ -251,7 +220,7 @@ export function participantStatusToString(status: ParticipantStatus): string {
  * Raw competition data from database (Prisma model)
  * Criteria is stored as separate type + JSON config fields
  */
-export interface RawCompetition {
+export type RawCompetition = {
   id: number;
   serverId: string;
   ownerId: string;
@@ -269,16 +238,15 @@ export interface RawCompetition {
   creatorDiscordId: string;
   createdTime: Date;
   updatedTime: Date;
-}
+};
 
 /**
  * Competition with parsed criteria (domain type)
  * This is what we use in application code
  */
-export interface CompetitionWithCriteria
-  extends Omit<RawCompetition, "criteriaType" | "criteriaConfig"> {
+export type CompetitionWithCriteria = Omit<RawCompetition, "criteriaType" | "criteriaConfig"> & {
   criteria: CompetitionCriteria;
-}
+};
 
 /**
  * Parse raw competition from database to domain type
@@ -292,33 +260,29 @@ export function parseCompetition(raw: RawCompetition): CompetitionWithCriteria {
   try {
     criteriaConfig = JSON.parse(raw.criteriaConfig);
   } catch (error) {
-    throw new Error(
-      `Invalid criteriaConfig JSON for competition ${raw.id.toString()}: ${error instanceof Error ? error.message : "unknown error"}`,
-    );
+    throw new Error(`Invalid criteriaConfig JSON for competition ${raw.id.toString()}: ${String(error)}`);
   }
 
-  // Validate it's an object
-  if (typeof criteriaConfig !== "object" || criteriaConfig === null) {
-    throw new Error(
-      `criteriaConfig must be an object for competition ${raw.id.toString()}`,
-    );
+  // Validate it's an object using Zod
+  const objectResult = z.record(z.unknown()).safeParse(criteriaConfig);
+  if (!objectResult.success) {
+    throw new Error(`criteriaConfig must be an object for competition ${raw.id.toString()}`);
   }
 
   // Combine type + config and validate
   const criteriaData = {
     type: raw.criteriaType,
-    ...criteriaConfig,
+    ...objectResult.data,
   };
 
   const result = CompetitionCriteriaSchema.safeParse(criteriaData);
   if (!result.success) {
-    throw new Error(
-      `Invalid criteria for competition ${raw.id.toString()}: ${result.error.message}`,
-    );
+    throw new Error(`Invalid criteria for competition ${raw.id.toString()}: ${result.error.message}`);
   }
 
   // Return domain type with parsed criteria
-  const { criteriaType: _criteriaType, criteriaConfig: _, ...rest } = raw;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { criteriaType, criteriaConfig, ...rest } = raw;
   return {
     ...rest,
     criteria: result.data,
@@ -351,9 +315,7 @@ export const RankSnapshotDataSchema = z.object({
 /**
  * Games played data for snapshot - captures game counts per queue
  */
-export type GamesPlayedSnapshotData = z.infer<
-  typeof GamesPlayedSnapshotDataSchema
->;
+export type GamesPlayedSnapshotData = z.infer<typeof GamesPlayedSnapshotDataSchema>;
 export const GamesPlayedSnapshotDataSchema = z.object({
   soloGames: z.number().int().nonnegative().optional(),
   flexGames: z.number().int().nonnegative().optional(),
@@ -382,10 +344,7 @@ export const WinsSnapshotDataSchema = z.object({
  */
 export function getSnapshotSchemaForCriteria(
   criteria: CompetitionCriteria,
-):
-  | typeof RankSnapshotDataSchema
-  | typeof GamesPlayedSnapshotDataSchema
-  | typeof WinsSnapshotDataSchema {
+): typeof RankSnapshotDataSchema | typeof GamesPlayedSnapshotDataSchema | typeof WinsSnapshotDataSchema {
   return match(criteria)
     .with({ type: "HIGHEST_RANK" }, () => RankSnapshotDataSchema)
     .with({ type: "MOST_RANK_CLIMB" }, () => RankSnapshotDataSchema)

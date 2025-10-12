@@ -67,8 +67,8 @@ export const RiotIdSchema = z
     "Riot ID must be in the format <game_name>#<tag_line>",
   )
   .transform((val) => {
-    const [game_name, tag_line] = val.split("#");
-    return { game_name, tag_line };
+    const [gameName, tagLine] = val.split("#");
+    return { game_name: gameName, tag_line: tagLine };
   })
   .pipe(
     z.object({

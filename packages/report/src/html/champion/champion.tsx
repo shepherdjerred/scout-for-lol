@@ -3,7 +3,7 @@ import { palette } from "../../assets/colors.ts";
 import { Champion } from "@scout-for-lol/data";
 import { summoner } from "../../dataDragon/summoner.ts";
 import { latestVersion } from "../../dataDragon/version.ts";
-import { CreepScore } from "./creepScore.tsx";
+import { CreepScore } from "./creep-score.tsx";
 import { Gold } from "./gold.tsx";
 import { Damage } from "./damage.tsx";
 import { Kda } from "./kda.tsx";

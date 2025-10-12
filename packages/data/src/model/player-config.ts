@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LeagueAccountSchema } from "./leagueAccount.js";
+import { LeagueAccountSchema } from "./league-account.js";
 import { DiscordSchema } from "./discord.js";
 
 export type PlayerConfigEntry = z.infer<typeof PlayerConfigEntrySchema>;

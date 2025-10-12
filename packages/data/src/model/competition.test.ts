@@ -354,8 +354,9 @@ describe("getCompetitionStatus - Error cases", () => {
       getCompetitionStatus(competition);
       expect(false).toBe(true); // Should not reach here
     } catch (error) {
-      expect((error as Error).message).toContain("startDate AND endDate");
-      expect((error as Error).message).toContain("seasonId");
+      const errorMessage = String(error);
+      expect(errorMessage).toContain("startDate AND endDate");
+      expect(errorMessage).toContain("seasonId");
     }
   });
 });
@@ -1397,9 +1398,7 @@ describe("parseCompetition", () => {
       criteriaConfig: JSON.stringify("not an object"),
     };
 
-    expect(() => parseCompetition(raw)).toThrow(
-      /criteriaConfig must be an object/,
-    );
+    expect(() => parseCompetition(raw)).toThrow(/criteriaConfig must be an object/);
   });
 
   test("throws when criteriaConfig is null", () => {
@@ -1408,9 +1407,7 @@ describe("parseCompetition", () => {
       criteriaConfig: JSON.stringify(null),
     };
 
-    expect(() => parseCompetition(raw)).toThrow(
-      /criteriaConfig must be an object/,
-    );
+    expect(() => parseCompetition(raw)).toThrow(/criteriaConfig must be an object/);
   });
 
   test("throws when criteriaType doesn't match config", () => {

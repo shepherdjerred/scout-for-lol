@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DivisionSchema, divisionToString } from "./division.js";
 import { TierSchema } from "./tier.js";
-import { rankToLeaguePoints, tierToOrdinal } from "./leaguePoints.js";
+import { rankToLeaguePoints, tierToOrdinal } from "./league-points.js";
 import { startCase } from "../util.js";
 
 export type Rank = z.infer<typeof RankSchema>;

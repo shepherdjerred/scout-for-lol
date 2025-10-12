@@ -3,15 +3,11 @@ import { match } from "ts-pattern";
 import { z } from "zod";
 import { type CompetitionCriteria, CompetitionQueueTypeSchema, CompetitionVisibilitySchema } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
-import {
-  type CreateCompetitionInput,
-  canCreateCompetition,
-  createCompetition,
-  recordCreation,
-  validateOwnerLimit,
-  validateServerLimit,
-} from "../../../database/competition/index.js";
 import { prisma } from "../../../database/index.js";
+import { canCreateCompetition } from "../../../database/competition/permissions.js";
+import { type CreateCompetitionInput, createCompetition } from "../../../database/competition/queries.js";
+import { recordCreation } from "../../../database/competition/rate-limit.js";
+import { validateOwnerLimit, validateServerLimit } from "../../../database/competition/validation.js";
 
 // ============================================================================
 // Helper Functions

@@ -4,11 +4,8 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-  clearAllRateLimits,
-  createCompetition,
-  getCompetitionById,
-} from "../../../database/competition/index.js";
+import type { createCompetition, getCompetitionById } from "../../../database/competition/queries.js";
+import { clearAllRateLimits } from "../../../database/competition/rate-limit.js";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "create-command-test-"));
@@ -296,9 +293,7 @@ describe("Permission and limit integration", () => {
     });
 
     // Try to create second competition
-    const { validateOwnerLimit } = await import(
-      "../../../database/competition/index.js"
-    );
+    const { validateOwnerLimit } = await import("../../../database/competition/index.js");
 
     let error: Error | null = null;
     try {
@@ -336,9 +331,7 @@ describe("Permission and limit integration", () => {
     }
 
     // Try to create 6th competition
-    const { validateServerLimit } = await import(
-      "../../../database/competition/index.js"
-    );
+    const { validateServerLimit } = await import("../../../database/competition/index.js");
 
     let error: Error | null = null;
     try {
@@ -503,12 +496,8 @@ describe("Metadata tracking", () => {
 
     const afterCreate = new Date();
 
-    expect(competition.createdTime.getTime()).toBeGreaterThanOrEqual(
-      beforeCreate.getTime(),
-    );
-    expect(competition.createdTime.getTime()).toBeLessThanOrEqual(
-      afterCreate.getTime(),
-    );
+    expect(competition.createdTime.getTime()).toBeGreaterThanOrEqual(beforeCreate.getTime());
+    expect(competition.createdTime.getTime()).toBeLessThanOrEqual(afterCreate.getTime());
     expect(competition.updatedTime).toEqual(competition.createdTime);
   });
 });
