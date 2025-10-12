@@ -16,7 +16,8 @@
     "format": "bun run --filter='*' format",
     "test": "bun run --filter='*' test",
     "clean": "rm -rf node_modules packages/*/node_modules",
-    "generate": "bun run --filter='*' generate"
+    "generate": "bun run --filter='*' generate",
+    "prepare": "husky"
   },
   "devDependencies": {
     "typescript": "^5.0.0",

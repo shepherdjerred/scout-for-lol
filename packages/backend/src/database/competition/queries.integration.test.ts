@@ -378,7 +378,7 @@ describe("cancelCompetition", () => {
     try {
       await cancelCompetition(prisma, 99999);
     } catch (e) {
-      error = e as unknown as Error;
+      error = e as Error;
     }
     expect(error).not.toBeNull();
   });
