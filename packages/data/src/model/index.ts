@@ -1,5 +1,6 @@
 export * from "./arena/index.js";
 export * from "./champion.js";
+export * from "./competition.js";
 export * from "./discord.js";
 export * from "./division.js";
 export * from "./lane.js";

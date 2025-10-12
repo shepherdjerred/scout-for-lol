@@ -1,23 +1,28 @@
 # Task 2: Core Types - Branded Types and Enums
 
 ## Overview
+
 Create the foundational Zod schemas and TypeScript types for the competition system in the shared `packages/data` package. This includes branded ID types, core enums, and the domain status type.
 
 ## Dependencies
+
 - Task 1 (Prisma schema) - for understanding the data model
 
 ## Files to Create/Modify
+
 - `packages/data/src/model/competition.ts` (new file)
 - `packages/data/src/index.ts` - export new types
 
 ## Acceptance Criteria
+
 1. Branded types created for `CompetitionId` and `ParticipantId`
 2. Enums defined for:
    - `CompetitionVisibility` (OPEN, INVITE_ONLY, SERVER_WIDE)
    - `ParticipantStatus` (INVITED, JOINED, LEFT)
    - `SnapshotType` (START, END)
    - `PermissionType` (CREATE_COMPETITION)
-3. `QueueType` enum defined (SOLO, FLEX, RANKED_ANY, ARENA, ARAM, ALL)
+3. `CompetitionQueueType` enum defined (SOLO, FLEX, RANKED_ANY, ARENA, ARAM, ALL)
+   - Note: Named `CompetitionQueueType` (not `QueueType`) to avoid conflict with existing `QueueType` in state.ts
 4. `CompetitionStatus` type defined (DRAFT, ACTIVE, ENDED, CANCELLED)
 5. `getCompetitionStatus()` function implemented with proper logic
 6. All types exported from `packages/data/src/index.ts`
@@ -25,6 +30,7 @@ Create the foundational Zod schemas and TypeScript types for the competition sys
 8. All schemas have proper Zod validation
 
 ## Implementation Notes
+
 - Use `.brand()` for ID types to prevent mixing different ID types
 - Enums use `z.enum()` for runtime validation
 - `getCompetitionStatus()` is a pure function with no side effects
@@ -33,6 +39,7 @@ Create the foundational Zod schemas and TypeScript types for the competition sys
 ## Test Cases
 
 ### Unit Tests
+
 File: `packages/data/src/model/competition.test.ts`
 
 1. **Branded type safety**
@@ -64,6 +71,7 @@ File: `packages/data/src/model/competition.test.ts`
    - Error message is descriptive
 
 ## Example Test Structure
+
 ```typescript
 import { describe, expect, test } from 'bun:test';
 import { CompetitionIdSchema, getCompetitionStatus } from './competition';
@@ -95,13 +103,13 @@ describe('getCompetitionStatus', () => {
     };
     expect(getCompetitionStatus(competition)).toBe('CANCELLED');
   });
-  
+
   // ... more tests
 });
 ```
 
 ## Validation
+
 - Run `bun run typecheck:all` - should pass
 - Run `bun test packages/data/src/model/competition.test.ts`
 - All tests should pass
-
