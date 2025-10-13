@@ -22,7 +22,6 @@ export function installBackendDeps(workspaceSource: Directory): Container {
     .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
     .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
     .withWorkdir("/workspace")
-    .withExec(["sh", "-c", "rm -rf ~/.bun/install/cache node_modules packages/*/node_modules"])
     .withExec(["bun", "install", "--frozen-lockfile"]);
 }
 
@@ -48,16 +47,16 @@ export function checkBackend(workspaceSource: Directory): Container {
   return (
     installBackendDeps(workspaceSource)
       .withWorkdir("/workspace/packages/backend")
-      .withExec(["bun", "run", "src/database/generate.ts"])
-      .withExec(["rm", "-f", "generated/client/runtime/edge-esm.cjs"])
+      .withExec(["bun", "run", "generate"])
+      // .terminal()
       .withExec(["sh", "-c", "echo '🔍 [CI] Running TypeScript type checking for backend...'"])
       .withExec(["bun", "run", "typecheck"])
       .withExec(["sh", "-c", "echo '✅ [CI] TypeScript type checking passed!'"])
       .withExec(["sh", "-c", "echo '🔍 [CI] Running ESLint for backend...'"])
       .withExec(["bun", "run", "lint"])
       .withExec(["sh", "-c", "echo '✅ [CI] ESLint passed!'"])
-      // .withExec(["sh", "-c", "echo '🧪 [CI] Running tests for backend...'"])
-      // .withExec(["bun", "test"])
+      .withExec(["sh", "-c", "echo '🧪 [CI] Running tests for backend...'"])
+      .withExec(["bun", "test"])
       .withExec(["sh", "-c", "echo '✅ [CI] All backend checks completed successfully!'"])
   );
 }
@@ -78,8 +77,7 @@ export function buildBackendImage(workspaceSource: Directory, version: string, g
       workspaceSource.directory("packages/backend").directory("prisma"),
     )
     .withWorkdir("/workspace/packages/backend")
-    .withExec(["bun", "run", "src/database/generate.ts"])
-    .withExec(["rm", "-f", "generated/client/runtime/edge-esm.cjs"])
+    .withExec(["bun", "run", "generate"])
     .withEntrypoint(["sh", "-c", "bun run src/database/migrate.ts && bun run src/index.ts"])
     .withLabel("org.opencontainers.image.title", "scout-for-lol-backend")
     .withLabel("org.opencontainers.image.description", "Scout for LoL Discord bot backend");

@@ -26,6 +26,7 @@
     },
   ],
   "extensions": {
+    "unwantedRecommendations": [],
     "recommendations": [
       "astro-build.astro-vscode",
       "tamasfe.even-better-toml",

@@ -307,35 +307,13 @@ export class ScoutForLol {
       return Promise.resolve(
         workspaceContainer
           .withWorkdir("/workspace/packages/backend")
-          .withExec(["bun", "run", "src/database/generate.ts"])
-          .withExec(["rm", "-f", "generated/client/runtime/edge-esm.cjs"])
+          .withExec(["bun", "run", "generate"])
           .directory("/workspace/packages/backend/generated"),
       );
     });
 
     logWithTimestamp("✅ Prisma client generated successfully");
     return result;
-  }
-
-  /**
-   * Check the backend package
-   * @param source The backend source directory
-   * @returns A message indicating completion
-   */
-  @func()
-  async checkBackend(
-    @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
-      defaultPath: "packages/backend",
-    })
-    source: Directory,
-  ): Promise<string> {
-    logWithTimestamp("🔍 Starting backend package check");
-
-    await withTiming("backend package check", () => Promise.resolve(checkBackend(source)));
-
-    logWithTimestamp("✅ Backend check completed successfully");
-    return "Backend check completed successfully";
   }
 
   /**
