@@ -42,8 +42,7 @@ export async function getCurrentGame(player: PlayerConfigEntry): Promise<undefin
     console.log(
       `📊 Game info: Match ID ${validatedResponse.response.gameId.toString()}, Mode: ${validatedResponse.response.gameMode}, Type: ${validatedResponse.response.gameType}`,
     );
-    // TODO: remove type assertion
-    return response.response as unknown as CurrentGameInfoDTO;
+    return response.response;
   } catch (e) {
     console.error(`❌ Error fetching current game for ${playerAlias}:`, e);
 

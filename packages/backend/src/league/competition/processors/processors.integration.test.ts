@@ -12,7 +12,7 @@ import { join } from "node:path";
 
 function loadMatch(path: string): MatchV5DTOs.MatchDto {
   const content = readFileSync(path, "utf-8");
-  // eslint-disable-next-line no-restricted-syntax
+  // eslint-disable-next-line no-restricted-syntax -- I'm okay with this since we're loading a saved API response
   return JSON.parse(content) as MatchV5DTOs.MatchDto;
 }
 

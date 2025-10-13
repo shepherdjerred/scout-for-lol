@@ -63,7 +63,7 @@ function createMockGetObjectResponse(content: string): GetObjectCommandOutput {
   return {
     Body: mockBody,
     $metadata: {},
-  } as unknown as GetObjectCommandOutput;
+  };
 }
 
 beforeEach(() => {

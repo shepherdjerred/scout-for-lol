@@ -96,10 +96,8 @@ describe("Competition Lifecycle - Query Logic", () => {
       const now = new Date("2025-01-15T12:00:00Z");
       const endDate = new Date("2025-01-15T11:00:00Z");
       const isCancelled = true;
-      const hasEndSnapshots = false;
 
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      const shouldEnd = endDate <= now && !hasEndSnapshots && !isCancelled;
+      const shouldEnd = endDate <= now && !isCancelled;
 
       expect(shouldEnd).toBe(false);
     });

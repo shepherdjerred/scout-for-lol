@@ -15,7 +15,7 @@ const RAW_FILE_PATHS = [
 async function loadMatch(path: string): Promise<MatchV5DTOs.MatchDto> {
   const file = Bun.file(path);
   const json = (await file.json()) as unknown;
-  // eslint-disable-next-line no-restricted-syntax -- External API type from Riot Games, casting is acceptable here
+  // eslint-disable-next-line no-restricted-syntax -- I'm okay with this since we're loading a saved API response
   return json as MatchV5DTOs.MatchDto;
 }
 

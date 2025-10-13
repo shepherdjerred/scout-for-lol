@@ -74,13 +74,11 @@ function assignRanks(entries: LeaderboardEntry[]): (LeaderboardEntry & { rank: n
  */
 function scoresAreEqual(a: number | Rank, b: number | Rank): boolean {
   // Both are numbers
-  // eslint-disable-next-line no-restricted-syntax -- Test helper needs type checking
   if (typeof a === "number" && typeof b === "number") {
     return a === b;
   }
 
   // Both are Rank objects
-  // eslint-disable-next-line no-restricted-syntax -- Test helper needs type checking
   if (typeof a === "object" && typeof b === "object") {
     // For simplicity in tests, compare tier, division, and LP
     return a.tier === b.tier && a.division === b.division && a.lp === b.lp;

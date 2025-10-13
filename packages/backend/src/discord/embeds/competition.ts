@@ -313,28 +313,28 @@ export function formatScore(
   return match(criteria)
     .with({ type: "MOST_GAMES_PLAYED" }, () => {
       // For number-based criteria, score should be a number
-      const numScore = score as unknown as number;
+      const numScore = score;
       return `${numScore.toString()} game${numScore === 1 ? "" : "s"}`;
     })
     .with({ type: "HIGHEST_RANK" }, () => {
       // For rank-based criteria, score should be a Rank
-      const rankScore = score as unknown as Rank;
+      const rankScore = score;
       return formatRankScore(rankScore);
     })
     .with({ type: "MOST_RANK_CLIMB" }, () => {
-      const numScore = score as unknown as number;
+      const numScore = score;
       return `${numScore.toString()} LP gained`;
     })
     .with({ type: "MOST_WINS_PLAYER" }, () => {
-      const numScore = score as unknown as number;
+      const numScore = score;
       return formatWinsScore(numScore, metadata);
     })
     .with({ type: "MOST_WINS_CHAMPION" }, () => {
-      const numScore = score as unknown as number;
+      const numScore = score;
       return formatWinsScore(numScore, metadata);
     })
     .with({ type: "HIGHEST_WIN_RATE" }, () => {
-      const numScore = score as unknown as number;
+      const numScore = score;
       return formatWinRateScore(numScore, metadata);
     })
     .exhaustive();
@@ -356,8 +356,8 @@ function formatWinsScore(wins: number, metadata?: Record<string, unknown>): stri
   const baseText = `${wins.toString()} win${wins === 1 ? "" : "s"}`;
 
   // If we have games in metadata, show win/loss record
-  if (metadata && metadata["games"] && (metadata["games"] as unknown as number) > 0) {
-    const games = metadata["games"] as unknown as number;
+  if (metadata && metadata["games"] && metadata["games"] > 0) {
+    const games = metadata["games"];
     const losses = games - wins;
     const winRate = (wins / games) * 100;
     return `${baseText} (${wins.toString()}-${losses.toString()}, ${winRate.toFixed(0)}%)`;

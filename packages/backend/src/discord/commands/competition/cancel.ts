@@ -57,7 +57,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   const memberResult = GuildMemberSchema.safeParse(member);
   let isAdmin = false;
   if (memberResult.success && member) {
-    const permissions = (member as unknown as { permissions: { has: (perm: bigint) => boolean } }).permissions;
+    const permissions = member.permissions;
     isAdmin = permissions.has(PermissionFlagsBits.Administrator);
   }
 
@@ -110,10 +110,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
     const channelResult = TextChannelSchema.safeParse(channel);
 
     if (channelResult.success && channel) {
-      const textChannel = channel as unknown as {
-        isTextBased: () => boolean;
-        send: (content: string) => Promise<unknown>;
-      };
+      const textChannel = channel;
       const isTextBased = textChannel.isTextBased();
 
       if (isTextBased) {
