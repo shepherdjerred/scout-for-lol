@@ -1,8 +1,4 @@
-import {
-  type ArenaMatch,
-  type Augment,
-  formatArenaPlacement,
-} from "@scout-for-lol/data";
+import { type ArenaMatch, type Augment, formatArenaPlacement } from "@scout-for-lol/data";
 import { renderItems } from "../champion/item.tsx";
 import { startCase } from "@scout-for-lol/data/src/util.ts";
 
@@ -16,8 +12,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
     }
     return `Augment ${a.id.toString()}`;
   };
-  const filterDisplayAugments = (augs: Augment[]) =>
-    augs.filter((a) => (a.type === "full" ? true : a.id > 0));
+  const filterDisplayAugments = (augs: Augment[]) => augs.filter((a) => (a.type === "full" ? true : a.id > 0));
   return (
     <div
       style={{
@@ -32,9 +27,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
     >
       {(() => {
         // Get tracked player names to check if we're only tracking one team
-        const highlightNames = match.players.map(
-          (p) => p.champion.riotIdGameName,
-        );
+        const highlightNames = match.players.map((p) => p.champion.riotIdGameName);
 
         const trackedTeams = match.teams.filter((team) =>
           team.players.some((p) => highlightNames.includes(p.riotIdGameName)),
@@ -85,36 +78,26 @@ export function ArenaReport(props: { match: ArenaMatch }) {
       })()}
 
       <div style={{ display: "flex", fontSize: 48, opacity: 0.9 }}>
-        {Math.round(match.durationInSeconds / 60)}m{" "}
-        {Math.round(match.durationInSeconds % 60)}s
+        {Math.round(match.durationInSeconds / 60)}m {Math.round(match.durationInSeconds % 60)}s
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         {/* Get tracked player names for gold highlighting (same as regular matches) */}
         {(() => {
-          const highlightNames = match.players.map(
-            (p) => p.champion.riotIdGameName,
-          );
+          const highlightNames = match.players.map((p) => p.champion.riotIdGameName);
 
           return [...match.teams]
             .sort((a, b) => a.placement - b.placement)
             .filter((team) => {
               // Only show teams that have tracked players
-              return team.players.some((p) =>
-                highlightNames.includes(p.riotIdGameName),
-              );
+              return team.players.some((p) => highlightNames.includes(p.riotIdGameName));
             })
             .map((team) => {
               // Check if this team has any tracked players (will always be true now due to filter)
-              const hasTrackedPlayer = team.players.some((p) =>
-                highlightNames.includes(p.riotIdGameName),
-              );
+              const hasTrackedPlayer = team.players.some((p) => highlightNames.includes(p.riotIdGameName));
 
               // Enhanced styling for teams with tracked players and medal accents
-              const getTeamStyling = (
-                placement: number,
-                hasTracked: boolean,
-              ) => {
+              const getTeamStyling = (placement: number, hasTracked: boolean) => {
                 const medalAccent = {
                   border:
                     placement <= 3
@@ -136,8 +119,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
 
                 if (hasTracked) {
                   return {
-                    background:
-                      "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)",
+                    background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)",
                     border: "3px solid #fbbf24",
                     boxShadow:
                       "0 8px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(251, 191, 36, 0.3), 0 0 20px rgba(251, 191, 36, 0.15)",
@@ -145,17 +127,13 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                 }
 
                 return {
-                  background:
-                    "linear-gradient(135deg, #111827 0%, #1f2937 100%)",
+                  background: "linear-gradient(135deg, #111827 0%, #1f2937 100%)",
                   border: medalAccent.border,
                   boxShadow: medalAccent.boxShadow,
                 };
               };
 
-              const teamStyle = getTeamStyling(
-                team.placement,
-                hasTrackedPlayer,
-              );
+              const teamStyle = getTeamStyling(team.placement, hasTrackedPlayer);
 
               return (
                 <div
@@ -180,9 +158,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                       marginBottom: 16,
                     }}
                   >
-                    <div
-                      style={{ display: "flex", alignItems: "center", gap: 12 }}
-                    >
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                       <div
                         style={{
                           background:
@@ -202,18 +178,12 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                           justifyContent: "center",
                           fontSize: 24,
                           fontWeight: 800,
-                          border:
-                            team.placement <= 3
-                              ? "2px solid rgba(255, 255, 255, 0.2)"
-                              : "none",
+                          border: team.placement <= 3 ? "2px solid rgba(255, 255, 255, 0.2)" : "none",
                           boxShadow:
                             team.placement <= 3
                               ? "0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
                               : "0 2px 4px rgba(0, 0, 0, 0.2)",
-                          textShadow:
-                            team.placement <= 3
-                              ? "0 1px 1px rgba(0, 0, 0, 0.3)"
-                              : "none",
+                          textShadow: team.placement <= 3 ? "0 1px 1px rgba(0, 0, 0, 0.3)" : "none",
                         }}
                       >
                         {formatArenaPlacement(team.placement)}
@@ -223,9 +193,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     {team.players.map((p, idx) => {
                       const items = renderItems(p.items, 0, true);
-                      const isTrackedPlayer = highlightNames.includes(
-                        p.riotIdGameName,
-                      );
+                      const isTrackedPlayer = highlightNames.includes(p.riotIdGameName);
 
                       return (
                         <div
@@ -237,9 +205,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                             gap: 8,
                           }}
                         >
-                          <div
-                            style={{ display: "flex", flexDirection: "column" }}
-                          >
+                          <div style={{ display: "flex", flexDirection: "column" }}>
                             <div
                               style={{
                                 display: "flex",
@@ -253,9 +219,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                                   display: "flex",
                                   fontSize: 28,
                                   fontWeight: 700,
-                                  color: isTrackedPlayer
-                                    ? "#fbbf24"
-                                    : "#e5e7eb",
+                                  color: isTrackedPlayer ? "#fbbf24" : "#e5e7eb",
                                 }}
                               >
                                 {p.riotIdGameName}
@@ -292,8 +256,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                                   display: "flex",
                                   fontSize: 24,
                                   fontWeight: 600,
-                                  color:
-                                    p.kills > p.deaths ? "#10b981" : "#ef4444",
+                                  color: p.kills > p.deaths ? "#10b981" : "#ef4444",
                                 }}
                               >
                                 {p.kills}/{p.deaths}/{p.assists}
@@ -318,31 +281,29 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                                 >
                                   Augments:
                                 </div>
-                                {filterDisplayAugments(p.augments).map(
-                                  (augment, augIdx) => (
-                                    <div
-                                      key={augIdx}
+                                {filterDisplayAugments(p.augments).map((augment, augIdx) => (
+                                  <div
+                                    key={augIdx}
+                                    style={{
+                                      display: "flex",
+                                      fontSize: 22,
+                                      opacity: 0.75,
+                                      paddingLeft: 16,
+                                      position: "relative",
+                                    }}
+                                  >
+                                    <span
                                       style={{
-                                        display: "flex",
-                                        fontSize: 22,
-                                        opacity: 0.75,
-                                        paddingLeft: 16,
-                                        position: "relative",
+                                        position: "absolute",
+                                        left: 0,
+                                        color: "#9ca3af",
                                       }}
                                     >
-                                      <span
-                                        style={{
-                                          position: "absolute",
-                                          left: 0,
-                                          color: "#9ca3af",
-                                        }}
-                                      >
-                                        •
-                                      </span>
-                                      {renderAugment(augment)}
-                                    </div>
-                                  ),
-                                )}
+                                      •
+                                    </span>
+                                    {renderAugment(augment)}
+                                  </div>
+                                ))}
                               </div>
                             ) : null}
                           </div>

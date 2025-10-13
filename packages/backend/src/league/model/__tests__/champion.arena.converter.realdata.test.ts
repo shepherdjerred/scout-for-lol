@@ -28,6 +28,7 @@ describe("participantToArenaChampion with real arena JSON", () => {
         // all augments non-zero (for id-only fallback and full augment objects)
         expect(
           champ.augments.every(
+            // TODO: remove these
             // eslint-disable-next-line no-restricted-syntax -- Testing type structure of augments
             (a) => (typeof a === "object" && "id" in a ? a.id : 0) !== 0,
           ),

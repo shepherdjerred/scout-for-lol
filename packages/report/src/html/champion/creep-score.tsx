@@ -1,12 +1,6 @@
 import { round } from "remeda";
 
-export function CreepScore({
-  value,
-  durationInMinutes,
-}: {
-  value: number;
-  durationInMinutes: number;
-}) {
+export function CreepScore({ value, durationInMinutes }: { value: number; durationInMinutes: number }) {
   return (
     <div
       style={{
@@ -17,9 +11,7 @@ export function CreepScore({
       }}
     >
       <span style={{ fontWeight: 700 }}>{value.toLocaleString()} CS</span>
-      <span>
-        {round(value / durationInMinutes || 0, 1).toLocaleString()} / min
-      </span>
+      <span>{round(value / durationInMinutes || 0, 1).toLocaleString()} / min</span>
     </div>
   );
 }

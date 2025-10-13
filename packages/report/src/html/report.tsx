@@ -1,8 +1,4 @@
-import {
-  CompletedMatch,
-  leaguePointsDelta,
-  lpDiffToString,
-} from "@scout-for-lol/data";
+import { CompletedMatch, leaguePointsDelta, lpDiffToString } from "@scout-for-lol/data";
 import { palette } from "../assets/colors.ts";
 import { RankedBadge } from "./ranked/index.tsx";
 import { renderTeam } from "./team.tsx";
@@ -61,9 +57,7 @@ export function Report({ match }: { match: CompletedMatch }) {
               alignSelf: "flex-start",
             }}
           >
-            <span style={{ color: palette.gold[4] }}>
-              {mainPlayer?.outcome}
-            </span>
+            <span style={{ color: palette.gold[4] }}>{mainPlayer?.outcome}</span>
             <div
               style={{
                 fontSize: "6rem",
@@ -86,12 +80,7 @@ export function Report({ match }: { match: CompletedMatch }) {
                 {/* Check both before and after a match; this handles placements */}
                 {mainPlayer?.rankBeforeMatch &&
                   mainPlayer.rankAfterMatch &&
-                  lpDiffToString(
-                    leaguePointsDelta(
-                      mainPlayer.rankBeforeMatch,
-                      mainPlayer.rankAfterMatch,
-                    ),
-                  )}
+                  lpDiffToString(leaguePointsDelta(mainPlayer.rankBeforeMatch, mainPlayer.rankAfterMatch))}
               </span>
               {wins != null && losses != null && (
                 <div
@@ -107,10 +96,7 @@ export function Report({ match }: { match: CompletedMatch }) {
             </div>
           </div>
           {mainPlayer?.rankAfterMatch && (
-            <RankedBadge
-              oldRank={mainPlayer.rankBeforeMatch}
-              newRank={mainPlayer.rankAfterMatch}
-            />
+            <RankedBadge oldRank={mainPlayer.rankBeforeMatch} newRank={mainPlayer.rankAfterMatch} />
           )}
         </div>
         <div
@@ -121,18 +107,8 @@ export function Report({ match }: { match: CompletedMatch }) {
             flexDirection: "column",
           }}
         >
-          {renderTeam(
-            match.teams.blue,
-            "blue",
-            highlightNames,
-            match.durationInSeconds / 60,
-          )}
-          {renderTeam(
-            match.teams.red,
-            "red",
-            highlightNames,
-            match.durationInSeconds / 60,
-          )}
+          {renderTeam(match.teams.blue, "blue", highlightNames, match.durationInSeconds / 60)}
+          {renderTeam(match.teams.red, "red", highlightNames, match.durationInSeconds / 60)}
         </div>
       </div>
     </div>

@@ -2,8 +2,7 @@ import type { TSESTree } from "@typescript-eslint/utils";
 import { ESLintUtils } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
-  (name) =>
-    `https://github.com/shepherdjerred/homelab/blob/main/eslint-rules/${name}.ts`
+  (name) => `https://github.com/shepherdjerred/homelab/blob/main/eslint-rules/${name}.ts`,
 );
 
 export const zodSchemaNaming = createRule({

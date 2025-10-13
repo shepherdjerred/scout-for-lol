@@ -51,9 +51,9 @@ There seems to be a fair bit of coupling. Examples:
 ## Misc
 
 - [ ] Detect users who haven't played in a while and lower how often they are
-  refreshed
+      refreshed
 - [ ] Prune servers where the bot no longer has permissions/where the bot has been
-  removed
+      removed
 
 ## Post-match
 

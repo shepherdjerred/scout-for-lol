@@ -13,10 +13,7 @@ function hashSvg(svg: string): string {
   return createHash("sha256").update(svg).digest("hex");
 }
 
-const RAW_FILE_PATHS = [
-  join(currentDir, "testdata/1.json"),
-  join(currentDir, "testdata/2.json"),
-];
+const RAW_FILE_PATHS = [join(currentDir, "testdata/1.json"), join(currentDir, "testdata/2.json")];
 
 for (const path of RAW_FILE_PATHS) {
   const fileName = path.split("/").pop();
@@ -29,8 +26,7 @@ for (const path of RAW_FILE_PATHS) {
     const svg = await arenaMatchToSvg(ArenaMatchSchema.parse(match));
     const png = svgToPng(svg);
     expect(svg.length).toBeGreaterThan(1024); // basic sanity check
-    const fileName =
-      path.split("/").pop()?.replace(".json", ".png") ?? "arena_real.png";
+    const fileName = path.split("/").pop()?.replace(".json", ".png") ?? "arena_real.png";
     writeFileSync(new URL(`__snapshots__/${fileName}`, import.meta.url), png);
 
     // Hash the SVG for snapshot comparison instead of storing the full content

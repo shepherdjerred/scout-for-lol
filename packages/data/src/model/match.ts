@@ -37,10 +37,7 @@ export const CompletedMatchSchema = z.strictObject({
   }),
 });
 
-export function getLaneOpponent(
-  player: Champion,
-  opponents: Champion[],
-): Champion | undefined {
+export function getLaneOpponent(player: Champion, opponents: Champion[]): Champion | undefined {
   return pipe(
     opponents,
     filter((opponent) => opponent.lane === player.lane),

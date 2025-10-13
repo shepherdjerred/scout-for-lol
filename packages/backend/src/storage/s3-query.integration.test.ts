@@ -4,12 +4,8 @@
  * These tests use in-memory mocking via aws-sdk-client-mock instead of real S3.
  * This makes them fast, reliable, and doesn't require AWS credentials.
  *
- * To run: NODE_ENV=test S3_BUCKET_NAME=test-bucket bun test src/storage/s3-query.integration.test.ts
+ * Environment setup is handled automatically by test-setup.ts (preloaded via bunfig.toml)
  */
-
-// Set up environment BEFORE importing modules that read config
-process.env["NODE_ENV"] = "test";
-process.env["S3_BUCKET_NAME"] = "test-bucket";
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";

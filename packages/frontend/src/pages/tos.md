@@ -1,6 +1,6 @@
 # Terms of Service
 
-**Last updated: September 26, 2025**
+Last updated: September 26, 2025
 
 Thank you for using Scout for League of Legends! This Discord bot is designed to help you track and analyze your League of Legends gameplay. Since this is a free service provided by a solo developer, these Terms of Service help establish clear guidelines for everyone.
 
@@ -62,6 +62,6 @@ As with any software, the Service may have bugs. We work to fix reported issues 
 
 Since this is a free service:
 
-***You expressly understand and agree that Scout for League of Legends shall not be liable for any damages or losses resulting from your use of the Service. This includes but is not limited to any issues with data accuracy, service availability, or other problems that may arise. Use of this Service is entirely at your own risk.***
+**_You expressly understand and agree that Scout for League of Legends shall not be liable for any damages or losses resulting from your use of the Service. This includes but is not limited to any issues with data accuracy, service availability, or other problems that may arise. Use of this Service is entirely at your own risk._**
 
 If you have questions about these Terms, you can reach out to <scout@sjer.red>

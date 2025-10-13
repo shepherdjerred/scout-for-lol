@@ -1,12 +1,6 @@
 import { round } from "remeda";
 
-export function Gold({
-  value,
-  durationInMinutes,
-}: {
-  value: number;
-  durationInMinutes: number;
-}) {
+export function Gold({ value, durationInMinutes }: { value: number; durationInMinutes: number }) {
   return (
     <div
       style={{
@@ -17,9 +11,7 @@ export function Gold({
       }}
     >
       <span style={{ fontWeight: 700 }}>{value.toLocaleString()} gold</span>
-      <span>
-        {round(value / durationInMinutes || 0, 0).toLocaleString()} / min
-      </span>
+      <span>{round(value / durationInMinutes || 0, 0).toLocaleString()} / min</span>
     </div>
   );
 }
