@@ -1,0 +1,6 @@
+{
+  "install": "mise dev",
+  "build": {
+    "dockerfile": "Dockerfile"
+  }
+}
