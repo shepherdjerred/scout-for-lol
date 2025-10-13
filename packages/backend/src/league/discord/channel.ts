@@ -1,4 +1,4 @@
-import { type Message, MessageCreateOptions, MessagePayload, type TextChannel } from "discord.js";
+import { type Message, MessageCreateOptions, MessagePayload } from "discord.js";
 import { z } from "zod";
 import client from "../../discord/client";
 import { asTextChannel } from "../../discord/utils/channel";
@@ -6,7 +6,7 @@ import { asTextChannel } from "../../discord/utils/channel";
 export async function send(
   options: string | MessagePayload | MessageCreateOptions,
   channelId: string,
-): Promise<Message<true> | Message<false>> {
+): Promise<Message> {
   // TODO: check if the channel is a text channel
   const fetchedChannel = await client.channels.fetch(channelId);
   if (!fetchedChannel) {

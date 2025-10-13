@@ -1,10 +1,10 @@
-import type { Channel } from "discord.js";
+import type { Channel, Message, MessageCreateOptions, MessagePayload } from "discord.js";
 
 /**
  * Minimal interface for text channels that support sending messages
  */
 export type SendableChannel = {
-  send(content: string): Promise<unknown>;
+  send(content: string | MessagePayload | MessageCreateOptions): Promise<Message>;
 };
 
 /**

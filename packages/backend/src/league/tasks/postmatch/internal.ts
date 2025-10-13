@@ -334,10 +334,7 @@ export async function checkPostMatchInternal(
   state: ApplicationState,
   saveFn: (match: MatchV5DTOs.MatchDto) => Promise<void>,
   checkFn: (game: LoadingScreenState) => Promise<MatchV5DTOs.MatchDto | undefined>,
-  sendFn: (
-    message: string | MessagePayload | MessageCreateOptions,
-    channelId: string,
-  ) => Promise<Message<true> | Message<false>>,
+  sendFn: (message: string | MessagePayload | MessageCreateOptions, channelId: string) => Promise<Message>,
   getPlayerFn: (playerConfig: PlayerConfigEntry) => Promise<Player>,
   getSubscriptionsFn: (playerIds: LeaguePuuid[]) => Promise<{ channel: DiscordChannelId }[]>,
 ) {
