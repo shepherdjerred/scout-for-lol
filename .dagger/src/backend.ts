@@ -105,10 +105,11 @@ export async function smokeTestBackendImage(
     .withEntrypoint([]); // Clear the entrypoint so we can run our own commands
 
   // Run the container with a timeout and capture output using combined stdout/stderr
+  // Increased timeout to 60s to account for dependency installation at runtime
   const container = containerWithEnv.withExec([
     "sh",
     "-c",
-    "timeout 30s bun run src/database/migrate.ts && timeout 30s bun run src/index.ts 2>&1 || true",
+    "timeout 60s bun run src/database/migrate.ts && timeout 60s bun run src/index.ts 2>&1 || true",
   ]);
 
   let output = "";
@@ -126,7 +127,7 @@ export async function smokeTestBackendImage(
 
   // Check for expected success patterns
   const expectedSuccessPatterns = [
-    "migrations have been successfully applied",
+    "All migrations have been successfully applied",
     "Started refreshing",
     "Logging into Discord",
   ];
