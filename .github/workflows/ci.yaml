@@ -20,8 +20,8 @@ jobs:
       - name: Extract kubectl version
         id: kubectl-version
         run: |
-          KUBECTL_VERSION=v1.31.0
-          echo "version=$KUBECTL_VERSION" >> $GITHUB_OUTPUT
+          KUBECTL_VERSION=v1.34.1
+          echo "version=$KUBECTL_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Cache kubectl
         uses: actions/cache@v4
@@ -39,7 +39,7 @@ jobs:
           mv kubectl ~/.local/bin/
 
       - name: Add kubectl to PATH
-        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Extract Dagger version
         id: dagger-version
@@ -47,19 +47,19 @@ jobs:
           # Get the Dagger version from the running dagger-dagger-helm-engine pod
           DAGGER_IMAGE=$(kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger -o jsonpath='{.items[0].spec.containers[0].image}')
           # Extract version from image tag (e.g., "registry.dagger.io/engine:v0.18.12" -> "0.18.12")
-          DAGGER_VERSION=$(echo "$DAGGER_IMAGE" | sed 's/.*:v//')
+          DAGGER_VERSION="${DAGGER_IMAGE##*:v}"
           echo "Detected Dagger version: $DAGGER_VERSION"
-          echo "version=$DAGGER_VERSION" >> $GITHUB_OUTPUT
+          echo "version=$DAGGER_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Install Dagger CLI
         run: |
           curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=${{ steps.dagger-version.outputs.version }} BIN_DIR=$HOME/.local/bin sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Get Dagger Engine Pod Name
         run: |
           DAGGER_ENGINE_POD_NAME="$(kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger --output=jsonpath='{.items[0].metadata.name}')"
-          echo "DAGGER_ENGINE_POD_NAME=$DAGGER_ENGINE_POD_NAME" >> $GITHUB_ENV
+          echo "DAGGER_ENGINE_POD_NAME=$DAGGER_ENGINE_POD_NAME" >> "$GITHUB_ENV"
 
       - name: Run Dagger CI pipeline (prod)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
