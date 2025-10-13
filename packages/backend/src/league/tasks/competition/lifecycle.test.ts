@@ -85,10 +85,12 @@ describe("Competition Lifecycle - Query Logic", () => {
     test("should exclude competition without START snapshots (never started)", () => {
       const now = new Date("2025-01-15T12:00:00Z");
       const endDate = new Date("2025-01-15T11:00:00Z");
+      const hasStartSnapshots = false;
       const hasEndSnapshots = false;
 
       // Query conditions: endDate <= now, has START, no END
-      const shouldEnd = endDate <= now && !hasEndSnapshots;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      const shouldEnd = endDate <= now && hasStartSnapshots && !hasEndSnapshots;
 
       expect(shouldEnd).toBe(false);
     });
