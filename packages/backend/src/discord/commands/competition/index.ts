@@ -2,6 +2,7 @@ import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from
 import { executeCompetitionCreate } from "./create.js";
 import { executeCompetitionCancel } from "./cancel.js";
 import { executeGrantPermission } from "./grant-permission.js";
+import { executeCompetitionJoin } from "./join.js";
 
 /**
  * Main competition command with subcommands
@@ -128,7 +129,19 @@ export const competitionCommand = new SlashCommandBuilder()
         option.setName("user").setDescription("User to grant permission to").setRequired(true),
       ),
   )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("join")
+      .setDescription("Join a competition")
+      .addIntegerOption((option) =>
+        option
+          .setName("competition-id")
+          .setDescription("ID of the competition to join")
+          .setRequired(true)
+          .setMinValue(1),
+      ),
+  )
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .setContexts(InteractionContextType.Guild);
 
-export { executeCompetitionCreate, executeCompetitionCancel, executeGrantPermission };
+export { executeCompetitionCreate, executeCompetitionCancel, executeGrantPermission, executeCompetitionJoin };

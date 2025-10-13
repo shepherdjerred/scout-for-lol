@@ -2,7 +2,12 @@ import { type Client, MessageFlags } from "discord.js";
 import { executeSubscribe } from "./subscribe";
 import { executeUnsubscribe } from "./unsubscribe";
 import { executeListSubscriptions } from "./list-subscriptions";
-import { executeCompetitionCreate, executeCompetitionCancel, executeGrantPermission } from "./competition/index.js";
+import {
+  executeCompetitionCreate,
+  executeCompetitionCancel,
+  executeGrantPermission,
+  executeCompetitionJoin,
+} from "./competition/index.js";
 import { getState } from "../../league/model/state";
 import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
 
@@ -54,6 +59,8 @@ export function handleCommands(client: Client) {
             await executeCompetitionCancel(interaction);
           } else if (subcommandName === "grant-permission") {
             await executeGrantPermission(interaction);
+          } else if (subcommandName === "join") {
+            await executeCompetitionJoin(interaction);
           } else {
             console.warn(`⚠️  Unknown competition subcommand: ${subcommandName}`);
             await interaction.reply({
