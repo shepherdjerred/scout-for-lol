@@ -3,3 +3,7 @@ peer = false
 
 [test]
 root = "./src"
+
+[test.env]
+NODE_ENV = "test"
+S3_BUCKET_NAME = "test-bucket"

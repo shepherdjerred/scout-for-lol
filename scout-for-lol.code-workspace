@@ -42,6 +42,7 @@
       "prisma.prisma",
       "orta.vscode-jest",
       "dbaeumer.vscode-eslint",
+      "oven.bun-vscode"
     ],
   },
   "settings": {
