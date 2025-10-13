@@ -657,7 +657,7 @@ describe("formatScore", () => {
     expect(result).toBe("0.0% (0-10)");
   });
 
-  it("should return error message for invalid score type", () => {
+  it("should throw for invalid score type", () => {
     const criteria = {
       type: "MOST_GAMES_PLAYED" as const,
       queue: "SOLO" as const,
@@ -672,7 +672,7 @@ describe("formatScore", () => {
       losses: 85,
     };
 
-    const result = formatScore(invalidScore, criteria);
-    expect(result).toBe("Invalid score");
+    // Since we use Zod .parse(), it should throw on invalid data
+    expect(() => formatScore(invalidScore, criteria)).toThrow();
   });
 });

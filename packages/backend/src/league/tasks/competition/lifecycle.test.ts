@@ -87,6 +87,7 @@ describe("Competition Lifecycle - Query Logic", () => {
       const endDate = new Date("2025-01-15T11:00:00Z");
       const hasEndSnapshots = false;
 
+      // Query conditions: endDate <= now, has START, no END
       const shouldEnd = endDate <= now && !hasEndSnapshots;
 
       expect(shouldEnd).toBe(false);
