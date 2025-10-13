@@ -7,6 +7,9 @@ import {
   executeCompetitionCancel,
   executeGrantPermission,
   executeCompetitionJoin,
+  executeCompetitionInvite,
+  executeCompetitionLeave,
+  executeCompetitionView,
 } from "./competition/index.js";
 import { getState } from "../../league/model/state";
 import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
@@ -61,6 +64,12 @@ export function handleCommands(client: Client) {
             await executeGrantPermission(interaction);
           } else if (subcommandName === "join") {
             await executeCompetitionJoin(interaction);
+          } else if (subcommandName === "invite") {
+            await executeCompetitionInvite(interaction);
+          } else if (subcommandName === "leave") {
+            await executeCompetitionLeave(interaction);
+          } else if (subcommandName === "view") {
+            await executeCompetitionView(interaction);
           } else {
             console.warn(`⚠️  Unknown competition subcommand: ${subcommandName}`);
             await interaction.reply({

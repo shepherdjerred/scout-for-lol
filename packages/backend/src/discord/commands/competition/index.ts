@@ -3,6 +3,9 @@ import { executeCompetitionCreate } from "./create.js";
 import { executeCompetitionCancel } from "./cancel.js";
 import { executeGrantPermission } from "./grant-permission.js";
 import { executeCompetitionJoin } from "./join.js";
+import { executeCompetitionInvite } from "./invite.js";
+import { executeCompetitionView } from "./view.js";
+import { executeCompetitionLeave } from "./leave.js";
 
 /**
  * Main competition command with subcommands
@@ -141,7 +144,48 @@ export const competitionCommand = new SlashCommandBuilder()
           .setMinValue(1),
       ),
   )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("invite")
+      .setDescription("Invite a user to your competition")
+      .addIntegerOption((option) =>
+        option.setName("competition-id").setDescription("ID of your competition").setRequired(true).setMinValue(1),
+      )
+      .addUserOption((option) => option.setName("user").setDescription("User to invite").setRequired(true)),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("leave")
+      .setDescription("Leave a competition")
+      .addIntegerOption((option) =>
+        option
+          .setName("competition-id")
+          .setDescription("ID of the competition to leave")
+          .setRequired(true)
+          .setMinValue(1),
+      ),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("view")
+      .setDescription("View competition details and leaderboard")
+      .addIntegerOption((option) =>
+        option
+          .setName("competition-id")
+          .setDescription("ID of the competition to view")
+          .setRequired(true)
+          .setMinValue(1),
+      ),
+  )
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .setContexts(InteractionContextType.Guild);
 
-export { executeCompetitionCreate, executeCompetitionCancel, executeGrantPermission, executeCompetitionJoin };
+export {
+  executeCompetitionCreate,
+  executeCompetitionCancel,
+  executeGrantPermission,
+  executeCompetitionJoin,
+  executeCompetitionInvite,
+  executeCompetitionLeave,
+  executeCompetitionView,
+};

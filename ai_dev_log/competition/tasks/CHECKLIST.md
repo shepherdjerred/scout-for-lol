@@ -87,11 +87,11 @@ Track your progress through the implementation tasks.
   - [ ] Invitation sent
   - [ ] Tests pass
 
-- [ ] **Task 14**: `/competition leave`
-  - [ ] Command registered
-  - [ ] Leave succeeds
-  - [ ] Can't rejoin
-  - [ ] Tests pass
+- [x] **Task 14**: `/competition leave`
+  - [x] Command registered
+  - [x] Leave succeeds
+  - [x] Can't rejoin
+  - [x] Tests pass
 
 ## Phase 5: Commands - Viewing
 
