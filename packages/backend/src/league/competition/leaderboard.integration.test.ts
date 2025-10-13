@@ -20,9 +20,9 @@ const testDbPath = join(testDbDir, "test.db");
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database before tests run
+// Note: cwd needs to be the backend directory where prisma/schema.prisma is located
 execSync("bunx prisma db push --skip-generate", {
   env: { ...process.env, DATABASE_URL: testDbUrl },
-  cwd: join(process.cwd(), ".."),
   stdio: "inherit",
 });
 
@@ -53,6 +53,16 @@ async function resetDatabase() {
   await prisma.player.deleteMany();
 }
 
+// Helper to create active competition dates
+function getActiveCompetitionDates(): { startDate: Date; endDate: Date } {
+  const now = new Date();
+  const startDate = new Date(now);
+  startDate.setDate(startDate.getDate() - 1); // Started yesterday
+  const endDate = new Date(now);
+  endDate.setDate(endDate.getDate() + 30); // Ends in 30 days
+  return { startDate, endDate };
+}
+
 beforeEach(async () => {
   await resetDatabase();
 });
@@ -65,6 +75,12 @@ describe("calculateLeaderboard integration tests", () => {
   test("should throw error for DRAFT competition", async () => {
     // Create DRAFT competition (no dates set)
     // Create raw competition directly with null dates for DRAFT status
+    // Create competition with future dates (DRAFT status)
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 7); // 7 days in future
+    const endDate = new Date(futureDate);
+    endDate.setDate(endDate.getDate() + 30); // 30 days after start
+
     const rawCompetition = await prisma.competition.create({
       data: {
         serverId: "test-server",
@@ -77,8 +93,8 @@ describe("calculateLeaderboard integration tests", () => {
         criteriaType: "MOST_GAMES_PLAYED",
         criteriaConfig: JSON.stringify({ queue: "SOLO" }),
         isCancelled: false,
-        startDate: null, // DRAFT - no start date
-        endDate: null,
+        startDate: futureDate,
+        endDate: endDate,
         seasonId: null,
         creatorDiscordId: "owner-1",
         createdTime: new Date(),
@@ -98,6 +114,7 @@ describe("calculateLeaderboard integration tests", () => {
 
   test("should return empty leaderboard for competition with no participants", async () => {
     // Create active competition with dates
+    const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
       serverId: "test-server",
       ownerId: "owner-1",
@@ -108,8 +125,7 @@ describe("calculateLeaderboard integration tests", () => {
       maxParticipants: 10,
       dates: {
         type: "FIXED_DATES",
-        startDate: new Date("2025-01-01"),
-        endDate: new Date("2025-01-31"),
+        ...dates,
       },
       criteria: {
         type: "MOST_GAMES_PLAYED",
@@ -174,7 +190,13 @@ describe("calculateLeaderboard integration tests", () => {
       },
     });
 
-    // Create competition
+    // Create competition with current dates (active)
+    const now = new Date();
+    const startDate = new Date(now);
+    startDate.setDate(startDate.getDate() - 1); // Started yesterday
+    const endDate = new Date(now);
+    endDate.setDate(endDate.getDate() + 30); // Ends in 30 days
+
     const competition = await createCompetition(prisma, {
       serverId: "test-server",
       ownerId: "owner-1",
@@ -185,8 +207,8 @@ describe("calculateLeaderboard integration tests", () => {
       maxParticipants: 10,
       dates: {
         type: "FIXED_DATES",
-        startDate: new Date("2025-01-01"),
-        endDate: new Date("2025-01-31"),
+        startDate,
+        endDate,
       },
       criteria: {
         type: "MOST_GAMES_PLAYED",
@@ -262,6 +284,7 @@ describe("calculateLeaderboard integration tests", () => {
     });
 
     // Create competition with HIGHEST_RANK criteria
+    const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
       serverId: "test-server",
       ownerId: "owner-1",
@@ -272,8 +295,7 @@ describe("calculateLeaderboard integration tests", () => {
       maxParticipants: 10,
       dates: {
         type: "FIXED_DATES",
-        startDate: new Date("2025-01-01"),
-        endDate: new Date("2025-01-31"),
+        ...dates,
       },
       criteria: {
         type: "HIGHEST_RANK",
@@ -390,6 +412,7 @@ describe("calculateLeaderboard integration tests", () => {
     });
 
     // Create competition with MOST_RANK_CLIMB criteria
+    const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
       serverId: "test-server",
       ownerId: "owner-1",
@@ -400,8 +423,7 @@ describe("calculateLeaderboard integration tests", () => {
       maxParticipants: 10,
       dates: {
         type: "FIXED_DATES",
-        startDate: new Date("2025-01-01"),
-        endDate: new Date("2025-01-31"),
+        ...dates,
       },
       criteria: {
         type: "MOST_RANK_CLIMB",
@@ -560,6 +582,7 @@ describe("calculateLeaderboard integration tests", () => {
     });
 
     // Create competition
+    const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
       serverId: "test-server",
       ownerId: "owner-1",
@@ -570,8 +593,7 @@ describe("calculateLeaderboard integration tests", () => {
       maxParticipants: 10,
       dates: {
         type: "FIXED_DATES",
-        startDate: new Date("2025-01-01"),
-        endDate: new Date("2025-01-31"),
+        ...dates,
       },
       criteria: {
         type: "MOST_GAMES_PLAYED",
