@@ -1,6 +1,7 @@
 import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { executeCompetitionCreate } from "./create.js";
 import { executeCompetitionCancel } from "./cancel.js";
+import { executeGrantPermission } from "./grant-permission.js";
 
 /**
  * Main competition command with subcommands
@@ -119,7 +120,15 @@ export const competitionCommand = new SlashCommandBuilder()
           .setMinValue(1),
       ),
   )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("grant-permission")
+      .setDescription("Grant competition creation permission to a user")
+      .addUserOption((option) =>
+        option.setName("user").setDescription("User to grant permission to").setRequired(true),
+      ),
+  )
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .setContexts(InteractionContextType.Guild);
 
-export { executeCompetitionCreate, executeCompetitionCancel };
+export { executeCompetitionCreate, executeCompetitionCancel, executeGrantPermission };
