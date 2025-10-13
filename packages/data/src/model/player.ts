@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { RankSchema, RanksSchema } from "./rank.js";
-import { rankToLeaguePoints } from "./leaguePoints.js";
-import { PlayerConfigEntrySchema } from "./playerConfig.js";
+import { rankToLeaguePoints } from "./league-points.js";
+import { PlayerConfigEntrySchema } from "./player-config.js";
 import { flatMap, sortBy } from "remeda";
 
 export type Player = z.infer<typeof PlayerSchema>;
@@ -10,30 +10,20 @@ export const PlayerSchema = z.strictObject({
   ranks: RanksSchema,
 });
 
-export type PlayerWithSoloQueueRank = z.infer<
-  typeof PlayerWithSoloQueueRankSchema
->;
+export type PlayerWithSoloQueueRank = z.infer<typeof PlayerWithSoloQueueRankSchema>;
 export const PlayerWithSoloQueueRankSchema = PlayerSchema.extend({
   ranks: RanksSchema.extend({
     solo: RankSchema,
   }),
 });
 
-export function filterPlayersWithSoloQueueRank(
-  players: Player[],
-): PlayerWithSoloQueueRank[] {
+export function filterPlayersWithSoloQueueRank(players: Player[]): PlayerWithSoloQueueRank[] {
   return flatMap(players, (player) =>
-    PlayerWithSoloQueueRankSchema.safeParse(player).success
-      ? [PlayerWithSoloQueueRankSchema.parse(player)]
-      : [],
+    PlayerWithSoloQueueRankSchema.safeParse(player).success ? [PlayerWithSoloQueueRankSchema.parse(player)] : [],
   );
 }
 
-export function sortPlayersBySoloQueueRank(
-  players: Player[],
-): PlayerWithSoloQueueRank[] {
+export function sortPlayersBySoloQueueRank(players: Player[]): PlayerWithSoloQueueRank[] {
   const playersWithSoloQueueRank = filterPlayersWithSoloQueueRank(players);
-  return sortBy(playersWithSoloQueueRank, (player) =>
-    rankToLeaguePoints(player.ranks.solo),
-  ).reverse();
+  return sortBy(playersWithSoloQueueRank, (player) => rankToLeaguePoints(player.ranks.solo)).reverse();
 }

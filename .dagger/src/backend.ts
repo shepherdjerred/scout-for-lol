@@ -13,23 +13,16 @@ export function installBackendDeps(workspaceSource: Directory): Container {
     .withWorkdir("/workspace")
     .withFile("/workspace/package.json", workspaceSource.file("package.json"))
     .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-    .withDirectory(
-      "/workspace/packages/backend",
-      workspaceSource.directory("packages/backend")
-    )
-    .withDirectory(
-      "/workspace/packages/data",
-      workspaceSource.directory("packages/data")
-    )
-    .withDirectory(
-      "/workspace/packages/report",
-      workspaceSource.directory("packages/report")
-    )
-    .withDirectory(
-      "/workspace/packages/frontend",
-      workspaceSource.directory("packages/frontend")
-    )
+    .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
+    .withFile("/workspace/tsconfig.json", workspaceSource.file("tsconfig.json"))
+    .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
+    .withDirectory("/workspace/eslint-rules", workspaceSource.directory("eslint-rules"))
+    .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
+    .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
+    .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
+    .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
     .withWorkdir("/workspace")
+    .withExec(["sh", "-c", "rm -rf ~/.bun/install/cache node_modules packages/*/node_modules"])
     .withExec(["bun", "install", "--frozen-lockfile"]);
 }
 
@@ -52,31 +45,21 @@ export function updateLockfile(source: Directory): Directory {
  * @returns The test results
  */
 export function checkBackend(workspaceSource: Directory): Container {
-  return installBackendDeps(workspaceSource)
-    .withWorkdir("/workspace/packages/backend")
-    .withExec(["bun", "run", "src/database/generate.ts"])
-    .withExec(["rm", "-f", "generated/client/runtime/edge-esm.cjs"])
-    .withExec([
-      "sh",
-      "-c",
-      "echo '🔍 [CI] Running TypeScript type checking for backend...'",
-    ])
-    // .withExec(["bun", "run", "typecheck"])
-    .withExec(["sh", "-c", "echo '✅ [CI] TypeScript type checking passed!'"])
-    .withExec(["sh", "-c", "echo '🔍 [CI] Running ESLint for backend...'"])
-    // .withExec(["bun", "run", "lint"])
-    .withExec(["sh", "-c", "echo '✅ [CI] ESLint passed!'"])
-    .withExec(["sh", "-c", "echo '🧪 [CI] Running tests for backend...'"])
-    .withFile(
-      ".env",
-      workspaceSource.directory("packages/backend").file("test.env")
-    )
-    // .withExec(["bun", "test"])
-    .withExec([
-      "sh",
-      "-c",
-      "echo '✅ [CI] All backend checks completed successfully!'",
-    ]);
+  return (
+    installBackendDeps(workspaceSource)
+      .withWorkdir("/workspace/packages/backend")
+      .withExec(["bun", "run", "src/database/generate.ts"])
+      .withExec(["rm", "-f", "generated/client/runtime/edge-esm.cjs"])
+      .withExec(["sh", "-c", "echo '🔍 [CI] Running TypeScript type checking for backend...'"])
+      .withExec(["bun", "run", "typecheck"])
+      .withExec(["sh", "-c", "echo '✅ [CI] TypeScript type checking passed!'"])
+      .withExec(["sh", "-c", "echo '🔍 [CI] Running ESLint for backend...'"])
+      .withExec(["bun", "run", "lint"])
+      .withExec(["sh", "-c", "echo '✅ [CI] ESLint passed!'"])
+      // .withExec(["sh", "-c", "echo '🧪 [CI] Running tests for backend...'"])
+      // .withExec(["bun", "test"])
+      .withExec(["sh", "-c", "echo '✅ [CI] All backend checks completed successfully!'"])
+  );
 }
 
 /**
@@ -86,31 +69,20 @@ export function checkBackend(workspaceSource: Directory): Container {
  * @param gitSha The git SHA
  * @returns The built container
  */
-export function buildBackendImage(
-  workspaceSource: Directory,
-  version: string,
-  gitSha: string
-): Container {
+export function buildBackendImage(workspaceSource: Directory, version: string, gitSha: string): Container {
   return installBackendDeps(workspaceSource)
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
     .withDirectory(
       "/workspace/packages/backend/prisma",
-      workspaceSource.directory("packages/backend").directory("prisma")
+      workspaceSource.directory("packages/backend").directory("prisma"),
     )
     .withWorkdir("/workspace/packages/backend")
     .withExec(["bun", "run", "src/database/generate.ts"])
     .withExec(["rm", "-f", "generated/client/runtime/edge-esm.cjs"])
-    .withEntrypoint([
-      "sh",
-      "-c",
-      "bun run src/database/migrate.ts && bun run src/index.ts",
-    ])
+    .withEntrypoint(["sh", "-c", "bun run src/database/migrate.ts && bun run src/index.ts"])
     .withLabel("org.opencontainers.image.title", "scout-for-lol-backend")
-    .withLabel(
-      "org.opencontainers.image.description",
-      "Scout for LoL Discord bot backend"
-    );
+    .withLabel("org.opencontainers.image.description", "Scout for LoL Discord bot backend");
 }
 
 /**
@@ -123,21 +95,21 @@ export function buildBackendImage(
 export async function smokeTestBackendImage(
   workspaceSource: Directory,
   version: string,
-  gitSha: string
+  gitSha: string,
 ): Promise<string> {
   const image = buildBackendImage(workspaceSource, version, gitSha);
 
   // Copy example.env to .env to provide required environment variables
-  const containerWithEnv = image.withFile(
-    ".env",
-    workspaceSource.directory("packages/backend").file("example.env")
-  );
+  const containerWithEnv = image
+    .withFile(".env", workspaceSource.directory("packages/backend").file("example.env"))
+    .withEntrypoint([]); // Clear the entrypoint so we can run our own commands
 
   // Run the container with a timeout and capture output using combined stdout/stderr
+  // Increased timeout to 60s to account for dependency installation at runtime
   const container = containerWithEnv.withExec([
     "sh",
     "-c",
-    "timeout 30s bun run src/database/migrate.ts && timeout 30s bun run src/index.ts 2>&1 || true",
+    "timeout 60s bun run src/database/migrate.ts && timeout 60s bun run src/index.ts 2>&1 || true",
   ]);
 
   let output = "";
@@ -155,32 +127,20 @@ export async function smokeTestBackendImage(
 
   // Check for expected success patterns
   const expectedSuccessPatterns = [
-    "migrations have been successfully applied",
+    "All migrations have been successfully applied",
     "Started refreshing",
     "Logging into Discord",
   ];
 
-  const expectedFailurePatterns = [
-    "401: Unauthorized",
-    "An invalid token was provided",
-    "TokenInvalid",
-  ];
+  const expectedFailurePatterns = ["401: Unauthorized", "An invalid token was provided", "TokenInvalid"];
 
-  const hasExpectedSuccess = expectedSuccessPatterns.some((pattern) =>
-    output.includes(pattern)
-  );
+  const hasExpectedSuccess = expectedSuccessPatterns.some((pattern) => output.includes(pattern));
 
-  const hasExpectedFailure = expectedFailurePatterns.some((pattern) =>
-    output.includes(pattern)
-  );
+  const hasExpectedFailure = expectedFailurePatterns.some((pattern) => output.includes(pattern));
 
   if (hasExpectedSuccess && hasExpectedFailure) {
-    const foundSuccess = expectedSuccessPatterns.filter((p) =>
-      output.includes(p)
-    );
-    const foundFailure = expectedFailurePatterns.filter((p) =>
-      output.includes(p)
-    );
+    const foundSuccess = expectedSuccessPatterns.filter((p) => output.includes(p));
+    const foundFailure = expectedFailurePatterns.filter((p) => output.includes(p));
 
     return `✅ Smoke test passed: Container started successfully and failed as expected due to auth issues.\n\nKey success indicators found:\n${foundSuccess.map((p) => `- ${p}`).join("\n")}\n\nExpected failures found:\n${foundFailure.map((p) => `- ${p}`).join("\n")}`;
   } else if (hasExpectedSuccess && !hasExpectedFailure) {
@@ -206,25 +166,17 @@ export async function publishBackendImage(
   version: string,
   gitSha: string,
   registryUsername?: string,
-  registryPassword?: Secret
+  registryPassword?: Secret,
 ): Promise<string[]> {
   let image = buildBackendImage(workspaceSource, version, gitSha);
 
   // Set up registry authentication if credentials provided
   if (registryUsername && registryPassword) {
-    image = image.withRegistryAuth(
-      "ghcr.io",
-      registryUsername,
-      registryPassword
-    );
+    image = image.withRegistryAuth("ghcr.io", registryUsername, registryPassword);
   }
 
-  const versionRef = await image.publish(
-    `ghcr.io/shepherdjerred/scout-for-lol:${version}`
-  );
-  const shaRef = await image.publish(
-    `ghcr.io/shepherdjerred/scout-for-lol:${gitSha}`
-  );
+  const versionRef = await image.publish(`ghcr.io/shepherdjerred/scout-for-lol:${version}`);
+  const shaRef = await image.publish(`ghcr.io/shepherdjerred/scout-for-lol:${gitSha}`);
 
   return [versionRef, shaRef];
 }

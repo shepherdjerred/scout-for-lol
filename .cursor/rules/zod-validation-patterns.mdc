@@ -1,0 +1,231 @@
+---
+description: Zod validation patterns and best practices
+---
+
+# Zod Validation Patterns
+
+## Schema Naming Convention
+
+**All Zod schemas MUST use PascalCase naming.**
+
+```typescript
+// ✅ CORRECT:
+const ErrorSchema = z.object({ message: z.string() });
+const UserDataSchema = z.object({ id: z.string(), name: z.string() });
+const ResponseSchema = z.object({ status: z.number() });
+
+// ❌ WRONG:
+const errorSchema = z.object({ message: z.string() });  // camelCase
+const user_data_schema = z.object({ id: z.string() });   // snake_case
+```
+
+## Validate All External Data
+
+**EVERY piece of data from outside your code must be validated with Zod:**
+
+- User input
+- API responses
+- Environment variables
+- Database queries (when structure is uncertain)
+- JSON.parse() results
+- Error objects in catch blocks
+
+```typescript
+// ✅ CORRECT:
+const input: unknown = JSON.parse(rawString);
+const DataSchema = z.object({ id: z.number() });
+const validated = DataSchema.parse(input);
+
+// ❌ WRONG:
+const input = JSON.parse(rawString);  // Type is 'any'
+const id = input.id;  // Unsafe!
+```
+
+## Union vs Discriminated Union
+
+### Use `z.union()` for Complex Intersections
+
+When you have many field combinations, use `z.union()` with intersections:
+
+```typescript
+const Schema = z.union([
+  BaseSchema.and(OptionA).and(FeatureA),
+  BaseSchema.and(OptionA).and(FeatureB),
+  BaseSchema.and(OptionB).and(FeatureA),
+  BaseSchema.and(OptionB).and(FeatureB),
+]);
+```
+
+### Use `z.discriminatedUnion()` for Simple Cases
+
+When you have a clear discriminator with non-overlapping types:
+
+```typescript
+const Schema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("A"), fieldA: z.string() }),
+  z.object({ type: z.literal("B"), fieldB: z.number() }),
+]);
+```
+
+## Deprecated APIs
+
+**Never use deprecated Zod methods:**
+
+```typescript
+// ❌ WRONG:
+z.object({...}).passthrough()
+
+// ✅ CORRECT:
+z.object({...}).catchall(z.unknown())
+```
+
+## Record Types
+
+Always specify both key and value types for `z.record()`:
+
+```typescript
+// ❌ WRONG:
+z.record(z.unknown())  // Missing key type
+
+// ✅ CORRECT:
+z.record(z.string(), z.unknown())
+```
+
+## Refinements for Complex Validation
+
+Use `.refine()` for validation that can't be expressed in the schema:
+
+```typescript
+const DateArgsSchema = z.object({
+  startDate: z.string(),
+  endDate: z.string(),
+}).refine(
+  (data) => {
+    try {
+      const start = new Date(data.startDate);
+      const end = new Date(data.endDate);
+      return !isNaN(start.getTime()) && !isNaN(end.getTime());
+    } catch {
+      return false;
+    }
+  },
+  { message: "Invalid date format" }
+);
+```
+
+## Parse vs SafeParse
+
+### Use `.parse()` When
+
+- You want to throw on validation failure
+- Error propagation is handled by caller
+- Invalid data is exceptional (shouldn't happen)
+
+```typescript
+const validated = Schema.parse(input);  // Throws on failure
+```
+
+### Use `.safeParse()` When
+
+- You want to handle validation failure explicitly
+- Validation failure is expected/normal
+- You need the error details
+
+```typescript
+const result = Schema.safeParse(input);
+if (!result.success) {
+  console.error(result.error);
+  return;
+}
+// Use result.data
+```
+
+## Error Messages
+
+Use `zod-validation-error` for user-friendly messages:
+
+```typescript
+import { fromError } from "zod-validation-error";
+
+try {
+  const validated = Schema.parse(input);
+} catch (error) {
+  const validationError = fromError(error);
+  throw new Error(`Invalid input: ${validationError.message}`);
+}
+```
+
+## JSON Parsing Pattern
+
+Always validate JSON.parse() results:
+
+```typescript
+// ✅ CORRECT:
+const rawData: unknown = JSON.parse(jsonString);
+
+// Check it's an object first
+if (typeof rawData !== "object" || rawData === null) {
+  throw new Error("Expected object");
+}
+
+// Then validate with Zod
+const result = DataSchema.safeParse(rawData);
+if (!result.success) {
+  throw new Error(`Invalid data: ${result.error.message}`);
+}
+```
+
+## Optional vs Nullable vs Undefined
+
+Be explicit about optionality:
+
+```typescript
+// Field can be missing:
+z.object({ field: z.string().optional() })
+
+// Field must be present but can be null:
+z.object({ field: z.string().nullable() })
+
+// Field can be missing OR null:
+z.object({ field: z.string().nullable().optional() })
+
+// Default value if missing:
+z.object({ field: z.string().default("default") })
+```
+
+## Transform vs Preprocess
+
+### Use `.transform()` for type conversion
+
+```typescript
+const Schema = z.string().transform((val) => parseInt(val, 10));
+```
+
+### Use `.preprocess()` for data cleaning
+
+```typescript
+const Schema = z.preprocess(
+  (val) => typeof val === "string" ? val.trim() : val,
+  z.string().min(1)
+);
+```
+
+## Type Extraction
+
+Extract TypeScript types from schemas, not the other way around:
+
+```typescript
+// ✅ CORRECT: Schema is source of truth
+const UserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+type User = z.infer<typeof UserSchema>;
+
+// ❌ WRONG: Duplicating type information
+type User = { id: string; name: string };
+const UserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+```

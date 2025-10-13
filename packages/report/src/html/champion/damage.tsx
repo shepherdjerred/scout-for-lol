@@ -1,14 +1,6 @@
 import { palette } from "../../assets/colors.ts";
 
-export function Damage({
-  value,
-  percent,
-  highlight,
-}: {
-  value: number;
-  percent: number;
-  highlight: boolean;
-}) {
+export function Damage({ value, percent, highlight }: { value: number; percent: number; highlight: boolean }) {
   return (
     <div
       style={{
@@ -19,9 +11,7 @@ export function Damage({
         width: "40rem",
       }}
     >
-      <div style={{ display: "flex", gap: "2rem", fontWeight: 700 }}>
-        {value.toLocaleString()} dmg
-      </div>
+      <div style={{ display: "flex", gap: "2rem", fontWeight: 700 }}>{value.toLocaleString()} dmg</div>
       <span
         style={{
           width: "20rem",

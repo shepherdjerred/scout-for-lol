@@ -12,20 +12,8 @@ import { send } from "../../discord/channel";
 import { getRanks } from "../../model/rank";
 import { getState, setState } from "../../model/state";
 import { getCurrentGame } from "../../api/index";
-import {
-  filter,
-  groupBy,
-  map,
-  mapValues,
-  pipe,
-  uniqueBy,
-  values,
-  zip,
-} from "remeda";
-import {
-  getAccounts,
-  getChannelsSubscribedToPlayers,
-} from "../../../database/index";
+import { filter, groupBy, map, mapValues, pipe, uniqueBy, values, zip } from "remeda";
+import { getAccounts, getChannelsSubscribedToPlayers } from "../../../database/index";
 
 export async function checkPreMatch() {
   console.log("=== PRE-MATCH CHECK START ===");
@@ -58,8 +46,8 @@ export async function checkPreMatch() {
     playersNotInGame,
     zip(playerStatus),
     filter(
-      (pair): pair is [PlayerConfigEntry, CurrentGameInfoDTO] =>
-        pair[1] != undefined,
+      // eslint-disable-next-line no-restricted-syntax -- Type guard needed for filtering undefined values
+      (pair): pair is [PlayerConfigEntry, CurrentGameInfoDTO] => pair[1] != undefined,
     ),
   );
 
@@ -73,22 +61,19 @@ export async function checkPreMatch() {
   }
 
   console.log("🆕 Checking for new games not already tracked");
-  const newGames = filter(
-    playersInGame,
-    ([player, game]) => {
-      const isNewGame = !pipe(
-        getState().gamesStarted,
-        map((trackedGame) => trackedGame.matchId),
-        (matchIds) => matchIds.some((candidate) => candidate === game.gameId),
-      );
+  const newGames = filter(playersInGame, ([player, game]) => {
+    const isNewGame = !pipe(
+      getState().gamesStarted,
+      map((trackedGame) => trackedGame.matchId),
+      (matchIds) => matchIds.some((candidate) => candidate === game.gameId),
+    );
 
-      if (!isNewGame) {
-        console.log(`⏭️  Player ${player.alias} is in already tracked game ${game.gameId.toString()}`);
-      }
-
-      return isNewGame;
+    if (!isNewGame) {
+      console.log(`⏭️  Player ${player.alias} is in already tracked game ${game.gameId.toString()}`);
     }
-  );
+
+    return isNewGame;
+  });
 
   console.log(`🎉 Found ${newGames.length.toString()} new games to process`);
 
@@ -100,7 +85,7 @@ export async function checkPreMatch() {
   }
 
   console.log("🎮 Grouping players by game and processing each game");
-  const gameGroups = groupBy(newGames, ([_player, game]) => game.gameId);
+  const gameGroups = groupBy(newGames, ([, game]) => game.gameId);
   console.log(`📊 Processing ${Object.keys(gameGroups).length.toString()} unique games`);
 
   const promises = pipe(
@@ -110,28 +95,30 @@ export async function checkPreMatch() {
         throw new Error("No games found in group");
       }
 
-      const players = map(games, ([player, _game]) => player);
+      const players = map(games, ([player]) => player);
       const game = games[0][1];
       const gameId = game.gameId.toString();
 
       console.log(`⚡ Processing game ${gameId} with ${players.length.toString()} players`);
-      console.log(`📋 Players in game: ${players.map(p => p.alias).join(', ')}`);
+      console.log(`📋 Players in game: ${players.map((p) => p.alias).join(", ")}`);
 
       const queueType = parseQueueType(game.gameQueueConfigId);
-      console.log(`🎯 Queue type: ${queueType ?? 'unknown'} (ID: ${game.gameQueueConfigId.toString()})`);
+      console.log(`🎯 Queue type: ${queueType ?? "unknown"} (ID: ${game.gameQueueConfigId.toString()})`);
 
       // record the rank of each player before the game
       console.log(`📊 Fetching ranks for ${players.length.toString()} players`);
       const rankStartTime = Date.now();
       const playersWithRank = await Promise.all(
         map(players, async (player, index): Promise<LoadingScreenPlayer> => {
-          console.log(`🔍 Fetching rank for player ${(index + 1).toString()}/${players.length.toString()}: ${player.alias}`);
+          console.log(
+            `🔍 Fetching rank for player ${(index + 1).toString()}/${players.length.toString()}: ${player.alias}`,
+          );
           const rank = await getRanks(player);
           if (queueType === "solo" || queueType === "flex") {
             console.log(`✅ Got ${queueType} rank for ${player.alias}`);
             return { player, rank: rank[queueType] };
           } else {
-            console.log(`⚠️  No rank data needed for queue type ${queueType ?? 'unknown'}`);
+            console.log(`⚠️  No rank data needed for queue type ${queueType ?? "unknown"}`);
             return { player, rank: undefined };
           }
         }),

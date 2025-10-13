@@ -1,17 +1,9 @@
 import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import {
-  ApplicationState,
-  Player,
-  PlayerConfigEntry,
-} from "@scout-for-lol/data";
+import { ApplicationState, Player } from "@scout-for-lol/data";
 import { checkPostMatchInternal } from "./internal";
 import { test, expect, beforeAll } from "bun:test";
 import { Message, MessageCreateOptions, MessagePayload } from "discord.js";
-import {
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  LeaguePuuidSchema,
-} from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, DiscordChannelIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 
 const testdataPath = new URL("testdata/match.json", import.meta.url);
 
@@ -54,22 +46,21 @@ test("postmatch", async () => {
       },
     ],
   };
-  const saveMatchFn = async (_: MatchV5DTOs.MatchDto) => {
+  const saveMatchFn = async () => {
     // do nothing
   };
-  const sendFn = (async (
+  const sendFn = async (
     message: string | MessagePayload | MessageCreateOptions,
   ): Promise<Message<true> | Message<false>> => {
     expect(message).toMatchSnapshot();
-    return Promise.resolve({} as Message<true> | Message<false>);
-  });
+    return Promise.resolve({} as unknown as Message<true> | Message<false>);
+  };
   const checkMatchFn = async () => {
-    const exampleMatch = JSON.parse(
-      await Bun.file(testdataPath).text(),
-    ) as MatchV5DTOs.MatchDto;
+    // eslint-disable-next-line no-restricted-syntax -- I'm okay with this since we're loading a saved API response
+    const exampleMatch = JSON.parse(await Bun.file(testdataPath).text()) as MatchV5DTOs.MatchDto;
     return exampleMatch;
   };
-  const getPlayerFn = (_: PlayerConfigEntry): Promise<Player> => {
+  const getPlayerFn = (): Promise<Player> => {
     return Promise.resolve({
       config: {
         alias: "name",
@@ -91,17 +82,8 @@ test("postmatch", async () => {
     } satisfies Player);
   };
   const getSubscriptionsFn = () => {
-    return Promise.resolve([
-      { channel: DiscordChannelIdSchema.parse("12345678901234567") },
-    ]);
+    return Promise.resolve([{ channel: DiscordChannelIdSchema.parse("12345678901234567") }]);
   };
 
-  await checkPostMatchInternal(
-    state,
-    saveMatchFn,
-    checkMatchFn,
-    sendFn,
-    getPlayerFn,
-    getSubscriptionsFn,
-  );
+  await checkPostMatchInternal(state, saveMatchFn, checkMatchFn, sendFn, getPlayerFn, getSubscriptionsFn);
 });

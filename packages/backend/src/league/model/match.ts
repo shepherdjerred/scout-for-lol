@@ -15,10 +15,7 @@ import {
 } from "@scout-for-lol/data";
 import { strict as assert } from "assert";
 import { match } from "ts-pattern";
-import {
-  participantToArenaChampion,
-  participantToChampion,
-} from "./champion.js";
+import { participantToArenaChampion, participantToChampion } from "./champion.js";
 import { type ArenaMatch } from "@scout-for-lol/data";
 
 function getTeams(participants: MatchV5DTOs.ParticipantDto[]) {
@@ -32,12 +29,9 @@ export function toMatch(
   player: Player,
   matchDto: MatchV5DTOs.MatchDto,
   rankBeforeMatch: Rank | undefined,
-  rankAfterMatch: Rank | undefined
+  rankAfterMatch: Rank | undefined,
 ): CompletedMatch {
-  const participant = findParticipant(
-    player.config.league.leagueAccount.puuid,
-    matchDto.info.participants
-  );
+  const participant = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
   if (participant === undefined) {
     console.debug("Player PUUID:", player.config.league.leagueAccount.puuid);
     console.debug("Match Participants:", matchDto.info.participants);
@@ -64,14 +58,9 @@ export function toMatch(
         playerConfig: player.config,
         rankBeforeMatch,
         rankAfterMatch,
-        wins:
-          queueType === "solo" || queueType === "flex"
-            ? (player.ranks[queueType]?.wins ?? undefined)
-            : undefined,
+        wins: queueType === "solo" || queueType === "flex" ? (player.ranks[queueType]?.wins ?? undefined) : undefined,
         losses:
-          queueType === "solo" || queueType === "flex"
-            ? (player.ranks[queueType]?.losses ?? undefined)
-            : undefined,
+          queueType === "solo" || queueType === "flex" ? (player.ranks[queueType]?.losses ?? undefined) : undefined,
         champion,
         outcome: getOutcome(participant),
         team: team,
@@ -95,12 +84,12 @@ export function getOutcome(participant: MatchV5DTOs.ParticipantDto) {
 
 function findParticipant(
   puuid: string,
-  participants: MatchV5DTOs.ParticipantDto[]
+  participants: MatchV5DTOs.ParticipantDto[],
 ): MatchV5DTOs.ParticipantDto | undefined {
   return pipe(
     participants,
     filter((participant) => participant.puuid === puuid),
-    first()
+    first(),
   );
 }
 
@@ -145,12 +134,10 @@ export function groupArenaTeams(participants: MatchV5DTOs.ParticipantDto[]) {
     sortBy(([subteamId]) => subteamId),
     map(([subteamId, players]) => {
       if (players.length !== 2) {
-        throw new Error(
-          `subteam ${subteamId.toString()} must have exactly 2 players`
-        );
+        throw new Error(`subteam ${subteamId.toString()} must have exactly 2 players`);
       }
       return { subteamId, players };
-    })
+    }),
   );
   if (groups.length !== 8) {
     throw new Error(`expected 8 subteams, got ${groups.length.toString()}`);
@@ -158,10 +145,7 @@ export function groupArenaTeams(participants: MatchV5DTOs.ParticipantDto[]) {
   return groups;
 }
 
-export function getArenaTeammate(
-  participant: MatchV5DTOs.ParticipantDto,
-  participants: MatchV5DTOs.ParticipantDto[]
-) {
+export function getArenaTeammate(participant: MatchV5DTOs.ParticipantDto, participants: MatchV5DTOs.ParticipantDto[]) {
   const sub = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
   for (const p of participants) {
     if (p === participant) continue;
@@ -171,9 +155,7 @@ export function getArenaTeammate(
   return undefined;
 }
 
-export async function toArenaSubteams(
-  participants: MatchV5DTOs.ParticipantDto[]
-): Promise<ArenaTeam[]> {
+export async function toArenaSubteams(participants: MatchV5DTOs.ParticipantDto[]): Promise<ArenaTeam[]> {
   const grouped = groupArenaTeams(participants);
   const result: ArenaTeam[] = [];
   for (const { subteamId, players } of grouped) {
@@ -181,12 +163,10 @@ export async function toArenaSubteams(
     const placement1 = ArenaParticipantFieldsSchema.parse(players[1]).placement;
     if (placement0 !== placement1) {
       throw new Error(
-        `inconsistent placement for subteam ${subteamId.toString()}: ${placement0.toString()} !== ${placement1.toString()}`
+        `inconsistent placement for subteam ${subteamId.toString()}: ${placement0.toString()} !== ${placement1.toString()}`,
       );
     }
-    const converted = await Promise.all(
-      players.map((p) => participantToArenaChampion(p))
-    );
+    const converted = await Promise.all(players.map((p) => participantToArenaChampion(p)));
     result.push({
       teamId: ArenaTeamIdSchema.parse(subteamId),
       players: converted,
@@ -200,22 +180,15 @@ export function getArenaPlacement(participant: MatchV5DTOs.ParticipantDto) {
   return ArenaParticipantFieldsSchema.parse(participant).placement;
 }
 
-export async function toArenaMatch(
-  player: Player,
-  matchDto: MatchV5DTOs.MatchDto
-): Promise<ArenaMatch> {
+export async function toArenaMatch(player: Player, matchDto: MatchV5DTOs.MatchDto): Promise<ArenaMatch> {
   const subteams = await toArenaSubteams(matchDto.info.participants);
 
   // Build ArenaMatch.players for the tracked player only (can extend to multi-player later)
-  const participant = findParticipant(
-    player.config.league.leagueAccount.puuid,
-    matchDto.info.participants
-  );
+  const participant = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
   if (participant === undefined) {
     throw new Error("participant not found for arena match");
   }
-  const subteamId =
-    ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
+  const subteamId = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
   const placement = getArenaPlacement(participant);
   const champion = await participantToArenaChampion(participant);
   const teammateDto = getArenaTeammate(participant, matchDto.info.participants);

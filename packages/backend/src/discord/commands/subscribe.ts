@@ -18,15 +18,13 @@ import { mapRegionToEnum } from "../../league/model/region";
 import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
 import { prisma } from "../../database/index";
 import { fromError } from "zod-validation-error";
+import { getErrorMessage } from "../../utils/errors.js";
 
 export const subscribeCommand = new SlashCommandBuilder()
   .setName("subscribe")
   .setDescription("Subscribe to updates for a League of Legends account")
   .addChannelOption((option) =>
-    option
-      .setName("channel")
-      .setDescription("The channel to post messages to")
-      .setRequired(true)
+    option.setName("channel").setDescription("The channel to post messages to").setRequired(true),
   )
   .addStringOption((option) =>
     option
@@ -35,17 +33,15 @@ export const subscribeCommand = new SlashCommandBuilder()
       .addChoices(
         RegionSchema.options.map((region) => {
           return { name: toReadableRegion(region), value: region };
-        })
+        }),
       )
-      .setRequired(true)
+      .setRequired(true),
   )
   .addStringOption((option) =>
     option
       .setName("riot-id")
-      .setDescription(
-        "The Riot ID to subscribe to in the format of <name>#<tag>"
-      )
-      .setRequired(true)
+      .setDescription("The Riot ID to subscribe to in the format of <name>#<tag>")
+      .setRequired(true),
   )
   // TODO: differentiate between player and account alias
   .addStringOption((option) =>
@@ -53,11 +49,9 @@ export const subscribeCommand = new SlashCommandBuilder()
       .setName("alias")
       .setDescription("An alias for the player")
       // TODO: make this optional
-      .setRequired(true)
+      .setRequired(true),
   )
-  .addUserOption((option) =>
-    option.setName("user").setDescription("The Discord user of the player")
-  )
+  .addUserOption((option) => option.setName("user").setDescription("The Discord user of the player"))
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .setContexts(InteractionContextType.Guild);
 
@@ -70,16 +64,12 @@ export const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executeSubscribe(
-  interaction: ChatInputCommandInteraction
-) {
+export async function executeSubscribe(interaction: ChatInputCommandInteraction) {
   const startTime = Date.now();
   const userId = interaction.user.id;
   const username = interaction.user.username;
 
-  console.log(
-    `🔔 Starting subscription process for user ${username} (${userId})`
-  );
+  console.log(`🔔 Starting subscription process for user ${username} (${userId})`);
 
   let args: z.infer<typeof ArgsSchema>;
 
@@ -95,7 +85,7 @@ export async function executeSubscribe(
 
     console.log(`✅ Command arguments validated successfully`);
     console.log(
-      `📋 Args: channel=${args.channel}, region=${args.region}, riotId=${args.riotId.game_name}#${args.riotId.tag_line}, alias=${args.alias}`
+      `📋 Args: channel=${args.channel}, region=${args.region}, riotId=${args.riotId.game_name}#${args.riotId.tag_line}, alias=${args.alias}`,
     );
   } catch (error) {
     console.error(`❌ Invalid command arguments from ${username}:`, error);
@@ -109,38 +99,25 @@ export async function executeSubscribe(
 
   const { channel, region, riotId, user, alias, guildId } = args;
 
-  console.log(
-    `🔍 Looking up Riot ID: ${riotId.game_name}#${riotId.tag_line} in region ${region}`
-  );
+  console.log(`🔍 Looking up Riot ID: ${riotId.game_name}#${riotId.tag_line} in region ${region}`);
 
   let puuid: string;
   try {
     const apiStartTime = Date.now();
-    const regionGroup = regionToRegionGroupForAccountAPI(
-      mapRegionToEnum(region)
-    );
+    const regionGroup = regionToRegionGroupForAccountAPI(mapRegionToEnum(region));
 
     console.log(`🌐 Using region group: ${regionGroup}`);
 
-    const account = await riotApi.Account.getByRiotId(
-      riotId.game_name,
-      riotId.tag_line,
-      regionGroup
-    );
+    const account = await riotApi.Account.getByRiotId(riotId.game_name, riotId.tag_line, regionGroup);
 
     const apiTime = Date.now() - apiStartTime;
     puuid = account.response.puuid;
 
-    console.log(
-      `✅ Successfully resolved Riot ID to PUUID: ${puuid} (${apiTime.toString()}ms)`
-    );
+    console.log(`✅ Successfully resolved Riot ID to PUUID: ${puuid} (${apiTime.toString()}ms)`);
   } catch (error) {
-    console.error(
-      `❌ Failed to resolve Riot ID ${riotId.game_name}#${riotId.tag_line}:`,
-      error
-    );
+    console.error(`❌ Failed to resolve Riot ID ${riotId.game_name}#${riotId.tag_line}:`, error);
     await interaction.reply({
-      content: `Error looking up Riot ID: ${error instanceof Error ? error.message : String(error)}`,
+      content: `Error looking up Riot ID: ${getErrorMessage(error)}`,
       ephemeral: true,
     });
     return;
@@ -197,9 +174,7 @@ export async function executeSubscribe(
     });
 
     if (!player) {
-      console.error(
-        `❌ Failed to find player for account ID: ${account.id.toString()}`
-      );
+      console.error(`❌ Failed to find player for account ID: ${account.id.toString()}`);
       await interaction.reply({
         content: "Error finding player for account",
         ephemeral: true,
@@ -207,9 +182,7 @@ export async function executeSubscribe(
       return;
     }
 
-    console.log(
-      `📝 Found player record: ${player.playerId.alias} (ID: ${player.playerId.id.toString()})`
-    );
+    console.log(`📝 Found player record: ${player.playerId.alias} (ID: ${player.playerId.id.toString()})`);
 
     // create a new subscription
     console.log(`📝 Creating subscription for channel ${channel}`);
@@ -225,14 +198,10 @@ export async function executeSubscribe(
     });
 
     const dbTime = Date.now() - dbStartTime;
-    console.log(
-      `✅ Subscription created with ID: ${subscription.id.toString()} (${dbTime.toString()}ms)`
-    );
+    console.log(`✅ Subscription created with ID: ${subscription.id.toString()} (${dbTime.toString()}ms)`);
 
     const totalTime = Date.now() - startTime;
-    console.log(
-      `🎉 Subscription completed successfully in ${totalTime.toString()}ms`
-    );
+    console.log(`🎉 Subscription completed successfully in ${totalTime.toString()}ms`);
 
     await interaction.reply({
       content: `Successfully subscribed to updates for ${riotId.game_name}#${riotId.tag_line}`,
@@ -241,7 +210,7 @@ export async function executeSubscribe(
   } catch (error) {
     console.error(`❌ Database error during subscription:`, error);
     await interaction.reply({
-      content: `Error creating database records: ${error instanceof Error ? error.message : String(error)}`,
+      content: `Error creating database records: ${getErrorMessage(error)}`,
       ephemeral: true,
     });
   }

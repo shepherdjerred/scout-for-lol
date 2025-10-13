@@ -5,7 +5,7 @@ import { TeamSchema } from "./team.js";
 import { LaneSchema } from "./lane.js";
 import { QueueTypeSchema } from "./state.js";
 import { RankSchema } from "./rank.js";
-import { PlayerConfigEntrySchema } from "./playerConfig.js";
+import { PlayerConfigEntrySchema } from "./player-config.js";
 import { filter, first, pipe } from "remeda";
 
 export type CompletedMatch = z.infer<typeof CompletedMatchSchema>;
@@ -37,10 +37,7 @@ export const CompletedMatchSchema = z.strictObject({
   }),
 });
 
-export function getLaneOpponent(
-  player: Champion,
-  opponents: Champion[],
-): Champion | undefined {
+export function getLaneOpponent(player: Champion, opponents: Champion[]): Champion | undefined {
   return pipe(
     opponents,
     filter((opponent) => opponent.lane === player.lane),

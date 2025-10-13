@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/node";
+import { z } from "zod";
 
 export function logErrors(fn: () => Promise<unknown>) {
   return async () => {
@@ -14,11 +15,13 @@ export function logErrors(fn: () => Promise<unknown>) {
       console.error(`❌ Function ${functionName} failed:`, e);
 
       // Log additional error context
-      if (e instanceof Error) {
-        console.error(`❌ Error name: ${e.name}`);
-        console.error(`❌ Error message: ${e.message}`);
-        if (e.stack) {
-          console.error(`❌ Error stack: ${e.stack}`);
+      const ErrorDetailsSchema = z.object({ name: z.string(), message: z.string(), stack: z.string().optional() });
+      const errorResult = ErrorDetailsSchema.safeParse(e);
+      if (errorResult.success) {
+        console.error(`❌ Error name: ${errorResult.data.name}`);
+        console.error(`❌ Error message: ${errorResult.data.message}`);
+        if (errorResult.data.stack) {
+          console.error(`❌ Error stack: ${errorResult.data.stack}`);
         }
       }
 
@@ -26,8 +29,8 @@ export function logErrors(fn: () => Promise<unknown>) {
       Sentry.captureException(e, {
         tags: {
           function: functionName,
-          source: "cron-job"
-        }
+          source: "cron-job",
+        },
       });
 
       // Re-throw to maintain original behavior

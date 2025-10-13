@@ -1,11 +1,4 @@
-import {
-  divisionToString,
-  Rank,
-  Tier,
-  TierSchema,
-  wasDemoted,
-  wasPromoted,
-} from "@scout-for-lol/data";
+import { divisionToString, Rank, Tier, TierSchema, wasDemoted, wasPromoted } from "@scout-for-lol/data";
 import { palette } from "../../assets/colors.ts";
 import { z } from "zod";
 import { match } from "ts-pattern";
@@ -19,34 +12,24 @@ if (typeof Bun !== "undefined") {
       await Promise.all(
         TierSchema.options.map(async (tier): Promise<[Tier, string]> => {
           const image = await Bun.file(
-            new URL(
-              `assets/Rank=${tier.charAt(0).toUpperCase() + tier.slice(1)}.png`,
-              import.meta.url
-            )
+            new URL(`assets/Rank=${tier.charAt(0).toUpperCase() + tier.slice(1)}.png`, import.meta.url),
           ).arrayBuffer();
           return [tier, Buffer.from(image).toString("base64")];
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 }
 
-export async function RankedBadge({
-  oldRank,
-  newRank,
-}: {
-  oldRank: Rank | undefined;
-  newRank: Rank;
-}) {
+export async function RankedBadge({ oldRank, newRank }: { oldRank: Rank | undefined; newRank: Rank }) {
   const environment = typeof Bun !== "undefined" ? "bun" : "browser";
   const badge = await match(environment)
-    .with("bun", () =>
-      Promise.resolve(`data:image/png;base64,${images[newRank.tier]}`)
-    )
+    .with("bun", () => Promise.resolve(`data:image/png;base64,${images[newRank.tier]}`))
     .with("browser", async () => {
+      // TODO: remove type assertion for dynamic import
       const module = (await import(
         `./assets/Rank=${newRank.tier.charAt(0).toUpperCase() + newRank.tier.slice(1)}.png`
-      )) as {
+      )) as unknown as {
         default: {
           src: string;
           width: number;
@@ -96,10 +79,7 @@ export async function RankedBadge({
             }}
           >
             <div style={{ width: "24rem", height: "24rem", display: "flex" }}>
-              <img
-                src={badge}
-                style={{ width: "100%", height: "100%", display: "block" }}
-              />
+              <img src={badge} style={{ width: "100%", height: "100%", display: "block" }} />
             </div>
             <span style={{ position: "relative", left: "-8rem", top: "-2rem" }}>
               {divisionToString(newRank.division)}

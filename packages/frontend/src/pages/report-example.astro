@@ -26,7 +26,8 @@ import { Report } from "@scout-for-lol/report/src/html/report.tsx";
 <script>
   function cleanFontFamilyNames() {
     // Function to clean font family name by removing random suffixes
-    function cleanFontName(fontFamily) {
+    function cleanFontName(fontFamily: string | null): string {
+      if (!fontFamily) return "";
       // Remove hash-like suffixes (e.g., "-352db090d8d25929")
       return fontFamily.replace(/-[a-f0-9]{16,}/g, "");
     }
@@ -35,39 +36,36 @@ import { Report } from "@scout-for-lol/report/src/html/report.tsx";
     Array.from(document.styleSheets).forEach((styleSheet) => {
       try {
         // Process all CSS rules
-        Array.from(styleSheet.cssRules || styleSheet.rules || []).forEach(
-          (rule) => {
-            if (rule.type === CSSRule.STYLE_RULE) {
-              // Handle :root CSS variables
-              if (rule.selectorText === ":root") {
-                Array.from(rule.style).forEach((property) => {
-                  if (property.startsWith("--font-")) {
-                    const currentValue = rule.style.getPropertyValue(property);
-                    const cleanedValue = cleanFontName(currentValue);
-                    if (currentValue !== cleanedValue) {
-                      rule.style.setProperty(property, cleanedValue);
-                      console.log(
-                        `Updated CSS variable ${property}: ${currentValue} → ${cleanedValue}`
-                      );
-                    }
+        const rules = styleSheet.cssRules;
+        if (!rules) return;
+
+        Array.from(rules).forEach((rule) => {
+          if (rule instanceof CSSStyleRule) {
+            // Handle :root CSS variables
+            if (rule.selectorText === ":root") {
+              Array.from(rule.style).forEach((property: string) => {
+                if (property.startsWith("--font-")) {
+                  const currentValue = rule.style.getPropertyValue(property);
+                  const cleanedValue = cleanFontName(currentValue);
+                  if (currentValue !== cleanedValue) {
+                    rule.style.setProperty(property, cleanedValue);
+                    console.log(`Updated CSS variable ${property}: ${currentValue} → ${cleanedValue}`);
                   }
-                });
-              }
-            } else if (rule.type === CSSRule.FONT_FACE_RULE) {
-              // Handle @font-face rules
-              const currentFontFamily = rule.style.fontFamily;
-              if (currentFontFamily) {
-                const cleanedFontFamily = cleanFontName(currentFontFamily);
-                if (currentFontFamily !== cleanedFontFamily) {
-                  rule.style.fontFamily = cleanedFontFamily;
-                  console.log(
-                    `Updated @font-face: ${currentFontFamily} → ${cleanedFontFamily}`
-                  );
                 }
+              });
+            }
+          } else if (rule instanceof CSSFontFaceRule) {
+            // Handle @font-face rules
+            const currentFontFamily = rule.style.fontFamily;
+            if (currentFontFamily) {
+              const cleanedFontFamily = cleanFontName(currentFontFamily);
+              if (currentFontFamily !== cleanedFontFamily) {
+                rule.style.fontFamily = cleanedFontFamily;
+                console.log(`Updated @font-face: ${currentFontFamily} → ${cleanedFontFamily}`);
               }
             }
           }
-        );
+        });
       } catch (e) {
         // Skip stylesheets that can't be accessed (CORS issues, etc.)
         console.warn("Could not access stylesheet:", e);

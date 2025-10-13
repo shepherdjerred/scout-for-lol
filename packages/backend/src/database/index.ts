@@ -17,12 +17,8 @@ export const prisma = new PrismaClient();
 
 console.log("✅ Database client initialized");
 
-export async function getChannelsSubscribedToPlayers(
-  puuids: LeaguePuuid[]
-): Promise<{ channel: DiscordChannelId }[]> {
-  console.log(
-    `🔍 Fetching channels subscribed to ${puuids.length.toString()} players`
-  );
+export async function getChannelsSubscribedToPlayers(puuids: LeaguePuuid[]): Promise<{ channel: DiscordChannelId }[]> {
+  console.log(`🔍 Fetching channels subscribed to ${puuids.length.toString()} players`);
   console.log(`📋 PUUIDs: ${puuids.join(", ")}`);
 
   try {
@@ -45,16 +41,14 @@ export async function getChannelsSubscribedToPlayers(
     });
 
     const queryTime = Date.now() - startTime;
-    console.log(
-      `📊 Found ${accounts.length.toString()} accounts in ${queryTime.toString()}ms`
-    );
+    console.log(`📊 Found ${accounts.length.toString()} accounts in ${queryTime.toString()}ms`);
 
     const result = unique(
       accounts.flatMap((account) =>
         account.playerId.subscriptions.map((subscription) => ({
           channel: DiscordChannelIdSchema.parse(subscription.channelId),
-        }))
-      )
+        })),
+      ),
     );
 
     console.log(`📺 Returning ${result.length.toString()} unique channels`);
@@ -78,9 +72,7 @@ export async function getAccounts(): Promise<PlayerConfig> {
     });
 
     const queryTime = Date.now() - startTime;
-    console.log(
-      `📊 Found ${players.length.toString()} players in ${queryTime.toString()}ms`
-    );
+    console.log(`📊 Found ${players.length.toString()} players in ${queryTime.toString()}ms`);
 
     // transform
     const result = players.flatMap((player): PlayerConfigEntry[] => {
@@ -97,9 +89,7 @@ export async function getAccounts(): Promise<PlayerConfig> {
       });
     });
 
-    console.log(
-      `📋 Returning ${result.length.toString()} player config entries`
-    );
+    console.log(`📋 Returning ${result.length.toString()} player config entries`);
     return result;
   } catch (error) {
     console.error("❌ Error fetching player accounts:", error);
@@ -107,13 +97,7 @@ export async function getAccounts(): Promise<PlayerConfig> {
   }
 }
 
-function mapToAccount({
-  puuid,
-  region,
-}: {
-  puuid: string;
-  region: string;
-}): LeagueAccount {
+function mapToAccount({ puuid, region }: { puuid: string; region: string }): LeagueAccount {
   return {
     puuid: LeaguePuuidSchema.parse(puuid),
     region: RegionSchema.parse(region),

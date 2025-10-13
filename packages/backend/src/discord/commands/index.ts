@@ -1,12 +1,18 @@
 import { type Client, MessageFlags } from "discord.js";
 import { executeSubscribe } from "./subscribe";
 import { executeUnsubscribe } from "./unsubscribe";
-import { executeListSubscriptions } from "./listSubscriptions";
-import { getState } from "../../league/model/state";
+import { executeListSubscriptions } from "./list-subscriptions";
 import {
-  discordCommandsTotal,
-  discordCommandDuration,
-} from "../../metrics/index.js";
+  executeCompetitionCreate,
+  executeCompetitionCancel,
+  executeGrantPermission,
+  executeCompetitionJoin,
+  executeCompetitionInvite,
+  executeCompetitionLeave,
+  executeCompetitionView,
+} from "./competition/index.js";
+import { getState } from "../../league/model/state";
+import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
 
 export function handleCommands(client: Client) {
   console.log("⚡ Setting up Discord command handlers");
@@ -25,16 +31,14 @@ export function handleCommands(client: Client) {
       const channelId = interaction.channelId;
 
       console.log(
-        `📥 Command received: ${commandName} from ${username} (${userId}) in guild ${guildId ?? "DM"} channel ${channelId}`
+        `📥 Command received: ${commandName} from ${username} (${userId}) in guild ${guildId ?? "DM"} channel ${channelId}`,
       );
 
       // Log command options if any
       if (interaction.options.data.length > 0) {
         console.log(
           `📝 Command options:`,
-          interaction.options.data
-            .map((opt) => `${opt.name}: ${String(opt.value)}`)
-            .join(", ")
+          interaction.options.data.map((opt) => `${opt.name}: ${String(opt.value)}`).join(", "),
         );
       }
 
@@ -48,6 +52,31 @@ export function handleCommands(client: Client) {
         } else if (commandName === "listsubscriptions") {
           console.log("📋 Executing list subscriptions command");
           await executeListSubscriptions(interaction);
+        } else if (commandName === "competition") {
+          const subcommandName = interaction.options.getSubcommand();
+          console.log(`🏆 Executing competition ${subcommandName} command`);
+
+          if (subcommandName === "create") {
+            await executeCompetitionCreate(interaction);
+          } else if (subcommandName === "cancel") {
+            await executeCompetitionCancel(interaction);
+          } else if (subcommandName === "grant-permission") {
+            await executeGrantPermission(interaction);
+          } else if (subcommandName === "join") {
+            await executeCompetitionJoin(interaction);
+          } else if (subcommandName === "invite") {
+            await executeCompetitionInvite(interaction);
+          } else if (subcommandName === "leave") {
+            await executeCompetitionLeave(interaction);
+          } else if (subcommandName === "view") {
+            await executeCompetitionView(interaction);
+          } else {
+            console.warn(`⚠️  Unknown competition subcommand: ${subcommandName}`);
+            await interaction.reply({
+              content: "Unknown competition subcommand",
+              flags: MessageFlags.Ephemeral,
+            });
+          }
         } else if (commandName === "debug") {
           console.log("🐛 Executing debug command");
           const state = getState();
@@ -72,32 +101,21 @@ export function handleCommands(client: Client) {
 
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
-        console.log(
-          `✅ Command ${commandName} completed successfully in ${executionTime.toString()}ms`
-        );
+        console.log(`✅ Command ${commandName} completed successfully in ${executionTime.toString()}ms`);
 
         // Record successful command metrics
         discordCommandsTotal.inc({ command: commandName, status: "success" });
-        discordCommandDuration.observe(
-          { command: commandName },
-          executionTimeSeconds
-        );
+        discordCommandDuration.observe({ command: commandName }, executionTimeSeconds);
       } catch (error) {
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
-        console.error(
-          `❌ Command ${commandName} failed after ${executionTime.toString()}ms:`,
-          error
-        );
+        console.error(`❌ Command ${commandName} failed after ${executionTime.toString()}ms:`, error);
 
         // Record failed command metrics
         discordCommandsTotal.inc({ command: commandName, status: "error" });
-        discordCommandDuration.observe(
-          { command: commandName },
-          executionTimeSeconds
-        );
+        discordCommandDuration.observe({ command: commandName }, executionTimeSeconds);
         console.error(
-          `❌ Error details - User: ${username} (${userId}), Guild: ${String(guildId)}, Channel: ${channelId}`
+          `❌ Error details - User: ${username} (${userId}), Guild: ${String(guildId)}, Channel: ${channelId}`,
         );
 
         if (interaction.replied || interaction.deferred) {

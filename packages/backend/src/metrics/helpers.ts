@@ -26,10 +26,10 @@ export function withMetrics<TArgs extends unknown[], TReturn>(
       inc: (labels: { status: string; [key: string]: string }) => void;
     };
     histogram?: {
-      observe: (labels: { [key: string]: string }, value: number) => void;
+      observe: (labels: Record<string, string>, value: number) => void;
     };
-    labels: { [key: string]: string };
-  }
+    labels: Record<string, string>;
+  },
 ): (...args: TArgs) => Promise<TReturn> {
   return async (...args: TArgs): Promise<TReturn> => {
     const startTime = Date.now();
@@ -73,9 +73,9 @@ export function withMetrics<TArgs extends unknown[], TReturn>(
  */
 export function startTimer(
   histogram: {
-    observe: (labels: { [key: string]: string }, value: number) => void;
+    observe: (labels: Record<string, string>, value: number) => void;
   },
-  labels: { [key: string]: string }
+  labels: Record<string, string>,
 ): { stop: () => number } {
   const startTime = Date.now();
 
@@ -87,4 +87,3 @@ export function startTimer(
     },
   };
 }
-

@@ -22,22 +22,17 @@ const ApiAugmentsResponseSchema = z.strictObject({
 });
 
 // CommunityDragon Arena augments endpoint
-const ARENA_AUGMENTS_URL =
-  "https://raw.communitydragon.org/latest/cdragon/arena/en_us.json" as const;
+const ARENA_AUGMENTS_URL = "https://raw.communitydragon.org/latest/cdragon/arena/en_us.json" as const;
 
 let augmentMapCache: Map<number, FullAugment> | null = null;
 let loadPromise: Promise<Map<number, FullAugment>> | null = null;
 
-export async function initArenaAugmentsOnce(): Promise<
-  Map<number, FullAugment>
-> {
+export async function initArenaAugmentsOnce(): Promise<Map<number, FullAugment>> {
   if (augmentMapCache) return augmentMapCache;
   loadPromise ??= (async () => {
     const res = await fetch(ARENA_AUGMENTS_URL, { cache: "force-cache" });
     if (!res.ok) {
-      throw new Error(
-        `Failed to fetch Arena augments: ${res.status.toString()} ${res.statusText}`
-      );
+      throw new Error(`Failed to fetch Arena augments: ${res.status.toString()} ${res.statusText}`);
     }
     const data = await res.json();
     const parsed = ApiAugmentsResponseSchema.parse(data);
@@ -57,8 +52,8 @@ export async function initArenaAugmentsOnce(): Promise<
               rarity: rarityFromNumber(a.rarity),
               type: "full",
             },
-          ] as const
-      )
+          ] as const,
+      ),
     );
     return augmentMapCache;
   })();
@@ -74,9 +69,7 @@ export async function getArenaAugmentMap(): Promise<Map<number, FullAugment>> {
   return initArenaAugmentsOnce();
 }
 
-export async function mapAugmentIdsToUnion(
-  augmentIds: number[]
-): Promise<Augment[]> {
+export async function mapAugmentIdsToUnion(augmentIds: number[]): Promise<Augment[]> {
   const map = await getArenaAugmentMap();
   const result: Augment[] = [];
   for (const id of augmentIds) {

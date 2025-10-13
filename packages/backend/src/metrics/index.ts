@@ -247,4 +247,3 @@ export async function getMetrics(): Promise<string> {
   updateUptimeMetric();
   return await registry.metrics();
 }
-

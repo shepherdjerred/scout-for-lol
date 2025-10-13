@@ -124,8 +124,8 @@ export const bunBeaufortFonts: () => Promise<Font[]> = () =>
       async (font): Promise<Font> => ({
         ...font,
         data: await Bun.file(new URL(font.src, import.meta.url)).arrayBuffer(),
-      })
-    )
+      }),
+    ),
   );
 
 export const bunSpiegelFonts: () => Promise<Font[]> = () =>
@@ -134,6 +134,6 @@ export const bunSpiegelFonts: () => Promise<Font[]> = () =>
       async (font): Promise<Font> => ({
         ...font,
         data: await Bun.file(new URL(font.src, import.meta.url)).arrayBuffer(),
-      })
-    )
+      }),
+    ),
   );

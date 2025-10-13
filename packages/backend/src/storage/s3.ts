@@ -1,6 +1,7 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import configuration from "../configuration.js";
+import { getErrorMessage } from "../utils/errors.js";
 
 /**
  * Generate S3 key (path) for a match file
@@ -20,16 +21,12 @@ function generateMatchKey(matchId: string): string {
  * @param match The match data to save
  * @returns Promise that resolves when the match is saved
  */
-export async function saveMatchToS3(
-  match: MatchV5DTOs.MatchDto
-): Promise<void> {
+export async function saveMatchToS3(match: MatchV5DTOs.MatchDto): Promise<void> {
   const matchId = match.metadata.matchId;
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
-    console.warn(
-      `[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping save for match: ${matchId}`
-    );
+    console.warn(`[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping save for match: ${matchId}`);
     return;
   }
 
@@ -69,19 +66,12 @@ export async function saveMatchToS3(
     await client.send(command);
 
     const uploadTime = Date.now() - startTime;
-    console.log(
-      `[S3Storage] ✅ Successfully saved match ${matchId} to S3 in ${uploadTime.toString()}ms`
-    );
+    console.log(`[S3Storage] ✅ Successfully saved match ${matchId} to S3 in ${uploadTime.toString()}ms`);
     console.log(`[S3Storage] 🔗 S3 location: s3://${bucket}/${key}`);
   } catch (error) {
-    console.error(
-      `[S3Storage] ❌ Failed to save match ${matchId} to S3:`,
-      error
-    );
+    console.error(`[S3Storage] ❌ Failed to save match ${matchId} to S3:`, error);
 
     // Re-throw the error so the caller can handle it appropriately
-    throw new Error(
-      `Failed to save match ${matchId} to S3: ${error instanceof Error ? error.message : String(error)}`
-    );
+    throw new Error(`Failed to save match ${matchId} to S3: ${getErrorMessage(error)}`);
   }
 }

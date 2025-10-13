@@ -1,24 +1,21 @@
 import { describe, it, expect } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import {
-  ArenaMatchSchema,
-  LeaguePuuidSchema,
-  type Player,
-} from "@scout-for-lol/data";
+import { ArenaMatchSchema, LeaguePuuidSchema, type Player } from "@scout-for-lol/data";
 import { toArenaMatch } from "../match.js";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const currentDir = dirname(fileURLToPath(import.meta.url));
 
 const RAW_FILE_PATHS = [
-  join(__dirname, "testdata/matches_2025_09_19_NA1_5370969615.json"),
-  join(__dirname, "testdata/matches_2025_09_19_NA1_5370986469.json"),
+  join(currentDir, "testdata/matches_2025_09_19_NA1_5370969615.json"),
+  join(currentDir, "testdata/matches_2025_09_19_NA1_5370986469.json"),
 ];
 
 async function loadMatch(path: string): Promise<MatchV5DTOs.MatchDto> {
   const file = Bun.file(path);
   const json = (await file.json()) as unknown;
+  // eslint-disable-next-line no-restricted-syntax -- I'm okay with this since we're loading a saved API response
   return json as MatchV5DTOs.MatchDto;
 }
 
@@ -32,8 +29,7 @@ describe("toArenaMatch with real arena JSON", () => {
       expect(matchDto.info.participants.length).toBe(16);
       // choose first participant as the tracked player
       const tracked = matchDto.info.participants[0];
-      if (!tracked)
-        throw new Error("participants should not be empty in real data test");
+      if (!tracked) throw new Error("participants should not be empty in real data test");
 
       const player = {
         config: {

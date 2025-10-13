@@ -2,33 +2,32 @@
   "folders": [
     {
       "name": "dagger",
-      "path": ".dagger"
+      "path": ".dagger",
     },
     {
       "name": "backend",
-      "path": "packages/backend"
+      "path": "packages/backend",
     },
     {
       "name": "report",
-      "path": "packages/report"
+      "path": "packages/report",
     },
     {
       "name": "data",
-      "path": "packages/data"
+      "path": "packages/data",
     },
     {
       "name": "frontend",
-      "path": "packages/frontend"
+      "path": "packages/frontend",
     },
     {
       "name": "root",
-      "path": "."
-    }
+      "path": ".",
+    },
   ],
   "extensions": {
     "recommendations": [
       "astro-build.astro-vscode",
-      "earthly.earthfile-syntax-highlighting",
       "tamasfe.even-better-toml",
       "github.vscode-github-actions",
       "esbenp.prettier-vscode",
@@ -42,7 +41,8 @@
       "lightyen.tailwindcss-intellisense-twin",
       "prisma.prisma",
       "orta.vscode-jest",
-      "dbaeumer.vscode-eslint"
+      "dbaeumer.vscode-eslint",
+      "oven.bun-vscode",
     ],
   },
   "settings": {

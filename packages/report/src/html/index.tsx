@@ -27,11 +27,11 @@ export function svgToPng(svg: string) {
     textRendering: 2,
     imageRendering: 0,
     fitTo: {
-      mode: 'original',
+      mode: "original",
     },
     font: {
       loadSystemFonts: false,
-    }
+    },
   });
 
   // Automatically crop to bounding box to remove transparent background

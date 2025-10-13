@@ -17,9 +17,7 @@ import { match } from "ts-pattern";
 function participantToChampion(participant: MatchV5DTOs.ParticipantDto) {
   return {
     riotIdGameName:
-      participant.riotIdGameName && participant.riotIdGameName.length > 0
-        ? participant.riotIdGameName
-        : "Unknown",
+      participant.riotIdGameName && participant.riotIdGameName.length > 0 ? participant.riotIdGameName : "Unknown",
     championName: participant.championName,
     kills: participant.kills,
     deaths: participant.deaths,
@@ -36,8 +34,7 @@ function participantToChampion(participant: MatchV5DTOs.ParticipantDto) {
     spells: [participant.summoner1Id, participant.summoner2Id],
     gold: participant.goldEarned,
     runes: [], // TODO: Extract runes from participant.perks if needed
-    creepScore:
-      participant.totalMinionsKilled + participant.neutralMinionsKilled,
+    creepScore: participant.totalMinionsKilled + participant.neutralMinionsKilled,
     visionScore: participant.visionScore,
     damage: participant.totalDamageDealtToChampions,
     lane: parseLane(participant.lane),
@@ -55,12 +52,9 @@ export function toMatch(
   player: Player,
   matchDto: MatchV5DTOs.MatchDto,
   rankBeforeMatch: Rank | undefined,
-  rankAfterMatch: Rank | undefined
+  rankAfterMatch: Rank | undefined,
 ): CompletedMatch {
-  const participant = findParticipant(
-    player.config.league.leagueAccount.puuid,
-    matchDto.info.participants
-  );
+  const participant = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
   if (participant === undefined) {
     console.debug("Player PUUID:", player.config.league.leagueAccount.puuid);
     console.debug("Match Participants:", matchDto.info.participants);
@@ -87,14 +81,9 @@ export function toMatch(
         playerConfig: player.config,
         rankBeforeMatch,
         rankAfterMatch,
-        wins:
-          queueType === "solo" || queueType === "flex"
-            ? (player.ranks[queueType]?.wins ?? undefined)
-            : undefined,
+        wins: queueType === "solo" || queueType === "flex" ? (player.ranks[queueType]?.wins ?? undefined) : undefined,
         losses:
-          queueType === "solo" || queueType === "flex"
-            ? (player.ranks[queueType]?.losses ?? undefined)
-            : undefined,
+          queueType === "solo" || queueType === "flex" ? (player.ranks[queueType]?.losses ?? undefined) : undefined,
         champion,
         outcome: getOutcome(participant),
         team: team,
@@ -118,11 +107,11 @@ export function getOutcome(participant: MatchV5DTOs.ParticipantDto) {
 
 function findParticipant(
   puuid: string,
-  participants: MatchV5DTOs.ParticipantDto[]
+  participants: MatchV5DTOs.ParticipantDto[],
 ): MatchV5DTOs.ParticipantDto | undefined {
   return pipe(
     participants,
     filter((participant) => participant.puuid === puuid),
-    first()
+    first(),
   );
 }

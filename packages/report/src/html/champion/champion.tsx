@@ -3,7 +3,7 @@ import { palette } from "../../assets/colors.ts";
 import { Champion } from "@scout-for-lol/data";
 import { summoner } from "../../dataDragon/summoner.ts";
 import { latestVersion } from "../../dataDragon/version.ts";
-import { CreepScore } from "./creepScore.tsx";
+import { CreepScore } from "./creep-score.tsx";
 import { Gold } from "./gold.tsx";
 import { Damage } from "./damage.tsx";
 import { Kda } from "./kda.tsx";
@@ -12,22 +12,13 @@ import { Lane } from "../lane/index.tsx";
 import { first, keys, map, pickBy, round } from "remeda";
 
 // highlight should be true if this champion's riotIdGameName is in the highlightNames array (player-based highlight)
-export function renderChampion(
-  champion: Champion,
-  highlight: boolean,
-  durationInMinutes: number,
-  damageMax: number
-) {
+export function renderChampion(champion: Champion, highlight: boolean, durationInMinutes: number, damageMax: number) {
   const items = renderItems(champion.items, champion.visionScore, false);
 
   const damagePercent = round((champion.damage / damageMax || 0) * 100, 0);
 
   const summs = map(champion.spells, (spell) => {
-    const name = first(
-      keys(
-        pickBy(summoner.data, (summoner) => summoner.key === spell.toString())
-      )
-    );
+    const name = first(keys(pickBy(summoner.data, (summoner) => summoner.key === spell.toString())));
 
     if (name === undefined) {
       throw new Error(`Summoner spell ${spell.toString()} not found`);
@@ -72,38 +63,20 @@ export function renderChampion(
         }}
       >
         {champion.lane && <Lane lane={champion.lane} />}
-        <span style={{ fontWeight: 700, width: "10rem" }}>
-          {champion.level.toString()}
-        </span>
+        <span style={{ fontWeight: 700, width: "10rem" }}>{champion.level.toString()}</span>
       </div>
 
-      <Names
-        championName={champion.championName}
-        summonerName={champion.riotIdGameName}
-        highlight={highlight}
-      />
+      <Names championName={champion.championName} summonerName={champion.riotIdGameName} highlight={highlight} />
 
       <div style={{ display: "flex", gap: "3rem" }}>
         <div style={{ display: "flex", flexDirection: "column" }}>{summs}</div>
         <div style={{ display: "flex", flexDirection: "row" }}>{items}</div>
       </div>
 
-      <Kda
-        kills={champion.kills}
-        deaths={champion.deaths}
-        assists={champion.assists}
-        highlight={highlight}
-      />
-      <Damage
-        value={champion.damage}
-        percent={damagePercent}
-        highlight={highlight}
-      />
+      <Kda kills={champion.kills} deaths={champion.deaths} assists={champion.assists} highlight={highlight} />
+      <Damage value={champion.damage} percent={damagePercent} highlight={highlight} />
       <Gold value={champion.gold} durationInMinutes={durationInMinutes} />
-      <CreepScore
-        value={champion.creepScore}
-        durationInMinutes={durationInMinutes}
-      />
+      <CreepScore value={champion.creepScore} durationInMinutes={durationInMinutes} />
     </div>
   );
 }

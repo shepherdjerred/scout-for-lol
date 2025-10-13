@@ -2,6 +2,7 @@
   "dependencies": {
     "@astrojs/react": "^4.3.1",
     "@astrojs/tailwind": "^6.0.0",
+    "@scout-for-lol/data": "workspace:*",
     "@scout-for-lol/report": "workspace:*",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/react": "^19.1.13",
@@ -16,8 +17,16 @@
     "astro": "astro",
     "build": "astro build",
     "dev": "astro dev",
-    "preview": "astro preview"
+    "format": "prettier --check .",
+    "lint": "astro check && eslint src",
+    "preview": "astro preview",
+    "test": "echo 'No tests configured' && exit 0",
+    "typecheck": "astro check"
   },
   "type": "module",
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "typescript": "^5.9.3"
+  }
 }

@@ -1,0 +1,131 @@
+---
+description: When and how to use type assertions correctly
+---
+
+# Type Assertions Policy
+
+## General Rule: Validate, Don't Assert
+
+**ALWAYS prefer Zod validation over type assertions.**
+
+## Acceptable Type Assertions
+
+Type assertions are ONLY acceptable in these specific forms:
+
+### 1. `as unknown as TargetType` (Two-Step Cast)
+
+When interfacing with third-party libraries that don't have perfect types:
+
+```typescript
+// Validate with Zod first, then cast if necessary
+const ResponseSchema = z.object({
+  gameId: z.number(),
+  gameMode: z.string(),
+});
+
+const validated = ResponseSchema.parse(response.response);
+// Now we know the structure is correct
+return response.response as unknown as ThirdPartyType;
+```
+
+### 2. `as const` (Literal Type)
+
+For const assertions (always acceptable):
+
+```typescript
+const config = {
+  type: "FIXED_DATES" as const,
+  startDate: new Date(),
+};
+```
+
+### 3. `as unknown` (Intermediate Cast)
+
+When you need to pass validated data through a type boundary:
+
+```typescript
+const validated = Schema.parse(input);
+return validated as unknown as ExpectedType;
+```
+
+## ❌ NEVER Use These
+
+```typescript
+// Direct cast (bypasses type safety):
+error as Error
+
+// Any cast:
+value as any
+
+// Unchecked cast:
+data as SpecificType  // without Zod validation first
+```
+
+## The Zod-First Pattern
+
+Always follow this sequence:
+
+1. **Validate** with Zod schema
+2. **Use** TypeScript's natural narrowing
+3. **Assert** only when crossing library boundaries
+
+```typescript
+// 1. Validate
+const DataSchema = z.object({
+  id: z.number(),
+  name: z.string()
+});
+const validated = DataSchema.parse(unknownData);
+
+// 2. Use (TypeScript knows the type now)
+console.log(validated.id, validated.name);
+
+// 3. Assert (only if needed for third-party library)
+return validated as unknown as ThirdPartyInterface;
+```
+
+## Why This Matters
+
+1. **Runtime Safety**: Zod catches invalid data before it causes issues
+2. **Compile Safety**: TypeScript catches type errors
+3. **Linter Compliance**: Follows `no-restricted-syntax` rules
+4. **Maintainability**: Clear validation logic, not hidden assumptions
+
+## Import Types
+
+Use `import type` for type-only imports:
+
+```typescript
+// ✅ CORRECT:
+import { createCompetition, type CreateCompetitionInput } from "./queries.js";
+import type { Competition } from "./types.js";
+
+// ❌ WRONG:
+import type { createCompetition } from "./queries.js";  // Function used at runtime!
+```
+
+## Template Literals
+
+Never use values in template literals that could stringify poorly:
+
+```typescript
+// ❌ WRONG:
+const msg = `Error: ${error}`;  // error is unknown
+
+// ✅ CORRECT:
+const ErrorSchema = z.object({ message: z.string() });
+const result = ErrorSchema.safeParse(error);
+const msg = result.success ? `Error: ${result.data.message}` : "Unknown error";
+```
+
+## Index Signatures
+
+Use bracket notation for accessing index signature properties:
+
+```typescript
+// ❌ WRONG:
+const value = obj.dynamicKey;  // If dynamicKey is from index signature
+
+// ✅ CORRECT:
+const value = obj["dynamicKey"];
+```

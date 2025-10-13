@@ -2,8 +2,8 @@ import { describe, it, expect } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { participantToArenaChampion } from "../../model/champion.js";
 
-const baseParticipant = (): MatchV5DTOs.ParticipantDto =>
-  ({
+const baseParticipant = (): MatchV5DTOs.ParticipantDto => {
+  const participant = {
     riotIdGameName: "Player#NA1",
     summonerName: "Player",
     championName: "Lux",
@@ -46,18 +46,18 @@ const baseParticipant = (): MatchV5DTOs.ParticipantDto =>
     PlayerScore8: 9,
     challenges: {
       damageTakenOnTeamPercentage: 0.2,
-    } satisfies Partial<MatchV5DTOs.ChallengesDto> as MatchV5DTOs.ChallengesDto,
+    } as unknown as MatchV5DTOs.ChallengesDto,
     // unused fields for this test
     teamId: 100,
-  }) satisfies Partial<MatchV5DTOs.ParticipantDto> as MatchV5DTOs.ParticipantDto;
+  } as unknown as MatchV5DTOs.ParticipantDto;
+  return participant;
+};
 
 describe("participantToArenaChampion", () => {
   it("extracts and filters augments, keeps order", async () => {
     const dto = baseParticipant();
     const champ = await participantToArenaChampion(dto);
-    expect(champ.augments.map((a) => ("id" in a ? a.id : undefined))).toEqual([
-      667, 123,
-    ]);
+    expect(champ.augments.map((a) => ("id" in a ? a.id : undefined))).toEqual([667, 123]);
   });
 
   it("copies base champion fields", async () => {

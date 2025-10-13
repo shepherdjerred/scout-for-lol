@@ -1,9 +1,11 @@
 import { REST, Routes } from "discord.js";
+import { z } from "zod";
 import { subscribeCommand } from "./commands/subscribe";
 import { unsubscribeCommand } from "./commands/unsubscribe";
 import configuration from "../configuration";
-import { listSubscriptionsCommand } from "./commands/listSubscriptions";
+import { listSubscriptionsCommand } from "./commands/list-subscriptions";
 import { debugCommand } from "./commands/debug";
+import { competitionCommand } from "./commands/competition/index.js";
 
 console.log("🔄 Preparing Discord slash commands for registration");
 
@@ -12,13 +14,12 @@ const commands = [
   unsubscribeCommand.toJSON(),
   listSubscriptionsCommand.toJSON(),
   debugCommand.toJSON(),
+  competitionCommand.toJSON(),
 ];
 
 console.log("📋 Commands to register:");
 commands.forEach((command, index) => {
-  console.log(
-    `  ${(index + 1).toString()}. ${command.name}: ${command.description}`
-  );
+  console.log(`  ${(index + 1).toString()}. ${command.name}: ${command.description}`);
 });
 
 console.log("🔑 Initializing Discord REST client");
@@ -26,29 +27,24 @@ const rest = new REST().setToken(configuration.discordToken);
 
 void (async () => {
   try {
-    console.log(
-      `🚀 Starting registration of ${commands.length.toString()} application (/) commands`
-    );
+    console.log(`🚀 Starting registration of ${commands.length.toString()} application (/) commands`);
     console.log(`🎯 Target application ID: ${configuration.applicationId}`);
 
     const startTime = Date.now();
-    const data = await rest.put(
-      Routes.applicationCommands(configuration.applicationId),
-      { body: commands }
-    );
+    const data = await rest.put(Routes.applicationCommands(configuration.applicationId), { body: commands });
     const registrationTime = Date.now() - startTime;
 
     console.log(
-      `✅ Successfully registered ${commands.length.toString()} application (/) commands in ${registrationTime.toString()}ms`
+      `✅ Successfully registered ${commands.length.toString()} application (/) commands in ${registrationTime.toString()}ms`,
     );
 
     // Log details about registered commands
-    if (Array.isArray(data)) {
+    const CommandSchema = z.object({ name: z.string(), id: z.string() });
+    const commandsResult = z.array(CommandSchema).safeParse(data);
+    if (commandsResult.success) {
       console.log("📝 Registered commands details:");
-      data.forEach((command: { name: string; id: string }, index: number) => {
-        console.log(
-          `  ${(index + 1).toString()}. ${command.name} (ID: ${command.id})`
-        );
+      commandsResult.data.forEach((command, index) => {
+        console.log(`  ${(index + 1).toString()}. ${command.name} (ID: ${command.id})`);
       });
     }
 
@@ -57,26 +53,22 @@ void (async () => {
     console.error("❌ Failed to register Discord commands:", error);
 
     // Log additional error context
-    if (error instanceof Error) {
-      console.error("❌ Error name:", error.name);
-      console.error("❌ Error message:", error.message);
-      if (error.stack) {
-        console.error("❌ Error stack:", error.stack);
+    const ErrorDetailsSchema = z.object({ name: z.string(), message: z.string(), stack: z.string().optional() });
+    const errorResult = ErrorDetailsSchema.safeParse(error);
+    if (errorResult.success) {
+      console.error("❌ Error name:", errorResult.data.name);
+      console.error("❌ Error message:", errorResult.data.message);
+      if (errorResult.data.stack) {
+        console.error("❌ Error stack:", errorResult.data.stack);
       }
     }
 
     // Check for specific Discord API errors
-    if (typeof error === "object" && error !== null && "status" in error) {
-      const discordError = error as {
-        status: unknown;
-        rawError?: unknown;
-        body?: unknown;
-      };
+    const objectResult = z.object({ status: z.unknown() }).catchall(z.unknown()).safeParse(error);
+    if (objectResult.success) {
+      const discordError = objectResult.data;
       console.error("❌ HTTP Status:", discordError.status);
-      console.error(
-        "❌ Response body:",
-        discordError.rawError ?? discordError.body
-      );
+      console.error("❌ Response body:", discordError["rawError"] ?? discordError["body"]);
     }
 
     process.exit(1);

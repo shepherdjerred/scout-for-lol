@@ -1,8 +1,4 @@
-import {
-  type CompletedMatch,
-  LeaguePuuidSchema,
-  DiscordAccountIdSchema,
-} from "@scout-for-lol/data";
+import { type CompletedMatch, LeaguePuuidSchema, DiscordAccountIdSchema } from "@scout-for-lol/data";
 
 export function getExampleMatch(): CompletedMatch {
   return {
@@ -14,7 +10,7 @@ export function getExampleMatch(): CompletedMatch {
           league: {
             leagueAccount: {
               puuid: LeaguePuuidSchema.parse(
-                "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw"
+                "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
               ),
               region: "AMERICA_NORTH",
             },

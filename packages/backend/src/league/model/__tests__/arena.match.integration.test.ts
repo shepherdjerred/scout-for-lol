@@ -1,11 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import {
-  ArenaMatchSchema,
-  ArenaTeamSchema,
-  LeaguePuuidSchema,
-  type Player,
-} from "@scout-for-lol/data";
+import { ArenaMatchSchema, ArenaTeamSchema, LeaguePuuidSchema, type Player } from "@scout-for-lol/data";
 import { participantToArenaChampion } from "../champion.js";
 import { toArenaMatch, toArenaSubteams } from "../match.js";
 
@@ -14,7 +9,7 @@ function makeParticipant(
     playerSubteamId: number;
     placement: number;
     puuid: string;
-  }
+  },
 ): MatchV5DTOs.ParticipantDto {
   const base: Partial<MatchV5DTOs.ParticipantDto> = {
     riotIdGameName: "P#NA1",
@@ -57,14 +52,14 @@ function makeParticipant(
     PlayerScore8: 0,
     challenges: {
       damageTakenOnTeamPercentage: 0.2,
-    } satisfies Partial<MatchV5DTOs.ChallengesDto> as MatchV5DTOs.ChallengesDto,
+    } satisfies Partial<MatchV5DTOs.ChallengesDto> as unknown as MatchV5DTOs.ChallengesDto,
   };
   return {
     totalHealsOnTeammates: 300,
     totalDamageShieldedOnTeammates: 500,
     ...base,
     ...overrides,
-  } satisfies Partial<MatchV5DTOs.ParticipantDto> as MatchV5DTOs.ParticipantDto;
+  } satisfies Partial<MatchV5DTOs.ParticipantDto> as unknown as MatchV5DTOs.ParticipantDto;
 }
 
 function makeArenaMatchDto(): MatchV5DTOs.MatchDto {
@@ -76,14 +71,14 @@ function makeArenaMatchDto(): MatchV5DTOs.MatchDto {
         playerSubteamId: sub,
         placement: sub,
         puuid: longPuuid(`A${sub.toString()}`),
-      })
+      }),
     );
     participants.push(
       makeParticipant({
         playerSubteamId: sub,
         placement: sub,
         puuid: longPuuid(`B${sub.toString()}`),
-      })
+      }),
     );
   }
   return {
@@ -117,9 +112,7 @@ describe("arena match integration", () => {
   it("builds valid arena subteams and players from MatchDto", async () => {
     const dto = makeArenaMatchDto();
     const subteams = await toArenaSubteams(dto.info.participants);
-    const players = await Promise.all(
-      dto.info.participants.map(participantToArenaChampion)
-    );
+    const players = await Promise.all(dto.info.participants.map(participantToArenaChampion));
 
     // Validate subteams against schema and basic expectations
     subteams.forEach((st) => {

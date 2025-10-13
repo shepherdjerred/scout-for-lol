@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { RankSchema } from "./rank.js";
 import { match } from "ts-pattern";
-import { PlayerConfig, PlayerConfigEntrySchema } from "./playerConfig.js";
+import { PlayerConfig, PlayerConfigEntrySchema } from "./player-config.js";
 import { filter, flatMap } from "remeda";
 
 export type QueueType = z.infer<typeof QueueTypeSchema>;
@@ -90,32 +90,22 @@ export const ApplicationStateSchema = z.strictObject({
   gamesStarted: z.array(LoadingScreenStateSchema),
 });
 
-export function getPlayersInGame(
-  players: PlayerConfig,
-  state: ApplicationState
-) {
+export function getPlayersInGame(players: PlayerConfig, state: ApplicationState) {
   const playersInGame = flatMap(state.gamesStarted, (game) => game.players);
   return filter(players, (player) =>
     playersInGame.some(
-      (matchPlayer) =>
-        matchPlayer.player.league.leagueAccount.puuid ===
-        player.league.leagueAccount.puuid
-    )
+      (matchPlayer) => matchPlayer.player.league.leagueAccount.puuid === player.league.leagueAccount.puuid,
+    ),
   );
 }
 
-export function getPlayersNotInGame(
-  players: PlayerConfig,
-  state: ApplicationState
-) {
+export function getPlayersNotInGame(players: PlayerConfig, state: ApplicationState) {
   const playersInGame = flatMap(state.gamesStarted, (game) => game.players);
   return filter(
     players,
     (player) =>
       !playersInGame.some(
-        (matchPlayer) =>
-          matchPlayer.player.league.leagueAccount.puuid ===
-          player.league.leagueAccount.puuid
-      )
+        (matchPlayer) => matchPlayer.player.league.leagueAccount.puuid === player.league.leagueAccount.puuid,
+      ),
   );
 }

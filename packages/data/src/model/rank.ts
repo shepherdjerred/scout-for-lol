@@ -1,14 +1,14 @@
 import { z } from "zod";
 import { DivisionSchema, divisionToString } from "./division.js";
 import { TierSchema } from "./tier.js";
-import { rankToLeaguePoints, tierToOrdinal } from "./leaguePoints.js";
+import { rankToLeaguePoints, tierToOrdinal } from "./league-points.js";
 import { startCase } from "../util.js";
 
 export type Rank = z.infer<typeof RankSchema>;
 export const RankSchema = z.strictObject({
   division: DivisionSchema,
   tier: TierSchema,
-  lp: z.number().nonnegative().max(100),
+  lp: z.number().nonnegative(), // No max - Master+ can have LP > 100
   wins: z.number().nonnegative(),
   losses: z.number().nonnegative(),
 });
@@ -20,9 +20,7 @@ export const RanksSchema = z.strictObject({
 });
 
 export function rankToString(rank: Rank): string {
-  return `${startCase(rank.tier)} ${divisionToString(
-    rank.division,
-  )}, ${rank.lp.toString()}LP`;
+  return `${startCase(rank.tier)} ${divisionToString(rank.division)}, ${rank.lp.toString()}LP`;
 }
 
 export function rankToSimpleString(rank: Rank): string {
@@ -50,10 +48,7 @@ export function wasDemoted(previous: Rank | undefined, current: Rank): boolean {
   return false;
 }
 
-export function wasPromoted(
-  previous: Rank | undefined,
-  current: Rank,
-): boolean {
+export function wasPromoted(previous: Rank | undefined, current: Rank): boolean {
   if (previous === undefined) {
     return false;
   }

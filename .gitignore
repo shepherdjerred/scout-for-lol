@@ -1,4 +1,5 @@
 node_modules
-.tmp-earthly-out
 .jj
 *.tar.gz
+*.db
+.eslintcache
