@@ -1,4 +1,5 @@
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from "bun:test";
+import { z } from "zod";
 import { PrismaClient } from "../../../generated/prisma/client/index.js";
 import { calculateLeaderboard } from "./leaderboard.js";
 import { createCompetition } from "../../database/competition/queries.js";
@@ -50,7 +51,6 @@ async function resetDatabase() {
   await prisma.subscription.deleteMany();
   await prisma.account.deleteMany();
   await prisma.player.deleteMany();
-  await prisma.server.deleteMany();
 }
 
 beforeEach(async () => {
@@ -470,22 +470,19 @@ describe("calculateLeaderboard integration tests", () => {
     // Player 1 should be rank 1 (bigger climb)
     expect(leaderboard[0]?.playerId).toBe(player1.id);
     expect(leaderboard[0]?.rank).toBe(1);
-    expect(typeof leaderboard[0]?.score).toBe("number");
-    expect(leaderboard[0]?.score).toBeGreaterThan(0);
+    expect(z.number().safeParse(leaderboard[0]?.score).success).toBe(true);
+    expect(z.number().parse(leaderboard[0]?.score)).toBeGreaterThan(0);
 
     // Player 2 should be rank 2 (smaller climb)
     expect(leaderboard[1]?.playerId).toBe(player2.id);
     expect(leaderboard[1]?.rank).toBe(2);
-    expect(typeof leaderboard[1]?.score).toBe("number");
-    expect(leaderboard[1]?.score).toBeGreaterThan(0);
+    expect(z.number().safeParse(leaderboard[1]?.score).success).toBe(true);
+    expect(z.number().parse(leaderboard[1]?.score)).toBeGreaterThan(0);
 
     // Player 1's climb should be greater than Player 2's
-    // We've already verified both are numbers above
-    const score0 = leaderboard[0]?.score;
-    const score1 = leaderboard[1]?.score;
-    if (score0 !== undefined && score1 !== undefined && typeof score0 === "number" && typeof score1 === "number") {
-      expect(score0).toBeGreaterThan(score1);
-    }
+    const score0 = z.number().parse(leaderboard[0]?.score);
+    const score1 = z.number().parse(leaderboard[1]?.score);
+    expect(score0).toBeGreaterThan(score1);
   });
 
   test("should only include JOINED participants, not INVITED or LEFT", async () => {

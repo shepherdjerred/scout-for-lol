@@ -1,7 +1,8 @@
 import type { CompetitionCriteria, CompetitionQueueType, CompetitionWithCriteria, Rank } from "@scout-for-lol/data";
-import { getCompetitionStatus, competitionQueueTypeToString, rankToString } from "@scout-for-lol/data";
+import { getCompetitionStatus, competitionQueueTypeToString, rankToString, RankSchema } from "@scout-for-lol/data";
 import { EmbedBuilder, Colors } from "discord.js";
 import { match } from "ts-pattern";
+import { z } from "zod";
 import { getChampionName } from "twisted/dist/constants/champions.js";
 import type { RankedLeaderboardEntry } from "../../league/competition/leaderboard.js";
 
@@ -312,29 +313,27 @@ export function formatScore(
 ): string {
   return match(criteria)
     .with({ type: "MOST_GAMES_PLAYED" }, () => {
-      // For number-based criteria, score should be a number
-      const numScore = score;
+      const numScore = z.number().parse(score);
       return `${numScore.toString()} game${numScore === 1 ? "" : "s"}`;
     })
     .with({ type: "HIGHEST_RANK" }, () => {
-      // For rank-based criteria, score should be a Rank
-      const rankScore = score;
+      const rankScore = RankSchema.parse(score);
       return formatRankScore(rankScore);
     })
     .with({ type: "MOST_RANK_CLIMB" }, () => {
-      const numScore = score;
+      const numScore = z.number().parse(score);
       return `${numScore.toString()} LP gained`;
     })
     .with({ type: "MOST_WINS_PLAYER" }, () => {
-      const numScore = score;
+      const numScore = z.number().parse(score);
       return formatWinsScore(numScore, metadata);
     })
     .with({ type: "MOST_WINS_CHAMPION" }, () => {
-      const numScore = score;
+      const numScore = z.number().parse(score);
       return formatWinsScore(numScore, metadata);
     })
     .with({ type: "HIGHEST_WIN_RATE" }, () => {
-      const numScore = score;
+      const numScore = z.number().parse(score);
       return formatWinRateScore(numScore, metadata);
     })
     .exhaustive();
@@ -356,8 +355,15 @@ function formatWinsScore(wins: number, metadata?: Record<string, unknown>): stri
   const baseText = `${wins.toString()} win${wins === 1 ? "" : "s"}`;
 
   // If we have games in metadata, show win/loss record
-  if (metadata && metadata["games"] && metadata["games"] > 0) {
-    const games = metadata["games"];
+  if (!metadata) return baseText;
+
+  const MetadataSchema = z.object({
+    games: z.number().positive(),
+  });
+
+  const result = MetadataSchema.safeParse(metadata);
+  if (result.success) {
+    const games = result.data.games;
     const losses = games - wins;
     const winRate = (wins / games) * 100;
     return `${baseText} (${wins.toString()}-${losses.toString()}, ${winRate.toFixed(0)}%)`;
@@ -374,9 +380,17 @@ function formatWinRateScore(winRate: number, metadata?: Record<string, unknown>)
   const rateText = `${winRate.toFixed(1)}%`;
 
   // If we have wins and games in metadata, show record
-  if (metadata && isNumber(metadata["wins"]) && isNumber(metadata["games"]) && metadata["games"] > 0) {
-    const wins = metadata["wins"];
-    const games = metadata["games"];
+  if (!metadata) return rateText;
+
+  const MetadataSchema = z.object({
+    wins: z.number(),
+    games: z.number().positive(),
+  });
+
+  const result = MetadataSchema.safeParse(metadata);
+  if (result.success) {
+    const wins = result.data.wins;
+    const games = result.data.games;
     const losses = games - wins;
     return `${rateText} (${wins.toString()}-${losses.toString()})`;
   }

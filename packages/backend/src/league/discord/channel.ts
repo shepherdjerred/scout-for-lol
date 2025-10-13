@@ -1,6 +1,7 @@
 import { type Message, MessageCreateOptions, MessagePayload, type TextChannel } from "discord.js";
 import { z } from "zod";
 import client from "../../discord/client";
+import { asTextChannel } from "../../discord/utils/channel";
 
 export async function send(
   options: string | MessagePayload | MessageCreateOptions,
@@ -11,7 +12,10 @@ export async function send(
   if (!fetchedChannel) {
     throw new Error("invalid channel");
   }
-  const channel = fetchedChannel as unknown as TextChannel;
+  const channel = asTextChannel(fetchedChannel);
+  if (!channel) {
+    throw new Error("invalid channel");
+  }
 
   // Log message info - only log string messages to avoid object stringification
   const stringResult = z.string().safeParse(options);

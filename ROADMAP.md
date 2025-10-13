@@ -6,6 +6,11 @@ There seems to be a fair bit of coupling. Examples:
   etc.
 - Unrelated concerns should be runnable
 
+## Code Quality
+
+- parse, safeParse -- we use it way too much
+- as unknown as
+
 ## Misc
 
 - [x] Strict TS config for Dagger

@@ -1,13 +1,13 @@
 import type { CompetitionCriteria, CompetitionWithCriteria, Rank } from "@scout-for-lol/data";
-import { getCompetitionStatus, rankToLeaguePoints } from "@scout-for-lol/data";
+import { getCompetitionStatus, rankToLeaguePoints, RankSchema } from "@scout-for-lol/data";
 import { sortBy } from "remeda";
 import { match } from "ts-pattern";
+import { z } from "zod";
 import type { PrismaClient } from "../../../generated/prisma/client/index.js";
 import { queryMatchesByDateRange } from "../../storage/s3-query.js";
 import type { LeaderboardEntry, PlayerWithAccounts } from "./processors/types.js";
 import { processCriteria, type SnapshotData } from "./processors/index.js";
 import { getSnapshot } from "./snapshots.js";
-import { isNumber, isRank } from "../../discord/embeds/type-guards.js";
 
 // ============================================================================
 // Types
@@ -108,19 +108,25 @@ async function fetchSnapshotData(
  * Check if two scores are equal
  */
 function scoresAreEqual(a: number | Rank, b: number | Rank): boolean {
+  const aNumResult = z.number().safeParse(a);
+  const bNumResult = z.number().safeParse(b);
+
   // Both are numbers
-  if (isNumber(a) && isNumber(b)) {
-    return a === b;
+  if (aNumResult.success && bNumResult.success) {
+    return aNumResult.data === bNumResult.data;
   }
 
+  const aRankResult = RankSchema.safeParse(a);
+  const bRankResult = RankSchema.safeParse(b);
+
   // Both are Rank objects
-  if (isRank(a) && isRank(b)) {
-    const aLP = rankToLeaguePoints(a);
-    const bLP = rankToLeaguePoints(b);
+  if (aRankResult.success && bRankResult.success) {
+    const aLP = rankToLeaguePoints(aRankResult.data);
+    const bLP = rankToLeaguePoints(bRankResult.data);
     return aLP === bLP;
   }
 
-  // Mixed types are never equal
+  // Mixed types or invalid - not equal
   return false;
 }
 
@@ -262,11 +268,17 @@ export async function calculateLeaderboard(
     (entry) => {
       // Use a comparator that works for both numbers and Ranks
       // We'll sort by converting to a sortable value
-      if (isNumber(entry.score)) {
-        return entry.score;
+      const numResult = z.number().safeParse(entry.score);
+      if (numResult.success) {
+        return numResult.data;
       }
-      // For Rank, use league points as the sort key
-      return rankToLeaguePoints(entry.score);
+      // For Rank, validate and use league points as the sort key
+      const rankResult = RankSchema.safeParse(entry.score);
+      if (rankResult.success) {
+        return rankToLeaguePoints(rankResult.data);
+      }
+      // Fallback for invalid data
+      return 0;
     },
     "desc", // Higher is better
   ]);

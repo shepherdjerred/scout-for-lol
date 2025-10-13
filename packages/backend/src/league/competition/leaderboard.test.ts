@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { z } from "zod";
 import type { Rank } from "@scout-for-lol/data";
 import type { LeaderboardEntry } from "./processors/types.js";
 
@@ -73,15 +74,33 @@ function assignRanks(entries: LeaderboardEntry[]): (LeaderboardEntry & { rank: n
  * Uses simplified equality check for Rank objects
  */
 function scoresAreEqual(a: number | Rank, b: number | Rank): boolean {
+  const aNumResult = z.number().safeParse(a);
+  const bNumResult = z.number().safeParse(b);
+
   // Both are numbers
-  if (typeof a === "number" && typeof b === "number") {
-    return a === b;
+  if (aNumResult.success && bNumResult.success) {
+    return aNumResult.data === bNumResult.data;
   }
 
+  const RankSchema = z.object({
+    tier: z.string(),
+    division: z.number(),
+    lp: z.number(),
+    wins: z.number(),
+    losses: z.number(),
+  });
+
+  const aRankResult = RankSchema.safeParse(a);
+  const bRankResult = RankSchema.safeParse(b);
+
   // Both are Rank objects
-  if (typeof a === "object" && typeof b === "object") {
+  if (aRankResult.success && bRankResult.success) {
     // For simplicity in tests, compare tier, division, and LP
-    return a.tier === b.tier && a.division === b.division && a.lp === b.lp;
+    return (
+      aRankResult.data.tier === bRankResult.data.tier &&
+      aRankResult.data.division === bRankResult.data.division &&
+      aRankResult.data.lp === bRankResult.data.lp
+    );
   }
 
   // Mixed types are never equal

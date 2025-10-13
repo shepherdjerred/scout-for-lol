@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
-import { z } from "zod";
 import configuration from "./configuration.js";
+import { ErrorSchema } from "./utils/errors.js";
 
 console.log("🏥 Starting health check");
 console.log(`🔍 Health check URL: http://127.0.0.1:${configuration.port.toString()}/ping`);
@@ -21,10 +21,8 @@ try {
 } catch (error) {
   console.error("❌ Health check failed:", error);
 
-  const ErrorDetailsSchema = z.object({ name: z.string(), message: z.string() });
-  const errorResult = ErrorDetailsSchema.safeParse(error);
+  const errorResult = ErrorSchema.safeParse(error);
   if (errorResult.success) {
-    console.error(`❌ Error name: ${errorResult.data.name}`);
     console.error(`❌ Error message: ${errorResult.data.message}`);
   }
 
