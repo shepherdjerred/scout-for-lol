@@ -50,7 +50,7 @@
       "bash -c 'cd packages/data && bunx eslint --cache --fix'",
       "bash -c 'cd packages/data && bun run test'"
     ],
-    "packages/frontend/**/*.{ts,tsx}": [
+    "packages/frontend/**/*.{ts,tsx,astro}": [
       "bash -c 'cd packages/frontend && bun run typecheck'",
       "bash -c 'cd packages/frontend && bunx eslint --cache --fix'",
       "bash -c 'cd packages/frontend && bun run test'"
