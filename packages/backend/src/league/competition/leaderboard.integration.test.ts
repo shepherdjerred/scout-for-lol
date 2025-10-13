@@ -4,19 +4,34 @@ import { calculateLeaderboard } from "./leaderboard.js";
 import { createCompetition } from "../../database/competition/queries.js";
 import { addParticipant } from "../../database/competition/participants.js";
 import type { Rank } from "@scout-for-lol/data";
+import { execSync } from "node:child_process";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 // ============================================================================
 // Test Setup
 // ============================================================================
 
+// Create a temporary database for testing
+const testDbDir = mkdtempSync(join(tmpdir(), "leaderboard-test-"));
+const testDbPath = join(testDbDir, "test.db");
+const testDbUrl = `file:${testDbPath}`;
+
+// Push schema to test database before tests run
+execSync("bunx prisma db push --skip-generate", {
+  env: { ...process.env, DATABASE_URL: testDbUrl },
+  cwd: join(process.cwd(), ".."),
+  stdio: "inherit",
+});
+
 let prisma: PrismaClient;
 
 beforeAll(() => {
-  // Use in-memory SQLite database for testing
   prisma = new PrismaClient({
     datasources: {
       db: {
-        url: "file::memory:?cache=shared",
+        url: testDbUrl,
       },
     },
   });
@@ -28,12 +43,14 @@ afterAll(async () => {
 
 // Helper to reset database between tests
 async function resetDatabase() {
-  await prisma.$executeRaw`DELETE FROM CompetitionSnapshot`;
-  await prisma.$executeRaw`DELETE FROM CompetitionParticipant`;
-  await prisma.$executeRaw`DELETE FROM Competition`;
-  await prisma.$executeRaw`DELETE FROM Account`;
-  await prisma.$executeRaw`DELETE FROM Player`;
-  await prisma.$executeRaw`DELETE FROM Server`;
+  await prisma.competitionSnapshot.deleteMany();
+  await prisma.competitionParticipant.deleteMany();
+  await prisma.competition.deleteMany();
+  await prisma.serverPermission.deleteMany();
+  await prisma.subscription.deleteMany();
+  await prisma.account.deleteMany();
+  await prisma.player.deleteMany();
+  await prisma.server.deleteMany();
 }
 
 beforeEach(async () => {

@@ -4,7 +4,6 @@ import { EmbedBuilder, Colors } from "discord.js";
 import { match } from "ts-pattern";
 import { getChampionName } from "twisted/dist/constants/champions.js";
 import type { RankedLeaderboardEntry } from "../../league/competition/leaderboard.js";
-import { isNumber, isRank } from "./type-guards.js";
 
 // ============================================================================
 // Types
@@ -313,40 +312,30 @@ export function formatScore(
 ): string {
   return match(criteria)
     .with({ type: "MOST_GAMES_PLAYED" }, () => {
-      if (!isNumber(score)) {
-        return "Invalid score";
-      }
-      return `${score.toString()} game${score === 1 ? "" : "s"}`;
+      // For number-based criteria, score should be a number
+      const numScore = score as unknown as number;
+      return `${numScore.toString()} game${numScore === 1 ? "" : "s"}`;
     })
     .with({ type: "HIGHEST_RANK" }, () => {
-      if (!isRank(score)) {
-        return "Invalid score";
-      }
-      return formatRankScore(score);
+      // For rank-based criteria, score should be a Rank
+      const rankScore = score as unknown as Rank;
+      return formatRankScore(rankScore);
     })
     .with({ type: "MOST_RANK_CLIMB" }, () => {
-      if (!isNumber(score)) {
-        return "Invalid score";
-      }
-      return `${score.toString()} LP gained`;
+      const numScore = score as unknown as number;
+      return `${numScore.toString()} LP gained`;
     })
     .with({ type: "MOST_WINS_PLAYER" }, () => {
-      if (!isNumber(score)) {
-        return "Invalid score";
-      }
-      return formatWinsScore(score, metadata);
+      const numScore = score as unknown as number;
+      return formatWinsScore(numScore, metadata);
     })
     .with({ type: "MOST_WINS_CHAMPION" }, () => {
-      if (!isNumber(score)) {
-        return "Invalid score";
-      }
-      return formatWinsScore(score, metadata);
+      const numScore = score as unknown as number;
+      return formatWinsScore(numScore, metadata);
     })
     .with({ type: "HIGHEST_WIN_RATE" }, () => {
-      if (!isNumber(score)) {
-        return "Invalid score";
-      }
-      return formatWinRateScore(score, metadata);
+      const numScore = score as unknown as number;
+      return formatWinRateScore(numScore, metadata);
     })
     .exhaustive();
 }
@@ -367,8 +356,8 @@ function formatWinsScore(wins: number, metadata?: Record<string, unknown>): stri
   const baseText = `${wins.toString()} win${wins === 1 ? "" : "s"}`;
 
   // If we have games in metadata, show win/loss record
-  if (metadata && isNumber(metadata["games"]) && metadata["games"] > 0) {
-    const games = metadata["games"];
+  if (metadata && metadata["games"] && (metadata["games"] as unknown as number) > 0) {
+    const games = metadata["games"] as unknown as number;
     const losses = games - wins;
     const winRate = (wins / games) * 100;
     return `${baseText} (${wins.toString()}-${losses.toString()}, ${winRate.toFixed(0)}%)`;
