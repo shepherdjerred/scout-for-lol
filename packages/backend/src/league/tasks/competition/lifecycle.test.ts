@@ -98,6 +98,7 @@ describe("Competition Lifecycle - Query Logic", () => {
       const isCancelled = true;
       const hasEndSnapshots = false;
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       const shouldEnd = endDate <= now && !hasEndSnapshots && !isCancelled;
 
       expect(shouldEnd).toBe(false);

@@ -90,7 +90,7 @@ describe("generateLeaderboardEmbed", () => {
   it("should display top 10 participants when there are more than 10", () => {
     const competition = createTestCompetition();
     const leaderboard: RankedLeaderboardEntry[] = Array.from({ length: 15 }, (_, i) =>
-      createTestLeaderboardEntry(i + 1, 100 - i, `Player${i + 1}`),
+      createTestLeaderboardEntry(i + 1, 100 - i, `Player${(i + 1).toString()}`),
     );
 
     const embed = generateLeaderboardEmbed(competition, leaderboard);

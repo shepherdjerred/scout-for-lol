@@ -7,6 +7,7 @@ import { queryMatchesByDateRange } from "../../storage/s3-query.js";
 import type { LeaderboardEntry, PlayerWithAccounts } from "./processors/types.js";
 import { processCriteria, type SnapshotData } from "./processors/index.js";
 import { getSnapshot } from "./snapshots.js";
+import { isNumber, isRank } from "../../discord/embeds/type-guards.js";
 
 // ============================================================================
 // Types
@@ -108,12 +109,12 @@ async function fetchSnapshotData(
  */
 function scoresAreEqual(a: number | Rank, b: number | Rank): boolean {
   // Both are numbers
-  if (typeof a === "number" && typeof b === "number") {
+  if (isNumber(a) && isNumber(b)) {
     return a === b;
   }
 
   // Both are Rank objects
-  if (typeof a === "object" && typeof b === "object") {
+  if (isRank(a) && isRank(b)) {
     const aLP = rankToLeaguePoints(a);
     const bLP = rankToLeaguePoints(b);
     return aLP === bLP;
@@ -261,7 +262,7 @@ export async function calculateLeaderboard(
     (entry) => {
       // Use a comparator that works for both numbers and Ranks
       // We'll sort by converting to a sortable value
-      if (typeof entry.score === "number") {
+      if (isNumber(entry.score)) {
         return entry.score;
       }
       // For Rank, use league points as the sort key

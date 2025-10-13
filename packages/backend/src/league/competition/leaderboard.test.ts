@@ -34,12 +34,12 @@ function createRankEntry(playerId: number, rank: Rank): LeaderboardEntry {
 /**
  * Helper to assign ranks to entries (mirrors the actual implementation)
  */
-function assignRanks(entries: LeaderboardEntry[]): Array<LeaderboardEntry & { rank: number }> {
+function assignRanks(entries: LeaderboardEntry[]): (LeaderboardEntry & { rank: number })[] {
   if (entries.length === 0) {
     return [];
   }
 
-  const ranked: Array<LeaderboardEntry & { rank: number }> = [];
+  const ranked: (LeaderboardEntry & { rank: number })[] = [];
   let currentRank = 1;
 
   for (let i = 0; i < entries.length; i++) {
@@ -70,14 +70,17 @@ function assignRanks(entries: LeaderboardEntry[]): Array<LeaderboardEntry & { ra
 
 /**
  * Check if two scores are equal (mirrors the actual implementation)
+ * Uses simplified equality check for Rank objects
  */
 function scoresAreEqual(a: number | Rank, b: number | Rank): boolean {
   // Both are numbers
+  // eslint-disable-next-line no-restricted-syntax -- Test helper needs type checking
   if (typeof a === "number" && typeof b === "number") {
     return a === b;
   }
 
   // Both are Rank objects
+  // eslint-disable-next-line no-restricted-syntax -- Test helper needs type checking
   if (typeof a === "object" && typeof b === "object") {
     // For simplicity in tests, compare tier, division, and LP
     return a.tier === b.tier && a.division === b.division && a.lp === b.lp;

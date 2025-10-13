@@ -263,7 +263,10 @@ describe("createSnapshot - Idempotency", () => {
       });
 
       expect(firstSnapshot).not.toBeNull();
-      const firstSnapshotTime = firstSnapshot!.snapshotTime;
+      if (!firstSnapshot) {
+        throw new Error("Expected firstSnapshot to be defined");
+      }
+      const firstSnapshotTime = firstSnapshot.snapshotTime;
 
       // Wait a bit to ensure different timestamp
       await new Promise((resolve) => setTimeout(resolve, 100));
