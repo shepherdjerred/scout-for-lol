@@ -1,5 +1,6 @@
 import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { executeCompetitionCreate } from "./create.js";
+import { executeCompetitionCancel } from "./cancel.js";
 
 /**
  * Main competition command with subcommands
@@ -106,7 +107,19 @@ export const competitionCommand = new SlashCommandBuilder()
           .setMaxValue(100),
       ),
   )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("cancel")
+      .setDescription("Cancel a competition")
+      .addIntegerOption((option) =>
+        option
+          .setName("competition-id")
+          .setDescription("ID of the competition to cancel")
+          .setRequired(true)
+          .setMinValue(1),
+      ),
+  )
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .setContexts(InteractionContextType.Guild);
 
-export { executeCompetitionCreate };
+export { executeCompetitionCreate, executeCompetitionCancel };

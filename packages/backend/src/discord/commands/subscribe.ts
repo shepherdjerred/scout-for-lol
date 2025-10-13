@@ -18,12 +18,7 @@ import { mapRegionToEnum } from "../../league/model/region";
 import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
 import { prisma } from "../../database/index";
 import { fromError } from "zod-validation-error";
-
-const ErrorSchema = z.object({ message: z.string() });
-function getErrorMessage(error: unknown): string {
-  const result = ErrorSchema.safeParse(error);
-  return result.success ? result.data.message : String(error);
-}
+import { getErrorMessage } from "../../utils/errors.js";
 
 export const subscribeCommand = new SlashCommandBuilder()
   .setName("subscribe")

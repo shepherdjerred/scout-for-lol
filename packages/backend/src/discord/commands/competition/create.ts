@@ -7,19 +7,7 @@ import { canCreateCompetition } from "../../../database/competition/permissions.
 import { type CreateCompetitionInput, createCompetition } from "../../../database/competition/queries.js";
 import { recordCreation } from "../../../database/competition/rate-limit.js";
 import { validateOwnerLimit, validateServerLimit } from "../../../database/competition/validation.js";
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Extract error message from unknown error value (avoids instanceof checks)
- */
-function getErrorMessage(error: unknown): string {
-  const ErrorSchema = z.object({ message: z.string() });
-  const result = ErrorSchema.safeParse(error);
-  return result.success ? result.data.message : String(error);
-}
+import { getErrorMessage } from "../../../utils/errors.js";
 
 // ============================================================================
 // Input Parsing Schema - Discriminated Unions

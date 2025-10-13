@@ -4,12 +4,10 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { z } from "zod";
 import { createCompetition, getCompetitionById } from "../../../database/competition/queries.js";
 import { clearAllRateLimits } from "../../../database/competition/rate-limit.js";
 import { validateOwnerLimit, validateServerLimit } from "../../../database/competition/validation.js";
-
-const ErrorSchema = z.object({ message: z.string() });
+import { ErrorSchema } from "../../../utils/errors.js";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "create-command-test-"));

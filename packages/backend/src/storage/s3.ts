@@ -1,13 +1,7 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { z } from "zod";
 import configuration from "../configuration.js";
-
-const ErrorSchema = z.object({ message: z.string() });
-function getErrorMessage(error: unknown): string {
-  const result = ErrorSchema.safeParse(error);
-  return result.success ? result.data.message : String(error);
-}
+import { getErrorMessage } from "../utils/errors.js";
 
 /**
  * Generate S3 key (path) for a match file

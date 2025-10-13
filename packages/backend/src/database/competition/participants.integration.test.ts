@@ -4,7 +4,6 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { z } from "zod";
 import {
   acceptInvitation,
   addParticipant,
@@ -14,8 +13,7 @@ import {
   removeParticipant,
 } from "./participants.js";
 import { createCompetition, type CreateCompetitionInput } from "./queries.js";
-
-const ErrorSchema = z.object({ message: z.string() });
+import { ErrorSchema } from "../../utils/errors.js";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "participants-test-"));

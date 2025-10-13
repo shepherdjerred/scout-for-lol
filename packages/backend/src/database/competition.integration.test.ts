@@ -4,9 +4,7 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { z } from "zod";
-
-const ErrorSchema = z.object({ message: z.string() });
+import { ErrorSchema } from "../utils/errors.js";
 
 // Create a temporary database for testing
 const testDbDir = mkdtempSync(join(tmpdir(), "competition-test-"));

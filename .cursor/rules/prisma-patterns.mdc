@@ -1,0 +1,365 @@
+---
+description: Prisma ORM patterns and nullable field handling
+globs: **/database/**/*.ts,**/prisma/**/*.ts
+---
+
+# Prisma Patterns and Best Practices
+
+## Nullable Field Handling
+
+Prisma models with optional fields (`field?: Type`) generate nullable TypeScript types. **Always check for null before using.**
+
+### ❌ WRONG: Using optional fields without null check
+
+```typescript
+const competition = await prisma.competition.findUnique({ where: { id } });
+
+// TypeScript error: 'competition.startDate' is possibly 'null'
+const status = now < competition.startDate ? "PENDING" : "ACTIVE";
+```
+
+### ✅ CORRECT: Check for null first
+
+```typescript
+const competition = await prisma.competition.findUnique({ where: { id } });
+
+if (competition) {
+  const status = competition.isCancelled
+    ? "CANCELLED"
+    : competition.startDate && now < competition.startDate
+      ? "PENDING"
+      : competition.startDate && competition.endDate &&
+        now >= competition.startDate && now <= competition.endDate
+        ? "ACTIVE"
+        : "ENDED";
+}
+```
+
+**Key Pattern**: Chain null checks with `&&` operator for optional fields.
+
+## Schema Design: Optional vs Required
+
+### XOR Pattern (Either/Or fields)
+
+For mutually exclusive fields, make both optional and validate in application logic:
+
+```prisma
+model Competition {
+  // XOR: Either fixed dates OR season
+  startDate  DateTime?
+  endDate    DateTime?
+  seasonId   String?
+}
+```
+
+**Validation**:
+
+```typescript
+// In Zod schema
+const DatesSchema = z.union([
+  z.object({ startDate: z.date(), endDate: z.date() }),
+  z.object({ seasonId: z.string() }),
+]);
+```
+
+### Nullable for Lifecycle States
+
+Use nullable fields for state that changes over time:
+
+```prisma
+model CompetitionParticipant {
+  invitedAt  DateTime?  // null if joined directly
+  joinedAt   DateTime?  // null if invited but not accepted
+  leftAt     DateTime?  // null if still participating
+}
+```
+
+## Test Database Setup
+
+### Pattern for Integration Tests
+
+```typescript
+import { execSync } from "node:child_process";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+// Create test database ONCE (outside beforeEach)
+const testDir = mkdtempSync(join(tmpdir(), "test-"));
+const testDbPath = join(testDir, "test.db");
+const testDbUrl = `file:${testDbPath}`;
+
+// ✅ CORRECT: Use bun run db:push
+execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`, {
+  cwd: join(import.meta.dir, "../../.."),
+  env: { ...process.env, DATABASE_URL: testDbUrl },
+});
+
+// ❌ WRONG: Don't use prisma migrate deploy
+// execSync("bunx prisma migrate deploy", { ... });
+
+const prisma = new PrismaClient({
+  datasources: { db: { url: testDbUrl } },
+});
+
+beforeEach(async () => {
+  // Clean up in dependency order (child tables first)
+  await prisma.competitionSnapshot.deleteMany();
+  await prisma.competitionParticipant.deleteMany();
+  await prisma.competition.deleteMany();
+});
+```
+
+**Why `db:push` not `migrate`?**
+
+- ✅ Faster (no migration history)
+- ✅ Works with temporary databases
+- ✅ Syncs schema directly from schema.prisma
+- ✅ Handles schema changes in tests
+
+## Error Handling in Database Operations
+
+### Validate Before Throwing
+
+```typescript
+let error: unknown = null;
+try {
+  await prisma.competition.create({ data: invalidData });
+} catch (e) {
+  error = e;
+}
+
+expect(error).not.toBeNull();
+
+// Use ErrorSchema from utils/errors.js
+const errorResult = ErrorSchema.safeParse(error);
+if (errorResult.success) {
+  expect(errorResult.data.message).toContain("expected error");
+}
+```
+
+**Never**:
+
+```typescript
+// ❌ WRONG: Don't use instanceof
+if (error instanceof Error) { }
+
+// ❌ WRONG: Don't assert type
+expect((error as Error).message).toContain("...");
+```
+
+## String IDs vs Foreign Keys
+
+### Competition Models Use String IDs
+
+The Competition models use string IDs (Discord IDs) directly, not foreign keys:
+
+```typescript
+// ✅ CORRECT: Use string IDs directly
+const competition = await createCompetition(prisma, {
+  serverId: "123456789012345678",  // Discord guild ID as string
+  ownerId: "987654321098765432",   // Discord user ID as string
+  // ...
+});
+
+// ❌ WRONG: Don't create Server/Player records first
+// const server = await prisma.server.create({ ... });
+// const player = await prisma.player.create({ ... });
+```
+
+**Why?**
+
+- Competition feature is independent
+- No foreign key constraints on Discord IDs
+- Simpler test setup
+
+## Query Patterns
+
+### Finding by ID
+
+```typescript
+const competition = await prisma.competition.findUnique({
+  where: { id: competitionId },
+});
+
+if (!competition) {
+  throw new Error(`Competition ${competitionId.toString()} not found`);
+}
+
+// Now safe to use competition
+```
+
+### Filtering by Multiple Conditions
+
+```typescript
+const competitions = await prisma.competition.findMany({
+  where: {
+    serverId,
+    isCancelled: false,
+    startDate: { lte: now },
+    endDate: { gte: now },
+  },
+});
+```
+
+### Counting with Filters
+
+```typescript
+const activeCount = await prisma.competition.count({
+  where: {
+    serverId,
+    isCancelled: false,
+  },
+});
+```
+
+## Prisma Client Singleton
+
+### Global Prisma Instance
+
+Use the global prisma instance from `database/index.js`:
+
+```typescript
+import { prisma } from "../database/index.js";
+
+// ✅ Use global instance
+await prisma.competition.findMany();
+
+// ❌ Don't create new instances
+// const prisma = new PrismaClient();
+```
+
+**Exception**: Test files create isolated instances.
+
+## JSON Fields
+
+### Storing Complex Data
+
+For dynamic/polymorphic data, use JSON fields:
+
+```prisma
+model Competition {
+  criteriaType   String  // "MOST_GAMES_PLAYED"
+  criteriaConfig String  // JSON: {"queue": "SOLO"}
+}
+```
+
+**Parse with Zod**:
+
+```typescript
+const config: unknown = JSON.parse(raw.criteriaConfig);
+
+if (typeof config !== "object" || config === null) {
+  throw new Error("Invalid config");
+}
+
+const criteriaData = { type: raw.criteriaType, ...config };
+const result = CriteriaSchema.safeParse(criteriaData);
+```
+
+## Date Handling
+
+### DateTime Fields
+
+Prisma `DateTime` maps to JavaScript `Date`:
+
+```typescript
+const now = new Date();
+const tomorrow = new Date(now);
+tomorrow.setDate(tomorrow.getDate() + 1);
+
+await prisma.competition.create({
+  data: {
+    startDate: tomorrow,  // Date object
+    createdTime: now,
+  },
+});
+```
+
+### Comparing Dates
+
+```typescript
+const competition = await prisma.competition.findUnique({ where: { id } });
+
+if (competition && competition.startDate) {
+  const now = new Date();
+  const isPending = now < competition.startDate;
+}
+```
+
+## Index Optimization
+
+### Queries Should Use Indexes
+
+Check schema for indexes on frequently queried fields:
+
+```prisma
+model Competition {
+  serverId    String
+  isCancelled Boolean
+
+  @@index([serverId, isCancelled])
+  @@index([serverId, ownerId, isCancelled])
+}
+```
+
+**Query patterns that use indexes**:
+
+```typescript
+// ✅ Uses first index
+await prisma.competition.findMany({
+  where: { serverId, isCancelled: false },
+});
+
+// ✅ Uses second index
+await prisma.competition.findMany({
+  where: { serverId, ownerId, isCancelled: false },
+});
+```
+
+## Common Mistakes
+
+### ❌ Don't forget null checks
+
+```typescript
+// WRONG
+const status = now < competition.startDate ? "PENDING" : "ACTIVE";
+
+// CORRECT
+const status = competition.startDate && now < competition.startDate
+  ? "PENDING"
+  : "ACTIVE";
+```
+
+### ❌ Don't use `prisma migrate` in tests
+
+```typescript
+// WRONG
+execSync("bunx prisma migrate deploy");
+
+// CORRECT
+execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`);
+```
+
+### ❌ Don't create unnecessary foreign key records
+
+```typescript
+// WRONG - Competition models don't need this
+await prisma.server.create({ data: { discordGuildId: serverId } });
+await prisma.competition.create({ data: { serverId } });
+
+// CORRECT - Use string ID directly
+await prisma.competition.create({ data: { serverId } });
+```
+
+## Checklist for Prisma Code
+
+- [ ] Null checks for optional fields (`field?: Type`)
+- [ ] Test database uses `bun run db:push` not migrate
+- [ ] Clean up in `beforeEach` (child tables first)
+- [ ] Use global `prisma` instance (except in tests)
+- [ ] JSON fields parsed with Zod validation
+- [ ] Date comparisons check for null first
+- [ ] Error handling uses `ErrorSchema` from utils
+- [ ] Queries leverage defined indexes
+- [ ] String IDs used directly (no FK setup in tests)
