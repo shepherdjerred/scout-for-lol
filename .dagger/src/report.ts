@@ -11,8 +11,10 @@ export function installReportDeps(workspaceSource: Directory): Container {
     .withWorkdir("/workspace")
     .withFile("/workspace/package.json", workspaceSource.file("package.json"))
     .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
+    .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
     .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
     .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
+    .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
     .withWorkdir("/workspace")
     .withExec(["bun", "install", "--frozen-lockfile"]);
 }

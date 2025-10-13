@@ -45,9 +45,6 @@ export class ScoutForLol {
     logWithTimestamp("🔍 Starting comprehensive check process");
     logWithTimestamp("📋 This includes TypeScript type checking, ESLint, and tests for all packages");
 
-    const reportSource = source.directory("packages/report");
-    const dataSource = source.directory("packages/data");
-
     logWithTimestamp("📁 Prepared source directories for all packages");
 
     // Run checks in parallel - force container execution with .sync()
@@ -63,12 +60,12 @@ export class ScoutForLol {
           return container;
         }),
         withTiming("report check (lint + typecheck + tests)", async () => {
-          const container = checkReport(reportSource, dataSource);
+          const container = checkReport(source);
           await container.sync();
           return container;
         }),
         withTiming("data check (lint + typecheck)", async () => {
-          const container = checkData(dataSource);
+          const container = checkData(source);
           await container.sync();
           return container;
         }),
@@ -449,14 +446,14 @@ export class ScoutForLol {
 
   /**
    * Check the data package
-   * @param source The data source directory
+   * @param source The workspace source directory
    * @returns A message indicating completion
    */
   @func()
   async checkData(
     @argument({
       ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
-      defaultPath: "packages/data",
+      defaultPath: ".",
     })
     source: Directory,
   ): Promise<string> {
