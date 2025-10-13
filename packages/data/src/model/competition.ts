@@ -280,9 +280,11 @@ export function parseCompetition(raw: RawCompetition): CompetitionWithCriteria {
     throw new Error(`Invalid criteria for competition ${raw.id.toString()}: ${result.error.message}`);
   }
 
-  // Return domain type with parsed criteria
+  // Return domain type with parsed criteria, excluding criteriaType and criteriaConfig
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { criteriaType: _type, criteriaConfig: _config, ...rest } = raw;
   return {
-    ...raw,
+    ...rest,
     criteria: result.data,
   };
 }

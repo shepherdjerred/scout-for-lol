@@ -7,3 +7,11 @@ run = "bun install && (cd packages/backend/ && bun db:generate) && dagger develo
 
 [tasks.ci]
 run = "dagger call ci --git-sha='HEAD' --version='dev'"
+
+[tasks.check]
+run = [
+    "bun run typecheck",
+    "bun run lint",
+    "bun run format",
+    "bun run test",
+]
