@@ -32,12 +32,12 @@ export function checkData(workspaceSource: Directory): Container {
   return installDataDeps(workspaceSource)
     .withWorkdir("/workspace/packages/data")
     .withExec(["sh", "-c", "echo '🔍 [CI] Running TypeScript type checking for data...'"])
-    .withExec(["bun", "run", "typecheck"])
+    .withExec(["bunx", "--bun", "tsc", "--noEmit"])
     .withExec(["sh", "-c", "echo '✅ [CI] TypeScript type checking passed!'"])
     .withExec(["sh", "-c", "echo '🔍 [CI] Running ESLint for data...'"])
-    .withExec(["bun", "run", "lint"])
+    .withExec(["bunx", "eslint", "src"])
     .withExec(["sh", "-c", "echo '✅ [CI] ESLint passed!'"])
+    .withExec(["sh", "-c", "echo '🧪 [CI] Running tests for data...'"])
+    .withExec(["bun", "test"])
     .withExec(["sh", "-c", "echo '✅ [CI] All data checks completed successfully!'"]);
-  // Note: Tests are commented out in the original Earthfile
-  // .withExec(["bun", "test"]);
 }

@@ -11,6 +11,10 @@ export function installReportDeps(workspaceSource: Directory): Container {
     .withWorkdir("/workspace")
     .withFile("/workspace/package.json", workspaceSource.file("package.json"))
     .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
+    .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
+    .withFile("/workspace/tsconfig.json", workspaceSource.file("tsconfig.json"))
+    .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
+    .withDirectory("/workspace/eslint-rules", workspaceSource.directory("eslint-rules"))
     .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
     .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
     .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
@@ -25,17 +29,15 @@ export function installReportDeps(workspaceSource: Directory): Container {
  * @returns The test results
  */
 export function checkReport(workspaceSource: Directory): Container {
-  return (
-    installReportDeps(workspaceSource)
-      .withWorkdir("/workspace/packages/report")
-      .withExec(["sh", "-c", "echo '🔍 [CI] Running TypeScript type checking for report...'"])
-      // .withExec(["bun", "run", "typecheck"])
-      .withExec(["sh", "-c", "echo '✅ [CI] TypeScript type checking passed!'"])
-      .withExec(["sh", "-c", "echo '🔍 [CI] Running ESLint for report...'"])
-      // .withExec(["bun", "run", "lint"])
-      .withExec(["sh", "-c", "echo '✅ [CI] ESLint passed!'"])
-      .withExec(["sh", "-c", "echo '🧪 [CI] Running tests for report...'"])
-      // .withExec(["bun", "test"])
-      .withExec(["sh", "-c", "echo '✅ [CI] All report checks completed successfully!'"])
-  );
+  return installReportDeps(workspaceSource)
+    .withWorkdir("/workspace/packages/report")
+    .withExec(["sh", "-c", "echo '🔍 [CI] Running TypeScript type checking for report...'"])
+    .withExec(["bunx", "--bun", "tsc", "--noEmit"])
+    .withExec(["sh", "-c", "echo '✅ [CI] TypeScript type checking passed!'"])
+    .withExec(["sh", "-c", "echo '🔍 [CI] Running ESLint for report...'"])
+    .withExec(["bunx", "eslint", "src"])
+    .withExec(["sh", "-c", "echo '✅ [CI] ESLint passed!'"])
+    .withExec(["sh", "-c", "echo '🧪 [CI] Running tests for report...'"])
+    .withExec(["bun", "test"])
+    .withExec(["sh", "-c", "echo '✅ [CI] All report checks completed successfully!'"]);
 }
