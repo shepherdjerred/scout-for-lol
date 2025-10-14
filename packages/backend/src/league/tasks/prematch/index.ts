@@ -102,6 +102,8 @@ export async function checkPreMatch() {
       console.log(`⚡ Processing game ${gameId} with ${players.length.toString()} players`);
       console.log(`📋 Players in game: ${players.map((p) => p.alias).join(", ")}`);
 
+      console.log(`🎮 Game details: ${JSON.stringify(game)}`);
+
       const queueType = parseQueueType(game.gameQueueConfigId);
       console.log(`🎯 Queue type: ${queueType ?? "unknown"} (ID: ${game.gameQueueConfigId.toString()})`);
 

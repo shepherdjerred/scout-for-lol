@@ -1,4 +1,4 @@
-import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
+import { InteractionContextType, SlashCommandBuilder } from "discord.js";
 import { executeCompetitionCreate } from "./create.js";
 import { executeCompetitionCancel } from "./cancel.js";
 import { executeGrantPermission } from "./grant-permission.js";
@@ -177,7 +177,6 @@ export const competitionCommand = new SlashCommandBuilder()
           .setMinValue(1),
       ),
   )
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   .setContexts(InteractionContextType.Guild);
 
 export {
