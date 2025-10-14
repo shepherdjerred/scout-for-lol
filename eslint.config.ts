@@ -22,7 +22,14 @@ export default tseslint.config(
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
   {
-    ignores: ["**/generated/**/*", "**/dist/**/*", "**/build/**/*", "**/.cache/**/*", "**/node_modules/**/*"],
+    ignores: [
+      "**/generated/**/*",
+      "**/dist/**/*",
+      "**/build/**/*",
+      "**/.cache/**/*",
+      "**/node_modules/**/*",
+      "**/.astro/**/*",
+    ],
   },
   {
     languageOptions: {
