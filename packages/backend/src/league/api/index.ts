@@ -26,24 +26,17 @@ export async function getCurrentGame(player: PlayerConfigEntry): Promise<undefin
     if (z.instanceof(SpectatorNotAvailableDTO).safeParse(response).success) {
       console.log(`❌ Spectator API unavailable for ${playerAlias} (${apiTime.toString()}ms)`);
       return undefined;
+    } else {
+      // at this point, we know it's a ApiResponseDTO<CurrentGameInfoDTO>
+      const currentGameInfo = response.response as unknown as CurrentGameInfoDTO;
+      console.log(
+        `✅ Successfully fetched current game for ${playerAlias} (${apiTime.toString()}ms)`
+      );
+      console.log(
+        `📊 Game info: Match ID ${currentGameInfo.gameId.toString()}, Mode: ${currentGameInfo.gameMode}, Type: ${currentGameInfo.gameType}`
+      );
+      return currentGameInfo;
     }
-
-    // Validate the response has the expected structure
-    const GameInfoSchema = z.object({
-      gameId: z.number(),
-      gameMode: z.string(),
-      gameType: z.string(),
-    });
-
-    const ResponseSchema = z.object({ response: GameInfoSchema });
-    const validatedResponse = ResponseSchema.parse(response);
-
-    console.log(`✅ Successfully fetched current game for ${playerAlias} (${apiTime.toString()}ms)`);
-    console.log(
-      `📊 Game info: Match ID ${validatedResponse.response.gameId.toString()}, Mode: ${validatedResponse.response.gameMode}, Type: ${validatedResponse.response.gameType}`,
-    );
-    // TODO
-    return validatedResponse.response as unknown as CurrentGameInfoDTO;
   } catch (e) {
     console.error(`❌ Error fetching current game for ${playerAlias}. Likely indicates they are not currently in a game`);
 
