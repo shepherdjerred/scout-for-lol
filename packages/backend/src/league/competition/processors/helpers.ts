@@ -1,4 +1,4 @@
-import type { CompetitionQueueType } from "@scout-for-lol/data";
+import type { CompetitionQueueType, QueueType } from "@scout-for-lol/data";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { parseQueueType } from "@scout-for-lol/data";
 import type { PlayerWithAccounts } from "./types.js";
@@ -27,15 +27,23 @@ export function matchesQueue(match: MatchV5DTOs.MatchDto, queueFilter: Competiti
   }
 
   // Map CompetitionQueueType to QueueType
-  const queueMap: Record<string, string> = {
+  // Note: RANKED_ANY and ALL are handled by special cases above
+  const queueMap: Partial<Record<CompetitionQueueType, QueueType>> = {
     SOLO: "solo",
     FLEX: "flex",
     ARENA: "arena",
     ARAM: "aram",
+    URF: "urf",
+    ARURF: "arurf",
+    QUICKPLAY: "quickplay",
+    SWIFTPLAY: "swiftplay",
+    BRAWL: "brawl",
+    DRAFT_PICK: "draft pick",
+    CUSTOM: "custom",
   };
 
   const expectedQueue = queueMap[queueFilter];
-  return queueType === expectedQueue;
+  return expectedQueue !== undefined && queueType === expectedQueue;
 }
 
 /**

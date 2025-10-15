@@ -29,7 +29,21 @@ export type PermissionType = z.infer<typeof PermissionTypeSchema>;
 export const PermissionTypeSchema = z.enum(["CREATE_COMPETITION"]);
 
 export type CompetitionQueueType = z.infer<typeof CompetitionQueueTypeSchema>;
-export const CompetitionQueueTypeSchema = z.enum(["SOLO", "FLEX", "RANKED_ANY", "ARENA", "ARAM", "ALL"]);
+export const CompetitionQueueTypeSchema = z.enum([
+  "SOLO",
+  "FLEX",
+  "RANKED_ANY",
+  "ARENA",
+  "ARAM",
+  "URF",
+  "ARURF",
+  "QUICKPLAY",
+  "SWIFTPLAY",
+  "BRAWL",
+  "DRAFT_PICK",
+  "CUSTOM",
+  "ALL",
+]);
 
 // ============================================================================
 // Competition Criteria (Discriminated Union)
@@ -186,6 +200,13 @@ export function competitionQueueTypeToString(queueType: CompetitionQueueType): s
     .with("RANKED_ANY", () => "Ranked (Any)")
     .with("ARENA", () => "Arena")
     .with("ARAM", () => "ARAM")
+    .with("URF", () => "URF")
+    .with("ARURF", () => "ARURF")
+    .with("QUICKPLAY", () => "Quickplay")
+    .with("SWIFTPLAY", () => "Swiftplay")
+    .with("BRAWL", () => "Brawl")
+    .with("DRAFT_PICK", () => "Draft Pick")
+    .with("CUSTOM", () => "Custom")
     .with("ALL", () => "All Queues")
     .exhaustive();
 }

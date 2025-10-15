@@ -59,7 +59,10 @@ export const competitionCommand = new SlashCommandBuilder()
           .setRequired(false),
       )
       .addStringOption((option) =>
-        option.setName("season").setDescription("Season ID (alternative to fixed dates)").setRequired(false),
+        option
+          .setName("season")
+          .setDescription("Season ID (alternative to fixed dates, e.g. 'Season 2024' or '2024 Split 1')")
+          .setRequired(false),
       )
       // Criteria-specific options
       .addStringOption((option) =>
@@ -73,6 +76,9 @@ export const competitionCommand = new SlashCommandBuilder()
             { name: "Any Ranked", value: "RANKED_ANY" },
             { name: "Arena", value: "ARENA" },
             { name: "ARAM", value: "ARAM" },
+            { name: "Swiftplay", value: "SWIFTPLAY" },
+            { name: "Draft Pick", value: "DRAFT_PICK" },
+            { name: "Custom", value: "CUSTOM" },
             { name: "All Queues", value: "ALL" },
           ),
       )
