@@ -136,7 +136,7 @@ describe("arena match integration", () => {
       },
       ranks: {},
     };
-    const arenaMatch = await toArenaMatch(player, dto);
+    const arenaMatch = await toArenaMatch([player], dto);
     const parsed = ArenaMatchSchema.parse(arenaMatch);
     expect(parsed.queueType).toBe("arena");
     expect(parsed.teams.length).toBe(8);
@@ -145,5 +145,46 @@ describe("arena match integration", () => {
     if (!firstPlayer) throw new Error("parsed players should not be empty");
     expect(firstPlayer.placement).toBeGreaterThanOrEqual(1);
     expect(firstPlayer.placement).toBeLessThanOrEqual(8);
+  });
+
+  it("builds ArenaMatch with multiple tracked players", async () => {
+    const dto = makeArenaMatchDto();
+    const first = dto.info.participants[0];
+    const second = dto.info.participants[2]; // Different team
+    if (!first || !second) throw new Error("participants should not be empty in test dto");
+
+    const puuid1 = LeaguePuuidSchema.parse(first.puuid);
+    const puuid2 = LeaguePuuidSchema.parse(second.puuid);
+
+    const player1: Player = {
+      config: {
+        alias: "Player1",
+        league: { leagueAccount: { puuid: puuid1, region: "PBE" } },
+        discordAccount: null,
+      },
+      ranks: {},
+    };
+
+    const player2: Player = {
+      config: {
+        alias: "Player2",
+        league: { leagueAccount: { puuid: puuid2, region: "PBE" } },
+        discordAccount: null,
+      },
+      ranks: {},
+    };
+
+    const arenaMatch = await toArenaMatch([player1, player2], dto);
+    const parsed = ArenaMatchSchema.parse(arenaMatch);
+
+    expect(parsed.queueType).toBe("arena");
+    expect(parsed.teams.length).toBe(8);
+    expect(parsed.players.length).toBe(2); // Should have 2 tracked players
+
+    // Verify both players are included
+    expect(parsed.players[0]?.champion).toBeDefined();
+    expect(parsed.players[1]?.champion).toBeDefined();
+    expect(parsed.players[0]?.placement).toBeGreaterThanOrEqual(1);
+    expect(parsed.players[1]?.placement).toBeGreaterThanOrEqual(1);
   });
 });

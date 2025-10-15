@@ -45,7 +45,7 @@ describe("toArenaMatch with real arena JSON", () => {
         ranks: {},
       } satisfies Player;
 
-      const arenaMatch = await toArenaMatch(player, matchDto);
+      const arenaMatch = await toArenaMatch([player], matchDto);
       const parsed = ArenaMatchSchema.parse(arenaMatch);
 
       expect(parsed).toMatchSnapshot();

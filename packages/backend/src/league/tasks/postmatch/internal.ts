@@ -190,12 +190,12 @@ async function createMatchObj(
   const queueType = parseQueueType(match.info.queueId);
   if (queueType === "arena") {
     // Build ArenaMatch and short-circuit traditional flow
-    const firstPlayerState = state.players[0];
-    if (!firstPlayerState) {
+    // Process ALL tracked players in this arena match
+    if (state.players.length === 0) {
       throw new Error("No players found in game state for arena match");
     }
-    const player = await getPlayerFn(firstPlayerState.player);
-    const arena = toArenaMatch(player, match);
+    const players = await Promise.all(state.players.map((playerState) => getPlayerFn(playerState.player)));
+    const arena = await toArenaMatch(players, match);
     return arena;
   }
   const teams = getTeams(match.info.participants);

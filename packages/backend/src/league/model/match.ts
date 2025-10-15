@@ -180,35 +180,39 @@ export function getArenaPlacement(participant: MatchV5DTOs.ParticipantDto) {
   return ArenaParticipantFieldsSchema.parse(participant).placement;
 }
 
-export async function toArenaMatch(player: Player, matchDto: MatchV5DTOs.MatchDto): Promise<ArenaMatch> {
+export async function toArenaMatch(players: Player[], matchDto: MatchV5DTOs.MatchDto): Promise<ArenaMatch> {
   const subteams = await toArenaSubteams(matchDto.info.participants);
 
-  // Build ArenaMatch.players for the tracked player only (can extend to multi-player later)
-  const participant = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
-  if (participant === undefined) {
-    throw new Error("participant not found for arena match");
-  }
-  const subteamId = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
-  const placement = getArenaPlacement(participant);
-  const champion = await participantToArenaChampion(participant);
-  const teammateDto = getArenaTeammate(participant, matchDto.info.participants);
-  if (!teammateDto) {
-    throw new Error("arena teammate not found");
-  }
-  const arenaTeammate = await participantToArenaChampion(teammateDto);
+  // Build ArenaMatch.players for all tracked players
+  const arenaPlayers = await Promise.all(
+    players.map(async (player) => {
+      const participant = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
+      if (participant === undefined) {
+        throw new Error(`participant not found for player ${player.config.alias}`);
+      }
+      const subteamId = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
+      const placement = getArenaPlacement(participant);
+      const champion = await participantToArenaChampion(participant);
+      const teammateDto = getArenaTeammate(participant, matchDto.info.participants);
+      if (!teammateDto) {
+        throw new Error(`arena teammate not found for player ${player.config.alias}`);
+      }
+      const arenaTeammate = await participantToArenaChampion(teammateDto);
 
-  return {
-    durationInSeconds: matchDto.info.gameDuration,
-    queueType: "arena",
-    players: [
-      {
+      return {
         playerConfig: player.config,
         placement: ArenaPlacementSchema.parse(placement),
         champion,
         teamId: ArenaTeamIdSchema.parse(subteamId),
         teammate: arenaTeammate,
-      },
-    ],
+      };
+    }),
+  );
+
+  return {
+    durationInSeconds: matchDto.info.gameDuration,
+    queueType: "arena",
+    players: arenaPlayers,
     teams: subteams,
   } satisfies ArenaMatch;
 }

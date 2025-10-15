@@ -64,3 +64,23 @@ export function getPlayerParticipant(
 export function isWin(participant: MatchV5DTOs.ParticipantDto): boolean {
   return participant.win;
 }
+
+/**
+ * Get all participants for all tracked players in a match
+ * Returns array of [player, participant] pairs for each tracked player found in the match
+ */
+export function getAllPlayersInMatch(
+  players: PlayerWithAccounts[],
+  match: MatchV5DTOs.MatchDto,
+): [PlayerWithAccounts, MatchV5DTOs.ParticipantDto][] {
+  const results: [PlayerWithAccounts, MatchV5DTOs.ParticipantDto][] = [];
+
+  for (const player of players) {
+    const participant = getPlayerParticipant(player, match);
+    if (participant) {
+      results.push([player, participant]);
+    }
+  }
+
+  return results;
+}
