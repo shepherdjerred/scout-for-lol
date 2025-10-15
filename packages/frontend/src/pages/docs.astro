@@ -27,10 +27,46 @@ import Layout from "../layouts/Layout.astro";
           <a href="/docs" class="text-sm/6 font-semibold text-indigo-600"
             >Documentation</a
           >
-          <a href="/privacy" class="text-sm/6 font-semibold text-gray-900"
-            >Privacy</a
+          <a
+            href="https://github.com/shepherdjerred/scout-for-lol/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-sm/6 font-semibold text-gray-900 hover:text-indigo-600 inline-flex items-center gap-1"
           >
-          <a href="/tos" class="text-sm/6 font-semibold text-gray-900">Terms</a>
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"
+              ></path>
+            </svg>
+            Support
+          </a>
+          <a
+            href="https://github.com/shepherdjerred/scout-for-lol"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-sm/6 font-semibold text-gray-900 hover:text-indigo-600 inline-flex items-center gap-1"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                clip-rule="evenodd"></path>
+            </svg>
+            GitHub
+          </a>
         </div>
         <div class="hidden lg:flex lg:flex-1 lg:justify-end">
           <a
@@ -73,6 +109,11 @@ import Layout from "../layouts/Layout.astro";
               href="#commands"
               class="block text-indigo-600 hover:text-indigo-500"
               >Bot Commands</a
+            >
+            <a
+              href="#advanced-features"
+              class="block text-indigo-600 hover:text-indigo-500"
+              >Advanced Features</a
             >
             <a
               href="#permissions"
@@ -246,6 +287,272 @@ import Layout from "../layouts/Layout.astro";
 
               <div class="bg-gray-50 rounded-md p-4">
                 <code class="text-sm"> /debug </code>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Advanced Features -->
+        <section id="advanced-features" class="mb-16">
+          <h2 class="text-3xl font-bold text-gray-900 mb-6">
+            Advanced Features
+          </h2>
+
+          <div class="space-y-12">
+            <!-- Arena Support -->
+            <div>
+              <div class="flex items-center gap-3 mb-4">
+                <div
+                  class="bg-purple-100 rounded-lg p-2 flex items-center justify-center"
+                >
+                  <svg
+                    class="h-6 w-6 text-purple-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"
+                    ></path>
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-semibold text-gray-900">
+                  Arena Support
+                </h3>
+              </div>
+
+              <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
+                <p class="text-gray-700 mb-4">
+                  Scout now fully supports <strong
+                    >League of Legends Arena mode</strong
+                  > - the fast-paced 2v2v2v2v2v2v2v2 (16 player) game mode! Get
+                  notifications and detailed reports for Arena matches just like any
+                  other queue.
+                </p>
+
+                <h4 class="font-semibold text-gray-900 mb-3">
+                  What's Tracked in Arena:
+                </h4>
+                <ul class="list-disc list-inside space-y-2 text-gray-700 mb-4">
+                  <li>Match start notifications with duo partner information</li>
+                  <li>Complete post-match reports with placement and stats</li>
+                  <li>Team compositions for all 8 duos</li>
+                  <li>Damage dealt, damage taken, and eliminations</li>
+                  <li>Augments selected throughout the match</li>
+                  <li>Final placement (1st through 8th place)</li>
+                </ul>
+
+                <div
+                  class="bg-white border border-purple-300 rounded-md p-4 text-sm"
+                >
+                  <p class="text-gray-600">
+                    <strong>Note:</strong> Arena matches are automatically detected
+                    when you subscribe to a player - no special configuration needed!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Competitions -->
+            <div>
+              <div class="flex items-center gap-3 mb-4">
+                <div
+                  class="bg-amber-100 rounded-lg p-2 flex items-center justify-center"
+                >
+                  <svg
+                    class="h-6 w-6 text-amber-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0"
+                    ></path>
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-semibold text-gray-900">
+                  Competitions & Leaderboards
+                </h3>
+              </div>
+
+              <div class="bg-amber-50 border border-amber-200 rounded-lg p-6">
+                <p class="text-gray-700 mb-4">
+                  Create custom competitions with configurable criteria and
+                  track your server's performance on dynamic leaderboards!
+                  Perfect for friendly tournaments, ranked grinds, or skill
+                  challenges.
+                </p>
+
+                <h4 class="font-semibold text-gray-900 mb-3">
+                  Competition Features:
+                </h4>
+                <ul class="list-disc list-inside space-y-2 text-gray-700 mb-6">
+                  <li>
+                    Set custom start and end dates for time-limited competitions
+                  </li>
+                  <li>
+                    Configure which game modes count (Ranked, ARAM, Arena, etc.)
+                  </li>
+                  <li>Choose scoring criteria: wins, KDA, CS, damage, and more</li>
+                  <li>
+                    Real-time leaderboards updated automatically after each match
+                  </li>
+                  <li>Support for both individual and team competitions</li>
+                  <li>Automatic winner announcements when competitions end</li>
+                </ul>
+
+                <h4 class="font-semibold text-gray-900 mb-3">
+                  Competition Commands:
+                </h4>
+                <div class="space-y-3 mb-6">
+                  <div class="bg-white border border-amber-300 rounded-md p-3">
+                    <code class="text-sm text-gray-800">
+                      /competition create name:[name] start-date:[date]
+                      end-date:[date]
+                    </code>
+                    <p class="text-xs text-gray-600 mt-2">
+                      Create a new competition with custom parameters
+                    </p>
+                  </div>
+
+                  <div class="bg-white border border-amber-300 rounded-md p-3">
+                    <code class="text-sm text-gray-800">
+                      /competition leaderboard name:[name]
+                    </code>
+                    <p class="text-xs text-gray-600 mt-2">
+                      View the current leaderboard for a competition
+                    </p>
+                  </div>
+
+                  <div class="bg-white border border-amber-300 rounded-md p-3">
+                    <code class="text-sm text-gray-800">
+                      /competition list
+                    </code>
+                    <p class="text-xs text-gray-600 mt-2">
+                      See all active competitions in your server
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  class="bg-white border border-amber-300 rounded-md p-4 text-sm"
+                >
+                  <p class="text-gray-600">
+                    <strong>Pro Tip:</strong> Competitions automatically track
+                    matches for all subscribed players in your server. Create
+                    weekly or monthly competitions to keep your community engaged!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- LLM-Generated Reviews -->
+            <div>
+              <div class="flex items-center gap-3 mb-4">
+                <div
+                  class="bg-green-100 rounded-lg p-2 flex items-center justify-center"
+                >
+                  <svg
+                    class="h-6 w-6 text-green-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z"
+                    ></path>
+                  </svg>
+                </div>
+                <h3 class="text-2xl font-semibold text-gray-900">
+                  AI-Powered Match Reviews
+                </h3>
+              </div>
+
+              <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                <p class="text-gray-700 mb-4">
+                  Get intelligent, personalized match analysis powered by
+                  advanced AI. Scout uses large language models to provide
+                  insightful feedback on gameplay, highlighting both strengths
+                  and areas for improvement.
+                </p>
+
+                <h4 class="font-semibold text-gray-900 mb-3">
+                  What AI Reviews Include:
+                </h4>
+                <ul class="list-disc list-inside space-y-2 text-gray-700 mb-6">
+                  <li>
+                    Performance analysis based on champion, role, and game
+                    context
+                  </li>
+                  <li>
+                    Comparison to typical performance metrics for that champion
+                  </li>
+                  <li>
+                    Specific feedback on KDA, CS, damage output, and objective
+                    participation
+                  </li>
+                  <li>
+                    Recognition of exceptional plays and standout performances
+                  </li>
+                  <li>
+                    Constructive suggestions for improvement in future matches
+                  </li>
+                  <li>Match context awareness (comeback wins, stomp losses, etc.)</li>
+                </ul>
+
+                <div
+                  class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-300 rounded-lg p-5 mb-4"
+                >
+                  <h5 class="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    <svg
+                      class="h-5 w-5 text-green-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="1.5"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"
+                      ></path>
+                    </svg>
+                    Example AI Review:
+                  </h5>
+                  <p class="text-sm text-gray-700 italic">
+                    "Great comeback win! Your 8.5 KDA on Jinx shows excellent
+                    positioning in teamfights. The 245 CS at 32 minutes is solid,
+                    though there's room to improve early game farming. Your 34.2k
+                    damage carried the late game - keep focusing on scaling
+                    champions when your team needs a carry. Consider warding more
+                    aggressively to avoid those 3 deaths mid-game."
+                  </p>
+                </div>
+
+                <div
+                  class="bg-white border border-green-300 rounded-md p-4 text-sm"
+                >
+                  <p class="text-gray-600 mb-2">
+                    <strong>Note:</strong> AI reviews are automatically included
+                    in post-match reports and provide personalized insights for
+                    each player's performance. The AI understands context like
+                    champion difficulty, match length, and team composition.
+                  </p>
+                  <p class="text-gray-600">
+                    Reviews are generated using state-of-the-art language models
+                    trained to understand League of Legends gameplay and provide
+                    constructive feedback.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -458,8 +765,37 @@ import Layout from "../layouts/Layout.astro";
               </h3>
               <p class="text-gray-600">
                 Scout tracks all ranked and normal games on Summoner's Rift,
-                ARAM, and other matchmade queues. Custom games, practice tool,
-                and tutorial matches are not tracked.
+                ARAM, Arena (2v2v2v2v2v2v2v2), and other matchmade queues.
+                Custom games, practice tool, and tutorial matches are not
+                tracked.
+              </p>
+            </div>
+
+            <div class="border border-gray-200 rounded-lg p-6">
+              <h3 class="font-semibold text-gray-900 mb-3">
+                How do competitions work?
+              </h3>
+              <p class="text-gray-600">
+                Competitions allow you to create time-limited challenges for
+                your server members. You can set custom criteria (wins, KDA,
+                damage, etc.) and Scout will automatically track performance and
+                update leaderboards. Use <code
+                  class="bg-gray-100 px-2 py-1 rounded text-sm"
+                  >/competition create</code
+                > to get started!
+              </p>
+            </div>
+
+            <div class="border border-gray-200 rounded-lg p-6">
+              <h3 class="font-semibold text-gray-900 mb-3">
+                Are AI-generated reviews always included?
+              </h3>
+              <p class="text-gray-600">
+                Yes! AI-powered match reviews are automatically generated for
+                post-match reports. They provide personalized feedback based on
+                each player's performance, champion choice, and match context.
+                The reviews are designed to be constructive and help players
+                improve.
               </p>
             </div>
 
@@ -529,18 +865,57 @@ import Layout from "../layouts/Layout.astro";
       <div
         class="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8"
       >
-        <div class="flex justify-center space-x-6 md:order-2">
+        <div class="flex flex-wrap justify-center gap-4 md:order-2">
           <a href="/privacy" class="text-gray-500 hover:text-gray-900"
             >Privacy Policy</a
           >
           <a href="/tos" class="text-gray-500 hover:text-gray-900"
             >Terms of Service</a
           >
+          <a
+            href="https://github.com/shepherdjerred/scout-for-lol/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"
+              ></path>
+            </svg>
+            Get Support
+          </a>
+          <a
+            href="https://github.com/shepherdjerred/scout-for-lol"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                clip-rule="evenodd"></path>
+            </svg>
+            View on GitHub
+          </a>
         </div>
         <div class="mt-8 md:order-1 md:mt-0">
           <p class="text-center text-xs/5 text-gray-500">
-            &copy; 2024 Scout for League of Legends. Built with ❤️ for the
-            League community.
+            &copy; 2025 Scout for League of Legends.
           </p>
         </div>
       </div>
