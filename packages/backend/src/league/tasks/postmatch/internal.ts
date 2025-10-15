@@ -26,6 +26,7 @@ import { mapRegionToEnum } from "../../model/region.ts";
 import { participantToChampion } from "../../model/champion.ts";
 import { toArenaMatch } from "../../model/match.ts";
 import { saveMatchToS3 } from "../../../storage/s3.ts";
+import { generateMatchReview } from "../../review/generator.ts";
 
 export async function checkMatch(game: LoadingScreenState) {
   console.log(`[checkMatch] 🔍 Starting match check for matchId: ${game.matchId.toString()}`);
@@ -410,6 +411,10 @@ export async function checkPostMatchInternal(
         const [attachment, embed] = await getImage(matchObj);
         console.log(`[checkPostMatchInternal] Successfully generated image for: ${matchDto.metadata.matchId}`);
 
+        console.log(`[checkPostMatchInternal] Generating review for: ${matchDto.metadata.matchId}`);
+        const review = generateMatchReview(matchObj);
+        console.log(`[checkPostMatchInternal] Successfully generated review for: ${matchDto.metadata.matchId}`);
+
         // figure out what channels to send the message to
         // server, see if they have a player in the game
         console.log(`[checkPostMatchInternal] Getting subscriptions for match: ${matchDto.metadata.matchId}`);
@@ -434,7 +439,7 @@ export async function checkPostMatchInternal(
             console.log(
               `[checkPostMatchInternal] Sending message to channel: ${server.channel} for match: ${matchDto.metadata.matchId}`,
             );
-            return sendFn({ embeds: [embed], files: [attachment] }, server.channel);
+            return sendFn({ content: review, embeds: [embed], files: [attachment] }, server.channel);
           });
           await Promise.all(promises);
           console.log(
