@@ -8,11 +8,16 @@ There seems to be a fair bit of coupling. Examples:
 
 ## Code Quality
 
-- parse, safeParse -- we use it way too much
-- as unknown as
+- [ ] parse, safeParse -- we use it way too much
+- [ ] as unknown as
 
 ## Misc
 
+- [ ] Limit number of competitions per server
+- [ ] Allow passing in champion id as name
+- [x] Accept datetime for competition
+- [ ] List competitions command
+- [ ] Edit competition command
 - [x] Strict TS config for Dagger
 - [x] Fix KDA ratio
 - [x] Fix image width
@@ -23,7 +28,7 @@ There seems to be a fair bit of coupling. Examples:
 - [x] Remove use of deprecated flags (--unstable)
 - [ ] Allow a user to be in multiple games at once (e.g. Arena games)
 - [ ] Allow Players to have multiple Accounts, e.g. maybe do a lookup on Account based on alias and append an Account?
-- [ ] CI doesn't seem to be running tests, linter
+- [x] CI doesn't seem to be running tests, linter
 - [ ] Setup CI to deploy site
 
 ## Bugs
@@ -48,12 +53,7 @@ There seems to be a fair bit of coupling. Examples:
 - [x] Support unranked queue types
   - Currently it will show LP stats/promos, etc.
 
-### Setup Flow
-
-- User adds bot to a Discord server
-- User uses commands to subscribe to players
-
-## Misc
+## Abuse Protection
 
 - [ ] Detect users who haven't played in a while and lower how often they are
       refreshed

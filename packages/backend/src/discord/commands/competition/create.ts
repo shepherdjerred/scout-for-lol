@@ -8,6 +8,7 @@ import { type CreateCompetitionInput, createCompetition } from "../../../databas
 import { recordCreation } from "../../../database/competition/rate-limit.js";
 import { validateOwnerLimit, validateServerLimit } from "../../../database/competition/validation.js";
 import { getErrorMessage } from "../../../utils/errors.js";
+import { getChampionId } from "../../../utils/champion.js";
 
 // ============================================================================
 // Input Parsing Schema - Discriminated Unions
@@ -28,6 +29,11 @@ const CommonArgsSchema = z.object({
 
 /**
  * Fixed dates variant with date string validation
+ * Supports ISO 8601 formats including timezone information:
+ * - YYYY-MM-DD (defaults to midnight local time)
+ * - YYYY-MM-DDTHH:mm:ss (local time)
+ * - YYYY-MM-DDTHH:mm:ssZ (UTC)
+ * - YYYY-MM-DDTHH:mm:ss+HH:mm (with timezone offset)
  */
 const FixedDatesArgsSchema = z
   .object({
@@ -42,7 +48,7 @@ const FixedDatesArgsSchema = z
       return !isNaN(start.getTime()) && !isNaN(end.getTime());
     },
     {
-      message: "Invalid date format. Use ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)",
+      message: "Invalid date format. Use ISO 8601 format (YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, or with timezone Z/+HH:mm)",
       path: ["startDate"],
     },
   );
@@ -80,7 +86,9 @@ const MostWinsPlayerArgsSchema = z.object({
 
 const MostWinsChampionArgsSchema = z.object({
   criteriaType: z.literal("MOST_WINS_CHAMPION"),
-  championId: z.number().int().positive(),
+  // Champion can be provided as string (from autocomplete with ID) or name
+  // We'll convert it to championId during parsing
+  champion: z.string().min(1),
   queue: CompetitionQueueTypeSchema.optional(),
 });
 
@@ -163,7 +171,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
       endDate: endDateStr ?? undefined,
       season: seasonStr ?? undefined,
       queue: interaction.options.getString("queue") ?? undefined,
-      championId: interaction.options.getInteger("champion-id") ?? undefined,
+      champion: interaction.options.getString("champion") ?? undefined,
       minGames: interaction.options.getInteger("min-games") ?? undefined,
       visibility: interaction.options.getString("visibility") ?? undefined,
       maxParticipants: interaction.options.getInteger("max-participants") ?? undefined,
@@ -226,9 +234,24 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
   } else if (args.criteriaType === "MOST_WINS_PLAYER") {
     criteria = { type: "MOST_WINS_PLAYER", queue: args.queue };
   } else if (args.criteriaType === "MOST_WINS_CHAMPION") {
+    // Convert champion string (ID from autocomplete) to number
+    // Try parsing as number first (from autocomplete), then try as name
+    let championId: number;
+    const championIdFromString = Number.parseInt(args.champion, 10);
+    if (!isNaN(championIdFromString)) {
+      championId = championIdFromString;
+    } else {
+      // Try looking up by name
+      const idFromName = getChampionId(args.champion);
+      if (!idFromName) {
+        throw new Error(`Invalid champion: "${args.champion}". Please select a champion from the autocomplete list.`);
+      }
+      championId = idFromName;
+    }
+
     criteria = {
       type: "MOST_WINS_CHAMPION",
-      championId: args.championId,
+      championId,
       queue: args.queue,
     };
   } else {

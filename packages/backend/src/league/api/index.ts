@@ -29,16 +29,16 @@ export async function getCurrentGame(player: PlayerConfigEntry): Promise<undefin
     } else {
       // at this point, we know it's a ApiResponseDTO<CurrentGameInfoDTO>
       const currentGameInfo = response.response as unknown as CurrentGameInfoDTO;
+      console.log(`✅ Successfully fetched current game for ${playerAlias} (${apiTime.toString()}ms)`);
       console.log(
-        `✅ Successfully fetched current game for ${playerAlias} (${apiTime.toString()}ms)`
-      );
-      console.log(
-        `📊 Game info: Match ID ${currentGameInfo.gameId.toString()}, Mode: ${currentGameInfo.gameMode}, Type: ${currentGameInfo.gameType}`
+        `📊 Game info: Match ID ${currentGameInfo.gameId.toString()}, Mode: ${currentGameInfo.gameMode}, Type: ${currentGameInfo.gameType}`,
       );
       return currentGameInfo;
     }
   } catch (e) {
-    console.error(`❌ Error fetching current game for ${playerAlias}. Likely indicates they are not currently in a game`);
+    console.error(
+      `❌ Error fetching current game for ${playerAlias}. Likely indicates they are not currently in a game`,
+    );
 
     const result = z.object({ status: z.number() }).safeParse(e);
     if (result.success) {

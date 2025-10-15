@@ -24,6 +24,29 @@ describe("Date validation patterns", () => {
     expect(isNaN(date3.getTime())).toBe(false);
   });
 
+  test("valid ISO date strings with timezone should parse correctly", () => {
+    const dateFormats = [
+      "2025-01-15T09:00:00Z", // UTC
+      "2025-01-15T09:00:00+00:00", // UTC with offset notation
+      "2025-01-15T09:00:00-05:00", // EST
+      "2025-01-15T09:00:00+01:00", // CET
+      "2025-01-15T14:30:00-08:00", // PST
+    ];
+
+    for (const dateStr of dateFormats) {
+      const date = new Date(dateStr);
+      expect(isNaN(date.getTime())).toBe(false);
+    }
+  });
+
+  test("date with timezone should be parsed correctly to UTC", () => {
+    // 2025-01-15T09:00:00-05:00 (9am EST) should equal 2025-01-15T14:00:00Z (2pm UTC)
+    const estDate = new Date("2025-01-15T09:00:00-05:00");
+    const utcDate = new Date("2025-01-15T14:00:00Z");
+
+    expect(estDate.getTime()).toBe(utcDate.getTime());
+  });
+
   test("invalid date strings should be detected", () => {
     const invalidDates = [
       "not-a-date",

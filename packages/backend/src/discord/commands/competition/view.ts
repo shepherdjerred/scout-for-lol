@@ -6,6 +6,8 @@ import { prisma } from "../../../database/index.js";
 import { getCompetitionById } from "../../../database/competition/queries.js";
 import { getParticipants } from "../../../database/competition/participants.js";
 import { getErrorMessage } from "../../../utils/errors.js";
+import { calculateLeaderboard, type RankedLeaderboardEntry } from "../../../league/competition/leaderboard.js";
+import { formatScore } from "../../embeds/competition.js";
 
 // Schema for participant with player relation (when includePlayer=true)
 const ParticipantWithPlayerSchema = z.object({
@@ -73,7 +75,7 @@ Competition #${competitionId.toString()} doesn't exist. Use \`/competition list\
   // Step 4: Build embed
   // ============================================================================
 
-  const embed = buildCompetitionEmbed(competition, status, participants);
+  const embed = await buildCompetitionEmbed(competition, status, participants);
 
   await interaction.reply({
     embeds: [embed],
@@ -84,11 +86,11 @@ Competition #${competitionId.toString()} doesn't exist. Use \`/competition list\
 /**
  * Build Discord embed for competition view
  */
-function buildCompetitionEmbed(
+async function buildCompetitionEmbed(
   competition: Awaited<ReturnType<typeof getCompetitionById>>,
   status: ReturnType<typeof getCompetitionStatus>,
   participants: Awaited<ReturnType<typeof getParticipants>>,
-): EmbedBuilder {
+): Promise<EmbedBuilder> {
   if (!competition) {
     throw new Error("Competition cannot be null");
   }
@@ -139,9 +141,8 @@ function buildCompetitionEmbed(
   if (status === "DRAFT") {
     addParticipantList(embed, participants);
   } else {
-    // For ACTIVE, ENDED, or CANCELLED - we would show leaderboard here
-    // TODO: Implement leaderboard calculation (Task 19)
-    addLeaderboardPlaceholder(embed, status, competition);
+    // For ACTIVE, ENDED, or CANCELLED - calculate and show leaderboard
+    await addLeaderboard(embed, status, competition);
   }
 
   // Add footer with criteria description
@@ -222,13 +223,14 @@ function addParticipantList(embed: EmbedBuilder, participants: Awaited<ReturnTyp
 }
 
 /**
- * Add leaderboard placeholder (TODO: implement with Task 19)
+ * Add leaderboard standings to embed
+ * Calculates actual leaderboard and displays top entries
  */
-function addLeaderboardPlaceholder(
+async function addLeaderboard(
   embed: EmbedBuilder,
   status: ReturnType<typeof getCompetitionStatus>,
   competition: NonNullable<Awaited<ReturnType<typeof getCompetitionById>>>,
-): void {
+): Promise<void> {
   const title = match(status)
     .with("ACTIVE", () => "📊 Current Standings")
     .with("ENDED", () => "🎉 Final Standings")
@@ -237,20 +239,65 @@ function addLeaderboardPlaceholder(
 
   embed.addFields({ name: title, value: "━━━━━━━━━━━━━━━━━━━━━", inline: false });
 
-  // TODO: Replace this with actual leaderboard calculation from Task 19
+  // Calculate leaderboard
+  let leaderboard: RankedLeaderboardEntry[];
+  try {
+    leaderboard = await calculateLeaderboard(prisma, competition);
+  } catch (error) {
+    console.error(`[Competition View] Error calculating leaderboard:`, error);
+    embed.addFields({
+      name: "\u200B",
+      value: `Unable to calculate leaderboard: ${getErrorMessage(error)}`,
+      inline: false,
+    });
+    return;
+  }
+
+  // Display leaderboard entries
+  if (leaderboard.length === 0) {
+    embed.addFields({
+      name: "\u200B",
+      value: "No participants have scores yet. Play some games to appear on the leaderboard!",
+      inline: false,
+    });
+    return;
+  }
+
+  // Show top 10 entries
+  const top10 = leaderboard.slice(0, 10);
+  const leaderboardText = top10
+    .map((entry) => {
+      const medal = getMedalEmoji(entry.rank);
+      const score = formatScore(entry.score, competition.criteria, entry.metadata);
+      return `${medal} **${entry.rank.toString()}.** ${entry.playerName} - ${score}`;
+    })
+    .join("\n");
+
   embed.addFields({
     name: "\u200B",
-    value: "Leaderboard calculation not yet implemented. Coming soon!",
+    value: leaderboardText,
     inline: false,
   });
 
-  // Show what would be ranked
-  const criteriaDescription = getCriteriaDescription(competition.criteria);
-  embed.addFields({
-    name: "Ranking Criteria",
-    value: criteriaDescription,
-    inline: false,
-  });
+  // If there are more than 10 participants, indicate it
+  if (leaderboard.length > 10) {
+    embed.addFields({
+      name: "\u200B",
+      value: `(Showing top 10 of ${leaderboard.length.toString()} participants)`,
+      inline: false,
+    });
+  }
+}
+
+/**
+ * Get medal emoji for rank position
+ * Returns medal emoji for top 3, empty string with spacing for others
+ */
+function getMedalEmoji(rank: number): string {
+  if (rank === 1) return "🥇";
+  if (rank === 2) return "🥈";
+  if (rank === 3) return "🥉";
+  return "  "; // Two spaces for alignment
 }
 
 /**

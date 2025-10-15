@@ -13,10 +13,40 @@ import {
 } from "./competition/index.js";
 import { getState } from "../../league/model/state";
 import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
+import { searchChampions } from "../../utils/champion.js";
 
 export function handleCommands(client: Client) {
   console.log("⚡ Setting up Discord command handlers");
 
+  // Handle autocomplete interactions
+  client.on("interactionCreate", (interaction) => {
+    void (async () => {
+      if (interaction.isAutocomplete()) {
+        const commandName = interaction.commandName;
+        const focusedOption = interaction.options.getFocused(true);
+
+        // Handle champion autocomplete for competition create command
+        if (commandName === "competition" && focusedOption.name === "champion") {
+          const query = focusedOption.value;
+          const results = searchChampions(query);
+
+          await interaction.respond(
+            results.map((champion) => ({
+              name: champion.name,
+              value: champion.id.toString(), // Store ID as string value
+            })),
+          );
+          return;
+        }
+
+        // No autocomplete for this option
+        await interaction.respond([]);
+        return;
+      }
+    })();
+  });
+
+  // Handle command interactions
   client.on("interactionCreate", (interaction) => {
     void (async () => {
       if (!interaction.isChatInputCommand()) {

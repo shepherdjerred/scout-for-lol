@@ -49,13 +49,13 @@ export const competitionCommand = new SlashCommandBuilder()
       .addStringOption((option) =>
         option
           .setName("start-date")
-          .setDescription("Start date (ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)")
+          .setDescription("Start date+time (ISO: YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, or with timezone Z/+HH:mm)")
           .setRequired(false),
       )
       .addStringOption((option) =>
         option
           .setName("end-date")
-          .setDescription("End date (ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss)")
+          .setDescription("End date+time (ISO: YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, or with timezone Z/+HH:mm)")
           .setRequired(false),
       )
       .addStringOption((option) =>
@@ -76,12 +76,12 @@ export const competitionCommand = new SlashCommandBuilder()
             { name: "All Queues", value: "ALL" },
           ),
       )
-      .addIntegerOption((option) =>
+      .addStringOption((option) =>
         option
-          .setName("champion-id")
-          .setDescription("Champion ID (required for Most Wins Champion)")
+          .setName("champion")
+          .setDescription("Champion name (required for Most Wins Champion)")
           .setRequired(false)
-          .setMinValue(1),
+          .setAutocomplete(true),
       )
       .addIntegerOption((option) =>
         option
