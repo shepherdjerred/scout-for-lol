@@ -251,7 +251,7 @@ describe("Subscribe Command - Multi-Account Support", () => {
           updatedTime: now,
         },
       });
-    } catch (error) {
+    } catch (_error) {
       errorThrown = true;
     }
 

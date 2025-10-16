@@ -26,11 +26,11 @@ export const zodSchemaNaming = createRule({
     const checker = services.program.getTypeChecker();
 
     function isPascalCase(name: string): boolean {
-      return /^[A-Z][a-zA-Z0-9]*$/.test(name);
+      return /^_?[A-Z][a-zA-Z0-9]*$/.test(name);
     }
 
     function isCamelCase(name: string): boolean {
-      return /^[a-z][a-zA-Z0-9]*$/.test(name);
+      return /^_?[a-z][a-zA-Z0-9]*$/.test(name);
     }
 
     function isZodType(node: TSESTree.Node): boolean {

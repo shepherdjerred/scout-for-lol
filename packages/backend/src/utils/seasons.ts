@@ -68,7 +68,7 @@ export function getCurrentSeason(): SeasonData | undefined {
  * Only returns seasons that haven't ended yet (current and future seasons)
  * @returns Array of {name, value} for Discord choices
  */
-export function getSeasonChoices(): Array<{ name: string; value: SeasonId }> {
+export function getSeasonChoices(): { name: string; value: SeasonId }[] {
   const now = new Date();
   return getAllSeasons()
     .filter((season) => season.endDate >= now)

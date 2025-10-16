@@ -222,4 +222,3 @@ describe("shouldCheckPlayer", () => {
     expect(shouldCheckPlayer(threeMonthsAgo, time20)).toBe(false);
   });
 });
-

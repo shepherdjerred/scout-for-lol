@@ -99,18 +99,61 @@ export default tseslint.config(
         },
         {
           selector:
-            "TSAsExpression:not([typeAnnotation.type='TSUnknownKeyword']):not([typeAnnotation.type='TSTypeReference'][typeAnnotation.typeName.name='const']):not([expression.type='TSAsExpression'][expression.typeAnnotation.type='TSUnknownKeyword'])",
+            "TSAsExpression:not([typeAnnotation.type='TSUnknownKeyword']):not([typeAnnotation.type='TSTypeReference'][typeAnnotation.typeName.name='const'])",
           message:
-            "Type assertions are not allowed except for casting to 'unknown' or 'as const'. Use 'value as unknown' if you need to cast to unknown, 'value as const' for const assertions, otherwise use Zod schema validation.",
+            "Type assertions are not allowed except for casting to 'unknown' or 'as const'. Use 'value as unknown' to widen to unknown, 'value as const' for const assertions, or Zod schema validation to safely narrow types.",
         },
       ],
     },
   },
-  // Test files can be longer
+  // Test files can be longer and use test-specific patterns
   {
     files: ["**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts"],
     rules: {
       "max-lines": ["error", { max: 1500, skipBlankLines: false, skipComments: false }],
+      // Allow test mocks and doubles to use any and type assertions
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/require-await": "off",
+      "@typescript-eslint/await-thenable": "off",
+      "@typescript-eslint/no-confusing-void-expression": "off",
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "@typescript-eslint/no-unnecessary-condition": "off",
+      "no-restricted-syntax": "off", // Allow type assertions, typeof, instanceof in tests
+    },
+  },
+  // Allow instanceof for Discord.js error handling and channel type checking
+  {
+    files: ["**/discord/**/*.ts", "**/league/discord/**/*.ts", "**/league/tasks/competition/**/*.ts"],
+    ignores: ["**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "UnaryExpression[operator='typeof']:not([argument.name='Bun'])",
+          message: "Prefer Zod schema validation over typeof operator. Use z.string(), z.number(), etc. instead.",
+        },
+        {
+          selector: "TSTypePredicate",
+          message:
+            "Prefer Zod schema validation over type guard functions. Use z.schema.safeParse() instead of custom type guards.",
+        },
+        {
+          selector: "TSTypeAssertion:not([typeAnnotation.type='TSUnknownKeyword'])",
+          message:
+            "Type assertions are not allowed except for casting to 'unknown'. Use 'value as unknown' if you need to cast to unknown, otherwise use Zod schema validation.",
+        },
+        {
+          selector:
+            "TSAsExpression:not([typeAnnotation.type='TSUnknownKeyword']):not([typeAnnotation.type='TSTypeReference'][typeAnnotation.typeName.name='const'])",
+          message:
+            "Type assertions are not allowed except for casting to 'unknown' or 'as const'. Use 'value as unknown' to widen to unknown, 'value as const' for const assertions, or Zod schema validation to safely narrow types.",
+        },
+      ],
     },
   },
   // File naming conventions

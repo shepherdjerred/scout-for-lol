@@ -61,9 +61,10 @@ export function checkSendMessagePermission(
 
   try {
     // Call permissionsFor - we know it exists from schema validation
-    const permissions = (guildChannelResult.data["permissionsFor"] as (id: string) => PermissionsBitField | null)(
-      botId,
-    );
+    // Type assertion needed: Zod schema confirms permissionsFor exists, but TypeScript can't track this
+    const permissions =
+      // eslint-disable-next-line no-restricted-syntax -- Method existence validated by Zod schema check above
+      (guildChannelResult.data.permissionsFor as unknown as (id: string) => PermissionsBitField | null)(botId);
 
     if (!permissions) {
       return {

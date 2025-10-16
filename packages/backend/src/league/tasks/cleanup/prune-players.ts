@@ -15,23 +15,23 @@ type PlayerWithRelations = Player & {
   accounts: Account[];
 };
 
-interface PruneResult {
+type PruneResult = {
   totalPlayersPruned: number;
   totalAccountsDeleted: number;
   totalParticipantsDeleted: number;
   totalSnapshotsDeleted: number;
-  serverSummaries: Array<{
+  serverSummaries: {
     serverId: string;
     playersPruned: number;
     accountsDeleted: number;
-    playerDetails: Array<{
+    playerDetails: {
       alias: string;
       accountCount: number;
       hadLeftCompetitions: boolean;
       hadPendingInvites: boolean;
-    }>;
-  }>;
-}
+    }[];
+  }[];
+};
 
 /**
  * Send notification to server owner about pruned players
@@ -49,17 +49,9 @@ async function notifyServerOwner(
   try {
     console.log(`[PlayerPruning] Attempting to notify server ${serverId} owner about pruned players`);
 
+    // Discord.js fetch methods throw on error rather than returning null
     const guild = await discordClient.guilds.fetch(serverId);
-    if (!guild) {
-      console.warn(`[PlayerPruning] Could not fetch guild ${serverId} for notification`);
-      return;
-    }
-
     const owner = await guild.fetchOwner();
-    if (!owner) {
-      console.warn(`[PlayerPruning] Could not fetch owner for guild ${serverId}`);
-      return;
-    }
 
     const playerList = playerDetails
       .map((player) => {
@@ -69,7 +61,7 @@ async function notifyServerOwner(
         if (reasons.length === 0) reasons.push("no subscriptions");
 
         const reasonStr = reasons.length > 0 ? ` (${reasons.join(", ")})` : "";
-        return `• **${player.alias}** - ${player.accountCount} account(s)${reasonStr}`;
+        return `• **${player.alias}** - ${player.accountCount.toString()} account(s)${reasonStr}`;
       })
       .join("\n");
 
@@ -78,7 +70,7 @@ async function notifyServerOwner(
     await owner.send({
       content: `🧹 **Automatic Player Cleanup Report**
 
-Your server had **${playerDetails.length} player(s)** and **${totalAccounts} account(s)** automatically removed from Scout for LoL's database because they were no longer being tracked.
+Your server had **${playerDetails.length.toString()} player(s)** and **${totalAccounts.toString()} account(s)** automatically removed from Scout for LoL's database because they were no longer being tracked.
 
 **Players Removed:**
 ${playerList}
@@ -119,7 +111,7 @@ If you want to track these players again, simply re-subscribe to them using \`/s
  */
 export async function pruneOrphanedPlayers(
   prismaClient: PrismaClient = prisma,
-  notifyOwners: boolean = true,
+  notifyOwners = true,
   discordClient: Client | null = null,
 ): Promise<PruneResult> {
   const startTime = Date.now();
@@ -296,7 +288,7 @@ export async function runPlayerPruning(): Promise<void> {
     const result = await pruneOrphanedPlayers(prisma, true, client);
     console.log(`[PlayerPruning] ✅ Scheduled player pruning complete`);
     console.log(
-      `[PlayerPruning]   Summary: ${result.totalPlayersPruned} players, ${result.totalAccountsDeleted} accounts`,
+      `[PlayerPruning]   Summary: ${result.totalPlayersPruned.toString()} players, ${result.totalAccountsDeleted.toString()} accounts`,
     );
   } catch (error) {
     console.error("[PlayerPruning] ❌ Scheduled player pruning failed:", error);

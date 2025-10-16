@@ -2,7 +2,7 @@ import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { z } from "zod";
 import { api } from "../../api/api.ts";
 import { AttachmentBuilder, EmbedBuilder, Message, MessageCreateOptions, MessagePayload } from "discord.js";
-import { matchToImage, arenaMatchToImage, matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
+import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
 import {
   ApplicationState,
   CompletedMatch,
@@ -29,14 +29,7 @@ import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "../../../storage/s3.t
 import { generateMatchReview } from "../../review/generator.ts";
 
 export async function checkMatch(game: LoadingScreenState) {
-  console.log(`[checkMatch] 🔍 Starting match check for matchId: ${game.matchId.toString()}`);
-  console.log(`[checkMatch] 📊 Game details:`, {
-    matchId: game.matchId.toString(),
-    playersCount: game.players.length,
-    queue: game.queue,
-    added: game.added.toISOString(),
-    uuid: game.uuid,
-  });
+  console.log(`[checkMatch] Starting match check for matchId: ${game.matchId.toString()}`);
 
   try {
     const firstPlayer = game.players[0];
@@ -45,83 +38,40 @@ export async function checkMatch(game: LoadingScreenState) {
     }
 
     const region = mapRegionToEnum(firstPlayer.player.league.leagueAccount.region);
-    console.log(`[checkMatch] 🌍 Mapped region: ${region}`);
-
     const regionGroup = regionToRegionGroup(region);
-    console.log(`[checkMatch] 🌐 Region group: ${regionGroup}`);
-
     const matchIdForApi = `${region}_${game.matchId.toString()}`;
-    console.log(`[checkMatch] 🔗 Calling API with matchId: ${matchIdForApi}`);
 
-    const apiStartTime = Date.now();
     const response = await api.MatchV5.get(matchIdForApi, regionGroup);
-    const apiTime = Date.now() - apiStartTime;
-
-    console.log(
-      `[checkMatch] ✅ API response received for match: ${game.matchId.toString()} in ${apiTime.toString()}ms`,
-    );
-    console.log(
-      `[checkMatch] 📊 Match status: ${response.response.info.gameEndTimestamp ? "FINISHED" : "IN_PROGRESS"}`,
-    );
-
-    if (response.response.info.gameEndTimestamp) {
-      console.log(
-        `[checkMatch] 🏁 Match finished at: ${new Date(response.response.info.gameEndTimestamp).toISOString()}`,
-      );
-      console.log(`[checkMatch] ⏱️  Game duration: ${response.response.info.gameDuration.toString()}s`);
-    }
 
     return response.response;
   } catch (e) {
-    console.error(`[checkMatch] ❌ Error occurred for match ${game.matchId.toString()}:`, e);
     const result = z.object({ status: z.number() }).safeParse(e);
     if (result.success) {
-      console.log(`[checkMatch] 🔢 HTTP status code: ${result.data.status.toString()}`);
       if (result.data.status === 404) {
-        // game not done
-        console.log(`[checkMatch] ⏳ Match ${game.matchId.toString()} not finished yet (404)`);
         return undefined;
       }
       if (result.data.status === 403) {
-        // Not recoverable: log and remove from queue
-        console.error(`[checkMatch] 🚫 403 Forbidden for match ${game.matchId.toString()}, removing from queue`);
+        console.error(`[checkMatch] 403 Forbidden for match ${game.matchId.toString()}, removing from queue`);
         const currentState = getState();
         const newGamesStarted = currentState.gamesStarted.filter((g) => g.matchId !== game.matchId);
         setState({
           ...currentState,
           gamesStarted: newGamesStarted,
         });
-        console.log(`[checkMatch] 🗑️  Removed match ${game.matchId.toString()} from tracking`);
         return undefined;
       }
     }
-    console.error(`[checkMatch] 💥 Unhandled error for match ${game.matchId.toString()}:`, e);
+    console.error(`[checkMatch] Error for match ${game.matchId.toString()}:`, e);
     return undefined;
   }
 }
 
 export async function saveMatch(match: MatchV5DTOs.MatchDto): Promise<void> {
-  console.log(`[saveMatch] 💾 Saving match: ${match.metadata.matchId}`);
-  console.log(`[saveMatch] 📊 Match details:`, {
-    matchId: match.metadata.matchId,
-    participants: match.info.participants.length,
-    gameMode: match.info.gameMode,
-    queueId: match.info.queueId,
-    gameEndTimestamp: match.info.gameEndTimestamp,
-    gameDuration: match.info.gameDuration,
-  });
-
   try {
-    // Save the match to S3
     await saveMatchToS3(match);
-
-    console.log(`[saveMatch] ✅ Successfully saved match: ${match.metadata.matchId}`);
   } catch (error) {
-    console.error(`[saveMatch] ❌ Error saving match ${match.metadata.matchId}:`, error);
-
-    // Don't throw the error to prevent disrupting the entire post-match flow
-    // The match processing should continue even if S3 storage fails
-    console.warn(`[saveMatch] ⚠️  Continuing post-match processing despite storage failure`);
+    console.error(`[saveMatch] Error saving match ${match.metadata.matchId}:`, error);
+    // Don't throw - continue processing even if S3 storage fails
   }
 }
 
@@ -129,66 +79,31 @@ async function getImage(
   match: CompletedMatch | ArenaMatch,
   matchId: string,
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
-  console.log(`[getImage] 🖼️  Starting image generation for match: ${matchId}`);
-  console.log(`[getImage] 📊 Match details:`, {
-    matchId,
-    queueType: match.queueType,
-    playersCount: match.players.length,
-    durationInSeconds: match.durationInSeconds,
-  });
+  const isArena = match.queueType === "arena";
+  const svg = isArena ? await arenaMatchToSvg(match) : await matchToSvg(match);
+  const image = svgToPng(svg);
 
+  // Save both PNG and SVG to S3
   try {
-    const imageStartTime = Date.now();
-    const isArena = match.queueType === "arena";
-
-    // Generate SVG once, then convert to PNG (more efficient than generating twice)
-    const svg = isArena ? await arenaMatchToSvg(match) : await matchToSvg(match);
-    const image = svgToPng(svg);
-    const imageTime = Date.now() - imageStartTime;
-
-    console.log(
-      `[getImage] ✅ Image generated successfully in ${imageTime.toString()}ms, PNG size: ${image.length.toString()} bytes, SVG size: ${svg.length.toString()} chars`,
-    );
-
-    // Save both PNG and SVG to S3
-    try {
-      const queueTypeForStorage = isArena ? "arena" : (match.queueType ?? "unknown");
-
-      // Save PNG
-      const pngUrl = await saveImageToS3(matchId, image, queueTypeForStorage);
-      if (pngUrl) {
-        console.log(`[getImage] 💾 PNG saved to S3: ${pngUrl}`);
-      }
-
-      // Save SVG
-      const svgUrl = await saveSvgToS3(matchId, svg, queueTypeForStorage);
-      if (svgUrl) {
-        console.log(`[getImage] 💾 SVG saved to S3: ${svgUrl}`);
-      }
-    } catch (error) {
-      // Log the error but don't fail the entire operation
-      console.error(`[getImage] ⚠️  Failed to save images to S3, continuing:`, error);
-    }
-
-    const attachment = new AttachmentBuilder(image).setName("match.png");
-    if (!attachment.name) {
-      console.error(`[getImage] ❌ Attachment name is null`);
-      throw new Error("[getImage] Attachment name is null");
-    }
-    console.log(`[getImage] 📎 Attachment created with name: ${attachment.name}`);
-
-    const embed = {
-      image: {
-        url: `attachment://${attachment.name}`,
-      },
-    };
-    console.log(`[getImage] 🎨 Embed created successfully`);
-
-    return [attachment, new EmbedBuilder(embed)];
+    const queueTypeForStorage = isArena ? "arena" : (match.queueType ?? "unknown");
+    await saveImageToS3(matchId, image, queueTypeForStorage);
+    await saveSvgToS3(matchId, svg, queueTypeForStorage);
   } catch (error) {
-    console.error(`[getImage] 💥 Error generating image:`, error);
-    throw error;
+    console.error(`[getImage] Failed to save images to S3:`, error);
   }
+
+  const attachment = new AttachmentBuilder(image).setName("match.png");
+  if (!attachment.name) {
+    throw new Error("[getImage] Attachment name is null");
+  }
+
+  const embed = {
+    image: {
+      url: `attachment://${attachment.name}`,
+    },
+  };
+
+  return [attachment, new EmbedBuilder(embed)];
 }
 
 async function createMatchObj(
@@ -404,6 +319,15 @@ export async function checkPostMatchInternal(
   });
 
   console.log("[checkPostMatchInternal] Filtering finished games");
+  // Helper to filter out tuples with undefined match data - allows TypeScript to narrow the type
+  // Type predicate needed: TypeScript can't narrow tuple types through filter() without explicit type guard
+  const isFinishedGame = (
+    tuple: [LoadingScreenState, MatchV5DTOs.MatchDto | undefined],
+    // eslint-disable-next-line no-restricted-syntax -- Type predicate necessary for tuple narrowing
+  ): tuple is [LoadingScreenState, MatchV5DTOs.MatchDto] => {
+    return tuple[1] !== undefined;
+  };
+
   const finishedGames = pipe(
     state.gamesStarted,
     map((game) => {
@@ -418,9 +342,8 @@ export async function checkPostMatchInternal(
         MatchV5DTOs.MatchDto | undefined,
       ];
     }),
-    filter(([, match]) => match != undefined),
-    // this case is required to get rid of the undefined type
-  ) as unknown as [LoadingScreenState, MatchV5DTOs.MatchDto][];
+    filter(isFinishedGame),
+  );
 
   console.log(`[checkPostMatchInternal] Found ${finishedGames.length.toString()} finished games to process`);
 

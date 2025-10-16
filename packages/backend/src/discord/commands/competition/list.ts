@@ -6,6 +6,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   type MessageActionRowComponentBuilder,
+  type ButtonInteraction,
 } from "discord.js";
 import { getCompetitionStatus } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
@@ -91,11 +92,10 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
   const embed = buildListEmbed(competitions, currentPage, totalPages, showActiveOnly, showOwnOnly);
   const components = totalPages > 1 ? [buildPaginationButtons(currentPage, totalPages)] : [];
 
-  const response = await interaction.reply({
+  await interaction.reply({
     embeds: [embed],
     components,
     flags: MessageFlags.Ephemeral,
-    withResponse: true,
   });
 
   // ============================================================================
@@ -103,6 +103,9 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
   // ============================================================================
 
   if (totalPages > 1) {
+    // Fetch the message after replying
+    const response = await interaction.fetchReply();
+
     // Create collector for button interactions
     const collector = response.createMessageComponentCollector({
       componentType: 2,
@@ -111,7 +114,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
 
     let page = currentPage;
 
-    collector.on("collect", (buttonInteraction: any) => {
+    collector.on("collect", (buttonInteraction: ButtonInteraction) => {
       void (async () => {
         // Only the original user can use the buttons
         if (buttonInteraction.user.id !== interaction.user.id) {

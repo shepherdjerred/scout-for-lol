@@ -5,7 +5,7 @@ import {
   getPermissionErrorMessage,
   formatPermissionErrorForLog,
 } from "./permissions";
-import { PermissionFlagsBits } from "discord.js";
+import { PermissionFlagsBits, type Channel } from "discord.js";
 
 describe("isPermissionError", () => {
   test("returns true for Discord missing permissions error (50013)", () => {
@@ -41,7 +41,8 @@ describe("checkSendMessagePermission", () => {
     const dmChannel = {
       isDMBased: () => true,
     };
-    const result = checkSendMessagePermission(dmChannel as any, "bot-id");
+    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Channel interface
+    const result = checkSendMessagePermission(dmChannel as unknown as Channel, "bot-id");
     expect(result.hasPermission).toBe(true);
   });
 
@@ -50,7 +51,8 @@ describe("checkSendMessagePermission", () => {
       isDMBased: () => false,
       // No permissionsFor method
     };
-    const result = checkSendMessagePermission(invalidChannel as any, "bot-id");
+    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Channel interface
+    const result = checkSendMessagePermission(invalidChannel as unknown as Channel, "bot-id");
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Cannot check permissions");
   });
@@ -60,7 +62,8 @@ describe("checkSendMessagePermission", () => {
       isDMBased: () => false,
       permissionsFor: () => null,
     };
-    const result = checkSendMessagePermission(channel as any, "bot-id");
+    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Channel interface
+    const result = checkSendMessagePermission(channel as unknown as Channel, "bot-id");
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Cannot access channel");
   });
@@ -75,7 +78,7 @@ describe("checkSendMessagePermission", () => {
         },
       }),
     };
-    const result = checkSendMessagePermission(channel as any, "bot-id");
+    const result = checkSendMessagePermission(channel as unknown as Channel, "bot-id");
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Send Messages");
   });
@@ -90,7 +93,7 @@ describe("checkSendMessagePermission", () => {
         },
       }),
     };
-    const result = checkSendMessagePermission(channel as any, "bot-id");
+    const result = checkSendMessagePermission(channel as unknown as Channel, "bot-id");
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("cannot view");
   });
@@ -105,7 +108,7 @@ describe("checkSendMessagePermission", () => {
         },
       }),
     };
-    const result = checkSendMessagePermission(channel as any, "bot-id");
+    const result = checkSendMessagePermission(channel as unknown as Channel, "bot-id");
     expect(result.hasPermission).toBe(true);
     expect(result.reason).toBeUndefined();
   });
@@ -117,7 +120,7 @@ describe("checkSendMessagePermission", () => {
         throw new Error("Permission check failed");
       },
     };
-    const result = checkSendMessagePermission(channel as any, "bot-id");
+    const result = checkSendMessagePermission(channel as unknown as Channel, "bot-id");
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Error checking permissions");
   });

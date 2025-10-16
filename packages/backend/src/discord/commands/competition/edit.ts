@@ -131,10 +131,10 @@ const CriteriaEditSchema = z
   .optional();
 
 // Union of date edit schemas
-const DatesEditSchema = z.union([FixedDatesEditArgsSchema, SeasonEditArgsSchema]).optional();
+const _DatesEditSchema = z.union([FixedDatesEditArgsSchema, SeasonEditArgsSchema]).optional();
 
 type EditCommandArgs = z.infer<typeof EditCommandArgsBaseSchema> & {
-  dates?: z.infer<typeof DatesEditSchema>;
+  dates?: z.infer<typeof _DatesEditSchema>;
   criteria?: z.infer<typeof CriteriaEditSchema>;
 };
 
@@ -347,7 +347,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
       } else {
         updateInput.dates = {
           type: "SEASON",
-          seasonId: args.dates["season"],
+          seasonId: args.dates.season,
         };
       }
     }

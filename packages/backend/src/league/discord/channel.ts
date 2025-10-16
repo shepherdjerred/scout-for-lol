@@ -27,6 +27,9 @@ export class ChannelSendError extends Error {
   }
 }
 
+// Zod schema for validating ChannelSendError instances
+const ChannelSendErrorSchema = z.instanceof(ChannelSendError);
+
 /**
  * Send a message to a Discord channel with graceful error handling
  *
@@ -120,7 +123,7 @@ export async function send(
     return sentMessage;
   } catch (error) {
     // If it's already a ChannelSendError, re-throw it
-    if (error instanceof ChannelSendError) {
+    if (ChannelSendErrorSchema.safeParse(error).success) {
       throw error;
     }
 

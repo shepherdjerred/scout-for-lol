@@ -296,12 +296,9 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
         endDate: new Date(args.endDate),
       };
     } else {
-      if (!args["season"]) {
-        throw new Error("season required for SEASON (validation error)");
-      }
       dates = {
         type: "SEASON" as const,
-        seasonId: args["season"],
+        seasonId: args.season,
       };
     }
 

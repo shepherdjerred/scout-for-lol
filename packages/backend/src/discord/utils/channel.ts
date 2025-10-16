@@ -21,5 +21,8 @@ export function asTextChannel(channel: Channel): SendableChannel | undefined {
     return undefined;
   }
 
+  // Type assertion needed: Discord.js's isTextBased() runtime check guarantees send() method exists
+  // but TypeScript's type system can't express this relationship
+  // eslint-disable-next-line no-restricted-syntax -- Discord.js runtime check guarantees type safety
   return channel as unknown as SendableChannel;
 }

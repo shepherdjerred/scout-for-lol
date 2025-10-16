@@ -26,7 +26,8 @@ export async function RankedBadge({ oldRank, newRank }: { oldRank: Rank | undefi
   const badge = await match(environment)
     .with("bun", () => Promise.resolve(`data:image/png;base64,${images[newRank.tier]}`))
     .with("browser", async () => {
-      // TODO: remove type assertion for dynamic import
+      // Dynamic import type assertion needed: Vite/bundler doesn't provide static types for PNG imports
+      // eslint-disable-next-line no-restricted-syntax -- Dynamic PNG import requires runtime type assertion
       const module = (await import(
         `./assets/Rank=${newRank.tier.charAt(0).toUpperCase() + newRank.tier.slice(1)}.png`
       )) as unknown as {

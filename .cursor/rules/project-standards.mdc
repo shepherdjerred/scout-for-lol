@@ -20,7 +20,8 @@ This is a monorepo using **Bun workspaces** with packages:
 - **Prettier** - Code formatting
 
 ### Infrastructure & CI/CD
-- **Dagger** - CI/CD pipelines and containerization
+- **Mise** - Primary task runner for local development (fast checks)
+- **Dagger** - CI/CD pipelines and containerization (CI debugging)
 - **Prisma** - Database ORM and migrations
 - **Docker** - Container deployment
 
@@ -31,6 +32,34 @@ This is a monorepo using **Bun workspaces** with packages:
 - **Astro** - Frontend framework
 
 ## Development Commands
+
+### Quick Code Verification
+
+**Use `mise check` for fast local verification (recommended):**
+
+```bash
+# Run comprehensive checks (lint, typecheck, format, test)
+# This is the FASTEST way to verify your code locally
+mise check
+
+# Individual mise tasks
+mise run typecheck
+mise run lint
+mise run format
+mise run test
+```
+
+**Use `dagger call check` for CI-specific debugging:**
+
+```bash
+# When mise check passes but CI fails, use Dagger to debug CI-specific issues
+dagger call check
+```
+
+**Strategy:**
+- ✅ Use `mise check` for 95% of local development - it's fast and catches most issues
+- ✅ Use `dagger call check` only when debugging CI-specific failures
+- ✅ Both will pass before code can be merged, but mise is faster for iteration
 
 ### Root Level Commands
 ```bash
@@ -70,7 +99,27 @@ bun run db:studio       # Open Prisma Studio
 # Each package supports: dev, build, test, lint, format, typecheck
 ```
 
+## Mise Task Runner
+
+**Mise is the primary development tool** - use it for fast local checks:
+
+```bash
+# Run all checks (lint, typecheck, format, test)
+mise check
+
+# Run individual checks
+mise run typecheck
+mise run lint
+mise run format
+mise run test
+
+# List all available tasks
+mise tasks
+```
+
 ## Dagger CI/CD Pipeline
+
+**Dagger mirrors production CI** - use it for debugging CI-specific issues:
 
 ### Discovering Available Targets
 ```bash
@@ -84,6 +133,7 @@ dagger functions --help
 ### Main Dagger Targets
 ```bash
 # Run comprehensive checks (lint, typecheck, test)
+# Use this when debugging CI failures that don't reproduce with mise
 dagger call check
 
 # Build all packages
@@ -178,5 +228,23 @@ type DeepReadonly<T> = {
 - **Proper caching** - Cache expensive operations appropriately
 - **Memory management** - Clean up resources and connections
 - **Bundle optimization** - Use proper bundling strategies
+
+## Recommended Development Workflow
+
+### Daily Development
+1. **Make changes** to code
+2. **Run `mise check`** to verify (fast, catches 95% of issues)
+3. **Fix any errors** shown by mise
+4. **Commit** when mise check passes
+
+### Debugging CI Failures
+1. **CI fails but mise passes?** Run `dagger call check`
+2. **Debug the difference** between mise and Dagger environments
+3. **Fix the issue** and verify with both mise and Dagger
+4. **Push again** when both pass
+
+### Key Principle
+- **Mise for speed** - Use in tight iteration loops
+- **Dagger for accuracy** - Use when you need to match CI exactly
 
 This project maintains high standards for code quality, type safety, and maintainability. Always prefer explicit, type-safe approaches over quick hacks or workarounds.

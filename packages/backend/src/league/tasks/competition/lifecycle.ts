@@ -5,6 +5,7 @@ import { createSnapshotsForAllParticipants } from "../../competition/snapshots.j
 import { calculateLeaderboard, type RankedLeaderboardEntry } from "../../competition/leaderboard.js";
 import { send as sendChannelMessage, ChannelSendError } from "../../discord/channel.js";
 import type { PrismaClient } from "../../../../generated/prisma/client/index.js";
+import { z } from "zod";
 
 // ============================================================================
 // Discord Notifications
@@ -31,7 +32,8 @@ Good luck! 🍀`;
     console.log(`[CompetitionLifecycle] ✅ Posted start notification for competition ${competition.id.toString()}`);
   } catch (error) {
     // Handle permission errors gracefully - they're expected in some cases
-    if (error instanceof ChannelSendError && error.isPermissionError) {
+    const channelSendError = z.instanceof(ChannelSendError).safeParse(error);
+    if (channelSendError.success && channelSendError.data.isPermissionError) {
       console.warn(
         `[CompetitionLifecycle] ⚠️  Cannot post start notification for competition ${competition.id.toString()} - missing permissions in channel ${competition.channelId}. Server owner has been notified.`,
       );
@@ -97,7 +99,8 @@ async function postFinalLeaderboard(
     console.log(`[CompetitionLifecycle] ✅ Posted final leaderboard for competition ${competition.id.toString()}`);
   } catch (error) {
     // Handle permission errors gracefully - they're expected in some cases
-    if (error instanceof ChannelSendError && error.isPermissionError) {
+    const channelSendError = z.instanceof(ChannelSendError).safeParse(error);
+    if (channelSendError.success && channelSendError.data.isPermissionError) {
       console.warn(
         `[CompetitionLifecycle] ⚠️  Cannot post final leaderboard for competition ${competition.id.toString()} - missing permissions in channel ${competition.channelId}. Server owner has been notified.`,
       );

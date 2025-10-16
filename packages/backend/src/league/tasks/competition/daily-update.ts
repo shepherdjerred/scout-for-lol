@@ -5,6 +5,7 @@ import { calculateLeaderboard } from "../../competition/leaderboard.js";
 import { generateLeaderboardEmbed } from "../../../discord/embeds/competition.js";
 import { send as sendChannelMessage, ChannelSendError } from "../../discord/channel.js";
 import { saveCachedLeaderboard } from "../../../storage/s3-leaderboard.js";
+import { z } from "zod";
 
 // ============================================================================
 // Daily Leaderboard Update
@@ -99,7 +100,8 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
         await new Promise((resolve) => setTimeout(resolve, 1000));
       } catch (error) {
         // Handle permission errors gracefully - they're expected in some cases
-        if (error instanceof ChannelSendError && error.isPermissionError) {
+        const channelSendError = z.instanceof(ChannelSendError).safeParse(error);
+        if (channelSendError.success && channelSendError.data.isPermissionError) {
           console.warn(
             `[DailyLeaderboard] ⚠️  Cannot update competition ${competition.id.toString()} - missing permissions in channel ${competition.channelId}. Server owner has been notified.`,
           );

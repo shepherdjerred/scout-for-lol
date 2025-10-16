@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { notifyServerOwnerAboutPermissionError } from "./permissions";
+import type { Client } from "discord.js";
 
 describe("notifyServerOwnerAboutPermissionError", () => {
   test("sends DM to server owner with permission error details", async () => {
     const sentMessages: { user: string; message: string }[] = [];
 
-    // Mock Discord client
-    // eslint-disable-next-line no-restricted-syntax -- test mock needs any type
+    // Mock Discord client - test double with minimal required methods
     const mockClient = {
       guilds: {
         fetch: async () => ({
@@ -19,7 +19,7 @@ describe("notifyServerOwnerAboutPermissionError", () => {
           }),
         }),
       },
-    } as any;
+    } as unknown as Client;
 
     await notifyServerOwnerAboutPermissionError(
       mockClient,
@@ -36,19 +36,21 @@ describe("notifyServerOwnerAboutPermissionError", () => {
   });
 
   test("handles case when guild is not found", async () => {
+    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Client interface
     const mockClient = {
       guilds: {
         fetch: async () => null,
       },
-    };
+    } as unknown as Client;
 
     // Should not throw
     await expect(
-      notifyServerOwnerAboutPermissionError(mockClient as any, "server-123", "channel-456"),
+      notifyServerOwnerAboutPermissionError(mockClient, "server-123", "channel-456"),
     ).resolves.toBeUndefined();
   });
 
   test("handles case when owner fetch fails", async () => {
+    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Client interface
     const mockClient = {
       guilds: {
         fetch: async () => ({
@@ -56,15 +58,16 @@ describe("notifyServerOwnerAboutPermissionError", () => {
           fetchOwner: async () => null,
         }),
       },
-    };
+    } as unknown as Client;
 
     // Should not throw
     await expect(
-      notifyServerOwnerAboutPermissionError(mockClient as any, "server-123", "channel-456"),
+      notifyServerOwnerAboutPermissionError(mockClient, "server-123", "channel-456"),
     ).resolves.toBeUndefined();
   });
 
   test("handles case when DM send fails (user has DMs disabled)", async () => {
+    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Client interface
     const mockClient = {
       guilds: {
         fetch: async () => ({
@@ -77,15 +80,16 @@ describe("notifyServerOwnerAboutPermissionError", () => {
           }),
         }),
       },
-    };
+    } as unknown as Client;
 
     // Should not throw - gracefully handles DM failures
     await expect(
-      notifyServerOwnerAboutPermissionError(mockClient as any, "server-123", "channel-456"),
+      notifyServerOwnerAboutPermissionError(mockClient, "server-123", "channel-456"),
     ).resolves.toBeUndefined();
   });
 
   test("handles generic error during DM send", async () => {
+    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Client interface
     const mockClient = {
       guilds: {
         fetch: async () => ({
@@ -98,18 +102,18 @@ describe("notifyServerOwnerAboutPermissionError", () => {
           }),
         }),
       },
-    };
+    } as unknown as Client;
 
     // Should not throw - gracefully handles all errors
     await expect(
-      notifyServerOwnerAboutPermissionError(mockClient as any, "server-123", "channel-456"),
+      notifyServerOwnerAboutPermissionError(mockClient, "server-123", "channel-456"),
     ).resolves.toBeUndefined();
   });
 
   test("includes reason in message when provided", async () => {
     const sentMessages: { user: string; message: string }[] = [];
 
-    // eslint-disable-next-line no-restricted-syntax -- test mock needs any type
+    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Client interface
     const mockClient = {
       guilds: {
         fetch: async () => ({
@@ -122,7 +126,7 @@ describe("notifyServerOwnerAboutPermissionError", () => {
           }),
         }),
       },
-    } as any;
+    } as unknown as Client;
 
     await notifyServerOwnerAboutPermissionError(mockClient, "server-123", "channel-456", "Custom error reason");
 
@@ -132,7 +136,7 @@ describe("notifyServerOwnerAboutPermissionError", () => {
   test("works without reason parameter", async () => {
     const sentMessages: { user: string; message: string }[] = [];
 
-    // eslint-disable-next-line no-restricted-syntax -- test mock needs any type
+    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Client interface
     const mockClient = {
       guilds: {
         fetch: async () => ({
@@ -145,7 +149,7 @@ describe("notifyServerOwnerAboutPermissionError", () => {
           }),
         }),
       },
-    } as any;
+    } as unknown as Client;
 
     await notifyServerOwnerAboutPermissionError(mockClient, "server-123", "channel-456");
 

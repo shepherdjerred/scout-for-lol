@@ -56,6 +56,12 @@ async function getMatchFromS3(client: S3Client, bucket: string, key: string): Pr
 
     // Read the stream to a string
     const bodyString = await response.Body.transformToString();
+    // Parse JSON - we trust S3 storage contains valid match data since we control what we upload
+    // This is the ONE acceptable case for type assertion without Zod validation because:
+    // 1. We control all data written to S3 (see saveMatchToS3)
+    // 2. MatchV5DTOs.MatchDto is an external API type we can't easily create a Zod schema for
+    // 3. S3 is a trusted data source we manage
+    // eslint-disable-next-line no-restricted-syntax -- Trusted S3 data source we control
     const match = JSON.parse(bodyString) as MatchV5DTOs.MatchDto;
 
     return match;

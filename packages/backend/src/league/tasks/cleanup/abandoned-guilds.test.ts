@@ -34,14 +34,10 @@ describe("Abandoned Guild Metrics", () => {
     expect(typeof guildDataCleanupTotal.inc).toBe("function");
   });
 
-  test("metrics should increment without errors", () => {
+  test("metrics should increment without errors", async () => {
     // Import metrics
-    const {
-      abandonedGuildsDetectedTotal,
-      guildsLeftTotal,
-      abandonmentNotificationsTotal,
-      guildDataCleanupTotal,
-    } = require("../../../metrics/index.js");
+    const { abandonedGuildsDetectedTotal, guildsLeftTotal, abandonmentNotificationsTotal, guildDataCleanupTotal } =
+      await import("../../../metrics/index.js");
 
     // Test incrementing each metric
     expect(() => abandonedGuildsDetectedTotal.inc(1)).not.toThrow();

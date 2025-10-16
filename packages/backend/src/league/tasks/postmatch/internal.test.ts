@@ -57,7 +57,6 @@ test("postmatch", async () => {
     return Promise.resolve({} as unknown as Message<true> | Message<false>);
   };
   const checkMatchFn = async () => {
-    // eslint-disable-next-line no-restricted-syntax -- I'm okay with this since we're loading a saved API response
     const exampleMatch = JSON.parse(await Bun.file(testdataPath).text()) as MatchV5DTOs.MatchDto;
     return exampleMatch;
   };
@@ -72,6 +71,7 @@ test("postmatch", async () => {
             ),
             region: "AMERICA_NORTH",
           },
+          lastSeenInGame: null,
         },
         discordAccount: {
           id: DiscordAccountIdSchema.parse("12345678901234567"),

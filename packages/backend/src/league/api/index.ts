@@ -28,6 +28,8 @@ export async function getCurrentGame(player: PlayerConfigEntry): Promise<undefin
       return undefined;
     } else {
       // at this point, we know it's a ApiResponseDTO<CurrentGameInfoDTO>
+      // Type assertion needed: twisted library returns union type that TypeScript can't narrow properly
+      // eslint-disable-next-line no-restricted-syntax -- External library union type requires assertion after runtime check
       const currentGameInfo = response.response as unknown as CurrentGameInfoDTO;
       console.log(`✅ Successfully fetched current game for ${playerAlias} (${apiTime.toString()}ms)`);
       console.log(

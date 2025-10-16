@@ -8,6 +8,7 @@ import {
   type PlayerConfigEntry,
 } from "@scout-for-lol/data";
 import { createDiscordMessage } from "./discord";
+import { z } from "zod";
 import { send } from "../../discord/channel";
 import { getRanks } from "../../model/rank";
 import { getState, setState } from "../../model/state";
@@ -38,7 +39,7 @@ export async function checkPreMatch() {
   // Update Prometheus metrics for interval distribution
   for (const [interval, count] of intervalDistribution.entries()) {
     playerPollingIntervalDistribution.set({ interval_minutes: interval.toString() }, count);
-    console.log(`📊 Polling interval ${interval}min: ${count.toString()} accounts`);
+    console.log(`📊 Polling interval ${interval.toString()}min: ${count.toString()} accounts`);
   }
 
   const playersToCheck = filter(players, (player) => shouldCheckPlayer(player.league.lastSeenInGame, currentTime));
@@ -122,11 +123,11 @@ export async function checkPreMatch() {
 
   // Log detailed info about each game group
   for (const [gameId, games] of Object.entries(gameGroups)) {
+    if (games.length === 0) continue; // groupBy never creates empty arrays, but guard for TypeScript
     const playerNames = games.map(([player]) => player.alias).join(", ");
-    const queueId = games[0]?.[1]?.gameQueueConfigId;
-    console.log(
-      `📊 Game ${gameId}: ${games.length.toString()} players (${playerNames}), Queue: ${queueId?.toString() ?? "unknown"}`,
-    );
+    const firstGame = games[0];
+    const queueId = firstGame[1].gameQueueConfigId;
+    console.log(`📊 Game ${gameId}: ${games.length.toString()} players (${playerNames}), Queue: ${queueId.toString()}`);
   }
 
   const promises = pipe(
@@ -202,9 +203,10 @@ export async function checkPreMatch() {
             console.log(`✅ Successfully sent message to channel: ${server.channel}`);
           } catch (error) {
             // Log error but don't fail the whole operation
+            const errorResult = z.instanceof(Error).safeParse(error);
             console.error(
               `⚠️  Failed to send message to channel ${server.channel} for game ${gameId}:`,
-              error instanceof Error ? error.message : String(error),
+              errorResult.success ? errorResult.data.message : String(error),
             );
           }
         });
