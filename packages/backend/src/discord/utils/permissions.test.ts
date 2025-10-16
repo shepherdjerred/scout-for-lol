@@ -41,7 +41,6 @@ describe("checkSendMessagePermission", () => {
     const dmChannel = {
       isDMBased: () => true,
     };
-    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Channel interface
     const result = checkSendMessagePermission(dmChannel as unknown as Channel, "bot-id");
     expect(result.hasPermission).toBe(true);
   });
@@ -51,7 +50,6 @@ describe("checkSendMessagePermission", () => {
       isDMBased: () => false,
       // No permissionsFor method
     };
-    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Channel interface
     const result = checkSendMessagePermission(invalidChannel as unknown as Channel, "bot-id");
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Cannot check permissions");
@@ -62,7 +60,6 @@ describe("checkSendMessagePermission", () => {
       isDMBased: () => false,
       permissionsFor: () => null,
     };
-    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Channel interface
     const result = checkSendMessagePermission(channel as unknown as Channel, "bot-id");
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Cannot access channel");

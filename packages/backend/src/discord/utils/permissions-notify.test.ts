@@ -36,7 +36,6 @@ describe("notifyServerOwnerAboutPermissionError", () => {
   });
 
   test("handles case when guild is not found", async () => {
-    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Client interface
     const mockClient = {
       guilds: {
         fetch: async () => null,
@@ -50,7 +49,6 @@ describe("notifyServerOwnerAboutPermissionError", () => {
   });
 
   test("handles case when owner fetch fails", async () => {
-    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Client interface
     const mockClient = {
       guilds: {
         fetch: async () => ({
@@ -67,7 +65,6 @@ describe("notifyServerOwnerAboutPermissionError", () => {
   });
 
   test("handles case when DM send fails (user has DMs disabled)", async () => {
-    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Client interface
     const mockClient = {
       guilds: {
         fetch: async () => ({
@@ -89,7 +86,6 @@ describe("notifyServerOwnerAboutPermissionError", () => {
   });
 
   test("handles generic error during DM send", async () => {
-    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Client interface
     const mockClient = {
       guilds: {
         fetch: async () => ({
@@ -113,7 +109,6 @@ describe("notifyServerOwnerAboutPermissionError", () => {
   test("includes reason in message when provided", async () => {
     const sentMessages: { user: string; message: string }[] = [];
 
-    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Client interface
     const mockClient = {
       guilds: {
         fetch: async () => ({
@@ -136,7 +131,6 @@ describe("notifyServerOwnerAboutPermissionError", () => {
   test("works without reason parameter", async () => {
     const sentMessages: { user: string; message: string }[] = [];
 
-    // eslint-disable-next-line no-restricted-syntax -- Test mock requires casting to Client interface
     const mockClient = {
       guilds: {
         fetch: async () => ({
