@@ -69,39 +69,6 @@ export async function send(
       throw error;
     }
 
-    // Check permissions before attempting to send
-    const permissionCheck = checkSendMessagePermission(fetchedChannel, client.user);
-    if (!permissionCheck.hasPermission) {
-      const error = new ChannelSendError(
-        permissionCheck.reason ?? "Missing permissions to send messages",
-        channelId,
-        true,
-      );
-      console.warn(`[ChannelSend] ${error.message} - channel: ${channelId}`);
-
-      // Track permission error in metrics (only if serverId provided to avoid duplication with notifyServerOwnerAboutPermissionError)
-      if (!serverId) {
-        discordPermissionErrorsTotal.inc({
-          guild_id: "unknown",
-          error_type: "proactive_check",
-        });
-      }
-
-      // Record permission error in database if serverId is provided
-      if (serverId) {
-        void recordPermissionError(prisma, serverId, channelId, "proactive_check", permissionCheck.reason).catch(
-          (dbError) => {
-            console.error(`[ChannelSend] Failed to record permission error in DB:`, dbError);
-          },
-        );
-
-        // Notify server owner (this will also track metrics)
-        void notifyServerOwnerAboutPermissionError(client, serverId, channelId, permissionCheck.reason);
-      }
-
-      throw error;
-    }
-
     // Log message info - only log string messages to avoid object stringification
     const stringResult = z.string().safeParse(options);
     if (stringResult.success) {
@@ -128,8 +95,24 @@ export async function send(
     }
 
     // Check if it's a Discord permission error
-    const isPermError = isPermissionError(error);
-    const errorMessage = formatPermissionErrorForLog(channelId, error);
+    let isPermError = isPermissionError(error);
+    let errorMessage = formatPermissionErrorForLog(channelId, error);
+    let permissionReason: string | undefined;
+
+    // If not a Discord API permission error, check permissions to provide better diagnostics
+    if (!isPermError) {
+      // Fetch channel to check permissions
+      const fetchedChannel = await client.channels.fetch(channelId).catch(() => null);
+      if (fetchedChannel) {
+        const permissionCheck = await checkSendMessagePermission(fetchedChannel, client.user);
+        if (!permissionCheck.hasPermission) {
+          // It was actually a permission issue even though Discord didn't return a permission error
+          isPermError = true;
+          permissionReason = permissionCheck.reason;
+          errorMessage = formatPermissionErrorForLog(channelId, error, permissionCheck.reason);
+        }
+      }
+    }
 
     // Log appropriately based on error type
     if (isPermError) {
@@ -145,12 +128,12 @@ export async function send(
 
       // Record permission error in database and notify owner if serverId is provided
       if (serverId) {
-        void recordPermissionError(prisma, serverId, channelId, "api_error").catch((dbError) => {
+        void recordPermissionError(prisma, serverId, channelId, "api_error", permissionReason).catch((dbError) => {
           console.error(`[ChannelSend] Failed to record permission error in DB:`, dbError);
         });
 
         // Notify server owner (this will also track metrics)
-        void notifyServerOwnerAboutPermissionError(client, serverId, channelId);
+        void notifyServerOwnerAboutPermissionError(client, serverId, channelId, permissionReason);
       }
     } else {
       console.error(`[ChannelSend] ${errorMessage}`);

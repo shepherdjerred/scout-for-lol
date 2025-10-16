@@ -36,6 +36,7 @@ const GuildChannelSchema = z.object({
     .object({
       members: z.object({
         me: z.unknown().nullable(),
+        fetch: z.function(),
       }),
     })
     .nullable(),
@@ -46,12 +47,12 @@ const GuildChannelSchema = z.object({
  *
  * @param channel - The channel to check permissions for
  * @param botUser - The bot's User object (from client.user)
- * @returns Object with hasPermission flag and optional error message
+ * @returns Promise with hasPermission flag and optional error message
  */
-export function checkSendMessagePermission(
+export async function checkSendMessagePermission(
   channel: Channel,
   botUser: User | null,
-): { hasPermission: boolean; reason?: string } {
+): Promise<{ hasPermission: boolean; reason?: string }> {
   // DM channels don't need permission checks
   if (channel.isDMBased()) {
     return { hasPermission: true };
@@ -74,17 +75,31 @@ export function checkSendMessagePermission(
   }
 
   try {
-    // If guild.members.me is available, use it directly for more accurate permission checking
-    // Otherwise fall back to using the bot's user object
-    const targetForPermissions = guildChannelResult.data.guild?.members.me ?? botUser;
+    let targetForPermissions = guildChannelResult.data.guild?.members.me;
+
+    // If guild.members.me is not available, fetch the bot's guild member
+    if (!targetForPermissions && guildChannelResult.data.guild?.members.fetch && botUser.id) {
+      try {
+        const fetchFunction = guildChannelResult.data.guild.members.fetch as unknown;
+        // eslint-disable-next-line no-restricted-syntax -- Method existence validated by Zod schema check above
+        targetForPermissions = await (fetchFunction as (userId: string) => Promise<unknown>)(botUser.id);
+      } catch (fetchError) {
+        // If fetch fails, we'll still try with botUser below
+        console.warn(`[Permissions] Failed to fetch bot member: ${String(fetchError)}`);
+      }
+    }
+
+    // If we still don't have a member, fall back to botUser
+    // Note: This may fail with older Discord.js versions or certain configurations
+    targetForPermissions ??= botUser;
 
     // Call permissionsFor - we know it exists from schema validation
     // Type assertion needed: Zod schema confirms permissionsFor exists, but TypeScript can't track this
-    const permissions =
-      // eslint-disable-next-line no-restricted-syntax -- Method existence validated by Zod schema check above
-      (guildChannelResult.data.permissionsFor as unknown as (target: unknown) => PermissionsBitField | null)(
-        targetForPermissions,
-      );
+    const permissionsForFunction = guildChannelResult.data.permissionsFor as unknown;
+    // eslint-disable-next-line no-restricted-syntax -- Method existence validated by Zod schema check above
+    const permissions = (permissionsForFunction as (target: unknown) => PermissionsBitField | null)(
+      targetForPermissions,
+    );
 
     if (!permissions) {
       return {
