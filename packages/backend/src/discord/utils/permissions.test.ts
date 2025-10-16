@@ -5,7 +5,15 @@ import {
   getPermissionErrorMessage,
   formatPermissionErrorForLog,
 } from "./permissions";
-import { PermissionFlagsBits, type Channel } from "discord.js";
+import { PermissionFlagsBits, type Channel, type User } from "discord.js";
+
+// Mock bot user for tests
+// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Test mock for complex Discord.js User class
+const mockBotUser = {
+  id: "bot-id",
+  username: "TestBot",
+  discriminator: "0000",
+} as User;
 
 describe("isPermissionError", () => {
   test("returns true for Discord missing permissions error (50013)", () => {
@@ -41,8 +49,19 @@ describe("checkSendMessagePermission", () => {
     const dmChannel = {
       isDMBased: () => true,
     };
-    const result = checkSendMessagePermission(dmChannel as unknown as Channel, "bot-id");
+    const result = checkSendMessagePermission(dmChannel as unknown as Channel, mockBotUser);
     expect(result.hasPermission).toBe(true);
+  });
+
+  test("returns false when bot user is null", () => {
+    const channel = {
+      isDMBased: () => false,
+      permissionsFor: () => null,
+      guild: null,
+    };
+    const result = checkSendMessagePermission(channel as unknown as Channel, null);
+    expect(result.hasPermission).toBe(false);
+    expect(result.reason).toContain("Bot user not available");
   });
 
   test("returns false when channel doesn't have permissionsFor method", () => {
@@ -50,7 +69,7 @@ describe("checkSendMessagePermission", () => {
       isDMBased: () => false,
       // No permissionsFor method
     };
-    const result = checkSendMessagePermission(invalidChannel as unknown as Channel, "bot-id");
+    const result = checkSendMessagePermission(invalidChannel as unknown as Channel, mockBotUser);
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Cannot check permissions");
   });
@@ -59,8 +78,9 @@ describe("checkSendMessagePermission", () => {
     const channel = {
       isDMBased: () => false,
       permissionsFor: () => null,
+      guild: null,
     };
-    const result = checkSendMessagePermission(channel as unknown as Channel, "bot-id");
+    const result = checkSendMessagePermission(channel as unknown as Channel, mockBotUser);
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Cannot access channel");
   });
@@ -74,8 +94,9 @@ describe("checkSendMessagePermission", () => {
           return permission === PermissionFlagsBits.ViewChannel;
         },
       }),
+      guild: null,
     };
-    const result = checkSendMessagePermission(channel as unknown as Channel, "bot-id");
+    const result = checkSendMessagePermission(channel as unknown as Channel, mockBotUser);
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Send Messages");
   });
@@ -89,8 +110,9 @@ describe("checkSendMessagePermission", () => {
           return permission === PermissionFlagsBits.SendMessages;
         },
       }),
+      guild: null,
     };
-    const result = checkSendMessagePermission(channel as unknown as Channel, "bot-id");
+    const result = checkSendMessagePermission(channel as unknown as Channel, mockBotUser);
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("cannot view");
   });
@@ -104,8 +126,9 @@ describe("checkSendMessagePermission", () => {
           return permission === PermissionFlagsBits.ViewChannel || permission === PermissionFlagsBits.SendMessages;
         },
       }),
+      guild: null,
     };
-    const result = checkSendMessagePermission(channel as unknown as Channel, "bot-id");
+    const result = checkSendMessagePermission(channel as unknown as Channel, mockBotUser);
     expect(result.hasPermission).toBe(true);
     expect(result.reason).toBeUndefined();
   });
@@ -116,10 +139,32 @@ describe("checkSendMessagePermission", () => {
       permissionsFor: () => {
         throw new Error("Permission check failed");
       },
+      guild: null,
     };
-    const result = checkSendMessagePermission(channel as unknown as Channel, "bot-id");
+    const result = checkSendMessagePermission(channel as unknown as Channel, mockBotUser);
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Error checking permissions");
+  });
+
+  test("uses guild.members.me when available", () => {
+    const mockMe = { id: "bot-member-id" };
+    const channel = {
+      isDMBased: () => false,
+      permissionsFor: (target: unknown) => {
+        // Verify we're using the member object, not the user
+        expect(target).toBe(mockMe);
+        return {
+          has: () => true,
+        };
+      },
+      guild: {
+        members: {
+          me: mockMe,
+        },
+      },
+    };
+    const result = checkSendMessagePermission(channel as unknown as Channel, mockBotUser);
+    expect(result.hasPermission).toBe(true);
   });
 });
 

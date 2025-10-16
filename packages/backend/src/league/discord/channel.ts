@@ -70,7 +70,7 @@ export async function send(
     }
 
     // Check permissions before attempting to send
-    const permissionCheck = checkSendMessagePermission(fetchedChannel, client.user?.id ?? "");
+    const permissionCheck = checkSendMessagePermission(fetchedChannel, client.user);
     if (!permissionCheck.hasPermission) {
       const error = new ChannelSendError(
         permissionCheck.reason ?? "Missing permissions to send messages",

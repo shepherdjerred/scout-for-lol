@@ -1,4 +1,4 @@
-import type { Channel, PermissionsBitField, Client } from "discord.js";
+import type { Channel, PermissionsBitField, Client, User } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
 import { getErrorMessage } from "../../utils/errors";
@@ -32,22 +32,36 @@ export function isPermissionError(error: unknown): boolean {
  */
 const GuildChannelSchema = z.object({
   permissionsFor: z.function(),
+  guild: z
+    .object({
+      members: z.object({
+        me: z.unknown().nullable(),
+      }),
+    })
+    .nullable(),
 });
 
 /**
  * Check if the bot has permission to send messages in a channel
  *
  * @param channel - The channel to check permissions for
- * @param botId - The bot's user ID
+ * @param botUser - The bot's User object (from client.user)
  * @returns Object with hasPermission flag and optional error message
  */
 export function checkSendMessagePermission(
   channel: Channel,
-  botId: string,
+  botUser: User | null,
 ): { hasPermission: boolean; reason?: string } {
   // DM channels don't need permission checks
   if (channel.isDMBased()) {
     return { hasPermission: true };
+  }
+
+  if (!botUser) {
+    return {
+      hasPermission: false,
+      reason: "Bot user not available",
+    };
   }
 
   // Validate channel has permission checking methods
@@ -60,11 +74,17 @@ export function checkSendMessagePermission(
   }
 
   try {
+    // If guild.members.me is available, use it directly for more accurate permission checking
+    // Otherwise fall back to using the bot's user object
+    const targetForPermissions = guildChannelResult.data.guild?.members.me ?? botUser;
+
     // Call permissionsFor - we know it exists from schema validation
     // Type assertion needed: Zod schema confirms permissionsFor exists, but TypeScript can't track this
     const permissions =
       // eslint-disable-next-line no-restricted-syntax -- Method existence validated by Zod schema check above
-      (guildChannelResult.data.permissionsFor as unknown as (id: string) => PermissionsBitField | null)(botId);
+      (guildChannelResult.data.permissionsFor as unknown as (target: unknown) => PermissionsBitField | null)(
+        targetForPermissions,
+      );
 
     if (!permissions) {
       return {

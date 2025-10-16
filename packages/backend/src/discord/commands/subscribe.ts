@@ -320,10 +320,23 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
 
     if (existingSubscription) {
       console.log(`⚠️  Subscription already exists for player ${playerAccount.player.alias} in channel ${channel}`);
-      await interaction.reply({
-        content: `ℹ️ **Already subscribed**\n\nPlayer "${playerAccount.player.alias}" is already subscribed in <#${channel}>.\n\nMatch updates will continue to be posted there.`,
-        ephemeral: true,
-      });
+
+      // If we just added an account to an existing player, show success message
+      if (isAddingToExistingPlayer) {
+        const accountCount = playerAccount.player.accounts.length;
+        const accountList = playerAccount.player.accounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
+
+        await interaction.reply({
+          content: `✅ **Account added successfully**\n\nAdded **${riotId.game_name}#${riotId.tag_line}** to player "${playerAccount.player.alias}".\n\nThis player is already subscribed in <#${channel}> and now has ${accountCount.toString()} account${accountCount === 1 ? "" : "s"}:\n${accountList}\n\nMatch updates for all accounts will continue to be posted there.`,
+          ephemeral: true,
+        });
+      } else {
+        // This shouldn't happen in normal flow, but handle it just in case
+        await interaction.reply({
+          content: `ℹ️ **Already subscribed**\n\nPlayer "${playerAccount.player.alias}" is already subscribed in <#${channel}>.\n\nMatch updates will continue to be posted there.`,
+          ephemeral: true,
+        });
+      }
       return;
     }
 

@@ -1,4 +1,5 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { getCompetitionStatus } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { getCompetitionById } from "../../../database/competition/queries.js";
 import { addParticipant, acceptInvitation, getParticipantStatus } from "../../../database/competition/participants.js";
@@ -239,10 +240,8 @@ This competition has reached its maximum of ${competition.maxParticipants.toStri
   // Step 11: Send success message
   // ============================================================================
 
-  const statusLine =
-    competition.startDate && competition.startDate > now
-      ? `Status: Starting ${getRelativeTimeString(competition.startDate)}`
-      : "Status: In progress";
+  const status = getCompetitionStatus(competition);
+  const statusLine = formatStatusForJoinMessage(status, competition, now);
 
   await interaction.reply({
     content: `✅ You've joined the competition!
@@ -255,6 +254,29 @@ ${statusLine}
 Good luck! The leaderboard will be posted daily in <#${competition.channelId}>.`,
     flags: MessageFlags.Ephemeral,
   });
+}
+
+/**
+ * Format status for join success message
+ */
+function formatStatusForJoinMessage(
+  status: ReturnType<typeof getCompetitionStatus>,
+  competition: { startDate: Date | null; endDate: Date | null },
+  now: Date,
+): string {
+  switch (status) {
+    case "DRAFT":
+      if (competition.startDate && competition.startDate > now) {
+        return `Status: Starting ${getRelativeTimeString(competition.startDate)}`;
+      }
+      return "Status: Draft";
+    case "ACTIVE":
+      return "Status: In progress";
+    case "ENDED":
+      return "Status: Ended";
+    case "CANCELLED":
+      return "Status: Cancelled";
+  }
 }
 
 /**
