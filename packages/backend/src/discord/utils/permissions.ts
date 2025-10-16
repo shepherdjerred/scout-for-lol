@@ -148,25 +148,9 @@ export async function notifyServerOwnerAboutPermissionError(
   try {
     // Fetch the guild
     const guild = await client.guilds.fetch(serverId);
-    if (!guild) {
-      console.warn(`[PermissionNotify] Cannot notify owner - guild ${serverId} not found`);
-      discordOwnerNotificationsTotal.inc({
-        guild_id: serverId,
-        status: "guild_not_found",
-      });
-      return;
-    }
 
     // Fetch the guild owner
     const owner = await guild.fetchOwner();
-    if (!owner) {
-      console.warn(`[PermissionNotify] Cannot notify owner - owner not found for guild ${serverId}`);
-      discordOwnerNotificationsTotal.inc({
-        guild_id: serverId,
-        status: "owner_not_found",
-      });
-      return;
-    }
 
     // Construct the DM message
     const reasonText = reason ? `\n\n**Reason:** ${reason}` : "";

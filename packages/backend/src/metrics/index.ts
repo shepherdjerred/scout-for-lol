@@ -153,6 +153,27 @@ export const riotApiRequestsTotal = new Counter({
 });
 
 /**
+ * Distribution of player accounts across polling interval buckets
+ * Shows how many accounts are in each refresh rate category
+ */
+export const playerPollingIntervalDistribution = new Gauge({
+  name: "player_polling_interval_distribution",
+  help: "Number of player accounts in each polling interval bucket (by minutes)",
+  labelNames: ["interval_minutes"] as const,
+  registers: [registry],
+});
+
+/**
+ * Number of players checked vs skipped in current cycle
+ */
+export const playerPollingStats = new Gauge({
+  name: "player_polling_stats",
+  help: "Players checked or skipped in the current polling cycle",
+  labelNames: ["status"] as const,
+  registers: [registry],
+});
+
+/**
  * Duration of Riot API requests in seconds
  */
 export const riotApiRequestDuration = new Histogram({

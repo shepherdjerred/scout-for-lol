@@ -14,7 +14,8 @@ import { getState, setState } from "../../model/state";
 import { getCurrentGame } from "../../api/index";
 import { filter, groupBy, map, mapValues, pipe, values, zip } from "remeda";
 import { getAccounts, getChannelsSubscribedToPlayers, updateLastSeenInGame } from "../../../database/index";
-import { shouldCheckPlayer } from "../../../utils/polling-intervals";
+import { shouldCheckPlayer, calculatePollingInterval } from "../../../utils/polling-intervals";
+import { playerPollingIntervalDistribution, playerPollingStats } from "../../../metrics/index.js";
 
 export async function checkPreMatch() {
   console.log("=== PRE-MATCH CHECK START ===");
@@ -26,10 +27,28 @@ export async function checkPreMatch() {
 
   console.log("⏱️  Filtering players based on dynamic polling intervals");
   const currentTime = new Date();
+
+  // Track distribution of players across polling intervals
+  const intervalDistribution = new Map<number, number>();
+  for (const player of players) {
+    const interval = calculatePollingInterval(player.league.lastSeenInGame, currentTime);
+    intervalDistribution.set(interval, (intervalDistribution.get(interval) ?? 0) + 1);
+  }
+
+  // Update Prometheus metrics for interval distribution
+  for (const [interval, count] of intervalDistribution.entries()) {
+    playerPollingIntervalDistribution.set({ interval_minutes: interval.toString() }, count);
+    console.log(`📊 Polling interval ${interval}min: ${count.toString()} accounts`);
+  }
+
   const playersToCheck = filter(players, (player) => shouldCheckPlayer(player.league.lastSeenInGame, currentTime));
   console.log(
     `📊 ${playersToCheck.length.toString()} / ${players.length.toString()} players should be checked this cycle`,
   );
+
+  // Update metrics for checked vs skipped players
+  playerPollingStats.set({ status: "checked" }, playersToCheck.length);
+  playerPollingStats.set({ status: "skipped" }, players.length - playersToCheck.length);
 
   console.log("🎮 Filtering out players already in tracked games");
   const currentState = getState();

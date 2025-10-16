@@ -278,6 +278,214 @@ import Layout from "../layouts/Layout.astro";
               </div>
             </div>
 
+            <!-- Competition Commands -->
+            <div class="border border-indigo-300 rounded-lg p-6 bg-indigo-50">
+              <h3 class="text-xl font-semibold text-gray-900 mb-3">
+                /competition
+              </h3>
+              <p class="text-gray-600 mb-4">
+                Manage competitions and leaderboards for your server.
+              </p>
+
+              <div class="space-y-4">
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /competition create
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Create a new competition with custom criteria, dates, and settings.
+                    You can use fixed dates or select a League season.
+                  </p>
+                  <div class="bg-white rounded-md p-3 mb-2">
+                    <code class="text-xs">
+                      /competition create title:[name] description:[desc]
+                      criteria-type:[type] channel:[#channel] season:[season]
+                    </code>
+                  </div>
+                  <p class="text-xs text-gray-500 italic">
+                    Examples: Most Games Played, Highest Rank, Most Rank Climb,
+                    Most Wins (Player/Champion), Highest Win Rate
+                  </p>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /competition edit <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">NEW</span>
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Edit an existing competition. You can always change title, description,
+                    and channel. Other settings can only be changed before the competition starts.
+                  </p>
+                  <div class="bg-white rounded-md p-3">
+                    <code class="text-xs">
+                      /competition edit competition-id:[id] title:[new-title]
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /competition list <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700">NEW</span>
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    View all competitions in your server, with optional filters.
+                  </p>
+                  <div class="bg-white rounded-md p-3">
+                    <code class="text-xs">
+                      /competition list active-only:[true] my-competitions:[true]
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /competition view
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    View competition details and current leaderboard standings.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /competition join
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Join an open competition to compete on the leaderboard.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /competition leave
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Leave a competition you've joined.
+                  </p>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /competition cancel
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Cancel a competition (competition owner only).
+                  </p>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /competition grant-permission
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Grant permission to create competitions to another user (admin only).
+                  </p>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /competition invite
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Invite a user to join your invite-only competition.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Admin Commands -->
+            <div class="border border-red-300 rounded-lg p-6 bg-red-50">
+              <h3 class="text-xl font-semibold text-gray-900 mb-3">
+                /admin <span class="inline-flex items-center rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700">NEW</span>
+              </h3>
+              <p class="text-gray-600 mb-4">
+                Advanced player and account management commands for server administrators.
+              </p>
+
+              <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
+                <p class="text-sm text-yellow-800">
+                  <strong>⚠️ Administrator Only:</strong> These commands require Discord Administrator permissions
+                  and should be used carefully as some actions cannot be undone.
+                </p>
+              </div>
+
+              <div class="space-y-4">
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /admin player-edit-alias
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Change a player's display alias in your server.
+                  </p>
+                  <div class="bg-white rounded-md p-3">
+                    <code class="text-xs">
+                      /admin player-edit-alias current-alias:[old] new-alias:[new]
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /admin account-remove
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Remove a specific Riot account from a player. Useful when someone
+                    changes their main account or a smurf is no longer used.
+                  </p>
+                  <div class="bg-white rounded-md p-3">
+                    <code class="text-xs">
+                      /admin account-remove riot-id:[name#tag] region:[region]
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /admin account-transfer
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Transfer an account from one player to another. Perfect for when
+                    an account was added to the wrong player.
+                  </p>
+                  <div class="bg-white rounded-md p-3">
+                    <code class="text-xs">
+                      /admin account-transfer riot-id:[name#tag] region:[region] to-player-alias:[alias]
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /admin player-merge
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Merge two players into one, combining all their accounts and subscriptions.
+                    Useful for consolidating duplicate players.
+                  </p>
+                  <div class="bg-white rounded-md p-3">
+                    <code class="text-xs">
+                      /admin player-merge source-alias:[from] target-alias:[to]
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /admin player-delete
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Permanently delete a player and all their accounts and subscriptions.
+                    <strong class="text-red-600">This action cannot be undone!</strong>
+                  </p>
+                  <div class="bg-white rounded-md p-3">
+                    <code class="text-xs">
+                      /admin player-delete alias:[alias] confirm:[true]
+                    </code>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Debug Command -->
             <div class="border border-gray-200 rounded-lg p-6">
               <h3 class="text-xl font-semibold text-gray-900 mb-3">/debug</h3>
@@ -328,7 +536,7 @@ import Layout from "../layouts/Layout.astro";
                 <p class="text-gray-700 mb-4">
                   Scout now fully supports <strong
                     >League of Legends Arena mode</strong
-                  > - the fast-paced 2v2v2v2v2v2v2v2 (16 player) game mode! Get
+                  > - the fast-paced 16 player game mode! Get
                   notifications and detailed reports for Arena matches just like any
                   other queue.
                 </p>
@@ -394,48 +602,77 @@ import Layout from "../layouts/Layout.astro";
                 </h4>
                 <ul class="list-disc list-inside space-y-2 text-gray-700 mb-6">
                   <li>
-                    Set custom start and end dates for time-limited competitions
+                    <strong>Season Support:</strong> Align competitions with League seasons
+                    (e.g., Season 2025 Split 1) or use custom dates
                   </li>
                   <li>
-                    Configure which game modes count (Ranked, ARAM, Arena, etc.)
+                    <strong>Edit Competitions:</strong> Update title, description, and channel
+                    anytime. Edit criteria and dates before competition starts.
                   </li>
-                  <li>Choose scoring criteria: wins, KDA, CS, damage, and more</li>
                   <li>
-                    Real-time leaderboards updated automatically after each match
+                    <strong>Multiple Criteria:</strong> Choose from Most Games Played, Highest Rank,
+                    Most Rank Climb, Most Wins (Player/Champion), or Highest Win Rate
                   </li>
-                  <li>Support for both individual and team competitions</li>
-                  <li>Automatic winner announcements when competitions end</li>
+                  <li>
+                    <strong>Queue Filtering:</strong> Track specific queues like Solo Queue,
+                    Flex, Arena, ARAM, or all games
+                  </li>
+                  <li>
+                    <strong>Visibility Options:</strong> Open competitions for anyone, invite-only,
+                    or server-wide automatic enrollment
+                  </li>
+                  <li>
+                    <strong>Real-time Leaderboards:</strong> Automatically updated after each match
+                    with daily summary posts
+                  </li>
+                  <li>
+                    <strong>Champion-Specific Competitions:</strong> Create competitions for specific
+                    champions (e.g., "Best Yasuo Player")
+                  </li>
+                  <li>
+                    Automatic lifecycle management with winner announcements
+                  </li>
                 </ul>
 
                 <h4 class="font-semibold text-gray-900 mb-3">
-                  Competition Commands:
+                  Quick Start Examples:
                 </h4>
                 <div class="space-y-3 mb-6">
                   <div class="bg-white border border-amber-300 rounded-md p-3">
                     <code class="text-sm text-gray-800">
-                      /competition create name:[name] start-date:[date]
-                      end-date:[date]
+                      /competition create title:"Season Grind" description:"Climb the highest!"
+                      criteria-type:HIGHEST_RANK queue:SOLO season:2025-SPLIT-1 channel:#leaderboard
                     </code>
                     <p class="text-xs text-gray-600 mt-2">
-                      Create a new competition with custom parameters
+                      Create a ranked climb competition that lasts the entire split
                     </p>
                   </div>
 
                   <div class="bg-white border border-amber-300 rounded-md p-3">
                     <code class="text-sm text-gray-800">
-                      /competition leaderboard name:[name]
+                      /competition create title:"Arena Champions" criteria-type:MOST_WINS_PLAYER
+                      queue:ARENA start-date:2025-01-01 end-date:2025-01-31 channel:#arena
                     </code>
                     <p class="text-xs text-gray-600 mt-2">
-                      View the current leaderboard for a competition
+                      Track who wins the most Arena games in January
                     </p>
                   </div>
 
                   <div class="bg-white border border-amber-300 rounded-md p-3">
                     <code class="text-sm text-gray-800">
-                      /competition list
+                      /competition list active-only:true
                     </code>
                     <p class="text-xs text-gray-600 mt-2">
-                      See all active competitions in your server
+                      View all currently running competitions
+                    </p>
+                  </div>
+
+                  <div class="bg-white border border-amber-300 rounded-md p-3">
+                    <code class="text-sm text-gray-800">
+                      /competition edit competition-id:5 title:"New Title" description:"Updated!"
+                    </code>
+                    <p class="text-xs text-gray-600 mt-2">
+                      Update competition details (works anytime)
                     </p>
                   </div>
                 </div>
@@ -443,10 +680,16 @@ import Layout from "../layouts/Layout.astro";
                 <div
                   class="bg-white border border-amber-300 rounded-md p-4 text-sm"
                 >
+                  <p class="text-gray-600 mb-2">
+                    <strong>💡 Pro Tip:</strong> Competitions automatically track
+                    matches for participants in your server. Use seasons to avoid
+                    manually setting dates, and edit competitions if you need to
+                    make changes!
+                  </p>
                   <p class="text-gray-600">
-                    <strong>Pro Tip:</strong> Competitions automatically track
-                    matches for all subscribed players in your server. Create
-                    weekly or monthly competitions to keep your community engaged!
+                    <strong>New in this update:</strong> You can now edit competitions,
+                    list all competitions with filters, and use League seasons instead
+                    of fixed dates.
                   </p>
                 </div>
               </div>
@@ -765,7 +1008,7 @@ import Layout from "../layouts/Layout.astro";
               </h3>
               <p class="text-gray-600">
                 Scout tracks all ranked and normal games on Summoner's Rift,
-                ARAM, Arena (2v2v2v2v2v2v2v2), and other matchmade queues.
+                ARAM, Arena, and other matchmade queues.
                 Custom games, practice tool, and tutorial matches are not
                 tracked.
               </p>
@@ -777,12 +1020,39 @@ import Layout from "../layouts/Layout.astro";
               </h3>
               <p class="text-gray-600">
                 Competitions allow you to create time-limited challenges for
-                your server members. You can set custom criteria (wins, KDA,
-                damage, etc.) and Scout will automatically track performance and
-                update leaderboards. Use <code
+                your server members. You can set custom criteria (wins, rank climb,
+                win rate, etc.) and Scout will automatically track performance and
+                update leaderboards. You can use League seasons or custom dates,
+                and even edit competitions before they start. Use <code
                   class="bg-gray-100 px-2 py-1 rounded text-sm"
                   >/competition create</code
                 > to get started!
+              </p>
+            </div>
+
+            <div class="border border-gray-200 rounded-lg p-6">
+              <h3 class="font-semibold text-gray-900 mb-3">
+                Can I edit a competition after creating it?
+              </h3>
+              <p class="text-gray-600">
+                Yes! You can always edit the title, description, and channel using
+                <code class="bg-gray-100 px-2 py-1 rounded text-sm">/competition edit</code>.
+                Before a competition starts, you can also change the criteria, dates,
+                visibility settings, and other parameters. Once a competition is active,
+                core settings like criteria and dates are locked to ensure fairness.
+              </p>
+            </div>
+
+            <div class="border border-gray-200 rounded-lg p-6">
+              <h3 class="font-semibold text-gray-900 mb-3">
+                What are the admin commands for?
+              </h3>
+              <p class="text-gray-600">
+                The <code class="bg-gray-100 px-2 py-1 rounded text-sm">/admin</code>
+                commands help server administrators manage players and accounts. You can
+                rename players, remove accounts, transfer accounts between players, merge
+                duplicate players, and delete players entirely. These are advanced commands
+                that require Administrator permissions in Discord.
               </p>
             </div>
 

@@ -312,7 +312,7 @@ describe("markGuildAsNotified", () => {
     });
 
     expect(records).toHaveLength(2);
-    expect(records.every((r) => r.ownerNotified === true)).toBe(true);
+    expect(records.every((r) => r.ownerNotified)).toBe(true);
   });
 });
 

@@ -34,7 +34,7 @@ export async function checkAbandonedGuilds(client: Client): Promise<void> {
       return;
     }
 
-    console.log(`[AbandonedGuilds] Found ${abandonedGuilds.length} potentially abandoned guild(s)`);
+    console.log(`[AbandonedGuilds] Found ${abandonedGuilds.length.toString()} potentially abandoned guild(s)`);
 
     // Record metric for detected abandoned guilds
     abandonedGuildsDetectedTotal.inc(abandonedGuilds.length);
@@ -68,22 +68,16 @@ async function handleAbandonedGuild(
   const { serverId, firstOccurrence, errorCount } = guildInfo;
 
   console.log(
-    `[AbandonedGuilds] Processing guild ${serverId} (errors since ${firstOccurrence.toISOString()}, count: ${errorCount})`,
+    `[AbandonedGuilds] Processing guild ${serverId} (errors since ${firstOccurrence.toISOString()}, count: ${errorCount.toString()})`,
   );
 
   // Fetch the guild
   let guild;
   try {
     guild = await client.guilds.fetch(serverId);
-  } catch (error) {
+  } catch (_error) {
     console.warn(`[AbandonedGuilds] Could not fetch guild ${serverId} - may have already been removed`);
     // Mark as notified so we don't keep trying
-    await markGuildAsNotified(prisma, serverId);
-    return;
-  }
-
-  if (!guild) {
-    console.warn(`[AbandonedGuilds] Guild ${serverId} not found - may have already been removed`);
     await markGuildAsNotified(prisma, serverId);
     return;
   }
@@ -134,7 +128,7 @@ async function notifyOwnerOfAbandonment(
 Hello! I'm writing to let you know that I'll be leaving your server **${guild.name}**.
 
 **Why am I leaving?**
-I've been experiencing permission errors for the past ${daysSinceFirstError} days and haven't been able to send messages in your server. I've recorded ${errorCount} failed attempts.
+I've been experiencing permission errors for the past ${daysSinceFirstError.toString()} days and haven't been able to send messages in your server. I've recorded ${errorCount.toString()} failed attempts.
 
 This usually means:
 • My role was removed or permissions were revoked
@@ -190,14 +184,14 @@ async function cleanupGuildData(serverId: string): Promise<void> {
     const deletedSubs = await prisma.subscription.deleteMany({
       where: { serverId },
     });
-    console.log(`[AbandonedGuilds] Deleted ${deletedSubs.count} subscriptions`);
+    console.log(`[AbandonedGuilds] Deleted ${deletedSubs.count.toString()} subscriptions`);
     guildDataCleanupTotal.inc({ data_type: "subscriptions", status: "success" });
 
     // Delete server permissions
     const deletedPerms = await prisma.serverPermission.deleteMany({
       where: { serverId },
     });
-    console.log(`[AbandonedGuilds] Deleted ${deletedPerms.count} server permissions`);
+    console.log(`[AbandonedGuilds] Deleted ${deletedPerms.count.toString()} server permissions`);
     guildDataCleanupTotal.inc({ data_type: "permissions", status: "success" });
 
     // Note: We keep Player, Account, Competition, and related data

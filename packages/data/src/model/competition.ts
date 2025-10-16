@@ -413,7 +413,7 @@ export type CachedLeaderboardEntry = z.infer<typeof CachedLeaderboardEntrySchema
 export const CachedLeaderboardSchema = z.object({
   version: z.literal("v1"),
   competitionId: z.number().int().positive(),
-  calculatedAt: z.string().datetime(), // ISO 8601 timestamp
+  calculatedAt: z.string(), // ISO 8601 timestamp
   entries: z.array(CachedLeaderboardEntrySchema),
 });
 

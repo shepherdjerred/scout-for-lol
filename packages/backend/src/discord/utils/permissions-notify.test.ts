@@ -109,6 +109,7 @@ describe("notifyServerOwnerAboutPermissionError", () => {
   test("includes reason in message when provided", async () => {
     const sentMessages: { user: string; message: string }[] = [];
 
+    // eslint-disable-next-line no-restricted-syntax -- test mock needs any type
     const mockClient = {
       guilds: {
         fetch: async () => ({
@@ -121,9 +122,9 @@ describe("notifyServerOwnerAboutPermissionError", () => {
           }),
         }),
       },
-    };
+    } as any;
 
-    await notifyServerOwnerAboutPermissionError(mockClient as any, "server-123", "channel-456", "Custom error reason");
+    await notifyServerOwnerAboutPermissionError(mockClient, "server-123", "channel-456", "Custom error reason");
 
     expect(sentMessages[0]?.message).toContain("Custom error reason");
   });
@@ -131,6 +132,7 @@ describe("notifyServerOwnerAboutPermissionError", () => {
   test("works without reason parameter", async () => {
     const sentMessages: { user: string; message: string }[] = [];
 
+    // eslint-disable-next-line no-restricted-syntax -- test mock needs any type
     const mockClient = {
       guilds: {
         fetch: async () => ({
@@ -143,9 +145,9 @@ describe("notifyServerOwnerAboutPermissionError", () => {
           }),
         }),
       },
-    };
+    } as any;
 
-    await notifyServerOwnerAboutPermissionError(mockClient as any, "server-123", "channel-456");
+    await notifyServerOwnerAboutPermissionError(mockClient, "server-123", "channel-456");
 
     expect(sentMessages).toHaveLength(1);
     expect(sentMessages[0]?.message).toContain("Bot Permission Issue");

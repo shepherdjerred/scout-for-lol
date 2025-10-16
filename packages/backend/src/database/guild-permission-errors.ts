@@ -108,8 +108,8 @@ export async function recordSuccessfulSend(prisma: PrismaClient, serverId: strin
  */
 export async function getAbandonedGuilds(
   prisma: PrismaClient,
-  minDays: number = 7,
-): Promise<Array<{ serverId: string; firstOccurrence: Date; lastOccurrence: Date; errorCount: number }>> {
+  minDays = 7,
+): Promise<{ serverId: string; firstOccurrence: Date; lastOccurrence: Date; errorCount: number }[]> {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - minDays);
 
