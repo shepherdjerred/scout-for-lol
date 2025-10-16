@@ -97,9 +97,13 @@ export async function smokeTestBackendImage(
 ): Promise<string> {
   const image = buildBackendImage(workspaceSource, version, gitSha);
 
-  // Copy example.env to .env to provide required environment variables
+  // Use a unique database name for this test run to avoid caching issues
+  const testDbName = `test-${Date.now().toString()}.sqlite`;
+
+  // Copy example.env to .env and override DATABASE_URL for clean test
   const containerWithEnv = image
     .withFile(".env", workspaceSource.directory("packages/backend").file("example.env"))
+    .withEnvVariable("DATABASE_URL", `file:./${testDbName}`)
     .withEntrypoint([]); // Clear the entrypoint so we can run our own commands
 
   // Run the container with a timeout and capture output using combined stdout/stderr
@@ -126,7 +130,7 @@ export async function smokeTestBackendImage(
   // Check for expected success patterns
   const expectedSuccessPatterns = [
     "All migrations have been successfully applied",
-    "Started refreshing",
+    "Starting registration of",
     "Logging into Discord",
   ];
 

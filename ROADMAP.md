@@ -6,12 +6,21 @@ There seems to be a fair bit of coupling. Examples:
   etc.
 - Unrelated concerns should be runnable
 
-## Code Quality
+## Release
+
+### Post-Match
+
+- [ ] add champ icon
+- [ ] add icons for damage, K/D/A, and gold
+
+## Beta
+
+### Code Quality
 
 - [ ] parse, safeParse -- we use it way too much
 - [ ] as unknown as
 
-## Misc
+### Misc
 
 - [x] Limit number of competitions per server
 - [x] Allow passing in champion id as name
@@ -32,14 +41,14 @@ There seems to be a fair bit of coupling. Examples:
 - [x] CI doesn't seem to be running tests, linter
 - [ ] Setup CI to deploy site
 
-## Bugs
+### Bugs
 
 - [x] Handle error gracefully when the bot doesn't have permission to post to a
       channel
 - [x] Duplicate messages when a user is tracked in multiple servers
 - [x] Fix summoner spell icons
 
-## MVP
+### MVP
 
 - [x] Store player configs and database in either Postgres or sqlite
   - [x] Setup Prisma
@@ -54,14 +63,14 @@ There seems to be a fair bit of coupling. Examples:
 - [x] Support unranked queue types
   - Currently it will show LP stats/promos, etc.
 
-## Abuse Protection
+### Abuse Protection
 
 - [x] Detect users who haven't played in a while and lower how often they are
       refreshed
 - [x] Prune servers where the bot no longer has permissions/where the bot has been
       removed
 
-## Post-match
+### Post-match
 
 - [ ] add champ icon
 - [x] make vision score easier to see
