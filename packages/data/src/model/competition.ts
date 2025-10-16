@@ -373,3 +373,48 @@ export function getSnapshotSchemaForCriteria(
     .with({ type: "HIGHEST_WIN_RATE" }, () => WinsSnapshotDataSchema)
     .exhaustive();
 }
+
+// ============================================================================
+// Cached Leaderboard Schema
+// ============================================================================
+
+/**
+ * Leaderboard entry stored in cache
+ * Supports both numeric scores and Rank objects
+ */
+export const CachedLeaderboardEntrySchema = z.object({
+  playerId: z.number().int().positive(),
+  playerName: z.string(),
+  score: z.union([z.number(), RankSchema]),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+  rank: z.number().int().positive(),
+});
+
+export type CachedLeaderboardEntry = z.infer<typeof CachedLeaderboardEntrySchema>;
+
+/**
+ * Cached leaderboard data stored in S3
+ *
+ * Schema includes:
+ * - version: For future format changes (currently v1)
+ * - competitionId: Which competition this leaderboard belongs to
+ * - calculatedAt: When this leaderboard was computed (ISO 8601 timestamp)
+ * - entries: The leaderboard entries with ranks
+ *
+ * S3 Storage Strategy:
+ * - Current leaderboard: leaderboards/competition-{id}/current.json
+ * - Historical snapshots: leaderboards/competition-{id}/snapshots/YYYY-MM-DD.json
+ *
+ * This allows:
+ * - Fast access to current leaderboard
+ * - Historical analysis of leaderboard changes over time
+ * - Version migration if we need to change the format later
+ */
+export const CachedLeaderboardSchema = z.object({
+  version: z.literal("v1"),
+  competitionId: z.number().int().positive(),
+  calculatedAt: z.string().datetime(), // ISO 8601 timestamp
+  entries: z.array(CachedLeaderboardEntrySchema),
+});
+
+export type CachedLeaderboard = z.infer<typeof CachedLeaderboardSchema>;

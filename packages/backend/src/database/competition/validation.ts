@@ -2,13 +2,14 @@ import { type PrismaClient } from "../../../generated/prisma/client/index.js";
 import { CompetitionCriteriaSchema, CompetitionVisibilitySchema } from "@scout-for-lol/data";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { SeasonIdSchema, hasSeasonEnded } from "../../utils/seasons.js";
 
 // ============================================================================
 // Constants
 // ============================================================================
 
 const MAX_COMPETITION_DURATION_DAYS = 90;
-const MAX_ACTIVE_COMPETITIONS_PER_SERVER = 5;
+const MAX_ACTIVE_COMPETITIONS_PER_SERVER = 2;
 const MAX_ACTIVE_COMPETITIONS_PER_OWNER = 1;
 
 // ============================================================================
@@ -73,11 +74,24 @@ const FixedDateCompetitionSchema = z
 /**
  * Season-based competition schema
  * No date constraints - follows League's season timing
+ * Uses predefined season IDs only
+ * Validates that the season hasn't ended yet
  */
-const SeasonBasedCompetitionSchema = z.object({
-  type: z.literal("SEASON"),
-  seasonId: z.string().min(1),
-});
+const SeasonBasedCompetitionSchema = z
+  .object({
+    type: z.literal("SEASON"),
+    seasonId: SeasonIdSchema,
+  })
+  .refine(
+    (data) => {
+      const ended = hasSeasonEnded(data.seasonId);
+      return ended !== true; // Allow if not ended or season not found (will fail later)
+    },
+    {
+      message: "Cannot create competition for a season that has already ended",
+      path: ["seasonId"],
+    },
+  );
 
 /**
  * Discriminated union for competition dates

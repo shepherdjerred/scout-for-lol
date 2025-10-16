@@ -61,7 +61,6 @@ function createMockGetObjectResponse(content: string): GetObjectCommandOutput {
   };
 
   return {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, no-restricted-syntax
     Body: mockBody as any,
     $metadata: {},
   };

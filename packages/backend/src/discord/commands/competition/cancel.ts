@@ -111,14 +111,24 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
 
     const textChannel = asTextChannel(channel);
 
-    if (textChannel) {
-      await textChannel.send(`🚫 Competition **${competition.title}** has been cancelled by <@${userId}>`);
-      console.log(`[Competition Cancel] Posted notification to channel ${competition.channelId}`);
-    } else {
+    if (!textChannel) {
       console.warn(`[Competition Cancel] Channel ${competition.channelId} is not text-based`);
+      return;
     }
+
+    await textChannel.send(`🚫 Competition **${competition.title}** has been cancelled by <@${userId}>`);
+    console.log(`[Competition Cancel] Posted notification to channel ${competition.channelId}`);
   } catch (error) {
     // Non-critical error - log but don't fail the command
-    console.error(`[Competition Cancel] Error posting to channel ${competition.channelId}:`, getErrorMessage(error));
+    // Permission errors are expected and shouldn't be alarming
+    const errorMessage = getErrorMessage(error);
+    if (errorMessage.includes("permission") || errorMessage.includes("50013") || errorMessage.includes("50001")) {
+      console.warn(
+        `[Competition Cancel] Cannot post to channel ${competition.channelId} - missing permissions. ` +
+          "Please ensure the bot has 'Send Messages' and 'View Channel' permissions.",
+      );
+    } else {
+      console.error(`[Competition Cancel] Error posting to channel ${competition.channelId}:`, errorMessage);
+    }
   }
 }

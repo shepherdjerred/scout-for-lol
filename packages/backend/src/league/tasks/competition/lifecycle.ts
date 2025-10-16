@@ -3,7 +3,7 @@ import { parseCompetition } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { createSnapshotsForAllParticipants } from "../../competition/snapshots.js";
 import { calculateLeaderboard, type RankedLeaderboardEntry } from "../../competition/leaderboard.js";
-import { send as sendChannelMessage } from "../../discord/channel.js";
+import { send as sendChannelMessage, ChannelSendError } from "../../discord/channel.js";
 import type { PrismaClient } from "../../../../generated/prisma/client/index.js";
 
 // ============================================================================
@@ -27,12 +27,19 @@ Players can still join with:
 Good luck! 🍀`;
 
   try {
-    await sendChannelMessage(message, competition.channelId);
+    await sendChannelMessage(message, competition.channelId, competition.serverId);
     console.log(`[CompetitionLifecycle] ✅ Posted start notification for competition ${competition.id.toString()}`);
   } catch (error) {
-    console.warn(
-      `[CompetitionLifecycle] ⚠️  Failed to post start notification for competition ${competition.id.toString()}: ${String(error)}`,
-    );
+    // Handle permission errors gracefully - they're expected in some cases
+    if (error instanceof ChannelSendError && error.isPermissionError) {
+      console.warn(
+        `[CompetitionLifecycle] ⚠️  Cannot post start notification for competition ${competition.id.toString()} - missing permissions in channel ${competition.channelId}. Server owner has been notified.`,
+      );
+    } else {
+      console.warn(
+        `[CompetitionLifecycle] ⚠️  Failed to post start notification for competition ${competition.id.toString()}: ${String(error)}`,
+      );
+    }
     // Don't throw - notification failure shouldn't stop the lifecycle transition
   }
 }
@@ -86,12 +93,19 @@ async function postFinalLeaderboard(
   message += `\n\nThank you for participating! 🎉`;
 
   try {
-    await sendChannelMessage(message, competition.channelId);
+    await sendChannelMessage(message, competition.channelId, competition.serverId);
     console.log(`[CompetitionLifecycle] ✅ Posted final leaderboard for competition ${competition.id.toString()}`);
   } catch (error) {
-    console.warn(
-      `[CompetitionLifecycle] ⚠️  Failed to post final leaderboard for competition ${competition.id.toString()}: ${String(error)}`,
-    );
+    // Handle permission errors gracefully - they're expected in some cases
+    if (error instanceof ChannelSendError && error.isPermissionError) {
+      console.warn(
+        `[CompetitionLifecycle] ⚠️  Cannot post final leaderboard for competition ${competition.id.toString()} - missing permissions in channel ${competition.channelId}. Server owner has been notified.`,
+      );
+    } else {
+      console.warn(
+        `[CompetitionLifecycle] ⚠️  Failed to post final leaderboard for competition ${competition.id.toString()}: ${String(error)}`,
+      );
+    }
     // Don't throw - notification failure shouldn't stop the lifecycle transition
   }
 }

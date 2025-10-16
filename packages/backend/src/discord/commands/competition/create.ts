@@ -9,6 +9,7 @@ import { recordCreation } from "../../../database/competition/rate-limit.js";
 import { validateOwnerLimit, validateServerLimit } from "../../../database/competition/validation.js";
 import { getErrorMessage } from "../../../utils/errors.js";
 import { getChampionId } from "../../../utils/champion.js";
+import { SeasonIdSchema } from "../../../utils/seasons.js";
 
 // ============================================================================
 // Input Parsing Schema - Discriminated Unions
@@ -51,14 +52,25 @@ const FixedDatesArgsSchema = z
       message: "Invalid date format. Use ISO 8601 format (YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, or with timezone Z/+HH:mm)",
       path: ["startDate"],
     },
+  )
+  .refine(
+    (data) => {
+      const start = new Date(data.startDate);
+      const end = new Date(data.endDate);
+      return start < end;
+    },
+    {
+      message: "Start date must be before end date",
+      path: ["startDate"],
+    },
   );
 
 /**
- * Season variant with length limit
+ * Season variant using predefined season IDs
  */
 const SeasonArgsSchema = z.object({
   dateType: z.literal("SEASON"),
-  season: z.string().min(1).max(100),
+  season: SeasonIdSchema,
 });
 
 /**
@@ -284,12 +296,12 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
         endDate: new Date(args.endDate),
       };
     } else {
-      if (!args.season) {
+      if (!args["season"]) {
         throw new Error("season required for SEASON (validation error)");
       }
       dates = {
         type: "SEASON" as const,
-        seasonId: args.season,
+        seasonId: args["season"],
       };
     }
 
@@ -338,7 +350,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     // Check owner limit (1 active competition per owner)
     await validateOwnerLimit(prisma, serverId, userId);
 
-    // Check server limit (5 active competitions per server)
+    // Check server limit (2 active competitions per server)
     await validateServerLimit(prisma, serverId);
 
     console.log(`✅ Business validation passed`);

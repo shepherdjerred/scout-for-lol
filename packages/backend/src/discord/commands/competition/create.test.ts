@@ -24,6 +24,27 @@ describe("Date validation patterns", () => {
     expect(isNaN(date3.getTime())).toBe(false);
   });
 
+  test("start date must be before end date", () => {
+    const startDate = new Date("2025-01-01");
+    const endDate = new Date("2025-01-31");
+
+    expect(startDate < endDate).toBe(true);
+  });
+
+  test("start date after end date should be invalid", () => {
+    const startDate = new Date("2025-01-31");
+    const endDate = new Date("2025-01-01");
+
+    expect(startDate < endDate).toBe(false);
+  });
+
+  test("start date equal to end date should be invalid", () => {
+    const startDate = new Date("2025-01-15T12:00:00Z");
+    const endDate = new Date("2025-01-15T12:00:00Z");
+
+    expect(startDate < endDate).toBe(false);
+  });
+
   test("valid ISO date strings with timezone should parse correctly", () => {
     const dateFormats = [
       "2025-01-15T09:00:00Z", // UTC

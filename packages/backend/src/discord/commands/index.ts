@@ -4,13 +4,22 @@ import { executeUnsubscribe } from "./unsubscribe";
 import { executeListSubscriptions } from "./list-subscriptions";
 import {
   executeCompetitionCreate,
+  executeCompetitionEdit,
   executeCompetitionCancel,
   executeGrantPermission,
   executeCompetitionJoin,
   executeCompetitionInvite,
   executeCompetitionLeave,
   executeCompetitionView,
+  executeCompetitionList,
 } from "./competition/index.js";
+import {
+  executePlayerEditAlias,
+  executeAccountRemove,
+  executePlayerMerge,
+  executePlayerDelete,
+  executeAccountTransfer,
+} from "./admin/index.js";
 import { getState } from "../../league/model/state";
 import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
 import { searchChampions } from "../../utils/champion.js";
@@ -88,6 +97,8 @@ export function handleCommands(client: Client) {
 
           if (subcommandName === "create") {
             await executeCompetitionCreate(interaction);
+          } else if (subcommandName === "edit") {
+            await executeCompetitionEdit(interaction);
           } else if (subcommandName === "cancel") {
             await executeCompetitionCancel(interaction);
           } else if (subcommandName === "grant-permission") {
@@ -100,10 +111,33 @@ export function handleCommands(client: Client) {
             await executeCompetitionLeave(interaction);
           } else if (subcommandName === "view") {
             await executeCompetitionView(interaction);
+          } else if (subcommandName === "list") {
+            await executeCompetitionList(interaction);
           } else {
             console.warn(`⚠️  Unknown competition subcommand: ${subcommandName}`);
             await interaction.reply({
               content: "Unknown competition subcommand",
+              flags: MessageFlags.Ephemeral,
+            });
+          }
+        } else if (commandName === "admin") {
+          const subcommandName = interaction.options.getSubcommand();
+          console.log(`🔧 Executing admin ${subcommandName} command`);
+
+          if (subcommandName === "player-edit-alias") {
+            await executePlayerEditAlias(interaction);
+          } else if (subcommandName === "account-remove") {
+            await executeAccountRemove(interaction);
+          } else if (subcommandName === "account-transfer") {
+            await executeAccountTransfer(interaction);
+          } else if (subcommandName === "player-merge") {
+            await executePlayerMerge(interaction);
+          } else if (subcommandName === "player-delete") {
+            await executePlayerDelete(interaction);
+          } else {
+            console.warn(`⚠️  Unknown admin subcommand: ${subcommandName}`);
+            await interaction.reply({
+              content: "Unknown admin subcommand",
               flags: MessageFlags.Ephemeral,
             });
           }

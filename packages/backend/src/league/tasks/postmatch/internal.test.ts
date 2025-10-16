@@ -35,6 +35,7 @@ test("postmatch", async () => {
                   ),
                   region: "AMERICA_NORTH",
                 },
+                lastSeenInGame: null,
               },
               discordAccount: {
                 id: DiscordAccountIdSchema.parse("123456789012345678"),

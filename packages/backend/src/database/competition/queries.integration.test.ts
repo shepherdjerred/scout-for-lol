@@ -86,7 +86,7 @@ describe("createCompetition", () => {
       maxParticipants: 25,
       dates: {
         type: "SEASON",
-        seasonId: "SPLIT_1_2025",
+        seasonId: "2025_SEASON_3_ACT_1",
       },
       criteria: {
         type: "HIGHEST_RANK",
@@ -96,7 +96,7 @@ describe("createCompetition", () => {
 
     const competition = await createCompetition(prisma, input);
 
-    expect(competition.seasonId).toBe("SPLIT_1_2025");
+    expect(competition.seasonId).toBe("2025_SEASON_3_ACT_1");
     expect(competition.startDate).toBeNull();
     expect(competition.endDate).toBeNull();
   });
@@ -112,7 +112,7 @@ describe("createCompetition", () => {
       maxParticipants: 50,
       dates: {
         type: "SEASON",
-        seasonId: "SPLIT_1_2025",
+        seasonId: "2025_SEASON_3_ACT_1",
       },
       criteria: {
         type: "MOST_WINS_CHAMPION",
@@ -143,7 +143,7 @@ describe("getCompetitionById", () => {
       description: "Test",
       visibility: "OPEN",
       maxParticipants: 50,
-      dates: { type: "SEASON", seasonId: "S1" },
+      dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     };
 
@@ -175,7 +175,7 @@ describe("getCompetitionsByServer", () => {
         description: "Test",
         visibility: "OPEN",
         maxParticipants: 50,
-        dates: { type: "SEASON", seasonId: `S${i.toString()}` },
+        dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
         criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
       });
     }
@@ -237,7 +237,7 @@ describe("getCompetitionsByServer", () => {
       description: "Test",
       visibility: "OPEN",
       maxParticipants: 50,
-      dates: { type: "SEASON", seasonId: "S1" },
+      dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
@@ -249,7 +249,7 @@ describe("getCompetitionsByServer", () => {
       description: "Test",
       visibility: "OPEN",
       maxParticipants: 50,
-      dates: { type: "SEASON", seasonId: "S2" },
+      dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
@@ -354,7 +354,7 @@ describe("cancelCompetition", () => {
       description: "Test",
       visibility: "OPEN",
       maxParticipants: 50,
-      dates: { type: "SEASON", seasonId: "S1" },
+      dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 

@@ -366,7 +366,7 @@ describe("generateCompetitionDetailsEmbed", () => {
     const competition = createTestCompetition({
       startDate: null,
       endDate: null,
-      seasonId: "SEASON_2025_SPLIT_1",
+      seasonId: "2025_SEASON_3_ACT_1",
     });
 
     const embed = generateCompetitionDetailsEmbed(competition);
@@ -374,7 +374,7 @@ describe("generateCompetitionDetailsEmbed", () => {
 
     const durationField = embedData.fields?.find((f) => f.name === "📅 Duration");
     expect(durationField?.value).toContain("Season-based");
-    expect(durationField?.value).toContain("SEASON_2025_SPLIT_1");
+    expect(durationField?.value).toContain("2025_SEASON_3_ACT_1");
   });
 
   it("should include criteria description", () => {

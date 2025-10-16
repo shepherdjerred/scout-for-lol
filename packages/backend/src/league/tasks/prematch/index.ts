@@ -12,8 +12,9 @@ import { send } from "../../discord/channel";
 import { getRanks } from "../../model/rank";
 import { getState, setState } from "../../model/state";
 import { getCurrentGame } from "../../api/index";
-import { filter, groupBy, map, mapValues, pipe, uniqueBy, values, zip } from "remeda";
-import { getAccounts, getChannelsSubscribedToPlayers } from "../../../database/index";
+import { filter, groupBy, map, mapValues, pipe, values, zip } from "remeda";
+import { getAccounts, getChannelsSubscribedToPlayers, updateLastSeenInGame } from "../../../database/index";
+import { shouldCheckPlayer } from "../../../utils/polling-intervals";
 
 export async function checkPreMatch() {
   console.log("=== PRE-MATCH CHECK START ===");
@@ -23,11 +24,18 @@ export async function checkPreMatch() {
   const players = await getAccounts();
   console.log(`📊 Found ${players.length.toString()} total players to check`);
 
+  console.log("⏱️  Filtering players based on dynamic polling intervals");
+  const currentTime = new Date();
+  const playersToCheck = filter(players, (player) => shouldCheckPlayer(player.league.lastSeenInGame, currentTime));
+  console.log(
+    `📊 ${playersToCheck.length.toString()} / ${players.length.toString()} players should be checked this cycle`,
+  );
+
   console.log("🎮 Filtering out players already in tracked games");
   const currentState = getState();
   console.log(`📋 Current state has ${currentState.gamesStarted.length.toString()} games in progress`);
 
-  const playersNotInGame = getPlayersNotInGame(players, currentState);
+  const playersNotInGame = getPlayersNotInGame(playersToCheck, currentState);
   console.log(`🔍 ${playersNotInGame.length.toString()} players not in tracked games`);
 
   if (playersNotInGame.length === 0) {
@@ -60,6 +68,11 @@ export async function checkPreMatch() {
     return;
   }
 
+  // Update lastSeenInGame for all players we found in-game
+  console.log("📝 Updating lastSeenInGame timestamps for players found in-game");
+  const puuidsInGame = playersInGame.map(([player]) => player.league.leagueAccount.puuid);
+  await updateLastSeenInGame(puuidsInGame, currentTime);
+
   console.log("🆕 Checking for new games not already tracked");
   const newGames = filter(playersInGame, ([player, game]) => {
     const isNewGame = !pipe(
@@ -87,6 +100,15 @@ export async function checkPreMatch() {
   console.log("🎮 Grouping players by game and processing each game");
   const gameGroups = groupBy(newGames, ([, game]) => game.gameId);
   console.log(`📊 Processing ${Object.keys(gameGroups).length.toString()} unique games`);
+
+  // Log detailed info about each game group
+  for (const [gameId, games] of Object.entries(gameGroups)) {
+    const playerNames = games.map(([player]) => player.alias).join(", ");
+    const queueId = games[0]?.[1]?.gameQueueConfigId;
+    console.log(
+      `📊 Game ${gameId}: ${games.length.toString()} players (${playerNames}), Queue: ${queueId?.toString() ?? "unknown"}`,
+    );
+  }
 
   const promises = pipe(
     gameGroups,
@@ -148,19 +170,24 @@ export async function checkPreMatch() {
       console.log(`📋 Looking up subscriptions for ${puuids.length.toString()} PUUIDs`);
 
       const servers = await getChannelsSubscribedToPlayers(puuids);
-      console.log(`📺 Found ${servers.length.toString()} subscribed channels`);
+      console.log(`📺 Found ${servers.length.toString()} unique subscribed channels`);
 
-      // Deduplicate by channel (string ID) using Remeda uniqueBy
-      const uniqueChannels = uniqueBy(servers, (server) => server.channel);
-      console.log(`📺 After deduplication: ${uniqueChannels.length.toString()} unique channels`);
-
-      if (uniqueChannels.length === 0) {
+      if (servers.length === 0) {
         console.log(`⚠️  No channels to send message to for game ${gameId}`);
       } else {
-        console.log(`📤 Sending messages to ${uniqueChannels.length.toString()} channels for game ${gameId}`);
-        const promises = uniqueChannels.map((server) => {
-          console.log(`📤 Sending to channel: ${server.channel}`);
-          return send(message, server.channel);
+        console.log(`📤 Sending messages to ${servers.length.toString()} channels for game ${gameId}`);
+        const promises = servers.map(async (server) => {
+          console.log(`📤 Sending to channel: ${server.channel} in server: ${server.serverId}`);
+          try {
+            await send(message, server.channel, server.serverId);
+            console.log(`✅ Successfully sent message to channel: ${server.channel}`);
+          } catch (error) {
+            // Log error but don't fail the whole operation
+            console.error(
+              `⚠️  Failed to send message to channel ${server.channel} for game ${gameId}:`,
+              error instanceof Error ? error.message : String(error),
+            );
+          }
         });
         void Promise.all(promises);
       }

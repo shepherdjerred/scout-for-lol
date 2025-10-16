@@ -47,7 +47,11 @@ model Account {
   // TODO: store riot ID for the sake of easier understanding
   puuid    String
   region   String
-  playerId Player @relation(fields: [id], references: [id])
+  playerId Int
+  player   Player @relation(fields: [playerId], references: [id])
+
+  // Activity tracking for dynamic polling
+  lastSeenInGame DateTime? // When we last detected this account in an active game
 
   // metadata
   serverId         String
@@ -134,4 +138,23 @@ model ServerPermission {
   grantedAt     DateTime
 
   @@unique([serverId, discordUserId, permission])
+}
+
+model GuildPermissionError {
+  id                    Int      @id @default(autoincrement())
+  serverId              String
+  channelId             String
+  errorType             String // Type of permission error
+  errorReason           String? // Detailed reason
+  firstOccurrence       DateTime // When this error first occurred
+  lastOccurrence        DateTime // Most recent occurrence
+  consecutiveErrorCount Int      @default(1) // Number of consecutive errors
+  lastSuccessfulSend    DateTime? // Last time a message was successfully sent to this server
+  ownerNotified         Boolean  @default(false) // Whether owner was notified about abandonment
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([serverId, channelId])
+  @@index([serverId, consecutiveErrorCount])
+  @@index([lastOccurrence])
 }

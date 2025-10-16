@@ -17,12 +17,26 @@ const MessageContentSchema = z.object({
 // Mock the Discord send function BEFORE importing daily-update
 let sentMessages: { channelId: string; content: string | Record<string, unknown> }[] = [];
 
+// Custom error class for channel send failures (for type checking)
+class ChannelSendError extends Error {
+  constructor(
+    message: string,
+    public readonly channelId: string,
+    public readonly isPermissionError: boolean,
+    public readonly originalError?: unknown,
+  ) {
+    super(message);
+    this.name = "ChannelSendError";
+  }
+}
+
 // Mock the channel send function
 void mock.module("../../discord/channel.js", () => ({
   send: (message: string | Record<string, unknown>, channelId: string) => {
     sentMessages.push({ channelId, content: message });
     return Promise.resolve({ id: "mock-message-id" });
   },
+  ChannelSendError,
 }));
 
 // Create a test database

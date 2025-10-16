@@ -39,6 +39,7 @@ describe("toArenaMatch with real arena JSON", () => {
               puuid: LeaguePuuidSchema.parse(tracked.puuid),
               region: "PBE",
             },
+            lastSeenInGame: null,
           },
           discordAccount: null,
         },

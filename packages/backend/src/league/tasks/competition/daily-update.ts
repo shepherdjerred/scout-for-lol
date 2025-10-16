@@ -1,9 +1,10 @@
-import { getCompetitionStatus } from "@scout-for-lol/data";
+import { getCompetitionStatus, type CachedLeaderboard } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { getActiveCompetitions } from "../../../database/competition/queries.js";
 import { calculateLeaderboard } from "../../competition/leaderboard.js";
 import { generateLeaderboardEmbed } from "../../../discord/embeds/competition.js";
-import { send as sendChannelMessage } from "../../discord/channel.js";
+import { send as sendChannelMessage, ChannelSendError } from "../../discord/channel.js";
+import { saveCachedLeaderboard } from "../../../storage/s3-leaderboard.js";
 
 // ============================================================================
 // Daily Leaderboard Update
@@ -57,6 +58,25 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
         // Calculate current leaderboard
         const leaderboard = await calculateLeaderboard(prisma, competition);
 
+        // Cache leaderboard to S3 (both current and historical snapshot)
+        const cachedLeaderboard: CachedLeaderboard = {
+          version: "v1",
+          competitionId: competition.id,
+          calculatedAt: new Date().toISOString(),
+          entries: leaderboard,
+        };
+
+        try {
+          await saveCachedLeaderboard(cachedLeaderboard);
+          console.log(`[DailyLeaderboard] ✅ Cached leaderboard to S3 for competition ${competition.id.toString()}`);
+        } catch (error) {
+          console.error(
+            `[DailyLeaderboard] ⚠️  Failed to cache leaderboard to S3 for competition ${competition.id.toString()}:`,
+            error,
+          );
+          // Continue - caching failure shouldn't stop the Discord update
+        }
+
         // Generate embed for the leaderboard
         const embed = generateLeaderboardEmbed(competition, leaderboard);
 
@@ -67,6 +87,7 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
             embeds: [embed],
           },
           competition.channelId,
+          competition.serverId,
         );
 
         console.log(`[DailyLeaderboard] ✅ Updated competition ${competition.id.toString()}`);
@@ -77,7 +98,14 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
         // But we're posting to different channels, so 1 second is conservative
         await new Promise((resolve) => setTimeout(resolve, 1000));
       } catch (error) {
-        console.error(`[DailyLeaderboard] ❌ Error updating competition ${competition.id.toString()}:`, error);
+        // Handle permission errors gracefully - they're expected in some cases
+        if (error instanceof ChannelSendError && error.isPermissionError) {
+          console.warn(
+            `[DailyLeaderboard] ⚠️  Cannot update competition ${competition.id.toString()} - missing permissions in channel ${competition.channelId}. Server owner has been notified.`,
+          );
+        } else {
+          console.error(`[DailyLeaderboard] ❌ Error updating competition ${competition.id.toString()}:`, error);
+        }
         failureCount++;
         // Continue with other competitions - don't let one failure stop all updates
       }

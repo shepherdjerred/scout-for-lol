@@ -22,6 +22,7 @@ function getMatch(): CompletedMatch {
               ),
               region: "AMERICA_NORTH",
             },
+            lastSeenInGame: null,
           },
           discordAccount: {
             id: DiscordAccountIdSchema.parse("12345678901234567"),
@@ -466,6 +467,7 @@ test("multiple highlighted players test", async () => {
           ),
           region: "AMERICA_NORTH",
         },
+        lastSeenInGame: null,
       },
       discordAccount: {
         id: DiscordAccountIdSchema.parse("98765432109876543"),

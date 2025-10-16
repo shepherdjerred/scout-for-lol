@@ -2,7 +2,7 @@ import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { z } from "zod";
 import { api } from "../../api/api.ts";
 import { AttachmentBuilder, EmbedBuilder, Message, MessageCreateOptions, MessagePayload } from "discord.js";
-import { matchToImage, arenaMatchToImage } from "@scout-for-lol/report";
+import { matchToImage, arenaMatchToImage, matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
 import {
   ApplicationState,
   CompletedMatch,
@@ -25,7 +25,7 @@ import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
 import { mapRegionToEnum } from "../../model/region.ts";
 import { participantToChampion } from "../../model/champion.ts";
 import { toArenaMatch } from "../../model/match.ts";
-import { saveMatchToS3 } from "../../../storage/s3.ts";
+import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "../../../storage/s3.ts";
 import { generateMatchReview } from "../../review/generator.ts";
 
 export async function checkMatch(game: LoadingScreenState) {
@@ -125,9 +125,13 @@ export async function saveMatch(match: MatchV5DTOs.MatchDto): Promise<void> {
   }
 }
 
-async function getImage(match: CompletedMatch | ArenaMatch): Promise<[AttachmentBuilder, EmbedBuilder]> {
-  console.log(`[getImage] 🖼️  Starting image generation for match`);
+async function getImage(
+  match: CompletedMatch | ArenaMatch,
+  matchId: string,
+): Promise<[AttachmentBuilder, EmbedBuilder]> {
+  console.log(`[getImage] 🖼️  Starting image generation for match: ${matchId}`);
   console.log(`[getImage] 📊 Match details:`, {
+    matchId,
     queueType: match.queueType,
     playersCount: match.players.length,
     durationInSeconds: match.durationInSeconds,
@@ -135,12 +139,36 @@ async function getImage(match: CompletedMatch | ArenaMatch): Promise<[Attachment
 
   try {
     const imageStartTime = Date.now();
-    const image = match.queueType === "arena" ? await arenaMatchToImage(match) : await matchToImage(match);
+    const isArena = match.queueType === "arena";
+
+    // Generate SVG once, then convert to PNG (more efficient than generating twice)
+    const svg = isArena ? await arenaMatchToSvg(match) : await matchToSvg(match);
+    const image = svgToPng(svg);
     const imageTime = Date.now() - imageStartTime;
 
     console.log(
-      `[getImage] ✅ Image generated successfully in ${imageTime.toString()}ms, size: ${image.length.toString()} bytes`,
+      `[getImage] ✅ Image generated successfully in ${imageTime.toString()}ms, PNG size: ${image.length.toString()} bytes, SVG size: ${svg.length.toString()} chars`,
     );
+
+    // Save both PNG and SVG to S3
+    try {
+      const queueTypeForStorage = isArena ? "arena" : (match.queueType ?? "unknown");
+
+      // Save PNG
+      const pngUrl = await saveImageToS3(matchId, image, queueTypeForStorage);
+      if (pngUrl) {
+        console.log(`[getImage] 💾 PNG saved to S3: ${pngUrl}`);
+      }
+
+      // Save SVG
+      const svgUrl = await saveSvgToS3(matchId, svg, queueTypeForStorage);
+      if (svgUrl) {
+        console.log(`[getImage] 💾 SVG saved to S3: ${svgUrl}`);
+      }
+    } catch (error) {
+      // Log the error but don't fail the entire operation
+      console.error(`[getImage] ⚠️  Failed to save images to S3, continuing:`, error);
+    }
 
     const attachment = new AttachmentBuilder(image).setName("match.png");
     if (!attachment.name) {
@@ -192,11 +220,20 @@ async function createMatchObj(
   if (queueType === "arena") {
     // Build ArenaMatch and short-circuit traditional flow
     // Process ALL tracked players in this arena match
+    console.log(
+      `[createMatchObj] 🎯 ARENA: state has ${state.players.length.toString()} tracked player(s): ${state.players.map((p) => p.player.alias).join(", ")}`,
+    );
+
     if (state.players.length === 0) {
       throw new Error("No players found in game state for arena match");
     }
     const players = await Promise.all(state.players.map((playerState) => getPlayerFn(playerState.player)));
     const arena = await toArenaMatch(players, match);
+
+    console.log(
+      `[createMatchObj] ✅ ARENA: created match with ${arena.players.length.toString()} player(s): ${arena.players.map((p) => p.champion.riotIdGameName).join(", ")}`,
+    );
+
     return arena;
   }
   const teams = getTeams(match.info.participants);
@@ -408,7 +445,7 @@ export async function checkPostMatchInternal(
         console.log(`[checkPostMatchInternal] Successfully created match object for: ${matchDto.metadata.matchId}`);
 
         console.log(`[checkPostMatchInternal] Generating image for: ${matchDto.metadata.matchId}`);
-        const [attachment, embed] = await getImage(matchObj);
+        const [attachment, embed] = await getImage(matchObj, matchDto.metadata.matchId);
         console.log(`[checkPostMatchInternal] Successfully generated image for: ${matchDto.metadata.matchId}`);
 
         console.log(`[checkPostMatchInternal] Generating review for: ${matchDto.metadata.matchId}`);

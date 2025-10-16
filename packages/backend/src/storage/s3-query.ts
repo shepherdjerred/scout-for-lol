@@ -56,7 +56,6 @@ async function getMatchFromS3(client: S3Client, bucket: string, key: string): Pr
 
     // Read the stream to a string
     const bodyString = await response.Body.transformToString();
-    // eslint-disable-next-line no-restricted-syntax -- I'm okay with this since we're loading a saved API response
     const match = JSON.parse(bodyString) as MatchV5DTOs.MatchDto;
 
     return match;

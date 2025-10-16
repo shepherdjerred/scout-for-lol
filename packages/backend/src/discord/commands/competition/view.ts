@@ -6,8 +6,8 @@ import { prisma } from "../../../database/index.js";
 import { getCompetitionById } from "../../../database/competition/queries.js";
 import { getParticipants } from "../../../database/competition/participants.js";
 import { getErrorMessage } from "../../../utils/errors.js";
-import { calculateLeaderboard, type RankedLeaderboardEntry } from "../../../league/competition/leaderboard.js";
 import { formatScore } from "../../embeds/competition.js";
+import { loadCachedLeaderboard } from "../../../storage/s3-leaderboard.js";
 
 // Schema for participant with player relation (when includePlayer=true)
 const ParticipantWithPlayerSchema = z.object({
@@ -224,7 +224,7 @@ function addParticipantList(embed: EmbedBuilder, participants: Awaited<ReturnTyp
 
 /**
  * Add leaderboard standings to embed
- * Calculates actual leaderboard and displays top entries
+ * Loads from S3 cache if available, otherwise shows message that leaderboard is not yet available
  */
 async function addLeaderboard(
   embed: EmbedBuilder,
@@ -239,19 +239,32 @@ async function addLeaderboard(
 
   embed.addFields({ name: title, value: "━━━━━━━━━━━━━━━━━━━━━", inline: false });
 
-  // Calculate leaderboard
-  let leaderboard: RankedLeaderboardEntry[];
-  try {
-    leaderboard = await calculateLeaderboard(prisma, competition);
-  } catch (error) {
-    console.error(`[Competition View] Error calculating leaderboard:`, error);
+  // Try to load from cache
+  console.log(`[Competition View] Attempting to load cached leaderboard for competition ${competition.id.toString()}`);
+  const cached = await loadCachedLeaderboard(competition.id);
+
+  if (!cached) {
+    console.log(`[Competition View] No cached leaderboard found for competition ${competition.id.toString()}`);
     embed.addFields({
       name: "\u200B",
-      value: `Unable to calculate leaderboard: ${getErrorMessage(error)}`,
+      value:
+        "Leaderboard not yet available. The leaderboard is updated daily at midnight UTC. Check back after the next update!",
       inline: false,
     });
     return;
   }
+
+  console.log(`[Competition View] Using cached leaderboard from ${cached.calculatedAt}`);
+
+  // Map cached entries to RankedLeaderboardEntry type to ensure type compatibility
+  const leaderboard = cached.entries.map((entry) => ({
+    playerId: entry.playerId,
+    playerName: entry.playerName,
+    score: entry.score,
+    rank: entry.rank,
+    ...(entry.metadata !== undefined && { metadata: entry.metadata }),
+  }));
+  const cachedAt = new Date(cached.calculatedAt);
 
   // Display leaderboard entries
   if (leaderboard.length === 0) {
@@ -287,6 +300,35 @@ async function addLeaderboard(
       inline: false,
     });
   }
+
+  // Add cache timestamp
+  const now = new Date();
+  const ageMs = now.getTime() - cachedAt.getTime();
+  const ageHours = Math.floor(ageMs / (1000 * 60 * 60));
+  const ageMinutes = Math.floor((ageMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  let ageText = "";
+  if (ageHours > 0) {
+    ageText = `${ageHours.toString()} hour${ageHours === 1 ? "" : "s"} ago`;
+  } else if (ageMinutes > 0) {
+    ageText = `${ageMinutes.toString()} minute${ageMinutes === 1 ? "" : "s"} ago`;
+  } else {
+    ageText = "just now";
+  }
+
+  const dateStr = cachedAt.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  embed.addFields({
+    name: "\u200B",
+    value: `_Last updated: ${dateStr} (${ageText})_`,
+    inline: false,
+  });
 }
 
 /**

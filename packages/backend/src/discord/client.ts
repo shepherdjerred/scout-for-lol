@@ -68,4 +68,5 @@ client.on("ready", (client) => {
   console.log("⚡ Discord command handler initialized");
 });
 
+export { client };
 export default client;

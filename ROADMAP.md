@@ -13,11 +13,11 @@ There seems to be a fair bit of coupling. Examples:
 
 ## Misc
 
-- [ ] Limit number of competitions per server
-- [ ] Allow passing in champion id as name
+- [x] Limit number of competitions per server
+- [x] Allow passing in champion id as name
 - [x] Accept datetime for competition
-- [ ] List competitions command
-- [ ] Edit competition command
+- [x] List competitions command
+- [x] Edit competition command
 - [x] Strict TS config for Dagger
 - [x] Fix KDA ratio
 - [x] Fix image width
@@ -27,15 +27,16 @@ There seems to be a fair bit of coupling. Examples:
 - [x] Better duo/flex squeue support
 - [x] Remove use of deprecated flags (--unstable)
 - [ ] Allow a user to be in multiple games at once (e.g. Arena games)
-- [ ] Allow Players to have multiple Accounts, e.g. maybe do a lookup on Account based on alias and append an Account?
+  - I think this is a limit of the Riot API
+- [x] Allow Players to have multiple Accounts, e.g. maybe do a lookup on Account based on alias and append an Account?
 - [x] CI doesn't seem to be running tests, linter
 - [ ] Setup CI to deploy site
 
 ## Bugs
 
-- [ ] Handle error gracefully when the bot doesn't have permission to post to a
+- [x] Handle error gracefully when the bot doesn't have permission to post to a
       channel
-- [ ] Duplicate messages when a user is tracked in multiple servers
+- [x] Duplicate messages when a user is tracked in multiple servers
 - [x] Fix summoner spell icons
 
 ## MVP
@@ -44,20 +45,20 @@ There seems to be a fair bit of coupling. Examples:
   - [x] Setup Prisma
 - [x] Add support for player regions
 - [x] Frontend/marketing site
-- [ ] Add commands for customizing player configs and database state
-- [ ] Track players that aren't subscribed to by any server & prune from
+- [x] Add commands for customizing player configs and database state
+- [x] Track players that aren't subscribed to by any server & prune from
       database
 - [x] Store match objects in S3
-- [ ] Store generated images in S3
+- [x] Store generated images in S3
 - [x] Use correct username in generated images
 - [x] Support unranked queue types
   - Currently it will show LP stats/promos, etc.
 
 ## Abuse Protection
 
-- [ ] Detect users who haven't played in a while and lower how often they are
+- [x] Detect users who haven't played in a while and lower how often they are
       refreshed
-- [ ] Prune servers where the bot no longer has permissions/where the bot has been
+- [x] Prune servers where the bot no longer has permissions/where the bot has been
       removed
 
 ## Post-match

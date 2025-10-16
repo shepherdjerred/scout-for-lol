@@ -4,7 +4,11 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { createCompetition, getCompetitionById } from "../../../database/competition/queries.js";
+import {
+  createCompetition,
+  getCompetitionById,
+  type CreateCompetitionInput,
+} from "../../../database/competition/queries.js";
 import { clearAllRateLimits } from "../../../database/competition/rate-limit.js";
 import { validateOwnerLimit, validateServerLimit } from "../../../database/competition/validation.js";
 import { ErrorSchema } from "../../../utils/errors.js";
@@ -82,7 +86,7 @@ describe("Competition creation - MOST_GAMES_PLAYED", () => {
       maxParticipants: 50,
       dates: {
         type: "SEASON",
-        seasonId: "SPLIT_1_2025",
+        seasonId: "2025_SEASON_3_ACT_1",
       },
       criteria: {
         type: "MOST_GAMES_PLAYED",
@@ -91,24 +95,24 @@ describe("Competition creation - MOST_GAMES_PLAYED", () => {
     });
 
     expect(competition.id).toBeGreaterThan(0);
-    expect(competition.seasonId).toBe("SPLIT_1_2025");
+    expect(competition.seasonId).toBe("2025_SEASON_3_ACT_1");
     expect(competition.startDate).toBeNull();
     expect(competition.endDate).toBeNull();
   });
 });
 
 describe("Competition creation - All criteria types", () => {
-  const baseInput = {
+  const baseInput: Omit<CreateCompetitionInput, "criteria"> = {
     serverId: "123456789012345678",
     ownerId: "987654321098765432",
     channelId: "111222333444555666",
     title: "Test Competition",
     description: "Test",
-    visibility: "OPEN" as const,
+    visibility: "OPEN",
     maxParticipants: 50,
     dates: {
-      type: "SEASON" as const,
-      seasonId: "TEST_SEASON",
+      type: "SEASON",
+      seasonId: "2025_SEASON_3_ACT_1",
     },
   };
 
@@ -248,7 +252,7 @@ describe("Competition defaults", () => {
       description: "Test",
       visibility: "OPEN", // Explicitly testing default
       maxParticipants: 50,
-      dates: { type: "SEASON", seasonId: "S1" },
+      dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
@@ -264,7 +268,7 @@ describe("Competition defaults", () => {
       description: "Test",
       visibility: "OPEN",
       maxParticipants: 50, // Explicitly testing default
-      dates: { type: "SEASON", seasonId: "S1" },
+      dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
@@ -309,12 +313,12 @@ describe("Permission and limit integration", () => {
     }
   });
 
-  test("sixth competition on server fails (server limit)", async () => {
+  test("third competition on server fails (server limit)", async () => {
     const serverId = "123456789012345678";
     const now = new Date();
 
-    // Create 5 competitions (server limit)
-    for (let i = 0; i < 5; i++) {
+    // Create 2 competitions (server limit)
+    for (let i = 0; i < 2; i++) {
       await createCompetition(prisma, {
         serverId,
         ownerId: (100000000000000000 + i).toString(),
@@ -358,7 +362,7 @@ describe("Data integrity", () => {
       description: "Test retrieval",
       visibility: "INVITE_ONLY",
       maxParticipants: 25,
-      dates: { type: "SEASON", seasonId: "S1" },
+      dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
       criteria: { type: "MOST_GAMES_PLAYED", queue: "FLEX" },
     });
 
@@ -431,7 +435,7 @@ describe("Data integrity", () => {
         description: "Test",
         visibility: "OPEN",
         maxParticipants: 50,
-        dates: { type: "SEASON", seasonId: "S1" },
+        dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
         criteria: testCase.criteria,
       });
 
@@ -457,7 +461,7 @@ describe("Metadata tracking", () => {
       description: "Test",
       visibility: "OPEN",
       maxParticipants: 50,
-      dates: { type: "SEASON", seasonId: "S1" },
+      dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
@@ -474,7 +478,7 @@ describe("Metadata tracking", () => {
       description: "Test",
       visibility: "OPEN",
       maxParticipants: 50,
-      dates: { type: "SEASON", seasonId: "S1" },
+      dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
@@ -492,7 +496,7 @@ describe("Metadata tracking", () => {
       description: "Test",
       visibility: "OPEN",
       maxParticipants: 50,
-      dates: { type: "SEASON", seasonId: "S1" },
+      dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 

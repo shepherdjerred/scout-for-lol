@@ -59,12 +59,20 @@ describe("CompetitionDatesSchema - discriminated union", () => {
     expect(result.success).toBe(true);
   });
 
-  test("passes with SEASON type", () => {
+  test("passes with SEASON type for active season", () => {
     const result = CompetitionDatesSchema.safeParse({
       type: "SEASON",
-      seasonId: "SPLIT_1_2025",
+      seasonId: "2025_SEASON_3_ACT_1",
     });
     expect(result.success).toBe(true);
+  });
+
+  test("rejects SEASON with invalid seasonId", () => {
+    const result = CompetitionDatesSchema.safeParse({
+      type: "SEASON",
+      seasonId: "INVALID_SEASON",
+    });
+    expect(result.success).toBe(false);
   });
 
   test("fails with invalid discriminator type", () => {
@@ -114,7 +122,7 @@ describe("CompetitionDatesSchema - discriminated union", () => {
       type: "FIXED_DATES",
       startDate,
       endDate,
-      seasonId: "SPLIT_1_2025", // Extra field ignored
+      seasonId: "2025_SEASON_3_ACT_1", // Extra field ignored
     });
     expect(result.success).toBe(true); // Passes because extra fields are ignored
   });
@@ -245,7 +253,7 @@ describe("CompetitionDatesSchema - duration limit", () => {
     // Season-based competitions can be arbitrarily long
     const result = CompetitionDatesSchema.safeParse({
       type: "SEASON",
-      seasonId: "SEASON_2025",
+      seasonId: "2025_SEASON_3_ACT_1",
     });
     expect(result.success).toBe(true);
   });
@@ -264,7 +272,7 @@ describe("CompetitionCreationSchema - Discord ID validation", () => {
     description: "Test description",
     visibility: "OPEN" as const,
     maxParticipants: 50,
-    dates: { type: "SEASON" as const, seasonId: "SEASON_2025" },
+    dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
     criteriaType: "MOST_GAMES_PLAYED",
     criteriaConfig: JSON.stringify({ queue: "SOLO" }),
   };
@@ -308,7 +316,7 @@ describe("CompetitionCreationSchema - title validation", () => {
     description: "Test description",
     visibility: "OPEN" as const,
     maxParticipants: 50,
-    dates: { type: "SEASON" as const, seasonId: "SEASON_2025" },
+    dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
     criteriaType: "MOST_GAMES_PLAYED",
     criteriaConfig: JSON.stringify({ queue: "SOLO" }),
   };
@@ -369,7 +377,7 @@ describe("CompetitionCreationSchema - description validation", () => {
     description: "Test description",
     visibility: "OPEN" as const,
     maxParticipants: 50,
-    dates: { type: "SEASON" as const, seasonId: "SEASON_2025" },
+    dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
     criteriaType: "MOST_GAMES_PLAYED",
     criteriaConfig: JSON.stringify({ queue: "SOLO" }),
   };
@@ -427,7 +435,7 @@ describe("CompetitionCreationSchema - visibility validation", () => {
     description: "Test description",
     visibility: "OPEN" as const,
     maxParticipants: 50,
-    dates: { type: "SEASON" as const, seasonId: "SEASON_2025" },
+    dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
     criteriaType: "MOST_GAMES_PLAYED",
     criteriaConfig: JSON.stringify({ queue: "SOLO" }),
   };
@@ -471,7 +479,7 @@ describe("CompetitionCreationSchema - maxParticipants validation", () => {
     description: "Test description",
     visibility: "OPEN" as const,
     maxParticipants: 50,
-    dates: { type: "SEASON" as const, seasonId: "SEASON_2025" },
+    dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
     criteriaType: "MOST_GAMES_PLAYED",
     criteriaConfig: JSON.stringify({ queue: "SOLO" }),
   };
@@ -545,7 +553,7 @@ describe("CompetitionCreationSchema - criteria validation", () => {
     description: "Test description",
     visibility: "OPEN" as const,
     maxParticipants: 50,
-    dates: { type: "SEASON" as const, seasonId: "SEASON_2025" },
+    dates: { type: "SEASON" as const, seasonId: "2025_SEASON_3_ACT_1" },
     criteriaType: "MOST_GAMES_PLAYED",
     criteriaConfig: JSON.stringify({ queue: "SOLO" }),
   };

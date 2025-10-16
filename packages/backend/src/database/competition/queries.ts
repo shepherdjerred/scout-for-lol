@@ -175,6 +175,98 @@ export async function getActiveCompetitions(prisma: PrismaClient): Promise<Compe
 // ============================================================================
 
 /**
+ * Input for updating a competition
+ * All fields are optional - only provided fields will be updated
+ */
+export type UpdateCompetitionInput = {
+  title?: string;
+  description?: string;
+  channelId?: string;
+  visibility?: CompetitionVisibility;
+  maxParticipants?: number;
+  dates?: CompetitionDates;
+  criteria?: CompetitionCriteria;
+};
+
+/**
+ * Update a competition
+ *
+ * @param prisma - Prisma client instance
+ * @param id - Competition ID
+ * @param input - Fields to update
+ * @returns Updated competition with parsed criteria
+ * @throws {Error} if competition not found
+ */
+export async function updateCompetition(
+  prisma: PrismaClient,
+  id: number,
+  input: UpdateCompetitionInput,
+): Promise<CompetitionWithCriteria> {
+  const now = new Date();
+
+  // Build update data object
+  const updateData: {
+    title?: string;
+    description?: string;
+    channelId?: string;
+    visibility?: string;
+    maxParticipants?: number;
+    startDate?: Date | null;
+    endDate?: Date | null;
+    seasonId?: string | null;
+    criteriaType?: string;
+    criteriaConfig?: string;
+    updatedTime: Date;
+  } = {
+    updatedTime: now,
+  };
+
+  // Add simple fields if provided
+  if (input.title !== undefined) {
+    updateData.title = input.title;
+  }
+  if (input.description !== undefined) {
+    updateData.description = input.description;
+  }
+  if (input.channelId !== undefined) {
+    updateData.channelId = input.channelId;
+  }
+  if (input.visibility !== undefined) {
+    updateData.visibility = input.visibility;
+  }
+  if (input.maxParticipants !== undefined) {
+    updateData.maxParticipants = input.maxParticipants;
+  }
+
+  // Handle dates if provided
+  if (input.dates !== undefined) {
+    if (input.dates.type === "FIXED_DATES") {
+      updateData.startDate = input.dates.startDate;
+      updateData.endDate = input.dates.endDate;
+      updateData.seasonId = null;
+    } else {
+      updateData.startDate = null;
+      updateData.endDate = null;
+      updateData.seasonId = input.dates.seasonId;
+    }
+  }
+
+  // Handle criteria if provided
+  if (input.criteria !== undefined) {
+    const { type: criteriaType, ...criteriaConfig } = input.criteria;
+    updateData.criteriaType = criteriaType;
+    updateData.criteriaConfig = JSON.stringify(criteriaConfig);
+  }
+
+  const raw = await prisma.competition.update({
+    where: { id },
+    data: updateData,
+  });
+
+  return parseCompetition(raw);
+}
+
+/**
  * Cancel a competition by setting isCancelled flag
  *
  * @param prisma - Prisma client instance

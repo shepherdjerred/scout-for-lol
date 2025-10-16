@@ -138,7 +138,8 @@
           "leagueAccount": {
             "puuid": "HFtvdIhMBfzyJYecX1EVDfTqG8X-CPyzKS2T3qi7bU3sQmCM9AO20XkpBx3XCetXZncv2pJtmX4F9w",
             "region": "PBE"
-          }
+          },
+          "lastSeenInGame": null
         }
       },
       "teamId": 1,

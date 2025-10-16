@@ -19,6 +19,11 @@ import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions
 import { prisma } from "../../database/index";
 import { fromError } from "zod-validation-error";
 import { getErrorMessage } from "../../utils/errors.js";
+import {
+  getSubscriptionLimit,
+  getAccountLimit,
+  hasUnlimitedSubscriptions,
+} from "../../configuration/subscription-limits.js";
 
 export const subscribeCommand = new SlashCommandBuilder()
   .setName("subscribe")
@@ -99,6 +104,86 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
 
   const { channel, region, riotId, user, alias, guildId } = args;
 
+  // Check if player already exists with this alias
+  const existingPlayer = await prisma.player.findUnique({
+    where: {
+      serverId_alias: {
+        serverId: guildId,
+        alias: alias,
+      },
+    },
+  });
+
+  // Check subscription limit (only if creating a new player)
+  if (!existingPlayer) {
+    const subscriptionLimit = getSubscriptionLimit(guildId);
+
+    if (subscriptionLimit !== null) {
+      console.log(`🔍 Checking subscription limit for server ${guildId}: ${subscriptionLimit.toString()} players`);
+
+      // Count unique players with subscriptions in this server
+      const subscribedPlayerCount = await prisma.player.count({
+        where: {
+          serverId: guildId,
+          subscriptions: {
+            some: {},
+          },
+        },
+      });
+
+      console.log(`📊 Current subscribed players: ${subscribedPlayerCount.toString()}/${subscriptionLimit.toString()}`);
+
+      if (subscribedPlayerCount >= subscriptionLimit) {
+        const hasUnlimited = hasUnlimitedSubscriptions(guildId);
+        console.log(
+          `❌ Subscription limit reached for server ${guildId} (${subscribedPlayerCount.toString()}/${subscriptionLimit.toString()}, unlimited: ${hasUnlimited.toString()})`,
+        );
+
+        await interaction.reply({
+          content: `❌ **Subscription limit reached**\n\nThis server can subscribe to a maximum of ${subscriptionLimit.toString()} players. You currently have ${subscribedPlayerCount.toString()} subscribed players.\n\nTo subscribe to a new player, please unsubscribe from an existing player first using \`/unsubscribe\`.`,
+          ephemeral: true,
+        });
+        return;
+      }
+    } else {
+      console.log(`♾️ Server ${guildId} has unlimited subscriptions`);
+    }
+  } else {
+    console.log(
+      `📌 Adding account to existing player "${alias}" (ID: ${existingPlayer.id.toString()}) - no limit check needed`,
+    );
+  }
+
+  // Check account limit (always check, even for existing players)
+  const accountLimit = getAccountLimit(guildId);
+
+  if (accountLimit !== null) {
+    console.log(`🔍 Checking account limit for server ${guildId}: ${accountLimit.toString()} accounts`);
+
+    // Count all accounts in this server
+    const accountCount = await prisma.account.count({
+      where: {
+        serverId: guildId,
+      },
+    });
+
+    console.log(`📊 Current accounts: ${accountCount.toString()}/${accountLimit.toString()}`);
+
+    if (accountCount >= accountLimit) {
+      console.log(
+        `❌ Account limit reached for server ${guildId} (${accountCount.toString()}/${accountLimit.toString()})`,
+      );
+
+      await interaction.reply({
+        content: `❌ **Account limit reached**\n\nThis server can have a maximum of ${accountLimit.toString()} accounts. You currently have ${accountCount.toString()} accounts.\n\nTo add a new account, please remove an existing account first.`,
+        ephemeral: true,
+      });
+      return;
+    }
+  } else {
+    console.log(`♾️ Server ${guildId} has unlimited accounts`);
+  }
+
   console.log(`🔍 Looking up Riot ID: ${riotId.game_name}#${riotId.tag_line} in region ${region}`);
 
   let puuid: string;
@@ -123,11 +208,45 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
     return;
   }
 
+  // Check if this exact account already exists
+  const existingAccount = await prisma.account.findUnique({
+    where: {
+      serverId_puuid: {
+        serverId: guildId,
+        puuid: puuid,
+      },
+    },
+    include: {
+      player: {
+        include: {
+          subscriptions: true,
+        },
+      },
+    },
+  });
+
+  if (existingAccount) {
+    console.log(
+      `⚠️  Account already exists: ${riotId.game_name}#${riotId.tag_line} (PUUID: ${puuid}) for player "${existingAccount.player.alias}"`,
+    );
+
+    const subscriptions = existingAccount.player.subscriptions;
+    const channelList = subscriptions.map((sub) => `<#${sub.channelId}>`).join(", ");
+
+    await interaction.reply({
+      content: `ℹ️ **Account already subscribed**\n\nThe account **${riotId.game_name}#${riotId.tag_line}** is already subscribed as player "${existingAccount.player.alias}".\n\n${subscriptions.length > 0 ? `Currently posting to: ${channelList}` : "No active subscriptions."}`,
+      ephemeral: true,
+    });
+    return;
+  }
+
   const now = new Date();
   console.log(`💾 Starting database operations for subscription`);
 
   try {
     const dbStartTime = Date.now();
+
+    const isAddingToExistingPlayer = existingPlayer !== null;
 
     // add a new account
     console.log(`📝 Creating account record for ${alias}`);
@@ -138,7 +257,7 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
         region: region,
         serverId: guildId,
         creatorDiscordId: interaction.user.id,
-        playerId: {
+        player: {
           connectOrCreate: {
             where: {
               serverId_alias: {
@@ -164,16 +283,20 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
     console.log(`✅ Account created with ID: ${account.id.toString()}`);
 
     // get the player for the account
-    const player = await prisma.account.findUnique({
+    const playerAccount = await prisma.account.findUnique({
       where: {
         id: account.id,
       },
       include: {
-        playerId: true,
+        player: {
+          include: {
+            accounts: true,
+          },
+        },
       },
     });
 
-    if (!player) {
+    if (!playerAccount) {
       console.error(`❌ Failed to find player for account ID: ${account.id.toString()}`);
       await interaction.reply({
         content: "Error finding player for account",
@@ -182,14 +305,34 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
       return;
     }
 
-    console.log(`📝 Found player record: ${player.playerId.alias} (ID: ${player.playerId.id.toString()})`);
+    console.log(`📝 Found player record: ${playerAccount.player.alias} (ID: ${playerAccount.player.id.toString()})`);
+
+    // Check if subscription already exists for this player in this channel
+    const existingSubscription = await prisma.subscription.findUnique({
+      where: {
+        serverId_playerId_channelId: {
+          serverId: guildId,
+          playerId: playerAccount.player.id,
+          channelId: channel,
+        },
+      },
+    });
+
+    if (existingSubscription) {
+      console.log(`⚠️  Subscription already exists for player ${playerAccount.player.alias} in channel ${channel}`);
+      await interaction.reply({
+        content: `ℹ️ **Already subscribed**\n\nPlayer "${playerAccount.player.alias}" is already subscribed in <#${channel}>.\n\nMatch updates will continue to be posted there.`,
+        ephemeral: true,
+      });
+      return;
+    }
 
     // create a new subscription
     console.log(`📝 Creating subscription for channel ${channel}`);
     const subscription = await prisma.subscription.create({
       data: {
         channelId: channel,
-        playerId: player.playerId.id,
+        playerId: playerAccount.player.id,
         createdTime: now,
         updatedTime: now,
         creatorDiscordId: interaction.user.id,
@@ -203,8 +346,20 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
     const totalTime = Date.now() - startTime;
     console.log(`🎉 Subscription completed successfully in ${totalTime.toString()}ms`);
 
+    // Build response message based on whether we added to existing player
+    let responseMessage = `Successfully subscribed to updates for ${riotId.game_name}#${riotId.tag_line}`;
+
+    if (isAddingToExistingPlayer) {
+      const accountCount = playerAccount.player.accounts.length;
+      const accountList = playerAccount.player.accounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
+      responseMessage += `\n\n✨ **Added to existing player "${alias}"**`;
+      responseMessage += `\nThis player now has ${accountCount.toString()} account${accountCount === 1 ? "" : "s"}:\n${accountList}`;
+    } else {
+      responseMessage += `\n\n✅ Created new player profile for "${alias}"`;
+    }
+
     await interaction.reply({
-      content: `Successfully subscribed to updates for ${riotId.game_name}#${riotId.tag_line}`,
+      content: responseMessage,
       ephemeral: true,
     });
   } catch (error) {

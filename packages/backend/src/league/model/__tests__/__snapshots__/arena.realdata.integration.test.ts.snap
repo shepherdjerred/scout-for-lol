@@ -146,6 +146,7 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
         "alias": "RealDataUser",
         "discordAccount": null,
         "league": {
+          "lastSeenInGame": null,
           "leagueAccount": {
             "puuid": "HFtvdIhMBfzyJYecX1EVDfTqG8X-CPyzKS2T3qi7bU3sQmCM9AO20XkpBx3XCetXZncv2pJtmX4F9w",
             "region": "PBE",
@@ -2811,6 +2812,7 @@ exports[`toArenaMatch with real arena JSON produces valid ArenaMatch for each pr
         "alias": "RealDataUser",
         "discordAccount": null,
         "league": {
+          "lastSeenInGame": null,
           "leagueAccount": {
             "puuid": "bL9pahyX3LbriXUwyIlEgbsz8xppWHmfFsly7T2s4fM4ENMQvpfly4-Z8CsiZ0kZRkcR42ld1cKmQQ",
             "region": "PBE",
