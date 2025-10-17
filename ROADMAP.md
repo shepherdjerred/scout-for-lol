@@ -8,10 +8,33 @@ There seems to be a fair bit of coupling. Examples:
 
 ## Release
 
+- [ ] View detailed player info
+  - [ ] Accounts
+    - [ ] Include rate limiting info
+  - [ ] Subscriptions
+  - [ ] Competitions
+  - [ ] Debug info
+- [x] View detailed server info
+  - [x] Players
+  - [x] Accounts
+  - [x] Subscriptions
+  - [x] Competitions
+  - [x] Debug info
+- [ ] Edit player info
+  - [ ] Add/remove accounts
+  - [ ] Change alias
+  - [ ] Change/add/remove Discord ID
+- [ ] Competition management
+- [ ] Show user-readable Zod error messages
+- [ ] Prevent bot from sending messages larger than Discord's limit (happens with Zod)
+- [ ] Make Arena matches pretty
+  - [ ] Show augment icons
+
 ### Post-Match
 
 - [ ] add champ icon
 - [ ] add icons for damage, K/D/A, and gold
+- [ ] add runes
 
 ## Beta
 

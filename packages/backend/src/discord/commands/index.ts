@@ -16,11 +16,16 @@ import {
 import {
   executePlayerEditAlias,
   executeAccountRemove,
+  executeAccountAdd,
   executePlayerMerge,
   executePlayerDelete,
   executeAccountTransfer,
+  executePlayerLinkDiscord,
+  executePlayerUnlinkDiscord,
+  executePlayerInfo,
 } from "./admin/index.js";
-import { getState } from "../../league/model/state";
+import { executeDebugState, executeDebugDatabase } from "./debug.js";
+import { executeServerInfo } from "./server-info.js";
 import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
 import { searchChampions } from "../../utils/champion.js";
 
@@ -128,12 +133,20 @@ export function handleCommands(client: Client) {
             await executePlayerEditAlias(interaction);
           } else if (subcommandName === "account-remove") {
             await executeAccountRemove(interaction);
+          } else if (subcommandName === "account-add") {
+            await executeAccountAdd(interaction);
           } else if (subcommandName === "account-transfer") {
             await executeAccountTransfer(interaction);
           } else if (subcommandName === "player-merge") {
             await executePlayerMerge(interaction);
           } else if (subcommandName === "player-delete") {
             await executePlayerDelete(interaction);
+          } else if (subcommandName === "player-link-discord") {
+            await executePlayerLinkDiscord(interaction);
+          } else if (subcommandName === "player-unlink-discord") {
+            await executePlayerUnlinkDiscord(interaction);
+          } else if (subcommandName === "player-info") {
+            await executePlayerInfo(interaction);
           } else {
             console.warn(`⚠️  Unknown admin subcommand: ${subcommandName}`);
             await interaction.reply({
@@ -142,22 +155,23 @@ export function handleCommands(client: Client) {
             });
           }
         } else if (commandName === "debug") {
-          console.log("🐛 Executing debug command");
-          const state = getState();
-          const debugInfo = {
-            gamesInProgress: state.gamesStarted.length,
-            games: state.gamesStarted.map((game) => ({
-              matchId: game.matchId,
-              players: game.players.length,
-              added: game.added.toISOString(),
-              queue: game.queue,
-            })),
-          };
-          console.log("📊 Debug info:", debugInfo);
-          await interaction.reply({
-            content: `\`\`\`json\n${JSON.stringify(debugInfo, null, 2)}\n\`\`\``,
-            flags: MessageFlags.Ephemeral,
-          });
+          const subcommandName = interaction.options.getSubcommand();
+          console.log(`🐛 Executing debug ${subcommandName} command`);
+
+          if (subcommandName === "state") {
+            await executeDebugState(interaction);
+          } else if (subcommandName === "database") {
+            await executeDebugDatabase(interaction);
+          } else {
+            console.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
+            await interaction.reply({
+              content: "Unknown debug subcommand",
+              flags: MessageFlags.Ephemeral,
+            });
+          }
+        } else if (commandName === "server-info") {
+          console.log("📊 Executing server-info command");
+          await executeServerInfo(interaction);
         } else {
           console.warn(`⚠️  Unknown command received: ${commandName}`);
           await interaction.reply("Unknown command");
