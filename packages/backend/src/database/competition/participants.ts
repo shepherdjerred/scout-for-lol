@@ -27,15 +27,16 @@ export async function addParticipant(
   const now = new Date();
 
   // Get competition to check limits and status
-  const competition = await prisma.competition.findUnique({
-    where: { id: competitionId },
-  });
+  // Use getCompetitionById to ensure dates are populated from seasonId
+  const { getCompetitionById } = await import("./queries.js");
+  const competition = await getCompetitionById(prisma, competitionId);
 
   if (!competition) {
     throw new Error(`Competition ${competitionId.toString()} not found`);
   }
 
   // Check if competition is active (not cancelled, not ended)
+  // Season-based competitions now have endDate populated from the season
   const active = isCompetitionActive(competition.isCancelled, competition.endDate, now);
 
   if (!active) {
@@ -280,15 +281,16 @@ export async function canJoinCompetition(
   playerId: number,
 ): Promise<{ canJoin: boolean; reason?: string }> {
   // Check if competition exists
-  const competition = await prisma.competition.findUnique({
-    where: { id: competitionId },
-  });
+  // Use getCompetitionById to ensure dates are populated from seasonId
+  const { getCompetitionById } = await import("./queries.js");
+  const competition = await getCompetitionById(prisma, competitionId);
 
   if (!competition) {
     return { canJoin: false, reason: "Competition not found" };
   }
 
   // Check if competition is active
+  // Season-based competitions now have endDate populated from the season
   const now = new Date();
   const active = isCompetitionActive(competition.isCancelled, competition.endDate, now);
 

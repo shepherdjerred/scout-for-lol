@@ -80,6 +80,7 @@ export async function createCompetition(
     },
   });
 
+  // parseCompetition transparently populates dates from seasonId
   return parseCompetition(raw);
 }
 
@@ -103,6 +104,7 @@ export async function getCompetitionById(prisma: PrismaClient, id: number): Prom
     return null;
   }
 
+  // parseCompetition transparently populates dates from seasonId
   return parseCompetition(raw);
 }
 
@@ -141,6 +143,7 @@ export async function getCompetitionsByServer(
     },
   });
 
+  // parseCompetition transparently populates dates from seasonId
   return raw.map(parseCompetition);
 }
 
@@ -167,6 +170,7 @@ export async function getActiveCompetitions(prisma: PrismaClient): Promise<Compe
     },
   });
 
+  // parseCompetition transparently populates dates from seasonId
   return raw.map(parseCompetition);
 }
 
@@ -263,6 +267,7 @@ export async function updateCompetition(
     data: updateData,
   });
 
+  // parseCompetition transparently populates dates from seasonId
   return parseCompetition(raw);
 }
 
@@ -285,5 +290,6 @@ export async function cancelCompetition(prisma: PrismaClient, id: number): Promi
     },
   });
 
+  // parseCompetition transparently populates dates from seasonId
   return parseCompetition(raw);
 }
