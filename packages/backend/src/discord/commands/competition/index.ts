@@ -8,7 +8,7 @@ import { executeCompetitionInvite } from "./invite.js";
 import { executeCompetitionView } from "./view.js";
 import { executeCompetitionLeave } from "./leave.js";
 import { executeCompetitionList } from "./list.js";
-import { getSeasonChoices } from "../../../utils/seasons.js";
+import { getSeasonChoices } from "@scout-for-lol/data";
 
 /**
  * Main competition command with subcommands

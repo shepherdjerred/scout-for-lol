@@ -5,6 +5,7 @@ import {
   CompetitionQueueTypeSchema,
   CompetitionVisibilitySchema,
   getCompetitionStatus,
+  SeasonIdSchema,
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import { prisma } from "../../../database/index.js";
@@ -15,7 +16,6 @@ import {
 } from "../../../database/competition/queries.js";
 import { getErrorMessage } from "../../../utils/errors.js";
 import { getChampionId } from "../../../utils/champion.js";
-import { SeasonIdSchema } from "../../../utils/seasons.js";
 
 // ============================================================================
 // Input Parsing Schema - Editable Fields

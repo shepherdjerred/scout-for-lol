@@ -244,8 +244,11 @@ describe("Edit DRAFT competition", () => {
     await updateCompetition(prisma, competitionId, updateInput);
 
     const after = await getCompetitionById(prisma, competitionId);
-    expect(after?.startDate).toBeNull();
-    expect(after?.endDate).toBeNull();
+    // startDate and endDate are transparently populated from season
+    expect(after?.startDate).toBeInstanceOf(Date);
+    expect(after?.endDate).toBeInstanceOf(Date);
+    expect(after?.startDate).toBeTruthy();
+    expect(after?.endDate).toBeTruthy();
     expect(after?.seasonId).toBe("2025_SEASON_3_ACT_1");
   });
 

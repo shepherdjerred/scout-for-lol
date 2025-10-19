@@ -97,8 +97,11 @@ describe("createCompetition", () => {
     const competition = await createCompetition(prisma, input);
 
     expect(competition.seasonId).toBe("2025_SEASON_3_ACT_1");
-    expect(competition.startDate).toBeNull();
-    expect(competition.endDate).toBeNull();
+    // startDate and endDate are transparently populated from season
+    expect(competition.startDate).toBeInstanceOf(Date);
+    expect(competition.endDate).toBeInstanceOf(Date);
+    expect(competition.startDate).toBeTruthy();
+    expect(competition.endDate).toBeTruthy();
   });
 
   test("criteria round-trips correctly with MOST_WINS_CHAMPION", async () => {

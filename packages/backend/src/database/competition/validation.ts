@@ -1,8 +1,12 @@
 import { type PrismaClient } from "../../../generated/prisma/client/index.js";
-import { CompetitionCriteriaSchema, CompetitionVisibilitySchema } from "@scout-for-lol/data";
+import {
+  CompetitionCriteriaSchema,
+  CompetitionVisibilitySchema,
+  SeasonIdSchema,
+  hasSeasonEnded,
+} from "@scout-for-lol/data";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
-import { SeasonIdSchema, hasSeasonEnded } from "../../utils/seasons.js";
 
 // ============================================================================
 // Constants

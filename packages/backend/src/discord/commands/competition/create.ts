@@ -1,6 +1,11 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { z } from "zod";
-import { type CompetitionCriteria, CompetitionQueueTypeSchema, CompetitionVisibilitySchema } from "@scout-for-lol/data";
+import {
+  type CompetitionCriteria,
+  CompetitionQueueTypeSchema,
+  CompetitionVisibilitySchema,
+  SeasonIdSchema,
+} from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import { prisma } from "../../../database/index.js";
 import { canCreateCompetition } from "../../../database/competition/permissions.js";
@@ -9,7 +14,6 @@ import { recordCreation } from "../../../database/competition/rate-limit.js";
 import { validateOwnerLimit, validateServerLimit } from "../../../database/competition/validation.js";
 import { getErrorMessage } from "../../../utils/errors.js";
 import { getChampionId } from "../../../utils/champion.js";
-import { SeasonIdSchema } from "../../../utils/seasons.js";
 
 // ============================================================================
 // Input Parsing Schema - Discriminated Unions

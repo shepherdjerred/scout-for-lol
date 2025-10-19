@@ -1,6 +1,7 @@
 import { match } from "ts-pattern";
 import { z } from "zod";
 import { RankSchema } from "./rank.js";
+import { getSeasonById } from "../seasons.js";
 
 // ============================================================================
 // Branded ID Types
@@ -137,12 +138,15 @@ export type CompetitionStatus = "DRAFT" | "ACTIVE" | "ENDED" | "CANCELLED";
  * Calculate competition status based on dates and cancellation flag.
  * This is a pure function with no side effects.
  *
+ * Note: When competitions are loaded via parseCompetition(), season-based
+ * competitions will have their startDate/endDate populated from the season,
+ * so this function should always have dates to work with.
+ *
  * Rules:
  * 1. If isCancelled === true → CANCELLED (regardless of dates)
  * 2. If endDate is in the past → ENDED
  * 3. If startDate is in the future → DRAFT
  * 4. If startDate <= now < endDate → ACTIVE
- * 5. If no dates provided → DRAFT (assumes seasonId is set)
  */
 export function getCompetitionStatus(competition: {
   isCancelled: boolean;
@@ -157,7 +161,7 @@ export function getCompetitionStatus(competition: {
 
   const now = new Date();
 
-  // Handle date-based competitions
+  // Handle competitions with dates (both fixed-date and season-based)
   if (competition.startDate !== null && competition.endDate !== null) {
     const startDate = competition.startDate;
     const endDate = competition.endDate;
@@ -176,9 +180,9 @@ export function getCompetitionStatus(competition: {
     return "ACTIVE";
   }
 
-  // Handle season-based competitions (no fixed dates yet)
+  // Edge case: season-based competition with invalid/missing season
+  // This shouldn't happen if parseCompetition() was used, but handle gracefully
   if (competition.seasonId !== null) {
-    // Season competitions start in DRAFT until dates are resolved
     return "DRAFT";
   }
 
@@ -272,6 +276,7 @@ export type CompetitionWithCriteria = Omit<RawCompetition, "criteriaType" | "cri
 /**
  * Parse raw competition from database to domain type
  * Validates and parses criteriaConfig JSON
+ * Transparently populates startDate/endDate from seasonId if present
  *
  * @throws {Error} if criteriaConfig is invalid JSON or doesn't match schema
  */
@@ -302,8 +307,23 @@ export function parseCompetition(raw: RawCompetition): CompetitionWithCriteria {
   }
 
   const { criteriaType: _type, criteriaConfig: _config, ...rest } = raw;
+
+  // Transparently populate dates from season if seasonId is set
+  let startDate = raw.startDate;
+  let endDate = raw.endDate;
+
+  if (raw.seasonId !== null && raw.startDate === null && raw.endDate === null) {
+    const season = getSeasonById(raw.seasonId);
+    if (season) {
+      startDate = season.startDate;
+      endDate = season.endDate;
+    }
+  }
+
   return {
     ...rest,
+    startDate,
+    endDate,
     criteria: result.data,
   };
 }
