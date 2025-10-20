@@ -1,6 +1,6 @@
 import { ApplicationState } from "@scout-for-lol/data";
 
-let state: ApplicationState = { gamesStarted: [] };
+let state: ApplicationState = {};
 
 export function getState(): ApplicationState {
   return state;

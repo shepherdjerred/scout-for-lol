@@ -1,7 +1,6 @@
 import { type ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import { prisma } from "../../database/index.js";
 import configuration from "../../configuration.js";
-import { getState } from "../../league/model/state.js";
 
 export const serverInfoCommand = new SlashCommandBuilder()
   .setName("server-info")
@@ -63,9 +62,8 @@ export async function executeServerInfo(interaction: ChatInputCommandInteraction
       `📊 Data fetched - Players: ${players.length.toString()}, Accounts: ${accounts.length.toString()}, Subscriptions: ${subscriptions.length.toString()}, Competitions: ${competitions.length.toString()}`,
     );
 
-    // Get debug state info
-    const state = getState();
-    const activeGames = state.gamesStarted.length;
+    // Note: Active game tracking removed (Spectator API deprecated)
+    const activeGames = 0; // No longer tracking active games
 
     // Count active accounts (seen in last 7 days)
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);

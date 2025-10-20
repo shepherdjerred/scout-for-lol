@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import { saveSvgToS3 } from "./s3.js";
+import { MatchIdSchema } from "@scout-for-lol/data";
 
 // Create S3 mock
 const s3Mock = mockClient(S3Client);
@@ -30,7 +31,7 @@ afterEach(() => {
 
 describe("saveSvgToS3 - Success Cases", () => {
   test("uploads SVG with correct parameters", async () => {
-    const matchId = "NA1_1234567890";
+    const matchId = MatchIdSchema.parse("NA1_1234567890");
     const svgContent = '<svg xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100"/></svg>';
     const queueType = "solo";
 
@@ -63,7 +64,7 @@ describe("saveSvgToS3 - Success Cases", () => {
   });
 
   test("handles arena queue type", async () => {
-    const matchId = "NA1_ARENA";
+    const matchId = MatchIdSchema.parse("NA1_ARENA");
     const svgContent = "<svg></svg>";
     const queueType = "arena";
 
@@ -84,7 +85,7 @@ describe("saveSvgToS3 - Success Cases", () => {
   });
 
   test("handles large SVG content", async () => {
-    const matchId = "NA1_LARGE_SVG";
+    const matchId = MatchIdSchema.parse("NA1_LARGE_SVG");
     // Create a large SVG (simulating complex match report)
     const largeSvgContent = "<svg>" + "x".repeat(100000) + "</svg>";
     const queueType = "solo";
@@ -106,7 +107,7 @@ describe("saveSvgToS3 - Success Cases", () => {
   });
 
   test("handles SVG with special XML characters", async () => {
-    const matchId = "NA1_SPECIAL_CHARS";
+    const matchId = MatchIdSchema.parse("NA1_SPECIAL_CHARS");
     const svgContent = '<svg xmlns="http://www.w3.org/2000/svg"><text>&lt;&gt;&amp;&quot;&#x27;</text></svg>';
     const queueType = "solo";
 
@@ -143,7 +144,7 @@ describe("saveSvgToS3 - Configuration", () => {
 
 describe("saveSvgToS3 - Error Handling", () => {
   test("throws error when S3 upload fails", async () => {
-    const matchId = "NA1_ERROR";
+    const matchId = MatchIdSchema.parse("NA1_ERROR");
     const svgContent = "<svg></svg>";
     const queueType = "solo";
 
@@ -156,7 +157,7 @@ describe("saveSvgToS3 - Error Handling", () => {
   });
 
   test("throws error with match ID in error message", async () => {
-    const matchId = "EUW1_NETWORK_ERROR";
+    const matchId = MatchIdSchema.parse("EUW1_NETWORK_ERROR");
     const svgContent = "<svg></svg>";
     const queueType = "flex";
 
@@ -174,7 +175,7 @@ describe("saveSvgToS3 - Error Handling", () => {
 
 describe("saveSvgToS3 - S3 Key Format", () => {
   test("uses current date in S3 key", async () => {
-    const matchId = "NA1_DATE_TEST";
+    const matchId = MatchIdSchema.parse("NA1_DATE_TEST");
     const svgContent = "<svg></svg>";
     const queueType = "solo";
 
@@ -201,7 +202,7 @@ describe("saveSvgToS3 - S3 Key Format", () => {
   });
 
   test("uses .svg extension", async () => {
-    const matchId = "NA1_SVG_EXT";
+    const matchId = MatchIdSchema.parse("NA1_SVG_EXT");
     const svgContent = "<svg></svg>";
     const queueType = "solo";
 
@@ -218,7 +219,7 @@ describe("saveSvgToS3 - S3 Key Format", () => {
   });
 
   test("returns s3:// URL format", async () => {
-    const matchId = "NA1_URL_FORMAT";
+    const matchId = MatchIdSchema.parse("NA1_URL_FORMAT");
     const svgContent = "<svg></svg>";
     const queueType = "solo";
 
@@ -240,7 +241,7 @@ describe("saveSvgToS3 - S3 Key Format", () => {
 
 describe("saveSvgToS3 - Content Type and Metadata", () => {
   test("sets correct ContentType for SVG", async () => {
-    const matchId = "NA1_CONTENT_TYPE";
+    const matchId = MatchIdSchema.parse("NA1_CONTENT_TYPE");
     const svgContent = "<svg></svg>";
     const queueType = "solo";
 
@@ -257,7 +258,7 @@ describe("saveSvgToS3 - Content Type and Metadata", () => {
   });
 
   test("includes all required metadata fields", async () => {
-    const matchId = "NA1_METADATA";
+    const matchId = MatchIdSchema.parse("NA1_METADATA");
     const svgContent = "<svg></svg>";
     const queueType = "solo";
 
@@ -285,7 +286,7 @@ describe("saveSvgToS3 - Content Type and Metadata", () => {
   });
 
   test("converts SVG string to UTF-8 buffer", async () => {
-    const matchId = "NA1_UTF8";
+    const matchId = MatchIdSchema.parse("NA1_UTF8");
     const svgContent = "<svg><text>Hello 世界</text></svg>";
     const queueType = "solo";
 
@@ -318,9 +319,9 @@ describe("saveSvgToS3 - Concurrent Operations", () => {
     });
 
     const uploads = [
-      saveSvgToS3("NA1_CONCURRENT_1", "<svg>1</svg>", "solo"),
-      saveSvgToS3("NA1_CONCURRENT_2", "<svg>2</svg>", "flex"),
-      saveSvgToS3("NA1_CONCURRENT_3", "<svg>3</svg>", "arena"),
+      saveSvgToS3(MatchIdSchema.parse("NA1_CONCURRENT_1"), "<svg>1</svg>", "solo"),
+      saveSvgToS3(MatchIdSchema.parse("NA1_CONCURRENT_2"), "<svg>2</svg>", "flex"),
+      saveSvgToS3(MatchIdSchema.parse("NA1_CONCURRENT_3"), "<svg>3</svg>", "arena"),
     ];
 
     const results = await Promise.all(uploads);

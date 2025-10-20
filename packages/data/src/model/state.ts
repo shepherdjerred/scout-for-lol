@@ -2,7 +2,6 @@ import { z } from "zod";
 import { RankSchema } from "./rank.js";
 import { match } from "ts-pattern";
 import { PlayerConfig, PlayerConfigEntrySchema } from "./player-config.js";
-import { filter, flatMap } from "remeda";
 
 export type QueueType = z.infer<typeof QueueTypeSchema>;
 export const QueueTypeSchema = z.enum([
@@ -87,25 +86,17 @@ export const LoadingScreenStateSchema = z.strictObject({
 
 export type ApplicationState = z.infer<typeof ApplicationStateSchema>;
 export const ApplicationStateSchema = z.strictObject({
-  gamesStarted: z.array(LoadingScreenStateSchema),
+  // Application state is now minimal since we no longer track in-progress games
+  // State is preserved for future use if needed
 });
 
-export function getPlayersInGame(players: PlayerConfig, state: ApplicationState) {
-  const playersInGame = flatMap(state.gamesStarted, (game) => game.players);
-  return filter(players, (player) =>
-    playersInGame.some(
-      (matchPlayer) => matchPlayer.player.league.leagueAccount.puuid === player.league.leagueAccount.puuid,
-    ),
-  );
+// Legacy functions kept for backward compatibility but marked as deprecated
+/** @deprecated No longer tracking in-progress games - will always return empty array */
+export function getPlayersInGame(_players: PlayerConfig, _state: ApplicationState) {
+  return [];
 }
 
-export function getPlayersNotInGame(players: PlayerConfig, state: ApplicationState) {
-  const playersInGame = flatMap(state.gamesStarted, (game) => game.players);
-  return filter(
-    players,
-    (player) =>
-      !playersInGame.some(
-        (matchPlayer) => matchPlayer.player.league.leagueAccount.puuid === player.league.leagueAccount.puuid,
-      ),
-  );
+/** @deprecated No longer tracking in-progress games - will always return all players */
+export function getPlayersNotInGame(players: PlayerConfig, _state: ApplicationState) {
+  return players;
 }

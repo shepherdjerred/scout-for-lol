@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import { saveImageToS3 } from "./s3.js";
+import { MatchIdSchema } from "@scout-for-lol/data";
 
 // Create S3 mock
 const s3Mock = mockClient(S3Client);
@@ -33,7 +34,7 @@ afterEach(() => {
 
 describe("saveImageToS3 - Success Cases", () => {
   test("uploads image with correct parameters", async () => {
-    const matchId = "NA1_1234567890";
+    const matchId = MatchIdSchema.parse("NA1_1234567890");
     const imageBuffer = Buffer.from("fake-png-data");
     const queueType = "solo";
 
@@ -66,7 +67,7 @@ describe("saveImageToS3 - Success Cases", () => {
   });
 
   test("handles arena queue type", async () => {
-    const matchId = "NA1_9999999999";
+    const matchId = MatchIdSchema.parse("NA1_9999999999");
     const imageBuffer = Buffer.from("arena-image-data");
     const queueType = "arena";
 
@@ -87,7 +88,7 @@ describe("saveImageToS3 - Success Cases", () => {
   });
 
   test("handles flex queue type", async () => {
-    const matchId = "EUW1_5555555555";
+    const matchId = MatchIdSchema.parse("EUW1_5555555555");
     const imageBuffer = Buffer.from("flex-image-data");
     const queueType = "flex";
 
@@ -107,7 +108,7 @@ describe("saveImageToS3 - Success Cases", () => {
   });
 
   test("handles unknown queue type", async () => {
-    const matchId = "KR_1111111111";
+    const matchId = MatchIdSchema.parse("KR_1111111111");
     const imageBuffer = Buffer.from("unknown-image-data");
     const queueType = "unknown";
 
@@ -127,7 +128,7 @@ describe("saveImageToS3 - Success Cases", () => {
   });
 
   test("handles large image buffers", async () => {
-    const matchId = "NA1_LARGE";
+    const matchId = MatchIdSchema.parse("NA1_LARGE");
     // Create a 5MB buffer
     const imageBuffer = Buffer.alloc(5 * 1024 * 1024);
     const queueType = "solo";
@@ -149,7 +150,7 @@ describe("saveImageToS3 - Success Cases", () => {
   });
 
   test("handles match IDs with special characters", async () => {
-    const matchId = "NA1_1234567890_SPECIAL";
+    const matchId = MatchIdSchema.parse("NA1_1234567890_SPECIAL");
     const imageBuffer = Buffer.from("special-image-data");
     const queueType = "solo";
 
@@ -202,7 +203,7 @@ describe("saveImageToS3 - Configuration", () => {
 
 describe("saveImageToS3 - Error Handling", () => {
   test("throws error when S3 upload fails", async () => {
-    const matchId = "NA1_ERROR_CASE";
+    const matchId = MatchIdSchema.parse("NA1_ERROR_CASE");
     const imageBuffer = Buffer.from("image-data");
     const queueType = "solo";
 
@@ -217,7 +218,7 @@ describe("saveImageToS3 - Error Handling", () => {
   });
 
   test("throws error with match ID in error message", async () => {
-    const matchId = "EUW1_SPECIFIC_ERROR";
+    const matchId = MatchIdSchema.parse("EUW1_SPECIFIC_ERROR");
     const imageBuffer = Buffer.from("image-data");
     const queueType = "flex";
 
@@ -229,7 +230,7 @@ describe("saveImageToS3 - Error Handling", () => {
   });
 
   test("throws error when S3 returns non-200 status", async () => {
-    const matchId = "NA1_BAD_STATUS";
+    const matchId = MatchIdSchema.parse("NA1_BAD_STATUS");
     const imageBuffer = Buffer.from("image-data");
     const queueType = "solo";
 
@@ -247,7 +248,7 @@ describe("saveImageToS3 - Error Handling", () => {
   });
 
   test("preserves original error details", async () => {
-    const matchId = "NA1_DETAILED_ERROR";
+    const matchId = MatchIdSchema.parse("NA1_DETAILED_ERROR");
     const imageBuffer = Buffer.from("image-data");
     const queueType = "solo";
 
@@ -273,7 +274,7 @@ describe("saveImageToS3 - Error Handling", () => {
 
 describe("saveImageToS3 - S3 Key Format", () => {
   test("uses current date in S3 key", async () => {
-    const matchId = "NA1_DATE_TEST";
+    const matchId = MatchIdSchema.parse("NA1_DATE_TEST");
     const imageBuffer = Buffer.from("image-data");
     const queueType = "solo";
 
@@ -300,7 +301,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
   });
 
   test("uses .png extension", async () => {
-    const matchId = "NA1_PNG_EXT";
+    const matchId = MatchIdSchema.parse("NA1_PNG_EXT");
     const imageBuffer = Buffer.from("image-data");
     const queueType = "solo";
 
@@ -317,7 +318,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
   });
 
   test("returns s3:// URL format", async () => {
-    const matchId = "NA1_URL_FORMAT";
+    const matchId = MatchIdSchema.parse("NA1_URL_FORMAT");
     const imageBuffer = Buffer.from("image-data");
     const queueType = "solo";
 
@@ -339,7 +340,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
 
 describe("saveImageToS3 - Metadata", () => {
   test("includes all required metadata fields", async () => {
-    const matchId = "NA1_METADATA";
+    const matchId = MatchIdSchema.parse("NA1_METADATA");
     const imageBuffer = Buffer.from("image-data");
     const queueType = "solo";
 
@@ -366,7 +367,7 @@ describe("saveImageToS3 - Metadata", () => {
   });
 
   test("uploadedAt timestamp is recent", async () => {
-    const matchId = "NA1_TIMESTAMP";
+    const matchId = MatchIdSchema.parse("NA1_TIMESTAMP");
     const imageBuffer = Buffer.from("image-data");
     const queueType = "solo";
 

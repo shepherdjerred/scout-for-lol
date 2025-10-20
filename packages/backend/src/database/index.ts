@@ -9,6 +9,8 @@ import {
   type PlayerConfig,
   type PlayerConfigEntry,
   RegionSchema,
+  MatchIdSchema,
+  type MatchId,
 } from "@scout-for-lol/data";
 import { uniqueBy } from "remeda";
 
@@ -113,6 +115,7 @@ function mapToAccount({ puuid, region }: { puuid: string; region: string }): Lea
 /**
  * Update the lastSeenInGame timestamp for multiple accounts.
  * This is called when we detect players in an active game.
+ * @deprecated No longer actively used since Spectator API was removed
  *
  * @param puuids - Array of player PUUIDs to update
  * @param timestamp - The timestamp to set (defaults to now)
@@ -147,6 +150,69 @@ export async function updateLastSeenInGame(
     console.log(`✅ Updated lastSeenInGame in ${queryTime.toString()}ms`);
   } catch (error) {
     console.error("❌ Error updating lastSeenInGame:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update the lastProcessedMatchId for a specific account.
+ * This is called after we successfully process a match to avoid reprocessing.
+ *
+ * @param puuid - Player PUUID to update
+ * @param matchId - The match ID that was just processed
+ * @param prismaClient - Prisma client instance
+ */
+export async function updateLastProcessedMatch(
+  puuid: LeaguePuuid,
+  matchId: MatchId,
+  prismaClient: PrismaClient = prisma,
+): Promise<void> {
+  console.log(`📝 Updating lastProcessedMatchId for ${puuid} to ${matchId}`);
+
+  try {
+    const startTime = Date.now();
+
+    await prismaClient.account.updateMany({
+      where: {
+        puuid,
+      },
+      data: {
+        lastProcessedMatchId: matchId,
+      },
+    });
+
+    const queryTime = Date.now() - startTime;
+    console.log(`✅ Updated lastProcessedMatchId in ${queryTime.toString()}ms`);
+  } catch (error) {
+    console.error("❌ Error updating lastProcessedMatchId:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get the lastProcessedMatchId for a specific account.
+ *
+ * @param puuid - Player PUUID to query
+ * @param prismaClient - Prisma client instance
+ * @returns The last processed match ID, or null if none exists
+ */
+export async function getLastProcessedMatch(
+  puuid: LeaguePuuid,
+  prismaClient: PrismaClient = prisma,
+): Promise<MatchId | null> {
+  try {
+    const account = await prismaClient.account.findFirst({
+      where: {
+        puuid,
+      },
+      select: {
+        lastProcessedMatchId: true,
+      },
+    });
+
+    return account?.lastProcessedMatchId ? MatchIdSchema.parse(account.lastProcessedMatchId) : null;
+  } catch (error) {
+    console.error("❌ Error getting lastProcessedMatchId:", error);
     throw error;
   }
 }

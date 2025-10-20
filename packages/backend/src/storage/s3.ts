@@ -2,11 +2,13 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import configuration from "../configuration.js";
 import { getErrorMessage } from "../utils/errors.js";
+import type { MatchId } from "@scout-for-lol/data";
+import { MatchIdSchema } from "@scout-for-lol/data";
 
 /**
  * Generate S3 key (path) for a match file
  */
-function generateMatchKey(matchId: string): string {
+function generateMatchKey(matchId: MatchId): string {
   const now = new Date();
   const year = now.getUTCFullYear();
   const month = String(now.getUTCMonth() + 1).padStart(2, "0");
@@ -19,7 +21,7 @@ function generateMatchKey(matchId: string): string {
 /**
  * Generate S3 key (path) for a match image
  */
-function generateImageKey(matchId: string): string {
+function generateImageKey(matchId: MatchId): string {
   const now = new Date();
   const year = now.getUTCFullYear();
   const month = String(now.getUTCMonth() + 1).padStart(2, "0");
@@ -35,7 +37,7 @@ function generateImageKey(matchId: string): string {
  * @returns Promise that resolves when the match is saved
  */
 export async function saveMatchToS3(match: MatchV5DTOs.MatchDto): Promise<void> {
-  const matchId = match.metadata.matchId;
+  const matchId = MatchIdSchema.parse(match.metadata.matchId);
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
@@ -97,7 +99,7 @@ export async function saveMatchToS3(match: MatchV5DTOs.MatchDto): Promise<void> 
  * @returns Promise that resolves to the S3 URL when the image is saved, or undefined if S3 is not configured
  */
 export async function saveImageToS3(
-  matchId: string,
+  matchId: MatchId,
   imageBuffer: Buffer,
   queueType: string,
 ): Promise<string | undefined> {
@@ -155,7 +157,7 @@ export async function saveImageToS3(
 /**
  * Generate S3 key (path) for a match SVG image
  */
-function generateSvgKey(matchId: string): string {
+function generateSvgKey(matchId: MatchId): string {
   const now = new Date();
   const year = now.getUTCFullYear();
   const month = String(now.getUTCMonth() + 1).padStart(2, "0");
@@ -172,7 +174,11 @@ function generateSvgKey(matchId: string): string {
  * @param queueType The queue type (for metadata)
  * @returns Promise that resolves to the S3 URL when the SVG is saved, or undefined if S3 is not configured
  */
-export async function saveSvgToS3(matchId: string, svgContent: string, queueType: string): Promise<string | undefined> {
+export async function saveSvgToS3(
+  matchId: MatchId,
+  svgContent: string,
+  queueType: string,
+): Promise<string | undefined> {
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {

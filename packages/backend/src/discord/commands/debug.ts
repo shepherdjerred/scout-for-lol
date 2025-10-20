@@ -18,13 +18,9 @@ export async function executeDebugState(interaction: ChatInputCommandInteraction
   console.log("🐛 Executing debug state command");
   const state = getState();
   const debugInfo = {
-    gamesInProgress: state.gamesStarted.length,
-    games: state.gamesStarted.map((game) => ({
-      matchId: game.matchId,
-      players: game.players.length,
-      added: game.added.toISOString(),
-      queue: game.queue,
-    })),
+    note: "Active game tracking removed - Spectator API deprecated",
+    gamesInProgress: 0,
+    state: state,
   };
   console.log("📊 Debug info:", debugInfo);
   await interaction.reply({
