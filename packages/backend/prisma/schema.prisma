@@ -50,8 +50,7 @@ model Account {
   playerId Int
   player   Player @relation(fields: [playerId], references: [id])
 
-  // Activity tracking for dynamic polling
-  lastSeenInGame DateTime? // When we last detected this account in an active game (deprecated - kept for future use)
+  // Match processing tracking
   lastProcessedMatchId String? // Track last match we've processed to avoid duplicates
 
   // metadata

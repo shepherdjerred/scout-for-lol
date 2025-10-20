@@ -14,7 +14,6 @@ export function getExampleMatch(): CompletedMatch {
               ),
               region: "AMERICA_NORTH",
             },
-            lastSeenInGame: null,
           },
           discordAccount: {
             id: DiscordAccountIdSchema.parse("12345678901234567"),

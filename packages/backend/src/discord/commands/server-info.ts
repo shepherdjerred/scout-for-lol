@@ -65,12 +65,6 @@ export async function executeServerInfo(interaction: ChatInputCommandInteraction
     // Note: Active game tracking removed (Spectator API deprecated)
     const activeGames = 0; // No longer tracking active games
 
-    // Count active accounts (seen in last 7 days)
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const activeAccounts = accounts.filter(
-      (account) => account.lastSeenInGame && account.lastSeenInGame > sevenDaysAgo,
-    ).length;
-
     // Count subscriptions by channel
     const channelMap = new Map<string, number>();
     for (const sub of subscriptions) {
@@ -88,13 +82,11 @@ export async function executeServerInfo(interaction: ChatInputCommandInteraction
       .addFields(
         { name: "👥 Total Players", value: players.length.toString(), inline: true },
         { name: "🎮 Total Accounts", value: accounts.length.toString(), inline: true },
-        { name: "📡 Active Accounts (7d)", value: activeAccounts.toString(), inline: true },
         { name: "🔔 Subscriptions", value: subscriptions.length.toString(), inline: true },
         { name: "📺 Subscribed Channels", value: channelMap.size.toString(), inline: true },
         { name: "🏆 Total Competitions", value: competitions.length.toString(), inline: true },
         { name: "✅ Active Competitions", value: activeCompetitions.length.toString(), inline: true },
         { name: "🔑 Permissions Granted", value: permissions.length.toString(), inline: true },
-        { name: "🎮 Games In Progress", value: activeGames.toString(), inline: true },
       )
       .setTimestamp();
 
@@ -127,10 +119,7 @@ export async function executeServerInfo(interaction: ChatInputCommandInteraction
 
       const accountsList = accounts.slice(0, 10).map((account) => {
         const region = account.region.toUpperCase();
-        const lastSeen = account.lastSeenInGame
-          ? `Last seen: <t:${Math.floor(account.lastSeenInGame.getTime() / 1000).toString()}:R>`
-          : "Never seen";
-        return `**${account.alias}** (${region}) - ${account.player.alias}\n${lastSeen}`;
+        return `**${account.alias}** (${region}) - ${account.player.alias}`;
       });
 
       if (accountsList.length > 0) {

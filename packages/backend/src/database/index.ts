@@ -88,7 +88,6 @@ export async function getAccounts(): Promise<PlayerConfig> {
           alias: player.alias,
           league: {
             leagueAccount: mapToAccount(account),
-            lastSeenInGame: account.lastSeenInGame,
           },
           discordAccount: {
             id: DiscordAccountIdSchema.nullable().parse(player.discordId),
@@ -110,48 +109,6 @@ function mapToAccount({ puuid, region }: { puuid: string; region: string }): Lea
     puuid: LeaguePuuidSchema.parse(puuid),
     region: RegionSchema.parse(region),
   };
-}
-
-/**
- * Update the lastSeenInGame timestamp for multiple accounts.
- * This is called when we detect players in an active game.
- * @deprecated No longer actively used since Spectator API was removed
- *
- * @param puuids - Array of player PUUIDs to update
- * @param timestamp - The timestamp to set (defaults to now)
- * @param prismaClient - Prisma client instance
- */
-export async function updateLastSeenInGame(
-  puuids: LeaguePuuid[],
-  timestamp: Date = new Date(),
-  prismaClient: PrismaClient = prisma,
-): Promise<void> {
-  if (puuids.length === 0) {
-    return;
-  }
-
-  console.log(`📝 Updating lastSeenInGame for ${puuids.length.toString()} accounts`);
-
-  try {
-    const startTime = Date.now();
-
-    await prismaClient.account.updateMany({
-      where: {
-        puuid: {
-          in: puuids,
-        },
-      },
-      data: {
-        lastSeenInGame: timestamp,
-      },
-    });
-
-    const queryTime = Date.now() - startTime;
-    console.log(`✅ Updated lastSeenInGame in ${queryTime.toString()}ms`);
-  } catch (error) {
-    console.error("❌ Error updating lastSeenInGame:", error);
-    throw error;
-  }
 }
 
 /**

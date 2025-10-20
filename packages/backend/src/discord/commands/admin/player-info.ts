@@ -100,12 +100,12 @@ export async function executePlayerInfo(interaction: ChatInputCommandInteraction
   sections.push(`\n## 🎮 Accounts (${player.accounts.length.toString()})`);
   if (player.accounts.length > 0) {
     for (const account of player.accounts) {
-      const lastSeen = account.lastSeenInGame
-        ? `Last seen: <t:${Math.floor(account.lastSeenInGame.getTime() / 1000).toString()}:R>`
-        : "Never seen in game";
+      const lastProcessed = account.lastProcessedMatchId
+        ? `Last match: \`${account.lastProcessedMatchId}\``
+        : "No matches processed yet";
       sections.push(`• **${account.alias}** (${account.region.toUpperCase()})`);
       sections.push(`  - PUUID: \`${account.puuid}\``);
-      sections.push(`  - ${lastSeen}`);
+      sections.push(`  - ${lastProcessed}`);
       sections.push(`  - ID: ${account.id.toString()}`);
     }
   } else {
