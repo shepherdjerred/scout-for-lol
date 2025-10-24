@@ -14,18 +14,15 @@ import {
 } from "@scout-for-lol/data";
 import { uniqueBy } from "remeda";
 
-/**
- * Player account with runtime state for polling
- */
-export type PlayerAccountWithState = {
-  config: PlayerConfigEntry;
-  lastMatchTime: Date | null;
-};
-
 console.log("🗄️  Initializing Prisma database client");
 export const prisma = new PrismaClient();
 
 console.log("✅ Database client initialized");
+
+export type PlayerAccountWithState = {
+  config: PlayerConfigEntry;
+  lastCheckedTime: Date | undefined;
+};
 
 export async function getChannelsSubscribedToPlayers(
   puuids: LeaguePuuid[],
@@ -98,7 +95,7 @@ export async function getAccounts(): Promise<PlayerConfig> {
             leagueAccount: mapToAccount(account),
           },
           discordAccount: {
-            id: DiscordAccountIdSchema.nullable().parse(player.discordId),
+            id: DiscordAccountIdSchema.optional().parse(player.discordId),
           },
         };
       });
@@ -144,10 +141,10 @@ export async function getAccountsWithState(prismaClient: PrismaClient = prisma):
               leagueAccount: mapToAccount(account),
             },
             discordAccount: {
-              id: DiscordAccountIdSchema.nullable().parse(player.discordId),
+              id: DiscordAccountIdSchema.optional().parse(player.discordId),
             },
           },
-          lastMatchTime: account.lastMatchTime,
+          lastCheckedTime: undefined,
         };
       });
     });

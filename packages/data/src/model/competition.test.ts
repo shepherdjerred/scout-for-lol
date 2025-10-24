@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
   type CompetitionCriteria,
-  type RawCompetition,
   CompetitionCriteriaSchema,
   CompetitionIdSchema,
   CompetitionQueueTypeSchema,
@@ -26,6 +25,7 @@ import {
   participantStatusToString,
   visibilityToString,
 } from "./competition.js";
+import type { Competition } from "../../../backend/generated/prisma/client/index.js";
 
 describe("CompetitionId branded type", () => {
   test("accepts positive integers", () => {
@@ -196,7 +196,7 @@ describe("CompetitionQueueType enum", () => {
 
 describe("getCompetitionStatus - CANCELLED", () => {
   test("returns CANCELLED when isCancelled is true (with future dates)", () => {
-    const competition = {
+    const competition: Competition = {
       isCancelled: true,
       startDate: new Date("2025-06-01"),
       endDate: new Date("2025-07-01"),
@@ -206,7 +206,7 @@ describe("getCompetitionStatus - CANCELLED", () => {
   });
 
   test("returns CANCELLED when isCancelled is true (with past dates)", () => {
-    const competition = {
+    const competition: Competition = {
       isCancelled: true,
       startDate: new Date("2024-01-01"),
       endDate: new Date("2024-02-01"),
@@ -217,7 +217,7 @@ describe("getCompetitionStatus - CANCELLED", () => {
 
   test("returns CANCELLED when isCancelled is true (with current dates)", () => {
     const now = new Date();
-    const competition = {
+    const competition: Competition = {
       isCancelled: true,
       startDate: new Date(now.getTime() - 86400000), // Yesterday
       endDate: new Date(now.getTime() + 86400000), // Tomorrow
@@ -227,10 +227,10 @@ describe("getCompetitionStatus - CANCELLED", () => {
   });
 
   test("returns CANCELLED when isCancelled is true (with seasonId)", () => {
-    const competition = {
+    const competition: Competition = {
       isCancelled: true,
-      startDate: null,
-      endDate: null,
+      startDate: undefined,
+      endDate: undefined,
       seasonId: "2025-season-1",
     };
     expect(getCompetitionStatus(competition)).toBe("CANCELLED");
@@ -240,20 +240,20 @@ describe("getCompetitionStatus - CANCELLED", () => {
 describe("getCompetitionStatus - DRAFT", () => {
   test("returns DRAFT when startDate is in the future", () => {
     const now = new Date();
-    const competition = {
+    const competition: Competition = {
       isCancelled: false,
       startDate: new Date(now.getTime() + 86400000), // Tomorrow
       endDate: new Date(now.getTime() + 86400000 * 7), // Next week
-      seasonId: null,
+      seasonId: undefined,
     };
     expect(getCompetitionStatus(competition)).toBe("DRAFT");
   });
 
   test("returns DRAFT when only seasonId is set", () => {
-    const competition = {
+    const competition: Competition = {
       isCancelled: false,
-      startDate: null,
-      endDate: null,
+      startDate: undefined,
+      endDate: undefined,
       seasonId: "2025-season-1",
     };
     expect(getCompetitionStatus(competition)).toBe("DRAFT");
@@ -261,11 +261,11 @@ describe("getCompetitionStatus - DRAFT", () => {
 
   test("returns DRAFT when startDate is exactly now (edge case)", () => {
     const now = new Date();
-    const competition = {
+    const competition: Competition = {
       isCancelled: false,
       startDate: new Date(now.getTime() + 1000), // 1 second in future
       endDate: new Date(now.getTime() + 86400000),
-      seasonId: null,
+      seasonId: undefined,
     };
     expect(getCompetitionStatus(competition)).toBe("DRAFT");
   });
@@ -274,22 +274,22 @@ describe("getCompetitionStatus - DRAFT", () => {
 describe("getCompetitionStatus - ACTIVE", () => {
   test("returns ACTIVE when startDate is in past and endDate is in future", () => {
     const now = new Date();
-    const competition = {
+    const competition: Competition = {
       isCancelled: false,
       startDate: new Date(now.getTime() - 86400000), // Yesterday
       endDate: new Date(now.getTime() + 86400000), // Tomorrow
-      seasonId: null,
+      seasonId: undefined,
     };
     expect(getCompetitionStatus(competition)).toBe("ACTIVE");
   });
 
   test("returns ACTIVE when just started (edge case)", () => {
     const now = new Date();
-    const competition = {
+    const competition: Competition = {
       isCancelled: false,
       startDate: new Date(now.getTime() - 1000), // 1 second ago
       endDate: new Date(now.getTime() + 86400000),
-      seasonId: null,
+      seasonId: undefined,
     };
     expect(getCompetitionStatus(competition)).toBe("ACTIVE");
   });
@@ -302,29 +302,29 @@ describe("getCompetitionStatus - ENDED", () => {
       isCancelled: false,
       startDate: new Date(now.getTime() - 86400000 * 7), // Last week
       endDate: new Date(now.getTime() - 86400000), // Yesterday
-      seasonId: null,
+      seasonId: undefined,
     };
     expect(getCompetitionStatus(competition)).toBe("ENDED");
   });
 
   test("returns ENDED when just ended (edge case)", () => {
     const now = new Date();
-    const competition = {
+    const competition: Competition = {
       isCancelled: false,
       startDate: new Date(now.getTime() - 86400000 * 7),
       endDate: new Date(now.getTime() - 1000), // 1 second ago
-      seasonId: null,
+      seasonId: undefined,
     };
     expect(getCompetitionStatus(competition)).toBe("ENDED");
   });
 
   test("returns ENDED when endDate is exactly now", () => {
     const now = new Date();
-    const competition = {
+    const competition: Competition = {
       isCancelled: false,
       startDate: new Date(now.getTime() - 86400000),
       endDate: now,
-      seasonId: null,
+      seasonId: undefined,
     };
     expect(getCompetitionStatus(competition)).toBe("ENDED");
   });
@@ -332,11 +332,11 @@ describe("getCompetitionStatus - ENDED", () => {
 
 describe("getCompetitionStatus - Error cases", () => {
   test("throws error when no dates and no seasonId", () => {
-    const competition = {
+    const competition: Competition = {
       isCancelled: false,
-      startDate: null,
-      endDate: null,
-      seasonId: null,
+      startDate: undefined,
+      endDate: undefined,
+      seasonId: undefined,
     };
     expect(() => getCompetitionStatus(competition)).toThrow(
       "Competition must have either (startDate AND endDate) OR seasonId",
@@ -344,11 +344,11 @@ describe("getCompetitionStatus - Error cases", () => {
   });
 
   test("error message is descriptive", () => {
-    const competition = {
+    const competition: Competition = {
       isCancelled: false,
-      startDate: null,
-      endDate: null,
-      seasonId: null,
+      startDate: undefined,
+      endDate: undefined,
+      seasonId: undefined,
     };
     try {
       getCompetitionStatus(competition);
@@ -1272,7 +1272,7 @@ describe("getSnapshotSchemaForCriteria", () => {
 // ============================================================================
 
 describe("parseCompetition", () => {
-  const baseRawCompetition: RawCompetition = {
+  const baseRawCompetition: Competition = {
     id: 42,
     serverId: "123456789012345678",
     ownerId: "987654321098765432",
@@ -1286,14 +1286,14 @@ describe("parseCompetition", () => {
     maxParticipants: 50,
     startDate: new Date("2025-01-01"),
     endDate: new Date("2025-01-31"),
-    seasonId: null,
+    seasonId: undefined,
     creatorDiscordId: "987654321098765432",
     createdTime: new Date("2024-12-01"),
     updatedTime: new Date("2024-12-01"),
   };
 
   test("parses MOST_GAMES_PLAYED criteria correctly", () => {
-    const raw: RawCompetition = {
+    const raw: Competition = {
       ...baseRawCompetition,
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: JSON.stringify({ queue: "SOLO" }),
@@ -1310,7 +1310,7 @@ describe("parseCompetition", () => {
   });
 
   test("parses HIGHEST_RANK criteria correctly", () => {
-    const raw: RawCompetition = {
+    const raw: Competition = {
       ...baseRawCompetition,
       criteriaType: "HIGHEST_RANK",
       criteriaConfig: JSON.stringify({ queue: "FLEX" }),
@@ -1325,7 +1325,7 @@ describe("parseCompetition", () => {
   });
 
   test("parses MOST_WINS_CHAMPION criteria correctly", () => {
-    const raw: RawCompetition = {
+    const raw: Competition = {
       ...baseRawCompetition,
       criteriaType: "MOST_WINS_CHAMPION",
       criteriaConfig: JSON.stringify({ championId: 157, queue: "SOLO" }),
@@ -1341,7 +1341,7 @@ describe("parseCompetition", () => {
   });
 
   test("parses HIGHEST_WIN_RATE criteria with default minGames", () => {
-    const raw: RawCompetition = {
+    const raw: Competition = {
       ...baseRawCompetition,
       criteriaType: "HIGHEST_WIN_RATE",
       criteriaConfig: JSON.stringify({ queue: "FLEX" }),
@@ -1384,7 +1384,7 @@ describe("parseCompetition", () => {
   });
 
   test("throws on invalid JSON in criteriaConfig", () => {
-    const raw: RawCompetition = {
+    const raw: Competition = {
       ...baseRawCompetition,
       criteriaConfig: "{ invalid json",
     };
@@ -1393,7 +1393,7 @@ describe("parseCompetition", () => {
   });
 
   test("throws when criteriaConfig is not an object", () => {
-    const raw: RawCompetition = {
+    const raw: Competition = {
       ...baseRawCompetition,
       criteriaConfig: JSON.stringify("not an object"),
     };
@@ -1402,7 +1402,7 @@ describe("parseCompetition", () => {
   });
 
   test("throws when criteriaConfig is null", () => {
-    const raw: RawCompetition = {
+    const raw: Competition = {
       ...baseRawCompetition,
       criteriaConfig: JSON.stringify(null),
     };
@@ -1411,7 +1411,7 @@ describe("parseCompetition", () => {
   });
 
   test("throws when criteriaType doesn't match config", () => {
-    const raw: RawCompetition = {
+    const raw: Competition = {
       ...baseRawCompetition,
       criteriaType: "MOST_WINS_CHAMPION",
       criteriaConfig: JSON.stringify({ queue: "SOLO" }), // missing championId
@@ -1421,7 +1421,7 @@ describe("parseCompetition", () => {
   });
 
   test("throws when criteria has missing required fields", () => {
-    const raw: RawCompetition = {
+    const raw: Competition = {
       ...baseRawCompetition,
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: JSON.stringify({}), // missing queue
@@ -1431,7 +1431,7 @@ describe("parseCompetition", () => {
   });
 
   test("throws when criteria has invalid queue for HIGHEST_RANK", () => {
-    const raw: RawCompetition = {
+    const raw: Competition = {
       ...baseRawCompetition,
       criteriaType: "HIGHEST_RANK",
       criteriaConfig: JSON.stringify({ queue: "ARENA" }), // not SOLO/FLEX

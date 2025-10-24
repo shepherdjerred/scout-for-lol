@@ -38,7 +38,7 @@ export type RankedLeaderboardEntry = LeaderboardEntry & {
  * We NEVER reuse old snapshots to display current state. START/END snapshots are
  * only for historical comparison (e.g., MOST_RANK_CLIMB comparing start vs end).
  */
-async function fetchSnapshotData(
+export async function fetchSnapshotData(
   prisma: PrismaClient,
   competitionId: number,
   criteria: CompetitionCriteria,

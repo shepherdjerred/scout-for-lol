@@ -82,7 +82,7 @@ export function Report({ match }: { match: CompletedMatch }) {
                   mainPlayer.rankAfterMatch &&
                   lpDiffToString(leaguePointsDelta(mainPlayer.rankBeforeMatch, mainPlayer.rankAfterMatch))}
               </span>
-              {wins != null && losses != null && (
+              {wins !== undefined && losses !== undefined && (
                 <div
                   style={{
                     display: "flex",

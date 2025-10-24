@@ -120,6 +120,12 @@ export const competitionCommand = new SlashCommandBuilder()
           .setRequired(false)
           .setMinValue(2)
           .setMaxValue(100),
+      )
+      .addBooleanOption((option) =>
+        option
+          .setName("add-all-members")
+          .setDescription("Add all server members with linked accounts (admin only)")
+          .setRequired(false),
       ),
   )
   .addSubcommand((subcommand) =>

@@ -8,7 +8,7 @@ export const PlayerConfigEntrySchema = z.strictObject({
   league: z.strictObject({
     leagueAccount: LeagueAccountSchema,
   }),
-  discordAccount: DiscordSchema.nullable(),
+  discordAccount: DiscordSchema.optional(),
 });
 
 export type PlayerConfig = z.infer<typeof PlayerConfigSchema>;

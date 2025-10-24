@@ -1,4 +1,4 @@
-import type { HighestRankCriteria, Rank } from "@scout-for-lol/data";
+import type { HighestRankCriteria, LeaguePuuid, Rank } from "@scout-for-lol/data";
 import { rankToLeaguePoints } from "@scout-for-lol/data";
 import type { LeaderboardEntry, PlayerWithAccounts } from "./types.js";
 
@@ -12,7 +12,7 @@ import type { LeaderboardEntry, PlayerWithAccounts } from "./types.js";
 export function processHighestRank(
   participants: PlayerWithAccounts[],
   criteria: HighestRankCriteria,
-  ranks: Map<number, { soloRank?: Rank; flexRank?: Rank }>,
+  ranks: Map<LeaguePuuid, { soloRank?: Rank; flexRank?: Rank }[]>,
 ): LeaderboardEntry[] {
   const entries: LeaderboardEntry[] = [];
 
