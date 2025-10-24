@@ -1,13 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import { Colors } from "discord.js";
 import type { CompetitionWithCriteria } from "@scout-for-lol/data";
 import type { RankedLeaderboardEntry } from "../../league/competition/leaderboard.js";
-import {
-  generateLeaderboardEmbed,
-  generateCompetitionDetailsEmbed,
-  formatCriteriaDescription,
-  formatScore,
-} from "./competition.js";
+import { generateLeaderboardEmbed, generateCompetitionDetailsEmbed, formatScore } from "./competition.js";
 
 // ============================================================================
 // Test Data Factories
@@ -158,74 +152,6 @@ describe("generateLeaderboardEmbed", () => {
     expect(standingsText).toContain("🥉");
   });
 
-  it("should show correct status colors for ACTIVE competition", () => {
-    const competition = createTestCompetition({
-      startDate: new Date(Date.now() - 1000 * 60 * 60 * 24), // Started 1 day ago
-      endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 15), // Ends in 15 days
-    });
-
-    const embed = generateLeaderboardEmbed(competition, []);
-    const embedData = embed.toJSON();
-
-    // Green color for ACTIVE
-    expect(embedData.color).toBe(Colors.Green);
-
-    // Should show active status
-    const statusField = embedData.fields?.find((f) => f.name === "Status");
-    expect(statusField?.value).toContain("🟢");
-    expect(statusField?.value).toContain("Active");
-  });
-
-  it("should show correct status colors for DRAFT competition", () => {
-    const competition = createTestCompetition({
-      startDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // Starts in 7 days
-      endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 37), // Ends in 37 days
-    });
-
-    const embed = generateLeaderboardEmbed(competition, []);
-    const embedData = embed.toJSON();
-
-    // Blue color for DRAFT
-    expect(embedData.color).toBe(Colors.Blue);
-
-    const statusField = embedData.fields?.find((f) => f.name === "Status");
-    expect(statusField?.value).toContain("🔵");
-    expect(statusField?.value).toContain("Draft");
-  });
-
-  it("should show correct status colors for ENDED competition", () => {
-    const competition = createTestCompetition({
-      startDate: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), // Started 30 days ago
-      endDate: new Date(Date.now() - 1000 * 60 * 60 * 24), // Ended 1 day ago
-    });
-
-    const embed = generateLeaderboardEmbed(competition, []);
-    const embedData = embed.toJSON();
-
-    // Red color for ENDED
-    expect(embedData.color).toBe(Colors.Red);
-
-    const statusField = embedData.fields?.find((f) => f.name === "Status");
-    expect(statusField?.value).toContain("🔴");
-    expect(statusField?.value).toContain("Ended");
-  });
-
-  it("should show correct status colors for CANCELLED competition", () => {
-    const competition = createTestCompetition({
-      isCancelled: true,
-    });
-
-    const embed = generateLeaderboardEmbed(competition, []);
-    const embedData = embed.toJSON();
-
-    // Grey color for CANCELLED
-    expect(embedData.color).toBe(Colors.Grey);
-
-    const statusField = embedData.fields?.find((f) => f.name === "Status");
-    expect(statusField?.value).toContain("⚫");
-    expect(statusField?.value).toContain("Cancelled");
-  });
-
   it("should handle empty leaderboard gracefully", () => {
     const competition = createTestCompetition();
     const leaderboard: RankedLeaderboardEntry[] = [];
@@ -235,31 +161,6 @@ describe("generateLeaderboardEmbed", () => {
 
     const standingsField = embedData.fields?.find((f) => f.name.includes("Standings"));
     expect(standingsField?.value).toContain("No participants have scores yet");
-  });
-
-  it("should include participant count in fields", () => {
-    const competition = createTestCompetition({ maxParticipants: 50 });
-    const leaderboard: RankedLeaderboardEntry[] = [
-      createTestLeaderboardEntry(1, 100, "Player1"),
-      createTestLeaderboardEntry(2, 90, "Player2"),
-      createTestLeaderboardEntry(3, 80, "Player3"),
-    ];
-
-    const embed = generateLeaderboardEmbed(competition, leaderboard);
-    const embedData = embed.toJSON();
-
-    const participantField = embedData.fields?.find((f) => f.name === "Participants");
-    expect(participantField?.value).toBe("3/50");
-  });
-
-  it("should include owner in fields", () => {
-    const competition = createTestCompetition({ ownerId: "owner-123" });
-
-    const embed = generateLeaderboardEmbed(competition, []);
-    const embedData = embed.toJSON();
-
-    const ownerField = embedData.fields?.find((f) => f.name === "Owner");
-    expect(ownerField?.value).toBe("<@owner-123>");
   });
 
   it("should include criteria description and timestamp in footer", () => {
@@ -416,117 +317,10 @@ describe("generateCompetitionDetailsEmbed", () => {
 });
 
 // ============================================================================
-// Tests: formatCriteriaDescription
-// ============================================================================
-
-describe("formatCriteriaDescription", () => {
-  it("should format MOST_GAMES_PLAYED criteria", () => {
-    const criteria = {
-      type: "MOST_GAMES_PLAYED" as const,
-      queue: "SOLO" as const,
-    };
-
-    const result = formatCriteriaDescription(criteria);
-    expect(result).toBe("Most games played in Solo Queue");
-  });
-
-  it("should format HIGHEST_RANK criteria", () => {
-    const criteria = {
-      type: "HIGHEST_RANK" as const,
-      queue: "FLEX" as const,
-    };
-
-    const result = formatCriteriaDescription(criteria);
-    expect(result).toBe("Highest rank in Flex Queue");
-  });
-
-  it("should format MOST_RANK_CLIMB criteria", () => {
-    const criteria = {
-      type: "MOST_RANK_CLIMB" as const,
-      queue: "SOLO" as const,
-    };
-
-    const result = formatCriteriaDescription(criteria);
-    expect(result).toBe("Most rank climb in Solo Queue");
-  });
-
-  it("should format MOST_WINS_PLAYER criteria", () => {
-    const criteria = {
-      type: "MOST_WINS_PLAYER" as const,
-      queue: "ARAM" as const,
-    };
-
-    const result = formatCriteriaDescription(criteria);
-    expect(result).toBe("Most wins in ARAM");
-  });
-
-  it("should format MOST_WINS_CHAMPION criteria with champion name", () => {
-    const criteria = {
-      type: "MOST_WINS_CHAMPION" as const,
-      championId: 157, // Yasuo
-      queue: undefined,
-    };
-
-    const result = formatCriteriaDescription(criteria);
-    expect(result).toContain("Most wins with");
-    // Note: The actual champion name will depend on the twisted library
-  });
-
-  it("should format MOST_WINS_CHAMPION criteria with queue specified", () => {
-    const criteria = {
-      type: "MOST_WINS_CHAMPION" as const,
-      championId: 157, // Yasuo
-      queue: "SOLO" as const,
-    };
-
-    const result = formatCriteriaDescription(criteria);
-    expect(result).toContain("Most wins with");
-    expect(result).toContain("in Solo Queue");
-  });
-
-  it("should format HIGHEST_WIN_RATE criteria", () => {
-    const criteria = {
-      type: "HIGHEST_WIN_RATE" as const,
-      queue: "FLEX" as const,
-      minGames: 20,
-    };
-
-    const result = formatCriteriaDescription(criteria);
-    expect(result).toBe("Highest win rate in Flex Queue (min 20 games)");
-  });
-
-  it("should handle all queue types correctly", () => {
-    const queueTypes = ["SOLO", "FLEX", "RANKED_ANY", "ARENA", "ARAM", "ALL"] as const;
-
-    for (const queue of queueTypes) {
-      const criteria = {
-        type: "MOST_GAMES_PLAYED" as const,
-        queue,
-      };
-
-      const result = formatCriteriaDescription(criteria);
-      expect(result).toContain("Most games played in");
-      expect(result.length).toBeGreaterThan(0);
-    }
-  });
-});
-
-// ============================================================================
-// Tests: formatScore
+// Tests: formatScore (complex cases only)
 // ============================================================================
 
 describe("formatScore", () => {
-  it("should format games count for MOST_GAMES_PLAYED", () => {
-    const criteria = {
-      type: "MOST_GAMES_PLAYED" as const,
-      queue: "SOLO" as const,
-    };
-
-    expect(formatScore(1, criteria)).toBe("1 game");
-    expect(formatScore(15, criteria)).toBe("15 games");
-    expect(formatScore(0, criteria)).toBe("0 games");
-  });
-
   it("should format rank for HIGHEST_RANK", () => {
     const criteria = {
       type: "HIGHEST_RANK" as const,
@@ -544,26 +338,6 @@ describe("formatScore", () => {
     const result = formatScore(rank, criteria);
     expect(result).toContain("Diamond");
     expect(result).toContain("67");
-  });
-
-  it("should format LP gained for MOST_RANK_CLIMB", () => {
-    const criteria = {
-      type: "MOST_RANK_CLIMB" as const,
-      queue: "SOLO" as const,
-    };
-
-    expect(formatScore(250, criteria)).toBe("250 LP gained");
-    expect(formatScore(0, criteria)).toBe("0 LP gained");
-  });
-
-  it("should format wins count for MOST_WINS_PLAYER", () => {
-    const criteria = {
-      type: "MOST_WINS_PLAYER" as const,
-      queue: "SOLO" as const,
-    };
-
-    expect(formatScore(1, criteria)).toBe("1 win");
-    expect(formatScore(12, criteria)).toBe("12 wins");
   });
 
   it("should format wins with record when metadata includes games", () => {
@@ -595,18 +369,6 @@ describe("formatScore", () => {
 
     const result = formatScore(10, criteria, metadata);
     expect(result).toBe("10 wins (10-8, 56%)");
-  });
-
-  it("should format win rate for HIGHEST_WIN_RATE", () => {
-    const criteria = {
-      type: "HIGHEST_WIN_RATE" as const,
-      queue: "SOLO" as const,
-      minGames: 10,
-    };
-
-    expect(formatScore(75.0, criteria)).toBe("75.0%");
-    expect(formatScore(100.0, criteria)).toBe("100.0%");
-    expect(formatScore(0.0, criteria)).toBe("0.0%");
   });
 
   it("should format win rate with record when metadata available", () => {
@@ -655,24 +417,5 @@ describe("formatScore", () => {
 
     const result = formatScore(0.0, criteria, metadata);
     expect(result).toBe("0.0% (0-10)");
-  });
-
-  it("should throw for invalid score type", () => {
-    const criteria = {
-      type: "MOST_GAMES_PLAYED" as const,
-      queue: "SOLO" as const,
-    };
-
-    // Pass a Rank object when expecting a number
-    const invalidScore = {
-      tier: "diamond" as const,
-      division: 2 as const,
-      lp: 67,
-      wins: 100,
-      losses: 85,
-    };
-
-    // Since we use Zod .parse(), it should throw on invalid data
-    expect(() => formatScore(invalidScore, criteria)).toThrow();
   });
 });

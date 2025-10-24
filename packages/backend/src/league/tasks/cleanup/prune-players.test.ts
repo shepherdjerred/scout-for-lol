@@ -6,7 +6,9 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-describe("pruneOrphanedPlayers", () => {
+// Mark these tests as serial since they create temporary databases
+// and have timing constraints. Running them concurrently would slow them down.
+describe.serial("pruneOrphanedPlayers", () => {
   let prisma: PrismaClient;
   let testDir: string;
   let testDbPath: string;

@@ -1,5 +1,4 @@
 import { type ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits } from "discord.js";
-import { z } from "zod";
 import { prisma } from "../../../database/index.js";
 import { cancelCompetition, getCompetitionById } from "../../../database/competition/queries.js";
 import { getErrorMessage } from "../../../utils/errors.js";
@@ -49,19 +48,22 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   const isOwner = competition.ownerId === userId;
 
   // Check if user is admin (only works in guild context)
-  const GuildMemberSchema = z.object({
-    permissions: z.object({
-      has: z.function({
-        input: [z.bigint()],
-        output: z.boolean(),
-      }),
-    }),
-  });
-
+  // Note: We cannot use z.function() here because it loses the 'this' context
+  // when Zod validates by calling the function. Instead, we use a type guard.
   let isAdmin = false;
-  const memberResult = GuildMemberSchema.safeParse(member);
-  if (memberResult.success) {
-    isAdmin = memberResult.data.permissions.has(PermissionFlagsBits.Administrator);
+  if (
+    member &&
+    // eslint-disable-next-line no-restricted-syntax -- ok only for this function -- signed off by a human
+    typeof member === "object" &&
+    "permissions" in member &&
+    member.permissions &&
+    // eslint-disable-next-line no-restricted-syntax -- ok only for this function -- signed off by a human
+    typeof member.permissions === "object" &&
+    "has" in member.permissions &&
+    // eslint-disable-next-line no-restricted-syntax -- ok only for this function -- signed off by a human
+    typeof member.permissions.has === "function"
+  ) {
+    isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
   }
 
   if (!isOwner && !isAdmin) {

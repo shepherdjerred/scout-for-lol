@@ -1,10 +1,5 @@
 import { type PrismaClient } from "../../../generated/prisma/client/index.js";
-import {
-  CompetitionCriteriaSchema,
-  CompetitionVisibilitySchema,
-  SeasonIdSchema,
-  hasSeasonEnded,
-} from "@scout-for-lol/data";
+import { CompetitionCriteriaSchema, CompetitionVisibilitySchema, SeasonIdSchema } from "@scout-for-lol/data";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 
@@ -79,23 +74,11 @@ const FixedDateCompetitionSchema = z
  * Season-based competition schema
  * No date constraints - follows League's season timing
  * Uses predefined season IDs only
- * Validates that the season hasn't ended yet
  */
-const SeasonBasedCompetitionSchema = z
-  .object({
-    type: z.literal("SEASON"),
-    seasonId: SeasonIdSchema,
-  })
-  .refine(
-    (data) => {
-      const ended = hasSeasonEnded(data.seasonId);
-      return ended !== true; // Allow if not ended or season not found (will fail later)
-    },
-    {
-      message: "Cannot create competition for a season that has already ended",
-      path: ["seasonId"],
-    },
-  );
+const SeasonBasedCompetitionSchema = z.object({
+  type: z.literal("SEASON"),
+  seasonId: SeasonIdSchema,
+});
 
 /**
  * Discriminated union for competition dates

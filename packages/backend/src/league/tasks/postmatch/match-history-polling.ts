@@ -3,10 +3,11 @@ import { z } from "zod";
 import { api } from "../../api/api.js";
 import { getRecentMatchIds, filterNewMatches } from "../../api/match-history.js";
 import {
-  getAccounts,
+  getAccountsWithState,
   updateLastProcessedMatch,
   getChannelsSubscribedToPlayers,
   getLastProcessedMatch,
+  updateLastMatchTime,
 } from "../../../database/index.js";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
 import { mapRegionToEnum } from "../../model/region.js";
@@ -20,6 +21,7 @@ import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "../../../storage/s3.j
 import { toMatch, toArenaMatch } from "../../model/match.js";
 import { generateMatchReview } from "../../review/generator.js";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
+import { shouldCheckPlayer, calculatePollingInterval } from "../../../utils/polling-intervals.js";
 
 type PlayerWithMatchIds = {
   player: PlayerConfigEntry;
@@ -209,23 +211,56 @@ export async function checkMatchHistory(): Promise<void> {
   const startTime = Date.now();
 
   try {
-    // Get all tracked player accounts
-    const players = await getAccounts();
-    console.log(`📊 Checking match history for ${players.length.toString()} player account(s)`);
+    // Get all tracked player accounts with their polling state
+    const accountsWithState = await getAccountsWithState();
+    console.log(`📊 Found ${accountsWithState.length.toString()} total player account(s)`);
 
-    if (players.length === 0) {
+    if (accountsWithState.length === 0) {
       console.log("⏸️  No players to check");
+      return;
+    }
+
+    const currentTime = new Date();
+
+    // Track distribution of players across polling intervals for monitoring
+    const intervalDistribution = new Map<number, number>();
+    for (const { lastMatchTime } of accountsWithState) {
+      const interval = calculatePollingInterval(lastMatchTime, currentTime);
+      intervalDistribution.set(interval, (intervalDistribution.get(interval) ?? 0) + 1);
+    }
+
+    // Log interval distribution
+    for (const [interval, count] of intervalDistribution.entries()) {
+      console.log(`📊 Polling interval ${interval.toString()}min: ${count.toString()} account(s)`);
+    }
+
+    // Filter to only players that should be checked this cycle
+    const playersToCheck = accountsWithState.filter(({ lastMatchTime }) =>
+      shouldCheckPlayer(lastMatchTime, currentTime),
+    );
+
+    console.log(
+      `📊 ${playersToCheck.length.toString()} / ${accountsWithState.length.toString()} account(s) should be checked this cycle`,
+    );
+
+    if (playersToCheck.length === 0) {
+      console.log("⏸️  No players to check this cycle (based on polling intervals)");
       return;
     }
 
     // Fetch recent match IDs for each player
     const playersWithMatches: PlayerWithMatchIds[] = [];
 
-    for (const player of players) {
-      // Query the last processed match ID from the database
-      const lastProcessedMatchId = await getLastProcessedMatch(player.league.leagueAccount.puuid);
+    for (const { config: player, lastMatchTime } of playersToCheck) {
+      const puuid = player.league.leagueAccount.puuid;
+      const interval = calculatePollingInterval(lastMatchTime, currentTime);
 
-      console.log(`[${player.alias}] 🔍 Checking match history (last processed: ${lastProcessedMatchId ?? "none"})`);
+      console.log(
+        `[${player.alias}] 🔍 Checking match history (interval: ${interval.toString()}min, last match: ${lastMatchTime?.toISOString() ?? "never"})`,
+      );
+
+      // Query the last processed match ID from the database
+      const lastProcessedMatchId = await getLastProcessedMatch(puuid);
 
       const recentMatchIds = await getRecentMatchIds(player, 5);
 
@@ -259,6 +294,9 @@ export async function checkMatchHistory(): Promise<void> {
       `🎮 Processing ${playersWithMatches.reduce((sum, p) => sum + p.matchIds.length, 0).toString()} new match(es) from ${playersWithMatches.length.toString()} player(s)`,
     );
 
+    // Get all player configs for match processing (we need all configs, not just the ones we checked)
+    const allPlayerConfigs = accountsWithState.map((a) => a.config);
+
     // Process each match
     // We need to deduplicate matches since multiple tracked players might be in the same game
     const processedMatchIds = new Set<MatchId>();
@@ -281,7 +319,7 @@ export async function checkMatchHistory(): Promise<void> {
           }
 
           // Get all tracked players in this match
-          const allTrackedPlayers = players.filter((p) =>
+          const allTrackedPlayers = allPlayerConfigs.filter((p) =>
             matchData.metadata.participants.includes(p.league.leagueAccount.puuid),
           );
 
@@ -291,10 +329,17 @@ export async function checkMatchHistory(): Promise<void> {
           // Mark as processed
           processedMatchIds.add(matchId);
 
-          // Update lastProcessedMatchId for all players in this match
+          // Get match creation time for activity tracking
+          const matchCreationTime = new Date(matchData.info.gameCreation);
+
+          // Update lastProcessedMatchId and lastMatchTime for all players in this match
           for (const trackedPlayer of allTrackedPlayers) {
-            await updateLastProcessedMatch(trackedPlayer.league.leagueAccount.puuid, matchId);
-            console.log(`[${trackedPlayer.alias}] 📝 Updated lastProcessedMatchId to ${matchId}`);
+            const playerPuuid = trackedPlayer.league.leagueAccount.puuid;
+            await updateLastProcessedMatch(playerPuuid, matchId);
+            await updateLastMatchTime(playerPuuid, matchCreationTime);
+            console.log(
+              `[${trackedPlayer.alias}] 📝 Updated lastProcessedMatchId to ${matchId}, lastMatchTime to ${matchCreationTime.toISOString()}`,
+            );
           }
         } catch (error) {
           console.error(`[${player.alias}] ❌ Error processing match ${matchId}:`, error);

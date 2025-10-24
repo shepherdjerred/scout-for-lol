@@ -17,8 +17,9 @@ const testDir = mkdtempSync(join(tmpdir(), "guild-errors-test-"));
 const testDbPath = join(testDir, "test.db");
 
 // Initialize test database
-execSync(`DATABASE_URL="file:${testDbPath}" bun run db:push`, {
-  cwd: join(process.cwd()),
+execSync("bunx prisma db push --skip-generate", {
+  env: { ...process.env, DATABASE_URL: `file:${testDbPath}` },
+  cwd: process.cwd(),
   stdio: "pipe",
 });
 

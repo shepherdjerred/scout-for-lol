@@ -5,6 +5,7 @@ import {
   CompetitionQueueTypeSchema,
   CompetitionVisibilitySchema,
   SeasonIdSchema,
+  hasSeasonEnded,
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import { prisma } from "../../../database/index.js";
@@ -300,6 +301,11 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
         endDate: new Date(args.endDate),
       };
     } else {
+      // Validate season hasn't ended yet
+      if (hasSeasonEnded(args.season)) {
+        throw new Error(`Cannot create competition for season ${args.season} - this season has already ended`);
+      }
+
       dates = {
         type: "SEASON" as const,
         seasonId: args.season,

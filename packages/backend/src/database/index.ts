@@ -14,6 +14,14 @@ import {
 } from "@scout-for-lol/data";
 import { uniqueBy } from "remeda";
 
+/**
+ * Player account with runtime state for polling
+ */
+export type PlayerAccountWithState = {
+  config: PlayerConfigEntry;
+  lastMatchTime: Date | null;
+};
+
 console.log("🗄️  Initializing Prisma database client");
 export const prisma = new PrismaClient();
 
@@ -104,6 +112,54 @@ export async function getAccounts(): Promise<PlayerConfig> {
   }
 }
 
+/**
+ * Get all player accounts with their runtime state for polling.
+ * Includes lastMatchTime to determine polling intervals.
+ *
+ * @param prismaClient - Prisma client instance
+ * @returns Array of player accounts with their polling state
+ */
+export async function getAccountsWithState(prismaClient: PrismaClient = prisma): Promise<PlayerAccountWithState[]> {
+  console.log("🔍 Fetching all player accounts with state");
+
+  try {
+    const startTime = Date.now();
+
+    const players = await prismaClient.player.findMany({
+      include: {
+        accounts: true,
+      },
+    });
+
+    const queryTime = Date.now() - startTime;
+    console.log(`📊 Found ${players.length.toString()} players in ${queryTime.toString()}ms`);
+
+    // transform
+    const result = players.flatMap((player): PlayerAccountWithState[] => {
+      return player.accounts.map((account): PlayerAccountWithState => {
+        return {
+          config: {
+            alias: player.alias,
+            league: {
+              leagueAccount: mapToAccount(account),
+            },
+            discordAccount: {
+              id: DiscordAccountIdSchema.nullable().parse(player.discordId),
+            },
+          },
+          lastMatchTime: account.lastMatchTime,
+        };
+      });
+    });
+
+    console.log(`📋 Returning ${result.length.toString()} player account entries with state`);
+    return result;
+  } catch (error) {
+    console.error("❌ Error fetching player accounts with state:", error);
+    throw error;
+  }
+}
+
 function mapToAccount({ puuid, region }: { puuid: string; region: string }): LeagueAccount {
   return {
     puuid: LeaguePuuidSchema.parse(puuid),
@@ -170,6 +226,36 @@ export async function getLastProcessedMatch(
     return account?.lastProcessedMatchId ? MatchIdSchema.parse(account.lastProcessedMatchId) : null;
   } catch (error) {
     console.error("❌ Error getting lastProcessedMatchId:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update the lastMatchTime for an account.
+ * This is called when we process a match to track player activity for dynamic polling.
+ *
+ * @param puuid - Player PUUID to update
+ * @param matchTime - The game creation timestamp from the match
+ * @param prismaClient - Prisma client instance
+ */
+export async function updateLastMatchTime(
+  puuid: LeaguePuuid,
+  matchTime: Date,
+  prismaClient: PrismaClient = prisma,
+): Promise<void> {
+  console.log(`📝 Updating lastMatchTime for ${puuid} to ${matchTime.toISOString()}`);
+
+  try {
+    await prismaClient.account.updateMany({
+      where: {
+        puuid,
+      },
+      data: {
+        lastMatchTime: matchTime,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error updating lastMatchTime:", error);
     throw error;
   }
 }

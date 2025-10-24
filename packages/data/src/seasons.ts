@@ -10,7 +10,7 @@ import { z } from "zod";
 /**
  * Valid season IDs as a Zod enum
  */
-export const SeasonIdSchema = z.enum(["2025_SEASON_3_ACT_1"]);
+export const SeasonIdSchema = z.enum(["2025_SEASON_3_ACT_1", "2025_SEASON_3_ACT_2"]);
 
 export type SeasonId = z.infer<typeof SeasonIdSchema>;
 
@@ -30,6 +30,12 @@ export const SEASONS: Record<SeasonId, SeasonData> = {
     displayName: "Trials of Twilight",
     startDate: new Date("2025-08-27T00:00:00-07:00"),
     endDate: new Date("2025-10-21T23:59:59-07:00"),
+  },
+  "2025_SEASON_3_ACT_2": {
+    id: "2025_SEASON_3_ACT_2",
+    displayName: "Worlds 2025",
+    startDate: new Date("2025-10-22T00:00:00-07:00"),
+    endDate: new Date("2026-01-07T23:59:59-08:00"),
   },
 };
 

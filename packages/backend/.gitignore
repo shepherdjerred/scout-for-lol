@@ -1,12 +1,40 @@
+# Coverage output
+coverage/
+*.lcov
+
+# Test reports
+junit.xml
+
+# Build output
+dist/
+
+# Dependencies
+node_modules/
+
+# Environment
 .env
-*.env
-!test.env
-!example.env
-*.png
-!src/league/image/html/**/*.png
-chats.json
-state.json
-matches
-generated
-*.sqlite
-*.sqlite-journal
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.db-journal
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
