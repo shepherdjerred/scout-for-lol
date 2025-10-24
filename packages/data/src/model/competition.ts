@@ -2,6 +2,7 @@ import { match } from "ts-pattern";
 import { z } from "zod";
 import { RankSchema } from "./rank.js";
 import { getSeasonById } from "../seasons.js";
+import type { Competition } from "../../../backend/generated/prisma/client/index.js";
 
 // ============================================================================
 // Branded ID Types
@@ -148,12 +149,7 @@ export type CompetitionStatus = "DRAFT" | "ACTIVE" | "ENDED" | "CANCELLED";
  * 3. If startDate is in the future → DRAFT
  * 4. If startDate <= now < endDate → ACTIVE
  */
-export function getCompetitionStatus(competition: {
-  isCancelled: boolean;
-  startDate: Date | null;
-  endDate: Date | null;
-  seasonId: string | null;
-}): CompetitionStatus {
+export function getCompetitionStatus(competition: Competition | CompetitionWithCriteria): CompetitionStatus {
   // Rule 1: Cancellation overrides everything
   if (competition.isCancelled) {
     return "CANCELLED";
@@ -242,34 +238,10 @@ export function participantStatusToString(status: ParticipantStatus): string {
 // ============================================================================
 
 /**
- * Raw competition data from database (Prisma model)
- * Criteria is stored as separate type + JSON config fields
- */
-export type RawCompetition = {
-  id: number;
-  serverId: string;
-  ownerId: string;
-  title: string;
-  description: string;
-  channelId: string;
-  isCancelled: boolean;
-  visibility: string;
-  criteriaType: string;
-  criteriaConfig: string; // JSON string
-  maxParticipants: number;
-  startDate: Date | null;
-  endDate: Date | null;
-  seasonId: string | null;
-  creatorDiscordId: string;
-  createdTime: Date;
-  updatedTime: Date;
-};
-
-/**
  * Competition with parsed criteria (domain type)
  * This is what we use in application code
  */
-export type CompetitionWithCriteria = Omit<RawCompetition, "criteriaType" | "criteriaConfig"> & {
+export type CompetitionWithCriteria = Omit<Competition, "criteriaType" | "criteriaConfig"> & {
   criteria: CompetitionCriteria;
 };
 
@@ -280,7 +252,7 @@ export type CompetitionWithCriteria = Omit<RawCompetition, "criteriaType" | "cri
  *
  * @throws {Error} if criteriaConfig is invalid JSON or doesn't match schema
  */
-export function parseCompetition(raw: RawCompetition): CompetitionWithCriteria {
+export function parseCompetition(raw: Competition): CompetitionWithCriteria {
   // Parse the JSON config
   let criteriaConfig: unknown;
   try {
@@ -356,10 +328,10 @@ export const RankSnapshotDataSchema = z.object({
  */
 export type GamesPlayedSnapshotData = z.infer<typeof GamesPlayedSnapshotDataSchema>;
 export const GamesPlayedSnapshotDataSchema = z.object({
-  soloGames: z.number().int().nonnegative().optional(),
-  flexGames: z.number().int().nonnegative().optional(),
-  arenaGames: z.number().int().nonnegative().optional(),
-  aramGames: z.number().int().nonnegative().optional(),
+  soloGames: z.number().int().nonnegative(),
+  flexGames: z.number().int().nonnegative(),
+  arenaGames: z.number().int().nonnegative(),
+  aramGames: z.number().int().nonnegative(),
 });
 
 /**
@@ -369,8 +341,8 @@ export type WinsSnapshotData = z.infer<typeof WinsSnapshotDataSchema>;
 export const WinsSnapshotDataSchema = z.object({
   wins: z.number().int().nonnegative(),
   games: z.number().int().nonnegative(),
-  championId: z.number().int().positive().optional(),
-  queue: CompetitionQueueTypeSchema.optional(),
+  championId: z.number().int().positive(),
+  queue: CompetitionQueueTypeSchema,
 });
 
 // ============================================================================

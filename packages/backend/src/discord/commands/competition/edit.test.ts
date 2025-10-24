@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import { getCompetitionStatus } from "@scout-for-lol/data";
+import type { Competition } from "../../../../generated/prisma/client";
 
 /**
  * These tests verify the validation logic patterns used in edit.ts
@@ -27,11 +28,24 @@ describe("Edit validation patterns", () => {
 
 describe("Competition status checks", () => {
   test("DRAFT competition should allow all edits", () => {
-    const competition = {
+    const competition: Competition = {
       isCancelled: false,
       startDate: new Date(Date.now() + 86400000), // Tomorrow
       endDate: new Date(Date.now() + 2 * 86400000), // Day after tomorrow
       seasonId: null,
+      visibility: "OPEN",
+      serverId: "1234567890",
+      ownerId: "user123",
+      channelId: "channel123",
+      title: "Test Competition",
+      description: "Test description",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+      maxParticipants: 10,
+      createdTime: new Date(),
+      updatedTime: new Date(),
+      creatorDiscordId: "user123",
+      id: 1,
     };
 
     const status = getCompetitionStatus(competition);
@@ -46,6 +60,19 @@ describe("Competition status checks", () => {
       startDate: new Date(Date.now() - 86400000), // Yesterday
       endDate: new Date(Date.now() + 86400000), // Tomorrow
       seasonId: null,
+      visibility: "OPEN",
+      serverId: "1234567890",
+      ownerId: "user123",
+      channelId: "channel123",
+      title: "Test Competition",
+      description: "Test description",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+      maxParticipants: 10,
+      createdTime: new Date(),
+      updatedTime: new Date(),
+      creatorDiscordId: "user123",
+      id: 1,
     };
 
     const status = getCompetitionStatus(competition);
@@ -56,11 +83,24 @@ describe("Competition status checks", () => {
   });
 
   test("ENDED competition should restrict edits", () => {
-    const competition = {
+    const competition: Competition = {
       isCancelled: false,
       startDate: new Date(Date.now() - 2 * 86400000), // Two days ago
       endDate: new Date(Date.now() - 86400000), // Yesterday
       seasonId: null,
+      visibility: "OPEN",
+      serverId: "1234567890",
+      ownerId: "user123",
+      channelId: "channel123",
+      title: "Test Competition",
+      description: "Test description",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+      maxParticipants: 10,
+      createdTime: new Date(),
+      updatedTime: new Date(),
+      creatorDiscordId: "user123",
+      id: 1,
     };
 
     const status = getCompetitionStatus(competition);
@@ -71,11 +111,24 @@ describe("Competition status checks", () => {
   });
 
   test("CANCELLED competition should be rejected", () => {
-    const competition = {
+    const competition: Competition = {
       isCancelled: true,
       startDate: new Date(Date.now() + 86400000),
       endDate: new Date(Date.now() + 2 * 86400000),
       seasonId: null,
+      visibility: "OPEN",
+      serverId: "1234567890",
+      ownerId: "user123",
+      channelId: "channel123",
+      title: "Test Competition",
+      description: "Test description",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+      maxParticipants: 10,
+      createdTime: new Date(),
+      updatedTime: new Date(),
+      creatorDiscordId: "user123",
+      id: 1,
     };
 
     const status = getCompetitionStatus(competition);

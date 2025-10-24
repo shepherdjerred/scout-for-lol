@@ -1677,6 +1677,6 @@ exports[`should be able to get champion data 1`] = `
     },
   },
   "type": "summoner",
-  "version": "15.20.1",
+  "version": "15.21.1",
 }
 `;

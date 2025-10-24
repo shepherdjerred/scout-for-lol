@@ -11,5 +11,5 @@ export const DiscordChannelIdSchema = z.string().min(17).max(20).regex(/\d./).br
 
 export type Discord = z.infer<typeof DiscordSchema>;
 export const DiscordSchema = z.strictObject({
-  id: DiscordAccountIdSchema.nullable(),
+  id: DiscordAccountIdSchema.optional(),
 });

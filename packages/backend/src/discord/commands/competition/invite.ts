@@ -3,6 +3,7 @@ import { prisma } from "../../../database/index.js";
 import { getCompetitionById } from "../../../database/competition/queries.js";
 import { addParticipant, getParticipantStatus } from "../../../database/competition/participants.js";
 import { getErrorMessage } from "../../../utils/errors.js";
+import { formatCriteriaType } from "./helpers.js";
 
 /**
  * Execute /competition invite command
@@ -268,26 +269,4 @@ Invited @${targetUser.username} to **${competition.title}**.
 They can join with \`/competition join competition-id:${competitionId.toString()}\`${dmWarning}`,
     flags: MessageFlags.Ephemeral,
   });
-}
-
-/**
- * Format criteria type to human-readable string
- */
-function formatCriteriaType(criteriaType: string): string {
-  switch (criteriaType) {
-    case "MOST_GAMES_PLAYED":
-      return "Most games played";
-    case "HIGHEST_RANK":
-      return "Highest rank";
-    case "MOST_RANK_CLIMB":
-      return "Most rank climb";
-    case "MOST_WINS_PLAYER":
-      return "Most wins (player)";
-    case "MOST_WINS_CHAMPION":
-      return "Most wins (champion)";
-    case "HIGHEST_WIN_RATE":
-      return "Highest win rate";
-    default:
-      return criteriaType;
-  }
 }

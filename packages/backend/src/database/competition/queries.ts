@@ -95,13 +95,16 @@ export async function createCompetition(
  * @param id - Competition ID
  * @returns Competition with parsed criteria, or null if not found
  */
-export async function getCompetitionById(prisma: PrismaClient, id: number): Promise<CompetitionWithCriteria | null> {
+export async function getCompetitionById(
+  prisma: PrismaClient,
+  id: number,
+): Promise<CompetitionWithCriteria | undefined> {
   const raw = await prisma.competition.findUnique({
     where: { id },
   });
 
   if (!raw) {
-    return null;
+    return undefined;
   }
 
   // parseCompetition transparently populates dates from seasonId
