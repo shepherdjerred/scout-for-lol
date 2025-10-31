@@ -15,7 +15,6 @@ const ApiAugmentSchema = FullAugmentSchema.omit({
   type: true,
   rarity: true,
 }).extend({ rarity: z.number().int() });
-type ApiAugment = z.infer<typeof ApiAugmentSchema>;
 
 const ApiAugmentsResponseSchema = z.strictObject({
   augments: z.array(ApiAugmentSchema),
@@ -24,10 +23,10 @@ const ApiAugmentsResponseSchema = z.strictObject({
 // CommunityDragon Arena augments endpoint
 const ARENA_AUGMENTS_URL = "https://raw.communitydragon.org/latest/cdragon/arena/en_us.json" as const;
 
-let augmentMapCache: Map<number, FullAugment> | null = null;
-let loadPromise: Promise<Map<number, FullAugment>> | null = null;
+let augmentMapCache: Record<number, FullAugment> | undefined = undefined;
+let loadPromise: Promise<Record<number, FullAugment>> | undefined = undefined;
 
-export async function initArenaAugmentsOnce(): Promise<Map<number, FullAugment>> {
+export async function initArenaAugmentsOnce(): Promise<Record<number, FullAugment>> {
   if (augmentMapCache) return augmentMapCache;
   loadPromise ??= (async () => {
     const res = await fetch(ARENA_AUGMENTS_URL, { cache: "force-cache" });
@@ -42,29 +41,25 @@ export async function initArenaAugmentsOnce(): Promise<Map<number, FullAugment>>
       if (n === 3) return "silver";
       return "silver";
     };
-    augmentMapCache = new Map(
-      parsed.augments.map(
-        (a: ApiAugment) =>
-          [
-            a.id,
-            {
-              ...a,
-              rarity: rarityFromNumber(a.rarity),
-              type: "full",
-            },
-          ] as const,
-      ),
-    );
+    augmentMapCache = {};
+
+    for (const a of parsed.augments) {
+      augmentMapCache[a.id] = {
+        ...a,
+        rarity: rarityFromNumber(a.rarity),
+        type: "full",
+      };
+    }
     return augmentMapCache;
   })();
   return loadPromise;
 }
 
-export function getArenaAugmentMapSync(): Map<number, FullAugment> | null {
+export function getArenaAugmentMapSync(): Record<number, FullAugment> | undefined {
   return augmentMapCache;
 }
 
-export async function getArenaAugmentMap(): Promise<Map<number, FullAugment>> {
+export async function getArenaAugmentMap(): Promise<Record<number, FullAugment>> {
   if (augmentMapCache) return augmentMapCache;
   return initArenaAugmentsOnce();
 }
@@ -73,7 +68,7 @@ export async function mapAugmentIdsToUnion(augmentIds: number[]): Promise<Augmen
   const map = await getArenaAugmentMap();
   const result: Augment[] = [];
   for (const id of augmentIds) {
-    const aug = map.get(id);
+    const aug = map[id];
     const parsed = AugmentSchema.safeParse({
       ...aug,
       type: "full",

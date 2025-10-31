@@ -2,19 +2,12 @@ import {
   type CompetitionCriteria,
   type GamesPlayedSnapshotData,
   getSnapshotSchemaForCriteria,
-  type LeaguePuuid,
   type RankSnapshotData,
-  type Region,
-  RegionSchema,
   type SnapshotType,
   type WinsSnapshotData,
 } from "@scout-for-lol/data";
-import { match } from "ts-pattern";
 import { type PrismaClient } from "../../../generated/prisma/client/index.js";
 import { getParticipants } from "../../database/competition/participants.js";
-import { api } from "../api/api.js";
-import { mapRegionToEnum } from "../model/region.js";
-import { getRank } from "../model/rank.js";
 import { fetchSnapshotData } from "./leaderboard.js";
 
 // ============================================================================

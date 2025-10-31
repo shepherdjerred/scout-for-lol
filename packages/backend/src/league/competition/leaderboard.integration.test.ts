@@ -332,7 +332,7 @@ describe("calculateLeaderboard integration tests", () => {
         competitionId: competition.id,
         playerId: player1.id,
         snapshotType: "START",
-        snapshotData: JSON.stringify({ soloRank: goldRank }),
+        snapshotData: JSON.stringify({ solo: goldRank }),
         snapshotTime: new Date(),
       },
     });
@@ -343,7 +343,7 @@ describe("calculateLeaderboard integration tests", () => {
         competitionId: competition.id,
         playerId: player2.id,
         snapshotType: "START",
-        snapshotData: JSON.stringify({ soloRank: silverRank }),
+        snapshotData: JSON.stringify({ solo: silverRank }),
         snapshotTime: new Date(),
       },
     });
@@ -473,7 +473,7 @@ describe("calculateLeaderboard integration tests", () => {
         competitionId: competition.id,
         playerId: player1.id,
         snapshotType: "END",
-        snapshotData: JSON.stringify({ soloRank: goldRank }),
+        snapshotData: JSON.stringify({ solo: goldRank }),
         snapshotTime: new Date(),
       },
     });
@@ -484,7 +484,7 @@ describe("calculateLeaderboard integration tests", () => {
         competitionId: competition.id,
         playerId: player2.id,
         snapshotType: "END",
-        snapshotData: JSON.stringify({ soloRank: silverRank }),
+        snapshotData: JSON.stringify({ solo: silverRank }),
         snapshotTime: new Date(),
       },
     });
@@ -595,7 +595,7 @@ describe("calculateLeaderboard integration tests", () => {
         playerId: player1.id,
         snapshotType: "START",
         snapshotData: JSON.stringify({
-          soloRank: { tier: "silver", division: 1, lp: 50, wins: 50, losses: 50 },
+          solo: { tier: "silver", division: 1, lp: 50, wins: 50, losses: 50 },
         }),
         snapshotTime: new Date(),
       },
@@ -607,7 +607,7 @@ describe("calculateLeaderboard integration tests", () => {
         playerId: player1.id,
         snapshotType: "END",
         snapshotData: JSON.stringify({
-          soloRank: { tier: "gold", division: 2, lp: 50, wins: 100, losses: 80 },
+          solo: { tier: "gold", division: 2, lp: 50, wins: 100, losses: 80 },
         }),
         snapshotTime: new Date(),
       },
@@ -620,7 +620,7 @@ describe("calculateLeaderboard integration tests", () => {
         playerId: player2.id,
         snapshotType: "START",
         snapshotData: JSON.stringify({
-          soloRank: { tier: "silver", division: 2, lp: 0, wins: 40, losses: 40 },
+          solo: { tier: "silver", division: 2, lp: 0, wins: 40, losses: 40 },
         }),
         snapshotTime: new Date(),
       },
@@ -632,7 +632,7 @@ describe("calculateLeaderboard integration tests", () => {
         playerId: player2.id,
         snapshotType: "END",
         snapshotData: JSON.stringify({
-          soloRank: { tier: "silver", division: 1, lp: 0, wins: 80, losses: 70 },
+          solo: { tier: "silver", division: 1, lp: 0, wins: 80, losses: 70 },
         }),
         snapshotTime: new Date(),
       },

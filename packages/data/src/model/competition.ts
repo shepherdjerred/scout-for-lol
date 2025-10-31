@@ -319,8 +319,8 @@ export function parseCompetition(raw: Competition): CompetitionWithCriteria {
  */
 export type RankSnapshotData = z.infer<typeof RankSnapshotDataSchema>;
 export const RankSnapshotDataSchema = z.object({
-  soloRank: RankSchema.optional(),
-  flexRank: RankSchema.optional(),
+  solo: RankSchema.optional(),
+  flex: RankSchema.optional(),
 });
 
 /**

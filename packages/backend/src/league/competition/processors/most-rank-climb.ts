@@ -1,4 +1,4 @@
-import type { MostRankClimbCriteria, Rank } from "@scout-for-lol/data";
+import type { MostRankClimbCriteria, Ranks } from "@scout-for-lol/data";
 import { rankToLeaguePoints } from "@scout-for-lol/data";
 import type { LeaderboardEntry, PlayerWithAccounts } from "./types.js";
 
@@ -11,17 +11,17 @@ import type { LeaderboardEntry, PlayerWithAccounts } from "./types.js";
 export function processMostRankClimb(
   participants: PlayerWithAccounts[],
   criteria: MostRankClimbCriteria,
-  startSnapshots: Map<number, { soloRank?: Rank; flexRank?: Rank }>,
-  endSnapshots: Map<number, { soloRank?: Rank; flexRank?: Rank }>,
+  startSnapshots: Record<number, Ranks>,
+  endSnapshots: Record<number, Ranks>,
 ): LeaderboardEntry[] {
   const entries: LeaderboardEntry[] = [];
 
   for (const participant of participants) {
-    const startRanks = startSnapshots.get(participant.id);
-    const endRanks = endSnapshots.get(participant.id);
+    const startRanks = startSnapshots[participant.id];
+    const endRanks = endSnapshots[participant.id];
 
-    const startRank = criteria.queue === "SOLO" ? startRanks?.soloRank : startRanks?.flexRank;
-    const endRank = criteria.queue === "SOLO" ? endRanks?.soloRank : endRanks?.flexRank;
+    const startRank = criteria.queue === "SOLO" ? startRanks?.solo : startRanks?.flex;
+    const endRank = criteria.queue === "SOLO" ? endRanks?.solo : endRanks?.flex;
 
     // Calculate LP delta
     const startLP = rankToLeaguePoints(startRank);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import type { Rank } from "@scout-for-lol/data";
+import type { Rank, Ranks } from "@scout-for-lol/data";
 import { rankToLeaguePoints } from "@scout-for-lol/data";
 import { processCriteria } from "./index.js";
 import type { PlayerWithAccounts } from "./types.js";
@@ -405,16 +405,16 @@ describe("processMostGamesPlayed", () => {
 
 describe("processHighestRank", () => {
   it("should rank players by current rank (Diamond II > Diamond III > Platinum I)", () => {
-    const currentRanks = new Map([
-      [playerA.id, { soloRank: diamondII }],
-      [playerB.id, { soloRank: platinumI }],
-      [playerC.id, { soloRank: diamondIII }],
-    ]);
+    const currentRanks: Record<number, Ranks> = {
+      [playerA.id]: { solo: diamondII },
+      [playerB.id]: { solo: platinumI },
+      [playerC.id]: { solo: diamondIII },
+    };
 
     const result = processCriteria({ type: "HIGHEST_RANK", queue: "SOLO" }, [], allParticipants, {
       currentRanks,
-      startSnapshots: new Map<number, { soloRank?: Rank; flexRank?: Rank }>(),
-      endSnapshots: new Map<number, { soloRank?: Rank; flexRank?: Rank }>(),
+      startSnapshots: {},
+      endSnapshots: {},
     });
 
     // Check that all players are included
@@ -436,15 +436,15 @@ describe("processHighestRank", () => {
   });
 
   it("should use unranked (Iron IV 0 LP) for players without rank", () => {
-    const currentRanks = new Map([
-      [playerA.id, { soloRank: diamondII }],
+    const currentRanks: Record<number, Ranks> = {
+      [playerA.id]: { solo: diamondII },
       // playerB has no rank
-    ]);
+    };
 
     const result = processCriteria({ type: "HIGHEST_RANK", queue: "SOLO" }, [], [playerA, playerB], {
       currentRanks,
-      startSnapshots: new Map<number, { soloRank?: Rank; flexRank?: Rank }>(),
-      endSnapshots: new Map<number, { soloRank?: Rank; flexRank?: Rank }>(),
+      startSnapshots: {},
+      endSnapshots: {},
     });
 
     const playerBEntry = result.find((e) => e.playerId === playerB.id);
@@ -464,18 +464,18 @@ describe("processHighestRank", () => {
 
 describe("processMostRankClimb", () => {
   it("should calculate LP gained from start to end", () => {
-    const startSnapshots = new Map([
-      [playerA.id, { soloRank: goldIV }],
-      [playerB.id, { soloRank: platinumII }],
-    ]);
+    const startSnapshots: Record<number, Ranks> = {
+      [playerA.id]: { solo: goldIV },
+      [playerB.id]: { solo: platinumII },
+    };
 
-    const endSnapshots = new Map([
-      [playerA.id, { soloRank: diamondIV }], // Gold IV → Diamond IV = +400 LP
-      [playerB.id, { soloRank: platinumI }], // Platinum II → Platinum I = +100 LP
-    ]);
+    const endSnapshots: Record<number, Ranks> = {
+      [playerA.id]: { solo: diamondIV }, // Gold IV → Diamond IV = +400 LP
+      [playerB.id]: { solo: platinumI }, // Platinum II → Platinum I = +100 LP
+    };
 
     const result = processCriteria({ type: "MOST_RANK_CLIMB", queue: "SOLO" }, [], [playerA, playerB], {
-      currentRanks: new Map<number, { soloRank?: Rank; flexRank?: Rank }>(),
+      currentRanks: {},
       startSnapshots,
       endSnapshots,
     });
@@ -703,9 +703,9 @@ describe("processCriteria dispatcher", () => {
     const emptyMatches: MatchV5DTOs.MatchDto[] = [];
     const emptyParticipants: PlayerWithAccounts[] = [];
     const emptySnapshots = {
-      currentRanks: new Map<number, { soloRank?: Rank; flexRank?: Rank }>(),
-      startSnapshots: new Map<number, { soloRank?: Rank; flexRank?: Rank }>(),
-      endSnapshots: new Map<number, { soloRank?: Rank; flexRank?: Rank }>(),
+      currentRanks: {},
+      startSnapshots: {},
+      endSnapshots: {},
     };
 
     // This test verifies that TypeScript compilation succeeds with .exhaustive()

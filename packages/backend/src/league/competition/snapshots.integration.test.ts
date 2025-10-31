@@ -408,7 +408,7 @@ describe("getSnapshot", () => {
 
     // Manually create a snapshot with known data
     const mockSnapshotData = {
-      soloRank: {
+      solo: {
         tier: "gold",
         division: 3,
         lp: 50,
@@ -431,11 +431,11 @@ describe("getSnapshot", () => {
 
     expect(snapshot).not.toBeNull();
     if (snapshot) {
-      expect(snapshot).toHaveProperty("soloRank");
-      if ("soloRank" in snapshot && snapshot.soloRank) {
-        expect(snapshot.soloRank.tier).toBe("gold");
-        expect(snapshot.soloRank.division).toBe(3);
-        expect(snapshot.soloRank.lp).toBe(50);
+      expect(snapshot).toHaveProperty("solo");
+      if ("solo" in snapshot && snapshot.solo) {
+        expect(snapshot.solo.tier).toBe("gold");
+        expect(snapshot.solo.division).toBe(3);
+        expect(snapshot.solo.lp).toBe(50);
       }
     }
   });
@@ -462,7 +462,7 @@ describe("createSnapshot - Different criteria types", () => {
       const snapshot = await getSnapshot(prisma, competitionId, playerId, "START", criteria);
       if (snapshot) {
         // Should have rank structure
-        expect(snapshot).toHaveProperty("soloRank");
+        expect(snapshot).toHaveProperty("solo");
       }
     } catch (error) {
       console.warn("Riot API unavailable:", String(error));

@@ -831,7 +831,7 @@ describe("CompetitionCriteria discriminated union", () => {
 describe("RankSnapshotDataSchema", () => {
   test("accepts valid solo rank data", () => {
     const data = {
-      soloRank: {
+      solo: {
         tier: "diamond",
         division: 2, // II
         lp: 67,
@@ -845,7 +845,7 @@ describe("RankSnapshotDataSchema", () => {
 
   test("accepts valid flex rank data", () => {
     const data = {
-      flexRank: {
+      flex: {
         tier: "gold",
         division: 1, // I
         lp: 0,
@@ -859,14 +859,14 @@ describe("RankSnapshotDataSchema", () => {
 
   test("accepts both ranks together", () => {
     const data = {
-      soloRank: {
+      solo: {
         tier: "platinum",
         division: 3, // III
         lp: 45,
         wins: 100,
         losses: 95,
       },
-      flexRank: {
+      flex: {
         tier: "diamond",
         division: 4, // IV
         lp: 12,
@@ -886,7 +886,7 @@ describe("RankSnapshotDataSchema", () => {
 
   test("rejects negative LP", () => {
     const data = {
-      soloRank: {
+      solo: {
         tier: "gold",
         division: 2,
         lp: -10,
@@ -900,7 +900,7 @@ describe("RankSnapshotDataSchema", () => {
 
   test("rejects invalid tier", () => {
     const data = {
-      soloRank: {
+      solo: {
         tier: "INVALID_TIER",
         division: 2,
         lp: 45,
@@ -914,7 +914,7 @@ describe("RankSnapshotDataSchema", () => {
 
   test("rejects invalid division (0)", () => {
     const data = {
-      soloRank: {
+      solo: {
         tier: "gold",
         division: 0,
         lp: 50,
@@ -928,7 +928,7 @@ describe("RankSnapshotDataSchema", () => {
 
   test("rejects invalid division (5)", () => {
     const data = {
-      soloRank: {
+      solo: {
         tier: "gold",
         division: 5,
         lp: 50,
@@ -942,7 +942,7 @@ describe("RankSnapshotDataSchema", () => {
 
   test("rejects missing required fields", () => {
     const data = {
-      soloRank: {
+      solo: {
         tier: "gold",
         division: 2,
         // missing lp, wins, losses
@@ -954,7 +954,7 @@ describe("RankSnapshotDataSchema", () => {
 
   test("accepts Master tier with high LP", () => {
     const data = {
-      soloRank: {
+      solo: {
         tier: "master",
         division: 1,
         lp: 500, // Master+ can have LP > 100
@@ -1221,7 +1221,7 @@ describe("getSnapshotSchemaForCriteria", () => {
     const schema = getSnapshotSchemaForCriteria(criteria);
 
     const validData = {
-      soloRank: {
+      solo: {
         tier: "gold",
         division: 2, // II
         lp: 45,

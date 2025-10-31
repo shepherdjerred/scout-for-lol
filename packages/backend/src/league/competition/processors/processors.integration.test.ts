@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import type { Rank } from "@scout-for-lol/data";
+import type { Rank, Ranks } from "@scout-for-lol/data";
 import { processCriteria } from "./index.js";
 import type { PlayerWithAccounts } from "./types.js";
 import { readFileSync } from "node:fs";
@@ -261,15 +261,15 @@ describe("processCriteria integration tests", () => {
       throw new Error("Test players not defined");
     }
 
-    const currentRanks = new Map<number, { soloRank?: Rank; flexRank?: Rank }>([
-      [player1.id, { soloRank: platinumRank }],
-      [player2.id, { soloRank: goldRank }],
-    ]);
+    const currentRanks: Record<number, Ranks> = {
+      [player1.id]: { solo: platinumRank },
+      [player2.id]: { solo: goldRank },
+    };
 
     const result = processCriteria({ type: "HIGHEST_RANK", queue: "SOLO" }, [], testPlayers, {
       currentRanks,
-      startSnapshots: new Map(),
-      endSnapshots: new Map(),
+      startSnapshots: {},
+      endSnapshots: {},
     });
 
     expect(result.length).toBe(2);

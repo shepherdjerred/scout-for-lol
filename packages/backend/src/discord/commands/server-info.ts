@@ -66,10 +66,10 @@ export async function executeServerInfo(interaction: ChatInputCommandInteraction
     const activeGames = 0; // No longer tracking active games
 
     // Count subscriptions by channel
-    const channelMap = new Map<string, number>();
+    const channelMap: Record<string, number> = {};
     for (const sub of subscriptions) {
-      const count = channelMap.get(sub.channelId) ?? 0;
-      channelMap.set(sub.channelId, count + 1);
+      const count = channelMap[sub.channelId] ?? 0;
+      channelMap[sub.channelId] = count + 1;
     }
 
     // Build embeds (Discord has a limit, so we'll create multiple embeds)
@@ -83,7 +83,7 @@ export async function executeServerInfo(interaction: ChatInputCommandInteraction
         { name: "👥 Total Players", value: players.length.toString(), inline: true },
         { name: "🎮 Total Accounts", value: accounts.length.toString(), inline: true },
         { name: "🔔 Subscriptions", value: subscriptions.length.toString(), inline: true },
-        { name: "📺 Subscribed Channels", value: channelMap.size.toString(), inline: true },
+        { name: "📺 Subscribed Channels", value: Object.keys(channelMap).length.toString(), inline: true },
         { name: "🏆 Total Competitions", value: competitions.length.toString(), inline: true },
         { name: "✅ Active Competitions", value: activeCompetitions.length.toString(), inline: true },
         { name: "🔑 Permissions Granted", value: permissions.length.toString(), inline: true },
@@ -137,18 +137,11 @@ export async function executeServerInfo(interaction: ChatInputCommandInteraction
     if (subscriptions.length > 0) {
       const subscriptionsEmbed = new EmbedBuilder().setTitle("🔔 Subscriptions").setColor(0xeb459e); // Pink
 
-      const channelsList = Array.from(channelMap.entries())
+      const channelsList = Object.entries(channelMap)
         .slice(0, 10)
         .map(([channelId, count]) => `<#${channelId}>: ${count.toString()} subscription${count !== 1 ? "s" : ""}`)
         .join("\n");
-
-      if (channelsList.length > 0) {
-        subscriptionsEmbed.setDescription(channelsList);
-      }
-
-      if (channelMap.size > 10) {
-        subscriptionsEmbed.setFooter({ text: `Showing 10 of ${channelMap.size.toString()} channels` });
-      }
+      subscriptionsEmbed.setDescription(channelsList);
 
       embeds.push(subscriptionsEmbed);
     }

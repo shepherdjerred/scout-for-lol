@@ -39,7 +39,7 @@ describe("toArenaMatch with real arena JSON", () => {
               region: "PBE",
             },
           },
-          discordAccount: null,
+          discordAccount: undefined,
         },
         ranks: {},
       } satisfies Player;

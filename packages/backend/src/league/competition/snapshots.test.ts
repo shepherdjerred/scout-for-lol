@@ -23,14 +23,14 @@ describe("Snapshot Data Validation", () => {
     expect(schema).toBe(RankSnapshotDataSchema);
 
     const mockRankData: RankSnapshotData = {
-      soloRank: {
+      solo: {
         tier: "gold",
         division: 2,
         lp: 45,
         wins: 50,
         losses: 40,
       },
-      flexRank: {
+      flex: {
         tier: "silver",
         division: 1,
         lp: 80,
@@ -48,7 +48,7 @@ describe("Snapshot Data Validation", () => {
 
   test("should validate rank snapshot data with only solo rank", () => {
     const mockRankData: RankSnapshotData = {
-      soloRank: {
+      solo: {
         tier: "platinum",
         division: 3,
         lp: 20,
@@ -60,8 +60,8 @@ describe("Snapshot Data Validation", () => {
     const result = RankSnapshotDataSchema.safeParse(mockRankData);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.soloRank).toBeDefined();
-      expect(result.data.flexRank).toBeUndefined();
+      expect(result.data.solo).toBeDefined();
+      expect(result.data.flex).toBeUndefined();
     }
   });
 
@@ -71,8 +71,8 @@ describe("Snapshot Data Validation", () => {
     const result = RankSnapshotDataSchema.safeParse(mockRankData);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.soloRank).toBeUndefined();
-      expect(result.data.flexRank).toBeUndefined();
+      expect(result.data.solo).toBeUndefined();
+      expect(result.data.flex).toBeUndefined();
     }
   });
 
@@ -165,6 +165,8 @@ describe("Snapshot Data Validation", () => {
     const mockWinsData: WinsSnapshotData = {
       wins: 0,
       games: 0,
+      championId: 0,
+      queue: "SOLO",
     };
 
     const result = WinsSnapshotDataSchema.safeParse(mockWinsData);

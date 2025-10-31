@@ -1,5 +1,11 @@
-import type { CompetitionCriteria, CompetitionWithCriteria, Rank } from "@scout-for-lol/data";
-import { getCompetitionStatus, rankToLeaguePoints, RankSchema, RegionSchema } from "@scout-for-lol/data";
+import type { CompetitionCriteria, CompetitionWithCriteria, LeaguePuuid, Rank, Ranks } from "@scout-for-lol/data";
+import {
+  getCompetitionStatus,
+  rankToLeaguePoints,
+  RankSchema,
+  RegionSchema,
+  LeaguePuuidSchema,
+} from "@scout-for-lol/data";
 import { sortBy } from "remeda";
 import { match } from "ts-pattern";
 import { z } from "zod";
@@ -57,44 +63,38 @@ export async function fetchSnapshotData(
 
   console.log(`[Leaderboard] Fetching snapshot data for ${participants.length.toString()} participants`);
 
-  const startSnapshots = new Map<number, { soloRank?: Rank; flexRank?: Rank }>();
-  const endSnapshots = new Map<number, { soloRank?: Rank; flexRank?: Rank }>();
-  const currentRanks = new Map<number, { soloRank?: Rank; flexRank?: Rank }>();
+  const startSnapshots: Record<number, Ranks> = {};
+  const endSnapshots: Record<number, Ranks> = {};
+  const currentRanks: Record<number, Ranks> = {};
 
   // Fetch snapshots in parallel
   await Promise.all(
     participants.map(async (participant) => {
       const playerId = participant.id;
 
-      // Helper function to fetch current rank from Riot API
-      const fetchCurrentRank = async (): Promise<{ soloRank?: Rank; flexRank?: Rank }> => {
-        const rankData: { soloRank?: Rank; flexRank?: Rank } = {};
-
+      // Helper function to fetch current ranks from Riot API
+      const fetchCurrentRanks = async (): Promise<Record<LeaguePuuid, Ranks>> => {
         // Try each account until we get rank data
+        const allRanks: Record<LeaguePuuid, Ranks> = {};
         for (const account of participant.accounts) {
           try {
             const region = RegionSchema.parse(account.region);
             const response = await api.League.byPUUID(account.puuid, mapRegionToEnum(region));
 
-            const soloRank = getRank(response.response, "RANKED_SOLO_5x5");
-            const flexRank = getRank(response.response, "RANKED_FLEX_SR");
+            const solo = getRank(response.response, "RANKED_SOLO_5x5");
+            const flex = getRank(response.response, "RANKED_FLEX_SR");
 
-            if (soloRank) rankData.soloRank = soloRank;
-            if (flexRank) rankData.flexRank = flexRank;
-
-            // If we got any rank data, we're done
-            if (soloRank ?? flexRank) {
-              break;
-            }
+            allRanks[LeaguePuuidSchema.parse(account.puuid)] = {
+              solo: solo,
+              flex: flex,
+            };
           } catch (error) {
             console.warn(
               `[Leaderboard] Failed to fetch rank data for player ${playerId.toString()} account ${account.puuid}: ${String(error)}`,
             );
-            // Continue to next account
           }
         }
-
-        return rankData;
+        return allRanks;
       };
 
       // For MOST_RANK_CLIMB, we need START (stored) and current/end (stored if ended, live if active)
@@ -102,27 +102,29 @@ export async function fetchSnapshotData(
         // Always get START snapshot (captured when competition began)
         const startSnapshot = await getSnapshot(prisma, competitionId, playerId, "START", criteria);
 
-        if (startSnapshot && "soloRank" in startSnapshot) {
-          const data: { soloRank?: Rank; flexRank?: Rank } = {};
-          if (startSnapshot.soloRank) data.soloRank = startSnapshot.soloRank;
-          if (startSnapshot.flexRank) data.flexRank = startSnapshot.flexRank;
-          startSnapshots.set(playerId, data);
+        if (startSnapshot && ("solo" in startSnapshot || "flex" in startSnapshot)) {
+          const data: Ranks = {};
+          if (startSnapshot.solo) data.solo = startSnapshot.solo;
+          if (startSnapshot.flex) data.flex = startSnapshot.flex;
+          startSnapshots[participant.id] = data;
         }
 
         if (competitionStatus === "ENDED") {
           // For ended competitions, use the stored END snapshot
           const endSnapshot = await getSnapshot(prisma, competitionId, playerId, "END", criteria);
-          if (endSnapshot && "soloRank" in endSnapshot) {
-            const data: { soloRank?: Rank; flexRank?: Rank } = {};
-            if (endSnapshot.soloRank) data.soloRank = endSnapshot.soloRank;
-            if (endSnapshot.flexRank) data.flexRank = endSnapshot.flexRank;
-            endSnapshots.set(playerId, data);
+          if (endSnapshot && ("solo" in endSnapshot || "flex" in endSnapshot)) {
+            const data: Ranks = {};
+            if (endSnapshot.solo) data.solo = endSnapshot.solo;
+            if (endSnapshot.flex) data.flex = endSnapshot.flex;
+            endSnapshots[playerId] = data;
           }
         } else {
           // For active competitions, fetch CURRENT rank from Riot API
-          const currentRankData = await fetchCurrentRank();
-          if (currentRankData.soloRank ?? currentRankData.flexRank) {
-            endSnapshots.set(playerId, currentRankData);
+          const currentRankData = await fetchCurrentRanks();
+          // Use the first account's ranks (or merge multiple accounts if needed)
+          const firstAccountRanks = Object.values(currentRankData)[0];
+          if (firstAccountRanks && (firstAccountRanks.solo ?? firstAccountRanks.flex)) {
+            endSnapshots[playerId] = firstAccountRanks;
           }
         }
       }
@@ -132,17 +134,19 @@ export async function fetchSnapshotData(
         if (competitionStatus === "ENDED") {
           // For ended competitions, use the stored END snapshot
           const endSnapshot = await getSnapshot(prisma, competitionId, playerId, "END", criteria);
-          if (endSnapshot && "soloRank" in endSnapshot) {
-            const data: { soloRank?: Rank; flexRank?: Rank } = {};
-            if (endSnapshot.soloRank) data.soloRank = endSnapshot.soloRank;
-            if (endSnapshot.flexRank) data.flexRank = endSnapshot.flexRank;
-            currentRanks.set(playerId, data);
+          if (endSnapshot && ("solo" in endSnapshot || "flex" in endSnapshot)) {
+            const data: Ranks = {};
+            if (endSnapshot.solo) data.solo = endSnapshot.solo;
+            if (endSnapshot.flex) data.flex = endSnapshot.flex;
+            currentRanks[playerId] = data;
           }
         } else {
           // For active competitions, fetch CURRENT rank from Riot API
-          const currentRankData = await fetchCurrentRank();
-          if (currentRankData.soloRank ?? currentRankData.flexRank) {
-            currentRanks.set(playerId, currentRankData);
+          const currentRankData = await fetchCurrentRanks();
+          // Use the first account's ranks (or merge multiple accounts if needed)
+          const firstAccountRanks = Object.values(currentRankData)[0];
+          if (firstAccountRanks && (firstAccountRanks.solo ?? firstAccountRanks.flex)) {
+            currentRanks[playerId] = firstAccountRanks;
           }
         }
       }
@@ -150,7 +154,7 @@ export async function fetchSnapshotData(
   );
 
   console.log(
-    `[Leaderboard] Fetched snapshots: ${startSnapshots.size.toString()} start, ${endSnapshots.size.toString()} end, ${currentRanks.size.toString()} current`,
+    `[Leaderboard] Fetched snapshots: ${Object.keys(startSnapshots).length.toString()} start, ${Object.keys(endSnapshots).length.toString()} end, ${Object.keys(currentRanks).length.toString()} current`,
   );
 
   return {
