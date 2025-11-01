@@ -1,7 +1,6 @@
 import { type CommandInteraction, SlashCommandBuilder } from "discord.js";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "../../database/index";
-import { fromError } from "zod-validation-error";
 
 export const listSubscriptionsCommand = new SlashCommandBuilder()
   .setName("listsubscriptions")
@@ -15,7 +14,7 @@ export async function executeListSubscriptions(interaction: CommandInteraction) 
     });
     return;
   }
-  
+
   const guildId = DiscordGuildIdSchema.parse(interaction.guildId);
 
   const subscriptions = await prisma.subscription.findMany({

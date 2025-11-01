@@ -8,7 +8,12 @@ import {
   type MessageActionRowComponentBuilder,
   type ButtonInteraction,
 } from "discord.js";
-import { CompetitionIdSchema, type DiscordAccountId, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, getCompetitionStatus } from "@scout-for-lol/data";
+import {
+  type DiscordAccountId,
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+  getCompetitionStatus,
+} from "@scout-for-lol/data";
 import { match } from "ts-pattern";
 import { prisma } from "../../../database/index.js";
 import { getCompetitionsByServer } from "../../../database/competition/queries.js";

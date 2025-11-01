@@ -24,7 +24,9 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
+  type CompetitionId,
   type DiscordAccountId,
+  type DiscordChannelId,
   type DiscordGuildId,
   type PlayerId,
 } from "@scout-for-lol/data";
