@@ -7,6 +7,7 @@ import {
 } from "@scout-for-lol/data";
 import { type CompetitionParticipant, type PrismaClient } from "../../../generated/prisma/client/index.js";
 import { isCompetitionActive } from "./validation.js";
+import { match } from "ts-pattern";
 
 // ============================================================================
 // Add Participant
@@ -318,15 +319,11 @@ export async function canJoinCompetition(
   });
 
   if (existingParticipant) {
-    if (existingParticipant.status === "JOINED") {
-      return { canJoin: false, reason: "Already joined" };
-    }
-    if (existingParticipant.status === "INVITED") {
-      return { canJoin: false, reason: "Already invited (use accept instead)" };
-    }
-    if (existingParticipant.status === "LEFT") {
-      return { canJoin: false, reason: "Cannot rejoin after leaving" };
-    }
+    return match(existingParticipant.status)
+      .with("JOINED", () => ({ canJoin: false, reason: "Already joined" }))
+      .with("INVITED", () => ({ canJoin: false, reason: "Already invited (use accept instead)" }))
+      .with("LEFT", () => ({ canJoin: false, reason: "Cannot rejoin after leaving" }))
+      .exhaustive();
   }
 
   // Check participant limit

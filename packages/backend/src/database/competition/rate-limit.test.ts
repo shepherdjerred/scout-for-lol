@@ -13,13 +13,13 @@ afterEach(() => {
 
 describe("checkRateLimit", () => {
   test("returns true for first creation", () => {
-    const result = checkRateLimit("server-123", "user-456");
+    const result = checkRateLimit("server-123", "user-45600000456");
     expect(result).toBe(true);
   });
 
   test("returns false within rate limit window", () => {
     const serverId = "server-123";
-    const userId = DiscordAccountIdSchema.parse("user-456");
+    const userId = DiscordAccountIdSchema.parse("user-456000004560");
 
     // Record creation
     recordCreation(serverId, userId);
@@ -31,7 +31,7 @@ describe("checkRateLimit", () => {
 
   test("returns true after rate limit window expires", () => {
     const serverId = "server-123";
-    const userId = DiscordAccountIdSchema.parse("user-456");
+    const userId = DiscordAccountIdSchema.parse("user-456000004560");
 
     // Note: We can't directly manipulate time in the implementation,
     // so we test the clearing behavior instead
@@ -46,36 +46,36 @@ describe("checkRateLimit", () => {
   });
 
   test("rate limits are independent per server", () => {
-    const userId = DiscordAccountIdSchema.parse("user-456");
+    const userId = DiscordAccountIdSchema.parse("user-456000004560");
 
     // Record on server1
-    recordCreation("server-1", userId);
+    recordCreation("server-1000000001", userId);
 
     // Should be limited on server1
-    expect(checkRateLimit("server-1", userId)).toBe(false);
+    expect(checkRateLimit("server-1000000001", userId)).toBe(false);
 
     // Should NOT be limited on server2
-    expect(checkRateLimit("server-2", userId)).toBe(true);
+    expect(checkRateLimit("server-2000000002", userId)).toBe(true);
   });
 
   test("rate limits are independent per user", () => {
     const serverId = "server-123";
 
     // Record for user1
-    recordCreation(serverId, "user-1");
+    recordCreation(serverId, "user-10000000001");
 
     // Should be limited for user1
-    expect(checkRateLimit(serverId, "user-1")).toBe(false);
+    expect(checkRateLimit(serverId, "user-10000000001")).toBe(false);
 
     // Should NOT be limited for user2
-    expect(checkRateLimit(serverId, "user-2")).toBe(true);
+    expect(checkRateLimit(serverId, "user-20000000002")).toBe(true);
   });
 });
 
 describe("recordCreation", () => {
   test("records creation timestamp", () => {
     const serverId = "server-123";
-    const userId = DiscordAccountIdSchema.parse("user-456");
+    const userId = DiscordAccountIdSchema.parse("user-456000004560");
 
     // Should be allowed initially
     expect(checkRateLimit(serverId, userId)).toBe(true);
@@ -89,7 +89,7 @@ describe("recordCreation", () => {
 
   test("updates timestamp on subsequent recordings", () => {
     const serverId = "server-123";
-    const userId = DiscordAccountIdSchema.parse("user-456");
+    const userId = DiscordAccountIdSchema.parse("user-456000004560");
 
     // Record twice
     recordCreation(serverId, userId);
@@ -102,13 +102,13 @@ describe("recordCreation", () => {
 
 describe("getTimeRemaining", () => {
   test("returns 0 for user with no rate limit", () => {
-    const remaining = getTimeRemaining("server-123", "user-456");
+    const remaining = getTimeRemaining("server-123", "user-45600000456");
     expect(remaining).toBe(0);
   });
 
   test("returns time remaining after recording", () => {
     const serverId = "server-123";
-    const userId = DiscordAccountIdSchema.parse("user-456");
+    const userId = DiscordAccountIdSchema.parse("user-456000004560");
 
     recordCreation(serverId, userId);
 
@@ -122,7 +122,7 @@ describe("getTimeRemaining", () => {
 
   test("returns 0 after clearing rate limit", () => {
     const serverId = "server-123";
-    const userId = DiscordAccountIdSchema.parse("user-456");
+    const userId = DiscordAccountIdSchema.parse("user-456000004560");
 
     recordCreation(serverId, userId);
     expect(getTimeRemaining(serverId, userId)).toBeGreaterThan(0);
@@ -135,7 +135,7 @@ describe("getTimeRemaining", () => {
 describe("clearRateLimit", () => {
   test("clears rate limit for specific user", () => {
     const serverId = "server-123";
-    const userId = DiscordAccountIdSchema.parse("user-456");
+    const userId = DiscordAccountIdSchema.parse("user-456000004560");
 
     recordCreation(serverId, userId);
     expect(checkRateLimit(serverId, userId)).toBe(false);
@@ -147,26 +147,26 @@ describe("clearRateLimit", () => {
   test("only clears specified user's rate limit", () => {
     const serverId = "server-123";
 
-    recordCreation(serverId, "user-1");
-    recordCreation(serverId, "user-2");
+    recordCreation(serverId, "user-10000000001");
+    recordCreation(serverId, "user-20000000002");
 
-    clearRateLimit(serverId, "user-1");
+    clearRateLimit(serverId, "user-10000000001");
 
-    expect(checkRateLimit(serverId, "user-1")).toBe(true);
-    expect(checkRateLimit(serverId, "user-2")).toBe(false);
+    expect(checkRateLimit(serverId, "user-10000000001")).toBe(true);
+    expect(checkRateLimit(serverId, "user-20000000002")).toBe(false);
   });
 });
 
 describe("clearAllRateLimits", () => {
   test("clears all rate limits", () => {
-    recordCreation("server-1", "user-1");
-    recordCreation("server-1", "user-2");
-    recordCreation("server-2", "user-1");
+    recordCreation("server-1000000001", "user-10000000001");
+    recordCreation("server-1000000001", "user-20000000002");
+    recordCreation("server-2000000002", "user-10000000001");
 
     clearAllRateLimits();
 
-    expect(checkRateLimit("server-1", "user-1")).toBe(true);
-    expect(checkRateLimit("server-1", "user-2")).toBe(true);
-    expect(checkRateLimit("server-2", "user-1")).toBe(true);
+    expect(checkRateLimit("server-1000000001", "user-10000000001")).toBe(true);
+    expect(checkRateLimit("server-1000000001", "user-20000000002")).toBe(true);
+    expect(checkRateLimit("server-2000000002", "user-10000000001")).toBe(true);
   });
 });

@@ -21,11 +21,11 @@ import { generateLeaderboardEmbed, generateCompetitionDetailsEmbed, formatScore 
 function createTestCompetition(overrides: Partial<CompetitionWithCriteria> = {}): CompetitionWithCriteria {
   return {
     id: CompetitionIdSchema.parse(1),
-    serverId: DiscordGuildIdSchema.parse("test-server-123"),
+    serverId: DiscordGuildIdSchema.parse("test-server-12300"),
     ownerId: DiscordAccountIdSchema.parse("owner-discord-id-123"),
     title: "Test Competition",
     description: "A test competition for unit tests",
-    channelId: DiscordChannelIdSchema.parse("test-channel-456"),
+    channelId: DiscordChannelIdSchema.parse("test-channel-4560"),
     isCancelled: false,
     visibility: "OPEN",
     maxParticipants: 50,
@@ -226,8 +226,8 @@ describe("generateCompetitionDetailsEmbed", () => {
     const competition = createTestCompetition({
       title: "Test Competition",
       description: "Test description",
-      ownerId: DiscordAccountIdSchema.parse("owner-123"),
-      channelId: DiscordChannelIdSchema.parse("channel-456"),
+      ownerId: DiscordAccountIdSchema.parse("owner-12300000123"),
+      channelId: DiscordChannelIdSchema.parse("channel-456000000"),
       maxParticipants: 25,
     });
 

@@ -14,7 +14,7 @@ describe("generateMatchReview", () => {
           {
             playerConfig: {
               alias: "TestPlayer",
-              discord: { discordUserId: DiscordAccountIdSchema.parse("123") },
+              discord: { discordUserId: DiscordAccountIdSchema.parse("12300000000000000") },
               league: {
                 leagueAccount: {
                   puuid: LeaguePuuidSchema.parse("test-puuid") as unknown,
@@ -76,7 +76,7 @@ describe("generateMatchReview", () => {
           {
             playerConfig: {
               alias: "Player2",
-              discord: { discordUserId: DiscordAccountIdSchema.parse("456") },
+              discord: { discordUserId: DiscordAccountIdSchema.parse("45600000000000000") },
               league: {
                 leagueAccount: {
                   puuid: LeaguePuuidSchema.parse("test-puuid-2") as unknown,
@@ -131,7 +131,7 @@ describe("generateMatchReview", () => {
           {
             playerConfig: {
               alias: "ArenaPlayer",
-              discord: { discordUserId: DiscordAccountIdSchema.parse("789") },
+              discord: { discordUserId: DiscordAccountIdSchema.parse("78900000000000000") },
               league: {
                 leagueAccount: {
                   puuid: LeaguePuuidSchema.parse("arena-puuid") as unknown,
@@ -196,7 +196,7 @@ describe("generateMatchReview", () => {
           {
             playerConfig: {
               alias: "ArenaPlayer2",
-              discord: { discordUserId: DiscordAccountIdSchema.parse("890") },
+              discord: { discordUserId: DiscordAccountIdSchema.parse("89000000000000000") },
               league: {
                 leagueAccount: {
                   puuid: LeaguePuuidSchema.parse("arena-puuid-2") as unknown,

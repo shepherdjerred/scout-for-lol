@@ -14,30 +14,6 @@
 import { Project, SyntaxKind, type TypeAliasDeclaration, type InterfaceDeclaration } from "ts-morph";
 import { resolve } from "node:path";
 
-// Configuration: Map field names to branded types
-const BRAND_MAPPINGS = {
-  id: {
-    Player: "PlayerId",
-    Account: "AccountId",
-    Competition: "CompetitionId",
-    CompetitionParticipant: "ParticipantId",
-    CompetitionSnapshot: "number", // snapshot IDs don't need branding
-    Subscription: "number", // subscription IDs don't need branding
-  },
-  playerId: "PlayerId",
-  competitionId: "CompetitionId",
-  accountId: "AccountId",
-  serverId: "DiscordGuildId",
-  channelId: "DiscordChannelId",
-  discordId: "DiscordAccountId",
-  ownerId: "DiscordAccountId",
-  creatorDiscordId: "DiscordAccountId",
-  invitedBy: "DiscordAccountId",
-  puuid: "LeaguePuuid",
-  region: "Region",
-  lastProcessedMatchId: "MatchId",
-} as const;
-
 // Types that need to be imported
 const BRANDED_TYPES_TO_IMPORT = new Set<string>();
 
@@ -116,8 +92,14 @@ function main() {
     });
   }
 
+  // Debug: Check if file was actually modified
+  const wasModified = sourceFile.getImportDeclarations().length > 0 || transformCount > 0;
+  console.log(`\nFile was modified: ${wasModified}`);
+  console.log(`Import declarations before save: ${sourceFile.getImportDeclarations().length}`);
+
   // Save the transformed file
   sourceFile.saveSync();
+  console.log("Save completed");
 
   console.log(`✅ Transformed ${transformCount.toString()} properties`);
   console.log(`✅ Added imports: ${Array.from(BRANDED_TYPES_TO_IMPORT).join(", ")}`);
@@ -375,28 +357,67 @@ function transformFieldRefsInterface(interfaceDecl: InterfaceDeclaration): numbe
 function getBrandedType(propName: string, parentTypeName: string): string | null {
   // Check if this is an 'id' field with model-specific branding
   if (propName === "id") {
-    const idMappings = BRAND_MAPPINGS.id;
-
-    // Check if the parent type exists in our id mappings
-    if (parentTypeName in idMappings) {
-      const mapping = idMappings[parentTypeName as keyof typeof idMappings];
-      if (mapping === "number") return null;
-      return mapping;
+    // Handle each model explicitly
+    switch (parentTypeName) {
+      case "Player":
+        return "PlayerId";
+      case "Account":
+        return "AccountId";
+      case "Competition":
+        return "CompetitionId";
+      case "CompetitionParticipant":
+        return "ParticipantId";
+      case "CompetitionSnapshot":
+        return "SnapshotId";
+      case "Subscription":
+        return "SubscriptionId";
+      case "ServerPermission":
+        return "PermissionId";
+      case "GuildPermissionError":
+        return "PermissionErrorId";
+      default:
+        return null;
     }
-    return null;
   }
 
   // Check other field mappings
-  if (propName in BRAND_MAPPINGS) {
-    const mapping = BRAND_MAPPINGS[propName as keyof typeof BRAND_MAPPINGS];
-
-    // The id field is an object, other fields are strings
-    // This is a build script, so typeof check is appropriate here
-    // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
-    return typeof mapping === "string" ? mapping : null;
+  switch (propName) {
+    case "playerId":
+      return "PlayerId";
+    case "competitionId":
+      return "CompetitionId";
+    case "accountId":
+      return "AccountId";
+    case "serverId":
+      return "DiscordGuildId";
+    case "channelId":
+      return "DiscordChannelId";
+    case "discordId":
+    case "ownerId":
+    case "creatorDiscordId":
+    case "invitedBy":
+    case "discordUserId":
+    case "grantedBy":
+      return "DiscordAccountId";
+    case "puuid":
+      return "LeaguePuuid";
+    case "region":
+      return "Region";
+    case "lastProcessedMatchId":
+      return "MatchId";
+    case "visibility":
+      return "CompetitionVisibility";
+    case "status":
+      return "ParticipantStatus";
+    case "snapshotType":
+      return "SnapshotType";
+    case "permission":
+      return "PermissionType";
+    case "seasonId":
+      return "SeasonId";
+    default:
+      return null;
   }
-
-  return null;
 }
 
 // Run the script

@@ -271,7 +271,7 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
               discordId: user ?? null,
               createdTime: now,
               updatedTime: now,
-              creatorDiscordId: interaction.user.id,
+              creatorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
               serverId: guildId,
             },
           },

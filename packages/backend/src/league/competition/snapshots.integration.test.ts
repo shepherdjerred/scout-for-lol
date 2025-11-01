@@ -413,7 +413,7 @@ describe("createSnapshotsForAllParticipants", () => {
     );
 
     await addParticipant(prisma, competitionId, joinedPlayerId, "JOINED");
-    await addParticipant(prisma, competitionId, invitedPlayerId, "INVITED", DiscordAccountIdSchema.parse("inviter123"));
+    await addParticipant(prisma, competitionId, invitedPlayerId, "INVITED", DiscordAccountIdSchema.parse("inviter1230000000"));
 
     await createSnapshotsForAllParticipants(prisma, CompetitionIdSchema.parse(competitionId), "START", criteria);
 

@@ -5,6 +5,7 @@ import {
   type DiscordAccountId,
   type DiscordChannelId,
   type DiscordGuildId,
+  type SeasonId,
   parseCompetition,
 } from "@scout-for-lol/data";
 import { type PrismaClient } from "../../../generated/prisma/client/index.js";
@@ -50,7 +51,7 @@ export async function createCompetition(
   // Extract dates based on type
   let startDate: Date | null = null;
   let endDate: Date | null = null;
-  let seasonId: string | null = null;
+  let seasonId: SeasonId | null = null;
 
   if (input.dates.type === "FIXED_DATES") {
     startDate = input.dates.startDate;
@@ -219,12 +220,12 @@ export async function updateCompetition(
     title?: string;
     description?: string;
     channelId?: DiscordChannelId;
-    visibility?: string;
+    visibility?: CompetitionVisibility;
     maxParticipants?: number;
     startDate?: Date | null;
     endDate?: Date | null;
-    seasonId?: string | null;
-    criteriaType?: string;
+    seasonId?: SeasonId | null;
+    criteriaType?: CompetitionCriteria["type"];
     criteriaConfig?: string;
     updatedTime: Date;
   } = {

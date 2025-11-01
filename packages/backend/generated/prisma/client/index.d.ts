@@ -1,4 +1,4 @@
-import { AccountId, CompetitionId, DiscordAccountId, DiscordChannelId, DiscordGuildId, LeaguePuuid, MatchId, ParticipantId, PlayerId, Region } from "@scout-for-lol/data";
+import { AccountId, CompetitionId, CompetitionVisibility, DiscordAccountId, DiscordChannelId, DiscordGuildId, LeaguePuuid, MatchId, ParticipantId, ParticipantStatus, PermissionErrorId, PermissionId, PermissionType, PlayerId, Region, SeasonId, SnapshotId, SnapshotType, SubscriptionId } from "@scout-for-lol/data";
 /**
  * Client
 **/
@@ -1618,7 +1618,7 @@ export namespace Prisma {
   }
 
   export type SubscriptionMinAggregateOutputType = {
-    id: number | null
+    id: SubscriptionId | null
     playerId: PlayerId | null
     channelId: DiscordChannelId | null
     serverId: DiscordGuildId | null
@@ -1628,7 +1628,7 @@ export namespace Prisma {
   }
 
   export type SubscriptionMaxAggregateOutputType = {
-    id: number | null
+    id: SubscriptionId | null
     playerId: PlayerId | null
     channelId: DiscordChannelId | null
     serverId: DiscordGuildId | null
@@ -1777,7 +1777,7 @@ export namespace Prisma {
   }
 
   export type SubscriptionGroupByOutputType = {
-    id: number
+    id: SubscriptionId
     playerId: PlayerId
     channelId: DiscordChannelId
     serverId: DiscordGuildId
@@ -1865,7 +1865,7 @@ export namespace Prisma {
       player: Prisma.$PlayerPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
-          id: number
+          id: SubscriptionId
           playerId: PlayerId
           channelId: DiscordChannelId
           serverId: DiscordGuildId
@@ -2296,7 +2296,7 @@ export namespace Prisma {
    * Fields of the Subscription model
    */
   interface SubscriptionFieldRefs {
-    readonly id: FieldRef<"Subscription", 'Int'>
+    readonly id: FieldRef<"Subscription", SubscriptionId>
     readonly playerId: FieldRef<"Subscription", PlayerId>
     readonly channelId: FieldRef<"Subscription", DiscordChannelId>
     readonly serverId: FieldRef<"Subscription", DiscordGuildId>
@@ -5142,13 +5142,13 @@ export namespace Prisma {
     description: string | null
     channelId: DiscordChannelId | null
     isCancelled: boolean | null
-    visibility: string | null
+    visibility: CompetitionVisibility | null
     criteriaType: string | null
     criteriaConfig: string | null
     maxParticipants: number | null
     startDate: Date | null
     endDate: Date | null
-    seasonId: string | null
+    seasonId: SeasonId | null
     creatorDiscordId: DiscordAccountId | null
     createdTime: Date | null
     updatedTime: Date | null
@@ -5162,13 +5162,13 @@ export namespace Prisma {
     description: string | null
     channelId: DiscordChannelId | null
     isCancelled: boolean | null
-    visibility: string | null
+    visibility: CompetitionVisibility | null
     criteriaType: string | null
     criteriaConfig: string | null
     maxParticipants: number | null
     startDate: Date | null
     endDate: Date | null
-    seasonId: string | null
+    seasonId: SeasonId | null
     creatorDiscordId: DiscordAccountId | null
     createdTime: Date | null
     updatedTime: Date | null
@@ -5361,13 +5361,13 @@ export namespace Prisma {
     description: string
     channelId: DiscordChannelId
     isCancelled: boolean
-    visibility: string
+    visibility: CompetitionVisibility
     criteriaType: string
     criteriaConfig: string
     maxParticipants: number
     startDate: Date | null
     endDate: Date | null
-    seasonId: string | null
+    seasonId: SeasonId | null
     creatorDiscordId: DiscordAccountId
     createdTime: Date
     updatedTime: Date
@@ -5498,13 +5498,13 @@ export namespace Prisma {
           description: string
           channelId: DiscordChannelId
           isCancelled: boolean
-          visibility: string
+          visibility: CompetitionVisibility
           criteriaType: string
           criteriaConfig: string
           maxParticipants: number
           startDate: Date | null
           endDate: Date | null
-          seasonId: string | null
+          seasonId: SeasonId | null
           creatorDiscordId: DiscordAccountId
           createdTime: Date
           updatedTime: Date
@@ -5940,13 +5940,13 @@ export namespace Prisma {
     readonly description: FieldRef<"Competition", 'String'>
     readonly channelId: FieldRef<"Competition", DiscordChannelId>
     readonly isCancelled: FieldRef<"Competition", 'Boolean'>
-    readonly visibility: FieldRef<"Competition", 'String'>
+    readonly visibility: FieldRef<"Competition", CompetitionVisibility>
     readonly criteriaType: FieldRef<"Competition", 'String'>
     readonly criteriaConfig: FieldRef<"Competition", 'String'>
     readonly maxParticipants: FieldRef<"Competition", 'Int'>
     readonly startDate: FieldRef<"Competition", 'DateTime'>
     readonly endDate: FieldRef<"Competition", 'DateTime'>
-    readonly seasonId: FieldRef<"Competition", 'String'>
+    readonly seasonId: FieldRef<"Competition", SeasonId>
     readonly creatorDiscordId: FieldRef<"Competition", DiscordAccountId>
     readonly createdTime: FieldRef<"Competition", 'DateTime'>
     readonly updatedTime: FieldRef<"Competition", 'DateTime'>
@@ -6430,7 +6430,7 @@ export namespace Prisma {
     id: ParticipantId | null
     competitionId: CompetitionId | null
     playerId: PlayerId | null
-    status: string | null
+    status: ParticipantStatus | null
     invitedBy: DiscordAccountId | null
     invitedAt: Date | null
     joinedAt: Date | null
@@ -6441,7 +6441,7 @@ export namespace Prisma {
     id: ParticipantId | null
     competitionId: CompetitionId | null
     playerId: PlayerId | null
-    status: string | null
+    status: ParticipantStatus | null
     invitedBy: DiscordAccountId | null
     invitedAt: Date | null
     joinedAt: Date | null
@@ -6597,7 +6597,7 @@ export namespace Prisma {
     id: ParticipantId
     competitionId: CompetitionId
     playerId: PlayerId
-    status: string
+    status: ParticipantStatus
     invitedBy: DiscordAccountId | null
     invitedAt: Date | null
     joinedAt: Date | null
@@ -6697,7 +6697,7 @@ export namespace Prisma {
           id: ParticipantId
           competitionId: CompetitionId
           playerId: PlayerId
-          status: string
+          status: ParticipantStatus
           invitedBy: DiscordAccountId | null
           invitedAt: Date | null
           joinedAt: Date | null
@@ -7130,7 +7130,7 @@ export namespace Prisma {
     readonly id: FieldRef<"CompetitionParticipant", ParticipantId>
     readonly competitionId: FieldRef<"CompetitionParticipant", CompetitionId>
     readonly playerId: FieldRef<"CompetitionParticipant", PlayerId>
-    readonly status: FieldRef<"CompetitionParticipant", 'String'>
+    readonly status: FieldRef<"CompetitionParticipant", ParticipantStatus>
     readonly invitedBy: FieldRef<"CompetitionParticipant", DiscordAccountId>
     readonly invitedAt: FieldRef<"CompetitionParticipant", 'DateTime'>
     readonly joinedAt: FieldRef<"CompetitionParticipant", 'DateTime'>
@@ -7572,19 +7572,19 @@ export namespace Prisma {
   }
 
   export type CompetitionSnapshotMinAggregateOutputType = {
-    id: number | null
+    id: SnapshotId | null
     competitionId: CompetitionId | null
     playerId: PlayerId | null
-    snapshotType: string | null
+    snapshotType: SnapshotType | null
     snapshotData: string | null
     snapshotTime: Date | null
   }
 
   export type CompetitionSnapshotMaxAggregateOutputType = {
-    id: number | null
+    id: SnapshotId | null
     competitionId: CompetitionId | null
     playerId: PlayerId | null
-    snapshotType: string | null
+    snapshotType: SnapshotType | null
     snapshotData: string | null
     snapshotTime: Date | null
   }
@@ -7727,10 +7727,10 @@ export namespace Prisma {
   }
 
   export type CompetitionSnapshotGroupByOutputType = {
-    id: number
+    id: SnapshotId
     competitionId: CompetitionId
     playerId: PlayerId
-    snapshotType: string
+    snapshotType: SnapshotType
     snapshotData: string
     snapshotTime: Date
     _count: CompetitionSnapshotCountAggregateOutputType | null
@@ -7817,10 +7817,10 @@ export namespace Prisma {
       player: Prisma.$PlayerPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
-          id: number
+          id: SnapshotId
           competitionId: CompetitionId
           playerId: PlayerId
-          snapshotType: string
+          snapshotType: SnapshotType
           snapshotData: string
           snapshotTime: Date
         }, ExtArgs["result"]["competitionSnapshot"]>
@@ -8248,10 +8248,10 @@ export namespace Prisma {
    * Fields of the CompetitionSnapshot model
    */
   interface CompetitionSnapshotFieldRefs {
-    readonly id: FieldRef<"CompetitionSnapshot", 'Int'>
+    readonly id: FieldRef<"CompetitionSnapshot", SnapshotId>
     readonly competitionId: FieldRef<"CompetitionSnapshot", CompetitionId>
     readonly playerId: FieldRef<"CompetitionSnapshot", PlayerId>
-    readonly snapshotType: FieldRef<"CompetitionSnapshot", 'String'>
+    readonly snapshotType: FieldRef<"CompetitionSnapshot", SnapshotType>
     readonly snapshotData: FieldRef<"CompetitionSnapshot", 'String'>
     readonly snapshotTime: FieldRef<"CompetitionSnapshot", 'DateTime'>
   }
@@ -8687,20 +8687,20 @@ export namespace Prisma {
   }
 
   export type ServerPermissionMinAggregateOutputType = {
-    id: number | null
+    id: PermissionId | null
     serverId: DiscordGuildId | null
-    discordUserId: string | null
-    permission: string | null
-    grantedBy: string | null
+    discordUserId: DiscordAccountId | null
+    permission: PermissionType | null
+    grantedBy: DiscordAccountId | null
     grantedAt: Date | null
   }
 
   export type ServerPermissionMaxAggregateOutputType = {
-    id: number | null
+    id: PermissionId | null
     serverId: DiscordGuildId | null
-    discordUserId: string | null
-    permission: string | null
-    grantedBy: string | null
+    discordUserId: DiscordAccountId | null
+    permission: PermissionType | null
+    grantedBy: DiscordAccountId | null
     grantedAt: Date | null
   }
 
@@ -8838,11 +8838,11 @@ export namespace Prisma {
   }
 
   export type ServerPermissionGroupByOutputType = {
-    id: number
+    id: PermissionId
     serverId: DiscordGuildId
-    discordUserId: string
-    permission: string
-    grantedBy: string
+    discordUserId: DiscordAccountId
+    permission: PermissionType
+    grantedBy: DiscordAccountId
     grantedAt: Date
     _count: ServerPermissionCountAggregateOutputType | null
     _avg: ServerPermissionAvgAggregateOutputType | null
@@ -8907,11 +8907,11 @@ export namespace Prisma {
     name: "ServerPermission"
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
-          id: number
+          id: PermissionId
           serverId: DiscordGuildId
-          discordUserId: string
-          permission: string
-          grantedBy: string
+          discordUserId: DiscordAccountId
+          permission: PermissionType
+          grantedBy: DiscordAccountId
           grantedAt: Date
         }, ExtArgs["result"]["serverPermission"]>
     composites: {}
@@ -9336,11 +9336,11 @@ export namespace Prisma {
    * Fields of the ServerPermission model
    */
   interface ServerPermissionFieldRefs {
-    readonly id: FieldRef<"ServerPermission", 'Int'>
+    readonly id: FieldRef<"ServerPermission", PermissionId>
     readonly serverId: FieldRef<"ServerPermission", DiscordGuildId>
-    readonly discordUserId: FieldRef<"ServerPermission", 'String'>
-    readonly permission: FieldRef<"ServerPermission", 'String'>
-    readonly grantedBy: FieldRef<"ServerPermission", 'String'>
+    readonly discordUserId: FieldRef<"ServerPermission", DiscordAccountId>
+    readonly permission: FieldRef<"ServerPermission", PermissionType>
+    readonly grantedBy: FieldRef<"ServerPermission", DiscordAccountId>
     readonly grantedAt: FieldRef<"ServerPermission", 'DateTime'>
   }
     
@@ -9729,7 +9729,7 @@ export namespace Prisma {
   }
 
   export type GuildPermissionErrorMinAggregateOutputType = {
-    id: number | null
+    id: PermissionErrorId | null
     serverId: DiscordGuildId | null
     channelId: DiscordChannelId | null
     errorType: string | null
@@ -9744,7 +9744,7 @@ export namespace Prisma {
   }
 
   export type GuildPermissionErrorMaxAggregateOutputType = {
-    id: number | null
+    id: PermissionErrorId | null
     serverId: DiscordGuildId | null
     channelId: DiscordChannelId | null
     errorType: string | null
@@ -9918,7 +9918,7 @@ export namespace Prisma {
   }
 
   export type GuildPermissionErrorGroupByOutputType = {
-    id: number
+    id: PermissionErrorId
     serverId: DiscordGuildId
     channelId: DiscordChannelId
     errorType: string
@@ -10017,7 +10017,7 @@ export namespace Prisma {
     name: "GuildPermissionError"
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
-          id: number
+          id: PermissionErrorId
           serverId: DiscordGuildId
           channelId: DiscordChannelId
           errorType: string
@@ -10452,7 +10452,7 @@ export namespace Prisma {
    * Fields of the GuildPermissionError model
    */
   interface GuildPermissionErrorFieldRefs {
-    readonly id: FieldRef<"GuildPermissionError", 'Int'>
+    readonly id: FieldRef<"GuildPermissionError", PermissionErrorId>
     readonly serverId: FieldRef<"GuildPermissionError", DiscordGuildId>
     readonly channelId: FieldRef<"GuildPermissionError", DiscordChannelId>
     readonly errorType: FieldRef<"GuildPermissionError", 'String'>
@@ -11025,7 +11025,7 @@ export namespace Prisma {
     AND?: SubscriptionWhereInput | SubscriptionWhereInput[]
     OR?: SubscriptionWhereInput[]
     NOT?: SubscriptionWhereInput | SubscriptionWhereInput[]
-    id?: IntFilter<"Subscription"> | number
+    id?: IntFilter<"Subscription"> | SubscriptionId
     playerId?: IntFilter<"Subscription"> | PlayerId
     channelId?: StringFilter<"Subscription"> | DiscordChannelId
     serverId?: StringFilter<"Subscription"> | DiscordGuildId
@@ -11270,13 +11270,13 @@ export namespace Prisma {
     description?: StringFilter<"Competition"> | string
     channelId?: StringFilter<"Competition"> | DiscordChannelId
     isCancelled?: BoolFilter<"Competition"> | boolean
-    visibility?: StringFilter<"Competition"> | string
+    visibility?: StringFilter<"Competition"> | CompetitionVisibility
     criteriaType?: StringFilter<"Competition"> | string
     criteriaConfig?: StringFilter<"Competition"> | string
     maxParticipants?: IntFilter<"Competition"> | number
     startDate?: DateTimeNullableFilter<"Competition"> | Date | string | null
     endDate?: DateTimeNullableFilter<"Competition"> | Date | string | null
-    seasonId?: StringNullableFilter<"Competition"> | string | null
+    seasonId?: StringNullableFilter<"Competition"> | SeasonId | null
     creatorDiscordId?: StringFilter<"Competition"> | DiscordAccountId
     createdTime?: DateTimeFilter<"Competition"> | Date | string
     updatedTime?: DateTimeFilter<"Competition"> | Date | string
@@ -11386,7 +11386,7 @@ export namespace Prisma {
     id?: IntFilter<"CompetitionParticipant"> | ParticipantId
     competitionId?: IntFilter<"CompetitionParticipant"> | CompetitionId
     playerId?: IntFilter<"CompetitionParticipant"> | PlayerId
-    status?: StringFilter<"CompetitionParticipant"> | string
+    status?: StringFilter<"CompetitionParticipant"> | ParticipantStatus
     invitedBy?: StringNullableFilter<"CompetitionParticipant"> | DiscordAccountId | null
     invitedAt?: DateTimeNullableFilter<"CompetitionParticipant"> | Date | string | null
     joinedAt?: DateTimeNullableFilter<"CompetitionParticipant"> | Date | string | null
@@ -11459,10 +11459,10 @@ export namespace Prisma {
     AND?: CompetitionSnapshotWhereInput | CompetitionSnapshotWhereInput[]
     OR?: CompetitionSnapshotWhereInput[]
     NOT?: CompetitionSnapshotWhereInput | CompetitionSnapshotWhereInput[]
-    id?: IntFilter<"CompetitionSnapshot"> | number
+    id?: IntFilter<"CompetitionSnapshot"> | SnapshotId
     competitionId?: IntFilter<"CompetitionSnapshot"> | CompetitionId
     playerId?: IntFilter<"CompetitionSnapshot"> | PlayerId
-    snapshotType?: StringFilter<"CompetitionSnapshot"> | string
+    snapshotType?: StringFilter<"CompetitionSnapshot"> | SnapshotType
     snapshotData?: StringFilter<"CompetitionSnapshot"> | string
     snapshotTime?: DateTimeFilter<"CompetitionSnapshot"> | Date | string
     competition?: XOR<CompetitionScalarRelationFilter, CompetitionWhereInput>
@@ -11525,11 +11525,11 @@ export namespace Prisma {
     AND?: ServerPermissionWhereInput | ServerPermissionWhereInput[]
     OR?: ServerPermissionWhereInput[]
     NOT?: ServerPermissionWhereInput | ServerPermissionWhereInput[]
-    id?: IntFilter<"ServerPermission"> | number
+    id?: IntFilter<"ServerPermission"> | PermissionId
     serverId?: StringFilter<"ServerPermission"> | DiscordGuildId
-    discordUserId?: StringFilter<"ServerPermission"> | string
-    permission?: StringFilter<"ServerPermission"> | string
-    grantedBy?: StringFilter<"ServerPermission"> | string
+    discordUserId?: StringFilter<"ServerPermission"> | DiscordAccountId
+    permission?: StringFilter<"ServerPermission"> | PermissionType
+    grantedBy?: StringFilter<"ServerPermission"> | DiscordAccountId
     grantedAt?: DateTimeFilter<"ServerPermission"> | Date | string
   }
 
@@ -11585,7 +11585,7 @@ export namespace Prisma {
     AND?: GuildPermissionErrorWhereInput | GuildPermissionErrorWhereInput[]
     OR?: GuildPermissionErrorWhereInput[]
     NOT?: GuildPermissionErrorWhereInput | GuildPermissionErrorWhereInput[]
-    id?: IntFilter<"GuildPermissionError"> | number
+    id?: IntFilter<"GuildPermissionError"> | PermissionErrorId
     serverId?: StringFilter<"GuildPermissionError"> | DiscordGuildId
     channelId?: StringFilter<"GuildPermissionError"> | DiscordChannelId
     errorType?: StringFilter<"GuildPermissionError"> | string
@@ -11681,7 +11681,7 @@ export namespace Prisma {
   }
 
   export type SubscriptionUncheckedCreateInput = {
-    id?: number
+    id?: SubscriptionId
     playerId: PlayerId
     channelId: DiscordChannelId
     serverId: DiscordGuildId
@@ -11700,7 +11700,7 @@ export namespace Prisma {
   }
 
   export type SubscriptionUncheckedUpdateInput = {
-    id?: IntFieldUpdateOperationsInput | number
+    id?: IntFieldUpdateOperationsInput | SubscriptionId
     playerId?: IntFieldUpdateOperationsInput | PlayerId
     channelId?: StringFieldUpdateOperationsInput | DiscordChannelId
     serverId?: StringFieldUpdateOperationsInput | DiscordGuildId
@@ -11928,13 +11928,13 @@ export namespace Prisma {
     description: string
     channelId: DiscordChannelId
     isCancelled?: boolean
-    visibility: string
+    visibility: CompetitionVisibility
     criteriaType: string
     criteriaConfig: string
     maxParticipants?: number
     startDate?: Date | string | null
     endDate?: Date | string | null
-    seasonId?: string | null
+    seasonId?: SeasonId | null
     creatorDiscordId: DiscordAccountId
     createdTime: Date | string
     updatedTime: Date | string
@@ -11950,13 +11950,13 @@ export namespace Prisma {
     description: string
     channelId: DiscordChannelId
     isCancelled?: boolean
-    visibility: string
+    visibility: CompetitionVisibility
     criteriaType: string
     criteriaConfig: string
     maxParticipants?: number
     startDate?: Date | string | null
     endDate?: Date | string | null
-    seasonId?: string | null
+    seasonId?: SeasonId | null
     creatorDiscordId: DiscordAccountId
     createdTime: Date | string
     updatedTime: Date | string
@@ -11971,13 +11971,13 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     channelId?: StringFieldUpdateOperationsInput | DiscordChannelId
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
-    visibility?: StringFieldUpdateOperationsInput | string
+    visibility?: StringFieldUpdateOperationsInput | CompetitionVisibility
     criteriaType?: StringFieldUpdateOperationsInput | string
     criteriaConfig?: StringFieldUpdateOperationsInput | string
     maxParticipants?: IntFieldUpdateOperationsInput | number
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | SeasonId | null
     creatorDiscordId?: StringFieldUpdateOperationsInput | DiscordAccountId
     createdTime?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedTime?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -11993,13 +11993,13 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     channelId?: StringFieldUpdateOperationsInput | DiscordChannelId
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
-    visibility?: StringFieldUpdateOperationsInput | string
+    visibility?: StringFieldUpdateOperationsInput | CompetitionVisibility
     criteriaType?: StringFieldUpdateOperationsInput | string
     criteriaConfig?: StringFieldUpdateOperationsInput | string
     maxParticipants?: IntFieldUpdateOperationsInput | number
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | SeasonId | null
     creatorDiscordId?: StringFieldUpdateOperationsInput | DiscordAccountId
     createdTime?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedTime?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12015,13 +12015,13 @@ export namespace Prisma {
     description: string
     channelId: DiscordChannelId
     isCancelled?: boolean
-    visibility: string
+    visibility: CompetitionVisibility
     criteriaType: string
     criteriaConfig: string
     maxParticipants?: number
     startDate?: Date | string | null
     endDate?: Date | string | null
-    seasonId?: string | null
+    seasonId?: SeasonId | null
     creatorDiscordId: DiscordAccountId
     createdTime: Date | string
     updatedTime: Date | string
@@ -12034,13 +12034,13 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     channelId?: StringFieldUpdateOperationsInput | DiscordChannelId
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
-    visibility?: StringFieldUpdateOperationsInput | string
+    visibility?: StringFieldUpdateOperationsInput | CompetitionVisibility
     criteriaType?: StringFieldUpdateOperationsInput | string
     criteriaConfig?: StringFieldUpdateOperationsInput | string
     maxParticipants?: IntFieldUpdateOperationsInput | number
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | SeasonId | null
     creatorDiscordId?: StringFieldUpdateOperationsInput | DiscordAccountId
     createdTime?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedTime?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -12054,20 +12054,20 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     channelId?: StringFieldUpdateOperationsInput | DiscordChannelId
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
-    visibility?: StringFieldUpdateOperationsInput | string
+    visibility?: StringFieldUpdateOperationsInput | CompetitionVisibility
     criteriaType?: StringFieldUpdateOperationsInput | string
     criteriaConfig?: StringFieldUpdateOperationsInput | string
     maxParticipants?: IntFieldUpdateOperationsInput | number
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | SeasonId | null
     creatorDiscordId?: StringFieldUpdateOperationsInput | DiscordAccountId
     createdTime?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedTime?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type CompetitionParticipantCreateInput = {
-    status: string
+    status: ParticipantStatus
     invitedBy?: DiscordAccountId | null
     invitedAt?: Date | string | null
     joinedAt?: Date | string | null
@@ -12080,7 +12080,7 @@ export namespace Prisma {
     id?: ParticipantId
     competitionId: CompetitionId
     playerId: PlayerId
-    status: string
+    status: ParticipantStatus
     invitedBy?: DiscordAccountId | null
     invitedAt?: Date | string | null
     joinedAt?: Date | string | null
@@ -12088,7 +12088,7 @@ export namespace Prisma {
   }
 
   export type CompetitionParticipantUpdateInput = {
-    status?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | ParticipantStatus
     invitedBy?: NullableStringFieldUpdateOperationsInput | DiscordAccountId | null
     invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     joinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -12101,7 +12101,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | ParticipantId
     competitionId?: IntFieldUpdateOperationsInput | CompetitionId
     playerId?: IntFieldUpdateOperationsInput | PlayerId
-    status?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | ParticipantStatus
     invitedBy?: NullableStringFieldUpdateOperationsInput | DiscordAccountId | null
     invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     joinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -12112,7 +12112,7 @@ export namespace Prisma {
     id?: number
     competitionId: CompetitionId
     playerId: PlayerId
-    status: string
+    status: ParticipantStatus
     invitedBy?: DiscordAccountId | null
     invitedAt?: Date | string | null
     joinedAt?: Date | string | null
@@ -12120,7 +12120,7 @@ export namespace Prisma {
   }
 
   export type CompetitionParticipantUpdateManyMutationInput = {
-    status?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | ParticipantStatus
     invitedBy?: NullableStringFieldUpdateOperationsInput | DiscordAccountId | null
     invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     joinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -12131,7 +12131,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     competitionId?: IntFieldUpdateOperationsInput | CompetitionId
     playerId?: IntFieldUpdateOperationsInput | PlayerId
-    status?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | ParticipantStatus
     invitedBy?: NullableStringFieldUpdateOperationsInput | DiscordAccountId | null
     invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     joinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -12139,7 +12139,7 @@ export namespace Prisma {
   }
 
   export type CompetitionSnapshotCreateInput = {
-    snapshotType: string
+    snapshotType: SnapshotType
     snapshotData: string
     snapshotTime: Date | string
     competition: CompetitionCreateNestedOneWithoutSnapshotsInput
@@ -12147,16 +12147,16 @@ export namespace Prisma {
   }
 
   export type CompetitionSnapshotUncheckedCreateInput = {
-    id?: number
+    id?: SnapshotId
     competitionId: CompetitionId
     playerId: PlayerId
-    snapshotType: string
+    snapshotType: SnapshotType
     snapshotData: string
     snapshotTime: Date | string
   }
 
   export type CompetitionSnapshotUpdateInput = {
-    snapshotType?: StringFieldUpdateOperationsInput | string
+    snapshotType?: StringFieldUpdateOperationsInput | SnapshotType
     snapshotData?: StringFieldUpdateOperationsInput | string
     snapshotTime?: DateTimeFieldUpdateOperationsInput | Date | string
     competition?: CompetitionUpdateOneRequiredWithoutSnapshotsNestedInput
@@ -12164,10 +12164,10 @@ export namespace Prisma {
   }
 
   export type CompetitionSnapshotUncheckedUpdateInput = {
-    id?: IntFieldUpdateOperationsInput | number
+    id?: IntFieldUpdateOperationsInput | SnapshotId
     competitionId?: IntFieldUpdateOperationsInput | CompetitionId
     playerId?: IntFieldUpdateOperationsInput | PlayerId
-    snapshotType?: StringFieldUpdateOperationsInput | string
+    snapshotType?: StringFieldUpdateOperationsInput | SnapshotType
     snapshotData?: StringFieldUpdateOperationsInput | string
     snapshotTime?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12176,13 +12176,13 @@ export namespace Prisma {
     id?: number
     competitionId: CompetitionId
     playerId: PlayerId
-    snapshotType: string
+    snapshotType: SnapshotType
     snapshotData: string
     snapshotTime: Date | string
   }
 
   export type CompetitionSnapshotUpdateManyMutationInput = {
-    snapshotType?: StringFieldUpdateOperationsInput | string
+    snapshotType?: StringFieldUpdateOperationsInput | SnapshotType
     snapshotData?: StringFieldUpdateOperationsInput | string
     snapshotTime?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12191,68 +12191,68 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     competitionId?: IntFieldUpdateOperationsInput | CompetitionId
     playerId?: IntFieldUpdateOperationsInput | PlayerId
-    snapshotType?: StringFieldUpdateOperationsInput | string
+    snapshotType?: StringFieldUpdateOperationsInput | SnapshotType
     snapshotData?: StringFieldUpdateOperationsInput | string
     snapshotTime?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ServerPermissionCreateInput = {
     serverId: DiscordGuildId
-    discordUserId: string
-    permission: string
-    grantedBy: string
+    discordUserId: DiscordAccountId
+    permission: PermissionType
+    grantedBy: DiscordAccountId
     grantedAt: Date | string
   }
 
   export type ServerPermissionUncheckedCreateInput = {
-    id?: number
+    id?: PermissionId
     serverId: DiscordGuildId
-    discordUserId: string
-    permission: string
-    grantedBy: string
+    discordUserId: DiscordAccountId
+    permission: PermissionType
+    grantedBy: DiscordAccountId
     grantedAt: Date | string
   }
 
   export type ServerPermissionUpdateInput = {
     serverId?: StringFieldUpdateOperationsInput | DiscordGuildId
-    discordUserId?: StringFieldUpdateOperationsInput | string
-    permission?: StringFieldUpdateOperationsInput | string
-    grantedBy?: StringFieldUpdateOperationsInput | string
+    discordUserId?: StringFieldUpdateOperationsInput | DiscordAccountId
+    permission?: StringFieldUpdateOperationsInput | PermissionType
+    grantedBy?: StringFieldUpdateOperationsInput | DiscordAccountId
     grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ServerPermissionUncheckedUpdateInput = {
-    id?: IntFieldUpdateOperationsInput | number
+    id?: IntFieldUpdateOperationsInput | PermissionId
     serverId?: StringFieldUpdateOperationsInput | DiscordGuildId
-    discordUserId?: StringFieldUpdateOperationsInput | string
-    permission?: StringFieldUpdateOperationsInput | string
-    grantedBy?: StringFieldUpdateOperationsInput | string
+    discordUserId?: StringFieldUpdateOperationsInput | DiscordAccountId
+    permission?: StringFieldUpdateOperationsInput | PermissionType
+    grantedBy?: StringFieldUpdateOperationsInput | DiscordAccountId
     grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ServerPermissionCreateManyInput = {
     id?: number
     serverId: DiscordGuildId
-    discordUserId: string
-    permission: string
-    grantedBy: string
+    discordUserId: DiscordAccountId
+    permission: PermissionType
+    grantedBy: DiscordAccountId
     grantedAt: Date | string
   }
 
   export type ServerPermissionUpdateManyMutationInput = {
     serverId?: StringFieldUpdateOperationsInput | DiscordGuildId
-    discordUserId?: StringFieldUpdateOperationsInput | string
-    permission?: StringFieldUpdateOperationsInput | string
-    grantedBy?: StringFieldUpdateOperationsInput | string
+    discordUserId?: StringFieldUpdateOperationsInput | DiscordAccountId
+    permission?: StringFieldUpdateOperationsInput | PermissionType
+    grantedBy?: StringFieldUpdateOperationsInput | DiscordAccountId
     grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ServerPermissionUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
     serverId?: StringFieldUpdateOperationsInput | DiscordGuildId
-    discordUserId?: StringFieldUpdateOperationsInput | string
-    permission?: StringFieldUpdateOperationsInput | string
-    grantedBy?: StringFieldUpdateOperationsInput | string
+    discordUserId?: StringFieldUpdateOperationsInput | DiscordAccountId
+    permission?: StringFieldUpdateOperationsInput | PermissionType
+    grantedBy?: StringFieldUpdateOperationsInput | DiscordAccountId
     grantedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -12271,7 +12271,7 @@ export namespace Prisma {
   }
 
   export type GuildPermissionErrorUncheckedCreateInput = {
-    id?: number
+    id?: PermissionErrorId
     serverId: DiscordGuildId
     channelId: DiscordChannelId
     errorType: string
@@ -12300,7 +12300,7 @@ export namespace Prisma {
   }
 
   export type GuildPermissionErrorUncheckedUpdateInput = {
-    id?: IntFieldUpdateOperationsInput | number
+    id?: IntFieldUpdateOperationsInput | PermissionErrorId
     serverId?: StringFieldUpdateOperationsInput | DiscordGuildId
     channelId?: StringFieldUpdateOperationsInput | DiscordChannelId
     errorType?: StringFieldUpdateOperationsInput | string
@@ -13629,7 +13629,7 @@ export namespace Prisma {
   }
 
   export type SubscriptionUncheckedCreateWithoutPlayerInput = {
-    id?: number
+    id?: SubscriptionId
     channelId: DiscordChannelId
     serverId: DiscordGuildId
     creatorDiscordId: DiscordAccountId
@@ -13647,7 +13647,7 @@ export namespace Prisma {
   }
 
   export type CompetitionParticipantCreateWithoutPlayerInput = {
-    status: string
+    status: ParticipantStatus
     invitedBy?: DiscordAccountId | null
     invitedAt?: Date | string | null
     joinedAt?: Date | string | null
@@ -13658,7 +13658,7 @@ export namespace Prisma {
   export type CompetitionParticipantUncheckedCreateWithoutPlayerInput = {
     id?: ParticipantId
     competitionId: CompetitionId
-    status: string
+    status: ParticipantStatus
     invitedBy?: DiscordAccountId | null
     invitedAt?: Date | string | null
     joinedAt?: Date | string | null
@@ -13675,16 +13675,16 @@ export namespace Prisma {
   }
 
   export type CompetitionSnapshotCreateWithoutPlayerInput = {
-    snapshotType: string
+    snapshotType: SnapshotType
     snapshotData: string
     snapshotTime: Date | string
     competition: CompetitionCreateNestedOneWithoutSnapshotsInput
   }
 
   export type CompetitionSnapshotUncheckedCreateWithoutPlayerInput = {
-    id?: number
+    id?: SnapshotId
     competitionId: CompetitionId
-    snapshotType: string
+    snapshotType: SnapshotType
     snapshotData: string
     snapshotTime: Date | string
   }
@@ -13784,7 +13784,7 @@ export namespace Prisma {
     id?: IntFilter<"CompetitionParticipant"> | number
     competitionId?: IntFilter<"CompetitionParticipant"> | CompetitionId
     playerId?: IntFilter<"CompetitionParticipant"> | PlayerId
-    status?: StringFilter<"CompetitionParticipant"> | string
+    status?: StringFilter<"CompetitionParticipant"> | ParticipantStatus
     invitedBy?: StringNullableFilter<"CompetitionParticipant"> | DiscordAccountId | null
     invitedAt?: DateTimeNullableFilter<"CompetitionParticipant"> | Date | string | null
     joinedAt?: DateTimeNullableFilter<"CompetitionParticipant"> | Date | string | null
@@ -13814,7 +13814,7 @@ export namespace Prisma {
     id?: IntFilter<"CompetitionSnapshot"> | number
     competitionId?: IntFilter<"CompetitionSnapshot"> | CompetitionId
     playerId?: IntFilter<"CompetitionSnapshot"> | PlayerId
-    snapshotType?: StringFilter<"CompetitionSnapshot"> | string
+    snapshotType?: StringFilter<"CompetitionSnapshot"> | SnapshotType
     snapshotData?: StringFilter<"CompetitionSnapshot"> | string
     snapshotTime?: DateTimeFilter<"CompetitionSnapshot"> | Date | string
   }
@@ -13886,7 +13886,7 @@ export namespace Prisma {
   }
 
   export type CompetitionParticipantCreateWithoutCompetitionInput = {
-    status: string
+    status: ParticipantStatus
     invitedBy?: DiscordAccountId | null
     invitedAt?: Date | string | null
     joinedAt?: Date | string | null
@@ -13897,7 +13897,7 @@ export namespace Prisma {
   export type CompetitionParticipantUncheckedCreateWithoutCompetitionInput = {
     id?: ParticipantId
     playerId: PlayerId
-    status: string
+    status: ParticipantStatus
     invitedBy?: DiscordAccountId | null
     invitedAt?: Date | string | null
     joinedAt?: Date | string | null
@@ -13914,16 +13914,16 @@ export namespace Prisma {
   }
 
   export type CompetitionSnapshotCreateWithoutCompetitionInput = {
-    snapshotType: string
+    snapshotType: SnapshotType
     snapshotData: string
     snapshotTime: Date | string
     player: PlayerCreateNestedOneWithoutCompetitionSnapshotsInput
   }
 
   export type CompetitionSnapshotUncheckedCreateWithoutCompetitionInput = {
-    id?: number
+    id?: SnapshotId
     playerId: PlayerId
-    snapshotType: string
+    snapshotType: SnapshotType
     snapshotData: string
     snapshotTime: Date | string
   }
@@ -13976,13 +13976,13 @@ export namespace Prisma {
     description: string
     channelId: DiscordChannelId
     isCancelled?: boolean
-    visibility: string
+    visibility: CompetitionVisibility
     criteriaType: string
     criteriaConfig: string
     maxParticipants?: number
     startDate?: Date | string | null
     endDate?: Date | string | null
-    seasonId?: string | null
+    seasonId?: SeasonId | null
     creatorDiscordId: DiscordAccountId
     createdTime: Date | string
     updatedTime: Date | string
@@ -13997,13 +13997,13 @@ export namespace Prisma {
     description: string
     channelId: DiscordChannelId
     isCancelled?: boolean
-    visibility: string
+    visibility: CompetitionVisibility
     criteriaType: string
     criteriaConfig: string
     maxParticipants?: number
     startDate?: Date | string | null
     endDate?: Date | string | null
-    seasonId?: string | null
+    seasonId?: SeasonId | null
     creatorDiscordId: DiscordAccountId
     createdTime: Date | string
     updatedTime: Date | string
@@ -14063,13 +14063,13 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     channelId?: StringFieldUpdateOperationsInput | DiscordChannelId
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
-    visibility?: StringFieldUpdateOperationsInput | string
+    visibility?: StringFieldUpdateOperationsInput | CompetitionVisibility
     criteriaType?: StringFieldUpdateOperationsInput | string
     criteriaConfig?: StringFieldUpdateOperationsInput | string
     maxParticipants?: IntFieldUpdateOperationsInput | number
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | SeasonId | null
     creatorDiscordId?: StringFieldUpdateOperationsInput | DiscordAccountId
     createdTime?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedTime?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14084,13 +14084,13 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     channelId?: StringFieldUpdateOperationsInput | DiscordChannelId
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
-    visibility?: StringFieldUpdateOperationsInput | string
+    visibility?: StringFieldUpdateOperationsInput | CompetitionVisibility
     criteriaType?: StringFieldUpdateOperationsInput | string
     criteriaConfig?: StringFieldUpdateOperationsInput | string
     maxParticipants?: IntFieldUpdateOperationsInput | number
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | SeasonId | null
     creatorDiscordId?: StringFieldUpdateOperationsInput | DiscordAccountId
     createdTime?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedTime?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14140,13 +14140,13 @@ export namespace Prisma {
     description: string
     channelId: DiscordChannelId
     isCancelled?: boolean
-    visibility: string
+    visibility: CompetitionVisibility
     criteriaType: string
     criteriaConfig: string
     maxParticipants?: number
     startDate?: Date | string | null
     endDate?: Date | string | null
-    seasonId?: string | null
+    seasonId?: SeasonId | null
     creatorDiscordId: DiscordAccountId
     createdTime: Date | string
     updatedTime: Date | string
@@ -14161,13 +14161,13 @@ export namespace Prisma {
     description: string
     channelId: DiscordChannelId
     isCancelled?: boolean
-    visibility: string
+    visibility: CompetitionVisibility
     criteriaType: string
     criteriaConfig: string
     maxParticipants?: number
     startDate?: Date | string | null
     endDate?: Date | string | null
-    seasonId?: string | null
+    seasonId?: SeasonId | null
     creatorDiscordId: DiscordAccountId
     createdTime: Date | string
     updatedTime: Date | string
@@ -14227,13 +14227,13 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     channelId?: StringFieldUpdateOperationsInput | DiscordChannelId
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
-    visibility?: StringFieldUpdateOperationsInput | string
+    visibility?: StringFieldUpdateOperationsInput | CompetitionVisibility
     criteriaType?: StringFieldUpdateOperationsInput | string
     criteriaConfig?: StringFieldUpdateOperationsInput | string
     maxParticipants?: IntFieldUpdateOperationsInput | number
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | SeasonId | null
     creatorDiscordId?: StringFieldUpdateOperationsInput | DiscordAccountId
     createdTime?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedTime?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14248,13 +14248,13 @@ export namespace Prisma {
     description?: StringFieldUpdateOperationsInput | string
     channelId?: StringFieldUpdateOperationsInput | DiscordChannelId
     isCancelled?: BoolFieldUpdateOperationsInput | boolean
-    visibility?: StringFieldUpdateOperationsInput | string
+    visibility?: StringFieldUpdateOperationsInput | CompetitionVisibility
     criteriaType?: StringFieldUpdateOperationsInput | string
     criteriaConfig?: StringFieldUpdateOperationsInput | string
     maxParticipants?: IntFieldUpdateOperationsInput | number
     startDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     endDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    seasonId?: NullableStringFieldUpdateOperationsInput | string | null
+    seasonId?: NullableStringFieldUpdateOperationsInput | SeasonId | null
     creatorDiscordId?: StringFieldUpdateOperationsInput | DiscordAccountId
     createdTime?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedTime?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14312,7 +14312,7 @@ export namespace Prisma {
   }
 
   export type SubscriptionCreateManyPlayerInput = {
-    id?: number
+    id?: SubscriptionId
     channelId: DiscordChannelId
     serverId: DiscordGuildId
     creatorDiscordId: DiscordAccountId
@@ -14323,7 +14323,7 @@ export namespace Prisma {
   export type CompetitionParticipantCreateManyPlayerInput = {
     id?: ParticipantId
     competitionId: CompetitionId
-    status: string
+    status: ParticipantStatus
     invitedBy?: DiscordAccountId | null
     invitedAt?: Date | string | null
     joinedAt?: Date | string | null
@@ -14331,9 +14331,9 @@ export namespace Prisma {
   }
 
   export type CompetitionSnapshotCreateManyPlayerInput = {
-    id?: number
+    id?: SnapshotId
     competitionId: CompetitionId
-    snapshotType: string
+    snapshotType: SnapshotType
     snapshotData: string
     snapshotTime: Date | string
   }
@@ -14388,7 +14388,7 @@ export namespace Prisma {
   }
 
   export type SubscriptionUncheckedUpdateWithoutPlayerInput = {
-    id?: IntFieldUpdateOperationsInput | number
+    id?: IntFieldUpdateOperationsInput | SubscriptionId
     channelId?: StringFieldUpdateOperationsInput | DiscordChannelId
     serverId?: StringFieldUpdateOperationsInput | DiscordGuildId
     creatorDiscordId?: StringFieldUpdateOperationsInput | DiscordAccountId
@@ -14406,7 +14406,7 @@ export namespace Prisma {
   }
 
   export type CompetitionParticipantUpdateWithoutPlayerInput = {
-    status?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | ParticipantStatus
     invitedBy?: NullableStringFieldUpdateOperationsInput | DiscordAccountId | null
     invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     joinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -14417,7 +14417,7 @@ export namespace Prisma {
   export type CompetitionParticipantUncheckedUpdateWithoutPlayerInput = {
     id?: IntFieldUpdateOperationsInput | ParticipantId
     competitionId?: IntFieldUpdateOperationsInput | CompetitionId
-    status?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | ParticipantStatus
     invitedBy?: NullableStringFieldUpdateOperationsInput | DiscordAccountId | null
     invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     joinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -14427,7 +14427,7 @@ export namespace Prisma {
   export type CompetitionParticipantUncheckedUpdateManyWithoutPlayerInput = {
     id?: IntFieldUpdateOperationsInput | number
     competitionId?: IntFieldUpdateOperationsInput | CompetitionId
-    status?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | ParticipantStatus
     invitedBy?: NullableStringFieldUpdateOperationsInput | DiscordAccountId | null
     invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     joinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -14435,16 +14435,16 @@ export namespace Prisma {
   }
 
   export type CompetitionSnapshotUpdateWithoutPlayerInput = {
-    snapshotType?: StringFieldUpdateOperationsInput | string
+    snapshotType?: StringFieldUpdateOperationsInput | SnapshotType
     snapshotData?: StringFieldUpdateOperationsInput | string
     snapshotTime?: DateTimeFieldUpdateOperationsInput | Date | string
     competition?: CompetitionUpdateOneRequiredWithoutSnapshotsNestedInput
   }
 
   export type CompetitionSnapshotUncheckedUpdateWithoutPlayerInput = {
-    id?: IntFieldUpdateOperationsInput | number
+    id?: IntFieldUpdateOperationsInput | SnapshotId
     competitionId?: IntFieldUpdateOperationsInput | CompetitionId
-    snapshotType?: StringFieldUpdateOperationsInput | string
+    snapshotType?: StringFieldUpdateOperationsInput | SnapshotType
     snapshotData?: StringFieldUpdateOperationsInput | string
     snapshotTime?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -14452,7 +14452,7 @@ export namespace Prisma {
   export type CompetitionSnapshotUncheckedUpdateManyWithoutPlayerInput = {
     id?: IntFieldUpdateOperationsInput | number
     competitionId?: IntFieldUpdateOperationsInput | CompetitionId
-    snapshotType?: StringFieldUpdateOperationsInput | string
+    snapshotType?: StringFieldUpdateOperationsInput | SnapshotType
     snapshotData?: StringFieldUpdateOperationsInput | string
     snapshotTime?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -14460,7 +14460,7 @@ export namespace Prisma {
   export type CompetitionParticipantCreateManyCompetitionInput = {
     id?: ParticipantId
     playerId: PlayerId
-    status: string
+    status: ParticipantStatus
     invitedBy?: DiscordAccountId | null
     invitedAt?: Date | string | null
     joinedAt?: Date | string | null
@@ -14468,15 +14468,15 @@ export namespace Prisma {
   }
 
   export type CompetitionSnapshotCreateManyCompetitionInput = {
-    id?: number
+    id?: SnapshotId
     playerId: PlayerId
-    snapshotType: string
+    snapshotType: SnapshotType
     snapshotData: string
     snapshotTime: Date | string
   }
 
   export type CompetitionParticipantUpdateWithoutCompetitionInput = {
-    status?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | ParticipantStatus
     invitedBy?: NullableStringFieldUpdateOperationsInput | DiscordAccountId | null
     invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     joinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -14487,7 +14487,7 @@ export namespace Prisma {
   export type CompetitionParticipantUncheckedUpdateWithoutCompetitionInput = {
     id?: IntFieldUpdateOperationsInput | ParticipantId
     playerId?: IntFieldUpdateOperationsInput | PlayerId
-    status?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | ParticipantStatus
     invitedBy?: NullableStringFieldUpdateOperationsInput | DiscordAccountId | null
     invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     joinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -14497,7 +14497,7 @@ export namespace Prisma {
   export type CompetitionParticipantUncheckedUpdateManyWithoutCompetitionInput = {
     id?: IntFieldUpdateOperationsInput | number
     playerId?: IntFieldUpdateOperationsInput | PlayerId
-    status?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | ParticipantStatus
     invitedBy?: NullableStringFieldUpdateOperationsInput | DiscordAccountId | null
     invitedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     joinedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -14505,16 +14505,16 @@ export namespace Prisma {
   }
 
   export type CompetitionSnapshotUpdateWithoutCompetitionInput = {
-    snapshotType?: StringFieldUpdateOperationsInput | string
+    snapshotType?: StringFieldUpdateOperationsInput | SnapshotType
     snapshotData?: StringFieldUpdateOperationsInput | string
     snapshotTime?: DateTimeFieldUpdateOperationsInput | Date | string
     player?: PlayerUpdateOneRequiredWithoutCompetitionSnapshotsNestedInput
   }
 
   export type CompetitionSnapshotUncheckedUpdateWithoutCompetitionInput = {
-    id?: IntFieldUpdateOperationsInput | number
+    id?: IntFieldUpdateOperationsInput | SnapshotId
     playerId?: IntFieldUpdateOperationsInput | PlayerId
-    snapshotType?: StringFieldUpdateOperationsInput | string
+    snapshotType?: StringFieldUpdateOperationsInput | SnapshotType
     snapshotData?: StringFieldUpdateOperationsInput | string
     snapshotTime?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -14522,7 +14522,7 @@ export namespace Prisma {
   export type CompetitionSnapshotUncheckedUpdateManyWithoutCompetitionInput = {
     id?: IntFieldUpdateOperationsInput | number
     playerId?: IntFieldUpdateOperationsInput | PlayerId
-    snapshotType?: StringFieldUpdateOperationsInput | string
+    snapshotType?: StringFieldUpdateOperationsInput | SnapshotType
     snapshotData?: StringFieldUpdateOperationsInput | string
     snapshotTime?: DateTimeFieldUpdateOperationsInput | Date | string
   }

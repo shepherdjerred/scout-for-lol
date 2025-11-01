@@ -368,7 +368,7 @@ describe("Daily Leaderboard Update", () => {
       startDate,
       endDate,
       {
-        channelId: DiscordChannelIdSchema.parse("valid-channel-id"),
+        channelId: DiscordChannelIdSchema.parse("valid-channel-id0"),
         title: "Competition 2",
       },
     );

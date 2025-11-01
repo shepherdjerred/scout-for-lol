@@ -20,7 +20,7 @@ import type { PlayerWithAccounts } from "./types.js";
 const playerA: PlayerWithAccounts = {
   id: PlayerIdSchema.parse(1),
   alias: "PlayerA",
-  discordId: DiscordAccountIdSchema.parse("discord-a"),
+  discordId: DiscordAccountIdSchema.parse("discord-a00000000"),
   accounts: [
     {
       id: AccountIdSchema.parse(1),
@@ -34,7 +34,7 @@ const playerA: PlayerWithAccounts = {
 const playerB: PlayerWithAccounts = {
   id: PlayerIdSchema.parse(2),
   alias: "PlayerB",
-  discordId: DiscordAccountIdSchema.parse("discord-b"),
+  discordId: DiscordAccountIdSchema.parse("discord-b00000000"),
   accounts: [
     {
       id: AccountIdSchema.parse(2),
@@ -48,7 +48,7 @@ const playerB: PlayerWithAccounts = {
 const playerC: PlayerWithAccounts = {
   id: PlayerIdSchema.parse(3),
   alias: "PlayerC",
-  discordId: DiscordAccountIdSchema.parse("discord-c"),
+  discordId: DiscordAccountIdSchema.parse("discord-c00000000"),
   accounts: [
     {
       id: AccountIdSchema.parse(3),

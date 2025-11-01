@@ -80,10 +80,10 @@ function createTestCompetitionInput(
 // ============================================================================
 
 describe("Competition List Query", () => {
-  const serverId = DiscordGuildIdSchema.parse("test-server-123");
-  const ownerId1 = DiscordAccountIdSchema.parse("user-1");
-  const ownerId2 = DiscordAccountIdSchema.parse("user-2");
-  const channelId = DiscordChannelIdSchema.parse("channel-1");
+  const serverId = DiscordGuildIdSchema.parse("test-server-12300");
+  const ownerId1 = DiscordAccountIdSchema.parse("user-100000000010");
+  const ownerId2 = DiscordAccountIdSchema.parse("user-200000000020");
+  const channelId = DiscordChannelIdSchema.parse("channel-1000000001");
 
   test("empty list when no competitions exist", async () => {
     const competitions = await getCompetitionsByServer(prisma, serverId);
@@ -108,7 +108,7 @@ describe("Competition List Query", () => {
     // Create competition in different server (should not appear)
     await createCompetition(
       prisma,
-      createTestCompetitionInput(DiscordGuildIdSchema.parse("other-server"), ownerId1, channelId, {
+      createTestCompetitionInput(DiscordGuildIdSchema.parse("other-server00000"), ownerId1, channelId, {
         title: "Other Server Comp",
       }),
     );

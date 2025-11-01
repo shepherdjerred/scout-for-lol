@@ -286,7 +286,7 @@ describe("CompetitionCreationSchema - Discord ID validation", () => {
   test("rejects invalid serverId (too short)", () => {
     const result = CompetitionCreationSchema.safeParse({
       ...validInput,
-      serverId: "1234",
+      serverId: "12340000000000000",
     });
     expect(result.success).toBe(false);
   });

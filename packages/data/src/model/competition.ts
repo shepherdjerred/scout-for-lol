@@ -14,6 +14,18 @@ export const CompetitionIdSchema = z.number().int().positive().brand("Competitio
 export type ParticipantId = z.infer<typeof ParticipantIdSchema>;
 export const ParticipantIdSchema = z.number().int().positive().brand("ParticipantId");
 
+export type SnapshotId = z.infer<typeof SnapshotIdSchema>;
+export const SnapshotIdSchema = z.number().int().positive().brand("SnapshotId");
+
+export type SubscriptionId = z.infer<typeof SubscriptionIdSchema>;
+export const SubscriptionIdSchema = z.number().int().positive().brand("SubscriptionId");
+
+export type PermissionId = z.infer<typeof PermissionIdSchema>;
+export const PermissionIdSchema = z.number().int().positive().brand("PermissionId");
+
+export type PermissionErrorId = z.infer<typeof PermissionErrorIdSchema>;
+export const PermissionErrorIdSchema = z.number().int().positive().brand("PermissionErrorId");
+
 // ============================================================================
 // Enums
 // ============================================================================
