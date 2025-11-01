@@ -51,7 +51,7 @@ export async function getChannelsSubscribedToPlayers(
 
     const result = uniqueBy(
       accounts.flatMap((account) =>
-        account.player.subscriptions.map((subscription) => ({
+        account.player.subscriptions.map((subscription): { channel: DiscordChannelId; serverId: string } => ({
           channel: subscription.channelId,
           serverId: subscription.serverId,
         })),

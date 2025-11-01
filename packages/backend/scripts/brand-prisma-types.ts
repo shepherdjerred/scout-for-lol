@@ -11,7 +11,7 @@
  * This should be run after `prisma generate`
  */
 
-import { Project, SyntaxKind, type TypeAliasDeclaration } from "ts-morph";
+import { Project, SyntaxKind, type TypeAliasDeclaration, type InterfaceDeclaration } from "ts-morph";
 import { resolve } from "node:path";
 
 // Configuration: Map field names to branded types
@@ -77,13 +77,34 @@ function main() {
     else if (typeName.includes("WhereUniqueInput") || typeName.includes("WhereInput")) {
       transformCount += transformWhereType(typeAlias);
     }
-    // Process Create input types
-    else if (typeName.includes("CreateInput") || typeName.includes("CreateManyInput")) {
+    // Process Create input types (all variations)
+    // Patterns: CreateInput, CreateManyInput, CreateWithout...Input, Unchecked variants
+    else if (typeName.includes("Create") && typeName.endsWith("Input")) {
       transformCount += transformInputType(typeAlias);
     }
-    // Process Update input types
-    else if (typeName.includes("UpdateInput") || typeName.includes("UpdateManyInput")) {
+    // Process Update input types (all variations)
+    // Patterns: UpdateInput, UpdateManyInput, UpdateWithout...Input, Unchecked variants
+    else if (typeName.includes("Update") && typeName.endsWith("Input")) {
       transformCount += transformInputType(typeAlias);
+    }
+    // Process Min/Max Aggregate output types (return actual values, not counts)
+    else if (typeName.includes("MinAggregateOutputType") || typeName.includes("MaxAggregateOutputType")) {
+      transformCount += transformAggregateType(typeAlias);
+    }
+    // Process GroupBy output types (return actual values)
+    else if (typeName.includes("GroupByOutputType")) {
+      transformCount += transformAggregateType(typeAlias);
+    }
+  }
+
+  // Process all interfaces inside the Prisma namespace
+  const interfaces = prismaNamespace.getInterfaces();
+  for (const interfaceDecl of interfaces) {
+    const interfaceName = interfaceDecl.getName();
+
+    // Process FieldRefs interfaces (for query building)
+    if (interfaceName.endsWith("FieldRefs")) {
+      transformCount += transformFieldRefsInterface(interfaceDecl);
     }
   }
 
@@ -221,8 +242,11 @@ function transformWhereType(typeAlias: TypeAliasDeclaration): number {
 function transformInputType(typeAlias: TypeAliasDeclaration): number {
   const typeName = typeAlias.getName();
   // Extract model name from various input type patterns
+  // Must check longer patterns first to avoid partial matches
+  // Patterns like "PlayerCreateWithoutSubscriptionsInput" -> "Player"
+  // Patterns like "AccountCreateManyPlayerInput" -> "Account"
   const modelName = typeName.replace(
-    /CreateInput|CreateManyInput|UpdateInput|UpdateManyInput|UncheckedCreateInput|UncheckedUpdateInput/,
+    /UncheckedCreateWithout\w+Input|UncheckedUpdateWithout\w+Input|UncheckedCreateInput|UncheckedUpdateInput|CreateWithout\w+Input|UpdateWithout\w+Input|CreateMany\w+Input|UpdateMany\w+Input|CreateInput|UpdateInput/,
     "",
   );
 
@@ -291,6 +315,57 @@ function transformSimpleObjectType(typeAlias: TypeAliasDeclaration, modelName: s
         BRANDED_TYPES_TO_IMPORT.add(brandedType);
         count++;
       }
+    }
+  }
+
+  return count;
+}
+
+function transformAggregateType(typeAlias: TypeAliasDeclaration): number {
+  const typeName = typeAlias.getName();
+  // Extract model name: SubscriptionMinAggregateOutputType → Subscription
+  // or SubscriptionGroupByOutputType → Subscription
+  const modelName = typeName.replace(/MinAggregateOutputType|MaxAggregateOutputType|GroupByOutputType/, "");
+
+  return transformSimpleObjectType(typeAlias, modelName);
+}
+
+function transformFieldRefsInterface(interfaceDecl: InterfaceDeclaration): number {
+  const interfaceName = interfaceDecl.getName();
+  // Extract model name: SubscriptionFieldRefs → Subscription
+  const modelName = interfaceName.replace(/FieldRefs$/, "");
+
+  let count = 0;
+
+  for (const member of interfaceDecl.getMembers()) {
+    if (member.getKind() !== SyntaxKind.PropertySignature) continue;
+
+    const prop = member.asKindOrThrow(SyntaxKind.PropertySignature);
+    const propName = prop.getName();
+    const propTypeNode = prop.getTypeNode();
+
+    if (!propTypeNode) continue;
+
+    const brandedType = getBrandedType(propName, modelName);
+    if (!brandedType) continue;
+
+    const fullText = prop.getText();
+
+    // FieldRef pattern: readonly channelId: FieldRef<"Subscription", 'String'>
+    // We need to replace the second type parameter with the branded type
+    // Pattern: FieldRef<"Model", 'Int'> → FieldRef<"Model", BrandedType>
+    // Pattern: FieldRef<"Model", 'String'> → FieldRef<"Model", BrandedType>
+
+    // Match the FieldRef type parameter (Int, String, DateTime, etc.)
+    const fieldRefPattern = /FieldRef<"[^"]+",\s*'(Int|String|DateTime|Boolean|Float|Decimal|BigInt|Bytes|Json)'\s*>/;
+    const match = fieldRefPattern.exec(fullText);
+
+    if (match) {
+      // Replace the type parameter with the branded type (without quotes since it's a type, not a string literal)
+      const newText = fullText.replace(fieldRefPattern, `FieldRef<"${modelName}", ${brandedType}>`);
+      prop.replaceWithText(newText);
+      BRANDED_TYPES_TO_IMPORT.add(brandedType);
+      count++;
     }
   }
 
