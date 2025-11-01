@@ -1,4 +1,4 @@
-import { AccountId, CompetitionId, DiscordAccountId, DiscordChannelId, DiscordGuildId, LeaguePuuid, ParticipantId, PlayerId } from "@scout-for-lol/data";
+import { AccountId, CompetitionId, DiscordAccountId, DiscordChannelId, DiscordGuildId, LeaguePuuid, ParticipantId, PlayerId, Region } from "@scout-for-lol/data";
 /**
  * Client
 **/
@@ -4255,7 +4255,7 @@ export namespace Prisma {
           id: AccountId
           alias: string
           puuid: LeaguePuuid
-          region: string
+          region: Region
           playerId: PlayerId
           lastProcessedMatchId: string | null
           lastMatchTime: Date | null
@@ -11173,7 +11173,7 @@ export namespace Prisma {
     id?: IntFilter<"Account"> | AccountId
     alias?: StringFilter<"Account"> | string
     puuid?: StringFilter<"Account"> | LeaguePuuid
-    region?: StringFilter<"Account"> | string
+    region?: StringFilter<"Account"> | Region
     playerId?: IntFilter<"Account"> | PlayerId
     lastProcessedMatchId?: StringNullableFilter<"Account"> | string | null
     lastMatchTime?: DateTimeNullableFilter<"Account"> | Date | string | null
@@ -11823,7 +11823,7 @@ export namespace Prisma {
   export type AccountCreateInput = {
     alias: string
     puuid: LeaguePuuid
-    region: string
+    region: Region
     lastProcessedMatchId?: string | null
     lastMatchTime?: Date | string | null
     lastCheckedAt?: Date | string | null
@@ -11838,7 +11838,7 @@ export namespace Prisma {
     id?: AccountId
     alias: string
     puuid: LeaguePuuid
-    region: string
+    region: Region
     playerId: PlayerId
     lastProcessedMatchId?: string | null
     lastMatchTime?: Date | string | null
@@ -11852,7 +11852,7 @@ export namespace Prisma {
   export type AccountUpdateInput = {
     alias?: StringFieldUpdateOperationsInput | string
     puuid?: StringFieldUpdateOperationsInput | LeaguePuuid
-    region?: StringFieldUpdateOperationsInput | string
+    region?: StringFieldUpdateOperationsInput | Region
     lastProcessedMatchId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMatchTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastCheckedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -11867,7 +11867,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | AccountId
     alias?: StringFieldUpdateOperationsInput | string
     puuid?: StringFieldUpdateOperationsInput | LeaguePuuid
-    region?: StringFieldUpdateOperationsInput | string
+    region?: StringFieldUpdateOperationsInput | Region
     playerId?: IntFieldUpdateOperationsInput | PlayerId
     lastProcessedMatchId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMatchTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -11882,7 +11882,7 @@ export namespace Prisma {
     id?: AccountId
     alias: string
     puuid: LeaguePuuid
-    region: string
+    region: Region
     playerId: PlayerId
     lastProcessedMatchId?: string | null
     lastMatchTime?: Date | string | null
@@ -11910,7 +11910,7 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
     alias?: StringFieldUpdateOperationsInput | string
     puuid?: StringFieldUpdateOperationsInput | LeaguePuuid
-    region?: StringFieldUpdateOperationsInput | string
+    region?: StringFieldUpdateOperationsInput | Region
     playerId?: IntFieldUpdateOperationsInput | PlayerId
     lastProcessedMatchId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMatchTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -13721,7 +13721,7 @@ export namespace Prisma {
     id?: IntFilter<"Account"> | number
     alias?: StringFilter<"Account"> | string
     puuid?: StringFilter<"Account"> | LeaguePuuid
-    region?: StringFilter<"Account"> | string
+    region?: StringFilter<"Account"> | Region
     playerId?: IntFilter<"Account"> | PlayerId
     lastProcessedMatchId?: StringNullableFilter<"Account"> | string | null
     lastMatchTime?: DateTimeNullableFilter<"Account"> | Date | string | null

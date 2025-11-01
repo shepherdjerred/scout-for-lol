@@ -1,4 +1,5 @@
 import { type Client, MessageFlags } from "discord.js";
+import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { executeSubscribe } from "./subscribe";
 import { executeUnsubscribe } from "./unsubscribe";
 import { executeListSubscriptions } from "./list-subscriptions";

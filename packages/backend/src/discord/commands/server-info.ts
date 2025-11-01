@@ -1,4 +1,5 @@
 import { type ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "../../database/index.js";
 import configuration from "../../configuration.js";
 

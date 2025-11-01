@@ -11,7 +11,7 @@ import {
   markGuildAsNotified,
   cleanupOldErrorRecords,
 } from "./guild-permission-errors.js";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import { DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "guild-errors-test-"));
@@ -195,7 +195,7 @@ describe("getAbandonedGuilds", () => {
     const abandoned = await getAbandonedGuilds(prisma, 7);
 
     expect(abandoned).toHaveLength(1);
-    expect(abandoned[0]?.serverId).toBe("abandoned-guild");
+    expect(abandoned[0]?.serverId).toBe(DiscordGuildIdSchema.parse("abandoned-guild"));
     expect(abandoned[0]?.errorCount).toBe(50);
   });
 
@@ -294,7 +294,7 @@ describe("getAbandonedGuilds", () => {
     const abandoned = await getAbandonedGuilds(prisma, 7);
 
     expect(abandoned).toHaveLength(1);
-    expect(abandoned[0]?.serverId).toBe("multi-channel-guild");
+    expect(abandoned[0]?.serverId).toBe(DiscordGuildIdSchema.parse("multi-channel-guild"));
     expect(abandoned[0]?.errorCount).toBe(35); // 20 + 15
   });
 
@@ -439,16 +439,11 @@ describe("cleanupOldErrorRecords", () => {
 
 describe("Permission Error Workflow", () => {
   test("full workflow: error -> more errors -> success -> reset", async () => {
-    const serverId = "workflow-guild";
-    const channelId = "workflow-channel";
+    const serverId = DiscordGuildIdSchema.parse("workflow-guild");
+    const channelId = DiscordChannelIdSchema.parse("workflow-channel");
 
     // 1. First error
-    await recordPermissionError(
-      prisma,
-      DiscordGuildIdSchema.parse(serverId),
-      DiscordChannelIdSchema.parse(channelId),
-      "proactive_check",
-    );
+    await recordPermissionError(prisma, serverId, channelId, "proactive_check");
     let record = await prisma.guildPermissionError.findUnique({
       where: { serverId_channelId: { serverId, channelId } },
     });
@@ -500,7 +495,7 @@ describe("Permission Error Workflow", () => {
     // 1. Should be detected as abandoned
     const abandoned = await getAbandonedGuilds(prisma, 7);
     expect(abandoned).toHaveLength(1);
-    expect(abandoned[0]?.serverId).toBe("abandoned-123");
+    expect(abandoned[0]?.serverId).toBe(DiscordGuildIdSchema.parse("abandoned-123"));
 
     // 2. Mark as notified
     await markGuildAsNotified(prisma, DiscordGuildIdSchema.parse("abandoned-123"));
