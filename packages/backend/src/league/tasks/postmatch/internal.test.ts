@@ -9,6 +9,8 @@
 
 import { test } from "bun:test";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
+
 test.skip("old postmatch logic - deprecated", () => {
   // Tests skipped - old implementation replaced with match history polling
 });

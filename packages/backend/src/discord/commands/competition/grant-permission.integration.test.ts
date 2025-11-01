@@ -18,7 +18,7 @@ execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`, {
 });
 import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
 const prisma = new PrismaClient({
   datasources: {
     db: {

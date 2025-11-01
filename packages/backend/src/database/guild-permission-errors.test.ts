@@ -13,7 +13,7 @@ import {
 } from "./guild-permission-errors.js";
 import { DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../testing/test-ids.js";
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "guild-errors-test-"));
 const testDbPath = join(testDir, "test.db");

@@ -15,7 +15,7 @@ import type { PlayerWithAccounts } from "./types.js";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
 // ============================================================================
 // Test Fixtures - Load Real Match Data
 // ============================================================================

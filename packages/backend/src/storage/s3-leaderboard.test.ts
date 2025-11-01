@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../testing/test-ids";
+
 import {
   CachedLeaderboardSchema,
   CompetitionIdSchema,
@@ -124,7 +126,7 @@ describe("CachedLeaderboard Schema Validation", () => {
   test("rejects invalid competitionId", () => {
     const invalidLeaderboard = {
       version: "v1",
-      competitionId: CompetitionIdSchema.parse(-1), // Negative ID
+      competitionId: -1 as any, // Negative ID (invalid)
       calculatedAt: new Date().toISOString(),
       entries: [],
     };
@@ -152,7 +154,7 @@ describe("CachedLeaderboard Schema Validation", () => {
       calculatedAt: new Date().toISOString(),
       entries: [
         {
-          playerId: PlayerIdSchema.parse(-1), // Negative ID
+          playerId: -1 as any, // Negative ID (invalid)
           playerName: "Player1",
           score: 100,
           rank: 1,

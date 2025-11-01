@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { notifyServerOwnerAboutPermissionError } from "./permissions";
 import type { Client } from "discord.js";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
+
 describe("notifyServerOwnerAboutPermissionError", () => {
   test("sends DM to server owner with permission error details", async () => {
     const sentMessages: { user: string; message: string }[] = [];

@@ -16,7 +16,7 @@ import type {
 } from "@scout-for-lol/data";
 import { z } from "zod";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
 // Schema for Discord message content validation
 const MessageContentSchema = z.object({
   content: z.string(),

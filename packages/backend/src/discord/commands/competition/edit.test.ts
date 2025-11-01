@@ -9,7 +9,7 @@ import {
 } from "@scout-for-lol/data";
 import type { Competition } from "../../../../generated/prisma/client";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
 /**
  * These tests verify the validation logic patterns used in edit.ts
  * They test the same patterns without needing Discord.js mocks

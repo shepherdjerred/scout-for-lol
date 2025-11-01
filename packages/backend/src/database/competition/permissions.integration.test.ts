@@ -9,7 +9,7 @@ import { canCreateCompetition, grantPermission, hasPermission, revokePermission 
 import { clearAllRateLimits, recordCreation } from "./rate-limit.js";
 import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "permissions-test-"));
 const testDbPath = join(testDir, "test.db");

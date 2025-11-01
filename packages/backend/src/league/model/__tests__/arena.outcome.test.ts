@@ -2,6 +2,8 @@ import { describe, it, expect } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { getArenaPlacement } from "../match.js";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
+
 function makeParticipant(extra: Record<string, unknown> = {}): MatchV5DTOs.ParticipantDto {
   return {
     puuid: crypto.randomUUID(),

@@ -13,6 +13,8 @@ import { mockClient } from "aws-sdk-client-mock";
 import { saveImageToS3 } from "./s3.js";
 import { MatchIdSchema } from "@scout-for-lol/data";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../testing/test-ids.js";
+
 // Create S3 mock
 const s3Mock = mockClient(S3Client);
 

@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { getChampionId, getChampionDisplayName, searchChampions, getAllChampions } from "./champion.js";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../testing/test-ids.js";
+
 describe("Champion utilities", () => {
   describe("getChampionId", () => {
     test("finds champion by exact name (uppercase)", () => {

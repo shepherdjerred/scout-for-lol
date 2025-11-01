@@ -224,11 +224,14 @@ describe("generateLeaderboardEmbed", () => {
 
 describe("generateCompetitionDetailsEmbed", () => {
   it("should include all basic competition metadata", () => {
+    const ownerId = testAccountId("12300000123");
+    const channelId = testChannelId("456000000");
+    
     const competition = createTestCompetition({
       title: "Test Competition",
       description: "Test description",
-      ownerId: testAccountId("12300000123"),
-      channelId: testChannelId("456000000"),
+      ownerId,
+      channelId,
       maxParticipants: 25,
     });
 
@@ -239,10 +242,10 @@ describe("generateCompetitionDetailsEmbed", () => {
     expect(embedData.description).toBe("Test description");
 
     const ownerField = embedData.fields?.find((f) => f.name === "Owner");
-    expect(ownerField?.value).toBe("<@owner-123>");
+    expect(ownerField?.value).toBe(`<@${ownerId}>`);
 
     const channelField = embedData.fields?.find((f) => f.name === "Channel");
-    expect(channelField?.value).toBe("<#channel-456>");
+    expect(channelField?.value).toBe(`<#${channelId}>`);
 
     const maxField = embedData.fields?.find((f) => f.name === "Max Participants");
     expect(maxField?.value).toBe("25");

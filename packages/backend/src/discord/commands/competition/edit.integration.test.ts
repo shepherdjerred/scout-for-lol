@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createCompetition, getCompetitionById, updateCompetition } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput, UpdateCompetitionInput } from "../../../database/competition/queries.js";
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
 import {
   CompetitionIdSchema,
   DiscordAccountIdSchema,

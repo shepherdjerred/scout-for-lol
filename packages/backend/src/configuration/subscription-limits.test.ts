@@ -1,4 +1,6 @@
 import { describe, test, expect } from "bun:test";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../testing/test-ids.js";
+
 import {
   DEFAULT_PLAYER_SUBSCRIPTION_LIMIT,
   DEFAULT_ACCOUNT_LIMIT,

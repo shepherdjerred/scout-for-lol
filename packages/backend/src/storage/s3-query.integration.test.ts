@@ -14,6 +14,8 @@ import { mockClient } from "aws-sdk-client-mock";
 import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { queryMatchesByDateRange } from "./s3-query.js";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../testing/test-ids.js";
+
 // Create S3 mock
 const s3Mock = mockClient(S3Client);
 

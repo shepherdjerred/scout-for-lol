@@ -13,7 +13,7 @@ import {
 import { processCriteria } from "./index.js";
 import type { PlayerWithAccounts } from "./types.js";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
 // ============================================================================
 // Test Fixtures - Players
 // ============================================================================

@@ -29,9 +29,11 @@ import {
  * const serverId2 = testGuildId("123");          // "312300000000000000"
  * ```
  */
-export function testGuildId(identifier: string = "0"): DiscordGuildId {
+export function testGuildId(identifier = "0"): DiscordGuildId {
   const base = identifier.replace(/\D/g, ""); // Remove non-digits
-  const numericId = `3${base}`.padEnd(18, "0");
+  const withPrefix = `3${base}`;
+  // Ensure length is between 17-20, truncate or pad as needed
+  const numericId = withPrefix.length > 20 ? withPrefix.slice(0, 20) : withPrefix.padEnd(18, "0");
   return DiscordGuildIdSchema.parse(numericId);
 }
 
@@ -48,9 +50,11 @@ export function testGuildId(identifier: string = "0"): DiscordGuildId {
  * const userId2 = testAccountId("456");        // "245600000000000000"
  * ```
  */
-export function testAccountId(identifier: string = "0"): DiscordAccountId {
+export function testAccountId(identifier = "0"): DiscordAccountId {
   const base = identifier.replace(/\D/g, ""); // Remove non-digits
-  const numericId = `2${base}`.padEnd(18, "0");
+  const withPrefix = `2${base}`;
+  // Ensure length is between 17-18, truncate or pad as needed
+  const numericId = withPrefix.length > 18 ? withPrefix.slice(0, 18) : withPrefix.padEnd(18, "0");
   return DiscordAccountIdSchema.parse(numericId);
 }
 
@@ -67,9 +71,11 @@ export function testAccountId(identifier: string = "0"): DiscordAccountId {
  * const channelId2 = testChannelId("789");      // "178900000000000000"
  * ```
  */
-export function testChannelId(identifier: string = "0"): DiscordChannelId {
+export function testChannelId(identifier = "0"): DiscordChannelId {
   const base = identifier.replace(/\D/g, ""); // Remove non-digits
-  const numericId = `1${base}`.padEnd(18, "0");
+  const withPrefix = `1${base}`;
+  // Ensure length is between 17-20, truncate or pad as needed
+  const numericId = withPrefix.length > 20 ? withPrefix.slice(0, 20) : withPrefix.padEnd(18, "0");
   return DiscordChannelIdSchema.parse(numericId);
 }
 
@@ -104,7 +110,7 @@ export function testPuuid(identifier: string): LeaguePuuid {
  * const nextWeek = testDate(7);
  * ```
  */
-export function testDate(daysOffset: number = 0): Date {
+export function testDate(daysOffset = 0): Date {
   const date = new Date();
   date.setDate(date.getDate() + daysOffset);
   return date;
@@ -123,7 +129,7 @@ export function testDate(daysOffset: number = 0): Date {
  * const endOfDay = testDateAt(23, 59);
  * ```
  */
-export function testDateAt(hours: number, minutes: number = 0): Date {
+export function testDateAt(hours: number, minutes = 0): Date {
   const date = new Date();
   date.setHours(hours, minutes, 0, 0);
   return date;
@@ -137,24 +143,23 @@ export const TEST_IDS = {
   SERVER_1: testGuildId("1000000001"),
   SERVER_2: testGuildId("2000000002"),
   SERVER_3: testGuildId("3000000003"),
-  
+
   // Common users
   OWNER: testAccountId("owner"),
   USER_1: testAccountId("user1"),
   USER_2: testAccountId("user2"),
   USER_3: testAccountId("user3"),
   CREATOR: testAccountId("testcreator"),
-  
+
   // Common channels
   CHANNEL_GENERAL: testChannelId("general"),
   CHANNEL_1: testChannelId("123"),
   CHANNEL_2: testChannelId("456"),
   CHANNEL_3: testChannelId("789"),
-  
+
   // Common PUUIDs
   PUUID_MAIN: testPuuid("main"),
   PUUID_SMURF: testPuuid("smurf"),
   PUUID_1: testPuuid("1"),
   PUUID_2: testPuuid("2"),
 } as const;
-

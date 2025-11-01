@@ -3,6 +3,8 @@ import { z } from "zod";
 import { PlayerIdSchema, type PlayerId, type Rank } from "@scout-for-lol/data";
 import type { LeaderboardEntry } from "./processors/types.js";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
+
 // Import the internal functions for testing by re-exporting them
 // We'll need to test the ranking logic directly
 

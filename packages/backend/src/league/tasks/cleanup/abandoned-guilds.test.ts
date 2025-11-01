@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
+
 // Note: Full integration tests for checkAbandonedGuilds would require:
 // - Test database with GuildPermissionError records
 // - Mock Discord client

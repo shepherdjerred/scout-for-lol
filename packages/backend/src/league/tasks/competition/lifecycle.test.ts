@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
+
 /**
  * Unit tests for lifecycle query logic
  * These tests verify the database query conditions used to find competitions
