@@ -28,16 +28,19 @@ const testDbPath = join(testDir, "test.db");
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database once before all tests
-execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
-  cwd: join(import.meta.dir, "../../../.."),
-  env: {
-    ...process.env,
-    DATABASE_URL: testDbUrl,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+execSync(
+  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  {
+    cwd: join(import.meta.dir, "../../../.."),
+    env: {
+      ...process.env,
+      DATABASE_URL: testDbUrl,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "ignore",
   },
-  stdio: "ignore",
-});
+);
 
 const prisma = new PrismaClient({
   datasources: {
@@ -172,21 +175,9 @@ describe("Competition View - DRAFT Status", () => {
     const ownerId = testAccountId("10000000100");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId);
-    const { playerId: player1Id } = await createTestPlayer(
-      serverId,
-      testAccountId("100000000010"),
-      "Player1",
-    );
-    const { playerId: player2Id } = await createTestPlayer(
-      serverId,
-      testAccountId("200000000020"),
-      "Player2",
-    );
-    const { playerId: player3Id } = await createTestPlayer(
-      serverId,
-      testAccountId("300000000030"),
-      "Player3",
-    );
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
+    const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
+    const { playerId: player3Id } = await createTestPlayer(serverId, testAccountId("300000000030"), "Player3");
 
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
     await addParticipant(prisma, competitionId, player2Id, "JOINED");
@@ -277,16 +268,8 @@ describe("Competition View - ACTIVE Status", () => {
     });
 
     // Add participants
-    const { playerId: player1Id } = await createTestPlayer(
-      serverId,
-      testAccountId("100000000010"),
-      "Player1",
-    );
-    const { playerId: player2Id } = await createTestPlayer(
-      serverId,
-      testAccountId("200000000020"),
-      "Player2",
-    );
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
+    const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
     await addParticipant(prisma, competitionId, player2Id, "JOINED");
 
@@ -352,16 +335,8 @@ describe("Competition View - ENDED Status", () => {
     });
 
     // Add participants while competition is active
-    const { playerId: player1Id } = await createTestPlayer(
-      serverId,
-      testAccountId("100000000010"),
-      "Player1",
-    );
-    const { playerId: player2Id } = await createTestPlayer(
-      serverId,
-      testAccountId("200000000020"),
-      "Player2",
-    );
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
+    const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
     await addParticipant(prisma, competitionId, player2Id, "JOINED");
 
@@ -427,7 +402,7 @@ describe("Competition View - CANCELLED Status", () => {
 describe("Competition View - Error Cases", () => {
   test("should return null for non-existent competition", async () => {
     const competition = await getCompetitionById(prisma, 999999);
-    expect(competition).toBeNull();
+    expect(competition).toBeUndefined();
   });
 });
 

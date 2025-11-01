@@ -14,16 +14,19 @@ const testDbPath = join(testDir, "test.db");
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database once before all tests
-execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
-  cwd: join(import.meta.dir, "../../../.."),
-  env: {
-    ...process.env,
-    DATABASE_URL: testDbUrl,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+execSync(
+  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  {
+    cwd: join(import.meta.dir, "../../../.."),
+    env: {
+      ...process.env,
+      DATABASE_URL: testDbUrl,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "ignore",
   },
-  stdio: "ignore",
-});
+);
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -188,7 +191,7 @@ describe("Non-existent competition", () => {
     const nonExistentId = 999999;
     const competition = await getCompetitionById(prisma, nonExistentId);
 
-    expect(competition).toBeNull();
+    expect(competition).toBeUndefined();
   });
 });
 

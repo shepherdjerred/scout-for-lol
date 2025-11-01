@@ -254,7 +254,7 @@ describe.serial("pruneOrphanedPlayers", () => {
           create: [
             {
               alias: "account1",
-              puuid: LeaguePuuidSchema.parse("puuid1"),
+              puuid: testPuuid("1"),
               region: "AMERICA_NORTH",
               serverId: testGuildId("1000000001"),
               creatorDiscordId: testAccountId("1000000000000"),
@@ -263,7 +263,7 @@ describe.serial("pruneOrphanedPlayers", () => {
             },
             {
               alias: "account2",
-              puuid: LeaguePuuidSchema.parse("puuid2"),
+              puuid: testPuuid("2"),
               region: "EU_WEST",
               serverId: testGuildId("1000000001"),
               creatorDiscordId: testAccountId("1000000000000"),

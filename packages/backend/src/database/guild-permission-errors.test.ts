@@ -210,7 +210,7 @@ describe("getAbandonedGuilds", () => {
 
     await prisma.guildPermissionError.create({
       data: {
-        serverId: testGuildId("recent-error-guild"),
+        serverId: testGuildId("2000000001"),
         channelId: testChannelId("1000000001"),
         errorType: "proactive_check",
         firstOccurrence: fiveDaysAgo,
@@ -276,7 +276,7 @@ describe("getAbandonedGuilds", () => {
     // Multiple channels with errors in same guild
     await prisma.guildPermissionError.create({
       data: {
-        serverId: testGuildId("multi-channel-guild"),
+        serverId: testGuildId("3000000001"),
         channelId: testChannelId("1000000001"),
         errorType: "proactive_check",
         firstOccurrence: eightDaysAgo,
@@ -287,7 +287,7 @@ describe("getAbandonedGuilds", () => {
 
     await prisma.guildPermissionError.create({
       data: {
-        serverId: testGuildId("multi-channel-guild"),
+        serverId: testGuildId("3000000001"),
         channelId: testChannelId("2000000002"),
         errorType: "api_error",
         firstOccurrence: eightDaysAgo,
@@ -299,7 +299,7 @@ describe("getAbandonedGuilds", () => {
     const abandoned = await getAbandonedGuilds(prisma, 7);
 
     expect(abandoned).toHaveLength(1);
-    expect(abandoned[0]?.serverId).toBe(testGuildId("multi-channel-guild"));
+    expect(abandoned[0]?.serverId).toBe(testGuildId("3000000001"));
     expect(abandoned[0]?.errorCount).toBe(35); // 20 + 15
   });
 
@@ -424,7 +424,7 @@ describe("cleanupOldErrorRecords", () => {
     // Old but still has errors
     await prisma.guildPermissionError.create({
       data: {
-        serverId: testGuildId("ongoing-error-guild"),
+        serverId: testGuildId("4000000001"),
         channelId: testChannelId("1000000001"),
         errorType: "proactive_check",
         firstOccurrence: fortyDaysAgo,

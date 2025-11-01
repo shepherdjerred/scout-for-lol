@@ -18,7 +18,7 @@ describe("generateMatchReview", () => {
               discord: { discordUserId: testAccountId("12300000000000000") },
               league: {
                 leagueAccount: {
-                  puuid: LeaguePuuidSchema.parse("test-puuid") as unknown,
+                  puuid: testPuuid("test-puuid") as unknown,
                   region: "AMERICA_NORTH",
                   gameName: "TestPlayer",
                   tagLine: "NA1",
@@ -80,7 +80,7 @@ describe("generateMatchReview", () => {
               discord: { discordUserId: testAccountId("45600000000000000") },
               league: {
                 leagueAccount: {
-                  puuid: LeaguePuuidSchema.parse("test-puuid-2") as unknown,
+                  puuid: testPuuid("test-puuid-2") as unknown,
                   region: "AMERICA_NORTH",
                   gameName: "Player2",
                   tagLine: "NA1",
@@ -135,7 +135,7 @@ describe("generateMatchReview", () => {
               discord: { discordUserId: testAccountId("78900000000000000") },
               league: {
                 leagueAccount: {
-                  puuid: LeaguePuuidSchema.parse("arena-puuid") as unknown,
+                  puuid: testPuuid("arena-puuid") as unknown,
                   region: "AMERICA_NORTH",
                   gameName: "ArenaPlayer",
                   tagLine: "NA1",
@@ -200,7 +200,7 @@ describe("generateMatchReview", () => {
               discord: { discordUserId: testAccountId("89000000000000000") },
               league: {
                 leagueAccount: {
-                  puuid: LeaguePuuidSchema.parse("arena-puuid-2") as unknown,
+                  puuid: testPuuid("arena-puuid-2") as unknown,
                   region: "AMERICA_NORTH",
                   gameName: "ArenaPlayer2",
                   tagLine: "NA1",

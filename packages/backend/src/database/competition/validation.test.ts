@@ -287,7 +287,7 @@ describe("CompetitionCreationSchema - Discord ID validation", () => {
   test("rejects invalid serverId (too short)", () => {
     const result = CompetitionCreationSchema.safeParse({
       ...validInput,
-      serverId: "12340000000000000",
+      serverId: "1234000000000000", // 16 chars - actually too short
     });
     expect(result.success).toBe(false);
   });
@@ -295,7 +295,7 @@ describe("CompetitionCreationSchema - Discord ID validation", () => {
   test("rejects invalid ownerId (contains letters)", () => {
     const result = CompetitionCreationSchema.safeParse({
       ...validInput,
-      ownerId: testAccountId("123456789012345"),
+      ownerId: "123456789012abc456", // Contains letters - invalid
     });
     expect(result.success).toBe(false);
   });
@@ -303,7 +303,7 @@ describe("CompetitionCreationSchema - Discord ID validation", () => {
   test("rejects invalid channelId (too long)", () => {
     const result = CompetitionCreationSchema.safeParse({
       ...validInput,
-      channelId: "12345678901234567890",
+      channelId: "123456789012345678901", // 21 chars - actually too long
     });
     expect(result.success).toBe(false);
   });

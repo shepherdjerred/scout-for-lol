@@ -166,7 +166,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: LeaguePuuidSchema.parse("puuid-1"),
+              puuid: testPuuid("1"),
               alias: "Player1",
               region: "AMERICA_NORTH",
               serverId: testGuildId("000000"),
@@ -190,7 +190,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: LeaguePuuidSchema.parse("puuid-2"),
+              puuid: testPuuid("2"),
               alias: "Player2",
               region: "AMERICA_NORTH",
               serverId: testGuildId("000000"),
@@ -261,7 +261,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: LeaguePuuidSchema.parse("puuid-1"),
+              puuid: testPuuid("1"),
               alias: "Player1",
               region: "AMERICA_NORTH",
               serverId: testGuildId("000000"),
@@ -285,7 +285,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: LeaguePuuidSchema.parse("puuid-2"),
+              puuid: testPuuid("2"),
               alias: "Player2",
               region: "AMERICA_NORTH",
               serverId: testGuildId("000000"),
@@ -389,7 +389,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: LeaguePuuidSchema.parse("puuid-3"),
+              puuid: testPuuid("3"),
               alias: "Player3",
               region: "AMERICA_NORTH",
               serverId: testGuildId("000000"),
@@ -413,7 +413,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: LeaguePuuidSchema.parse("puuid-4"),
+              puuid: testPuuid("4"),
               alias: "Player4",
               region: "AMERICA_NORTH",
               serverId: testGuildId("000000"),
@@ -540,7 +540,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: LeaguePuuidSchema.parse("puuid-1"),
+              puuid: testPuuid("1"),
               alias: "Player1",
               region: "AMERICA_NORTH",
               serverId: testGuildId("000000"),
@@ -564,7 +564,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: LeaguePuuidSchema.parse("puuid-2"),
+              puuid: testPuuid("2"),
               alias: "Player2",
               region: "AMERICA_NORTH",
               serverId: testGuildId("000000"),
@@ -686,7 +686,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: LeaguePuuidSchema.parse("puuid-1"),
+              puuid: testPuuid("1"),
               alias: "Player1",
               region: "AMERICA_NORTH",
               serverId: testGuildId("000000"),
@@ -710,7 +710,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: LeaguePuuidSchema.parse("puuid-2"),
+              puuid: testPuuid("2"),
               alias: "Player2",
               region: "AMERICA_NORTH",
               serverId: testGuildId("000000"),
@@ -734,7 +734,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: LeaguePuuidSchema.parse("puuid-3"),
+              puuid: testPuuid("3"),
               alias: "Player3",
               region: "AMERICA_NORTH",
               serverId: testGuildId("000000"),

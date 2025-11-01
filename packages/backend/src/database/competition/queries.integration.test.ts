@@ -23,16 +23,19 @@ import {
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "competition-queries-test-"));
 const testDbPath = join(testDir, "test.db");
-execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
-  cwd: join(__dirname, "../../.."),
-  env: {
-    ...process.env,
-    DATABASE_URL: `file:${testDbPath}`,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+execSync(
+  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  {
+    cwd: join(__dirname, "../../.."),
+    env: {
+      ...process.env,
+      DATABASE_URL: `file:${testDbPath}`,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "ignore",
   },
-  stdio: "ignore",
-});
+);
 
 const prisma = new PrismaClient({
   datasources: {
@@ -172,7 +175,7 @@ describe("getCompetitionById", () => {
 
   test("returns null for non-existent ID", async () => {
     const found = await getCompetitionById(prisma, 99999);
-    expect(found).toBeNull();
+    expect(found).toBeUndefined();
   });
 });
 

@@ -114,9 +114,9 @@ describe("Snapshot Data Validation", () => {
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.soloGames).toBe(100);
-      expect(result.data.flexGames).toBeUndefined();
-      expect(result.data.arenaGames).toBeUndefined();
-      expect(result.data.aramGames).toBeUndefined();
+      expect(result.data.flexGames).toBe(0);
+      expect(result.data.arenaGames).toBe(0);
+      expect(result.data.aramGames).toBe(0);
     }
   });
 
@@ -171,7 +171,7 @@ describe("Snapshot Data Validation", () => {
     const mockWinsData: WinsSnapshotData = {
       wins: 0,
       games: 0,
-      championId: ChampionIdSchema.parse(0),
+      // championId is optional, omit it since 0 is not a valid champion ID
       queue: "SOLO",
     };
 
@@ -180,6 +180,7 @@ describe("Snapshot Data Validation", () => {
     if (result.success) {
       expect(result.data.wins).toBe(0);
       expect(result.data.games).toBe(0);
+      expect(result.data.championId).toBeUndefined();
     }
   });
 

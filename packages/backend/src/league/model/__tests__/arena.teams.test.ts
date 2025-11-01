@@ -63,11 +63,11 @@ describe("arena team grouping and teammate lookup", () => {
   });
 
   it("getArenaTeammate returns the other participant in the same subteam", () => {
-    const a = makeParticipant({ puuid: LeaguePuuidSchema.parse("A"), playerSubteamId: 3 });
-    const b = makeParticipant({ puuid: LeaguePuuidSchema.parse("B"), playerSubteamId: 3 });
-    const c = makeParticipant({ puuid: LeaguePuuidSchema.parse("C"), playerSubteamId: 4 });
+    const a = makeParticipant({ puuid: testPuuid("A"), playerSubteamId: 3 });
+    const b = makeParticipant({ puuid: testPuuid("B"), playerSubteamId: 3 });
+    const c = makeParticipant({ puuid: testPuuid("C"), playerSubteamId: 4 });
     const teammate = getArenaTeammate(a, [a, b, c]);
-    expect(teammate?.puuid).toBe("B");
+    expect(teammate?.puuid).toBe(testPuuid("B"));
   });
 
   it("throws on invalid subteam ids or wrong sizes", () => {

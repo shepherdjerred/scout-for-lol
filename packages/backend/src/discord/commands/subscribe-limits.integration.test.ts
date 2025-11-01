@@ -22,15 +22,18 @@ const testDbPath = path.join(tempDir, "test.db");
 const testDatabaseUrl = `file:${testDbPath}`;
 
 // Push schema to test database
-execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
-  env: {
-    ...process.env,
-    DATABASE_URL: testDatabaseUrl,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+execSync(
+  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  {
+    env: {
+      ...process.env,
+      DATABASE_URL: testDatabaseUrl,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "inherit",
   },
-  stdio: "inherit",
-});
+);
 
 // Test Prisma client with isolated database
 const testPrisma = new PrismaClient({
@@ -58,7 +61,7 @@ describe("Subscribe Command - Subscription Limits", () => {
     // Create DEFAULT_PLAYER_SUBSCRIPTION_LIMIT players with subscriptions
     for (let i = 0; i < DEFAULT_PLAYER_SUBSCRIPTION_LIMIT; i++) {
       const alias = `Player${i.toString()}`;
-      const puuid = LeaguePuuidSchema.parse(`puuid-${i.toString()}`);
+      const puuid = testPuuid(i.toString());
 
       await testPrisma.subscription.create({
         data: {
@@ -131,7 +134,7 @@ describe("Subscribe Command - Subscription Limits", () => {
               accounts: {
                 create: {
                   alias: `SubscribedPlayer${i.toString()}`,
-                  puuid: LeaguePuuidSchema.parse(`puuid-subscribed-${i.toString()}`),
+                  puuid: testPuuid(`subscribed-${i.toString()}`),
                   region: "AMERICA_NORTH",
                   serverId: serverId,
                   creatorDiscordId: discordUserId,
@@ -158,7 +161,7 @@ describe("Subscribe Command - Subscription Limits", () => {
           accounts: {
             create: {
               alias: `UnsubscribedPlayer${i.toString()}`,
-              puuid: LeaguePuuidSchema.parse(`puuid-unsubscribed-${i.toString()}`),
+              puuid: testPuuid(`unsubscribed-${i.toString()}`),
               region: "AMERICA_NORTH",
               serverId: serverId,
               creatorDiscordId: discordUserId,
@@ -194,7 +197,7 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("allows adding accounts to existing player even at limit", async () => {
     const now = new Date();
-    const serverId = testGuildId("test-server-existing-player");
+    const serverId = testGuildId("003");
     const channelId = testChannelId("00001");
     const discordUserId = testAccountId("0000001");
 
@@ -218,7 +221,7 @@ describe("Subscribe Command - Subscription Limits", () => {
               accounts: {
                 create: {
                   alias: `Player${i.toString()}`,
-                  puuid: LeaguePuuidSchema.parse(`puuid-${i.toString()}`),
+                  puuid: testPuuid(i.toString()),
                   region: "AMERICA_NORTH",
                   serverId: serverId,
                   creatorDiscordId: discordUserId,
@@ -250,7 +253,7 @@ describe("Subscribe Command - Subscription Limits", () => {
     const secondAccount = await testPrisma.account.create({
       data: {
         alias: "Player0", // Same alias
-        puuid: LeaguePuuidSchema.parse("puuid-player0-euw"),
+        puuid: testPuuid("player0-euw"),
         region: "EU_WEST",
         serverId: serverId,
         creatorDiscordId: discordUserId,
@@ -277,7 +280,7 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("unlimited servers bypass the limit", async () => {
     const now = new Date();
-    const serverId = testGuildId("000");
+    const serverId = testGuildId("004");
     const channelId = testChannelId("00001");
     const discordUserId = testAccountId("0000001");
 
@@ -297,7 +300,7 @@ describe("Subscribe Command - Subscription Limits", () => {
             updatedTime: now,
             player: {
               create: {
-                alias: `Player${i.toString()}`,
+                alias: `UnlimitedPlayer${i.toString()}`,
                 discordId: null,
                 serverId: serverId,
                 creatorDiscordId: discordUserId,
@@ -305,8 +308,8 @@ describe("Subscribe Command - Subscription Limits", () => {
                 updatedTime: now,
                 accounts: {
                   create: {
-                    alias: `Player${i.toString()}`,
-                    puuid: LeaguePuuidSchema.parse(`puuid-${i.toString()}`),
+                    alias: `UnlimitedPlayer${i.toString()}`,
+                    puuid: testPuuid(`unlimited-player-${i.toString()}`),
                     region: "AMERICA_NORTH",
                     serverId: serverId,
                     creatorDiscordId: discordUserId,
@@ -339,8 +342,8 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("limits are enforced per-server independently", async () => {
     const now = new Date();
-    const server1Id = testGuildId("000001");
-    const server2Id = testGuildId("000002");
+    const server1Id = testGuildId("005");
+    const server2Id = testGuildId("006");
     const channelId = testChannelId("00001");
     const discordUserId = testAccountId("0000001");
 
@@ -364,7 +367,7 @@ describe("Subscribe Command - Subscription Limits", () => {
               accounts: {
                 create: {
                   alias: `Server1Player${i.toString()}`,
-                  puuid: LeaguePuuidSchema.parse(`puuid-s1-${i.toString()}`),
+                  puuid: testPuuid(`s1-${i.toString()}`),
                   region: "AMERICA_NORTH",
                   serverId: server1Id,
                   creatorDiscordId: discordUserId,
@@ -398,7 +401,7 @@ describe("Subscribe Command - Subscription Limits", () => {
               accounts: {
                 create: {
                   alias: `Server2Player${i.toString()}`,
-                  puuid: LeaguePuuidSchema.parse(`puuid-s2-${i.toString()}`),
+                  puuid: testPuuid(`s2-${i.toString()}`),
                   region: "AMERICA_NORTH",
                   serverId: server2Id,
                   creatorDiscordId: discordUserId,
@@ -437,13 +440,13 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("allows accounts up to the account limit", async () => {
     const now = new Date();
-    const serverId = testGuildId("test-server-account-limit");
+    const serverId = testGuildId("007");
     const discordUserId = testAccountId("0000001");
 
     // Create DEFAULT_ACCOUNT_LIMIT accounts (doesn't matter if they have subscriptions)
     for (let i = 0; i < DEFAULT_ACCOUNT_LIMIT; i++) {
       const alias = `Player${i.toString()}`;
-      const puuid = LeaguePuuidSchema.parse(`puuid-${i.toString()}`);
+      const puuid = testPuuid(i.toString());
 
       await testPrisma.player.create({
         data: {
@@ -480,7 +483,7 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("account limit counts all accounts regardless of subscriptions", async () => {
     const now = new Date();
-    const serverId = testGuildId("1");
+    const serverId = testGuildId("008");
     const channelId = testChannelId("00001");
     const discordUserId = testAccountId("0000001");
 
@@ -504,7 +507,7 @@ describe("Subscribe Command - Subscription Limits", () => {
               accounts: {
                 create: {
                   alias: `SubscribedPlayer${i.toString()}`,
-                  puuid: LeaguePuuidSchema.parse(`puuid-subscribed-${i.toString()}`),
+                  puuid: testPuuid(`subscribed-${i.toString()}`),
                   region: "AMERICA_NORTH",
                   serverId: serverId,
                   creatorDiscordId: discordUserId,
@@ -531,7 +534,7 @@ describe("Subscribe Command - Subscription Limits", () => {
           accounts: {
             create: {
               alias: `UnsubscribedPlayer${i.toString()}`,
-              puuid: LeaguePuuidSchema.parse(`puuid-unsubscribed-${i.toString()}`),
+              puuid: testPuuid(`unsubscribed-${i.toString()}`),
               region: "AMERICA_NORTH",
               serverId: serverId,
               creatorDiscordId: discordUserId,
@@ -567,8 +570,8 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("account limit is enforced per-server independently", async () => {
     const now = new Date();
-    const server1Id = testGuildId("1");
-    const server2Id = testGuildId("2");
+    const server1Id = testGuildId("009");
+    const server2Id = testGuildId("010");
     const discordUserId = testAccountId("0000001");
 
     // Create limit number of accounts in server 1
@@ -584,7 +587,7 @@ describe("Subscribe Command - Subscription Limits", () => {
           accounts: {
             create: {
               alias: `Server1Account${i.toString()}`,
-              puuid: LeaguePuuidSchema.parse(`puuid-s1-${i.toString()}`),
+              puuid: testPuuid(`s1-${i.toString()}`),
               region: "AMERICA_NORTH",
               serverId: server1Id,
               creatorDiscordId: discordUserId,
@@ -609,7 +612,7 @@ describe("Subscribe Command - Subscription Limits", () => {
           accounts: {
             create: {
               alias: `Server2Account${i.toString()}`,
-              puuid: LeaguePuuidSchema.parse(`puuid-s2-${i.toString()}`),
+              puuid: testPuuid(`s2-${i.toString()}`),
               region: "AMERICA_NORTH",
               serverId: server2Id,
               creatorDiscordId: discordUserId,
@@ -640,7 +643,7 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("unlimited servers bypass account limit", async () => {
     const now = new Date();
-    const serverId = testGuildId("test-server-unlimited-accounts");
+    const serverId = testGuildId("011");
     const discordUserId = testAccountId("0000001");
 
     // Add to unlimited servers set
@@ -652,7 +655,7 @@ describe("Subscribe Command - Subscription Limits", () => {
       for (let i = 0; i < DEFAULT_ACCOUNT_LIMIT + extraAccounts; i++) {
         await testPrisma.player.create({
           data: {
-            alias: `Account${i.toString()}`,
+            alias: `UnlimitedAccount${i.toString()}`,
             discordId: null,
             serverId: serverId,
             creatorDiscordId: discordUserId,
@@ -660,8 +663,8 @@ describe("Subscribe Command - Subscription Limits", () => {
             updatedTime: now,
             accounts: {
               create: {
-                alias: `Account${i.toString()}`,
-                puuid: LeaguePuuidSchema.parse(`puuid-${i.toString()}`),
+                alias: `UnlimitedAccount${i.toString()}`,
+                puuid: testPuuid(`unlimited-${i.toString()}`),
                 region: "AMERICA_NORTH",
                 serverId: serverId,
                 creatorDiscordId: discordUserId,

@@ -321,7 +321,7 @@ describe("Update input building", () => {
 
     expect(updateInput).toEqual({
       title: "New Title",
-      channelId: "channel1230000000",
+      channelId: "channel123",
     });
     expect(updateInput["description"]).toBeUndefined();
   });
