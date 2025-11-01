@@ -4,7 +4,14 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type DiscordAccountId, type DiscordChannelId, type DiscordGuildId, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import {
+  type DiscordAccountId,
+  type DiscordChannelId,
+  type DiscordGuildId,
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 import { createCompetition, getCompetitionsByServer } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 
@@ -101,7 +108,9 @@ describe("Competition List Query", () => {
     // Create competition in different server (should not appear)
     await createCompetition(
       prisma,
-      createTestCompetitionInput(DiscordGuildIdSchema.parse("other-server"), ownerId1, channelId, { title: "Other Server Comp" }),
+      createTestCompetitionInput(DiscordGuildIdSchema.parse("other-server"), ownerId1, channelId, {
+        title: "Other Server Comp",
+      }),
     );
 
     const competitions = await getCompetitionsByServer(prisma, serverId);

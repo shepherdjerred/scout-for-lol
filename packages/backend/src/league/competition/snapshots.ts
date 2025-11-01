@@ -1,19 +1,15 @@
 import {
   type CompetitionCriteria,
   type CompetitionId,
-  DiscordAccountIdSchema,
   type GamesPlayedSnapshotData,
   getSnapshotSchemaForCriteria,
-  LeaguePuuidSchema,
   type PlayerId,
-  RegionSchema,
   type RankSnapshotData,
   type SnapshotType,
   type WinsSnapshotData,
 } from "@scout-for-lol/data";
 import { getParticipants } from "../../database/competition/participants.js";
 import { fetchSnapshotData } from "./leaderboard.js";
-import type { PlayerWithAccounts } from "./processors/types.js";
 import { PrismaClient } from "../../../generated/prisma/client/index.js";
 
 // ============================================================================
@@ -44,22 +40,10 @@ export async function createSnapshot(
     `[Snapshots] Creating ${snapshotType} snapshot for competition ${competitionId.toString()}, player ${playerId.toString()}`,
   );
 
-  // Get player with accounts (select only fields needed for PlayerWithAccounts)
+  // Get player with accounts (include preserves branded types from Prisma)
   const playerData = await prisma.player.findUnique({
     where: { id: playerId },
-    select: {
-      id: true,
-      alias: true,
-      discordId: true,
-      accounts: {
-        select: {
-          id: true,
-          alias: true,
-          puuid: true,
-          region: true,
-        },
-      },
-    },
+    include: { accounts: true },
   });
 
   if (!playerData) {
@@ -70,21 +54,9 @@ export async function createSnapshot(
     throw new Error(`Player ${playerId.toString()} has no accounts`);
   }
 
-  // Transform to PlayerWithAccounts (validate string fields)
-  const player: PlayerWithAccounts = {
-    id: playerData.id, // Already PlayerId from Prisma!
-    alias: playerData.alias,
-    discordId: playerData.discordId,
-    accounts: playerData.accounts.map((account) => ({
-      id: account.id, // Already AccountId from Prisma!
-      alias: account.alias,
-      puuid: account.puuid,
-      region: account.region,
-    })),
-  };
-
-  // Fetch snapshot data based on criteria
-  const snapshotData = await fetchSnapshotData(prisma, competitionId, criteria, [player], "ACTIVE");
+  // Fetch snapshot data based on criteria - pass playerData directly
+  // Prisma include returns branded types compatible with PlayerWithAccounts
+  const snapshotData = await fetchSnapshotData(prisma, competitionId, criteria, [playerData], "ACTIVE");
 
   // Get the appropriate schema for validation
   const schema = getSnapshotSchemaForCriteria(criteria);

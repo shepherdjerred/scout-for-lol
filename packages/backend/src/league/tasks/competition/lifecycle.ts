@@ -1,5 +1,5 @@
 import type { CompetitionWithCriteria } from "@scout-for-lol/data";
-import { CompetitionIdSchema, parseCompetition } from "@scout-for-lol/data";
+import { parseCompetition } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { createSnapshotsForAllParticipants } from "../../competition/snapshots.js";
 import { calculateLeaderboard, type RankedLeaderboardEntry } from "../../competition/leaderboard.js";

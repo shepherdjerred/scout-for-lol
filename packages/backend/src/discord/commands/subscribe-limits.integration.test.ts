@@ -2,7 +2,12 @@ import { describe, test, expect, beforeEach } from "bun:test";
 import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
-import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import {
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  LeaguePuuidSchema,
+} from "@scout-for-lol/data";
 import { PrismaClient } from "../../../generated/prisma/client";
 import {
   DEFAULT_PLAYER_SUBSCRIPTION_LIMIT,
@@ -329,8 +334,8 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("limits are enforced per-server independently", async () => {
     const now = new Date();
-    const server1Id = "test-server-1";
-    const server2Id = "test-server-2";
+    const server1Id = DiscordGuildIdSchema.parse("test-server-1");
+    const server2Id = DiscordGuildIdSchema.parse("test-server-2");
     const channelId = DiscordChannelIdSchema.parse("test-channel");
     const discordUserId = DiscordAccountIdSchema.parse("test-user");
 
@@ -557,8 +562,8 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("account limit is enforced per-server independently", async () => {
     const now = new Date();
-    const server1Id = "test-server-accounts-1";
-    const server2Id = "test-server-accounts-2";
+    const server1Id = DiscordGuildIdSchema.parse("test-server-accounts-1");
+    const server2Id = DiscordGuildIdSchema.parse("test-server-accounts-2");
     const discordUserId = DiscordAccountIdSchema.parse("test-user");
 
     // Create limit number of accounts in server 1

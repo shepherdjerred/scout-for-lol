@@ -19,11 +19,9 @@ execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`, {
   env: { ...process.env, DATABASE_URL: testDbUrl },
 });
 import {
-  CompetitionIdSchema,
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-  LeaguePuuidSchema,
   type CompetitionId,
   type DiscordAccountId,
   type DiscordChannelId,

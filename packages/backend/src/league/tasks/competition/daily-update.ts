@@ -1,4 +1,4 @@
-import { CompetitionIdSchema, getCompetitionStatus, type CachedLeaderboard } from "@scout-for-lol/data";
+import { getCompetitionStatus, type CachedLeaderboard } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { getActiveCompetitions } from "../../../database/competition/queries.js";
 import { calculateLeaderboard } from "../../competition/leaderboard.js";

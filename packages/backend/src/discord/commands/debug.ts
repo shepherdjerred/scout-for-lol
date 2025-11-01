@@ -181,9 +181,9 @@ export async function executeDebugPolling(interaction: ChatInputCommandInteracti
         chunks.push(currentChunk);
       }
 
-      await interaction.editReply({ content: chunks[0] });
+      await interaction.editReply({ content: chunks[0] ?? "No content" });
       for (let i = 1; i < chunks.length; i++) {
-        await interaction.followUp({ content: chunks[i], ephemeral: true });
+        await interaction.followUp({ content: chunks[i] ?? "No content", ephemeral: true });
       }
     } else {
       await interaction.editReply({ content: summary });

@@ -6,13 +6,7 @@ import type {
   Rank,
   Ranks,
 } from "@scout-for-lol/data";
-import {
-  getCompetitionStatus,
-  rankToLeaguePoints,
-  RankSchema,
-  RegionSchema,
-  LeaguePuuidSchema,
-} from "@scout-for-lol/data";
+import { getCompetitionStatus, rankToLeaguePoints, RankSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 import { sortBy } from "remeda";
 import { match } from "ts-pattern";
 import { z } from "zod";
