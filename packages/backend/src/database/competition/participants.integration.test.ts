@@ -21,10 +21,19 @@ import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "participants-test-"));
 const testDbPath = join(testDir, "test.db");
-execSync(`DATABASE_URL="file:${testDbPath}" bun run db:push`, {
-  cwd: join(__dirname, "../../.."),
-  env: { ...process.env, DATABASE_URL: `file:${testDbPath}` },
-});
+execSync(
+  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  {
+    cwd: join(__dirname, "../../.."),
+    env: {
+      ...process.env,
+      DATABASE_URL: `file:${testDbPath}`,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "ignore",
+  },
+);
 
 const prisma = new PrismaClient({
   datasources: {
@@ -141,13 +150,7 @@ describe("addParticipant - INVITED status", () => {
     const { competitionId } = await createTestCompetition();
     const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
 
-    await addParticipant(
-      prisma,
-      competitionId,
-      playerId,
-      "INVITED",
-      testAccountId("222222222222222222"),
-    );
+    await addParticipant(prisma, competitionId, playerId, "INVITED", testAccountId("222222222222222222"));
 
     const updated = await acceptInvitation(prisma, competitionId, playerId);
 
@@ -432,13 +435,7 @@ describe("getParticipantStatus", () => {
     const { competitionId } = await createTestCompetition();
     const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
 
-    await addParticipant(
-      prisma,
-      competitionId,
-      playerId,
-      "INVITED",
-      testAccountId("222222222222222222"),
-    );
+    await addParticipant(prisma, competitionId, playerId, "INVITED", testAccountId("222222222222222222"));
 
     const status = await getParticipantStatus(prisma, competitionId, playerId);
 
@@ -565,13 +562,7 @@ describe("canJoinCompetition validation", () => {
     const { competitionId } = await createTestCompetition();
     const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
 
-    await addParticipant(
-      prisma,
-      competitionId,
-      playerId,
-      "INVITED",
-      testAccountId("222222222222222222"),
-    );
+    await addParticipant(prisma, competitionId, playerId, "INVITED", testAccountId("222222222222222222"));
 
     const result = await canJoinCompetition(prisma, competitionId, playerId);
 

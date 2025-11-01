@@ -51,9 +51,15 @@ void mock.module("../../discord/channel.js", () => ({
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "daily-update-test-"));
 const testDbPath = join(testDir, "test.db");
-execSync(`DATABASE_URL="file:${testDbPath}" bun run db:push`, {
+execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
   cwd: join(__dirname, "../../.."),
-  env: { ...process.env, DATABASE_URL: `file:${testDbPath}` },
+  env: {
+    ...process.env,
+    DATABASE_URL: `file:${testDbPath}`,
+    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+  },
+  stdio: "ignore",
 });
 
 const testPrisma = new PrismaClient({

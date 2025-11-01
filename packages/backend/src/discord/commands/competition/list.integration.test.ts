@@ -22,9 +22,15 @@ const testDbPath = join(testDir, "test.db");
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database once before all tests
-execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`, {
+execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
   cwd: join(import.meta.dir, "../../../.."),
-  env: { ...process.env, DATABASE_URL: testDbUrl },
+  env: {
+    ...process.env,
+    DATABASE_URL: testDbUrl,
+    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+  },
+  stdio: "ignore",
 });
 
 const prisma = new PrismaClient({

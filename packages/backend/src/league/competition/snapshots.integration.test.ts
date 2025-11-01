@@ -26,10 +26,19 @@ import {
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "snapshots-test-"));
 const testDbPath = join(testDir, "test.db");
-execSync(`DATABASE_URL="file:${testDbPath}" bun run db:push`, {
-  cwd: join(__dirname, "../../.."),
-  env: { ...process.env, DATABASE_URL: `file:${testDbPath}` },
-});
+execSync(
+  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  {
+    cwd: join(__dirname, "../../.."),
+    env: {
+      ...process.env,
+      DATABASE_URL: `file:${testDbPath}`,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "ignore",
+  },
+);
 
 const prisma = new PrismaClient({
   datasources: {
@@ -414,13 +423,7 @@ describe("createSnapshotsForAllParticipants", () => {
     );
 
     await addParticipant(prisma, competitionId, joinedPlayerId, "JOINED");
-    await addParticipant(
-      prisma,
-      competitionId,
-      invitedPlayerId,
-      "INVITED",
-      testAccountId("1230000000"),
-    );
+    await addParticipant(prisma, competitionId, invitedPlayerId, "INVITED", testAccountId("1230000000"));
 
     await createSnapshotsForAllParticipants(prisma, CompetitionIdSchema.parse(competitionId), "START", criteria);
 
