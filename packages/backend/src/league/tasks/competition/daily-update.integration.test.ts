@@ -95,10 +95,10 @@ async function createTestCompetition(
     title?: string;
   },
 ): Promise<{ competitionId: CompetitionId; channelId: DiscordChannelId }> {
-  const channelId = options?.channelId ?? DiscordChannelIdSchema.parse(`channel-${Date.now().toString()}`);
+  const channelId = options?.channelId ?? testChannelId(Date.now().toString());
   const input: CreateCompetitionInput = {
-    serverId: options?.serverId ?? testGuildId("123456789012345678"),
-    ownerId: testAccountId("987654321098765432"),
+    serverId: options?.serverId ?? testGuildId("12345678901234567"),
+    ownerId: testAccountId("98765432109876543"),
     channelId,
     title: options?.title ?? "Test Competition",
     description: "Test Description",
@@ -122,8 +122,8 @@ async function createTestPlayer(alias: string, puuid: LeaguePuuid, region: Regio
     data: {
       alias,
       discordId: null,
-      serverId: testGuildId("123456789012345678"),
-      creatorDiscordId: testAccountId("987654321098765432"),
+      serverId: testGuildId("12345678901234567"),
+      creatorDiscordId: testAccountId("98765432109876543"),
       createdTime: now,
       updatedTime: now,
       accounts: {
@@ -132,8 +132,8 @@ async function createTestPlayer(alias: string, puuid: LeaguePuuid, region: Regio
             alias,
             puuid,
             region,
-            serverId: testGuildId("123456789012345678"),
-            creatorDiscordId: testAccountId("987654321098765432"),
+            serverId: testGuildId("12345678901234567"),
+            creatorDiscordId: testAccountId("98765432109876543"),
             createdTime: now,
             updatedTime: now,
           },
@@ -201,7 +201,7 @@ describe("Daily Leaderboard Update", () => {
     // Create START snapshot to make it ACTIVE
     const { playerId } = await createTestPlayer(
       "Player1",
-      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      testPuuid("player1"),
       "AMERICA_NORTH",
     );
     await addTestParticipant(competitionId, playerId);
@@ -241,15 +241,15 @@ describe("Daily Leaderboard Update", () => {
     const comps = [];
     for (let i = 0; i < 3; i++) {
       const { competitionId, channelId } = await createTestCompetition(criteria, startDate, endDate, {
-        serverId: DiscordGuildIdSchema.parse((100000000000000000 + i).toString()),
-        channelId: DiscordChannelIdSchema.parse(`channel-${i.toString()}`),
+        serverId: testGuildId((100 + i).toString()),
+        channelId: testChannelId(i.toString()),
         title: `Competition ${i.toString()}`,
       });
 
       // Make them ACTIVE by adding START snapshots
       const { playerId } = await createTestPlayer(
         `Player${i.toString()}`,
-        LeaguePuuidSchema.parse(`p${i.toString()}-puuid-78-characters-long-exactly-this-is-valid-format-ok-123456789`),
+        testPuuid(`player-${i.toString()}`),
         "AMERICA_NORTH",
       );
       await addTestParticipant(competitionId, playerId);
@@ -266,7 +266,8 @@ describe("Daily Leaderboard Update", () => {
 
     // Verify each competition got an update
     for (let i = 0; i < 3; i++) {
-      const messageForComp = sentMessages.find((m) => m.channelId === `channel-${i.toString()}`);
+      const expectedChannelId = comps[i]?.channelId;
+      const messageForComp = sentMessages.find((m) => m.channelId === expectedChannelId);
       expect(messageForComp).toBeDefined();
 
       const parsed = MessageContentSchema.safeParse(messageForComp?.content);
@@ -295,7 +296,7 @@ describe("Daily Leaderboard Update", () => {
     );
     const { playerId: endedPlayerId } = await createTestPlayer(
       "EndedPlayer",
-      LeaguePuuidSchema.parse("ended-puuid-78-characters-long-exactly-this-is-valid-format-ok-123456"),
+      testPuuid("ended-player"),
       "AMERICA_NORTH",
     );
     await addTestParticipant(endedId, endedPlayerId);
@@ -358,12 +359,12 @@ describe("Daily Leaderboard Update", () => {
 
     // Create first competition with invalid channel (will fail to send)
     const { competitionId: comp1Id } = await createTestCompetition(criteria, startDate, endDate, {
-      channelId: testChannelId("invalid-channel-id"),
+      channelId: testChannelId("999"),
       title: "Competition 1",
     });
     const { playerId: player1Id } = await createTestPlayer(
       "Player1",
-      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      testPuuid("error-player1"),
       "AMERICA_NORTH",
     );
     await addTestParticipant(comp1Id, player1Id);
@@ -381,7 +382,7 @@ describe("Daily Leaderboard Update", () => {
     );
     const { playerId: player2Id } = await createTestPlayer(
       "Player2",
-      LeaguePuuidSchema.parse("p2-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      testPuuid("error-player2"),
       "AMERICA_NORTH",
     );
     await addTestParticipant(comp2Id, player2Id);
@@ -421,7 +422,7 @@ describe("Daily Leaderboard Update", () => {
     // Make it ACTIVE
     const { playerId } = await createTestPlayer(
       "Player1",
-      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      testPuuid("day-count-player"),
       "AMERICA_NORTH",
     );
     await addTestParticipant(competitionId, playerId);
@@ -461,13 +462,13 @@ describe("Daily Leaderboard Update", () => {
     // Create 3 active competitions
     for (let i = 0; i < 3; i++) {
       const { competitionId } = await createTestCompetition(criteria, startDate, endDate, {
-        channelId: DiscordChannelIdSchema.parse(`channel-${i.toString()}`),
+        channelId: testChannelId(i.toString()),
         title: `Competition ${i.toString()}`,
       });
 
       const { playerId } = await createTestPlayer(
         `Player${i.toString()}`,
-        LeaguePuuidSchema.parse(`p${i.toString()}-puuid-78-characters-long-exactly-this-is-valid-format-ok-123456789`),
+        testPuuid(`rate-limit-player-${i.toString()}`),
         "AMERICA_NORTH",
       );
       await addTestParticipant(competitionId, playerId);

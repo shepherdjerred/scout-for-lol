@@ -228,7 +228,7 @@ describe("Competition Lifecycle - Query for Starting", () => {
     // Add a player and create START snapshot
     const { playerId } = await createTestPlayer(
       "Player1",
-      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      testPuuid("lifecycle-player1"),
       "AMERICA_NORTH",
     );
     await addTestParticipant(competitionId, playerId);
@@ -282,7 +282,7 @@ describe("Competition Lifecycle - Query for Ending", () => {
     // Add a player and create START snapshot
     const { playerId } = await createTestPlayer(
       "Player1",
-      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      testPuuid("lifecycle-player1"),
       "AMERICA_NORTH",
     );
     await addTestParticipant(competitionId, playerId);
@@ -338,7 +338,7 @@ describe("Competition Lifecycle - Query for Ending", () => {
     // Add START snapshot
     const { playerId } = await createTestPlayer(
       "Player1",
-      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      testPuuid("lifecycle-player1"),
       "AMERICA_NORTH",
     );
     await addTestParticipant(competitionId, playerId);
@@ -430,7 +430,7 @@ describe("Competition Lifecycle - Query for Ending", () => {
     // Add START and END snapshots
     const { playerId } = await createTestPlayer(
       "Player1",
-      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      testPuuid("lifecycle-player1"),
       "AMERICA_NORTH",
     );
     await addTestParticipant(competitionId, playerId);
@@ -521,7 +521,7 @@ describe("Competition Lifecycle - Multiple Competitions", () => {
     // Add START snapshots for comp3 and comp4
     const { playerId } = await createTestPlayer(
       "Player1",
-      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      testPuuid("lifecycle-player1"),
       "AMERICA_NORTH",
     );
 
