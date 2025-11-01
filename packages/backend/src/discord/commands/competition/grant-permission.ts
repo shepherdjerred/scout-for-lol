@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "../../../database/index.js";
 import { grantPermission } from "../../../database/competition/permissions.js";
 import { getErrorMessage } from "../../../utils/errors.js";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 /**
  * Execute /competition grant-permission command
@@ -61,7 +61,13 @@ export async function executeGrantPermission(interaction: ChatInputCommandIntera
   // ============================================================================
 
   try {
-    await grantPermission(prisma, serverId, DiscordAccountIdSchema.parse(targetUser.id), "CREATE_COMPETITION", DiscordAccountIdSchema.parse(adminId));
+    await grantPermission(
+      prisma,
+      serverId,
+      DiscordAccountIdSchema.parse(targetUser.id),
+      "CREATE_COMPETITION",
+      DiscordAccountIdSchema.parse(adminId),
+    );
 
     console.log(`[Grant Permission] ${adminId} granted CREATE_COMPETITION to ${targetUser.id} on server ${serverId}`);
   } catch (error) {

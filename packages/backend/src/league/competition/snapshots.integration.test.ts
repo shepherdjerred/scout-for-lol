@@ -7,7 +7,20 @@ import { join } from "node:path";
 import { createSnapshot, getSnapshot, createSnapshotsForAllParticipants } from "./snapshots.js";
 import { createCompetition, type CreateCompetitionInput } from "../../database/competition/queries.js";
 import { addParticipant } from "../../database/competition/participants.js";
-import { ChampionIdSchema, CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema, PlayerIdSchema, type CompetitionCriteria } from "@scout-for-lol/data";
+import {
+  ChampionIdSchema,
+  CompetitionId,
+  CompetitionIdSchema,
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  LeaguePuuidSchema,
+  PlayerIdSchema,
+  type CompetitionCriteria,
+  type LeaguePuuid,
+  type PlayerId,
+  type Region,
+} from "@scout-for-lol/data";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "snapshots-test-"));
@@ -26,7 +39,7 @@ const prisma = new PrismaClient({
 });
 
 // Test helpers
-async function createTestCompetition(criteria: CompetitionCriteria): Promise<{ competitionId: number }> {
+async function createTestCompetition(criteria: CompetitionCriteria): Promise<{ competitionId: CompetitionId }> {
   const now = new Date();
   const input: CreateCompetitionInput = {
     serverId: DiscordGuildIdSchema.parse("123456789012345678"),
@@ -48,7 +61,7 @@ async function createTestCompetition(criteria: CompetitionCriteria): Promise<{ c
   return { competitionId: competition.id };
 }
 
-async function createTestPlayer(alias: string, puuid: string, region: string): Promise<{ playerId: number }> {
+async function createTestPlayer(alias: string, puuid: LeaguePuuid, region: Region): Promise<{ playerId: PlayerId }> {
   const now = new Date();
   const player = await prisma.player.create({
     data: {
@@ -98,7 +111,7 @@ describe("createSnapshot - START snapshot", () => {
 
     const { competitionId } = await createTestCompetition(criteria);
     // Use a realistic PUUID format (78 characters)
-    const puuid = "a".repeat(78);
+    const puuid = LeaguePuuidSchema.parse("a".repeat(78));
     const { playerId } = await createTestPlayer("TestPlayer", puuid, "AMERICA_NORTH");
 
     await addParticipant(prisma, competitionId, playerId, "JOINED");
@@ -208,7 +221,7 @@ describe("createSnapshot - END snapshot", () => {
     };
 
     const { competitionId } = await createTestCompetition(criteria);
-    const puuid = "b".repeat(78);
+    const puuid = LeaguePuuidSchema.parse("b".repeat(78));
     const { playerId } = await createTestPlayer("RankPlayer", puuid, "EU_WEST");
 
     await addParticipant(prisma, competitionId, playerId, "JOINED");
@@ -273,7 +286,7 @@ describe("createSnapshot - Idempotency", () => {
     };
 
     const { competitionId } = await createTestCompetition(criteria);
-    const puuid = "c".repeat(78);
+    const puuid = LeaguePuuidSchema.parse("c".repeat(78));
     const { playerId } = await createTestPlayer("IdempotentPlayer", puuid, "KOREA");
 
     await addParticipant(prisma, competitionId, playerId, "JOINED");
@@ -353,9 +366,9 @@ describe("createSnapshotsForAllParticipants", () => {
 
     // Create 3 players
     const players = await Promise.all([
-      createTestPlayer("Player1", "p1" + "x".repeat(76), "AMERICA_NORTH"),
-      createTestPlayer("Player2", "p2" + "x".repeat(76), "EU_WEST"),
-      createTestPlayer("Player3", "p3" + "x".repeat(76), "KOREA"),
+      createTestPlayer("Player1", LeaguePuuidSchema.parse("p1" + "x".repeat(76)), "AMERICA_NORTH"),
+      createTestPlayer("Player2", LeaguePuuidSchema.parse("p2" + "x".repeat(76)), "EU_WEST"),
+      createTestPlayer("Player3", LeaguePuuidSchema.parse("p3" + "x".repeat(76)), "KOREA"),
     ]);
 
     // Add all as participants
@@ -388,15 +401,19 @@ describe("createSnapshotsForAllParticipants", () => {
 
     const { competitionId } = await createTestCompetition(criteria);
 
-    const { playerId: joinedPlayerId } = await createTestPlayer("JoinedPlayer", "j" + "x".repeat(77), "AMERICA_NORTH");
+    const { playerId: joinedPlayerId } = await createTestPlayer(
+      "JoinedPlayer",
+      LeaguePuuidSchema.parse("j" + "x".repeat(77)),
+      "AMERICA_NORTH",
+    );
     const { playerId: invitedPlayerId } = await createTestPlayer(
       "InvitedPlayer",
-      "i" + "x".repeat(77),
+      LeaguePuuidSchema.parse("i" + "x".repeat(77)),
       "AMERICA_NORTH",
     );
 
     await addParticipant(prisma, competitionId, joinedPlayerId, "JOINED");
-    await addParticipant(prisma, competitionId, invitedPlayerId, "INVITED", "inviter123");
+    await addParticipant(prisma, competitionId, invitedPlayerId, "INVITED", DiscordAccountIdSchema.parse("inviter123"));
 
     await createSnapshotsForAllParticipants(prisma, CompetitionIdSchema.parse(competitionId), "START", criteria);
 
@@ -430,7 +447,7 @@ describe("getSnapshot", () => {
     };
 
     const { competitionId } = await createTestCompetition(criteria);
-    const puuid = "d".repeat(78);
+    const puuid = LeaguePuuidSchema.parse("d".repeat(78));
     const { playerId } = await createTestPlayer("NoSnapshotPlayer", puuid, "AMERICA_NORTH");
 
     const snapshot = await getSnapshot(
@@ -451,7 +468,7 @@ describe("getSnapshot", () => {
     };
 
     const { competitionId } = await createTestCompetition(criteria);
-    const puuid = "e".repeat(78);
+    const puuid = LeaguePuuidSchema.parse("e".repeat(78));
     const { playerId } = await createTestPlayer("SnapshotPlayer", puuid, "AMERICA_NORTH");
 
     // Manually create a snapshot with known data
@@ -507,7 +524,7 @@ describe("createSnapshot - Different criteria types", () => {
     };
 
     const { competitionId } = await createTestCompetition(criteria);
-    const puuid = "f".repeat(78);
+    const puuid = LeaguePuuidSchema.parse("f".repeat(78));
     const { playerId } = await createTestPlayer("RankPlayer", puuid, "AMERICA_NORTH");
 
     try {
@@ -537,7 +554,7 @@ describe("createSnapshot - Different criteria types", () => {
     };
 
     const { competitionId } = await createTestCompetition(criteria);
-    const puuid = "g".repeat(78);
+    const puuid = LeaguePuuidSchema.parse("g".repeat(78));
     const { playerId } = await createTestPlayer("ChampionPlayer", puuid, "AMERICA_NORTH");
 
     try {
@@ -574,7 +591,7 @@ describe("createSnapshot - Different criteria types", () => {
     };
 
     const { competitionId } = await createTestCompetition(criteria);
-    const puuid = "h".repeat(78);
+    const puuid = LeaguePuuidSchema.parse("h".repeat(78));
     const { playerId } = await createTestPlayer("WinRatePlayer", puuid, "AMERICA_NORTH");
 
     try {

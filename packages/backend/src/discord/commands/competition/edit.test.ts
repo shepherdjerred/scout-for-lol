@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema, getCompetitionStatus } from "@scout-for-lol/data";
+import {
+  CompetitionIdSchema,
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  getCompetitionStatus,
+} from "@scout-for-lol/data";
 import type { Competition } from "../../../../generated/prisma/client";
 
 /**

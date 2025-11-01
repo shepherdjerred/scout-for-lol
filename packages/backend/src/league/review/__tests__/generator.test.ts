@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { generateMatchReview } from "../generator.ts";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 
 describe("generateMatchReview", () => {
   describe("regular matches", () => {

@@ -12,7 +12,12 @@ import {
   getCompetitionById,
   getCompetitionsByServer,
 } from "./queries.js";
-import { ChampionIdSchema, CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import {
+  ChampionIdSchema,
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "competition-queries-test-"));

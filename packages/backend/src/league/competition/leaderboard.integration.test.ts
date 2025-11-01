@@ -4,7 +4,15 @@ import { PrismaClient } from "../../../generated/prisma/client/index.js";
 import { calculateLeaderboard } from "./leaderboard.js";
 import { createCompetition } from "../../database/competition/queries.js";
 import { addParticipant } from "../../database/competition/participants.js";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema, PlayerIdSchema, parseCompetition, type Rank } from "@scout-for-lol/data";
+import {
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  LeaguePuuidSchema,
+  PlayerIdSchema,
+  parseCompetition,
+  type Rank,
+} from "@scout-for-lol/data";
 import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -83,9 +91,9 @@ describe("calculateLeaderboard integration tests", () => {
 
     const rawCompetition = await prisma.competition.create({
       data: {
-        serverId: "test-server",
+        serverId: DiscordGuildIdSchema.parse("test-server"),
         ownerId: DiscordAccountIdSchema.parse("owner-1"),
-        channelId: "channel-1",
+        channelId: DiscordChannelIdSchema.parse("channel-1"),
         title: "Test Competition",
         description: "Test",
         visibility: "OPEN",
@@ -116,9 +124,9 @@ describe("calculateLeaderboard integration tests", () => {
     // Create active competition with dates
     const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
-      serverId: "test-server",
+      serverId: DiscordGuildIdSchema.parse("test-server"),
       ownerId: DiscordAccountIdSchema.parse("owner-1"),
-      channelId: "channel-1",
+      channelId: DiscordChannelIdSchema.parse("channel-1"),
       title: "Test Competition",
       description: "Test",
       visibility: "OPEN",
@@ -146,7 +154,7 @@ describe("calculateLeaderboard integration tests", () => {
       data: {
         discordId: DiscordAccountIdSchema.parse("discord-1"),
         alias: "Player1",
-        serverId: "test-server",
+        serverId: DiscordGuildIdSchema.parse("test-server"),
         creatorDiscordId: DiscordAccountIdSchema.parse("discord-1"),
         createdTime: new Date(),
         updatedTime: new Date(),
@@ -156,7 +164,7 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-1"),
               alias: "Player1",
               region: "na1",
-              serverId: "test-server",
+              serverId: DiscordGuildIdSchema.parse("test-server"),
               creatorDiscordId: DiscordAccountIdSchema.parse("discord-1"),
               createdTime: new Date(),
               updatedTime: new Date(),
@@ -170,7 +178,7 @@ describe("calculateLeaderboard integration tests", () => {
       data: {
         discordId: DiscordAccountIdSchema.parse("discord-2"),
         alias: "Player2",
-        serverId: "test-server",
+        serverId: DiscordGuildIdSchema.parse("test-server"),
         creatorDiscordId: DiscordAccountIdSchema.parse("discord-2"),
         createdTime: new Date(),
         updatedTime: new Date(),
@@ -180,7 +188,7 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-2"),
               alias: "Player2",
               region: "na1",
-              serverId: "test-server",
+              serverId: DiscordGuildIdSchema.parse("test-server"),
               creatorDiscordId: DiscordAccountIdSchema.parse("discord-2"),
               createdTime: new Date(),
               updatedTime: new Date(),
@@ -198,9 +206,9 @@ describe("calculateLeaderboard integration tests", () => {
     endDate.setDate(endDate.getDate() + 30); // Ends in 30 days
 
     const competition = await createCompetition(prisma, {
-      serverId: "test-server",
+      serverId: DiscordGuildIdSchema.parse("test-server"),
       ownerId: DiscordAccountIdSchema.parse("owner-1"),
-      channelId: "channel-1",
+      channelId: DiscordChannelIdSchema.parse("channel-1"),
       title: "Test Competition",
       description: "Test",
       visibility: "OPEN",
@@ -241,7 +249,7 @@ describe("calculateLeaderboard integration tests", () => {
       data: {
         discordId: DiscordAccountIdSchema.parse("discord-1"),
         alias: "Player1",
-        serverId: "test-server",
+        serverId: DiscordGuildIdSchema.parse("test-server"),
         creatorDiscordId: DiscordAccountIdSchema.parse("discord-1"),
         createdTime: new Date(),
         updatedTime: new Date(),
@@ -251,7 +259,7 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-1"),
               alias: "Player1",
               region: "na1",
-              serverId: "test-server",
+              serverId: DiscordGuildIdSchema.parse("test-server"),
               creatorDiscordId: DiscordAccountIdSchema.parse("discord-1"),
               createdTime: new Date(),
               updatedTime: new Date(),
@@ -265,7 +273,7 @@ describe("calculateLeaderboard integration tests", () => {
       data: {
         discordId: DiscordAccountIdSchema.parse("discord-2"),
         alias: "Player2",
-        serverId: "test-server",
+        serverId: DiscordGuildIdSchema.parse("test-server"),
         creatorDiscordId: DiscordAccountIdSchema.parse("discord-2"),
         createdTime: new Date(),
         updatedTime: new Date(),
@@ -275,7 +283,7 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-2"),
               alias: "Player2",
               region: "na1",
-              serverId: "test-server",
+              serverId: DiscordGuildIdSchema.parse("test-server"),
               creatorDiscordId: DiscordAccountIdSchema.parse("discord-2"),
               createdTime: new Date(),
               updatedTime: new Date(),
@@ -288,9 +296,9 @@ describe("calculateLeaderboard integration tests", () => {
     // Create ACTIVE competition with HIGHEST_RANK criteria
     const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
-      serverId: "test-server",
+      serverId: DiscordGuildIdSchema.parse("test-server"),
       ownerId: DiscordAccountIdSchema.parse("owner-1"),
-      channelId: "channel-1",
+      channelId: DiscordChannelIdSchema.parse("channel-1"),
       title: "Rank Competition",
       description: "Test",
       visibility: "OPEN",
@@ -369,7 +377,7 @@ describe("calculateLeaderboard integration tests", () => {
       data: {
         discordId: DiscordAccountIdSchema.parse("discord-3"),
         alias: "Player3",
-        serverId: "test-server",
+        serverId: DiscordGuildIdSchema.parse("test-server"),
         creatorDiscordId: DiscordAccountIdSchema.parse("discord-3"),
         createdTime: new Date(),
         updatedTime: new Date(),
@@ -379,7 +387,7 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-3"),
               alias: "Player3",
               region: "na1",
-              serverId: "test-server",
+              serverId: DiscordGuildIdSchema.parse("test-server"),
               creatorDiscordId: DiscordAccountIdSchema.parse("discord-3"),
               createdTime: new Date(),
               updatedTime: new Date(),
@@ -393,7 +401,7 @@ describe("calculateLeaderboard integration tests", () => {
       data: {
         discordId: DiscordAccountIdSchema.parse("discord-4"),
         alias: "Player4",
-        serverId: "test-server",
+        serverId: DiscordGuildIdSchema.parse("test-server"),
         creatorDiscordId: DiscordAccountIdSchema.parse("discord-4"),
         createdTime: new Date(),
         updatedTime: new Date(),
@@ -403,7 +411,7 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-4"),
               alias: "Player4",
               region: "na1",
-              serverId: "test-server",
+              serverId: DiscordGuildIdSchema.parse("test-server"),
               creatorDiscordId: DiscordAccountIdSchema.parse("discord-4"),
               createdTime: new Date(),
               updatedTime: new Date(),
@@ -420,9 +428,9 @@ describe("calculateLeaderboard integration tests", () => {
     startDate.setDate(startDate.getDate() - 30); // Started 30 days ago
 
     const competition = await createCompetition(prisma, {
-      serverId: "test-server",
+      serverId: DiscordGuildIdSchema.parse("test-server"),
       ownerId: DiscordAccountIdSchema.parse("owner-1"),
-      channelId: "channel-1",
+      channelId: DiscordChannelIdSchema.parse("channel-1"),
       title: "Rank Competition",
       description: "Test",
       visibility: "OPEN",
@@ -520,7 +528,7 @@ describe("calculateLeaderboard integration tests", () => {
       data: {
         discordId: DiscordAccountIdSchema.parse("discord-1"),
         alias: "Player1",
-        serverId: "test-server",
+        serverId: DiscordGuildIdSchema.parse("test-server"),
         creatorDiscordId: DiscordAccountIdSchema.parse("discord-1"),
         createdTime: new Date(),
         updatedTime: new Date(),
@@ -530,7 +538,7 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-1"),
               alias: "Player1",
               region: "na1",
-              serverId: "test-server",
+              serverId: DiscordGuildIdSchema.parse("test-server"),
               creatorDiscordId: DiscordAccountIdSchema.parse("discord-1"),
               createdTime: new Date(),
               updatedTime: new Date(),
@@ -544,7 +552,7 @@ describe("calculateLeaderboard integration tests", () => {
       data: {
         discordId: DiscordAccountIdSchema.parse("discord-2"),
         alias: "Player2",
-        serverId: "test-server",
+        serverId: DiscordGuildIdSchema.parse("test-server"),
         creatorDiscordId: DiscordAccountIdSchema.parse("discord-2"),
         createdTime: new Date(),
         updatedTime: new Date(),
@@ -554,7 +562,7 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-2"),
               alias: "Player2",
               region: "na1",
-              serverId: "test-server",
+              serverId: DiscordGuildIdSchema.parse("test-server"),
               creatorDiscordId: DiscordAccountIdSchema.parse("discord-2"),
               createdTime: new Date(),
               updatedTime: new Date(),
@@ -567,9 +575,9 @@ describe("calculateLeaderboard integration tests", () => {
     // Create competition with MOST_RANK_CLIMB criteria
     const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
-      serverId: "test-server",
+      serverId: DiscordGuildIdSchema.parse("test-server"),
       ownerId: DiscordAccountIdSchema.parse("owner-1"),
-      channelId: "channel-1",
+      channelId: DiscordChannelIdSchema.parse("channel-1"),
       title: "Climb Competition",
       description: "Test",
       visibility: "OPEN",
@@ -666,7 +674,7 @@ describe("calculateLeaderboard integration tests", () => {
       data: {
         discordId: DiscordAccountIdSchema.parse("discord-1"),
         alias: "Player1",
-        serverId: "test-server",
+        serverId: DiscordGuildIdSchema.parse("test-server"),
         creatorDiscordId: DiscordAccountIdSchema.parse("discord-1"),
         createdTime: new Date(),
         updatedTime: new Date(),
@@ -676,7 +684,7 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-1"),
               alias: "Player1",
               region: "na1",
-              serverId: "test-server",
+              serverId: DiscordGuildIdSchema.parse("test-server"),
               creatorDiscordId: DiscordAccountIdSchema.parse("discord-1"),
               createdTime: new Date(),
               updatedTime: new Date(),
@@ -690,7 +698,7 @@ describe("calculateLeaderboard integration tests", () => {
       data: {
         discordId: DiscordAccountIdSchema.parse("discord-2"),
         alias: "Player2",
-        serverId: "test-server",
+        serverId: DiscordGuildIdSchema.parse("test-server"),
         creatorDiscordId: DiscordAccountIdSchema.parse("discord-2"),
         createdTime: new Date(),
         updatedTime: new Date(),
@@ -700,7 +708,7 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-2"),
               alias: "Player2",
               region: "na1",
-              serverId: "test-server",
+              serverId: DiscordGuildIdSchema.parse("test-server"),
               creatorDiscordId: DiscordAccountIdSchema.parse("discord-2"),
               createdTime: new Date(),
               updatedTime: new Date(),
@@ -714,7 +722,7 @@ describe("calculateLeaderboard integration tests", () => {
       data: {
         discordId: DiscordAccountIdSchema.parse("discord-3"),
         alias: "Player3",
-        serverId: "test-server",
+        serverId: DiscordGuildIdSchema.parse("test-server"),
         creatorDiscordId: DiscordAccountIdSchema.parse("discord-3"),
         createdTime: new Date(),
         updatedTime: new Date(),
@@ -724,7 +732,7 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-3"),
               alias: "Player3",
               region: "na1",
-              serverId: "test-server",
+              serverId: DiscordGuildIdSchema.parse("test-server"),
               creatorDiscordId: DiscordAccountIdSchema.parse("discord-3"),
               createdTime: new Date(),
               updatedTime: new Date(),
@@ -737,9 +745,9 @@ describe("calculateLeaderboard integration tests", () => {
     // Create competition
     const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
-      serverId: "test-server",
+      serverId: DiscordGuildIdSchema.parse("test-server"),
       ownerId: DiscordAccountIdSchema.parse("owner-1"),
-      channelId: "channel-1",
+      channelId: DiscordChannelIdSchema.parse("channel-1"),
       title: "Test Competition",
       description: "Test",
       visibility: "OPEN",

@@ -1,5 +1,13 @@
 import { describe, expect, it } from "bun:test";
-import { ChampionIdSchema, CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema, PlayerIdSchema, type CompetitionWithCriteria } from "@scout-for-lol/data";
+import {
+  ChampionIdSchema,
+  CompetitionIdSchema,
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  PlayerIdSchema,
+  type CompetitionWithCriteria,
+} from "@scout-for-lol/data";
 import type { RankedLeaderboardEntry } from "../../league/competition/leaderboard.js";
 import { generateLeaderboardEmbed, generateCompetitionDetailsEmbed, formatScore } from "./competition.js";
 
@@ -12,12 +20,12 @@ import { generateLeaderboardEmbed, generateCompetitionDetailsEmbed, formatScore 
  */
 function createTestCompetition(overrides: Partial<CompetitionWithCriteria> = {}): CompetitionWithCriteria {
   return {
-    id: 1,
-    serverId: "test-server-123",
+    id: CompetitionIdSchema.parse(1),
+    serverId: DiscordGuildIdSchema.parse("test-server-123"),
     ownerId: DiscordAccountIdSchema.parse("owner-discord-id-123"),
     title: "Test Competition",
     description: "A test competition for unit tests",
-    channelId: "test-channel-456",
+    channelId: DiscordChannelIdSchema.parse("test-channel-456"),
     isCancelled: false,
     visibility: "OPEN",
     maxParticipants: 50,
@@ -219,7 +227,7 @@ describe("generateCompetitionDetailsEmbed", () => {
       title: "Test Competition",
       description: "Test description",
       ownerId: DiscordAccountIdSchema.parse("owner-123"),
-      channelId: "channel-456",
+      channelId: DiscordChannelIdSchema.parse("channel-456"),
       maxParticipants: 25,
     });
 
@@ -294,7 +302,7 @@ describe("generateCompetitionDetailsEmbed", () => {
   });
 
   it("should include competition ID in footer", () => {
-    const competition = createTestCompetition({ id: 42 });
+    const competition = createTestCompetition({ id: CompetitionIdSchema.parse(42) });
 
     const embed = generateCompetitionDetailsEmbed(competition);
     const embedData = embed.toJSON();

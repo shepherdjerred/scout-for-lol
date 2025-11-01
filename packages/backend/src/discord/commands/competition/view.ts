@@ -1,5 +1,5 @@
 import { type ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from "discord.js";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, getCompetitionStatus } from "@scout-for-lol/data";
+import { CompetitionIdSchema, getCompetitionStatus } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
 import { z } from "zod";
 import { prisma } from "../../../database/index.js";

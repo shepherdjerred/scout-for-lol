@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { canCreateCompetition, grantPermission, hasPermission, revokePermission } from "./permissions.js";
 import { clearAllRateLimits, recordCreation } from "./rate-limit.js";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "permissions-test-"));

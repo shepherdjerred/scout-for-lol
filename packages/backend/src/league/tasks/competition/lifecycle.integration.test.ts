@@ -5,8 +5,13 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createCompetition, type CreateCompetitionInput } from "../../../database/competition/queries.js";
-import type { CompetitionCriteria } from "@scout-for-lol/data";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import type { CompetitionCriteria, CompetitionId, LeaguePuuid, PlayerId, Region } from "@scout-for-lol/data";
+import {
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  LeaguePuuidSchema,
+} from "@scout-for-lol/data";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "lifecycle-test-"));
@@ -29,7 +34,7 @@ async function createTestCompetition(
   criteria: CompetitionCriteria,
   startDate: Date,
   endDate: Date,
-): Promise<{ competitionId: number }> {
+): Promise<{ competitionId: CompetitionId }> {
   const input: CreateCompetitionInput = {
     serverId: DiscordGuildIdSchema.parse("123456789012345678"),
     ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
@@ -50,7 +55,7 @@ async function createTestCompetition(
   return { competitionId: competition.id };
 }
 
-async function createTestPlayer(alias: string, puuid: string, region: string): Promise<{ playerId: number }> {
+async function createTestPlayer(alias: string, puuid: LeaguePuuid, region: Region): Promise<{ playerId: PlayerId }> {
   const now = new Date();
   const player = await prisma.player.create({
     data: {
@@ -78,7 +83,7 @@ async function createTestPlayer(alias: string, puuid: string, region: string): P
   return { playerId: player.id };
 }
 
-async function addTestParticipant(competitionId: number, playerId: number): Promise<void> {
+async function addTestParticipant(competitionId: CompetitionId, playerId: PlayerId): Promise<void> {
   const now = new Date();
   await prisma.competitionParticipant.create({
     data: {
@@ -216,8 +221,8 @@ describe("Competition Lifecycle - Query for Starting", () => {
     // Add a player and create START snapshot
     const { playerId } = await createTestPlayer(
       "Player1",
-      "p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890",
-      "na1",
+      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      "AMERICA_NORTH",
     );
     await addTestParticipant(competitionId, playerId);
 
@@ -270,8 +275,8 @@ describe("Competition Lifecycle - Query for Ending", () => {
     // Add a player and create START snapshot
     const { playerId } = await createTestPlayer(
       "Player1",
-      "p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890",
-      "na1",
+      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      "AMERICA_NORTH",
     );
     await addTestParticipant(competitionId, playerId);
 
@@ -326,8 +331,8 @@ describe("Competition Lifecycle - Query for Ending", () => {
     // Add START snapshot
     const { playerId } = await createTestPlayer(
       "Player1",
-      "p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890",
-      "na1",
+      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      "AMERICA_NORTH",
     );
     await addTestParticipant(competitionId, playerId);
 
@@ -418,8 +423,8 @@ describe("Competition Lifecycle - Query for Ending", () => {
     // Add START and END snapshots
     const { playerId } = await createTestPlayer(
       "Player1",
-      "p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890",
-      "na1",
+      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      "AMERICA_NORTH",
     );
     await addTestParticipant(competitionId, playerId);
 
@@ -509,8 +514,8 @@ describe("Competition Lifecycle - Multiple Competitions", () => {
     // Add START snapshots for comp3 and comp4
     const { playerId } = await createTestPlayer(
       "Player1",
-      "p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890",
-      "na1",
+      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      "AMERICA_NORTH",
     );
 
     await addTestParticipant(comp3, playerId);

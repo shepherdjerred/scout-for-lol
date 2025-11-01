@@ -1,6 +1,16 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { z } from "zod";
-import { ChampionIdSchema, CompetitionIdSchema, CompetitionQueueTypeSchema, CompetitionVisibilitySchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, SeasonIdSchema, getCompetitionStatus, type CompetitionCriteria } from "@scout-for-lol/data";
+import {
+  ChampionIdSchema,
+  CompetitionIdSchema,
+  CompetitionQueueTypeSchema,
+  CompetitionVisibilitySchema,
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  SeasonIdSchema,
+  getCompetitionStatus,
+  type CompetitionCriteria,
+} from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import { prisma } from "../../../database/index.js";
 import {

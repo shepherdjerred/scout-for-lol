@@ -177,7 +177,7 @@ Thank you for using Scout for LoL! Feel free to reach out if you have any questi
  * Clean up database records for an abandoned guild
  * Note: This preserves data for potential re-invite, but marks it for future cleanup
  */
-async function cleanupGuildData(serverId: string): Promise<void> {
+async function cleanupGuildData(serverId: DiscordGuildId): Promise<void> {
   console.log(`[AbandonedGuilds] Cleaning up data for guild ${serverId}`);
 
   try {

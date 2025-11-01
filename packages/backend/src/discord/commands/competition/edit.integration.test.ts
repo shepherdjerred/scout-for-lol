@@ -6,7 +6,17 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createCompetition, getCompetitionById, updateCompetition } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput, UpdateCompetitionInput } from "../../../database/competition/queries.js";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema, getCompetitionStatus, type CompetitionId, type DiscordAccountId, type DiscordChannelId, type DiscordGuildId } from "@scout-for-lol/data";
+import {
+  CompetitionIdSchema,
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  getCompetitionStatus,
+  type CompetitionId,
+  type DiscordAccountId,
+  type DiscordChannelId,
+  type DiscordGuildId,
+} from "@scout-for-lol/data";
 
 // Create a test database for integration tests
 const testDir = mkdtempSync(join(tmpdir(), "competition-edit-test-"));

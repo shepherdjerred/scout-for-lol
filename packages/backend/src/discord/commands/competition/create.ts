@@ -1,6 +1,16 @@
 import { type ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
-import { ChampionIdSchema, CompetitionIdSchema, CompetitionQueueTypeSchema, CompetitionVisibilitySchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, SeasonIdSchema, hasSeasonEnded, type CompetitionCriteria } from "@scout-for-lol/data";
+import {
+  ChampionIdSchema,
+  CompetitionQueueTypeSchema,
+  CompetitionVisibilitySchema,
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  SeasonIdSchema,
+  hasSeasonEnded,
+  type CompetitionCriteria,
+} from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import { prisma } from "../../../database/index.js";
 import { canCreateCompetition } from "../../../database/competition/permissions.js";

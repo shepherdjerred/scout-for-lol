@@ -11,7 +11,7 @@ import { validateOwnerLimit, validateServerLimit } from "./competition/validatio
 import { canCreateCompetition, grantPermission } from "./competition/permissions.js";
 import { clearAllRateLimits } from "./competition/rate-limit.js";
 import type { CompetitionId, DiscordAccountId, DiscordGuildId, PlayerId } from "@scout-for-lol/data";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 // ============================================================================
 // Test Database Setup

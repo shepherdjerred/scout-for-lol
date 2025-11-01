@@ -3,7 +3,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
 import { PrismaClient } from "../../../generated/prisma/client";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import {
+  CompetitionIdSchema,
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  LeaguePuuidSchema,
+} from "@scout-for-lol/data";
 
 // Create test database in temp directory
 const tempDir = fs.mkdtempSync(path.join("/tmp", "subscribe-test-"));
@@ -46,13 +52,13 @@ describe("Subscribe Command - Multi-Account Support", () => {
         alias: alias,
         puuid: LeaguePuuidSchema.parse("puuid-1"),
         region: "AMERICA_NORTH",
-        serverId: serverId,
-        creatorDiscordId: discordUserId,
+        serverId: DiscordGuildIdSchema.parse(serverId),
+        creatorDiscordId: DiscordAccountIdSchema.parse(discordUserId),
         player: {
           connectOrCreate: {
             where: {
               serverId_alias: {
-                serverId: serverId,
+                serverId: DiscordGuildIdSchema.parse(serverId),
                 alias: alias,
               },
             },
@@ -62,7 +68,7 @@ describe("Subscribe Command - Multi-Account Support", () => {
               createdTime: now,
               updatedTime: now,
               creatorDiscordId: discordUserId,
-              serverId: serverId,
+              serverId: DiscordGuildIdSchema.parse(serverId),
             },
           },
         },

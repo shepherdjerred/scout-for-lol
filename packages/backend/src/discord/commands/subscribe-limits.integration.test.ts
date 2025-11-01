@@ -8,7 +8,7 @@ import {
   DEFAULT_ACCOUNT_LIMIT,
   UNLIMITED_SUBSCRIPTION_SERVERS,
 } from "../../configuration/subscription-limits";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import { LeaguePuuidSchema } from "@scout-for-lol/data";
 
 // Create test database in temp directory
 const tempDir = fs.mkdtempSync(path.join("/tmp", "subscribe-limits-test-"));

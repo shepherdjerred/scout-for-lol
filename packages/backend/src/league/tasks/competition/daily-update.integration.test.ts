@@ -5,7 +5,15 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createCompetition, type CreateCompetitionInput } from "../../../database/competition/queries.js";
-import type { CompetitionCriteria, CompetitionId, DiscordChannelId, DiscordGuildId } from "@scout-for-lol/data";
+import type {
+  CompetitionCriteria,
+  CompetitionId,
+  DiscordChannelId,
+  DiscordGuildId,
+  LeaguePuuid,
+  PlayerId,
+  Region,
+} from "@scout-for-lol/data";
 import { z } from "zod";
 
 // Schema for Discord message content validation
@@ -62,7 +70,12 @@ void mock.module("../../../database/index.js", () => ({
 
 // Now import daily-update after mocks are set up
 const { runDailyLeaderboardUpdate } = await import("./daily-update.js");
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import {
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  LeaguePuuidSchema,
+} from "@scout-for-lol/data";
 
 // Test helpers
 async function createTestCompetition(
@@ -96,7 +109,7 @@ async function createTestCompetition(
   return { competitionId: competition.id, channelId };
 }
 
-async function createTestPlayer(alias: string, puuid: string, region: string): Promise<{ playerId: number }> {
+async function createTestPlayer(alias: string, puuid: LeaguePuuid, region: Region): Promise<{ playerId: PlayerId }> {
   const now = new Date();
   const player = await testPrisma.player.create({
     data: {
@@ -124,7 +137,7 @@ async function createTestPlayer(alias: string, puuid: string, region: string): P
   return { playerId: player.id };
 }
 
-async function addTestParticipant(competitionId: number, playerId: number): Promise<void> {
+async function addTestParticipant(competitionId: CompetitionId, playerId: PlayerId): Promise<void> {
   const now = new Date();
   await testPrisma.competitionParticipant.create({
     data: {
@@ -136,7 +149,7 @@ async function addTestParticipant(competitionId: number, playerId: number): Prom
   });
 }
 
-async function createStartSnapshot(competitionId: number, playerId: number, startDate: Date): Promise<void> {
+async function createStartSnapshot(competitionId: CompetitionId, playerId: PlayerId, startDate: Date): Promise<void> {
   await testPrisma.competitionSnapshot.create({
     data: {
       competitionId,
@@ -181,8 +194,8 @@ describe("Daily Leaderboard Update", () => {
     // Create START snapshot to make it ACTIVE
     const { playerId } = await createTestPlayer(
       "Player1",
-      "p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890",
-      "na1",
+      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      "AMERICA_NORTH",
     );
     await addTestParticipant(competitionId, playerId);
     await createStartSnapshot(competitionId, playerId, startDate);
@@ -229,8 +242,8 @@ describe("Daily Leaderboard Update", () => {
       // Make them ACTIVE by adding START snapshots
       const { playerId } = await createTestPlayer(
         `Player${i.toString()}`,
-        `p${i.toString()}-puuid-78-characters-long-exactly-this-is-valid-format-ok-123456789`,
-        "na1",
+        LeaguePuuidSchema.parse(`p${i.toString()}-puuid-78-characters-long-exactly-this-is-valid-format-ok-123456789`),
+        "AMERICA_NORTH",
       );
       await addTestParticipant(competitionId, playerId);
       await createStartSnapshot(competitionId, playerId, startDate);
@@ -275,8 +288,8 @@ describe("Daily Leaderboard Update", () => {
     );
     const { playerId: endedPlayerId } = await createTestPlayer(
       "EndedPlayer",
-      "ended-puuid-78-characters-long-exactly-this-is-valid-format-ok-123456",
-      "na1",
+      LeaguePuuidSchema.parse("ended-puuid-78-characters-long-exactly-this-is-valid-format-ok-123456"),
+      "AMERICA_NORTH",
     );
     await addTestParticipant(endedId, endedPlayerId);
     await createStartSnapshot(endedId, endedPlayerId, new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000));
@@ -343,8 +356,8 @@ describe("Daily Leaderboard Update", () => {
     });
     const { playerId: player1Id } = await createTestPlayer(
       "Player1",
-      "p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890",
-      "na1",
+      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      "AMERICA_NORTH",
     );
     await addTestParticipant(comp1Id, player1Id);
     await createStartSnapshot(comp1Id, player1Id, startDate);
@@ -361,8 +374,8 @@ describe("Daily Leaderboard Update", () => {
     );
     const { playerId: player2Id } = await createTestPlayer(
       "Player2",
-      "p2-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890",
-      "na1",
+      LeaguePuuidSchema.parse("p2-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      "AMERICA_NORTH",
     );
     await addTestParticipant(comp2Id, player2Id);
     await createStartSnapshot(comp2Id, player2Id, startDate);
@@ -401,8 +414,8 @@ describe("Daily Leaderboard Update", () => {
     // Make it ACTIVE
     const { playerId } = await createTestPlayer(
       "Player1",
-      "p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890",
-      "na1",
+      LeaguePuuidSchema.parse("p1-puuid-78-characters-long-exactly-this-is-a-valid-format-ok-1234567890"),
+      "AMERICA_NORTH",
     );
     await addTestParticipant(competitionId, playerId);
     await createStartSnapshot(competitionId, playerId, startDate);
@@ -447,8 +460,8 @@ describe("Daily Leaderboard Update", () => {
 
       const { playerId } = await createTestPlayer(
         `Player${i.toString()}`,
-        `p${i.toString()}-puuid-78-characters-long-exactly-this-is-valid-format-ok-123456789`,
-        "na1",
+        LeaguePuuidSchema.parse(`p${i.toString()}-puuid-78-characters-long-exactly-this-is-valid-format-ok-123456789`),
+        "AMERICA_NORTH",
       );
       await addTestParticipant(competitionId, playerId);
       await createStartSnapshot(competitionId, playerId, startDate);

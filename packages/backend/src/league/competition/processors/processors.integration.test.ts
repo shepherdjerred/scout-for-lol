@@ -1,6 +1,15 @@
 import { describe, expect, it } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { AccountIdSchema, ChampionIdSchema, CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema, PlayerIdSchema, RegionSchema, type Rank, type Ranks } from "@scout-for-lol/data";
+import {
+  AccountIdSchema,
+  ChampionIdSchema,
+  DiscordAccountIdSchema,
+  LeaguePuuidSchema,
+  PlayerIdSchema,
+  RegionSchema,
+  type Rank,
+  type Ranks,
+} from "@scout-for-lol/data";
 import { processCriteria } from "./index.js";
 import type { PlayerWithAccounts } from "./types.js";
 import { readFileSync } from "node:fs";

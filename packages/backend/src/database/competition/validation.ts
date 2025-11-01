@@ -3,7 +3,6 @@ import {
   CompetitionCriteriaSchema,
   CompetitionVisibilitySchema,
   type DiscordAccountId,
-  type DiscordChannelId,
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   type DiscordGuildId,

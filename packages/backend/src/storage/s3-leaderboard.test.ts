@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { CachedLeaderboardSchema, CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema, PlayerIdSchema, type CachedLeaderboard } from "@scout-for-lol/data";
+import { CachedLeaderboardSchema, CompetitionIdSchema, PlayerIdSchema, type CachedLeaderboard } from "@scout-for-lol/data";
 
 // ============================================================================
 // Zod Schema Validation Tests

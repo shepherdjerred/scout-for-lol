@@ -5,7 +5,16 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getChannelsSubscribedToPlayers } from "./index.js";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuid, LeaguePuuidSchema, type DiscordChannelId, type DiscordGuildId, type PlayerId } from "@scout-for-lol/data";
+import {
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  LeaguePuuid,
+  LeaguePuuidSchema,
+  type DiscordChannelId,
+  type DiscordGuildId,
+  type PlayerId,
+} from "@scout-for-lol/data";
 
 // Create a temporary database for testing
 const testDbDir = mkdtempSync(join(tmpdir(), "subscriptions-test-"));

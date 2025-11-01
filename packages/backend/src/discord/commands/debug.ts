@@ -2,12 +2,7 @@ import { type ChatInputCommandInteraction, SlashCommandBuilder, AttachmentBuilde
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { formatDistanceToNow } from "date-fns";
-import {
-  CompetitionIdSchema,
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
-} from "@scout-for-lol/data";
+import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import configuration from "../../configuration";
 import { getState } from "../../league/model/state";
 import { getAccountsWithState } from "../../database/index.js";
