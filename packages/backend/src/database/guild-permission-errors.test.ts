@@ -50,8 +50,8 @@ describe("recordPermissionError", () => {
     const record = await prisma.guildPermissionError.findUnique({
       where: {
         serverId_channelId: {
-          serverId: "guild-123",
-          channelId: "channel-456",
+          serverId: DiscordGuildIdSchema.parse("guild-123"),
+          channelId: DiscordChannelIdSchema.parse("channel-456"),
         },
       },
     });
@@ -86,8 +86,8 @@ describe("recordPermissionError", () => {
     const record = await prisma.guildPermissionError.findUnique({
       where: {
         serverId_channelId: {
-          serverId: "guild-123",
-          channelId: "channel-456",
+          serverId: DiscordGuildIdSchema.parse("guild-123"),
+          channelId: DiscordChannelIdSchema.parse("channel-456"),
         },
       },
     });
@@ -144,8 +144,8 @@ describe("recordSuccessfulSend", () => {
     const record = await prisma.guildPermissionError.findUnique({
       where: {
         serverId_channelId: {
-          serverId: "guild-123",
-          channelId: "channel-456",
+          serverId: DiscordGuildIdSchema.parse("guild-123"),
+          channelId: DiscordChannelIdSchema.parse("channel-456"),
         },
       },
     });
@@ -164,8 +164,8 @@ describe("recordSuccessfulSend", () => {
     const record = await prisma.guildPermissionError.findUnique({
       where: {
         serverId_channelId: {
-          serverId: "guild-123",
-          channelId: "channel-456",
+          serverId: DiscordGuildIdSchema.parse("guild-123"),
+          channelId: DiscordChannelIdSchema.parse("channel-456"),
         },
       },
     });

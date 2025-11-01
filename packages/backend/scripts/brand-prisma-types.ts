@@ -35,6 +35,7 @@ const BRAND_MAPPINGS = {
   invitedBy: "DiscordAccountId",
   puuid: "LeaguePuuid",
   region: "Region",
+  lastProcessedMatchId: "MatchId",
 } as const;
 
 // Types that need to be imported

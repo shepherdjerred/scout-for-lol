@@ -4,6 +4,7 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { type DiscordAccountId, type DiscordChannelId, type DiscordGuildId, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { createCompetition, getCompetitionsByServer } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 
@@ -41,9 +42,9 @@ beforeEach(async () => {
 // ============================================================================
 
 function createTestCompetitionInput(
-  serverId: string,
-  ownerId: string,
-  channelId: string,
+  serverId: DiscordGuildId,
+  ownerId: DiscordAccountId,
+  channelId: DiscordChannelId,
   overrides?: Partial<CreateCompetitionInput>,
 ): CreateCompetitionInput {
   return {
@@ -72,10 +73,10 @@ function createTestCompetitionInput(
 // ============================================================================
 
 describe("Competition List Query", () => {
-  const serverId = "test-server-123";
-  const ownerId1 = "user-1";
-  const ownerId2 = "user-2";
-  const channelId = "channel-1";
+  const serverId = DiscordGuildIdSchema.parse("test-server-123");
+  const ownerId1 = DiscordAccountIdSchema.parse("user-1");
+  const ownerId2 = DiscordAccountIdSchema.parse("user-2");
+  const channelId = DiscordChannelIdSchema.parse("channel-1");
 
   test("empty list when no competitions exist", async () => {
     const competitions = await getCompetitionsByServer(prisma, serverId);
@@ -100,7 +101,7 @@ describe("Competition List Query", () => {
     // Create competition in different server (should not appear)
     await createCompetition(
       prisma,
-      createTestCompetitionInput("other-server", ownerId1, channelId, { title: "Other Server Comp" }),
+      createTestCompetitionInput(DiscordGuildIdSchema.parse("other-server"), ownerId1, channelId, { title: "Other Server Comp" }),
     );
 
     const competitions = await getCompetitionsByServer(prisma, serverId);

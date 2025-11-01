@@ -146,8 +146,8 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
       if (uniqueSourceChannels.length > 0) {
         await tx.subscription.createMany({
           data: uniqueSourceChannels.map((channelId) => ({
-            playerId: PlayerIdSchema.parse(targetPlayer.id),
-            channelId: DiscordChannelIdSchema.parse(channelId),
+            playerId: targetPlayer.id,
+            channelId: channelId,
             serverId: guildId,
             creatorDiscordId: userId,
             createdTime: now,

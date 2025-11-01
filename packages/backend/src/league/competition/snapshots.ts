@@ -74,12 +74,12 @@ export async function createSnapshot(
   const player: PlayerWithAccounts = {
     id: playerData.id, // Already PlayerId from Prisma!
     alias: playerData.alias,
-    discordId: playerData.discordId ? DiscordAccountIdSchema.parse(playerData.discordId) : null,
+    discordId: playerData.discordId,
     accounts: playerData.accounts.map((account) => ({
       id: account.id, // Already AccountId from Prisma!
       alias: account.alias,
-      puuid: LeaguePuuidSchema.parse(account.puuid),
-      region: RegionSchema.parse(account.region),
+      puuid: account.puuid,
+      region: account.region,
     })),
   };
 

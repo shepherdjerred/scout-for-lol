@@ -1,4 +1,4 @@
-import { AccountId, CompetitionId, DiscordAccountId, DiscordChannelId, DiscordGuildId, LeaguePuuid, ParticipantId, PlayerId, Region } from "@scout-for-lol/data";
+import { AccountId, CompetitionId, DiscordAccountId, DiscordChannelId, DiscordGuildId, LeaguePuuid, MatchId, ParticipantId, PlayerId, Region } from "@scout-for-lol/data";
 /**
  * Client
 **/
@@ -4257,7 +4257,7 @@ export namespace Prisma {
           puuid: LeaguePuuid
           region: Region
           playerId: PlayerId
-          lastProcessedMatchId: string | null
+          lastProcessedMatchId: MatchId | null
           lastMatchTime: Date | null
           lastCheckedAt: Date | null
           serverId: DiscordGuildId
@@ -11175,7 +11175,7 @@ export namespace Prisma {
     puuid?: StringFilter<"Account"> | LeaguePuuid
     region?: StringFilter<"Account"> | Region
     playerId?: IntFilter<"Account"> | PlayerId
-    lastProcessedMatchId?: StringNullableFilter<"Account"> | string | null
+    lastProcessedMatchId?: StringNullableFilter<"Account"> | MatchId | null
     lastMatchTime?: DateTimeNullableFilter<"Account"> | Date | string | null
     lastCheckedAt?: DateTimeNullableFilter<"Account"> | Date | string | null
     serverId?: StringFilter<"Account"> | DiscordGuildId
@@ -11824,7 +11824,7 @@ export namespace Prisma {
     alias: string
     puuid: LeaguePuuid
     region: Region
-    lastProcessedMatchId?: string | null
+    lastProcessedMatchId?: MatchId | null
     lastMatchTime?: Date | string | null
     lastCheckedAt?: Date | string | null
     serverId: DiscordGuildId
@@ -11840,7 +11840,7 @@ export namespace Prisma {
     puuid: LeaguePuuid
     region: Region
     playerId: PlayerId
-    lastProcessedMatchId?: string | null
+    lastProcessedMatchId?: MatchId | null
     lastMatchTime?: Date | string | null
     lastCheckedAt?: Date | string | null
     serverId: DiscordGuildId
@@ -11853,7 +11853,7 @@ export namespace Prisma {
     alias?: StringFieldUpdateOperationsInput | string
     puuid?: StringFieldUpdateOperationsInput | LeaguePuuid
     region?: StringFieldUpdateOperationsInput | Region
-    lastProcessedMatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastProcessedMatchId?: NullableStringFieldUpdateOperationsInput | MatchId | null
     lastMatchTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastCheckedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     serverId?: StringFieldUpdateOperationsInput | DiscordGuildId
@@ -11869,7 +11869,7 @@ export namespace Prisma {
     puuid?: StringFieldUpdateOperationsInput | LeaguePuuid
     region?: StringFieldUpdateOperationsInput | Region
     playerId?: IntFieldUpdateOperationsInput | PlayerId
-    lastProcessedMatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastProcessedMatchId?: NullableStringFieldUpdateOperationsInput | MatchId | null
     lastMatchTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastCheckedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     serverId?: StringFieldUpdateOperationsInput | DiscordGuildId
@@ -11884,7 +11884,7 @@ export namespace Prisma {
     puuid: LeaguePuuid
     region: Region
     playerId: PlayerId
-    lastProcessedMatchId?: string | null
+    lastProcessedMatchId?: MatchId | null
     lastMatchTime?: Date | string | null
     lastCheckedAt?: Date | string | null
     serverId: DiscordGuildId
@@ -11912,7 +11912,7 @@ export namespace Prisma {
     puuid?: StringFieldUpdateOperationsInput | LeaguePuuid
     region?: StringFieldUpdateOperationsInput | Region
     playerId?: IntFieldUpdateOperationsInput | PlayerId
-    lastProcessedMatchId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastProcessedMatchId?: NullableStringFieldUpdateOperationsInput | MatchId | null
     lastMatchTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastCheckedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     serverId?: StringFieldUpdateOperationsInput | DiscordGuildId
@@ -13723,7 +13723,7 @@ export namespace Prisma {
     puuid?: StringFilter<"Account"> | LeaguePuuid
     region?: StringFilter<"Account"> | Region
     playerId?: IntFilter<"Account"> | PlayerId
-    lastProcessedMatchId?: StringNullableFilter<"Account"> | string | null
+    lastProcessedMatchId?: StringNullableFilter<"Account"> | MatchId | null
     lastMatchTime?: DateTimeNullableFilter<"Account"> | Date | string | null
     lastCheckedAt?: DateTimeNullableFilter<"Account"> | Date | string | null
     serverId?: StringFilter<"Account"> | DiscordGuildId

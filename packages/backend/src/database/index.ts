@@ -1,14 +1,9 @@
 import { PrismaClient } from "../../generated/prisma/client";
 import {
-  DiscordAccountIdSchema,
   type DiscordChannelId,
-  DiscordChannelIdSchema,
-  type LeagueAccount,
-  LeaguePuuidSchema,
   type LeaguePuuid,
   type PlayerConfig,
   type PlayerConfigEntry,
-  RegionSchema,
   MatchIdSchema,
   type MatchId,
 } from "@scout-for-lol/data";
@@ -57,7 +52,7 @@ export async function getChannelsSubscribedToPlayers(
     const result = uniqueBy(
       accounts.flatMap((account) =>
         account.player.subscriptions.map((subscription) => ({
-          channel: DiscordChannelIdSchema.parse(subscription.channelId),
+          channel: subscription.channelId,
           serverId: subscription.serverId,
         })),
       ),
@@ -93,10 +88,10 @@ export async function getAccounts(): Promise<PlayerConfig> {
         return {
           alias: player.alias,
           league: {
-            leagueAccount: mapToAccount(account),
+            leagueAccount: account,
           },
           discordAccount: {
-            id: DiscordAccountIdSchema.optional().parse(player.discordId),
+            id: player.discordId ?? undefined,
           },
         };
       });
@@ -139,10 +134,10 @@ export async function getAccountsWithState(prismaClient: PrismaClient = prisma):
           config: {
             alias: player.alias,
             league: {
-              leagueAccount: mapToAccount(account),
+              leagueAccount: account,
             },
             discordAccount: {
-              id: DiscordAccountIdSchema.optional().parse(player.discordId),
+              id: player.discordId ?? undefined,
             },
           },
           lastMatchTime: account.lastMatchTime ?? undefined,
@@ -157,13 +152,6 @@ export async function getAccountsWithState(prismaClient: PrismaClient = prisma):
     console.error("❌ Error fetching player accounts with state:", error);
     throw error;
   }
-}
-
-function mapToAccount({ puuid, region }: { puuid: string; region: string }): LeagueAccount {
-  return {
-    puuid: LeaguePuuidSchema.parse(puuid),
-    region: RegionSchema.parse(region),
-  };
 }
 
 /**

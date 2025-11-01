@@ -85,7 +85,7 @@ export async function fetchSnapshotData(
         const allRanks: Record<LeaguePuuid, Ranks> = {};
         for (const account of participant.accounts) {
           try {
-            const region = RegionSchema.parse(account.region);
+            const region = account.region;
             const response = await api.League.byPUUID(account.puuid, mapRegionToEnum(region));
 
             const solo = getRank(response.response, "RANKED_SOLO_5x5");

@@ -62,7 +62,7 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
         // Cache leaderboard to S3 (both current and historical snapshot)
         const cachedLeaderboard: CachedLeaderboard = {
           version: "v1",
-          competitionId: CompetitionIdSchema.parse(competition.id),
+          competitionId: competition.id,
           calculatedAt: new Date().toISOString(),
           entries: leaderboard,
         };

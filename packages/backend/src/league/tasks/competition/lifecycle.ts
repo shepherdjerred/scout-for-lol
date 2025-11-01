@@ -160,12 +160,7 @@ async function handleCompetitionStarts(prismaClient: PrismaClient, now: Date): P
       const competition = parseCompetition(rawCompetition);
 
       // Create START snapshots for all participants
-      await createSnapshotsForAllParticipants(
-        prismaClient,
-        CompetitionIdSchema.parse(competition.id),
-        "START",
-        competition.criteria,
-      );
+      await createSnapshotsForAllParticipants(prismaClient, competition.id, "START", competition.criteria);
 
       // Post start notification to channel
       await postCompetitionStarted(competition);
@@ -228,12 +223,7 @@ async function handleCompetitionEnds(prismaClient: PrismaClient, now: Date): Pro
       const competition = parseCompetition(rawCompetition);
 
       // Create END snapshots for all participants
-      await createSnapshotsForAllParticipants(
-        prismaClient,
-        CompetitionIdSchema.parse(competition.id),
-        "END",
-        competition.criteria,
-      );
+      await createSnapshotsForAllParticipants(prismaClient, competition.id, "END", competition.criteria);
 
       // Calculate and post final leaderboard
       const leaderboard = await calculateLeaderboard(prismaClient, competition);
