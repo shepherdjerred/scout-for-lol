@@ -1,4 +1,4 @@
-import { type PermissionType } from "@scout-for-lol/data";
+import { type DiscordAccountId, type DiscordGuildId, type PermissionType } from "@scout-for-lol/data";
 import type { PermissionsBitField } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
 import { type PrismaClient } from "../../../generated/prisma/client/index.js";
@@ -28,8 +28,8 @@ export type PermissionCheckResult = {
  */
 export async function hasPermission(
   prisma: PrismaClient,
-  serverId: string,
-  userId: string,
+  serverId: DiscordGuildId,
+  userId: DiscordAccountId,
   permission: PermissionType,
 ): Promise<boolean> {
   const record = await prisma.serverPermission.findUnique({
@@ -57,10 +57,10 @@ export async function hasPermission(
  */
 export async function grantPermission(
   prisma: PrismaClient,
-  serverId: string,
-  userId: string,
+  serverId: DiscordGuildId,
+  userId: DiscordAccountId,
   permission: PermissionType,
-  grantedBy: string,
+  grantedBy: DiscordAccountId,
 ): Promise<void> {
   // Upsert to make this idempotent
   await prisma.serverPermission.upsert({
@@ -96,8 +96,8 @@ export async function grantPermission(
  */
 export async function revokePermission(
   prisma: PrismaClient,
-  serverId: string,
-  userId: string,
+  serverId: DiscordGuildId,
+  userId: DiscordAccountId,
   permission: PermissionType,
 ): Promise<void> {
   // Delete if exists - idempotent (no error if not found)
@@ -130,8 +130,8 @@ export async function revokePermission(
  */
 export async function canCreateCompetition(
   prisma: PrismaClient,
-  serverId: string,
-  userId: string,
+  serverId: DiscordGuildId,
+  userId: DiscordAccountId,
   memberPermissions: Readonly<PermissionsBitField>,
 ): Promise<PermissionCheckResult> {
   // 1. Admin bypass - always allowed

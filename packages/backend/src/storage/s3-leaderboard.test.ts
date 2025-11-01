@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { CachedLeaderboardSchema, type CachedLeaderboard } from "@scout-for-lol/data";
+import {
+  CachedLeaderboardSchema,
+  CompetitionIdSchema,
+  PlayerIdSchema,
+  type CachedLeaderboard,
+} from "@scout-for-lol/data";
 
 // ============================================================================
 // Zod Schema Validation Tests
@@ -9,17 +14,17 @@ describe("CachedLeaderboard Schema Validation", () => {
   test("validates correct cached leaderboard with numeric scores", () => {
     const validLeaderboard: CachedLeaderboard = {
       version: "v1",
-      competitionId: 123,
+      competitionId: CompetitionIdSchema.parse(123),
       calculatedAt: new Date().toISOString(),
       entries: [
         {
-          playerId: 1,
+          playerId: PlayerIdSchema.parse(1),
           playerName: "Player1",
           score: 100,
           rank: 1,
         },
         {
-          playerId: 2,
+          playerId: PlayerIdSchema.parse(2),
           playerName: "Player2",
           score: 80,
           rank: 2,
@@ -34,11 +39,11 @@ describe("CachedLeaderboard Schema Validation", () => {
   test("validates cached leaderboard with Rank scores", () => {
     const validLeaderboard: CachedLeaderboard = {
       version: "v1",
-      competitionId: 456,
+      competitionId: CompetitionIdSchema.parse(456),
       calculatedAt: new Date().toISOString(),
       entries: [
         {
-          playerId: 1,
+          playerId: PlayerIdSchema.parse(1),
           playerName: "Player1",
           score: {
             tier: "diamond",
@@ -50,7 +55,7 @@ describe("CachedLeaderboard Schema Validation", () => {
           rank: 1,
         },
         {
-          playerId: 2,
+          playerId: PlayerIdSchema.parse(2),
           playerName: "Player2",
           score: {
             tier: "platinum",
@@ -71,11 +76,11 @@ describe("CachedLeaderboard Schema Validation", () => {
   test("validates cached leaderboard with metadata", () => {
     const validLeaderboard: CachedLeaderboard = {
       version: "v1",
-      competitionId: 789,
+      competitionId: CompetitionIdSchema.parse(789),
       calculatedAt: new Date().toISOString(),
       entries: [
         {
-          playerId: 1,
+          playerId: PlayerIdSchema.parse(1),
           playerName: "Player1",
           score: 10,
           metadata: {
@@ -95,7 +100,7 @@ describe("CachedLeaderboard Schema Validation", () => {
   test("rejects invalid version", () => {
     const invalidLeaderboard = {
       version: "v2", // Invalid version
-      competitionId: 123,
+      competitionId: CompetitionIdSchema.parse(123),
       calculatedAt: new Date().toISOString(),
       entries: [],
     };
@@ -107,7 +112,7 @@ describe("CachedLeaderboard Schema Validation", () => {
   test("rejects missing required fields", () => {
     const invalidLeaderboard = {
       version: "v1",
-      competitionId: 123,
+      competitionId: CompetitionIdSchema.parse(123),
       // Missing calculatedAt
       entries: [],
     };
@@ -119,7 +124,7 @@ describe("CachedLeaderboard Schema Validation", () => {
   test("rejects invalid competitionId", () => {
     const invalidLeaderboard = {
       version: "v1",
-      competitionId: -1, // Negative ID
+      competitionId: CompetitionIdSchema.parse(-1), // Negative ID
       calculatedAt: new Date().toISOString(),
       entries: [],
     };
@@ -131,7 +136,7 @@ describe("CachedLeaderboard Schema Validation", () => {
   test("rejects invalid ISO timestamp", () => {
     const invalidLeaderboard = {
       version: "v1",
-      competitionId: 123,
+      competitionId: CompetitionIdSchema.parse(123),
       calculatedAt: "not-a-timestamp",
       entries: [],
     };
@@ -143,11 +148,11 @@ describe("CachedLeaderboard Schema Validation", () => {
   test("rejects invalid entry fields", () => {
     const invalidLeaderboard = {
       version: "v1",
-      competitionId: 123,
+      competitionId: CompetitionIdSchema.parse(123),
       calculatedAt: new Date().toISOString(),
       entries: [
         {
-          playerId: -1, // Negative ID
+          playerId: PlayerIdSchema.parse(-1), // Negative ID
           playerName: "Player1",
           score: 100,
           rank: 1,
@@ -162,11 +167,11 @@ describe("CachedLeaderboard Schema Validation", () => {
   test("rejects invalid rank", () => {
     const invalidLeaderboard = {
       version: "v1",
-      competitionId: 123,
+      competitionId: CompetitionIdSchema.parse(123),
       calculatedAt: new Date().toISOString(),
       entries: [
         {
-          playerId: 1,
+          playerId: PlayerIdSchema.parse(1),
           playerName: "Player1",
           score: 100,
           rank: 0, // Rank must be positive
@@ -181,7 +186,7 @@ describe("CachedLeaderboard Schema Validation", () => {
   test("handles empty entries array", () => {
     const validLeaderboard: CachedLeaderboard = {
       version: "v1",
-      competitionId: 123,
+      competitionId: CompetitionIdSchema.parse(123),
       calculatedAt: new Date().toISOString(),
       entries: [],
     };
@@ -193,17 +198,17 @@ describe("CachedLeaderboard Schema Validation", () => {
   test("handles mixed score types in different entries", () => {
     const validLeaderboard: CachedLeaderboard = {
       version: "v1",
-      competitionId: 123,
+      competitionId: CompetitionIdSchema.parse(123),
       calculatedAt: new Date().toISOString(),
       entries: [
         {
-          playerId: 1,
+          playerId: PlayerIdSchema.parse(1),
           playerName: "Player1",
           score: 100, // Numeric score
           rank: 1,
         },
         {
-          playerId: 2,
+          playerId: PlayerIdSchema.parse(2),
           playerName: "Player2",
           score: {
             // Rank score
@@ -229,7 +234,7 @@ describe("CachedLeaderboard Schema Validation", () => {
 
 describe("S3 Key Generation Logic", () => {
   test("current leaderboard key format", () => {
-    const competitionId = 123;
+    const competitionId = CompetitionIdSchema.parse(123);
     const expectedKey = `leaderboards/competition-${competitionId.toString()}/current.json`;
 
     // This tests the expected format - actual function is not exported
@@ -238,7 +243,7 @@ describe("S3 Key Generation Logic", () => {
   });
 
   test("snapshot leaderboard key format", () => {
-    const competitionId = 456;
+    const competitionId = CompetitionIdSchema.parse(456);
     const date = new Date("2025-10-15T12:00:00Z");
     const year = date.getUTCFullYear();
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
@@ -307,10 +312,10 @@ describe("Edge Cases", () => {
   test("handles very large leaderboards", () => {
     const largeLeaderboard: CachedLeaderboard = {
       version: "v1",
-      competitionId: 999,
+      competitionId: CompetitionIdSchema.parse(999),
       calculatedAt: new Date().toISOString(),
       entries: Array.from({ length: 1000 }, (_, i) => ({
-        playerId: i + 1,
+        playerId: PlayerIdSchema.parse(i + 1),
         playerName: `Player${(i + 1).toString()}`,
         score: 1000 - i,
         rank: i + 1,
@@ -325,23 +330,23 @@ describe("Edge Cases", () => {
   test("handles Unicode characters in player names", () => {
     const leaderboard: CachedLeaderboard = {
       version: "v1",
-      competitionId: 123,
+      competitionId: CompetitionIdSchema.parse(123),
       calculatedAt: new Date().toISOString(),
       entries: [
         {
-          playerId: 1,
+          playerId: PlayerIdSchema.parse(1),
           playerName: "玩家一",
           score: 100,
           rank: 1,
         },
         {
-          playerId: 2,
+          playerId: PlayerIdSchema.parse(2),
           playerName: "Игрок2",
           score: 90,
           rank: 2,
         },
         {
-          playerId: 3,
+          playerId: PlayerIdSchema.parse(3),
           playerName: "🎮Player3🏆",
           score: 80,
           rank: 3,
@@ -357,7 +362,7 @@ describe("Edge Cases", () => {
     const timestamp = "2025-10-16T14:30:45.123Z";
     const leaderboard: CachedLeaderboard = {
       version: "v1",
-      competitionId: 123,
+      competitionId: CompetitionIdSchema.parse(123),
       calculatedAt: timestamp,
       entries: [],
     };

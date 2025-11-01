@@ -1,4 +1,4 @@
-import { getCompetitionStatus, type CachedLeaderboard } from "@scout-for-lol/data";
+import { CompetitionIdSchema, getCompetitionStatus, type CachedLeaderboard } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { getActiveCompetitions } from "../../../database/competition/queries.js";
 import { calculateLeaderboard } from "../../competition/leaderboard.js";
@@ -62,7 +62,7 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
         // Cache leaderboard to S3 (both current and historical snapshot)
         const cachedLeaderboard: CachedLeaderboard = {
           version: "v1",
-          competitionId: competition.id,
+          competitionId: CompetitionIdSchema.parse(competition.id),
           calculatedAt: new Date().toISOString(),
           entries: leaderboard,
         };

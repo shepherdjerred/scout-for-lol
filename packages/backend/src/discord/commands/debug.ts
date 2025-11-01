@@ -1,8 +1,11 @@
 import { type ChatInputCommandInteraction, SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { formatDistanceToNow } from "date-fns";
 import configuration from "../../configuration";
 import { getState } from "../../league/model/state";
+import { getAccountsWithState } from "../../database/index.js";
+import { calculatePollingInterval, shouldCheckPlayer } from "../../utils/polling-intervals.js";
 
 export const debugCommand = new SlashCommandBuilder()
   .setName("debug")
@@ -12,6 +15,9 @@ export const debugCommand = new SlashCommandBuilder()
   )
   .addSubcommand((subcommand) =>
     subcommand.setName("database").setDescription("Upload the SQLite database file (owner only)"),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand.setName("polling").setDescription("Show polling intervals for all tracked players"),
   );
 
 export async function executeDebugState(interaction: ChatInputCommandInteraction) {
@@ -91,6 +97,102 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
     console.error("❌ Error reading or uploading database file:", error);
     await interaction.editReply({
       content: `❌ Error uploading database file: ${error instanceof Error ? error.message : String(error)}`,
+    });
+  }
+}
+
+export async function executeDebugPolling(interaction: ChatInputCommandInteraction) {
+  console.log("🐛 Executing debug polling command");
+
+  try {
+    await interaction.deferReply({ ephemeral: true });
+
+    const accountsWithState = await getAccountsWithState();
+    const currentTime = new Date();
+
+    if (accountsWithState.length === 0) {
+      await interaction.editReply({ content: "No tracked players found." });
+      return;
+    }
+
+    // Build summary info
+    const intervalCounts = new Map<number, number>();
+    const shouldCheckCount = { yes: 0, no: 0 };
+
+    const playerDetails: string[] = [];
+
+    for (const { config, lastMatchTime, lastCheckedAt } of accountsWithState) {
+      const interval = calculatePollingInterval(lastMatchTime, currentTime);
+      const shouldCheck = shouldCheckPlayer(lastMatchTime, lastCheckedAt, currentTime);
+
+      // Count intervals
+      intervalCounts.set(interval, (intervalCounts.get(interval) ?? 0) + 1);
+      if (shouldCheck) {
+        shouldCheckCount.yes++;
+      } else {
+        shouldCheckCount.no++;
+      }
+
+      // Format player info
+      const lastMatchStr = lastMatchTime ? formatDistanceToNow(lastMatchTime, { addSuffix: true }) : "never";
+      const lastCheckedStr = lastCheckedAt ? formatDistanceToNow(lastCheckedAt, { addSuffix: true }) : "never";
+      const checkStatus = shouldCheck ? "✅" : "⏸️";
+
+      playerDetails.push(
+        `${checkStatus} **${config.alias}** (${config.league.leagueAccount.region})\n` +
+          `  Interval: ${interval.toString()}m | Last match: ${lastMatchStr} | Last checked: ${lastCheckedStr}`,
+      );
+    }
+
+    // Build summary
+    const sortedIntervals = Array.from(intervalCounts.entries()).sort((a, b) => a[0] - b[0]);
+    const intervalSummary = sortedIntervals
+      .map(([interval, count]) => `${interval.toString()}min: ${count.toString()} player(s)`)
+      .join("\n");
+
+    const summary =
+      `**Polling Interval Summary**\n` +
+      `Total players: ${accountsWithState.length.toString()}\n` +
+      `Should check now: ${shouldCheckCount.yes.toString()}\n` +
+      `Waiting: ${shouldCheckCount.no.toString()}\n\n` +
+      `**Interval Distribution:**\n${intervalSummary}\n\n` +
+      `**Player Details:**\n${playerDetails.join("\n\n")}`;
+
+    // Split into chunks if too long (Discord limit is 2000 characters)
+    if (summary.length > 1900) {
+      const chunks: string[] = [];
+      let currentChunk =
+        `**Polling Interval Summary**\n` +
+        `Total players: ${accountsWithState.length.toString()}\n` +
+        `Should check now: ${shouldCheckCount.yes.toString()}\n` +
+        `Waiting: ${shouldCheckCount.no.toString()}\n\n` +
+        `**Interval Distribution:**\n${intervalSummary}\n\n` +
+        `**Player Details:**\n`;
+
+      for (const detail of playerDetails) {
+        if (currentChunk.length + detail.length + 2 > 1900) {
+          chunks.push(currentChunk);
+          currentChunk = "";
+        }
+        currentChunk += detail + "\n\n";
+      }
+      if (currentChunk.length > 0) {
+        chunks.push(currentChunk);
+      }
+
+      await interaction.editReply({ content: chunks[0] });
+      for (let i = 1; i < chunks.length; i++) {
+        await interaction.followUp({ content: chunks[i], ephemeral: true });
+      }
+    } else {
+      await interaction.editReply({ content: summary });
+    }
+
+    console.log(`✅ Polling debug info sent (${accountsWithState.length.toString()} players)`);
+  } catch (error) {
+    console.error("❌ Error in debug polling command:", error);
+    await interaction.editReply({
+      content: `❌ Error getting polling info: ${error instanceof Error ? error.message : String(error)}`,
     });
   }
 }

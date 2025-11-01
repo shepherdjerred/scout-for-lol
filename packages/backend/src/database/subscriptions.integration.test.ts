@@ -5,7 +5,16 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getChannelsSubscribedToPlayers } from "./index.js";
-import { DiscordChannelIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import {
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+  LeaguePuuid,
+  LeaguePuuidSchema,
+  type DiscordChannelId,
+  type DiscordGuildId,
+  type PlayerId,
+} from "@scout-for-lol/data";
 
 // Create a temporary database for testing
 const testDbDir = mkdtempSync(join(tmpdir(), "subscriptions-test-"));
@@ -65,14 +74,14 @@ async function createTestPlayer(alias: string, serverId: string) {
       alias,
       discordId: `discord-${alias}`,
       serverId,
-      creatorDiscordId: "test-creator",
+      creatorDiscordId: DiscordAccountIdSchema.parse("test-creator"),
       createdTime: now,
       updatedTime: now,
     },
   });
 }
 
-async function createTestAccount(puuid: string, playerId: number, serverId: string, alias: string) {
+async function createTestAccount(puuid: LeaguePuuid, playerId: PlayerId, serverId: string, alias: string) {
   const now = new Date();
   return await testPrisma.account.create({
     data: {
@@ -81,23 +90,22 @@ async function createTestAccount(puuid: string, playerId: number, serverId: stri
       alias,
       playerId,
       serverId,
-      creatorDiscordId: "test-creator",
+      creatorDiscordId: DiscordAccountIdSchema.parse("test-creator"),
       createdTime: now,
       updatedTime: now,
     },
   });
 }
 
-async function createTestSubscription(playerId: number, channelId: string, serverId: string) {
-  const now = new Date();
+async function createTestSubscription(playerId: PlayerId, channelId: DiscordChannelId, serverId: DiscordGuildId) {
   return await testPrisma.subscription.create({
     data: {
       playerId,
       channelId,
       serverId,
-      creatorDiscordId: "test-creator",
-      createdTime: now,
-      updatedTime: now,
+      creatorDiscordId: DiscordAccountIdSchema.parse("test-creator"),
+      createdTime: new Date(),
+      updatedTime: new Date(),
     },
   });
 }

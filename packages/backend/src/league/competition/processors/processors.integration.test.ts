@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import type { Rank, Ranks } from "@scout-for-lol/data";
+import { AccountIdSchema, ChampionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema, PlayerIdSchema, RegionSchema, type Rank, type Ranks } from "@scout-for-lol/data";
 import { processCriteria } from "./index.js";
 import type { PlayerWithAccounts } from "./types.js";
 import { readFileSync } from "node:fs";
@@ -22,28 +22,28 @@ function loadMatch(path: string): MatchV5DTOs.MatchDto {
 // These should match PUUIDs from real match data
 const testPlayers: PlayerWithAccounts[] = [
   {
-    id: 1,
+    id: PlayerIdSchema.parse(1),
     alias: "TestPlayer1",
-    discordId: "discord-1",
+    discordId: DiscordAccountIdSchema.parse("discord-1"),
     accounts: [
       {
-        id: 1,
+        id: AccountIdSchema.parse(1),
         alias: "TestPlayer1",
-        puuid: "test-puuid-1", // Replace with actual PUUID from fixture if available
-        region: "na1",
+        puuid: LeaguePuuidSchema.parse("test-puuid-1"), // Replace with actual PUUID from fixture if available
+        region: RegionSchema.parse("AMERICA_NORTH"),
       },
     ],
   },
   {
-    id: 2,
+    id: PlayerIdSchema.parse(2),
     alias: "TestPlayer2",
-    discordId: "discord-2",
+    discordId: DiscordAccountIdSchema.parse("discord-2"),
     accounts: [
       {
-        id: 2,
+        id: AccountIdSchema.parse(2),
         alias: "TestPlayer2",
-        puuid: "test-puuid-2",
-        region: "na1",
+        puuid: LeaguePuuidSchema.parse("test-puuid-2"),
+        region: RegionSchema.parse("AMERICA_NORTH"),
       },
     ],
   },
@@ -63,15 +63,15 @@ describe("processCriteria integration tests", () => {
 
     // Create players with actual PUUIDs
     const players: PlayerWithAccounts[] = puuids.map((puuid, index) => ({
-      id: index + 1,
+      id: PlayerIdSchema.parse(index + 1),
       alias: `Player${(index + 1).toString()}`,
-      discordId: `discord-${(index + 1).toString()}`,
+      discordId: DiscordAccountIdSchema.parse(`discord-${(index + 1).toString()}`),
       accounts: [
         {
-          id: index + 1,
+          id: AccountIdSchema.parse(index + 1),
           alias: `Player${(index + 1).toString()}`,
-          puuid,
-          region: "na1",
+          puuid: LeaguePuuidSchema.parse(puuid),
+          region: RegionSchema.parse("AMERICA_NORTH"),
         },
       ],
     }));
@@ -101,7 +101,7 @@ describe("processCriteria integration tests", () => {
     expect(winsResult.every((entry) => entry.score === 0)).toBe(true);
 
     const championResult = processCriteria(
-      { type: "MOST_WINS_CHAMPION", championId: 157, queue: "SOLO" },
+      { type: "MOST_WINS_CHAMPION", championId: ChampionIdSchema.parse(157), queue: "SOLO" },
       emptyMatches,
       players,
     );
@@ -121,15 +121,15 @@ describe("processCriteria integration tests", () => {
     }
 
     const player: PlayerWithAccounts = {
-      id: 1,
+      id: PlayerIdSchema.parse(1),
       alias: "TestPlayer",
-      discordId: "discord-1",
+      discordId: DiscordAccountIdSchema.parse("discord-1"),
       accounts: [
         {
-          id: 1,
+          id: AccountIdSchema.parse(1),
           alias: "TestPlayer",
-          puuid,
-          region: "na1",
+          puuid: LeaguePuuidSchema.parse(puuid),
+          region: RegionSchema.parse("AMERICA_NORTH"),
         },
       ],
     };
@@ -168,15 +168,15 @@ describe("processCriteria integration tests", () => {
     }
 
     const player: PlayerWithAccounts = {
-      id: 1,
+      id: PlayerIdSchema.parse(1),
       alias: "TestPlayer",
-      discordId: "discord-1",
+      discordId: DiscordAccountIdSchema.parse("discord-1"),
       accounts: [
         {
-          id: 1,
+          id: AccountIdSchema.parse(1),
           alias: "TestPlayer",
-          puuid: firstParticipant.puuid,
-          region: "na1",
+          puuid: LeaguePuuidSchema.parse(firstParticipant.puuid),
+          region: RegionSchema.parse("AMERICA_NORTH"),
         },
       ],
     };
@@ -215,15 +215,15 @@ describe("processCriteria integration tests", () => {
     }
 
     const player: PlayerWithAccounts = {
-      id: 1,
+      id: PlayerIdSchema.parse(1),
       alias: "TestPlayer",
-      discordId: "discord-1",
+      discordId: DiscordAccountIdSchema.parse("discord-1"),
       accounts: [
         {
-          id: 1,
+          id: AccountIdSchema.parse(1),
           alias: "TestPlayer",
-          puuid,
-          region: "na1",
+          puuid: LeaguePuuidSchema.parse(puuid),
+          region: RegionSchema.parse("AMERICA_NORTH"),
         },
       ],
     };
@@ -288,22 +288,22 @@ describe("processCriteria integration tests", () => {
     }
 
     const player: PlayerWithAccounts = {
-      id: 1,
+      id: PlayerIdSchema.parse(1),
       alias: "TestPlayer",
-      discordId: "discord-1",
+      discordId: DiscordAccountIdSchema.parse("discord-1"),
       accounts: [
         {
-          id: 1,
+          id: AccountIdSchema.parse(1),
           alias: "TestPlayer",
-          puuid: firstParticipant.puuid,
-          region: "na1",
+          puuid: LeaguePuuidSchema.parse(firstParticipant.puuid),
+          region: RegionSchema.parse("AMERICA_NORTH"),
         },
       ],
     };
 
     // Test with matching champion ID
     const matchingResult = processCriteria(
-      { type: "MOST_WINS_CHAMPION", championId: firstParticipant.championId, queue: "ALL" },
+      { type: "MOST_WINS_CHAMPION", championId: ChampionIdSchema.parse(firstParticipant.championId), queue: "ALL" },
       [match],
       [player],
     );
@@ -313,7 +313,7 @@ describe("processCriteria integration tests", () => {
 
     // Test with non-matching champion ID
     const nonMatchingResult = processCriteria(
-      { type: "MOST_WINS_CHAMPION", championId: 9999, queue: "ALL" }, // Champion ID that doesn't exist
+      { type: "MOST_WINS_CHAMPION", championId: ChampionIdSchema.parse(9999), queue: "ALL" }, // Champion ID that doesn't exist
       [match],
       [player],
     );
@@ -332,15 +332,15 @@ describe("processCriteria integration tests", () => {
     }
 
     const player: PlayerWithAccounts = {
-      id: 1,
+      id: PlayerIdSchema.parse(1),
       alias: "TestPlayer",
-      discordId: "discord-1",
+      discordId: DiscordAccountIdSchema.parse("discord-1"),
       accounts: [
         {
-          id: 1,
+          id: AccountIdSchema.parse(1),
           alias: "TestPlayer",
-          puuid: firstParticipant.puuid,
-          region: "na1",
+          puuid: LeaguePuuidSchema.parse(firstParticipant.puuid),
+          region: RegionSchema.parse("AMERICA_NORTH"),
         },
       ],
     };

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  ChampionIdSchema,
   type GamesPlayedSnapshotData,
   GamesPlayedSnapshotDataSchema,
   getSnapshotSchemaForCriteria,
@@ -102,6 +103,9 @@ describe("Snapshot Data Validation", () => {
   test("should validate games played snapshot with only some queues", () => {
     const mockGamesData: GamesPlayedSnapshotData = {
       soloGames: 100,
+      flexGames: 0,
+      arenaGames: 0,
+      aramGames: 0,
     };
 
     const result = GamesPlayedSnapshotDataSchema.safeParse(mockGamesData);
@@ -150,14 +154,14 @@ describe("Snapshot Data Validation", () => {
     const mockWinsData: WinsSnapshotData = {
       wins: 25,
       games: 40,
-      championId: 157, // Yasuo
+      championId: ChampionIdSchema.parse(157), // Yasuo
       queue: "SOLO",
     };
 
     const result = WinsSnapshotDataSchema.safeParse(mockWinsData);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.championId).toBe(157);
+      expect(result.data.championId).toBe(ChampionIdSchema.parse(157));
     }
   });
 
@@ -165,7 +169,7 @@ describe("Snapshot Data Validation", () => {
     const mockWinsData: WinsSnapshotData = {
       wins: 0,
       games: 0,
-      championId: 0,
+      championId: ChampionIdSchema.parse(0),
       queue: "SOLO",
     };
 
@@ -214,7 +218,9 @@ describe("Snapshot Data Validation", () => {
     expect(getSnapshotSchemaForCriteria({ type: "MOST_WINS_PLAYER", queue: "RANKED_ANY" })).toBe(
       WinsSnapshotDataSchema,
     );
-    expect(getSnapshotSchemaForCriteria({ type: "MOST_WINS_CHAMPION", championId: 157 })).toBe(WinsSnapshotDataSchema);
+    expect(getSnapshotSchemaForCriteria({ type: "MOST_WINS_CHAMPION", championId: ChampionIdSchema.parse(157) })).toBe(
+      WinsSnapshotDataSchema,
+    );
     expect(getSnapshotSchemaForCriteria({ type: "HIGHEST_WIN_RATE", queue: "SOLO", minGames: 10 })).toBe(
       WinsSnapshotDataSchema,
     );

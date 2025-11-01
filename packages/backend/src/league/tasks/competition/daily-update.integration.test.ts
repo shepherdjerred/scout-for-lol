@@ -62,6 +62,7 @@ void mock.module("../../../database/index.js", () => ({
 
 // Now import daily-update after mocks are set up
 const { runDailyLeaderboardUpdate } = await import("./daily-update.js");
+import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 // Test helpers
 async function createTestCompetition(
@@ -77,7 +78,7 @@ async function createTestCompetition(
   const channelId = options?.channelId ?? `channel-${Date.now().toString()}`;
   const input: CreateCompetitionInput = {
     serverId: options?.serverId ?? "123456789012345678",
-    ownerId: "987654321098765432",
+    ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
     channelId,
     title: options?.title ?? "Test Competition",
     description: "Test Description",
@@ -101,8 +102,8 @@ async function createTestPlayer(alias: string, puuid: string, region: string): P
     data: {
       alias,
       discordId: null,
-      serverId: "123456789012345678",
-      creatorDiscordId: "987654321098765432",
+      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
       createdTime: now,
       updatedTime: now,
       accounts: {
@@ -111,8 +112,8 @@ async function createTestPlayer(alias: string, puuid: string, region: string): P
             alias,
             puuid,
             region,
-            serverId: "123456789012345678",
-            creatorDiscordId: "987654321098765432",
+            serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+            creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
             createdTime: now,
             updatedTime: now,
           },

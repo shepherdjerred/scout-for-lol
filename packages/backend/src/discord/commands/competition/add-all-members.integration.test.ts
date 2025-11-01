@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createCompetition } from "../../../database/competition/queries.js";
 import { addParticipant } from "../../../database/competition/participants.js";
+import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "add-all-members-test-"));
@@ -71,7 +72,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player1",
-          discordId: "discord-1",
+          discordId: DiscordAccountIdSchema.parse("discord-1"),
           serverId,
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -81,7 +82,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player2",
-          discordId: "discord-2",
+          discordId: DiscordAccountIdSchema.parse("discord-2"),
           serverId,
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -91,7 +92,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player3",
-          discordId: "discord-3",
+          discordId: DiscordAccountIdSchema.parse("discord-3"),
           serverId,
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -101,7 +102,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player4",
-          discordId: "discord-4",
+          discordId: DiscordAccountIdSchema.parse("discord-4"),
           serverId,
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -111,7 +112,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player5",
-          discordId: "discord-5",
+          discordId: DiscordAccountIdSchema.parse("discord-5"),
           serverId,
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -173,7 +174,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "PlayerA",
-          discordId: "discord-a",
+          discordId: DiscordAccountIdSchema.parse("discord-a"),
           serverId,
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -183,7 +184,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "PlayerB",
-          discordId: "discord-b",
+          discordId: DiscordAccountIdSchema.parse("discord-b"),
           serverId,
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -193,7 +194,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "PlayerC",
-          discordId: "discord-c",
+          discordId: DiscordAccountIdSchema.parse("discord-c"),
           serverId,
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -262,7 +263,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player1",
-          discordId: "discord-1",
+          discordId: DiscordAccountIdSchema.parse("discord-1"),
           serverId,
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -272,7 +273,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player2",
-          discordId: "discord-2",
+          discordId: DiscordAccountIdSchema.parse("discord-2"),
           serverId,
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -282,7 +283,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player3",
-          discordId: "discord-3",
+          discordId: DiscordAccountIdSchema.parse("discord-3"),
           serverId,
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -292,7 +293,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player4",
-          discordId: "discord-4",
+          discordId: DiscordAccountIdSchema.parse("discord-4"),
           serverId,
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -302,7 +303,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player5",
-          discordId: "discord-5",
+          discordId: DiscordAccountIdSchema.parse("discord-5"),
           serverId,
           creatorDiscordId: ownerId,
           createdTime: new Date(),

@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createCompetition, getCompetitionById, updateCompetition } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput, UpdateCompetitionInput } from "../../../database/competition/queries.js";
-import { getCompetitionStatus } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, getCompetitionStatus } from "@scout-for-lol/data";
 
 // Create a test database for integration tests
 const testDir = mkdtempSync(join(tmpdir(), "competition-edit-test-"));
@@ -51,7 +51,7 @@ async function createDraftCompetition(
   const input: CreateCompetitionInput = {
     serverId,
     ownerId,
-    channelId: "123456789012345678",
+    channelId: DiscordChannelIdSchema.parse("123456789012345678"),
     title: "Test Competition",
     description: "A test competition",
     visibility: "OPEN",
@@ -87,7 +87,7 @@ async function createActiveCompetition(
   const input: CreateCompetitionInput = {
     serverId,
     ownerId,
-    channelId: "123456789012345678",
+    channelId: DiscordChannelIdSchema.parse("123456789012345678"),
     title: "Active Competition",
     description: "An active competition",
     visibility: "OPEN",
@@ -156,7 +156,7 @@ describe("Edit DRAFT competition", () => {
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const updateInput: UpdateCompetitionInput = {
-      channelId: "999999999999999999",
+      channelId: DiscordChannelIdSchema.parse("999999999999999999"),
     };
 
     await updateCompetition(prisma, competitionId, updateInput);
@@ -344,7 +344,7 @@ describe("Edit ACTIVE competition", () => {
     const { competitionId } = await createActiveCompetition(serverId, ownerId);
 
     const updateInput: UpdateCompetitionInput = {
-      channelId: "888888888888888888",
+      channelId: DiscordChannelIdSchema.parse("888888888888888888"),
     };
 
     await updateCompetition(prisma, competitionId, updateInput);

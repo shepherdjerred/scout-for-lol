@@ -1,5 +1,5 @@
 import type { CompetitionWithCriteria } from "@scout-for-lol/data";
-import { parseCompetition } from "@scout-for-lol/data";
+import { CompetitionIdSchema, parseCompetition } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { createSnapshotsForAllParticipants } from "../../competition/snapshots.js";
 import { calculateLeaderboard, type RankedLeaderboardEntry } from "../../competition/leaderboard.js";
@@ -160,7 +160,12 @@ async function handleCompetitionStarts(prismaClient: PrismaClient, now: Date): P
       const competition = parseCompetition(rawCompetition);
 
       // Create START snapshots for all participants
-      await createSnapshotsForAllParticipants(prismaClient, competition.id, "START", competition.criteria);
+      await createSnapshotsForAllParticipants(
+        prismaClient,
+        CompetitionIdSchema.parse(competition.id),
+        "START",
+        competition.criteria,
+      );
 
       // Post start notification to channel
       await postCompetitionStarted(competition);
@@ -223,7 +228,12 @@ async function handleCompetitionEnds(prismaClient: PrismaClient, now: Date): Pro
       const competition = parseCompetition(rawCompetition);
 
       // Create END snapshots for all participants
-      await createSnapshotsForAllParticipants(prismaClient, competition.id, "END", competition.criteria);
+      await createSnapshotsForAllParticipants(
+        prismaClient,
+        CompetitionIdSchema.parse(competition.id),
+        "END",
+        competition.criteria,
+      );
 
       // Calculate and post final leaderboard
       const leaderboard = await calculateLeaderboard(prismaClient, competition);

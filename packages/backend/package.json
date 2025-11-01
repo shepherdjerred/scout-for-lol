@@ -19,7 +19,8 @@
     "format:write": "bunx prettier --write src",
     "typecheck": "bunx tsc --noEmit",
     "generate": "bun run db:generate",
-    "db:generate": "bunx prisma generate",
+    "db:generate": "bunx prisma generate && bun run brand-types",
+    "brand-types": "bun run scripts/brand-prisma-types.ts",
     "db:push": "bunx prisma db push",
     "db:migrate": "bunx prisma migrate dev",
     "db:studio": "bunx prisma studio"
@@ -53,6 +54,8 @@
     "@types/uuid": "^11.0.0",
     "aws-sdk-client-mock": "^4.1.0",
     "bun-types": "latest",
+    "glob": "^11.0.3",
+    "ts-morph": "^27.0.2",
     "typescript": "^5.0.0"
   },
   "description": "Backend service for Scout for League of Legends Discord bot",

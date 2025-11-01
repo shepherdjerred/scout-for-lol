@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import type { CompetitionWithCriteria } from "@scout-for-lol/data";
+import { ChampionIdSchema, PlayerIdSchema, type CompetitionWithCriteria } from "@scout-for-lol/data";
 import type { RankedLeaderboardEntry } from "../../league/competition/leaderboard.js";
 import { generateLeaderboardEmbed, generateCompetitionDetailsEmbed, formatScore } from "./competition.js";
 
@@ -45,7 +45,7 @@ function createTestLeaderboardEntry(
   metadata?: Record<string, unknown>,
 ): RankedLeaderboardEntry {
   const entry: RankedLeaderboardEntry = {
-    playerId: rank,
+    playerId: PlayerIdSchema.parse(rank),
     playerName,
     score,
     rank,
@@ -358,7 +358,7 @@ describe("formatScore", () => {
   it("should format wins for MOST_WINS_CHAMPION with record", () => {
     const criteria = {
       type: "MOST_WINS_CHAMPION" as const,
-      championId: 157,
+      championId: ChampionIdSchema.parse(157),
       queue: undefined,
     };
 

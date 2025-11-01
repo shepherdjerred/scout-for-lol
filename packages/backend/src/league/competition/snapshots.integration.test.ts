@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { createSnapshot, getSnapshot, createSnapshotsForAllParticipants } from "./snapshots.js";
 import { createCompetition, type CreateCompetitionInput } from "../../database/competition/queries.js";
 import { addParticipant } from "../../database/competition/participants.js";
-import type { CompetitionCriteria } from "@scout-for-lol/data";
+import { ChampionIdSchema, CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, PlayerIdSchema, type CompetitionCriteria } from "@scout-for-lol/data";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "snapshots-test-"));
@@ -29,9 +29,9 @@ const prisma = new PrismaClient({
 async function createTestCompetition(criteria: CompetitionCriteria): Promise<{ competitionId: number }> {
   const now = new Date();
   const input: CreateCompetitionInput = {
-    serverId: "123456789012345678",
-    ownerId: "987654321098765432",
-    channelId: "111222333444555666",
+    serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+    ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
+    channelId: DiscordChannelIdSchema.parse("111222333444555666"),
     title: "Test Competition",
     description: "Test",
     visibility: "OPEN",
@@ -54,8 +54,8 @@ async function createTestPlayer(alias: string, puuid: string, region: string): P
     data: {
       alias,
       discordId: null,
-      serverId: "123456789012345678",
-      creatorDiscordId: "987654321098765432",
+      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
       createdTime: now,
       updatedTime: now,
       accounts: {
@@ -64,8 +64,8 @@ async function createTestPlayer(alias: string, puuid: string, region: string): P
             alias,
             puuid,
             region,
-            serverId: "123456789012345678",
-            creatorDiscordId: "987654321098765432",
+            serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+            creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
             createdTime: now,
             updatedTime: now,
           },
@@ -106,7 +106,13 @@ describe("createSnapshot - START snapshot", () => {
     // Create snapshot - this will fail gracefully if Riot API is unavailable
     // In a real test environment, we would mock the API
     try {
-      await createSnapshot(prisma, competitionId, playerId, "START", criteria);
+      await createSnapshot(
+        prisma,
+        CompetitionIdSchema.parse(competitionId),
+        PlayerIdSchema.parse(playerId),
+        "START",
+        criteria,
+      );
 
       // Verify snapshot was created
       const snapshot = await prisma.competitionSnapshot.findUnique({
@@ -146,9 +152,15 @@ describe("createSnapshot - START snapshot", () => {
     const { competitionId } = await createTestCompetition(criteria);
     const nonExistentPlayerId = 99999;
 
-    expect(createSnapshot(prisma, competitionId, nonExistentPlayerId, "START", criteria)).rejects.toThrow(
-      "Player 99999 not found",
-    );
+    expect(
+      createSnapshot(
+        prisma,
+        CompetitionIdSchema.parse(competitionId),
+        PlayerIdSchema.parse(nonExistentPlayerId),
+        "START",
+        criteria,
+      ),
+    ).rejects.toThrow("Player 99999 not found");
   });
 
   test("throws error if player has no accounts", async () => {
@@ -165,16 +177,22 @@ describe("createSnapshot - START snapshot", () => {
       data: {
         alias: "NoAccountPlayer",
         discordId: null,
-        serverId: "123456789012345678",
-        creatorDiscordId: "987654321098765432",
+        serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+        creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
         createdTime: now,
         updatedTime: now,
       },
     });
 
-    expect(createSnapshot(prisma, competitionId, player.id, "START", criteria)).rejects.toThrow(
-      `Player ${player.id.toString()} has no accounts`,
-    );
+    expect(
+      createSnapshot(
+        prisma,
+        CompetitionIdSchema.parse(competitionId),
+        PlayerIdSchema.parse(player.id),
+        "START",
+        criteria,
+      ),
+    ).rejects.toThrow(`Player ${player.id.toString()} has no accounts`);
   });
 });
 
@@ -197,8 +215,20 @@ describe("createSnapshot - END snapshot", () => {
 
     // Create both snapshots (will fail if API unavailable)
     try {
-      await createSnapshot(prisma, competitionId, playerId, "START", criteria);
-      await createSnapshot(prisma, competitionId, playerId, "END", criteria);
+      await createSnapshot(
+        prisma,
+        CompetitionIdSchema.parse(competitionId),
+        PlayerIdSchema.parse(playerId),
+        "START",
+        criteria,
+      );
+      await createSnapshot(
+        prisma,
+        CompetitionIdSchema.parse(competitionId),
+        PlayerIdSchema.parse(playerId),
+        "END",
+        criteria,
+      );
 
       // Verify both snapshots exist
       const startSnapshot = await prisma.competitionSnapshot.findUnique({
@@ -250,7 +280,13 @@ describe("createSnapshot - Idempotency", () => {
 
     try {
       // Create snapshot first time
-      await createSnapshot(prisma, competitionId, playerId, "START", criteria);
+      await createSnapshot(
+        prisma,
+        CompetitionIdSchema.parse(competitionId),
+        PlayerIdSchema.parse(playerId),
+        "START",
+        criteria,
+      );
 
       const firstSnapshot = await prisma.competitionSnapshot.findUnique({
         where: {
@@ -272,7 +308,13 @@ describe("createSnapshot - Idempotency", () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Create snapshot second time
-      await createSnapshot(prisma, competitionId, playerId, "START", criteria);
+      await createSnapshot(
+        prisma,
+        CompetitionIdSchema.parse(competitionId),
+        PlayerIdSchema.parse(playerId),
+        "START",
+        criteria,
+      );
 
       // Verify only one snapshot exists
       const allSnapshots = await prisma.competitionSnapshot.findMany({
@@ -322,7 +364,7 @@ describe("createSnapshotsForAllParticipants", () => {
     }
 
     // Create snapshots for all
-    await createSnapshotsForAllParticipants(prisma, competitionId, "START", criteria);
+    await createSnapshotsForAllParticipants(prisma, CompetitionIdSchema.parse(competitionId), "START", criteria);
 
     // Count snapshots (some may fail if API unavailable, but should try all)
     const snapshotCount = await prisma.competitionSnapshot.count({
@@ -356,7 +398,7 @@ describe("createSnapshotsForAllParticipants", () => {
     await addParticipant(prisma, competitionId, joinedPlayerId, "JOINED");
     await addParticipant(prisma, competitionId, invitedPlayerId, "INVITED", "inviter123");
 
-    await createSnapshotsForAllParticipants(prisma, competitionId, "START", criteria);
+    await createSnapshotsForAllParticipants(prisma, CompetitionIdSchema.parse(competitionId), "START", criteria);
 
     // Only joined player should have snapshot attempted
     const snapshots = await prisma.competitionSnapshot.findMany({
@@ -391,7 +433,13 @@ describe("getSnapshot", () => {
     const puuid = "d".repeat(78);
     const { playerId } = await createTestPlayer("NoSnapshotPlayer", puuid, "AMERICA_NORTH");
 
-    const snapshot = await getSnapshot(prisma, competitionId, playerId, "START", criteria);
+    const snapshot = await getSnapshot(
+      prisma,
+      CompetitionIdSchema.parse(competitionId),
+      PlayerIdSchema.parse(playerId),
+      "START",
+      criteria,
+    );
 
     expect(snapshot).toBeNull();
   });
@@ -427,7 +475,13 @@ describe("getSnapshot", () => {
       },
     });
 
-    const snapshot = await getSnapshot(prisma, competitionId, playerId, "START", criteria);
+    const snapshot = await getSnapshot(
+      prisma,
+      CompetitionIdSchema.parse(competitionId),
+      PlayerIdSchema.parse(playerId),
+      "START",
+      criteria,
+    );
 
     expect(snapshot).not.toBeNull();
     if (snapshot) {
@@ -457,7 +511,13 @@ describe("createSnapshot - Different criteria types", () => {
     const { playerId } = await createTestPlayer("RankPlayer", puuid, "AMERICA_NORTH");
 
     try {
-      await createSnapshot(prisma, competitionId, playerId, "START", criteria);
+      await createSnapshot(
+        prisma,
+        CompetitionIdSchema.parse(competitionId),
+        PlayerIdSchema.parse(playerId),
+        "START",
+        criteria,
+      );
 
       const snapshot = await getSnapshot(prisma, competitionId, playerId, "START", criteria);
       if (snapshot) {
@@ -472,7 +532,7 @@ describe("createSnapshot - Different criteria types", () => {
   test("creates snapshot for MOST_WINS_CHAMPION criteria", async () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_WINS_CHAMPION",
-      championId: 157, // Yasuo
+      championId: ChampionIdSchema.parse(157), // Yasuo
       queue: "SOLO",
     };
 
@@ -481,9 +541,21 @@ describe("createSnapshot - Different criteria types", () => {
     const { playerId } = await createTestPlayer("ChampionPlayer", puuid, "AMERICA_NORTH");
 
     try {
-      await createSnapshot(prisma, competitionId, playerId, "START", criteria);
+      await createSnapshot(
+        prisma,
+        CompetitionIdSchema.parse(competitionId),
+        PlayerIdSchema.parse(playerId),
+        "START",
+        criteria,
+      );
 
-      const snapshot = await getSnapshot(prisma, competitionId, playerId, "START", criteria);
+      const snapshot = await getSnapshot(
+        prisma,
+        CompetitionIdSchema.parse(competitionId),
+        PlayerIdSchema.parse(playerId),
+        "START",
+        criteria,
+      );
       if (snapshot) {
         // Should have wins structure
         expect(snapshot).toHaveProperty("wins");
@@ -506,7 +578,13 @@ describe("createSnapshot - Different criteria types", () => {
     const { playerId } = await createTestPlayer("WinRatePlayer", puuid, "AMERICA_NORTH");
 
     try {
-      await createSnapshot(prisma, competitionId, playerId, "START", criteria);
+      await createSnapshot(
+        prisma,
+        CompetitionIdSchema.parse(competitionId),
+        PlayerIdSchema.parse(playerId),
+        "START",
+        criteria,
+      );
 
       const snapshot = await getSnapshot(prisma, competitionId, playerId, "START", criteria);
       if (snapshot) {

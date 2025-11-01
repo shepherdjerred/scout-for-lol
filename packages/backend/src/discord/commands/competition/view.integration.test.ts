@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { createCompetition, getCompetitionById } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 import { addParticipant } from "../../../database/competition/participants.js";
-import { getCompetitionStatus } from "@scout-for-lol/data";
+import { ChampionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, getCompetitionStatus, type ChampionId } from "@scout-for-lol/data";
 
 // Create a test database for integration tests
 const testDir = mkdtempSync(join(tmpdir(), "competition-view-test-"));
@@ -70,7 +70,7 @@ async function createTestCompetition(
     title?: string;
     description?: string;
     criteriaType?: "MOST_GAMES_PLAYED" | "HIGHEST_RANK" | "MOST_WINS_CHAMPION";
-    championId?: number;
+    championId?: ChampionId;
   },
 ): Promise<{ competitionId: number; channelId: string }> {
   const now = new Date();
@@ -91,7 +91,7 @@ async function createTestCompetition(
   const input: CreateCompetitionInput = {
     serverId,
     ownerId,
-    channelId: "123456789012345678",
+    channelId: DiscordChannelIdSchema.parse("123456789012345678"),
     title: options?.title ?? "Test Competition",
     description: options?.description ?? "A test competition",
     visibility: options?.visibility ?? "OPEN",
@@ -424,7 +424,7 @@ describe("Competition View - Different Criteria Types", () => {
   test("should show MOST_WINS_CHAMPION criteria with champion ID", async () => {
     const serverId = "server-1";
     const ownerId = "owner-1";
-    const championId = 157; // Yasuo
+    const championId = ChampionIdSchema.parse(157); // Yasuo
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       criteriaType: "MOST_WINS_CHAMPION",
@@ -440,7 +440,7 @@ describe("Competition View - Different Criteria Types", () => {
 
     expect(competition.criteria.type).toBe("MOST_WINS_CHAMPION");
     if (competition.criteria.type === "MOST_WINS_CHAMPION") {
-      expect(competition.criteria.championId).toBe(championId);
+      expect(competition.criteria.championId).toBe(ChampionIdSchema.parse(championId));
     }
   });
 });

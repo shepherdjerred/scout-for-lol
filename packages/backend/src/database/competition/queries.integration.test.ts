@@ -12,6 +12,7 @@ import {
   getCompetitionById,
   getCompetitionsByServer,
 } from "./queries.js";
+import { ChampionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "competition-queries-test-"));
@@ -47,9 +48,9 @@ describe("createCompetition", () => {
     const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const input: CreateCompetitionInput = {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
+      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
       title: "Test Competition",
       description: "A test competition",
       visibility: "OPEN",
@@ -77,9 +78,9 @@ describe("createCompetition", () => {
 
   test("creates competition with season ID and HIGHEST_RANK criteria", async () => {
     const input: CreateCompetitionInput = {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
+      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
       title: "Season Competition",
       description: "Season-based",
       visibility: "INVITE_ONLY",
@@ -106,9 +107,9 @@ describe("createCompetition", () => {
 
   test("criteria round-trips correctly with MOST_WINS_CHAMPION", async () => {
     const input: CreateCompetitionInput = {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
+      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
       title: "Champion Competition",
       description: "Test",
       visibility: "OPEN",
@@ -119,7 +120,7 @@ describe("createCompetition", () => {
       },
       criteria: {
         type: "MOST_WINS_CHAMPION",
-        championId: 157,
+        championId: ChampionIdSchema.parse(157),
         queue: "SOLO",
       },
     };
@@ -139,9 +140,9 @@ describe("createCompetition", () => {
 describe("getCompetitionById", () => {
   test("returns competition when it exists", async () => {
     const input: CreateCompetitionInput = {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
+      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
       title: "Test",
       description: "Test",
       visibility: "OPEN",
@@ -171,9 +172,9 @@ describe("getCompetitionsByServer", () => {
   test("returns all competitions for a server", async () => {
     for (let i = 0; i < 3; i++) {
       await createCompetition(prisma, {
-        serverId: "123456789012345678",
-        ownerId: "987654321098765432",
-        channelId: "111222333444555666",
+        serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+        ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
+        channelId: DiscordChannelIdSchema.parse("111222333444555666"),
         title: `Competition ${i.toString()}`,
         description: "Test",
         visibility: "OPEN",
@@ -192,9 +193,9 @@ describe("getCompetitionsByServer", () => {
 
     // Active competition
     await createCompetition(prisma, {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
+      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
       title: "Active",
       description: "Test",
       visibility: "OPEN",
@@ -209,9 +210,9 @@ describe("getCompetitionsByServer", () => {
 
     // Ended competition
     await createCompetition(prisma, {
-      serverId: "123456789012345678",
-      ownerId: "111111111111111111",
-      channelId: "111222333444555666",
+      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      ownerId: DiscordAccountIdSchema.parse("111111111111111111"),
+      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
       title: "Ended",
       description: "Test",
       visibility: "OPEN",
@@ -233,9 +234,9 @@ describe("getCompetitionsByServer", () => {
   test("filters by ownerId", async () => {
     // Create competitions with different owners
     await createCompetition(prisma, {
-      serverId: "123456789012345678",
-      ownerId: "111111111111111111",
-      channelId: "111222333444555666",
+      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      ownerId: DiscordAccountIdSchema.parse("111111111111111111"),
+      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
       title: "Owner 1 Competition",
       description: "Test",
       visibility: "OPEN",
@@ -245,9 +246,9 @@ describe("getCompetitionsByServer", () => {
     });
 
     await createCompetition(prisma, {
-      serverId: "123456789012345678",
-      ownerId: "222222222222222222",
-      channelId: "111222333444555666",
+      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      ownerId: DiscordAccountIdSchema.parse("222222222222222222"),
+      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
       title: "Owner 2 Competition",
       description: "Test",
       visibility: "OPEN",
@@ -256,7 +257,7 @@ describe("getCompetitionsByServer", () => {
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
-    const owner1Comps = await getCompetitionsByServer(prisma, "123456789012345678", { ownerId: "111111111111111111" });
+    const owner1Comps = await getCompetitionsByServer(prisma, "123456789012345678", { ownerId: DiscordAccountIdSchema.parse("111111111111111111") });
 
     expect(owner1Comps).toHaveLength(1);
     expect(owner1Comps[0]?.title).toBe("Owner 1 Competition");
@@ -274,8 +275,8 @@ describe("getActiveCompetitions", () => {
     for (let i = 0; i < 3; i++) {
       await createCompetition(prisma, {
         serverId: (100000000000000000 + i).toString(),
-        ownerId: "987654321098765432",
-        channelId: "111222333444555666",
+        ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
+        channelId: DiscordChannelIdSchema.parse("111222333444555666"),
         title: `Server ${i.toString()}`,
         description: "Test",
         visibility: "OPEN",
@@ -297,9 +298,9 @@ describe("getActiveCompetitions", () => {
     const now = new Date();
 
     const created = await createCompetition(prisma, {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
+      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
       title: "Active",
       description: "Test",
       visibility: "OPEN",
@@ -323,9 +324,9 @@ describe("getActiveCompetitions", () => {
 
     // Create ended competition
     await createCompetition(prisma, {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
+      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
       title: "Ended",
       description: "Test",
       visibility: "OPEN",
@@ -350,9 +351,9 @@ describe("getActiveCompetitions", () => {
 describe("cancelCompetition", () => {
   test("sets isCancelled flag to true", async () => {
     const created = await createCompetition(prisma, {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
+      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
       title: "Test",
       description: "Test",
       visibility: "OPEN",

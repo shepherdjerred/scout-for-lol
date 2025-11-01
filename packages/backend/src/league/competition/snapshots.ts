@@ -1,14 +1,20 @@
 import {
   type CompetitionCriteria,
+  type CompetitionId,
+  DiscordAccountIdSchema,
   type GamesPlayedSnapshotData,
   getSnapshotSchemaForCriteria,
+  LeaguePuuidSchema,
+  type PlayerId,
+  RegionSchema,
   type RankSnapshotData,
   type SnapshotType,
   type WinsSnapshotData,
 } from "@scout-for-lol/data";
-import { type PrismaClient } from "../../../generated/prisma/client/index.js";
 import { getParticipants } from "../../database/competition/participants.js";
 import { fetchSnapshotData } from "./leaderboard.js";
+import type { PlayerWithAccounts } from "./processors/types.js";
+import { PrismaClient } from "../../../generated/prisma/client/index.js";
 
 // ============================================================================
 // Snapshot Creation
@@ -29,8 +35,8 @@ import { fetchSnapshotData } from "./leaderboard.js";
  */
 export async function createSnapshot(
   prisma: PrismaClient,
-  competitionId: number,
-  playerId: number,
+  competitionId: CompetitionId,
+  playerId: PlayerId,
   snapshotType: SnapshotType,
   criteria: CompetitionCriteria,
 ): Promise<void> {
@@ -38,19 +44,44 @@ export async function createSnapshot(
     `[Snapshots] Creating ${snapshotType} snapshot for competition ${competitionId.toString()}, player ${playerId.toString()}`,
   );
 
-  // Get player with accounts
-  const player = await prisma.player.findUnique({
+  // Get player with accounts (select only fields needed for PlayerWithAccounts)
+  const playerData = await prisma.player.findUnique({
     where: { id: playerId },
-    include: { accounts: true },
+    select: {
+      id: true,
+      alias: true,
+      discordId: true,
+      accounts: {
+        select: {
+          id: true,
+          alias: true,
+          puuid: true,
+          region: true,
+        },
+      },
+    },
   });
 
-  if (!player) {
+  if (!playerData) {
     throw new Error(`Player ${playerId.toString()} not found`);
   }
 
-  if (player.accounts.length === 0) {
+  if (playerData.accounts.length === 0) {
     throw new Error(`Player ${playerId.toString()} has no accounts`);
   }
+
+  // Transform to PlayerWithAccounts (validate string fields)
+  const player: PlayerWithAccounts = {
+    id: playerData.id, // Already PlayerId from Prisma!
+    alias: playerData.alias,
+    discordId: playerData.discordId ? DiscordAccountIdSchema.parse(playerData.discordId) : null,
+    accounts: playerData.accounts.map((account) => ({
+      id: account.id, // Already AccountId from Prisma!
+      alias: account.alias,
+      puuid: LeaguePuuidSchema.parse(account.puuid),
+      region: RegionSchema.parse(account.region),
+    })),
+  };
 
   // Fetch snapshot data based on criteria
   const snapshotData = await fetchSnapshotData(prisma, competitionId, criteria, [player], "ACTIVE");
@@ -148,7 +179,7 @@ export async function getSnapshot(
  */
 export async function createSnapshotsForAllParticipants(
   prisma: PrismaClient,
-  competitionId: number,
+  competitionId: CompetitionId,
   snapshotType: SnapshotType,
   criteria: CompetitionCriteria,
 ): Promise<void> {

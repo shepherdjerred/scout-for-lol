@@ -1,18 +1,18 @@
-import type { Rank } from "@scout-for-lol/data";
+import type { AccountId, DiscordAccountId, LeaguePuuid, PlayerId, Rank, Region } from "@scout-for-lol/data";
 
 /**
  * Player with their accounts from Prisma
  * This is what we get from fetching participants with their accounts
  */
 export type PlayerWithAccounts = {
-  id: number;
+  id: PlayerId;
   alias: string;
-  discordId: string | null;
+  discordId: DiscordAccountId | null;
   accounts: {
-    id: number;
+    id: AccountId;
     alias: string;
-    puuid: string;
-    region: string;
+    puuid: LeaguePuuid;
+    region: Region;
   }[];
 };
 
@@ -20,7 +20,7 @@ export type PlayerWithAccounts = {
  * Leaderboard entry returned by processors
  */
 export type LeaderboardEntry = {
-  playerId: number;
+  playerId: PlayerId;
   playerName: string;
   score: number | Rank;
   metadata?: Record<string, unknown>;

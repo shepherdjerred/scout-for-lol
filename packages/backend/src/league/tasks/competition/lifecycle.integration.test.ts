@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createCompetition, type CreateCompetitionInput } from "../../../database/competition/queries.js";
 import type { CompetitionCriteria } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "lifecycle-test-"));
@@ -30,9 +31,9 @@ async function createTestCompetition(
   endDate: Date,
 ): Promise<{ competitionId: number }> {
   const input: CreateCompetitionInput = {
-    serverId: "123456789012345678",
-    ownerId: "987654321098765432",
-    channelId: "111222333444555666",
+    serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+    ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
+    channelId: DiscordChannelIdSchema.parse("111222333444555666"),
     title: "Test Competition",
     description: "Test Description",
     visibility: "OPEN",
@@ -55,8 +56,8 @@ async function createTestPlayer(alias: string, puuid: string, region: string): P
     data: {
       alias,
       discordId: null,
-      serverId: "123456789012345678",
-      creatorDiscordId: "987654321098765432",
+      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
       createdTime: now,
       updatedTime: now,
       accounts: {
@@ -65,8 +66,8 @@ async function createTestPlayer(alias: string, puuid: string, region: string): P
             alias,
             puuid,
             region,
-            serverId: "123456789012345678",
-            creatorDiscordId: "987654321098765432",
+            serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+            creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
             createdTime: now,
             updatedTime: now,
           },

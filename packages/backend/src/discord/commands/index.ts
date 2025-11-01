@@ -24,7 +24,7 @@ import {
   executePlayerUnlinkDiscord,
   executePlayerInfo,
 } from "./admin/index.js";
-import { executeDebugState, executeDebugDatabase } from "./debug.js";
+import { executeDebugState, executeDebugDatabase, executeDebugPolling } from "./debug.js";
 import { executeServerInfo } from "./server-info.js";
 import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
 import { searchChampions } from "../../utils/champion.js";
@@ -162,6 +162,8 @@ export function handleCommands(client: Client) {
             await executeDebugState(interaction);
           } else if (subcommandName === "database") {
             await executeDebugDatabase(interaction);
+          } else if (subcommandName === "polling") {
+            await executeDebugPolling(interaction);
           } else {
             console.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
             await interaction.reply({

@@ -2,6 +2,9 @@ import {
   type CompetitionCriteria,
   type CompetitionVisibility,
   type CompetitionWithCriteria,
+  type DiscordAccountId,
+  type DiscordChannelId,
+  type DiscordGuildId,
   parseCompetition,
 } from "@scout-for-lol/data";
 import { type PrismaClient } from "../../../generated/prisma/client/index.js";
@@ -16,9 +19,9 @@ import { type CompetitionDates } from "./validation.js";
  * This is the simplified type used by query functions (not validation schema)
  */
 export type CreateCompetitionInput = {
-  serverId: string;
-  ownerId: string;
-  channelId: string;
+  serverId: DiscordGuildId;
+  ownerId: DiscordAccountId;
+  channelId: DiscordChannelId;
   title: string;
   description: string;
   visibility: CompetitionVisibility;
@@ -121,10 +124,10 @@ export async function getCompetitionById(
  */
 export async function getCompetitionsByServer(
   prisma: PrismaClient,
-  serverId: string,
+  serverId: DiscordGuildId,
   options?: {
     activeOnly?: boolean;
-    ownerId?: string;
+    ownerId?: DiscordAccountId;
   },
 ): Promise<CompetitionWithCriteria[]> {
   const now = new Date();
@@ -188,7 +191,7 @@ export async function getActiveCompetitions(prisma: PrismaClient): Promise<Compe
 export type UpdateCompetitionInput = {
   title?: string;
   description?: string;
-  channelId?: string;
+  channelId?: DiscordChannelId;
   visibility?: CompetitionVisibility;
   maxParticipants?: number;
   dates?: CompetitionDates;
@@ -215,7 +218,7 @@ export async function updateCompetition(
   const updateData: {
     title?: string;
     description?: string;
-    channelId?: string;
+    channelId?: DiscordChannelId;
     visibility?: string;
     maxParticipants?: number;
     startDate?: Date | null;

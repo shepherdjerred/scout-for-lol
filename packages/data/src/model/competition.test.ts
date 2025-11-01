@@ -1,5 +1,7 @@
+/* eslint-disable max-lines */
 import { describe, expect, test } from "bun:test";
 import {
+  ChampionIdSchema,
   type CompetitionCriteria,
   CompetitionCriteriaSchema,
   CompetitionIdSchema,
@@ -201,6 +203,19 @@ describe("getCompetitionStatus - CANCELLED", () => {
       startDate: new Date("2025-06-01"),
       endDate: new Date("2025-07-01"),
       seasonId: null,
+      id: 1,
+      updatedTime: new Date(),
+      createdTime: new Date(),
+      creatorDiscordId: "1234567890",
+      visibility: "OPEN",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: "{}",
+      maxParticipants: 10,
+      serverId: "1234567890",
+      ownerId: "1234567890",
+      title: "Test Competition",
+      description: "Test Description",
+      channelId: "1234567890",
     };
     expect(getCompetitionStatus(competition)).toBe("CANCELLED");
   });
@@ -211,6 +226,19 @@ describe("getCompetitionStatus - CANCELLED", () => {
       startDate: new Date("2024-01-01"),
       endDate: new Date("2024-02-01"),
       seasonId: null,
+      id: 1,
+      updatedTime: new Date(),
+      createdTime: new Date(),
+      creatorDiscordId: "1234567890",
+      visibility: "OPEN",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: "{}",
+      maxParticipants: 10,
+      serverId: "1234567890",
+      ownerId: "1234567890",
+      title: "Test Competition",
+      description: "Test Description",
+      channelId: "1234567890",
     };
     expect(getCompetitionStatus(competition)).toBe("CANCELLED");
   });
@@ -222,6 +250,19 @@ describe("getCompetitionStatus - CANCELLED", () => {
       startDate: new Date(now.getTime() - 86400000), // Yesterday
       endDate: new Date(now.getTime() + 86400000), // Tomorrow
       seasonId: null,
+      id: 1,
+      updatedTime: new Date(),
+      createdTime: new Date(),
+      creatorDiscordId: "1234567890",
+      visibility: "OPEN",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: "{}",
+      maxParticipants: 10,
+      serverId: "1234567890",
+      ownerId: "1234567890",
+      title: "Test Competition",
+      description: "Test Description",
+      channelId: "1234567890",
     };
     expect(getCompetitionStatus(competition)).toBe("CANCELLED");
   });
@@ -229,9 +270,22 @@ describe("getCompetitionStatus - CANCELLED", () => {
   test("returns CANCELLED when isCancelled is true (with seasonId)", () => {
     const competition: Competition = {
       isCancelled: true,
-      startDate: undefined,
-      endDate: undefined,
+      startDate: null,
+      endDate: null,
       seasonId: "2025-season-1",
+      id: 1,
+      updatedTime: new Date(),
+      createdTime: new Date(),
+      creatorDiscordId: "1234567890",
+      visibility: "OPEN",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: "{}",
+      maxParticipants: 10,
+      serverId: "1234567890",
+      ownerId: "1234567890",
+      title: "Test Competition",
+      description: "Test Description",
+      channelId: "1234567890",
     };
     expect(getCompetitionStatus(competition)).toBe("CANCELLED");
   });
@@ -244,7 +298,20 @@ describe("getCompetitionStatus - DRAFT", () => {
       isCancelled: false,
       startDate: new Date(now.getTime() + 86400000), // Tomorrow
       endDate: new Date(now.getTime() + 86400000 * 7), // Next week
-      seasonId: undefined,
+      seasonId: null,
+      id: 1,
+      updatedTime: new Date(),
+      createdTime: new Date(),
+      creatorDiscordId: "1234567890",
+      visibility: "OPEN",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: "{}",
+      maxParticipants: 10,
+      serverId: "1234567890",
+      ownerId: "1234567890",
+      title: "Test Competition",
+      description: "Test Description",
+      channelId: "1234567890",
     };
     expect(getCompetitionStatus(competition)).toBe("DRAFT");
   });
@@ -252,9 +319,22 @@ describe("getCompetitionStatus - DRAFT", () => {
   test("returns DRAFT when only seasonId is set", () => {
     const competition: Competition = {
       isCancelled: false,
-      startDate: undefined,
-      endDate: undefined,
+      startDate: null,
+      endDate: null,
+      id: 1,
+      updatedTime: new Date(),
+      createdTime: new Date(),
+      creatorDiscordId: "1234567890",
+      visibility: "OPEN",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: "{}",
+      maxParticipants: 10,
       seasonId: "2025-season-1",
+      serverId: "1234567890",
+      ownerId: "1234567890",
+      title: "Test Competition",
+      description: "Test Description",
+      channelId: "1234567890",
     };
     expect(getCompetitionStatus(competition)).toBe("DRAFT");
   });
@@ -265,7 +345,20 @@ describe("getCompetitionStatus - DRAFT", () => {
       isCancelled: false,
       startDate: new Date(now.getTime() + 1000), // 1 second in future
       endDate: new Date(now.getTime() + 86400000),
-      seasonId: undefined,
+      seasonId: null,
+      id: 1,
+      updatedTime: new Date(),
+      createdTime: new Date(),
+      creatorDiscordId: "1234567890",
+      visibility: "OPEN",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: "{}",
+      maxParticipants: 10,
+      serverId: "123467890",
+      ownerId: "1234567890",
+      title: "Test Competition",
+      description: "Test Description",
+      channelId: "1234567890",
     };
     expect(getCompetitionStatus(competition)).toBe("DRAFT");
   });
@@ -278,7 +371,20 @@ describe("getCompetitionStatus - ACTIVE", () => {
       isCancelled: false,
       startDate: new Date(now.getTime() - 86400000), // Yesterday
       endDate: new Date(now.getTime() + 86400000), // Tomorrow
-      seasonId: undefined,
+      seasonId: null,
+      id: 1,
+      updatedTime: new Date(),
+      createdTime: new Date(),
+      creatorDiscordId: "1234567890",
+      visibility: "OPEN",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: "{}",
+      maxParticipants: 10,
+      serverId: "1234567890",
+      ownerId: "1234567890",
+      title: "Test Competition",
+      description: "Test Description",
+      channelId: "1234567890",
     };
     expect(getCompetitionStatus(competition)).toBe("ACTIVE");
   });
@@ -289,7 +395,20 @@ describe("getCompetitionStatus - ACTIVE", () => {
       isCancelled: false,
       startDate: new Date(now.getTime() - 1000), // 1 second ago
       endDate: new Date(now.getTime() + 86400000),
-      seasonId: undefined,
+      seasonId: null,
+      id: 1,
+      updatedTime: new Date(),
+      createdTime: new Date(),
+      creatorDiscordId: "1234567890",
+      visibility: "OPEN",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: "{}",
+      maxParticipants: 10,
+      serverId: "1234567890",
+      ownerId: "1234567890",
+      title: "Test Competition",
+      description: "Test Description",
+      channelId: "1234567890",
     };
     expect(getCompetitionStatus(competition)).toBe("ACTIVE");
   });
@@ -302,7 +421,20 @@ describe("getCompetitionStatus - ENDED", () => {
       isCancelled: false,
       startDate: new Date(now.getTime() - 86400000 * 7), // Last week
       endDate: new Date(now.getTime() - 86400000), // Yesterday
-      seasonId: undefined,
+      seasonId: null,
+      id: 1,
+      updatedTime: new Date(),
+      createdTime: new Date(),
+      creatorDiscordId: "1234567890",
+      visibility: "OPEN",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: "{}",
+      maxParticipants: 10,
+      serverId: "1234567890",
+      ownerId: "1234567890",
+      title: "Test Competition",
+      description: "Test Description",
+      channelId: "1234567890",
     };
     expect(getCompetitionStatus(competition)).toBe("ENDED");
   });
@@ -313,7 +445,20 @@ describe("getCompetitionStatus - ENDED", () => {
       isCancelled: false,
       startDate: new Date(now.getTime() - 86400000 * 7),
       endDate: new Date(now.getTime() - 1000), // 1 second ago
-      seasonId: undefined,
+      seasonId: null,
+      id: 1,
+      updatedTime: new Date(),
+      createdTime: new Date(),
+      creatorDiscordId: "1234567890",
+      visibility: "OPEN",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: "{}",
+      maxParticipants: 10,
+      serverId: "1234567890",
+      ownerId: "1234567890",
+      title: "Test Competition",
+      description: "Test Description",
+      channelId: "1234567890",
     };
     expect(getCompetitionStatus(competition)).toBe("ENDED");
   });
@@ -324,7 +469,20 @@ describe("getCompetitionStatus - ENDED", () => {
       isCancelled: false,
       startDate: new Date(now.getTime() - 86400000),
       endDate: now,
-      seasonId: undefined,
+      seasonId: null,
+      id: 1,
+      updatedTime: new Date(),
+      createdTime: new Date(),
+      creatorDiscordId: "1234567890",
+      visibility: "OPEN",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: "{}",
+      maxParticipants: 10,
+      serverId: "1234567890",
+      ownerId: "1234567890",
+      title: "Test Competition",
+      description: "Test Description",
+      channelId: "1234567890",
     };
     expect(getCompetitionStatus(competition)).toBe("ENDED");
   });
@@ -334,9 +492,22 @@ describe("getCompetitionStatus - Error cases", () => {
   test("throws error when no dates and no seasonId", () => {
     const competition: Competition = {
       isCancelled: false,
-      startDate: undefined,
-      endDate: undefined,
-      seasonId: undefined,
+      startDate: null,
+      endDate: null,
+      seasonId: null,
+      id: 1,
+      updatedTime: new Date(),
+      createdTime: new Date(),
+      creatorDiscordId: "1234567890",
+      visibility: "OPEN",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: "{}",
+      maxParticipants: 10,
+      serverId: "1234567890",
+      ownerId: "1234567890",
+      title: "Test Competition",
+      description: "Test Description",
+      channelId: "1234567890",
     };
     expect(() => getCompetitionStatus(competition)).toThrow(
       "Competition must have either (startDate AND endDate) OR seasonId",
@@ -346,9 +517,22 @@ describe("getCompetitionStatus - Error cases", () => {
   test("error message is descriptive", () => {
     const competition: Competition = {
       isCancelled: false,
-      startDate: undefined,
-      endDate: undefined,
-      seasonId: undefined,
+      startDate: null,
+      endDate: null,
+      seasonId: null,
+      id: 1,
+      updatedTime: new Date(),
+      createdTime: new Date(),
+      creatorDiscordId: "1234567890",
+      visibility: "OPEN",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: "{}",
+      maxParticipants: 10,
+      serverId: "1234567890",
+      ownerId: "1234567890",
+      title: "Test Competition",
+      description: "Test Description",
+      channelId: "1234567890",
     };
     try {
       getCompetitionStatus(competition);
@@ -734,7 +918,7 @@ describe("CompetitionCriteria discriminated union", () => {
     if (result.success) {
       expect(result.data.type).toBe("MOST_WINS_CHAMPION");
       if (result.data.type === "MOST_WINS_CHAMPION") {
-        expect(result.data.championId).toBe(157);
+        expect(result.data.championId).toBe(ChampionIdSchema.parse(157));
         expect(result.data.queue).toBe("SOLO");
       }
     }
@@ -788,7 +972,7 @@ describe("CompetitionCriteria discriminated union", () => {
     // TypeScript should narrow the type based on discriminator
     if (criteria.type === "MOST_WINS_CHAMPION") {
       // This should compile without errors - championId exists on this type
-      expect(criteria.championId).toBe(157);
+      expect(criteria.championId).toBe(ChampionIdSchema.parse(157));
       expect(criteria.queue).toBe("SOLO");
     } else {
       // This branch should never be reached
@@ -810,7 +994,7 @@ describe("CompetitionCriteria discriminated union", () => {
     expect(criteria2.type).toBe("MOST_WINS_CHAMPION");
     // Verify type narrowing allows access to type-specific fields
     if (criteria2.type === "MOST_WINS_CHAMPION") {
-      expect(criteria2.championId).toBe(157);
+      expect(criteria2.championId).toBe(ChampionIdSchema.parse(157));
     }
 
     const criteria3 = CompetitionCriteriaSchema.parse({
@@ -1197,7 +1381,7 @@ describe("getSnapshotSchemaForCriteria", () => {
   test("returns WinsSnapshotDataSchema for MOST_WINS_CHAMPION", () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_WINS_CHAMPION",
-      championId: 157,
+      championId: ChampionIdSchema.parse(157),
     };
     const schema = getSnapshotSchemaForCriteria(criteria);
     expect(schema).toBe(WinsSnapshotDataSchema);
@@ -1251,7 +1435,7 @@ describe("getSnapshotSchemaForCriteria", () => {
   test("factory returns working schema - MOST_WINS_CHAMPION", () => {
     const criteria: CompetitionCriteria = {
       type: "MOST_WINS_CHAMPION",
-      championId: 157,
+      championId: ChampionIdSchema.parse(157),
       queue: "SOLO",
     };
     const schema = getSnapshotSchemaForCriteria(criteria);
@@ -1259,7 +1443,7 @@ describe("getSnapshotSchemaForCriteria", () => {
     const validData = {
       wins: 20,
       games: 30,
-      championId: 157,
+      championId: ChampionIdSchema.parse(157),
       queue: "SOLO",
     };
     const result = schema.safeParse(validData);
@@ -1286,7 +1470,7 @@ describe("parseCompetition", () => {
     maxParticipants: 50,
     startDate: new Date("2025-01-01"),
     endDate: new Date("2025-01-31"),
-    seasonId: undefined,
+    seasonId: null,
     creatorDiscordId: "987654321098765432",
     createdTime: new Date("2024-12-01"),
     updatedTime: new Date("2024-12-01"),
@@ -1328,14 +1512,14 @@ describe("parseCompetition", () => {
     const raw: Competition = {
       ...baseRawCompetition,
       criteriaType: "MOST_WINS_CHAMPION",
-      criteriaConfig: JSON.stringify({ championId: 157, queue: "SOLO" }),
+      criteriaConfig: JSON.stringify({ championId: ChampionIdSchema.parse(157), queue: "SOLO" }),
     };
 
     const parsed = parseCompetition(raw);
 
     expect(parsed.criteria).toEqual({
       type: "MOST_WINS_CHAMPION",
-      championId: 157,
+      championId: ChampionIdSchema.parse(157),
       queue: "SOLO",
     });
   });

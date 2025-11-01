@@ -1,4 +1,11 @@
-import type { CompetitionCriteria, CompetitionWithCriteria, LeaguePuuid, Rank, Ranks } from "@scout-for-lol/data";
+import type {
+  CompetitionCriteria,
+  CompetitionId,
+  CompetitionWithCriteria,
+  LeaguePuuid,
+  Rank,
+  Ranks,
+} from "@scout-for-lol/data";
 import {
   getCompetitionStatus,
   rankToLeaguePoints,
@@ -46,7 +53,7 @@ export type RankedLeaderboardEntry = LeaderboardEntry & {
  */
 export async function fetchSnapshotData(
   prisma: PrismaClient,
-  competitionId: number,
+  competitionId: CompetitionId,
   criteria: CompetitionCriteria,
   participants: PlayerWithAccounts[],
   competitionStatus: ReturnType<typeof getCompetitionStatus>,
@@ -63,9 +70,9 @@ export async function fetchSnapshotData(
 
   console.log(`[Leaderboard] Fetching snapshot data for ${participants.length.toString()} participants`);
 
-  const startSnapshots: Record<number, Ranks> = {};
-  const endSnapshots: Record<number, Ranks> = {};
-  const currentRanks: Record<number, Ranks> = {};
+  const startSnapshots: Record<LeaguePuuid, Ranks> = {};
+  const endSnapshots: Record<LeaguePuuid, Ranks> = {};
+  const currentRanks: Record<LeaguePuuid, Ranks> = {};
 
   // Fetch snapshots in parallel
   await Promise.all(
@@ -106,7 +113,7 @@ export async function fetchSnapshotData(
           const data: Ranks = {};
           if (startSnapshot.solo) data.solo = startSnapshot.solo;
           if (startSnapshot.flex) data.flex = startSnapshot.flex;
-          startSnapshots[participant.id] = data;
+          startSnapshots[participant] = data;
         }
 
         if (competitionStatus === "ENDED") {

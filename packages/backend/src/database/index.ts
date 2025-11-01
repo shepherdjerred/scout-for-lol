@@ -21,7 +21,8 @@ console.log("✅ Database client initialized");
 
 export type PlayerAccountWithState = {
   config: PlayerConfigEntry;
-  lastCheckedTime: Date | undefined;
+  lastMatchTime: Date | undefined;
+  lastCheckedAt: Date | undefined;
 };
 
 export async function getChannelsSubscribedToPlayers(
@@ -111,7 +112,7 @@ export async function getAccounts(): Promise<PlayerConfig> {
 
 /**
  * Get all player accounts with their runtime state for polling.
- * Includes lastMatchTime to determine polling intervals.
+ * Includes lastMatchTime and lastCheckedAt to determine polling intervals.
  *
  * @param prismaClient - Prisma client instance
  * @returns Array of player accounts with their polling state
@@ -144,7 +145,8 @@ export async function getAccountsWithState(prismaClient: PrismaClient = prisma):
               id: DiscordAccountIdSchema.optional().parse(player.discordId),
             },
           },
-          lastCheckedTime: undefined,
+          lastMatchTime: account.lastMatchTime ?? undefined,
+          lastCheckedAt: account.lastCheckedAt ?? undefined,
         };
       });
     });
@@ -253,6 +255,36 @@ export async function updateLastMatchTime(
     });
   } catch (error) {
     console.error("❌ Error updating lastMatchTime:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update the lastCheckedAt timestamp for an account.
+ * This is called after we check for new matches to track when we last polled.
+ *
+ * @param puuid - Player PUUID to update
+ * @param checkedAt - The timestamp when we checked for matches
+ * @param prismaClient - Prisma client instance
+ */
+export async function updateLastCheckedAt(
+  puuid: LeaguePuuid,
+  checkedAt: Date,
+  prismaClient: PrismaClient = prisma,
+): Promise<void> {
+  console.log(`📝 Updating lastCheckedAt for ${puuid} to ${checkedAt.toISOString()}`);
+
+  try {
+    await prismaClient.account.updateMany({
+      where: {
+        puuid,
+      },
+      data: {
+        lastCheckedAt: checkedAt,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error updating lastCheckedAt:", error);
     throw error;
   }
 }

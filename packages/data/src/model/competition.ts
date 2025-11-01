@@ -91,13 +91,16 @@ export const MostWinsPlayerCriteriaSchema = z.object({
 
 export type MostWinsPlayerCriteria = z.infer<typeof MostWinsPlayerCriteriaSchema>;
 
+export const ChampionIdSchema = z.number().int().positive().brand("ChampionId");
+export type ChampionId = z.infer<typeof ChampionIdSchema>;
+
 /**
  * Criteria: Most wins with a specific champion
  * Queue is optional - if not specified, counts wins across all queues
  */
 export const MostWinsChampionCriteriaSchema = z.object({
   type: z.literal("MOST_WINS_CHAMPION"),
-  championId: z.number().int().positive(),
+  championId: ChampionIdSchema,
   queue: CompetitionQueueTypeSchema.optional(),
 });
 
@@ -341,8 +344,8 @@ export type WinsSnapshotData = z.infer<typeof WinsSnapshotDataSchema>;
 export const WinsSnapshotDataSchema = z.object({
   wins: z.number().int().nonnegative(),
   games: z.number().int().nonnegative(),
-  championId: z.number().int().positive(),
-  queue: CompetitionQueueTypeSchema,
+  championId: ChampionIdSchema.optional(),
+  queue: CompetitionQueueTypeSchema.optional(),
 });
 
 // ============================================================================
@@ -370,12 +373,18 @@ export function getSnapshotSchemaForCriteria(
 // Cached Leaderboard Schema
 // ============================================================================
 
+export const PlayerIdSchema = z.number().int().positive().brand("PlayerId");
+export type PlayerId = z.infer<typeof PlayerIdSchema>;
+
+export const AccountIdSchema = z.number().int().positive().brand("AccountId");
+export type AccountId = z.infer<typeof AccountIdSchema>;
+
 /**
  * Leaderboard entry stored in cache
  * Supports both numeric scores and Rank objects
  */
 export const CachedLeaderboardEntrySchema = z.object({
-  playerId: z.number().int().positive(),
+  playerId: PlayerIdSchema,
   playerName: z.string(),
   score: z.union([z.number(), RankSchema]),
   metadata: z.record(z.string(), z.unknown()).optional(),
@@ -404,7 +413,7 @@ export type CachedLeaderboardEntry = z.infer<typeof CachedLeaderboardEntrySchema
  */
 export const CachedLeaderboardSchema = z.object({
   version: z.literal("v1"),
-  competitionId: z.number().int().positive(),
+  competitionId: CompetitionIdSchema,
   calculatedAt: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Invalid ISO 8601 datetime",
   }), // ISO 8601 timestamp

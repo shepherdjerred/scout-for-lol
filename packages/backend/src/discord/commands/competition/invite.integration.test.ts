@@ -18,6 +18,7 @@ execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`, {
   cwd: join(import.meta.dir, "../../../.."),
   env: { ...process.env, DATABASE_URL: testDbUrl },
 });
+import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 const prisma = new PrismaClient({
   datasources: {
@@ -77,7 +78,7 @@ async function createTestCompetition(
   const input: CreateCompetitionInput = {
     serverId,
     ownerId,
-    channelId: "123456789012345678",
+    channelId: DiscordChannelIdSchema.parse("123456789012345678"),
     title: "Test Competition",
     description: "A test competition",
     visibility: options?.visibility ?? "OPEN",

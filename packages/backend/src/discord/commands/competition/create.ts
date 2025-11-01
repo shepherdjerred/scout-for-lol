@@ -1,6 +1,7 @@
 import { type ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
 import {
+  ChampionIdSchema,
   type CompetitionCriteria,
   CompetitionQueueTypeSchema,
   CompetitionVisibilitySchema,
@@ -287,7 +288,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
 
     criteria = {
       type: "MOST_WINS_CHAMPION",
-      championId,
+      championId: ChampionIdSchema.parse(championId),
       queue: args.queue,
     };
   } else {

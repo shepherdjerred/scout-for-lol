@@ -280,6 +280,102 @@ export const cronJobLastSuccess = new Gauge({
 });
 
 // =======================
+// Usage & Growth Metrics
+// =======================
+
+/**
+ * Total number of players tracked across all servers
+ */
+export const playersTrackedTotal = new Gauge({
+  name: "players_tracked_total",
+  help: "Total number of players tracked across all servers",
+  registers: [registry],
+});
+
+/**
+ * Total number of League accounts tracked across all servers
+ */
+export const accountsTrackedTotal = new Gauge({
+  name: "accounts_tracked_total",
+  help: "Total number of League accounts tracked across all servers",
+  registers: [registry],
+});
+
+/**
+ * Number of active competitions (not cancelled)
+ */
+export const competitionsActiveTotal = new Gauge({
+  name: "competitions_active_total",
+  help: "Number of active competitions (not cancelled)",
+  registers: [registry],
+});
+
+/**
+ * Total number of competitions ever created
+ */
+export const competitionsTotalCreated = new Gauge({
+  name: "competitions_total_created",
+  help: "Total number of competitions ever created",
+  registers: [registry],
+});
+
+/**
+ * Total number of subscriptions across all servers
+ */
+export const subscriptionsTotal = new Gauge({
+  name: "subscriptions_total",
+  help: "Total number of active subscriptions across all servers",
+  registers: [registry],
+});
+
+/**
+ * Number of unique servers with data (have at least one player)
+ */
+export const serversWithDataTotal = new Gauge({
+  name: "servers_with_data_total",
+  help: "Number of unique servers that have at least one player tracked",
+  registers: [registry],
+});
+
+/**
+ * Number of accounts per region
+ */
+export const accountsByRegion = new Gauge({
+  name: "accounts_by_region",
+  help: "Number of accounts tracked per region",
+  labelNames: ["region"] as const,
+  registers: [registry],
+});
+
+/**
+ * Number of competition participants (total enrollments)
+ */
+export const competitionParticipantsTotal = new Gauge({
+  name: "competition_participants_total",
+  help: "Total number of competition participants across all competitions",
+  labelNames: ["status"] as const,
+  registers: [registry],
+});
+
+/**
+ * Average players per server
+ */
+export const avgPlayersPerServer = new Gauge({
+  name: "avg_players_per_server",
+  help: "Average number of players per server",
+  registers: [registry],
+});
+
+/**
+ * Average accounts per player
+ */
+export const avgAccountsPerPlayer = new Gauge({
+  name: "avg_accounts_per_player",
+  help: "Average number of accounts per player",
+  registers: [registry],
+});
+
+// =======================
 // Application Metrics
 // =======================
 
@@ -320,10 +416,18 @@ setInterval(() => {
 
 console.log("✅ Prometheus metrics initialized successfully");
 
+// Import and initialize usage metrics collection
+// This must be after all metric definitions to avoid circular dependencies
+export { updateUsageMetrics } from "./usage.js";
+import "./usage.js";
+
 /**
  * Get all metrics as Prometheus-formatted text
  */
 export async function getMetrics(): Promise<string> {
+  // Dynamic import to avoid circular dependency issues
+  const { updateUsageMetrics } = await import("./usage.js");
   updateUptimeMetric();
+  await updateUsageMetrics();
   return await registry.metrics();
 }
