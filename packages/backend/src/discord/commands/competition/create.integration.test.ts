@@ -12,7 +12,7 @@ import {
 import { clearAllRateLimits } from "../../../database/competition/rate-limit.js";
 import { validateOwnerLimit, validateServerLimit } from "../../../database/competition/validation.js";
 import { ErrorSchema } from "../../../utils/errors.js";
-import { ChampionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { ChampionIdSchema, CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "create-command-test-"));
@@ -282,7 +282,7 @@ describe("Competition defaults", () => {
 
 describe("Permission and limit integration", () => {
   test("second competition by same owner fails (owner limit)", async () => {
-    const ownerId = "999888777666555444";
+    const ownerId = DiscordAccountIdSchema.parse("999888777666555444");
     const now = new Date();
 
     // Create first competition
@@ -304,7 +304,7 @@ describe("Permission and limit integration", () => {
 
     let error: unknown = null;
     try {
-      await validateOwnerLimit(prisma, "123456789012345678", ownerId);
+      await validateOwnerLimit(prisma, DiscordGuildIdSchema.parse("123456789012345678"), ownerId);
     } catch (e) {
       error = e;
     }
@@ -318,14 +318,14 @@ describe("Permission and limit integration", () => {
   });
 
   test("third competition on server fails (server limit)", async () => {
-    const serverId = "123456789012345678";
+    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
     const now = new Date();
 
     // Create 2 competitions (server limit)
     for (let i = 0; i < 2; i++) {
       await createCompetition(prisma, {
         serverId,
-        ownerId: (100000000000000000 + i).toString(),
+        ownerId: DiscordAccountIdSchema.parse((100000000000000000 + i).toString()),
         channelId: DiscordChannelIdSchema.parse("111222333444555666"),
         title: `Competition ${i.toString()}`,
         description: "Test",
@@ -491,7 +491,7 @@ describe("Data integrity", () => {
 
 describe("Metadata tracking", () => {
   test("tracks creatorDiscordId", async () => {
-    const ownerId = "987654321098765432";
+    const ownerId = DiscordAccountIdSchema.parse("987654321098765432");
 
     const competition = await createCompetition(prisma, {
       serverId: DiscordGuildIdSchema.parse("123456789012345678"),

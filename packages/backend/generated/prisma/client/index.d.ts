@@ -1,4 +1,4 @@
-import { AccountId, CompetitionId, DiscordAccountId, DiscordChannelId, DiscordGuildId, ParticipantId, PlayerId } from "@scout-for-lol/data";
+import { AccountId, CompetitionId, DiscordAccountId, DiscordChannelId, DiscordGuildId, LeaguePuuid, ParticipantId, PlayerId, Region } from "@scout-for-lol/data";
 /**
  * Client
 **/
@@ -4254,8 +4254,8 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
           id: AccountId
           alias: string
-          puuid: string
-          region: string
+          puuid: LeaguePuuid
+          region: Region
           playerId: PlayerId
           lastProcessedMatchId: string | null
           lastMatchTime: Date | null
@@ -11172,8 +11172,8 @@ export namespace Prisma {
     NOT?: AccountWhereInput | AccountWhereInput[]
     id?: IntFilter<"Account"> | AccountId
     alias?: StringFilter<"Account"> | string
-    puuid?: StringFilter<"Account"> | string
-    region?: StringFilter<"Account"> | string
+    puuid?: StringFilter<"Account"> | LeaguePuuid
+    region?: StringFilter<"Account"> | Region
     playerId?: IntFilter<"Account"> | PlayerId
     lastProcessedMatchId?: StringNullableFilter<"Account"> | string | null
     lastMatchTime?: DateTimeNullableFilter<"Account"> | Date | string | null
@@ -11822,8 +11822,8 @@ export namespace Prisma {
 
   export type AccountCreateInput = {
     alias: string
-    puuid: string
-    region: string
+    puuid: LeaguePuuid
+    region: Region
     lastProcessedMatchId?: string | null
     lastMatchTime?: Date | string | null
     lastCheckedAt?: Date | string | null
@@ -11837,8 +11837,8 @@ export namespace Prisma {
   export type AccountUncheckedCreateInput = {
     id?: AccountId
     alias: string
-    puuid: string
-    region: string
+    puuid: LeaguePuuid
+    region: Region
     playerId: PlayerId
     lastProcessedMatchId?: string | null
     lastMatchTime?: Date | string | null
@@ -11851,8 +11851,8 @@ export namespace Prisma {
 
   export type AccountUpdateInput = {
     alias?: StringFieldUpdateOperationsInput | string
-    puuid?: StringFieldUpdateOperationsInput | string
-    region?: StringFieldUpdateOperationsInput | string
+    puuid?: StringFieldUpdateOperationsInput | LeaguePuuid
+    region?: StringFieldUpdateOperationsInput | Region
     lastProcessedMatchId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMatchTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     lastCheckedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -11866,8 +11866,8 @@ export namespace Prisma {
   export type AccountUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | AccountId
     alias?: StringFieldUpdateOperationsInput | string
-    puuid?: StringFieldUpdateOperationsInput | string
-    region?: StringFieldUpdateOperationsInput | string
+    puuid?: StringFieldUpdateOperationsInput | LeaguePuuid
+    region?: StringFieldUpdateOperationsInput | Region
     playerId?: IntFieldUpdateOperationsInput | PlayerId
     lastProcessedMatchId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMatchTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -11881,8 +11881,8 @@ export namespace Prisma {
   export type AccountCreateManyInput = {
     id?: AccountId
     alias: string
-    puuid: string
-    region: string
+    puuid: LeaguePuuid
+    region: Region
     playerId: PlayerId
     lastProcessedMatchId?: string | null
     lastMatchTime?: Date | string | null
@@ -11909,8 +11909,8 @@ export namespace Prisma {
   export type AccountUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
     alias?: StringFieldUpdateOperationsInput | string
-    puuid?: StringFieldUpdateOperationsInput | string
-    region?: StringFieldUpdateOperationsInput | string
+    puuid?: StringFieldUpdateOperationsInput | LeaguePuuid
+    region?: StringFieldUpdateOperationsInput | Region
     playerId?: IntFieldUpdateOperationsInput | PlayerId
     lastProcessedMatchId?: NullableStringFieldUpdateOperationsInput | string | null
     lastMatchTime?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -13720,8 +13720,8 @@ export namespace Prisma {
     NOT?: AccountScalarWhereInput | AccountScalarWhereInput[]
     id?: IntFilter<"Account"> | number
     alias?: StringFilter<"Account"> | string
-    puuid?: StringFilter<"Account"> | string
-    region?: StringFilter<"Account"> | string
+    puuid?: StringFilter<"Account"> | LeaguePuuid
+    region?: StringFilter<"Account"> | Region
     playerId?: IntFilter<"Account"> | PlayerId
     lastProcessedMatchId?: StringNullableFilter<"Account"> | string | null
     lastMatchTime?: DateTimeNullableFilter<"Account"> | Date | string | null

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { CompetitionIdSchema, PlayerIdSchema, type CachedLeaderboard } from "@scout-for-lol/data";
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema, PlayerIdSchema, type CachedLeaderboard } from "@scout-for-lol/data";
 import { EmbedBuilder } from "discord.js";
 
 /**

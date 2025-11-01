@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createCompetition } from "../../../database/competition/queries.js";
 import { addParticipant } from "../../../database/competition/participants.js";
-import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "add-all-members-test-"));
@@ -40,8 +40,8 @@ beforeEach(async () => {
 
 describe("Add all members to competition", () => {
   test("successfully adds all server players to competition", async () => {
-    const serverId = "test-server-123";
-    const ownerId = "owner-discord-id";
+    const serverId = DiscordGuildIdSchema.parse("test-server-123");
+    const ownerId = DiscordAccountIdSchema.parse("owner-discord-id");
 
     const now = new Date();
     const startDate = new Date(now.getTime() + 1000 * 60 * 60); // 1 hour from now
@@ -51,7 +51,7 @@ describe("Add all members to competition", () => {
     const competition = await createCompetition(prisma, {
       serverId,
       ownerId,
-      channelId: "channel-123",
+      channelId: DiscordChannelIdSchema.parse("channel-123"),
       title: "Server-wide Competition",
       description: "Everyone is automatically joined!",
       visibility: "SERVER_WIDE",
@@ -73,7 +73,7 @@ describe("Add all members to competition", () => {
         data: {
           alias: "Player1",
           discordId: DiscordAccountIdSchema.parse("discord-1"),
-          serverId,
+          serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
           updatedTime: new Date(),
@@ -83,7 +83,7 @@ describe("Add all members to competition", () => {
         data: {
           alias: "Player2",
           discordId: DiscordAccountIdSchema.parse("discord-2"),
-          serverId,
+          serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
           updatedTime: new Date(),
@@ -93,7 +93,7 @@ describe("Add all members to competition", () => {
         data: {
           alias: "Player3",
           discordId: DiscordAccountIdSchema.parse("discord-3"),
-          serverId,
+          serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
           updatedTime: new Date(),
@@ -103,7 +103,7 @@ describe("Add all members to competition", () => {
         data: {
           alias: "Player4",
           discordId: DiscordAccountIdSchema.parse("discord-4"),
-          serverId,
+          serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
           updatedTime: new Date(),
@@ -113,7 +113,7 @@ describe("Add all members to competition", () => {
         data: {
           alias: "Player5",
           discordId: DiscordAccountIdSchema.parse("discord-5"),
-          serverId,
+          serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
           updatedTime: new Date(),
@@ -143,8 +143,8 @@ describe("Add all members to competition", () => {
   });
 
   test("handles partial failures when some players already joined", async () => {
-    const serverId = "test-server-456";
-    const ownerId = "owner-discord-id";
+    const serverId = DiscordGuildIdSchema.parse("test-server-456");
+    const ownerId = DiscordAccountIdSchema.parse("owner-discord-id");
 
     const now = new Date();
     const startDate = new Date(now.getTime() + 1000 * 60 * 60); // 1 hour from now
@@ -153,7 +153,7 @@ describe("Add all members to competition", () => {
     const competition = await createCompetition(prisma, {
       serverId,
       ownerId,
-      channelId: "channel-456",
+      channelId: DiscordChannelIdSchema.parse("channel-456"),
       title: "Partial Join Test",
       description: "Some players already joined",
       visibility: "OPEN",
@@ -175,7 +175,7 @@ describe("Add all members to competition", () => {
         data: {
           alias: "PlayerA",
           discordId: DiscordAccountIdSchema.parse("discord-a"),
-          serverId,
+          serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
           updatedTime: new Date(),
@@ -185,7 +185,7 @@ describe("Add all members to competition", () => {
         data: {
           alias: "PlayerB",
           discordId: DiscordAccountIdSchema.parse("discord-b"),
-          serverId,
+          serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
           updatedTime: new Date(),
@@ -195,7 +195,7 @@ describe("Add all members to competition", () => {
         data: {
           alias: "PlayerC",
           discordId: DiscordAccountIdSchema.parse("discord-c"),
-          serverId,
+          serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
           updatedTime: new Date(),
@@ -231,8 +231,8 @@ describe("Add all members to competition", () => {
   });
 
   test("adds all players when using Promise.allSettled (concurrent)", async () => {
-    const serverId = "test-server-789";
-    const ownerId = "owner-discord-id";
+    const serverId = DiscordGuildIdSchema.parse("test-server-789");
+    const ownerId = DiscordAccountIdSchema.parse("owner-discord-id");
 
     const now = new Date();
     const startDate = new Date(now.getTime() + 1000 * 60 * 60); // 1 hour from now
@@ -242,7 +242,7 @@ describe("Add all members to competition", () => {
     const competition = await createCompetition(prisma, {
       serverId,
       ownerId,
-      channelId: "channel-789",
+      channelId: DiscordChannelIdSchema.parse("channel-789"),
       title: "Limited Competition",
       description: "Only 3 spots available",
       visibility: "OPEN",
@@ -264,7 +264,7 @@ describe("Add all members to competition", () => {
         data: {
           alias: "Player1",
           discordId: DiscordAccountIdSchema.parse("discord-1"),
-          serverId,
+          serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
           updatedTime: new Date(),
@@ -274,7 +274,7 @@ describe("Add all members to competition", () => {
         data: {
           alias: "Player2",
           discordId: DiscordAccountIdSchema.parse("discord-2"),
-          serverId,
+          serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
           updatedTime: new Date(),
@@ -284,7 +284,7 @@ describe("Add all members to competition", () => {
         data: {
           alias: "Player3",
           discordId: DiscordAccountIdSchema.parse("discord-3"),
-          serverId,
+          serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
           updatedTime: new Date(),
@@ -294,7 +294,7 @@ describe("Add all members to competition", () => {
         data: {
           alias: "Player4",
           discordId: DiscordAccountIdSchema.parse("discord-4"),
-          serverId,
+          serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
           updatedTime: new Date(),
@@ -304,7 +304,7 @@ describe("Add all members to competition", () => {
         data: {
           alias: "Player5",
           discordId: DiscordAccountIdSchema.parse("discord-5"),
-          serverId,
+          serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
           updatedTime: new Date(),
@@ -339,8 +339,8 @@ describe("Add all members to competition", () => {
   });
 
   test("handles empty server (no players to add)", async () => {
-    const serverId = "empty-server-999";
-    const ownerId = "owner-discord-id";
+    const serverId = DiscordGuildIdSchema.parse("empty-server-999");
+    const ownerId = DiscordAccountIdSchema.parse("owner-discord-id");
 
     const now = new Date();
     const startDate = new Date(now.getTime() + 1000 * 60 * 60); // 1 hour from now
@@ -349,7 +349,7 @@ describe("Add all members to competition", () => {
     const competition = await createCompetition(prisma, {
       serverId,
       ownerId,
-      channelId: "channel-999",
+      channelId: DiscordChannelIdSchema.parse("channel-999"),
       title: "Empty Server Competition",
       description: "No players in this server",
       visibility: "SERVER_WIDE",
@@ -368,7 +368,7 @@ describe("Add all members to competition", () => {
     // Fetch all players (should be empty)
     const players = await prisma.player.findMany({
       where: {
-        serverId,
+        serverId: DiscordGuildIdSchema.parse(serverId),
       },
     });
 

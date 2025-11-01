@@ -11,7 +11,7 @@ import { validateOwnerLimit, validateServerLimit } from "./competition/validatio
 import { canCreateCompetition, grantPermission } from "./competition/permissions.js";
 import { clearAllRateLimits } from "./competition/rate-limit.js";
 import type { CompetitionId, DiscordAccountId, DiscordGuildId, PlayerId } from "@scout-for-lol/data";
-import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 
 // ============================================================================
 // Test Database Setup
@@ -467,7 +467,7 @@ describe("Competition Limits - Server limit", () => {
 describe("Permission Enforcement - Create competition", () => {
   test("admin can create competition without grant", async () => {
     const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const userId = "user-123";
+    const userId = DiscordAccountIdSchema.parse("user-123");
     const adminPermissions = new PermissionsBitField([PermissionFlagsBits.Administrator]);
 
     const result = await canCreateCompetition(prisma, serverId, userId, adminPermissions);
@@ -478,11 +478,11 @@ describe("Permission Enforcement - Create competition", () => {
 
   test("user with CREATE_COMPETITION grant can create competition", async () => {
     const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const userId = "user-123";
+    const userId = DiscordAccountIdSchema.parse("user-123");
     const normalPermissions = new PermissionsBitField([PermissionFlagsBits.SendMessages]);
 
     // Grant permission
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", "admin-456");
+    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", DiscordAccountIdSchema.parse("admin-456"));
 
     const result = await canCreateCompetition(prisma, serverId, userId, normalPermissions);
 
@@ -491,7 +491,7 @@ describe("Permission Enforcement - Create competition", () => {
 
   test("user without grant cannot create competition", async () => {
     const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const userId = "user-123";
+    const userId = DiscordAccountIdSchema.parse("user-123");
     const normalPermissions = new PermissionsBitField([PermissionFlagsBits.SendMessages]);
 
     const result = await canCreateCompetition(prisma, serverId, userId, normalPermissions);
@@ -503,11 +503,11 @@ describe("Permission Enforcement - Create competition", () => {
   test("permission grant is server-specific", async () => {
     const server1 = DiscordGuildIdSchema.parse("111111111111111111");
     const server2 = DiscordGuildIdSchema.parse("222222222222222222");
-    const userId = "user-123";
+    const userId = DiscordAccountIdSchema.parse("user-123");
     const normalPermissions = new PermissionsBitField([PermissionFlagsBits.SendMessages]);
 
     // Grant on server1
-    await grantPermission(prisma, server1, userId, "CREATE_COMPETITION", "admin-456");
+    await grantPermission(prisma, server1, userId, "CREATE_COMPETITION", DiscordAccountIdSchema.parse("admin-456"));
 
     // Can create on server1
     const result1 = await canCreateCompetition(prisma, server1, userId, normalPermissions);

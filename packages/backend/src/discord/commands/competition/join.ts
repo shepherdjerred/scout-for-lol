@@ -1,5 +1,5 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
-import { getCompetitionStatus } from "@scout-for-lol/data";
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, getCompetitionStatus } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { getCompetitionById } from "../../../database/competition/queries.js";
 import { addParticipant, acceptInvitation, getParticipantStatus } from "../../../database/competition/participants.js";
@@ -15,9 +15,9 @@ export async function executeCompetitionJoin(interaction: ChatInputCommandIntera
   // Step 1: Extract and validate input
   // ============================================================================
 
-  const competitionId = interaction.options.getInteger("competition-id", true);
-  const userId = interaction.user.id;
-  const serverId = interaction.guildId;
+  const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
+  const serverId = interaction.guildId ? DiscordGuildIdSchema.parse(interaction.guildId) : null;
 
   if (!serverId) {
     await interaction.reply({

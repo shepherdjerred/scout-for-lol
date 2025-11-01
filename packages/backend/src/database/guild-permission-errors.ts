@@ -1,3 +1,4 @@
+import { type DiscordChannelId, type DiscordGuildId } from "@scout-for-lol/data";
 import type { PrismaClient } from "../../generated/prisma/client/index.js";
 
 /**
@@ -6,8 +7,8 @@ import type { PrismaClient } from "../../generated/prisma/client/index.js";
  */
 export async function recordPermissionError(
   prisma: PrismaClient,
-  serverId: string,
-  channelId: string,
+  serverId: DiscordGuildId,
+  channelId: DiscordChannelId,
   errorType: string,
   errorReason?: string,
 ): Promise<void> {
@@ -58,7 +59,11 @@ export async function recordPermissionError(
 /**
  * Record a successful message send - resets error count
  */
-export async function recordSuccessfulSend(prisma: PrismaClient, serverId: string, channelId: string): Promise<void> {
+export async function recordSuccessfulSend(
+  prisma: PrismaClient,
+  serverId: DiscordGuildId,
+  channelId: DiscordChannelId,
+): Promise<void> {
   const now = new Date();
 
   // Check if there's an existing error record
@@ -109,7 +114,7 @@ export async function recordSuccessfulSend(prisma: PrismaClient, serverId: strin
 export async function getAbandonedGuilds(
   prisma: PrismaClient,
   minDays = 7,
-): Promise<{ serverId: string; firstOccurrence: Date; lastOccurrence: Date; errorCount: number }[]> {
+): Promise<{ serverId: DiscordGuildId; firstOccurrence: Date; lastOccurrence: Date; errorCount: number }[]> {
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - minDays);
 
@@ -140,8 +145,10 @@ export async function getAbandonedGuilds(
   });
 
   // Group by serverId and aggregate
-  const guilds: Record<string, { serverId: string; firstOccurrence: Date; lastOccurrence: Date; errorCount: number }> =
-    {};
+  const guilds: Record<
+    string,
+    { serverId: DiscordGuildId; firstOccurrence: Date; lastOccurrence: Date; errorCount: number }
+  > = {};
 
   for (const error of errors) {
     const existing = guilds[error.serverId];
@@ -170,7 +177,7 @@ export async function getAbandonedGuilds(
 /**
  * Mark a guild as having been notified about abandonment
  */
-export async function markGuildAsNotified(prisma: PrismaClient, serverId: string): Promise<void> {
+export async function markGuildAsNotified(prisma: PrismaClient, serverId: DiscordGuildId): Promise<void> {
   await prisma.guildPermissionError.updateMany({
     where: {
       serverId,

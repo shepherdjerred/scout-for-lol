@@ -12,7 +12,7 @@ import {
   getCompetitionById,
   getCompetitionsByServer,
 } from "./queries.js";
-import { ChampionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { ChampionIdSchema, CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "competition-queries-test-"));
@@ -184,7 +184,7 @@ describe("getCompetitionsByServer", () => {
       });
     }
 
-    const competitions = await getCompetitionsByServer(prisma, "123456789012345678");
+    const competitions = await getCompetitionsByServer(prisma, DiscordGuildIdSchema.parse("123456789012345678"));
     expect(competitions).toHaveLength(3);
   });
 
@@ -225,7 +225,9 @@ describe("getCompetitionsByServer", () => {
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
-    const activeOnly = await getCompetitionsByServer(prisma, "123456789012345678", { activeOnly: true });
+    const activeOnly = await getCompetitionsByServer(prisma, DiscordGuildIdSchema.parse("123456789012345678"), {
+      activeOnly: true,
+    });
 
     expect(activeOnly).toHaveLength(1);
     expect(activeOnly[0]?.title).toBe("Active");
@@ -257,7 +259,9 @@ describe("getCompetitionsByServer", () => {
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
-    const owner1Comps = await getCompetitionsByServer(prisma, "123456789012345678", { ownerId: DiscordAccountIdSchema.parse("111111111111111111") });
+    const owner1Comps = await getCompetitionsByServer(prisma, DiscordGuildIdSchema.parse("123456789012345678"), {
+      ownerId: DiscordAccountIdSchema.parse("111111111111111111"),
+    });
 
     expect(owner1Comps).toHaveLength(1);
     expect(owner1Comps[0]?.title).toBe("Owner 1 Competition");
@@ -274,7 +278,7 @@ describe("getActiveCompetitions", () => {
 
     for (let i = 0; i < 3; i++) {
       await createCompetition(prisma, {
-        serverId: (100000000000000000 + i).toString(),
+        serverId: DiscordGuildIdSchema.parse((100000000000000000 + i).toString()),
         ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
         channelId: DiscordChannelIdSchema.parse("111222333444555666"),
         title: `Server ${i.toString()}`,

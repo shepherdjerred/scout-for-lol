@@ -27,6 +27,7 @@ import {
   participantStatusToString,
   visibilityToString,
 } from "./competition.js";
+import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "./discord.js";
 import type { Competition } from "../../../backend/generated/prisma/client/index.js";
 
 describe("CompetitionId branded type", () => {
@@ -203,19 +204,19 @@ describe("getCompetitionStatus - CANCELLED", () => {
       startDate: new Date("2025-06-01"),
       endDate: new Date("2025-07-01"),
       seasonId: null,
-      id: 1,
+      id: CompetitionIdSchema.parse(1),
       updatedTime: new Date(),
       createdTime: new Date(),
-      creatorDiscordId: "1234567890",
+      creatorDiscordId: DiscordAccountIdSchema.parse("1234567890"),
       visibility: "OPEN",
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,
-      serverId: "1234567890",
-      ownerId: "1234567890",
+      serverId: DiscordGuildIdSchema.parse("1234567890"),
+      ownerId: DiscordAccountIdSchema.parse("1234567890"),
       title: "Test Competition",
       description: "Test Description",
-      channelId: "1234567890",
+      channelId: DiscordChannelIdSchema.parse("1234567890"),
     };
     expect(getCompetitionStatus(competition)).toBe("CANCELLED");
   });
@@ -226,19 +227,19 @@ describe("getCompetitionStatus - CANCELLED", () => {
       startDate: new Date("2024-01-01"),
       endDate: new Date("2024-02-01"),
       seasonId: null,
-      id: 1,
+      id: CompetitionIdSchema.parse(1),
       updatedTime: new Date(),
       createdTime: new Date(),
-      creatorDiscordId: "1234567890",
+      creatorDiscordId: DiscordAccountIdSchema.parse("1234567890"),
       visibility: "OPEN",
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,
-      serverId: "1234567890",
-      ownerId: "1234567890",
+      serverId: DiscordGuildIdSchema.parse("1234567890"),
+      ownerId: DiscordAccountIdSchema.parse("1234567890"),
       title: "Test Competition",
       description: "Test Description",
-      channelId: "1234567890",
+      channelId: DiscordChannelIdSchema.parse("1234567890"),
     };
     expect(getCompetitionStatus(competition)).toBe("CANCELLED");
   });
@@ -250,19 +251,19 @@ describe("getCompetitionStatus - CANCELLED", () => {
       startDate: new Date(now.getTime() - 86400000), // Yesterday
       endDate: new Date(now.getTime() + 86400000), // Tomorrow
       seasonId: null,
-      id: 1,
+      id: CompetitionIdSchema.parse(1),
       updatedTime: new Date(),
       createdTime: new Date(),
-      creatorDiscordId: "1234567890",
+      creatorDiscordId: DiscordAccountIdSchema.parse("1234567890"),
       visibility: "OPEN",
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,
-      serverId: "1234567890",
-      ownerId: "1234567890",
+      serverId: DiscordGuildIdSchema.parse("1234567890"),
+      ownerId: DiscordAccountIdSchema.parse("1234567890"),
       title: "Test Competition",
       description: "Test Description",
-      channelId: "1234567890",
+      channelId: DiscordChannelIdSchema.parse("1234567890"),
     };
     expect(getCompetitionStatus(competition)).toBe("CANCELLED");
   });
@@ -273,19 +274,19 @@ describe("getCompetitionStatus - CANCELLED", () => {
       startDate: null,
       endDate: null,
       seasonId: "2025-season-1",
-      id: 1,
+      id: CompetitionIdSchema.parse(1),
       updatedTime: new Date(),
       createdTime: new Date(),
-      creatorDiscordId: "1234567890",
+      creatorDiscordId: DiscordAccountIdSchema.parse("1234567890"),
       visibility: "OPEN",
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,
-      serverId: "1234567890",
-      ownerId: "1234567890",
+      serverId: DiscordGuildIdSchema.parse("1234567890"),
+      ownerId: DiscordAccountIdSchema.parse("1234567890"),
       title: "Test Competition",
       description: "Test Description",
-      channelId: "1234567890",
+      channelId: DiscordChannelIdSchema.parse("1234567890"),
     };
     expect(getCompetitionStatus(competition)).toBe("CANCELLED");
   });
@@ -299,19 +300,19 @@ describe("getCompetitionStatus - DRAFT", () => {
       startDate: new Date(now.getTime() + 86400000), // Tomorrow
       endDate: new Date(now.getTime() + 86400000 * 7), // Next week
       seasonId: null,
-      id: 1,
+      id: CompetitionIdSchema.parse(1),
       updatedTime: new Date(),
       createdTime: new Date(),
-      creatorDiscordId: "1234567890",
+      creatorDiscordId: DiscordAccountIdSchema.parse("1234567890"),
       visibility: "OPEN",
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,
-      serverId: "1234567890",
-      ownerId: "1234567890",
+      serverId: DiscordGuildIdSchema.parse("1234567890"),
+      ownerId: DiscordAccountIdSchema.parse("1234567890"),
       title: "Test Competition",
       description: "Test Description",
-      channelId: "1234567890",
+      channelId: DiscordChannelIdSchema.parse("1234567890"),
     };
     expect(getCompetitionStatus(competition)).toBe("DRAFT");
   });
@@ -321,20 +322,20 @@ describe("getCompetitionStatus - DRAFT", () => {
       isCancelled: false,
       startDate: null,
       endDate: null,
-      id: 1,
+      id: CompetitionIdSchema.parse(1),
       updatedTime: new Date(),
       createdTime: new Date(),
-      creatorDiscordId: "1234567890",
+      creatorDiscordId: DiscordAccountIdSchema.parse("1234567890"),
       visibility: "OPEN",
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,
       seasonId: "2025-season-1",
-      serverId: "1234567890",
-      ownerId: "1234567890",
+      serverId: DiscordGuildIdSchema.parse("1234567890"),
+      ownerId: DiscordAccountIdSchema.parse("1234567890"),
       title: "Test Competition",
       description: "Test Description",
-      channelId: "1234567890",
+      channelId: DiscordChannelIdSchema.parse("1234567890"),
     };
     expect(getCompetitionStatus(competition)).toBe("DRAFT");
   });
@@ -346,19 +347,19 @@ describe("getCompetitionStatus - DRAFT", () => {
       startDate: new Date(now.getTime() + 1000), // 1 second in future
       endDate: new Date(now.getTime() + 86400000),
       seasonId: null,
-      id: 1,
+      id: CompetitionIdSchema.parse(1),
       updatedTime: new Date(),
       createdTime: new Date(),
-      creatorDiscordId: "1234567890",
+      creatorDiscordId: DiscordAccountIdSchema.parse("1234567890"),
       visibility: "OPEN",
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,
-      serverId: "123467890",
-      ownerId: "1234567890",
+      serverId: DiscordGuildIdSchema.parse("123467890"),
+      ownerId: DiscordAccountIdSchema.parse("1234567890"),
       title: "Test Competition",
       description: "Test Description",
-      channelId: "1234567890",
+      channelId: DiscordChannelIdSchema.parse("1234567890"),
     };
     expect(getCompetitionStatus(competition)).toBe("DRAFT");
   });
@@ -372,19 +373,19 @@ describe("getCompetitionStatus - ACTIVE", () => {
       startDate: new Date(now.getTime() - 86400000), // Yesterday
       endDate: new Date(now.getTime() + 86400000), // Tomorrow
       seasonId: null,
-      id: 1,
+      id: CompetitionIdSchema.parse(1),
       updatedTime: new Date(),
       createdTime: new Date(),
-      creatorDiscordId: "1234567890",
+      creatorDiscordId: DiscordAccountIdSchema.parse("1234567890"),
       visibility: "OPEN",
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,
-      serverId: "1234567890",
-      ownerId: "1234567890",
+      serverId: DiscordGuildIdSchema.parse("1234567890"),
+      ownerId: DiscordAccountIdSchema.parse("1234567890"),
       title: "Test Competition",
       description: "Test Description",
-      channelId: "1234567890",
+      channelId: DiscordChannelIdSchema.parse("1234567890"),
     };
     expect(getCompetitionStatus(competition)).toBe("ACTIVE");
   });
@@ -396,19 +397,19 @@ describe("getCompetitionStatus - ACTIVE", () => {
       startDate: new Date(now.getTime() - 1000), // 1 second ago
       endDate: new Date(now.getTime() + 86400000),
       seasonId: null,
-      id: 1,
+      id: CompetitionIdSchema.parse(1),
       updatedTime: new Date(),
       createdTime: new Date(),
-      creatorDiscordId: "1234567890",
+      creatorDiscordId: DiscordAccountIdSchema.parse("1234567890"),
       visibility: "OPEN",
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,
-      serverId: "1234567890",
-      ownerId: "1234567890",
+      serverId: DiscordGuildIdSchema.parse("1234567890"),
+      ownerId: DiscordAccountIdSchema.parse("1234567890"),
       title: "Test Competition",
       description: "Test Description",
-      channelId: "1234567890",
+      channelId: DiscordChannelIdSchema.parse("1234567890"),
     };
     expect(getCompetitionStatus(competition)).toBe("ACTIVE");
   });
@@ -422,19 +423,19 @@ describe("getCompetitionStatus - ENDED", () => {
       startDate: new Date(now.getTime() - 86400000 * 7), // Last week
       endDate: new Date(now.getTime() - 86400000), // Yesterday
       seasonId: null,
-      id: 1,
+      id: CompetitionIdSchema.parse(1),
       updatedTime: new Date(),
       createdTime: new Date(),
-      creatorDiscordId: "1234567890",
+      creatorDiscordId: DiscordAccountIdSchema.parse("1234567890"),
       visibility: "OPEN",
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,
-      serverId: "1234567890",
-      ownerId: "1234567890",
+      serverId: DiscordGuildIdSchema.parse("1234567890"),
+      ownerId: DiscordAccountIdSchema.parse("1234567890"),
       title: "Test Competition",
       description: "Test Description",
-      channelId: "1234567890",
+      channelId: DiscordChannelIdSchema.parse("1234567890"),
     };
     expect(getCompetitionStatus(competition)).toBe("ENDED");
   });
@@ -446,19 +447,19 @@ describe("getCompetitionStatus - ENDED", () => {
       startDate: new Date(now.getTime() - 86400000 * 7),
       endDate: new Date(now.getTime() - 1000), // 1 second ago
       seasonId: null,
-      id: 1,
+      id: CompetitionIdSchema.parse(1),
       updatedTime: new Date(),
       createdTime: new Date(),
-      creatorDiscordId: "1234567890",
+      creatorDiscordId: DiscordAccountIdSchema.parse("1234567890"),
       visibility: "OPEN",
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,
-      serverId: "1234567890",
-      ownerId: "1234567890",
+      serverId: DiscordGuildIdSchema.parse("1234567890"),
+      ownerId: DiscordAccountIdSchema.parse("1234567890"),
       title: "Test Competition",
       description: "Test Description",
-      channelId: "1234567890",
+      channelId: DiscordChannelIdSchema.parse("1234567890"),
     };
     expect(getCompetitionStatus(competition)).toBe("ENDED");
   });
@@ -470,19 +471,19 @@ describe("getCompetitionStatus - ENDED", () => {
       startDate: new Date(now.getTime() - 86400000),
       endDate: now,
       seasonId: null,
-      id: 1,
+      id: CompetitionIdSchema.parse(1),
       updatedTime: new Date(),
       createdTime: new Date(),
-      creatorDiscordId: "1234567890",
+      creatorDiscordId: DiscordAccountIdSchema.parse("1234567890"),
       visibility: "OPEN",
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,
-      serverId: "1234567890",
-      ownerId: "1234567890",
+      serverId: DiscordGuildIdSchema.parse("1234567890"),
+      ownerId: DiscordAccountIdSchema.parse("1234567890"),
       title: "Test Competition",
       description: "Test Description",
-      channelId: "1234567890",
+      channelId: DiscordChannelIdSchema.parse("1234567890"),
     };
     expect(getCompetitionStatus(competition)).toBe("ENDED");
   });
@@ -495,19 +496,19 @@ describe("getCompetitionStatus - Error cases", () => {
       startDate: null,
       endDate: null,
       seasonId: null,
-      id: 1,
+      id: CompetitionIdSchema.parse(1),
       updatedTime: new Date(),
       createdTime: new Date(),
-      creatorDiscordId: "1234567890",
+      creatorDiscordId: DiscordAccountIdSchema.parse("1234567890"),
       visibility: "OPEN",
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,
-      serverId: "1234567890",
-      ownerId: "1234567890",
+      serverId: DiscordGuildIdSchema.parse("1234567890"),
+      ownerId: DiscordAccountIdSchema.parse("1234567890"),
       title: "Test Competition",
       description: "Test Description",
-      channelId: "1234567890",
+      channelId: DiscordChannelIdSchema.parse("1234567890"),
     };
     expect(() => getCompetitionStatus(competition)).toThrow(
       "Competition must have either (startDate AND endDate) OR seasonId",
@@ -520,19 +521,19 @@ describe("getCompetitionStatus - Error cases", () => {
       startDate: null,
       endDate: null,
       seasonId: null,
-      id: 1,
+      id: CompetitionIdSchema.parse(1),
       updatedTime: new Date(),
       createdTime: new Date(),
-      creatorDiscordId: "1234567890",
+      creatorDiscordId: DiscordAccountIdSchema.parse("1234567890"),
       visibility: "OPEN",
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,
-      serverId: "1234567890",
-      ownerId: "1234567890",
+      serverId: DiscordGuildIdSchema.parse("1234567890"),
+      ownerId: DiscordAccountIdSchema.parse("1234567890"),
       title: "Test Competition",
       description: "Test Description",
-      channelId: "1234567890",
+      channelId: DiscordChannelIdSchema.parse("1234567890"),
     };
     try {
       getCompetitionStatus(competition);
@@ -1457,12 +1458,12 @@ describe("getSnapshotSchemaForCriteria", () => {
 
 describe("parseCompetition", () => {
   const baseRawCompetition: Competition = {
-    id: 42,
-    serverId: "123456789012345678",
-    ownerId: "987654321098765432",
+    id: CompetitionIdSchema.parse(42),
+    serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+    ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
     title: "Test Competition",
     description: "A test competition",
-    channelId: "111222333444555666",
+    channelId: DiscordChannelIdSchema.parse("111222333444555666"),
     isCancelled: false,
     visibility: "OPEN",
     criteriaType: "MOST_GAMES_PLAYED",
@@ -1471,7 +1472,7 @@ describe("parseCompetition", () => {
     startDate: new Date("2025-01-01"),
     endDate: new Date("2025-01-31"),
     seasonId: null,
-    creatorDiscordId: "987654321098765432",
+    creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
     createdTime: new Date("2024-12-01"),
     updatedTime: new Date("2024-12-01"),
   };
@@ -1485,7 +1486,7 @@ describe("parseCompetition", () => {
 
     const parsed = parseCompetition(raw);
 
-    expect(parsed.id).toBe(42);
+    expect(parsed.id).toBe(CompetitionIdSchema.parse(42));
     expect(parsed.title).toBe("Test Competition");
     expect(parsed.criteria).toEqual({
       type: "MOST_GAMES_PLAYED",

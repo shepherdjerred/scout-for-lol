@@ -8,7 +8,7 @@ import {
   type MessageActionRowComponentBuilder,
   type ButtonInteraction,
 } from "discord.js";
-import { getCompetitionStatus } from "@scout-for-lol/data";
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, getCompetitionStatus } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
 import { prisma } from "../../../database/index.js";
 import { getCompetitionsByServer } from "../../../database/competition/queries.js";
@@ -33,7 +33,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
     return;
   }
 
-  const serverId = interaction.guildId;
+  const serverId = interaction.guildId ? DiscordGuildIdSchema.parse(interaction.guildId) : null;
 
   // ============================================================================
   // Step 2: Parse options

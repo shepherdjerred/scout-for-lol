@@ -1,6 +1,6 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, PlayerIdSchema } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { fromError } from "zod-validation-error";
 import { getErrorMessage } from "../../../utils/errors.js";
@@ -13,7 +13,7 @@ const ArgsSchema = z.object({
 
 export async function executePlayerMerge(interaction: ChatInputCommandInteraction) {
   const startTime = Date.now();
-  const userId = interaction.user.id;
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
   console.log(`🔀 Starting player merge for user ${username} (${userId})`);
@@ -141,8 +141,8 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
       if (uniqueSourceChannels.length > 0) {
         await tx.subscription.createMany({
           data: uniqueSourceChannels.map((channelId) => ({
-            playerId: targetPlayer.id,
-            channelId: channelId,
+            playerId: PlayerIdSchema.parse(targetPlayer.id),
+            channelId: DiscordChannelIdSchema.parse(channelId),
             serverId: guildId,
             creatorDiscordId: userId,
             createdTime: now,

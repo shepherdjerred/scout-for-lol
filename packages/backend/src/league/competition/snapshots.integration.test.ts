@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { createSnapshot, getSnapshot, createSnapshotsForAllParticipants } from "./snapshots.js";
 import { createCompetition, type CreateCompetitionInput } from "../../database/competition/queries.js";
 import { addParticipant } from "../../database/competition/participants.js";
-import { ChampionIdSchema, CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, PlayerIdSchema, type CompetitionCriteria } from "@scout-for-lol/data";
+import { ChampionIdSchema, CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema, PlayerIdSchema, type CompetitionCriteria } from "@scout-for-lol/data";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "snapshots-test-"));

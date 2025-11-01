@@ -69,7 +69,7 @@ export function handleCommands(client: Client) {
 
       const startTime = Date.now();
       const commandName = interaction.commandName;
-      const userId = interaction.user.id;
+      const userId = DiscordAccountIdSchema.parse(interaction.user.id);
       const username = interaction.user.username;
       const guildId = interaction.guildId;
       const channelId = interaction.channelId;

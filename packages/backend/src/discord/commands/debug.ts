@@ -2,6 +2,12 @@ import { type ChatInputCommandInteraction, SlashCommandBuilder, AttachmentBuilde
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { formatDistanceToNow } from "date-fns";
+import {
+  CompetitionIdSchema,
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
 import configuration from "../../configuration";
 import { getState } from "../../league/model/state";
 import { getAccountsWithState } from "../../database/index.js";
@@ -37,7 +43,7 @@ export async function executeDebugState(interaction: ChatInputCommandInteraction
 
 export async function executeDebugDatabase(interaction: ChatInputCommandInteraction) {
   console.log("🐛 Executing debug database command");
-  const userId = interaction.user.id;
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
   // Check if user is the bot owner

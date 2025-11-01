@@ -1,5 +1,5 @@
 import { type ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from "discord.js";
-import { getCompetitionStatus } from "@scout-for-lol/data";
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, getCompetitionStatus } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
 import { z } from "zod";
 import { prisma } from "../../../database/index.js";
@@ -25,7 +25,7 @@ export async function executeCompetitionView(interaction: ChatInputCommandIntera
   // Step 1: Extract and validate input
   // ============================================================================
 
-  const competitionId = interaction.options.getInteger("competition-id", true);
+  const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
 
   // ============================================================================
   // Step 2: Fetch competition

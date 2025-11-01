@@ -5,7 +5,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createCompetition, type CreateCompetitionInput } from "../../../database/competition/queries.js";
-import type { CompetitionCriteria } from "@scout-for-lol/data";
+import type { CompetitionCriteria, CompetitionId, DiscordChannelId, DiscordGuildId } from "@scout-for-lol/data";
 import { z } from "zod";
 
 // Schema for Discord message content validation
@@ -62,7 +62,7 @@ void mock.module("../../../database/index.js", () => ({
 
 // Now import daily-update after mocks are set up
 const { runDailyLeaderboardUpdate } = await import("./daily-update.js");
-import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 
 // Test helpers
 async function createTestCompetition(
@@ -70,14 +70,14 @@ async function createTestCompetition(
   startDate: Date,
   endDate: Date,
   options?: {
-    serverId?: string;
-    channelId?: string;
+    serverId?: DiscordGuildId;
+    channelId?: DiscordChannelId;
     title?: string;
   },
-): Promise<{ competitionId: number; channelId: string }> {
-  const channelId = options?.channelId ?? `channel-${Date.now().toString()}`;
+): Promise<{ competitionId: CompetitionId; channelId: DiscordChannelId }> {
+  const channelId = options?.channelId ?? DiscordChannelIdSchema.parse(`channel-${Date.now().toString()}`);
   const input: CreateCompetitionInput = {
-    serverId: options?.serverId ?? "123456789012345678",
+    serverId: options?.serverId ?? DiscordGuildIdSchema.parse("123456789012345678"),
     ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
     channelId,
     title: options?.title ?? "Test Competition",
@@ -221,8 +221,8 @@ describe("Daily Leaderboard Update", () => {
     const comps = [];
     for (let i = 0; i < 3; i++) {
       const { competitionId, channelId } = await createTestCompetition(criteria, startDate, endDate, {
-        serverId: (100000000000000000 + i).toString(),
-        channelId: `channel-${i.toString()}`,
+        serverId: DiscordGuildIdSchema.parse((100000000000000000 + i).toString()),
+        channelId: DiscordChannelIdSchema.parse(`channel-${i.toString()}`),
         title: `Competition ${i.toString()}`,
       });
 
@@ -338,7 +338,7 @@ describe("Daily Leaderboard Update", () => {
 
     // Create first competition with invalid channel (will fail to send)
     const { competitionId: comp1Id } = await createTestCompetition(criteria, startDate, endDate, {
-      channelId: "invalid-channel-id",
+      channelId: DiscordChannelIdSchema.parse("invalid-channel-id"),
       title: "Competition 1",
     });
     const { playerId: player1Id } = await createTestPlayer(
@@ -355,7 +355,7 @@ describe("Daily Leaderboard Update", () => {
       startDate,
       endDate,
       {
-        channelId: "valid-channel-id",
+        channelId: DiscordChannelIdSchema.parse("valid-channel-id"),
         title: "Competition 2",
       },
     );
@@ -441,7 +441,7 @@ describe("Daily Leaderboard Update", () => {
     // Create 3 active competitions
     for (let i = 0; i < 3; i++) {
       const { competitionId } = await createTestCompetition(criteria, startDate, endDate, {
-        channelId: `channel-${i.toString()}`,
+        channelId: DiscordChannelIdSchema.parse(`channel-${i.toString()}`),
         title: `Competition ${i.toString()}`,
       });
 

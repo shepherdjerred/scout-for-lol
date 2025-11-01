@@ -4,7 +4,7 @@ import { PrismaClient } from "../../../generated/prisma/client/index.js";
 import { calculateLeaderboard } from "./leaderboard.js";
 import { createCompetition } from "../../database/competition/queries.js";
 import { addParticipant } from "../../database/competition/participants.js";
-import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, PlayerIdSchema, parseCompetition, type Rank } from "@scout-for-lol/data";
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema, PlayerIdSchema, parseCompetition, type Rank } from "@scout-for-lol/data";
 import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -153,7 +153,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: "puuid-1",
+              puuid: LeaguePuuidSchema.parse("puuid-1"),
               alias: "Player1",
               region: "na1",
               serverId: "test-server",
@@ -177,7 +177,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: "puuid-2",
+              puuid: LeaguePuuidSchema.parse("puuid-2"),
               alias: "Player2",
               region: "na1",
               serverId: "test-server",
@@ -248,7 +248,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: "puuid-1",
+              puuid: LeaguePuuidSchema.parse("puuid-1"),
               alias: "Player1",
               region: "na1",
               serverId: "test-server",
@@ -272,7 +272,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: "puuid-2",
+              puuid: LeaguePuuidSchema.parse("puuid-2"),
               alias: "Player2",
               region: "na1",
               serverId: "test-server",
@@ -376,7 +376,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: "puuid-3",
+              puuid: LeaguePuuidSchema.parse("puuid-3"),
               alias: "Player3",
               region: "na1",
               serverId: "test-server",
@@ -400,7 +400,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: "puuid-4",
+              puuid: LeaguePuuidSchema.parse("puuid-4"),
               alias: "Player4",
               region: "na1",
               serverId: "test-server",
@@ -527,7 +527,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: "puuid-1",
+              puuid: LeaguePuuidSchema.parse("puuid-1"),
               alias: "Player1",
               region: "na1",
               serverId: "test-server",
@@ -551,7 +551,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: "puuid-2",
+              puuid: LeaguePuuidSchema.parse("puuid-2"),
               alias: "Player2",
               region: "na1",
               serverId: "test-server",
@@ -673,7 +673,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: "puuid-1",
+              puuid: LeaguePuuidSchema.parse("puuid-1"),
               alias: "Player1",
               region: "na1",
               serverId: "test-server",
@@ -697,7 +697,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: "puuid-2",
+              puuid: LeaguePuuidSchema.parse("puuid-2"),
               alias: "Player2",
               region: "na1",
               serverId: "test-server",
@@ -721,7 +721,7 @@ describe("calculateLeaderboard integration tests", () => {
         accounts: {
           create: [
             {
-              puuid: "puuid-3",
+              puuid: LeaguePuuidSchema.parse("puuid-3"),
               alias: "Player3",
               region: "na1",
               serverId: "test-server",

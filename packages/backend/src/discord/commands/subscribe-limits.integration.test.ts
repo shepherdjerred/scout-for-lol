@@ -8,6 +8,7 @@ import {
   DEFAULT_ACCOUNT_LIMIT,
   UNLIMITED_SUBSCRIPTION_SERVERS,
 } from "../../configuration/subscription-limits";
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 
 // Create test database in temp directory
 const tempDir = fs.mkdtempSync(path.join("/tmp", "subscribe-limits-test-"));
@@ -68,7 +69,7 @@ describe("Subscribe Command - Subscription Limits", () => {
                 create: {
                   alias: alias,
                   puuid: puuid,
-                  region: "NA1",
+                  region: "AMERICA_NORTH",
                   serverId: serverId,
                   creatorDiscordId: discordUserId,
                   createdTime: now,
@@ -121,7 +122,7 @@ describe("Subscribe Command - Subscription Limits", () => {
                 create: {
                   alias: `SubscribedPlayer${i.toString()}`,
                   puuid: `puuid-subscribed-${i.toString()}`,
-                  region: "NA1",
+                  region: "AMERICA_NORTH",
                   serverId: serverId,
                   creatorDiscordId: discordUserId,
                   createdTime: now,
@@ -148,7 +149,7 @@ describe("Subscribe Command - Subscription Limits", () => {
             create: {
               alias: `UnsubscribedPlayer${i.toString()}`,
               puuid: `puuid-unsubscribed-${i.toString()}`,
-              region: "NA1",
+              region: "AMERICA_NORTH",
               serverId: serverId,
               creatorDiscordId: discordUserId,
               createdTime: now,
@@ -208,7 +209,7 @@ describe("Subscribe Command - Subscription Limits", () => {
                 create: {
                   alias: `Player${i.toString()}`,
                   puuid: `puuid-${i.toString()}`,
-                  region: "NA1",
+                  region: "AMERICA_NORTH",
                   serverId: serverId,
                   creatorDiscordId: discordUserId,
                   createdTime: now,
@@ -239,8 +240,8 @@ describe("Subscribe Command - Subscription Limits", () => {
     const secondAccount = await testPrisma.account.create({
       data: {
         alias: "Player0", // Same alias
-        puuid: "puuid-player0-euw",
-        region: "EUW1",
+        puuid: LeaguePuuidSchema.parse("puuid-player0-euw"),
+        region: "EU_WEST",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         playerId: existingPlayer.id,
@@ -296,7 +297,7 @@ describe("Subscribe Command - Subscription Limits", () => {
                   create: {
                     alias: `Player${i.toString()}`,
                     puuid: `puuid-${i.toString()}`,
-                    region: "NA1",
+                    region: "AMERICA_NORTH",
                     serverId: serverId,
                     creatorDiscordId: discordUserId,
                     createdTime: now,
@@ -354,7 +355,7 @@ describe("Subscribe Command - Subscription Limits", () => {
                 create: {
                   alias: `Server1Player${i.toString()}`,
                   puuid: `puuid-s1-${i.toString()}`,
-                  region: "NA1",
+                  region: "AMERICA_NORTH",
                   serverId: server1Id,
                   creatorDiscordId: discordUserId,
                   createdTime: now,
@@ -388,7 +389,7 @@ describe("Subscribe Command - Subscription Limits", () => {
                 create: {
                   alias: `Server2Player${i.toString()}`,
                   puuid: `puuid-s2-${i.toString()}`,
-                  region: "NA1",
+                  region: "AMERICA_NORTH",
                   serverId: server2Id,
                   creatorDiscordId: discordUserId,
                   createdTime: now,
@@ -446,7 +447,7 @@ describe("Subscribe Command - Subscription Limits", () => {
             create: {
               alias: alias,
               puuid: puuid,
-              region: "NA1",
+              region: "AMERICA_NORTH",
               serverId: serverId,
               creatorDiscordId: discordUserId,
               createdTime: now,
@@ -494,7 +495,7 @@ describe("Subscribe Command - Subscription Limits", () => {
                 create: {
                   alias: `SubscribedPlayer${i.toString()}`,
                   puuid: `puuid-subscribed-${i.toString()}`,
-                  region: "NA1",
+                  region: "AMERICA_NORTH",
                   serverId: serverId,
                   creatorDiscordId: discordUserId,
                   createdTime: now,
@@ -521,7 +522,7 @@ describe("Subscribe Command - Subscription Limits", () => {
             create: {
               alias: `UnsubscribedPlayer${i.toString()}`,
               puuid: `puuid-unsubscribed-${i.toString()}`,
-              region: "NA1",
+              region: "AMERICA_NORTH",
               serverId: serverId,
               creatorDiscordId: discordUserId,
               createdTime: now,
@@ -574,7 +575,7 @@ describe("Subscribe Command - Subscription Limits", () => {
             create: {
               alias: `Server1Account${i.toString()}`,
               puuid: `puuid-s1-${i.toString()}`,
-              region: "NA1",
+              region: "AMERICA_NORTH",
               serverId: server1Id,
               creatorDiscordId: discordUserId,
               createdTime: now,
@@ -599,7 +600,7 @@ describe("Subscribe Command - Subscription Limits", () => {
             create: {
               alias: `Server2Account${i.toString()}`,
               puuid: `puuid-s2-${i.toString()}`,
-              region: "NA1",
+              region: "AMERICA_NORTH",
               serverId: server2Id,
               creatorDiscordId: discordUserId,
               createdTime: now,
@@ -651,7 +652,7 @@ describe("Subscribe Command - Subscription Limits", () => {
               create: {
                 alias: `Account${i.toString()}`,
                 puuid: `puuid-${i.toString()}`,
-                region: "NA1",
+                region: "AMERICA_NORTH",
                 serverId: serverId,
                 creatorDiscordId: discordUserId,
                 createdTime: now,

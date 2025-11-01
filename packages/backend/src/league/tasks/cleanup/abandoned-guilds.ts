@@ -8,6 +8,7 @@ import {
   abandonmentNotificationsTotal,
   guildDataCleanupTotal,
 } from "../../../metrics/index.js";
+import type { DiscordGuildId } from "@scout-for-lol/data";
 
 /**
  * Check for abandoned guilds and handle cleanup
@@ -63,7 +64,7 @@ export async function checkAbandonedGuilds(client: Client): Promise<void> {
  */
 async function handleAbandonedGuild(
   client: Client,
-  guildInfo: { serverId: string; firstOccurrence: Date; lastOccurrence: Date; errorCount: number },
+  guildInfo: { serverId: DiscordGuildId; firstOccurrence: Date; lastOccurrence: Date; errorCount: number },
 ): Promise<void> {
   const { serverId, firstOccurrence, errorCount } = guildInfo;
 

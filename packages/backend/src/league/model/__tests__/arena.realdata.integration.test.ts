@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { ArenaMatchSchema, LeaguePuuidSchema, type Player } from "@scout-for-lol/data";
+import { ArenaMatchSchema, CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema, type Player } from "@scout-for-lol/data";
 import { toArenaMatch } from "../match.js";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";

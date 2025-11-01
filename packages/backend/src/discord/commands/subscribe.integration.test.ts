@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
 import { PrismaClient } from "../../../generated/prisma/client";
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 
 // Create test database in temp directory
 const tempDir = fs.mkdtempSync(path.join("/tmp", "subscribe-test-"));
@@ -43,8 +44,8 @@ describe("Subscribe Command - Multi-Account Support", () => {
     const account = await testPrisma.account.create({
       data: {
         alias: alias,
-        puuid: "puuid-1",
-        region: "NA1",
+        puuid: LeaguePuuidSchema.parse("puuid-1"),
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -81,7 +82,7 @@ describe("Subscribe Command - Multi-Account Support", () => {
     // Verify account was created with correct player link
     expect(account.playerId).toBe(account.player.id);
     expect(account.puuid).toBe("puuid-1");
-    expect(account.region).toBe("NA1");
+    expect(account.region).toBe("AMERICA_NORTH");
   });
 
   test("adds second account to existing player with same alias", async () => {
@@ -94,8 +95,8 @@ describe("Subscribe Command - Multi-Account Support", () => {
     const firstAccount = await testPrisma.account.create({
       data: {
         alias: alias,
-        puuid: "puuid-na1",
-        region: "NA1",
+        puuid: LeaguePuuidSchema.parse("puuid-na1"),
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -130,8 +131,8 @@ describe("Subscribe Command - Multi-Account Support", () => {
     const secondAccount = await testPrisma.account.create({
       data: {
         alias: alias, // Same alias!
-        puuid: "puuid-euw",
-        region: "EUW1",
+        puuid: LeaguePuuidSchema.parse("puuid-euw"),
+        region: "EU_WEST",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -193,7 +194,7 @@ describe("Subscribe Command - Multi-Account Support", () => {
       data: {
         alias: alias,
         puuid: puuid,
-        region: "NA1",
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -226,7 +227,7 @@ describe("Subscribe Command - Multi-Account Support", () => {
         data: {
           alias: alias,
           puuid: puuid, // Same PUUID!
-          region: "NA1",
+          region: "AMERICA_NORTH",
           serverId: serverId, // Same server!
           creatorDiscordId: discordUserId,
           player: {
@@ -270,7 +271,7 @@ describe("Subscribe Command - Multi-Account Support", () => {
       data: {
         alias: alias,
         puuid: puuid,
-        region: "NA1",
+        region: "AMERICA_NORTH",
         serverId: "server-1",
         creatorDiscordId: discordUserId,
         player: {
@@ -301,7 +302,7 @@ describe("Subscribe Command - Multi-Account Support", () => {
       data: {
         alias: alias,
         puuid: puuid, // Same PUUID!
-        region: "NA1",
+        region: "AMERICA_NORTH",
         serverId: "server-2", // Different server!
         creatorDiscordId: discordUserId,
         player: {
@@ -344,8 +345,8 @@ describe("Subscribe Command - Multi-Account Support", () => {
     const account1 = await testPrisma.account.create({
       data: {
         alias: alias,
-        puuid: "puuid-1",
-        region: "NA1",
+        puuid: LeaguePuuidSchema.parse("puuid-1"),
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -367,8 +368,8 @@ describe("Subscribe Command - Multi-Account Support", () => {
     await testPrisma.account.create({
       data: {
         alias: alias,
-        puuid: "puuid-2",
-        region: "EUW1",
+        puuid: LeaguePuuidSchema.parse("puuid-2"),
+        region: "EU_WEST",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         playerId: account1.player.id, // Link to existing player
@@ -424,8 +425,8 @@ describe("Subscribe Command - Multi-Account Support", () => {
     const account1 = await testPrisma.account.create({
       data: {
         alias: "MainAccount",
-        puuid: "puuid-main",
-        region: "NA1",
+        puuid: LeaguePuuidSchema.parse("puuid-main"),
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -448,8 +449,8 @@ describe("Subscribe Command - Multi-Account Support", () => {
     const account2 = await testPrisma.account.create({
       data: {
         alias: "SmurfAccount",
-        puuid: "puuid-smurf",
-        region: "NA1",
+        puuid: LeaguePuuidSchema.parse("puuid-smurf"),
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -490,7 +491,7 @@ describe("Subscribe Command - Multi-Account Support", () => {
       data: {
         alias: alias,
         puuid: puuid,
-        region: "NA1",
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -539,8 +540,8 @@ describe("Subscribe Command - Multi-Account Support", () => {
     const account = await testPrisma.account.create({
       data: {
         alias: alias,
-        puuid: "puuid-subscribed",
-        region: "NA1",
+        puuid: LeaguePuuidSchema.parse("puuid-subscribed"),
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {

@@ -1,13 +1,6 @@
 import { type ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
-import {
-  ChampionIdSchema,
-  type CompetitionCriteria,
-  CompetitionQueueTypeSchema,
-  CompetitionVisibilitySchema,
-  SeasonIdSchema,
-  hasSeasonEnded,
-} from "@scout-for-lol/data";
+import { ChampionIdSchema, CompetitionIdSchema, CompetitionQueueTypeSchema, CompetitionVisibilitySchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, SeasonIdSchema, hasSeasonEnded, type CompetitionCriteria } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import { prisma } from "../../../database/index.js";
 import { canCreateCompetition } from "../../../database/competition/permissions.js";
@@ -29,9 +22,9 @@ import { formatCriteriaType, getStatusEmoji, formatDateInfo } from "./helpers.js
 const CommonArgsSchema = z.object({
   title: z.string().min(1).max(100),
   description: z.string().min(1).max(500),
-  channelId: z.string(),
-  guildId: z.string(),
-  userId: z.string(),
+  channelId: DiscordChannelIdSchema,
+  guildId: DiscordGuildIdSchema,
+  userId: DiscordAccountIdSchema,
   visibility: CompetitionVisibilitySchema.optional(),
   maxParticipants: z.number().int().min(2).max(100).optional(),
   addAllMembers: z.boolean().optional(),
@@ -149,7 +142,7 @@ type CreateCommandArgs = z.infer<typeof CreateCommandArgsSchema>;
  */
 export async function executeCompetitionCreate(interaction: ChatInputCommandInteraction): Promise<void> {
   const startTime = Date.now();
-  const userId = interaction.user.id;
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
   const guildId = interaction.guildId;
 
@@ -237,7 +230,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
       return;
     }
 
-    const permissionCheck = await canCreateCompetition(prisma, args.guildId, userId, member.permissions);
+    const permissionCheck = await canCreateCompetition(prisma, args.guildId, args.userId, member.permissions);
 
     if (!permissionCheck.allowed) {
       console.warn(`⚠️  Permission denied for ${username}: ${permissionCheck.reason ?? "unknown reason"}`);
@@ -332,25 +325,15 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
       };
     }
 
-    // Extract common fields using Zod schema (no type assertions!)
-    const CommonFieldsExtractSchema = z.object({
-      guildId: z.string(),
-      channelId: z.string(),
-      title: z.string(),
-      description: z.string(),
-      visibility: CompetitionVisibilitySchema.optional(),
-      maxParticipants: z.number().int().optional(),
-    });
-    const validatedCommon = CommonFieldsExtractSchema.parse(args);
-
+    // args is already validated and has branded types from CommonArgsSchema
     competitionInput = {
-      serverId: validatedCommon.guildId,
-      ownerId: userId,
-      channelId: validatedCommon.channelId,
-      title: validatedCommon.title,
-      description: validatedCommon.description,
-      visibility: validatedCommon.visibility ?? "OPEN",
-      maxParticipants: validatedCommon.maxParticipants ?? 50,
+      serverId: args.guildId,
+      ownerId: args.userId,
+      channelId: args.channelId,
+      title: args.title,
+      description: args.description,
+      visibility: args.visibility ?? "OPEN",
+      maxParticipants: args.maxParticipants ?? 50,
       dates,
       criteria,
     };
@@ -370,12 +353,11 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
   // ============================================================================
 
   try {
-    // Extract serverId using Zod schema (no type assertions!)
-    const ServerIdSchema = z.object({ guildId: z.string() });
-    const { guildId: serverId } = ServerIdSchema.parse(args);
+    // args.guildId and args.userId are already branded from the schema
+    const serverId = args.guildId;
 
     // Check owner limit (1 active competition per owner)
-    await validateOwnerLimit(prisma, serverId, userId);
+    await validateOwnerLimit(prisma, serverId, args.userId);
 
     // Check server limit (2 active competitions per server)
     await validateServerLimit(prisma, serverId);

@@ -1,13 +1,6 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { z } from "zod";
-import {
-  ChampionIdSchema,
-  type CompetitionCriteria,
-  CompetitionQueueTypeSchema,
-  CompetitionVisibilitySchema,
-  getCompetitionStatus,
-  SeasonIdSchema,
-} from "@scout-for-lol/data";
+import { ChampionIdSchema, CompetitionIdSchema, CompetitionQueueTypeSchema, CompetitionVisibilitySchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, SeasonIdSchema, getCompetitionStatus, type CompetitionCriteria } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import { prisma } from "../../../database/index.js";
 import {
@@ -27,10 +20,10 @@ import { getChampionId } from "../../../utils/champion.js";
  */
 const EditableAlwaysArgsSchema = z.object({
   competitionId: z.number().int().positive(),
-  userId: z.string(),
+  userId: DiscordAccountIdSchema,
   title: z.string().min(1).max(100).optional(),
   description: z.string().min(1).max(500).optional(),
-  channelId: z.string().optional(),
+  channelId: DiscordChannelIdSchema.optional(),
 });
 
 /**
@@ -147,7 +140,7 @@ type EditCommandArgs = z.infer<typeof EditCommandArgsBaseSchema> & {
  * Execute /competition edit command
  */
 export async function executeCompetitionEdit(interaction: ChatInputCommandInteraction): Promise<void> {
-  const userId = interaction.user.id;
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
   console.log(`📝 Starting competition edit for user ${username} (${userId})`);
@@ -156,7 +149,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
   // Step 1: Parse competition ID and fetch competition
   // ============================================================================
 
-  const competitionId = interaction.options.getInteger("competition-id", true);
+  const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
 
   let competition;
   try {

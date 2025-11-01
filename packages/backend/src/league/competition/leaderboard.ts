@@ -70,9 +70,9 @@ export async function fetchSnapshotData(
 
   console.log(`[Leaderboard] Fetching snapshot data for ${participants.length.toString()} participants`);
 
-  const startSnapshots: Record<LeaguePuuid, Ranks> = {};
-  const endSnapshots: Record<LeaguePuuid, Ranks> = {};
-  const currentRanks: Record<LeaguePuuid, Ranks> = {};
+  const startSnapshots: Record<string, Ranks> = {};
+  const endSnapshots: Record<string, Ranks> = {};
+  const currentRanks: Record<string, Ranks> = {};
 
   // Fetch snapshots in parallel
   await Promise.all(
@@ -113,7 +113,7 @@ export async function fetchSnapshotData(
           const data: Ranks = {};
           if (startSnapshot.solo) data.solo = startSnapshot.solo;
           if (startSnapshot.flex) data.flex = startSnapshot.flex;
-          startSnapshots[participant] = data;
+          startSnapshots[playerId.toString()] = data;
         }
 
         if (competitionStatus === "ENDED") {
@@ -123,7 +123,7 @@ export async function fetchSnapshotData(
             const data: Ranks = {};
             if (endSnapshot.solo) data.solo = endSnapshot.solo;
             if (endSnapshot.flex) data.flex = endSnapshot.flex;
-            endSnapshots[playerId] = data;
+            endSnapshots[playerId.toString()] = data;
           }
         } else {
           // For active competitions, fetch CURRENT rank from Riot API
@@ -131,7 +131,7 @@ export async function fetchSnapshotData(
           // Use the first account's ranks (or merge multiple accounts if needed)
           const firstAccountRanks = Object.values(currentRankData)[0];
           if (firstAccountRanks && (firstAccountRanks.solo ?? firstAccountRanks.flex)) {
-            endSnapshots[playerId] = firstAccountRanks;
+            endSnapshots[playerId.toString()] = firstAccountRanks;
           }
         }
       }
@@ -145,7 +145,7 @@ export async function fetchSnapshotData(
             const data: Ranks = {};
             if (endSnapshot.solo) data.solo = endSnapshot.solo;
             if (endSnapshot.flex) data.flex = endSnapshot.flex;
-            currentRanks[playerId] = data;
+            currentRanks[playerId.toString()] = data;
           }
         } else {
           // For active competitions, fetch CURRENT rank from Riot API
@@ -153,7 +153,7 @@ export async function fetchSnapshotData(
           // Use the first account's ranks (or merge multiple accounts if needed)
           const firstAccountRanks = Object.values(currentRankData)[0];
           if (firstAccountRanks && (firstAccountRanks.solo ?? firstAccountRanks.flex)) {
-            currentRanks[playerId] = firstAccountRanks;
+            currentRanks[playerId.toString()] = firstAccountRanks;
           }
         }
       }

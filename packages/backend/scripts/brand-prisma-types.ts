@@ -33,6 +33,8 @@ const BRAND_MAPPINGS = {
   ownerId: "DiscordAccountId",
   creatorDiscordId: "DiscordAccountId",
   invitedBy: "DiscordAccountId",
+  puuid: "LeaguePuuid",
+  region: "Region",
 } as const;
 
 // Types that need to be imported

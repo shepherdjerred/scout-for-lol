@@ -16,6 +16,7 @@ execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`, {
   cwd: join(import.meta.dir, "../../../.."),
   env: { ...process.env, DATABASE_URL: testDbUrl },
 });
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 
 const prisma = new PrismaClient({
   datasources: {
@@ -36,9 +37,9 @@ beforeEach(async () => {
 
 describe("Admin grants permission", () => {
   test("creates ServerPermission record with correct fields", async () => {
-    const serverId = "123456789012345678";
-    const adminId = "111111111111111111";
-    const userId = "222222222222222222";
+    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
+    const adminId = DiscordAccountIdSchema.parse("111111111111111111");
+    const userId = DiscordAccountIdSchema.parse("222222222222222222");
 
     await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", adminId);
 
@@ -64,9 +65,9 @@ describe("Admin grants permission", () => {
   });
 
   test("user can be verified to have permission", async () => {
-    const serverId = "123456789012345678";
-    const adminId = "111111111111111111";
-    const userId = "222222222222222222";
+    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
+    const adminId = DiscordAccountIdSchema.parse("111111111111111111");
+    const userId = DiscordAccountIdSchema.parse("222222222222222222");
 
     // Before granting
     const beforeGrant = await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION");
@@ -87,9 +88,9 @@ describe("Admin grants permission", () => {
 
 describe("Idempotent grants", () => {
   test("granting permission twice creates only one record", async () => {
-    const serverId = "123456789012345678";
-    const adminId = "111111111111111111";
-    const userId = "222222222222222222";
+    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
+    const adminId = DiscordAccountIdSchema.parse("111111111111111111");
+    const userId = DiscordAccountIdSchema.parse("222222222222222222");
 
     // First grant
     await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", adminId);
@@ -110,10 +111,10 @@ describe("Idempotent grants", () => {
   });
 
   test("granting permission twice updates grantedBy and grantedAt", async () => {
-    const serverId = "123456789012345678";
-    const admin1Id = "111111111111111111";
-    const admin2Id = "333333333333333333";
-    const userId = "222222222222222222";
+    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
+    const admin1Id = DiscordAccountIdSchema.parse("111111111111111111");
+    const admin2Id = DiscordAccountIdSchema.parse("333333333333333333");
+    const userId = DiscordAccountIdSchema.parse("222222222222222222");
 
     // First grant by admin1
     await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", admin1Id);
@@ -163,8 +164,8 @@ describe("Idempotent grants", () => {
 
 describe("Grant to self", () => {
   test("admin can grant permission to themselves", async () => {
-    const serverId = "123456789012345678";
-    const adminId = "111111111111111111";
+    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
+    const adminId = DiscordAccountIdSchema.parse("111111111111111111");
 
     await grantPermission(prisma, serverId, adminId, "CREATE_COMPETITION", adminId);
 
@@ -192,10 +193,10 @@ describe("Grant to self", () => {
 
 describe("Server-specific permissions", () => {
   test("permission granted on one server doesn't apply to another", async () => {
-    const server1Id = "123456789012345678";
-    const server2Id = "987654321098765432";
-    const adminId = "111111111111111111";
-    const userId = "222222222222222222";
+    const server1Id = DiscordGuildIdSchema.parse("123456789012345678");
+    const server2Id = DiscordGuildIdSchema.parse("987654321098765432");
+    const adminId = DiscordAccountIdSchema.parse("111111111111111111");
+    const userId = DiscordAccountIdSchema.parse("222222222222222222");
 
     // Grant on server 1
     await grantPermission(prisma, server1Id, userId, "CREATE_COMPETITION", adminId);
@@ -210,11 +211,11 @@ describe("Server-specific permissions", () => {
   });
 
   test("user can have permission on multiple servers independently", async () => {
-    const server1Id = "123456789012345678";
-    const server2Id = "987654321098765432";
-    const admin1Id = "111111111111111111";
-    const admin2Id = "333333333333333333";
-    const userId = "222222222222222222";
+    const server1Id = DiscordGuildIdSchema.parse("123456789012345678");
+    const server2Id = DiscordGuildIdSchema.parse("987654321098765432");
+    const admin1Id = DiscordAccountIdSchema.parse("111111111111111111");
+    const admin2Id = DiscordAccountIdSchema.parse("333333333333333333");
+    const userId = DiscordAccountIdSchema.parse("222222222222222222");
 
     // Grant on server 1
     await grantPermission(prisma, server1Id, userId, "CREATE_COMPETITION", admin1Id);
@@ -247,11 +248,11 @@ describe("Server-specific permissions", () => {
 
 describe("Multiple users", () => {
   test("can grant permission to multiple users on same server", async () => {
-    const serverId = "123456789012345678";
-    const adminId = "111111111111111111";
-    const user1Id = "222222222222222222";
-    const user2Id = "333333333333333333";
-    const user3Id = "444444444444444444";
+    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
+    const adminId = DiscordAccountIdSchema.parse("111111111111111111");
+    const user1Id = DiscordAccountIdSchema.parse("222222222222222222");
+    const user2Id = DiscordAccountIdSchema.parse("333333333333333333");
+    const user3Id = DiscordAccountIdSchema.parse("444444444444444444");
 
     await grantPermission(prisma, serverId, user1Id, "CREATE_COMPETITION", adminId);
     await grantPermission(prisma, serverId, user2Id, "CREATE_COMPETITION", adminId);

@@ -1,6 +1,6 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordGuildIdSchema, RegionSchema, RiotIdSchema } from "@scout-for-lol/data";
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, RegionSchema, RiotIdSchema } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { fromError } from "zod-validation-error";
 import { riotApi } from "../../../league/api/api.js";
@@ -16,7 +16,7 @@ const ArgsSchema = z.object({
 
 export async function executeAccountRemove(interaction: ChatInputCommandInteraction) {
   const startTime = Date.now();
-  const userId = interaction.user.id;
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
   console.log(`🗑️  Starting account removal for user ${username} (${userId})`);

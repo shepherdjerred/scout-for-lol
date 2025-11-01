@@ -1,6 +1,6 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordGuildIdSchema, RegionSchema, RiotIdSchema } from "@scout-for-lol/data";
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema, RegionSchema, RiotIdSchema } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { fromError } from "zod-validation-error";
 import { riotApi } from "../../../league/api/api.js";
@@ -17,7 +17,7 @@ const ArgsSchema = z.object({
 
 export async function executeAccountAdd(interaction: ChatInputCommandInteraction) {
   const startTime = Date.now();
-  const userId = interaction.user.id;
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
   console.log(`➕ Starting account addition for user ${username} (${userId})`);
@@ -125,11 +125,11 @@ export async function executeAccountAdd(interaction: ChatInputCommandInteraction
     await prisma.account.create({
       data: {
         alias: `${riotId.game_name}#${riotId.tag_line}`,
-        puuid: puuid,
+        puuid: LeaguePuuidSchema.parse(puuid),
         region: region,
         playerId: player.id,
         serverId: guildId,
-        creatorDiscordId: userId,
+        creatorDiscordId: DiscordAccountIdSchema.parse(userId),
         createdTime: now,
         updatedTime: now,
       },

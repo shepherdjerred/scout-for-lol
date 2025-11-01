@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { createCompetition, getCompetitionById } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 import { addParticipant } from "../../../database/competition/participants.js";
-import { ChampionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, getCompetitionStatus, type ChampionId } from "@scout-for-lol/data";
+import { ChampionIdSchema, CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema, getCompetitionStatus, type ChampionId } from "@scout-for-lol/data";
 
 // Create a test database for integration tests
 const testDir = mkdtempSync(join(tmpdir(), "competition-view-test-"));
@@ -124,7 +124,7 @@ async function createTestCompetition(
 describe("Competition View - DRAFT Status", () => {
   test("should show details for DRAFT competition with no participants", async () => {
     const serverId = "server-1";
-    const ownerId = "owner-1";
+    const ownerId = DiscordAccountIdSchema.parse("owner-1");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
@@ -146,7 +146,7 @@ describe("Competition View - DRAFT Status", () => {
 
   test("should show participant list for DRAFT competition with participants", async () => {
     const serverId = "server-1";
-    const ownerId = "owner-1";
+    const ownerId = DiscordAccountIdSchema.parse("owner-1");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId);
     const { playerId: player1Id } = await createTestPlayer(serverId, "user-1", "Player1");
@@ -176,7 +176,7 @@ describe("Competition View - DRAFT Status", () => {
 
   test("should indicate leaderboard not available for DRAFT competition", async () => {
     const serverId = "server-1";
-    const ownerId = "owner-1";
+    const ownerId = DiscordAccountIdSchema.parse("owner-1");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
@@ -202,7 +202,7 @@ describe("Competition View - DRAFT Status", () => {
 describe("Competition View - ACTIVE Status", () => {
   test("should show details for ACTIVE competition", async () => {
     const serverId = "server-1";
-    const ownerId = "owner-1";
+    const ownerId = DiscordAccountIdSchema.parse("owner-1");
 
     const now = new Date();
     const yesterday = new Date(now);
@@ -228,7 +228,7 @@ describe("Competition View - ACTIVE Status", () => {
 
   test("should handle ACTIVE competition with participants", async () => {
     const serverId = "server-1";
-    const ownerId = "owner-1";
+    const ownerId = DiscordAccountIdSchema.parse("owner-1");
 
     const now = new Date();
     const yesterday = new Date(now);
@@ -268,7 +268,7 @@ describe("Competition View - ACTIVE Status", () => {
 describe("Competition View - ENDED Status", () => {
   test("should show details for ENDED competition", async () => {
     const serverId = "server-1";
-    const ownerId = "owner-1";
+    const ownerId = DiscordAccountIdSchema.parse("owner-1");
 
     const now = new Date();
     const lastWeek = new Date(now);
@@ -294,7 +294,7 @@ describe("Competition View - ENDED Status", () => {
 
   test("should show final standings for ENDED competition", async () => {
     const serverId = "server-1";
-    const ownerId = "owner-1";
+    const ownerId = DiscordAccountIdSchema.parse("owner-1");
 
     const now = new Date();
     const twoWeeksAgo = new Date(now);
@@ -349,7 +349,7 @@ describe("Competition View - ENDED Status", () => {
 describe("Competition View - CANCELLED Status", () => {
   test("should show details for CANCELLED competition", async () => {
     const serverId = "server-1";
-    const ownerId = "owner-1";
+    const ownerId = DiscordAccountIdSchema.parse("owner-1");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       isCancelled: true,
@@ -387,7 +387,7 @@ describe("Competition View - Error Cases", () => {
 describe("Competition View - Different Criteria Types", () => {
   test("should show MOST_GAMES_PLAYED criteria", async () => {
     const serverId = "server-1";
-    const ownerId = "owner-1";
+    const ownerId = DiscordAccountIdSchema.parse("owner-1");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       criteriaType: "MOST_GAMES_PLAYED",
@@ -405,7 +405,7 @@ describe("Competition View - Different Criteria Types", () => {
 
   test("should show HIGHEST_RANK criteria", async () => {
     const serverId = "server-1";
-    const ownerId = "owner-1";
+    const ownerId = DiscordAccountIdSchema.parse("owner-1");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       criteriaType: "HIGHEST_RANK",
@@ -423,7 +423,7 @@ describe("Competition View - Different Criteria Types", () => {
 
   test("should show MOST_WINS_CHAMPION criteria with champion ID", async () => {
     const serverId = "server-1";
-    const ownerId = "owner-1";
+    const ownerId = DiscordAccountIdSchema.parse("owner-1");
     const championId = ChampionIdSchema.parse(157); // Yasuo
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, {

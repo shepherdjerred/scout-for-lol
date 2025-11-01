@@ -1,6 +1,6 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { fromError } from "zod-validation-error";
 import { getErrorMessage } from "../../../utils/errors.js";
@@ -13,7 +13,7 @@ const ArgsSchema = z.object({
 
 export async function executePlayerLinkDiscord(interaction: ChatInputCommandInteraction) {
   const startTime = Date.now();
-  const userId = interaction.user.id;
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
   console.log(`🔗 Starting Discord link for user ${username} (${userId})`);

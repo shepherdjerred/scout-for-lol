@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { ChampionIdSchema, PlayerIdSchema, type CompetitionWithCriteria } from "@scout-for-lol/data";
+import { ChampionIdSchema, CompetitionIdSchema, DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema, LeaguePuuidSchema, PlayerIdSchema, type CompetitionWithCriteria } from "@scout-for-lol/data";
 import type { RankedLeaderboardEntry } from "../../league/competition/leaderboard.js";
 import { generateLeaderboardEmbed, generateCompetitionDetailsEmbed, formatScore } from "./competition.js";
 
@@ -14,7 +14,7 @@ function createTestCompetition(overrides: Partial<CompetitionWithCriteria> = {})
   return {
     id: 1,
     serverId: "test-server-123",
-    ownerId: "owner-discord-id-123",
+    ownerId: DiscordAccountIdSchema.parse("owner-discord-id-123"),
     title: "Test Competition",
     description: "A test competition for unit tests",
     channelId: "test-channel-456",
@@ -24,7 +24,7 @@ function createTestCompetition(overrides: Partial<CompetitionWithCriteria> = {})
     startDate: new Date("2025-01-01T00:00:00Z"),
     endDate: new Date("2025-01-31T23:59:59Z"),
     seasonId: null,
-    creatorDiscordId: "creator-discord-id-789",
+    creatorDiscordId: DiscordAccountIdSchema.parse("creator-discord-id-789"),
     createdTime: new Date("2024-12-01T00:00:00Z"),
     updatedTime: new Date("2024-12-01T00:00:00Z"),
     criteria: {
@@ -218,7 +218,7 @@ describe("generateCompetitionDetailsEmbed", () => {
     const competition = createTestCompetition({
       title: "Test Competition",
       description: "Test description",
-      ownerId: "owner-123",
+      ownerId: DiscordAccountIdSchema.parse("owner-123"),
       channelId: "channel-456",
       maxParticipants: 25,
     });

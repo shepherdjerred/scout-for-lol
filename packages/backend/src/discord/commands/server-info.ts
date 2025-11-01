@@ -13,7 +13,7 @@ export async function executeServerInfo(interaction: ChatInputCommandInteraction
   await interaction.deferReply({ ephemeral: true });
 
   try {
-    const serverId = interaction.guildId;
+    const serverId = interaction.guildId ? DiscordGuildIdSchema.parse(interaction.guildId) : null;
 
     if (!serverId) {
       await interaction.editReply({
