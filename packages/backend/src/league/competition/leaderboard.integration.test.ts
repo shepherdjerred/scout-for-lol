@@ -18,6 +18,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 // ============================================================================
 // Test Setup
 // ============================================================================
@@ -28,9 +29,13 @@ const testDbPath = join(testDbDir, "test.db");
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database before tests run
-// Note: cwd needs to be the backend directory where prisma/schema.prisma is located
-execSync("bunx prisma db push --skip-generate", {
-  env: { ...process.env, DATABASE_URL: testDbUrl },
+execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
+  env: {
+    ...process.env,
+    DATABASE_URL: testDbUrl,
+    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+  },
   stdio: "inherit",
 });
 
@@ -91,9 +96,9 @@ describe("calculateLeaderboard integration tests", () => {
 
     const rawCompetition = await prisma.competition.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("test-server000000"),
-        ownerId: DiscordAccountIdSchema.parse("owner-10000000100"),
-        channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+        serverId: testGuildId("000000"),
+        ownerId: testAccountId("10000000100"),
+        channelId: testChannelId("1000000001"),
         title: "Test Competition",
         description: "Test",
         visibility: "OPEN",
@@ -104,7 +109,7 @@ describe("calculateLeaderboard integration tests", () => {
         startDate: futureDate,
         endDate: endDate,
         seasonId: null,
-        creatorDiscordId: DiscordAccountIdSchema.parse("owner-10000000100"),
+        creatorDiscordId: testAccountId("10000000100"),
         createdTime: new Date(),
         updatedTime: new Date(),
       },
@@ -124,9 +129,9 @@ describe("calculateLeaderboard integration tests", () => {
     // Create active competition with dates
     const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
-      serverId: DiscordGuildIdSchema.parse("test-server000000"),
-      ownerId: DiscordAccountIdSchema.parse("owner-10000000100"),
-      channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+      serverId: testGuildId("000000"),
+      ownerId: testAccountId("10000000100"),
+      channelId: testChannelId("1000000001"),
       title: "Test Competition",
       description: "Test",
       visibility: "OPEN",
@@ -152,10 +157,10 @@ describe("calculateLeaderboard integration tests", () => {
     // Create players
     const player1 = await prisma.player.create({
       data: {
-        discordId: DiscordAccountIdSchema.parse("discord-100000000"),
+        discordId: testAccountId("100000000"),
         alias: "Player1",
-        serverId: DiscordGuildIdSchema.parse("test-server000000"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("discord-100000000"),
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("100000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
@@ -164,8 +169,8 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-1"),
               alias: "Player1",
               region: "AMERICA_NORTH",
-              serverId: DiscordGuildIdSchema.parse("test-server000000"),
-              creatorDiscordId: DiscordAccountIdSchema.parse("discord-100000000"),
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("100000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -176,10 +181,10 @@ describe("calculateLeaderboard integration tests", () => {
 
     const player2 = await prisma.player.create({
       data: {
-        discordId: DiscordAccountIdSchema.parse("discord-200000000"),
+        discordId: testAccountId("200000000"),
         alias: "Player2",
-        serverId: DiscordGuildIdSchema.parse("test-server000000"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("discord-200000000"),
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("200000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
@@ -188,8 +193,8 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-2"),
               alias: "Player2",
               region: "AMERICA_NORTH",
-              serverId: DiscordGuildIdSchema.parse("test-server000000"),
-              creatorDiscordId: DiscordAccountIdSchema.parse("discord-200000000"),
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("200000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -206,9 +211,9 @@ describe("calculateLeaderboard integration tests", () => {
     endDate.setDate(endDate.getDate() + 30); // Ends in 30 days
 
     const competition = await createCompetition(prisma, {
-      serverId: DiscordGuildIdSchema.parse("test-server000000"),
-      ownerId: DiscordAccountIdSchema.parse("owner-10000000100"),
-      channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+      serverId: testGuildId("000000"),
+      ownerId: testAccountId("10000000100"),
+      channelId: testChannelId("1000000001"),
       title: "Test Competition",
       description: "Test",
       visibility: "OPEN",
@@ -247,10 +252,10 @@ describe("calculateLeaderboard integration tests", () => {
     // Create players
     const player1 = await prisma.player.create({
       data: {
-        discordId: DiscordAccountIdSchema.parse("discord-100000000"),
+        discordId: testAccountId("100000000"),
         alias: "Player1",
-        serverId: DiscordGuildIdSchema.parse("test-server000000"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("discord-100000000"),
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("100000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
@@ -259,8 +264,8 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-1"),
               alias: "Player1",
               region: "AMERICA_NORTH",
-              serverId: DiscordGuildIdSchema.parse("test-server000000"),
-              creatorDiscordId: DiscordAccountIdSchema.parse("discord-100000000"),
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("100000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -271,10 +276,10 @@ describe("calculateLeaderboard integration tests", () => {
 
     const player2 = await prisma.player.create({
       data: {
-        discordId: DiscordAccountIdSchema.parse("discord-200000000"),
+        discordId: testAccountId("200000000"),
         alias: "Player2",
-        serverId: DiscordGuildIdSchema.parse("test-server000000"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("discord-200000000"),
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("200000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
@@ -283,8 +288,8 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-2"),
               alias: "Player2",
               region: "AMERICA_NORTH",
-              serverId: DiscordGuildIdSchema.parse("test-server000000"),
-              creatorDiscordId: DiscordAccountIdSchema.parse("discord-200000000"),
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("200000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -296,9 +301,9 @@ describe("calculateLeaderboard integration tests", () => {
     // Create ACTIVE competition with HIGHEST_RANK criteria
     const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
-      serverId: DiscordGuildIdSchema.parse("test-server000000"),
-      ownerId: DiscordAccountIdSchema.parse("owner-10000000100"),
-      channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+      serverId: testGuildId("000000"),
+      ownerId: testAccountId("10000000100"),
+      channelId: testChannelId("1000000001"),
       title: "Rank Competition",
       description: "Test",
       visibility: "OPEN",
@@ -375,10 +380,10 @@ describe("calculateLeaderboard integration tests", () => {
     // Create players
     const player1 = await prisma.player.create({
       data: {
-        discordId: DiscordAccountIdSchema.parse("discord-300000000"),
+        discordId: testAccountId("300000000"),
         alias: "Player3",
-        serverId: DiscordGuildIdSchema.parse("test-server000000"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("discord-300000000"),
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("300000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
@@ -387,8 +392,8 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-3"),
               alias: "Player3",
               region: "AMERICA_NORTH",
-              serverId: DiscordGuildIdSchema.parse("test-server000000"),
-              creatorDiscordId: DiscordAccountIdSchema.parse("discord-300000000"),
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("300000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -399,10 +404,10 @@ describe("calculateLeaderboard integration tests", () => {
 
     const player2 = await prisma.player.create({
       data: {
-        discordId: DiscordAccountIdSchema.parse("discord-400000000"),
+        discordId: testAccountId("400000000"),
         alias: "Player4",
-        serverId: DiscordGuildIdSchema.parse("test-server000000"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("discord-400000000"),
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("400000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
@@ -411,8 +416,8 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-4"),
               alias: "Player4",
               region: "AMERICA_NORTH",
-              serverId: DiscordGuildIdSchema.parse("test-server000000"),
-              creatorDiscordId: DiscordAccountIdSchema.parse("discord-400000000"),
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("400000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -428,9 +433,9 @@ describe("calculateLeaderboard integration tests", () => {
     startDate.setDate(startDate.getDate() - 30); // Started 30 days ago
 
     const competition = await createCompetition(prisma, {
-      serverId: DiscordGuildIdSchema.parse("test-server000000"),
-      ownerId: DiscordAccountIdSchema.parse("owner-10000000100"),
-      channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+      serverId: testGuildId("000000"),
+      ownerId: testAccountId("10000000100"),
+      channelId: testChannelId("1000000001"),
       title: "Rank Competition",
       description: "Test",
       visibility: "OPEN",
@@ -526,10 +531,10 @@ describe("calculateLeaderboard integration tests", () => {
     // Create players
     const player1 = await prisma.player.create({
       data: {
-        discordId: DiscordAccountIdSchema.parse("discord-100000000"),
+        discordId: testAccountId("100000000"),
         alias: "Player1",
-        serverId: DiscordGuildIdSchema.parse("test-server000000"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("discord-100000000"),
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("100000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
@@ -538,8 +543,8 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-1"),
               alias: "Player1",
               region: "AMERICA_NORTH",
-              serverId: DiscordGuildIdSchema.parse("test-server000000"),
-              creatorDiscordId: DiscordAccountIdSchema.parse("discord-100000000"),
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("100000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -550,10 +555,10 @@ describe("calculateLeaderboard integration tests", () => {
 
     const player2 = await prisma.player.create({
       data: {
-        discordId: DiscordAccountIdSchema.parse("discord-200000000"),
+        discordId: testAccountId("200000000"),
         alias: "Player2",
-        serverId: DiscordGuildIdSchema.parse("test-server000000"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("discord-200000000"),
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("200000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
@@ -562,8 +567,8 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-2"),
               alias: "Player2",
               region: "AMERICA_NORTH",
-              serverId: DiscordGuildIdSchema.parse("test-server000000"),
-              creatorDiscordId: DiscordAccountIdSchema.parse("discord-200000000"),
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("200000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -575,9 +580,9 @@ describe("calculateLeaderboard integration tests", () => {
     // Create competition with MOST_RANK_CLIMB criteria
     const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
-      serverId: DiscordGuildIdSchema.parse("test-server000000"),
-      ownerId: DiscordAccountIdSchema.parse("owner-10000000100"),
-      channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+      serverId: testGuildId("000000"),
+      ownerId: testAccountId("10000000100"),
+      channelId: testChannelId("1000000001"),
       title: "Climb Competition",
       description: "Test",
       visibility: "OPEN",
@@ -672,10 +677,10 @@ describe("calculateLeaderboard integration tests", () => {
     // Create players
     const player1 = await prisma.player.create({
       data: {
-        discordId: DiscordAccountIdSchema.parse("discord-100000000"),
+        discordId: testAccountId("100000000"),
         alias: "Player1",
-        serverId: DiscordGuildIdSchema.parse("test-server000000"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("discord-100000000"),
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("100000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
@@ -684,8 +689,8 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-1"),
               alias: "Player1",
               region: "AMERICA_NORTH",
-              serverId: DiscordGuildIdSchema.parse("test-server000000"),
-              creatorDiscordId: DiscordAccountIdSchema.parse("discord-100000000"),
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("100000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -696,10 +701,10 @@ describe("calculateLeaderboard integration tests", () => {
 
     const player2 = await prisma.player.create({
       data: {
-        discordId: DiscordAccountIdSchema.parse("discord-200000000"),
+        discordId: testAccountId("200000000"),
         alias: "Player2",
-        serverId: DiscordGuildIdSchema.parse("test-server000000"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("discord-200000000"),
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("200000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
@@ -708,8 +713,8 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-2"),
               alias: "Player2",
               region: "AMERICA_NORTH",
-              serverId: DiscordGuildIdSchema.parse("test-server000000"),
-              creatorDiscordId: DiscordAccountIdSchema.parse("discord-200000000"),
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("200000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -720,10 +725,10 @@ describe("calculateLeaderboard integration tests", () => {
 
     const player3 = await prisma.player.create({
       data: {
-        discordId: DiscordAccountIdSchema.parse("discord-300000000"),
+        discordId: testAccountId("300000000"),
         alias: "Player3",
-        serverId: DiscordGuildIdSchema.parse("test-server000000"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("discord-300000000"),
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("300000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
@@ -732,8 +737,8 @@ describe("calculateLeaderboard integration tests", () => {
               puuid: LeaguePuuidSchema.parse("puuid-3"),
               alias: "Player3",
               region: "AMERICA_NORTH",
-              serverId: DiscordGuildIdSchema.parse("test-server000000"),
-              creatorDiscordId: DiscordAccountIdSchema.parse("discord-300000000"),
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("300000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -745,9 +750,9 @@ describe("calculateLeaderboard integration tests", () => {
     // Create competition
     const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
-      serverId: DiscordGuildIdSchema.parse("test-server000000"),
-      ownerId: DiscordAccountIdSchema.parse("owner-10000000100"),
-      channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+      serverId: testGuildId("000000"),
+      ownerId: testAccountId("10000000100"),
+      channelId: testChannelId("1000000001"),
       title: "Test Competition",
       description: "Test",
       visibility: "OPEN",

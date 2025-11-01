@@ -3,6 +3,7 @@ import { generateMatchReview } from "../generator.ts";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data";
 import { DiscordAccountIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../testing/test-ids.js";
 describe("generateMatchReview", () => {
   describe("regular matches", () => {
     test("generates review for a solo queue victory", () => {
@@ -14,7 +15,7 @@ describe("generateMatchReview", () => {
           {
             playerConfig: {
               alias: "TestPlayer",
-              discord: { discordUserId: DiscordAccountIdSchema.parse("12300000000000000") },
+              discord: { discordUserId: testAccountId("12300000000000000") },
               league: {
                 leagueAccount: {
                   puuid: LeaguePuuidSchema.parse("test-puuid") as unknown,
@@ -76,7 +77,7 @@ describe("generateMatchReview", () => {
           {
             playerConfig: {
               alias: "Player2",
-              discord: { discordUserId: DiscordAccountIdSchema.parse("45600000000000000") },
+              discord: { discordUserId: testAccountId("45600000000000000") },
               league: {
                 leagueAccount: {
                   puuid: LeaguePuuidSchema.parse("test-puuid-2") as unknown,
@@ -131,7 +132,7 @@ describe("generateMatchReview", () => {
           {
             playerConfig: {
               alias: "ArenaPlayer",
-              discord: { discordUserId: DiscordAccountIdSchema.parse("78900000000000000") },
+              discord: { discordUserId: testAccountId("78900000000000000") },
               league: {
                 leagueAccount: {
                   puuid: LeaguePuuidSchema.parse("arena-puuid") as unknown,
@@ -196,7 +197,7 @@ describe("generateMatchReview", () => {
           {
             playerConfig: {
               alias: "ArenaPlayer2",
-              discord: { discordUserId: DiscordAccountIdSchema.parse("89000000000000000") },
+              discord: { discordUserId: testAccountId("89000000000000000") },
               league: {
                 leagueAccount: {
                   puuid: LeaguePuuidSchema.parse("arena-puuid-2") as unknown,

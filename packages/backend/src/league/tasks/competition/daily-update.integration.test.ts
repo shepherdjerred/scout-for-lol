@@ -16,6 +16,7 @@ import type {
 } from "@scout-for-lol/data";
 import { z } from "zod";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 // Schema for Discord message content validation
 const MessageContentSchema = z.object({
   content: z.string(),
@@ -90,8 +91,8 @@ async function createTestCompetition(
 ): Promise<{ competitionId: CompetitionId; channelId: DiscordChannelId }> {
   const channelId = options?.channelId ?? DiscordChannelIdSchema.parse(`channel-${Date.now().toString()}`);
   const input: CreateCompetitionInput = {
-    serverId: options?.serverId ?? DiscordGuildIdSchema.parse("123456789012345678"),
-    ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
+    serverId: options?.serverId ?? testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
     channelId,
     title: options?.title ?? "Test Competition",
     description: "Test Description",
@@ -115,8 +116,8 @@ async function createTestPlayer(alias: string, puuid: LeaguePuuid, region: Regio
     data: {
       alias,
       discordId: null,
-      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-      creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
+      serverId: testGuildId("123456789012345678"),
+      creatorDiscordId: testAccountId("987654321098765432"),
       createdTime: now,
       updatedTime: now,
       accounts: {
@@ -125,8 +126,8 @@ async function createTestPlayer(alias: string, puuid: LeaguePuuid, region: Regio
             alias,
             puuid,
             region,
-            serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-            creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
+            serverId: testGuildId("123456789012345678"),
+            creatorDiscordId: testAccountId("987654321098765432"),
             createdTime: now,
             updatedTime: now,
           },
@@ -351,7 +352,7 @@ describe("Daily Leaderboard Update", () => {
 
     // Create first competition with invalid channel (will fail to send)
     const { competitionId: comp1Id } = await createTestCompetition(criteria, startDate, endDate, {
-      channelId: DiscordChannelIdSchema.parse("invalid-channel-id"),
+      channelId: testChannelId("invalid-channel-id"),
       title: "Competition 1",
     });
     const { playerId: player1Id } = await createTestPlayer(
@@ -368,7 +369,7 @@ describe("Daily Leaderboard Update", () => {
       startDate,
       endDate,
       {
-        channelId: DiscordChannelIdSchema.parse("valid-channel-id0"),
+        channelId: testChannelId("0"),
         title: "Competition 2",
       },
     );

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { checkRateLimit, clearAllRateLimits, clearRateLimit, getTimeRemaining, recordCreation } from "./rate-limit.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../testing/test-ids.js";
 // Clean up before each test
 beforeEach(() => {
   clearAllRateLimits();
@@ -19,7 +20,7 @@ describe("checkRateLimit", () => {
 
   test("returns false within rate limit window", () => {
     const serverId = "server-123";
-    const userId = DiscordAccountIdSchema.parse("user-456000004560");
+    const userId = testAccountId("456000004560");
 
     // Record creation
     recordCreation(serverId, userId);
@@ -31,7 +32,7 @@ describe("checkRateLimit", () => {
 
   test("returns true after rate limit window expires", () => {
     const serverId = "server-123";
-    const userId = DiscordAccountIdSchema.parse("user-456000004560");
+    const userId = testAccountId("456000004560");
 
     // Note: We can't directly manipulate time in the implementation,
     // so we test the clearing behavior instead
@@ -46,7 +47,7 @@ describe("checkRateLimit", () => {
   });
 
   test("rate limits are independent per server", () => {
-    const userId = DiscordAccountIdSchema.parse("user-456000004560");
+    const userId = testAccountId("456000004560");
 
     // Record on server1
     recordCreation("server-1000000001", userId);
@@ -75,7 +76,7 @@ describe("checkRateLimit", () => {
 describe("recordCreation", () => {
   test("records creation timestamp", () => {
     const serverId = "server-123";
-    const userId = DiscordAccountIdSchema.parse("user-456000004560");
+    const userId = testAccountId("456000004560");
 
     // Should be allowed initially
     expect(checkRateLimit(serverId, userId)).toBe(true);
@@ -89,7 +90,7 @@ describe("recordCreation", () => {
 
   test("updates timestamp on subsequent recordings", () => {
     const serverId = "server-123";
-    const userId = DiscordAccountIdSchema.parse("user-456000004560");
+    const userId = testAccountId("456000004560");
 
     // Record twice
     recordCreation(serverId, userId);
@@ -108,7 +109,7 @@ describe("getTimeRemaining", () => {
 
   test("returns time remaining after recording", () => {
     const serverId = "server-123";
-    const userId = DiscordAccountIdSchema.parse("user-456000004560");
+    const userId = testAccountId("456000004560");
 
     recordCreation(serverId, userId);
 
@@ -122,7 +123,7 @@ describe("getTimeRemaining", () => {
 
   test("returns 0 after clearing rate limit", () => {
     const serverId = "server-123";
-    const userId = DiscordAccountIdSchema.parse("user-456000004560");
+    const userId = testAccountId("456000004560");
 
     recordCreation(serverId, userId);
     expect(getTimeRemaining(serverId, userId)).toBeGreaterThan(0);
@@ -135,7 +136,7 @@ describe("getTimeRemaining", () => {
 describe("clearRateLimit", () => {
   test("clears rate limit for specific user", () => {
     const serverId = "server-123";
-    const userId = DiscordAccountIdSchema.parse("user-456000004560");
+    const userId = testAccountId("456000004560");
 
     recordCreation(serverId, userId);
     expect(checkRateLimit(serverId, userId)).toBe(false);

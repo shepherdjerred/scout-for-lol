@@ -8,6 +8,7 @@ import { createCompetition } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 import { addParticipant, getParticipantStatus, removeParticipant } from "../../../database/competition/participants.js";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 // Create a test database for integration tests
 const testDir = mkdtempSync(join(tmpdir(), "competition-leave-test-"));
 const testDbPath = join(testDir, "test.db");
@@ -91,7 +92,7 @@ async function createTestCompetition(
   const input: CreateCompetitionInput = {
     serverId,
     ownerId,
-    channelId: DiscordChannelIdSchema.parse("123456789012345678"),
+    channelId: testChannelId("123456789012345678"),
     title: "Test Competition",
     description: "A test competition",
     visibility: options?.visibility ?? "OPEN",
@@ -125,10 +126,10 @@ async function createTestCompetition(
 // ============================================================================
 
 describe("Competition Leave - Integration Tests", () => {
-  const serverId = DiscordGuildIdSchema.parse("test-server-12300");
-  const ownerId = DiscordAccountIdSchema.parse("owner-user-123000");
-  const user1Id = DiscordAccountIdSchema.parse("user-100000000010");
-  const user2Id = DiscordAccountIdSchema.parse("user-200000000020");
+  const serverId = testGuildId("12300");
+  const ownerId = testAccountId("123000");
+  const user1Id = testAccountId("100000000010");
+  const user2Id = testAccountId("200000000020");
 
   // ==========================================================================
   // Test 1: Leave joined competition
@@ -138,7 +139,7 @@ describe("Competition Leave - Integration Tests", () => {
     // Arrange
     const { playerId: player1Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user-100000000010"),
+      testAccountId("100000000010"),
       "Player1",
     );
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
@@ -171,7 +172,7 @@ describe("Competition Leave - Integration Tests", () => {
     // Arrange
     const { playerId: player1Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user-100000000010"),
+      testAccountId("100000000010"),
       "Player1",
     );
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
@@ -205,7 +206,7 @@ describe("Competition Leave - Integration Tests", () => {
     // Arrange
     const { playerId: player1Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user-100000000010"),
+      testAccountId("100000000010"),
       "Player1",
     );
     const { competitionId } = await createTestCompetition(serverId, ownerId);
@@ -226,7 +227,7 @@ describe("Competition Leave - Integration Tests", () => {
     // Arrange
     const { playerId: player1Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user-100000000010"),
+      testAccountId("100000000010"),
       "Player1",
     );
     const { competitionId } = await createTestCompetition(serverId, ownerId);
@@ -253,7 +254,7 @@ describe("Competition Leave - Integration Tests", () => {
     // Arrange
     const { playerId: player1Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user-100000000010"),
+      testAccountId("100000000010"),
       "Player1",
     );
     const { competitionId } = await createTestCompetition(serverId, ownerId);
@@ -318,7 +319,7 @@ describe("Competition Leave - Integration Tests", () => {
     // Arrange
     const { playerId: player1Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user-100000000010"),
+      testAccountId("100000000010"),
       "Player1",
     );
 

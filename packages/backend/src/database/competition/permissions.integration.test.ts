@@ -9,6 +9,7 @@ import { canCreateCompetition, grantPermission, hasPermission, revokePermission 
 import { clearAllRateLimits, recordCreation } from "./rate-limit.js";
 import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "permissions-test-"));
 const testDbPath = join(testDir, "test.db");
@@ -37,15 +38,15 @@ beforeEach(async () => {
 
 describe("hasPermission", () => {
   test("returns true for user with granted permission", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const userId = DiscordAccountIdSchema.parse("987654321098765432");
+    const serverId = testGuildId("123456789012345678");
+    const userId = testAccountId("987654321098765432");
 
     await grantPermission(
       prisma,
       serverId,
       userId,
       "CREATE_COMPETITION",
-      DiscordAccountIdSchema.parse("admin-12300000000"),
+      testAccountId("12300000000"),
     );
 
     const result = await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION");
@@ -55,33 +56,33 @@ describe("hasPermission", () => {
   test("returns false for user without permission", async () => {
     const result = await hasPermission(
       prisma,
-      DiscordGuildIdSchema.parse("123456789012345678"),
-      DiscordAccountIdSchema.parse("987654321098765432"),
+      testGuildId("123456789012345678"),
+      testAccountId("987654321098765432"),
       "CREATE_COMPETITION",
     );
     expect(result).toBe(false);
   });
 
   test("permission is server-specific", async () => {
-    const userId = DiscordAccountIdSchema.parse("987654321098765432");
+    const userId = testAccountId("987654321098765432");
 
     // Grant on server1
     await grantPermission(
       prisma,
-      DiscordGuildIdSchema.parse("111111111111111111"),
+      testGuildId("111111111111111111"),
       userId,
       "CREATE_COMPETITION",
-      DiscordAccountIdSchema.parse("admin-12300000000"),
+      testAccountId("12300000000"),
     );
 
     // Has permission on server1
     expect(
-      await hasPermission(prisma, DiscordGuildIdSchema.parse("111111111111111111"), userId, "CREATE_COMPETITION"),
+      await hasPermission(prisma, testGuildId("111111111111111111"), userId, "CREATE_COMPETITION"),
     ).toBe(true);
 
     // Does NOT have permission on server2
     expect(
-      await hasPermission(prisma, DiscordGuildIdSchema.parse("222222222222222222"), userId, "CREATE_COMPETITION"),
+      await hasPermission(prisma, testGuildId("222222222222222222"), userId, "CREATE_COMPETITION"),
     ).toBe(false);
   });
 });
@@ -92,9 +93,9 @@ describe("hasPermission", () => {
 
 describe("grantPermission", () => {
   test("creates ServerPermission record", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const userId = DiscordAccountIdSchema.parse("987654321098765432");
-    const adminId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const userId = testAccountId("987654321098765432");
+    const adminId = testAccountId("111111111111111111");
 
     await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", adminId);
 
@@ -114,9 +115,9 @@ describe("grantPermission", () => {
   });
 
   test("is idempotent - granting twice does not error", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const userId = DiscordAccountIdSchema.parse("987654321098765432");
-    const adminId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const userId = testAccountId("987654321098765432");
+    const adminId = testAccountId("111111111111111111");
 
     // Grant twice
     await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", adminId);
@@ -136,8 +137,8 @@ describe("grantPermission", () => {
   });
 
   test("updates grantedBy on re-grant", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const userId = DiscordAccountIdSchema.parse("987654321098765432");
+    const serverId = testGuildId("123456789012345678");
+    const userId = testAccountId("987654321098765432");
 
     // Grant by admin1
     await grantPermission(
@@ -145,7 +146,7 @@ describe("grantPermission", () => {
       serverId,
       userId,
       "CREATE_COMPETITION",
-      DiscordAccountIdSchema.parse("admin-10000000100"),
+      testAccountId("10000000100"),
     );
 
     // Re-grant by admin2
@@ -154,7 +155,7 @@ describe("grantPermission", () => {
       serverId,
       userId,
       "CREATE_COMPETITION",
-      DiscordAccountIdSchema.parse("admin-20000000200"),
+      testAccountId("20000000200"),
     );
 
     const record = await prisma.serverPermission.findUnique({
@@ -167,7 +168,7 @@ describe("grantPermission", () => {
       },
     });
 
-    expect(record?.grantedBy).toBe(DiscordAccountIdSchema.parse("admin-20000000200"));
+    expect(record?.grantedBy).toBe(testAccountId("20000000200"));
   });
 });
 
@@ -177,8 +178,8 @@ describe("grantPermission", () => {
 
 describe("revokePermission", () => {
   test("deletes ServerPermission record", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const userId = DiscordAccountIdSchema.parse("987654321098765432");
+    const serverId = testGuildId("123456789012345678");
+    const userId = testAccountId("987654321098765432");
 
     // Grant permission
     await grantPermission(
@@ -186,7 +187,7 @@ describe("revokePermission", () => {
       serverId,
       userId,
       "CREATE_COMPETITION",
-      DiscordAccountIdSchema.parse("admin-12300000000"),
+      testAccountId("12300000000"),
     );
 
     expect(await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION")).toBe(true);
@@ -198,8 +199,8 @@ describe("revokePermission", () => {
   });
 
   test("is idempotent - revoking twice does not error", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const userId = DiscordAccountIdSchema.parse("987654321098765432");
+    const serverId = testGuildId("123456789012345678");
+    const userId = testAccountId("987654321098765432");
 
     // Revoke when no permission exists
     await revokePermission(prisma, serverId, userId, "CREATE_COMPETITION");
@@ -219,8 +220,8 @@ describe("canCreateCompetition - admin bypass", () => {
 
     const result = await canCreateCompetition(
       prisma,
-      DiscordGuildIdSchema.parse("123456789012345678"),
-      DiscordAccountIdSchema.parse("987654321098765432"),
+      testGuildId("123456789012345678"),
+      testAccountId("987654321098765432"),
       permissions,
     );
 
@@ -229,8 +230,8 @@ describe("canCreateCompetition - admin bypass", () => {
   });
 
   test("admin bypass works without ServerPermission grant", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const userId = DiscordAccountIdSchema.parse("987654321098765432");
+    const serverId = testGuildId("123456789012345678");
+    const userId = testAccountId("987654321098765432");
 
     // Verify no permission grant
     expect(await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION")).toBe(false);
@@ -244,8 +245,8 @@ describe("canCreateCompetition - admin bypass", () => {
   });
 
   test("admin bypass ignores rate limit", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const userId = DiscordAccountIdSchema.parse("987654321098765432");
+    const serverId = testGuildId("123456789012345678");
+    const userId = testAccountId("987654321098765432");
 
     // Record creation to trigger rate limit
     recordCreation(serverId, userId);
@@ -265,8 +266,8 @@ describe("canCreateCompetition - admin bypass", () => {
 
 describe("canCreateCompetition - granted permission", () => {
   test("user with grant allowed (no rate limit)", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const userId = DiscordAccountIdSchema.parse("987654321098765432");
+    const serverId = testGuildId("123456789012345678");
+    const userId = testAccountId("987654321098765432");
 
     // Grant permission
     await grantPermission(
@@ -274,7 +275,7 @@ describe("canCreateCompetition - granted permission", () => {
       serverId,
       userId,
       "CREATE_COMPETITION",
-      DiscordAccountIdSchema.parse("admin-12300000000"),
+      testAccountId("12300000000"),
     );
 
     // Non-admin permissions
@@ -286,8 +287,8 @@ describe("canCreateCompetition - granted permission", () => {
   });
 
   test("user without grant denied", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const userId = DiscordAccountIdSchema.parse("987654321098765432");
+    const serverId = testGuildId("123456789012345678");
+    const userId = testAccountId("987654321098765432");
 
     // Non-admin permissions, no grant
     const permissions = new PermissionsBitField(PermissionFlagsBits.SendMessages);
@@ -305,8 +306,8 @@ describe("canCreateCompetition - granted permission", () => {
 
 describe("canCreateCompetition - rate limit", () => {
   test("user with grant but rate limited is denied", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const userId = DiscordAccountIdSchema.parse("987654321098765432");
+    const serverId = testGuildId("123456789012345678");
+    const userId = testAccountId("987654321098765432");
 
     // Grant permission
     await grantPermission(
@@ -314,7 +315,7 @@ describe("canCreateCompetition - rate limit", () => {
       serverId,
       userId,
       "CREATE_COMPETITION",
-      DiscordAccountIdSchema.parse("admin-12300000000"),
+      testAccountId("12300000000"),
     );
 
     // Record creation to trigger rate limit
@@ -331,15 +332,15 @@ describe("canCreateCompetition - rate limit", () => {
   });
 
   test("rate limit error message shows time remaining", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const userId = DiscordAccountIdSchema.parse("987654321098765432");
+    const serverId = testGuildId("123456789012345678");
+    const userId = testAccountId("987654321098765432");
 
     await grantPermission(
       prisma,
       serverId,
       userId,
       "CREATE_COMPETITION",
-      DiscordAccountIdSchema.parse("admin-12300000000"),
+      testAccountId("12300000000"),
     );
 
     recordCreation(serverId, userId);

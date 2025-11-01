@@ -12,6 +12,7 @@ import {
 import { clearAllRateLimits } from "../../../database/competition/rate-limit.js";
 import { validateOwnerLimit, validateServerLimit } from "../../../database/competition/validation.js";
 import { ErrorSchema } from "../../../utils/errors.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 import {
   ChampionIdSchema,
   DiscordAccountIdSchema,
@@ -55,9 +56,9 @@ describe("Competition creation - MOST_GAMES_PLAYED", () => {
     const endDate = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000); // +14 days
 
     const competition = await createCompetition(prisma, {
-      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-      ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
-      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
       title: "January Grind Challenge",
       description: "Who can play the most solo queue games this month?",
       visibility: "OPEN",
@@ -83,9 +84,9 @@ describe("Competition creation - MOST_GAMES_PLAYED", () => {
 
   test("creates competition with season successfully", async () => {
     const competition = await createCompetition(prisma, {
-      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-      ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
-      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
       title: "Season 2025 Grind",
       description: "Compete for the entire season!",
       visibility: "OPEN",
@@ -112,9 +113,9 @@ describe("Competition creation - MOST_GAMES_PLAYED", () => {
 
 describe("Competition creation - All criteria types", () => {
   const baseInput: Omit<CreateCompetitionInput, "criteria"> = {
-    serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-    ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
-    channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+    serverId: testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
+    channelId: testChannelId("111222333444555666"),
     title: "Test Competition",
     description: "Test",
     visibility: "OPEN",
@@ -128,7 +129,7 @@ describe("Competition creation - All criteria types", () => {
   test("HIGHEST_RANK with SOLO queue", async () => {
     const competition = await createCompetition(prisma, {
       ...baseInput,
-      ownerId: DiscordAccountIdSchema.parse("100000000000000001"),
+      ownerId: testAccountId("100000000000000001"),
       title: "Rank Challenge",
       criteria: {
         type: "HIGHEST_RANK",
@@ -145,7 +146,7 @@ describe("Competition creation - All criteria types", () => {
   test("MOST_RANK_CLIMB with FLEX queue", async () => {
     const competition = await createCompetition(prisma, {
       ...baseInput,
-      ownerId: DiscordAccountIdSchema.parse("100000000000000002"),
+      ownerId: testAccountId("100000000000000002"),
       title: "Climb Challenge",
       criteria: {
         type: "MOST_RANK_CLIMB",
@@ -162,7 +163,7 @@ describe("Competition creation - All criteria types", () => {
   test("MOST_WINS_PLAYER with ARENA queue", async () => {
     const competition = await createCompetition(prisma, {
       ...baseInput,
-      ownerId: DiscordAccountIdSchema.parse("100000000000000003"),
+      ownerId: testAccountId("100000000000000003"),
       title: "Arena Wins",
       criteria: {
         type: "MOST_WINS_PLAYER",
@@ -179,7 +180,7 @@ describe("Competition creation - All criteria types", () => {
   test("MOST_WINS_CHAMPION with championId", async () => {
     const competition = await createCompetition(prisma, {
       ...baseInput,
-      ownerId: DiscordAccountIdSchema.parse("100000000000000004"),
+      ownerId: testAccountId("100000000000000004"),
       title: "Yasuo Masters",
       criteria: {
         type: "MOST_WINS_CHAMPION",
@@ -198,7 +199,7 @@ describe("Competition creation - All criteria types", () => {
   test("MOST_WINS_CHAMPION without queue (optional)", async () => {
     const competition = await createCompetition(prisma, {
       ...baseInput,
-      ownerId: DiscordAccountIdSchema.parse("100000000000000005"),
+      ownerId: testAccountId("100000000000000005"),
       title: "Champion Masters",
       criteria: {
         type: "MOST_WINS_CHAMPION",
@@ -216,7 +217,7 @@ describe("Competition creation - All criteria types", () => {
   test("HIGHEST_WIN_RATE with minGames", async () => {
     const competition = await createCompetition(prisma, {
       ...baseInput,
-      ownerId: DiscordAccountIdSchema.parse("100000000000000006"),
+      ownerId: testAccountId("100000000000000006"),
       title: "Win Rate Challenge",
       criteria: {
         type: "HIGHEST_WIN_RATE",
@@ -235,7 +236,7 @@ describe("Competition creation - All criteria types", () => {
   test("HIGHEST_WIN_RATE with default minGames (10)", async () => {
     const competition = await createCompetition(prisma, {
       ...baseInput,
-      ownerId: DiscordAccountIdSchema.parse("100000000000000007"),
+      ownerId: testAccountId("100000000000000007"),
       title: "Win Rate Default",
       criteria: {
         type: "HIGHEST_WIN_RATE",
@@ -254,9 +255,9 @@ describe("Competition creation - All criteria types", () => {
 describe("Competition defaults", () => {
   test("visibility defaults to OPEN", async () => {
     const competition = await createCompetition(prisma, {
-      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-      ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
-      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
       title: "Default Visibility",
       description: "Test",
       visibility: "OPEN", // Explicitly testing default
@@ -270,9 +271,9 @@ describe("Competition defaults", () => {
 
   test("maxParticipants defaults to 50", async () => {
     const competition = await createCompetition(prisma, {
-      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-      ownerId: DiscordAccountIdSchema.parse("987654321098765433"),
-      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765433"),
+      channelId: testChannelId("111222333444555666"),
       title: "Default Max",
       description: "Test",
       visibility: "OPEN",
@@ -287,14 +288,14 @@ describe("Competition defaults", () => {
 
 describe("Permission and limit integration", () => {
   test("second competition by same owner fails (owner limit)", async () => {
-    const ownerId = DiscordAccountIdSchema.parse("999888777666555444");
+    const ownerId = testAccountId("999888777666555444");
     const now = new Date();
 
     // Create first competition
     await createCompetition(prisma, {
-      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      serverId: testGuildId("123456789012345678"),
       ownerId,
-      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+      channelId: testChannelId("111222333444555666"),
       title: "First Competition",
       description: "Test",
       visibility: "OPEN",
@@ -309,7 +310,7 @@ describe("Permission and limit integration", () => {
 
     let error: unknown = null;
     try {
-      await validateOwnerLimit(prisma, DiscordGuildIdSchema.parse("123456789012345678"), ownerId);
+      await validateOwnerLimit(prisma, testGuildId("123456789012345678"), ownerId);
     } catch (e) {
       error = e;
     }
@@ -323,7 +324,7 @@ describe("Permission and limit integration", () => {
   });
 
   test("third competition on server fails (server limit)", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
+    const serverId = testGuildId("123456789012345678");
     const now = new Date();
 
     // Create 2 competitions (server limit)
@@ -331,7 +332,7 @@ describe("Permission and limit integration", () => {
       await createCompetition(prisma, {
         serverId,
         ownerId: DiscordAccountIdSchema.parse((100000000000000000 + i).toString()),
-        channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+        channelId: testChannelId("111222333444555666"),
         title: `Competition ${i.toString()}`,
         description: "Test",
         visibility: "OPEN",
@@ -364,9 +365,9 @@ describe("Permission and limit integration", () => {
 describe("Data integrity", () => {
   test("created competition can be retrieved", async () => {
     const competition = await createCompetition(prisma, {
-      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-      ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
-      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
       title: "Retrieval Test",
       description: "Test retrieval",
       visibility: "INVITE_ONLY",
@@ -390,80 +391,80 @@ describe("Data integrity", () => {
   test("criteria round-trips correctly for all types", async () => {
     const testCases: CreateCompetitionInput[] = [
       {
-        ownerId: DiscordAccountIdSchema.parse("100000000000000001"),
+        ownerId: testAccountId("100000000000000001"),
         title: "Games Test",
         criteria: {
           type: "MOST_GAMES_PLAYED" as const,
           queue: "SOLO" as const,
         },
-        serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-        channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+        serverId: testGuildId("123456789012345678"),
+        channelId: testChannelId("111222333444555666"),
         description: "Test",
         visibility: "OPEN",
         maxParticipants: 50,
         dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
       },
       {
-        ownerId: DiscordAccountIdSchema.parse("100000000000000002"),
+        ownerId: testAccountId("100000000000000002"),
         title: "Rank Test",
         criteria: { type: "HIGHEST_RANK" as const, queue: "FLEX" as const },
-        serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-        channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+        serverId: testGuildId("123456789012345678"),
+        channelId: testChannelId("111222333444555666"),
         description: "Test",
         visibility: "OPEN",
         maxParticipants: 50,
         dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
       },
       {
-        ownerId: DiscordAccountIdSchema.parse("100000000000000003"),
+        ownerId: testAccountId("100000000000000003"),
         title: "Climb Test",
         criteria: { type: "MOST_RANK_CLIMB" as const, queue: "SOLO" as const },
-        serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-        channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+        serverId: testGuildId("123456789012345678"),
+        channelId: testChannelId("111222333444555666"),
         description: "Test",
         visibility: "OPEN",
         maxParticipants: 50,
         dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
       },
       {
-        ownerId: DiscordAccountIdSchema.parse("100000000000000004"),
+        ownerId: testAccountId("100000000000000004"),
         title: "Wins Test",
         criteria: {
           type: "MOST_WINS_PLAYER" as const,
           queue: "ARENA" as const,
         },
-        serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-        channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+        serverId: testGuildId("123456789012345678"),
+        channelId: testChannelId("111222333444555666"),
         description: "Test",
         visibility: "OPEN",
         maxParticipants: 50,
         dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
       },
       {
-        ownerId: DiscordAccountIdSchema.parse("100000000000000005"),
+        ownerId: testAccountId("100000000000000005"),
         title: "Champion Test",
         criteria: {
           type: "MOST_WINS_CHAMPION" as const,
           championId: ChampionIdSchema.parse(157),
           queue: "SOLO" as const,
         },
-        serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-        channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+        serverId: testGuildId("123456789012345678"),
+        channelId: testChannelId("111222333444555666"),
         description: "Test",
         visibility: "OPEN",
         maxParticipants: 50,
         dates: { type: "SEASON", seasonId: "2025_SEASON_3_ACT_1" },
       },
       {
-        ownerId: DiscordAccountIdSchema.parse("100000000000000006"),
+        ownerId: testAccountId("100000000000000006"),
         title: "Win Rate Test",
         criteria: {
           type: "HIGHEST_WIN_RATE" as const,
           minGames: 20,
           queue: "FLEX" as const,
         },
-        serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-        channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+        serverId: testGuildId("123456789012345678"),
+        channelId: testChannelId("111222333444555666"),
         description: "Test",
         visibility: "OPEN",
         maxParticipants: 50,
@@ -473,9 +474,9 @@ describe("Data integrity", () => {
 
     for (const testCase of testCases) {
       const created = await createCompetition(prisma, {
-        serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+        serverId: testGuildId("123456789012345678"),
         ownerId: testCase.ownerId,
-        channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+        channelId: testChannelId("111222333444555666"),
         title: testCase.title,
         description: "Test",
         visibility: "OPEN",
@@ -496,12 +497,12 @@ describe("Data integrity", () => {
 
 describe("Metadata tracking", () => {
   test("tracks creatorDiscordId", async () => {
-    const ownerId = DiscordAccountIdSchema.parse("987654321098765432");
+    const ownerId = testAccountId("987654321098765432");
 
     const competition = await createCompetition(prisma, {
-      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
+      serverId: testGuildId("123456789012345678"),
       ownerId,
-      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+      channelId: testChannelId("111222333444555666"),
       title: "Metadata Test",
       description: "Test",
       visibility: "OPEN",
@@ -516,9 +517,9 @@ describe("Metadata tracking", () => {
 
   test("sets isCancelled to false by default", async () => {
     const competition = await createCompetition(prisma, {
-      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-      ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
-      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
       title: "Status Test",
       description: "Test",
       visibility: "OPEN",
@@ -534,9 +535,9 @@ describe("Metadata tracking", () => {
     const beforeCreate = new Date();
 
     const competition = await createCompetition(prisma, {
-      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-      ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
-      channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
       title: "Timestamp Test",
       description: "Test",
       visibility: "OPEN",

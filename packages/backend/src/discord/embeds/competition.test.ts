@@ -11,6 +11,7 @@ import {
 import type { RankedLeaderboardEntry } from "../../league/competition/leaderboard.js";
 import { generateLeaderboardEmbed, generateCompetitionDetailsEmbed, formatScore } from "./competition.js";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
 // ============================================================================
 // Test Data Factories
 // ============================================================================
@@ -21,18 +22,18 @@ import { generateLeaderboardEmbed, generateCompetitionDetailsEmbed, formatScore 
 function createTestCompetition(overrides: Partial<CompetitionWithCriteria> = {}): CompetitionWithCriteria {
   return {
     id: CompetitionIdSchema.parse(1),
-    serverId: DiscordGuildIdSchema.parse("test-server-12300"),
-    ownerId: DiscordAccountIdSchema.parse("owner-discord-id-123"),
+    serverId: testGuildId("12300"),
+    ownerId: testAccountId("123"),
     title: "Test Competition",
     description: "A test competition for unit tests",
-    channelId: DiscordChannelIdSchema.parse("test-channel-4560"),
+    channelId: testChannelId("4560"),
     isCancelled: false,
     visibility: "OPEN",
     maxParticipants: 50,
     startDate: new Date("2025-01-01T00:00:00Z"),
     endDate: new Date("2025-01-31T23:59:59Z"),
     seasonId: null,
-    creatorDiscordId: DiscordAccountIdSchema.parse("creator-discord-id-789"),
+    creatorDiscordId: testAccountId("789"),
     createdTime: new Date("2024-12-01T00:00:00Z"),
     updatedTime: new Date("2024-12-01T00:00:00Z"),
     criteria: {
@@ -226,8 +227,8 @@ describe("generateCompetitionDetailsEmbed", () => {
     const competition = createTestCompetition({
       title: "Test Competition",
       description: "Test description",
-      ownerId: DiscordAccountIdSchema.parse("owner-12300000123"),
-      channelId: DiscordChannelIdSchema.parse("channel-456000000"),
+      ownerId: testAccountId("12300000123"),
+      channelId: testChannelId("456000000"),
       maxParticipants: 25,
     });
 

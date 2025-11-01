@@ -8,6 +8,7 @@ import { createCompetition, getCompetitionById } from "../../../database/competi
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 import { addParticipant, getParticipantStatus } from "../../../database/competition/participants.js";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 // Create a test database for integration tests
 const testDir = mkdtempSync(join(tmpdir(), "competition-join-test-"));
 const testDbPath = join(testDir, "test.db");
@@ -91,7 +92,7 @@ async function createTestCompetition(
   const input: CreateCompetitionInput = {
     serverId,
     ownerId,
-    channelId: DiscordChannelIdSchema.parse("123456789012345678"),
+    channelId: testChannelId("123456789012345678"),
     title: "Test Competition",
     description: "A test competition",
     visibility: options?.visibility ?? "OPEN",
@@ -129,9 +130,9 @@ async function createTestCompetition(
 
 describe("Join OPEN competition", () => {
   test("user executes join on OPEN competition → succeeds", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const userId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const userId = testAccountId("222222222222222222");
 
     const { playerId } = await createTestPlayer(serverId, userId, "TestUser");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
@@ -166,9 +167,9 @@ describe("Join OPEN competition", () => {
   });
 
   test("response message includes competition name and participant count", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const userId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const userId = testAccountId("222222222222222222");
 
     const { playerId } = await createTestPlayer(serverId, userId, "TestUser");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
@@ -195,9 +196,9 @@ describe("Join OPEN competition", () => {
 
 describe("Join INVITE_ONLY when invited", () => {
   test("user is INVITED to competition → user executes join → succeeds", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const userId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const userId = testAccountId("222222222222222222");
 
     const { playerId } = await createTestPlayer(serverId, userId, "TestUser");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
@@ -259,9 +260,9 @@ describe("Join INVITE_ONLY when invited", () => {
 
 describe("Join INVITE_ONLY without invitation", () => {
   test("user not invited → user tries to join INVITE_ONLY → visibility check fails", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const userId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const userId = testAccountId("222222222222222222");
 
     const { playerId } = await createTestPlayer(serverId, userId, "TestUser");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
@@ -289,25 +290,25 @@ describe("Join INVITE_ONLY without invitation", () => {
 
 describe("Join when at participant limit", () => {
   test("competition has maxParticipants=2 → 2 users already joined → 3rd user tries to join → fails", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, { maxParticipants: 2 });
 
     // Create 2 players and have them join
     const { playerId: player1Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user1000000000000"),
+      testAccountId("1000000000000"),
       "Player1",
     );
     const { playerId: player2Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user2000000000000"),
+      testAccountId("2000000000000"),
       "Player2",
     );
     const { playerId: player3Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user3000000000000"),
+      testAccountId("3000000000000"),
       "Player3",
     );
 
@@ -334,9 +335,9 @@ describe("Join when at participant limit", () => {
 
 describe("Join already joined competition", () => {
   test("user already JOINED → user tries to join again → fails", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const userId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const userId = testAccountId("222222222222222222");
 
     const { playerId } = await createTestPlayer(serverId, userId, "TestUser");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
@@ -359,9 +360,9 @@ describe("Join already joined competition", () => {
 
 describe("Join after leaving", () => {
   test("user joined then left (status=LEFT) → user tries to rejoin → fails", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const userId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const userId = testAccountId("222222222222222222");
 
     const { playerId } = await createTestPlayer(serverId, userId, "TestUser");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
@@ -398,9 +399,9 @@ describe("Join after leaving", () => {
 
 describe("Join CANCELLED competition", () => {
   test("competition is cancelled → user tries to join → fails", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const userId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const userId = testAccountId("222222222222222222");
 
     const { playerId } = await createTestPlayer(serverId, userId, "TestUser");
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
@@ -423,9 +424,9 @@ describe("Join CANCELLED competition", () => {
 
 describe("Join without Player account", () => {
   test("Discord user has no linked Player → cannot join", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const userId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const userId = testAccountId("222222222222222222");
 
     await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
 
@@ -450,9 +451,9 @@ describe("Join without Player account", () => {
 
 describe("SERVER_WIDE competition", () => {
   test("SERVER_WIDE visibility → any server member can join → succeeds", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const userId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const userId = testAccountId("222222222222222222");
 
     const { playerId } = await createTestPlayer(serverId, userId, "TestUser");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "SERVER_WIDE" });
@@ -472,9 +473,9 @@ describe("SERVER_WIDE competition", () => {
 
 describe("Join ended competition", () => {
   test("competition has ended → user tries to join → fails", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const userId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const userId = testAccountId("222222222222222222");
 
     // Create competition with dates in the past
     const lastWeek = new Date();

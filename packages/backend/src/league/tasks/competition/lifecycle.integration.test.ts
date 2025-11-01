@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createCompetition, type CreateCompetitionInput } from "../../../database/competition/queries.js";
 import type { CompetitionCriteria, CompetitionId, LeaguePuuid, PlayerId, Region } from "@scout-for-lol/data";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -36,9 +37,9 @@ async function createTestCompetition(
   endDate: Date,
 ): Promise<{ competitionId: CompetitionId }> {
   const input: CreateCompetitionInput = {
-    serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-    ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
-    channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+    serverId: testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
+    channelId: testChannelId("111222333444555666"),
     title: "Test Competition",
     description: "Test Description",
     visibility: "OPEN",
@@ -61,8 +62,8 @@ async function createTestPlayer(alias: string, puuid: LeaguePuuid, region: Regio
     data: {
       alias,
       discordId: null,
-      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-      creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
+      serverId: testGuildId("123456789012345678"),
+      creatorDiscordId: testAccountId("987654321098765432"),
       createdTime: now,
       updatedTime: now,
       accounts: {
@@ -71,8 +72,8 @@ async function createTestPlayer(alias: string, puuid: LeaguePuuid, region: Regio
             alias,
             puuid,
             region,
-            serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-            creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
+            serverId: testGuildId("123456789012345678"),
+            creatorDiscordId: testAccountId("987654321098765432"),
             createdTime: now,
             updatedTime: now,
           },

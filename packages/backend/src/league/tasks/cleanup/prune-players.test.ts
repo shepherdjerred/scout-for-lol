@@ -5,6 +5,7 @@ import { execSync } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -25,11 +26,18 @@ describe.serial("pruneOrphanedPlayers", () => {
     testDbPath = join(testDir, "test.db");
 
     // Run Prisma migrations to set up the schema
-    execSync(`DATABASE_URL="file:${testDbPath}" bun run db:push`, {
-      cwd: join(__dirname, "../../../.."),
-      env: { ...process.env, DATABASE_URL: `file:${testDbPath}` },
-      stdio: "ignore",
-    });
+    execSync(
+      "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+      {
+        env: {
+          ...process.env,
+          DATABASE_URL: `file:${testDbPath}`,
+          PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+          PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+        },
+        stdio: "ignore",
+      },
+    );
 
     // Create Prisma client
     prisma = new PrismaClient({
@@ -54,8 +62,8 @@ describe.serial("pruneOrphanedPlayers", () => {
     await prisma.player.create({
       data: {
         alias: "orphaned",
-        serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+        serverId: testGuildId("1000000001"),
+        creatorDiscordId: testAccountId("1000000000000"),
         createdTime: now,
         updatedTime: now,
       },
@@ -81,15 +89,15 @@ describe.serial("pruneOrphanedPlayers", () => {
     await prisma.player.create({
       data: {
         alias: "subscribed",
-        serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+        serverId: testGuildId("1000000001"),
+        creatorDiscordId: testAccountId("1000000000000"),
         createdTime: now,
         updatedTime: now,
         subscriptions: {
           create: {
-            channelId: DiscordChannelIdSchema.parse("channel1000000000"),
-            serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-            creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+            channelId: testChannelId("1000000000"),
+            serverId: testGuildId("1000000001"),
+            creatorDiscordId: testAccountId("1000000000000"),
             createdTime: now,
             updatedTime: now,
           },
@@ -116,15 +124,15 @@ describe.serial("pruneOrphanedPlayers", () => {
     // Create a competition
     const competition = await prisma.competition.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-        ownerId: DiscordAccountIdSchema.parse("user1000000000000"),
+        serverId: testGuildId("1000000001"),
+        ownerId: testAccountId("1000000000000"),
         title: "Test Competition",
         description: "Test",
-        channelId: DiscordChannelIdSchema.parse("channel1000000000"),
+        channelId: testChannelId("1000000000"),
         visibility: "OPEN",
         criteriaType: "MOST_WINS",
         criteriaConfig: "{}",
-        creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+        creatorDiscordId: testAccountId("1000000000000"),
         createdTime: now,
         updatedTime: now,
       },
@@ -134,8 +142,8 @@ describe.serial("pruneOrphanedPlayers", () => {
     await prisma.player.create({
       data: {
         alias: "competing",
-        serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+        serverId: testGuildId("1000000001"),
+        creatorDiscordId: testAccountId("1000000000000"),
         createdTime: now,
         updatedTime: now,
         competitionParticipants: {
@@ -167,15 +175,15 @@ describe.serial("pruneOrphanedPlayers", () => {
     // Create a competition
     const competition = await prisma.competition.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-        ownerId: DiscordAccountIdSchema.parse("user1000000000000"),
+        serverId: testGuildId("1000000001"),
+        ownerId: testAccountId("1000000000000"),
         title: "Test Competition",
         description: "Test",
-        channelId: DiscordChannelIdSchema.parse("channel1000000000"),
+        channelId: testChannelId("1000000000"),
         visibility: "OPEN",
         criteriaType: "MOST_WINS",
         criteriaConfig: "{}",
-        creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+        creatorDiscordId: testAccountId("1000000000000"),
         createdTime: now,
         updatedTime: now,
       },
@@ -185,8 +193,8 @@ describe.serial("pruneOrphanedPlayers", () => {
     await prisma.player.create({
       data: {
         alias: "left",
-        serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+        serverId: testGuildId("1000000001"),
+        creatorDiscordId: testAccountId("1000000000000"),
         createdTime: now,
         updatedTime: now,
         competitionParticipants: {
@@ -203,15 +211,15 @@ describe.serial("pruneOrphanedPlayers", () => {
     await prisma.player.create({
       data: {
         alias: "invited",
-        serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+        serverId: testGuildId("1000000001"),
+        creatorDiscordId: testAccountId("1000000000000"),
         createdTime: now,
         updatedTime: now,
         competitionParticipants: {
           create: {
             competitionId: competition.id,
             status: "INVITED",
-            invitedBy: DiscordAccountIdSchema.parse("user2000000000000"),
+            invitedBy: testAccountId("2000000000000"),
             invitedAt: now,
           },
         },
@@ -238,8 +246,8 @@ describe.serial("pruneOrphanedPlayers", () => {
     await prisma.player.create({
       data: {
         alias: "orphaned",
-        serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+        serverId: testGuildId("1000000001"),
+        creatorDiscordId: testAccountId("1000000000000"),
         createdTime: now,
         updatedTime: now,
         accounts: {
@@ -248,8 +256,8 @@ describe.serial("pruneOrphanedPlayers", () => {
               alias: "account1",
               puuid: LeaguePuuidSchema.parse("puuid1"),
               region: "AMERICA_NORTH",
-              serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-              creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+              serverId: testGuildId("1000000001"),
+              creatorDiscordId: testAccountId("1000000000000"),
               createdTime: now,
               updatedTime: now,
             },
@@ -257,8 +265,8 @@ describe.serial("pruneOrphanedPlayers", () => {
               alias: "account2",
               puuid: LeaguePuuidSchema.parse("puuid2"),
               region: "EU_WEST",
-              serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-              creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+              serverId: testGuildId("1000000001"),
+              creatorDiscordId: testAccountId("1000000000000"),
               createdTime: now,
               updatedTime: now,
             },
@@ -287,15 +295,15 @@ describe.serial("pruneOrphanedPlayers", () => {
     // Create a competition
     const competition = await prisma.competition.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-        ownerId: DiscordAccountIdSchema.parse("user1000000000000"),
+        serverId: testGuildId("1000000001"),
+        ownerId: testAccountId("1000000000000"),
         title: "Test Competition",
         description: "Test",
-        channelId: DiscordChannelIdSchema.parse("channel1000000000"),
+        channelId: testChannelId("1000000000"),
         visibility: "OPEN",
         criteriaType: "MOST_WINS",
         criteriaConfig: "{}",
-        creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+        creatorDiscordId: testAccountId("1000000000000"),
         createdTime: now,
         updatedTime: now,
       },
@@ -305,8 +313,8 @@ describe.serial("pruneOrphanedPlayers", () => {
     await prisma.player.create({
       data: {
         alias: "orphaned",
-        serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+        serverId: testGuildId("1000000001"),
+        creatorDiscordId: testAccountId("1000000000000"),
         createdTime: now,
         updatedTime: now,
       },
@@ -316,15 +324,15 @@ describe.serial("pruneOrphanedPlayers", () => {
     await prisma.player.create({
       data: {
         alias: "subscribed",
-        serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+        serverId: testGuildId("1000000001"),
+        creatorDiscordId: testAccountId("1000000000000"),
         createdTime: now,
         updatedTime: now,
         subscriptions: {
           create: {
-            channelId: DiscordChannelIdSchema.parse("channel1000000000"),
-            serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-            creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+            channelId: testChannelId("1000000000"),
+            serverId: testGuildId("1000000001"),
+            creatorDiscordId: testAccountId("1000000000000"),
             createdTime: now,
             updatedTime: now,
           },
@@ -336,8 +344,8 @@ describe.serial("pruneOrphanedPlayers", () => {
     await prisma.player.create({
       data: {
         alias: "competing",
-        serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+        serverId: testGuildId("1000000001"),
+        creatorDiscordId: testAccountId("1000000000000"),
         createdTime: now,
         updatedTime: now,
         competitionParticipants: {
@@ -354,8 +362,8 @@ describe.serial("pruneOrphanedPlayers", () => {
     await prisma.player.create({
       data: {
         alias: "left",
-        serverId: DiscordGuildIdSchema.parse("server-1000000001"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("user1000000000000"),
+        serverId: testGuildId("1000000001"),
+        creatorDiscordId: testAccountId("1000000000000"),
         createdTime: now,
         updatedTime: now,
         competitionParticipants: {

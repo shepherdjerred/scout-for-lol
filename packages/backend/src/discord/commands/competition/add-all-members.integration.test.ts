@@ -8,6 +8,7 @@ import { createCompetition } from "../../../database/competition/queries.js";
 import { addParticipant } from "../../../database/competition/participants.js";
 import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "add-all-members-test-"));
 const testDbPath = join(testDir, "test.db");
@@ -40,8 +41,8 @@ beforeEach(async () => {
 
 describe("Add all members to competition", () => {
   test("successfully adds all server players to competition", async () => {
-    const serverId = DiscordGuildIdSchema.parse("test-server-12300");
-    const ownerId = DiscordAccountIdSchema.parse("owner-discord-id0");
+    const serverId = testGuildId("12300");
+    const ownerId = testAccountId("0");
 
     const now = new Date();
     const startDate = new Date(now.getTime() + 1000 * 60 * 60); // 1 hour from now
@@ -51,7 +52,7 @@ describe("Add all members to competition", () => {
     const competition = await createCompetition(prisma, {
       serverId,
       ownerId,
-      channelId: DiscordChannelIdSchema.parse("channel-123000000"),
+      channelId: testChannelId("123000000"),
       title: "Server-wide Competition",
       description: "Everyone is automatically joined!",
       visibility: "SERVER_WIDE",
@@ -72,7 +73,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player1",
-          discordId: DiscordAccountIdSchema.parse("discord-100000000"),
+          discordId: testAccountId("100000000"),
           serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -82,7 +83,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player2",
-          discordId: DiscordAccountIdSchema.parse("discord-200000000"),
+          discordId: testAccountId("200000000"),
           serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -92,7 +93,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player3",
-          discordId: DiscordAccountIdSchema.parse("discord-300000000"),
+          discordId: testAccountId("300000000"),
           serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -102,7 +103,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player4",
-          discordId: DiscordAccountIdSchema.parse("discord-400000000"),
+          discordId: testAccountId("400000000"),
           serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -112,7 +113,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player5",
-          discordId: DiscordAccountIdSchema.parse("discord-500000000"),
+          discordId: testAccountId("500000000"),
           serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -143,8 +144,8 @@ describe("Add all members to competition", () => {
   });
 
   test("handles partial failures when some players already joined", async () => {
-    const serverId = DiscordGuildIdSchema.parse("test-server-45600");
-    const ownerId = DiscordAccountIdSchema.parse("owner-discord-id0");
+    const serverId = testGuildId("45600");
+    const ownerId = testAccountId("0");
 
     const now = new Date();
     const startDate = new Date(now.getTime() + 1000 * 60 * 60); // 1 hour from now
@@ -153,7 +154,7 @@ describe("Add all members to competition", () => {
     const competition = await createCompetition(prisma, {
       serverId,
       ownerId,
-      channelId: DiscordChannelIdSchema.parse("channel-456000000"),
+      channelId: testChannelId("456000000"),
       title: "Partial Join Test",
       description: "Some players already joined",
       visibility: "OPEN",
@@ -174,7 +175,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "PlayerA",
-          discordId: DiscordAccountIdSchema.parse("discord-a00000000"),
+          discordId: testAccountId("00000000"),
           serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -184,7 +185,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "PlayerB",
-          discordId: DiscordAccountIdSchema.parse("discord-b00000000"),
+          discordId: testAccountId("00000000"),
           serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -194,7 +195,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "PlayerC",
-          discordId: DiscordAccountIdSchema.parse("discord-c00000000"),
+          discordId: testAccountId("00000000"),
           serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -231,8 +232,8 @@ describe("Add all members to competition", () => {
   });
 
   test("adds all players when using Promise.allSettled (concurrent)", async () => {
-    const serverId = DiscordGuildIdSchema.parse("test-server-78900");
-    const ownerId = DiscordAccountIdSchema.parse("owner-discord-id0");
+    const serverId = testGuildId("78900");
+    const ownerId = testAccountId("0");
 
     const now = new Date();
     const startDate = new Date(now.getTime() + 1000 * 60 * 60); // 1 hour from now
@@ -242,7 +243,7 @@ describe("Add all members to competition", () => {
     const competition = await createCompetition(prisma, {
       serverId,
       ownerId,
-      channelId: DiscordChannelIdSchema.parse("channel-789000000"),
+      channelId: testChannelId("789000000"),
       title: "Limited Competition",
       description: "Only 3 spots available",
       visibility: "OPEN",
@@ -263,7 +264,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player1",
-          discordId: DiscordAccountIdSchema.parse("discord-100000000"),
+          discordId: testAccountId("100000000"),
           serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -273,7 +274,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player2",
-          discordId: DiscordAccountIdSchema.parse("discord-200000000"),
+          discordId: testAccountId("200000000"),
           serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -283,7 +284,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player3",
-          discordId: DiscordAccountIdSchema.parse("discord-300000000"),
+          discordId: testAccountId("300000000"),
           serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -293,7 +294,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player4",
-          discordId: DiscordAccountIdSchema.parse("discord-400000000"),
+          discordId: testAccountId("400000000"),
           serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -303,7 +304,7 @@ describe("Add all members to competition", () => {
       prisma.player.create({
         data: {
           alias: "Player5",
-          discordId: DiscordAccountIdSchema.parse("discord-500000000"),
+          discordId: testAccountId("500000000"),
           serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
@@ -339,8 +340,8 @@ describe("Add all members to competition", () => {
   });
 
   test("handles empty server (no players to add)", async () => {
-    const serverId = DiscordGuildIdSchema.parse("empty-server-9990");
-    const ownerId = DiscordAccountIdSchema.parse("owner-discord-id0");
+    const serverId = testGuildId("9990");
+    const ownerId = testAccountId("0");
 
     const now = new Date();
     const startDate = new Date(now.getTime() + 1000 * 60 * 60); // 1 hour from now
@@ -349,7 +350,7 @@ describe("Add all members to competition", () => {
     const competition = await createCompetition(prisma, {
       serverId,
       ownerId,
-      channelId: DiscordChannelIdSchema.parse("channel-999000000"),
+      channelId: testChannelId("999000000"),
       title: "Empty Server Competition",
       description: "No players in this server",
       visibility: "SERVER_WIDE",

@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { createCompetition, getCompetitionById } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 import { addParticipant } from "../../../database/competition/participants.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 import {
   ChampionIdSchema,
   DiscordAccountIdSchema,
@@ -107,7 +108,7 @@ async function createTestCompetition(
   const input: CreateCompetitionInput = {
     serverId,
     ownerId,
-    channelId: DiscordChannelIdSchema.parse("123456789012345678"),
+    channelId: testChannelId("123456789012345678"),
     title: options?.title ?? "Test Competition",
     description: options?.description ?? "A test competition",
     visibility: options?.visibility ?? "OPEN",
@@ -139,8 +140,8 @@ async function createTestCompetition(
 
 describe("Competition View - DRAFT Status", () => {
   test("should show details for DRAFT competition with no participants", async () => {
-    const serverId = DiscordGuildIdSchema.parse("server-1000000001");
-    const ownerId = DiscordAccountIdSchema.parse("owner-10000000100");
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
@@ -161,23 +162,23 @@ describe("Competition View - DRAFT Status", () => {
   });
 
   test("should show participant list for DRAFT competition with participants", async () => {
-    const serverId = DiscordGuildIdSchema.parse("server-1000000001");
-    const ownerId = DiscordAccountIdSchema.parse("owner-10000000100");
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId);
     const { playerId: player1Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user-100000000010"),
+      testAccountId("100000000010"),
       "Player1",
     );
     const { playerId: player2Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user-200000000020"),
+      testAccountId("200000000020"),
       "Player2",
     );
     const { playerId: player3Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user-300000000030"),
+      testAccountId("300000000030"),
       "Player3",
     );
 
@@ -203,8 +204,8 @@ describe("Competition View - DRAFT Status", () => {
   });
 
   test("should indicate leaderboard not available for DRAFT competition", async () => {
-    const serverId = DiscordGuildIdSchema.parse("server-1000000001");
-    const ownerId = DiscordAccountIdSchema.parse("owner-10000000100");
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
@@ -229,8 +230,8 @@ describe("Competition View - DRAFT Status", () => {
 
 describe("Competition View - ACTIVE Status", () => {
   test("should show details for ACTIVE competition", async () => {
-    const serverId = DiscordGuildIdSchema.parse("server-1000000001");
-    const ownerId = DiscordAccountIdSchema.parse("owner-10000000100");
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const now = new Date();
     const yesterday = new Date(now);
@@ -255,8 +256,8 @@ describe("Competition View - ACTIVE Status", () => {
   });
 
   test("should handle ACTIVE competition with participants", async () => {
-    const serverId = DiscordGuildIdSchema.parse("server-1000000001");
-    const ownerId = DiscordAccountIdSchema.parse("owner-10000000100");
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const now = new Date();
     const yesterday = new Date(now);
@@ -272,12 +273,12 @@ describe("Competition View - ACTIVE Status", () => {
     // Add participants
     const { playerId: player1Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user-100000000010"),
+      testAccountId("100000000010"),
       "Player1",
     );
     const { playerId: player2Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user-200000000020"),
+      testAccountId("200000000020"),
       "Player2",
     );
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
@@ -303,8 +304,8 @@ describe("Competition View - ACTIVE Status", () => {
 
 describe("Competition View - ENDED Status", () => {
   test("should show details for ENDED competition", async () => {
-    const serverId = DiscordGuildIdSchema.parse("server-1000000001");
-    const ownerId = DiscordAccountIdSchema.parse("owner-10000000100");
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const now = new Date();
     const lastWeek = new Date(now);
@@ -329,8 +330,8 @@ describe("Competition View - ENDED Status", () => {
   });
 
   test("should show final standings for ENDED competition", async () => {
-    const serverId = DiscordGuildIdSchema.parse("server-1000000001");
-    const ownerId = DiscordAccountIdSchema.parse("owner-10000000100");
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const now = new Date();
     const twoWeeksAgo = new Date(now);
@@ -347,12 +348,12 @@ describe("Competition View - ENDED Status", () => {
     // Add participants while competition is active
     const { playerId: player1Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user-100000000010"),
+      testAccountId("100000000010"),
       "Player1",
     );
     const { playerId: player2Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user-200000000020"),
+      testAccountId("200000000020"),
       "Player2",
     );
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
@@ -392,8 +393,8 @@ describe("Competition View - ENDED Status", () => {
 
 describe("Competition View - CANCELLED Status", () => {
   test("should show details for CANCELLED competition", async () => {
-    const serverId = DiscordGuildIdSchema.parse("server-1000000001");
-    const ownerId = DiscordAccountIdSchema.parse("owner-10000000100");
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       isCancelled: true,
@@ -430,8 +431,8 @@ describe("Competition View - Error Cases", () => {
 
 describe("Competition View - Different Criteria Types", () => {
   test("should show MOST_GAMES_PLAYED criteria", async () => {
-    const serverId = DiscordGuildIdSchema.parse("server-1000000001");
-    const ownerId = DiscordAccountIdSchema.parse("owner-10000000100");
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       criteriaType: "MOST_GAMES_PLAYED",
@@ -448,8 +449,8 @@ describe("Competition View - Different Criteria Types", () => {
   });
 
   test("should show HIGHEST_RANK criteria", async () => {
-    const serverId = DiscordGuildIdSchema.parse("server-1000000001");
-    const ownerId = DiscordAccountIdSchema.parse("owner-10000000100");
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       criteriaType: "HIGHEST_RANK",
@@ -466,8 +467,8 @@ describe("Competition View - Different Criteria Types", () => {
   });
 
   test("should show MOST_WINS_CHAMPION criteria with champion ID", async () => {
-    const serverId = DiscordGuildIdSchema.parse("server-1000000001");
-    const ownerId = DiscordAccountIdSchema.parse("owner-10000000100");
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
     const championId = ChampionIdSchema.parse(157); // Yasuo
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, {

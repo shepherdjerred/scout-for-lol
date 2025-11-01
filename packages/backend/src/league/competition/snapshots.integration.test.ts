@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { createSnapshot, getSnapshot, createSnapshotsForAllParticipants } from "./snapshots.js";
 import { createCompetition, type CreateCompetitionInput } from "../../database/competition/queries.js";
 import { addParticipant } from "../../database/competition/participants.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 import {
   ChampionIdSchema,
   CompetitionId,
@@ -42,9 +43,9 @@ const prisma = new PrismaClient({
 async function createTestCompetition(criteria: CompetitionCriteria): Promise<{ competitionId: CompetitionId }> {
   const now = new Date();
   const input: CreateCompetitionInput = {
-    serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-    ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
-    channelId: DiscordChannelIdSchema.parse("111222333444555666"),
+    serverId: testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
+    channelId: testChannelId("111222333444555666"),
     title: "Test Competition",
     description: "Test",
     visibility: "OPEN",
@@ -67,8 +68,8 @@ async function createTestPlayer(alias: string, puuid: LeaguePuuid, region: Regio
     data: {
       alias,
       discordId: null,
-      serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-      creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
+      serverId: testGuildId("123456789012345678"),
+      creatorDiscordId: testAccountId("987654321098765432"),
       createdTime: now,
       updatedTime: now,
       accounts: {
@@ -77,8 +78,8 @@ async function createTestPlayer(alias: string, puuid: LeaguePuuid, region: Regio
             alias,
             puuid,
             region,
-            serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-            creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
+            serverId: testGuildId("123456789012345678"),
+            creatorDiscordId: testAccountId("987654321098765432"),
             createdTime: now,
             updatedTime: now,
           },
@@ -190,8 +191,8 @@ describe("createSnapshot - START snapshot", () => {
       data: {
         alias: "NoAccountPlayer",
         discordId: null,
-        serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-        creatorDiscordId: DiscordAccountIdSchema.parse("987654321098765432"),
+        serverId: testGuildId("123456789012345678"),
+        creatorDiscordId: testAccountId("987654321098765432"),
         createdTime: now,
         updatedTime: now,
       },
@@ -418,7 +419,7 @@ describe("createSnapshotsForAllParticipants", () => {
       competitionId,
       invitedPlayerId,
       "INVITED",
-      DiscordAccountIdSchema.parse("inviter1230000000"),
+      testAccountId("1230000000"),
     );
 
     await createSnapshotsForAllParticipants(prisma, CompetitionIdSchema.parse(competitionId), "START", criteria);

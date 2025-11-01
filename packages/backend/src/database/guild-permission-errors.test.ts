@@ -13,14 +13,19 @@ import {
 } from "./guild-permission-errors.js";
 import { DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "guild-errors-test-"));
 const testDbPath = join(testDir, "test.db");
 
 // Initialize test database
-execSync("bunx prisma db push --skip-generate", {
-  env: { ...process.env, DATABASE_URL: `file:${testDbPath}` },
-  cwd: process.cwd(),
+execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
+  env: {
+    ...process.env,
+    DATABASE_URL: `file:${testDbPath}`,
+    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+  },
   stdio: "pipe",
 });
 
@@ -41,8 +46,8 @@ describe("recordPermissionError", () => {
   test("creates new error record on first occurrence", async () => {
     await recordPermissionError(
       prisma,
-      DiscordGuildIdSchema.parse("guild-12300000000"),
-      DiscordChannelIdSchema.parse("channel-456000000"),
+      testGuildId("12300000000"),
+      testChannelId("456000000"),
       "proactive_check",
       "Missing Send Messages",
     );
@@ -50,15 +55,15 @@ describe("recordPermissionError", () => {
     const record = await prisma.guildPermissionError.findUnique({
       where: {
         serverId_channelId: {
-          serverId: DiscordGuildIdSchema.parse("guild-12300000000"),
-          channelId: DiscordChannelIdSchema.parse("channel-456000000"),
+          serverId: testGuildId("12300000000"),
+          channelId: testChannelId("456000000"),
         },
       },
     });
 
     expect(record).toBeDefined();
-    expect(record?.serverId).toBe(DiscordGuildIdSchema.parse("guild-12300000000"));
-    expect(record?.channelId).toBe(DiscordChannelIdSchema.parse("channel-456000000"));
+    expect(record?.serverId).toBe(testGuildId("12300000000"));
+    expect(record?.channelId).toBe(testChannelId("456000000"));
     expect(record?.errorType).toBe("proactive_check");
     expect(record?.errorReason).toBe("Missing Send Messages");
     expect(record?.consecutiveErrorCount).toBe(1);
@@ -70,24 +75,24 @@ describe("recordPermissionError", () => {
     // First error
     await recordPermissionError(
       prisma,
-      DiscordGuildIdSchema.parse("guild-12300000000"),
-      DiscordChannelIdSchema.parse("channel-456000000"),
+      testGuildId("12300000000"),
+      testChannelId("456000000"),
       "proactive_check",
     );
 
     // Second error
     await recordPermissionError(
       prisma,
-      DiscordGuildIdSchema.parse("guild-12300000000"),
-      DiscordChannelIdSchema.parse("channel-456000000"),
+      testGuildId("12300000000"),
+      testChannelId("456000000"),
       "api_error",
     );
 
     const record = await prisma.guildPermissionError.findUnique({
       where: {
         serverId_channelId: {
-          serverId: DiscordGuildIdSchema.parse("guild-12300000000"),
-          channelId: DiscordChannelIdSchema.parse("channel-456000000"),
+          serverId: testGuildId("12300000000"),
+          channelId: testChannelId("456000000"),
         },
       },
     });
@@ -99,19 +104,19 @@ describe("recordPermissionError", () => {
   test("tracks separate errors for different channels in same guild", async () => {
     await recordPermissionError(
       prisma,
-      DiscordGuildIdSchema.parse("guild-12300000000"),
-      DiscordChannelIdSchema.parse("channel-1000000001"),
+      testGuildId("12300000000"),
+      testChannelId("1000000001"),
       "proactive_check",
     );
     await recordPermissionError(
       prisma,
-      DiscordGuildIdSchema.parse("guild-12300000000"),
-      DiscordChannelIdSchema.parse("channel-2000000002"),
+      testGuildId("12300000000"),
+      testChannelId("2000000002"),
       "proactive_check",
     );
 
     const errors = await prisma.guildPermissionError.findMany({
-      where: { serverId: DiscordGuildIdSchema.parse("guild-12300000000") },
+      where: { serverId: testGuildId("12300000000") },
     });
 
     expect(errors).toHaveLength(2);
@@ -123,29 +128,29 @@ describe("recordSuccessfulSend", () => {
     // Create some errors
     await recordPermissionError(
       prisma,
-      DiscordGuildIdSchema.parse("guild-12300000000"),
-      DiscordChannelIdSchema.parse("channel-456000000"),
+      testGuildId("12300000000"),
+      testChannelId("456000000"),
       "proactive_check",
     );
     await recordPermissionError(
       prisma,
-      DiscordGuildIdSchema.parse("guild-12300000000"),
-      DiscordChannelIdSchema.parse("channel-456000000"),
+      testGuildId("12300000000"),
+      testChannelId("456000000"),
       "api_error",
     );
 
     // Record successful send
     await recordSuccessfulSend(
       prisma,
-      DiscordGuildIdSchema.parse("guild-12300000000"),
-      DiscordChannelIdSchema.parse("channel-456000000"),
+      testGuildId("12300000000"),
+      testChannelId("456000000"),
     );
 
     const record = await prisma.guildPermissionError.findUnique({
       where: {
         serverId_channelId: {
-          serverId: DiscordGuildIdSchema.parse("guild-12300000000"),
-          channelId: DiscordChannelIdSchema.parse("channel-456000000"),
+          serverId: testGuildId("12300000000"),
+          channelId: testChannelId("456000000"),
         },
       },
     });
@@ -157,15 +162,15 @@ describe("recordSuccessfulSend", () => {
   test("creates record with successful send if none exists", async () => {
     await recordSuccessfulSend(
       prisma,
-      DiscordGuildIdSchema.parse("guild-12300000000"),
-      DiscordChannelIdSchema.parse("channel-456000000"),
+      testGuildId("12300000000"),
+      testChannelId("456000000"),
     );
 
     const record = await prisma.guildPermissionError.findUnique({
       where: {
         serverId_channelId: {
-          serverId: DiscordGuildIdSchema.parse("guild-12300000000"),
-          channelId: DiscordChannelIdSchema.parse("channel-456000000"),
+          serverId: testGuildId("12300000000"),
+          channelId: testChannelId("456000000"),
         },
       },
     });
@@ -183,8 +188,8 @@ describe("getAbandonedGuilds", () => {
     // Create error record from 8 days ago
     await prisma.guildPermissionError.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("abandoned-guild00"),
-        channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+        serverId: testGuildId("00"),
+        channelId: testChannelId("1000000001"),
         errorType: "proactive_check",
         firstOccurrence: eightDaysAgo,
         lastOccurrence: new Date(),
@@ -195,7 +200,7 @@ describe("getAbandonedGuilds", () => {
     const abandoned = await getAbandonedGuilds(prisma, 7);
 
     expect(abandoned).toHaveLength(1);
-    expect(abandoned[0]?.serverId).toBe(DiscordGuildIdSchema.parse("abandoned-guild00"));
+    expect(abandoned[0]?.serverId).toBe(testGuildId("00"));
     expect(abandoned[0]?.errorCount).toBe(50);
   });
 
@@ -205,8 +210,8 @@ describe("getAbandonedGuilds", () => {
 
     await prisma.guildPermissionError.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("recent-error-guild"),
-        channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+        serverId: testGuildId("recent-error-guild"),
+        channelId: testChannelId("1000000001"),
         errorType: "proactive_check",
         firstOccurrence: fiveDaysAgo,
         lastOccurrence: new Date(),
@@ -228,8 +233,8 @@ describe("getAbandonedGuilds", () => {
 
     await prisma.guildPermissionError.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("recovered-guild00"),
-        channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+        serverId: testGuildId("00"),
+        channelId: testChannelId("1000000001"),
         errorType: "proactive_check",
         firstOccurrence: eightDaysAgo,
         lastOccurrence: new Date(),
@@ -249,8 +254,8 @@ describe("getAbandonedGuilds", () => {
 
     await prisma.guildPermissionError.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("already-notified0"),
-        channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+        serverId: testGuildId("0"),
+        channelId: testChannelId("1000000001"),
         errorType: "proactive_check",
         firstOccurrence: eightDaysAgo,
         lastOccurrence: new Date(),
@@ -271,8 +276,8 @@ describe("getAbandonedGuilds", () => {
     // Multiple channels with errors in same guild
     await prisma.guildPermissionError.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("multi-channel-guild"),
-        channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+        serverId: testGuildId("multi-channel-guild"),
+        channelId: testChannelId("1000000001"),
         errorType: "proactive_check",
         firstOccurrence: eightDaysAgo,
         lastOccurrence: new Date(),
@@ -282,8 +287,8 @@ describe("getAbandonedGuilds", () => {
 
     await prisma.guildPermissionError.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("multi-channel-guild"),
-        channelId: DiscordChannelIdSchema.parse("channel-2000000002"),
+        serverId: testGuildId("multi-channel-guild"),
+        channelId: testChannelId("2000000002"),
         errorType: "api_error",
         firstOccurrence: eightDaysAgo,
         lastOccurrence: new Date(),
@@ -294,7 +299,7 @@ describe("getAbandonedGuilds", () => {
     const abandoned = await getAbandonedGuilds(prisma, 7);
 
     expect(abandoned).toHaveLength(1);
-    expect(abandoned[0]?.serverId).toBe(DiscordGuildIdSchema.parse("multi-channel-guild"));
+    expect(abandoned[0]?.serverId).toBe(testGuildId("multi-channel-guild"));
     expect(abandoned[0]?.errorCount).toBe(35); // 20 + 15
   });
 
@@ -304,8 +309,8 @@ describe("getAbandonedGuilds", () => {
 
     await prisma.guildPermissionError.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("three-day-error00"),
-        channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+        serverId: testGuildId("00"),
+        channelId: testChannelId("1000000001"),
         errorType: "proactive_check",
         firstOccurrence: threeDaysAgo,
         lastOccurrence: new Date(),
@@ -331,8 +336,8 @@ describe("markGuildAsNotified", () => {
     // Create multiple error records for same guild
     await prisma.guildPermissionError.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("guild-12300000000"),
-        channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+        serverId: testGuildId("12300000000"),
+        channelId: testChannelId("1000000001"),
         errorType: "proactive_check",
         firstOccurrence: eightDaysAgo,
         lastOccurrence: new Date(),
@@ -342,8 +347,8 @@ describe("markGuildAsNotified", () => {
 
     await prisma.guildPermissionError.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("guild-12300000000"),
-        channelId: DiscordChannelIdSchema.parse("channel-2000000002"),
+        serverId: testGuildId("12300000000"),
+        channelId: testChannelId("2000000002"),
         errorType: "api_error",
         firstOccurrence: eightDaysAgo,
         lastOccurrence: new Date(),
@@ -351,10 +356,10 @@ describe("markGuildAsNotified", () => {
       },
     });
 
-    await markGuildAsNotified(prisma, DiscordGuildIdSchema.parse("guild-12300000000"));
+    await markGuildAsNotified(prisma, testGuildId("12300000000"));
 
     const records = await prisma.guildPermissionError.findMany({
-      where: { serverId: DiscordGuildIdSchema.parse("guild-12300000000") },
+      where: { serverId: testGuildId("12300000000") },
     });
 
     expect(records).toHaveLength(2);
@@ -370,8 +375,8 @@ describe("cleanupOldErrorRecords", () => {
     // Old resolved error
     await prisma.guildPermissionError.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("old-guild00000000"),
-        channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+        serverId: testGuildId("00000000"),
+        channelId: testChannelId("1000000001"),
         errorType: "none",
         firstOccurrence: fortyDaysAgo,
         lastOccurrence: fortyDaysAgo,
@@ -394,8 +399,8 @@ describe("cleanupOldErrorRecords", () => {
 
     await prisma.guildPermissionError.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("recent-guild00000"),
-        channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+        serverId: testGuildId("00000"),
+        channelId: testChannelId("1000000001"),
         errorType: "none",
         firstOccurrence: yesterday,
         lastOccurrence: yesterday,
@@ -419,8 +424,8 @@ describe("cleanupOldErrorRecords", () => {
     // Old but still has errors
     await prisma.guildPermissionError.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("ongoing-error-guild"),
-        channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+        serverId: testGuildId("ongoing-error-guild"),
+        channelId: testChannelId("1000000001"),
         errorType: "proactive_check",
         firstOccurrence: fortyDaysAgo,
         lastOccurrence: new Date(),
@@ -439,8 +444,8 @@ describe("cleanupOldErrorRecords", () => {
 
 describe("Permission Error Workflow", () => {
   test("full workflow: error -> more errors -> success -> reset", async () => {
-    const serverId = DiscordGuildIdSchema.parse("workflow-guild000");
-    const channelId = DiscordChannelIdSchema.parse("workflow-channel0");
+    const serverId = testGuildId("000");
+    const channelId = testChannelId("0");
 
     // 1. First error
     await recordPermissionError(prisma, serverId, channelId, "proactive_check");
@@ -483,8 +488,8 @@ describe("Permission Error Workflow", () => {
     // Create error that started 8 days ago
     await prisma.guildPermissionError.create({
       data: {
-        serverId: DiscordGuildIdSchema.parse("abandoned-1230000"),
-        channelId: DiscordChannelIdSchema.parse("channel-1000000001"),
+        serverId: testGuildId("1230000"),
+        channelId: testChannelId("1000000001"),
         errorType: "proactive_check",
         firstOccurrence: eightDaysAgo,
         lastOccurrence: new Date(),
@@ -495,10 +500,10 @@ describe("Permission Error Workflow", () => {
     // 1. Should be detected as abandoned
     const abandoned = await getAbandonedGuilds(prisma, 7);
     expect(abandoned).toHaveLength(1);
-    expect(abandoned[0]?.serverId).toBe(DiscordGuildIdSchema.parse("abandoned-1230000"));
+    expect(abandoned[0]?.serverId).toBe(testGuildId("1230000"));
 
     // 2. Mark as notified
-    await markGuildAsNotified(prisma, DiscordGuildIdSchema.parse("abandoned-1230000"));
+    await markGuildAsNotified(prisma, testGuildId("1230000"));
 
     // 3. Should no longer appear in abandoned list
     const stillAbandoned = await getAbandonedGuilds(prisma, 7);

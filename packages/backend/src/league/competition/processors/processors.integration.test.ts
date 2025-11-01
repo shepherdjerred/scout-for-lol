@@ -15,6 +15,7 @@ import type { PlayerWithAccounts } from "./types.js";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 // ============================================================================
 // Test Fixtures - Load Real Match Data
 // ============================================================================
@@ -33,7 +34,7 @@ const testPlayers: PlayerWithAccounts[] = [
   {
     id: PlayerIdSchema.parse(1),
     alias: "TestPlayer1",
-    discordId: DiscordAccountIdSchema.parse("discord-100000000"),
+    discordId: testAccountId("100000000"),
     accounts: [
       {
         id: AccountIdSchema.parse(1),
@@ -46,7 +47,7 @@ const testPlayers: PlayerWithAccounts[] = [
   {
     id: PlayerIdSchema.parse(2),
     alias: "TestPlayer2",
-    discordId: DiscordAccountIdSchema.parse("discord-200000000"),
+    discordId: testAccountId("200000000"),
     accounts: [
       {
         id: AccountIdSchema.parse(2),
@@ -132,7 +133,7 @@ describe("processCriteria integration tests", () => {
     const player: PlayerWithAccounts = {
       id: PlayerIdSchema.parse(1),
       alias: "TestPlayer",
-      discordId: DiscordAccountIdSchema.parse("discord-100000000"),
+      discordId: testAccountId("100000000"),
       accounts: [
         {
           id: AccountIdSchema.parse(1),
@@ -179,7 +180,7 @@ describe("processCriteria integration tests", () => {
     const player: PlayerWithAccounts = {
       id: PlayerIdSchema.parse(1),
       alias: "TestPlayer",
-      discordId: DiscordAccountIdSchema.parse("discord-100000000"),
+      discordId: testAccountId("100000000"),
       accounts: [
         {
           id: AccountIdSchema.parse(1),
@@ -226,7 +227,7 @@ describe("processCriteria integration tests", () => {
     const player: PlayerWithAccounts = {
       id: PlayerIdSchema.parse(1),
       alias: "TestPlayer",
-      discordId: DiscordAccountIdSchema.parse("discord-100000000"),
+      discordId: testAccountId("100000000"),
       accounts: [
         {
           id: AccountIdSchema.parse(1),
@@ -299,7 +300,7 @@ describe("processCriteria integration tests", () => {
     const player: PlayerWithAccounts = {
       id: PlayerIdSchema.parse(1),
       alias: "TestPlayer",
-      discordId: DiscordAccountIdSchema.parse("discord-100000000"),
+      discordId: testAccountId("100000000"),
       accounts: [
         {
           id: AccountIdSchema.parse(1),
@@ -343,7 +344,7 @@ describe("processCriteria integration tests", () => {
     const player: PlayerWithAccounts = {
       id: PlayerIdSchema.parse(1),
       alias: "TestPlayer",
-      discordId: DiscordAccountIdSchema.parse("discord-100000000"),
+      discordId: testAccountId("100000000"),
       accounts: [
         {
           id: AccountIdSchema.parse(1),

@@ -9,6 +9,7 @@ import {
 } from "@scout-for-lol/data";
 import type { Competition } from "../../../../generated/prisma/client";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 /**
  * These tests verify the validation logic patterns used in edit.ts
  * They test the same patterns without needing Discord.js mocks
@@ -16,16 +17,16 @@ import type { Competition } from "../../../../generated/prisma/client";
 
 describe("Edit validation patterns", () => {
   test("owner check should validate user ID matches competition owner", () => {
-    const competition = { ownerId: DiscordAccountIdSchema.parse("user1230000000000") };
-    const userId = DiscordAccountIdSchema.parse("user1230000000000");
+    const competition = { ownerId: testAccountId("1230000000000") };
+    const userId = testAccountId("1230000000000");
     const isOwner = competition.ownerId === userId;
 
     expect(isOwner).toBe(true);
   });
 
   test("non-owner should be rejected", () => {
-    const competition = { ownerId: DiscordAccountIdSchema.parse("user1230000000000") };
-    const userId = DiscordAccountIdSchema.parse("user4560000000000");
+    const competition = { ownerId: testAccountId("1230000000000") };
+    const userId = testAccountId("4560000000000");
     const isOwner = competition.ownerId === userId;
 
     expect(isOwner).toBe(false);
@@ -40,9 +41,9 @@ describe("Competition status checks", () => {
       endDate: new Date(Date.now() + 2 * 86400000), // Day after tomorrow
       seasonId: null,
       visibility: "OPEN",
-      serverId: DiscordGuildIdSchema.parse("12345678900000000"),
-      ownerId: DiscordAccountIdSchema.parse("user1230000000000"),
-      channelId: DiscordChannelIdSchema.parse("channel1230000000"),
+      serverId: testGuildId("12345678900000000"),
+      ownerId: testAccountId("1230000000000"),
+      channelId: testChannelId("1230000000"),
       title: "Test Competition",
       description: "Test description",
       criteriaType: "MOST_GAMES_PLAYED",
@@ -50,7 +51,7 @@ describe("Competition status checks", () => {
       maxParticipants: 10,
       createdTime: new Date(),
       updatedTime: new Date(),
-      creatorDiscordId: DiscordAccountIdSchema.parse("user1230000000000"),
+      creatorDiscordId: testAccountId("1230000000000"),
       id: CompetitionIdSchema.parse(1),
     };
 
@@ -67,9 +68,9 @@ describe("Competition status checks", () => {
       endDate: new Date(Date.now() + 86400000), // Tomorrow
       seasonId: null,
       visibility: "OPEN",
-      serverId: DiscordGuildIdSchema.parse("12345678900000000"),
-      ownerId: DiscordAccountIdSchema.parse("user1230000000000"),
-      channelId: DiscordChannelIdSchema.parse("channel1230000000"),
+      serverId: testGuildId("12345678900000000"),
+      ownerId: testAccountId("1230000000000"),
+      channelId: testChannelId("1230000000"),
       title: "Test Competition",
       description: "Test description",
       criteriaType: "MOST_GAMES_PLAYED",
@@ -77,7 +78,7 @@ describe("Competition status checks", () => {
       maxParticipants: 10,
       createdTime: new Date(),
       updatedTime: new Date(),
-      creatorDiscordId: DiscordAccountIdSchema.parse("user1230000000000"),
+      creatorDiscordId: testAccountId("1230000000000"),
       id: CompetitionIdSchema.parse(1),
     };
 
@@ -95,9 +96,9 @@ describe("Competition status checks", () => {
       endDate: new Date(Date.now() - 86400000), // Yesterday
       seasonId: null,
       visibility: "OPEN",
-      serverId: DiscordGuildIdSchema.parse("12345678900000000"),
-      ownerId: DiscordAccountIdSchema.parse("user1230000000000"),
-      channelId: DiscordChannelIdSchema.parse("channel1230000000"),
+      serverId: testGuildId("12345678900000000"),
+      ownerId: testAccountId("1230000000000"),
+      channelId: testChannelId("1230000000"),
       title: "Test Competition",
       description: "Test description",
       criteriaType: "MOST_GAMES_PLAYED",
@@ -105,7 +106,7 @@ describe("Competition status checks", () => {
       maxParticipants: 10,
       createdTime: new Date(),
       updatedTime: new Date(),
-      creatorDiscordId: DiscordAccountIdSchema.parse("user1230000000000"),
+      creatorDiscordId: testAccountId("1230000000000"),
       id: CompetitionIdSchema.parse(1),
     };
 
@@ -123,9 +124,9 @@ describe("Competition status checks", () => {
       endDate: new Date(Date.now() + 2 * 86400000),
       seasonId: null,
       visibility: "OPEN",
-      serverId: DiscordGuildIdSchema.parse("12345678900000000"),
-      ownerId: DiscordAccountIdSchema.parse("user1230000000000"),
-      channelId: DiscordChannelIdSchema.parse("channel1230000000"),
+      serverId: testGuildId("12345678900000000"),
+      ownerId: testAccountId("1230000000000"),
+      channelId: testChannelId("1230000000"),
       title: "Test Competition",
       description: "Test description",
       criteriaType: "MOST_GAMES_PLAYED",
@@ -133,7 +134,7 @@ describe("Competition status checks", () => {
       maxParticipants: 10,
       createdTime: new Date(),
       updatedTime: new Date(),
-      creatorDiscordId: DiscordAccountIdSchema.parse("user1230000000000"),
+      creatorDiscordId: testAccountId("1230000000000"),
       id: CompetitionIdSchema.parse(1),
     };
 

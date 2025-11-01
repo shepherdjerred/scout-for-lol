@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { CompetitionCreationSchema, CompetitionDatesSchema, isCompetitionActive } from "./validation.js";
 import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../testing/test-ids.js";
 // ============================================================================
 // isCompetitionActive
 // ============================================================================
@@ -266,9 +267,9 @@ describe("CompetitionDatesSchema - duration limit", () => {
 
 describe("CompetitionCreationSchema - Discord ID validation", () => {
   const validInput = {
-    serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-    ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
-    channelId: DiscordChannelIdSchema.parse("111111111111111111"),
+    serverId: testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
+    channelId: testChannelId("111111111111111111"),
     title: "Test Competition",
     description: "Test description",
     visibility: "OPEN" as const,
@@ -294,7 +295,7 @@ describe("CompetitionCreationSchema - Discord ID validation", () => {
   test("rejects invalid ownerId (contains letters)", () => {
     const result = CompetitionCreationSchema.safeParse({
       ...validInput,
-      ownerId: DiscordAccountIdSchema.parse("abc123456789012345"),
+      ownerId: testAccountId("123456789012345"),
     });
     expect(result.success).toBe(false);
   });
@@ -310,9 +311,9 @@ describe("CompetitionCreationSchema - Discord ID validation", () => {
 
 describe("CompetitionCreationSchema - title validation", () => {
   const validInput = {
-    serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-    ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
-    channelId: DiscordChannelIdSchema.parse("111111111111111111"),
+    serverId: testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
+    channelId: testChannelId("111111111111111111"),
     title: "Test Competition",
     description: "Test description",
     visibility: "OPEN" as const,
@@ -371,9 +372,9 @@ describe("CompetitionCreationSchema - title validation", () => {
 
 describe("CompetitionCreationSchema - description validation", () => {
   const validInput = {
-    serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-    ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
-    channelId: DiscordChannelIdSchema.parse("111111111111111111"),
+    serverId: testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
+    channelId: testChannelId("111111111111111111"),
     title: "Test Competition",
     description: "Test description",
     visibility: "OPEN" as const,
@@ -429,9 +430,9 @@ describe("CompetitionCreationSchema - description validation", () => {
 
 describe("CompetitionCreationSchema - visibility validation", () => {
   const validInput = {
-    serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-    ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
-    channelId: DiscordChannelIdSchema.parse("111111111111111111"),
+    serverId: testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
+    channelId: testChannelId("111111111111111111"),
     title: "Test Competition",
     description: "Test description",
     visibility: "OPEN" as const,
@@ -473,9 +474,9 @@ describe("CompetitionCreationSchema - visibility validation", () => {
 
 describe("CompetitionCreationSchema - maxParticipants validation", () => {
   const validInput = {
-    serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-    ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
-    channelId: DiscordChannelIdSchema.parse("111111111111111111"),
+    serverId: testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
+    channelId: testChannelId("111111111111111111"),
     title: "Test Competition",
     description: "Test description",
     visibility: "OPEN" as const,
@@ -547,9 +548,9 @@ describe("CompetitionCreationSchema - maxParticipants validation", () => {
 
 describe("CompetitionCreationSchema - criteria validation", () => {
   const validInput = {
-    serverId: DiscordGuildIdSchema.parse("123456789012345678"),
-    ownerId: DiscordAccountIdSchema.parse("987654321098765432"),
-    channelId: DiscordChannelIdSchema.parse("111111111111111111"),
+    serverId: testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
+    channelId: testChannelId("111111111111111111"),
     title: "Test Competition",
     description: "Test description",
     visibility: "OPEN" as const,

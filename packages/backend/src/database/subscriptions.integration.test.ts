@@ -5,6 +5,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getChannelsSubscribedToPlayers } from "./index.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -22,11 +23,18 @@ const testDbPath = join(testDbDir, "test.db");
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database
-execSync("bunx prisma db push --skip-generate", {
-  env: { ...process.env, DATABASE_URL: testDbUrl },
-  cwd: process.cwd(),
-  stdio: "inherit",
-});
+execSync(
+  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  {
+    env: {
+      ...process.env,
+      DATABASE_URL: testDbUrl,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "inherit",
+  },
+);
 
 const testPrisma = new PrismaClient({
   datasources: {
@@ -51,19 +59,33 @@ afterEach(async () => {
 });
 
 // Helper function to create a valid 78-character PUUID
-function createPuuid(identifier: string): LeaguePuuid {
+function testPuuid(identifier: string): LeaguePuuid {
   // PUUIDs are exactly 78 characters long
   const base = `puuid-${identifier}`;
   return LeaguePuuidSchema.parse(base.padEnd(78, "0"));
 }
 
 // Helper function to create a valid Discord channel ID (17-20 numeric characters)
-function createChannelId(identifier: string): DiscordChannelId {
+function testChannelId(identifier: string): DiscordChannelId {
   // Discord channel IDs are 17-20 characters and must be numeric (snowflake IDs)
   // Format: Take a base number and pad it to make it 18 characters
   const base = identifier.replace(/\D/g, ""); // Remove non-digits
   const numericId = `1${base}`.padEnd(18, "0");
   return DiscordChannelIdSchema.parse(numericId);
+}
+
+// Helper function to create a valid Discord account ID (17-18 numeric characters)
+function testAccountId(identifier: string): DiscordAccountId {
+  const base = identifier.replace(/\D/g, ""); // Remove non-digits
+  const numericId = `2${base}`.padEnd(18, "0");
+  return DiscordAccountIdSchema.parse(numericId);
+}
+
+// Helper function to create a valid Discord guild ID (17-20 numeric characters)
+function testGuildId(identifier: string): DiscordGuildId {
+  const base = identifier.replace(/\D/g, ""); // Remove non-digits
+  const numericId = `3${base}`.padEnd(18, "0");
+  return DiscordGuildIdSchema.parse(numericId);
 }
 
 // Helper function to create test data with required metadata
@@ -72,9 +94,9 @@ async function createTestPlayer(alias: string, serverId: DiscordGuildId) {
   return await testPrisma.player.create({
     data: {
       alias,
-      discordId: DiscordAccountIdSchema.parse(`discord-${alias}`),
-      serverId: DiscordGuildIdSchema.parse(serverId),
-      creatorDiscordId: DiscordAccountIdSchema.parse("test-creator00000"),
+      discordId: testAccountId(alias),
+      serverId,
+      creatorDiscordId: testAccountId("testcreator"),
       createdTime: now,
       updatedTime: now,
     },
@@ -90,7 +112,7 @@ async function createTestAccount(puuid: LeaguePuuid, playerId: PlayerId, serverI
       alias,
       playerId,
       serverId,
-      creatorDiscordId: DiscordAccountIdSchema.parse("test-creator00000"),
+      creatorDiscordId: testAccountId("testcreator"),
       createdTime: now,
       updatedTime: now,
     },
@@ -103,7 +125,7 @@ async function createTestSubscription(playerId: PlayerId, channelId: DiscordChan
       playerId,
       channelId,
       serverId,
-      creatorDiscordId: DiscordAccountIdSchema.parse("test-creator00000"),
+      creatorDiscordId: testAccountId("testcreator"),
       createdTime: new Date(),
       updatedTime: new Date(),
     },
@@ -115,20 +137,20 @@ describe("getChannelsSubscribedToPlayers - Deduplication Fix", () => {
     // This is the core bug fix: When Server A and Server B both track Player X
     // and both subscribe to channel #123, we should only send ONE message to #123
 
-    const player = await createTestPlayer("TestPlayer", DiscordGuildIdSchema.parse("server-1000000001"));
+    const player = await createTestPlayer("TestPlayer", testGuildId("1000000001"));
 
     // Create account for the player
     const account = await createTestAccount(
-      createPuuid("main"),
+      testPuuid("main"),
       player.id,
-      DiscordGuildIdSchema.parse("server-1000000001"),
+      testGuildId("1000000001"),
       player.alias,
     );
 
     // Create two subscriptions in different servers but to the SAME channel
-    const channelId = createChannelId("123");
-    await createTestSubscription(player.id, channelId, DiscordGuildIdSchema.parse("server-1000000001"));
-    await createTestSubscription(player.id, channelId, DiscordGuildIdSchema.parse("server-2000000002"));
+    const channelId = testChannelId("123");
+    await createTestSubscription(player.id, channelId, testGuildId("1000000001"));
+    await createTestSubscription(player.id, channelId, testGuildId("2000000002"));
 
     // Get channels subscribed to this player
     const puuid = LeaguePuuidSchema.parse(account.puuid);
@@ -140,21 +162,21 @@ describe("getChannelsSubscribedToPlayers - Deduplication Fix", () => {
   });
 
   test("returns multiple channels when player is subscribed to different channels", async () => {
-    const player = await createTestPlayer("TestPlayer", DiscordGuildIdSchema.parse("server-1000000001"));
+    const player = await createTestPlayer("TestPlayer", testGuildId("1000000001"));
     const account = await createTestAccount(
-      createPuuid("main"),
+      testPuuid("main"),
       player.id,
-      DiscordGuildIdSchema.parse("server-1000000001"),
+      testGuildId("1000000001"),
       player.alias,
     );
 
     // Create subscriptions to different channels
-    const channel1 = createChannelId("123");
-    const channel2 = createChannelId("456");
-    const channel3 = createChannelId("789");
-    await createTestSubscription(player.id, channel1, DiscordGuildIdSchema.parse("server-1000000001"));
-    await createTestSubscription(player.id, channel2, DiscordGuildIdSchema.parse("server-2000000002"));
-    await createTestSubscription(player.id, channel3, DiscordGuildIdSchema.parse("server-3000000000"));
+    const channel1 = testChannelId("123");
+    const channel2 = testChannelId("456");
+    const channel3 = testChannelId("789");
+    await createTestSubscription(player.id, channel1, testGuildId("1000000001"));
+    await createTestSubscription(player.id, channel2, testGuildId("2000000002"));
+    await createTestSubscription(player.id, channel3, testGuildId("3000000000"));
 
     const puuid = LeaguePuuidSchema.parse(account.puuid);
     const channels = await getChannelsSubscribedToPlayers([puuid], testPrisma);
@@ -174,25 +196,25 @@ describe("getChannelsSubscribedToPlayers - Deduplication Fix", () => {
     // Both accounts are tracked in the same channel
     // Should only send ONE message to that channel
 
-    const player = await createTestPlayer("TestPlayer", DiscordGuildIdSchema.parse("server-1000000001"));
+    const player = await createTestPlayer("TestPlayer", testGuildId("1000000001"));
 
     // Create two accounts for the same player (e.g., main and smurf)
     const mainAccount = await createTestAccount(
-      createPuuid("main"),
+      testPuuid("main"),
       player.id,
-      DiscordGuildIdSchema.parse("server-1000000001"),
+      testGuildId("1000000001"),
       player.alias,
     );
     const smurfAccount = await createTestAccount(
-      createPuuid("smurf"),
+      testPuuid("smurf"),
       player.id,
-      DiscordGuildIdSchema.parse("server-1000000001"),
+      testGuildId("1000000001"),
       `${player.alias}-smurf`,
     );
 
     // Create a subscription for the player (applies to all their accounts)
-    const channelId = createChannelId("123");
-    await createTestSubscription(player.id, channelId, DiscordGuildIdSchema.parse("server-1000000001"));
+    const channelId = testChannelId("123");
+    await createTestSubscription(player.id, channelId, testGuildId("1000000001"));
 
     // Get channels for both accounts
     const puuids = [mainAccount.puuid, smurfAccount.puuid].map((p) => LeaguePuuidSchema.parse(p));
@@ -204,11 +226,11 @@ describe("getChannelsSubscribedToPlayers - Deduplication Fix", () => {
   });
 
   test("returns empty array when player has no subscriptions", async () => {
-    const player = await createTestPlayer("TestPlayer", DiscordGuildIdSchema.parse("server-1000000001"));
+    const player = await createTestPlayer("TestPlayer", testGuildId("1000000001"));
     const account = await createTestAccount(
-      createPuuid("main"),
+      testPuuid("main"),
       player.id,
-      DiscordGuildIdSchema.parse("server-1000000001"),
+      testGuildId("1000000001"),
       player.alias,
     );
 
@@ -225,32 +247,32 @@ describe("getChannelsSubscribedToPlayers - Deduplication Fix", () => {
     // - When both are in a game together, should return [channel-A, channel-B, channel-C]
     //   with channel-B deduplicated (not appearing twice)
 
-    const player1 = await createTestPlayer("Player1", DiscordGuildIdSchema.parse("server-1000000001"));
-    const player2 = await createTestPlayer("Player2", DiscordGuildIdSchema.parse("server-1000000001"));
+    const player1 = await createTestPlayer("Player1", testGuildId("1000000001"));
+    const player2 = await createTestPlayer("Player2", testGuildId("1000000001"));
 
     const account1 = await createTestAccount(
-      createPuuid("player1"),
+      testPuuid("player1"),
       player1.id,
-      DiscordGuildIdSchema.parse("server-1000000001"),
+      testGuildId("1000000001"),
       player1.alias,
     );
     const account2 = await createTestAccount(
-      createPuuid("player2"),
+      testPuuid("player2"),
       player2.id,
-      DiscordGuildIdSchema.parse("server-1000000001"),
+      testGuildId("1000000001"),
       player2.alias,
     );
 
     // Player 1 subscriptions
-    const channelA = createChannelId("111");
-    const channelB = createChannelId("222");
-    const channelC = createChannelId("333");
-    await createTestSubscription(player1.id, channelA, DiscordGuildIdSchema.parse("server-1000000001"));
-    await createTestSubscription(player1.id, channelB, DiscordGuildIdSchema.parse("server-2000000002"));
+    const channelA = testChannelId("111");
+    const channelB = testChannelId("222");
+    const channelC = testChannelId("333");
+    await createTestSubscription(player1.id, channelA, testGuildId("1000000001"));
+    await createTestSubscription(player1.id, channelB, testGuildId("2000000002"));
 
     // Player 2 subscriptions (channel-B overlaps!)
-    await createTestSubscription(player2.id, channelB, DiscordGuildIdSchema.parse("server-3000000000"));
-    await createTestSubscription(player2.id, channelC, DiscordGuildIdSchema.parse("server-4000000000"));
+    await createTestSubscription(player2.id, channelB, testGuildId("3000000000"));
+    await createTestSubscription(player2.id, channelC, testGuildId("4000000000"));
 
     const puuids = [account1.puuid, account2.puuid].map((p) => LeaguePuuidSchema.parse(p));
     const channels = await getChannelsSubscribedToPlayers(puuids, testPrisma);
@@ -269,19 +291,19 @@ describe("getChannelsSubscribedToPlayers - Deduplication Fix", () => {
     // Edge case: Player is subscribed in multiple channels in the same server
     // (e.g., #general and #league-of-legends)
 
-    const player = await createTestPlayer("TestPlayer", DiscordGuildIdSchema.parse("server-1000000001"));
+    const player = await createTestPlayer("TestPlayer", testGuildId("1000000001"));
     const account = await createTestAccount(
-      createPuuid("main"),
+      testPuuid("main"),
       player.id,
-      DiscordGuildIdSchema.parse("server-1000000001"),
+      testGuildId("1000000001"),
       player.alias,
     );
 
     // Create multiple subscriptions in the same server to different channels
-    const channelGeneral = createChannelId("1001");
-    const channelLol = createChannelId("1002");
-    await createTestSubscription(player.id, channelGeneral, DiscordGuildIdSchema.parse("server-1000000001"));
-    await createTestSubscription(player.id, channelLol, DiscordGuildIdSchema.parse("server-1000000001"));
+    const channelGeneral = testChannelId("1001");
+    const channelLol = testChannelId("1002");
+    await createTestSubscription(player.id, channelGeneral, testGuildId("1000000001"));
+    await createTestSubscription(player.id, channelLol, testGuildId("1000000001"));
 
     const puuid = LeaguePuuidSchema.parse(account.puuid);
     const channels = await getChannelsSubscribedToPlayers([puuid], testPrisma);

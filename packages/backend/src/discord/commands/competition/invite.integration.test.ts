@@ -8,6 +8,7 @@ import { createCompetition, getCompetitionById } from "../../../database/competi
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 import { addParticipant, getParticipantStatus } from "../../../database/competition/participants.js";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 // Create a test database for integration tests
 const testDir = mkdtempSync(join(tmpdir(), "competition-invite-test-"));
 const testDbPath = join(testDir, "test.db");
@@ -91,7 +92,7 @@ async function createTestCompetition(
   const input: CreateCompetitionInput = {
     serverId,
     ownerId,
-    channelId: DiscordChannelIdSchema.parse("123456789012345678"),
+    channelId: testChannelId("123456789012345678"),
     title: "Test Competition",
     description: "A test competition",
     visibility: options?.visibility ?? "OPEN",
@@ -129,9 +130,9 @@ async function createTestCompetition(
 
 describe("Owner invites user", () => {
   test("owner executes invite → succeeds", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const targetUserId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const targetUserId = testAccountId("222222222222222222");
 
     const { playerId } = await createTestPlayer(serverId, targetUserId, "TargetUser");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
@@ -164,10 +165,10 @@ describe("Owner invites user", () => {
 
 describe("Non-owner tries to invite", () => {
   test("non-owner tries to invite → owner check would fail", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const nonOwnerId = "333333333333333333";
-    const targetUserId = DiscordAccountIdSchema.parse("222222222222222222");
+    const targetUserId = testAccountId("222222222222222222");
 
     await createTestPlayer(serverId, targetUserId, "TargetUser");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
@@ -191,9 +192,9 @@ describe("Non-owner tries to invite", () => {
 
 describe("Invite to OPEN competition", () => {
   test("OPEN competition → owner invites user → succeeds", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const targetUserId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const targetUserId = testAccountId("222222222222222222");
 
     const { playerId } = await createTestPlayer(serverId, targetUserId, "TargetUser");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
@@ -217,9 +218,9 @@ describe("Invite to OPEN competition", () => {
 
 describe("Invite already joined user", () => {
   test("user already JOINED → owner tries to invite → should detect existing status", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const targetUserId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const targetUserId = testAccountId("222222222222222222");
 
     const { playerId } = await createTestPlayer(serverId, targetUserId, "TargetUser");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
@@ -243,9 +244,9 @@ describe("Invite already joined user", () => {
 
 describe("Invite already invited user", () => {
   test("user already INVITED → owner tries to invite again → idempotent", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const targetUserId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const targetUserId = testAccountId("222222222222222222");
 
     const { playerId } = await createTestPlayer(serverId, targetUserId, "TargetUser");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
@@ -273,9 +274,9 @@ describe("Invite already invited user", () => {
 
 describe("Invite user without Player account", () => {
   test("target user has no linked account → should detect missing player", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const targetUserId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const targetUserId = testAccountId("222222222222222222");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
 
@@ -303,25 +304,25 @@ describe("Invite user without Player account", () => {
 
 describe("Invite when at limit", () => {
   test("competition at maxParticipants → owner tries to invite → fails", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, { maxParticipants: 2 });
 
     // Create 2 players and have them join
     const { playerId: player1Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user1000000000000"),
+      testAccountId("1000000000000"),
       "Player1",
     );
     const { playerId: player2Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user2000000000000"),
+      testAccountId("2000000000000"),
       "Player2",
     );
     const { playerId: player3Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user3000000000000"),
+      testAccountId("3000000000000"),
       "Player3",
     );
 
@@ -350,9 +351,9 @@ describe("Invite when at limit", () => {
 
 describe("Invite user who left", () => {
   test("user previously left → owner tries to invite → should detect LEFT status", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const targetUserId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const targetUserId = testAccountId("222222222222222222");
 
     const { playerId } = await createTestPlayer(serverId, targetUserId, "TargetUser");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
@@ -387,9 +388,9 @@ describe("Invite user who left", () => {
 
 describe("Invite to cancelled competition", () => {
   test("competition is cancelled → owner tries to invite → should detect cancellation", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const targetUserId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const targetUserId = testAccountId("222222222222222222");
 
     const { playerId } = await createTestPlayer(serverId, targetUserId, "TargetUser");
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
@@ -414,9 +415,9 @@ describe("Invite to cancelled competition", () => {
 
 describe("Invite to ended competition", () => {
   test("competition has ended → owner tries to invite → should detect ended status", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const targetUserId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const targetUserId = testAccountId("222222222222222222");
 
     // Create competition with dates in the past
     const lastWeek = new Date();
@@ -452,25 +453,25 @@ describe("Invite to ended competition", () => {
 
 describe("Multiple invitations", () => {
   test("owner invites multiple users → all succeed", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
 
     // Create 3 players
     const { playerId: player1Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user1000000000000"),
+      testAccountId("1000000000000"),
       "Player1",
     );
     const { playerId: player2Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user2000000000000"),
+      testAccountId("2000000000000"),
       "Player2",
     );
     const { playerId: player3Id } = await createTestPlayer(
       serverId,
-      DiscordAccountIdSchema.parse("user3000000000000"),
+      testAccountId("3000000000000"),
       "Player3",
     );
 

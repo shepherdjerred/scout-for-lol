@@ -9,6 +9,7 @@ import {
   LeaguePuuidSchema,
 } from "@scout-for-lol/data";
 import { PrismaClient } from "../../../generated/prisma/client";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 import {
   DEFAULT_PLAYER_SUBSCRIPTION_LIMIT,
   DEFAULT_ACCOUNT_LIMIT,
@@ -21,9 +22,13 @@ const testDbPath = path.join(tempDir, "test.db");
 const testDatabaseUrl = `file:${testDbPath}`;
 
 // Push schema to test database
-execSync("bunx prisma db push --skip-generate", {
-  env: { ...process.env, DATABASE_URL: testDatabaseUrl },
-  cwd: process.cwd(),
+execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
+  env: {
+    ...process.env,
+    DATABASE_URL: testDatabaseUrl,
+    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+  },
   stdio: "inherit",
 });
 
@@ -46,9 +51,9 @@ beforeEach(async () => {
 describe("Subscribe Command - Subscription Limits", () => {
   test("allows subscriptions up to the limit", async () => {
     const now = new Date();
-    const serverId = DiscordGuildIdSchema.parse("test-server-lmtd01");
-    const channelId = DiscordChannelIdSchema.parse("test-channel-00001");
-    const discordUserId = DiscordAccountIdSchema.parse("test-user-0000001");
+    const serverId = testGuildId("01");
+    const channelId = testChannelId("00001");
+    const discordUserId = testAccountId("0000001");
 
     // Create DEFAULT_PLAYER_SUBSCRIPTION_LIMIT players with subscriptions
     for (let i = 0; i < DEFAULT_PLAYER_SUBSCRIPTION_LIMIT; i++) {
@@ -102,9 +107,9 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("counts only players with active subscriptions", async () => {
     const now = new Date();
-    const serverId = DiscordGuildIdSchema.parse("test-server-cnt001");
-    const channelId = DiscordChannelIdSchema.parse("test-channel-00001");
-    const discordUserId = DiscordAccountIdSchema.parse("test-user-0000001");
+    const serverId = testGuildId("001");
+    const channelId = testChannelId("00001");
+    const discordUserId = testAccountId("0000001");
 
     // Create 5 players with subscriptions
     for (let i = 0; i < 5; i++) {
@@ -189,9 +194,9 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("allows adding accounts to existing player even at limit", async () => {
     const now = new Date();
-    const serverId = DiscordGuildIdSchema.parse("test-server-existing-player");
-    const channelId = DiscordChannelIdSchema.parse("test-channel-00001");
-    const discordUserId = DiscordAccountIdSchema.parse("test-user-0000001");
+    const serverId = testGuildId("test-server-existing-player");
+    const channelId = testChannelId("00001");
+    const discordUserId = testAccountId("0000001");
 
     // Create limit number of players with subscriptions
     for (let i = 0; i < DEFAULT_PLAYER_SUBSCRIPTION_LIMIT; i++) {
@@ -272,9 +277,9 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("unlimited servers bypass the limit", async () => {
     const now = new Date();
-    const serverId = DiscordGuildIdSchema.parse("test-server-nlimited000");
-    const channelId = DiscordChannelIdSchema.parse("test-channel-00001");
-    const discordUserId = DiscordAccountIdSchema.parse("test-user-0000001");
+    const serverId = testGuildId("000");
+    const channelId = testChannelId("00001");
+    const discordUserId = testAccountId("0000001");
 
     // Add to unlimited servers set
     UNLIMITED_SUBSCRIPTION_SERVERS.add(serverId);
@@ -334,10 +339,10 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("limits are enforced per-server independently", async () => {
     const now = new Date();
-    const server1Id = DiscordGuildIdSchema.parse("test-server-000001");
-    const server2Id = DiscordGuildIdSchema.parse("test-server-000002");
-    const channelId = DiscordChannelIdSchema.parse("test-channel-00001");
-    const discordUserId = DiscordAccountIdSchema.parse("test-user-0000001");
+    const server1Id = testGuildId("000001");
+    const server2Id = testGuildId("000002");
+    const channelId = testChannelId("00001");
+    const discordUserId = testAccountId("0000001");
 
     // Create limit number of players in server 1
     for (let i = 0; i < DEFAULT_PLAYER_SUBSCRIPTION_LIMIT; i++) {
@@ -432,8 +437,8 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("allows accounts up to the account limit", async () => {
     const now = new Date();
-    const serverId = DiscordGuildIdSchema.parse("test-server-account-limit");
-    const discordUserId = DiscordAccountIdSchema.parse("test-user-0000001");
+    const serverId = testGuildId("test-server-account-limit");
+    const discordUserId = testAccountId("0000001");
 
     // Create DEFAULT_ACCOUNT_LIMIT accounts (doesn't matter if they have subscriptions)
     for (let i = 0; i < DEFAULT_ACCOUNT_LIMIT; i++) {
@@ -475,9 +480,9 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("account limit counts all accounts regardless of subscriptions", async () => {
     const now = new Date();
-    const serverId = DiscordGuildIdSchema.parse("tst-srv-acnt-cnt1");
-    const channelId = DiscordChannelIdSchema.parse("test-channel-00001");
-    const discordUserId = DiscordAccountIdSchema.parse("test-user-0000001");
+    const serverId = testGuildId("1");
+    const channelId = testChannelId("00001");
+    const discordUserId = testAccountId("0000001");
 
     // Create 5 accounts WITH subscriptions
     for (let i = 0; i < 5; i++) {
@@ -562,9 +567,9 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("account limit is enforced per-server independently", async () => {
     const now = new Date();
-    const server1Id = DiscordGuildIdSchema.parse("test-server-accounts-1");
-    const server2Id = DiscordGuildIdSchema.parse("test-server-accounts-2");
-    const discordUserId = DiscordAccountIdSchema.parse("test-user-0000001");
+    const server1Id = testGuildId("1");
+    const server2Id = testGuildId("2");
+    const discordUserId = testAccountId("0000001");
 
     // Create limit number of accounts in server 1
     for (let i = 0; i < DEFAULT_ACCOUNT_LIMIT; i++) {
@@ -635,8 +640,8 @@ describe("Subscribe Command - Subscription Limits", () => {
 
   test("unlimited servers bypass account limit", async () => {
     const now = new Date();
-    const serverId = DiscordGuildIdSchema.parse("test-server-unlimited-accounts");
-    const discordUserId = DiscordAccountIdSchema.parse("test-user-0000001");
+    const serverId = testGuildId("test-server-unlimited-accounts");
+    const discordUserId = testAccountId("0000001");
 
     // Add to unlimited servers set
     UNLIMITED_SUBSCRIPTION_SERVERS.add(serverId);

@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createCompetition, getCompetitionById, updateCompetition } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput, UpdateCompetitionInput } from "../../../database/competition/queries.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 import {
   CompetitionIdSchema,
   DiscordAccountIdSchema,
@@ -61,7 +62,7 @@ async function createDraftCompetition(
   const input: CreateCompetitionInput = {
     serverId,
     ownerId,
-    channelId: DiscordChannelIdSchema.parse("123456789012345678"),
+    channelId: testChannelId("123456789012345678"),
     title: "Test Competition",
     description: "A test competition",
     visibility: "OPEN",
@@ -97,7 +98,7 @@ async function createActiveCompetition(
   const input: CreateCompetitionInput = {
     serverId,
     ownerId,
-    channelId: DiscordChannelIdSchema.parse("123456789012345678"),
+    channelId: testChannelId("123456789012345678"),
     title: "Active Competition",
     description: "An active competition",
     visibility: "OPEN",
@@ -126,8 +127,8 @@ async function createActiveCompetition(
 
 describe("Edit DRAFT competition", () => {
   test("owner can edit title in DRAFT", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const before = await getCompetitionById(prisma, competitionId);
@@ -146,8 +147,8 @@ describe("Edit DRAFT competition", () => {
   });
 
   test("owner can edit description in DRAFT", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const updateInput: UpdateCompetitionInput = {
@@ -161,23 +162,23 @@ describe("Edit DRAFT competition", () => {
   });
 
   test("owner can edit channel in DRAFT", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const updateInput: UpdateCompetitionInput = {
-      channelId: DiscordChannelIdSchema.parse("999999999999999999"),
+      channelId: testChannelId("999999999999999999"),
     };
 
     await updateCompetition(prisma, competitionId, updateInput);
 
     const after = await getCompetitionById(prisma, competitionId);
-    expect(after?.channelId).toBe(DiscordChannelIdSchema.parse("999999999999999999"));
+    expect(after?.channelId).toBe(testChannelId("999999999999999999"));
   });
 
   test("owner can edit visibility in DRAFT", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const before = await getCompetitionById(prisma, competitionId);
@@ -194,8 +195,8 @@ describe("Edit DRAFT competition", () => {
   });
 
   test("owner can edit maxParticipants in DRAFT", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const before = await getCompetitionById(prisma, competitionId);
@@ -212,8 +213,8 @@ describe("Edit DRAFT competition", () => {
   });
 
   test("owner can edit dates in DRAFT", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const newStart = new Date("2025-06-01T00:00:00Z");
@@ -235,8 +236,8 @@ describe("Edit DRAFT competition", () => {
   });
 
   test("owner can change from fixed dates to season in DRAFT", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const before = await getCompetitionById(prisma, competitionId);
@@ -263,8 +264,8 @@ describe("Edit DRAFT competition", () => {
   });
 
   test("owner can edit criteria in DRAFT", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const before = await getCompetitionById(prisma, competitionId);
@@ -287,8 +288,8 @@ describe("Edit DRAFT competition", () => {
   });
 
   test("owner can edit multiple fields at once in DRAFT", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const updateInput: UpdateCompetitionInput = {
@@ -314,8 +315,8 @@ describe("Edit DRAFT competition", () => {
 
 describe("Edit ACTIVE competition", () => {
   test("owner can edit title in ACTIVE", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createActiveCompetition(serverId, ownerId);
 
     // Verify it's ACTIVE
@@ -334,8 +335,8 @@ describe("Edit ACTIVE competition", () => {
   });
 
   test("owner can edit description in ACTIVE", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createActiveCompetition(serverId, ownerId);
 
     const updateInput: UpdateCompetitionInput = {
@@ -349,18 +350,18 @@ describe("Edit ACTIVE competition", () => {
   });
 
   test("owner can edit channel in ACTIVE", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createActiveCompetition(serverId, ownerId);
 
     const updateInput: UpdateCompetitionInput = {
-      channelId: DiscordChannelIdSchema.parse("888888888888888888"),
+      channelId: testChannelId("888888888888888888"),
     };
 
     await updateCompetition(prisma, competitionId, updateInput);
 
     const after = await getCompetitionById(prisma, competitionId);
-    expect(after?.channelId).toBe(DiscordChannelIdSchema.parse("888888888888888888"));
+    expect(after?.channelId).toBe(testChannelId("888888888888888888"));
   });
 });
 
@@ -370,23 +371,23 @@ describe("Edit ACTIVE competition", () => {
 
 describe("Ownership validation", () => {
   test("competition owner ID is preserved", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const competition = await getCompetitionById(prisma, competitionId);
     expect(competition?.ownerId).toBe(ownerId);
 
     // Simulate checking ownership in the command
-    const userId = DiscordAccountIdSchema.parse("111111111111111111");
+    const userId = testAccountId("111111111111111111");
     const isOwner = competition?.ownerId === userId;
     expect(isOwner).toBe(true);
   });
 
   test("non-owner is detected", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
-    const otherUserId = DiscordAccountIdSchema.parse("222222222222222222");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
+    const otherUserId = testAccountId("222222222222222222");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const competition = await getCompetitionById(prisma, competitionId);
@@ -403,8 +404,8 @@ describe("Ownership validation", () => {
 
 describe("Status-based restrictions", () => {
   test("DRAFT status allows full edits", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const competition = await getCompetitionById(prisma, competitionId);
@@ -416,8 +417,8 @@ describe("Status-based restrictions", () => {
   });
 
   test("ACTIVE status restricts certain edits", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createActiveCompetition(serverId, ownerId);
 
     const competition = await getCompetitionById(prisma, competitionId);
@@ -440,8 +441,8 @@ describe("Status-based restrictions", () => {
   });
 
   test("CANCELLED status is detected", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     // Cancel the competition
@@ -466,8 +467,8 @@ describe("Status-based restrictions", () => {
 
 describe("Partial updates", () => {
   test("updating one field preserves others", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const before = await getCompetitionById(prisma, competitionId);
@@ -489,8 +490,8 @@ describe("Partial updates", () => {
   });
 
   test("updatedTime changes on edit", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const before = await getCompetitionById(prisma, competitionId);
@@ -516,8 +517,8 @@ describe("Partial updates", () => {
   });
 
   test("createdTime remains unchanged on edit", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createDraftCompetition(serverId, ownerId);
 
     const before = await getCompetitionById(prisma, competitionId);

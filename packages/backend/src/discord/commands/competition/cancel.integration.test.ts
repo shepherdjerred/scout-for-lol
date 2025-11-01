@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { createCompetition, getCompetitionById } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../../testing/test-ids.js";
 // Create a test database for integration tests
 const testDir = mkdtempSync(join(tmpdir(), "competition-cancel-test-"));
 const testDbPath = join(testDir, "test.db");
@@ -57,7 +58,7 @@ async function createTestCompetition(
   const input: CreateCompetitionInput = {
     serverId,
     ownerId,
-    channelId: DiscordChannelIdSchema.parse("123456789012345678"),
+    channelId: testChannelId("123456789012345678"),
     title: "Test Competition",
     description: "A test competition",
     visibility: "OPEN",
@@ -86,8 +87,8 @@ async function createTestCompetition(
 
 describe("Owner cancellation", () => {
   test("owner can cancel their own competition", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // Verify competition is not cancelled initially
@@ -112,8 +113,8 @@ describe("Owner cancellation", () => {
   });
 
   test("cancelled competition maintains all other data", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     const before = await getCompetitionById(prisma, competitionId);
@@ -144,8 +145,8 @@ describe("Owner cancellation", () => {
 
 describe("Admin cancellation", () => {
   test("admin can cancel competition they don't own", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const adminId = "222222222222222222";
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
@@ -173,8 +174,8 @@ describe("Admin cancellation", () => {
 
 describe("Non-existent competition", () => {
   test("cancelling non-existent competition returns null", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     // Create a competition just to set up the database properly
     await createTestCompetition(serverId, ownerId);
 
@@ -191,8 +192,8 @@ describe("Non-existent competition", () => {
 
 describe("Idempotent cancellation", () => {
   test("cancelling already cancelled competition is idempotent", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // Cancel first time
@@ -227,8 +228,8 @@ describe("Idempotent cancellation", () => {
 
 describe("Status with cancellation", () => {
   test("cancelled competition has CANCELLED status", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     await prisma.competition.update({
@@ -255,8 +256,8 @@ describe("Status with cancellation", () => {
   });
 
   test("active competition becomes cancelled when flag set", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
 
     // Create competition with dates that make it ACTIVE
     const yesterday = new Date();
@@ -267,7 +268,7 @@ describe("Status with cancellation", () => {
     const input: CreateCompetitionInput = {
       serverId,
       ownerId,
-      channelId: DiscordChannelIdSchema.parse("123456789012345678"),
+      channelId: testChannelId("123456789012345678"),
       title: "Active Competition",
       description: "Currently active",
       visibility: "OPEN",
@@ -330,8 +331,8 @@ describe("Status with cancellation", () => {
 
 describe("Permission checks", () => {
   test("owner ID matches competition owner", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     const competition = await getCompetitionById(prisma, competitionId);
@@ -346,8 +347,8 @@ describe("Permission checks", () => {
   });
 
   test("non-owner ID does not match", async () => {
-    const serverId = DiscordGuildIdSchema.parse("123456789012345678");
-    const ownerId = DiscordAccountIdSchema.parse("111111111111111111");
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const otherUserId = "222222222222222222";
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
