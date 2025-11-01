@@ -165,9 +165,21 @@ describe("Competition View - DRAFT Status", () => {
     const ownerId = DiscordAccountIdSchema.parse("owner-10000000100");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId);
-    const { playerId: player1Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-100000000010"), "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-200000000020"), "Player2");
-    const { playerId: player3Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-300000000030"), "Player3");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-100000000010"),
+      "Player1",
+    );
+    const { playerId: player2Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-200000000020"),
+      "Player2",
+    );
+    const { playerId: player3Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-300000000030"),
+      "Player3",
+    );
 
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
     await addParticipant(prisma, competitionId, player2Id, "JOINED");
@@ -258,8 +270,16 @@ describe("Competition View - ACTIVE Status", () => {
     });
 
     // Add participants
-    const { playerId: player1Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-100000000010"), "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-200000000020"), "Player2");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-100000000010"),
+      "Player1",
+    );
+    const { playerId: player2Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-200000000020"),
+      "Player2",
+    );
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
     await addParticipant(prisma, competitionId, player2Id, "JOINED");
 
@@ -325,8 +345,16 @@ describe("Competition View - ENDED Status", () => {
     });
 
     // Add participants while competition is active
-    const { playerId: player1Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-100000000010"), "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-200000000020"), "Player2");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-100000000010"),
+      "Player1",
+    );
+    const { playerId: player2Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-200000000020"),
+      "Player2",
+    );
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
     await addParticipant(prisma, competitionId, player2Id, "JOINED");
 

@@ -136,7 +136,11 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User can leave a competition they joined", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-100000000010"), "Player1");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-100000000010"),
+      "Player1",
+    );
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
 
     // Join competition
@@ -165,7 +169,11 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User can leave a competition they were invited to (decline invitation)", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-100000000010"), "Player1");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-100000000010"),
+      "Player1",
+    );
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
 
     // Add as invited
@@ -195,7 +203,11 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User cannot leave a competition they are not part of", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-100000000010"), "Player1");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-100000000010"),
+      "Player1",
+    );
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // User is not a participant
@@ -212,7 +224,11 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User cannot leave a competition they already left", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-100000000010"), "Player1");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-100000000010"),
+      "Player1",
+    );
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // Join and then leave
@@ -235,7 +251,11 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User cannot rejoin a competition after leaving", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-100000000010"), "Player1");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-100000000010"),
+      "Player1",
+    );
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // Join, leave, then try to rejoin
@@ -296,7 +316,11 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User can leave a cancelled competition", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-100000000010"), "Player1");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-100000000010"),
+      "Player1",
+    );
 
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);

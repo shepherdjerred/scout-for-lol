@@ -18,9 +18,10 @@ export const PlayerWithSoloQueueRankSchema = PlayerSchema.extend({
 });
 
 export function filterPlayersWithSoloQueueRank(players: Player[]): PlayerWithSoloQueueRank[] {
-  return flatMap(players, (player) =>
-    PlayerWithSoloQueueRankSchema.safeParse(player).success ? [PlayerWithSoloQueueRankSchema.parse(player)] : [],
-  );
+  return flatMap(players, (player) => {
+    const result = PlayerWithSoloQueueRankSchema.safeParse(player);
+    return result.success ? [result.data] : [];
+  });
 }
 
 export function sortPlayersBySoloQueueRank(players: Player[]): PlayerWithSoloQueueRank[] {

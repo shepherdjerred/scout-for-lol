@@ -16,6 +16,7 @@ export const noRedundantZodParse = createRule({
         "Redundant Zod parse: the value '{{valueName}}' already has type '{{valueType}}' which matches the schema output. Zod validation is for unknown/untrusted data.",
     },
     schema: [],
+    hasSuggestions: false,
   },
   defaultOptions: [],
   create(context) {
@@ -59,6 +60,57 @@ export const noRedundantZodParse = createRule({
       return typeString === "unknown" || typeString === "any";
     }
 
+    function isInSafeParseConditional(
+      parseCallNode: TSESTree.CallExpression,
+      schemaNode: TSESTree.Node,
+      argument: TSESTree.Node,
+    ): boolean {
+      // Check if this parse call is inside a conditional that checks safeParse().success
+      // Pattern: safeParse(x).success ? [parse(x)] : []
+
+      let parent: TSESTree.Node | undefined = parseCallNode.parent;
+
+      // Look up the tree to find a ConditionalExpression
+      while (parent !== undefined) {
+        if (parent.type === AST_NODE_TYPES.ConditionalExpression) {
+          const test = parent.test;
+
+          // Check if the test is a .success member access
+          if (
+            test.type === AST_NODE_TYPES.MemberExpression &&
+            test.property.type === AST_NODE_TYPES.Identifier &&
+            test.property.name === "success"
+          ) {
+            // Check if the object is a safeParse call
+            if (
+              test.object.type === AST_NODE_TYPES.CallExpression &&
+              test.object.callee.type === AST_NODE_TYPES.MemberExpression &&
+              test.object.callee.property.type === AST_NODE_TYPES.Identifier &&
+              test.object.callee.property.name === "safeParse"
+            ) {
+              // Check if it's the same schema
+              const safeParseSchema = test.object.callee.object;
+              const safeParseArg = test.object.arguments[0];
+
+              // Compare schema and argument
+              const isSameSchema =
+                context.sourceCode.getText(safeParseSchema) === context.sourceCode.getText(schemaNode);
+              const isSameArg =
+                safeParseArg !== undefined &&
+                context.sourceCode.getText(safeParseArg) === context.sourceCode.getText(argument);
+
+              if (isSameSchema && isSameArg) {
+                return true;
+              }
+            }
+          }
+        }
+        parent = parent.parent;
+      }
+
+      return false;
+    }
+
     return {
       CallExpression(node) {
         // Check if this is a .parse() or .safeParse() call
@@ -81,6 +133,11 @@ export const noRedundantZodParse = createRule({
             return;
           }
 
+          // Skip if this is only a safeParse call (we only want to check parse calls)
+          if (node.callee.property.name === "safeParse") {
+            return;
+          }
+
           try {
             // Get the input argument's type
             const argTsNode = services.esTreeNodeToTSNodeMap.get(argument);
@@ -100,6 +157,12 @@ export const noRedundantZodParse = createRule({
             // If the argument type already matches the parse return type, it's redundant
             // This works for both primitive types and branded types
             if (argTypeString === parseReturnTypeString) {
+              // Don't flag if this parse is part of a safeParse check pattern
+              // Pattern: safeParse(x).success ? [parse(x)] : []
+              if (isInSafeParseConditional(node, schemaNode, argument)) {
+                return;
+              }
+
               context.report({
                 node: node.callee.property,
                 messageId: "redundantParse",

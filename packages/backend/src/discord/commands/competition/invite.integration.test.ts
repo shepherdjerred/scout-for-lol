@@ -309,9 +309,21 @@ describe("Invite when at limit", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId, { maxParticipants: 2 });
 
     // Create 2 players and have them join
-    const { playerId: player1Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user1000000000000"), "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user2000000000000"), "Player2");
-    const { playerId: player3Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user3000000000000"), "Player3");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user1000000000000"),
+      "Player1",
+    );
+    const { playerId: player2Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user2000000000000"),
+      "Player2",
+    );
+    const { playerId: player3Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user3000000000000"),
+      "Player3",
+    );
 
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
     await addParticipant(prisma, competitionId, player2Id, "JOINED");
@@ -446,9 +458,21 @@ describe("Multiple invitations", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
 
     // Create 3 players
-    const { playerId: player1Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user1000000000000"), "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user2000000000000"), "Player2");
-    const { playerId: player3Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user3000000000000"), "Player3");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user1000000000000"),
+      "Player1",
+    );
+    const { playerId: player2Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user2000000000000"),
+      "Player2",
+    );
+    const { playerId: player3Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user3000000000000"),
+      "Player3",
+    );
 
     // Owner invites all 3
     await addParticipant(prisma, competitionId, player1Id, "INVITED", ownerId);

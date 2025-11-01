@@ -273,7 +273,7 @@ describe("getCompetitionStatus - CANCELLED", () => {
       isCancelled: true,
       startDate: null,
       endDate: null,
-      seasonId: "2025-season-1",
+      seasonId: "2025_SEASON_3_ACT_1",
       id: CompetitionIdSchema.parse(1),
       updatedTime: new Date(),
       createdTime: new Date(),
@@ -330,7 +330,7 @@ describe("getCompetitionStatus - DRAFT", () => {
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,
-      seasonId: "2025-season-1",
+      seasonId: "2025_SEASON_3_ACT_1",
       serverId: DiscordGuildIdSchema.parse("12345678901234567"),
       ownerId: DiscordAccountIdSchema.parse("12345678901234567"),
       title: "Test Competition",
@@ -418,7 +418,7 @@ describe("getCompetitionStatus - ACTIVE", () => {
 describe("getCompetitionStatus - ENDED", () => {
   test("returns ENDED when endDate is in past", () => {
     const now = new Date();
-    const competition = {
+    const competition: Competition = {
       isCancelled: false,
       startDate: new Date(now.getTime() - 86400000 * 7), // Last week
       endDate: new Date(now.getTime() - 86400000), // Yesterday
@@ -427,7 +427,7 @@ describe("getCompetitionStatus - ENDED", () => {
       updatedTime: new Date(),
       createdTime: new Date(),
       creatorDiscordId: DiscordAccountIdSchema.parse("12345678901234567"),
-      visibility: "OPEN",
+      visibility: "OPEN" as const,
       criteriaType: "MOST_GAMES_PLAYED",
       criteriaConfig: "{}",
       maxParticipants: 10,

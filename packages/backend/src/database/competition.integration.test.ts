@@ -128,7 +128,11 @@ describe("Participant Management - Cannot join inactive competition", () => {
   test("cannot join cancelled competition", async () => {
     const serverId = DiscordGuildIdSchema.parse("123456789012345678");
     const ownerId = DiscordAccountIdSchema.parse("owner-12300000123");
-    const { playerId } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-456000004560"), "TestPlayer");
+    const { playerId } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-456000004560"),
+      "TestPlayer",
+    );
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       isCancelled: true,
     });
@@ -145,7 +149,11 @@ describe("Participant Management - Cannot join inactive competition", () => {
     const yesterday = new Date(now.getTime() - 86400000);
     const lastWeek = new Date(now.getTime() - 7 * 86400000);
 
-    const { playerId } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-456000004560"), "TestPlayer");
+    const { playerId } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-456000004560"),
+      "TestPlayer",
+    );
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       startDate: lastWeek,
       endDate: yesterday,
@@ -163,7 +171,11 @@ describe("Participant Management - Cannot join inactive competition", () => {
     const yesterday = new Date(now.getTime() - 86400000);
     const nextWeek = new Date(now.getTime() + 7 * 86400000);
 
-    const { playerId } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-456000004560"), "TestPlayer");
+    const { playerId } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-456000004560"),
+      "TestPlayer",
+    );
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       startDate: yesterday,
       endDate: nextWeek,
@@ -183,13 +195,25 @@ describe("Participant Management - Participant limit enforcement", () => {
     });
 
     // Add 2 participants (reaches limit)
-    const { playerId: player1Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-100000000010"), "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-200000000020"), "Player2");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-100000000010"),
+      "Player1",
+    );
+    const { playerId: player2Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-200000000020"),
+      "Player2",
+    );
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
     await addParticipant(prisma, competitionId, player2Id, "JOINED");
 
     // Try to add 3rd participant
-    const { playerId: player3Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-300000000030"), "Player3");
+    const { playerId: player3Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-300000000030"),
+      "Player3",
+    );
     await expect(addParticipant(prisma, competitionId, player3Id, "JOINED")).rejects.toThrow(
       "Competition has reached maximum participants (2)",
     );
@@ -203,11 +227,19 @@ describe("Participant Management - Participant limit enforcement", () => {
     });
 
     // Add 1 participant (below limit)
-    const { playerId: player1Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-100000000010"), "Player1");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-100000000010"),
+      "Player1",
+    );
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
 
     // Can add 2nd participant
-    const { playerId: player2Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-200000000020"), "Player2");
+    const { playerId: player2Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-200000000020"),
+      "Player2",
+    );
     const participant = await addParticipant(prisma, competitionId, player2Id, "JOINED");
     expect(participant.status).toBe("JOINED");
   });
@@ -220,8 +252,16 @@ describe("Participant Management - Participant limit enforcement", () => {
     });
 
     // Add 2 participants
-    const { playerId: player1Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-100000000010"), "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-200000000020"), "Player2");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-100000000010"),
+      "Player1",
+    );
+    const { playerId: player2Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-200000000020"),
+      "Player2",
+    );
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
     await addParticipant(prisma, competitionId, player2Id, "JOINED");
 
@@ -240,7 +280,11 @@ describe("Participant Management - Participant limit enforcement", () => {
     });
 
     // Now player3 can join (only 1 active participant)
-    const { playerId: player3Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-300000000030"), "Player3");
+    const { playerId: player3Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-300000000030"),
+      "Player3",
+    );
     const participant = await addParticipant(prisma, competitionId, player3Id, "JOINED");
     expect(participant.status).toBe("JOINED");
   });
@@ -251,7 +295,11 @@ describe("Participant Management - Cannot rejoin after leaving", () => {
     const serverId = DiscordGuildIdSchema.parse("123456789012345678");
     const ownerId = DiscordAccountIdSchema.parse("owner-12300000123");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
-    const { playerId } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-456000004560"), "TestPlayer");
+    const { playerId } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-456000004560"),
+      "TestPlayer",
+    );
 
     // Join and then leave
     await addParticipant(prisma, competitionId, playerId, "JOINED");
@@ -278,7 +326,11 @@ describe("Participant Management - Cannot rejoin after leaving", () => {
     const serverId = DiscordGuildIdSchema.parse("123456789012345678");
     const ownerId = DiscordAccountIdSchema.parse("owner-12300000123");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
-    const { playerId } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-456000004560"), "TestPlayer");
+    const { playerId } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-456000004560"),
+      "TestPlayer",
+    );
 
     await addParticipant(prisma, competitionId, playerId, "JOINED");
     await prisma.competitionParticipant.update({
@@ -307,7 +359,11 @@ describe("Participant Management - Invitation system", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       visibility: "INVITE_ONLY",
     });
-    const { playerId } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-456000004560"), "TestPlayer");
+    const { playerId } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-456000004560"),
+      "TestPlayer",
+    );
 
     const participant = await addParticipant(prisma, competitionId, playerId, "INVITED", inviterId);
 
@@ -326,13 +382,25 @@ describe("Participant Management - Invitation system", () => {
     });
 
     // Invite 2 participants (reaches limit)
-    const { playerId: player1Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-100000000010"), "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-200000000020"), "Player2");
+    const { playerId: player1Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-100000000010"),
+      "Player1",
+    );
+    const { playerId: player2Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-200000000020"),
+      "Player2",
+    );
     await addParticipant(prisma, competitionId, player1Id, "INVITED", ownerId);
     await addParticipant(prisma, competitionId, player2Id, "INVITED", ownerId);
 
     // Cannot invite 3rd participant
-    const { playerId: player3Id } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-300000000030"), "Player3");
+    const { playerId: player3Id } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-300000000030"),
+      "Player3",
+    );
     await expect(addParticipant(prisma, competitionId, player3Id, "INVITED", ownerId)).rejects.toThrow(
       "Competition has reached maximum participants (2)",
     );
@@ -342,7 +410,11 @@ describe("Participant Management - Invitation system", () => {
     const serverId = DiscordGuildIdSchema.parse("123456789012345678");
     const ownerId = DiscordAccountIdSchema.parse("owner-12300000123");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
-    const { playerId } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-456000004560"), "TestPlayer");
+    const { playerId } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-456000004560"),
+      "TestPlayer",
+    );
 
     await addParticipant(prisma, competitionId, playerId, "JOINED");
 
@@ -482,7 +554,13 @@ describe("Permission Enforcement - Create competition", () => {
     const normalPermissions = new PermissionsBitField([PermissionFlagsBits.SendMessages]);
 
     // Grant permission
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", DiscordAccountIdSchema.parse("admin-45600000000"));
+    await grantPermission(
+      prisma,
+      serverId,
+      userId,
+      "CREATE_COMPETITION",
+      DiscordAccountIdSchema.parse("admin-45600000000"),
+    );
 
     const result = await canCreateCompetition(prisma, serverId, userId, normalPermissions);
 
@@ -507,7 +585,13 @@ describe("Permission Enforcement - Create competition", () => {
     const normalPermissions = new PermissionsBitField([PermissionFlagsBits.SendMessages]);
 
     // Grant on server1
-    await grantPermission(prisma, server1, userId, "CREATE_COMPETITION", DiscordAccountIdSchema.parse("admin-45600000000"));
+    await grantPermission(
+      prisma,
+      server1,
+      userId,
+      "CREATE_COMPETITION",
+      DiscordAccountIdSchema.parse("admin-45600000000"),
+    );
 
     // Can create on server1
     const result1 = await canCreateCompetition(prisma, server1, userId, normalPermissions);
@@ -534,7 +618,11 @@ describe("Integration - Competition lifecycle", () => {
     });
 
     // Player joins
-    const { playerId } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-456000004560"), "TestPlayer");
+    const { playerId } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-456000004560"),
+      "TestPlayer",
+    );
     const participant = await addParticipant(prisma, competitionId, playerId, "JOINED");
     expect(participant.status).toBe("JOINED");
 
@@ -576,7 +664,11 @@ describe("Integration - Competition lifecycle", () => {
     });
 
     // Owner invites player
-    const { playerId } = await createTestPlayer(serverId, DiscordAccountIdSchema.parse("user-456000004560"), "TestPlayer");
+    const { playerId } = await createTestPlayer(
+      serverId,
+      DiscordAccountIdSchema.parse("user-456000004560"),
+      "TestPlayer",
+    );
     const invitation = await addParticipant(prisma, competitionId, playerId, "INVITED", ownerId);
     expect(invitation.status).toBe("INVITED");
     expect(invitation.invitedBy).toBe(ownerId);
