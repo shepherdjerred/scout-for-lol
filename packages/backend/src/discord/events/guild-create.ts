@@ -65,7 +65,7 @@ Scout tracks your friends' League of Legends matches and delivers beautiful post
 
 **Quick Start:**
 • Use \`/help\` to see all available commands
-• Use \`/subscribe\` to start tracking players
+• Use \`/subscription add\` to start tracking players
 • Visit **https://scout-for-lol.com/getting-started** for a step-by-step setup guide
 
 **Full Documentation:** https://scout-for-lol.com/docs
@@ -75,6 +75,9 @@ Need help? Join our Discord support server or open a GitHub issue!`);
     await channel.send({ content: welcomeMessage });
     console.log(`[Guild Create] Welcome message sent to ${guild.name} in #${channel.name}`);
   } catch (error) {
-    console.error(`[Guild Create] Failed to send welcome message to ${guild.name} (${guild.id}):`, getErrorMessage(error));
+    console.error(
+      `[Guild Create] Failed to send welcome message to ${guild.name} (${guild.id}):`,
+      getErrorMessage(error),
+    );
   }
 }

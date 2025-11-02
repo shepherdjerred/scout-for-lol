@@ -1,13 +1,13 @@
 import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
-export { executePlayerEditAlias } from "./player-edit-alias";
-export { executeAccountRemove } from "./account-remove";
+export { executePlayerEdit } from "./player-edit";
+export { executeAccountDelete } from "./account-delete";
 export { executeAccountAdd } from "./account-add";
 export { executePlayerMerge } from "./player-merge";
 export { executePlayerDelete } from "./player-delete";
 export { executeAccountTransfer } from "./account-transfer";
 export { executePlayerLinkDiscord } from "./player-link-discord";
 export { executePlayerUnlinkDiscord } from "./player-unlink-discord";
-export { executePlayerInfo } from "./player-info";
+export { executePlayerView } from "./player-view";
 
 /**
  * Admin command for managing players and accounts
@@ -19,8 +19,8 @@ export const adminCommand = new SlashCommandBuilder()
   .setContexts(InteractionContextType.Guild)
   .addSubcommand((subcommand) =>
     subcommand
-      .setName("player-edit-alias")
-      .setDescription("Change a player's alias")
+      .setName("player-edit")
+      .setDescription("Edit a player's details")
       .addStringOption((option) =>
         option.setName("current-alias").setDescription("The current alias of the player").setRequired(true),
       )
@@ -30,8 +30,8 @@ export const adminCommand = new SlashCommandBuilder()
   )
   .addSubcommand((subcommand) =>
     subcommand
-      .setName("account-remove")
-      .setDescription("Remove an account from a player")
+      .setName("account-delete")
+      .setDescription("Delete an account from a player")
       .addStringOption((option) =>
         option.setName("riot-id").setDescription("The Riot ID of the account in format <name>#<tag>").setRequired(true),
       )
@@ -169,8 +169,8 @@ export const adminCommand = new SlashCommandBuilder()
   )
   .addSubcommand((subcommand) =>
     subcommand
-      .setName("player-info")
-      .setDescription("View detailed player information (accounts, subscriptions, competitions, debug info)")
+      .setName("player-view")
+      .setDescription("View player details (accounts, subscriptions, competitions)")
       .addStringOption((option) =>
         option.setName("alias").setDescription("The alias of the player to view").setRequired(true),
       ),

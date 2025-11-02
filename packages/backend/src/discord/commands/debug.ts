@@ -2,9 +2,8 @@ import { type ChatInputCommandInteraction, SlashCommandBuilder, AttachmentBuilde
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { formatDistanceToNow } from "date-fns";
-import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import configuration from "../../configuration";
-import { getState } from "../../league/model/state";
 import { getAccountsWithState, prisma } from "../../database/index.js";
 import { calculatePollingInterval, shouldCheckPlayer } from "../../utils/polling-intervals.js";
 
@@ -12,64 +11,19 @@ export const debugCommand = new SlashCommandBuilder()
   .setName("debug")
   .setDescription("Debug commands for bot owner")
   .addSubcommand((subcommand) =>
-    subcommand.setName("state").setDescription("Show current application state for debugging"),
-  )
-  .addSubcommand((subcommand) =>
     subcommand.setName("database").setDescription("Upload the SQLite database file (owner only)"),
   )
   .addSubcommand((subcommand) =>
     subcommand.setName("polling").setDescription("Show polling intervals for all tracked players"),
   )
   .addSubcommand((subcommand) =>
-    subcommand.setName("server-info").setDescription("View detailed server information (players, accounts, subscriptions, competitions)"),
+    subcommand
+      .setName("server-info")
+      .setDescription("View detailed server information (players, accounts, subscriptions, competitions)"),
   );
-
-export async function executeDebugState(interaction: ChatInputCommandInteraction) {
-  console.log("🐛 Executing debug state command");
-  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
-  const username = interaction.user.username;
-
-  // Check if user is the bot owner
-  if (userId !== configuration.ownerDiscordId) {
-    console.warn(`⚠️  Unauthorized debug state access attempt by ${username} (${userId})`);
-    await interaction.reply({
-      content: "❌ This command is only available to the bot owner.",
-      ephemeral: true,
-    });
-    return;
-  }
-
-  console.log(`✅ Authorized debug state access by bot owner ${username} (${userId})`);
-
-  const state = getState();
-  const debugInfo = {
-    note: "Active game tracking removed - Spectator API deprecated",
-    gamesInProgress: 0,
-    state: state,
-  };
-  console.log("📊 Debug info:", debugInfo);
-  await interaction.reply({
-    content: `\`\`\`json\n${JSON.stringify(debugInfo, null, 2)}\n\`\`\``,
-    ephemeral: true,
-  });
-}
 
 export async function executeDebugDatabase(interaction: ChatInputCommandInteraction) {
   console.log("🐛 Executing debug database command");
-  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
-  const username = interaction.user.username;
-
-  // Check if user is the bot owner
-  if (userId !== configuration.ownerDiscordId) {
-    console.warn(`⚠️  Unauthorized debug database access attempt by ${username} (${userId})`);
-    await interaction.reply({
-      content: "❌ This command is only available to the bot owner.",
-      ephemeral: true,
-    });
-    return;
-  }
-
-  console.log(`✅ Authorized debug database access by bot owner ${username} (${userId})`);
 
   // Get the database file path from configuration
   const databaseUrl = configuration.databaseUrl;
@@ -111,7 +65,7 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
       files: [attachment],
     });
 
-    console.log(`🎉 Database file uploaded successfully to ${username}`);
+    console.log(`🎉 Database file uploaded successfully`);
   } catch (error) {
     console.error("❌ Error reading or uploading database file:", error);
     await interaction.editReply({
@@ -122,20 +76,6 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
 
 export async function executeDebugPolling(interaction: ChatInputCommandInteraction) {
   console.log("🐛 Executing debug polling command");
-  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
-  const username = interaction.user.username;
-
-  // Check if user is the bot owner
-  if (userId !== configuration.ownerDiscordId) {
-    console.warn(`⚠️  Unauthorized debug polling access attempt by ${username} (${userId})`);
-    await interaction.reply({
-      content: "❌ This command is only available to the bot owner.",
-      ephemeral: true,
-    });
-    return;
-  }
-
-  console.log(`✅ Authorized debug polling access by bot owner ${username} (${userId})`);
 
   try {
     await interaction.deferReply({ ephemeral: true });
@@ -286,9 +226,6 @@ export async function executeDebugServerInfo(interaction: ChatInputCommandIntera
       `📊 Data fetched - Players: ${players.length.toString()}, Accounts: ${accounts.length.toString()}, Subscriptions: ${subscriptions.length.toString()}, Competitions: ${competitions.length.toString()}`,
     );
 
-    // Note: Active game tracking removed (Spectator API deprecated)
-    const activeGames = 0; // No longer tracking active games
-
     // Count subscriptions by channel
     const channelMap: Record<string, number> = {};
     for (const sub of subscriptions) {
@@ -411,7 +348,6 @@ export async function executeDebugServerInfo(interaction: ChatInputCommandIntera
         { name: "Bot Version", value: configuration.version, inline: true },
         { name: "Environment", value: configuration.environment, inline: true },
         { name: "Git SHA", value: configuration.gitSha.substring(0, 8), inline: true },
-        { name: "Games in Progress", value: activeGames.toString(), inline: true },
         { name: "Database", value: configuration.databaseUrl.includes("file:") ? "SQLite" : "External", inline: true },
         { name: "S3 Bucket", value: configuration.s3BucketName ?? "Not configured", inline: true },
       );

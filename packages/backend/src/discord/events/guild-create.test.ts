@@ -41,7 +41,7 @@ describe("handleGuildCreate", () => {
     expect(calls[0]?.[0]?.content).toContain("Thanks for adding Scout");
     expect(calls[0]?.[0]?.content).toContain("https://scout-for-lol.com/getting-started");
     expect(calls[0]?.[0]?.content).toContain("/help");
-    expect(calls[0]?.[0]?.content).toContain("/subscribe");
+    expect(calls[0]?.[0]?.content).toContain("/subscription add");
   });
 
   it("should find first available text channel if system channel unavailable", async () => {

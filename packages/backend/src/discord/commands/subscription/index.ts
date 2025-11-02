@@ -37,12 +37,7 @@ export const subscriptionCommand = new SlashCommandBuilder()
           .setDescription("The Riot ID to subscribe to in the format of <name>#<tag>")
           .setRequired(true),
       )
-      .addStringOption((option) =>
-        option
-          .setName("alias")
-          .setDescription("An alias for the player")
-          .setRequired(true),
-      )
+      .addStringOption((option) => option.setName("alias").setDescription("An alias for the player").setRequired(true))
       .addUserOption((option) => option.setName("user").setDescription("The Discord user of the player")),
   )
   .addSubcommand((subcommand) =>
@@ -59,4 +54,3 @@ export const subscriptionCommand = new SlashCommandBuilder()
   .addSubcommand((subcommand) =>
     subcommand.setName("list").setDescription("Lists all users that the server is subscribed to"),
   );
-

@@ -11,7 +11,7 @@ const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executePlayerEditAlias(interaction: ChatInputCommandInteraction) {
+export async function executePlayerEdit(interaction: ChatInputCommandInteraction) {
   const startTime = Date.now();
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;

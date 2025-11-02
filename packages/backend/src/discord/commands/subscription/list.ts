@@ -1,13 +1,9 @@
-import { type CommandInteraction, SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
+import { type ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from "discord.js";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "../../database/index";
-import { truncateDiscordMessage } from "../utils/message.js";
+import { prisma } from "../../../database/index";
+import { truncateDiscordMessage } from "../../utils/message.js";
 
-export const listSubscriptionsCommand = new SlashCommandBuilder()
-  .setName("listsubscriptions")
-  .setDescription("Lists all users that the server is subscribed to");
-
-export async function executeListSubscriptions(interaction: CommandInteraction) {
+export async function executeSubscriptionList(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId) {
     await interaction.reply({
       content: truncateDiscordMessage("This command can only be used in a server"),
@@ -73,7 +69,7 @@ export async function executeListSubscriptions(interaction: CommandInteraction) 
   }
 
   embed.setFooter({
-    text: "Use /subscribe to add more subscriptions",
+    text: "Use /subscription add to add more subscriptions",
   });
 
   await interaction.reply({

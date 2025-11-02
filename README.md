@@ -35,7 +35,6 @@ Create custom competitions with configurable criteria:
 
 Full support for League's Arena mode with detailed reports for all 16 players, including:
 
-- Match start notifications with duo partner information
 - Complete statistics for all 8 teams
 - Augments selected throughout the match
 - Final placements and performance metrics
@@ -64,10 +63,10 @@ You'll need Administrator permissions to add the bot to your server.
 
 ### 2. Subscribe to Players
 
-Use the `/subscribe` command to start tracking players:
+Use the `/subscription add` command to start tracking players:
 
-```
-/subscribe channel:#general region:na1 riot-id:PlayerName#TAG alias:FriendlyName
+```text
+/subscription add channel:#general region:na1 riot-id:PlayerName#TAG alias:FriendlyName
 ```
 
 **Parameters:**
@@ -88,9 +87,9 @@ Scout automatically checks for matches every minute and posts:
 
 ### Basic Commands
 
-- `/subscribe` - Track a League player in your server
-- `/unsubscribe` - Stop tracking a player
-- `/listsubscriptions` - View all tracked players
+- `/subscription add` - Track a League player in your server
+- `/subscription delete` - Stop tracking a player
+- `/subscription list` - View all tracked players
 
 ### Competitions
 
@@ -114,10 +113,11 @@ Scout automatically checks for matches every minute and posts:
 - `/admin player-link-discord` - Link a Discord user to a player
 - `/admin player-unlink-discord` - Unlink a Discord user from a player
 
-### Other Commands
+### Debug Commands (Owner Only)
 
-- `/server-info` - Display server statistics
-- `/debug` - View bot state (admin only)
+- `/debug server-info` - Display server statistics
+- `/debug database` - Download database file
+- `/debug polling` - View polling intervals
 
 ## Technical Details
 
@@ -140,7 +140,7 @@ Scout automatically checks for matches every minute and posts:
 
 **Project Structure:**
 
-```
+```text
 packages/
   backend/      - Discord bot service
   data/         - Shared types and utilities

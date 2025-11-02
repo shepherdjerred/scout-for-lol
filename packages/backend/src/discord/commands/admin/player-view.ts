@@ -10,7 +10,7 @@ const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executePlayerInfo(interaction: ChatInputCommandInteraction) {
+export async function executePlayerView(interaction: ChatInputCommandInteraction) {
   const startTime = Date.now();
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;

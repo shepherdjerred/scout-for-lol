@@ -29,10 +29,17 @@ export async function executeHelp(interaction: ChatInputCommandInteraction): Pro
       {
         name: "🔔 Basic Commands",
         value:
-          "• `/subscribe` - Track a League player's matches\n" +
-          "• `/unsubscribe` - Stop tracking a player\n" +
-          "• `/listsubscriptions` - View all subscriptions\n" +
-          "• `/server-info` - View server statistics",
+          "• `/subscription add` - Track a League player's matches\n" +
+          "• `/subscription delete` - Stop tracking a player\n" +
+          "• `/subscription list` - View all subscriptions",
+        inline: false,
+      },
+      {
+        name: "🐛 Debug Commands",
+        value:
+          "• `/debug server-info` - View server statistics\n" +
+          "• `/debug database` - Download database file (owner only)\n" +
+          "• `/debug polling` - Show polling intervals (owner only)",
         inline: false,
       },
       {
@@ -48,14 +55,14 @@ export async function executeHelp(interaction: ChatInputCommandInteraction): Pro
         name: "🔧 Admin Commands",
         value:
           "• `/admin account-add` - Link a Riot account to a player\n" +
-          "• `/admin player-edit-alias` - Change a player's alias\n" +
+          "• `/admin player-edit` - Edit a player's details\n" +
           "• `/admin player-link-discord` - Link Discord user to player",
         inline: false,
       },
       {
         name: "💡 Quick Start",
         value:
-          "1. Use `/subscribe` to track your first player\n" +
+          "1. Use `/subscription add` to track your first player\n" +
           "2. Scout will notify your channel when they start a match\n" +
           "3. Get detailed post-match reports automatically!",
         inline: false,
