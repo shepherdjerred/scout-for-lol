@@ -20,8 +20,9 @@ describe.serial("pruneOrphanedPlayers", () => {
     testDbPath = join(testDir, "test.db");
 
     // Run Prisma migrations to set up the schema
+    const schemaPath = join(import.meta.dir, "../../..", "prisma/schema.prisma");
     execSync(
-      "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+      `bunx prisma db push --skip-generate --schema=${schemaPath}`,
       {
         env: {
           ...process.env,

@@ -51,8 +51,9 @@ void mock.module("../../discord/channel.js", () => ({
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "daily-update-test-"));
 const testDbPath = join(testDir, "test.db");
+const schemaPath = join(__dirname, "../../..", "prisma/schema.prisma");
 execSync(
-  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  `bunx prisma db push --skip-generate --schema=${schemaPath}`,
   {
     cwd: join(__dirname, "../../.."),
     env: {

@@ -18,8 +18,9 @@ import { ChampionIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "competition-queries-test-"));
 const testDbPath = join(testDir, "test.db");
+const schemaPath = join(__dirname, "../../..", "prisma/schema.prisma");
 execSync(
-  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  `bunx prisma db push --skip-generate --schema=${schemaPath}`,
   {
     cwd: join(__dirname, "../../.."),
     env: {
