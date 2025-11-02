@@ -43,7 +43,9 @@ Full support for League's Arena mode with detailed reports for all 16 players, i
 
 Track players across all League of Legends regions: NA, EUW, EUNE, KR, BR, LAN, LAS, TR, RU, OCE, JP, PH, SG, TH, TW, VN, ME.
 
-### ✨ AI-Powered Match Reviews
+### ✨ AI-Powered Match Reviews _(Coming Soon)_
+
+> **Note**: This feature is currently in development. Match reviews currently show placeholder text while we integrate with LLM services.
 
 Intelligent, personalized match analysis powered by advanced AI:
 

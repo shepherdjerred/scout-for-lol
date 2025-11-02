@@ -658,14 +658,19 @@ import Footer from "../components/Footer.astro";
                   </svg>
                 </div>
                 <h3 class="text-2xl font-semibold text-gray-900">
-                  AI-Powered Match Reviews
+                  AI-Powered Match Reviews <span class="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700">COMING SOON</span>
                 </h3>
               </div>
 
               <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
+                  <p class="text-sm text-yellow-800">
+                    <strong>🚧 Work in Progress:</strong> This feature is currently under development. Match reviews currently show placeholder text while we integrate with LLM services.
+                  </p>
+                </div>
                 <p class="text-gray-700 mb-4">
                   Get intelligent, personalized match analysis powered by
-                  advanced AI. Scout uses large language models to provide
+                  advanced AI. Scout will use large language models to provide
                   insightful feedback on gameplay, highlighting both strengths
                   and areas for improvement.
                 </p>
@@ -727,13 +732,13 @@ import Footer from "../components/Footer.astro";
                   class="bg-white border border-green-300 rounded-md p-4 text-sm"
                 >
                   <p class="text-gray-600 mb-2">
-                    <strong>Note:</strong> AI reviews are automatically included
+                    <strong>Note:</strong> AI reviews will be automatically included
                     in post-match reports and provide personalized insights for
-                    each player's performance. The AI understands context like
+                    each player's performance. The AI will understand context like
                     champion difficulty, match length, and team composition.
                   </p>
                   <p class="text-gray-600">
-                    Reviews are generated using state-of-the-art language models
+                    Reviews will be generated using state-of-the-art language models
                     trained to understand League of Legends gameplay and provide
                     constructive feedback.
                   </p>
@@ -937,10 +942,17 @@ import Footer from "../components/Footer.astro";
               <h3 class="font-semibold text-gray-900 mb-3">
                 How often does Scout check for new matches?
               </h3>
+              <p class="text-gray-600 mb-3">
+                Scout uses intelligent dynamic polling that adjusts based on player activity:
+              </p>
+              <ul class="list-disc list-inside text-sm text-gray-600 space-y-1 mb-3">
+                <li><strong>Active players</strong> (played within the last hour): Checked every 1 minute</li>
+                <li><strong>Recently active</strong> (6-12 hours): Checked every 5-10 minutes</li>
+                <li><strong>Inactive players</strong> (30+ days): Checked every 60 minutes</li>
+              </ul>
               <p class="text-gray-600">
-                Scout automatically checks for new matches every minute. When a
-                tracked player starts a match, you'll get a notification within
-                1-2 minutes.
+                This means you'll get notifications within 1-2 minutes for players who are actively gaming,
+                while reducing unnecessary API calls for inactive accounts.
               </p>
             </div>
 
@@ -1002,12 +1014,15 @@ import Footer from "../components/Footer.astro";
               <h3 class="font-semibold text-gray-900 mb-3">
                 Are AI-generated reviews always included?
               </h3>
+              <p class="text-gray-600 mb-2">
+                <strong>Currently:</strong> AI match reviews are still in development. Post-match reports
+                currently show placeholder review text while we integrate with LLM services.
+              </p>
               <p class="text-gray-600">
-                Yes! AI-powered match reviews are automatically generated for
-                post-match reports. They provide personalized feedback based on
+                <strong>Coming soon:</strong> AI-powered match reviews will be automatically generated for
+                all post-match reports. They will provide personalized feedback based on
                 each player's performance, champion choice, and match context.
-                The reviews are designed to be constructive and help players
-                improve.
+                The reviews will be designed to be constructive and help players improve.
               </p>
             </div>
 
@@ -1026,9 +1041,14 @@ import Footer from "../components/Footer.astro";
               <h3 class="font-semibold text-gray-900 mb-3">
                 How many players can I track?
               </h3>
+              <p class="text-gray-600 mb-3">
+                By default, each server can track up to <strong>10 players</strong> with a maximum of
+                <strong>10 League accounts</strong> total. This helps ensure reliable service for all users.
+              </p>
               <p class="text-gray-600">
-                There's no hard limit on the number of players you can track,
-                but we recommend keeping it reasonable to avoid channel spam.
+                If you need to track more players, you can remove existing subscriptions using
+                <code class="bg-gray-100 px-1 rounded text-sm">/subscription delete</code>.
+                Contact us if your community requires a higher limit.
               </p>
             </div>
 
@@ -1036,11 +1056,17 @@ import Footer from "../components/Footer.astro";
               <h3 class="font-semibold text-gray-900 mb-3">
                 Why am I not getting post-match reports?
               </h3>
+              <p class="text-gray-600 mb-3">
+                Post-match reports are generated after games end. The timing depends on when Scout detects the match is complete:
+              </p>
+              <ul class="list-disc list-inside text-sm text-gray-600 space-y-1 mb-3">
+                <li>For <strong>active players</strong> (recently played): Reports appear within 2-3 minutes after match completion</li>
+                <li>For <strong>less active players</strong>: May take 5-15 minutes depending on their polling interval</li>
+                <li>Very short games (under 5 minutes) or remakes might not generate reports</li>
+              </ul>
               <p class="text-gray-600">
-                Post-match reports are generated after games end. Very short
-                games (usually under 5 minutes) or remakes might not generate
-                reports. The reports typically appear 2-5 minutes after a match
-                ends.
+                The dynamic polling system prioritizes active players, so if someone is playing regularly,
+                their reports will appear faster than someone who plays occasionally.
               </p>
             </div>
 
