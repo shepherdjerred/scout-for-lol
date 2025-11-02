@@ -8,6 +8,7 @@ import { getParticipants } from "../../../database/competition/participants.js";
 import { getErrorMessage } from "../../../utils/errors.js";
 import { formatScore } from "../../embeds/competition.js";
 import { loadCachedLeaderboard } from "../../../storage/s3-leaderboard.js";
+import { truncateDiscordMessage } from "../../utils/message.js";
 
 // Schema for participant with player relation (when includePlayer=true)
 const ParticipantWithPlayerSchema = z.object({
@@ -37,7 +38,7 @@ export async function executeCompetitionView(interaction: ChatInputCommandIntera
   } catch (error) {
     console.error(`[Competition View] Error fetching competition ${competitionId.toString()}:`, error);
     await interaction.reply({
-      content: `Error fetching competition: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error fetching competition: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -45,9 +46,9 @@ export async function executeCompetitionView(interaction: ChatInputCommandIntera
 
   if (!competition) {
     await interaction.reply({
-      content: `❌ Competition not found
+      content: truncateDiscordMessage(`❌ Competition not found
 
-Competition #${competitionId.toString()} doesn't exist. Use \`/competition list\` to see all available competitions.`,
+Competition #${competitionId.toString()} doesn't exist. Use \`/competition list\` to see all available competitions.`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -65,7 +66,7 @@ Competition #${competitionId.toString()} doesn't exist. Use \`/competition list\
   } catch (error) {
     console.error(`[Competition View] Error fetching participants:`, error);
     await interaction.reply({
-      content: `Error fetching participants: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error fetching participants: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;

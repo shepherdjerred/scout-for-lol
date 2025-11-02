@@ -4,6 +4,7 @@ import { prisma } from "../../../database/index.js";
 import { cancelCompetition, getCompetitionById } from "../../../database/competition/queries.js";
 import { getErrorMessage } from "../../../utils/errors.js";
 import { asTextChannel } from "../../utils/channel.js";
+import { truncateDiscordMessage } from "../../utils/message.js";
 
 /**
  * Execute /competition cancel command
@@ -27,7 +28,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   } catch (error) {
     console.error(`[Competition Cancel] Error fetching competition ${competitionId.toString()}:`, error);
     await interaction.reply({
-      content: `Error fetching competition: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error fetching competition: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -35,7 +36,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
 
   if (!competition) {
     await interaction.reply({
-      content: `Competition with ID ${competitionId.toString()} not found`,
+      content: truncateDiscordMessage(`Competition with ID ${competitionId.toString()} not found`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -69,7 +70,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
 
   if (!isOwner && !isAdmin) {
     await interaction.reply({
-      content: "Only the competition owner or server administrators can cancel competitions",
+      content: truncateDiscordMessage("Only the competition owner or server administrators can cancel competitions"),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -85,7 +86,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   } catch (error) {
     console.error(`[Competition Cancel] Error cancelling competition ${competitionId.toString()}:`, error);
     await interaction.reply({
-      content: `Error cancelling competition: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error cancelling competition: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -96,7 +97,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   // ============================================================================
 
   await interaction.reply({
-    content: `Competition "${competition.title}" has been cancelled`,
+    content: truncateDiscordMessage(`Competition "${competition.title}" has been cancelled`),
     flags: MessageFlags.Ephemeral,
   });
 

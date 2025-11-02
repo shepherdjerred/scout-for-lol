@@ -10,8 +10,9 @@ import {
 describe("calculatePollingInterval", () => {
   const now = new Date("2024-01-15T12:00:00Z");
 
-  test("returns MIN interval for undefined lastMatchTime", () => {
-    expect(calculatePollingInterval(undefined, now)).toBe(POLLING_INTERVALS.MIN);
+  test("returns MAX interval for undefined lastMatchTime", () => {
+    // Use max interval to avoid excessive polling for players with unknown activity
+    expect(calculatePollingInterval(undefined, now)).toBe(POLLING_INTERVALS.MAX);
   });
 
   test("returns MIN interval for recent match (within 1 hour)", () => {

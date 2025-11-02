@@ -4,6 +4,7 @@ import { prisma } from "../../../database/index.js";
 import { getCompetitionById } from "../../../database/competition/queries.js";
 import { removeParticipant, getParticipantStatus } from "../../../database/competition/participants.js";
 import { getErrorMessage } from "../../../utils/errors.js";
+import { truncateDiscordMessage } from "../../utils/message.js";
 
 /**
  * Execute /competition leave command
@@ -20,7 +21,7 @@ export async function executeCompetitionLeave(interaction: ChatInputCommandInter
 
   if (!serverId) {
     await interaction.reply({
-      content: "This command can only be used in a server",
+      content: truncateDiscordMessage("This command can only be used in a server"),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -41,7 +42,7 @@ export async function executeCompetitionLeave(interaction: ChatInputCommandInter
   } catch (error) {
     console.error(`[Competition Leave] Error fetching player for user ${userId}:`, error);
     await interaction.reply({
-      content: `Error fetching player data: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error fetching player data: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -49,10 +50,10 @@ export async function executeCompetitionLeave(interaction: ChatInputCommandInter
 
   if (!player) {
     await interaction.reply({
-      content: `❌ No League account linked
+      content: truncateDiscordMessage(`❌ No League account linked
 
 You need to link your League of Legends account first. Use:
-\`/subscribe region:NA1 riot-id:YourName#NA1 alias:YourName channel:#updates\``,
+\`/subscribe region:NA1 riot-id:YourName#NA1 alias:YourName channel:#updates\``),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -68,7 +69,7 @@ You need to link your League of Legends account first. Use:
   } catch (error) {
     console.error(`[Competition Leave] Error fetching competition ${competitionId.toString()}:`, error);
     await interaction.reply({
-      content: `Error fetching competition: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error fetching competition: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -76,9 +77,9 @@ You need to link your League of Legends account first. Use:
 
   if (!competition) {
     await interaction.reply({
-      content: `❌ Competition not found
+      content: truncateDiscordMessage(`❌ Competition not found
 
-Competition with ID ${competitionId.toString()} does not exist.`,
+Competition with ID ${competitionId.toString()} does not exist.`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -94,7 +95,7 @@ Competition with ID ${competitionId.toString()} does not exist.`,
   } catch (error) {
     console.error(`[Competition Leave] Error checking participant status:`, error);
     await interaction.reply({
-      content: `Error checking participation status: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error checking participation status: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -103,9 +104,9 @@ Competition with ID ${competitionId.toString()} does not exist.`,
   // Not a participant or already left
   if (!participantStatus || participantStatus === "LEFT") {
     await interaction.reply({
-      content: `❌ Not a participant
+      content: truncateDiscordMessage(`❌ Not a participant
 
-You're not in this competition. Use \`/competition list\` to see competitions you can join.`,
+You're not in this competition. Use \`/competition list\` to see competitions you can join.`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -123,7 +124,7 @@ You're not in this competition. Use \`/competition list\` to see competitions yo
   } catch (error) {
     console.error(`[Competition Leave] Error removing participant:`, error);
     await interaction.reply({
-      content: `Error leaving competition: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error leaving competition: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -134,11 +135,11 @@ You're not in this competition. Use \`/competition list\` to see competitions yo
   // ============================================================================
 
   await interaction.reply({
-    content: `✅ You've left the competition
+    content: truncateDiscordMessage(`✅ You've left the competition
 
 You're no longer participating in **${competition.title}**.
 
-Note: You cannot rejoin a competition after leaving.`,
+Note: You cannot rejoin a competition after leaving.`),
     flags: MessageFlags.Ephemeral,
   });
 }

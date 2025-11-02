@@ -56,9 +56,10 @@ export const ACTIVITY_THRESHOLDS = {
  * @returns Polling interval in minutes
  */
 export function calculatePollingInterval(lastMatchTime: Date | undefined, currentTime: Date = new Date()): number {
-  // If we've never seen them in a match, check frequently (min interval)
+  // If we've never seen them in a match, use max interval to avoid excessive polling
+  // They'll be checked when first added, and if no matches are found, we'll check infrequently
   if (lastMatchTime === undefined) {
-    return POLLING_INTERVALS.MIN;
+    return POLLING_INTERVALS.MAX;
   }
 
   const hoursSinceLastMatch = differenceInHours(currentTime, lastMatchTime);

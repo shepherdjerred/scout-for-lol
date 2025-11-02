@@ -5,6 +5,7 @@ import { getCompetitionById } from "../../../database/competition/queries.js";
 import { addParticipant, getParticipantStatus } from "../../../database/competition/participants.js";
 import { getErrorMessage } from "../../../utils/errors.js";
 import { formatCriteriaType } from "./helpers.js";
+import { truncateDiscordMessage } from "../../utils/message.js";
 
 /**
  * Execute /competition invite command
@@ -22,7 +23,7 @@ export async function executeCompetitionInvite(interaction: ChatInputCommandInte
 
   if (!serverId) {
     await interaction.reply({
-      content: "This command can only be used in a server",
+      content: truncateDiscordMessage("This command can only be used in a server"),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -38,7 +39,7 @@ export async function executeCompetitionInvite(interaction: ChatInputCommandInte
   } catch (error) {
     console.error(`[Competition Invite] Error fetching competition ${competitionId.toString()}:`, error);
     await interaction.reply({
-      content: `Error fetching competition: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error fetching competition: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -46,7 +47,7 @@ export async function executeCompetitionInvite(interaction: ChatInputCommandInte
 
   if (!competition) {
     await interaction.reply({
-      content: `Competition with ID ${competitionId.toString()} not found`,
+      content: truncateDiscordMessage(`Competition with ID ${competitionId.toString()} not found`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -58,9 +59,9 @@ export async function executeCompetitionInvite(interaction: ChatInputCommandInte
 
   if (competition.ownerId !== userId) {
     await interaction.reply({
-      content: `❌ Permission denied
+      content: truncateDiscordMessage(`❌ Permission denied
 
-Only the competition owner can invite participants. The owner of this competition is <@${competition.ownerId}>.`,
+Only the competition owner can invite participants. The owner of this competition is <@${competition.ownerId}>.`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -72,9 +73,9 @@ Only the competition owner can invite participants. The owner of this competitio
 
   if (competition.isCancelled) {
     await interaction.reply({
-      content: `❌ Competition cancelled
+      content: truncateDiscordMessage(`❌ Competition cancelled
 
-This competition has been cancelled and is no longer accepting participants.`,
+This competition has been cancelled and is no longer accepting participants.`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -87,9 +88,9 @@ This competition has been cancelled and is no longer accepting participants.`,
   const now = new Date();
   if (competition.endDate && competition.endDate < now) {
     await interaction.reply({
-      content: `❌ Competition ended
+      content: truncateDiscordMessage(`❌ Competition ended
 
-This competition has already ended on ${competition.endDate.toLocaleDateString()}.`,
+This competition has already ended on ${competition.endDate.toLocaleDateString()}.`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -110,7 +111,7 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
   } catch (error) {
     console.error(`[Competition Invite] Error fetching player for user ${targetUser.id}:`, error);
     await interaction.reply({
-      content: `Error fetching player data: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error fetching player data: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -118,9 +119,9 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
 
   if (!player) {
     await interaction.reply({
-      content: `❌ Cannot invite user
+      content: truncateDiscordMessage(`❌ Cannot invite user
 
-@${targetUser.username} doesn't have a linked League of Legends account. They need to use \`/subscribe\` first.`,
+@${targetUser.username} doesn't have a linked League of Legends account. They need to use \`/subscribe\` first.`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -136,7 +137,7 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
   } catch (error) {
     console.error(`[Competition Invite] Error checking participant status:`, error);
     await interaction.reply({
-      content: `Error checking participation status: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error checking participation status: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -145,9 +146,9 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
   // Handle existing participant statuses
   if (participantStatus === "JOINED") {
     await interaction.reply({
-      content: `❌ Already participating
+      content: truncateDiscordMessage(`❌ Already participating
 
-@${targetUser.username} is already in this competition.`,
+@${targetUser.username} is already in this competition.`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -156,8 +157,9 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
   if (participantStatus === "INVITED") {
     // Idempotent - already invited, just acknowledge
     await interaction.reply({
-      content: `@${targetUser.username} has already been invited to this competition. They can join with:
-\`/competition join competition-id:${competitionId.toString()}\``,
+      content:
+        truncateDiscordMessage(`@${targetUser.username} has already been invited to this competition. They can join with:
+\`/competition join competition-id:${competitionId.toString()}\``),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -165,9 +167,9 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
 
   if (participantStatus === "LEFT") {
     await interaction.reply({
-      content: `❌ Cannot invite
+      content: truncateDiscordMessage(`❌ Cannot invite
 
-@${targetUser.username} previously left this competition and cannot be re-invited.`,
+@${targetUser.username} previously left this competition and cannot be re-invited.`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -188,7 +190,7 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
   } catch (error) {
     console.error(`[Competition Invite] Error counting participants:`, error);
     await interaction.reply({
-      content: `Error checking participant limit: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error checking participant limit: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -196,9 +198,9 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
 
   if (activeParticipantCount >= competition.maxParticipants) {
     await interaction.reply({
-      content: `❌ Competition full
+      content: truncateDiscordMessage(`❌ Competition full
 
-This competition has reached its maximum of ${competition.maxParticipants.toString()} participants. Cannot invite more users.`,
+This competition has reached its maximum of ${competition.maxParticipants.toString()} participants. Cannot invite more users.`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -216,7 +218,7 @@ This competition has reached its maximum of ${competition.maxParticipants.toStri
   } catch (error) {
     console.error(`[Competition Invite] Error adding participant:`, error);
     await interaction.reply({
-      content: `Error sending invitation: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error sending invitation: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -237,7 +239,7 @@ This competition has reached its maximum of ${competition.maxParticipants.toStri
     const duration = competition.startDate && competition.endDate ? `${startDateStr} - ${endDateStr}` : startDateStr;
 
     await targetUser.send({
-      content: `📩 **Competition Invitation**
+      content: truncateDiscordMessage(`📩 **Competition Invitation**
 
 You've been invited to compete in **${competition.title}**!
 
@@ -247,7 +249,7 @@ You've been invited to compete in **${competition.title}**!
 **Owner:** <@${competition.ownerId}>
 
 To join, use:
-\`/competition join competition-id:${competitionId.toString()}\``,
+\`/competition join competition-id:${competitionId.toString()}\``),
     });
     console.log(`[Competition Invite] DM sent to user ${targetUser.id}`);
   } catch (error) {
@@ -264,10 +266,10 @@ To join, use:
     : "";
 
   await interaction.reply({
-    content: `✅ Invitation sent
+    content: truncateDiscordMessage(`✅ Invitation sent
 
 Invited @${targetUser.username} to **${competition.title}**.
-They can join with \`/competition join competition-id:${competitionId.toString()}\`${dmWarning}`,
+They can join with \`/competition join competition-id:${competitionId.toString()}\`${dmWarning}`),
     flags: MessageFlags.Ephemeral,
   });
 }

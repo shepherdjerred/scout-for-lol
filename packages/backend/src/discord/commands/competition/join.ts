@@ -10,6 +10,7 @@ import { getCompetitionById } from "../../../database/competition/queries.js";
 import { addParticipant, acceptInvitation, getParticipantStatus } from "../../../database/competition/participants.js";
 import { getErrorMessage } from "../../../utils/errors.js";
 import { formatCriteriaType } from "./helpers.js";
+import { truncateDiscordMessage } from "../../utils/message.js";
 
 /**
  * Execute /competition join command
@@ -26,7 +27,7 @@ export async function executeCompetitionJoin(interaction: ChatInputCommandIntera
 
   if (!serverId) {
     await interaction.reply({
-      content: "This command can only be used in a server",
+      content: truncateDiscordMessage("This command can only be used in a server"),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -47,7 +48,7 @@ export async function executeCompetitionJoin(interaction: ChatInputCommandIntera
   } catch (error) {
     console.error(`[Competition Join] Error fetching player for user ${userId}:`, error);
     await interaction.reply({
-      content: `Error fetching player data: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error fetching player data: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -55,10 +56,10 @@ export async function executeCompetitionJoin(interaction: ChatInputCommandIntera
 
   if (!player) {
     await interaction.reply({
-      content: `❌ No League account linked
+      content: truncateDiscordMessage(`❌ No League account linked
 
 You need to link your League of Legends account first. Use:
-\`/subscribe region:NA1 riot-id:YourName#NA1 alias:YourName channel:#updates\``,
+\`/subscribe region:NA1 riot-id:YourName#NA1 alias:YourName channel:#updates\``),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -74,7 +75,7 @@ You need to link your League of Legends account first. Use:
   } catch (error) {
     console.error(`[Competition Join] Error fetching competition ${competitionId.toString()}:`, error);
     await interaction.reply({
-      content: `Error fetching competition: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error fetching competition: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -82,7 +83,7 @@ You need to link your League of Legends account first. Use:
 
   if (!competition) {
     await interaction.reply({
-      content: `Competition with ID ${competitionId.toString()} not found`,
+      content: truncateDiscordMessage(`Competition with ID ${competitionId.toString()} not found`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -94,9 +95,9 @@ You need to link your League of Legends account first. Use:
 
   if (competition.isCancelled) {
     await interaction.reply({
-      content: `❌ Competition cancelled
+      content: truncateDiscordMessage(`❌ Competition cancelled
 
-This competition has been cancelled and is no longer accepting participants.`,
+This competition has been cancelled and is no longer accepting participants.`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -109,9 +110,9 @@ This competition has been cancelled and is no longer accepting participants.`,
   const now = new Date();
   if (competition.endDate && competition.endDate < now) {
     await interaction.reply({
-      content: `❌ Competition ended
+      content: truncateDiscordMessage(`❌ Competition ended
 
-This competition has already ended on ${competition.endDate.toLocaleDateString()}.`,
+This competition has already ended on ${competition.endDate.toLocaleDateString()}.`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -127,7 +128,7 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
   } catch (error) {
     console.error(`[Competition Join] Error checking participant status:`, error);
     await interaction.reply({
-      content: `Error checking participation status: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error checking participation status: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -136,10 +137,10 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
   // Handle existing participant statuses
   if (participantStatus === "JOINED") {
     await interaction.reply({
-      content: `❌ Already participating
+      content: truncateDiscordMessage(`❌ Already participating
 
 You're already in this competition! Check your current standing with:
-\`/competition view competition-id:${competitionId.toString()}\``,
+\`/competition view competition-id:${competitionId.toString()}\``),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -147,9 +148,9 @@ You're already in this competition! Check your current standing with:
 
   if (participantStatus === "LEFT") {
     await interaction.reply({
-      content: `❌ Cannot rejoin
+      content: truncateDiscordMessage(`❌ Cannot rejoin
 
-You previously left this competition and cannot rejoin.`,
+You previously left this competition and cannot rejoin.`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -162,10 +163,10 @@ You previously left this competition and cannot rejoin.`,
   // If INVITE_ONLY, user must have an invitation
   if (competition.visibility === "INVITE_ONLY" && participantStatus !== "INVITED") {
     await interaction.reply({
-      content: `❌ Invitation required
+      content: truncateDiscordMessage(`❌ Invitation required
 
 This is an invite-only competition. Ask the competition owner (<@${competition.ownerId}>) to invite you with:
-\`/competition invite competition-id:${competitionId.toString()} user:@${interaction.user.username}\``,
+\`/competition invite competition-id:${competitionId.toString()} user:@${interaction.user.username}\``),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -186,7 +187,7 @@ This is an invite-only competition. Ask the competition owner (<@${competition.o
   } catch (error) {
     console.error(`[Competition Join] Error counting participants:`, error);
     await interaction.reply({
-      content: `Error checking participant limit: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error checking participant limit: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -194,9 +195,9 @@ This is an invite-only competition. Ask the competition owner (<@${competition.o
 
   if (activeParticipantCount >= competition.maxParticipants) {
     await interaction.reply({
-      content: `❌ Competition full
+      content: truncateDiscordMessage(`❌ Competition full
 
-This competition has reached its maximum of ${competition.maxParticipants.toString()} participants. The competition is full!`,
+This competition has reached its maximum of ${competition.maxParticipants.toString()} participants. The competition is full!`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -219,7 +220,7 @@ This competition has reached its maximum of ${competition.maxParticipants.toStri
   } catch (error) {
     console.error(`[Competition Join] Error adding participant:`, error);
     await interaction.reply({
-      content: `Error joining competition: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error joining competition: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -250,14 +251,14 @@ This competition has reached its maximum of ${competition.maxParticipants.toStri
   const statusLine = formatStatusForJoinMessage(status, competition, now);
 
   await interaction.reply({
-    content: `✅ You've joined the competition!
+    content: truncateDiscordMessage(`✅ You've joined the competition!
 
 **${competition.title}**
 Type: ${formatCriteriaType(competition.criteria.type)}
 Participants: ${updatedParticipantCount.toString()}/${competition.maxParticipants.toString()}
 ${statusLine}
 
-Good luck! The leaderboard will be posted daily in <#${competition.channelId}>.`,
+Good luck! The leaderboard will be posted daily in <#${competition.channelId}>.`),
     flags: MessageFlags.Ephemeral,
   });
 }

@@ -18,6 +18,7 @@ import { match } from "ts-pattern";
 import { prisma } from "../../../database/index.js";
 import { getCompetitionsByServer } from "../../../database/competition/queries.js";
 import { getErrorMessage } from "../../../utils/errors.js";
+import { truncateDiscordMessage } from "../../utils/message.js";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -32,7 +33,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
 
   if (!interaction.guildId) {
     await interaction.reply({
-      content: "❌ This command can only be used in a server.",
+      content: truncateDiscordMessage("❌ This command can only be used in a server."),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -63,7 +64,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
   } catch (error) {
     console.error("[Competition List] Error fetching competitions:", error);
     await interaction.reply({
-      content: `Error fetching competitions: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error fetching competitions: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -81,7 +82,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
         : "No competitions found. Create one with `/competition create`!";
 
     await interaction.reply({
-      content: `📋 ${message}`,
+      content: truncateDiscordMessage(`📋 ${message}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -124,7 +125,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
         // Only the original user can use the buttons
         if (buttonInteraction.user.id !== interaction.user.id) {
           await buttonInteraction.reply({
-            content: "These buttons aren't for you!",
+            content: truncateDiscordMessage("These buttons aren't for you!"),
             flags: MessageFlags.Ephemeral,
           });
           return;

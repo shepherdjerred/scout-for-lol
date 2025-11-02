@@ -13,6 +13,7 @@ import { riotApi } from "../../../league/api/api.js";
 import { mapRegionToEnum } from "../../../league/model/region.js";
 import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
 import { getErrorMessage } from "../../../utils/errors.js";
+import { backfillLastMatchTime } from "../../../league/api/backfill-match-history.js";
 
 const ArgsSchema = z.object({
   riotId: RiotIdSchema,
@@ -140,6 +141,23 @@ export async function executeAccountAdd(interaction: ChatInputCommandInteraction
         updatedTime: now,
       },
     });
+
+    // Backfill match history to initialize lastMatchTime
+    // This prevents newly added players from being stuck on 1-minute polling interval
+    const playerConfigEntry = {
+      alias: playerAlias,
+      league: {
+        leagueAccount: {
+          puuid: LeaguePuuidSchema.parse(puuid),
+          region: region,
+        },
+      },
+      discordAccount: {
+        id: player.discordId ?? undefined,
+      },
+    };
+
+    await backfillLastMatchTime(playerConfigEntry, LeaguePuuidSchema.parse(puuid));
 
     // Get updated player with all accounts
     const updatedPlayer = await prisma.player.findUnique({

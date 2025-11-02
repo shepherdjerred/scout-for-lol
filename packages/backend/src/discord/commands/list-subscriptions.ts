@@ -1,6 +1,7 @@
-import { type CommandInteraction, SlashCommandBuilder } from "discord.js";
+import { type CommandInteraction, SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "../../database/index";
+import { truncateDiscordMessage } from "../utils/message.js";
 
 export const listSubscriptionsCommand = new SlashCommandBuilder()
   .setName("listsubscriptions")
@@ -9,7 +10,7 @@ export const listSubscriptionsCommand = new SlashCommandBuilder()
 export async function executeListSubscriptions(interaction: CommandInteraction) {
   if (!interaction.guildId) {
     await interaction.reply({
-      content: `This command can only be used in a server`,
+      content: truncateDiscordMessage("This command can only be used in a server"),
       ephemeral: true,
     });
     return;
@@ -29,16 +30,54 @@ export async function executeListSubscriptions(interaction: CommandInteraction) 
   });
 
   if (subscriptions.length === 0) {
-    await interaction.reply("No subscriptions found for this server.");
+    await interaction.reply({
+      content: truncateDiscordMessage("📭 No subscriptions found for this server."),
+      flags: MessageFlags.Ephemeral,
+    });
     return;
   }
 
-  const subscriptionList = subscriptions
-    .map((sub) => {
-      const player = sub.player;
-      return `${(player.alias || player.discordId) ?? "Unknown"} (${player.accounts.length.toString()} account${player.accounts.length === 1 ? "" : "s"})`;
-    })
-    .join("\n");
+  // Group subscriptions by channel
+  const subscriptionsByChannel: Record<string, typeof subscriptions> = subscriptions.reduce<
+    Record<string, typeof subscriptions>
+  >((acc, sub) => {
+    const channelId = sub.channelId;
+    acc[channelId] ??= [];
+    acc[channelId].push(sub);
+    return acc;
+  }, {});
 
-  await interaction.reply(`Subscriptions:\n${subscriptionList}`);
+  const embed = new EmbedBuilder()
+    .setTitle("🔔 Server Subscriptions")
+    .setColor(0xeb459e) // Pink color
+    .setDescription(
+      `Found **${subscriptions.length.toString()}** subscription${subscriptions.length === 1 ? "" : "s"} across **${Object.keys(subscriptionsByChannel).length.toString()}** channel${Object.keys(subscriptionsByChannel).length === 1 ? "" : "s"}`,
+    );
+
+  // Add fields for each channel
+  for (const [channelId, channelSubs] of Object.entries(subscriptionsByChannel)) {
+    const playerList = channelSubs
+      .map((sub) => {
+        const player = sub.player;
+        const displayName = player.alias;
+        const accountCount = player.accounts.length;
+        return `• ${displayName} (${accountCount.toString()} account${accountCount === 1 ? "" : "s"})`;
+      })
+      .join("\n");
+
+    embed.addFields({
+      name: `📺 <#${channelId}>`,
+      value: playerList,
+      inline: false,
+    });
+  }
+
+  embed.setFooter({
+    text: "Use /subscribe to add more subscriptions",
+  });
+
+  await interaction.reply({
+    embeds: [embed],
+    flags: MessageFlags.Ephemeral,
+  });
 }

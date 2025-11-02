@@ -57,7 +57,7 @@ const absoluteChangedFiles = changedFiles
   .map((f) => resolve(join(repoRoot, f)));
 
 if (absoluteChangedFiles.length === 0) {
-  console.log("No relevant files changed in this package.");
+  console.error("No relevant files changed in this package.");
   process.exit(0);
 }
 

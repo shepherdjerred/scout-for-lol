@@ -21,6 +21,7 @@ import { getErrorMessage } from "../../../utils/errors.js";
 import { getChampionId } from "../../../utils/champion.js";
 import { addParticipant } from "../../../database/competition/participants.js";
 import { formatCriteriaType, getStatusEmoji, formatDateInfo } from "./helpers.js";
+import { truncateDiscordMessage } from "../../utils/message.js";
 
 // ============================================================================
 // Input Parsing Schema - Discriminated Unions
@@ -208,7 +209,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     console.error(`❌ Invalid command arguments from ${username}:`, error);
     const validationError = fromError(error);
     await interaction.reply({
-      content: `**Invalid input:**\n${validationError.toString()}`,
+      content: truncateDiscordMessage(`**Invalid input:**\n${validationError.toString()}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -255,7 +256,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
   } catch (error) {
     console.error(`❌ Permission check failed:`, error);
     await interaction.reply({
-      content: `**Error checking permissions:**\n${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`**Error checking permissions:**\n${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -352,7 +353,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
   } catch (error) {
     console.error(`❌ Failed to build competition input:`, error);
     await interaction.reply({
-      content: `**Invalid competition data:**\n${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`**Invalid competition data:**\n${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -376,7 +377,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
   } catch (error) {
     console.error(`❌ Business validation failed:`, error);
     await interaction.reply({
-      content: `**Validation failed:**\n${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`**Validation failed:**\n${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -475,13 +476,13 @@ ${competition.description}
     }
 
     await interaction.reply({
-      content: successMessage,
+      content: truncateDiscordMessage(successMessage),
       flags: MessageFlags.Ephemeral,
     });
   } catch (error) {
     console.error(`❌ Database error during competition creation:`, error);
     await interaction.reply({
-      content: `**Error creating competition:**\n${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`**Error creating competition:**\n${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
   }

@@ -13,3 +13,4 @@
   - I think we have a file analyzing what tests are helpful and which are not
 - Skipped tests
 - resolve TODO comments
+- Remove stuff due to spectator API being deprecated

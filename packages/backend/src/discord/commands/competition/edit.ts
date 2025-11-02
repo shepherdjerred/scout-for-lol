@@ -20,6 +20,7 @@ import {
 } from "../../../database/competition/queries.js";
 import { getErrorMessage } from "../../../utils/errors.js";
 import { getChampionId } from "../../../utils/champion.js";
+import { truncateDiscordMessage } from "../../utils/message.js";
 
 // ============================================================================
 // Input Parsing Schema - Editable Fields
@@ -167,7 +168,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
   } catch (error) {
     console.error(`❌ Error fetching competition ${competitionId.toString()}:`, error);
     await interaction.reply({
-      content: `**Error fetching competition:**\n${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`**Error fetching competition:**\n${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -308,7 +309,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
     console.error(`❌ Invalid edit arguments from ${username}:`, error);
     const validationError = fromError(error);
     await interaction.reply({
-      content: `**Invalid input:**\n${validationError.toString()}`,
+      content: truncateDiscordMessage(`**Invalid input:**\n${validationError.toString()}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -433,20 +434,20 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
     if (updateInput.criteria !== undefined) updatedFields.push("Criteria");
 
     await interaction.reply({
-      content: `✅ **Competition Updated!**
+      content: truncateDiscordMessage(`✅ **Competition Updated!**
 
 **${updatedCompetition.title}**
 
 **Updated fields:** ${updatedFields.join(", ")}
 
 View the competition with:
-\`/competition view competition-id:${competitionId.toString()}\``,
+\`/competition view competition-id:${competitionId.toString()}\``),
       flags: MessageFlags.Ephemeral,
     });
   } catch (error) {
     console.error(`❌ Database error during competition edit:`, error);
     await interaction.reply({
-      content: `**Error updating competition:**\n${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`**Error updating competition:**\n${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
   }

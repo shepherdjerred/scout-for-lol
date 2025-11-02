@@ -4,6 +4,7 @@ import { prisma } from "../../../database/index.js";
 import { grantPermission } from "../../../database/competition/permissions.js";
 import { getErrorMessage } from "../../../utils/errors.js";
 import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { truncateDiscordMessage } from "../../utils/message.js";
 
 /**
  * Execute /competition grant-permission command
@@ -23,7 +24,7 @@ export async function executeGrantPermission(interaction: ChatInputCommandIntera
 
   if (!permissionsResult.success || !interaction.memberPermissions) {
     await interaction.reply({
-      content: "Unable to verify permissions",
+      content: truncateDiscordMessage("Unable to verify permissions"),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -33,7 +34,7 @@ export async function executeGrantPermission(interaction: ChatInputCommandIntera
 
   if (!hasAdmin) {
     await interaction.reply({
-      content: "Only server administrators can grant permissions",
+      content: truncateDiscordMessage("Only server administrators can grant permissions"),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -48,7 +49,7 @@ export async function executeGrantPermission(interaction: ChatInputCommandIntera
 
   if (!serverId) {
     await interaction.reply({
-      content: "This command can only be used in a server",
+      content: truncateDiscordMessage("This command can only be used in a server"),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -73,7 +74,7 @@ export async function executeGrantPermission(interaction: ChatInputCommandIntera
   } catch (error) {
     console.error(`[Grant Permission] Error granting permission to ${targetUser.id}:`, error);
     await interaction.reply({
-      content: `Error granting permission: ${getErrorMessage(error)}`,
+      content: truncateDiscordMessage(`Error granting permission: ${getErrorMessage(error)}`),
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -84,7 +85,9 @@ export async function executeGrantPermission(interaction: ChatInputCommandIntera
   // ============================================================================
 
   await interaction.reply({
-    content: `✅ Granted **CREATE_COMPETITION** permission to ${targetUser.username}.\n\nThey can now create competitions on this server.`,
+    content: truncateDiscordMessage(
+      `✅ Granted **CREATE_COMPETITION** permission to ${targetUser.username}.\n\nThey can now create competitions on this server.`,
+    ),
     flags: MessageFlags.Ephemeral,
   });
 }

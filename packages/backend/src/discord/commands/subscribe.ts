@@ -25,6 +25,7 @@ import {
   getAccountLimit,
   hasUnlimitedSubscriptions,
 } from "../../configuration/subscription-limits.js";
+import { backfillLastMatchTime } from "../../league/api/backfill-match-history.js";
 
 export const subscribeCommand = new SlashCommandBuilder()
   .setName("subscribe")
@@ -282,6 +283,23 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
     });
 
     console.log(`✅ Account created with ID: ${account.id.toString()}`);
+
+    // Backfill match history to initialize lastMatchTime
+    // This prevents newly added players from being stuck on 1-minute polling interval
+    const playerConfigEntry = {
+      alias: alias,
+      league: {
+        leagueAccount: {
+          puuid: LeaguePuuidSchema.parse(puuid),
+          region: region,
+        },
+      },
+      discordAccount: {
+        id: user ?? undefined,
+      },
+    };
+
+    await backfillLastMatchTime(playerConfigEntry, LeaguePuuidSchema.parse(puuid));
 
     // get the player for the account
     const playerAccount = await prisma.account.findUnique({
