@@ -162,8 +162,8 @@ The bot requires API tokens for Discord and Riot Games. In test mode (`NODE_ENV=
 
 ## Links
 
-- **Website**: [scoutforlol.com](https://scoutforlol.com)
-- **Documentation**: [scoutforlol.com/docs](https://scoutforlol.com/docs)
+- **Website**: [scout-for-lol.com](https://scout-for-lol.com)
+- **Documentation**: [scout-for-lol.com/docs](https://scout-for-lol.com/docs)
 - **Add to Discord**: [Install Scout](https://discord.com/oauth2/authorize?client_id=1182800769188110366)
 - **GitHub**: [shepherdjerred/scout-for-lol](https://github.com/shepherdjerred/scout-for-lol)
 - **Support**: [GitHub Issues](https://github.com/shepherdjerred/scout-for-lol/issues)
@@ -172,7 +172,7 @@ The bot requires API tokens for Discord and Riot Games. In test mode (`NODE_ENV=
 
 Scout stores only the minimum data necessary to provide notifications: Riot IDs, aliases, Discord channel information, and match history for competitions. We don't collect personal information beyond what's required for the service.
 
-See [Privacy Policy](https://scoutforlol.com/privacy) and [Terms of Service](https://scoutforlol.com/tos) for details.
+See [Privacy Policy](https://scout-for-lol.com/privacy) and [Terms of Service](https://scout-for-lol.com/tos) for details.
 
 ---
 
