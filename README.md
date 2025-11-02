@@ -104,14 +104,15 @@ Scout automatically checks for matches every minute and posts:
 
 ### Admin Commands (Administrator Only)
 
-- `/admin player-edit-alias` - Change a player's display name
-- `/admin account-remove` - Remove a Riot account from a player
+- `/admin player-edit` - Change a player's display name
+- `/admin account-delete` - Remove a Riot account from a player
 - `/admin account-add` - Add a Riot account to a player
 - `/admin account-transfer` - Transfer an account between players
 - `/admin player-merge` - Merge two players into one
 - `/admin player-delete` - Permanently delete a player
 - `/admin player-link-discord` - Link a Discord user to a player
 - `/admin player-unlink-discord` - Unlink a Discord user from a player
+- `/admin player-view` - View detailed player information
 
 ### Debug Commands (Owner Only)
 

@@ -272,21 +272,21 @@ import Footer from "../components/Footer.astro";
               <div class="space-y-4">
                 <div>
                   <h4 class="font-medium text-gray-900 mb-2">
-                    /admin player-edit-alias
+                    /admin player-edit
                   </h4>
                   <p class="text-sm text-gray-600 mb-2">
                     Change a player's display alias in your server.
                   </p>
                   <div class="bg-white rounded-md p-3">
                     <code class="text-xs">
-                      /admin player-edit-alias current-alias:[old] new-alias:[new]
+                      /admin player-edit current-alias:[old] new-alias:[new]
                     </code>
                   </div>
                 </div>
 
                 <div>
                   <h4 class="font-medium text-gray-900 mb-2">
-                    /admin account-remove
+                    /admin account-delete
                   </h4>
                   <p class="text-sm text-gray-600 mb-2">
                     Remove a specific Riot account from a player. Useful when someone
@@ -294,7 +294,7 @@ import Footer from "../components/Footer.astro";
                   </p>
                   <div class="bg-white rounded-md p-3">
                     <code class="text-xs">
-                      /admin account-remove riot-id:[name#tag] region:[region]
+                      /admin account-delete riot-id:[name#tag] region:[region]
                     </code>
                   </div>
                 </div>
@@ -343,18 +343,101 @@ import Footer from "../components/Footer.astro";
                     </code>
                   </div>
                 </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /admin player-link-discord
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Link a Discord user to a player profile.
+                  </p>
+                  <div class="bg-white rounded-md p-3">
+                    <code class="text-xs">
+                      /admin player-link-discord player-alias:[alias] discord-user:[@user]
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /admin player-unlink-discord
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Unlink a Discord user from a player profile.
+                  </p>
+                  <div class="bg-white rounded-md p-3">
+                    <code class="text-xs">
+                      /admin player-unlink-discord player-alias:[alias]
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /admin player-view
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    View detailed information about a player including accounts,
+                    subscriptions, and competitions.
+                  </p>
+                  <div class="bg-white rounded-md p-3">
+                    <code class="text-xs">
+                      /admin player-view alias:[alias]
+                    </code>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- Debug Command -->
+            <!-- Debug Commands -->
             <div class="border border-gray-200 rounded-lg p-6">
               <h3 class="text-xl font-semibold text-gray-900 mb-3">/debug</h3>
               <p class="text-gray-600 mb-4">
-                Display current bot state for troubleshooting (admin only).
+                Debug commands for troubleshooting (owner only).
               </p>
 
-              <div class="bg-gray-50 rounded-md p-4">
-                <code class="text-sm"> /debug </code>
+              <div class="space-y-3">
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /debug server-info
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    View detailed server information including players, accounts, subscriptions, and competitions.
+                  </p>
+                  <div class="bg-gray-50 rounded-md p-3">
+                    <code class="text-xs">
+                      /debug server-info
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /debug database
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Download the SQLite database file (owner only).
+                  </p>
+                  <div class="bg-gray-50 rounded-md p-3">
+                    <code class="text-xs">
+                      /debug database
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /debug polling
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Show polling intervals for all tracked players (owner only).
+                  </p>
+                  <div class="bg-gray-50 rounded-md p-3">
+                    <code class="text-xs">
+                      /debug polling
+                    </code>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

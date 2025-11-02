@@ -54,9 +54,15 @@ export async function executeHelp(interaction: ChatInputCommandInteraction): Pro
       {
         name: "🔧 Admin Commands",
         value:
-          "• `/admin account-add` - Link a Riot account to a player\n" +
-          "• `/admin player-edit` - Edit a player's details\n" +
-          "• `/admin player-link-discord` - Link Discord user to player",
+          "• `/admin player-edit` - Edit a player's alias\n" +
+          "• `/admin account-delete` - Remove a Riot account\n" +
+          "• `/admin account-add` - Add a Riot account to a player\n" +
+          "• `/admin account-transfer` - Transfer account between players\n" +
+          "• `/admin player-merge` - Merge two players\n" +
+          "• `/admin player-delete` - Permanently delete a player\n" +
+          "• `/admin player-link-discord` - Link Discord user to player\n" +
+          "• `/admin player-unlink-discord` - Unlink Discord user\n" +
+          "• `/admin player-view` - View player details",
         inline: false,
       },
       {
