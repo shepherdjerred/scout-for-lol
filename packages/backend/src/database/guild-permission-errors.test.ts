@@ -19,7 +19,7 @@ const testDir = mkdtempSync(join(tmpdir(), "guild-errors-test-"));
 const testDbPath = join(testDir, "test.db");
 
 // Initialize test database
-const schemaPath = join(import.meta.dir, "..", "prisma/schema.prisma");
+const schemaPath = join(import.meta.dir, "../..", "prisma/schema.prisma");
 execSync(
   `bunx prisma db push --skip-generate --schema=${schemaPath}`,
   {
