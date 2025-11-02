@@ -24,19 +24,16 @@ import {
 const testDir = mkdtempSync(join(tmpdir(), "snapshots-test-"));
 const testDbPath = join(testDir, "test.db");
 const schemaPath = join(__dirname, "../../..", "prisma/schema.prisma");
-execSync(
-  `bunx prisma db push --skip-generate --schema=${schemaPath}`,
-  {
-    cwd: join(__dirname, "../../.."),
-    env: {
-      ...process.env,
-      DATABASE_URL: `file:${testDbPath}`,
-      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-    },
-    stdio: "ignore",
+execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
+  cwd: join(__dirname, "../../.."),
+  env: {
+    ...process.env,
+    DATABASE_URL: `file:${testDbPath}`,
+    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
   },
-);
+  stdio: "ignore",
+});
 
 const prisma = new PrismaClient({
   datasources: {
@@ -157,6 +154,9 @@ describe("createSnapshot - START snapshot", () => {
         expect(snapshotData).toBeDefined();
       }
     } catch (error) {
+      // TODO: the tests should not pass in this case...
+      // calling the API is a bit weird but makes a little sense
+      // would be better if we could cache the response locally
       // If Riot API is unavailable, test passes with warning
       // Error can be either a fetch error or a validation error (when API returns invalid data)
       console.warn("Riot API unavailable, snapshot creation failed as expected:", String(error));

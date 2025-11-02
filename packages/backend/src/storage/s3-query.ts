@@ -137,6 +137,7 @@ export async function queryMatchesByDateRange(
     } catch (error) {
       console.error(`[S3Query] Error listing objects for prefix ${prefix}: ${getErrorMessage(error)}`);
       // Continue with other prefixes
+      // TODO: we probably want to throw an error here
     }
   }
 
