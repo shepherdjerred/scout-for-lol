@@ -94,8 +94,8 @@ function main() {
 
   // Debug: Check if file was actually modified
   const wasModified = sourceFile.getImportDeclarations().length > 0 || transformCount > 0;
-  console.log(`\nFile was modified: ${wasModified}`);
-  console.log(`Import declarations before save: ${sourceFile.getImportDeclarations().length}`);
+  console.log(`\nFile was modified: ${wasModified.toString()}`);
+  console.log(`Import declarations before save: ${sourceFile.getImportDeclarations().length.toString()}`);
 
   // Save the transformed file
   sourceFile.saveSync();

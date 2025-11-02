@@ -4,7 +4,7 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId } from "../../testing/test-ids.js";
 import {
   type CreateCompetitionInput,
   cancelCompetition,
@@ -13,12 +13,7 @@ import {
   getCompetitionById,
   getCompetitionsByServer,
 } from "./queries.js";
-import {
-  ChampionIdSchema,
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
-} from "@scout-for-lol/data";
+import { ChampionIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "competition-queries-test-"));

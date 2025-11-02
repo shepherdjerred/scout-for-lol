@@ -4,34 +4,30 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-  type DiscordAccountId,
-  type DiscordChannelId,
-  type DiscordGuildId,
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
-} from "@scout-for-lol/data";
+import { type DiscordAccountId, type DiscordChannelId, type DiscordGuildId } from "@scout-for-lol/data";
 import { createCompetition, getCompetitionsByServer } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId } from "../../../testing/test-ids.js";
 // Create a test database for integration tests
 const testDir = mkdtempSync(join(tmpdir(), "competition-list-test-"));
 const testDbPath = join(testDir, "test.db");
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database once before all tests
-execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
-  cwd: join(import.meta.dir, "../../../.."),
-  env: {
-    ...process.env,
-    DATABASE_URL: testDbUrl,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+execSync(
+  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  {
+    cwd: join(import.meta.dir, "../../../.."),
+    env: {
+      ...process.env,
+      DATABASE_URL: testDbUrl,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "ignore",
   },
-  stdio: "ignore",
-});
+);
 
 const prisma = new PrismaClient({
   datasources: {

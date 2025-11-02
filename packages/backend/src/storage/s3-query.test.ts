@@ -1,8 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../testing/test-ids.js";
-
 // We'll need to test internal helper functions, so let's create a test version
 // that exposes these functions for testing
 

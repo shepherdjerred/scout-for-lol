@@ -1,19 +1,11 @@
 import { describe, expect, it } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import type { ChampionId, LeaguePuuid, Rank, Ranks } from "@scout-for-lol/data";
-import {
-  AccountIdSchema,
-  ChampionIdSchema,
-  DiscordAccountIdSchema,
-  LeaguePuuidSchema,
-  PlayerIdSchema,
-  RegionSchema,
-  rankToLeaguePoints,
-} from "@scout-for-lol/data";
+import { AccountIdSchema, ChampionIdSchema, PlayerIdSchema, rankToLeaguePoints } from "@scout-for-lol/data";
 import { processCriteria } from "./index.js";
 import type { PlayerWithAccounts } from "./types.js";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
+import { testAccountId, testPuuid } from "../../../testing/test-ids.js";
 // ============================================================================
 // Test Fixtures - Players
 // ============================================================================
@@ -26,8 +18,8 @@ const playerA: PlayerWithAccounts = {
     {
       id: AccountIdSchema.parse(1),
       alias: "PlayerA",
-      puuid: LeaguePuuidSchema.parse("puuid-a"),
-      region: RegionSchema.parse("AMERICA_NORTH"),
+      puuid: testPuuid("a"),
+      region: "AMERICA_NORTH",
     },
   ],
 };
@@ -40,8 +32,8 @@ const playerB: PlayerWithAccounts = {
     {
       id: AccountIdSchema.parse(2),
       alias: "PlayerB",
-      puuid: LeaguePuuidSchema.parse("puuid-b"),
-      region: RegionSchema.parse("AMERICA_NORTH"),
+      puuid: testPuuid("b"),
+      region: "AMERICA_NORTH",
     },
   ],
 };
@@ -54,8 +46,8 @@ const playerC: PlayerWithAccounts = {
     {
       id: AccountIdSchema.parse(3),
       alias: "PlayerC",
-      puuid: LeaguePuuidSchema.parse("puuid-c"),
-      region: RegionSchema.parse("AMERICA_NORTH"),
+      puuid: testPuuid("c"),
+      region: "AMERICA_NORTH",
     },
   ],
 };
@@ -321,21 +313,21 @@ describe("processMostGamesPlayed", () => {
     const matches = [
       // SOLO queue matches
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       // ARENA matches
       createMatch(1700, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-b"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       createMatch(1700, [
-        { puuid: LeaguePuuidSchema.parse("puuid-b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
     ];
 
@@ -352,17 +344,17 @@ describe("processMostGamesPlayed", () => {
     const matches = [
       // SOLO queue matches
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       // ARENA matches
       createMatch(1700, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-b"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       createMatch(1700, [
-        { puuid: LeaguePuuidSchema.parse("puuid-b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
     ];
 
@@ -379,22 +371,22 @@ describe("processMostGamesPlayed", () => {
     const matches = [
       // SOLO queue
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       // FLEX queue
       createMatch(440, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       // ARENA (should not count)
       createMatch(1700, [
-        { puuid: LeaguePuuidSchema.parse("puuid-b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
     ];
 
@@ -510,29 +502,29 @@ describe("processMostWinsPlayer", () => {
     const matches = [
       // PlayerA: 2 wins
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: false },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: true },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: false },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: true },
       ]),
       // PlayerB: 3 wins
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
     ];
 
@@ -560,35 +552,35 @@ describe("processMostWinsChampion", () => {
     const matches = [
       // PlayerA: 2 Yasuo wins, 1 Yasuo loss
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(yasuoId), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(yasuoId), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(yasuoId), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(yasuoId), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(yasuoId), win: false },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: true },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(yasuoId), win: false },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: true },
       ]),
       // PlayerA with other champion (should not count)
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       // PlayerB: 1 Yasuo win
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-b"), championId: ChampionIdSchema.parse(yasuoId), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(yasuoId), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       // PlayerB with other champion (should not count)
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-b"), championId: ChampionIdSchema.parse(1), win: true },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+        { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
       ]),
     ];
 
@@ -618,40 +610,40 @@ describe("processHighestWinRate", () => {
       // PlayerA: 15 wins, 5 losses (75% win rate, 20 games)
       ...Array.from({ length: 15 }, () =>
         createMatch(420, [
-          { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: true },
-          { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+          { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
+          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
         ]),
       ),
       ...Array.from({ length: 5 }, () =>
         createMatch(420, [
-          { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: false },
-          { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: true },
+          { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: false },
+          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: true },
         ]),
       ),
       // PlayerB: 8 wins, 2 losses (80% win rate, but only 10 games - exactly at threshold)
       ...Array.from({ length: 8 }, () =>
         createMatch(420, [
-          { puuid: LeaguePuuidSchema.parse("puuid-b"), championId: ChampionIdSchema.parse(1), win: true },
-          { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+          { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
+          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
         ]),
       ),
       ...Array.from({ length: 2 }, () =>
         createMatch(420, [
-          { puuid: LeaguePuuidSchema.parse("puuid-b"), championId: ChampionIdSchema.parse(1), win: false },
-          { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: true },
+          { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: false },
+          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: true },
         ]),
       ),
       // PlayerC: 10 wins, 10 losses (50% win rate, 20 games)
       ...Array.from({ length: 10 }, () =>
         createMatch(420, [
-          { puuid: LeaguePuuidSchema.parse("puuid-c"), championId: ChampionIdSchema.parse(1), win: true },
-          { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+          { puuid: testPuuid("c"), championId: ChampionIdSchema.parse(1), win: true },
+          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
         ]),
       ),
       ...Array.from({ length: 10 }, () =>
         createMatch(420, [
-          { puuid: LeaguePuuidSchema.parse("puuid-c"), championId: ChampionIdSchema.parse(1), win: false },
-          { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: true },
+          { puuid: testPuuid("c"), championId: ChampionIdSchema.parse(1), win: false },
+          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: true },
         ]),
       ),
     ];
@@ -675,19 +667,19 @@ describe("processHighestWinRate", () => {
       // PlayerA: 8 wins, 1 loss (only 9 games, below min of 10)
       ...Array.from({ length: 8 }, () =>
         createMatch(420, [
-          { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: true },
-          { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+          { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: true },
+          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
         ]),
       ),
       createMatch(420, [
-        { puuid: LeaguePuuidSchema.parse("puuid-a"), championId: ChampionIdSchema.parse(1), win: false },
-        { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: true },
+        { puuid: testPuuid("a"), championId: ChampionIdSchema.parse(1), win: false },
+        { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: true },
       ]),
       // PlayerB: 10 wins, 0 losses (exactly 10 games, should be included)
       ...Array.from({ length: 10 }, () =>
         createMatch(420, [
-          { puuid: LeaguePuuidSchema.parse("puuid-b"), championId: ChampionIdSchema.parse(1), win: true },
-          { puuid: LeaguePuuidSchema.parse("puuid-other"), championId: ChampionIdSchema.parse(2), win: false },
+          { puuid: testPuuid("b"), championId: ChampionIdSchema.parse(1), win: true },
+          { puuid: testPuuid("other"), championId: ChampionIdSchema.parse(2), win: false },
         ]),
       ),
     ];

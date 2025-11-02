@@ -3,13 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
 import { PrismaClient } from "../../../generated/prisma/client";
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
-import {
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
-  LeaguePuuidSchema,
-} from "@scout-for-lol/data";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../testing/test-ids.js";
 
 // Create test database in temp directory
 const tempDir = fs.mkdtempSync(path.join("/tmp", "subscribe-test-"));

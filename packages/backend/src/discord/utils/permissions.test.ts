@@ -7,8 +7,6 @@ import {
 } from "./permissions";
 import { PermissionFlagsBits, type Channel, type User } from "discord.js";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
-
 // Mock bot user for tests
 // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Test mock for complex Discord.js User class
 const mockBotUser = {

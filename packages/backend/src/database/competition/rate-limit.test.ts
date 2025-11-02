@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { checkRateLimit, clearAllRateLimits, clearRateLimit, getTimeRemaining, recordCreation } from "./rate-limit.js";
-import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
+import { testAccountId } from "../../testing/test-ids.js";
 // Clean up before each test
 beforeEach(() => {
   clearAllRateLimits();

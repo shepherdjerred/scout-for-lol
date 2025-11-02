@@ -2,8 +2,6 @@ import { describe, expect, test } from "bun:test";
 import { CompetitionIdSchema, PlayerIdSchema, type CachedLeaderboard } from "@scout-for-lol/data";
 import { EmbedBuilder } from "discord.js";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
-
 /**
  * Tests for leaderboard caching logic in competition view command
  *

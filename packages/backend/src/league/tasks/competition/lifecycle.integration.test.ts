@@ -6,27 +6,24 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createCompetition, type CreateCompetitionInput } from "../../../database/competition/queries.js";
 import type { CompetitionCriteria, CompetitionId, LeaguePuuid, PlayerId, Region } from "@scout-for-lol/data";
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
-import {
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
-  LeaguePuuidSchema,
-} from "@scout-for-lol/data";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../../testing/test-ids.js";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "lifecycle-test-"));
 const testDbPath = join(testDir, "test.db");
-execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
-  cwd: join(__dirname, "../../.."),
-  env: {
-    ...process.env,
-    DATABASE_URL: `file:${testDbPath}`,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+execSync(
+  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  {
+    cwd: join(__dirname, "../../.."),
+    env: {
+      ...process.env,
+      DATABASE_URL: `file:${testDbPath}`,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "ignore",
   },
-  stdio: "ignore",
-});
+);
 
 const prisma = new PrismaClient({
   datasources: {
@@ -226,11 +223,7 @@ describe("Competition Lifecycle - Query for Starting", () => {
     const { competitionId } = await createTestCompetition(criteria, startDate, endDate);
 
     // Add a player and create START snapshot
-    const { playerId } = await createTestPlayer(
-      "Player1",
-      testPuuid("lifecycle-player1"),
-      "AMERICA_NORTH",
-    );
+    const { playerId } = await createTestPlayer("Player1", testPuuid("lifecycle-player1"), "AMERICA_NORTH");
     await addTestParticipant(competitionId, playerId);
 
     await prisma.competitionSnapshot.create({
@@ -280,11 +273,7 @@ describe("Competition Lifecycle - Query for Ending", () => {
     const { competitionId } = await createTestCompetition(criteria, startDate, endDate);
 
     // Add a player and create START snapshot
-    const { playerId } = await createTestPlayer(
-      "Player1",
-      testPuuid("lifecycle-player1"),
-      "AMERICA_NORTH",
-    );
+    const { playerId } = await createTestPlayer("Player1", testPuuid("lifecycle-player1"), "AMERICA_NORTH");
     await addTestParticipant(competitionId, playerId);
 
     await prisma.competitionSnapshot.create({
@@ -336,11 +325,7 @@ describe("Competition Lifecycle - Query for Ending", () => {
     const { competitionId } = await createTestCompetition(criteria, startDate, endDate);
 
     // Add START snapshot
-    const { playerId } = await createTestPlayer(
-      "Player1",
-      testPuuid("lifecycle-player1"),
-      "AMERICA_NORTH",
-    );
+    const { playerId } = await createTestPlayer("Player1", testPuuid("lifecycle-player1"), "AMERICA_NORTH");
     await addTestParticipant(competitionId, playerId);
 
     await prisma.competitionSnapshot.create({
@@ -428,11 +413,7 @@ describe("Competition Lifecycle - Query for Ending", () => {
     const { competitionId } = await createTestCompetition(criteria, startDate, endDate);
 
     // Add START and END snapshots
-    const { playerId } = await createTestPlayer(
-      "Player1",
-      testPuuid("lifecycle-player1"),
-      "AMERICA_NORTH",
-    );
+    const { playerId } = await createTestPlayer("Player1", testPuuid("lifecycle-player1"), "AMERICA_NORTH");
     await addTestParticipant(competitionId, playerId);
 
     await prisma.competitionSnapshot.create({
@@ -519,11 +500,7 @@ describe("Competition Lifecycle - Multiple Competitions", () => {
     );
 
     // Add START snapshots for comp3 and comp4
-    const { playerId } = await createTestPlayer(
-      "Player1",
-      testPuuid("lifecycle-player1"),
-      "AMERICA_NORTH",
-    );
+    const { playerId } = await createTestPlayer("Player1", testPuuid("lifecycle-player1"), "AMERICA_NORTH");
 
     await addTestParticipant(comp3, playerId);
     await addTestParticipant(comp4, playerId);

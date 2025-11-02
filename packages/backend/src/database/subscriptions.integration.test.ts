@@ -5,13 +5,13 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getChannelsSubscribedToPlayers } from "./index.js";
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../testing/test-ids.js";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuid,
   LeaguePuuidSchema,
+  type DiscordAccountId,
   type DiscordChannelId,
   type DiscordGuildId,
   type PlayerId,
@@ -140,12 +140,7 @@ describe("getChannelsSubscribedToPlayers - Deduplication Fix", () => {
     const player = await createTestPlayer("TestPlayer", testGuildId("1000000001"));
 
     // Create account for the player
-    const account = await createTestAccount(
-      testPuuid("main"),
-      player.id,
-      testGuildId("1000000001"),
-      player.alias,
-    );
+    const account = await createTestAccount(testPuuid("main"), player.id, testGuildId("1000000001"), player.alias);
 
     // Create two subscriptions in different servers but to the SAME channel
     const channelId = testChannelId("123");
@@ -163,12 +158,7 @@ describe("getChannelsSubscribedToPlayers - Deduplication Fix", () => {
 
   test("returns multiple channels when player is subscribed to different channels", async () => {
     const player = await createTestPlayer("TestPlayer", testGuildId("1000000001"));
-    const account = await createTestAccount(
-      testPuuid("main"),
-      player.id,
-      testGuildId("1000000001"),
-      player.alias,
-    );
+    const account = await createTestAccount(testPuuid("main"), player.id, testGuildId("1000000001"), player.alias);
 
     // Create subscriptions to different channels
     const channel1 = testChannelId("123");
@@ -199,12 +189,7 @@ describe("getChannelsSubscribedToPlayers - Deduplication Fix", () => {
     const player = await createTestPlayer("TestPlayer", testGuildId("1000000001"));
 
     // Create two accounts for the same player (e.g., main and smurf)
-    const mainAccount = await createTestAccount(
-      testPuuid("main"),
-      player.id,
-      testGuildId("1000000001"),
-      player.alias,
-    );
+    const mainAccount = await createTestAccount(testPuuid("main"), player.id, testGuildId("1000000001"), player.alias);
     const smurfAccount = await createTestAccount(
       testPuuid("smurf"),
       player.id,
@@ -227,12 +212,7 @@ describe("getChannelsSubscribedToPlayers - Deduplication Fix", () => {
 
   test("returns empty array when player has no subscriptions", async () => {
     const player = await createTestPlayer("TestPlayer", testGuildId("1000000001"));
-    const account = await createTestAccount(
-      testPuuid("main"),
-      player.id,
-      testGuildId("1000000001"),
-      player.alias,
-    );
+    const account = await createTestAccount(testPuuid("main"), player.id, testGuildId("1000000001"), player.alias);
 
     const puuid = LeaguePuuidSchema.parse(account.puuid);
     const channels = await getChannelsSubscribedToPlayers([puuid], testPrisma);
@@ -292,12 +272,7 @@ describe("getChannelsSubscribedToPlayers - Deduplication Fix", () => {
     // (e.g., #general and #league-of-legends)
 
     const player = await createTestPlayer("TestPlayer", testGuildId("1000000001"));
-    const account = await createTestAccount(
-      testPuuid("main"),
-      player.id,
-      testGuildId("1000000001"),
-      player.alias,
-    );
+    const account = await createTestAccount(testPuuid("main"), player.id, testGuildId("1000000001"), player.alias);
 
     // Create multiple subscriptions in the same server to different channels
     const channelGeneral = testChannelId("1001");

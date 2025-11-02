@@ -11,3 +11,4 @@
 - Lots of repetition in tests. we need helpers
 - Remove unhelpful tests
   - I think we have a file analyzing what tests are helpful and which are not
+- Skipped tests

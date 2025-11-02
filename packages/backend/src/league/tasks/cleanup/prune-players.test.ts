@@ -5,13 +5,7 @@ import { execSync } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
-import {
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
-  LeaguePuuidSchema,
-} from "@scout-for-lol/data";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../../testing/test-ids.js";
 
 // Mark these tests as serial since they create temporary databases
 // and have timing constraints. Running them concurrently would slow them down.

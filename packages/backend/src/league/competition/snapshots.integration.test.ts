@@ -7,14 +7,11 @@ import { join } from "node:path";
 import { createSnapshot, getSnapshot, createSnapshotsForAllParticipants } from "./snapshots.js";
 import { createCompetition, type CreateCompetitionInput } from "../../database/competition/queries.js";
 import { addParticipant } from "../../database/competition/participants.js";
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../testing/test-ids.js";
 import {
   ChampionIdSchema,
   CompetitionId,
   CompetitionIdSchema,
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
   LeaguePuuidSchema,
   PlayerIdSchema,
   type CompetitionCriteria,

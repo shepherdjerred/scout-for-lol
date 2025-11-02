@@ -112,11 +112,11 @@ export function testPuuid(identifier: string): LeaguePuuid {
   // e.g., "1" and "10" won't collide because we pad with "x" then "0"
   const base = `puuid-${identifier}`;
   const paddingNeeded = 78 - base.length;
-  
+
   // First half with 'x', second half with '0' to create unique patterns
   const halfPadding = Math.floor(paddingNeeded / 2);
   const padding = "x".repeat(halfPadding) + "0".repeat(paddingNeeded - halfPadding);
-  
+
   return LeaguePuuidSchema.parse(base + padding);
 }
 

@@ -16,7 +16,7 @@ import type {
 } from "@scout-for-lol/data";
 import { z } from "zod";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../../testing/test-ids.js";
 // Schema for Discord message content validation
 const MessageContentSchema = z.object({
   content: z.string(),
@@ -51,16 +51,19 @@ void mock.module("../../discord/channel.js", () => ({
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "daily-update-test-"));
 const testDbPath = join(testDir, "test.db");
-execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
-  cwd: join(__dirname, "../../.."),
-  env: {
-    ...process.env,
-    DATABASE_URL: `file:${testDbPath}`,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+execSync(
+  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  {
+    cwd: join(__dirname, "../../.."),
+    env: {
+      ...process.env,
+      DATABASE_URL: `file:${testDbPath}`,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "ignore",
   },
-  stdio: "ignore",
-});
+);
 
 const testPrisma = new PrismaClient({
   datasources: {
@@ -77,12 +80,6 @@ void mock.module("../../../database/index.js", () => ({
 
 // Now import daily-update after mocks are set up
 const { runDailyLeaderboardUpdate } = await import("./daily-update.js");
-import {
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
-  LeaguePuuidSchema,
-} from "@scout-for-lol/data";
 
 // Test helpers
 async function createTestCompetition(
@@ -199,11 +196,7 @@ describe("Daily Leaderboard Update", () => {
     const { competitionId, channelId } = await createTestCompetition(criteria, startDate, endDate);
 
     // Create START snapshot to make it ACTIVE
-    const { playerId } = await createTestPlayer(
-      "Player1",
-      testPuuid("player1"),
-      "AMERICA_NORTH",
-    );
+    const { playerId } = await createTestPlayer("Player1", testPuuid("player1"), "AMERICA_NORTH");
     await addTestParticipant(competitionId, playerId);
     await createStartSnapshot(competitionId, playerId, startDate);
 
@@ -362,11 +355,7 @@ describe("Daily Leaderboard Update", () => {
       channelId: testChannelId("999"),
       title: "Competition 1",
     });
-    const { playerId: player1Id } = await createTestPlayer(
-      "Player1",
-      testPuuid("error-player1"),
-      "AMERICA_NORTH",
-    );
+    const { playerId: player1Id } = await createTestPlayer("Player1", testPuuid("error-player1"), "AMERICA_NORTH");
     await addTestParticipant(comp1Id, player1Id);
     await createStartSnapshot(comp1Id, player1Id, startDate);
 
@@ -380,11 +369,7 @@ describe("Daily Leaderboard Update", () => {
         title: "Competition 2",
       },
     );
-    const { playerId: player2Id } = await createTestPlayer(
-      "Player2",
-      testPuuid("error-player2"),
-      "AMERICA_NORTH",
-    );
+    const { playerId: player2Id } = await createTestPlayer("Player2", testPuuid("error-player2"), "AMERICA_NORTH");
     await addTestParticipant(comp2Id, player2Id);
     await createStartSnapshot(comp2Id, player2Id, startDate);
 
@@ -420,11 +405,7 @@ describe("Daily Leaderboard Update", () => {
     const { competitionId } = await createTestCompetition(criteria, startDate, endDate);
 
     // Make it ACTIVE
-    const { playerId } = await createTestPlayer(
-      "Player1",
-      testPuuid("day-count-player"),
-      "AMERICA_NORTH",
-    );
+    const { playerId } = await createTestPlayer("Player1", testPuuid("day-count-player"), "AMERICA_NORTH");
     await addTestParticipant(competitionId, playerId);
     await createStartSnapshot(competitionId, playerId, startDate);
 

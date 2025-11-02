@@ -8,27 +8,27 @@ import { createCompetition } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 import { addParticipant, getParticipantStatus, removeParticipant } from "../../../database/competition/participants.js";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId } from "../../../testing/test-ids.js";
 // Create a test database for integration tests
 const testDir = mkdtempSync(join(tmpdir(), "competition-leave-test-"));
 const testDbPath = join(testDir, "test.db");
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database once before all tests
-execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
-  cwd: join(import.meta.dir, "../../../.."),
-  env: {
-    ...process.env,
-    DATABASE_URL: testDbUrl,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+execSync(
+  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  {
+    cwd: join(import.meta.dir, "../../../.."),
+    env: {
+      ...process.env,
+      DATABASE_URL: testDbUrl,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "ignore",
   },
-  stdio: "ignore",
-});
+);
 import {
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
   type DiscordAccountId,
   type DiscordGuildId,
   type PlayerId,
@@ -143,11 +143,7 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User can leave a competition they joined", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(
-      serverId,
-      testAccountId("100000000010"),
-      "Player1",
-    );
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
 
     // Join competition
@@ -176,11 +172,7 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User can leave a competition they were invited to (decline invitation)", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(
-      serverId,
-      testAccountId("100000000010"),
-      "Player1",
-    );
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
 
     // Add as invited
@@ -210,11 +202,7 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User cannot leave a competition they are not part of", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(
-      serverId,
-      testAccountId("100000000010"),
-      "Player1",
-    );
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // User is not a participant
@@ -231,11 +219,7 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User cannot leave a competition they already left", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(
-      serverId,
-      testAccountId("100000000010"),
-      "Player1",
-    );
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // Join and then leave
@@ -258,11 +242,7 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User cannot rejoin a competition after leaving", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(
-      serverId,
-      testAccountId("100000000010"),
-      "Player1",
-    );
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // Join, leave, then try to rejoin
@@ -323,11 +303,7 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User can leave a cancelled competition", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(
-      serverId,
-      testAccountId("100000000010"),
-      "Player1",
-    );
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
 
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);

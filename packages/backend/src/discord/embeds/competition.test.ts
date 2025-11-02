@@ -2,16 +2,13 @@ import { describe, expect, it } from "bun:test";
 import {
   ChampionIdSchema,
   CompetitionIdSchema,
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
   PlayerIdSchema,
   type CompetitionWithCriteria,
 } from "@scout-for-lol/data";
 import type { RankedLeaderboardEntry } from "../../league/competition/leaderboard.js";
 import { generateLeaderboardEmbed, generateCompetitionDetailsEmbed, formatScore } from "./competition.js";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId } from "../../testing/test-ids.js";
 // ============================================================================
 // Test Data Factories
 // ============================================================================
@@ -226,7 +223,7 @@ describe("generateCompetitionDetailsEmbed", () => {
   it("should include all basic competition metadata", () => {
     const ownerId = testAccountId("12300000123");
     const channelId = testChannelId("456000000");
-    
+
     const competition = createTestCompetition({
       title: "Test Competition",
       description: "Test description",

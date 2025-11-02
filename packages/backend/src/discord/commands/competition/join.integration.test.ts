@@ -8,27 +8,27 @@ import { createCompetition, getCompetitionById } from "../../../database/competi
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 import { addParticipant, getParticipantStatus } from "../../../database/competition/participants.js";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId } from "../../../testing/test-ids.js";
 // Create a test database for integration tests
 const testDir = mkdtempSync(join(tmpdir(), "competition-join-test-"));
 const testDbPath = join(testDir, "test.db");
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database once before all tests
-execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
-  cwd: join(import.meta.dir, "../../../.."),
-  env: {
-    ...process.env,
-    DATABASE_URL: testDbUrl,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+execSync(
+  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  {
+    cwd: join(import.meta.dir, "../../../.."),
+    env: {
+      ...process.env,
+      DATABASE_URL: testDbUrl,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "ignore",
   },
-  stdio: "ignore",
-});
+);
 import {
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
   type CompetitionId,
   type DiscordAccountId,
   type DiscordChannelId,
@@ -302,21 +302,9 @@ describe("Join when at participant limit", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId, { maxParticipants: 2 });
 
     // Create 2 players and have them join
-    const { playerId: player1Id } = await createTestPlayer(
-      serverId,
-      testAccountId("1000000000000"),
-      "Player1",
-    );
-    const { playerId: player2Id } = await createTestPlayer(
-      serverId,
-      testAccountId("2000000000000"),
-      "Player2",
-    );
-    const { playerId: player3Id } = await createTestPlayer(
-      serverId,
-      testAccountId("3000000000000"),
-      "Player3",
-    );
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("1000000000000"), "Player1");
+    const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("2000000000000"), "Player2");
+    const { playerId: player3Id } = await createTestPlayer(serverId, testAccountId("3000000000000"), "Player3");
 
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
     await addParticipant(prisma, competitionId, player2Id, "JOINED");

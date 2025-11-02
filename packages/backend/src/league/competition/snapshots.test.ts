@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
 
 import {
   ChampionIdSchema,

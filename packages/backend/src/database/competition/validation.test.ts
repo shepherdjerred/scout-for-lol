@@ -1,8 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { CompetitionCreationSchema, CompetitionDatesSchema, isCompetitionActive } from "./validation.js";
-import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId } from "../../testing/test-ids.js";
 // ============================================================================
 // isCompetitionActive
 // ============================================================================

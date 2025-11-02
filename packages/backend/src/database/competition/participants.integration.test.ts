@@ -15,9 +15,9 @@ import {
 import { createCompetition, type CreateCompetitionInput } from "./queries.js";
 import { ErrorSchema } from "../../utils/errors.js";
 import type { CompetitionId, DiscordAccountId, PlayerId } from "@scout-for-lol/data";
-import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId } from "../../testing/test-ids.js";
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "participants-test-"));
 const testDbPath = join(testDir, "test.db");

@@ -4,21 +4,13 @@ import { PrismaClient } from "../../../generated/prisma/client/index.js";
 import { calculateLeaderboard } from "./leaderboard.js";
 import { createCompetition } from "../../database/competition/queries.js";
 import { addParticipant } from "../../database/competition/participants.js";
-import {
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
-  LeaguePuuidSchema,
-  PlayerIdSchema,
-  parseCompetition,
-  type Rank,
-} from "@scout-for-lol/data";
+import { PlayerIdSchema, parseCompetition, type Rank } from "@scout-for-lol/data";
 import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../testing/test-ids.js";
 // ============================================================================
 // Test Setup
 // ============================================================================
@@ -29,15 +21,18 @@ const testDbPath = join(testDbDir, "test.db");
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database before tests run
-execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
-  env: {
-    ...process.env,
-    DATABASE_URL: testDbUrl,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+execSync(
+  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  {
+    env: {
+      ...process.env,
+      DATABASE_URL: testDbUrl,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "inherit",
   },
-  stdio: "inherit",
-});
+);
 
 let prisma: PrismaClient;
 

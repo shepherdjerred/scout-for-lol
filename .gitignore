@@ -4,3 +4,8 @@ node_modules
 *.db
 .eslintcache
 *.sqlite
+
+# Test coverage and reports
+coverage/
+*.lcov
+junit.xml

@@ -1,8 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
-
 // We'll test the schemas directly by importing them
 // Since they're not exported, we'll create minimal versions for testing validation logic
 

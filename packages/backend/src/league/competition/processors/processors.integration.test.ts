@@ -3,10 +3,8 @@ import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import {
   AccountIdSchema,
   ChampionIdSchema,
-  DiscordAccountIdSchema,
   LeaguePuuidSchema,
   PlayerIdSchema,
-  RegionSchema,
   type Rank,
   type Ranks,
 } from "@scout-for-lol/data";
@@ -15,7 +13,7 @@ import type { PlayerWithAccounts } from "./types.js";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
+import { testAccountId, testPuuid } from "../../../testing/test-ids.js";
 // ============================================================================
 // Test Fixtures - Load Real Match Data
 // ============================================================================
@@ -39,8 +37,8 @@ const testPlayers: PlayerWithAccounts[] = [
       {
         id: AccountIdSchema.parse(1),
         alias: "TestPlayer1",
-        puuid: LeaguePuuidSchema.parse("test-puuid-1"), // Replace with actual PUUID from fixture if available
-        region: RegionSchema.parse("AMERICA_NORTH"),
+        puuid: testPuuid("test-1"), // Replace with actual PUUID from fixture if available
+        region: "AMERICA_NORTH",
       },
     ],
   },
@@ -52,8 +50,8 @@ const testPlayers: PlayerWithAccounts[] = [
       {
         id: AccountIdSchema.parse(2),
         alias: "TestPlayer2",
-        puuid: LeaguePuuidSchema.parse("test-puuid-2"),
-        region: RegionSchema.parse("AMERICA_NORTH"),
+        puuid: testPuuid("test-2"),
+        region: "AMERICA_NORTH",
       },
     ],
   },
@@ -75,13 +73,13 @@ describe("processCriteria integration tests", () => {
     const players: PlayerWithAccounts[] = puuids.map((puuid, index) => ({
       id: PlayerIdSchema.parse(index + 1),
       alias: `Player${(index + 1).toString()}`,
-      discordId: DiscordAccountIdSchema.parse(`discord-${(index + 1).toString()}`),
+      discordId: testAccountId((index + 1).toString()),
       accounts: [
         {
           id: AccountIdSchema.parse(index + 1),
           alias: `Player${(index + 1).toString()}`,
           puuid: LeaguePuuidSchema.parse(puuid),
-          region: RegionSchema.parse("AMERICA_NORTH"),
+          region: "AMERICA_NORTH",
         },
       ],
     }));
@@ -139,7 +137,7 @@ describe("processCriteria integration tests", () => {
           id: AccountIdSchema.parse(1),
           alias: "TestPlayer",
           puuid: LeaguePuuidSchema.parse(puuid),
-          region: RegionSchema.parse("AMERICA_NORTH"),
+          region: "AMERICA_NORTH",
         },
       ],
     };
@@ -186,7 +184,7 @@ describe("processCriteria integration tests", () => {
           id: AccountIdSchema.parse(1),
           alias: "TestPlayer",
           puuid: LeaguePuuidSchema.parse(firstParticipant.puuid),
-          region: RegionSchema.parse("AMERICA_NORTH"),
+          region: "AMERICA_NORTH",
         },
       ],
     };
@@ -233,7 +231,7 @@ describe("processCriteria integration tests", () => {
           id: AccountIdSchema.parse(1),
           alias: "TestPlayer",
           puuid: LeaguePuuidSchema.parse(puuid),
-          region: RegionSchema.parse("AMERICA_NORTH"),
+          region: "AMERICA_NORTH",
         },
       ],
     };
@@ -306,7 +304,7 @@ describe("processCriteria integration tests", () => {
           id: AccountIdSchema.parse(1),
           alias: "TestPlayer",
           puuid: LeaguePuuidSchema.parse(firstParticipant.puuid),
-          region: RegionSchema.parse("AMERICA_NORTH"),
+          region: "AMERICA_NORTH",
         },
       ],
     };
@@ -350,7 +348,7 @@ describe("processCriteria integration tests", () => {
           id: AccountIdSchema.parse(1),
           alias: "TestPlayer",
           puuid: LeaguePuuidSchema.parse(firstParticipant.puuid),
-          region: RegionSchema.parse("AMERICA_NORTH"),
+          region: "AMERICA_NORTH",
         },
       ],
     };

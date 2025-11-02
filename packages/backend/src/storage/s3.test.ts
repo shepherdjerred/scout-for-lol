@@ -1,7 +1,5 @@
 import { describe, expect, test } from "bun:test";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../testing/test-ids.js";
-
 // ============================================================================
 // S3 Key Generation Tests (unit tests for the logic)
 // ============================================================================

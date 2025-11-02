@@ -55,10 +55,28 @@ export function checkBackend(workspaceSource: Directory): Container {
       .withExec(["sh", "-c", "echo '🔍 [CI] Running ESLint for backend...'"])
       .withExec(["bun", "run", "lint"])
       .withExec(["sh", "-c", "echo '✅ [CI] ESLint passed!'"])
-      .withExec(["sh", "-c", "echo '🧪 [CI] Running tests for backend...'"])
-      .withExec(["bun", "test"])
+      .withExec(["sh", "-c", "echo '🧪 [CI] Running tests with coverage for backend...'"])
+      .withExec(["bun", "run", "test:ci"])
       .withExec(["sh", "-c", "echo '✅ [CI] All backend checks completed successfully!'"])
   );
+}
+
+/**
+ * Export test coverage for the backend
+ * @param workspaceSource The full workspace source directory
+ * @returns The coverage directory
+ */
+export function getBackendCoverage(workspaceSource: Directory): Directory {
+  return checkBackend(workspaceSource).directory("/workspace/packages/backend/coverage");
+}
+
+/**
+ * Export test report for the backend
+ * @param workspaceSource The full workspace source directory
+ * @returns The test report file
+ */
+export function getBackendTestReport(workspaceSource: Directory): Directory {
+  return checkBackend(workspaceSource).directory("/workspace/packages/backend");
 }
 
 /**

@@ -4,8 +4,6 @@ import { ArenaMatchSchema, ArenaTeamSchema, LeaguePuuidSchema, type Player } fro
 import { participantToArenaChampion } from "../champion.js";
 import { toArenaMatch, toArenaSubteams } from "../match.js";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
-
 function makeParticipant(
   overrides: Partial<MatchV5DTOs.ParticipantDto> & {
     playerSubteamId: number;

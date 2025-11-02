@@ -13,21 +13,24 @@ import {
 } from "./guild-permission-errors.js";
 import { DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../testing/test-ids.js";
+import { testGuildId, testChannelId } from "../testing/test-ids.js";
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "guild-errors-test-"));
 const testDbPath = join(testDir, "test.db");
 
 // Initialize test database
-execSync("bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma", {
-  env: {
-    ...process.env,
-    DATABASE_URL: `file:${testDbPath}`,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+execSync(
+  "bunx prisma db push --skip-generate --schema=/workspaces/scout-for-lol/packages/backend/prisma/schema.prisma",
+  {
+    env: {
+      ...process.env,
+      DATABASE_URL: `file:${testDbPath}`,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "pipe",
   },
-  stdio: "pipe",
-});
+);
 
 const prisma = new PrismaClient({
   datasources: {
@@ -73,20 +76,10 @@ describe("recordPermissionError", () => {
 
   test("increments error count on subsequent occurrences", async () => {
     // First error
-    await recordPermissionError(
-      prisma,
-      testGuildId("12300000000"),
-      testChannelId("456000000"),
-      "proactive_check",
-    );
+    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("456000000"), "proactive_check");
 
     // Second error
-    await recordPermissionError(
-      prisma,
-      testGuildId("12300000000"),
-      testChannelId("456000000"),
-      "api_error",
-    );
+    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("456000000"), "api_error");
 
     const record = await prisma.guildPermissionError.findUnique({
       where: {
@@ -102,18 +95,8 @@ describe("recordPermissionError", () => {
   });
 
   test("tracks separate errors for different channels in same guild", async () => {
-    await recordPermissionError(
-      prisma,
-      testGuildId("12300000000"),
-      testChannelId("1000000001"),
-      "proactive_check",
-    );
-    await recordPermissionError(
-      prisma,
-      testGuildId("12300000000"),
-      testChannelId("2000000002"),
-      "proactive_check",
-    );
+    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("1000000001"), "proactive_check");
+    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("2000000002"), "proactive_check");
 
     const errors = await prisma.guildPermissionError.findMany({
       where: { serverId: testGuildId("12300000000") },
@@ -126,25 +109,11 @@ describe("recordPermissionError", () => {
 describe("recordSuccessfulSend", () => {
   test("resets error count when called", async () => {
     // Create some errors
-    await recordPermissionError(
-      prisma,
-      testGuildId("12300000000"),
-      testChannelId("456000000"),
-      "proactive_check",
-    );
-    await recordPermissionError(
-      prisma,
-      testGuildId("12300000000"),
-      testChannelId("456000000"),
-      "api_error",
-    );
+    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("456000000"), "proactive_check");
+    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("456000000"), "api_error");
 
     // Record successful send
-    await recordSuccessfulSend(
-      prisma,
-      testGuildId("12300000000"),
-      testChannelId("456000000"),
-    );
+    await recordSuccessfulSend(prisma, testGuildId("12300000000"), testChannelId("456000000"));
 
     const record = await prisma.guildPermissionError.findUnique({
       where: {
@@ -160,11 +129,7 @@ describe("recordSuccessfulSend", () => {
   });
 
   test("creates record with successful send if none exists", async () => {
-    await recordSuccessfulSend(
-      prisma,
-      testGuildId("12300000000"),
-      testChannelId("456000000"),
-    );
+    await recordSuccessfulSend(prisma, testGuildId("12300000000"), testChannelId("456000000"));
 
     const record = await prisma.guildPermissionError.findUnique({
       where: {

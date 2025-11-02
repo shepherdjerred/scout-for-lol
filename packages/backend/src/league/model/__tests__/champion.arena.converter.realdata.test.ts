@@ -6,8 +6,6 @@ import { participantToArenaChampion } from "../../model/champion.js";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../../testing/test-ids.js";
-
 const currentDir = dirname(fileURLToPath(import.meta.url));
 
 const RAW_FILE_PATHS = [

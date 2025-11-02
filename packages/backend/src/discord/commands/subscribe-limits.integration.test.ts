@@ -2,14 +2,9 @@ import { describe, test, expect, beforeEach } from "bun:test";
 import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
-import {
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
-  LeaguePuuidSchema,
-} from "@scout-for-lol/data";
+
 import { PrismaClient } from "../../../generated/prisma/client";
-import { testGuildId, testAccountId, testChannelId, testPuuid, testDate } from "../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../testing/test-ids.js";
 import {
   DEFAULT_PLAYER_SUBSCRIPTION_LIMIT,
   DEFAULT_ACCOUNT_LIMIT,
