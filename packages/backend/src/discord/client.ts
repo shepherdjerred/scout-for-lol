@@ -2,6 +2,7 @@ import configuration from "../configuration";
 import { Client, GatewayIntentBits } from "discord.js";
 import { handleCommands } from "./commands/index";
 import { discordConnectionStatus, discordGuildsGauge, discordUsersGauge, discordLatency } from "../metrics/index.js";
+import { handleGuildCreate } from "./events/guild-create.js";
 
 console.log("🔌 Initializing Discord client");
 
@@ -66,6 +67,13 @@ client.on("ready", (client) => {
 
   handleCommands(client);
   console.log("⚡ Discord command handler initialized");
+});
+
+// Handle bot being added to new servers
+client.on("guildCreate", (guild) => {
+  console.log(`[Guild Create] Bot added to new server: ${guild.name}`);
+  discordGuildsGauge.set(client.guilds.cache.size);
+  void handleGuildCreate(guild);
 });
 
 export { client };

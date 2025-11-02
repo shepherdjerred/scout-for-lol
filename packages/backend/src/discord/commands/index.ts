@@ -3,6 +3,7 @@ import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { executeSubscribe } from "./subscribe";
 import { executeUnsubscribe } from "./unsubscribe";
 import { executeListSubscriptions } from "./list-subscriptions";
+import { executeHelp } from "./help";
 import {
   executeCompetitionCreate,
   executeCompetitionEdit,
@@ -25,8 +26,7 @@ import {
   executePlayerUnlinkDiscord,
   executePlayerInfo,
 } from "./admin/index.js";
-import { executeDebugState, executeDebugDatabase, executeDebugPolling } from "./debug.js";
-import { executeServerInfo } from "./server-info.js";
+import { executeDebugState, executeDebugDatabase, executeDebugPolling, executeDebugServerInfo } from "./debug.js";
 import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
 import { searchChampions } from "../../utils/champion.js";
 
@@ -165,6 +165,8 @@ export function handleCommands(client: Client) {
             await executeDebugDatabase(interaction);
           } else if (subcommandName === "polling") {
             await executeDebugPolling(interaction);
+          } else if (subcommandName === "server-info") {
+            await executeDebugServerInfo(interaction);
           } else {
             console.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
             await interaction.reply({
@@ -172,9 +174,9 @@ export function handleCommands(client: Client) {
               flags: MessageFlags.Ephemeral,
             });
           }
-        } else if (commandName === "server-info") {
-          console.log("📊 Executing server-info command");
-          await executeServerInfo(interaction);
+        } else if (commandName === "help") {
+          console.log("❓ Executing help command");
+          await executeHelp(interaction);
         } else {
           console.warn(`⚠️  Unknown command received: ${commandName}`);
           await interaction.reply("Unknown command");
@@ -199,14 +201,20 @@ export function handleCommands(client: Client) {
           `❌ Error details - User: ${username} (${userId}), Guild: ${String(guildId)}, Channel: ${channelId}`,
         );
 
+        const errorMessage =
+          "❌ **There was an error while executing this command!**\n\n" +
+          "If this issue persists, please report it:\n" +
+          "• Open an issue on GitHub: https://github.com/shepherdjerred/scout-for-lol/issues\n" +
+          "• Join our Discord server for support: https://discord.gg/qmRewyHXFE";
+
         if (interaction.replied || interaction.deferred) {
           await interaction.followUp({
-            content: "There was an error while executing this command!",
+            content: errorMessage,
             flags: MessageFlags.Ephemeral,
           });
         } else {
           await interaction.reply({
-            content: "There was an error while executing this command!",
+            content: errorMessage,
             flags: MessageFlags.Ephemeral,
           });
         }

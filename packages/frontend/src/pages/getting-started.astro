@@ -1,0 +1,415 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+  <div class="bg-white">
+    <!-- Header -->
+    <header class="absolute inset-x-0 top-0 z-50">
+      <nav
+        class="flex items-center justify-between p-6 lg:px-8"
+        aria-label="Global"
+      >
+        <div class="flex lg:flex-1">
+          <a href="/" class="-m-1.5 p-1.5">
+            <span class="sr-only">Scout for League of Legends</span>
+            <div
+              class="h-8 w-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center"
+            >
+              <span class="text-white font-bold text-sm">S</span>
+            </div>
+          </a>
+        </div>
+        <div class="hidden lg:flex lg:gap-x-12">
+          <a href="/#features" class="text-sm/6 font-semibold text-gray-900"
+            >Features</a
+          >
+          <a href="/getting-started" class="text-sm/6 font-semibold text-indigo-600"
+            >Getting Started</a
+          >
+          <a href="/docs" class="text-sm/6 font-semibold text-gray-900"
+            >Documentation</a
+          >
+          <a
+            href="https://github.com/shepherdjerred/scout-for-lol/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-sm/6 font-semibold text-gray-900 hover:text-indigo-600 inline-flex items-center gap-1"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"
+              ></path>
+            </svg>
+            Support
+          </a>
+          <a
+            href="https://github.com/shepherdjerred/scout-for-lol"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-sm/6 font-semibold text-gray-900 hover:text-indigo-600 inline-flex items-center gap-1"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                clip-rule="evenodd"></path>
+            </svg>
+            GitHub
+          </a>
+        </div>
+        <div class="hidden lg:flex lg:flex-1 lg:justify-end">
+          <a
+            href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
+            class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >Add to Discord</a
+          >
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <div class="relative px-6 pt-14 lg:px-8">
+      <div class="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56">
+        <!-- Page Header -->
+        <div class="text-center mb-16">
+          <h1
+            class="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl"
+          >
+            Getting Started with Scout
+          </h1>
+          <p class="mt-6 text-lg leading-8 text-gray-600">
+            Start tracking your friends' League matches in just a few minutes.
+          </p>
+        </div>
+
+        <!-- Step 1: Add Scout -->
+        <section class="mb-16">
+          <div class="flex items-center mb-6">
+            <div
+              class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xl font-bold mr-4"
+            >
+              1
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900">
+              Add Scout to Your Server
+            </h2>
+          </div>
+
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+            <p class="text-blue-800">
+              <strong>Note:</strong> You need Administrator permissions in your
+              Discord server to add Scout.
+            </p>
+          </div>
+
+          <div class="prose max-w-none mb-6">
+            <ol class="list-decimal list-inside space-y-3">
+              <li>
+                Click the <strong>"Add to Discord"</strong> button below or at the
+                top of the page
+              </li>
+              <li>Select the Discord server where you want to add Scout</li>
+              <li>Review and approve the requested permissions</li>
+              <li>
+                Click <strong>"Authorize"</strong> to complete the installation
+              </li>
+            </ol>
+          </div>
+
+          <a
+            href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
+            class="inline-flex items-center rounded-md bg-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+          >
+            Add Scout to Discord
+            <svg
+              class="ml-2 -mr-1 h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"></path>
+            </svg>
+          </a>
+        </section>
+
+        <!-- Step 2: Subscribe to a Player -->
+        <section class="mb-16">
+          <div class="flex items-center mb-6">
+            <div
+              class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xl font-bold mr-4"
+            >
+              2
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900">
+              Subscribe to a Player
+            </h2>
+          </div>
+
+          <div class="prose max-w-none mb-6">
+            <p class="text-lg text-gray-700 mb-4">
+              Once Scout is in your server, use the <code
+                class="bg-gray-100 px-2 py-1 rounded text-sm">/subscribe</code
+              > command to start tracking League players.
+            </p>
+
+            <div class="bg-gray-900 text-white p-6 rounded-lg mb-6">
+              <code class="text-sm"
+                >/subscribe channel:#general region:na1 riot-id:PlayerName#1234
+                alias:MyFriend</code
+              >
+            </div>
+
+            <h3 class="text-xl font-semibold text-gray-900 mb-3">
+              Command Parameters:
+            </h3>
+            <ul class="space-y-3">
+              <li>
+                <strong class="text-indigo-600">channel:</strong> The Discord channel
+                where notifications will be posted
+              </li>
+              <li>
+                <strong class="text-indigo-600">region:</strong> The League region
+                (na1, euw1, eune1, kr, etc.)
+              </li>
+              <li>
+                <strong class="text-indigo-600">riot-id:</strong> The player's Riot
+                ID in format "GameName#TagLine"
+              </li>
+              <li>
+                <strong class="text-indigo-600">alias:</strong> A friendly name to
+                display in notifications
+              </li>
+            </ul>
+          </div>
+
+          <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+            <h4 class="font-semibold text-yellow-800 mb-2">
+              💡 Pro Tip: Finding Riot IDs
+            </h4>
+            <p class="text-yellow-700">
+              You can find your Riot ID in the League client. It's displayed
+              as <strong>GameName#TagLine</strong>. For example: <code
+                class="bg-yellow-100 px-2 py-1 rounded">Faker#KR1</code
+              >
+            </p>
+          </div>
+        </section>
+
+        <!-- Step 3: Enjoy Automatic Updates -->
+        <section class="mb-16">
+          <div class="flex items-center mb-6">
+            <div
+              class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xl font-bold mr-4"
+            >
+              3
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900">
+              Enjoy Automatic Updates
+            </h2>
+          </div>
+
+          <div class="prose max-w-none">
+            <p class="text-lg text-gray-700 mb-6">
+              That's it! Scout will now automatically:
+            </p>
+
+            <div class="grid gap-6 sm:grid-cols-2">
+              <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                <h4 class="font-semibold text-green-900 mb-2 flex items-center">
+                  <svg
+                    class="h-5 w-5 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
+                    ></path>
+                  </svg>
+                  Match Start Notifications
+                </h4>
+                <p class="text-green-700">
+                  Get instant alerts when tracked players start a match with
+                  champion picks and team comps
+                </p>
+              </div>
+
+              <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
+                <h4
+                  class="font-semibold text-purple-900 mb-2 flex items-center"
+                >
+                  <svg
+                    class="h-5 w-5 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6"
+                    ></path>
+                  </svg>
+                  Post-Match Reports
+                </h4>
+                <p class="text-purple-700">
+                  Receive beautiful reports with detailed stats, KDA, damage,
+                  gold, items, and more
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Next Steps -->
+        <section class="mb-16">
+          <h2 class="text-3xl font-bold text-gray-900 mb-6">
+            What's Next?
+          </h2>
+
+          <div class="space-y-6">
+            <div class="border-l-4 border-indigo-600 bg-gray-50 p-6">
+              <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                🏆 Create Competitions
+              </h3>
+              <p class="text-gray-700 mb-3">
+                Set up custom leaderboards and challenges for your server
+                members with the <code
+                  class="bg-gray-100 px-2 py-1 rounded text-sm"
+                  >/competition create</code
+                > command.
+              </p>
+              <a
+                href="/docs#advanced-features"
+                class="text-indigo-600 hover:text-indigo-500 font-medium"
+                >Learn about competitions →</a
+              >
+            </div>
+
+            <div class="border-l-4 border-indigo-600 bg-gray-50 p-6">
+              <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                📚 Read Full Documentation
+              </h3>
+              <p class="text-gray-700 mb-3">
+                Explore all features, commands, and advanced configuration
+                options in our comprehensive documentation.
+              </p>
+              <a
+                href="/docs"
+                class="text-indigo-600 hover:text-indigo-500 font-medium"
+                >View full docs →</a
+              >
+            </div>
+
+            <div class="border-l-4 border-indigo-600 bg-gray-50 p-6">
+              <h3 class="text-xl font-semibold text-gray-900 mb-2">
+                ❓ Get Help
+              </h3>
+              <p class="text-gray-700 mb-3">
+                Need help? Use the <code
+                  class="bg-gray-100 px-2 py-1 rounded text-sm">/help</code
+                > command in Discord, or join our support server.
+              </p>
+              <div class="flex gap-4">
+                <a
+                  href="https://discord.gg/qmRewyHXFE"
+                  class="text-indigo-600 hover:text-indigo-500 font-medium"
+                  >Discord Support →</a
+                >
+                <a
+                  href="https://github.com/shepherdjerred/scout-for-lol/issues"
+                  class="text-indigo-600 hover:text-indigo-500 font-medium"
+                  >GitHub Issues →</a
+                >
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Quick Reference -->
+        <section class="bg-gray-900 rounded-lg p-8 text-white">
+          <h2 class="text-2xl font-bold mb-6">Quick Command Reference</h2>
+
+          <div class="space-y-4">
+            <div>
+              <code class="text-indigo-300">/subscribe</code>
+              <p class="text-gray-300 mt-1">Start tracking a League player</p>
+            </div>
+
+            <div>
+              <code class="text-indigo-300">/unsubscribe</code>
+              <p class="text-gray-300 mt-1">Stop tracking a player</p>
+            </div>
+
+            <div>
+              <code class="text-indigo-300">/listsubscriptions</code>
+              <p class="text-gray-300 mt-1">View all subscriptions</p>
+            </div>
+
+            <div>
+              <code class="text-indigo-300">/competition create</code>
+              <p class="text-gray-300 mt-1">
+                Create a custom leaderboard/challenge
+              </p>
+            </div>
+
+            <div>
+              <code class="text-indigo-300">/help</code>
+              <p class="text-gray-300 mt-1">
+                Get help and view available commands
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-50 border-t border-gray-200">
+      <div class="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+        <div class="text-center">
+          <p class="text-sm text-gray-600">
+            <a href="/privacy" class="hover:text-indigo-600">Privacy Policy</a>
+            •
+            <a href="/tos" class="hover:text-indigo-600">Terms of Service</a>
+            •
+            <a
+              href="https://github.com/shepherdjerred/scout-for-lol/issues"
+              class="hover:text-indigo-600">Get Support</a
+            >
+            •
+            <a
+              href="https://github.com/shepherdjerred/scout-for-lol"
+              class="hover:text-indigo-600">View on GitHub</a
+            >
+          </p>
+          <p class="mt-4 text-xs text-gray-500">
+            © 2025 Scout for League of Legends.
+          </p>
+        </div>
+      </div>
+    </footer>
+  </div>
+</Layout>

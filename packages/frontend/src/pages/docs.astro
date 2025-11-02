@@ -24,6 +24,9 @@ import Layout from "../layouts/Layout.astro";
           <a href="/#features" class="text-sm/6 font-semibold text-gray-900"
             >Features</a
           >
+          <a href="/getting-started" class="text-sm/6 font-semibold text-gray-900"
+            >Getting Started</a
+          >
           <a href="/docs" class="text-sm/6 font-semibold text-indigo-600"
             >Documentation</a
           >
@@ -101,11 +104,6 @@ import Layout from "../layouts/Layout.astro";
           </h2>
           <nav class="space-y-2">
             <a
-              href="#getting-started"
-              class="block text-indigo-600 hover:text-indigo-500"
-              >Getting Started</a
-            >
-            <a
               href="#commands"
               class="block text-indigo-600 hover:text-indigo-500"
               >Bot Commands</a
@@ -135,77 +133,6 @@ import Layout from "../layouts/Layout.astro";
             >
           </nav>
         </div>
-
-        <!-- Getting Started -->
-        <section id="getting-started" class="mb-16">
-          <h2 class="text-3xl font-bold text-gray-900 mb-6">Getting Started</h2>
-
-          <div class="prose max-w-none">
-            <h3 class="text-xl font-semibold text-gray-900 mb-4">
-              Step 1: Add Scout to Your Server
-            </h3>
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p class="text-blue-800">
-                <strong>Note:</strong> You need Administrator permissions in your
-                Discord server to add Scout.
-              </p>
-            </div>
-            <ol class="list-decimal list-inside space-y-4 mb-8">
-              <li>
-                Click the <strong>"Add to Discord"</strong> button on our homepage
-                or <a
-                  href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
-                  class="text-indigo-600 hover:text-indigo-500">here</a>
-              </li>
-              <li>Select the Discord server where you want to add Scout</li>
-              <li>Review and approve the requested permissions</li>
-              <li>
-                Click <strong>"Authorize"</strong> to complete the installation
-              </li>
-            </ol>
-
-            <h3 class="text-xl font-semibold text-gray-900 mb-4">
-              Step 2: Subscribe to Players
-            </h3>
-            <p class="mb-4">
-              Once Scout is in your server, you can start tracking League of
-              Legends players using the <code
-                class="bg-gray-100 px-2 py-1 rounded text-sm">/subscribe</code
-              > command.
-            </p>
-
-            <div class="bg-gray-900 text-white p-4 rounded-lg mb-6">
-              <code
-                >/subscribe channel:#general region:na1 riot-id:PlayerName#1234
-                alias:MyFriend</code
-              >
-            </div>
-
-            <h4 class="text-lg font-medium text-gray-900 mb-3">
-              Command Parameters:
-            </h4>
-            <ul class="list-disc list-inside space-y-2 mb-6">
-              <li>
-                <strong>channel:</strong> The Discord channel where notifications
-                will be posted
-              </li>
-              <li>
-                <strong>region:</strong> The League of Legends region (na1, euw1,
-                eune1, kr, etc.)
-              </li>
-              <li>
-                <strong>riot-id:</strong> The player's Riot ID in the format "GameName#TagLine"
-              </li>
-              <li>
-                <strong>alias:</strong> A friendly name to display in notifications
-              </li>
-              <li>
-                <strong>user:</strong> (Optional) The Discord user associated with
-                this League account
-              </li>
-            </ul>
-          </div>
-        </section>
 
         <!-- Commands -->
         <section id="commands" class="mb-16">

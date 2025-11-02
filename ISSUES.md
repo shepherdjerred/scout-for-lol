@@ -3,8 +3,8 @@
 - Use `undefined` rather than `null`
   - Add linter
   - Fix for Prisma
-- Have Prisma load Zod branded types
-- Use branded types over string/number
+- [x] Have Prisma load Zod branded types
+- [x] Use branded types over string/number
 - Find duplicated code -- there seems to be at least a little bit
 - Avoid enums
 - Avoid z.parse and z.safeParse -- use the type system instead
