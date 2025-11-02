@@ -1,82 +1,12 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
 ---
 
 <Layout>
   <div class="bg-white">
-    <!-- Header -->
-    <header class="absolute inset-x-0 top-0 z-50">
-      <nav
-        class="flex items-center justify-between p-6 lg:px-8"
-        aria-label="Global"
-      >
-        <div class="flex lg:flex-1">
-          <a href="/" class="-m-1.5 p-1.5">
-            <span class="sr-only">Scout for League of Legends</span>
-            <div
-              class="h-8 w-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center"
-            >
-              <span class="text-white font-bold text-sm">S</span>
-            </div>
-          </a>
-        </div>
-        <div class="hidden lg:flex lg:gap-x-12">
-          <a href="/#features" class="text-sm/6 font-semibold text-gray-900"
-            >Features</a
-          >
-          <a href="/docs" class="text-sm/6 font-semibold text-indigo-600"
-            >Documentation</a
-          >
-          <a
-            href="https://github.com/shepherdjerred/scout-for-lol/issues"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-sm/6 font-semibold text-gray-900 hover:text-indigo-600 inline-flex items-center gap-1"
-          >
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"
-              ></path>
-            </svg>
-            Support
-          </a>
-          <a
-            href="https://github.com/shepherdjerred/scout-for-lol"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-sm/6 font-semibold text-gray-900 hover:text-indigo-600 inline-flex items-center gap-1"
-          >
-            <svg
-              class="h-4 w-4"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                clip-rule="evenodd"></path>
-            </svg>
-            GitHub
-          </a>
-        </div>
-        <div class="hidden lg:flex lg:flex-1 lg:justify-end">
-          <a
-            href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
-            class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-            >Add to Discord</a
-          >
-        </div>
-      </nav>
-    </header>
+    <Navbar activePage="docs" />
 
     <!-- Main Content -->
     <div class="relative px-6 pt-14 lg:px-8">
@@ -89,9 +19,15 @@ import Layout from "../layouts/Layout.astro";
             Documentation
           </h1>
           <p class="mt-6 text-lg leading-8 text-gray-600">
-            Everything you need to know to get Scout up and running in your
-            Discord server.
+            Complete reference for all Scout commands, features, and configuration options.
           </p>
+          <div class="mt-6">
+            <a
+              href="/getting-started"
+              class="text-indigo-600 hover:text-indigo-500 font-semibold"
+              >New to Scout? Check out the Getting Started guide →</a
+            >
+          </div>
         </div>
 
         <!-- Table of Contents -->
@@ -100,11 +36,6 @@ import Layout from "../layouts/Layout.astro";
             Table of Contents
           </h2>
           <nav class="space-y-2">
-            <a
-              href="#getting-started"
-              class="block text-indigo-600 hover:text-indigo-500"
-              >Getting Started</a
-            >
             <a
               href="#commands"
               class="block text-indigo-600 hover:text-indigo-500"
@@ -136,86 +67,15 @@ import Layout from "../layouts/Layout.astro";
           </nav>
         </div>
 
-        <!-- Getting Started -->
-        <section id="getting-started" class="mb-16">
-          <h2 class="text-3xl font-bold text-gray-900 mb-6">Getting Started</h2>
-
-          <div class="prose max-w-none">
-            <h3 class="text-xl font-semibold text-gray-900 mb-4">
-              Step 1: Add Scout to Your Server
-            </h3>
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p class="text-blue-800">
-                <strong>Note:</strong> You need Administrator permissions in your
-                Discord server to add Scout.
-              </p>
-            </div>
-            <ol class="list-decimal list-inside space-y-4 mb-8">
-              <li>
-                Click the <strong>"Add to Discord"</strong> button on our homepage
-                or <a
-                  href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
-                  class="text-indigo-600 hover:text-indigo-500">here</a>
-              </li>
-              <li>Select the Discord server where you want to add Scout</li>
-              <li>Review and approve the requested permissions</li>
-              <li>
-                Click <strong>"Authorize"</strong> to complete the installation
-              </li>
-            </ol>
-
-            <h3 class="text-xl font-semibold text-gray-900 mb-4">
-              Step 2: Subscribe to Players
-            </h3>
-            <p class="mb-4">
-              Once Scout is in your server, you can start tracking League of
-              Legends players using the <code
-                class="bg-gray-100 px-2 py-1 rounded text-sm">/subscribe</code
-              > command.
-            </p>
-
-            <div class="bg-gray-900 text-white p-4 rounded-lg mb-6">
-              <code
-                >/subscribe channel:#general region:na1 riot-id:PlayerName#1234
-                alias:MyFriend</code
-              >
-            </div>
-
-            <h4 class="text-lg font-medium text-gray-900 mb-3">
-              Command Parameters:
-            </h4>
-            <ul class="list-disc list-inside space-y-2 mb-6">
-              <li>
-                <strong>channel:</strong> The Discord channel where notifications
-                will be posted
-              </li>
-              <li>
-                <strong>region:</strong> The League of Legends region (na1, euw1,
-                eune1, kr, etc.)
-              </li>
-              <li>
-                <strong>riot-id:</strong> The player's Riot ID in the format "GameName#TagLine"
-              </li>
-              <li>
-                <strong>alias:</strong> A friendly name to display in notifications
-              </li>
-              <li>
-                <strong>user:</strong> (Optional) The Discord user associated with
-                this League account
-              </li>
-            </ul>
-          </div>
-        </section>
-
         <!-- Commands -->
         <section id="commands" class="mb-16">
           <h2 class="text-3xl font-bold text-gray-900 mb-6">Bot Commands</h2>
 
           <div class="space-y-8">
-            <!-- Subscribe Command -->
+            <!-- Subscription Add Command -->
             <div class="border border-gray-200 rounded-lg p-6">
               <h3 class="text-xl font-semibold text-gray-900 mb-3">
-                /subscribe
+                /subscription add
               </h3>
               <p class="text-gray-600 mb-4">
                 Subscribe to notifications for a League of Legends player.
@@ -223,7 +83,7 @@ import Layout from "../layouts/Layout.astro";
 
               <div class="bg-gray-50 rounded-md p-4 mb-4">
                 <code class="text-sm">
-                  /subscribe channel:[#channel] region:[region]
+                  /subscription add channel:[#channel] region:[region]
                   riot-id:[name#tag] alias:[nickname] user:[@user]
                 </code>
               </div>
@@ -250,31 +110,31 @@ import Layout from "../layouts/Layout.astro";
               </ul>
             </div>
 
-            <!-- Unsubscribe Command -->
+            <!-- Subscription Delete Command -->
             <div class="border border-gray-200 rounded-lg p-6">
               <h3 class="text-xl font-semibold text-gray-900 mb-3">
-                /unsubscribe
+                /subscription delete
               </h3>
               <p class="text-gray-600 mb-4">
                 Remove a player subscription from your server.
               </p>
 
               <div class="bg-gray-50 rounded-md p-4 mb-4">
-                <code class="text-sm"> /unsubscribe alias:[nickname] </code>
+                <code class="text-sm"> /subscription delete alias:[nickname] </code>
               </div>
             </div>
 
-            <!-- List Subscriptions Command -->
+            <!-- Subscription List Command -->
             <div class="border border-gray-200 rounded-lg p-6">
               <h3 class="text-xl font-semibold text-gray-900 mb-3">
-                /listsubscriptions
+                /subscription list
               </h3>
               <p class="text-gray-600 mb-4">
                 View all active player subscriptions in your server.
               </p>
 
               <div class="bg-gray-50 rounded-md p-4">
-                <code class="text-sm"> /listsubscriptions </code>
+                <code class="text-sm"> /subscription list </code>
               </div>
             </div>
 
@@ -412,21 +272,21 @@ import Layout from "../layouts/Layout.astro";
               <div class="space-y-4">
                 <div>
                   <h4 class="font-medium text-gray-900 mb-2">
-                    /admin player-edit-alias
+                    /admin player-edit
                   </h4>
                   <p class="text-sm text-gray-600 mb-2">
                     Change a player's display alias in your server.
                   </p>
                   <div class="bg-white rounded-md p-3">
                     <code class="text-xs">
-                      /admin player-edit-alias current-alias:[old] new-alias:[new]
+                      /admin player-edit current-alias:[old] new-alias:[new]
                     </code>
                   </div>
                 </div>
 
                 <div>
                   <h4 class="font-medium text-gray-900 mb-2">
-                    /admin account-remove
+                    /admin account-delete
                   </h4>
                   <p class="text-sm text-gray-600 mb-2">
                     Remove a specific Riot account from a player. Useful when someone
@@ -434,7 +294,7 @@ import Layout from "../layouts/Layout.astro";
                   </p>
                   <div class="bg-white rounded-md p-3">
                     <code class="text-xs">
-                      /admin account-remove riot-id:[name#tag] region:[region]
+                      /admin account-delete riot-id:[name#tag] region:[region]
                     </code>
                   </div>
                 </div>
@@ -483,18 +343,101 @@ import Layout from "../layouts/Layout.astro";
                     </code>
                   </div>
                 </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /admin player-link-discord
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Link a Discord user to a player profile.
+                  </p>
+                  <div class="bg-white rounded-md p-3">
+                    <code class="text-xs">
+                      /admin player-link-discord player-alias:[alias] discord-user:[@user]
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /admin player-unlink-discord
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Unlink a Discord user from a player profile.
+                  </p>
+                  <div class="bg-white rounded-md p-3">
+                    <code class="text-xs">
+                      /admin player-unlink-discord player-alias:[alias]
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /admin player-view
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    View detailed information about a player including accounts,
+                    subscriptions, and competitions.
+                  </p>
+                  <div class="bg-white rounded-md p-3">
+                    <code class="text-xs">
+                      /admin player-view alias:[alias]
+                    </code>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- Debug Command -->
+            <!-- Debug Commands -->
             <div class="border border-gray-200 rounded-lg p-6">
               <h3 class="text-xl font-semibold text-gray-900 mb-3">/debug</h3>
               <p class="text-gray-600 mb-4">
-                Display current bot state for troubleshooting (admin only).
+                Debug commands for troubleshooting (owner only).
               </p>
 
-              <div class="bg-gray-50 rounded-md p-4">
-                <code class="text-sm"> /debug </code>
+              <div class="space-y-3">
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /debug server-info
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    View detailed server information including players, accounts, subscriptions, and competitions.
+                  </p>
+                  <div class="bg-gray-50 rounded-md p-3">
+                    <code class="text-xs">
+                      /debug server-info
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /debug database
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Download the SQLite database file (owner only).
+                  </p>
+                  <div class="bg-gray-50 rounded-md p-3">
+                    <code class="text-xs">
+                      /debug database
+                    </code>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-medium text-gray-900 mb-2">
+                    /debug polling
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-2">
+                    Show polling intervals for all tracked players (owner only).
+                  </p>
+                  <div class="bg-gray-50 rounded-md p-3">
+                    <code class="text-xs">
+                      /debug polling
+                    </code>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -545,7 +488,6 @@ import Layout from "../layouts/Layout.astro";
                   What's Tracked in Arena:
                 </h4>
                 <ul class="list-disc list-inside space-y-2 text-gray-700 mb-4">
-                  <li>Match start notifications with duo partner information</li>
                   <li>Complete post-match reports with placement and stats</li>
                   <li>Team compositions for all 8 duos</li>
                   <li>Damage dealt, damage taken, and eliminations</li>
@@ -716,14 +658,19 @@ import Layout from "../layouts/Layout.astro";
                   </svg>
                 </div>
                 <h3 class="text-2xl font-semibold text-gray-900">
-                  AI-Powered Match Reviews
+                  AI-Powered Match Reviews <span class="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700">COMING SOON</span>
                 </h3>
               </div>
 
               <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
+                  <p class="text-sm text-yellow-800">
+                    <strong>🚧 Work in Progress:</strong> This feature is currently under development. Match reviews currently show placeholder text while we integrate with LLM services.
+                  </p>
+                </div>
                 <p class="text-gray-700 mb-4">
                   Get intelligent, personalized match analysis powered by
-                  advanced AI. Scout uses large language models to provide
+                  advanced AI. Scout will use large language models to provide
                   insightful feedback on gameplay, highlighting both strengths
                   and areas for improvement.
                 </p>
@@ -785,13 +732,13 @@ import Layout from "../layouts/Layout.astro";
                   class="bg-white border border-green-300 rounded-md p-4 text-sm"
                 >
                   <p class="text-gray-600 mb-2">
-                    <strong>Note:</strong> AI reviews are automatically included
+                    <strong>Note:</strong> AI reviews will be automatically included
                     in post-match reports and provide personalized insights for
-                    each player's performance. The AI understands context like
+                    each player's performance. The AI will understand context like
                     champion difficulty, match length, and team composition.
                   </p>
                   <p class="text-gray-600">
-                    Reviews are generated using state-of-the-art language models
+                    Reviews will be generated using state-of-the-art language models
                     trained to understand League of Legends gameplay and provide
                     constructive feedback.
                   </p>
@@ -819,8 +766,8 @@ import Layout from "../layouts/Layout.astro";
               <h4 class="font-medium text-yellow-800 mb-2">⚠️ Important:</h4>
               <p class="text-yellow-700">
                 Only users with Administrator permissions can use the <code
-                  >/subscribe</code
-                > and <code>/unsubscribe</code> commands.
+                  >/subscription add</code
+                > and <code>/subscription delete</code> commands.
               </p>
             </div>
 
@@ -995,10 +942,17 @@ import Layout from "../layouts/Layout.astro";
               <h3 class="font-semibold text-gray-900 mb-3">
                 How often does Scout check for new matches?
               </h3>
+              <p class="text-gray-600 mb-3">
+                Scout uses intelligent dynamic polling that adjusts based on player activity:
+              </p>
+              <ul class="list-disc list-inside text-sm text-gray-600 space-y-1 mb-3">
+                <li><strong>Active players</strong> (played within the last hour): Checked every 1 minute</li>
+                <li><strong>Recently active</strong> (6-12 hours): Checked every 5-10 minutes</li>
+                <li><strong>Inactive players</strong> (30+ days): Checked every 60 minutes</li>
+              </ul>
               <p class="text-gray-600">
-                Scout automatically checks for new matches every minute. When a
-                tracked player starts a match, you'll get a notification within
-                1-2 minutes.
+                This means you'll get notifications within 1-2 minutes for players who are actively gaming,
+                while reducing unnecessary API calls for inactive accounts.
               </p>
             </div>
 
@@ -1060,12 +1014,15 @@ import Layout from "../layouts/Layout.astro";
               <h3 class="font-semibold text-gray-900 mb-3">
                 Are AI-generated reviews always included?
               </h3>
+              <p class="text-gray-600 mb-2">
+                <strong>Currently:</strong> AI match reviews are still in development. Post-match reports
+                currently show placeholder review text while we integrate with LLM services.
+              </p>
               <p class="text-gray-600">
-                Yes! AI-powered match reviews are automatically generated for
-                post-match reports. They provide personalized feedback based on
+                <strong>Coming soon:</strong> AI-powered match reviews will be automatically generated for
+                all post-match reports. They will provide personalized feedback based on
                 each player's performance, champion choice, and match context.
-                The reviews are designed to be constructive and help players
-                improve.
+                The reviews will be designed to be constructive and help players improve.
               </p>
             </div>
 
@@ -1084,9 +1041,14 @@ import Layout from "../layouts/Layout.astro";
               <h3 class="font-semibold text-gray-900 mb-3">
                 How many players can I track?
               </h3>
+              <p class="text-gray-600 mb-3">
+                By default, each server can track up to <strong>10 players</strong> with a maximum of
+                <strong>10 League accounts</strong> total. This helps ensure reliable service for all users.
+              </p>
               <p class="text-gray-600">
-                There's no hard limit on the number of players you can track,
-                but we recommend keeping it reasonable to avoid channel spam.
+                If you need to track more players, you can remove existing subscriptions using
+                <code class="bg-gray-100 px-1 rounded text-sm">/subscription delete</code>.
+                Contact us if your community requires a higher limit.
               </p>
             </div>
 
@@ -1094,11 +1056,17 @@ import Layout from "../layouts/Layout.astro";
               <h3 class="font-semibold text-gray-900 mb-3">
                 Why am I not getting post-match reports?
               </h3>
+              <p class="text-gray-600 mb-3">
+                Post-match reports are generated after games end. The timing depends on when Scout detects the match is complete:
+              </p>
+              <ul class="list-disc list-inside text-sm text-gray-600 space-y-1 mb-3">
+                <li>For <strong>active players</strong> (recently played): Reports appear within 2-3 minutes after match completion</li>
+                <li>For <strong>less active players</strong>: May take 5-15 minutes depending on their polling interval</li>
+                <li>Very short games (under 5 minutes) or remakes might not generate reports</li>
+              </ul>
               <p class="text-gray-600">
-                Post-match reports are generated after games end. Very short
-                games (usually under 5 minutes) or remakes might not generate
-                reports. The reports typically appear 2-5 minutes after a match
-                ends.
+                The dynamic polling system prioritizes active players, so if someone is playing regularly,
+                their reports will appear faster than someone who plays occasionally.
               </p>
             </div>
 
@@ -1130,65 +1098,6 @@ import Layout from "../layouts/Layout.astro";
       </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200">
-      <div
-        class="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8"
-      >
-        <div class="flex flex-wrap justify-center gap-4 md:order-2">
-          <a href="/privacy" class="text-gray-500 hover:text-gray-900"
-            >Privacy Policy</a
-          >
-          <a href="/tos" class="text-gray-500 hover:text-gray-900"
-            >Terms of Service</a
-          >
-          <a
-            href="https://github.com/shepherdjerred/scout-for-lol/issues"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 rounded-md bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100 transition-colors"
-          >
-            <svg
-              class="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"
-              ></path>
-            </svg>
-            Get Support
-          </a>
-          <a
-            href="https://github.com/shepherdjerred/scout-for-lol"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center gap-1.5 rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
-          >
-            <svg
-              class="h-4 w-4"
-              fill="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
-                clip-rule="evenodd"></path>
-            </svg>
-            View on GitHub
-          </a>
-        </div>
-        <div class="mt-8 md:order-1 md:mt-0">
-          <p class="text-center text-xs/5 text-gray-500">
-            &copy; 2025 Scout for League of Legends.
-          </p>
-        </div>
-      </div>
-    </footer>
+    <Footer variant="homepage" />
   </div>
 </Layout>

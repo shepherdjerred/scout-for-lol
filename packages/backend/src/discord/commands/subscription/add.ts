@@ -1,9 +1,4 @@
-import {
-  type ChatInputCommandInteraction,
-  InteractionContextType,
-  PermissionFlagsBits,
-  SlashCommandBuilder,
-} from "discord.js";
+import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import {
   DiscordAccountIdSchema,
@@ -12,55 +7,19 @@ import {
   LeaguePuuidSchema,
   RegionSchema,
   RiotIdSchema,
-  toReadableRegion,
 } from "@scout-for-lol/data";
-import { riotApi } from "../../league/api/api";
-import { mapRegionToEnum } from "../../league/model/region";
+import { riotApi } from "../../../league/api/api";
+import { mapRegionToEnum } from "../../../league/model/region";
 import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
-import { prisma } from "../../database/index";
+import { prisma } from "../../../database/index";
 import { fromError } from "zod-validation-error";
-import { getErrorMessage } from "../../utils/errors.js";
+import { getErrorMessage } from "../../../utils/errors.js";
 import {
   getSubscriptionLimit,
   getAccountLimit,
   hasUnlimitedSubscriptions,
-} from "../../configuration/subscription-limits.js";
-import { backfillLastMatchTime } from "../../league/api/backfill-match-history.js";
-
-export const subscribeCommand = new SlashCommandBuilder()
-  .setName("subscribe")
-  .setDescription("Subscribe to updates for a League of Legends account")
-  .addChannelOption((option) =>
-    option.setName("channel").setDescription("The channel to post messages to").setRequired(true),
-  )
-  .addStringOption((option) =>
-    option
-      .setName("region")
-      .setDescription("The region of the League of Legends account")
-      .addChoices(
-        RegionSchema.options.map((region) => {
-          return { name: toReadableRegion(region), value: region };
-        }),
-      )
-      .setRequired(true),
-  )
-  .addStringOption((option) =>
-    option
-      .setName("riot-id")
-      .setDescription("The Riot ID to subscribe to in the format of <name>#<tag>")
-      .setRequired(true),
-  )
-  // TODO: differentiate between player and account alias
-  .addStringOption((option) =>
-    option
-      .setName("alias")
-      .setDescription("An alias for the player")
-      // TODO: make this optional
-      .setRequired(true),
-  )
-  .addUserOption((option) => option.setName("user").setDescription("The Discord user of the player"))
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-  .setContexts(InteractionContextType.Guild);
+} from "../../../configuration/subscription-limits.js";
+import { backfillLastMatchTime } from "../../../league/api/backfill-match-history.js";
 
 export const ArgsSchema = z.object({
   channel: DiscordChannelIdSchema,
@@ -71,7 +30,7 @@ export const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executeSubscribe(interaction: ChatInputCommandInteraction) {
+export async function executeSubscriptionAdd(interaction: ChatInputCommandInteraction) {
   const startTime = Date.now();
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
@@ -142,7 +101,7 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
         );
 
         await interaction.reply({
-          content: `❌ **Subscription limit reached**\n\nThis server can subscribe to a maximum of ${subscriptionLimit.toString()} players. You currently have ${subscribedPlayerCount.toString()} subscribed players.\n\nTo subscribe to a new player, please unsubscribe from an existing player first using \`/unsubscribe\`.`,
+          content: `❌ **Subscription limit reached**\n\nThis server can subscribe to a maximum of ${subscriptionLimit.toString()} players. You currently have ${subscribedPlayerCount.toString()} subscribed players.\n\nTo subscribe to a new player, please unsubscribe from an existing player first using \`/subscription delete\`.`,
           ephemeral: true,
         });
         return;

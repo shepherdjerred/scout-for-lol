@@ -59,7 +59,7 @@ export async function executeCompetitionJoin(interaction: ChatInputCommandIntera
       content: truncateDiscordMessage(`❌ No League account linked
 
 You need to link your League of Legends account first. Use:
-\`/subscribe region:NA1 riot-id:YourName#NA1 alias:YourName channel:#updates\``),
+\`/subscription add region:NA1 riot-id:YourName#NA1 alias:YourName channel:#updates\``),
       flags: MessageFlags.Ephemeral,
     });
     return;

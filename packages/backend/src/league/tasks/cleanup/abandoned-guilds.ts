@@ -148,7 +148,7 @@ If this was a mistake and you want to keep using Scout for LoL:
    • View Channels
    • Send Messages
    • Embed Links (for match reports)
-3. Set up your subscriptions again with \`/subscribe\`
+3. Set up your subscriptions again with \`/subscription add\`
 
 Thank you for using Scout for LoL! Feel free to reach out if you have any questions.
 

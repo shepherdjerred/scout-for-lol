@@ -1,8 +1,7 @@
-import { type Client, MessageFlags } from "discord.js";
+import { type Client, MessageFlags, PermissionFlagsBits, PermissionsBitField } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { executeSubscribe } from "./subscribe";
-import { executeUnsubscribe } from "./unsubscribe";
-import { executeListSubscriptions } from "./list-subscriptions";
+import { executeSubscriptionAdd, executeSubscriptionDelete, executeSubscriptionList } from "./subscription/index.js";
+import { executeHelp } from "./help";
 import {
   executeCompetitionCreate,
   executeCompetitionEdit,
@@ -15,20 +14,20 @@ import {
   executeCompetitionList,
 } from "./competition/index.js";
 import {
-  executePlayerEditAlias,
-  executeAccountRemove,
+  executePlayerEdit,
+  executeAccountDelete,
   executeAccountAdd,
   executePlayerMerge,
   executePlayerDelete,
   executeAccountTransfer,
   executePlayerLinkDiscord,
   executePlayerUnlinkDiscord,
-  executePlayerInfo,
+  executePlayerView,
 } from "./admin/index.js";
-import { executeDebugState, executeDebugDatabase, executeDebugPolling } from "./debug.js";
-import { executeServerInfo } from "./server-info.js";
+import { executeDebugDatabase, executeDebugPolling, executeDebugServerInfo } from "./debug.js";
 import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
 import { searchChampions } from "../../utils/champion.js";
+import configuration from "../../configuration.js";
 
 export function handleCommands(client: Client) {
   console.log("⚡ Setting up Discord command handlers");
@@ -88,15 +87,23 @@ export function handleCommands(client: Client) {
       }
 
       try {
-        if (commandName === "subscribe") {
-          console.log("🔔 Executing subscribe command");
-          await executeSubscribe(interaction);
-        } else if (commandName === "unsubscribe") {
-          console.log("🔕 Executing unsubscribe command");
-          await executeUnsubscribe(interaction);
-        } else if (commandName === "listsubscriptions") {
-          console.log("📋 Executing list subscriptions command");
-          await executeListSubscriptions(interaction);
+        if (commandName === "subscription") {
+          const subcommandName = interaction.options.getSubcommand();
+          console.log(`🔔 Executing subscription ${subcommandName} command`);
+
+          if (subcommandName === "add") {
+            await executeSubscriptionAdd(interaction);
+          } else if (subcommandName === "delete") {
+            await executeSubscriptionDelete(interaction);
+          } else if (subcommandName === "list") {
+            await executeSubscriptionList(interaction);
+          } else {
+            console.warn(`⚠️  Unknown subscription subcommand: ${subcommandName}`);
+            await interaction.reply({
+              content: "Unknown subscription subcommand",
+              flags: MessageFlags.Ephemeral,
+            });
+          }
         } else if (commandName === "competition") {
           const subcommandName = interaction.options.getSubcommand();
           console.log(`🏆 Executing competition ${subcommandName} command`);
@@ -127,13 +134,30 @@ export function handleCommands(client: Client) {
             });
           }
         } else if (commandName === "admin") {
-          const subcommandName = interaction.options.getSubcommand();
-          console.log(`🔧 Executing admin ${subcommandName} command`);
+          // Check if user has Administrator permissions (applies to all admin subcommands)
+          const member = interaction.member;
+          const hasAdminPermission =
+            member &&
+            "permissions" in member &&
+            member.permissions instanceof PermissionsBitField &&
+            member.permissions.has(PermissionFlagsBits.Administrator);
 
-          if (subcommandName === "player-edit-alias") {
-            await executePlayerEditAlias(interaction);
-          } else if (subcommandName === "account-remove") {
-            await executeAccountRemove(interaction);
+          if (!hasAdminPermission) {
+            console.warn(`⚠️  Unauthorized admin command access attempt by ${username} (${userId})`);
+            await interaction.reply({
+              content: "❌ Admin commands require Administrator permissions in this server.",
+              flags: MessageFlags.Ephemeral,
+            });
+            return;
+          }
+
+          const subcommandName = interaction.options.getSubcommand();
+          console.log(`🔧 Executing admin ${subcommandName} command (authorized: ${username})`);
+
+          if (subcommandName === "player-edit") {
+            await executePlayerEdit(interaction);
+          } else if (subcommandName === "account-delete") {
+            await executeAccountDelete(interaction);
           } else if (subcommandName === "account-add") {
             await executeAccountAdd(interaction);
           } else if (subcommandName === "account-transfer") {
@@ -146,8 +170,8 @@ export function handleCommands(client: Client) {
             await executePlayerLinkDiscord(interaction);
           } else if (subcommandName === "player-unlink-discord") {
             await executePlayerUnlinkDiscord(interaction);
-          } else if (subcommandName === "player-info") {
-            await executePlayerInfo(interaction);
+          } else if (subcommandName === "player-view") {
+            await executePlayerView(interaction);
           } else {
             console.warn(`⚠️  Unknown admin subcommand: ${subcommandName}`);
             await interaction.reply({
@@ -156,15 +180,25 @@ export function handleCommands(client: Client) {
             });
           }
         } else if (commandName === "debug") {
-          const subcommandName = interaction.options.getSubcommand();
-          console.log(`🐛 Executing debug ${subcommandName} command`);
+          // Check if user is the bot owner (applies to all debug subcommands)
+          if (userId !== configuration.ownerDiscordId) {
+            console.warn(`⚠️  Unauthorized debug command access attempt by ${username} (${userId})`);
+            await interaction.reply({
+              content: "❌ Debug commands are only available to the bot owner.",
+              flags: MessageFlags.Ephemeral,
+            });
+            return;
+          }
 
-          if (subcommandName === "state") {
-            await executeDebugState(interaction);
-          } else if (subcommandName === "database") {
+          const subcommandName = interaction.options.getSubcommand();
+          console.log(`🐛 Executing debug ${subcommandName} command (authorized: ${username})`);
+
+          if (subcommandName === "database") {
             await executeDebugDatabase(interaction);
           } else if (subcommandName === "polling") {
             await executeDebugPolling(interaction);
+          } else if (subcommandName === "server-info") {
+            await executeDebugServerInfo(interaction);
           } else {
             console.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
             await interaction.reply({
@@ -172,9 +206,9 @@ export function handleCommands(client: Client) {
               flags: MessageFlags.Ephemeral,
             });
           }
-        } else if (commandName === "server-info") {
-          console.log("📊 Executing server-info command");
-          await executeServerInfo(interaction);
+        } else if (commandName === "help") {
+          console.log("❓ Executing help command");
+          await executeHelp(interaction);
         } else {
           console.warn(`⚠️  Unknown command received: ${commandName}`);
           await interaction.reply("Unknown command");
@@ -199,14 +233,20 @@ export function handleCommands(client: Client) {
           `❌ Error details - User: ${username} (${userId}), Guild: ${String(guildId)}, Channel: ${channelId}`,
         );
 
+        const errorMessage =
+          "❌ **There was an error while executing this command!**\n\n" +
+          "If this issue persists, please report it:\n" +
+          "• Open an issue on GitHub: https://github.com/shepherdjerred/scout-for-lol/issues\n" +
+          "• Join our Discord server for support: https://discord.gg/qmRewyHXFE";
+
         if (interaction.replied || interaction.deferred) {
           await interaction.followUp({
-            content: "There was an error while executing this command!",
+            content: errorMessage,
             flags: MessageFlags.Ephemeral,
           });
         } else {
           await interaction.reply({
-            content: "There was an error while executing this command!",
+            content: errorMessage,
             flags: MessageFlags.Ephemeral,
           });
         }

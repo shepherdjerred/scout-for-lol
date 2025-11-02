@@ -14,12 +14,12 @@ const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executeAccountRemove(interaction: ChatInputCommandInteraction) {
+export async function executeAccountDelete(interaction: ChatInputCommandInteraction) {
   const startTime = Date.now();
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
-  console.log(`🗑️  Starting account removal for user ${username} (${userId})`);
+  console.log(`🗑️  Starting account deletion for user ${username} (${userId})`);
 
   let args: z.infer<typeof ArgsSchema>;
 
@@ -108,7 +108,7 @@ export async function executeAccountRemove(interaction: ChatInputCommandInteract
     return;
   }
 
-  console.log(`💾 Removing account ${riotId.game_name}#${riotId.tag_line} from player "${player.alias}"`);
+  console.log(`💾 Deleting account ${riotId.game_name}#${riotId.tag_line} from player "${player.alias}"`);
 
   try {
     // Delete the account
@@ -119,19 +119,19 @@ export async function executeAccountRemove(interaction: ChatInputCommandInteract
     });
 
     const executionTime = Date.now() - startTime;
-    console.log(`✅ Account removed successfully in ${executionTime.toString()}ms`);
+    console.log(`✅ Account deleted successfully in ${executionTime.toString()}ms`);
 
     const remainingAccounts = player.accounts.filter((acc) => acc.id !== account.id);
     const accountsList = remainingAccounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
 
     await interaction.reply({
-      content: `✅ **Account removed successfully**\n\nRemoved ${riotId.game_name}#${riotId.tag_line} from player "${player.alias}"\n\n**Remaining accounts (${remainingAccountsCount.toString()}):**\n${accountsList}`,
+      content: `✅ **Account deleted successfully**\n\nDeleted ${riotId.game_name}#${riotId.tag_line} from player "${player.alias}"\n\n**Remaining accounts (${remainingAccountsCount.toString()}):**\n${accountsList}`,
       ephemeral: true,
     });
   } catch (error) {
-    console.error(`❌ Database error during account removal:`, error);
+    console.error(`❌ Database error during account deletion:`, error);
     await interaction.reply({
-      content: `❌ **Error removing account**\n\nFailed to remove account: ${getErrorMessage(error)}`,
+      content: `❌ **Error deleting account**\n\nFailed to delete account: ${getErrorMessage(error)}`,
       ephemeral: true,
     });
   }

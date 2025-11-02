@@ -35,7 +35,6 @@ Create custom competitions with configurable criteria:
 
 Full support for League's Arena mode with detailed reports for all 16 players, including:
 
-- Match start notifications with duo partner information
 - Complete statistics for all 8 teams
 - Augments selected throughout the match
 - Final placements and performance metrics
@@ -44,7 +43,9 @@ Full support for League's Arena mode with detailed reports for all 16 players, i
 
 Track players across all League of Legends regions: NA, EUW, EUNE, KR, BR, LAN, LAS, TR, RU, OCE, JP, PH, SG, TH, TW, VN, ME.
 
-### ✨ AI-Powered Match Reviews
+### ✨ AI-Powered Match Reviews _(Coming Soon)_
+
+> **Note**: This feature is currently in development. Match reviews currently show placeholder text while we integrate with LLM services.
 
 Intelligent, personalized match analysis powered by advanced AI:
 
@@ -64,10 +65,10 @@ You'll need Administrator permissions to add the bot to your server.
 
 ### 2. Subscribe to Players
 
-Use the `/subscribe` command to start tracking players:
+Use the `/subscription add` command to start tracking players:
 
-```
-/subscribe channel:#general region:na1 riot-id:PlayerName#TAG alias:FriendlyName
+```text
+/subscription add channel:#general region:na1 riot-id:PlayerName#TAG alias:FriendlyName
 ```
 
 **Parameters:**
@@ -88,9 +89,9 @@ Scout automatically checks for matches every minute and posts:
 
 ### Basic Commands
 
-- `/subscribe` - Track a League player in your server
-- `/unsubscribe` - Stop tracking a player
-- `/listsubscriptions` - View all tracked players
+- `/subscription add` - Track a League player in your server
+- `/subscription delete` - Stop tracking a player
+- `/subscription list` - View all tracked players
 
 ### Competitions
 
@@ -105,19 +106,21 @@ Scout automatically checks for matches every minute and posts:
 
 ### Admin Commands (Administrator Only)
 
-- `/admin player-edit-alias` - Change a player's display name
-- `/admin account-remove` - Remove a Riot account from a player
+- `/admin player-edit` - Change a player's display name
+- `/admin account-delete` - Remove a Riot account from a player
 - `/admin account-add` - Add a Riot account to a player
 - `/admin account-transfer` - Transfer an account between players
 - `/admin player-merge` - Merge two players into one
 - `/admin player-delete` - Permanently delete a player
 - `/admin player-link-discord` - Link a Discord user to a player
 - `/admin player-unlink-discord` - Unlink a Discord user from a player
+- `/admin player-view` - View detailed player information
 
-### Other Commands
+### Debug Commands (Owner Only)
 
-- `/server-info` - Display server statistics
-- `/debug` - View bot state (admin only)
+- `/debug server-info` - Display server statistics
+- `/debug database` - Download database file
+- `/debug polling` - View polling intervals
 
 ## Technical Details
 
@@ -140,7 +143,7 @@ Scout automatically checks for matches every minute and posts:
 
 **Project Structure:**
 
-```
+```text
 packages/
   backend/      - Discord bot service
   data/         - Shared types and utilities

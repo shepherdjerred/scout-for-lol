@@ -121,7 +121,7 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
     await interaction.reply({
       content: truncateDiscordMessage(`❌ Cannot invite user
 
-@${targetUser.username} doesn't have a linked League of Legends account. They need to use \`/subscribe\` first.`),
+@${targetUser.username} doesn't have a linked League of Legends account. They need to use \`/subscription add\` first.`),
       flags: MessageFlags.Ephemeral,
     });
     return;

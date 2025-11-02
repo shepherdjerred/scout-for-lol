@@ -1,24 +1,20 @@
 import { REST, Routes } from "discord.js";
 import { z } from "zod";
-import { subscribeCommand } from "./commands/subscribe";
-import { unsubscribeCommand } from "./commands/unsubscribe";
 import configuration from "../configuration";
-import { listSubscriptionsCommand } from "./commands/list-subscriptions";
 import { debugCommand } from "./commands/debug";
 import { competitionCommand } from "./commands/competition/index.js";
 import { adminCommand } from "./commands/admin/index.js";
-import { serverInfoCommand } from "./commands/server-info.js";
+import { subscriptionCommand } from "./commands/subscription/index.js";
+import { helpCommand } from "./commands/help.js";
 
 console.log("🔄 Preparing Discord slash commands for registration");
 
 const commands = [
-  subscribeCommand.toJSON(),
-  unsubscribeCommand.toJSON(),
-  listSubscriptionsCommand.toJSON(),
+  subscriptionCommand.toJSON(),
   debugCommand.toJSON(),
   competitionCommand.toJSON(),
   adminCommand.toJSON(),
-  serverInfoCommand.toJSON(),
+  helpCommand.toJSON(),
 ];
 
 console.log("📋 Commands to register:");
