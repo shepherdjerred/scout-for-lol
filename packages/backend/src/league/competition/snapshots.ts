@@ -188,5 +188,7 @@ export async function createSnapshotsForAllParticipants(
         }
       }
     });
+    // TODO
+    // throw new Error(`Failed to create ${failed.toString()} snapshots`);
   }
 }
