@@ -1,4 +1,4 @@
-import type { CompetitionCriteria, Rank } from "@scout-for-lol/data";
+import type { CompetitionCriteria, Ranks } from "@scout-for-lol/data";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { match } from "ts-pattern";
 import { processMostGamesPlayed } from "./most-games-played.js";
@@ -13,9 +13,9 @@ import type { LeaderboardEntry, PlayerWithAccounts } from "./types.js";
  * Snapshot data that may be needed for rank-based criteria
  */
 export type SnapshotData = {
-  startSnapshots: Map<number, { soloRank?: Rank; flexRank?: Rank }>;
-  endSnapshots: Map<number, { soloRank?: Rank; flexRank?: Rank }>;
-  currentRanks: Map<number, { soloRank?: Rank; flexRank?: Rank }>;
+  startSnapshots: Record<number, Ranks>;
+  endSnapshots: Record<number, Ranks>;
+  currentRanks: Record<number, Ranks>;
 };
 
 /**

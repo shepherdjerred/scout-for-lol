@@ -8,6 +8,7 @@ There seems to be a fair bit of coupling. Examples:
 
 ## Release
 
+- [ ] Unsubscribe command
 - [x] View detailed player info
   - [x] Accounts
     - [x] Include rate limiting info

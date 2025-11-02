@@ -1,6 +1,6 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { fromError } from "zod-validation-error";
 import { getErrorMessage } from "../../../utils/errors.js";
@@ -12,7 +12,7 @@ const ArgsSchema = z.object({
 
 export async function executePlayerUnlinkDiscord(interaction: ChatInputCommandInteraction) {
   const startTime = Date.now();
-  const userId = interaction.user.id;
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
   console.log(`🔓 Starting Discord unlink for user ${username} (${userId})`);

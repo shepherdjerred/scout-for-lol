@@ -53,6 +53,7 @@ model Account {
   // Match processing tracking
   lastProcessedMatchId String? // Track last match we've processed to avoid duplicates
   lastMatchTime        DateTime? // Timestamp of the last match this player was in (for dynamic polling)
+  lastCheckedAt        DateTime? // Timestamp of when we last checked for new matches (for polling intervals)
 
   // metadata
   serverId         String

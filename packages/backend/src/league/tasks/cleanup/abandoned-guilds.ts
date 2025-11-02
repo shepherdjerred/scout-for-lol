@@ -8,6 +8,7 @@ import {
   abandonmentNotificationsTotal,
   guildDataCleanupTotal,
 } from "../../../metrics/index.js";
+import type { DiscordGuildId } from "@scout-for-lol/data";
 
 /**
  * Check for abandoned guilds and handle cleanup
@@ -63,7 +64,7 @@ export async function checkAbandonedGuilds(client: Client): Promise<void> {
  */
 async function handleAbandonedGuild(
   client: Client,
-  guildInfo: { serverId: string; firstOccurrence: Date; lastOccurrence: Date; errorCount: number },
+  guildInfo: { serverId: DiscordGuildId; firstOccurrence: Date; lastOccurrence: Date; errorCount: number },
 ): Promise<void> {
   const { serverId, firstOccurrence, errorCount } = guildInfo;
 
@@ -176,7 +177,7 @@ Thank you for using Scout for LoL! Feel free to reach out if you have any questi
  * Clean up database records for an abandoned guild
  * Note: This preserves data for potential re-invite, but marks it for future cleanup
  */
-async function cleanupGuildData(serverId: string): Promise<void> {
+async function cleanupGuildData(serverId: DiscordGuildId): Promise<void> {
   console.log(`[AbandonedGuilds] Cleaning up data for guild ${serverId}`);
 
   try {

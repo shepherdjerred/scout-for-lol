@@ -1,4 +1,4 @@
-import type { HighestRankCriteria, Rank } from "@scout-for-lol/data";
+import type { HighestRankCriteria, Rank, Ranks } from "@scout-for-lol/data";
 import { rankToLeaguePoints } from "@scout-for-lol/data";
 import type { LeaderboardEntry, PlayerWithAccounts } from "./types.js";
 
@@ -12,13 +12,13 @@ import type { LeaderboardEntry, PlayerWithAccounts } from "./types.js";
 export function processHighestRank(
   participants: PlayerWithAccounts[],
   criteria: HighestRankCriteria,
-  ranks: Map<number, { soloRank?: Rank; flexRank?: Rank }>,
+  ranks: Record<number, Ranks>,
 ): LeaderboardEntry[] {
   const entries: LeaderboardEntry[] = [];
 
   for (const participant of participants) {
-    const playerRanks = ranks.get(participant.id);
-    const rank = criteria.queue === "SOLO" ? playerRanks?.soloRank : playerRanks?.flexRank;
+    const playerRanks = ranks[participant.id];
+    const rank = criteria.queue === "SOLO" ? playerRanks?.solo : playerRanks?.flex;
 
     if (rank) {
       entries.push({

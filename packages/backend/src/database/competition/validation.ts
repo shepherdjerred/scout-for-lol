@@ -1,5 +1,14 @@
 import { type PrismaClient } from "../../../generated/prisma/client/index.js";
-import { CompetitionCriteriaSchema, CompetitionVisibilitySchema, SeasonIdSchema } from "@scout-for-lol/data";
+import {
+  CompetitionCriteriaSchema,
+  CompetitionVisibilitySchema,
+  type DiscordAccountId,
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  type DiscordGuildId,
+  DiscordGuildIdSchema,
+  SeasonIdSchema,
+} from "@scout-for-lol/data";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 
@@ -97,9 +106,10 @@ export type CompetitionDates = z.infer<typeof CompetitionDatesSchema>;
 export const CompetitionCreationSchema = z
   .object({
     // Identity fields (Discord snowflakes - 17-19 digits)
-    serverId: z.string().regex(/^\d{17,19}$/, "Invalid Discord server ID"),
-    ownerId: z.string().regex(/^\d{17,19}$/, "Invalid Discord user ID"),
-    channelId: z.string().regex(/^\d{17,19}$/, "Invalid Discord channel ID"),
+    // Use branded schemas which validate AND transform to branded types
+    serverId: DiscordGuildIdSchema,
+    ownerId: DiscordAccountIdSchema,
+    channelId: DiscordChannelIdSchema,
 
     // Content fields
     title: z.string().min(1, "Title cannot be empty").max(100, "Title cannot exceed 100 characters").trim(),
@@ -156,7 +166,11 @@ export type CompetitionCreationInput = z.infer<typeof CompetitionCreationSchema>
  * Validate owner doesn't have too many active competitions
  * This is async so it can't be part of Zod schema refinement easily
  */
-export async function validateOwnerLimit(prisma: PrismaClient, serverId: string, ownerId: string): Promise<void> {
+export async function validateOwnerLimit(
+  prisma: PrismaClient,
+  serverId: DiscordGuildId,
+  ownerId: DiscordAccountId,
+): Promise<void> {
   const now = new Date();
 
   // Count active competitions for this owner on this server
@@ -184,7 +198,7 @@ export async function validateOwnerLimit(prisma: PrismaClient, serverId: string,
 /**
  * Validate server doesn't have too many active competitions
  */
-export async function validateServerLimit(prisma: PrismaClient, serverId: string): Promise<void> {
+export async function validateServerLimit(prisma: PrismaClient, serverId: DiscordGuildId): Promise<void> {
   const now = new Date();
 
   // Count active competitions on this server

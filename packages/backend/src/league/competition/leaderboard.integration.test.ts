@@ -4,12 +4,13 @@ import { PrismaClient } from "../../../generated/prisma/client/index.js";
 import { calculateLeaderboard } from "./leaderboard.js";
 import { createCompetition } from "../../database/competition/queries.js";
 import { addParticipant } from "../../database/competition/participants.js";
-import { parseCompetition, type Rank } from "@scout-for-lol/data";
+import { PlayerIdSchema, parseCompetition, type Rank } from "@scout-for-lol/data";
 import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../testing/test-ids.js";
 // ============================================================================
 // Test Setup
 // ============================================================================
@@ -20,11 +21,19 @@ const testDbPath = join(testDbDir, "test.db");
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database before tests run
-// Note: cwd needs to be the backend directory where prisma/schema.prisma is located
-execSync("bunx prisma db push --skip-generate", {
-  env: { ...process.env, DATABASE_URL: testDbUrl },
-  stdio: "inherit",
-});
+const schemaPath = join(import.meta.dir, "../../..", "prisma/schema.prisma");
+execSync(
+  `bunx prisma db push --skip-generate --schema=${schemaPath}`,
+  {
+    env: {
+      ...process.env,
+      DATABASE_URL: testDbUrl,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "inherit",
+  },
+);
 
 let prisma: PrismaClient;
 
@@ -83,9 +92,9 @@ describe("calculateLeaderboard integration tests", () => {
 
     const rawCompetition = await prisma.competition.create({
       data: {
-        serverId: "test-server",
-        ownerId: "owner-1",
-        channelId: "channel-1",
+        serverId: testGuildId("000000"),
+        ownerId: testAccountId("10000000100"),
+        channelId: testChannelId("1000000001"),
         title: "Test Competition",
         description: "Test",
         visibility: "OPEN",
@@ -96,7 +105,7 @@ describe("calculateLeaderboard integration tests", () => {
         startDate: futureDate,
         endDate: endDate,
         seasonId: null,
-        creatorDiscordId: "owner-1",
+        creatorDiscordId: testAccountId("10000000100"),
         createdTime: new Date(),
         updatedTime: new Date(),
       },
@@ -116,9 +125,9 @@ describe("calculateLeaderboard integration tests", () => {
     // Create active competition with dates
     const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
-      serverId: "test-server",
-      ownerId: "owner-1",
-      channelId: "channel-1",
+      serverId: testGuildId("000000"),
+      ownerId: testAccountId("10000000100"),
+      channelId: testChannelId("1000000001"),
       title: "Test Competition",
       description: "Test",
       visibility: "OPEN",
@@ -144,20 +153,20 @@ describe("calculateLeaderboard integration tests", () => {
     // Create players
     const player1 = await prisma.player.create({
       data: {
-        discordId: "discord-1",
+        discordId: testAccountId("100000000"),
         alias: "Player1",
-        serverId: "test-server",
-        creatorDiscordId: "discord-1",
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("100000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
           create: [
             {
-              puuid: "puuid-1",
+              puuid: testPuuid("1"),
               alias: "Player1",
-              region: "na1",
-              serverId: "test-server",
-              creatorDiscordId: "discord-1",
+              region: "AMERICA_NORTH",
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("100000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -168,20 +177,20 @@ describe("calculateLeaderboard integration tests", () => {
 
     const player2 = await prisma.player.create({
       data: {
-        discordId: "discord-2",
+        discordId: testAccountId("200000000"),
         alias: "Player2",
-        serverId: "test-server",
-        creatorDiscordId: "discord-2",
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("200000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
           create: [
             {
-              puuid: "puuid-2",
+              puuid: testPuuid("2"),
               alias: "Player2",
-              region: "na1",
-              serverId: "test-server",
-              creatorDiscordId: "discord-2",
+              region: "AMERICA_NORTH",
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("200000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -198,9 +207,9 @@ describe("calculateLeaderboard integration tests", () => {
     endDate.setDate(endDate.getDate() + 30); // Ends in 30 days
 
     const competition = await createCompetition(prisma, {
-      serverId: "test-server",
-      ownerId: "owner-1",
-      channelId: "channel-1",
+      serverId: testGuildId("000000"),
+      ownerId: testAccountId("10000000100"),
+      channelId: testChannelId("1000000001"),
       title: "Test Competition",
       description: "Test",
       visibility: "OPEN",
@@ -239,20 +248,20 @@ describe("calculateLeaderboard integration tests", () => {
     // Create players
     const player1 = await prisma.player.create({
       data: {
-        discordId: "discord-1",
+        discordId: testAccountId("100000000"),
         alias: "Player1",
-        serverId: "test-server",
-        creatorDiscordId: "discord-1",
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("100000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
           create: [
             {
-              puuid: "puuid-1",
+              puuid: testPuuid("1"),
               alias: "Player1",
-              region: "na1",
-              serverId: "test-server",
-              creatorDiscordId: "discord-1",
+              region: "AMERICA_NORTH",
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("100000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -263,20 +272,20 @@ describe("calculateLeaderboard integration tests", () => {
 
     const player2 = await prisma.player.create({
       data: {
-        discordId: "discord-2",
+        discordId: testAccountId("200000000"),
         alias: "Player2",
-        serverId: "test-server",
-        creatorDiscordId: "discord-2",
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("200000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
           create: [
             {
-              puuid: "puuid-2",
+              puuid: testPuuid("2"),
               alias: "Player2",
-              region: "na1",
-              serverId: "test-server",
-              creatorDiscordId: "discord-2",
+              region: "AMERICA_NORTH",
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("200000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -288,9 +297,9 @@ describe("calculateLeaderboard integration tests", () => {
     // Create ACTIVE competition with HIGHEST_RANK criteria
     const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
-      serverId: "test-server",
-      ownerId: "owner-1",
-      channelId: "channel-1",
+      serverId: testGuildId("000000"),
+      ownerId: testAccountId("10000000100"),
+      channelId: testChannelId("1000000001"),
       title: "Rank Competition",
       description: "Test",
       visibility: "OPEN",
@@ -332,7 +341,7 @@ describe("calculateLeaderboard integration tests", () => {
         competitionId: competition.id,
         playerId: player1.id,
         snapshotType: "START",
-        snapshotData: JSON.stringify({ soloRank: goldRank }),
+        snapshotData: JSON.stringify({ solo: goldRank }),
         snapshotTime: new Date(),
       },
     });
@@ -343,7 +352,7 @@ describe("calculateLeaderboard integration tests", () => {
         competitionId: competition.id,
         playerId: player2.id,
         snapshotType: "START",
-        snapshotData: JSON.stringify({ soloRank: silverRank }),
+        snapshotData: JSON.stringify({ solo: silverRank }),
         snapshotTime: new Date(),
       },
     });
@@ -353,12 +362,12 @@ describe("calculateLeaderboard integration tests", () => {
     expect(leaderboard).toHaveLength(2);
 
     // Player 1 (Gold) should be rank 1
-    expect(leaderboard[0]?.playerId).toBe(player1.id);
+    expect(leaderboard[0]?.playerId).toBe(PlayerIdSchema.parse(player1.id));
     expect(leaderboard[0]?.rank).toBe(1);
     expect(leaderboard[0]?.score).toMatchObject(goldRank);
 
     // Player 2 (Silver) should be rank 2
-    expect(leaderboard[1]?.playerId).toBe(player2.id);
+    expect(leaderboard[1]?.playerId).toBe(PlayerIdSchema.parse(player2.id));
     expect(leaderboard[1]?.rank).toBe(2);
     expect(leaderboard[1]?.score).toMatchObject(silverRank);
   });
@@ -367,20 +376,20 @@ describe("calculateLeaderboard integration tests", () => {
     // Create players
     const player1 = await prisma.player.create({
       data: {
-        discordId: "discord-3",
+        discordId: testAccountId("300000000"),
         alias: "Player3",
-        serverId: "test-server",
-        creatorDiscordId: "discord-3",
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("300000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
           create: [
             {
-              puuid: "puuid-3",
+              puuid: testPuuid("3"),
               alias: "Player3",
-              region: "na1",
-              serverId: "test-server",
-              creatorDiscordId: "discord-3",
+              region: "AMERICA_NORTH",
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("300000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -391,20 +400,20 @@ describe("calculateLeaderboard integration tests", () => {
 
     const player2 = await prisma.player.create({
       data: {
-        discordId: "discord-4",
+        discordId: testAccountId("400000000"),
         alias: "Player4",
-        serverId: "test-server",
-        creatorDiscordId: "discord-4",
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("400000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
           create: [
             {
-              puuid: "puuid-4",
+              puuid: testPuuid("4"),
               alias: "Player4",
-              region: "na1",
-              serverId: "test-server",
-              creatorDiscordId: "discord-4",
+              region: "AMERICA_NORTH",
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("400000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -420,9 +429,9 @@ describe("calculateLeaderboard integration tests", () => {
     startDate.setDate(startDate.getDate() - 30); // Started 30 days ago
 
     const competition = await createCompetition(prisma, {
-      serverId: "test-server",
-      ownerId: "owner-1",
-      channelId: "channel-1",
+      serverId: testGuildId("000000"),
+      ownerId: testAccountId("10000000100"),
+      channelId: testChannelId("1000000001"),
       title: "Rank Competition",
       description: "Test",
       visibility: "OPEN",
@@ -473,7 +482,7 @@ describe("calculateLeaderboard integration tests", () => {
         competitionId: competition.id,
         playerId: player1.id,
         snapshotType: "END",
-        snapshotData: JSON.stringify({ soloRank: goldRank }),
+        snapshotData: JSON.stringify({ solo: goldRank }),
         snapshotTime: new Date(),
       },
     });
@@ -484,7 +493,7 @@ describe("calculateLeaderboard integration tests", () => {
         competitionId: competition.id,
         playerId: player2.id,
         snapshotType: "END",
-        snapshotData: JSON.stringify({ soloRank: silverRank }),
+        snapshotData: JSON.stringify({ solo: silverRank }),
         snapshotTime: new Date(),
       },
     });
@@ -500,12 +509,12 @@ describe("calculateLeaderboard integration tests", () => {
     expect(leaderboard).toHaveLength(2);
 
     // Player 1 (Gold) should be rank 1
-    expect(leaderboard[0]?.playerId).toBe(player1.id);
+    expect(leaderboard[0]?.playerId).toBe(PlayerIdSchema.parse(player1.id));
     expect(leaderboard[0]?.rank).toBe(1);
     expect(leaderboard[0]?.score).toMatchObject(goldRank);
 
     // Player 2 (Silver) should be rank 2
-    expect(leaderboard[1]?.playerId).toBe(player2.id);
+    expect(leaderboard[1]?.playerId).toBe(PlayerIdSchema.parse(player2.id));
     expect(leaderboard[1]?.rank).toBe(2);
     expect(leaderboard[1]?.score).toMatchObject(silverRank);
   });
@@ -518,20 +527,20 @@ describe("calculateLeaderboard integration tests", () => {
     // Create players
     const player1 = await prisma.player.create({
       data: {
-        discordId: "discord-1",
+        discordId: testAccountId("100000000"),
         alias: "Player1",
-        serverId: "test-server",
-        creatorDiscordId: "discord-1",
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("100000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
           create: [
             {
-              puuid: "puuid-1",
+              puuid: testPuuid("1"),
               alias: "Player1",
-              region: "na1",
-              serverId: "test-server",
-              creatorDiscordId: "discord-1",
+              region: "AMERICA_NORTH",
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("100000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -542,20 +551,20 @@ describe("calculateLeaderboard integration tests", () => {
 
     const player2 = await prisma.player.create({
       data: {
-        discordId: "discord-2",
+        discordId: testAccountId("200000000"),
         alias: "Player2",
-        serverId: "test-server",
-        creatorDiscordId: "discord-2",
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("200000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
           create: [
             {
-              puuid: "puuid-2",
+              puuid: testPuuid("2"),
               alias: "Player2",
-              region: "na1",
-              serverId: "test-server",
-              creatorDiscordId: "discord-2",
+              region: "AMERICA_NORTH",
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("200000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -567,9 +576,9 @@ describe("calculateLeaderboard integration tests", () => {
     // Create competition with MOST_RANK_CLIMB criteria
     const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
-      serverId: "test-server",
-      ownerId: "owner-1",
-      channelId: "channel-1",
+      serverId: testGuildId("000000"),
+      ownerId: testAccountId("10000000100"),
+      channelId: testChannelId("1000000001"),
       title: "Climb Competition",
       description: "Test",
       visibility: "OPEN",
@@ -595,7 +604,7 @@ describe("calculateLeaderboard integration tests", () => {
         playerId: player1.id,
         snapshotType: "START",
         snapshotData: JSON.stringify({
-          soloRank: { tier: "silver", division: 1, lp: 50, wins: 50, losses: 50 },
+          solo: { tier: "silver", division: 1, lp: 50, wins: 50, losses: 50 },
         }),
         snapshotTime: new Date(),
       },
@@ -607,7 +616,7 @@ describe("calculateLeaderboard integration tests", () => {
         playerId: player1.id,
         snapshotType: "END",
         snapshotData: JSON.stringify({
-          soloRank: { tier: "gold", division: 2, lp: 50, wins: 100, losses: 80 },
+          solo: { tier: "gold", division: 2, lp: 50, wins: 100, losses: 80 },
         }),
         snapshotTime: new Date(),
       },
@@ -620,7 +629,7 @@ describe("calculateLeaderboard integration tests", () => {
         playerId: player2.id,
         snapshotType: "START",
         snapshotData: JSON.stringify({
-          soloRank: { tier: "silver", division: 2, lp: 0, wins: 40, losses: 40 },
+          solo: { tier: "silver", division: 2, lp: 0, wins: 40, losses: 40 },
         }),
         snapshotTime: new Date(),
       },
@@ -632,7 +641,7 @@ describe("calculateLeaderboard integration tests", () => {
         playerId: player2.id,
         snapshotType: "END",
         snapshotData: JSON.stringify({
-          soloRank: { tier: "silver", division: 1, lp: 0, wins: 80, losses: 70 },
+          solo: { tier: "silver", division: 1, lp: 0, wins: 80, losses: 70 },
         }),
         snapshotTime: new Date(),
       },
@@ -643,13 +652,13 @@ describe("calculateLeaderboard integration tests", () => {
     expect(leaderboard).toHaveLength(2);
 
     // Player 1 should be rank 1 (bigger climb)
-    expect(leaderboard[0]?.playerId).toBe(player1.id);
+    expect(leaderboard[0]?.playerId).toBe(PlayerIdSchema.parse(player1.id));
     expect(leaderboard[0]?.rank).toBe(1);
     expect(z.number().safeParse(leaderboard[0]?.score).success).toBe(true);
     expect(z.number().parse(leaderboard[0]?.score)).toBeGreaterThan(0);
 
     // Player 2 should be rank 2 (smaller climb)
-    expect(leaderboard[1]?.playerId).toBe(player2.id);
+    expect(leaderboard[1]?.playerId).toBe(PlayerIdSchema.parse(player2.id));
     expect(leaderboard[1]?.rank).toBe(2);
     expect(z.number().safeParse(leaderboard[1]?.score).success).toBe(true);
     expect(z.number().parse(leaderboard[1]?.score)).toBeGreaterThan(0);
@@ -664,20 +673,20 @@ describe("calculateLeaderboard integration tests", () => {
     // Create players
     const player1 = await prisma.player.create({
       data: {
-        discordId: "discord-1",
+        discordId: testAccountId("100000000"),
         alias: "Player1",
-        serverId: "test-server",
-        creatorDiscordId: "discord-1",
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("100000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
           create: [
             {
-              puuid: "puuid-1",
+              puuid: testPuuid("1"),
               alias: "Player1",
-              region: "na1",
-              serverId: "test-server",
-              creatorDiscordId: "discord-1",
+              region: "AMERICA_NORTH",
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("100000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -688,20 +697,20 @@ describe("calculateLeaderboard integration tests", () => {
 
     const player2 = await prisma.player.create({
       data: {
-        discordId: "discord-2",
+        discordId: testAccountId("200000000"),
         alias: "Player2",
-        serverId: "test-server",
-        creatorDiscordId: "discord-2",
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("200000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
           create: [
             {
-              puuid: "puuid-2",
+              puuid: testPuuid("2"),
               alias: "Player2",
-              region: "na1",
-              serverId: "test-server",
-              creatorDiscordId: "discord-2",
+              region: "AMERICA_NORTH",
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("200000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -712,20 +721,20 @@ describe("calculateLeaderboard integration tests", () => {
 
     const player3 = await prisma.player.create({
       data: {
-        discordId: "discord-3",
+        discordId: testAccountId("300000000"),
         alias: "Player3",
-        serverId: "test-server",
-        creatorDiscordId: "discord-3",
+        serverId: testGuildId("000000"),
+        creatorDiscordId: testAccountId("300000000"),
         createdTime: new Date(),
         updatedTime: new Date(),
         accounts: {
           create: [
             {
-              puuid: "puuid-3",
+              puuid: testPuuid("3"),
               alias: "Player3",
-              region: "na1",
-              serverId: "test-server",
-              creatorDiscordId: "discord-3",
+              region: "AMERICA_NORTH",
+              serverId: testGuildId("000000"),
+              creatorDiscordId: testAccountId("300000000"),
               createdTime: new Date(),
               updatedTime: new Date(),
             },
@@ -737,9 +746,9 @@ describe("calculateLeaderboard integration tests", () => {
     // Create competition
     const dates = getActiveCompetitionDates();
     const competition = await createCompetition(prisma, {
-      serverId: "test-server",
-      ownerId: "owner-1",
-      channelId: "channel-1",
+      serverId: testGuildId("000000"),
+      ownerId: testAccountId("10000000100"),
+      channelId: testChannelId("1000000001"),
       title: "Test Competition",
       description: "Test",
       visibility: "OPEN",
@@ -777,6 +786,6 @@ describe("calculateLeaderboard integration tests", () => {
 
     // Should only include player1 (JOINED)
     expect(leaderboard).toHaveLength(1);
-    expect(leaderboard[0]?.playerId).toBe(player1.id);
+    expect(leaderboard[0]?.playerId).toBe(PlayerIdSchema.parse(player1.id));
   });
 });

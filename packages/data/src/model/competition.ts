@@ -2,6 +2,7 @@ import { match } from "ts-pattern";
 import { z } from "zod";
 import { RankSchema } from "./rank.js";
 import { getSeasonById } from "../seasons.js";
+import type { Competition } from "../../../backend/generated/prisma/client/index.js";
 
 // ============================================================================
 // Branded ID Types
@@ -12,6 +13,18 @@ export const CompetitionIdSchema = z.number().int().positive().brand("Competitio
 
 export type ParticipantId = z.infer<typeof ParticipantIdSchema>;
 export const ParticipantIdSchema = z.number().int().positive().brand("ParticipantId");
+
+export type SnapshotId = z.infer<typeof SnapshotIdSchema>;
+export const SnapshotIdSchema = z.number().int().positive().brand("SnapshotId");
+
+export type SubscriptionId = z.infer<typeof SubscriptionIdSchema>;
+export const SubscriptionIdSchema = z.number().int().positive().brand("SubscriptionId");
+
+export type PermissionId = z.infer<typeof PermissionIdSchema>;
+export const PermissionIdSchema = z.number().int().positive().brand("PermissionId");
+
+export type PermissionErrorId = z.infer<typeof PermissionErrorIdSchema>;
+export const PermissionErrorIdSchema = z.number().int().positive().brand("PermissionErrorId");
 
 // ============================================================================
 // Enums
@@ -90,13 +103,16 @@ export const MostWinsPlayerCriteriaSchema = z.object({
 
 export type MostWinsPlayerCriteria = z.infer<typeof MostWinsPlayerCriteriaSchema>;
 
+export const ChampionIdSchema = z.number().int().positive().brand("ChampionId");
+export type ChampionId = z.infer<typeof ChampionIdSchema>;
+
 /**
  * Criteria: Most wins with a specific champion
  * Queue is optional - if not specified, counts wins across all queues
  */
 export const MostWinsChampionCriteriaSchema = z.object({
   type: z.literal("MOST_WINS_CHAMPION"),
-  championId: z.number().int().positive(),
+  championId: ChampionIdSchema,
   queue: CompetitionQueueTypeSchema.optional(),
 });
 
@@ -148,12 +164,7 @@ export type CompetitionStatus = "DRAFT" | "ACTIVE" | "ENDED" | "CANCELLED";
  * 3. If startDate is in the future → DRAFT
  * 4. If startDate <= now < endDate → ACTIVE
  */
-export function getCompetitionStatus(competition: {
-  isCancelled: boolean;
-  startDate: Date | null;
-  endDate: Date | null;
-  seasonId: string | null;
-}): CompetitionStatus {
+export function getCompetitionStatus(competition: Competition | CompetitionWithCriteria): CompetitionStatus {
   // Rule 1: Cancellation overrides everything
   if (competition.isCancelled) {
     return "CANCELLED";
@@ -242,34 +253,10 @@ export function participantStatusToString(status: ParticipantStatus): string {
 // ============================================================================
 
 /**
- * Raw competition data from database (Prisma model)
- * Criteria is stored as separate type + JSON config fields
- */
-export type RawCompetition = {
-  id: number;
-  serverId: string;
-  ownerId: string;
-  title: string;
-  description: string;
-  channelId: string;
-  isCancelled: boolean;
-  visibility: string;
-  criteriaType: string;
-  criteriaConfig: string; // JSON string
-  maxParticipants: number;
-  startDate: Date | null;
-  endDate: Date | null;
-  seasonId: string | null;
-  creatorDiscordId: string;
-  createdTime: Date;
-  updatedTime: Date;
-};
-
-/**
  * Competition with parsed criteria (domain type)
  * This is what we use in application code
  */
-export type CompetitionWithCriteria = Omit<RawCompetition, "criteriaType" | "criteriaConfig"> & {
+export type CompetitionWithCriteria = Omit<Competition, "criteriaType" | "criteriaConfig"> & {
   criteria: CompetitionCriteria;
 };
 
@@ -280,7 +267,7 @@ export type CompetitionWithCriteria = Omit<RawCompetition, "criteriaType" | "cri
  *
  * @throws {Error} if criteriaConfig is invalid JSON or doesn't match schema
  */
-export function parseCompetition(raw: RawCompetition): CompetitionWithCriteria {
+export function parseCompetition(raw: Competition): CompetitionWithCriteria {
   // Parse the JSON config
   let criteriaConfig: unknown;
   try {
@@ -347,8 +334,8 @@ export function parseCompetition(raw: RawCompetition): CompetitionWithCriteria {
  */
 export type RankSnapshotData = z.infer<typeof RankSnapshotDataSchema>;
 export const RankSnapshotDataSchema = z.object({
-  soloRank: RankSchema.optional(),
-  flexRank: RankSchema.optional(),
+  solo: RankSchema.optional(),
+  flex: RankSchema.optional(),
 });
 
 /**
@@ -356,10 +343,10 @@ export const RankSnapshotDataSchema = z.object({
  */
 export type GamesPlayedSnapshotData = z.infer<typeof GamesPlayedSnapshotDataSchema>;
 export const GamesPlayedSnapshotDataSchema = z.object({
-  soloGames: z.number().int().nonnegative().optional(),
-  flexGames: z.number().int().nonnegative().optional(),
-  arenaGames: z.number().int().nonnegative().optional(),
-  aramGames: z.number().int().nonnegative().optional(),
+  soloGames: z.number().int().nonnegative(),
+  flexGames: z.number().int().nonnegative(),
+  arenaGames: z.number().int().nonnegative(),
+  aramGames: z.number().int().nonnegative(),
 });
 
 /**
@@ -369,7 +356,7 @@ export type WinsSnapshotData = z.infer<typeof WinsSnapshotDataSchema>;
 export const WinsSnapshotDataSchema = z.object({
   wins: z.number().int().nonnegative(),
   games: z.number().int().nonnegative(),
-  championId: z.number().int().positive().optional(),
+  championId: ChampionIdSchema.optional(),
   queue: CompetitionQueueTypeSchema.optional(),
 });
 
@@ -398,12 +385,18 @@ export function getSnapshotSchemaForCriteria(
 // Cached Leaderboard Schema
 // ============================================================================
 
+export const PlayerIdSchema = z.number().int().positive().brand("PlayerId");
+export type PlayerId = z.infer<typeof PlayerIdSchema>;
+
+export const AccountIdSchema = z.number().int().positive().brand("AccountId");
+export type AccountId = z.infer<typeof AccountIdSchema>;
+
 /**
  * Leaderboard entry stored in cache
  * Supports both numeric scores and Rank objects
  */
 export const CachedLeaderboardEntrySchema = z.object({
-  playerId: z.number().int().positive(),
+  playerId: PlayerIdSchema,
   playerName: z.string(),
   score: z.union([z.number(), RankSchema]),
   metadata: z.record(z.string(), z.unknown()).optional(),
@@ -432,7 +425,7 @@ export type CachedLeaderboardEntry = z.infer<typeof CachedLeaderboardEntrySchema
  */
 export const CachedLeaderboardSchema = z.object({
   version: z.literal("v1"),
-  competitionId: z.number().int().positive(),
+  competitionId: CompetitionIdSchema,
   calculatedAt: z.string().refine((val) => !isNaN(Date.parse(val)), {
     message: "Invalid ISO 8601 datetime",
   }), // ISO 8601 timestamp

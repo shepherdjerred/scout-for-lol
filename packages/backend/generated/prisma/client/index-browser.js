@@ -145,6 +145,7 @@ exports.Prisma.AccountScalarFieldEnum = {
   playerId: 'playerId',
   lastProcessedMatchId: 'lastProcessedMatchId',
   lastMatchTime: 'lastMatchTime',
+  lastCheckedAt: 'lastCheckedAt',
   serverId: 'serverId',
   creatorDiscordId: 'creatorDiscordId',
   createdTime: 'createdTime',

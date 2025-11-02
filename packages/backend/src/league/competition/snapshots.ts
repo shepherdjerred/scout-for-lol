@@ -1,178 +1,16 @@
 import {
   type CompetitionCriteria,
+  type CompetitionId,
   type GamesPlayedSnapshotData,
   getSnapshotSchemaForCriteria,
+  type PlayerId,
   type RankSnapshotData,
-  RegionSchema,
   type SnapshotType,
   type WinsSnapshotData,
 } from "@scout-for-lol/data";
-import { match } from "ts-pattern";
-import { type PrismaClient } from "../../../generated/prisma/client/index.js";
 import { getParticipants } from "../../database/competition/participants.js";
-import { api } from "../api/api.js";
-import { mapRegionToEnum } from "../model/region.js";
-import { getRank } from "../model/rank.js";
-
-// ============================================================================
-// Types
-// ============================================================================
-
-type PlayerWithAccounts = {
-  id: number;
-  alias: string;
-  accounts: {
-    puuid: string;
-    region: string;
-  }[];
-};
-
-// ============================================================================
-// Snapshot Data Fetching
-// ============================================================================
-
-/**
- * Fetch rank data for a player from Riot API
- */
-async function fetchRankData(player: PlayerWithAccounts): Promise<RankSnapshotData> {
-  const rankData: RankSnapshotData = {};
-
-  // Try each account until we get rank data
-  for (const account of player.accounts) {
-    try {
-      // Parse and validate region
-      const region = RegionSchema.parse(account.region);
-      const response = await api.League.byPUUID(account.puuid, mapRegionToEnum(region));
-
-      const soloRank = getRank(response.response, "RANKED_SOLO_5x5");
-      const flexRank = getRank(response.response, "RANKED_FLEX_SR");
-
-      if (soloRank) {
-        rankData.soloRank = soloRank;
-      }
-      if (flexRank) {
-        rankData.flexRank = flexRank;
-      }
-
-      // If we got any rank data, we're done
-      if (soloRank ?? flexRank) {
-        break;
-      }
-    } catch (error) {
-      console.warn(
-        `[Snapshots] Failed to fetch rank data for player ${player.id.toString()} account ${account.puuid}: ${String(error)}`,
-      );
-      // Continue to next account
-    }
-  }
-
-  return rankData;
-}
-
-/**
- * Fetch games played data for a player
- * This captures current game counts from Riot API
- */
-async function fetchGamesPlayedData(player: PlayerWithAccounts): Promise<GamesPlayedSnapshotData> {
-  const gamesData: GamesPlayedSnapshotData = {};
-
-  // Try each account until we get data
-  for (const account of player.accounts) {
-    try {
-      // Parse and validate region
-      const region = RegionSchema.parse(account.region);
-      const response = await api.League.byPUUID(account.puuid, mapRegionToEnum(region));
-
-      // Get solo games
-      const soloEntry = response.response.find((entry) => entry.queueType === "RANKED_SOLO_5x5");
-      if (soloEntry) {
-        gamesData.soloGames = soloEntry.wins + soloEntry.losses;
-      }
-
-      // Get flex games
-      const flexEntry = response.response.find((entry) => entry.queueType === "RANKED_FLEX_SR");
-      if (flexEntry) {
-        gamesData.flexGames = flexEntry.wins + flexEntry.losses;
-      }
-
-      // If we got any data, we're done
-      if (gamesData.soloGames !== undefined || gamesData.flexGames !== undefined) {
-        break;
-      }
-    } catch (error) {
-      console.warn(
-        `[Snapshots] Failed to fetch games played data for player ${player.id.toString()} account ${account.puuid}: ${String(error)}`,
-      );
-      // Continue to next account
-    }
-  }
-
-  return gamesData;
-}
-
-/**
- * Fetch wins data for a player
- * Optionally filtered by champion and queue
- */
-async function fetchWinsData(player: PlayerWithAccounts, championId?: number): Promise<WinsSnapshotData> {
-  // Initialize with zero values
-  const winsData: WinsSnapshotData = {
-    wins: 0,
-    games: 0,
-  };
-
-  if (championId !== undefined) {
-    winsData.championId = championId;
-  }
-
-  // Try each account until we get data
-  for (const account of player.accounts) {
-    try {
-      // Parse and validate region
-      const region = RegionSchema.parse(account.region);
-      const response = await api.League.byPUUID(account.puuid, mapRegionToEnum(region));
-
-      // For overall wins (not champion-specific), use ranked stats
-      if (championId === undefined) {
-        // Sum up wins and games from all ranked queues
-        for (const entry of response.response) {
-          winsData.wins += entry.wins;
-          winsData.games += entry.wins + entry.losses;
-        }
-      }
-
-      // If we got any data, we're done
-      if (winsData.games > 0) {
-        break;
-      }
-    } catch (error) {
-      console.warn(
-        `[Snapshots] Failed to fetch wins data for player ${player.id.toString()} account ${account.puuid}: ${String(error)}`,
-      );
-      // Continue to next account
-    }
-  }
-
-  return winsData;
-}
-
-/**
- * Fetch snapshot data based on criteria type
- * Routes to the appropriate fetching function
- */
-async function fetchSnapshotData(
-  player: PlayerWithAccounts,
-  criteria: CompetitionCriteria,
-): Promise<RankSnapshotData | GamesPlayedSnapshotData | WinsSnapshotData> {
-  return match(criteria)
-    .with({ type: "HIGHEST_RANK" }, () => fetchRankData(player))
-    .with({ type: "MOST_RANK_CLIMB" }, () => fetchRankData(player))
-    .with({ type: "MOST_GAMES_PLAYED" }, () => fetchGamesPlayedData(player))
-    .with({ type: "MOST_WINS_PLAYER" }, () => fetchWinsData(player))
-    .with({ type: "MOST_WINS_CHAMPION" }, (c) => fetchWinsData(player, c.championId))
-    .with({ type: "HIGHEST_WIN_RATE" }, () => fetchWinsData(player))
-    .exhaustive();
-}
+import { fetchSnapshotData } from "./leaderboard.js";
+import { PrismaClient } from "../../../generated/prisma/client/index.js";
 
 // ============================================================================
 // Snapshot Creation
@@ -193,8 +31,8 @@ async function fetchSnapshotData(
  */
 export async function createSnapshot(
   prisma: PrismaClient,
-  competitionId: number,
-  playerId: number,
+  competitionId: CompetitionId,
+  playerId: PlayerId,
   snapshotType: SnapshotType,
   criteria: CompetitionCriteria,
 ): Promise<void> {
@@ -202,22 +40,23 @@ export async function createSnapshot(
     `[Snapshots] Creating ${snapshotType} snapshot for competition ${competitionId.toString()}, player ${playerId.toString()}`,
   );
 
-  // Get player with accounts
-  const player = await prisma.player.findUnique({
+  // Get player with accounts (include preserves branded types from Prisma)
+  const playerData = await prisma.player.findUnique({
     where: { id: playerId },
     include: { accounts: true },
   });
 
-  if (!player) {
+  if (!playerData) {
     throw new Error(`Player ${playerId.toString()} not found`);
   }
 
-  if (player.accounts.length === 0) {
+  if (playerData.accounts.length === 0) {
     throw new Error(`Player ${playerId.toString()} has no accounts`);
   }
 
-  // Fetch snapshot data based on criteria
-  const snapshotData = await fetchSnapshotData(player, criteria);
+  // Fetch snapshot data based on criteria - pass playerData directly
+  // Prisma include returns branded types compatible with PlayerWithAccounts
+  const snapshotData = await fetchSnapshotData(prisma, competitionId, criteria, [playerData], "ACTIVE");
 
   // Get the appropriate schema for validation
   const schema = getSnapshotSchemaForCriteria(criteria);
@@ -312,7 +151,7 @@ export async function getSnapshot(
  */
 export async function createSnapshotsForAllParticipants(
   prisma: PrismaClient,
-  competitionId: number,
+  competitionId: CompetitionId,
   snapshotType: SnapshotType,
   criteria: CompetitionCriteria,
 ): Promise<void> {
@@ -349,5 +188,7 @@ export async function createSnapshotsForAllParticipants(
         }
       }
     });
+    // TODO
+    // throw new Error(`Failed to create ${failed.toString()} snapshots`);
   }
 }

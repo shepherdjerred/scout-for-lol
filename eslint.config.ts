@@ -2,6 +2,7 @@ import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 import unicorn from "eslint-plugin-unicorn";
 import { zodSchemaNaming } from "./eslint-rules/zod-schema-naming.ts";
+import { noRedundantZodParse } from "./eslint-rules/no-redundant-zod-parse.ts";
 
 /**
  * Bridge typescript-eslint rule to ESLint plugin system
@@ -14,6 +15,7 @@ import { zodSchemaNaming } from "./eslint-rules/zod-schema-naming.ts";
 const customRulesPlugin = {
   rules: {
     "zod-schema-naming": zodSchemaNaming,
+    "no-redundant-zod-parse": noRedundantZodParse,
   },
 };
 
@@ -170,13 +172,14 @@ export default tseslint.config(
       ],
     },
   },
-  // Custom rules for Zod schema naming
+  // Custom rules for Zod schema naming and validation
   {
     plugins: {
       "custom-rules": customRulesPlugin,
     },
     rules: {
       "custom-rules/zod-schema-naming": "error",
+      "custom-rules/no-redundant-zod-parse": "error",
     },
   },
   // Variable and identifier naming conventions

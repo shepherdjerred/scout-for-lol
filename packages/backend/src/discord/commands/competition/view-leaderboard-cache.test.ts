@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { CachedLeaderboard } from "@scout-for-lol/data";
+import { CompetitionIdSchema, PlayerIdSchema, type CachedLeaderboard } from "@scout-for-lol/data";
 import { EmbedBuilder } from "discord.js";
 
 /**
@@ -23,23 +23,23 @@ function createCachedLeaderboard(options?: {
 }): CachedLeaderboard {
   return {
     version: "v1",
-    competitionId: options?.competitionId ?? 123,
+    competitionId: CompetitionIdSchema.parse(options?.competitionId ?? 123),
     calculatedAt: options?.calculatedAt ?? new Date().toISOString(),
     entries: options?.entries ?? [
       {
-        playerId: 1,
+        playerId: PlayerIdSchema.parse(1),
         playerName: "Player1",
         score: 100,
         rank: 1,
       },
       {
-        playerId: 2,
+        playerId: PlayerIdSchema.parse(2),
         playerName: "Player2",
         score: 80,
         rank: 2,
       },
       {
-        playerId: 3,
+        playerId: PlayerIdSchema.parse(3),
         playerName: "Player3",
         score: 60,
         rank: 3,
@@ -51,10 +51,10 @@ function createCachedLeaderboard(options?: {
 function createLargeLeaderboard(entryCount: number): CachedLeaderboard {
   return {
     version: "v1",
-    competitionId: 123,
+    competitionId: CompetitionIdSchema.parse(123),
     calculatedAt: new Date().toISOString(),
     entries: Array.from({ length: entryCount }, (_, i) => ({
-      playerId: i + 1,
+      playerId: PlayerIdSchema.parse(i + 1),
       playerName: `Player${(i + 1).toString()}`,
       score: 1000 - i * 10,
       rank: i + 1,
@@ -65,11 +65,11 @@ function createLargeLeaderboard(entryCount: number): CachedLeaderboard {
 function createLeaderboardWithRankScores(): CachedLeaderboard {
   return {
     version: "v1",
-    competitionId: 123,
+    competitionId: CompetitionIdSchema.parse(123),
     calculatedAt: new Date().toISOString(),
     entries: [
       {
-        playerId: 1,
+        playerId: PlayerIdSchema.parse(1),
         playerName: "Player1",
         score: {
           tier: "diamond",
@@ -81,7 +81,7 @@ function createLeaderboardWithRankScores(): CachedLeaderboard {
         rank: 1,
       },
       {
-        playerId: 2,
+        playerId: PlayerIdSchema.parse(2),
         playerName: "Player2",
         score: {
           tier: "platinum",
@@ -99,7 +99,7 @@ function createLeaderboardWithRankScores(): CachedLeaderboard {
 function createEmptyLeaderboard(): CachedLeaderboard {
   return {
     version: "v1",
-    competitionId: 123,
+    competitionId: CompetitionIdSchema.parse(123),
     calculatedAt: new Date().toISOString(),
     entries: [],
   };
@@ -310,7 +310,7 @@ describe("Cached Leaderboard Data Handling", () => {
     const cached = createCachedLeaderboard({
       entries: [
         {
-          playerId: 1,
+          playerId: PlayerIdSchema.parse(1),
           playerName: "Player1",
           score: 10,
           rank: 1,
@@ -443,7 +443,7 @@ describe("Edge Cases", () => {
     const cached = createCachedLeaderboard({
       entries: [
         {
-          playerId: 1,
+          playerId: PlayerIdSchema.parse(1),
           playerName: "OnlyPlayer",
           score: 50,
           rank: 1,
@@ -456,8 +456,8 @@ describe("Edge Cases", () => {
   });
 
   test("should handle cache from different competition IDs", () => {
-    const cached1 = createCachedLeaderboard({ competitionId: 123 });
-    const cached2 = createCachedLeaderboard({ competitionId: 456 });
+    const cached1 = createCachedLeaderboard({ competitionId: CompetitionIdSchema.parse(123) });
+    const cached2 = createCachedLeaderboard({ competitionId: CompetitionIdSchema.parse(456) });
 
     expect(cached1.competitionId).not.toBe(cached2.competitionId);
   });
@@ -480,19 +480,19 @@ describe("Edge Cases", () => {
     const cached = createCachedLeaderboard({
       entries: [
         {
-          playerId: 1,
+          playerId: PlayerIdSchema.parse(1),
           playerName: "玩家一",
           score: 100,
           rank: 1,
         },
         {
-          playerId: 2,
+          playerId: PlayerIdSchema.parse(2),
           playerName: "Игрок2",
           score: 90,
           rank: 2,
         },
         {
-          playerId: 3,
+          playerId: PlayerIdSchema.parse(3),
           playerName: "🎮Player3🏆",
           score: 80,
           rank: 3,
@@ -509,25 +509,25 @@ describe("Edge Cases", () => {
     const cached = createCachedLeaderboard({
       entries: [
         {
-          playerId: 1,
+          playerId: PlayerIdSchema.parse(1),
           playerName: "Player1",
           score: 100,
           rank: 1,
         },
         {
-          playerId: 2,
+          playerId: PlayerIdSchema.parse(2),
           playerName: "Player2",
           score: 80,
           rank: 2,
         },
         {
-          playerId: 3,
+          playerId: PlayerIdSchema.parse(3),
           playerName: "Player3",
           score: 80,
           rank: 2, // Tied for 2nd
         },
         {
-          playerId: 4,
+          playerId: PlayerIdSchema.parse(4),
           playerName: "Player4",
           score: 60,
           rank: 4, // Next rank is 4, not 3

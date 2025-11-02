@@ -1,9 +1,15 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
-import { getCompetitionStatus } from "@scout-for-lol/data";
+import {
+  CompetitionIdSchema,
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+  getCompetitionStatus,
+} from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { getCompetitionById } from "../../../database/competition/queries.js";
 import { addParticipant, acceptInvitation, getParticipantStatus } from "../../../database/competition/participants.js";
 import { getErrorMessage } from "../../../utils/errors.js";
+import { formatCriteriaType } from "./helpers.js";
 
 /**
  * Execute /competition join command
@@ -14,9 +20,9 @@ export async function executeCompetitionJoin(interaction: ChatInputCommandIntera
   // Step 1: Extract and validate input
   // ============================================================================
 
-  const competitionId = interaction.options.getInteger("competition-id", true);
-  const userId = interaction.user.id;
-  const serverId = interaction.guildId;
+  const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
+  const serverId = interaction.guildId ? DiscordGuildIdSchema.parse(interaction.guildId) : null;
 
   if (!serverId) {
     await interaction.reply({
@@ -276,28 +282,6 @@ function formatStatusForJoinMessage(
       return "Status: Ended";
     case "CANCELLED":
       return "Status: Cancelled";
-  }
-}
-
-/**
- * Format criteria type to human-readable string
- */
-function formatCriteriaType(criteriaType: string): string {
-  switch (criteriaType) {
-    case "MOST_GAMES_PLAYED":
-      return "Most games played";
-    case "HIGHEST_RANK":
-      return "Highest rank";
-    case "MOST_RANK_CLIMB":
-      return "Most rank climb";
-    case "MOST_WINS_PLAYER":
-      return "Most wins (player)";
-    case "MOST_WINS_CHAMPION":
-      return "Most wins (champion)";
-    case "HIGHEST_WIN_RATE":
-      return "Highest win rate";
-    default:
-      return criteriaType;
   }
 }
 

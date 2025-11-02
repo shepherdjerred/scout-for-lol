@@ -132,7 +132,7 @@ describe("arena match integration", () => {
       config: {
         alias: "Test",
         league: { leagueAccount: { puuid, region: "PBE" } },
-        discordAccount: null,
+        discordAccount: undefined,
       },
       ranks: {},
     };
@@ -160,7 +160,7 @@ describe("arena match integration", () => {
       config: {
         alias: "Player1",
         league: { leagueAccount: { puuid: puuid1, region: "PBE" } },
-        discordAccount: null,
+        discordAccount: undefined,
       },
       ranks: {},
     };
@@ -169,7 +169,7 @@ describe("arena match integration", () => {
       config: {
         alias: "Player2",
         league: { leagueAccount: { puuid: puuid2, region: "PBE" } },
-        discordAccount: null,
+        discordAccount: undefined,
       },
       ranks: {},
     };

@@ -4,6 +4,7 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { testGuildId, testAccountId, testChannelId } from "../../testing/test-ids.js";
 import {
   type CreateCompetitionInput,
   cancelCompetition,
@@ -12,14 +13,25 @@ import {
   getCompetitionById,
   getCompetitionsByServer,
 } from "./queries.js";
+import { ChampionIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "competition-queries-test-"));
 const testDbPath = join(testDir, "test.db");
-execSync(`DATABASE_URL="file:${testDbPath}" bun run db:push`, {
-  cwd: join(__dirname, "../../.."),
-  env: { ...process.env, DATABASE_URL: `file:${testDbPath}` },
-});
+const schemaPath = join(__dirname, "../../..", "prisma/schema.prisma");
+execSync(
+  `bunx prisma db push --skip-generate --schema=${schemaPath}`,
+  {
+    cwd: join(__dirname, "../../.."),
+    env: {
+      ...process.env,
+      DATABASE_URL: `file:${testDbPath}`,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "ignore",
+  },
+);
 
 const prisma = new PrismaClient({
   datasources: {
@@ -47,9 +59,9 @@ describe("createCompetition", () => {
     const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const input: CreateCompetitionInput = {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
       title: "Test Competition",
       description: "A test competition",
       visibility: "OPEN",
@@ -77,9 +89,9 @@ describe("createCompetition", () => {
 
   test("creates competition with season ID and HIGHEST_RANK criteria", async () => {
     const input: CreateCompetitionInput = {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
       title: "Season Competition",
       description: "Season-based",
       visibility: "INVITE_ONLY",
@@ -106,9 +118,9 @@ describe("createCompetition", () => {
 
   test("criteria round-trips correctly with MOST_WINS_CHAMPION", async () => {
     const input: CreateCompetitionInput = {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
       title: "Champion Competition",
       description: "Test",
       visibility: "OPEN",
@@ -119,7 +131,7 @@ describe("createCompetition", () => {
       },
       criteria: {
         type: "MOST_WINS_CHAMPION",
-        championId: 157,
+        championId: ChampionIdSchema.parse(157),
         queue: "SOLO",
       },
     };
@@ -139,9 +151,9 @@ describe("createCompetition", () => {
 describe("getCompetitionById", () => {
   test("returns competition when it exists", async () => {
     const input: CreateCompetitionInput = {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
       title: "Test",
       description: "Test",
       visibility: "OPEN",
@@ -159,7 +171,7 @@ describe("getCompetitionById", () => {
 
   test("returns null for non-existent ID", async () => {
     const found = await getCompetitionById(prisma, 99999);
-    expect(found).toBeNull();
+    expect(found).toBeUndefined();
   });
 });
 
@@ -171,9 +183,9 @@ describe("getCompetitionsByServer", () => {
   test("returns all competitions for a server", async () => {
     for (let i = 0; i < 3; i++) {
       await createCompetition(prisma, {
-        serverId: "123456789012345678",
-        ownerId: "987654321098765432",
-        channelId: "111222333444555666",
+        serverId: testGuildId("123456789012345678"),
+        ownerId: testAccountId("987654321098765432"),
+        channelId: testChannelId("111222333444555666"),
         title: `Competition ${i.toString()}`,
         description: "Test",
         visibility: "OPEN",
@@ -183,7 +195,7 @@ describe("getCompetitionsByServer", () => {
       });
     }
 
-    const competitions = await getCompetitionsByServer(prisma, "123456789012345678");
+    const competitions = await getCompetitionsByServer(prisma, testGuildId("123456789012345678"));
     expect(competitions).toHaveLength(3);
   });
 
@@ -192,9 +204,9 @@ describe("getCompetitionsByServer", () => {
 
     // Active competition
     await createCompetition(prisma, {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
       title: "Active",
       description: "Test",
       visibility: "OPEN",
@@ -209,9 +221,9 @@ describe("getCompetitionsByServer", () => {
 
     // Ended competition
     await createCompetition(prisma, {
-      serverId: "123456789012345678",
-      ownerId: "111111111111111111",
-      channelId: "111222333444555666",
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("111111111111111111"),
+      channelId: testChannelId("111222333444555666"),
       title: "Ended",
       description: "Test",
       visibility: "OPEN",
@@ -224,7 +236,9 @@ describe("getCompetitionsByServer", () => {
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
-    const activeOnly = await getCompetitionsByServer(prisma, "123456789012345678", { activeOnly: true });
+    const activeOnly = await getCompetitionsByServer(prisma, testGuildId("123456789012345678"), {
+      activeOnly: true,
+    });
 
     expect(activeOnly).toHaveLength(1);
     expect(activeOnly[0]?.title).toBe("Active");
@@ -233,9 +247,9 @@ describe("getCompetitionsByServer", () => {
   test("filters by ownerId", async () => {
     // Create competitions with different owners
     await createCompetition(prisma, {
-      serverId: "123456789012345678",
-      ownerId: "111111111111111111",
-      channelId: "111222333444555666",
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("111111111111111111"),
+      channelId: testChannelId("111222333444555666"),
       title: "Owner 1 Competition",
       description: "Test",
       visibility: "OPEN",
@@ -245,9 +259,9 @@ describe("getCompetitionsByServer", () => {
     });
 
     await createCompetition(prisma, {
-      serverId: "123456789012345678",
-      ownerId: "222222222222222222",
-      channelId: "111222333444555666",
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("222222222222222222"),
+      channelId: testChannelId("111222333444555666"),
       title: "Owner 2 Competition",
       description: "Test",
       visibility: "OPEN",
@@ -256,7 +270,9 @@ describe("getCompetitionsByServer", () => {
       criteria: { type: "MOST_GAMES_PLAYED", queue: "SOLO" },
     });
 
-    const owner1Comps = await getCompetitionsByServer(prisma, "123456789012345678", { ownerId: "111111111111111111" });
+    const owner1Comps = await getCompetitionsByServer(prisma, testGuildId("123456789012345678"), {
+      ownerId: testAccountId("111111111111111111"),
+    });
 
     expect(owner1Comps).toHaveLength(1);
     expect(owner1Comps[0]?.title).toBe("Owner 1 Competition");
@@ -273,9 +289,9 @@ describe("getActiveCompetitions", () => {
 
     for (let i = 0; i < 3; i++) {
       await createCompetition(prisma, {
-        serverId: (100000000000000000 + i).toString(),
-        ownerId: "987654321098765432",
-        channelId: "111222333444555666",
+        serverId: DiscordGuildIdSchema.parse((100000000000000000 + i).toString()),
+        ownerId: testAccountId("987654321098765432"),
+        channelId: testChannelId("111222333444555666"),
         title: `Server ${i.toString()}`,
         description: "Test",
         visibility: "OPEN",
@@ -297,9 +313,9 @@ describe("getActiveCompetitions", () => {
     const now = new Date();
 
     const created = await createCompetition(prisma, {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
       title: "Active",
       description: "Test",
       visibility: "OPEN",
@@ -323,9 +339,9 @@ describe("getActiveCompetitions", () => {
 
     // Create ended competition
     await createCompetition(prisma, {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
       title: "Ended",
       description: "Test",
       visibility: "OPEN",
@@ -350,9 +366,9 @@ describe("getActiveCompetitions", () => {
 describe("cancelCompetition", () => {
   test("sets isCancelled flag to true", async () => {
     const created = await createCompetition(prisma, {
-      serverId: "123456789012345678",
-      ownerId: "987654321098765432",
-      channelId: "111222333444555666",
+      serverId: testGuildId("123456789012345678"),
+      ownerId: testAccountId("987654321098765432"),
+      channelId: testChannelId("111222333444555666"),
       title: "Test",
       description: "Test",
       visibility: "OPEN",

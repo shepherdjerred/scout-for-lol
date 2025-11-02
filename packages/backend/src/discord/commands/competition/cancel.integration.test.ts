@@ -7,16 +7,28 @@ import { join } from "node:path";
 import { createCompetition, getCompetitionById } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 
+import { testGuildId, testAccountId, testChannelId } from "../../../testing/test-ids.js";
 // Create a test database for integration tests
 const testDir = mkdtempSync(join(tmpdir(), "competition-cancel-test-"));
 const testDbPath = join(testDir, "test.db");
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database once before all tests
-execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`, {
-  cwd: join(import.meta.dir, "../../../.."),
-  env: { ...process.env, DATABASE_URL: testDbUrl },
-});
+const schemaPath = join(import.meta.dir, "../../../..", "prisma/schema.prisma");
+execSync(
+  `bunx prisma db push --skip-generate --schema=${schemaPath}`,
+  {
+    cwd: join(import.meta.dir, "../../../.."),
+    env: {
+      ...process.env,
+      DATABASE_URL: testDbUrl,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "ignore",
+  },
+);
+import { type DiscordAccountId, type DiscordGuildId } from "@scout-for-lol/data";
 
 const prisma = new PrismaClient({
   datasources: {
@@ -38,8 +50,8 @@ beforeEach(async () => {
 // ============================================================================
 
 async function createTestCompetition(
-  serverId: string,
-  ownerId: string,
+  serverId: DiscordGuildId,
+  ownerId: DiscordAccountId,
 ): Promise<{ competitionId: number; channelId: string }> {
   const now = new Date();
   const tomorrow = new Date(now);
@@ -50,7 +62,7 @@ async function createTestCompetition(
   const input: CreateCompetitionInput = {
     serverId,
     ownerId,
-    channelId: "123456789012345678",
+    channelId: testChannelId("123456789012345678"),
     title: "Test Competition",
     description: "A test competition",
     visibility: "OPEN",
@@ -79,8 +91,8 @@ async function createTestCompetition(
 
 describe("Owner cancellation", () => {
   test("owner can cancel their own competition", async () => {
-    const serverId = "123456789012345678";
-    const ownerId = "111111111111111111";
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // Verify competition is not cancelled initially
@@ -105,8 +117,8 @@ describe("Owner cancellation", () => {
   });
 
   test("cancelled competition maintains all other data", async () => {
-    const serverId = "123456789012345678";
-    const ownerId = "111111111111111111";
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     const before = await getCompetitionById(prisma, competitionId);
@@ -137,8 +149,8 @@ describe("Owner cancellation", () => {
 
 describe("Admin cancellation", () => {
   test("admin can cancel competition they don't own", async () => {
-    const serverId = "123456789012345678";
-    const ownerId = "111111111111111111";
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const adminId = "222222222222222222";
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
@@ -166,15 +178,15 @@ describe("Admin cancellation", () => {
 
 describe("Non-existent competition", () => {
   test("cancelling non-existent competition returns null", async () => {
-    const serverId = "123456789012345678";
-    const ownerId = "111111111111111111";
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     // Create a competition just to set up the database properly
     await createTestCompetition(serverId, ownerId);
 
     const nonExistentId = 999999;
     const competition = await getCompetitionById(prisma, nonExistentId);
 
-    expect(competition).toBeNull();
+    expect(competition).toBeUndefined();
   });
 });
 
@@ -184,8 +196,8 @@ describe("Non-existent competition", () => {
 
 describe("Idempotent cancellation", () => {
   test("cancelling already cancelled competition is idempotent", async () => {
-    const serverId = "123456789012345678";
-    const ownerId = "111111111111111111";
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // Cancel first time
@@ -220,8 +232,8 @@ describe("Idempotent cancellation", () => {
 
 describe("Status with cancellation", () => {
   test("cancelled competition has CANCELLED status", async () => {
-    const serverId = "123456789012345678";
-    const ownerId = "111111111111111111";
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     await prisma.competition.update({
@@ -248,8 +260,8 @@ describe("Status with cancellation", () => {
   });
 
   test("active competition becomes cancelled when flag set", async () => {
-    const serverId = "123456789012345678";
-    const ownerId = "111111111111111111";
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
 
     // Create competition with dates that make it ACTIVE
     const yesterday = new Date();
@@ -260,7 +272,7 @@ describe("Status with cancellation", () => {
     const input: CreateCompetitionInput = {
       serverId,
       ownerId,
-      channelId: "123456789012345678",
+      channelId: testChannelId("123456789012345678"),
       title: "Active Competition",
       description: "Currently active",
       visibility: "OPEN",
@@ -323,8 +335,8 @@ describe("Status with cancellation", () => {
 
 describe("Permission checks", () => {
   test("owner ID matches competition owner", async () => {
-    const serverId = "123456789012345678";
-    const ownerId = "111111111111111111";
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     const competition = await getCompetitionById(prisma, competitionId);
@@ -339,8 +351,8 @@ describe("Permission checks", () => {
   });
 
   test("non-owner ID does not match", async () => {
-    const serverId = "123456789012345678";
-    const ownerId = "111111111111111111";
+    const serverId = testGuildId("123456789012345678");
+    const ownerId = testAccountId("111111111111111111");
     const otherUserId = "222222222222222222";
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 

@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
-import { getCompetitionStatus } from "@scout-for-lol/data";
+import { CompetitionIdSchema, getCompetitionStatus } from "@scout-for-lol/data";
+import type { Competition } from "../../../../generated/prisma/client";
 
+import { testGuildId, testAccountId, testChannelId } from "../../../testing/test-ids.js";
 /**
  * These tests verify the validation logic patterns used in edit.ts
  * They test the same patterns without needing Discord.js mocks
@@ -9,16 +11,16 @@ import { getCompetitionStatus } from "@scout-for-lol/data";
 
 describe("Edit validation patterns", () => {
   test("owner check should validate user ID matches competition owner", () => {
-    const competition = { ownerId: "user123" };
-    const userId = "user123";
+    const competition = { ownerId: testAccountId("1230000000000") };
+    const userId = testAccountId("1230000000000");
     const isOwner = competition.ownerId === userId;
 
     expect(isOwner).toBe(true);
   });
 
   test("non-owner should be rejected", () => {
-    const competition = { ownerId: "user123" };
-    const userId = "user456";
+    const competition = { ownerId: testAccountId("1230000000000") };
+    const userId = testAccountId("4560000000000");
     const isOwner = competition.ownerId === userId;
 
     expect(isOwner).toBe(false);
@@ -27,11 +29,24 @@ describe("Edit validation patterns", () => {
 
 describe("Competition status checks", () => {
   test("DRAFT competition should allow all edits", () => {
-    const competition = {
+    const competition: Competition = {
       isCancelled: false,
       startDate: new Date(Date.now() + 86400000), // Tomorrow
       endDate: new Date(Date.now() + 2 * 86400000), // Day after tomorrow
       seasonId: null,
+      visibility: "OPEN",
+      serverId: testGuildId("12345678900000000"),
+      ownerId: testAccountId("1230000000000"),
+      channelId: testChannelId("1230000000"),
+      title: "Test Competition",
+      description: "Test description",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+      maxParticipants: 10,
+      createdTime: new Date(),
+      updatedTime: new Date(),
+      creatorDiscordId: testAccountId("1230000000000"),
+      id: CompetitionIdSchema.parse(1),
     };
 
     const status = getCompetitionStatus(competition);
@@ -41,11 +56,24 @@ describe("Competition status checks", () => {
   });
 
   test("ACTIVE competition should restrict edits", () => {
-    const competition = {
+    const competition: Competition = {
       isCancelled: false,
       startDate: new Date(Date.now() - 86400000), // Yesterday
       endDate: new Date(Date.now() + 86400000), // Tomorrow
       seasonId: null,
+      visibility: "OPEN",
+      serverId: testGuildId("12345678900000000"),
+      ownerId: testAccountId("1230000000000"),
+      channelId: testChannelId("1230000000"),
+      title: "Test Competition",
+      description: "Test description",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+      maxParticipants: 10,
+      createdTime: new Date(),
+      updatedTime: new Date(),
+      creatorDiscordId: testAccountId("1230000000000"),
+      id: CompetitionIdSchema.parse(1),
     };
 
     const status = getCompetitionStatus(competition);
@@ -56,11 +84,24 @@ describe("Competition status checks", () => {
   });
 
   test("ENDED competition should restrict edits", () => {
-    const competition = {
+    const competition: Competition = {
       isCancelled: false,
       startDate: new Date(Date.now() - 2 * 86400000), // Two days ago
       endDate: new Date(Date.now() - 86400000), // Yesterday
       seasonId: null,
+      visibility: "OPEN",
+      serverId: testGuildId("12345678900000000"),
+      ownerId: testAccountId("1230000000000"),
+      channelId: testChannelId("1230000000"),
+      title: "Test Competition",
+      description: "Test description",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+      maxParticipants: 10,
+      createdTime: new Date(),
+      updatedTime: new Date(),
+      creatorDiscordId: testAccountId("1230000000000"),
+      id: CompetitionIdSchema.parse(1),
     };
 
     const status = getCompetitionStatus(competition);
@@ -71,11 +112,24 @@ describe("Competition status checks", () => {
   });
 
   test("CANCELLED competition should be rejected", () => {
-    const competition = {
+    const competition: Competition = {
       isCancelled: true,
       startDate: new Date(Date.now() + 86400000),
       endDate: new Date(Date.now() + 2 * 86400000),
       seasonId: null,
+      visibility: "OPEN",
+      serverId: testGuildId("12345678900000000"),
+      ownerId: testAccountId("1230000000000"),
+      channelId: testChannelId("1230000000"),
+      title: "Test Competition",
+      description: "Test description",
+      criteriaType: "MOST_GAMES_PLAYED",
+      criteriaConfig: JSON.stringify({ queue: "SOLO" }),
+      maxParticipants: 10,
+      createdTime: new Date(),
+      updatedTime: new Date(),
+      creatorDiscordId: testAccountId("1230000000000"),
+      id: CompetitionIdSchema.parse(1),
     };
 
     const status = getCompetitionStatus(competition);

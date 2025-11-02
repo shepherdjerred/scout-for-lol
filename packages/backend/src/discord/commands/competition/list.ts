@@ -8,7 +8,12 @@ import {
   type MessageActionRowComponentBuilder,
   type ButtonInteraction,
 } from "discord.js";
-import { getCompetitionStatus } from "@scout-for-lol/data";
+import {
+  type DiscordAccountId,
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+  getCompetitionStatus,
+} from "@scout-for-lol/data";
 import { match } from "ts-pattern";
 import { prisma } from "../../../database/index.js";
 import { getCompetitionsByServer } from "../../../database/competition/queries.js";
@@ -33,7 +38,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
     return;
   }
 
-  const serverId = interaction.guildId;
+  const serverId = DiscordGuildIdSchema.parse(interaction.guildId);
 
   // ============================================================================
   // Step 2: Parse options
@@ -48,11 +53,11 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
 
   let competitions;
   try {
-    const options: { activeOnly?: boolean; ownerId?: string } = {
+    const options: { activeOnly?: boolean; ownerId?: DiscordAccountId } = {
       activeOnly: showActiveOnly,
     };
     if (showOwnOnly) {
-      options.ownerId = interaction.user.id;
+      options.ownerId = DiscordAccountIdSchema.parse(interaction.user.id);
     }
     competitions = await getCompetitionsByServer(prisma, serverId, options);
   } catch (error) {

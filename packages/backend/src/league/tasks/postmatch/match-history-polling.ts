@@ -8,6 +8,7 @@ import {
   getChannelsSubscribedToPlayers,
   getLastProcessedMatch,
   updateLastMatchTime,
+  updateLastCheckedAt,
 } from "../../../database/index.js";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
 import { mapRegionToEnum } from "../../model/region.js";
@@ -235,8 +236,8 @@ export async function checkMatchHistory(): Promise<void> {
     }
 
     // Filter to only players that should be checked this cycle
-    const playersToCheck = accountsWithState.filter(({ lastMatchTime }) =>
-      shouldCheckPlayer(lastMatchTime, currentTime),
+    const playersToCheck = accountsWithState.filter(({ lastMatchTime, lastCheckedAt }) =>
+      shouldCheckPlayer(lastMatchTime, lastCheckedAt, currentTime),
     );
 
     console.log(
@@ -251,36 +252,44 @@ export async function checkMatchHistory(): Promise<void> {
     // Fetch recent match IDs for each player
     const playersWithMatches: PlayerWithMatchIds[] = [];
 
-    for (const { config: player, lastMatchTime } of playersToCheck) {
+    for (const { config: player, lastMatchTime, lastCheckedAt } of playersToCheck) {
       const puuid = player.league.leagueAccount.puuid;
       const interval = calculatePollingInterval(lastMatchTime, currentTime);
 
       console.log(
-        `[${player.alias}] 🔍 Checking match history (interval: ${interval.toString()}min, last match: ${lastMatchTime?.toISOString() ?? "never"})`,
+        `[${player.alias}] 🔍 Checking match history (interval: ${interval.toString()}min, last match: ${lastMatchTime ? lastMatchTime.toISOString() : "never"}, last checked: ${lastCheckedAt ? lastCheckedAt.toISOString() : "never"})`,
       );
 
-      // Query the last processed match ID from the database
-      const lastProcessedMatchId = await getLastProcessedMatch(puuid);
+      try {
+        // Query the last processed match ID from the database
+        const lastProcessedMatchId = await getLastProcessedMatch(puuid);
 
-      const recentMatchIds = await getRecentMatchIds(player, 5);
+        const recentMatchIds = await getRecentMatchIds(player, 5);
 
-      if (!recentMatchIds || recentMatchIds.length === 0) {
-        console.log(`[${player.alias}] ℹ️  No recent matches found`);
-        continue;
+        // Update lastCheckedAt regardless of whether we found matches
+        await updateLastCheckedAt(puuid, currentTime);
+
+        if (!recentMatchIds || recentMatchIds.length === 0) {
+          console.log(`[${player.alias}] ℹ️  No recent matches found`);
+          continue;
+        }
+
+        // Filter to only new matches
+        const newMatchIds = filterNewMatches(recentMatchIds, lastProcessedMatchId);
+
+        if (newMatchIds.length === 0) {
+          console.log(`[${player.alias}] ✅ No new matches to process`);
+          continue;
+        }
+
+        console.log(
+          `[${player.alias}] 🆕 Found ${newMatchIds.length.toString()} new match(es): ${newMatchIds.join(", ")}`,
+        );
+        playersWithMatches.push({ player, matchIds: newMatchIds });
+      } catch (error) {
+        console.error(`[${player.alias}] ❌ Error checking match history:`, error);
+        // Continue with next player even if this one fails
       }
-
-      // Filter to only new matches
-      const newMatchIds = filterNewMatches(recentMatchIds, lastProcessedMatchId);
-
-      if (newMatchIds.length === 0) {
-        console.log(`[${player.alias}] ✅ No new matches to process`);
-        continue;
-      }
-
-      console.log(
-        `[${player.alias}] 🆕 Found ${newMatchIds.length.toString()} new match(es): ${newMatchIds.join(", ")}`,
-      );
-      playersWithMatches.push({ player, matchIds: newMatchIds });
     }
 
     if (playersWithMatches.length === 0) {

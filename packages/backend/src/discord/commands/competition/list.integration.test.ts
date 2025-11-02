@@ -4,19 +4,31 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { type DiscordAccountId, type DiscordChannelId, type DiscordGuildId } from "@scout-for-lol/data";
 import { createCompetition, getCompetitionsByServer } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 
+import { testGuildId, testAccountId, testChannelId } from "../../../testing/test-ids.js";
 // Create a test database for integration tests
 const testDir = mkdtempSync(join(tmpdir(), "competition-list-test-"));
 const testDbPath = join(testDir, "test.db");
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database once before all tests
-execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`, {
-  cwd: join(import.meta.dir, "../../../.."),
-  env: { ...process.env, DATABASE_URL: testDbUrl },
-});
+const schemaPath = join(import.meta.dir, "../../../..", "prisma/schema.prisma");
+execSync(
+  `bunx prisma db push --skip-generate --schema=${schemaPath}`,
+  {
+    cwd: join(import.meta.dir, "../../../.."),
+    env: {
+      ...process.env,
+      DATABASE_URL: testDbUrl,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "ignore",
+  },
+);
 
 const prisma = new PrismaClient({
   datasources: {
@@ -41,9 +53,9 @@ beforeEach(async () => {
 // ============================================================================
 
 function createTestCompetitionInput(
-  serverId: string,
-  ownerId: string,
-  channelId: string,
+  serverId: DiscordGuildId,
+  ownerId: DiscordAccountId,
+  channelId: DiscordChannelId,
   overrides?: Partial<CreateCompetitionInput>,
 ): CreateCompetitionInput {
   return {
@@ -72,10 +84,10 @@ function createTestCompetitionInput(
 // ============================================================================
 
 describe("Competition List Query", () => {
-  const serverId = "test-server-123";
-  const ownerId1 = "user-1";
-  const ownerId2 = "user-2";
-  const channelId = "channel-1";
+  const serverId = testGuildId("12300");
+  const ownerId1 = testAccountId("100000000010");
+  const ownerId2 = testAccountId("200000000020");
+  const channelId = testChannelId("1000000001");
 
   test("empty list when no competitions exist", async () => {
     const competitions = await getCompetitionsByServer(prisma, serverId);
@@ -100,7 +112,9 @@ describe("Competition List Query", () => {
     // Create competition in different server (should not appear)
     await createCompetition(
       prisma,
-      createTestCompetitionInput("other-server", ownerId1, channelId, { title: "Other Server Comp" }),
+      createTestCompetitionInput(testGuildId("00000"), ownerId1, channelId, {
+        title: "Other Server Comp",
+      }),
     );
 
     const competitions = await getCompetitionsByServer(prisma, serverId);

@@ -1,31 +1,24 @@
 import { PrismaClient } from "../../generated/prisma/client";
 import {
-  DiscordAccountIdSchema,
   type DiscordChannelId,
-  DiscordChannelIdSchema,
-  type LeagueAccount,
-  LeaguePuuidSchema,
   type LeaguePuuid,
   type PlayerConfig,
   type PlayerConfigEntry,
-  RegionSchema,
   MatchIdSchema,
   type MatchId,
 } from "@scout-for-lol/data";
 import { uniqueBy } from "remeda";
 
-/**
- * Player account with runtime state for polling
- */
-export type PlayerAccountWithState = {
-  config: PlayerConfigEntry;
-  lastMatchTime: Date | null;
-};
-
 console.log("🗄️  Initializing Prisma database client");
 export const prisma = new PrismaClient();
 
 console.log("✅ Database client initialized");
+
+export type PlayerAccountWithState = {
+  config: PlayerConfigEntry;
+  lastMatchTime: Date | undefined;
+  lastCheckedAt: Date | undefined;
+};
 
 export async function getChannelsSubscribedToPlayers(
   puuids: LeaguePuuid[],
@@ -58,8 +51,8 @@ export async function getChannelsSubscribedToPlayers(
 
     const result = uniqueBy(
       accounts.flatMap((account) =>
-        account.player.subscriptions.map((subscription) => ({
-          channel: DiscordChannelIdSchema.parse(subscription.channelId),
+        account.player.subscriptions.map((subscription): { channel: DiscordChannelId; serverId: string } => ({
+          channel: subscription.channelId,
           serverId: subscription.serverId,
         })),
       ),
@@ -95,10 +88,10 @@ export async function getAccounts(): Promise<PlayerConfig> {
         return {
           alias: player.alias,
           league: {
-            leagueAccount: mapToAccount(account),
+            leagueAccount: account,
           },
           discordAccount: {
-            id: DiscordAccountIdSchema.nullable().parse(player.discordId),
+            id: player.discordId ?? undefined,
           },
         };
       });
@@ -114,7 +107,7 @@ export async function getAccounts(): Promise<PlayerConfig> {
 
 /**
  * Get all player accounts with their runtime state for polling.
- * Includes lastMatchTime to determine polling intervals.
+ * Includes lastMatchTime and lastCheckedAt to determine polling intervals.
  *
  * @param prismaClient - Prisma client instance
  * @returns Array of player accounts with their polling state
@@ -141,13 +134,14 @@ export async function getAccountsWithState(prismaClient: PrismaClient = prisma):
           config: {
             alias: player.alias,
             league: {
-              leagueAccount: mapToAccount(account),
+              leagueAccount: account,
             },
             discordAccount: {
-              id: DiscordAccountIdSchema.nullable().parse(player.discordId),
+              id: player.discordId ?? undefined,
             },
           },
-          lastMatchTime: account.lastMatchTime,
+          lastMatchTime: account.lastMatchTime ?? undefined,
+          lastCheckedAt: account.lastCheckedAt ?? undefined,
         };
       });
     });
@@ -158,13 +152,6 @@ export async function getAccountsWithState(prismaClient: PrismaClient = prisma):
     console.error("❌ Error fetching player accounts with state:", error);
     throw error;
   }
-}
-
-function mapToAccount({ puuid, region }: { puuid: string; region: string }): LeagueAccount {
-  return {
-    puuid: LeaguePuuidSchema.parse(puuid),
-    region: RegionSchema.parse(region),
-  };
 }
 
 /**
@@ -256,6 +243,36 @@ export async function updateLastMatchTime(
     });
   } catch (error) {
     console.error("❌ Error updating lastMatchTime:", error);
+    throw error;
+  }
+}
+
+/**
+ * Update the lastCheckedAt timestamp for an account.
+ * This is called after we check for new matches to track when we last polled.
+ *
+ * @param puuid - Player PUUID to update
+ * @param checkedAt - The timestamp when we checked for matches
+ * @param prismaClient - Prisma client instance
+ */
+export async function updateLastCheckedAt(
+  puuid: LeaguePuuid,
+  checkedAt: Date,
+  prismaClient: PrismaClient = prisma,
+): Promise<void> {
+  console.log(`📝 Updating lastCheckedAt for ${puuid} to ${checkedAt.toISOString()}`);
+
+  try {
+    await prismaClient.account.updateMany({
+      where: {
+        puuid,
+      },
+      data: {
+        lastCheckedAt: checkedAt,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error updating lastCheckedAt:", error);
     throw error;
   }
 }

@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
 import { PrismaClient } from "../../../generated/prisma/client";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../testing/test-ids.js";
 
 // Create test database in temp directory
 const tempDir = fs.mkdtempSync(path.join("/tmp", "subscribe-test-"));
@@ -10,11 +11,19 @@ const testDbPath = path.join(tempDir, "test.db");
 const testDatabaseUrl = `file:${testDbPath}`;
 
 // Push schema to test database
-execSync("bunx prisma db push --skip-generate", {
-  env: { ...process.env, DATABASE_URL: testDatabaseUrl },
-  cwd: process.cwd(),
-  stdio: "inherit",
-});
+const schemaPath = path.join(import.meta.dir, "../../..", "prisma/schema.prisma");
+execSync(
+  `bunx prisma db push --skip-generate --schema=${schemaPath}`,
+  {
+    env: {
+      ...process.env,
+      DATABASE_URL: testDatabaseUrl,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "inherit",
+  },
+);
 
 // Test Prisma client with isolated database
 const testPrisma = new PrismaClient({
@@ -35,16 +44,16 @@ beforeEach(async () => {
 describe("Subscribe Command - Multi-Account Support", () => {
   test("creates new player and account for first subscription", async () => {
     const now = new Date();
-    const serverId = "test-server-1";
+    const serverId = testGuildId("000001");
     const alias = "TestPlayer";
-    const discordUserId = "user-1";
+    const discordUserId = testAccountId("100000000010");
 
     // First subscription - should create both player and account
     const account = await testPrisma.account.create({
       data: {
         alias: alias,
-        puuid: "puuid-1",
-        region: "NA1",
+        puuid: testPuuid("1"),
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -80,22 +89,22 @@ describe("Subscribe Command - Multi-Account Support", () => {
 
     // Verify account was created with correct player link
     expect(account.playerId).toBe(account.player.id);
-    expect(account.puuid).toBe("puuid-1");
-    expect(account.region).toBe("NA1");
+    expect(account.puuid).toBe(testPuuid("1"));
+    expect(account.region).toBe("AMERICA_NORTH");
   });
 
   test("adds second account to existing player with same alias", async () => {
     const now = new Date();
-    const serverId = "test-server-2";
+    const serverId = testGuildId("000002");
     const alias = "MultiAccountPlayer";
-    const discordUserId = "user-2";
+    const discordUserId = testAccountId("200000000020");
 
     // First account - creates player
     const firstAccount = await testPrisma.account.create({
       data: {
         alias: alias,
-        puuid: "puuid-na1",
-        region: "NA1",
+        puuid: testPuuid("na1"),
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -130,8 +139,8 @@ describe("Subscribe Command - Multi-Account Support", () => {
     const secondAccount = await testPrisma.account.create({
       data: {
         alias: alias, // Same alias!
-        puuid: "puuid-euw",
-        region: "EUW1",
+        puuid: testPuuid("euw"),
+        region: "EU_WEST",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -166,10 +175,10 @@ describe("Subscribe Command - Multi-Account Support", () => {
     expect(firstAccount.player.id).toBe(secondAccount.player.id);
 
     // Verify accounts have different PUUIDs and regions
-    expect(firstAccount.puuid).toBe("puuid-na1");
-    expect(secondAccount.puuid).toBe("puuid-euw");
-    expect(firstAccount.region).toBe("NA1");
-    expect(secondAccount.region).toBe("EUW1");
+    expect(firstAccount.puuid).toBe(testPuuid("na1"));
+    expect(secondAccount.puuid).toBe(testPuuid("euw"));
+    expect(firstAccount.region).toBe("AMERICA_NORTH");
+    expect(secondAccount.region).toBe("EU_WEST");
 
     // Verify player has both accounts
     const playerWithAccounts = await testPrisma.player.findUnique({
@@ -178,22 +187,22 @@ describe("Subscribe Command - Multi-Account Support", () => {
     });
 
     expect(playerWithAccounts?.accounts).toHaveLength(2);
-    expect(playerWithAccounts?.accounts.map((a) => a.puuid).sort()).toEqual(["puuid-euw", "puuid-na1"]);
+    expect(playerWithAccounts?.accounts.map((a) => a.puuid).sort()).toEqual([testPuuid("euw"), testPuuid("na1")]);
   });
 
   test("prevents duplicate accounts with same PUUID in same server", async () => {
     const now = new Date();
-    const serverId = "test-server-3";
+    const serverId = testGuildId("30000");
     const alias = "DuplicateTest";
-    const puuid = "same-puuid";
-    const discordUserId = "user-3";
+    const puuid = testPuuid("same-puuid");
+    const discordUserId = testAccountId("300000000030");
 
     // First account
     await testPrisma.account.create({
       data: {
         alias: alias,
         puuid: puuid,
-        region: "NA1",
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -226,7 +235,7 @@ describe("Subscribe Command - Multi-Account Support", () => {
         data: {
           alias: alias,
           puuid: puuid, // Same PUUID!
-          region: "NA1",
+          region: "AMERICA_NORTH",
           serverId: serverId, // Same server!
           creatorDiscordId: discordUserId,
           player: {
@@ -262,22 +271,22 @@ describe("Subscribe Command - Multi-Account Support", () => {
   test("allows same PUUID in different servers", async () => {
     const now = new Date();
     const alias = "CrossServerPlayer";
-    const puuid = "cross-server-puuid";
-    const discordUserId = "user-4";
+    const puuid = testPuuid("cross-server-puuid");
+    const discordUserId = testAccountId("400000000040");
 
     // Account in server 1
     const account1 = await testPrisma.account.create({
       data: {
         alias: alias,
         puuid: puuid,
-        region: "NA1",
-        serverId: "server-1",
+        region: "AMERICA_NORTH",
+        serverId: testGuildId("1000000001"),
         creatorDiscordId: discordUserId,
         player: {
           connectOrCreate: {
             where: {
               serverId_alias: {
-                serverId: "server-1",
+                serverId: "server-1000000001",
                 alias: alias,
               },
             },
@@ -287,7 +296,7 @@ describe("Subscribe Command - Multi-Account Support", () => {
               createdTime: now,
               updatedTime: now,
               creatorDiscordId: discordUserId,
-              serverId: "server-1",
+              serverId: testGuildId("1000000001"),
             },
           },
         },
@@ -301,14 +310,14 @@ describe("Subscribe Command - Multi-Account Support", () => {
       data: {
         alias: alias,
         puuid: puuid, // Same PUUID!
-        region: "NA1",
-        serverId: "server-2", // Different server!
+        region: "AMERICA_NORTH",
+        serverId: testGuildId("2000000002"), // Different server!
         creatorDiscordId: discordUserId,
         player: {
           connectOrCreate: {
             where: {
               serverId_alias: {
-                serverId: "server-2",
+                serverId: "server-2000000002",
                 alias: alias,
               },
             },
@@ -318,7 +327,7 @@ describe("Subscribe Command - Multi-Account Support", () => {
               createdTime: now,
               updatedTime: now,
               creatorDiscordId: discordUserId,
-              serverId: "server-2",
+              serverId: testGuildId("2000000002"),
             },
           },
         },
@@ -335,17 +344,17 @@ describe("Subscribe Command - Multi-Account Support", () => {
 
   test("subscription links to correct player when multiple accounts exist", async () => {
     const now = new Date();
-    const serverId = "test-server-4";
+    const serverId = testGuildId("40000");
     const alias = "SubscriptionTest";
-    const channelId = "channel-test";
-    const discordUserId = "user-5";
+    const channelId = testChannelId("00000");
+    const discordUserId = testAccountId("500000000050");
 
     // Create player with two accounts
     const account1 = await testPrisma.account.create({
       data: {
         alias: alias,
-        puuid: "puuid-1",
-        region: "NA1",
+        puuid: testPuuid("1"),
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -367,8 +376,8 @@ describe("Subscribe Command - Multi-Account Support", () => {
     await testPrisma.account.create({
       data: {
         alias: alias,
-        puuid: "puuid-2",
-        region: "EUW1",
+        puuid: testPuuid("2"),
+        region: "EU_WEST",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         playerId: account1.player.id, // Link to existing player
@@ -417,15 +426,15 @@ describe("Subscribe Command - Multi-Account Support", () => {
 
   test("different aliases create different players even for same Discord user", async () => {
     const now = new Date();
-    const serverId = "test-server-5";
-    const discordUserId = "user-6";
+    const serverId = testGuildId("50000");
+    const discordUserId = testAccountId("600000000060");
 
     // Create player with alias "MainAccount"
     const account1 = await testPrisma.account.create({
       data: {
         alias: "MainAccount",
-        puuid: "puuid-main",
-        region: "NA1",
+        puuid: testPuuid("main"),
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -448,8 +457,8 @@ describe("Subscribe Command - Multi-Account Support", () => {
     const account2 = await testPrisma.account.create({
       data: {
         alias: "SmurfAccount",
-        puuid: "puuid-smurf",
-        region: "NA1",
+        puuid: testPuuid("smurf"),
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -480,17 +489,17 @@ describe("Subscribe Command - Multi-Account Support", () => {
 
   test("detects when account (PUUID) already exists in server", async () => {
     const now = new Date();
-    const serverId = "test-server-6";
+    const serverId = testGuildId("60000");
     const alias = "ExistingPlayer";
-    const puuid = "duplicate-check-puuid";
-    const discordUserId = "user-7";
+    const puuid = testPuuid("duplicate-check-puuid");
+    const discordUserId = testAccountId("700000000000");
 
     // Create an account
     const existingAccount = await testPrisma.account.create({
       data: {
         alias: alias,
         puuid: puuid,
-        region: "NA1",
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -530,17 +539,17 @@ describe("Subscribe Command - Multi-Account Support", () => {
 
   test("detects when subscription already exists for player in channel", async () => {
     const now = new Date();
-    const serverId = "test-server-7";
+    const serverId = testGuildId("70000");
     const alias = "SubscribedPlayer";
-    const channelId = "channel-duplicate-check";
-    const discordUserId = "user-8";
+    const channelId = testChannelId("1001");
+    const discordUserId = testAccountId("800000000000");
 
     // Create player with account and subscription
     const account = await testPrisma.account.create({
       data: {
         alias: alias,
-        puuid: "puuid-subscribed",
-        region: "NA1",
+        puuid: testPuuid("subscribed"),
+        region: "AMERICA_NORTH",
         serverId: serverId,
         creatorDiscordId: discordUserId,
         player: {
@@ -588,7 +597,7 @@ describe("Subscribe Command - Multi-Account Support", () => {
     expect(foundSubscription?.playerId).toBe(account.player.id);
 
     // Verify we can subscribe the same player to a DIFFERENT channel
-    const differentChannel = "channel-different";
+    const differentChannel = testChannelId("1002");
     const secondSubscription = await testPrisma.subscription.create({
       data: {
         channelId: differentChannel,

@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
+
 import {
+  ChampionIdSchema,
   type GamesPlayedSnapshotData,
   GamesPlayedSnapshotDataSchema,
   getSnapshotSchemaForCriteria,
@@ -23,14 +25,14 @@ describe("Snapshot Data Validation", () => {
     expect(schema).toBe(RankSnapshotDataSchema);
 
     const mockRankData: RankSnapshotData = {
-      soloRank: {
+      solo: {
         tier: "gold",
         division: 2,
         lp: 45,
         wins: 50,
         losses: 40,
       },
-      flexRank: {
+      flex: {
         tier: "silver",
         division: 1,
         lp: 80,
@@ -48,7 +50,7 @@ describe("Snapshot Data Validation", () => {
 
   test("should validate rank snapshot data with only solo rank", () => {
     const mockRankData: RankSnapshotData = {
-      soloRank: {
+      solo: {
         tier: "platinum",
         division: 3,
         lp: 20,
@@ -60,8 +62,8 @@ describe("Snapshot Data Validation", () => {
     const result = RankSnapshotDataSchema.safeParse(mockRankData);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.soloRank).toBeDefined();
-      expect(result.data.flexRank).toBeUndefined();
+      expect(result.data.solo).toBeDefined();
+      expect(result.data.flex).toBeUndefined();
     }
   });
 
@@ -71,8 +73,8 @@ describe("Snapshot Data Validation", () => {
     const result = RankSnapshotDataSchema.safeParse(mockRankData);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.soloRank).toBeUndefined();
-      expect(result.data.flexRank).toBeUndefined();
+      expect(result.data.solo).toBeUndefined();
+      expect(result.data.flex).toBeUndefined();
     }
   });
 
@@ -102,15 +104,18 @@ describe("Snapshot Data Validation", () => {
   test("should validate games played snapshot with only some queues", () => {
     const mockGamesData: GamesPlayedSnapshotData = {
       soloGames: 100,
+      flexGames: 0,
+      arenaGames: 0,
+      aramGames: 0,
     };
 
     const result = GamesPlayedSnapshotDataSchema.safeParse(mockGamesData);
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.soloGames).toBe(100);
-      expect(result.data.flexGames).toBeUndefined();
-      expect(result.data.arenaGames).toBeUndefined();
-      expect(result.data.aramGames).toBeUndefined();
+      expect(result.data.flexGames).toBe(0);
+      expect(result.data.arenaGames).toBe(0);
+      expect(result.data.aramGames).toBe(0);
     }
   });
 
@@ -150,14 +155,14 @@ describe("Snapshot Data Validation", () => {
     const mockWinsData: WinsSnapshotData = {
       wins: 25,
       games: 40,
-      championId: 157, // Yasuo
+      championId: ChampionIdSchema.parse(157), // Yasuo
       queue: "SOLO",
     };
 
     const result = WinsSnapshotDataSchema.safeParse(mockWinsData);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.championId).toBe(157);
+      expect(result.data.championId).toBe(ChampionIdSchema.parse(157));
     }
   });
 
@@ -165,6 +170,8 @@ describe("Snapshot Data Validation", () => {
     const mockWinsData: WinsSnapshotData = {
       wins: 0,
       games: 0,
+      // championId is optional, omit it since 0 is not a valid champion ID
+      queue: "SOLO",
     };
 
     const result = WinsSnapshotDataSchema.safeParse(mockWinsData);
@@ -172,6 +179,7 @@ describe("Snapshot Data Validation", () => {
     if (result.success) {
       expect(result.data.wins).toBe(0);
       expect(result.data.games).toBe(0);
+      expect(result.data.championId).toBeUndefined();
     }
   });
 
@@ -212,7 +220,9 @@ describe("Snapshot Data Validation", () => {
     expect(getSnapshotSchemaForCriteria({ type: "MOST_WINS_PLAYER", queue: "RANKED_ANY" })).toBe(
       WinsSnapshotDataSchema,
     );
-    expect(getSnapshotSchemaForCriteria({ type: "MOST_WINS_CHAMPION", championId: 157 })).toBe(WinsSnapshotDataSchema);
+    expect(getSnapshotSchemaForCriteria({ type: "MOST_WINS_CHAMPION", championId: ChampionIdSchema.parse(157) })).toBe(
+      WinsSnapshotDataSchema,
+    );
     expect(getSnapshotSchemaForCriteria({ type: "HIGHEST_WIN_RATE", queue: "SOLO", minGames: 10 })).toBe(
       WinsSnapshotDataSchema,
     );

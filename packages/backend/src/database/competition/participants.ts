@@ -1,6 +1,13 @@
-import { type ParticipantStatus, ParticipantStatusSchema } from "@scout-for-lol/data";
+import {
+  type CompetitionId,
+  type DiscordAccountId,
+  type ParticipantStatus,
+  ParticipantStatusSchema,
+  type PlayerId,
+} from "@scout-for-lol/data";
 import { type CompetitionParticipant, type PrismaClient } from "../../../generated/prisma/client/index.js";
 import { isCompetitionActive } from "./validation.js";
+import { match } from "ts-pattern";
 
 // ============================================================================
 // Add Participant
@@ -19,10 +26,10 @@ import { isCompetitionActive } from "./validation.js";
  */
 export async function addParticipant(
   prisma: PrismaClient,
-  competitionId: number,
-  playerId: number,
+  competitionId: CompetitionId,
+  playerId: PlayerId,
   status: ParticipantStatus,
-  invitedBy?: string,
+  invitedBy?: DiscordAccountId,
 ): Promise<CompetitionParticipant> {
   const now = new Date();
 
@@ -204,7 +211,7 @@ export async function removeParticipant(
  */
 export async function getParticipants(
   prisma: PrismaClient,
-  competitionId: number,
+  competitionId: CompetitionId,
   statusFilter?: ParticipantStatus,
   includePlayer = false,
 ): Promise<CompetitionParticipant[]> {
@@ -277,8 +284,8 @@ export async function getParticipantStatus(
  */
 export async function canJoinCompetition(
   prisma: PrismaClient,
-  competitionId: number,
-  playerId: number,
+  competitionId: CompetitionId,
+  playerId: PlayerId,
 ): Promise<{ canJoin: boolean; reason?: string }> {
   // Check if competition exists
   // Use getCompetitionById to ensure dates are populated from seasonId
@@ -312,15 +319,11 @@ export async function canJoinCompetition(
   });
 
   if (existingParticipant) {
-    if (existingParticipant.status === "JOINED") {
-      return { canJoin: false, reason: "Already joined" };
-    }
-    if (existingParticipant.status === "INVITED") {
-      return { canJoin: false, reason: "Already invited (use accept instead)" };
-    }
-    if (existingParticipant.status === "LEFT") {
-      return { canJoin: false, reason: "Cannot rejoin after leaving" };
-    }
+    return match(existingParticipant.status)
+      .with("JOINED", () => ({ canJoin: false, reason: "Already joined" }))
+      .with("INVITED", () => ({ canJoin: false, reason: "Already invited (use accept instead)" }))
+      .with("LEFT", () => ({ canJoin: false, reason: "Cannot rejoin after leaving" }))
+      .exhaustive();
   }
 
   // Check participant limit

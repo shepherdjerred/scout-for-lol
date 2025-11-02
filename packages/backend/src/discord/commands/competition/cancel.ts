@@ -1,4 +1,5 @@
 import { type ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits } from "discord.js";
+import { CompetitionIdSchema, DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { cancelCompetition, getCompetitionById } from "../../../database/competition/queries.js";
 import { getErrorMessage } from "../../../utils/errors.js";
@@ -13,8 +14,8 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   // Step 1: Extract and validate input
   // ============================================================================
 
-  const competitionId = interaction.options.getInteger("competition-id", true);
-  const userId = interaction.user.id;
+  const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
 
   // ============================================================================
   // Step 2: Check if competition exists

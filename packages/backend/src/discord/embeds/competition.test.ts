@@ -1,8 +1,14 @@
 import { describe, expect, it } from "bun:test";
-import type { CompetitionWithCriteria } from "@scout-for-lol/data";
+import {
+  ChampionIdSchema,
+  CompetitionIdSchema,
+  PlayerIdSchema,
+  type CompetitionWithCriteria,
+} from "@scout-for-lol/data";
 import type { RankedLeaderboardEntry } from "../../league/competition/leaderboard.js";
 import { generateLeaderboardEmbed, generateCompetitionDetailsEmbed, formatScore } from "./competition.js";
 
+import { testGuildId, testAccountId, testChannelId } from "../../testing/test-ids.js";
 // ============================================================================
 // Test Data Factories
 // ============================================================================
@@ -12,19 +18,19 @@ import { generateLeaderboardEmbed, generateCompetitionDetailsEmbed, formatScore 
  */
 function createTestCompetition(overrides: Partial<CompetitionWithCriteria> = {}): CompetitionWithCriteria {
   return {
-    id: 1,
-    serverId: "test-server-123",
-    ownerId: "owner-discord-id-123",
+    id: CompetitionIdSchema.parse(1),
+    serverId: testGuildId("12300"),
+    ownerId: testAccountId("123"),
     title: "Test Competition",
     description: "A test competition for unit tests",
-    channelId: "test-channel-456",
+    channelId: testChannelId("4560"),
     isCancelled: false,
     visibility: "OPEN",
     maxParticipants: 50,
     startDate: new Date("2025-01-01T00:00:00Z"),
     endDate: new Date("2025-01-31T23:59:59Z"),
     seasonId: null,
-    creatorDiscordId: "creator-discord-id-789",
+    creatorDiscordId: testAccountId("789"),
     createdTime: new Date("2024-12-01T00:00:00Z"),
     updatedTime: new Date("2024-12-01T00:00:00Z"),
     criteria: {
@@ -45,7 +51,7 @@ function createTestLeaderboardEntry(
   metadata?: Record<string, unknown>,
 ): RankedLeaderboardEntry {
   const entry: RankedLeaderboardEntry = {
-    playerId: rank,
+    playerId: PlayerIdSchema.parse(rank),
     playerName,
     score,
     rank,
@@ -215,11 +221,14 @@ describe("generateLeaderboardEmbed", () => {
 
 describe("generateCompetitionDetailsEmbed", () => {
   it("should include all basic competition metadata", () => {
+    const ownerId = testAccountId("12300000123");
+    const channelId = testChannelId("456000000");
+
     const competition = createTestCompetition({
       title: "Test Competition",
       description: "Test description",
-      ownerId: "owner-123",
-      channelId: "channel-456",
+      ownerId,
+      channelId,
       maxParticipants: 25,
     });
 
@@ -230,10 +239,10 @@ describe("generateCompetitionDetailsEmbed", () => {
     expect(embedData.description).toBe("Test description");
 
     const ownerField = embedData.fields?.find((f) => f.name === "Owner");
-    expect(ownerField?.value).toBe("<@owner-123>");
+    expect(ownerField?.value).toBe(`<@${ownerId}>`);
 
     const channelField = embedData.fields?.find((f) => f.name === "Channel");
-    expect(channelField?.value).toBe("<#channel-456>");
+    expect(channelField?.value).toBe(`<#${channelId}>`);
 
     const maxField = embedData.fields?.find((f) => f.name === "Max Participants");
     expect(maxField?.value).toBe("25");
@@ -294,7 +303,7 @@ describe("generateCompetitionDetailsEmbed", () => {
   });
 
   it("should include competition ID in footer", () => {
-    const competition = createTestCompetition({ id: 42 });
+    const competition = createTestCompetition({ id: CompetitionIdSchema.parse(42) });
 
     const embed = generateCompetitionDetailsEmbed(competition);
     const embedData = embed.toJSON();
@@ -358,7 +367,7 @@ describe("formatScore", () => {
   it("should format wins for MOST_WINS_CHAMPION with record", () => {
     const criteria = {
       type: "MOST_WINS_CHAMPION" as const,
-      championId: 157,
+      championId: ChampionIdSchema.parse(157),
       queue: undefined,
     };
 

@@ -12,7 +12,7 @@ export function processMostGamesPlayed(
   participants: PlayerWithAccounts[],
   criteria: MostGamesPlayedCriteria,
 ): LeaderboardEntry[] {
-  const gameCounts = new Map<number, number>();
+  const gameCounts: Record<number, number> = {};
 
   // Count games for each player
   for (const match of matches) {
@@ -21,8 +21,8 @@ export function processMostGamesPlayed(
 
     for (const participant of participants) {
       if (isPlayerInMatch(participant, match)) {
-        const currentCount = gameCounts.get(participant.id) ?? 0;
-        gameCounts.set(participant.id, currentCount + 1);
+        const currentCount = gameCounts[participant.id] ?? 0;
+        gameCounts[participant.id] = currentCount + 1;
       }
     }
   }
@@ -30,7 +30,7 @@ export function processMostGamesPlayed(
   // Convert to leaderboard entries
   const entries: LeaderboardEntry[] = [];
   for (const participant of participants) {
-    const count = gameCounts.get(participant.id) ?? 0;
+    const count = gameCounts[participant.id] ?? 0;
     entries.push({
       playerId: participant.id,
       playerName: participant.alias,

@@ -7,7 +7,17 @@ import { join } from "node:path";
 import { createCompetition, getCompetitionById } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 import { addParticipant } from "../../../database/competition/participants.js";
-import { getCompetitionStatus } from "@scout-for-lol/data";
+import { testGuildId, testAccountId, testChannelId } from "../../../testing/test-ids.js";
+import {
+  ChampionIdSchema,
+  getCompetitionStatus,
+  type ChampionId,
+  type CompetitionId,
+  type DiscordAccountId,
+  type DiscordChannelId,
+  type DiscordGuildId,
+  type PlayerId,
+} from "@scout-for-lol/data";
 
 // Create a test database for integration tests
 const testDir = mkdtempSync(join(tmpdir(), "competition-view-test-"));
@@ -15,10 +25,20 @@ const testDbPath = join(testDir, "test.db");
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database once before all tests
-execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`, {
-  cwd: join(import.meta.dir, "../../../.."),
-  env: { ...process.env, DATABASE_URL: testDbUrl },
-});
+const schemaPath = join(import.meta.dir, "../../../..", "prisma/schema.prisma");
+execSync(
+  `bunx prisma db push --skip-generate --schema=${schemaPath}`,
+  {
+    cwd: join(import.meta.dir, "../../../.."),
+    env: {
+      ...process.env,
+      DATABASE_URL: testDbUrl,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "ignore",
+  },
+);
 
 const prisma = new PrismaClient({
   datasources: {
@@ -42,7 +62,11 @@ beforeEach(async () => {
 // Test Helpers
 // ============================================================================
 
-async function createTestPlayer(serverId: string, discordId: string, alias: string): Promise<{ playerId: number }> {
+async function createTestPlayer(
+  serverId: DiscordGuildId,
+  discordId: DiscordAccountId,
+  alias: string,
+): Promise<{ playerId: PlayerId }> {
   const now = new Date();
   const player = await prisma.player.create({
     data: {
@@ -59,8 +83,8 @@ async function createTestPlayer(serverId: string, discordId: string, alias: stri
 }
 
 async function createTestCompetition(
-  serverId: string,
-  ownerId: string,
+  serverId: DiscordGuildId,
+  ownerId: DiscordAccountId,
   options?: {
     visibility?: "OPEN" | "INVITE_ONLY" | "SERVER_WIDE";
     maxParticipants?: number;
@@ -70,9 +94,9 @@ async function createTestCompetition(
     title?: string;
     description?: string;
     criteriaType?: "MOST_GAMES_PLAYED" | "HIGHEST_RANK" | "MOST_WINS_CHAMPION";
-    championId?: number;
+    championId?: ChampionId;
   },
-): Promise<{ competitionId: number; channelId: string }> {
+): Promise<{ competitionId: CompetitionId; channelId: DiscordChannelId }> {
   const now = new Date();
   const tomorrow = new Date(now);
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -91,7 +115,7 @@ async function createTestCompetition(
   const input: CreateCompetitionInput = {
     serverId,
     ownerId,
-    channelId: "123456789012345678",
+    channelId: testChannelId("123456789012345678"),
     title: options?.title ?? "Test Competition",
     description: options?.description ?? "A test competition",
     visibility: options?.visibility ?? "OPEN",
@@ -123,8 +147,8 @@ async function createTestCompetition(
 
 describe("Competition View - DRAFT Status", () => {
   test("should show details for DRAFT competition with no participants", async () => {
-    const serverId = "server-1";
-    const ownerId = "owner-1";
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
@@ -145,13 +169,13 @@ describe("Competition View - DRAFT Status", () => {
   });
 
   test("should show participant list for DRAFT competition with participants", async () => {
-    const serverId = "server-1";
-    const ownerId = "owner-1";
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId);
-    const { playerId: player1Id } = await createTestPlayer(serverId, "user-1", "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, "user-2", "Player2");
-    const { playerId: player3Id } = await createTestPlayer(serverId, "user-3", "Player3");
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
+    const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
+    const { playerId: player3Id } = await createTestPlayer(serverId, testAccountId("300000000030"), "Player3");
 
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
     await addParticipant(prisma, competitionId, player2Id, "JOINED");
@@ -175,8 +199,8 @@ describe("Competition View - DRAFT Status", () => {
   });
 
   test("should indicate leaderboard not available for DRAFT competition", async () => {
-    const serverId = "server-1";
-    const ownerId = "owner-1";
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
@@ -201,8 +225,8 @@ describe("Competition View - DRAFT Status", () => {
 
 describe("Competition View - ACTIVE Status", () => {
   test("should show details for ACTIVE competition", async () => {
-    const serverId = "server-1";
-    const ownerId = "owner-1";
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const now = new Date();
     const yesterday = new Date(now);
@@ -227,8 +251,8 @@ describe("Competition View - ACTIVE Status", () => {
   });
 
   test("should handle ACTIVE competition with participants", async () => {
-    const serverId = "server-1";
-    const ownerId = "owner-1";
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const now = new Date();
     const yesterday = new Date(now);
@@ -242,8 +266,8 @@ describe("Competition View - ACTIVE Status", () => {
     });
 
     // Add participants
-    const { playerId: player1Id } = await createTestPlayer(serverId, "user-1", "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, "user-2", "Player2");
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
+    const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
     await addParticipant(prisma, competitionId, player2Id, "JOINED");
 
@@ -267,8 +291,8 @@ describe("Competition View - ACTIVE Status", () => {
 
 describe("Competition View - ENDED Status", () => {
   test("should show details for ENDED competition", async () => {
-    const serverId = "server-1";
-    const ownerId = "owner-1";
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const now = new Date();
     const lastWeek = new Date(now);
@@ -293,8 +317,8 @@ describe("Competition View - ENDED Status", () => {
   });
 
   test("should show final standings for ENDED competition", async () => {
-    const serverId = "server-1";
-    const ownerId = "owner-1";
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const now = new Date();
     const twoWeeksAgo = new Date(now);
@@ -309,8 +333,8 @@ describe("Competition View - ENDED Status", () => {
     });
 
     // Add participants while competition is active
-    const { playerId: player1Id } = await createTestPlayer(serverId, "user-1", "Player1");
-    const { playerId: player2Id } = await createTestPlayer(serverId, "user-2", "Player2");
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
+    const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
     await addParticipant(prisma, competitionId, player1Id, "JOINED");
     await addParticipant(prisma, competitionId, player2Id, "JOINED");
 
@@ -348,8 +372,8 @@ describe("Competition View - ENDED Status", () => {
 
 describe("Competition View - CANCELLED Status", () => {
   test("should show details for CANCELLED competition", async () => {
-    const serverId = "server-1";
-    const ownerId = "owner-1";
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       isCancelled: true,
@@ -376,7 +400,7 @@ describe("Competition View - CANCELLED Status", () => {
 describe("Competition View - Error Cases", () => {
   test("should return null for non-existent competition", async () => {
     const competition = await getCompetitionById(prisma, 999999);
-    expect(competition).toBeNull();
+    expect(competition).toBeUndefined();
   });
 });
 
@@ -386,8 +410,8 @@ describe("Competition View - Error Cases", () => {
 
 describe("Competition View - Different Criteria Types", () => {
   test("should show MOST_GAMES_PLAYED criteria", async () => {
-    const serverId = "server-1";
-    const ownerId = "owner-1";
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       criteriaType: "MOST_GAMES_PLAYED",
@@ -404,8 +428,8 @@ describe("Competition View - Different Criteria Types", () => {
   });
 
   test("should show HIGHEST_RANK criteria", async () => {
-    const serverId = "server-1";
-    const ownerId = "owner-1";
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       criteriaType: "HIGHEST_RANK",
@@ -422,9 +446,9 @@ describe("Competition View - Different Criteria Types", () => {
   });
 
   test("should show MOST_WINS_CHAMPION criteria with champion ID", async () => {
-    const serverId = "server-1";
-    const ownerId = "owner-1";
-    const championId = 157; // Yasuo
+    const serverId = testGuildId("1000000001");
+    const ownerId = testAccountId("10000000100");
+    const championId = ChampionIdSchema.parse(157); // Yasuo
 
     const { competitionId } = await createTestCompetition(serverId, ownerId, {
       criteriaType: "MOST_WINS_CHAMPION",
@@ -440,7 +464,7 @@ describe("Competition View - Different Criteria Types", () => {
 
     expect(competition.criteria.type).toBe("MOST_WINS_CHAMPION");
     if (competition.criteria.type === "MOST_WINS_CHAMPION") {
-      expect(competition.criteria.championId).toBe(championId);
+      expect(competition.criteria.championId).toBe(ChampionIdSchema.parse(championId));
     }
   });
 });

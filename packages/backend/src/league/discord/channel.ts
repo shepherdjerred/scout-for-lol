@@ -11,6 +11,7 @@ import {
 import { discordPermissionErrorsTotal } from "../../metrics/index";
 import { prisma } from "../../database/index";
 import { recordPermissionError, recordSuccessfulSend } from "../../database/guild-permission-errors";
+import type { DiscordChannelId, DiscordGuildId } from "@scout-for-lol/data";
 
 /**
  * Custom error class for channel send failures
@@ -49,8 +50,8 @@ const ChannelSendErrorSchema = z.instanceof(ChannelSendError);
  */
 export async function send(
   options: string | MessagePayload | MessageCreateOptions,
-  channelId: string,
-  serverId?: string,
+  channelId: DiscordChannelId,
+  serverId?: DiscordGuildId,
 ): Promise<Message> {
   try {
     // Fetch the channel

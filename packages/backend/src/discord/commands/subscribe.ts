@@ -9,6 +9,7 @@ import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
+  LeaguePuuidSchema,
   RegionSchema,
   RiotIdSchema,
   toReadableRegion,
@@ -71,7 +72,7 @@ export const ArgsSchema = z.object({
 
 export async function executeSubscribe(interaction: ChatInputCommandInteraction) {
   const startTime = Date.now();
-  const userId = interaction.user.id;
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
   console.log(`🔔 Starting subscription process for user ${username} (${userId})`);
@@ -253,10 +254,10 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
     const account = await prisma.account.create({
       data: {
         alias: alias,
-        puuid: puuid,
+        puuid: LeaguePuuidSchema.parse(puuid),
         region: region,
         serverId: guildId,
-        creatorDiscordId: interaction.user.id,
+        creatorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
         player: {
           connectOrCreate: {
             where: {
@@ -270,7 +271,7 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
               discordId: user ?? null,
               createdTime: now,
               updatedTime: now,
-              creatorDiscordId: interaction.user.id,
+              creatorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
               serverId: guildId,
             },
           },
@@ -348,7 +349,7 @@ export async function executeSubscribe(interaction: ChatInputCommandInteraction)
         playerId: playerAccount.player.id,
         createdTime: now,
         updatedTime: now,
-        creatorDiscordId: interaction.user.id,
+        creatorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
         serverId: guildId,
       },
     });

@@ -12,8 +12,8 @@ export function processMostWinsPlayer(
   participants: PlayerWithAccounts[],
   criteria: MostWinsPlayerCriteria,
 ): LeaderboardEntry[] {
-  const winCounts = new Map<number, number>();
-  const totalGames = new Map<number, number>();
+  const winCounts: Record<number, number> = {};
+  const totalGames: Record<number, number> = {};
 
   // Count wins for each player
   for (const match of matches) {
@@ -23,13 +23,13 @@ export function processMostWinsPlayer(
     for (const participant of participants) {
       const participantData = getPlayerParticipant(participant, match);
       if (participantData) {
-        const currentWins = winCounts.get(participant.id) ?? 0;
-        const currentGames = totalGames.get(participant.id) ?? 0;
+        const currentWins = winCounts[participant.id] ?? 0;
+        const currentGames = totalGames[participant.id] ?? 0;
 
         if (isWin(participantData)) {
-          winCounts.set(participant.id, currentWins + 1);
+          winCounts[participant.id] = currentWins + 1;
         }
-        totalGames.set(participant.id, currentGames + 1);
+        totalGames[participant.id] = currentGames + 1;
       }
     }
   }
@@ -37,8 +37,8 @@ export function processMostWinsPlayer(
   // Convert to leaderboard entries
   const entries: LeaderboardEntry[] = [];
   for (const participant of participants) {
-    const wins = winCounts.get(participant.id) ?? 0;
-    const games = totalGames.get(participant.id) ?? 0;
+    const wins = winCounts[participant.id] ?? 0;
+    const games = totalGames[participant.id] ?? 0;
 
     entries.push({
       playerId: participant.id,

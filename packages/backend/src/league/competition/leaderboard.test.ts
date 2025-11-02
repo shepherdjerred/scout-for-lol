@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
-import type { Rank } from "@scout-for-lol/data";
+import { PlayerIdSchema, type PlayerId, type Rank } from "@scout-for-lol/data";
 import type { LeaderboardEntry } from "./processors/types.js";
 
 // Import the internal functions for testing by re-exporting them
@@ -13,7 +13,7 @@ import type { LeaderboardEntry } from "./processors/types.js";
 /**
  * Create a mock leaderboard entry with numeric score
  */
-function createEntry(playerId: number, score: number): LeaderboardEntry {
+function createEntry(playerId: PlayerId, score: number): LeaderboardEntry {
   return {
     playerId,
     playerName: `Player${playerId.toString()}`,
@@ -24,7 +24,7 @@ function createEntry(playerId: number, score: number): LeaderboardEntry {
 /**
  * Create a mock leaderboard entry with Rank score
  */
-function createRankEntry(playerId: number, rank: Rank): LeaderboardEntry {
+function createRankEntry(playerId: PlayerId, rank: Rank): LeaderboardEntry {
   return {
     playerId,
     playerName: `Player${playerId.toString()}`,
@@ -114,7 +114,11 @@ function scoresAreEqual(a: number | Rank, b: number | Rank): boolean {
 describe("Leaderboard Ranking Logic", () => {
   describe("assignRanks - numeric scores", () => {
     test("should assign ranks correctly with no ties", () => {
-      const entries = [createEntry(1, 100), createEntry(2, 80), createEntry(3, 60)];
+      const entries = [
+        createEntry(PlayerIdSchema.parse(1), 100),
+        createEntry(PlayerIdSchema.parse(2), 80),
+        createEntry(PlayerIdSchema.parse(3), 60),
+      ];
 
       const ranked = assignRanks(entries);
 
@@ -125,7 +129,12 @@ describe("Leaderboard Ranking Logic", () => {
     });
 
     test("should handle ties correctly (same rank, skip next)", () => {
-      const entries = [createEntry(1, 100), createEntry(2, 80), createEntry(3, 80), createEntry(4, 60)];
+      const entries = [
+        createEntry(PlayerIdSchema.parse(1), 100),
+        createEntry(PlayerIdSchema.parse(2), 80),
+        createEntry(PlayerIdSchema.parse(3), 80),
+        createEntry(PlayerIdSchema.parse(4), 60),
+      ];
 
       const ranked = assignRanks(entries);
 
@@ -138,11 +147,11 @@ describe("Leaderboard Ranking Logic", () => {
 
     test("should handle three-way ties", () => {
       const entries = [
-        createEntry(1, 100),
-        createEntry(2, 50),
-        createEntry(3, 50),
-        createEntry(4, 50),
-        createEntry(5, 20),
+        createEntry(PlayerIdSchema.parse(1), 100),
+        createEntry(PlayerIdSchema.parse(2), 50),
+        createEntry(PlayerIdSchema.parse(3), 50),
+        createEntry(PlayerIdSchema.parse(4), 50),
+        createEntry(PlayerIdSchema.parse(5), 20),
       ];
 
       const ranked = assignRanks(entries);
@@ -156,7 +165,11 @@ describe("Leaderboard Ranking Logic", () => {
     });
 
     test("should handle all entries having same score", () => {
-      const entries = [createEntry(1, 100), createEntry(2, 100), createEntry(3, 100)];
+      const entries = [
+        createEntry(PlayerIdSchema.parse(1), 100),
+        createEntry(PlayerIdSchema.parse(2), 100),
+        createEntry(PlayerIdSchema.parse(3), 100),
+      ];
 
       const ranked = assignRanks(entries);
 
@@ -175,7 +188,7 @@ describe("Leaderboard Ranking Logic", () => {
     });
 
     test("should handle single entry", () => {
-      const entries = [createEntry(1, 100)];
+      const entries = [createEntry(PlayerIdSchema.parse(1), 100)];
 
       const ranked = assignRanks(entries);
 
@@ -187,9 +200,9 @@ describe("Leaderboard Ranking Logic", () => {
   describe("assignRanks - Rank scores", () => {
     test("should assign ranks correctly with no ties (different tiers)", () => {
       const entries = [
-        createRankEntry(1, { tier: "diamond", division: 2, lp: 50, wins: 100, losses: 50 }),
-        createRankEntry(2, { tier: "platinum", division: 1, lp: 75, wins: 80, losses: 60 }),
-        createRankEntry(3, { tier: "gold", division: 3, lp: 20, wins: 50, losses: 50 }),
+        createRankEntry(PlayerIdSchema.parse(1), { tier: "diamond", division: 2, lp: 50, wins: 100, losses: 50 }),
+        createRankEntry(PlayerIdSchema.parse(2), { tier: "platinum", division: 1, lp: 75, wins: 80, losses: 60 }),
+        createRankEntry(PlayerIdSchema.parse(3), { tier: "gold", division: 3, lp: 20, wins: 50, losses: 50 }),
       ];
 
       const ranked = assignRanks(entries);
@@ -204,10 +217,10 @@ describe("Leaderboard Ranking Logic", () => {
       const sameRank: Rank = { tier: "gold", division: 2, lp: 50, wins: 50, losses: 50 };
 
       const entries = [
-        createRankEntry(1, { tier: "diamond", division: 4, lp: 0, wins: 100, losses: 50 }),
-        createRankEntry(2, sameRank),
-        createRankEntry(3, sameRank),
-        createRankEntry(4, { tier: "silver", division: 1, lp: 90, wins: 30, losses: 30 }),
+        createRankEntry(PlayerIdSchema.parse(1), { tier: "diamond", division: 4, lp: 0, wins: 100, losses: 50 }),
+        createRankEntry(PlayerIdSchema.parse(2), sameRank),
+        createRankEntry(PlayerIdSchema.parse(3), sameRank),
+        createRankEntry(PlayerIdSchema.parse(4), { tier: "silver", division: 1, lp: 90, wins: 30, losses: 30 }),
       ];
 
       const ranked = assignRanks(entries);
@@ -221,9 +234,9 @@ describe("Leaderboard Ranking Logic", () => {
 
     test("should differentiate between same tier but different divisions", () => {
       const entries = [
-        createRankEntry(1, { tier: "gold", division: 1, lp: 0, wins: 50, losses: 50 }),
-        createRankEntry(2, { tier: "gold", division: 2, lp: 0, wins: 50, losses: 50 }),
-        createRankEntry(3, { tier: "gold", division: 3, lp: 0, wins: 50, losses: 50 }),
+        createRankEntry(PlayerIdSchema.parse(1), { tier: "gold", division: 1, lp: 0, wins: 50, losses: 50 }),
+        createRankEntry(PlayerIdSchema.parse(2), { tier: "gold", division: 2, lp: 0, wins: 50, losses: 50 }),
+        createRankEntry(PlayerIdSchema.parse(3), { tier: "gold", division: 3, lp: 0, wins: 50, losses: 50 }),
       ];
 
       const ranked = assignRanks(entries);
@@ -236,9 +249,9 @@ describe("Leaderboard Ranking Logic", () => {
 
     test("should differentiate between same tier/division but different LP", () => {
       const entries = [
-        createRankEntry(1, { tier: "gold", division: 2, lp: 90, wins: 50, losses: 50 }),
-        createRankEntry(2, { tier: "gold", division: 2, lp: 50, wins: 50, losses: 50 }),
-        createRankEntry(3, { tier: "gold", division: 2, lp: 10, wins: 50, losses: 50 }),
+        createRankEntry(PlayerIdSchema.parse(1), { tier: "gold", division: 2, lp: 90, wins: 50, losses: 50 }),
+        createRankEntry(PlayerIdSchema.parse(2), { tier: "gold", division: 2, lp: 50, wins: 50, losses: 50 }),
+        createRankEntry(PlayerIdSchema.parse(3), { tier: "gold", division: 2, lp: 10, wins: 50, losses: 50 }),
       ];
 
       const ranked = assignRanks(entries);

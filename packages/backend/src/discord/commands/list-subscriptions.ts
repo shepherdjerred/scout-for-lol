@@ -1,24 +1,21 @@
 import { type CommandInteraction, SlashCommandBuilder } from "discord.js";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "../../database/index";
-import { z } from "zod";
-import { fromError } from "zod-validation-error";
 
 export const listSubscriptionsCommand = new SlashCommandBuilder()
   .setName("listsubscriptions")
   .setDescription("Lists all users that the server is subscribed to");
 
 export async function executeListSubscriptions(interaction: CommandInteraction) {
-  let guildId: string;
-  try {
-    guildId = z.string().parse(interaction.guildId);
-  } catch (error) {
-    const validationError = fromError(error);
+  if (!interaction.guildId) {
     await interaction.reply({
-      content: `This command can only be used in a server (${validationError.toString()})`,
+      content: `This command can only be used in a server`,
       ephemeral: true,
     });
     return;
   }
+
+  const guildId = DiscordGuildIdSchema.parse(interaction.guildId);
 
   const subscriptions = await prisma.subscription.findMany({
     where: { serverId: guildId },

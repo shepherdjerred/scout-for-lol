@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { generateMatchReview } from "../generator.ts";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data";
 
+import { testAccountId, testPuuid } from "../../../testing/test-ids.js";
 describe("generateMatchReview", () => {
   describe("regular matches", () => {
     test("generates review for a solo queue victory", () => {
@@ -13,10 +14,10 @@ describe("generateMatchReview", () => {
           {
             playerConfig: {
               alias: "TestPlayer",
-              discord: { discordUserId: "123" },
+              discord: { discordUserId: testAccountId("12300000000000000") },
               league: {
                 leagueAccount: {
-                  puuid: "test-puuid" as unknown,
+                  puuid: testPuuid("test-puuid") as unknown,
                   region: "AMERICA_NORTH",
                   gameName: "TestPlayer",
                   tagLine: "NA1",
@@ -75,10 +76,10 @@ describe("generateMatchReview", () => {
           {
             playerConfig: {
               alias: "Player2",
-              discord: { discordUserId: "456" },
+              discord: { discordUserId: testAccountId("45600000000000000") },
               league: {
                 leagueAccount: {
-                  puuid: "test-puuid-2" as unknown,
+                  puuid: testPuuid("test-puuid-2") as unknown,
                   region: "AMERICA_NORTH",
                   gameName: "Player2",
                   tagLine: "NA1",
@@ -130,10 +131,10 @@ describe("generateMatchReview", () => {
           {
             playerConfig: {
               alias: "ArenaPlayer",
-              discord: { discordUserId: "789" },
+              discord: { discordUserId: testAccountId("78900000000000000") },
               league: {
                 leagueAccount: {
-                  puuid: "arena-puuid" as unknown,
+                  puuid: testPuuid("arena-puuid") as unknown,
                   region: "AMERICA_NORTH",
                   gameName: "ArenaPlayer",
                   tagLine: "NA1",
@@ -195,10 +196,10 @@ describe("generateMatchReview", () => {
           {
             playerConfig: {
               alias: "ArenaPlayer2",
-              discord: { discordUserId: "890" },
+              discord: { discordUserId: testAccountId("89000000000000000") },
               league: {
                 leagueAccount: {
-                  puuid: "arena-puuid-2" as unknown,
+                  puuid: testPuuid("arena-puuid-2") as unknown,
                   region: "AMERICA_NORTH",
                   gameName: "ArenaPlayer2",
                   tagLine: "NA1",

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { CompetitionCreationSchema, CompetitionDatesSchema, isCompetitionActive } from "./validation.js";
 
+import { testGuildId, testAccountId, testChannelId } from "../../testing/test-ids.js";
 // ============================================================================
 // isCompetitionActive
 // ============================================================================
@@ -265,9 +266,9 @@ describe("CompetitionDatesSchema - duration limit", () => {
 
 describe("CompetitionCreationSchema - Discord ID validation", () => {
   const validInput = {
-    serverId: "123456789012345678",
-    ownerId: "987654321098765432",
-    channelId: "111111111111111111",
+    serverId: testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
+    channelId: testChannelId("111111111111111111"),
     title: "Test Competition",
     description: "Test description",
     visibility: "OPEN" as const,
@@ -285,7 +286,7 @@ describe("CompetitionCreationSchema - Discord ID validation", () => {
   test("rejects invalid serverId (too short)", () => {
     const result = CompetitionCreationSchema.safeParse({
       ...validInput,
-      serverId: "1234",
+      serverId: "1234000000000000", // 16 chars - actually too short
     });
     expect(result.success).toBe(false);
   });
@@ -293,7 +294,7 @@ describe("CompetitionCreationSchema - Discord ID validation", () => {
   test("rejects invalid ownerId (contains letters)", () => {
     const result = CompetitionCreationSchema.safeParse({
       ...validInput,
-      ownerId: "abc123456789012345",
+      ownerId: "123456789012abc456", // Contains letters - invalid
     });
     expect(result.success).toBe(false);
   });
@@ -301,7 +302,7 @@ describe("CompetitionCreationSchema - Discord ID validation", () => {
   test("rejects invalid channelId (too long)", () => {
     const result = CompetitionCreationSchema.safeParse({
       ...validInput,
-      channelId: "12345678901234567890",
+      channelId: "123456789012345678901", // 21 chars - actually too long
     });
     expect(result.success).toBe(false);
   });
@@ -309,9 +310,9 @@ describe("CompetitionCreationSchema - Discord ID validation", () => {
 
 describe("CompetitionCreationSchema - title validation", () => {
   const validInput = {
-    serverId: "123456789012345678",
-    ownerId: "987654321098765432",
-    channelId: "111111111111111111",
+    serverId: testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
+    channelId: testChannelId("111111111111111111"),
     title: "Test Competition",
     description: "Test description",
     visibility: "OPEN" as const,
@@ -370,9 +371,9 @@ describe("CompetitionCreationSchema - title validation", () => {
 
 describe("CompetitionCreationSchema - description validation", () => {
   const validInput = {
-    serverId: "123456789012345678",
-    ownerId: "987654321098765432",
-    channelId: "111111111111111111",
+    serverId: testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
+    channelId: testChannelId("111111111111111111"),
     title: "Test Competition",
     description: "Test description",
     visibility: "OPEN" as const,
@@ -428,9 +429,9 @@ describe("CompetitionCreationSchema - description validation", () => {
 
 describe("CompetitionCreationSchema - visibility validation", () => {
   const validInput = {
-    serverId: "123456789012345678",
-    ownerId: "987654321098765432",
-    channelId: "111111111111111111",
+    serverId: testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
+    channelId: testChannelId("111111111111111111"),
     title: "Test Competition",
     description: "Test description",
     visibility: "OPEN" as const,
@@ -472,9 +473,9 @@ describe("CompetitionCreationSchema - visibility validation", () => {
 
 describe("CompetitionCreationSchema - maxParticipants validation", () => {
   const validInput = {
-    serverId: "123456789012345678",
-    ownerId: "987654321098765432",
-    channelId: "111111111111111111",
+    serverId: testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
+    channelId: testChannelId("111111111111111111"),
     title: "Test Competition",
     description: "Test description",
     visibility: "OPEN" as const,
@@ -546,9 +547,9 @@ describe("CompetitionCreationSchema - maxParticipants validation", () => {
 
 describe("CompetitionCreationSchema - criteria validation", () => {
   const validInput = {
-    serverId: "123456789012345678",
-    ownerId: "987654321098765432",
-    channelId: "111111111111111111",
+    serverId: testGuildId("123456789012345678"),
+    ownerId: testAccountId("987654321098765432"),
+    channelId: testChannelId("111111111111111111"),
     title: "Test Competition",
     description: "Test description",
     visibility: "OPEN" as const,

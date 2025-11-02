@@ -2,6 +2,8 @@ import { describe, it, expect } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { groupArenaTeams, getArenaTeammate, toArenaSubteams } from "../match.js";
 
+import { testPuuid } from "../../../testing/test-ids.js";
+
 function makeParticipant(extra: Record<string, unknown> = {}): MatchV5DTOs.ParticipantDto {
   return {
     puuid: crypto.randomUUID(),
@@ -60,11 +62,11 @@ describe("arena team grouping and teammate lookup", () => {
   });
 
   it("getArenaTeammate returns the other participant in the same subteam", () => {
-    const a = makeParticipant({ puuid: "A", playerSubteamId: 3 });
-    const b = makeParticipant({ puuid: "B", playerSubteamId: 3 });
-    const c = makeParticipant({ puuid: "C", playerSubteamId: 4 });
+    const a = makeParticipant({ puuid: testPuuid("A"), playerSubteamId: 3 });
+    const b = makeParticipant({ puuid: testPuuid("B"), playerSubteamId: 3 });
+    const c = makeParticipant({ puuid: testPuuid("C"), playerSubteamId: 4 });
     const teammate = getArenaTeammate(a, [a, b, c]);
-    expect(teammate?.puuid).toBe("B");
+    expect(teammate?.puuid).toBe(testPuuid("B"));
   });
 
   it("throws on invalid subteam ids or wrong sizes", () => {

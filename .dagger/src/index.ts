@@ -1,7 +1,15 @@
+/* eslint-disable max-lines */
 import { func, argument, Directory, object, Secret, Container } from "@dagger.io/dagger";
-import { checkBackend, buildBackendImage, publishBackendImage, smokeTestBackendImage } from "./backend";
-import { checkReport } from "./report";
-import { checkData } from "./data";
+import {
+  checkBackend,
+  buildBackendImage,
+  publishBackendImage,
+  smokeTestBackendImage,
+  getBackendCoverage,
+  getBackendTestReport,
+} from "./backend";
+import { checkReport, getReportCoverage, getReportTestReport } from "./report";
+import { checkData, getDataCoverage, getDataTestReport } from "./data";
 import { getGitHubContainer, getBunNodeContainer } from "./base";
 
 // Helper function to log with timestamp
@@ -441,5 +449,107 @@ export class ScoutForLol {
 
     logWithTimestamp("✅ Data check completed successfully");
     return "Data check completed successfully";
+  }
+
+  /**
+   * Get backend test coverage
+   * @param source The workspace source directory
+   * @returns The coverage directory
+   */
+  @func()
+  backendCoverage(
+    @argument({
+      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Directory {
+    logWithTimestamp("📊 Exporting backend test coverage");
+    return getBackendCoverage(source);
+  }
+
+  /**
+   * Get backend test report (junit.xml)
+   * @param source The workspace source directory
+   * @returns The directory containing junit.xml
+   */
+  @func()
+  backendTestReport(
+    @argument({
+      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Directory {
+    logWithTimestamp("📋 Exporting backend test report");
+    return getBackendTestReport(source);
+  }
+
+  /**
+   * Get data package test coverage
+   * @param source The workspace source directory
+   * @returns The coverage directory
+   */
+  @func()
+  dataCoverage(
+    @argument({
+      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Directory {
+    logWithTimestamp("📊 Exporting data package test coverage");
+    return getDataCoverage(source);
+  }
+
+  /**
+   * Get data package test report (junit.xml)
+   * @param source The workspace source directory
+   * @returns The directory containing junit.xml
+   */
+  @func()
+  dataTestReport(
+    @argument({
+      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Directory {
+    logWithTimestamp("📋 Exporting data package test report");
+    return getDataTestReport(source);
+  }
+
+  /**
+   * Get report package test coverage
+   * @param source The workspace source directory
+   * @returns The coverage directory
+   */
+  @func()
+  reportCoverage(
+    @argument({
+      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Directory {
+    logWithTimestamp("📊 Exporting report package test coverage");
+    return getReportCoverage(source);
+  }
+
+  /**
+   * Get report package test report (junit.xml)
+   * @param source The workspace source directory
+   * @returns The directory containing junit.xml
+   */
+  @func()
+  reportTestReport(
+    @argument({
+      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Directory {
+    logWithTimestamp("📋 Exporting report package test report");
+    return getReportTestReport(source);
   }
 }

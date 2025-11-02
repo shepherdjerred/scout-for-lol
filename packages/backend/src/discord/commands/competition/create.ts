@@ -1,11 +1,15 @@
-import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { type ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
 import {
-  type CompetitionCriteria,
+  ChampionIdSchema,
   CompetitionQueueTypeSchema,
   CompetitionVisibilitySchema,
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
   SeasonIdSchema,
   hasSeasonEnded,
+  type CompetitionCriteria,
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import { prisma } from "../../../database/index.js";
@@ -15,6 +19,8 @@ import { recordCreation } from "../../../database/competition/rate-limit.js";
 import { validateOwnerLimit, validateServerLimit } from "../../../database/competition/validation.js";
 import { getErrorMessage } from "../../../utils/errors.js";
 import { getChampionId } from "../../../utils/champion.js";
+import { addParticipant } from "../../../database/competition/participants.js";
+import { formatCriteriaType, getStatusEmoji, formatDateInfo } from "./helpers.js";
 
 // ============================================================================
 // Input Parsing Schema - Discriminated Unions
@@ -26,11 +32,12 @@ import { getChampionId } from "../../../utils/champion.js";
 const CommonArgsSchema = z.object({
   title: z.string().min(1).max(100),
   description: z.string().min(1).max(500),
-  channelId: z.string(),
-  guildId: z.string(),
-  userId: z.string(),
+  channelId: DiscordChannelIdSchema,
+  guildId: DiscordGuildIdSchema,
+  userId: DiscordAccountIdSchema,
   visibility: CompetitionVisibilitySchema.optional(),
   maxParticipants: z.number().int().min(2).max(100).optional(),
+  addAllMembers: z.boolean().optional(),
 });
 
 /**
@@ -145,7 +152,7 @@ type CreateCommandArgs = z.infer<typeof CreateCommandArgsSchema>;
  */
 export async function executeCompetitionCreate(interaction: ChatInputCommandInteraction): Promise<void> {
   const startTime = Date.now();
-  const userId = interaction.user.id;
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
   const guildId = interaction.guildId;
 
@@ -192,6 +199,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
       minGames: interaction.options.getInteger("min-games") ?? undefined,
       visibility: interaction.options.getString("visibility") ?? undefined,
       maxParticipants: interaction.options.getInteger("max-participants") ?? undefined,
+      addAllMembers: interaction.options.getBoolean("add-all-members") ?? undefined,
     });
 
     console.log(`✅ Command arguments validated successfully`);
@@ -210,6 +218,8 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
   // Step 2: Permission and rate limit checks
   // ============================================================================
 
+  let isAdmin = false;
+
   try {
     // Get member to check permissions
     const member = await interaction.guild?.members.fetch(userId);
@@ -217,7 +227,20 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
       throw new Error("Could not fetch member from guild");
     }
 
-    const permissionCheck = await canCreateCompetition(prisma, args.guildId, userId, member.permissions);
+    // Check if user is an admin
+    isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
+
+    // If addAllMembers is true, require admin permission
+    if (args.addAllMembers && !isAdmin) {
+      console.warn(`⚠️  Non-admin ${username} attempted to use add-all-members option`);
+      await interaction.reply({
+        content: `**Permission denied:**\nThe \`add-all-members\` option requires Administrator permission.`,
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    const permissionCheck = await canCreateCompetition(prisma, args.guildId, args.userId, member.permissions);
 
     if (!permissionCheck.allowed) {
       console.warn(`⚠️  Permission denied for ${username}: ${permissionCheck.reason ?? "unknown reason"}`);
@@ -268,7 +291,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
 
     criteria = {
       type: "MOST_WINS_CHAMPION",
-      championId,
+      championId: ChampionIdSchema.parse(championId),
       queue: args.queue,
     };
   } else {
@@ -312,25 +335,15 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
       };
     }
 
-    // Extract common fields using Zod schema (no type assertions!)
-    const CommonFieldsExtractSchema = z.object({
-      guildId: z.string(),
-      channelId: z.string(),
-      title: z.string(),
-      description: z.string(),
-      visibility: CompetitionVisibilitySchema.optional(),
-      maxParticipants: z.number().int().optional(),
-    });
-    const validatedCommon = CommonFieldsExtractSchema.parse(args);
-
+    // args is already validated and has branded types from CommonArgsSchema
     competitionInput = {
-      serverId: validatedCommon.guildId,
-      ownerId: userId,
-      channelId: validatedCommon.channelId,
-      title: validatedCommon.title,
-      description: validatedCommon.description,
-      visibility: validatedCommon.visibility ?? "OPEN",
-      maxParticipants: validatedCommon.maxParticipants ?? 50,
+      serverId: args.guildId,
+      ownerId: args.userId,
+      channelId: args.channelId,
+      title: args.title,
+      description: args.description,
+      visibility: args.visibility ?? "OPEN",
+      maxParticipants: args.maxParticipants ?? 50,
       dates,
       criteria,
     };
@@ -350,12 +363,11 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
   // ============================================================================
 
   try {
-    // Extract serverId using Zod schema (no type assertions!)
-    const ServerIdSchema = z.object({ guildId: z.string() });
-    const { guildId: serverId } = ServerIdSchema.parse(args);
+    // args.guildId and args.userId are already branded from the schema
+    const serverId = args.guildId;
 
     // Check owner limit (1 active competition per owner)
-    await validateOwnerLimit(prisma, serverId, userId);
+    await validateOwnerLimit(prisma, serverId, args.userId);
 
     // Check server limit (2 active competitions per server)
     await validateServerLimit(prisma, serverId);
@@ -385,29 +397,63 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     // Record creation for rate limiting
     recordCreation(args.guildId, userId);
 
+    // ============================================================================
+    // Step 7: Add all server members if requested (admin only)
+    // ============================================================================
+
+    let addedMembersCount = 0;
+    if (args.addAllMembers) {
+      console.log(`🔄 Adding all server members to competition ${competition.id.toString()}...`);
+      const addMembersStartTime = Date.now();
+
+      try {
+        // Fetch all players in this server
+        const players = await prisma.player.findMany({
+          where: {
+            serverId: args.guildId,
+          },
+          select: {
+            id: true,
+            alias: true,
+            discordId: true,
+          },
+        });
+
+        console.log(`📊 Found ${players.length.toString()} players in server ${args.guildId}`);
+
+        // Add each player as a participant
+        const addResults = await Promise.allSettled(
+          players.map((player) => addParticipant(prisma, competition.id, player.id, "JOINED")),
+        );
+
+        // Count successful additions
+        addedMembersCount = addResults.filter((result) => result.status === "fulfilled").length;
+
+        const failedCount = addResults.filter((result) => result.status === "rejected").length;
+
+        const addMembersTime = Date.now() - addMembersStartTime;
+        console.log(
+          `✅ Added ${addedMembersCount.toString()}/${players.length.toString()} players to competition (${failedCount.toString()} failed) in ${addMembersTime.toString()}ms`,
+        );
+      } catch (error) {
+        console.error(`❌ Error adding all members to competition:`, error);
+        // Don't fail the entire operation - competition was created successfully
+        // We'll just mention the error in the response
+      }
+    }
+
     const totalTime = Date.now() - startTime;
     console.log(`🎉 Competition creation completed successfully in ${totalTime.toString()}ms`);
 
     // ============================================================================
-    // Step 7: Send success response
+    // Step 8: Send success response
     // ============================================================================
 
-    // Determine status emoji based on dates
-    const statusEmoji =
-      competition.startDate && competition.endDate
-        ? new Date() < competition.startDate
-          ? "🔵" // Draft - hasn't started yet
-          : "🟢" // Active - has started
-        : "🟢"; // Season-based - active
+    const statusEmoji = getStatusEmoji(competition.startDate, competition.endDate);
+    const dateInfo = formatDateInfo(competition.startDate, competition.endDate, competition.seasonId);
 
-    // Format date information
-    const dateInfo =
-      competition.startDate && competition.endDate
-        ? `**Starts:** <t:${Math.floor(competition.startDate.getTime() / 1000).toString()}:F>\n**Ends:** <t:${Math.floor(competition.endDate.getTime() / 1000).toString()}:F>`
-        : `**Season:** ${competition.seasonId ?? "Unknown"}`;
-
-    await interaction.reply({
-      content: `✅ **Competition Created!**
+    // Build success message
+    let successMessage = `✅ **Competition Created!**
 
 ${statusEmoji} **${competition.title}**
 ${competition.description}
@@ -415,12 +461,21 @@ ${competition.description}
 **ID:** ${competition.id.toString()}
 **Type:** ${formatCriteriaType(competition.criteria.type)}
 **Visibility:** ${competition.visibility}
-**Max Participants:** ${competition.maxParticipants.toString()}
+**Max Participants:** ${competition.maxParticipants.toString()}`;
 
-${dateInfo}
+    if (args.addAllMembers && addedMembersCount > 0) {
+      successMessage += `\n**Members Added:** ${addedMembersCount.toString()} server members automatically joined`;
+    }
 
-Users can join with:
-\`/competition join competition-id:${competition.id.toString()}\``,
+    successMessage += `\n\n${dateInfo}`;
+
+    if (!args.addAllMembers) {
+      successMessage += `\n\nUsers can join with:
+\`/competition join competition-id:${competition.id.toString()}\``;
+    }
+
+    await interaction.reply({
+      content: successMessage,
       flags: MessageFlags.Ephemeral,
     });
   } catch (error) {
@@ -429,31 +484,5 @@ Users can join with:
       content: `**Error creating competition:**\n${getErrorMessage(error)}`,
       flags: MessageFlags.Ephemeral,
     });
-  }
-}
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Format criteria type to human-readable string
- */
-function formatCriteriaType(type: string): string {
-  switch (type) {
-    case "MOST_GAMES_PLAYED":
-      return "Most Games Played";
-    case "HIGHEST_RANK":
-      return "Highest Rank";
-    case "MOST_RANK_CLIMB":
-      return "Most Rank Climb";
-    case "MOST_WINS_PLAYER":
-      return "Most Wins";
-    case "MOST_WINS_CHAMPION":
-      return "Most Wins (Champion)";
-    case "HIGHEST_WIN_RATE":
-      return "Highest Win Rate";
-    default:
-      return type;
   }
 }

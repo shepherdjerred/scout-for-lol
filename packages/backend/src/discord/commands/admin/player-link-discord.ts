@@ -13,7 +13,7 @@ const ArgsSchema = z.object({
 
 export async function executePlayerLinkDiscord(interaction: ChatInputCommandInteraction) {
   const startTime = Date.now();
-  const userId = interaction.user.id;
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
   console.log(`🔗 Starting Discord link for user ${username} (${userId})`);

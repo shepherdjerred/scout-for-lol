@@ -1,4 +1,5 @@
 import { type Client, MessageFlags } from "discord.js";
+import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { executeSubscribe } from "./subscribe";
 import { executeUnsubscribe } from "./unsubscribe";
 import { executeListSubscriptions } from "./list-subscriptions";
@@ -24,7 +25,7 @@ import {
   executePlayerUnlinkDiscord,
   executePlayerInfo,
 } from "./admin/index.js";
-import { executeDebugState, executeDebugDatabase } from "./debug.js";
+import { executeDebugState, executeDebugDatabase, executeDebugPolling } from "./debug.js";
 import { executeServerInfo } from "./server-info.js";
 import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
 import { searchChampions } from "../../utils/champion.js";
@@ -69,7 +70,7 @@ export function handleCommands(client: Client) {
 
       const startTime = Date.now();
       const commandName = interaction.commandName;
-      const userId = interaction.user.id;
+      const userId = DiscordAccountIdSchema.parse(interaction.user.id);
       const username = interaction.user.username;
       const guildId = interaction.guildId;
       const channelId = interaction.channelId;
@@ -162,6 +163,8 @@ export function handleCommands(client: Client) {
             await executeDebugState(interaction);
           } else if (subcommandName === "database") {
             await executeDebugDatabase(interaction);
+          } else if (subcommandName === "polling") {
+            await executeDebugPolling(interaction);
           } else {
             console.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
             await interaction.reply({

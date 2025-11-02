@@ -8,16 +8,34 @@ import { createCompetition } from "../../../database/competition/queries.js";
 import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
 import { addParticipant, getParticipantStatus, removeParticipant } from "../../../database/competition/participants.js";
 
+import { testGuildId, testAccountId, testChannelId } from "../../../testing/test-ids.js";
 // Create a test database for integration tests
 const testDir = mkdtempSync(join(tmpdir(), "competition-leave-test-"));
 const testDbPath = join(testDir, "test.db");
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database once before all tests
-execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`, {
-  cwd: join(import.meta.dir, "../../../.."),
-  env: { ...process.env, DATABASE_URL: testDbUrl },
-});
+const schemaPath = join(import.meta.dir, "../../../..", "prisma/schema.prisma");
+execSync(
+  `bunx prisma db push --skip-generate --schema=${schemaPath}`,
+  {
+    cwd: join(import.meta.dir, "../../../.."),
+    env: {
+      ...process.env,
+      DATABASE_URL: testDbUrl,
+      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+    },
+    stdio: "ignore",
+  },
+);
+import {
+  type DiscordAccountId,
+  type DiscordGuildId,
+  type PlayerId,
+  type CompetitionId,
+  type DiscordChannelId,
+} from "@scout-for-lol/data";
 
 const prisma = new PrismaClient({
   datasources: {
@@ -41,7 +59,11 @@ beforeEach(async () => {
 // Test Helpers
 // ============================================================================
 
-async function createTestPlayer(serverId: string, discordId: string, alias: string): Promise<{ playerId: number }> {
+async function createTestPlayer(
+  serverId: DiscordGuildId,
+  discordId: DiscordAccountId,
+  alias: string,
+): Promise<{ playerId: PlayerId }> {
   const now = new Date();
   const player = await prisma.player.create({
     data: {
@@ -58,8 +80,8 @@ async function createTestPlayer(serverId: string, discordId: string, alias: stri
 }
 
 async function createTestCompetition(
-  serverId: string,
-  ownerId: string,
+  serverId: DiscordGuildId,
+  ownerId: DiscordAccountId,
   options?: {
     visibility?: "OPEN" | "INVITE_ONLY" | "SERVER_WIDE";
     maxParticipants?: number;
@@ -67,7 +89,7 @@ async function createTestCompetition(
     startDate?: Date;
     endDate?: Date;
   },
-): Promise<{ competitionId: number; channelId: string }> {
+): Promise<{ competitionId: CompetitionId; channelId: DiscordChannelId }> {
   const now = new Date();
   const tomorrow = new Date(now);
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -77,7 +99,7 @@ async function createTestCompetition(
   const input: CreateCompetitionInput = {
     serverId,
     ownerId,
-    channelId: "123456789012345678",
+    channelId: testChannelId("123456789012345678"),
     title: "Test Competition",
     description: "A test competition",
     visibility: options?.visibility ?? "OPEN",
@@ -111,10 +133,10 @@ async function createTestCompetition(
 // ============================================================================
 
 describe("Competition Leave - Integration Tests", () => {
-  const serverId = "test-server-123";
-  const ownerId = "owner-user-123";
-  const user1Id = "user-1";
-  const user2Id = "user-2";
+  const serverId = testGuildId("12300");
+  const ownerId = testAccountId("123000");
+  const user1Id = testAccountId("100000000010");
+  const user2Id = testAccountId("200000000020");
 
   // ==========================================================================
   // Test 1: Leave joined competition
@@ -122,7 +144,7 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User can leave a competition they joined", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(serverId, user1Id, "Player1");
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
 
     // Join competition
@@ -151,7 +173,7 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User can leave a competition they were invited to (decline invitation)", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(serverId, user1Id, "Player1");
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
 
     // Add as invited
@@ -181,7 +203,7 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User cannot leave a competition they are not part of", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(serverId, user1Id, "Player1");
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // User is not a participant
@@ -198,7 +220,7 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User cannot leave a competition they already left", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(serverId, user1Id, "Player1");
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // Join and then leave
@@ -221,7 +243,7 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User cannot rejoin a competition after leaving", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(serverId, user1Id, "Player1");
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // Join, leave, then try to rejoin
@@ -282,7 +304,7 @@ describe("Competition Leave - Integration Tests", () => {
 
   test("User can leave a cancelled competition", async () => {
     // Arrange
-    const { playerId: player1Id } = await createTestPlayer(serverId, user1Id, "Player1");
+    const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
 
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
