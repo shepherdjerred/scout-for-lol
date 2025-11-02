@@ -1,6 +1,6 @@
 # Terms of Service
 
-Last updated: September 26, 2025
+**Last updated: November 1, 2025**
 
 Thank you for using Scout for League of Legends! This Discord bot is designed to help you track and analyze your League of Legends gameplay. Since this is a free service provided by a solo developer, these Terms of Service help establish clear guidelines for everyone.
 

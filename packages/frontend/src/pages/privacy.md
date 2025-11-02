@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last updated: September 26, 2025**
+**Last updated: November 1, 2025**
 
 The privacy of your data is important to us. In this policy, we explain what data we collect and why, how your data is handled, and your rights. We never sell your data.
 
@@ -103,16 +103,6 @@ We respect your data rights. Some of these rights include:
   how or why your personal information is processed.
 - **Right to Portability.** You have the right to receive the personal
   information we have about you and the right to transmit it to another party.
-  If you want to export data from your accounts, you can do so directly by
-  following these instructions for
-  [HEY](https://hey.com/faqs/#if-i-don-t-like-hey-can-i-export-my-email-and-contacts),
-  [Basecamp 4](https://3.basecamp-help.com/article/150-export-your-basecamp-data),
-  [Basecamp 2](https://2.basecamp-help.com/article/247-exporting-account-data),
-  [Basecamp Classic](https://classic.basecamp-help.com/article/524-exports),
-  [Highrise](https://support.highrise-help.com/category/314-imports-exports),
-  [Campfire](https://support.campfire-help.com/article/146-how-do-i-export-cancel-my-account),
-  and
-  [Backpack](https://support.backpack-help.com/article/289-can-i-export-my-data-out-of-backpack).
 - **Right to not Be Subject to Automated Decision-Making.** You have the right
   to object to and prevent any decision that could have a legal or similarly
   significant effect on you from being made solely based on automated processes.
@@ -146,38 +136,7 @@ about local privacy laws.
 
 ## How we secure your data
 
-All data is encrypted via
-[SSL/TLS](https://en.wikipedia.org/wiki/Transport_Layer_Security) when
-transmitted from our servers to your browser. The database backups are also
-encrypted. In addition, we go to great lengths to secure your data at rest. For
-more information about how we keep your information secure, please review our
-[security overview](../security/index.md).
-
-With regard to products other than HEY, most data are not encrypted while they
-live in our database (since they need to be ready to send to you when you need
-them). With HEY, we go further by encrypting the database at-work. Every field
-containing personal data is encrypted with its own key. The disks storing the
-data keys are encrypted as well. Our servers decrypt the data to send it to you
-when you need it. You can learn more about our approach to security for HEY at
-[https://hey.com/security/](https://hey.com/security/).
-
-## What happens when you delete content in your product accounts
-
-In many of our applications, we give you the option to trash content. Anything
-you trash in your product accounts while they are active will be kept in an
-accessible trash can for about 25 days (it varies a little by product). After
-that time, the trashed content cannot be accessed via the application and we are
-not able to retrieve it for you. The trashed content may remain on our active
-servers for another 30 days, and copies of the content may be held in backups of
-our application databases for up to another 30 days after that. Altogether, any
-content trashed in your product accounts should be purged from all of our
-systems and logs within 90 days.
-
-If you choose to cancel your account, your content will become immediately
-inaccessible and should be purged from our systems in full within 60 days. This
-applies both for cases when an account owner directly cancels and for
-auto-canceled accounts. Please refer to our
-[Cancellation policy](../cancellation/index.md) for more details.
+We take reasonable security measures to protect your data from unauthorized access, including access controls and secure hosting infrastructure. However, no method of transmission over the internet or electronic storage is 100% secure, and we cannot guarantee absolute security.
 
 ## Data retention
 
