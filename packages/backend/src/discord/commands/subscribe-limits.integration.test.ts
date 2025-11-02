@@ -17,7 +17,7 @@ const testDbPath = path.join(tempDir, "test.db");
 const testDatabaseUrl = `file:${testDbPath}`;
 
 // Push schema to test database
-const schemaPath = path.join(import.meta.dir, "../..", "prisma/schema.prisma");
+const schemaPath = path.join(import.meta.dir, "../../..", "prisma/schema.prisma");
 execSync(
   `bunx prisma db push --skip-generate --schema=${schemaPath}`,
   {

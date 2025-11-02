@@ -20,7 +20,7 @@ describe.serial("pruneOrphanedPlayers", () => {
     testDbPath = join(testDir, "test.db");
 
     // Run Prisma migrations to set up the schema
-    const schemaPath = join(import.meta.dir, "../../..", "prisma/schema.prisma");
+    const schemaPath = join(import.meta.dir, "../../../..", "prisma/schema.prisma");
     execSync(
       `bunx prisma db push --skip-generate --schema=${schemaPath}`,
       {
