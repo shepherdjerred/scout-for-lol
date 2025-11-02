@@ -45,22 +45,22 @@
     "packages/backend/**/*.{ts,tsx}": [
       "bash -c 'cd packages/backend && bun run typecheck'",
       "bash -c 'cd packages/backend && bunx eslint --cache --fix'",
-      "bash -c 'cd packages/backend && bun run test'"
+      "bash ./scripts/run-relevant-tests.sh packages/backend"
     ],
     "packages/data/**/*.{ts,tsx}": [
       "bash -c 'cd packages/data && bun run typecheck'",
       "bash -c 'cd packages/data && bunx eslint --cache --fix'",
-      "bash -c 'cd packages/data && bun run test'"
+      "bash ./scripts/run-relevant-tests.sh packages/data"
     ],
     "packages/frontend/**/*.{ts,tsx,astro}": [
       "bash -c 'cd packages/frontend && bun run typecheck'",
       "bash -c 'cd packages/frontend && bunx eslint --cache --fix'",
-      "bash -c 'cd packages/frontend && bun run test'"
+      "bash ./scripts/run-relevant-tests.sh packages/frontend"
     ],
     "packages/report/**/*.{ts,tsx}": [
       "bash -c 'cd packages/report && bun run typecheck'",
       "bash -c 'cd packages/report && bunx eslint --cache --fix'",
-      "bash -c 'cd packages/report && bun run test'"
+      "bash ./scripts/run-relevant-tests.sh packages/report"
     ]
   },
   "dependencies": {}
