@@ -16,19 +16,16 @@ const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database once before all tests
 const schemaPath = join(import.meta.dir, "../../../..", "prisma/schema.prisma");
-execSync(
-  `bunx prisma db push --skip-generate --schema=${schemaPath}`,
-  {
-    cwd: join(import.meta.dir, "../../../.."),
-    env: {
-      ...process.env,
-      DATABASE_URL: testDbUrl,
-      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-    },
-    stdio: "ignore",
+execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
+  cwd: join(import.meta.dir, "../../../.."),
+  env: {
+    ...process.env,
+    DATABASE_URL: testDbUrl,
+    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
   },
-);
+  stdio: "ignore",
+});
 import {
   type DiscordAccountId,
   type DiscordGuildId,

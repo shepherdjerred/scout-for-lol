@@ -30,6 +30,8 @@ function createTestCompetition(overrides: Partial<CompetitionWithCriteria> = {})
     startDate: new Date("2025-01-01T00:00:00Z"),
     endDate: new Date("2025-01-31T23:59:59Z"),
     seasonId: null,
+    startProcessedAt: null,
+    endProcessedAt: null,
     creatorDiscordId: testAccountId("789"),
     createdTime: new Date("2024-12-01T00:00:00Z"),
     updatedTime: new Date("2024-12-01T00:00:00Z"),

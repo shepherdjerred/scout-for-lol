@@ -22,6 +22,7 @@ import { getChampionId } from "../../../utils/champion.js";
 import { addParticipant } from "../../../database/competition/participants.js";
 import { formatCriteriaType, getStatusEmoji, formatDateInfo } from "./helpers.js";
 import { truncateDiscordMessage } from "../../utils/message.js";
+import configuration from "../../../configuration.js";
 
 // ============================================================================
 // Input Parsing Schema - Discriminated Unions
@@ -368,10 +369,14 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     const serverId = args.guildId;
 
     // Check owner limit (1 active competition per owner)
-    await validateOwnerLimit(prisma, serverId, args.userId);
+    // Bot owner can bypass both owner and server limits
+    const botOwnerId = configuration.ownerDiscordId
+      ? DiscordAccountIdSchema.parse(configuration.ownerDiscordId)
+      : undefined;
+    await validateOwnerLimit(prisma, serverId, args.userId, botOwnerId);
 
     // Check server limit (2 active competitions per server)
-    await validateServerLimit(prisma, serverId);
+    await validateServerLimit(prisma, serverId, botOwnerId, args.userId);
 
     console.log(`✅ Business validation passed`);
   } catch (error) {

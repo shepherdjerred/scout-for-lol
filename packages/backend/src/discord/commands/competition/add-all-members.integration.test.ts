@@ -13,19 +13,16 @@ import { testGuildId, testAccountId, testChannelId } from "../../../testing/test
 const testDir = mkdtempSync(join(tmpdir(), "add-all-members-test-"));
 const testDbPath = join(testDir, "test.db");
 const schemaPath = join(__dirname, "../../../..", "prisma/schema.prisma");
-execSync(
-  `bunx prisma db push --skip-generate --schema=${schemaPath}`,
-  {
-    cwd: join(__dirname, "../../../.."),
-    env: {
-      ...process.env,
-      DATABASE_URL: `file:${testDbPath}`,
-      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-    },
-    stdio: "ignore",
+execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
+  cwd: join(__dirname, "../../../.."),
+  env: {
+    ...process.env,
+    DATABASE_URL: `file:${testDbPath}`,
+    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
   },
-);
+  stdio: "ignore",
+});
 
 const prisma = new PrismaClient({
   datasources: {

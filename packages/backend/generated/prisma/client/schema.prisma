@@ -82,6 +82,11 @@ model Competition {
   endDate   DateTime?
   seasonId  String?
 
+  // Lifecycle tracking - when start/end processing was attempted
+  // These prevent re-processing even if snapshot creation fails
+  startProcessedAt DateTime?
+  endProcessedAt   DateTime?
+
   // Relations
   participants CompetitionParticipant[]
   snapshots    CompetitionSnapshot[]

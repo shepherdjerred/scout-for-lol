@@ -12,18 +12,15 @@ const testDatabaseUrl = `file:${testDbPath}`;
 
 // Push schema to test database
 const schemaPath = path.join(import.meta.dir, "../../..", "prisma/schema.prisma");
-execSync(
-  `bunx prisma db push --skip-generate --schema=${schemaPath}`,
-  {
-    env: {
-      ...process.env,
-      DATABASE_URL: testDatabaseUrl,
-      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-    },
-    stdio: "inherit",
+execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
+  env: {
+    ...process.env,
+    DATABASE_URL: testDatabaseUrl,
+    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
   },
-);
+  stdio: "inherit",
+});
 
 // Test Prisma client with isolated database
 const testPrisma = new PrismaClient({

@@ -34,6 +34,8 @@ describe("Competition status checks", () => {
       startDate: new Date(Date.now() + 86400000), // Tomorrow
       endDate: new Date(Date.now() + 2 * 86400000), // Day after tomorrow
       seasonId: null,
+      startProcessedAt: null,
+      endProcessedAt: null,
       visibility: "OPEN",
       serverId: testGuildId("12345678900000000"),
       ownerId: testAccountId("1230000000000"),
@@ -61,6 +63,8 @@ describe("Competition status checks", () => {
       startDate: new Date(Date.now() - 86400000), // Yesterday
       endDate: new Date(Date.now() + 86400000), // Tomorrow
       seasonId: null,
+      startProcessedAt: null,
+      endProcessedAt: null,
       visibility: "OPEN",
       serverId: testGuildId("12345678900000000"),
       ownerId: testAccountId("1230000000000"),
@@ -89,6 +93,8 @@ describe("Competition status checks", () => {
       startDate: new Date(Date.now() - 2 * 86400000), // Two days ago
       endDate: new Date(Date.now() - 86400000), // Yesterday
       seasonId: null,
+      startProcessedAt: null,
+      endProcessedAt: null,
       visibility: "OPEN",
       serverId: testGuildId("12345678900000000"),
       ownerId: testAccountId("1230000000000"),
@@ -117,6 +123,8 @@ describe("Competition status checks", () => {
       startDate: new Date(Date.now() + 86400000),
       endDate: new Date(Date.now() + 2 * 86400000),
       seasonId: null,
+      startProcessedAt: null,
+      endProcessedAt: null,
       visibility: "OPEN",
       serverId: testGuildId("12345678900000000"),
       ownerId: testAccountId("1230000000000"),

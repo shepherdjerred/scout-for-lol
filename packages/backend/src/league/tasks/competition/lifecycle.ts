@@ -127,19 +127,14 @@ async function handleCompetitionStarts(prismaClient: PrismaClient, now: Date): P
   // Find competitions that:
   // 1. Are not cancelled
   // 2. Have a start date that has passed
-  // 3. Don't have any START snapshots yet (indicates not started)
+  // 3. Haven't been processed yet (startProcessedAt is null)
   const competitionsToStart = await prismaClient.competition.findMany({
     where: {
       isCancelled: false,
       startDate: {
         lte: now,
       },
-      // No START snapshots yet
-      snapshots: {
-        none: {
-          snapshotType: "START",
-        },
-      },
+      startProcessedAt: null, // Not yet processed
     },
   });
 
@@ -158,6 +153,13 @@ async function handleCompetitionStarts(prismaClient: PrismaClient, now: Date): P
       );
 
       const competition = parseCompetition(rawCompetition);
+
+      // Mark as processed immediately to prevent re-processing
+      // This happens before snapshot creation so failures don't cause repeated notifications
+      await prismaClient.competition.update({
+        where: { id: competition.id },
+        data: { startProcessedAt: now },
+      });
 
       // Create START snapshots for all participants
       await createSnapshotsForAllParticipants(prismaClient, competition.id, "START", competition.criteria);
@@ -183,28 +185,16 @@ async function handleCompetitionEnds(prismaClient: PrismaClient, now: Date): Pro
   // Find competitions that:
   // 1. Are not cancelled
   // 2. Have an end date that has passed
-  // 3. Have START snapshots (indicates started)
-  // 4. Don't have END snapshots yet (indicates not ended)
+  // 3. Have been started (startProcessedAt is set)
+  // 4. Haven't been ended yet (endProcessedAt is null)
   const competitionsToEnd = await prismaClient.competition.findMany({
     where: {
       isCancelled: false,
       endDate: {
         lte: now,
       },
-      // Have START snapshots (started)
-      snapshots: {
-        some: {
-          snapshotType: "START",
-        },
-      },
-      // Don't have END snapshots yet
-      NOT: {
-        snapshots: {
-          some: {
-            snapshotType: "END",
-          },
-        },
-      },
+      startProcessedAt: { not: null }, // Has been started
+      endProcessedAt: null, // Not yet ended
     },
   });
 
@@ -221,6 +211,12 @@ async function handleCompetitionEnds(prismaClient: PrismaClient, now: Date): Pro
       console.log(`[CompetitionLifecycle] Ending competition ${rawCompetition.id.toString()}: ${rawCompetition.title}`);
 
       const competition = parseCompetition(rawCompetition);
+
+      // Mark as processed immediately to prevent re-processing
+      await prismaClient.competition.update({
+        where: { id: competition.id },
+        data: { endProcessedAt: now },
+      });
 
       // Create END snapshots for all participants
       await createSnapshotsForAllParticipants(prismaClient, competition.id, "END", competition.criteria);
