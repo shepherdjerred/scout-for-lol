@@ -36,7 +36,6 @@ const configFile = ts.readConfigFile(tsconfigPath, readFile);
 if (configFile.error) {
   // TypeScript's DiagnosticMessageChain is a special type that can be a string or an object
   const messageText = configFile.error.messageText;
-  // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions, no-restricted-syntax -- this is okay, we're narrowing down the type
   const errorMessage = typeof messageText === "string" ? messageText : messageText.messageText;
   console.error(`Error reading tsconfig.json: ${errorMessage}`);
   process.exit(1);
