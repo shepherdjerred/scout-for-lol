@@ -110,7 +110,7 @@ beforeEach(async () => {
 describe("createSnapshot - START snapshot", () => {
   test("creates START snapshot successfully", async () => {
     const criteria: CompetitionCriteria = {
-      type: "MOST_GAMES_PLAYED",
+      type: "HIGHEST_RANK",
       queue: "SOLO",
     };
 
