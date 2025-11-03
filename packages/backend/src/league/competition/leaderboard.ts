@@ -44,6 +44,10 @@ export type RankedLeaderboardEntry = LeaderboardEntry & {
  *
  * We NEVER reuse old snapshots to display current state. START/END snapshots are
  * only for historical comparison (e.g., MOST_RANK_CLIMB comparing start vs end).
+ *
+ * @param purpose - Why we're fetching snapshot data:
+ *   - 'calculate_leaderboard': Validates that required snapshots exist (throws if missing)
+ *   - 'create_snapshot': Just fetches current rank data without validation (used when creating new snapshots)
  */
 export async function fetchSnapshotData(
   prisma: PrismaClient,
@@ -51,6 +55,7 @@ export async function fetchSnapshotData(
   criteria: CompetitionCriteria,
   participants: PlayerWithAccounts[],
   competitionStatus: ReturnType<typeof getCompetitionStatus>,
+  purpose: "calculate_leaderboard" | "create_snapshot" = "calculate_leaderboard",
 ): Promise<SnapshotData | null> {
   // Only fetch snapshots for criteria that need them
   const needsSnapshots = match(criteria)
@@ -100,80 +105,101 @@ export async function fetchSnapshotData(
 
       // For MOST_RANK_CLIMB, we need START (stored) and current/end (stored if ended, live if active)
       if (criteria.type === "MOST_RANK_CLIMB") {
-        // Always get START snapshot (captured when competition began)
-        const startSnapshot = await getSnapshot(prisma, competitionId, playerId, "START", criteria);
+        // When creating snapshots, we just fetch current rank data without requiring existing snapshots
+        if (purpose === "create_snapshot") {
+          // Just fetch current rank from Riot API - this will be saved as the snapshot
+          const currentRankData = await fetchCurrentRanks();
+          const firstAccountRanks = Object.values(currentRankData)[0];
+          if (firstAccountRanks && (firstAccountRanks.solo ?? firstAccountRanks.flex)) {
+            currentRanks[playerId.toString()] = firstAccountRanks;
+          }
+        } else {
+          // When calculating leaderboard, we need the START snapshot to compare against
+          // Always get START snapshot (captured when competition began)
+          const startSnapshot = await getSnapshot(prisma, competitionId, playerId, "START", criteria);
 
-        // Validate START snapshot exists - cannot calculate rank climb without baseline
-        if (!startSnapshot) {
-          throw new Error(
-            `Missing START snapshot for player ${playerId.toString()} in competition ${competitionId.toString()}. ` +
-              `Cannot calculate rank climb without baseline data. Use debug command to create snapshots.`,
-          );
-        }
-
-        if ("solo" in startSnapshot || "flex" in startSnapshot) {
-          const data: Ranks = {};
-          if (startSnapshot.solo) data.solo = startSnapshot.solo;
-          if (startSnapshot.flex) data.flex = startSnapshot.flex;
-          startSnapshots[playerId.toString()] = data;
-        }
-
-        if (competitionStatus === "ENDED") {
-          // For ended competitions, use the stored END snapshot
-          const endSnapshot = await getSnapshot(prisma, competitionId, playerId, "END", criteria);
-
-          // Validate END snapshot exists for ended competitions
-          if (!endSnapshot) {
+          // Validate START snapshot exists - cannot calculate rank climb without baseline
+          if (!startSnapshot) {
             throw new Error(
-              `Missing END snapshot for player ${playerId.toString()} in competition ${competitionId.toString()}. ` +
-                `Cannot calculate final rank climb without end data. Use debug command to create snapshots.`,
+              `Missing START snapshot for player ${playerId.toString()} in competition ${competitionId.toString()}. ` +
+                `Cannot calculate rank climb without baseline data. Use debug command to create snapshots.`,
             );
           }
 
-          if ("solo" in endSnapshot || "flex" in endSnapshot) {
+          if ("solo" in startSnapshot || "flex" in startSnapshot) {
             const data: Ranks = {};
-            if (endSnapshot.solo) data.solo = endSnapshot.solo;
-            if (endSnapshot.flex) data.flex = endSnapshot.flex;
-            endSnapshots[playerId.toString()] = data;
+            if (startSnapshot.solo) data.solo = startSnapshot.solo;
+            if (startSnapshot.flex) data.flex = startSnapshot.flex;
+            startSnapshots[playerId.toString()] = data;
           }
-        } else {
-          // For active competitions, fetch CURRENT rank from Riot API
-          const currentRankData = await fetchCurrentRanks();
-          // Use the first account's ranks (or merge multiple accounts if needed)
-          const firstAccountRanks = Object.values(currentRankData)[0];
-          if (firstAccountRanks && (firstAccountRanks.solo ?? firstAccountRanks.flex)) {
-            endSnapshots[playerId.toString()] = firstAccountRanks;
+
+          if (competitionStatus === "ENDED") {
+            // For ended competitions, use the stored END snapshot
+            const endSnapshot = await getSnapshot(prisma, competitionId, playerId, "END", criteria);
+
+            // Validate END snapshot exists for ended competitions
+            if (!endSnapshot) {
+              throw new Error(
+                `Missing END snapshot for player ${playerId.toString()} in competition ${competitionId.toString()}. ` +
+                  `Cannot calculate final rank climb without end data. Use debug command to create snapshots.`,
+              );
+            }
+
+            if ("solo" in endSnapshot || "flex" in endSnapshot) {
+              const data: Ranks = {};
+              if (endSnapshot.solo) data.solo = endSnapshot.solo;
+              if (endSnapshot.flex) data.flex = endSnapshot.flex;
+              endSnapshots[playerId.toString()] = data;
+            }
+          } else {
+            // For active competitions, fetch CURRENT rank from Riot API
+            const currentRankData = await fetchCurrentRanks();
+            // Use the first account's ranks (or merge multiple accounts if needed)
+            const firstAccountRanks = Object.values(currentRankData)[0];
+            if (firstAccountRanks && (firstAccountRanks.solo ?? firstAccountRanks.flex)) {
+              endSnapshots[playerId.toString()] = firstAccountRanks;
+            }
           }
         }
       }
 
       // For HIGHEST_RANK, we just need current rank
       if (criteria.type === "HIGHEST_RANK") {
-        if (competitionStatus === "ENDED") {
-          // For ended competitions, use the stored END snapshot
-          const endSnapshot = await getSnapshot(prisma, competitionId, playerId, "END", criteria);
-
-          // Validate END snapshot exists for ended competitions
-          if (!endSnapshot) {
-            throw new Error(
-              `Missing END snapshot for player ${playerId.toString()} in competition ${competitionId.toString()}. ` +
-                `Cannot determine final rank without end data. Use debug command to create snapshots.`,
-            );
-          }
-
-          if ("solo" in endSnapshot || "flex" in endSnapshot) {
-            const data: Ranks = {};
-            if (endSnapshot.solo) data.solo = endSnapshot.solo;
-            if (endSnapshot.flex) data.flex = endSnapshot.flex;
-            currentRanks[playerId.toString()] = data;
-          }
-        } else {
-          // For active competitions, fetch CURRENT rank from Riot API
+        // When creating snapshots, just fetch current rank from Riot API
+        if (purpose === "create_snapshot") {
           const currentRankData = await fetchCurrentRanks();
-          // Use the first account's ranks (or merge multiple accounts if needed)
           const firstAccountRanks = Object.values(currentRankData)[0];
           if (firstAccountRanks && (firstAccountRanks.solo ?? firstAccountRanks.flex)) {
             currentRanks[playerId.toString()] = firstAccountRanks;
+          }
+        } else {
+          // When calculating leaderboard
+          if (competitionStatus === "ENDED") {
+            // For ended competitions, use the stored END snapshot
+            const endSnapshot = await getSnapshot(prisma, competitionId, playerId, "END", criteria);
+
+            // Validate END snapshot exists for ended competitions
+            if (!endSnapshot) {
+              throw new Error(
+                `Missing END snapshot for player ${playerId.toString()} in competition ${competitionId.toString()}. ` +
+                  `Cannot determine final rank without end data. Use debug command to create snapshots.`,
+              );
+            }
+
+            if ("solo" in endSnapshot || "flex" in endSnapshot) {
+              const data: Ranks = {};
+              if (endSnapshot.solo) data.solo = endSnapshot.solo;
+              if (endSnapshot.flex) data.flex = endSnapshot.flex;
+              currentRanks[playerId.toString()] = data;
+            }
+          } else {
+            // For active competitions, fetch CURRENT rank from Riot API
+            const currentRankData = await fetchCurrentRanks();
+            // Use the first account's ranks (or merge multiple accounts if needed)
+            const firstAccountRanks = Object.values(currentRankData)[0];
+            if (firstAccountRanks && (firstAccountRanks.solo ?? firstAccountRanks.flex)) {
+              currentRanks[playerId.toString()] = firstAccountRanks;
+            }
           }
         }
       }
