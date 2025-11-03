@@ -1,11 +1,66 @@
-import { getCompetitionStatus, type CachedLeaderboard } from "@scout-for-lol/data";
+import { getCompetitionStatus, type CachedLeaderboard, type CompetitionWithCriteria } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { getActiveCompetitions } from "../../../database/competition/queries.js";
 import { calculateLeaderboard } from "../../competition/leaderboard.js";
 import { generateLeaderboardEmbed } from "../../../discord/embeds/competition.js";
 import { send as sendChannelMessage, ChannelSendError } from "../../discord/channel.js";
 import { saveCachedLeaderboard } from "../../../storage/s3-leaderboard.js";
+import { EmbedBuilder } from "discord.js";
 import { z } from "zod";
+
+// ============================================================================
+// Error Handling
+// ============================================================================
+
+/**
+ * Post an error message to Discord when snapshots are missing
+ * This provides users with actionable information about the issue
+ */
+async function postSnapshotErrorMessage(competition: CompetitionWithCriteria, errorMessage: string): Promise<void> {
+  const embed = new EmbedBuilder()
+    .setTitle("⚠️ Competition Error")
+    .setDescription(`**${competition.title}**`)
+    .setColor(0xffa500) // Orange
+    .addFields(
+      {
+        name: "Error",
+        value: "Missing snapshot data - cannot calculate leaderboard",
+      },
+      {
+        name: "Details",
+        value: errorMessage.length > 1024 ? errorMessage.substring(0, 1021) + "..." : errorMessage,
+      },
+      {
+        name: "What does this mean?",
+        value:
+          "The competition needs baseline data to track progress. This data should have been captured when the competition started, but it's missing.",
+      },
+      {
+        name: "Next steps",
+        value:
+          "The bot owner has been notified. A debug command can be used to create the missing snapshots, but historical data before the snapshot is created will be lost.",
+      },
+    )
+    .setTimestamp();
+
+  try {
+    await sendChannelMessage(
+      {
+        content: `<@${competition.ownerId}>`,
+        embeds: [embed],
+      },
+      competition.channelId,
+      competition.serverId,
+    );
+    console.log(`[DailyLeaderboard] ✅ Posted snapshot error message for competition ${competition.id.toString()}`);
+  } catch (error) {
+    console.error(
+      `[DailyLeaderboard] ⚠️  Failed to post snapshot error message for competition ${competition.id.toString()}:`,
+      error,
+    );
+    // Don't throw - notification failure shouldn't stop processing
+  }
+}
 
 // ============================================================================
 // Daily Leaderboard Update
@@ -57,7 +112,33 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
         }
 
         // Calculate current leaderboard
-        const leaderboard = await calculateLeaderboard(prisma, competition);
+        // This may throw if snapshots are missing for rank-based criteria
+        let leaderboard;
+        try {
+          leaderboard = await calculateLeaderboard(prisma, competition);
+        } catch (error) {
+          const errorMessage = String(error);
+
+          // Check if this is a missing snapshot error
+          if (
+            errorMessage.includes("Missing START snapshot") ||
+            errorMessage.includes("Missing start rank data") ||
+            errorMessage.includes("Missing end rank data") ||
+            errorMessage.includes("Missing END snapshot")
+          ) {
+            console.error(
+              `[DailyLeaderboard] ❌ Missing snapshots for competition ${competition.id.toString()}:`,
+              errorMessage,
+            );
+            // Post error message to Discord channel
+            await postSnapshotErrorMessage(competition, errorMessage);
+            failureCount++;
+            continue; // Skip this competition and move to next
+          }
+
+          // Not a snapshot error - re-throw to be handled by outer catch
+          throw error;
+        }
 
         // Cache leaderboard to S3 (both current and historical snapshot)
         const cachedLeaderboard: CachedLeaderboard = {

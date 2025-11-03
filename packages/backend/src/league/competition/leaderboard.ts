@@ -103,7 +103,15 @@ export async function fetchSnapshotData(
         // Always get START snapshot (captured when competition began)
         const startSnapshot = await getSnapshot(prisma, competitionId, playerId, "START", criteria);
 
-        if (startSnapshot && ("solo" in startSnapshot || "flex" in startSnapshot)) {
+        // Validate START snapshot exists - cannot calculate rank climb without baseline
+        if (!startSnapshot) {
+          throw new Error(
+            `Missing START snapshot for player ${playerId.toString()} in competition ${competitionId.toString()}. ` +
+              `Cannot calculate rank climb without baseline data. Use debug command to create snapshots.`,
+          );
+        }
+
+        if ("solo" in startSnapshot || "flex" in startSnapshot) {
           const data: Ranks = {};
           if (startSnapshot.solo) data.solo = startSnapshot.solo;
           if (startSnapshot.flex) data.flex = startSnapshot.flex;
@@ -113,7 +121,16 @@ export async function fetchSnapshotData(
         if (competitionStatus === "ENDED") {
           // For ended competitions, use the stored END snapshot
           const endSnapshot = await getSnapshot(prisma, competitionId, playerId, "END", criteria);
-          if (endSnapshot && ("solo" in endSnapshot || "flex" in endSnapshot)) {
+
+          // Validate END snapshot exists for ended competitions
+          if (!endSnapshot) {
+            throw new Error(
+              `Missing END snapshot for player ${playerId.toString()} in competition ${competitionId.toString()}. ` +
+                `Cannot calculate final rank climb without end data. Use debug command to create snapshots.`,
+            );
+          }
+
+          if ("solo" in endSnapshot || "flex" in endSnapshot) {
             const data: Ranks = {};
             if (endSnapshot.solo) data.solo = endSnapshot.solo;
             if (endSnapshot.flex) data.flex = endSnapshot.flex;
@@ -135,7 +152,16 @@ export async function fetchSnapshotData(
         if (competitionStatus === "ENDED") {
           // For ended competitions, use the stored END snapshot
           const endSnapshot = await getSnapshot(prisma, competitionId, playerId, "END", criteria);
-          if (endSnapshot && ("solo" in endSnapshot || "flex" in endSnapshot)) {
+
+          // Validate END snapshot exists for ended competitions
+          if (!endSnapshot) {
+            throw new Error(
+              `Missing END snapshot for player ${playerId.toString()} in competition ${competitionId.toString()}. ` +
+                `Cannot determine final rank without end data. Use debug command to create snapshots.`,
+            );
+          }
+
+          if ("solo" in endSnapshot || "flex" in endSnapshot) {
             const data: Ranks = {};
             if (endSnapshot.solo) data.solo = endSnapshot.solo;
             if (endSnapshot.flex) data.flex = endSnapshot.flex;

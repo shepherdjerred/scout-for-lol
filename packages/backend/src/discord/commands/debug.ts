@@ -2,10 +2,13 @@ import { type ChatInputCommandInteraction, SlashCommandBuilder, AttachmentBuilde
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { formatDistanceToNow } from "date-fns";
+import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import configuration from "../../configuration";
 import { getAccountsWithState, prisma } from "../../database/index.js";
 import { calculatePollingInterval, shouldCheckPlayer } from "../../utils/polling-intervals.js";
+import { getCompetitionById } from "../../database/competition/queries.js";
+import { createSnapshotsForAllParticipants } from "../../league/competition/snapshots.js";
 
 export const debugCommand = new SlashCommandBuilder()
   .setName("debug")
@@ -20,6 +23,19 @@ export const debugCommand = new SlashCommandBuilder()
     subcommand
       .setName("server-info")
       .setDescription("View detailed server information (players, accounts, subscriptions, competitions)"),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("force-snapshot")
+      .setDescription("[Owner Only] Force create snapshots for a competition")
+      .addIntegerOption((option) => option.setName("competition-id").setDescription("Competition ID").setRequired(true))
+      .addStringOption((option) =>
+        option
+          .setName("type")
+          .setDescription("Snapshot type")
+          .setRequired(true)
+          .addChoices({ name: "START", value: "START" }, { name: "END", value: "END" }),
+      ),
   );
 
 export async function executeDebugDatabase(interaction: ChatInputCommandInteraction) {
@@ -364,5 +380,69 @@ export async function executeDebugServerInfo(interaction: ChatInputCommandIntera
     await interaction.editReply({
       content: `❌ Error fetching server information: ${error instanceof Error ? error.message : String(error)}`,
     });
+  }
+}
+
+export async function executeDebugForceSnapshot(interaction: ChatInputCommandInteraction) {
+  console.log("🐛 Executing debug force-snapshot command");
+
+  // Verify bot owner
+  if (interaction.user.id !== configuration.ownerDiscordId) {
+    await interaction.reply({
+      content: "❌ This command is restricted to the bot owner.",
+      ephemeral: true,
+    });
+    return;
+  }
+
+  // Validate command options at boundary
+  const ForceSnapshotOptionsSchema = z.object({
+    competitionId: z.number().int().positive(),
+    snapshotType: z.enum(["START", "END"]),
+  });
+
+  const rawCompetitionId = interaction.options.getInteger("competition-id", true);
+  const rawSnapshotType = interaction.options.getString("type", true);
+
+  const optionsResult = ForceSnapshotOptionsSchema.safeParse({
+    competitionId: rawCompetitionId,
+    snapshotType: rawSnapshotType,
+  });
+
+  if (!optionsResult.success) {
+    await interaction.reply({
+      content: `❌ Invalid command options: ${optionsResult.error.message}`,
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const { competitionId, snapshotType } = optionsResult.data;
+
+  // Defer reply since this might take time
+  await interaction.deferReply({ ephemeral: true });
+
+  try {
+    console.log(`🔍 Looking up competition ${competitionId.toString()}`);
+    const competition = await getCompetitionById(prisma, competitionId);
+
+    if (!competition) {
+      await interaction.editReply(`❌ Competition ${competitionId.toString()} not found`);
+      return;
+    }
+
+    console.log(`📸 Creating ${snapshotType} snapshots for competition "${competition.title}"`);
+
+    // Force create snapshots for all participants
+    await createSnapshotsForAllParticipants(prisma, competition.id, snapshotType, competition.criteria);
+
+    await interaction.editReply(
+      `✅ Created ${snapshotType} snapshots for all participants in competition **${competition.title}** (ID: ${competitionId.toString()})`,
+    );
+
+    console.log(`✅ Successfully created ${snapshotType} snapshots for competition ${competitionId.toString()}`);
+  } catch (error) {
+    console.error(`❌ Error creating snapshots for competition ${competitionId.toString()}:`, error);
+    await interaction.editReply(`❌ Error: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

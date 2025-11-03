@@ -58,6 +58,13 @@ export async function createSnapshot(
   // Prisma include returns branded types compatible with PlayerWithAccounts
   const snapshotData = await fetchSnapshotData(prisma, competitionId, criteria, [playerData], "ACTIVE");
 
+  // Check if snapshots are needed for this criteria type
+  // Some criteria (MOST_GAMES_PLAYED, MOST_WINS_*, etc.) don't use snapshots
+  if (snapshotData === null) {
+    console.log(`[Snapshots] No snapshot needed for ${criteria.type} criteria - skipping`);
+    return;
+  }
+
   // Get the appropriate schema for validation
   const schema = getSnapshotSchemaForCriteria(criteria);
 
@@ -188,7 +195,6 @@ export async function createSnapshotsForAllParticipants(
         }
       }
     });
-    // TODO
-    // throw new Error(`Failed to create ${failed.toString()} snapshots`);
+    throw new Error(`Failed to create ${failed.toString()} snapshots`);
   }
 }

@@ -94,29 +94,23 @@ function findParticipant(
 }
 
 // Arena helpers
-const ArenaParticipantMinimalSchema = z
-  .object({
-    playerSubteamId: z.union([
-      z.literal(1),
-      z.literal(2),
-      z.literal(3),
-      z.literal(4),
-      z.literal(5),
-      z.literal(6),
-      z.literal(7),
-      z.literal(8),
-    ]),
-  })
-  // TODO: remove
-  .loose();
+const ArenaParticipantMinimalSchema = z.object({
+  playerSubteamId: z.union([
+    z.literal(1),
+    z.literal(2),
+    z.literal(3),
+    z.literal(4),
+    z.literal(5),
+    z.literal(6),
+    z.literal(7),
+    z.literal(8),
+  ]),
+});
 
-const ArenaParticipantFieldsSchema = z
-  .object({
-    playerSubteamId: z.number().int().min(1).max(8),
-    placement: z.number().int().min(1).max(8),
-  })
-  // TODO: remove
-  .loose();
+const ArenaParticipantFieldsSchema = z.object({
+  playerSubteamId: z.number().int().min(1).max(8),
+  placement: z.number().int().min(1).max(8),
+});
 
 type ArenaParticipantValidatedMin = MatchV5DTOs.ParticipantDto & {
   playerSubteamId: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;

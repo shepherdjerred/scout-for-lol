@@ -20,8 +20,24 @@ export function processMostRankClimb(
     const startRanks = startSnapshots[participant.id];
     const endRanks = endSnapshots[participant.id];
 
-    const startRank = criteria.queue === "SOLO" ? startRanks?.solo : startRanks?.flex;
-    const endRank = criteria.queue === "SOLO" ? endRanks?.solo : endRanks?.flex;
+    // Validate that we have rank data for this participant
+    // Without baseline data, we cannot calculate rank climb
+    if (!startRanks) {
+      throw new Error(
+        `Missing start rank data for player ${participant.id.toString()} (${participant.alias}). ` +
+          `Cannot calculate rank climb without baseline data.`,
+      );
+    }
+
+    if (!endRanks) {
+      throw new Error(
+        `Missing end rank data for player ${participant.id.toString()} (${participant.alias}). ` +
+          `Cannot calculate rank climb without current data.`,
+      );
+    }
+
+    const startRank = criteria.queue === "SOLO" ? startRanks.solo : startRanks.flex;
+    const endRank = criteria.queue === "SOLO" ? endRanks.solo : endRanks.flex;
 
     // Calculate LP delta
     const startLP = rankToLeaguePoints(startRank);

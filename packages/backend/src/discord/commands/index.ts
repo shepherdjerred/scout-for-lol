@@ -24,7 +24,12 @@ import {
   executePlayerUnlinkDiscord,
   executePlayerView,
 } from "./admin/index.js";
-import { executeDebugDatabase, executeDebugPolling, executeDebugServerInfo } from "./debug.js";
+import {
+  executeDebugDatabase,
+  executeDebugPolling,
+  executeDebugServerInfo,
+  executeDebugForceSnapshot,
+} from "./debug.js";
 import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
 import { searchChampions } from "../../utils/champion.js";
 import configuration from "../../configuration.js";
@@ -199,6 +204,8 @@ export function handleCommands(client: Client) {
             await executeDebugPolling(interaction);
           } else if (subcommandName === "server-info") {
             await executeDebugServerInfo(interaction);
+          } else if (subcommandName === "force-snapshot") {
+            await executeDebugForceSnapshot(interaction);
           } else {
             console.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
             await interaction.reply({

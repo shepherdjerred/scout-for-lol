@@ -48,6 +48,22 @@ void mock.module("../../discord/channel.js", () => ({
   ChannelSendError,
 }));
 
+// Mock the S3 query module to avoid AWS configuration issues in tests
+void mock.module("../../../storage/s3-query.js", () => ({
+  queryMatchesByDateRange: async () => {
+    // Return empty array - tests are focused on posting logic, not match data
+    return [];
+  },
+}));
+
+// Mock the S3 leaderboard save function to avoid AWS configuration issues in tests
+void mock.module("../../../storage/s3-leaderboard.js", () => ({
+  saveCachedLeaderboard: async () => {
+    // No-op - tests are focused on posting logic, not S3 caching
+    return Promise.resolve();
+  },
+}));
+
 // Create a test database
 const testDir = mkdtempSync(join(tmpdir(), "daily-update-test-"));
 const testDbPath = join(testDir, "test.db");

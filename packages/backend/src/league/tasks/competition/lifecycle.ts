@@ -120,23 +120,28 @@ async function postFinalLeaderboard(
 /**
  * Handle competitions that need to start
  * Finds DRAFT competitions where startDate <= now and creates START snapshots
+ *
+ * Note: Season-based competitions have startDate: null in DB, so we must query
+ * all unprocessed competitions and filter client-side after parseCompetition()
+ * populates dates from seasonId
  */
 async function handleCompetitionStarts(prismaClient: PrismaClient, now: Date): Promise<void> {
   console.log("[CompetitionLifecycle] Checking for competitions to start...");
 
-  // Find competitions that:
-  // 1. Are not cancelled
-  // 2. Have a start date that has passed
-  // 3. Haven't been processed yet (startProcessedAt is null)
-  const competitionsToStart = await prismaClient.competition.findMany({
+  // Query all competitions that haven't been started yet
+  // We can't filter by startDate in the DB query because season-based
+  // competitions have startDate: null until parseCompetition() populates it
+  const unprocessedCompetitions = await prismaClient.competition.findMany({
     where: {
       isCancelled: false,
-      startDate: {
-        lte: now,
-      },
       startProcessedAt: null, // Not yet processed
     },
   });
+
+  // Parse to get client-side dates from seasonId, then filter by date
+  const competitionsToStart = unprocessedCompetitions
+    .map(parseCompetition)
+    .filter((comp) => comp.startDate !== null && comp.startDate <= now);
 
   if (competitionsToStart.length === 0) {
     console.log("[CompetitionLifecycle] No competitions to start");
@@ -145,14 +150,10 @@ async function handleCompetitionStarts(prismaClient: PrismaClient, now: Date): P
 
   console.log(`[CompetitionLifecycle] Found ${competitionsToStart.length.toString()} competition(s) to start`);
 
-  // Process each competition
-  for (const rawCompetition of competitionsToStart) {
+  // Process each competition (already parsed with dates populated)
+  for (const competition of competitionsToStart) {
     try {
-      console.log(
-        `[CompetitionLifecycle] Starting competition ${rawCompetition.id.toString()}: ${rawCompetition.title}`,
-      );
-
-      const competition = parseCompetition(rawCompetition);
+      console.log(`[CompetitionLifecycle] Starting competition ${competition.id.toString()}: ${competition.title}`);
 
       // Mark as processed immediately to prevent re-processing
       // This happens before snapshot creation so failures don't cause repeated notifications
@@ -169,7 +170,7 @@ async function handleCompetitionStarts(prismaClient: PrismaClient, now: Date): P
 
       console.log(`[CompetitionLifecycle] ✅ Competition ${competition.id.toString()} started successfully`);
     } catch (error) {
-      console.error(`[CompetitionLifecycle] ❌ Error starting competition ${rawCompetition.id.toString()}:`, error);
+      console.error(`[CompetitionLifecycle] ❌ Error starting competition ${competition.id.toString()}:`, error);
       // Continue with other competitions
     }
   }
@@ -178,25 +179,29 @@ async function handleCompetitionStarts(prismaClient: PrismaClient, now: Date): P
 /**
  * Handle competitions that need to end
  * Finds ACTIVE competitions where endDate <= now and creates END snapshots
+ *
+ * Note: Season-based competitions have endDate: null in DB, so we must query
+ * all unended competitions and filter client-side after parseCompetition()
+ * populates dates from seasonId
  */
 async function handleCompetitionEnds(prismaClient: PrismaClient, now: Date): Promise<void> {
   console.log("[CompetitionLifecycle] Checking for competitions to end...");
 
-  // Find competitions that:
-  // 1. Are not cancelled
-  // 2. Have an end date that has passed
-  // 3. Have been started (startProcessedAt is set)
-  // 4. Haven't been ended yet (endProcessedAt is null)
-  const competitionsToEnd = await prismaClient.competition.findMany({
+  // Query all competitions that have been started but not ended yet
+  // We can't filter by endDate in the DB query because season-based
+  // competitions have endDate: null until parseCompetition() populates it
+  const unendedCompetitions = await prismaClient.competition.findMany({
     where: {
       isCancelled: false,
-      endDate: {
-        lte: now,
-      },
       startProcessedAt: { not: null }, // Has been started
       endProcessedAt: null, // Not yet ended
     },
   });
+
+  // Parse to get client-side dates from seasonId, then filter by date
+  const competitionsToEnd = unendedCompetitions
+    .map(parseCompetition)
+    .filter((comp) => comp.endDate !== null && comp.endDate <= now);
 
   if (competitionsToEnd.length === 0) {
     console.log("[CompetitionLifecycle] No competitions to end");
@@ -205,12 +210,10 @@ async function handleCompetitionEnds(prismaClient: PrismaClient, now: Date): Pro
 
   console.log(`[CompetitionLifecycle] Found ${competitionsToEnd.length.toString()} competition(s) to end`);
 
-  // Process each competition
-  for (const rawCompetition of competitionsToEnd) {
+  // Process each competition (already parsed with dates populated)
+  for (const competition of competitionsToEnd) {
     try {
-      console.log(`[CompetitionLifecycle] Ending competition ${rawCompetition.id.toString()}: ${rawCompetition.title}`);
-
-      const competition = parseCompetition(rawCompetition);
+      console.log(`[CompetitionLifecycle] Ending competition ${competition.id.toString()}: ${competition.title}`);
 
       // Mark as processed immediately to prevent re-processing
       await prismaClient.competition.update({
@@ -227,7 +230,7 @@ async function handleCompetitionEnds(prismaClient: PrismaClient, now: Date): Pro
 
       console.log(`[CompetitionLifecycle] ✅ Competition ${competition.id.toString()} ended successfully`);
     } catch (error) {
-      console.error(`[CompetitionLifecycle] ❌ Error ending competition ${rawCompetition.id.toString()}:`, error);
+      console.error(`[CompetitionLifecycle] ❌ Error ending competition ${competition.id.toString()}:`, error);
       // Continue with other competitions
     }
   }
