@@ -20,6 +20,7 @@ import {
   hasUnlimitedSubscriptions,
 } from "../../../configuration/subscription-limits.js";
 import { backfillLastMatchTime } from "../../../league/api/backfill-match-history.js";
+import { sendWelcomeMatch } from "./welcome-match.js";
 
 export const ArgsSchema = z.object({
   channel: DiscordChannelIdSchema,
@@ -318,6 +319,18 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
       return;
     }
 
+    // Check if this is the first subscription for the server
+    const existingSubscriptionCount = await prisma.subscription.count({
+      where: {
+        serverId: guildId,
+      },
+    });
+    const isFirstSubscription = existingSubscriptionCount === 0;
+
+    if (isFirstSubscription) {
+      console.log(`🎉 This is the first subscription for server ${guildId}`);
+    }
+
     // create a new subscription
     console.log(`📝 Creating subscription for channel ${channel}`);
     const subscription = await prisma.subscription.create({
@@ -353,6 +366,30 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
       content: responseMessage,
       ephemeral: true,
     });
+
+    // If this is the first subscription for the server, send a welcome match asynchronously
+    if (isFirstSubscription) {
+      console.log(`🎁 Triggering welcome match for ${riotId.game_name}#${riotId.tag_line}`);
+
+      const playerConfigEntry = {
+        alias: alias,
+        league: {
+          leagueAccount: {
+            puuid: LeaguePuuidSchema.parse(puuid),
+            region: region,
+          },
+        },
+        discordAccount: {
+          id: user ?? undefined,
+        },
+      };
+
+      // Fire off async task to send welcome match
+      void sendWelcomeMatch(interaction, playerConfigEntry).catch((error) => {
+        console.error(`❌ Error sending welcome match:`, error);
+        // Don't throw - this is a background task
+      });
+    }
   } catch (error) {
     console.error(`❌ Database error during subscription:`, error);
     await interaction.reply({

@@ -1,6 +1,4 @@
 import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { z } from "zod";
-import { api } from "../../api/api.js";
 import { getRecentMatchIds, filterNewMatches } from "../../api/match-history.js";
 import {
   getAccountsWithState,
@@ -10,85 +8,16 @@ import {
   updateLastMatchTime,
   updateLastCheckedAt,
 } from "../../../database/index.js";
-import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
-import { mapRegionToEnum } from "../../model/region.js";
-import type { PlayerConfigEntry, LeaguePuuid, Region, MatchId } from "@scout-for-lol/data";
+import type { PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/data";
 import { MatchIdSchema } from "@scout-for-lol/data";
-import { getPlayer } from "../../model/player.js";
 import { send } from "../../discord/channel.js";
-import { AttachmentBuilder, EmbedBuilder, MessageCreateOptions } from "discord.js";
-import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
-import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "../../../storage/s3.js";
-import { toMatch, toArenaMatch } from "../../model/match.js";
-import { generateMatchReview } from "../../review/generator.js";
-import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 import { shouldCheckPlayer, calculatePollingInterval } from "../../../utils/polling-intervals.js";
+import { fetchMatchData, generateMatchReport } from "./match-report-generator.js";
 
 type PlayerWithMatchIds = {
   player: PlayerConfigEntry;
   matchIds: MatchId[];
 };
-
-/**
- * Fetch match data from Riot API
- */
-async function fetchMatchData(matchId: MatchId, playerRegion: Region): Promise<MatchV5DTOs.MatchDto | undefined> {
-  try {
-    const region = mapRegionToEnum(playerRegion);
-    const regionGroup = regionToRegionGroup(region);
-
-    console.log(`[fetchMatchData] 📥 Fetching match data for ${matchId}`);
-    const response = await api.MatchV5.get(matchId, regionGroup);
-
-    return response.response;
-  } catch (e) {
-    const result = z.object({ status: z.number() }).safeParse(e);
-    if (result.success) {
-      if (result.data.status === 404) {
-        console.log(`[fetchMatchData] ℹ️  Match ${matchId} not found (404) - may still be processing`);
-        return undefined;
-      }
-      console.error(`[fetchMatchData] ❌ HTTP Error ${result.data.status.toString()} for match ${matchId}`);
-    } else {
-      console.error(`[fetchMatchData] ❌ Error fetching match ${matchId}:`, e);
-    }
-    return undefined;
-  }
-}
-
-/**
- * Create image attachments for Discord message
- */
-async function createMatchImage(
-  match: CompletedMatch | ArenaMatch,
-  matchId: MatchId,
-): Promise<[AttachmentBuilder, EmbedBuilder]> {
-  const isArena = match.queueType === "arena";
-  const svg = isArena ? await arenaMatchToSvg(match) : await matchToSvg(match);
-  const image = svgToPng(svg);
-
-  // Save both PNG and SVG to S3
-  try {
-    const queueTypeForStorage = isArena ? "arena" : (match.queueType ?? "unknown");
-    await saveImageToS3(matchId, image, queueTypeForStorage);
-    await saveSvgToS3(matchId, svg, queueTypeForStorage);
-  } catch (error) {
-    console.error(`[createMatchImage] Failed to save images to S3:`, error);
-  }
-
-  const attachment = new AttachmentBuilder(image).setName("match.png");
-  if (!attachment.name) {
-    throw new Error("[createMatchImage] Attachment name is null");
-  }
-
-  const embed = {
-    image: {
-      url: `attachment://${attachment.name}`,
-    },
-  };
-
-  return [attachment, new EmbedBuilder(embed)];
-}
 
 /**
  * Process a completed match and send Discord notifications
@@ -98,12 +27,12 @@ async function processMatch(matchData: MatchV5DTOs.MatchDto, trackedPlayers: Pla
   console.log(`[processMatch] 🎮 Processing match ${matchId}`);
 
   try {
-    // Save match data to S3
-    try {
-      await saveMatchToS3(matchData);
-    } catch (error) {
-      console.error(`[processMatch] Error saving match ${matchId} to S3:`, error);
-      // Continue processing even if S3 storage fails
+    // Generate the match report message
+    const message = await generateMatchReport(matchData, trackedPlayers);
+
+    if (!message) {
+      console.log(`[processMatch] ⚠️  No message generated for match ${matchId}`);
+      return;
     }
 
     // Determine which tracked players are in this match
@@ -111,89 +40,19 @@ async function processMatch(matchData: MatchV5DTOs.MatchDto, trackedPlayers: Pla
       matchData.metadata.participants.includes(player.league.leagueAccount.puuid),
     );
 
-    if (playersInMatch.length === 0) {
-      console.log(`[processMatch] ⚠️  No tracked players found in match ${matchId}`);
-      return;
-    }
+    // Get channels to notify
+    const puuids: LeaguePuuid[] = playersInMatch.map((p) => p.league.leagueAccount.puuid);
+    const channels = await getChannelsSubscribedToPlayers(puuids);
 
-    console.log(
-      `[processMatch] 👥 Found ${playersInMatch.length.toString()} tracked player(s) in match: ${playersInMatch.map((p) => p.alias).join(", ")}`,
-    );
+    console.log(`[processMatch] 📢 Sending notifications to ${channels.length.toString()} channel(s)`);
 
-    // Get full player data with ranks
-    const players = await Promise.all(playersInMatch.map((playerConfig) => getPlayer(playerConfig)));
-
-    // Check if it's an arena match
-    const isArena = matchData.info.queueId === 1700;
-
-    if (isArena) {
-      console.log(`[processMatch] 🎯 Processing as arena match`);
-      const arenaMatch = await toArenaMatch(players, matchData);
-
-      // Create Discord message for arena
-      const [attachment, embed] = await createMatchImage(arenaMatch, matchId);
-
-      const message: MessageCreateOptions = {
-        files: [attachment],
-        embeds: [embed],
-      };
-
-      // Get channels to notify
-      const puuids: LeaguePuuid[] = playersInMatch.map((p) => p.league.leagueAccount.puuid);
-      const channels = await getChannelsSubscribedToPlayers(puuids);
-
-      console.log(`[processMatch] 📢 Sending notifications to ${channels.length.toString()} channel(s)`);
-
-      // Send to all subscribed channels
-      for (const { channel } of channels) {
-        try {
-          await send(message, channel);
-          console.log(`[processMatch] ✅ Sent notification to channel ${channel}`);
-        } catch (error) {
-          console.error(`[processMatch] ❌ Failed to send notification to channel ${channel}:`, error);
-        }
-      }
-    } else {
-      console.log(`[processMatch] ⚔️  Processing as standard match`);
-      // For non-arena, we process match for the first tracked player
-      // (multiple tracked players in same match will get separate notifications)
-      const player = players[0];
-      if (!player) {
-        throw new Error("No player data available");
-      }
-      const completedMatch = toMatch(player, matchData, undefined, undefined);
-
-      // Generate AI review
-      let aiReview: string | undefined;
+    // Send to all subscribed channels
+    for (const { channel } of channels) {
       try {
-        aiReview = generateMatchReview(completedMatch);
+        await send(message, channel);
+        console.log(`[processMatch] ✅ Sent notification to channel ${channel}`);
       } catch (error) {
-        console.error(`[processMatch] Error generating AI review:`, error);
-      }
-
-      // Create Discord message
-      const [attachment, embed] = await createMatchImage(completedMatch, matchId);
-
-      const message: MessageCreateOptions = {
-        files: [attachment],
-        embeds: [embed],
-        ...(aiReview && { content: aiReview }),
-      };
-
-      // Get channels to notify
-      const puuids: LeaguePuuid[] = playersInMatch.map((p) => p.league.leagueAccount.puuid);
-      const channels = await getChannelsSubscribedToPlayers(puuids);
-
-      console.log(`[processMatch] 📢 Sending notifications to ${channels.length.toString()} channel(s)`);
-
-      // Send to all subscribed channels
-      for (const { channel } of channels) {
-        try {
-          await send(message, channel);
-          console.log(`[processMatch] ✅ Sent notification to channel ${channel}`);
-        } catch (error) {
-          console.error(`[processMatch] ❌ Failed to send notification to channel ${channel}:`, error);
-        }
+        console.error(`[processMatch] ❌ Failed to send notification to channel ${channel}:`, error);
       }
     }
 
