@@ -138,7 +138,7 @@ export async function queryMatchesByDateRange(
       console.error(`[S3Query] Error listing objects for prefix ${prefix}: ${getErrorMessage(error)}`);
       // Continue with other prefixes
       // TODO: we probably want to throw an error here if this happens for too many days
-      throw new Error(`Error listing objects for prefix ${prefix}: ${getErrorMessage(error)}`);
+      // throw new Error(`Error listing objects for prefix ${prefix}: ${getErrorMessage(error)}`);
     }
   }
 
