@@ -212,6 +212,7 @@ This competition has reached its maximum of ${competition.maxParticipants.toStri
       // User was invited, accept the invitation
       await acceptInvitation(prisma, competitionId, player.id);
       console.log(`[Competition Join] User ${userId} accepted invitation to competition ${competitionId.toString()}`);
+      // TODO: use ts-pattern for exhaustive match
     } else {
       // User is joining for the first time (OPEN or SERVER_WIDE)
       await addParticipant(prisma, competitionId, player.id, "JOINED");

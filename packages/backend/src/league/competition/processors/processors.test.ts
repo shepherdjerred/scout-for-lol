@@ -304,6 +304,30 @@ const platinumII: Rank = {
   losses: 75,
 };
 
+const silverIV: Rank = {
+  tier: "silver",
+  division: 4,
+  lp: 10,
+  wins: 30,
+  losses: 28,
+};
+
+const goldI: Rank = {
+  tier: "gold",
+  division: 1,
+  lp: 75,
+  wins: 60,
+  losses: 55,
+};
+
+const platinumIV: Rank = {
+  tier: "platinum",
+  division: 4,
+  lp: 15,
+  wins: 75,
+  losses: 65,
+};
+
 // ============================================================================
 // Tests: Most Games Played
 // ============================================================================
@@ -490,6 +514,106 @@ describe("processMostRankClimb", () => {
     expect(playerAEntry?.score).toBe(playerALPGain);
     expect(playerBEntry?.score).toBe(playerBLPGain);
     expect(playerALPGain).toBeGreaterThan(playerBLPGain);
+  });
+
+  it("should skip participants without START snapshot (unranked at competition start)", () => {
+    const startSnapshots: Record<number, Ranks> = {
+      [playerA.id]: { solo: goldIV }, // PlayerA has START snapshot
+      // PlayerB has no START snapshot (was unranked)
+    };
+
+    const endSnapshots: Record<number, Ranks> = {
+      [playerA.id]: { solo: diamondIV },
+      [playerB.id]: { solo: goldI }, // PlayerB got ranked later
+    };
+
+    const result = processCriteria({ type: "MOST_RANK_CLIMB", queue: "SOLO" }, [], [playerA, playerB], {
+      currentRanks: {},
+      startSnapshots,
+      endSnapshots,
+    });
+
+    // Only playerA should be in the result
+    expect(result.length).toBe(1);
+    expect(result[0]?.playerId).toBe(playerA.id);
+  });
+
+  it("should skip participants without END snapshot", () => {
+    const startSnapshots: Record<number, Ranks> = {
+      [playerA.id]: { solo: goldIV },
+      [playerB.id]: { solo: silverIV },
+    };
+
+    const endSnapshots: Record<number, Ranks> = {
+      [playerA.id]: { solo: diamondIV },
+      // PlayerB has no END snapshot
+    };
+
+    const result = processCriteria({ type: "MOST_RANK_CLIMB", queue: "SOLO" }, [], [playerA, playerB], {
+      currentRanks: {},
+      startSnapshots,
+      endSnapshots,
+    });
+
+    // Only playerA should be in the result
+    expect(result.length).toBe(1);
+    expect(result[0]?.playerId).toBe(playerA.id);
+  });
+
+  it("should skip participants without rank data for the specific queue", () => {
+    const startSnapshots: Record<number, Ranks> = {
+      [playerA.id]: { solo: goldIV }, // Has solo rank
+      [playerB.id]: { flex: silverIV }, // Has only flex rank, not solo
+    };
+
+    const endSnapshots: Record<number, Ranks> = {
+      [playerA.id]: { solo: diamondIV },
+      [playerB.id]: { flex: goldI },
+    };
+
+    const result = processCriteria({ type: "MOST_RANK_CLIMB", queue: "SOLO" }, [], [playerA, playerB], {
+      currentRanks: {},
+      startSnapshots,
+      endSnapshots,
+    });
+
+    // Only playerA should be in the result (has solo rank)
+    expect(result.length).toBe(1);
+    expect(result[0]?.playerId).toBe(playerA.id);
+  });
+
+  it("should include participant who gets ranked mid-competition (has both snapshots)", () => {
+    const startSnapshots: Record<number, Ranks> = {
+      [playerA.id]: { solo: goldIV },
+      [playerB.id]: { solo: silverIV }, // PlayerB got placed mid-competition, has START snapshot from that point
+    };
+
+    const endSnapshots: Record<number, Ranks> = {
+      [playerA.id]: { solo: diamondIV },
+      [playerB.id]: { solo: platinumIV }, // PlayerB climbed after placement
+    };
+
+    const result = processCriteria({ type: "MOST_RANK_CLIMB", queue: "SOLO" }, [], [playerA, playerB], {
+      currentRanks: {},
+      startSnapshots,
+      endSnapshots,
+    });
+
+    // Both players should be in the result
+    expect(result.length).toBe(2);
+
+    const playerAEntry = result.find((e) => e.playerId === playerA.id);
+    const playerBEntry = result.find((e) => e.playerId === playerB.id);
+
+    expect(playerAEntry).toBeDefined();
+    expect(playerBEntry).toBeDefined();
+
+    // Both should have their respective LP gains calculated correctly
+    const playerALPGain = rankToLeaguePoints(diamondIV) - rankToLeaguePoints(goldIV);
+    const playerBLPGain = rankToLeaguePoints(platinumIV) - rankToLeaguePoints(silverIV);
+
+    expect(playerAEntry?.score).toBe(playerALPGain);
+    expect(playerBEntry?.score).toBe(playerBLPGain);
   });
 });
 

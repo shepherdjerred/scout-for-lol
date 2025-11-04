@@ -78,6 +78,22 @@ export async function createSnapshot(
   // For creating snapshots, the current rank data is in currentRanks
   const rankData = snapshotDataContainer.currentRanks[playerId];
 
+  // Special handling for MOST_RANK_CLIMB competitions:
+  // If creating a START snapshot and player is unranked, skip creating the snapshot.
+  // We'll create their START snapshot later when they first become ranked.
+  if (criteria.type === "MOST_RANK_CLIMB" && snapshotType === "START") {
+    const queue = criteria.queue;
+    const hasRank = rankData && (queue === "SOLO" ? rankData.solo : rankData.flex);
+
+    if (!hasRank) {
+      console.log(
+        `[Snapshots] Skipping START snapshot for unranked player ${playerId.toString()} in MOST_RANK_CLIMB competition. ` +
+          `Will create START snapshot when player completes placement matches.`,
+      );
+      return;
+    }
+  }
+
   // If no rank data was fetched, use empty object (player is unranked)
   const snapshotToStore = rankData ?? {};
 

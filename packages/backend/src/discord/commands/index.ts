@@ -30,6 +30,7 @@ import {
   executeDebugServerInfo,
   executeDebugForceSnapshot,
   executeDebugForceLeaderboardUpdate,
+  executeDebugManageParticipant,
 } from "./debug.js";
 import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
 import { searchChampions } from "../../utils/champion.js";
@@ -103,6 +104,7 @@ export function handleCommands(client: Client) {
             await executeSubscriptionDelete(interaction);
           } else if (subcommandName === "list") {
             await executeSubscriptionList(interaction);
+            // TODO: use ts-pattern for exhaustive match
           } else {
             console.warn(`⚠️  Unknown subscription subcommand: ${subcommandName}`);
             await interaction.reply({
@@ -132,6 +134,7 @@ export function handleCommands(client: Client) {
             await executeCompetitionView(interaction);
           } else if (subcommandName === "list") {
             await executeCompetitionList(interaction);
+            // TODO: use ts-pattern for exhaustive match
           } else {
             console.warn(`⚠️  Unknown competition subcommand: ${subcommandName}`);
             await interaction.reply({
@@ -178,6 +181,7 @@ export function handleCommands(client: Client) {
             await executePlayerUnlinkDiscord(interaction);
           } else if (subcommandName === "player-view") {
             await executePlayerView(interaction);
+            // TODO: use ts-pattern for exhaustive match
           } else {
             console.warn(`⚠️  Unknown admin subcommand: ${subcommandName}`);
             await interaction.reply({
@@ -209,6 +213,9 @@ export function handleCommands(client: Client) {
             await executeDebugForceSnapshot(interaction);
           } else if (subcommandName === "force-leaderboard-update") {
             await executeDebugForceLeaderboardUpdate(interaction);
+          } else if (subcommandName === "manage-participant") {
+            await executeDebugManageParticipant(interaction);
+            // TODO: use ts-pattern for exhaustive match
           } else {
             console.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
             await interaction.reply({
@@ -219,6 +226,7 @@ export function handleCommands(client: Client) {
         } else if (commandName === "help") {
           console.log("❓ Executing help command");
           await executeHelp(interaction);
+          // TODO: use ts-pattern for exhaustive match
         } else {
           console.warn(`⚠️  Unknown command received: ${commandName}`);
           await interaction.reply("Unknown command");

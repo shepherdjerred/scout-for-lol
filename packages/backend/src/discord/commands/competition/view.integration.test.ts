@@ -105,6 +105,7 @@ async function createTestCompetition(
     criteria = { type: "HIGHEST_RANK", queue: "SOLO" };
   } else if (options?.criteriaType === "MOST_WINS_CHAMPION" && options.championId) {
     criteria = { type: "MOST_WINS_CHAMPION", championId: options.championId, queue: "SOLO" };
+    // TODO: use ts-pattern for exhaustive match
   } else {
     criteria = { type: "MOST_GAMES_PLAYED", queue: "SOLO" };
   }

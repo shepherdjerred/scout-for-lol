@@ -349,6 +349,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
           startDate: new Date(args.dates.startDate),
           endDate: new Date(args.dates.endDate),
         };
+        // TODO: use ts-pattern for exhaustive match
       } else {
         updateInput.dates = {
           type: "SEASON",
@@ -390,6 +391,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
           championId: ChampionIdSchema.parse(championId),
           queue: args.criteria.queue,
         };
+        // TODO: use ts-pattern for exhaustive match
       } else {
         // HIGHEST_WIN_RATE
         criteria = {

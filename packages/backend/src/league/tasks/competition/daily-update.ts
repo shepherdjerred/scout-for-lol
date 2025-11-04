@@ -5,6 +5,8 @@ import { calculateLeaderboard } from "../../competition/leaderboard.js";
 import { generateLeaderboardEmbed } from "../../../discord/embeds/competition.js";
 import { send as sendChannelMessage, ChannelSendError } from "../../discord/channel.js";
 import { saveCachedLeaderboard } from "../../../storage/s3-leaderboard.js";
+import { createSnapshot, getSnapshot } from "../../competition/snapshots.js";
+import { getParticipants } from "../../../database/competition/participants.js";
 import { EmbedBuilder } from "discord.js";
 import { z } from "zod";
 
@@ -63,6 +65,68 @@ async function postSnapshotErrorMessage(competition: CompetitionWithCriteria, er
 }
 
 // ============================================================================
+// Backfill START Snapshots for MOST_RANK_CLIMB
+// ============================================================================
+
+/**
+ * For MOST_RANK_CLIMB competitions, create START snapshots for participants who:
+ * - Don't have a START snapshot yet (were unranked when competition started)
+ * - Now have rank data (completed placement matches)
+ *
+ * This allows players who join ranked after the competition starts to still participate.
+ * Their "start" is when they first got placed in ranked.
+ */
+async function backfillStartSnapshots(competition: CompetitionWithCriteria): Promise<void> {
+  // Only relevant for MOST_RANK_CLIMB competitions
+  if (competition.criteria.type !== "MOST_RANK_CLIMB") {
+    return;
+  }
+
+  console.log(
+    `[DailyLeaderboard] Checking for START snapshot backfill opportunities in competition ${competition.id.toString()}`,
+  );
+
+  // Get all JOINED participants
+  const participants = await getParticipants(prisma, competition.id, "JOINED", true);
+
+  // Check each participant for missing START snapshot
+  for (const participant of participants) {
+    try {
+      // Check if START snapshot exists
+      const existingSnapshot = await getSnapshot(
+        prisma,
+        competition.id,
+        participant.playerId,
+        "START",
+        competition.criteria,
+      );
+
+      // If snapshot exists, skip this participant
+      if (existingSnapshot) {
+        continue;
+      }
+
+      // No START snapshot - try to create one
+      // createSnapshot will check if player is now ranked and create the snapshot
+      // If player is still unranked, createSnapshot will skip it (return early)
+      console.log(
+        `[DailyLeaderboard] Attempting to create START snapshot for player ${participant.playerId.toString()} who was previously unranked`,
+      );
+
+      await createSnapshot(prisma, competition.id, participant.playerId, "START", competition.criteria);
+
+      console.log(`[DailyLeaderboard] ✅ Created START snapshot for player ${participant.playerId.toString()}`);
+    } catch (error) {
+      // Log but don't fail the entire update
+      console.warn(
+        `[DailyLeaderboard] ⚠️  Failed to backfill START snapshot for player ${participant.playerId.toString()}:`,
+        error,
+      );
+    }
+  }
+}
+
+// ============================================================================
 // Daily Leaderboard Update
 // ============================================================================
 
@@ -110,6 +174,10 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
           );
           continue;
         }
+
+        // Backfill START snapshots for players who were unranked but are now ranked
+        // This is specific to MOST_RANK_CLIMB competitions
+        await backfillStartSnapshots(competition);
 
         // Calculate current leaderboard
         // This may throw if snapshots are missing for rank-based criteria

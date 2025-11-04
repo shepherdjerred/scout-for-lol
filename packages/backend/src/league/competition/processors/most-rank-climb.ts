@@ -20,24 +20,42 @@ export function processMostRankClimb(
     const startRanks = startSnapshots[participant.id];
     const endRanks = endSnapshots[participant.id];
 
-    // Validate that we have rank data for this participant
-    // Without baseline data, we cannot calculate rank climb
+    // Skip participants without complete snapshot data
+    // This can happen when:
+    // 1. Player was unranked when competition started (no START snapshot)
+    // 2. Player hasn't played their placement matches yet (no END snapshot)
+    // These players simply don't appear on the leaderboard until they have both snapshots
     if (!startRanks) {
-      throw new Error(
-        `Missing start rank data for player ${participant.id.toString()} (${participant.alias}). ` +
-          `Cannot calculate rank climb without baseline data.`,
+      console.log(
+        `[MostRankClimb] Skipping player ${participant.id.toString()} (${participant.alias}) - no START snapshot (likely unranked at competition start)`,
       );
+      continue;
     }
 
     if (!endRanks) {
-      throw new Error(
-        `Missing end rank data for player ${participant.id.toString()} (${participant.alias}). ` +
-          `Cannot calculate rank climb without current data.`,
+      console.log(
+        `[MostRankClimb] Skipping player ${participant.id.toString()} (${participant.alias}) - no END snapshot`,
       );
+      continue;
     }
 
     const startRank = criteria.queue === "SOLO" ? startRanks.solo : startRanks.flex;
     const endRank = criteria.queue === "SOLO" ? endRanks.solo : endRanks.flex;
+
+    // Skip if player doesn't have rank data for the specific queue
+    if (!startRank) {
+      console.log(
+        `[MostRankClimb] Skipping player ${participant.id.toString()} (${participant.alias}) - no ${criteria.queue} rank at START`,
+      );
+      continue;
+    }
+
+    if (!endRank) {
+      console.log(
+        `[MostRankClimb] Skipping player ${participant.id.toString()} (${participant.alias}) - no ${criteria.queue} rank at END`,
+      );
+      continue;
+    }
 
     // Calculate LP delta
     const startLP = rankToLeaguePoints(startRank);

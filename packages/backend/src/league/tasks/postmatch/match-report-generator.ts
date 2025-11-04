@@ -131,6 +131,7 @@ export async function generateMatchReport(
         files: [attachment],
         embeds: [embed],
       };
+      // TODO: use ts-pattern for exhaustive match
     } else {
       console.log(`[generateMatchReport] ⚔️  Processing as standard match`);
       // For non-arena, we process match for the first tracked player

@@ -296,6 +296,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
       championId: ChampionIdSchema.parse(championId),
       queue: args.queue,
     };
+    // TODO: use ts-pattern for exhaustive match
   } else {
     // Last case: HIGHEST_WIN_RATE
     criteria = {
@@ -325,6 +326,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
         startDate: new Date(args.startDate),
         endDate: new Date(args.endDate),
       };
+      // TODO: use ts-pattern for exhaustive match
     } else {
       // Validate season hasn't ended yet
       if (hasSeasonEnded(args.season)) {

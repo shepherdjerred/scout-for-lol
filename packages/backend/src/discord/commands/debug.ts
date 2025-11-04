@@ -8,6 +8,7 @@ import { getAccountsWithState, prisma } from "../../database/index.js";
 import { calculatePollingInterval, shouldCheckPlayer } from "../../utils/polling-intervals.js";
 export { executeDebugForceSnapshot } from "./debug/force-snapshot.js";
 export { executeDebugForceLeaderboardUpdate } from "./debug/force-leaderboard-update.js";
+export { executeDebugManageParticipant } from "./debug/manage-participant.js";
 
 export const debugCommand = new SlashCommandBuilder()
   .setName("debug")
@@ -46,6 +47,22 @@ export const debugCommand = new SlashCommandBuilder()
           .setDescription("Optional: Specific competition ID (omit to update all active competitions)")
           .setRequired(false),
       ),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("manage-participant")
+      .setDescription("[Dev Only] Add or remove a participant from a competition")
+      .addStringOption((option) =>
+        option
+          .setName("action")
+          .setDescription("Action to perform")
+          .setRequired(true)
+          .addChoices({ name: "Add", value: "add" }, { name: "Kick", value: "kick" }),
+      )
+      .addIntegerOption((option) => option.setName("competition-id").setDescription("Competition ID").setRequired(true))
+      .addUserOption((option) =>
+        option.setName("user").setDescription("Discord user to add or remove").setRequired(true),
+      ),
   );
 
 export async function executeDebugDatabase(interaction: ChatInputCommandInteraction) {
@@ -59,6 +76,7 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
   if (databaseUrl.startsWith("file:")) {
     // Remove 'file:' prefix and handle URL encoding
     databasePath = databaseUrl.replace(/^file:/, "");
+    // TODO: use ts-pattern for exhaustive match
   } else {
     databasePath = databaseUrl;
   }

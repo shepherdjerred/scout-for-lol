@@ -56,6 +56,7 @@ export async function createCompetition(
   if (input.dates.type === "FIXED_DATES") {
     startDate = input.dates.startDate;
     endDate = input.dates.endDate;
+    // TODO: use ts-pattern for exhaustive match
   } else {
     seasonId = input.dates.seasonId;
   }
@@ -255,6 +256,7 @@ export async function updateCompetition(
       updateData.startDate = input.dates.startDate;
       updateData.endDate = input.dates.endDate;
       updateData.seasonId = null;
+      // TODO: use ts-pattern for exhaustive match
     } else {
       updateData.startDate = null;
       updateData.endDate = null;

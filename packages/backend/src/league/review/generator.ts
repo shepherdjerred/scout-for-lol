@@ -22,6 +22,7 @@ export function generateMatchReview(match: CompletedMatch | ArenaMatch): string 
 
     const placementStr = player.placement.toString();
     return `[Placeholder Review] ${player.playerConfig.alias} finished in ${placementStr}${getOrdinalSuffix(player.placement)} place playing ${player.champion.championName} with ${player.teammate.championName}.`;
+    // TODO: use ts-pattern for exhaustive match
   } else {
     // Regular match review
     const player = match.players[0]; // Primary tracked player

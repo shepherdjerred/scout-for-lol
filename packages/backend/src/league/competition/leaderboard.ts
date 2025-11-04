@@ -113,6 +113,7 @@ export async function fetchSnapshotData(
           if (firstAccountRanks && (firstAccountRanks.solo ?? firstAccountRanks.flex)) {
             currentRanks[playerId.toString()] = firstAccountRanks;
           }
+          // TODO: use ts-pattern for exhaustive match
         } else {
           // When calculating leaderboard, we need the START snapshot to compare against
           // Always get START snapshot (captured when competition began)
@@ -151,6 +152,7 @@ export async function fetchSnapshotData(
               if (endSnapshot.flex) data.flex = endSnapshot.flex;
               endSnapshots[playerId.toString()] = data;
             }
+            // TODO: use ts-pattern for exhaustive match
           } else {
             // For active competitions, fetch CURRENT rank from Riot API
             const currentRankData = await fetchCurrentRanks();
@@ -172,6 +174,7 @@ export async function fetchSnapshotData(
           if (firstAccountRanks && (firstAccountRanks.solo ?? firstAccountRanks.flex)) {
             currentRanks[playerId.toString()] = firstAccountRanks;
           }
+          // TODO: use ts-pattern for exhaustive match
         } else {
           // When calculating leaderboard
           if (competitionStatus === "ENDED") {
@@ -192,6 +195,7 @@ export async function fetchSnapshotData(
               if (endSnapshot.flex) data.flex = endSnapshot.flex;
               currentRanks[playerId.toString()] = data;
             }
+            // TODO: use ts-pattern for exhaustive match
           } else {
             // For active competitions, fetch CURRENT rank from Riot API
             const currentRankData = await fetchCurrentRanks();
