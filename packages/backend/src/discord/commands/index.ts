@@ -29,6 +29,7 @@ import {
   executeDebugPolling,
   executeDebugServerInfo,
   executeDebugForceSnapshot,
+  executeDebugForceLeaderboardUpdate,
 } from "./debug.js";
 import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
 import { searchChampions } from "../../utils/champion.js";
@@ -206,6 +207,8 @@ export function handleCommands(client: Client) {
             await executeDebugServerInfo(interaction);
           } else if (subcommandName === "force-snapshot") {
             await executeDebugForceSnapshot(interaction);
+          } else if (subcommandName === "force-leaderboard-update") {
+            await executeDebugForceLeaderboardUpdate(interaction);
           } else {
             console.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
             await interaction.reply({

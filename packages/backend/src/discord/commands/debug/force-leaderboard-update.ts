@@ -1,0 +1,74 @@
+import type { ChatInputCommandInteraction } from "discord.js";
+import configuration from "../../../configuration.js";
+import { prisma } from "../../../database/index.js";
+import { getCompetitionById } from "../../../database/competition/queries.js";
+import { runDailyLeaderboardUpdate } from "../../../league/tasks/competition/daily-update.js";
+import { calculateLeaderboard } from "../../../league/competition/leaderboard.js";
+import { generateLeaderboardEmbed } from "../../embeds/competition.js";
+import { send as sendChannelMessage } from "../../../league/discord/channel.js";
+
+export async function executeDebugForceLeaderboardUpdate(interaction: ChatInputCommandInteraction) {
+  console.log("🐛 Executing debug force-leaderboard-update command");
+
+  // Verify bot owner
+  if (interaction.user.id !== configuration.ownerDiscordId) {
+    await interaction.reply({
+      content: "❌ This command is restricted to the bot owner.",
+      ephemeral: true,
+    });
+    return;
+  }
+
+  const competitionId = interaction.options.getInteger("competition-id", false);
+
+  // Defer reply since this might take time
+  await interaction.deferReply({ ephemeral: true });
+
+  try {
+    if (competitionId !== null) {
+      // Update specific competition
+      console.log(`📊 Running leaderboard update for competition ${competitionId.toString()}`);
+
+      const competition = await getCompetitionById(prisma, competitionId);
+
+      if (!competition) {
+        await interaction.editReply(`❌ Competition ${competitionId.toString()} not found`);
+        return;
+      }
+
+      // Calculate leaderboard
+      const leaderboard = await calculateLeaderboard(prisma, competition);
+
+      // Generate embed
+      const embed = generateLeaderboardEmbed(competition, leaderboard);
+
+      // Post to competition channel
+      await sendChannelMessage(
+        {
+          content: `📊 **Leaderboard Update** - ${competition.title}`,
+          embeds: [embed],
+        },
+        competition.channelId,
+        competition.serverId,
+      );
+
+      await interaction.editReply(
+        `✅ Leaderboard updated successfully for competition **${competition.title}** (ID: ${competitionId.toString()})`,
+      );
+
+      console.log(`✅ Successfully updated leaderboard for competition ${competitionId.toString()}`);
+    } else {
+      // Update all active competitions
+      console.log("📊 Running daily leaderboard update for all active competitions");
+
+      await runDailyLeaderboardUpdate();
+
+      await interaction.editReply("✅ Daily leaderboard update completed successfully for all active competitions");
+
+      console.log("✅ Successfully ran daily leaderboard update for all competitions");
+    }
+  } catch (error) {
+    console.error("❌ Error running leaderboard update:", error);
+    await interaction.editReply(`❌ Error: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
