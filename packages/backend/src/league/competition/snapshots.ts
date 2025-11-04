@@ -56,8 +56,8 @@ export async function createSnapshot(
 
   // Fetch snapshot data based on criteria - pass playerData directly
   // Prisma include returns branded types compatible with PlayerWithAccounts
-  // Use 'create_snapshot' purpose to avoid validation errors when creating initial snapshots
-  const snapshotData = await fetchSnapshotData(
+  // Use 'create_snapshot' purpose to fetch current rank without validation
+  const snapshotDataContainer = await fetchSnapshotData(
     prisma,
     competitionId,
     criteria,
@@ -68,16 +68,26 @@ export async function createSnapshot(
 
   // Check if snapshots are needed for this criteria type
   // Some criteria (MOST_GAMES_PLAYED, MOST_WINS_*, etc.) don't use snapshots
-  if (snapshotData === null) {
+  if (snapshotDataContainer === null) {
     console.log(`[Snapshots] No snapshot needed for ${criteria.type} criteria - skipping`);
     return;
   }
 
+  // Extract this player's rank data from the container
+  // fetchSnapshotData returns {startSnapshots, endSnapshots, currentRanks}
+  // For creating snapshots, the current rank data is in currentRanks
+  const rankData = snapshotDataContainer.currentRanks[playerId];
+
+  // If no rank data was fetched, use empty object (player is unranked)
+  const snapshotToStore = rankData ?? {};
+
+  console.log(`[Snapshots] Extracted rank data for player ${playerId.toString()}:`, JSON.stringify(snapshotToStore));
+
   // Get the appropriate schema for validation
   const schema = getSnapshotSchemaForCriteria(criteria);
 
-  // Validate the data
-  const validated = schema.parse(snapshotData);
+  // Validate the rank data for this specific player
+  const validated = schema.parse(snapshotToStore);
 
   // Upsert the snapshot (for idempotency)
   await prisma.competitionSnapshot.upsert({

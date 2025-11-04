@@ -55,7 +55,7 @@ export async function fetchSnapshotData(
   criteria: CompetitionCriteria,
   participants: PlayerWithAccounts[],
   competitionStatus: ReturnType<typeof getCompetitionStatus>,
-  purpose: "calculate_leaderboard" | "create_snapshot" = "calculate_leaderboard",
+  purpose: "calculate_leaderboard" | "create_snapshot",
 ): Promise<SnapshotData | null> {
   // Only fetch snapshots for criteria that need them
   const needsSnapshots = match(criteria)
@@ -373,7 +373,14 @@ export async function calculateLeaderboard(
   console.log(`[Leaderboard] Found ${matches.length.toString()} matches in date range`);
 
   // Fetch snapshot data if needed for rank-based criteria
-  const snapshotData = await fetchSnapshotData(prisma, competition.id, competition.criteria, players, status);
+  const snapshotData = await fetchSnapshotData(
+    prisma,
+    competition.id,
+    competition.criteria,
+    players,
+    status,
+    "calculate_leaderboard",
+  );
 
   // Process matches with criteria processor
   const entries = processCriteria(competition.criteria, matches, players, snapshotData ?? undefined);
