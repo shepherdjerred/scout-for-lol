@@ -281,6 +281,28 @@ export async function updateCompetition(
 }
 
 /**
+ * Get competitions by channel ID
+ *
+ * Useful for finding competitions when a channel is deleted
+ *
+ * @param prisma - Prisma client instance
+ * @param channelId - Discord channel ID
+ * @returns List of competitions using this channel
+ */
+export async function getCompetitionsByChannelId(
+  prisma: PrismaClient,
+  channelId: DiscordChannelId,
+): Promise<CompetitionWithCriteria[]> {
+  const raw = await prisma.competition.findMany({
+    where: {
+      channelId,
+    },
+  });
+
+  return raw.map(parseCompetition);
+}
+
+/**
  * Cancel a competition by setting isCancelled flag
  *
  * @param prisma - Prisma client instance

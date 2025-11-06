@@ -5,6 +5,7 @@ import { runLifecycleCheck } from "./tasks/competition/lifecycle.js";
 import { runDailyLeaderboardUpdate } from "./tasks/competition/daily-update.js";
 import { runPlayerPruning } from "./tasks/cleanup/prune-players.js";
 import { checkAbandonedGuilds } from "./tasks/cleanup/abandoned-guilds.js";
+import { runDataValidation } from "./tasks/cleanup/validate-data.js";
 import { cronJobExecutionsTotal, cronJobDuration, cronJobLastSuccess } from "../metrics/index.js";
 import client from "../discord/client.js";
 
@@ -66,6 +67,42 @@ export function startCronJobs() {
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
         console.log(`✅ Competition lifecycle check completed in ${executionTime.toString()}ms`);
+
+        // Record successful execution metrics
+        cronJobExecutionsTotal.inc({ job_name: jobName, status: "success" });
+        cronJobDuration.observe({ job_name: jobName }, executionTimeSeconds);
+        cronJobLastSuccess.set({ job_name: jobName }, Date.now() / 1000);
+      } catch (error) {
+        const executionTime = Date.now() - startTime;
+        const executionTimeSeconds = executionTime / 1000;
+
+        // Record failed execution metrics
+        cronJobExecutionsTotal.inc({ job_name: jobName, status: "error" });
+        cronJobDuration.observe({ job_name: jobName }, executionTimeSeconds);
+        throw error;
+      }
+    }),
+    undefined,
+    true,
+    "America/Los_Angeles",
+    undefined,
+    true,
+  );
+
+  // validate data (cleanup orphaned guilds/channels) every hour
+  console.log("📅 Setting up data validation job (every hour at :00)");
+  new CronJob(
+    "0 0 * * * *", // Every hour at :00
+    logErrors(async () => {
+      const startTime = Date.now();
+      const jobName = "data_validation";
+      console.log("🔍 Running data validation");
+
+      try {
+        await runDataValidation(client);
+        const executionTime = Date.now() - startTime;
+        const executionTimeSeconds = executionTime / 1000;
+        console.log(`✅ Data validation completed in ${executionTime.toString()}ms`);
 
         // Record successful execution metrics
         cronJobExecutionsTotal.inc({ job_name: jobName, status: "success" });
@@ -198,6 +235,6 @@ export function startCronJobs() {
 
   console.log("✅ Cron jobs initialized successfully");
   console.log(
-    "📊 Match history polling, competition lifecycle, daily leaderboard, player pruning, and abandoned guild cleanup cron jobs are now active",
+    "📊 Match history polling, competition lifecycle, data validation, daily leaderboard, player pruning, and abandoned guild cleanup cron jobs are now active",
   );
 }

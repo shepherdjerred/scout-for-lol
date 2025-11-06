@@ -289,6 +289,80 @@ describe("getAbandonedGuilds", () => {
     const abandonedTwo = await getAbandonedGuilds(prisma, 2);
     expect(abandonedTwo).toHaveLength(1);
   });
+
+  test("does not find guilds with at least one working channel", async () => {
+    const eightDaysAgo = new Date();
+    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Channel 1: Has errors for 8+ days
+    await prisma.guildPermissionError.create({
+      data: {
+        serverId: testGuildId("4000000001"),
+        channelId: testChannelId("1000000001"),
+        errorType: "proactive_check",
+        firstOccurrence: eightDaysAgo,
+        lastOccurrence: new Date(),
+        consecutiveErrorCount: 50,
+      },
+    });
+
+    // Channel 2: Working fine (recent successful send)
+    await prisma.guildPermissionError.create({
+      data: {
+        serverId: testGuildId("4000000001"),
+        channelId: testChannelId("2000000002"),
+        errorType: "none",
+        firstOccurrence: yesterday,
+        lastOccurrence: yesterday,
+        consecutiveErrorCount: 0,
+        lastSuccessfulSend: yesterday,
+      },
+    });
+
+    const abandoned = await getAbandonedGuilds(prisma, 7);
+
+    // Guild should NOT be abandoned because channel 2 is working
+    expect(abandoned).toHaveLength(0);
+  });
+
+  test("finds guilds where ALL channels have errors", async () => {
+    const eightDaysAgo = new Date();
+    eightDaysAgo.setDate(eightDaysAgo.getDate() - 8);
+
+    // Channel 1: Has errors
+    await prisma.guildPermissionError.create({
+      data: {
+        serverId: testGuildId("5000000001"),
+        channelId: testChannelId("1000000001"),
+        errorType: "proactive_check",
+        firstOccurrence: eightDaysAgo,
+        lastOccurrence: new Date(),
+        consecutiveErrorCount: 30,
+      },
+    });
+
+    // Channel 2: Also has errors
+    await prisma.guildPermissionError.create({
+      data: {
+        serverId: testGuildId("5000000001"),
+        channelId: testChannelId("2000000002"),
+        errorType: "api_error",
+        firstOccurrence: eightDaysAgo,
+        lastOccurrence: new Date(),
+        consecutiveErrorCount: 20,
+      },
+    });
+
+    const abandoned = await getAbandonedGuilds(prisma, 7);
+
+    // Guild SHOULD be abandoned because ALL channels have errors
+    expect(abandoned).toHaveLength(1);
+    expect(abandoned[0]?.serverId).toBe(testGuildId("5000000001"));
+    expect(abandoned[0]?.errorCount).toBe(50); // 30 + 20
+  });
 });
 
 describe("markGuildAsNotified", () => {

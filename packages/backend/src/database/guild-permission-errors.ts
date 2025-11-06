@@ -108,6 +108,7 @@ export async function recordSuccessfulSend(
 
 /**
  * Get guilds that have had consecutive permission errors for more than a specified duration
+ * Only returns guilds where ALL channels have errors and there are NO working channels
  * @param minDays - Minimum number of days of consecutive errors (default: 7)
  * @returns List of abandoned guilds
  */
@@ -171,7 +172,29 @@ export async function getAbandonedGuilds(
     }
   }
 
-  return Object.values(guilds);
+  // Filter out guilds that have any working channels
+  // Only abandon if ALL channels have errors
+  const abandonedGuilds: typeof guilds = {};
+
+  for (const [serverId, guildInfo] of Object.entries(guilds)) {
+    // Check if this guild has ANY channels with recent successful sends
+    const workingChannels = await prisma.guildPermissionError.findFirst({
+      where: {
+        serverId: guildInfo.serverId,
+        consecutiveErrorCount: 0,
+        lastSuccessfulSend: {
+          gte: cutoffDate,
+        },
+      },
+    });
+
+    // Only include guild if it has NO working channels
+    if (!workingChannels) {
+      abandonedGuilds[serverId] = guildInfo;
+    }
+  }
+
+  return Object.values(abandonedGuilds);
 }
 
 /**

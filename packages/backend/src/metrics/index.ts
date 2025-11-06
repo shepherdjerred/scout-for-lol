@@ -138,6 +138,55 @@ export const guildDataCleanupTotal = new Counter({
   registers: [registry],
 });
 
+/**
+ * Total number of Discord API rate limit hits (429 responses)
+ */
+export const discordRateLimitHitsTotal = new Counter({
+  name: "discord_rate_limit_hits_total",
+  help: "Total number of Discord API rate limit hits (429 responses)",
+  labelNames: ["route"] as const,
+  registers: [registry],
+});
+
+/**
+ * Remaining Discord API requests before hitting rate limit
+ */
+export const discordRateLimitRemaining = new Gauge({
+  name: "discord_rate_limit_remaining",
+  help: "Remaining Discord API requests before hitting rate limit",
+  labelNames: ["route"] as const,
+  registers: [registry],
+});
+
+/**
+ * Timestamp when Discord API rate limit resets (Unix timestamp)
+ */
+export const discordRateLimitResetTimestamp = new Gauge({
+  name: "discord_rate_limit_reset_timestamp",
+  help: "Timestamp when Discord API rate limit resets (Unix timestamp)",
+  labelNames: ["route"] as const,
+  registers: [registry],
+});
+
+/**
+ * Total number of Discord channels deleted (event handler triggered)
+ */
+export const discordChannelsDeletedTotal = new Counter({
+  name: "discord_channels_deleted_total",
+  help: "Total number of Discord channels deleted (event handler triggered)",
+  registers: [registry],
+});
+
+/**
+ * Total number of subscriptions automatically cleaned up
+ */
+export const discordSubscriptionsCleanedTotal = new Counter({
+  name: "discord_subscriptions_cleaned_total",
+  help: "Total number of subscriptions automatically cleaned up",
+  labelNames: ["reason"] as const,
+  registers: [registry],
+});
+
 // =======================
 // League of Legends API Metrics
 // =======================
