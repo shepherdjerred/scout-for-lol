@@ -4,7 +4,7 @@
  * Helper functions for sending DMs to Discord users
  */
 
-import { type Client } from "discord.js";
+import { type Client, DiscordAPIError } from "discord.js";
 import { type DiscordAccountId } from "@scout-for-lol/data";
 import { getErrorMessage } from "../../utils/errors.js";
 
@@ -23,12 +23,12 @@ export async function sendDM(client: Client, userId: DiscordAccountId, message: 
     console.log(`[DM] Successfully sent DM to user ${userId}`);
     return true;
   } catch (error) {
-    const errorMsg = getErrorMessage(error);
-
-    // User has DMs disabled or bot is blocked
-    if (errorMsg.includes("Cannot send messages to this user")) {
+    // Check for specific Discord API error codes
+    if (error instanceof DiscordAPIError && error.code === 50007) {
+      // 50007 = Cannot send messages to this user
       console.log(`[DM] User ${userId} has DMs disabled or has blocked the bot`);
     } else {
+      const errorMsg = getErrorMessage(error);
       console.error(`[DM] Failed to send DM to user ${userId}:`, errorMsg);
     }
 

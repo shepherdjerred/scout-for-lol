@@ -1,4 +1,4 @@
-import { type Message, MessageCreateOptions, MessagePayload, DiscordAPIError } from "discord.js";
+import { type Message, MessageCreateOptions, MessagePayload } from "discord.js";
 import { z } from "zod";
 import client from "../../discord/client";
 import { asTextChannel } from "../../discord/utils/channel";
@@ -8,7 +8,7 @@ import {
   formatPermissionErrorForLog,
   notifyServerOwnerAboutPermissionError,
 } from "../../discord/utils/permissions";
-import { discordPermissionErrorsTotal, discordRateLimitHitsTotal } from "../../metrics/index";
+import { discordPermissionErrorsTotal } from "../../metrics/index";
 import { prisma } from "../../database/index";
 import { recordPermissionError, recordSuccessfulSend } from "../../database/guild-permission-errors";
 import type { DiscordChannelId, DiscordGuildId } from "@scout-for-lol/data";
@@ -93,20 +93,6 @@ export async function send(
     // If it's already a ChannelSendError, re-throw it
     if (ChannelSendErrorSchema.safeParse(error).success) {
       throw error;
-    }
-
-    // Check if it's a rate limit error (429)
-    if (error instanceof DiscordAPIError && error.status === 429) {
-      console.warn(`[ChannelSend] Rate limit hit for channel ${channelId} - discord.js will retry automatically`);
-
-      // Track rate limit hit
-      discordRateLimitHitsTotal.inc({ route: "channel_messages" });
-
-      // Note: discord.js automatically handles rate limits by queuing
-      // This error typically only occurs for global rate limits or bugs
-      const rateLimitMessage = `Rate limit hit (429) - discord.js will retry automatically`;
-
-      throw new ChannelSendError(rateLimitMessage, channelId, false, error);
     }
 
     // Check if it's a Discord permission error

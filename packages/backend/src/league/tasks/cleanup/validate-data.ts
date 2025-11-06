@@ -6,7 +6,7 @@
  */
 
 import { type Client } from "discord.js";
-import { DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { getCompetitionsByChannelId } from "../../../database/competition/queries.js";
 import { sendDM } from "../../../discord/utils/dm.js";
@@ -147,7 +147,8 @@ async function validateChannels(client: Client): Promise<void> {
 
     console.log(`[DataValidation] Found ${storedChannels.length.toString()} unique channels in database`);
 
-    let orphanedCount = 0;
+    // Collect orphaned channels
+    const orphanedChannels: string[] = [];
 
     for (const { channelId } of storedChannels) {
       try {
@@ -157,22 +158,26 @@ async function validateChannels(client: Client): Promise<void> {
         if (!channel) {
           // Channel doesn't exist
           console.log(`[DataValidation] ⚠️  Channel ${channelId} no longer exists`);
-          await cleanupOrphanedChannel(client, channelId);
-          orphanedCount++;
+          orphanedChannels.push(channelId);
         }
       } catch (error) {
         // Error fetching channel - likely doesn't exist
         console.log(`[DataValidation] ⚠️  Channel ${channelId} could not be fetched: ${getErrorMessage(error)}`);
-        await cleanupOrphanedChannel(client, channelId);
-        orphanedCount++;
+        orphanedChannels.push(channelId);
       }
     }
 
-    if (orphanedCount === 0) {
+    if (orphanedChannels.length === 0) {
       console.log("[DataValidation] ✅ All stored channels are valid");
-    } else {
-      console.log(`[DataValidation] ✅ Cleaned up ${orphanedCount.toString()} orphaned channel(s)`);
+      return;
     }
+
+    console.log(`[DataValidation] Found ${orphanedChannels.length.toString()} orphaned channel(s)`);
+
+    // Clean up orphaned channels and notify owners (grouped by owner)
+    await cleanupOrphanedChannels(client, orphanedChannels);
+
+    console.log(`[DataValidation] ✅ Cleaned up ${orphanedChannels.length.toString()} orphaned channel(s)`);
   } catch (error) {
     console.error("[DataValidation] Error validating channels:", getErrorMessage(error));
     throw error;
@@ -180,54 +185,81 @@ async function validateChannels(client: Client): Promise<void> {
 }
 
 /**
- * Clean up data for a channel that no longer exists
+ * Clean up data for channels that no longer exist and notify owners
+ * Groups notifications by owner to prevent spam
  */
-async function cleanupOrphanedChannel(client: Client, channelId: string): Promise<void> {
+async function cleanupOrphanedChannels(client: Client, channelIds: string[]): Promise<void> {
   try {
-    const parsedChannelId = DiscordChannelIdSchema.parse(channelId);
+    // Collect all competitions affected by deleted channels, grouped by owner
+    const competitionsByOwner = new Map<string, { id: number; title: string }[]>();
 
-    // Delete subscriptions for this channel
-    const deletedSubs = await prisma.subscription.deleteMany({
-      where: { channelId: parsedChannelId },
-    });
+    for (const channelId of channelIds) {
+      const parsedChannelId = DiscordChannelIdSchema.parse(channelId);
 
-    if (deletedSubs.count > 0) {
-      console.log(
-        `[DataValidation]   Deleted ${deletedSubs.count.toString()} subscription(s) for channel ${channelId}`,
-      );
-      discordSubscriptionsCleanedTotal.inc({ reason: "periodic_validation_channel" }, deletedSubs.count);
+      // Delete subscriptions for this channel
+      const deletedSubs = await prisma.subscription.deleteMany({
+        where: { channelId: parsedChannelId },
+      });
+
+      if (deletedSubs.count > 0) {
+        console.log(
+          `[DataValidation]   Deleted ${deletedSubs.count.toString()} subscription(s) for channel ${channelId}`,
+        );
+        discordSubscriptionsCleanedTotal.inc({ reason: "periodic_validation_channel" }, deletedSubs.count);
+      }
+
+      // Get competitions using this channel
+      const competitions = await getCompetitionsByChannelId(prisma, parsedChannelId);
+
+      // Group competitions by owner
+      for (const competition of competitions) {
+        const ownerId = competition.ownerId;
+        if (!competitionsByOwner.has(ownerId)) {
+          competitionsByOwner.set(ownerId, []);
+        }
+        competitionsByOwner.get(ownerId)?.push({
+          id: competition.id,
+          title: competition.title,
+        });
+      }
+
+      console.log(`[DataValidation] ✅ Cleaned up channel ${channelId}`);
     }
 
-    // Handle competitions using this channel
-    const competitions = await getCompetitionsByChannelId(prisma, parsedChannelId);
-
-    for (const competition of competitions) {
+    // Send grouped notifications to each owner
+    for (const [ownerId, competitions] of competitionsByOwner.entries()) {
       try {
-        // Notify the owner about the missing channel
-        const message = `⚠️ **Competition Channel Missing**
+        const competitionList = competitions
+          .map((comp) => `• **${comp.title}** (ID: ${comp.id.toString()})`)
+          .join("\n");
 
-Your competition **${competition.title}** (ID: ${competition.id.toString()}) was in a channel that no longer exists.
+        const message = `⚠️ **Competition Channel${competitions.length > 1 ? "s" : ""} Missing**
 
-The channel may have been deleted.
+${competitions.length > 1 ? `${competitions.length.toString()} of your competitions were` : "Your competition was"} in ${competitions.length > 1 ? "channels that no longer exist" : "a channel that no longer exists"}.
+
+**Affected competition${competitions.length > 1 ? "s" : ""}:**
+${competitionList}
+
+The ${competitions.length > 1 ? "channels may" : "channel may"} have been deleted.
 
 **What should you do?**
-• If the competition is still active, you may want to cancel it with \`/competition cancel\`
+• If any competition is still active, you may want to cancel it with \`/competition cancel\`
 • The competition data is preserved in the database
 
 If you have any questions, feel free to reach out for support.`;
 
-        await sendDM(client, competition.ownerId, message);
-        console.log(`[DataValidation]   Notified owner of competition ${competition.id.toString()}`);
+        const parsedOwnerId = DiscordAccountIdSchema.parse(ownerId);
+        const success = await sendDM(client, parsedOwnerId, message);
+        if (success) {
+          console.log(
+            `[DataValidation]   Notified owner ${ownerId} about ${competitions.length.toString()} competition(s)`,
+          );
+        }
       } catch (error) {
-        console.error(
-          `[DataValidation]   Failed to notify owner of competition ${competition.id.toString()}:`,
-          getErrorMessage(error),
-        );
+        console.error(`[DataValidation]   Failed to notify owner ${ownerId}:`, getErrorMessage(error));
       }
     }
-
-    console.log(`[DataValidation] ✅ Cleaned up channel ${channelId}`);
   } catch (error) {
-    console.error(`[DataValidation] Error cleaning up channel ${channelId}:`, getErrorMessage(error));
+    console.error(`[DataValidation] Error cleaning up orphaned channels:`, getErrorMessage(error));
   }
 }
