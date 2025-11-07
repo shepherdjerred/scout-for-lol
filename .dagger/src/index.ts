@@ -140,10 +140,14 @@ export class ScoutForLol {
    * @param source The source directory
    * @param version The version to build
    * @param gitSha The git SHA
+   * @param branch The git branch name (optional, for frontend deployment)
    * @param ghcrUsername The GitHub Container Registry username (optional)
    * @param ghcrPassword The GitHub Container Registry password/token (optional)
    * @param env The environment (prod/dev) - determines if images are published
    * @param ghToken The GitHub token for creating deployment PRs (optional)
+   * @param accountId Cloudflare account ID (optional, for frontend deployment)
+   * @param apiToken Cloudflare API token (optional, for frontend deployment)
+   * @param projectName Cloudflare Pages project name (optional, defaults to "scout-for-lol")
    * @returns A message indicating completion
    */
   @func()
@@ -155,10 +159,14 @@ export class ScoutForLol {
     source: Directory,
     @argument() version: string,
     @argument() gitSha: string,
+    branch?: string,
     ghcrUsername?: string,
     ghcrPassword?: Secret,
     env?: string,
     ghToken?: Secret,
+    accountId?: Secret,
+    apiToken?: Secret,
+    projectName?: string,
   ): Promise<string> {
     logWithTimestamp(`🚀 Starting CI pipeline for version ${version} (${gitSha}) in ${env ?? "dev"} environment`);
     logWithTimestamp("⚠️  CI will FAIL if lint or typecheck errors are found");
@@ -191,12 +199,27 @@ export class ScoutForLol {
       logWithTimestamp("⏭️ Phase 3: Skipping image publishing (no credentials or not prod environment)");
     }
 
-    // Deploy to beta - always deploy, but only create PR if GitHub token is provided
+    // Deploy backend to homelab
     const deployStage = env === "prod" ? "beta" : "dev";
-    await withTiming("CI deploy phase", () => {
-      logWithTimestamp(`🚀 Phase 4: Deploying to ${deployStage}...`);
+    await withTiming("CI backend deploy phase", () => {
+      logWithTimestamp(`🚀 Phase 4: Deploying backend to ${deployStage}...`);
       return this.deploy(source, version, deployStage, ghToken);
     });
+
+    // Deploy frontend to Cloudflare Pages if credentials provided
+    const shouldDeployFrontend = accountId && apiToken && branch;
+    if (shouldDeployFrontend) {
+      await withTiming("CI frontend deploy phase", async () => {
+        logWithTimestamp(`🚀 Phase 5: Deploying frontend to Cloudflare Pages (branch: ${branch})...`);
+        const project = projectName ?? "scout-for-lol";
+        await this.deployFrontend(source, branch, gitSha, project, accountId, apiToken);
+        logWithTimestamp(
+          `✅ Frontend deployed to https://${branch === "main" ? "" : `${branch}.`}${project}.pages.dev`,
+        );
+      });
+    } else {
+      logWithTimestamp("⏭️ Phase 5: Skipping frontend deployment (no Cloudflare credentials or branch not provided)");
+    }
 
     logWithTimestamp("🎉 CI pipeline completed successfully");
     return "CI pipeline completed successfully";
