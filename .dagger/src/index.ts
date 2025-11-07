@@ -10,6 +10,7 @@ import {
 } from "./backend";
 import { checkReport, getReportCoverage, getReportTestReport } from "./report";
 import { checkData, getDataCoverage, getDataTestReport } from "./data";
+import { checkFrontend, buildFrontend, deployFrontend } from "./frontend";
 import { getGitHubContainer, getBunNodeContainer } from "./base";
 
 // Helper function to log with timestamp
@@ -38,7 +39,7 @@ async function withTiming<T>(operation: string, fn: () => Promise<T>): Promise<T
 @object()
 export class ScoutForLol {
   /**
-   * Run all checks (backend, report, data)
+   * Run all checks (backend, report, data, frontend)
    * @param source The source directory
    * @returns A message indicating completion
    */
@@ -58,7 +59,7 @@ export class ScoutForLol {
     // Run checks in parallel - force container execution with .sync()
     await withTiming("parallel package checks (lint, typecheck, tests)", async () => {
       logWithTimestamp("🔄 Running lint, typecheck, and tests in parallel for all packages...");
-      logWithTimestamp("📦 Packages being checked: backend, report, data");
+      logWithTimestamp("📦 Packages being checked: backend, report, data, frontend");
 
       // Force execution of all containers in parallel
       await Promise.all([
@@ -74,6 +75,11 @@ export class ScoutForLol {
         }),
         withTiming("data check (lint + typecheck)", async () => {
           const container = checkData(source);
+          await container.sync();
+          return container;
+        }),
+        withTiming("frontend check (lint + typecheck)", async () => {
+          const container = checkFrontend(source);
           await container.sync();
           return container;
         }),
@@ -551,5 +557,84 @@ export class ScoutForLol {
   ): Directory {
     logWithTimestamp("📋 Exporting report package test report");
     return getReportTestReport(source);
+  }
+
+  /**
+   * Check the frontend package
+   * @param source The workspace source directory
+   * @returns A message indicating completion
+   */
+  @func()
+  async checkFrontend(
+    @argument({
+      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Promise<string> {
+    logWithTimestamp("🔍 Starting frontend package check");
+
+    await withTiming("frontend package check", async () => {
+      const container = checkFrontend(source);
+      await container.sync();
+      return container;
+    });
+
+    logWithTimestamp("✅ Frontend check completed successfully");
+    return "Frontend check completed successfully";
+  }
+
+  /**
+   * Build the frontend package
+   * @param source The workspace source directory
+   * @returns The built dist directory
+   */
+  @func()
+  async buildFrontend(
+    @argument({
+      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Promise<Directory> {
+    logWithTimestamp("🏗️  Building frontend package");
+
+    const result = await withTiming("frontend build", () => Promise.resolve(buildFrontend(source)));
+
+    logWithTimestamp("✅ Frontend build completed successfully");
+    return result;
+  }
+
+  /**
+   * Deploy the frontend to Cloudflare Pages
+   * @param source The workspace source directory
+   * @param branch The git branch name
+   * @param gitSha The git commit SHA
+   * @param projectName The Cloudflare Pages project name
+   * @param accountId Cloudflare account ID
+   * @param apiToken Cloudflare API token
+   * @returns Deployment output
+   */
+  @func()
+  async deployFrontend(
+    @argument({
+      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() branch: string,
+    @argument() gitSha: string,
+    @argument() projectName: string,
+    accountId: Secret,
+    apiToken: Secret,
+  ): Promise<string> {
+    logWithTimestamp(`🚀 Deploying frontend to Cloudflare Pages (project: ${projectName}, branch: ${branch})`);
+
+    const result = await withTiming("frontend deployment", () =>
+      deployFrontend(source, branch, gitSha, projectName, accountId, apiToken),
+    );
+
+    logWithTimestamp("✅ Frontend deployment completed successfully");
+    return `✅ Frontend deployed to Cloudflare Pages (project: ${projectName}, branch: ${branch})\n\n${result}`;
   }
 }

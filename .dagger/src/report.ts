@@ -1,5 +1,5 @@
 import { Directory, Container } from "@dagger.io/dagger";
-import { getBunContainer } from "./base";
+import { installWorkspaceDeps } from "./base";
 
 /**
  * Install dependencies for the report package
@@ -7,20 +7,7 @@ import { getBunContainer } from "./base";
  * @returns The container with dependencies installed
  */
 export function installReportDeps(workspaceSource: Directory): Container {
-  return getBunContainer()
-    .withWorkdir("/workspace")
-    .withFile("/workspace/package.json", workspaceSource.file("package.json"))
-    .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-    .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
-    .withFile("/workspace/tsconfig.json", workspaceSource.file("tsconfig.json"))
-    .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
-    .withDirectory("/workspace/eslint-rules", workspaceSource.directory("eslint-rules"))
-    .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
-    .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
-    .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
-    .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
-    .withWorkdir("/workspace")
-    .withExec(["bun", "install", "--frozen-lockfile"]);
+  return installWorkspaceDeps(workspaceSource);
 }
 
 /**
