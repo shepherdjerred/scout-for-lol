@@ -134,12 +134,11 @@ export async function generateMatchReport(
       // TODO: use ts-pattern for exhaustive match
     } else {
       console.log(`[generateMatchReport] ⚔️  Processing as standard match`);
-      // For non-arena, we process match for the first tracked player
-      const player = players[0];
-      if (!player) {
+      // Process match for all tracked players
+      if (players.length === 0) {
         throw new Error("No player data available");
       }
-      const completedMatch = toMatch(player, matchData, undefined, undefined);
+      const completedMatch = toMatch(players, matchData, undefined, undefined);
 
       // Generate AI review
       let aiReview: string | undefined;

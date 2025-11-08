@@ -26,48 +26,51 @@ function getTeams(participants: MatchV5DTOs.ParticipantDto[]) {
 }
 
 export function toMatch(
-  player: Player,
+  players: Player[],
   matchDto: MatchV5DTOs.MatchDto,
   rankBeforeMatch: Rank | undefined,
   rankAfterMatch: Rank | undefined,
 ): CompletedMatch {
-  const participant = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
-  if (participant === undefined) {
-    console.debug("Player PUUID:", player.config.league.leagueAccount.puuid);
-    console.debug("Match Participants:", matchDto.info.participants);
-    throw new Error("participant not found");
-  }
-
-  const champion = participantToChampion(participant);
-  const team = parseTeam(participant.teamId);
   const teams = getTeams(matchDto.info.participants);
-
-  assert(team !== undefined);
-
-  const enemyTeam = invertTeam(team);
   const queueType = parseQueueType(matchDto.info.queueId);
 
   if (queueType === "arena") {
     throw new Error("arena matches are not supported");
   }
 
+  // Build CompletedMatch.players for all tracked players
+  const matchPlayers = players.map((player) => {
+    const participant = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
+    if (participant === undefined) {
+      console.debug("Player PUUID:", player.config.league.leagueAccount.puuid);
+      console.debug("Match Participants:", matchDto.info.participants);
+      throw new Error(`participant not found for player ${player.config.alias}`);
+    }
+
+    const champion = participantToChampion(participant);
+    const team = parseTeam(participant.teamId);
+
+    assert(team !== undefined);
+
+    const enemyTeam = invertTeam(team);
+
+    return {
+      playerConfig: player.config,
+      rankBeforeMatch,
+      rankAfterMatch,
+      wins: queueType === "solo" || queueType === "flex" ? (player.ranks[queueType]?.wins ?? undefined) : undefined,
+      losses: queueType === "solo" || queueType === "flex" ? (player.ranks[queueType]?.losses ?? undefined) : undefined,
+      champion,
+      outcome: getOutcome(participant),
+      team: team,
+      lane: champion.lane,
+      laneOpponent: getLaneOpponent(champion, teams[enemyTeam]),
+    };
+  });
+
   return {
     queueType,
-    players: [
-      {
-        playerConfig: player.config,
-        rankBeforeMatch,
-        rankAfterMatch,
-        wins: queueType === "solo" || queueType === "flex" ? (player.ranks[queueType]?.wins ?? undefined) : undefined,
-        losses:
-          queueType === "solo" || queueType === "flex" ? (player.ranks[queueType]?.losses ?? undefined) : undefined,
-        champion,
-        outcome: getOutcome(participant),
-        team: team,
-        lane: champion.lane,
-        laneOpponent: getLaneOpponent(champion, teams[enemyTeam]),
-      },
-    ],
+    players: matchPlayers,
     durationInSeconds: matchDto.info.gameDuration,
     teams,
   };
