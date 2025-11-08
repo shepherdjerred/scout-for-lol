@@ -14,3 +14,4 @@
 - Skipped tests
 - resolve TODO comments
 - [x] Remove stuff due to spectator API being deprecated
+- [x] Fix competition notifications firing at random times and on bot startup

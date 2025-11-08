@@ -9,6 +9,7 @@ import { createSnapshot, getSnapshot } from "../../competition/snapshots.js";
 import { getParticipants } from "../../../database/competition/participants.js";
 import { EmbedBuilder } from "discord.js";
 import { z } from "zod";
+import { logNotification } from "../../../utils/notification-logger.js";
 
 // ============================================================================
 // Error Handling
@@ -46,6 +47,13 @@ async function postSnapshotErrorMessage(competition: CompetitionWithCriteria, er
     .setTimestamp();
 
   try {
+    logNotification("SNAPSHOT_ERROR", "daily-update:backfillStartSnapshots", {
+      competitionId: competition.id,
+      competitionTitle: competition.title,
+      channelId: competition.channelId,
+      serverId: competition.serverId,
+      message: errorMessage.slice(0, 100),
+    });
     await sendChannelMessage(
       {
         content: `<@${competition.ownerId}>`,
@@ -231,6 +239,12 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
         const embed = generateLeaderboardEmbed(competition, leaderboard);
 
         // Post to competition channel
+        logNotification("DAILY_LEADERBOARD", "daily-update:runDailyLeaderboardUpdate", {
+          competitionId: competition.id,
+          competitionTitle: competition.title,
+          channelId: competition.channelId,
+          serverId: competition.serverId,
+        });
         await sendChannelMessage(
           {
             content: `📊 **Daily Leaderboard Update** - ${competition.title}`,

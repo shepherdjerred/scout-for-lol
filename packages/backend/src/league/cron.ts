@@ -8,6 +8,7 @@ import { checkAbandonedGuilds } from "./tasks/cleanup/abandoned-guilds.js";
 import { runDataValidation } from "./tasks/cleanup/validate-data.js";
 import { cronJobExecutionsTotal, cronJobDuration, cronJobLastSuccess } from "../metrics/index.js";
 import client from "../discord/client.js";
+import { logCronTrigger } from "../utils/notification-logger.js";
 
 export function startCronJobs() {
   console.log("⏰ Initializing cron job scheduler");
@@ -53,14 +54,15 @@ export function startCronJobs() {
     true,
   );
 
-  // check competition lifecycle every hour
-  console.log("📅 Setting up competition lifecycle job (every hour at :00)");
+  // check competition lifecycle every 15 minutes
+  console.log("📅 Setting up competition lifecycle job (every 15 minutes)");
   new CronJob(
-    "0 0 * * * *", // Every hour at :00
+    "0 */15 * * * *", // Every 15 minutes
     logErrors(async () => {
       const startTime = Date.now();
       const jobName = "competition_lifecycle";
       console.log("🏆 Running competition lifecycle check");
+      logCronTrigger(jobName, "Checking for competitions to start/end");
 
       try {
         await runLifecycleCheck();
@@ -86,7 +88,7 @@ export function startCronJobs() {
     true,
     "America/Los_Angeles",
     undefined,
-    true,
+    false, // Don't run on init - prevents startup notifications
   );
 
   // validate data (cleanup orphaned guilds/channels) every hour
@@ -133,6 +135,7 @@ export function startCronJobs() {
       const startTime = Date.now();
       const jobName = "daily_leaderboard_update";
       console.log("📊 Running daily leaderboard update");
+      logCronTrigger(jobName, "Posting daily leaderboard updates for active competitions");
 
       try {
         await runDailyLeaderboardUpdate();
@@ -158,7 +161,7 @@ export function startCronJobs() {
     true,
     "UTC", // Explicitly UTC for consistency
     undefined,
-    true,
+    false, // Don't run on init - prevents startup notifications
   );
 
   // prune orphaned players daily at 3 AM UTC
@@ -235,6 +238,6 @@ export function startCronJobs() {
 
   console.log("✅ Cron jobs initialized successfully");
   console.log(
-    "📊 Match history polling, competition lifecycle, data validation, daily leaderboard, player pruning, and abandoned guild cleanup cron jobs are now active",
+    "📊 Match history polling (1min), competition lifecycle (15min), data validation (hourly), daily leaderboard (midnight UTC), player pruning (3AM UTC), and abandoned guild cleanup (4AM UTC) cron jobs are now active",
   );
 }

@@ -6,6 +6,7 @@ import { calculateLeaderboard, type RankedLeaderboardEntry } from "../../competi
 import { send as sendChannelMessage, ChannelSendError } from "../../discord/channel.js";
 import type { PrismaClient } from "../../../../generated/prisma/client/index.js";
 import { z } from "zod";
+import { logNotification } from "../../../utils/notification-logger.js";
 
 // ============================================================================
 // Discord Notifications
@@ -28,6 +29,12 @@ Players can still join with:
 Good luck! 🍀`;
 
   try {
+    logNotification("COMPETITION_STARTED", "lifecycle:handleCompetitionStarts", {
+      competitionId: competition.id,
+      competitionTitle: competition.title,
+      channelId: competition.channelId,
+      serverId: competition.serverId,
+    });
     await sendChannelMessage(message, competition.channelId, competition.serverId);
     console.log(`[CompetitionLifecycle] ✅ Posted start notification for competition ${competition.id.toString()}`);
   } catch (error) {
@@ -95,6 +102,12 @@ async function postFinalLeaderboard(
   message += `\n\nThank you for participating! 🎉`;
 
   try {
+    logNotification("COMPETITION_ENDED", "lifecycle:handleCompetitionEnds", {
+      competitionId: competition.id,
+      competitionTitle: competition.title,
+      channelId: competition.channelId,
+      serverId: competition.serverId,
+    });
     await sendChannelMessage(message, competition.channelId, competition.serverId);
     console.log(`[CompetitionLifecycle] ✅ Posted final leaderboard for competition ${competition.id.toString()}`);
   } catch (error) {
