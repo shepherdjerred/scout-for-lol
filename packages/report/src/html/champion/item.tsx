@@ -38,8 +38,6 @@ export function renderItem(item: number) {
               : `.01rem solid ${palette.gold.bright}`,
             width: "100%",
             height: "100%",
-            position: "relative",
-            zIndex: 1,
           }}
           width={"100%"}
           height={"100%"}
@@ -54,7 +52,6 @@ export function renderItem(item: number) {
               bottom: "-.15rem",
               border: `.2rem solid #8338ec`,
               borderRadius: `.25rem`,
-              zIndex: 2,
               pointerEvents: "none",
               boxShadow: `0 0 .6rem rgba(131, 56, 236, 0.9)`,
             }}
