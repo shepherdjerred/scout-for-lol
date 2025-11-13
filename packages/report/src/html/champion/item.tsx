@@ -45,6 +45,7 @@ export function renderItem(item: number) {
         {isPrismatic && (
           <div
             style={{
+              display: "block",
               position: "absolute",
               top: "-.15rem",
               left: "-.15rem",

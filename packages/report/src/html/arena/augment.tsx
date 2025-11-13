@@ -31,7 +31,7 @@ export function renderAugment(augment: Augment) {
             height={augmentIconSize}
           />
         )}
-        <div>
+        <div style={{ display: "block" }}>
           {augment.name} ({rarityName})
         </div>
       </div>
