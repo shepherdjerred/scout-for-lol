@@ -1,13 +1,15 @@
 import { type Augment } from "@scout-for-lol/data";
 import { startCase } from "@scout-for-lol/data/src/util.ts";
-import { getAugmentIconFilename } from "../../assets/augment-icons/augment-id-to-icon-map.ts";
 
 const augmentIconSize = "2rem";
 
 export function renderAugment(augment: Augment) {
   if (augment.type === "full") {
     const rarityName = startCase(augment.rarity);
-    const iconUrl = getAugmentIconUrl(augment.id, augment.iconSmall);
+    // Use iconSmall path directly from the augment data
+    const iconUrl = augment.iconSmall
+      ? `https://raw.communitydragon.org/latest/game/${augment.iconSmall}`
+      : null;
 
     return (
       <div
@@ -36,23 +38,4 @@ export function renderAugment(augment: Augment) {
     );
   }
   return `Augment ${augment.id.toString()}`;
-}
-
-function getAugmentIconUrl(
-  augmentId: number,
-  iconSmallPath: string | undefined,
-): string | null {
-  // Try to get icon filename from mapping
-  const iconFilename = getAugmentIconFilename(augmentId);
-  if (iconFilename) {
-    // Construct Community Dragon URL from icon filename
-    return `https://raw.communitydragon.org/latest/game/assets/ux/cherry/augments/icons/${iconFilename}`;
-  }
-
-  // Fallback: use iconSmall path if available
-  if (iconSmallPath) {
-    return `https://raw.communitydragon.org/latest/game/${iconSmallPath}`;
-  }
-
-  return null;
 }
