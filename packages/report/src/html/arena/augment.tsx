@@ -3,7 +3,7 @@ import { startCase } from "@scout-for-lol/data/src/util.ts";
 
 const augmentIconSize = "2rem";
 
-export function renderAugment(augment: Augment) {
+export function renderAugment(augment: Augment): JSX.Element {
   if (augment.type === "full") {
     const rarityName = startCase(augment.rarity);
     // Use iconSmall path directly from the augment data
@@ -37,5 +37,6 @@ export function renderAugment(augment: Augment) {
       </div>
     );
   }
-  return `Augment ${augment.id.toString()}`;
+  // For minimal augments (type === "id"), return text as JSX
+  return <div>Augment {augment.id.toString()}</div>;
 }
