@@ -16,7 +16,7 @@ function getItemIconUrl(itemId: number): string {
   return `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/item/${itemId.toString()}.png`;
 }
 
-export function renderItem(item: number): JSX.Element {
+export function renderItem(item: number) {
   if (item !== 0) {
     const isPrismatic = isPrismaticItem(item);
     const iconUrl = getItemIconUrl(item);
@@ -76,7 +76,7 @@ export function renderItem(item: number): JSX.Element {
   }
 }
 
-export function renderItems(items: number[], visionScore: number, isArena = false): JSX.Element {
+export function renderItems(items: number[], visionScore: number, isArena = false) {
   const mainItems = pipe(items, take(6), map(renderItem));
 
   const lastItem = last(items);
