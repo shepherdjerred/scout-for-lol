@@ -38,5 +38,5 @@ export function renderAugment(augment: Augment) {
     );
   }
   // For minimal augments (type === "id"), return text as JSX
-  return <div>Augment {augment.id.toString()}</div>;
+  return <div style={{ display: "block" }}>Augment {augment.id.toString()}</div>;
 }
