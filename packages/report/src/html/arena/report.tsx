@@ -1,17 +1,9 @@
 import { type ArenaMatch, type Augment, formatArenaPlacement } from "@scout-for-lol/data";
 import { renderItems } from "../champion/item.tsx";
-import { startCase } from "@scout-for-lol/data/src/util.ts";
+import { renderAugment } from "./augment.tsx";
 
 export function ArenaReport(props: { match: ArenaMatch }) {
   const { match } = props;
-  const renderAugment = (a: Augment) => {
-    if (a.type === "full") {
-      const rarityName = startCase(a.rarity);
-
-      return `${a.name} (${rarityName})`;
-    }
-    return `Augment ${a.id.toString()}`;
-  };
   const filterDisplayAugments = (augs: Augment[]) => augs.filter((a) => (a.type === "full" ? true : a.id > 0));
   return (
     <div
@@ -288,19 +280,8 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                                       display: "flex",
                                       fontSize: 22,
                                       opacity: 0.75,
-                                      paddingLeft: 16,
-                                      position: "relative",
                                     }}
                                   >
-                                    <span
-                                      style={{
-                                        position: "absolute",
-                                        left: 0,
-                                        color: "#9ca3af",
-                                      }}
-                                    >
-                                      •
-                                    </span>
                                     {renderAugment(augment)}
                                   </div>
                                 ))}
