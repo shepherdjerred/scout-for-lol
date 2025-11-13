@@ -265,6 +265,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                               >
                                 <div
                                   style={{
+                                    display: "block",
                                     fontSize: 24,
                                     opacity: 0.8,
                                     fontWeight: 600,
