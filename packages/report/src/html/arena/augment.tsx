@@ -7,9 +7,7 @@ export function renderAugment(augment: Augment) {
   if (augment.type === "full") {
     const rarityName = startCase(augment.rarity);
     // Use iconSmall path directly from the augment data
-    const iconUrl = augment.iconSmall
-      ? `https://raw.communitydragon.org/latest/game/${augment.iconSmall}`
-      : null;
+    const iconUrl = augment.iconSmall ? `https://raw.communitydragon.org/latest/game/${augment.iconSmall}` : null;
 
     return (
       <div

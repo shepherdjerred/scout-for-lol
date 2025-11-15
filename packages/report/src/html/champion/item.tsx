@@ -33,9 +33,7 @@ export function renderItem(item: number) {
           src={iconUrl}
           style={{
             backgroundColor: palette.blue[5],
-            border: isPrismatic
-              ? `.15rem solid transparent`
-              : `.01rem solid ${palette.gold.bright}`,
+            border: isPrismatic ? `.15rem solid transparent` : `.01rem solid ${palette.gold.bright}`,
             width: "100%",
             height: "100%",
           }}
