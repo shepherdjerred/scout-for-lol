@@ -9,15 +9,15 @@ export function renderAugment(augment: Augment) {
     // Use iconSmall path directly from the augment data
     const iconUrl = augment.iconSmall ? `https://raw.communitydragon.org/latest/game/${augment.iconSmall}` : null;
 
-    return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-        }}
-      >
-        {iconUrl && (
+    if (iconUrl) {
+      return (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
           <img
             src={iconUrl}
             style={{
@@ -28,13 +28,13 @@ export function renderAugment(augment: Augment) {
             width={augmentIconSize}
             height={augmentIconSize}
           />
-        )}
-        <div style={{ display: "block" }}>
-          {augment.name} ({rarityName})
+          <div style={{ display: "contents" }}>{`${augment.name} (${rarityName})`}</div>
         </div>
-      </div>
-    );
+      );
+    }
+
+    return <div style={{ display: "contents" }}>{`${augment.name} (${rarityName})`}</div>;
   }
   // For minimal augments (type === "id"), return text as JSX
-  return <div style={{ display: "block" }}>Augment {augment.id.toString()}</div>;
+  return <div style={{ display: "contents" }}>{`Augment ${augment.id.toString()}`}</div>;
 }

@@ -27,6 +27,8 @@ export function renderItem(item: number) {
           height: dimension,
           display: "flex",
           position: "relative",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
         <img
@@ -36,6 +38,9 @@ export function renderItem(item: number) {
             border: isPrismatic ? `.15rem solid transparent` : `.01rem solid ${palette.gold.bright}`,
             width: "100%",
             height: "100%",
+            position: "absolute",
+            top: 0,
+            left: 0,
           }}
           width={"100%"}
           height={"100%"}
@@ -64,6 +69,7 @@ export function renderItem(item: number) {
         style={{
           width: dimension,
           height: dimension,
+          display: "flex",
           backgroundColor: palette.blue[5],
           border: `.01rem solid ${palette.gold.bright}`,
         }}
