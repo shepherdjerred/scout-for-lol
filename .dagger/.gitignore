@@ -7,3 +7,4 @@ build/
 /**/node_modules/**
 /**/.pnpm-store/**
 /.env
+bun.lockb
