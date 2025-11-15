@@ -55,7 +55,7 @@
       "**/*.code-search": true,
       "**/dist": true,
       "**/generated": true,
-    }
+    },
   },
   "launch": {
     "configurations": [

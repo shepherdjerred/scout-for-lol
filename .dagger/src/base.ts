@@ -40,6 +40,8 @@ export function installWorkspaceDeps(workspaceSource: Directory, installOpenssl 
       // Dependency files (change occasionally - separate cache layer)
       .withFile("/workspace/package.json", workspaceSource.file("package.json"))
       .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
+      // Patches directory (needed for bun patch to work)
+      .withDirectory("/workspace/patches", workspaceSource.directory("patches"))
       // Package source code (changes frequently - mounted after deps)
       .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
       .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))

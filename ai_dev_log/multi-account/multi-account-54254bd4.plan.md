@@ -1,4 +1,5 @@
 <!-- 54254bd4-b60d-4cdc-84cd-3be60f71c604 8396c31c-a5e3-4499-8ab1-dcf10bfb308f -->
+
 # Multi-Account Competition Selection with Best-of-Multi-Entry
 
 ## Overview
@@ -32,10 +33,10 @@ model CompetitionParticipant {
   accountId     Int      // NEW: Which account this participant entry uses
   status        String   // INVITED, JOINED, LEFT
   // ... rest of fields
-  
+
   account       Account  @relation(fields: [accountId], references: [id])
   // ... rest of relations
-  
+
   @@unique([competitionId, accountId])  // Prevents same account joining twice
   @@index([competitionId, playerId, status])  // For querying all accounts per player
 }
@@ -67,9 +68,9 @@ model CompetitionSnapshot {
   snapshotType    String   // START, END
   snapshotData    String   // JSON
   snapshotTime    DateTime
-  
+
   participant     CompetitionParticipant @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  
+
   @@unique([participantId, snapshotType])  // CHANGED: One snapshot per participant entry
 }
 ```
@@ -194,8 +195,8 @@ Add `accountAlias` and `accountAliases` to `LeaderboardEntry`:
 export type LeaderboardEntry = {
   playerId: PlayerId;
   playerName: string;
-  accountAlias: string;        // NEW: Primary account (best performing)
-  accountAliases?: string[];   // NEW: All accounts used (for multi-entry)
+  accountAlias: string; // NEW: Primary account (best performing)
+  accountAliases?: string[]; // NEW: All accounts used (for multi-entry)
   score: number | Rank;
   metadata?: Record<string, unknown>;
 };
@@ -228,25 +229,25 @@ const participants = await prisma.competitionParticipant.findMany({
 
 ```typescript
 // Group entries by playerId
-const entriesByPlayer = groupBy(participants, p => p.playerId);
+const entriesByPlayer = groupBy(participants, (p) => p.playerId);
 
 // For each player, calculate best score across all their accounts
 const aggregatedEntries = Object.entries(entriesByPlayer).map(([playerId, entries]) => {
   // Process each account's performance
-  const accountScores = entries.map(entry => {
+  const accountScores = entries.map((entry) => {
     const matches = filterMatchesForAccount(entry.account.puuid);
     const score = processForCriteria(matches, entry.account);
     return { accountAlias: entry.account.alias, score };
   });
-  
+
   // Pick best score
   const best = selectBestScore(accountScores, criteria);
-  
+
   return {
     playerId,
     playerName: entries[0].player.alias,
-    accountAlias: best.accountAlias,  // Which account achieved best score
-    accountAliases: accountScores.map(a => a.accountAlias),  // All accounts used
+    accountAlias: best.accountAlias, // Which account achieved best score
+    accountAliases: accountScores.map((a) => a.accountAlias), // All accounts used
     score: best.score,
   };
 });
@@ -286,8 +287,8 @@ Create functions to compare scores based on criteria:
 ```typescript
 export function selectBestScore(
   scores: { accountAlias: string; score: number | Rank; metadata?: Record<string, unknown> }[],
-  criteria: CompetitionCriteria
-): { accountAlias: string; score: number | Rank; metadata?: Record<string, unknown> }
+  criteria: CompetitionCriteria,
+): { accountAlias: string; score: number | Rank; metadata?: Record<string, unknown> };
 ```
 
 Handle each criteria type:
@@ -345,8 +346,8 @@ Add account fields to `CachedLeaderboardEntrySchema`:
 export const CachedLeaderboardEntrySchema = z.object({
   playerId: PlayerIdSchema,
   playerName: z.string(),
-  accountAlias: z.string(),              // Primary/best account
-  accountAliases: z.array(z.string()).optional(),  // All accounts (multi-entry)
+  accountAlias: z.string(), // Primary/best account
+  accountAliases: z.array(z.string()).optional(), // All accounts (multi-entry)
   score: z.union([z.number(), RankSchema]),
   metadata: z.record(z.string(), z.unknown()).optional(),
   rank: z.number().int().positive(),

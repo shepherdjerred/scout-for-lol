@@ -5,19 +5,62 @@ import { last, map, pipe, take } from "remeda";
 
 const dimension = "7.5rem";
 
+function isPrismaticItem(itemId: number): boolean {
+  // Prismatic items in Arena have IDs starting with 44
+  return itemId.toString().startsWith("44");
+}
+
+function getItemIconUrl(itemId: number): string {
+  // All items (including prismatic) use Data Dragon
+  // Prismatic items have IDs starting with 44 and are available via Data Dragon
+  return `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/item/${itemId.toString()}.png`;
+}
+
 export function renderItem(item: number) {
   if (item !== 0) {
+    const isPrismatic = isPrismaticItem(item);
+    const iconUrl = getItemIconUrl(item);
     return (
-      <div style={{ width: dimension, height: dimension, display: "flex" }}>
+      <div
+        style={{
+          width: dimension,
+          height: dimension,
+          display: "flex",
+          position: "relative",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <img
-          src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/item/${item.toString()}.png`}
+          src={iconUrl}
           style={{
             backgroundColor: palette.blue[5],
-            border: `.01rem solid ${palette.gold.bright}`,
+            border: isPrismatic ? `.15rem solid transparent` : `.01rem solid ${palette.gold.bright}`,
+            width: "100%",
+            height: "100%",
+            position: "absolute",
+            top: 0,
+            left: 0,
           }}
           width={"100%"}
           height={"100%"}
         />
+        {isPrismatic && (
+          <div
+            style={{
+              display: "block",
+              position: "absolute",
+              top: "-.15rem",
+              left: "-.15rem",
+              right: "-.15rem",
+              bottom: "-.15rem",
+              border: `.2rem solid #8338ec`,
+              borderRadius: `.25rem`,
+              pointerEvents: "none",
+              boxShadow: `0 0 .6rem rgba(131, 56, 236, 0.9)`,
+            }}
+          />
+        )}
       </div>
     );
   } else {
@@ -26,6 +69,7 @@ export function renderItem(item: number) {
         style={{
           width: dimension,
           height: dimension,
+          display: "flex",
           backgroundColor: palette.blue[5],
           border: `.01rem solid ${palette.gold.bright}`,
         }}

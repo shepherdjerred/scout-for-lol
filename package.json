@@ -63,5 +63,8 @@
       "bun ./scripts/run-relevant-tests.ts packages/report"
     ]
   },
-  "dependencies": {}
+  "dependencies": {},
+  "patchedDependencies": {
+    "satori@0.18.3": "patches/satori@0.18.3.patch"
+  }
 }

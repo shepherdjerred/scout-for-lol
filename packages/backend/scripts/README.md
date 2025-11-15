@@ -56,22 +56,22 @@ After running, Prisma's generated types automatically use branded IDs:
 // Before transformation:
 export type $PlayerPayload = {
   scalars: {
-    id: number;  // ← Plain number
+    id: number; // ← Plain number
     alias: string;
     // ...
-  }
-}
+  };
+};
 
 // After transformation:
 import { PlayerId } from "@scout-for-lol/data";
 
 export type $PlayerPayload = {
   scalars: {
-    id: PlayerId;  // ← Branded type!
+    id: PlayerId; // ← Branded type!
     alias: string;
     // ...
-  }
-}
+  };
+};
 ```
 
 ## Benefits
@@ -85,6 +85,7 @@ export type $PlayerPayload = {
 ## How It Works
 
 Uses TypeScript's AST (via ts-morph) to:
+
 1. Navigate to `Prisma` namespace
 2. Find type aliases like `$PlayerPayload<ExtArgs>`
 3. Locate the `scalars:` property
@@ -92,6 +93,7 @@ Uses TypeScript's AST (via ts-morph) to:
 5. Replace `number` with branded types where configured
 
 This is **much more robust** than regex-based replacement because it:
+
 - Understands TypeScript syntax
 - Preserves formatting
 - Only transforms the exact fields we want
@@ -108,6 +110,7 @@ This is **much more robust** than regex-based replacement because it:
 The script is designed to be resilient to Prisma updates. If Prisma changes their generated type structure significantly, you may need to update the AST traversal logic in `transformPayloadType()`.
 
 Current implementation tested with:
+
 - Prisma 6.18.0
 - TypeScript 5.x
 - Bun 1.3.1
