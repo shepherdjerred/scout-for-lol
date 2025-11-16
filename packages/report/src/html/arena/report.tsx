@@ -38,7 +38,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 16,
+                gap: 24,
                 marginBottom: 8,
               }}
             >
@@ -52,26 +52,19 @@ export function ArenaReport(props: { match: ArenaMatch }) {
               >
                 {isVictory ? "VICTORY" : "DEFEAT"}
               </div>
-              <div
-                style={{
-                  fontSize: 32,
-                  opacity: 0.8,
-                  color: "#e5e7eb",
-                  display: "flex",
-                }}
-              >
-                {formatArenaPlacement(trackedTeam.placement)}
+              <div style={{ display: "flex", fontSize: 24, opacity: 0.9, gap: 0 }}>
+                {Math.round(match.durationInSeconds / 60)}m {Math.round(match.durationInSeconds % 60)}s
               </div>
             </div>
           );
         }
 
-        return null;
+        return (
+          <div style={{ display: "flex", fontSize: 48, opacity: 0.9, marginBottom: 8, gap: 0 }}>
+            {Math.round(match.durationInSeconds / 60)}m {Math.round(match.durationInSeconds % 60)}s
+          </div>
+        );
       })()}
-
-      <div style={{ display: "flex", fontSize: 48, opacity: 0.9 }}>
-        {Math.round(match.durationInSeconds / 60)}m {Math.round(match.durationInSeconds % 60)}s
-      </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
         {/* Get tracked player names for gold highlighting (same as regular matches) */}
@@ -142,46 +135,80 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                     position: "relative",
                   }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      marginBottom: 16,
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  {(() => {
+                    const teamKills = team.players.reduce((sum, p) => sum + p.kills, 0);
+                    const teamDeaths = team.players.reduce((sum, p) => sum + p.deaths, 0);
+                    const teamAssists = team.players.reduce((sum, p) => sum + p.assists, 0);
+
+                    return (
                       <div
                         style={{
-                          background:
-                            team.placement === 1
-                              ? "linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)"
-                              : team.placement === 2
-                                ? "linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%)"
-                                : team.placement === 3
-                                  ? "linear-gradient(135deg, #cd7f32 0%, #deb887 100%)"
-                                  : "#6b7280",
-                          color: team.placement <= 3 ? "#000" : "#fff",
-                          borderRadius: "50%",
-                          width: 52,
-                          height: 52,
                           display: "flex",
                           alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 24,
-                          fontWeight: 800,
-                          border: team.placement <= 3 ? "2px solid rgba(255, 255, 255, 0.2)" : "none",
-                          boxShadow:
-                            team.placement <= 3
-                              ? "0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
-                              : "0 2px 4px rgba(0, 0, 0, 0.2)",
-                          textShadow: team.placement <= 3 ? "0 1px 1px rgba(0, 0, 0, 0.3)" : "none",
+                          justifyContent: "space-between",
+                          marginBottom: 16,
                         }}
                       >
-                        {formatArenaPlacement(team.placement)}
+                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                          <div
+                            style={{
+                              background:
+                                team.placement === 1
+                                  ? "linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)"
+                                  : team.placement === 2
+                                    ? "linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%)"
+                                    : team.placement === 3
+                                      ? "linear-gradient(135deg, #cd7f32 0%, #deb887 100%)"
+                                      : "#6b7280",
+                              color: team.placement <= 3 ? "#000" : "#fff",
+                              borderRadius: "50%",
+                              width: 52,
+                              height: 52,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: 24,
+                              fontWeight: 800,
+                              border: team.placement <= 3 ? "2px solid rgba(255, 255, 255, 0.2)" : "none",
+                              boxShadow:
+                                team.placement <= 3
+                                  ? "0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)"
+                                  : "0 2px 4px rgba(0, 0, 0, 0.2)",
+                              textShadow: team.placement <= 3 ? "0 1px 1px rgba(0, 0, 0, 0.3)" : "none",
+                            }}
+                          >
+                            {formatArenaPlacement(team.placement)}
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            alignItems: "center",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 20,
+                              opacity: 0.7,
+                            }}
+                          >
+                            K/D/A
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              fontSize: 24,
+                              fontWeight: 600,
+                              color: teamKills > teamDeaths ? "#10b981" : "#ef4444",
+                            }}
+                          >
+                            {teamKills}/{teamDeaths}/{teamAssists}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     {team.players.map((p, idx) => {
                       const items = renderItems(p.items, 0, true);
@@ -254,50 +281,78 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                                 {p.kills}/{p.deaths}/{p.assists}
                               </div>
                             </div>
-                            {filterDisplayAugments(p.augments).length > 0 ? (
-                              <div
-                                style={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  marginTop: 8,
-                                  gap: 4,
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    display: "block",
-                                    fontSize: 24,
-                                    opacity: 0.8,
-                                    fontWeight: 600,
-                                    marginBottom: 4,
-                                  }}
-                                >
-                                  Augments:
-                                </div>
-                                {filterDisplayAugments(p.augments).map((augment, augIdx) => (
-                                  <div
-                                    key={augIdx}
-                                    style={{
-                                      display: "flex",
-                                      fontSize: 22,
-                                      opacity: 0.75,
-                                    }}
-                                  >
-                                    {renderAugment(augment)}
-                                  </div>
-                                ))}
-                              </div>
-                            ) : null}
                           </div>
 
                           <div
                             style={{
                               display: "flex",
-                              transform: "scale(0.5)",
-                              transformOrigin: "left top",
+                              gap: 24,
+                              alignItems: "flex-start",
                             }}
                           >
-                            {items}
+                            <div
+                              style={{
+                                display: "flex",
+                                transform: "scale(0.5)",
+                                transformOrigin: "left top",
+                              }}
+                            >
+                              {items}
+                            </div>
+
+                            {(() => {
+                              const displayAugments = filterDisplayAugments(p.augments);
+                              if (displayAugments.length === 0) return null;
+
+                              const augmentPairs = [];
+                              for (let i = 0; i < displayAugments.length; i += 2) {
+                                augmentPairs.push(displayAugments.slice(i, i + 2));
+                              }
+
+                              return (
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 4,
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      display: "block",
+                                      fontSize: 24,
+                                      opacity: 0.8,
+                                      fontWeight: 600,
+                                      marginBottom: 4,
+                                    }}
+                                  >
+                                    Augments
+                                  </div>
+                                  {augmentPairs.map((pair, pairIdx) => (
+                                    <div
+                                      key={pairIdx}
+                                      style={{
+                                        display: "flex",
+                                        gap: 12,
+                                      }}
+                                    >
+                                      {pair.map((augment, augIdx) => (
+                                        <div
+                                          key={augIdx}
+                                          style={{
+                                            display: "flex",
+                                            fontSize: 22,
+                                            opacity: 0.75,
+                                          }}
+                                        >
+                                          {renderAugment(augment)}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
                       );
