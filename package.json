@@ -67,7 +67,8 @@
       "bash -c 'cd packages/report-ui && bun run typecheck'",
       "bash -c 'cd packages/report-ui && bunx eslint --cache --fix'",
       "bun ./scripts/run-relevant-tests.ts packages/report-ui"
-    ]
+    ],
+    "*.{ts,tsx,js,jsx}": "bun run scripts/check-suppressions.ts"
   },
   "dependencies": {},
   "patchedDependencies": {
