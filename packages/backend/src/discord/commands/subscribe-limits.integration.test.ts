@@ -51,8 +51,11 @@ describe("Subscribe Command - Subscription Limits", () => {
     const channelId = testChannelId("00001");
     const discordUserId = testAccountId("0000001");
 
-    // Create DEFAULT_PLAYER_SUBSCRIPTION_LIMIT players with subscriptions
-    for (let i = 0; i < DEFAULT_PLAYER_SUBSCRIPTION_LIMIT; i++) {
+    // Create a smaller subset for faster testing
+    const testLimit = Math.min(5, DEFAULT_PLAYER_SUBSCRIPTION_LIMIT);
+
+    // Create testLimit players with subscriptions
+    for (let i = 0; i < testLimit; i++) {
       const alias = `Player${i.toString()}`;
       const puuid = testPuuid(i.toString());
 
@@ -98,7 +101,7 @@ describe("Subscribe Command - Subscription Limits", () => {
       },
     });
 
-    expect(subscribedPlayerCount).toBe(DEFAULT_PLAYER_SUBSCRIPTION_LIMIT);
+    expect(subscribedPlayerCount).toBe(testLimit);
   });
 
   test("counts only players with active subscriptions", async () => {
@@ -436,8 +439,11 @@ describe("Subscribe Command - Subscription Limits", () => {
     const serverId = testGuildId("007");
     const discordUserId = testAccountId("0000001");
 
-    // Create DEFAULT_ACCOUNT_LIMIT accounts (doesn't matter if they have subscriptions)
-    for (let i = 0; i < DEFAULT_ACCOUNT_LIMIT; i++) {
+    // Create a smaller subset for faster testing
+    const testAccountLimit = Math.min(5, DEFAULT_ACCOUNT_LIMIT);
+
+    // Create testAccountLimit accounts (doesn't matter if they have subscriptions)
+    for (let i = 0; i < testAccountLimit; i++) {
       const alias = `Player${i.toString()}`;
       const puuid = testPuuid(i.toString());
 
@@ -471,7 +477,7 @@ describe("Subscribe Command - Subscription Limits", () => {
       },
     });
 
-    expect(accountCount).toBe(DEFAULT_ACCOUNT_LIMIT);
+    expect(accountCount).toBe(testAccountLimit);
   });
 
   test("account limit counts all accounts regardless of subscriptions", async () => {

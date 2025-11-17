@@ -1,0 +1,84 @@
+/**
+ * Update metrics for servers at/approaching limits
+ * This persists state to Prometheus by querying current database state
+ */
+
+import { prisma } from "../database/index.js";
+import {
+  serversAtSubscriptionLimit,
+  serversApproachingSubscriptionLimit,
+  serversAtAccountLimit,
+  serversApproachingAccountLimit,
+} from "./index.js";
+import {
+  DEFAULT_PLAYER_SUBSCRIPTION_LIMIT,
+  DEFAULT_ACCOUNT_LIMIT,
+  LIMIT_WARNING_THRESHOLD,
+} from "../configuration/subscription-limits.js";
+
+/**
+ * Update limit metrics based on current database state
+ * This should be called periodically (e.g., every minute) to keep metrics current
+ */
+export async function updateLimitMetrics(): Promise<void> {
+  try {
+    // Get all servers and their current usage
+    const servers = await prisma.player.groupBy({
+      by: ["serverId"],
+      _count: {
+        id: true,
+      },
+    });
+
+    // Track servers by limit status
+    let atSubLimit = 0;
+    let approachingSubLimit = 0;
+    let atAcctLimit = 0;
+    let approachingAcctLimit = 0;
+
+    for (const server of servers) {
+      const serverId = server.serverId;
+
+      // Count subscribed players
+      const subscribedPlayers = await prisma.player.count({
+        where: {
+          serverId,
+          subscriptions: {
+            some: {},
+          },
+        },
+      });
+
+      // Count accounts
+      const accountCount = await prisma.account.count({
+        where: {
+          serverId,
+        },
+      });
+
+      // Check subscription limits
+      const subLimit = DEFAULT_PLAYER_SUBSCRIPTION_LIMIT;
+      if (subscribedPlayers >= subLimit) {
+        atSubLimit++;
+      } else if (subscribedPlayers >= subLimit - LIMIT_WARNING_THRESHOLD) {
+        approachingSubLimit++;
+      }
+
+      // Check account limits
+      const acctLimit = DEFAULT_ACCOUNT_LIMIT;
+      if (accountCount >= acctLimit) {
+        atAcctLimit++;
+      } else if (accountCount >= acctLimit - LIMIT_WARNING_THRESHOLD) {
+        approachingAcctLimit++;
+      }
+    }
+
+    // Update metrics
+    serversAtSubscriptionLimit.set(atSubLimit);
+    serversApproachingSubscriptionLimit.set(approachingSubLimit);
+    serversAtAccountLimit.set(atAcctLimit);
+    serversApproachingAccountLimit.set(approachingAcctLimit);
+  } catch (error) {
+    console.error("Failed to update limit metrics:", error);
+  }
+}

@@ -348,6 +348,42 @@ export const subscriptionsTotal = new Gauge({
 });
 
 /**
+ * Number of servers currently at their subscription limit
+ */
+export const serversAtSubscriptionLimit = new Gauge({
+  name: "servers_at_subscription_limit",
+  help: "Number of servers currently at their subscription limit",
+  registers: [registry],
+});
+
+/**
+ * Number of servers approaching their subscription limit (5 or fewer slots remaining)
+ */
+export const serversApproachingSubscriptionLimit = new Gauge({
+  name: "servers_approaching_subscription_limit",
+  help: "Number of servers approaching their subscription limit (5 or fewer slots remaining)",
+  registers: [registry],
+});
+
+/**
+ * Number of servers currently at their account limit
+ */
+export const serversAtAccountLimit = new Gauge({
+  name: "servers_at_account_limit",
+  help: "Number of servers currently at their account limit",
+  registers: [registry],
+});
+
+/**
+ * Number of servers approaching their account limit (5 or fewer slots remaining)
+ */
+export const serversApproachingAccountLimit = new Gauge({
+  name: "servers_approaching_account_limit",
+  help: "Number of servers approaching their account limit (5 or fewer slots remaining)",
+  registers: [registry],
+});
+
+/**
  * Number of unique servers with data (have at least one player)
  */
 export const serversWithDataTotal = new Gauge({
@@ -440,13 +476,18 @@ console.log("✅ Prometheus metrics initialized successfully");
 export { updateUsageMetrics } from "./usage.js";
 import "./usage.js";
 
+// Import limit metrics
+export { updateLimitMetrics } from "./limits.js";
+
 /**
  * Get all metrics as Prometheus-formatted text
  */
 export async function getMetrics(): Promise<string> {
   // Dynamic import to avoid circular dependency issues
   const { updateUsageMetrics } = await import("./usage.js");
+  const { updateLimitMetrics } = await import("./limits.js");
   updateUptimeMetric();
   await updateUsageMetrics();
+  await updateLimitMetrics();
   return await registry.metrics();
 }

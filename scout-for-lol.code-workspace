@@ -13,6 +13,10 @@
       "path": "packages/report",
     },
     {
+      "name": "report-ui",
+      "path": "packages/report-ui",
+    },
+    {
       "name": "data",
       "path": "packages/data",
     },

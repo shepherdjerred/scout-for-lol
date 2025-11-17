@@ -18,6 +18,8 @@ import {
   getSubscriptionLimit,
   getAccountLimit,
   hasUnlimitedSubscriptions,
+  DISCORD_SERVER_INVITE,
+  LIMIT_WARNING_THRESHOLD,
 } from "../../../configuration/subscription-limits.js";
 import { backfillLastMatchTime } from "../../../league/api/backfill-match-history.js";
 import { sendWelcomeMatch } from "./welcome-match.js";
@@ -102,10 +104,19 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
         );
 
         await interaction.reply({
-          content: `❌ **Subscription limit reached**\n\nThis server can subscribe to a maximum of ${subscriptionLimit.toString()} players. You currently have ${subscribedPlayerCount.toString()} subscribed players.\n\nTo subscribe to a new player, please unsubscribe from an existing player first using \`/subscription delete\`.`,
+          content: `❌ **Subscription limit reached**\n\nThis server can subscribe to a maximum of ${subscriptionLimit.toString()} players. You currently have ${subscribedPlayerCount.toString()} subscribed players.\n\nTo subscribe to a new player, please unsubscribe from an existing player first using \`/subscription delete\`.\n\nIf you need more subscriptions, please contact us: ${DISCORD_SERVER_INVITE}`,
           ephemeral: true,
         });
         return;
+      }
+
+      // Warn if approaching limit (threshold or fewer slots remaining)
+      const remainingSlots = subscriptionLimit - subscribedPlayerCount - 1;
+      if (remainingSlots <= LIMIT_WARNING_THRESHOLD && remainingSlots > 0) {
+        await interaction.followUp({
+          content: `⚠️  **Approaching subscription limit**\n\nYou will have ${remainingSlots.toString()} subscription slot${remainingSlots === 1 ? "" : "s"} remaining after this addition.\n\nIf you need more subscriptions, please contact us: ${DISCORD_SERVER_INVITE}`,
+          ephemeral: true,
+        });
       }
     } else {
       console.log(`♾️ Server ${guildId} has unlimited subscriptions`);
@@ -137,10 +148,19 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
       );
 
       await interaction.reply({
-        content: `❌ **Account limit reached**\n\nThis server can have a maximum of ${accountLimit.toString()} accounts. You currently have ${accountCount.toString()} accounts.\n\nTo add a new account, please remove an existing account first.`,
+        content: `❌ **Account limit reached**\n\nThis server can have a maximum of ${accountLimit.toString()} accounts. You currently have ${accountCount.toString()} accounts.\n\nTo add a new account, please remove an existing account first.\n\nIf you need more accounts, please contact us: ${DISCORD_SERVER_INVITE}`,
         ephemeral: true,
       });
       return;
+    }
+
+    // Warn if approaching limit (threshold or fewer slots remaining)
+    const remainingAccountSlots = accountLimit - accountCount - 1;
+    if (remainingAccountSlots <= LIMIT_WARNING_THRESHOLD && remainingAccountSlots > 0) {
+      await interaction.followUp({
+        content: `⚠️  **Approaching account limit**\n\nYou will have ${remainingAccountSlots.toString()} account slot${remainingAccountSlots === 1 ? "" : "s"} remaining after this addition.\n\nIf you need more accounts, please contact us: ${DISCORD_SERVER_INVITE}`,
+        ephemeral: true,
+      });
     }
   } else {
     console.log(`♾️ Server ${guildId} has unlimited accounts`);
