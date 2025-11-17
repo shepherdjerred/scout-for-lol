@@ -52,7 +52,7 @@ export async function createMatchImage(
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
   const isArena = match.queueType === "arena";
   const svg = isArena ? await arenaMatchToSvg(match) : await matchToSvg(match);
-  const image = svgToPng(svg);
+  const image = await svgToPng(svg);
 
   // Save both PNG and SVG to S3
   try {

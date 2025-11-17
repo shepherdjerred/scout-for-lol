@@ -24,7 +24,7 @@ for (const path of RAW_FILE_PATHS) {
   test(testName, async () => {
     const match = (await Bun.file(path).json()) as unknown;
     const svg = await arenaMatchToSvg(ArenaMatchSchema.parse(match));
-    const png = svgToPng(svg);
+    const png = await svgToPng(svg);
     expect(svg.length).toBeGreaterThan(1024); // basic sanity check
     const fileName = path.split("/").pop()?.replace(".json", ".png") ?? "arena_real.png";
     writeFileSync(new URL(`__snapshots__/${fileName}`, import.meta.url), png);

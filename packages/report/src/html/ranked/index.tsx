@@ -12,7 +12,7 @@ if (typeof Bun !== "undefined") {
       await Promise.all(
         TierSchema.options.map(async (tier): Promise<[Tier, string]> => {
           const image = await Bun.file(
-            new URL(`assets/Rank=${tier.charAt(0).toUpperCase() + tier.slice(1)}.png`, import.meta.url),
+            new URL(`./assets/Rank=${tier.charAt(0).toUpperCase() + tier.slice(1)}.png`, import.meta.url),
           ).arrayBuffer();
           return [tier, Buffer.from(image).toString("base64")];
         }),
@@ -21,24 +21,18 @@ if (typeof Bun !== "undefined") {
   );
 }
 
-export async function RankedBadge({ oldRank, newRank }: { oldRank: Rank | undefined; newRank: Rank }) {
+export function RankedBadge({ oldRank, newRank }: { oldRank: Rank | undefined; newRank: Rank }) {
   const environment = typeof Bun !== "undefined" ? "bun" : "browser";
-  const badge = await match(environment)
-    .with("bun", () => Promise.resolve(`data:image/png;base64,${images[newRank.tier]}`))
-    .with("browser", async () => {
-      // Dynamic import type assertion needed: Vite/bundler doesn't provide static types for PNG imports
-      // eslint-disable-next-line no-restricted-syntax -- Dynamic PNG import requires runtime type assertion
-      const module = (await import(
-        `./assets/Rank=${newRank.tier.charAt(0).toUpperCase() + newRank.tier.slice(1)}.png`
-      )) as unknown as {
-        default: {
-          src: string;
-          width: number;
-          height: number;
-          format: string;
-        };
-      };
-      return module.default.src;
+
+  // Use the pre-loaded images in Bun environment, or construct a URL for browser
+  const badge = match(environment)
+    .with("bun", () => `data:image/png;base64,${images[newRank.tier]}`)
+    .with("browser", () => {
+      // Construct the import path for Vite to handle at build time
+      return new URL(
+        `./assets/Rank=${newRank.tier.charAt(0).toUpperCase() + newRank.tier.slice(1)}.png`,
+        import.meta.url,
+      ).href;
     })
     .exhaustive();
 

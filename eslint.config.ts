@@ -3,6 +3,7 @@ import tseslint from "typescript-eslint";
 import unicorn from "eslint-plugin-unicorn";
 import { zodSchemaNaming } from "./eslint-rules/zod-schema-naming.ts";
 import { noRedundantZodParse } from "./eslint-rules/no-redundant-zod-parse.ts";
+import { satoriBestPractices } from "./eslint-rules/satori-best-practices.ts";
 
 /**
  * Bridge typescript-eslint rule to ESLint plugin system
@@ -16,6 +17,7 @@ const customRulesPlugin = {
   rules: {
     "zod-schema-naming": zodSchemaNaming,
     "no-redundant-zod-parse": noRedundantZodParse,
+    "satori-best-practices": satoriBestPractices,
   },
 };
 
@@ -180,6 +182,16 @@ export default tseslint.config(
     rules: {
       "custom-rules/zod-schema-naming": "error",
       "custom-rules/no-redundant-zod-parse": "error",
+    },
+  },
+  // Satori-specific best practices for all report components
+  {
+    files: ["packages/report/**/*.tsx", "packages/report/**/*.ts"],
+    plugins: {
+      "custom-rules": customRulesPlugin,
+    },
+    rules: {
+      "custom-rules/satori-best-practices": "error",
     },
   },
   // Variable and identifier naming conventions

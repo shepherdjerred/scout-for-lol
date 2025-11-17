@@ -9,6 +9,7 @@ import {
   getBackendTestReport,
 } from "./backend";
 import { checkReport, getReportCoverage, getReportTestReport } from "./report";
+import { checkReportUi, getReportUiCoverage, getReportUiTestReport, buildReportUi } from "./report-ui";
 import { checkData, getDataCoverage, getDataTestReport } from "./data";
 import { checkFrontend, buildFrontend, deployFrontend } from "./frontend";
 import { getGitHubContainer, getBunNodeContainer } from "./base";
@@ -59,7 +60,7 @@ export class ScoutForLol {
     // Run checks in parallel - force container execution with .sync()
     await withTiming("parallel package checks (lint, typecheck, tests)", async () => {
       logWithTimestamp("🔄 Running lint, typecheck, and tests in parallel for all packages...");
-      logWithTimestamp("📦 Packages being checked: backend, report, data, frontend");
+      logWithTimestamp("📦 Packages being checked: backend, report, report-ui, data, frontend");
 
       // Force execution of all containers in parallel
       await Promise.all([
@@ -70,6 +71,11 @@ export class ScoutForLol {
         }),
         withTiming("report check (lint + typecheck + tests)", async () => {
           const container = checkReport(source);
+          await container.sync();
+          return container;
+        }),
+        withTiming("report-ui check (lint + typecheck + tests)", async () => {
+          const container = checkReportUi(source);
           await container.sync();
           return container;
         }),
@@ -659,5 +665,85 @@ export class ScoutForLol {
 
     logWithTimestamp("✅ Frontend deployment completed successfully");
     return `✅ Frontend deployed to Cloudflare Pages (project: ${projectName}, branch: ${branch})\n\n${result}`;
+  }
+
+  /**
+   * Check the report-ui package
+   * @param source The workspace source directory
+   * @returns A message indicating completion
+   */
+  @func()
+  async checkReportUi(
+    @argument({
+      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Promise<string> {
+    logWithTimestamp("🔍 Starting report-ui package check");
+
+    await withTiming("report-ui package check", async () => {
+      const container = checkReportUi(source);
+      await container.sync();
+      return container;
+    });
+
+    logWithTimestamp("✅ Report-ui check completed successfully");
+    return "Report-ui check completed successfully";
+  }
+
+  /**
+   * Get report-ui test coverage
+   * @param source The workspace source directory
+   * @returns The coverage directory
+   */
+  @func()
+  reportUiCoverage(
+    @argument({
+      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Directory {
+    logWithTimestamp("📊 Exporting report-ui test coverage");
+    return getReportUiCoverage(source);
+  }
+
+  /**
+   * Get report-ui test report (junit.xml)
+   * @param source The workspace source directory
+   * @returns The directory containing junit.xml
+   */
+  @func()
+  reportUiTestReport(
+    @argument({
+      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Directory {
+    logWithTimestamp("📋 Exporting report-ui test report");
+    return getReportUiTestReport(source);
+  }
+
+  /**
+   * Build the report-ui package
+   * @param source The workspace source directory
+   * @returns The built dist directory
+   */
+  @func()
+  async buildReportUi(
+    @argument({
+      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Promise<Directory> {
+    logWithTimestamp("🏗️  Building report-ui package");
+
+    const result = await withTiming("report-ui build", () => Promise.resolve(buildReportUi(source)));
+
+    logWithTimestamp("✅ Report-ui build completed successfully");
+    return result;
   }
 }
