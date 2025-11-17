@@ -32,6 +32,12 @@ export function App() {
   };
 
   const [matchType, setMatchType] = useState<MatchType>(getInitialMatchType());
+  const [matchId, setMatchId] = useState("");
+  const [region, setRegion] = useState("na1");
+  const [apiToken, setApiToken] = useState(localStorage.getItem("riot-api-token") ?? "");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const exampleMatch = getExampleMatch(matchType);
 
   useEffect(() => {
@@ -40,14 +46,58 @@ export function App() {
     window.history.replaceState(null, "", `?${params.toString()}`);
   }, [matchType]);
 
+  const handleFetchMatch = async () => {
+    if (!matchId || !apiToken) {
+      setError("Please enter both match ID and API token");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { fetchMatchFromRiot } = await import("./api");
+      const result = await fetchMatchFromRiot(matchId, region, apiToken);
+
+      if (result.error) {
+        setError(result.error);
+      } else {
+        // result.match is always null for now
+        console.log("Match parsing not yet implemented");
+        setError("Match parsing not yet implemented");
+      }
+    } catch (err) {
+      const ErrorOrStringSchema = z.union([z.instanceof(Error), z.string()]);
+      const errorZod = ErrorOrStringSchema.safeParse(err);
+      let errorMessage = "Unknown error";
+      if (errorZod.success) {
+        const errorData = errorZod.data;
+        if (errorData instanceof Error) {
+          errorMessage = errorData.message;
+        } else {
+          errorMessage = errorData;
+        }
+      }
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+
+    // Save API token to localStorage
+    if (apiToken) {
+      localStorage.setItem("riot-api-token", apiToken);
+    }
+  };
+
   return (
     <div style={{ padding: "20px" }}>
       <h1>Report UI - Match Viewer</h1>
       <p>Browser-compatible report viewer for Scout for LoL</p>
 
+      {/* Example Match Selector */}
       <div style={{ marginBottom: "20px" }}>
         <label htmlFor="match-type" style={{ marginRight: "10px", fontWeight: "bold" }}>
-          Match Type:
+          Example Match Type:
         </label>
         <select
           id="match-type"
@@ -72,6 +122,108 @@ export function App() {
             </option>
           ))}
         </select>
+      </div>
+
+      {/* Riot API Match Fetcher */}
+      <div
+        style={{
+          marginBottom: "20px",
+          padding: "15px",
+          borderRadius: "4px",
+          backgroundColor: "#f5f5f5",
+          border: "1px solid #ddd",
+        }}
+      >
+        <h3 style={{ marginTop: 0 }}>Fetch Real Match from Riot API</h3>
+        <div style={{ marginBottom: "10px" }}>
+          <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Riot API Token:</label>
+          <input
+            type="password"
+            value={apiToken}
+            onChange={(e) => {
+              setApiToken(e.target.value);
+            }}
+            placeholder="Paste your API token here"
+            style={{
+              width: "100%",
+              padding: "8px",
+              borderRadius: "4px",
+              border: "1px solid #ccc",
+              boxSizing: "border-box",
+              marginBottom: "10px",
+            }}
+          />
+          <small style={{ color: "#666" }}>
+            Get a token at{" "}
+            <a href="https://developer.riotgames.com" target="_blank" rel="noreferrer">
+              developer.riotgames.com
+            </a>
+            . Saved locally in browser storage.
+          </small>
+        </div>
+
+        <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+          <div style={{ flex: 1 }}>
+            <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Match ID:</label>
+            <input
+              type="text"
+              value={matchId}
+              onChange={(e) => {
+                setMatchId(e.target.value);
+              }}
+              placeholder="e.g., NA1_1234567890"
+              style={{
+                width: "100%",
+                padding: "8px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+          <div style={{ flex: 0.5 }}>
+            <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Region:</label>
+            <select
+              value={region}
+              onChange={(e) => {
+                setRegion(e.target.value);
+              }}
+              style={{
+                width: "100%",
+                padding: "8px",
+                borderRadius: "4px",
+                border: "1px solid #ccc",
+                boxSizing: "border-box",
+              }}
+            >
+              <option value="na1">NA1</option>
+              <option value="euw1">EUW1</option>
+              <option value="kr">KR</option>
+              <option value="br1">BR1</option>
+            </select>
+          </div>
+        </div>
+
+        <button
+          onClick={() => {
+            void handleFetchMatch();
+          }}
+          disabled={isLoading}
+          style={{
+            padding: "10px 20px",
+            backgroundColor: isLoading ? "#ccc" : "#0066cc",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: isLoading ? "default" : "pointer",
+            fontSize: "14px",
+            fontWeight: "bold",
+          }}
+        >
+          {isLoading ? "Loading..." : "Fetch Match"}
+        </button>
+
+        {error && <div style={{ marginTop: "10px", color: "#d32f2f", fontSize: "14px" }}>⚠️ {error}</div>}
       </div>
 
       <section style={{ marginBottom: "40px" }}>
