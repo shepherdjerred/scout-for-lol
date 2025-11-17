@@ -46,6 +46,7 @@ export function installWorkspaceDeps(workspaceSource: Directory, installOpenssl 
       .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
       .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
       .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
+      .withDirectory("/workspace/packages/report-ui", workspaceSource.directory("packages/report-ui"))
       .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
       // Install dependencies (will use cache if lockfile unchanged)
       .withExec(["bun", "install", "--frozen-lockfile"])

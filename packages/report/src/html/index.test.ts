@@ -252,7 +252,7 @@ function getMatch(): CompletedMatch {
 
 test("sanity check", async () => {
   const svg = await matchToSvg(getMatch());
-  const png = svgToPng(svg);
+  const png = await svgToPng(svg);
   writeFileSync(new URL("__snapshots__/match.png", import.meta.url), png);
   writeFileSync(new URL("__snapshots__/match.svg", import.meta.url), svg);
 
@@ -269,7 +269,7 @@ test("no items test", async () => {
   matchNoItems.teams.red.forEach((player) => (player.items = [0, 0, 0, 0, 0, 0, 0]));
 
   const svg = await matchToSvg(matchNoItems);
-  const png = svgToPng(svg);
+  const png = await svgToPng(svg);
   writeFileSync(new URL("__snapshots__/match_no_items.png", import.meta.url), png);
   writeFileSync(new URL("__snapshots__/match_no_items.svg", import.meta.url), svg);
 
@@ -332,7 +332,7 @@ test("all fields zeroed out test", async () => {
   });
 
   const svg = await matchToSvg(matchZeroedOut);
-  const png = svgToPng(svg);
+  const png = await svgToPng(svg);
   writeFileSync(new URL("__snapshots__/match_zeroed_out.png", import.meta.url), png);
   writeFileSync(new URL("__snapshots__/match_zeroed_out.svg", import.meta.url), svg);
   const svgHash = hashSvg(svg);
@@ -347,7 +347,7 @@ test("no rank test", async () => {
   });
 
   const svg = await matchToSvg(matchNoRank);
-  const png = svgToPng(svg);
+  const png = await svgToPng(svg);
   writeFileSync(new URL("__snapshots__/match_no_rank.png", import.meta.url), png);
 
   writeFileSync(new URL("__snapshots__/match_no_rank.svg", import.meta.url), svg);
@@ -393,7 +393,7 @@ test("large values test", async () => {
   });
 
   const svg = await matchToSvg(matchLargeValues);
-  const png = svgToPng(svg);
+  const png = await svgToPng(svg);
   writeFileSync(new URL("__snapshots__/match_large_values.png", import.meta.url), png);
 
   writeFileSync(new URL("__snapshots__/match_large_values.svg", import.meta.url), svg);
@@ -408,7 +408,7 @@ test("victory test", async () => {
   });
 
   const svg = await matchToSvg(matchVictory);
-  const png = svgToPng(svg);
+  const png = await svgToPng(svg);
   writeFileSync(new URL("__snapshots__/match_victory.png", import.meta.url), png);
 
   writeFileSync(new URL("__snapshots__/match_victory.svg", import.meta.url), svg);
@@ -423,7 +423,7 @@ test("surrender test", async () => {
   });
 
   const svg = await matchToSvg(matchSurrender);
-  const png = svgToPng(svg);
+  const png = await svgToPng(svg);
   writeFileSync(new URL("__snapshots__/match_surrender.png", import.meta.url), png);
 
   writeFileSync(new URL("__snapshots__/match_surrender.svg", import.meta.url), svg);
@@ -445,7 +445,7 @@ test("no rank before match test", async () => {
   });
 
   const svg = await matchToSvg(matchNoRankBefore);
-  const png = svgToPng(svg);
+  const png = await svgToPng(svg);
   writeFileSync(new URL("__snapshots__/match_no_rank_before.png", import.meta.url), png);
 
   writeFileSync(new URL("__snapshots__/match_no_rank_before.svg", import.meta.url), svg);
@@ -525,7 +525,7 @@ test("multiple highlighted players test", async () => {
   });
 
   const svg = await matchToSvg(match);
-  const png = svgToPng(svg);
+  const png = await svgToPng(svg);
   writeFileSync(new URL("__snapshots__/match_multiple_highlighted_players.png", import.meta.url), png);
 
   writeFileSync(new URL("__snapshots__/match_multiple_highlighted_players.svg", import.meta.url), svg);

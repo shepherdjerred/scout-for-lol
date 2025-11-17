@@ -16,6 +16,6 @@ export async function arenaMatchToSvg(match: ArenaMatch) {
 
 export async function arenaMatchToImage(match: ArenaMatch) {
   const svg = await arenaMatchToSvg(match);
-  const png = svgToPng(svg);
+  const png = await svgToPng(svg);
   return png;
 }

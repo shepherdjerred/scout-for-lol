@@ -3,3 +3,5 @@
 exports[`arena real data renders image for 1.json 1`] = `"fb7348e4b0e7ae16d2b2b1fcae933c38241e3e826b427c31415db6024029e206"`;
 
 exports[`arena real data renders image for 2.json 1`] = `"ba714c1b47ca50940026e964b99a6760f6fd2c51eeabb52da01904aa5fef83c9"`;
+
+exports[`arena real data renders image for 2.json 2`] = `"db898d341747089c2794c6069e2f97b1512b72ee9a59c27dd8c2dcfa4ce73065"`;

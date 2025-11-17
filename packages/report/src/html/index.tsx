@@ -1,12 +1,11 @@
 import satori from "satori";
-import { Resvg } from "@resvg/resvg-js";
 import { CompletedMatch } from "@scout-for-lol/data";
 import { Report } from "./report.tsx";
 import { bunBeaufortFonts, bunSpiegelFonts } from "../assets/index.ts";
 
 export async function matchToImage(match: CompletedMatch) {
   const svg = await matchToSvg(match);
-  const png = svgToPng(svg);
+  const png = await svgToPng(svg);
   return png;
 }
 
@@ -20,7 +19,10 @@ export async function matchToSvg(match: CompletedMatch) {
   return svg;
 }
 
-export function svgToPng(svg: string) {
+export async function svgToPng(svg: string) {
+  // Lazy load resvg only when needed (server-side only)
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- ok for a dynamic import
+  const { Resvg } = await import("@resvg/resvg-js");
   const resvg = new Resvg(svg, {
     dpi: 600,
     shapeRendering: 2,

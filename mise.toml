@@ -15,3 +15,19 @@ run = [
     "bun run format",
     "bun run test",
 ]
+
+[tasks.typecheck]
+description = "Run TypeScript type checking for all packages"
+run = "bun run typecheck"
+
+[tasks.lint]
+description = "Run ESLint for all packages"
+run = "bun run lint"
+
+[tasks.format]
+description = "Check code formatting for all packages"
+run = "bun run format"
+
+[tasks.test]
+description = "Run tests for all packages"
+run = "bun run test"
