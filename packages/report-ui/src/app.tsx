@@ -72,6 +72,7 @@ export function App() {
       let errorMessage = "Unknown error";
       if (errorZod.success) {
         const errorData = errorZod.data;
+        // eslint-disable-next-line no-restricted-syntax -- ok, we're type narrowing
         if (errorData instanceof Error) {
           errorMessage = errorData.message;
         } else {

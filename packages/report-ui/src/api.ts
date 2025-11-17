@@ -2,8 +2,49 @@ import { z } from "zod";
 
 const RIOT_API_BASE = "https://americas.api.riotgames.com";
 
-// Zod schemas for validation
-const DataSchema = z.record(z.unknown());
+// Riot API response schema
+const RiotMatchResponseSchema = z.object({
+  metadata: z.object({
+    data_version: z.string(),
+    match_id: z.string(),
+    participants: z.array(z.string()),
+  }),
+  info: z.object({
+    game_duration: z.number(),
+    game_mode: z.string(),
+    match_creation: z.number(),
+    match_id: z.string(),
+    platform_id: z.string(),
+    queue_id: z.number(),
+    participants: z.array(
+      z.object({
+        assists: z.number(),
+        championName: z.string(),
+        deaths: z.number(),
+        gold: z.number(),
+        kills: z.number(),
+        item0: z.number(),
+        item1: z.number(),
+        item2: z.number(),
+        item3: z.number(),
+        item4: z.number(),
+        item5: z.number(),
+        item6: z.number(),
+        lane: z.string(),
+        level: z.number(),
+        puuid: z.string(),
+        role: z.string(),
+        summoner1Id: z.number(),
+        summoner2Id: z.number(),
+        teamId: z.number(),
+        totalDamageDealtToChampions: z.number(),
+        totalMinionsKilled: z.number(),
+        visionScore: z.number(),
+        win: z.boolean(),
+      }),
+    ),
+  }),
+});
 
 // Riot API types (for reference - not fully enforced)
 type RiotMatchResponse = {
@@ -73,12 +114,12 @@ export async function fetchMatchFromRiot(
       };
     }
 
-    const data = (await response.json()) as unknown;
-    const dataValidated = DataSchema.safeParse(data);
+    const data = await response.json();
+    const dataValidated = RiotMatchResponseSchema.safeParse(data);
     if (!dataValidated.success) {
       return { match: null, error: "Invalid API response" };
     }
-    const match = parseRiotMatch(dataValidated.data as unknown as RiotMatchResponse);
+    const match = parseRiotMatch(dataValidated.data);
     return { match };
   } catch (err) {
     const ErrorOrStringSchema = z.union([z.instanceof(Error), z.string()]);
@@ -86,6 +127,7 @@ export async function fetchMatchFromRiot(
     let errorMessage = "Unknown error";
     if (errorZod.success) {
       const errorData = errorZod.data;
+      // eslint-disable-next-line no-restricted-syntax -- ok, we're type narrowing
       if (errorData instanceof Error) {
         errorMessage = errorData.message;
       } else {

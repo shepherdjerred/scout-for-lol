@@ -92,6 +92,34 @@ export const satoriBestPractices = createRule({
       return null;
     }
 
+    function countJSXElementChildren(node: TSESTree.JSXElement): number {
+      // Count only JSX elements (not text or expressions mixed with text)
+      // Expressions mixed with text are inline and don't need layout control
+      // Only *multiple JSX elements* need display: flex
+      let elementCount = 0;
+      let hasTextOrExpression = false;
+
+      for (const child of node.children) {
+        if (child.type === AST_NODE_TYPES.JSXElement || child.type === AST_NODE_TYPES.JSXFragment) {
+          elementCount++;
+        } else if (child.type === AST_NODE_TYPES.JSXText) {
+          if (child.value.trim().length > 0) {
+            hasTextOrExpression = true;
+          }
+        } else if (child.type === AST_NODE_TYPES.JSXExpressionContainer) {
+          hasTextOrExpression = true;
+        }
+      }
+
+      // Only count pure elements that are siblings
+      // If there's text or expressions mixed in, this is inline content, not layout
+      // Return elementCount only if we have multiple JSX elements and no mixed text/expressions
+      if (hasTextOrExpression) {
+        return elementCount;
+      }
+      return elementCount;
+    }
+
     function checkJSXElement(node: TSESTree.JSXElement) {
       if (!isSatoriComponent()) return;
 
@@ -107,7 +135,8 @@ export const satoriBestPractices = createRule({
 
         // Check for elements with multiple children without explicit display property
         // Satori requires all container elements to have display: flex, contents, or none
-        if (node.children.length > 1) {
+        const childCount = countJSXElementChildren(node);
+        if (childCount > 1) {
           const display = getStyleDisplayValue(node);
           const validDisplays = new Set(["flex", "contents", "none"]);
 
@@ -169,6 +198,25 @@ export const satoriBestPractices = createRule({
       });
     }
 
+    function isLikelyHookCall(node: TSESTree.CallExpression): boolean {
+      // Check if this looks like a React hook (starts with 'use' and is PascalCase or lowercase like useState)
+      if (node.callee.type === AST_NODE_TYPES.Identifier) {
+        const name = node.callee.name;
+        // React hooks follow the pattern of 'use' prefix
+        return name.startsWith("use") && (name.charAt(3).toUpperCase() === name.charAt(3) || name === "use");
+      }
+
+      // Also check for useXxx patterns from the callee
+      if (node.callee.type === AST_NODE_TYPES.MemberExpression) {
+        if (node.callee.property.type === AST_NODE_TYPES.Identifier) {
+          const name = node.callee.property.name;
+          return name.startsWith("use") && name.charAt(3).toUpperCase() === name.charAt(3);
+        }
+      }
+
+      return false;
+    }
+
     function checkJSXChild(node: TSESTree.JSXElement) {
       if (!isSatoriComponent()) return;
 
@@ -177,30 +225,24 @@ export const satoriBestPractices = createRule({
         if (child.type === AST_NODE_TYPES.JSXExpressionContainer) {
           const expression = child.expression;
 
-          // Check for conditional expressions (ternary)
-          if (expression.type === AST_NODE_TYPES.ConditionalExpression) {
-            // Ternary is okay if it returns JSX elements
+          // Conditional expressions (ternary, logical) are okay - they're pure and deterministic
+          if (
+            expression.type === AST_NODE_TYPES.ConditionalExpression ||
+            expression.type === AST_NODE_TYPES.LogicalExpression
+          ) {
+            // These are okay for conditional rendering
             return;
           }
 
-          // Check for logical expressions
-          if (expression.type === AST_NODE_TYPES.LogicalExpression) {
-            context.report({
-              node: child,
-              messageId: "noDynamicJsx",
-            });
-          }
-
-          // Check for variable references that might be dynamic
-          if (expression.type === AST_NODE_TYPES.Identifier || expression.type === AST_NODE_TYPES.CallExpression) {
-            // Variable references are generally okay, but log them
-            // Context-dependent, so we'll be lenient here
-          }
-
-          // Check for function calls that return arrays/elements
+          // Check for function calls - but only if they look like hooks
           if (expression.type === AST_NODE_TYPES.CallExpression) {
-            // Rendering functions are okay if they're deterministic
-            // This is hard to detect statically, so we trust developers
+            if (isLikelyHookCall(expression)) {
+              context.report({
+                node: child,
+                messageId: "noDynamicJsx",
+              });
+            }
+            // Other function calls (like ts-pattern's match(), utility functions, etc.) are okay
           }
         }
 
