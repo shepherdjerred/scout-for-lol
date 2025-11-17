@@ -10,12 +10,12 @@ import {
 } from "./subscription-limits";
 
 describe("Subscription Limits Configuration", () => {
-  test("default player limit is 10", () => {
-    expect(DEFAULT_PLAYER_SUBSCRIPTION_LIMIT).toBe(10);
+  test("default player limit is 75", () => {
+    expect(DEFAULT_PLAYER_SUBSCRIPTION_LIMIT).toBe(75);
   });
 
-  test("default account limit is 10", () => {
-    expect(DEFAULT_ACCOUNT_LIMIT).toBe(10);
+  test("default account limit is 50", () => {
+    expect(DEFAULT_ACCOUNT_LIMIT).toBe(50);
   });
 
   test("UNLIMITED_SUBSCRIPTION_SERVERS is a Set", () => {
@@ -39,8 +39,8 @@ describe("Subscription Limits Configuration", () => {
   });
 
   test("getSubscriptionLimit returns default limit for regular servers", () => {
-    expect(getSubscriptionLimit("regular-server-123")).toBe(10);
-    expect(getSubscriptionLimit("another-server-456")).toBe(10);
+    expect(getSubscriptionLimit("regular-server-123")).toBe(75);
+    expect(getSubscriptionLimit("another-server-456")).toBe(75);
   });
 
   test("getSubscriptionLimit returns null for unlimited servers", () => {
@@ -54,8 +54,8 @@ describe("Subscription Limits Configuration", () => {
   });
 
   test("getAccountLimit returns default limit for regular servers", () => {
-    expect(getAccountLimit("regular-server-123")).toBe(10);
-    expect(getAccountLimit("another-server-456")).toBe(10);
+    expect(getAccountLimit("regular-server-123")).toBe(50);
+    expect(getAccountLimit("another-server-456")).toBe(50);
   });
 
   test("getAccountLimit returns null for unlimited servers", () => {

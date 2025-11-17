@@ -4,6 +4,9 @@ node_modules
 *.db
 .eslintcache
 *.sqlite
+*.node
+*.wasm
+*.tsbuildinfo
 
 # Test coverage and reports
 coverage/
