@@ -1,0 +1,102 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import { changelog, formatChangelogDate } from "../data/changelog";
+---
+
+<Layout>
+  <div class="bg-white">
+    <Navbar activePage="whatsnew" />
+
+    <!-- Hero Section -->
+    <div class="relative isolate px-6 pt-20 lg:px-8">
+      <div
+        class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
+        aria-hidden="true"
+      >
+        <div
+          class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+          style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"
+        >
+        </div>
+      </div>
+
+      <div class="mx-auto max-w-3xl py-16 sm:py-20 lg:py-28">
+        <div class="text-center">
+          <h1
+            class="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl"
+          >
+            What's New
+          </h1>
+          <p class="mt-6 text-lg/8 text-gray-600">
+            Check out the latest updates and improvements to Scout for League of
+            Legends.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Changelog Section -->
+    <div class="py-24 sm:py-32">
+      <div class="mx-auto max-w-3xl px-6 lg:px-8">
+        <div class="space-y-12">
+          {changelog.map((entry, index) => (
+            <div
+              class={`pb-12 ${index !== changelog.length - 1 ? "border-b border-gray-200" : ""}`}
+            >
+              <!-- Date Header -->
+              <div class="mb-6">
+                <div class="flex items-center gap-x-3">
+                  <div class="h-3 w-3 rounded-full bg-indigo-600"></div>
+                  <h2 class="text-2xl font-semibold text-gray-900">
+                    {formatChangelogDate(entry)}
+                  </h2>
+                </div>
+              </div>
+
+              <!-- Changes List -->
+              <div class="text-gray-700 pl-6 space-y-6" set:html={entry.text} />
+            </div>
+          ))}
+        </div>
+
+        {changelog.length === 0 && (
+          <div class="text-center py-12">
+            <p class="text-gray-600">
+              No changelog entries found. Check back soon!
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="bg-indigo-600">
+      <div class="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
+        <div class="mx-auto max-w-2xl text-center">
+          <h2 class="text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+            Ready to get Scout?
+          </h2>
+          <p class="mx-auto mt-6 max-w-xl text-lg/8 text-indigo-200">
+            Add Scout to your Discord server and start tracking your friends'
+            League matches today.
+          </p>
+          <div class="mt-10 flex items-center justify-center gap-x-6">
+            <a
+              href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
+              class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-indigo-600 shadow-sm hover:bg-indigo-50 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-white transition-colors"
+            >
+              Add to Discord
+            </a>
+            <a href="/docs" class="text-sm/6 font-semibold text-white hover:text-indigo-100 transition-colors">
+              Read the docs <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <Footer variant="homepage" />
+  </div>
+</Layout>

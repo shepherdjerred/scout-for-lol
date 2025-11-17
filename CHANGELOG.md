@@ -7,5 +7,8 @@
   - Reorganize report image layout
   - Add team KDA
 - Subscription commands
-  - Increase limits from 5 -> 75 subscriptions/accounts per server
+  - Increase limits from 10 -> 50 accounts per server
+  - Increase limits from 10 -> 75 subscriptions per server
   - Add messages for approaching limits
+- Site
+  - Add changelog and What's New page
