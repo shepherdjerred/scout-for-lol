@@ -47,7 +47,7 @@
     "uuid": "^13.0.0",
     "yoga-wasm-web": "^0.3.3",
     "zod": "^4.0.0",
-    "zod-validation-error": "^4.0.0"
+    "zod-validation-error": "^5.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
