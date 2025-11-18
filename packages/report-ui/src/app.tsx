@@ -231,7 +231,7 @@ export function App() {
         <h2 style={{ fontSize: "14px", color: "#999" }}>Preview at 8.5% zoom (match report card)</h2>
         <div
           style={{
-            zoom: 0.085,
+            zoom: 0.2,
             transformOrigin: "top left",
             width: "fit-content",
             padding: "20px",
@@ -246,7 +246,7 @@ export function App() {
         <h2 style={{ fontSize: "14px", color: "#999" }}>Preview at 20% zoom (interactive size)</h2>
         <div
           style={{
-            zoom: 0.2,
+            zoom: 0.6,
             transformOrigin: "top left",
             width: "fit-content",
             padding: "20px",

@@ -124,7 +124,7 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                 <div
                   key={team.teamId}
                   style={{
-                    width: "100%",
+                    // width: "100%",
                     display: "flex",
                     flexDirection: "column",
                     borderRadius: 20,
@@ -264,11 +264,30 @@ export function ArenaReport(props: { match: ArenaMatch }) {
                               <div
                                 style={{
                                   display: "flex",
-                                  fontSize: 24,
-                                  opacity: 0.9,
+                                  alignItems: "center",
+                                  gap: 12,
                                 }}
                               >
-                                {p.championName}
+                                <img
+                                  src={`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${p.championName}_0.jpg`}
+                                  style={{
+                                    width: 60,
+                                    height: 60,
+                                    borderRadius: 8,
+                                    border: "2px solid #374151",
+                                    flexShrink: 0,
+                                  }}
+                                  alt={p.championName}
+                                />
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    fontSize: 24,
+                                    opacity: 0.9,
+                                  }}
+                                >
+                                  {p.championName}
+                                </div>
                               </div>
                               <div
                                 style={{

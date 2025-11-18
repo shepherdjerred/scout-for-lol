@@ -25,3 +25,7 @@
   src: url("/fonts/Spiegel-TTF/Spiegel_TT_Bold.ttf") format("truetype");
   font-weight: bold;
 }
+
+* {
+  font-family: "Beaufort For LoL", sans-serif;
+}
