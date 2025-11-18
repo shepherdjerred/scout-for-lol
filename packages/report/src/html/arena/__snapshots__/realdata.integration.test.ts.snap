@@ -1,5 +1,5 @@
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
-exports[`arena real data renders image for 1.json 1`] = `"d807b5797f0fcdd714bedd27bf2a0690d0ad541f0748056ecfcb9f53bfc071c7"`;
+exports[`arena real data renders image for 1.json 1`] = `"17f351bfaba17a503fcfb8c764a5cde08876e5fee7cbde5e612ead076fdb34b0"`;
 
-exports[`arena real data renders image for 2.json 1`] = `"9fdcef468371c277dfce7538a17bbb94adb537f2bcf2d784d6640df25e25faae"`;
+exports[`arena real data renders image for 2.json 1`] = `"eda6d759ab578b93c9b1b0029892099f6d8b5f5d6f5e0a32a383e0312bd5ae13"`;
