@@ -64,7 +64,7 @@
     "packages/report/**/*.{ts,tsx}": [
       "bash -c 'cd packages/report && bun run typecheck'",
       "bash -c 'cd packages/report && bunx eslint --cache --fix'",
-      "bash -c 'cd packages/report && bun test'"
+      "bun ./scripts/run-relevant-tests.ts packages/report"
     ],
     "packages/report-ui/**/*.{ts,tsx}": [
       "bash -c 'cd packages/report-ui && bun run typecheck'",
