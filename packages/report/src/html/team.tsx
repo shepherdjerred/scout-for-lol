@@ -1,8 +1,7 @@
 import { renderChampion } from "./champion/champion.tsx";
 import { palette } from "../assets/colors.ts";
 import { font } from "../assets/index.ts";
-import { Roster } from "@scout-for-lol/data";
-import { Team } from "@scout-for-lol/data";
+import { Roster, Team } from "@scout-for-lol/data";
 import { sumBy } from "remeda";
 
 export function renderTeam(team: Roster, side: Team, highlightNames: string[], durationInMinutes: number) {

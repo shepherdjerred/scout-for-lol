@@ -1,14 +1,10 @@
 # Scout for League of Legends
 
-A Discord bot that automatically tracks your friends' League of Legends matches in real-time, delivering instant notifications when games start and beautiful post-match reports with detailed statistics directly to your Discord server.
+A Discord bot that automatically tracks your friends' League of Legends matches, delivering notifications when games end and beautiful post-match reports with detailed statistics directly to your Discord server.
 
 ![Match Report Example](./assets/match.png)
 
 ## Features
-
-### 🔔 Real-Time Match Notifications
-
-Get instant notifications when subscribed players start a League match, including champion selections and team compositions.
 
 ### 📊 Detailed Post-Match Reports
 
@@ -28,7 +24,7 @@ Create custom competitions with configurable criteria:
 - **Edit Anytime**: Update competition details before they start
 - **Multiple Criteria**: Most Wins, Highest Rank, Most Rank Climb, Highest Win Rate, etc.
 - **Queue Filtering**: Track specific queues (Solo/Duo, Flex, Arena, ARAM) or all games
-- **Real-time Leaderboards**: Automatically updated after each match
+- **Leaderboards**: Automatically updated daily
 - **Champion-Specific**: Create competitions for specific champions
 
 ### ⚡ Arena Mode Support
