@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test, mock } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test, mock } from "bun:test";
 import { PrismaClient } from "../../../../generated/prisma/client/index.js";
 import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
@@ -189,6 +189,9 @@ beforeEach(async () => {
 
   // Reset sent messages
   sentMessages = [];
+});
+afterAll(async () => {
+  await testPrisma.$disconnect();
 });
 
 // ============================================================================

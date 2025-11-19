@@ -4,6 +4,7 @@ import unicorn from "eslint-plugin-unicorn";
 import { zodSchemaNaming } from "./eslint-rules/zod-schema-naming.ts";
 import { noRedundantZodParse } from "./eslint-rules/no-redundant-zod-parse.ts";
 import { satoriBestPractices } from "./eslint-rules/satori-best-practices.ts";
+import { prismaClientDisconnect } from "./eslint-rules/prisma-client-disconnect.ts";
 
 /**
  * Bridge typescript-eslint rule to ESLint plugin system
@@ -18,6 +19,7 @@ const customRulesPlugin = {
     "zod-schema-naming": zodSchemaNaming,
     "no-redundant-zod-parse": noRedundantZodParse,
     "satori-best-practices": satoriBestPractices,
+    "prisma-client-disconnect": prismaClientDisconnect,
   },
 };
 
@@ -128,6 +130,16 @@ export default tseslint.config(
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-unnecessary-condition": "off",
       "no-restricted-syntax": "off", // Allow type assertions, typeof, instanceof in tests
+    },
+  },
+  // Integration test specific rules - ensure Prisma clients are disconnected
+  {
+    files: ["**/*.integration.test.ts"],
+    plugins: {
+      "custom-rules": customRulesPlugin,
+    },
+    rules: {
+      "custom-rules/prisma-client-disconnect": "error",
     },
   },
   // Allow instanceof for Discord.js error handling and channel type checking

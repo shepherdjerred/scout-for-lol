@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { PrismaClient } from "../../../generated/prisma/client/index.js";
 import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
@@ -87,6 +87,9 @@ beforeEach(async () => {
   await prisma.competitionParticipant.deleteMany();
   await prisma.competition.deleteMany();
   await prisma.player.deleteMany();
+});
+afterAll(async () => {
+  await prisma.$disconnect();
 });
 
 // ============================================================================

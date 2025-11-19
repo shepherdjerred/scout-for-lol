@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { PermissionsBitField, PermissionFlagsBits } from "discord.js";
 import { PrismaClient } from "../../generated/prisma/client/index.js";
 import { execSync } from "node:child_process";
@@ -51,6 +51,9 @@ beforeEach(async () => {
   await prisma.account.deleteMany();
   await prisma.player.deleteMany();
   clearAllRateLimits();
+});
+afterAll(async () => {
+  await prisma.$disconnect();
 });
 
 // ============================================================================

@@ -1,4 +1,4 @@
-import { test, expect, beforeEach, afterEach, describe } from "bun:test";
+import { afterAll, test, expect, beforeEach, afterEach, describe } from "bun:test";
 import { PrismaClient } from "../../generated/prisma/client/index.js";
 import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
@@ -54,6 +54,9 @@ afterEach(async () => {
   await testPrisma.subscription.deleteMany();
   await testPrisma.account.deleteMany();
   await testPrisma.player.deleteMany();
+});
+afterAll(async () => {
+  await testPrisma.$disconnect();
 });
 
 // Helper function to create a valid 78-character PUUID

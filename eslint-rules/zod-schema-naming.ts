@@ -1,5 +1,5 @@
 import type { TSESTree } from "@typescript-eslint/utils";
-import { ESLintUtils } from "@typescript-eslint/utils";
+import { ESLintUtils, AST_NODE_TYPES } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
   (name) => `https://github.com/shepherdjerred/homelab/blob/main/eslint-rules/${name}.ts`,
@@ -59,12 +59,7 @@ export const zodSchemaNaming = createRule({
 
     return {
       VariableDeclarator(node) {
-        if (
-          node.id.type === "Identifier" &&
-          node.init &&
-          node.parent?.type === "VariableDeclaration" &&
-          node.parent.kind === "const"
-        ) {
+        if (node.id.type === AST_NODE_TYPES.Identifier && node.init && node.parent.kind === "const") {
           const varName = node.id.name;
 
           // Only check variables ending with "Schema"

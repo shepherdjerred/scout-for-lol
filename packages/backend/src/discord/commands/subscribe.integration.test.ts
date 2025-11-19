@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from "bun:test";
+import { afterAll, describe, test, expect, beforeEach } from "bun:test";
 import fs from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
@@ -36,6 +36,9 @@ beforeEach(async () => {
   await testPrisma.subscription.deleteMany();
   await testPrisma.account.deleteMany();
   await testPrisma.player.deleteMany();
+});
+afterAll(async () => {
+  await testPrisma.$disconnect();
 });
 
 describe("Subscribe Command - Multi-Account Support", () => {
