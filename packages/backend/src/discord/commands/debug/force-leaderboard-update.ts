@@ -1,5 +1,4 @@
 import type { ChatInputCommandInteraction } from "discord.js";
-import configuration from "../../../configuration.js";
 import { prisma } from "../../../database/index.js";
 import { getCompetitionById } from "../../../database/competition/queries.js";
 import { runDailyLeaderboardUpdate } from "../../../league/tasks/competition/daily-update.js";
@@ -9,15 +8,6 @@ import { send as sendChannelMessage } from "../../../league/discord/channel.js";
 
 export async function executeDebugForceLeaderboardUpdate(interaction: ChatInputCommandInteraction) {
   console.log("🐛 Executing debug force-leaderboard-update command");
-
-  // Verify bot owner
-  if (interaction.user.id !== configuration.ownerDiscordId) {
-    await interaction.reply({
-      content: "❌ This command is restricted to the bot owner.",
-      ephemeral: true,
-    });
-    return;
-  }
 
   const competitionId = interaction.options.getInteger("competition-id", false);
 

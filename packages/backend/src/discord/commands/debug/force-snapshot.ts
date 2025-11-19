@@ -1,21 +1,11 @@
 import type { ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import configuration from "../../../configuration.js";
 import { prisma } from "../../../database/index.js";
 import { getCompetitionById } from "../../../database/competition/queries.js";
 import { createSnapshotsForAllParticipants } from "../../../league/competition/snapshots.js";
 
 export async function executeDebugForceSnapshot(interaction: ChatInputCommandInteraction) {
   console.log("🐛 Executing debug force-snapshot command");
-
-  // Verify bot owner
-  if (interaction.user.id !== configuration.ownerDiscordId) {
-    await interaction.reply({
-      content: "❌ This command is restricted to the bot owner.",
-      ephemeral: true,
-    });
-    return;
-  }
 
   // Validate command options at boundary
   const ForceSnapshotOptionsSchema = z.object({

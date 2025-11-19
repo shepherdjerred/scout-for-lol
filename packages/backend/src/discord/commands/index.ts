@@ -1,5 +1,6 @@
 import { type Client, MessageFlags, PermissionFlagsBits, PermissionsBitField } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import { getFlag } from "../../configuration/flags.js";
 import { executeSubscriptionAdd, executeSubscriptionDelete, executeSubscriptionList } from "./subscription/index.js";
 import { executeHelp } from "./help";
 import {
@@ -34,7 +35,6 @@ import {
 } from "./debug.js";
 import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
 import { searchChampions } from "../../utils/champion.js";
-import configuration from "../../configuration.js";
 
 export function handleCommands(client: Client) {
   console.log("⚡ Setting up Discord command handlers");
@@ -190,11 +190,11 @@ export function handleCommands(client: Client) {
             });
           }
         } else if (commandName === "debug") {
-          // Check if user is the bot owner (applies to all debug subcommands)
-          if (userId !== configuration.ownerDiscordId) {
+          // Check if user has debug access (applies to all debug subcommands)
+          if (!getFlag("debug", { user: userId })) {
             console.warn(`⚠️  Unauthorized debug command access attempt by ${username} (${userId})`);
             await interaction.reply({
-              content: "❌ Debug commands are only available to the bot owner.",
+              content: "❌ Debug commands are only available to authorized users.",
               flags: MessageFlags.Ephemeral,
             });
             return;

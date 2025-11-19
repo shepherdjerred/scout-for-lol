@@ -6,13 +6,23 @@ import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data";
  * This function analyzes the match data and generates a text review
  * that will be attached to the post-game report image.
  *
+ * TODO: AI-generated reviews will be implemented here in the future.
+ * The ai_reviews_enabled flag should be checked by the caller (where server context is available)
+ * before calling this function.
+ *
  * @param match - The completed match data (regular or arena)
  * @returns A string containing the review text
  */
 export function generateMatchReview(match: CompletedMatch | ArenaMatch): string {
-  // TODO: Integrate with LLM service
-  // For now, return a placeholder
+  // TODO: Integrate with LLM service for AI-generated reviews
+  // For now, always return placeholder review
+  return generatePlaceholderReview(match);
+}
 
+/**
+ * Generate a placeholder review (used when AI reviews are disabled or not yet implemented)
+ */
+function generatePlaceholderReview(match: CompletedMatch | ArenaMatch): string {
   if (match.queueType === "arena") {
     // Arena match review
     const player = match.players[0]; // Primary tracked player

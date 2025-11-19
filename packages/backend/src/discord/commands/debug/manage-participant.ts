@@ -2,7 +2,6 @@ import type { ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { match } from "ts-pattern";
 import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import configuration from "../../../configuration.js";
 import { prisma } from "../../../database/index.js";
 import { getCompetitionById } from "../../../database/competition/queries.js";
 import { addParticipant, removeParticipant, getParticipantStatus } from "../../../database/competition/participants.js";
@@ -10,19 +9,9 @@ import { getErrorMessage } from "../../../utils/errors.js";
 
 /**
  * Execute /debug manage-participant command
- * Allows bot owner to add or remove participants from competitions
  */
 export async function executeDebugManageParticipant(interaction: ChatInputCommandInteraction) {
   console.log("🐛 Executing debug manage-participant command");
-
-  // Verify bot owner
-  if (interaction.user.id !== configuration.ownerDiscordId) {
-    await interaction.reply({
-      content: "❌ This command is restricted to the bot owner.",
-      ephemeral: true,
-    });
-    return;
-  }
 
   // ============================================================================
   // Step 1: Validate command options at boundary

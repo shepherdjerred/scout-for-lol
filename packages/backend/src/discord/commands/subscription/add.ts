@@ -14,13 +14,8 @@ import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions
 import { prisma } from "../../../database/index";
 import { fromError } from "zod-validation-error";
 import { getErrorMessage } from "../../../utils/errors.js";
-import {
-  getSubscriptionLimit,
-  getAccountLimit,
-  hasUnlimitedSubscriptions,
-  DISCORD_SERVER_INVITE,
-  LIMIT_WARNING_THRESHOLD,
-} from "../../../configuration/subscription-limits.js";
+import { getLimit } from "../../../configuration/flags.js";
+import { DISCORD_SERVER_INVITE, LIMIT_WARNING_THRESHOLD } from "../../../configuration/subscription-limits.js";
 import { backfillLastMatchTime } from "../../../league/api/backfill-match-history.js";
 import { sendWelcomeMatch } from "./welcome-match.js";
 
@@ -80,9 +75,10 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
 
   // Check subscription limit (only if creating a new player)
   if (!existingPlayer) {
-    const subscriptionLimit = getSubscriptionLimit(guildId);
+    const subscriptionLimit = getLimit("player_subscriptions", { server: guildId });
+    const isUnlimited = subscriptionLimit === "unlimited";
 
-    if (subscriptionLimit !== null) {
+    if (!isUnlimited) {
       console.log(`🔍 Checking subscription limit for server ${guildId}: ${subscriptionLimit.toString()} players`);
 
       // Count unique players with subscriptions in this server
@@ -98,9 +94,8 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
       console.log(`📊 Current subscribed players: ${subscribedPlayerCount.toString()}/${subscriptionLimit.toString()}`);
 
       if (subscribedPlayerCount >= subscriptionLimit) {
-        const hasUnlimited = hasUnlimitedSubscriptions(guildId);
         console.log(
-          `❌ Subscription limit reached for server ${guildId} (${subscribedPlayerCount.toString()}/${subscriptionLimit.toString()}, unlimited: ${hasUnlimited.toString()})`,
+          `❌ Subscription limit reached for server ${guildId} (${subscribedPlayerCount.toString()}/${subscriptionLimit.toString()})`,
         );
 
         await interaction.reply({
@@ -128,9 +123,10 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
   }
 
   // Check account limit (always check, even for existing players)
-  const accountLimit = getAccountLimit(guildId);
+  const accountLimit = getLimit("accounts", { server: guildId });
+  const isUnlimitedAccounts = accountLimit === "unlimited";
 
-  if (accountLimit !== null) {
+  if (!isUnlimitedAccounts) {
     console.log(`🔍 Checking account limit for server ${guildId}: ${accountLimit.toString()} accounts`);
 
     // Count all accounts in this server

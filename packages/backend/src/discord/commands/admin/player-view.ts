@@ -3,7 +3,7 @@ import { z } from "zod";
 import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "../../../database/index.js";
 import { fromError } from "zod-validation-error";
-import { getAccountLimit, getSubscriptionLimit } from "../../../configuration/subscription-limits.js";
+import { getLimit } from "../../../configuration/flags.js";
 
 const ArgsSchema = z.object({
   alias: z.string().min(1).max(100),
@@ -70,8 +70,10 @@ export async function executePlayerView(interaction: ChatInputCommandInteraction
   console.log(`✅ Player found: ${player.alias} (ID: ${player.id.toString()})`);
 
   // Get rate limiting info for the server
-  const accountLimit = getAccountLimit(guildId);
-  const subscriptionLimit = getSubscriptionLimit(guildId);
+  const accountLimitRaw = getLimit("accounts", { server: guildId });
+  const accountLimit = accountLimitRaw === "unlimited" ? null : accountLimitRaw;
+  const subscriptionLimitRaw = getLimit("player_subscriptions", { server: guildId });
+  const subscriptionLimit = subscriptionLimitRaw === "unlimited" ? null : subscriptionLimitRaw;
 
   // Count total accounts and subscriptions in server for rate limit context
   const totalServerAccounts = await prisma.account.count({

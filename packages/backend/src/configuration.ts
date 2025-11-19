@@ -39,7 +39,6 @@ export default {
   environment: env.get("ENVIRONMENT").default("dev").asEnum(["dev", "beta", "prod"]),
   discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
   applicationId: getRequiredEnvVar("APPLICATION_ID"),
-  ownerDiscordId: getOptionalEnvVar("OWNER_DISCORD_ID", "160509172704739328"),
   riotApiToken: getRequiredEnvVar("RIOT_API_TOKEN"),
   databaseUrl: getRequiredEnvVar("DATABASE_URL"),
   port: env.get("PORT").default("3000").asPortNumber(),

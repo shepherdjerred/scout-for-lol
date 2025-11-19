@@ -12,13 +12,13 @@ import {
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 
+import { getLimit } from "../../configuration/flags.js";
+
 // ============================================================================
 // Constants
 // ============================================================================
 
 const MAX_COMPETITION_DURATION_DAYS = 90;
-const MAX_ACTIVE_COMPETITIONS_PER_SERVER = 2;
-const MAX_ACTIVE_COMPETITIONS_PER_OWNER = 1;
 
 // ============================================================================
 // Helper Functions
@@ -165,20 +165,14 @@ export type CompetitionCreationInput = z.infer<typeof CompetitionCreationSchema>
 /**
  * Validate owner doesn't have too many active competitions
  * This is async so it can't be part of Zod schema refinement easily
- *
- * @param botOwnerId - Optional bot owner ID to bypass limits (for admin/testing)
  */
 export async function validateOwnerLimit(
   prisma: PrismaClient,
   serverId: DiscordGuildId,
   ownerId: DiscordAccountId,
-  botOwnerId?: DiscordAccountId,
 ): Promise<void> {
-  // Bot owner can bypass the limit
-  if (botOwnerId && ownerId === botOwnerId) {
-    console.log(`🔓 Bot owner ${ownerId} bypassing competition limit check`);
-    return;
-  }
+  // Get the limit for this owner/server combination
+  const limit = getLimit("competitions_per_owner", { server: serverId, user: ownerId });
 
   const now = new Date();
 
@@ -197,7 +191,9 @@ export async function validateOwnerLimit(
     },
   });
 
-  if (activeCompetitionCount >= MAX_ACTIVE_COMPETITIONS_PER_OWNER) {
+  if (limit === "unlimited") {
+    // noop
+  } else if (activeCompetitionCount >= limit) {
     throw new Error(
       `You already have ${activeCompetitionCount.toString()} active competition(s). Please end or cancel your existing competition before creating a new one.`,
     );
@@ -206,21 +202,15 @@ export async function validateOwnerLimit(
 
 /**
  * Validate server doesn't have too many active competitions
- *
- * @param botOwnerId - Optional bot owner ID to bypass limits (for admin/testing)
- * @param requesterId - ID of the user making the request (to check if they're the bot owner)
  */
 export async function validateServerLimit(
   prisma: PrismaClient,
   serverId: DiscordGuildId,
-  botOwnerId?: DiscordAccountId,
   requesterId?: DiscordAccountId,
 ): Promise<void> {
-  // Bot owner can bypass the limit
-  if (botOwnerId && requesterId && requesterId === botOwnerId) {
-    console.log(`🔓 Bot owner ${requesterId} bypassing server competition limit check`);
-    return;
-  }
+  // Get the limit for this server and requester
+  const attributes = requesterId ? { server: serverId, user: requesterId } : { server: serverId };
+  const limit = getLimit("competitions_per_server", attributes);
 
   const now = new Date();
 
@@ -238,9 +228,11 @@ export async function validateServerLimit(
     },
   });
 
-  if (activeCompetitionCount >= MAX_ACTIVE_COMPETITIONS_PER_SERVER) {
+  if (limit === "unlimited") {
+    // noop
+  } else if (activeCompetitionCount >= limit) {
     throw new Error(
-      `This server already has ${activeCompetitionCount.toString()} active competitions. Maximum allowed is ${MAX_ACTIVE_COMPETITIONS_PER_SERVER.toString()}.`,
+      `This server already has ${activeCompetitionCount.toString()} active competitions. Maximum allowed is ${limit.toString()}.`,
     );
   }
 }
@@ -248,13 +240,10 @@ export async function validateServerLimit(
 /**
  * Comprehensive validation for competition creation
  * Uses Zod schema for sync validations + async database checks
- *
- * @param botOwnerId - Optional bot owner ID to bypass owner limits
  */
 export async function validateCompetitionCreation(
   prisma: PrismaClient,
   input: CompetitionCreationInput,
-  botOwnerId?: DiscordAccountId,
 ): Promise<CompetitionCreationInput> {
   // First validate with Zod schema (throws ZodError if invalid)
   const result = CompetitionCreationSchema.safeParse(input);
@@ -265,8 +254,8 @@ export async function validateCompetitionCreation(
   const validatedInput = result.data;
 
   // Then run async database validations
-  await validateOwnerLimit(prisma, validatedInput.serverId, validatedInput.ownerId, botOwnerId);
-  await validateServerLimit(prisma, validatedInput.serverId, botOwnerId, validatedInput.ownerId);
+  await validateOwnerLimit(prisma, validatedInput.serverId, validatedInput.ownerId);
+  await validateServerLimit(prisma, validatedInput.serverId, validatedInput.ownerId);
 
   return validatedInput;
 }

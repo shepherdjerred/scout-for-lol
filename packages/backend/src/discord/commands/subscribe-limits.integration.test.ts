@@ -5,11 +5,11 @@ import { execSync } from "node:child_process";
 
 import { PrismaClient } from "../../../generated/prisma/client";
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../testing/test-ids.js";
-import {
-  DEFAULT_PLAYER_SUBSCRIPTION_LIMIT,
-  DEFAULT_ACCOUNT_LIMIT,
-  UNLIMITED_SUBSCRIPTION_SERVERS,
-} from "../../configuration/subscription-limits";
+import { addLimitOverride, clearLimitOverrides } from "../../configuration/flags.js";
+
+// Constants for testing
+const DEFAULT_PLAYER_SUBSCRIPTION_LIMIT = 75;
+const DEFAULT_ACCOUNT_LIMIT = 50;
 
 // Create test database in temp directory
 const tempDir = fs.mkdtempSync(path.join("/tmp", "subscribe-limits-test-"));
@@ -283,8 +283,8 @@ describe("Subscribe Command - Subscription Limits", () => {
     const channelId = testChannelId("00001");
     const discordUserId = testAccountId("0000001");
 
-    // Add to unlimited servers set
-    UNLIMITED_SUBSCRIPTION_SERVERS.add(serverId);
+    // Add unlimited override for this server
+    addLimitOverride("player_subscriptions", "unlimited", { server: serverId });
 
     try {
       // Create more than the default limit
@@ -334,8 +334,8 @@ describe("Subscribe Command - Subscription Limits", () => {
 
       expect(subscribedPlayerCount).toBe(DEFAULT_PLAYER_SUBSCRIPTION_LIMIT + extraPlayers);
     } finally {
-      // Clean up - remove from unlimited set
-      UNLIMITED_SUBSCRIPTION_SERVERS.delete(serverId);
+      // Clean up - remove the override
+      clearLimitOverrides("player_subscriptions");
     }
   });
 
@@ -648,8 +648,8 @@ describe("Subscribe Command - Subscription Limits", () => {
     const serverId = testGuildId("011");
     const discordUserId = testAccountId("0000001");
 
-    // Add to unlimited servers set
-    UNLIMITED_SUBSCRIPTION_SERVERS.add(serverId);
+    // Add unlimited override for accounts
+    addLimitOverride("accounts", 999999, { server: serverId });
 
     try {
       // Create more than the default account limit
@@ -687,8 +687,8 @@ describe("Subscribe Command - Subscription Limits", () => {
 
       expect(accountCount).toBe(DEFAULT_ACCOUNT_LIMIT + extraAccounts);
     } finally {
-      // Clean up - remove from unlimited set
-      UNLIMITED_SUBSCRIPTION_SERVERS.delete(serverId);
+      // Clean up - remove the override
+      clearLimitOverrides("accounts");
     }
   });
 });

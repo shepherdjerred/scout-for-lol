@@ -41,7 +41,7 @@ async function postSnapshotErrorMessage(competition: CompetitionWithCriteria, er
       {
         name: "Next steps",
         value:
-          "The bot owner has been notified. A debug command can be used to create the missing snapshots, but historical data before the snapshot is created will be lost.",
+          "A debug command can be used to create the missing snapshots, but historical data before the snapshot is created will be lost. Reach out for assistance.",
       },
     )
     .setTimestamp();

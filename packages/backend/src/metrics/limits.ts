@@ -10,11 +10,9 @@ import {
   serversAtAccountLimit,
   serversApproachingAccountLimit,
 } from "./index.js";
-import {
-  DEFAULT_PLAYER_SUBSCRIPTION_LIMIT,
-  DEFAULT_ACCOUNT_LIMIT,
-  LIMIT_WARNING_THRESHOLD,
-} from "../configuration/subscription-limits.js";
+import { getLimit } from "../configuration/flags.js";
+import { LIMIT_WARNING_THRESHOLD } from "../configuration/subscription-limits.js";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 /**
  * Update limit metrics based on current database state
@@ -37,7 +35,7 @@ export async function updateLimitMetrics(): Promise<void> {
     let approachingAcctLimit = 0;
 
     for (const server of servers) {
-      const serverId = server.serverId;
+      const serverId = DiscordGuildIdSchema.parse(server.serverId);
 
       // Count subscribed players
       const subscribedPlayers = await prisma.player.count({
@@ -57,16 +55,20 @@ export async function updateLimitMetrics(): Promise<void> {
       });
 
       // Check subscription limits
-      const subLimit = DEFAULT_PLAYER_SUBSCRIPTION_LIMIT;
-      if (subscribedPlayers >= subLimit) {
+      const subLimit = getLimit("player_subscriptions", { server: serverId });
+      if (subLimit === "unlimited") {
+        // noop
+      } else if (subscribedPlayers >= subLimit) {
         atSubLimit++;
       } else if (subscribedPlayers >= subLimit - LIMIT_WARNING_THRESHOLD) {
         approachingSubLimit++;
       }
 
       // Check account limits
-      const acctLimit = DEFAULT_ACCOUNT_LIMIT;
-      if (accountCount >= acctLimit) {
+      const acctLimit = getLimit("accounts", { server: serverId });
+      if (acctLimit === "unlimited") {
+        // noop
+      } else if (accountCount >= acctLimit) {
         atAcctLimit++;
       } else if (accountCount >= acctLimit - LIMIT_WARNING_THRESHOLD) {
         approachingAcctLimit++;
