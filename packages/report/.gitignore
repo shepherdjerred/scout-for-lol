@@ -7,3 +7,4 @@ state.json
 matches
 npm
 **/__snapshots__/*.png
+*.svg

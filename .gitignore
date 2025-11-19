@@ -12,3 +12,6 @@ node_modules
 coverage/
 *.lcov
 junit.xml
+
+# Test cache (e.g., fetch mocking)
+.test-cache/
