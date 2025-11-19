@@ -15,8 +15,8 @@ coveragePathIgnorePatterns = [
   "**/build/**"
 ]
 
-# Coverage reporters: text for console, lcov for tooling integration, json for detailed analysis
-coverageReporter = ["text", "lcov", "json"]
+# Coverage reporters: text for console, lcov for tooling integration
+coverageReporter = ["text", "lcov"]
 
 # Coverage output directory
 coverageDir = "./coverage"

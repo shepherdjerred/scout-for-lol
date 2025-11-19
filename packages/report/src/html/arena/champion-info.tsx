@@ -1,5 +1,6 @@
 import { latestVersion } from "../../dataDragon/version";
 import { renderItems } from "../champion/item";
+import { Damage } from "./damage";
 
 export function ChampionInfo({
   playerName,
@@ -8,6 +9,9 @@ export function ChampionInfo({
   deaths,
   assists,
   items,
+  damage,
+  damagePercent,
+  highlight,
 }: {
   playerName: string;
   championName: string;
@@ -15,6 +19,9 @@ export function ChampionInfo({
   deaths: number;
   assists: number;
   items: number[];
+  damage: number;
+  damagePercent: number;
+  highlight: boolean;
 }) {
   const actualItems = renderItems(items, 0, true);
 
@@ -23,12 +30,27 @@ export function ChampionInfo({
       <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
         <img
           src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${championName}.png`}
-          style={{ width: 60, height: 60, borderRadius: 8, border: "2px solid #374151", flexShrink: 0 }}
+          style={{
+            width: 60,
+            height: 60,
+            borderRadius: 8,
+            border: highlight ? "3px solid #fbbf24" : "2px solid #374151",
+            flexShrink: 0,
+          }}
           alt={championName}
         />
-        <div style={{ display: "flex", fontSize: 24, opacity: 0.9, justifyContent: "center" }}>
-          <span>{playerName}</span>
-          <span>{championName}</span>
+        <div
+          style={{
+            display: "flex",
+            fontSize: 24,
+            opacity: 0.9,
+            justifyContent: "center",
+            gap: 0,
+            flexDirection: "column",
+          }}
+        >
+          <span style={{ color: highlight ? "#fbbf24" : "" }}>{playerName}</span>
+          <span style={{ color: highlight ? "#fbbf24" : "" }}>{championName}</span>
         </div>
       </div>
       <div
@@ -42,6 +64,8 @@ export function ChampionInfo({
       >
         {actualItems}
       </div>
+
+      <Damage value={damage} percent={damagePercent} highlight={highlight} />
 
       <div
         style={{

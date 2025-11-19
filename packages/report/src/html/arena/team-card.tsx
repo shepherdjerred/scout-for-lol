@@ -7,6 +7,12 @@ export function TeamCard({ team, highlightNames }: { team: ArenaTeam; highlightN
   const hasTrackedPlayer = team.players.some((p) => highlightNames.includes(p.riotIdGameName));
   const teamStyle = getTeamStyling(team.placement, hasTrackedPlayer);
 
+  const maxTeamDamage = Math.max(...team.players.map((p) => p.damage), 0);
+
+  console.log(highlightNames);
+  console.log(hasTrackedPlayer);
+  console.log(JSON.stringify(teamStyle, null, 2));
+
   return (
     <div
       key={team.teamId}
@@ -24,7 +30,12 @@ export function TeamCard({ team, highlightNames }: { team: ArenaTeam; highlightN
       <TeamHeader team={team} />
       <div style={{ display: "flex", flexDirection: "column" }}>
         {team.players.map((player, idx) => (
-          <PlayerCard key={idx} player={player} />
+          <PlayerCard
+            key={idx}
+            player={player}
+            highlight={highlightNames.includes(player.riotIdGameName)}
+            maxTeamDamage={maxTeamDamage}
+          />
         ))}
       </div>
     </div>

@@ -19,7 +19,7 @@
     "format:write": "bunx prettier --write src",
     "typecheck": "bunx tsc --noEmit",
     "generate": "bun run db:generate",
-    "db:generate": "bunx prisma generate && bun run brand-types",
+    "db:generate": "bunx prisma generate && bun run brand-types && prettier --write generated/",
     "brand-types": "bun run scripts/brand-prisma-types.ts",
     "db:push": "bunx prisma db push",
     "db:migrate": "bunx prisma migrate dev",

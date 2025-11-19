@@ -1,8 +1,19 @@
 import { type ArenaChampion } from "@scout-for-lol/data";
 import { ChampionInfo } from "./champion-info.tsx";
 import { AugmentsDisplay } from "./augments-display.tsx";
+import { round } from "remeda";
 
-export function PlayerCard({ player }: { player: ArenaChampion }) {
+export function PlayerCard({
+  player,
+  highlight,
+  maxTeamDamage,
+}: {
+  player: ArenaChampion;
+  highlight: boolean;
+  maxTeamDamage: number;
+}) {
+  const damagePercent = round((player.damage / (maxTeamDamage || 1)) * 100, 0);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", marginBottom: 16, gap: 8 }}>
       <ChampionInfo
@@ -12,6 +23,9 @@ export function PlayerCard({ player }: { player: ArenaChampion }) {
         kills={player.kills}
         deaths={player.deaths}
         assists={player.assists}
+        damage={player.damage}
+        damagePercent={damagePercent}
+        highlight={highlight}
       />
 
       <AugmentsDisplay augments={player.augments} />
