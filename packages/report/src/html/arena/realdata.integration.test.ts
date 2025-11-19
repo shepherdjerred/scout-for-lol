@@ -32,5 +32,7 @@ for (const path of RAW_FILE_PATHS) {
     // Hash the SVG for snapshot comparison instead of storing the full content
     const svgHash = hashSvg(svg);
     expect(svgHash).toMatchSnapshot();
+    // snapshot the SVG too
+    expect(svg).toMatchSnapshot();
   });
 }
