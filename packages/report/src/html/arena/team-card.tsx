@@ -9,10 +9,6 @@ export function TeamCard({ team, highlightNames }: { team: ArenaTeam; highlightN
 
   const maxTeamDamage = Math.max(...team.players.map((p) => p.damage), 0);
 
-  console.log(highlightNames);
-  console.log(hasTrackedPlayer);
-  console.log(JSON.stringify(teamStyle, null, 2));
-
   return (
     <div
       key={team.teamId}

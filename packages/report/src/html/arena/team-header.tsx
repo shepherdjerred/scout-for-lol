@@ -14,7 +14,7 @@ export function TeamHeader({ team }: { team: ArenaTeam }) {
         <PlacementBadge placement={team.placement} />
       </div>
       <TeamStats kills={teamKills} deaths={teamDeaths} assists={teamAssists} />
-      <div style={{ fontSize: 20, opacity: 0.7 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 20, opacity: 0.7 }}>
         Gold: <span style={{ fontSize: 24, fontWeight: 600, color: "#fbbf24" }}>{teamGold}</span>
       </div>
     </div>

@@ -9,8 +9,9 @@ export function Damage({ value, percent, highlight }: { value: number; percent: 
         minWidth: 120,
       }}
     >
-      <div style={{ fontSize: 16, fontWeight: 600, color: highlight ? "#fbbf24" : "#d1d5db" }}>
-        {value.toLocaleString()} dmg
+      <div style={{ display: "flex", gap: 4, fontSize: 16, fontWeight: 600, color: highlight ? "#fbbf24" : "#d1d5db" }}>
+        <span>{value.toLocaleString()}</span>
+        <span>dmg</span>
       </div>
       <span
         style={{

@@ -6,9 +6,13 @@ There seems to be a fair bit of coupling. Examples:
   etc.
 - Unrelated concerns should be runnable
 
+## Next Milestone
+
+- [ ] AI reviews
+
 ## Release
 
-- [ ] Unsubscribe command
+- [x] Unsubscribe command
 - [x] View detailed player info
   - [x] Accounts
     - [x] Include rate limiting info
@@ -25,11 +29,11 @@ There seems to be a fair bit of coupling. Examples:
   - [x] Add/remove accounts
   - [x] Change alias
   - [x] Change/add/remove Discord ID
-- [ ] Competition management
+- [x] Competition management
 - [ ] Show user-readable Zod error messages
-- [ ] Prevent bot from sending messages larger than Discord's limit (happens with Zod)
-- [ ] Make Arena matches pretty
-  - [ ] Show augment icons
+- [x] Prevent bot from sending messages larger than Discord's limit (happens with Zod)
+- [x] Make Arena matches pretty
+  - [x] Show augment icons
 
 ### Post-Match
 
@@ -63,7 +67,7 @@ There seems to be a fair bit of coupling. Examples:
   - I think this is a limit of the Riot API
 - [x] Allow Players to have multiple Accounts, e.g. maybe do a lookup on Account based on alias and append an Account?
 - [x] CI doesn't seem to be running tests, linter
-- [ ] Setup CI to deploy site
+- [x] Setup CI to deploy site
 
 ### Bugs
 
