@@ -35,8 +35,22 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
     const prismaClientNodes: { variable: string; node: TSESTree.VariableDeclarator }[] = [];
     let hasAfterAllWithDisconnect = false;
     let lastLifecycleHook: TSESTree.Node | undefined;
+    let bunTestImport: TSESTree.ImportDeclaration | undefined;
+    let hasAfterAllImport = false;
 
     return {
+      // Track imports from "bun:test" and check if afterAll is imported
+      "ImportDeclaration[source.value='bun:test']"(node: TSESTree.ImportDeclaration) {
+        bunTestImport = node;
+        // Check if afterAll is already imported
+        hasAfterAllImport = node.specifiers.some(
+          (spec) =>
+            spec.type === AST_NODE_TYPES.ImportSpecifier &&
+            spec.imported.type === AST_NODE_TYPES.Identifier &&
+            spec.imported.name === "afterAll",
+        );
+      },
+
       // Track PrismaClient instantiations
       "VariableDeclarator[init.callee.name='PrismaClient']"(node: TSESTree.VariableDeclarator) {
         if (node.id.type === AST_NODE_TYPES.Identifier) {
@@ -99,6 +113,25 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
               fix:
                 index === 0
                   ? (fixer) => {
+                      const fixes = [];
+
+                      // Add afterAll to imports if missing
+                      if (!hasAfterAllImport && bunTestImport !== undefined) {
+                        // Find the closing brace of the import specifiers
+                        const importText = sourceCode.getText(bunTestImport);
+                        const importRegex = /^import\s*\{\s*([^}]+)\s*\}\s*from/;
+                        const importMatch = importRegex.exec(importText);
+
+                        if (importMatch !== null) {
+                          // Add afterAll to the import list
+                          const newImportText = importText.replace(
+                            /^(import\s*\{\s*)([^}]+)(\s*\}\s*from)/,
+                            `$1afterAll, $2$3`,
+                          );
+                          fixes.push(fixer.replaceText(bunTestImport, newImportText));
+                        }
+                      }
+
                       // Generate the afterAll hook for all PrismaClient variables
                       const disconnectCalls = prismaClientNodes
                         .map((pc) => `  await ${pc.variable}.$disconnect();`)
@@ -130,7 +163,9 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
                         return null;
                       }
 
-                      return fixer.insertTextAfter(insertionPoint, afterAllHook);
+                      fixes.push(fixer.insertTextAfter(insertionPoint, afterAllHook));
+
+                      return fixes;
                     }
                   : undefined,
             });

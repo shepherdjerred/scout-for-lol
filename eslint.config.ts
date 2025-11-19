@@ -5,6 +5,9 @@ import { zodSchemaNaming } from "./eslint-rules/zod-schema-naming.ts";
 import { noRedundantZodParse } from "./eslint-rules/no-redundant-zod-parse.ts";
 import { satoriBestPractices } from "./eslint-rules/satori-best-practices.ts";
 import { prismaClientDisconnect } from "./eslint-rules/prisma-client-disconnect.ts";
+import importPlugin from "eslint-plugin-import";
+import noRelativeImportPaths from "eslint-plugin-no-relative-import-paths";
+import * as regexpPlugin from "eslint-plugin-regexp";
 
 /**
  * Bridge typescript-eslint rule to ESLint plugin system
@@ -27,6 +30,7 @@ export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
+  // regexpPlugin.configs["flat/recommended"],
   {
     ignores: [
       "**/generated/**/*",
@@ -45,6 +49,22 @@ export default tseslint.config(
       },
     },
   },
+  {
+    files: ["**/*.{ts,tsx}"],
+    extends: [importPlugin.flatConfigs.recommended, importPlugin.flatConfigs.typescript],
+    rules: {
+      "import/no-unresolved": "off",
+    },
+  },
+  // TODO
+  // {
+  //   plugins: {
+  //     "no-relative-import-paths": noRelativeImportPaths,
+  //   },
+  //   rules: {
+  //     "no-relative-import-paths/no-relative-import-paths": ["warn", { allowSameFolder: true }],
+  //   },
+  // },
   {
     rules: {
       "max-lines": ["error", { max: 500, skipBlankLines: false, skipComments: false }],

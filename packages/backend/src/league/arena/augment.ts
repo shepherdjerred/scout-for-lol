@@ -5,7 +5,7 @@ import {
   type AugmentRarity,
   type FullAugment,
 } from "@scout-for-lol/data";
-import z from "zod";
+import { z } from "zod";
 
 // This models the API response from CommunityDragon.
 // API response objects do not include our internal discriminator `type`,

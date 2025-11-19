@@ -1,6 +1,6 @@
 import { type Message, MessageCreateOptions, MessagePayload } from "discord.js";
 import { z } from "zod";
-import client from "../../discord/client";
+import { client } from "../../discord/client";
 import { asTextChannel } from "../../discord/utils/channel";
 import {
   checkSendMessagePermission,

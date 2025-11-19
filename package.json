@@ -73,7 +73,9 @@
     ],
     "*.{ts,tsx,js,jsx}": "bun run scripts/check-suppressions.ts"
   },
-  "dependencies": {},
+  "dependencies": {
+    "eslint-plugin-regexp": "^2.10.0"
+  },
   "patchedDependencies": {
     "satori@0.18.3": "patches/satori@0.18.3.patch"
   }

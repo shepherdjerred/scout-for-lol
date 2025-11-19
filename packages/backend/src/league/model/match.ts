@@ -12,11 +12,11 @@ import {
   parseTeam,
   type Player,
   type Rank,
+  type ArenaMatch,
 } from "@scout-for-lol/data";
 import { strict as assert } from "assert";
 import { match } from "ts-pattern";
 import { participantToArenaChampion, participantToChampion } from "./champion.js";
-import { type ArenaMatch } from "@scout-for-lol/data";
 
 function getTeams(participants: MatchV5DTOs.ParticipantDto[]) {
   return {

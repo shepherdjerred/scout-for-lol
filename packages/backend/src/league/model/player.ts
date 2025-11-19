@@ -1,5 +1,4 @@
-import { Player } from "@scout-for-lol/data";
-import { PlayerConfigEntry } from "@scout-for-lol/data";
+import { Player, PlayerConfigEntry } from "@scout-for-lol/data";
 import { getRanks } from "./rank";
 
 export async function getPlayer(playerConfig: PlayerConfigEntry): Promise<Player> {

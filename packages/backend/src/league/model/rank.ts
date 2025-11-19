@@ -1,7 +1,4 @@
-import { parseDivision, Ranks } from "@scout-for-lol/data";
-import { PlayerConfigEntry } from "@scout-for-lol/data";
-import { Rank } from "@scout-for-lol/data";
-import { TierSchema } from "@scout-for-lol/data";
+import { parseDivision, Ranks, PlayerConfigEntry, Rank, TierSchema } from "@scout-for-lol/data";
 import { api } from "../api/api";
 import { SummonerLeagueDto } from "twisted/dist/models-dto/index.js";
 import { filter, first, pipe } from "remeda";

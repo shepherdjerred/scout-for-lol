@@ -7,7 +7,12 @@
  * Based on: https://frontendmasters.com/blog/testing-types-in-typescript/
  */
 
-import type { Player, Account, Competition, CompetitionParticipant } from "../generated/prisma/client/index.js";
+import type {
+  Player,
+  Account,
+  Competition,
+  CompetitionParticipant,
+} from "packages/backend/generated/prisma/client/index.js";
 import type {
   PlayerId,
   CompetitionId,

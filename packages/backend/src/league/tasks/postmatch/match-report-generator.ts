@@ -3,7 +3,7 @@ import { z } from "zod";
 import { api } from "../../api/api.js";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
 import { mapRegionToEnum } from "../../model/region.js";
-import type { PlayerConfigEntry, Region, MatchId } from "@scout-for-lol/data";
+import type { PlayerConfigEntry, Region, MatchId, CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 import { MatchIdSchema } from "@scout-for-lol/data";
 import { getPlayer } from "../../model/player.js";
 import { AttachmentBuilder, EmbedBuilder, MessageCreateOptions } from "discord.js";
@@ -11,7 +11,6 @@ import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
 import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "../../../storage/s3.js";
 import { toMatch, toArenaMatch } from "../../model/match.js";
 import { generateMatchReview } from "../../review/generator.js";
-import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 
 /**
  * Fetch match data from Riot API
