@@ -28,8 +28,8 @@ describe("Feature Flags System", () => {
 
     test("returns override for specific server", () => {
       const serverId = DiscordGuildIdSchema.parse("1337623164146155593");
-      expect(getLimit("player_subscriptions", { server: serverId })).toBe(999999);
-      expect(getLimit("accounts", { server: serverId })).toBe(999999);
+      expect(getLimit("player_subscriptions", { server: serverId })).toBe("unlimited");
+      expect(getLimit("accounts", { server: serverId })).toBe("unlimited");
     });
 
     test("returns most specific override when multiple match", () => {

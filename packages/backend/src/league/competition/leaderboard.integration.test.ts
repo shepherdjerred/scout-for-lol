@@ -9,8 +9,16 @@ import { execSync } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
+import { mockClient } from "aws-sdk-client-mock";
 
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../testing/test-ids.js";
+// ============================================================================
+// S3 Mock Setup
+// ============================================================================
+
+const s3Mock = mockClient(S3Client);
+
 // ============================================================================
 // Test Setup
 // ============================================================================
@@ -70,6 +78,12 @@ function getActiveCompetitionDates(): { startDate: Date; endDate: Date } {
 }
 
 beforeEach(async () => {
+  // Reset S3 mock before each test
+  s3Mock.reset();
+  // Mock S3 to return empty results by default (no matches in S3)
+  s3Mock.on(ListObjectsV2Command).resolves({ Contents: [] });
+  s3Mock.on(GetObjectCommand).rejects(new Error("No match found"));
+
   await resetDatabase();
 });
 
