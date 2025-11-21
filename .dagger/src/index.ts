@@ -47,7 +47,7 @@ export class ScoutForLol {
   @func()
   async check(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -107,7 +107,7 @@ export class ScoutForLol {
   @func()
   async build(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -159,7 +159,7 @@ export class ScoutForLol {
   @func()
   async ci(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -242,7 +242,7 @@ export class ScoutForLol {
   @func()
   async deploy(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -329,7 +329,7 @@ export class ScoutForLol {
   @func()
   async generatePrisma(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: "packages/backend",
     })
     source: Directory,
@@ -369,7 +369,7 @@ export class ScoutForLol {
   @func()
   async buildBackendImage(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -398,7 +398,7 @@ export class ScoutForLol {
   @func()
   async publishBackendImage(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -427,7 +427,7 @@ export class ScoutForLol {
   @func()
   async smokeTestBackendImage(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -452,7 +452,7 @@ export class ScoutForLol {
   @func()
   async checkReport(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -473,7 +473,7 @@ export class ScoutForLol {
   @func()
   async checkData(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -494,7 +494,7 @@ export class ScoutForLol {
   @func()
   backendCoverage(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -511,7 +511,7 @@ export class ScoutForLol {
   @func()
   backendTestReport(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -528,7 +528,7 @@ export class ScoutForLol {
   @func()
   dataCoverage(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -545,7 +545,7 @@ export class ScoutForLol {
   @func()
   dataTestReport(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -562,7 +562,7 @@ export class ScoutForLol {
   @func()
   reportCoverage(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -579,7 +579,7 @@ export class ScoutForLol {
   @func()
   reportTestReport(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -596,7 +596,7 @@ export class ScoutForLol {
   @func()
   async checkFrontend(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -621,7 +621,7 @@ export class ScoutForLol {
   @func()
   async buildFrontend(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -647,7 +647,7 @@ export class ScoutForLol {
   @func()
   async deployFrontend(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -675,7 +675,7 @@ export class ScoutForLol {
   @func()
   async checkReportUi(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -700,7 +700,7 @@ export class ScoutForLol {
   @func()
   reportUiCoverage(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -717,7 +717,7 @@ export class ScoutForLol {
   @func()
   reportUiTestReport(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
@@ -734,7 +734,7 @@ export class ScoutForLol {
   @func()
   async buildReportUi(
     @argument({
-      ignore: ["node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
