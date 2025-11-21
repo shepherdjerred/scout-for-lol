@@ -107,38 +107,97 @@ export async function queryMatchesByDateRange(
 
   console.log(`[S3Query] 📅 Scanning ${dayPrefixes.length.toString()} day(s)`);
 
-  for (const prefix of dayPrefixes) {
-    try {
-      const listCommand = new ListObjectsV2Command({
-        Bucket: bucket,
-        Prefix: prefix,
-      });
+  // Process days in batches to avoid overwhelming S3 and memory
+  const BATCH_SIZE = 5; // Process 5 days at a time
+  const MAX_CONCURRENT_DOWNLOADS = 10; // Limit concurrent match downloads
+  const MAX_CONSECUTIVE_ERRORS = 3; // Stop if we get too many consecutive errors
 
-      const response = await client.send(listCommand);
+  let consecutiveErrors = 0;
 
-      if (!response.Contents || response.Contents.length === 0) {
-        console.log(`[S3Query] No objects found for prefix: ${prefix}`);
+  for (let i = 0; i < dayPrefixes.length; i += BATCH_SIZE) {
+    const batch = dayPrefixes.slice(i, i + BATCH_SIZE);
+
+    for (const prefix of batch) {
+      try {
+        const listCommand = new ListObjectsV2Command({
+          Bucket: bucket,
+          Prefix: prefix,
+        });
+
+        const response = await client.send(listCommand);
+
+        if (!response.Contents || response.Contents.length === 0) {
+          console.log(`[S3Query] No objects found for prefix: ${prefix}`);
+          continue;
+        }
+
+        console.log(`[S3Query] Found ${response.Contents.length.toString()} object(s) in ${prefix}`);
+        totalObjects += response.Contents.length;
+
+        // Get all keys for this day
+        const keys = response.Contents.flatMap((obj) => (obj.Key ? [obj.Key] : [])).slice(0, 1000); // Limit to prevent memory issues
+
+        if (keys.length === 0) {
+          console.log(`[S3Query] No valid keys found for ${prefix}`);
+          continue;
+        }
+
+        // Process matches in smaller concurrent batches to avoid overwhelming S3
+        for (let j = 0; j < keys.length; j += MAX_CONCURRENT_DOWNLOADS) {
+          const keyBatch = keys.slice(j, j + MAX_CONCURRENT_DOWNLOADS);
+
+          const matchPromises = keyBatch.map(async (key) => {
+            try {
+              const match = await getMatchFromS3(client, bucket, key);
+              return { key, match };
+            } catch (error) {
+              console.warn(`[S3Query] Failed to fetch match ${key}: ${getErrorMessage(error)}`);
+              return { key, match: null };
+            }
+          });
+
+          const results = await Promise.allSettled(matchPromises);
+
+          for (const result of results) {
+            if (result.status === "fulfilled" && result.value.match) {
+              const { match } = result.value;
+              if (matchIncludesParticipant(match, puuids)) {
+                matches.push(match);
+                matchedObjects++;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`[S3Query] Error processing prefix ${prefix}: ${getErrorMessage(error)}`);
+        consecutiveErrors++;
+
+        // Circuit breaker: if we get too many consecutive errors, stop processing
+        if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+          console.error(`[S3Query] ❌ Too many consecutive errors (${consecutiveErrors.toString()}), stopping query`);
+          throw new Error(
+            `S3 query failed after ${consecutiveErrors.toString()} consecutive errors. Last error: ${getErrorMessage(error)}`,
+          );
+        }
+
         continue;
       }
 
-      console.log(`[S3Query] Found ${response.Contents.length.toString()} object(s) in ${prefix}`);
-      totalObjects += response.Contents.length;
+      // Reset error counter on successful processing
+      consecutiveErrors = 0;
+    }
 
-      for (const object of response.Contents) {
-        if (!object.Key) continue;
+    // Log progress every few batches
+    if ((i / BATCH_SIZE) % 5 === 0 && i > 0) {
+      const progress = Math.round((i / dayPrefixes.length) * 100);
+      console.log(
+        `[S3Query] 📈 Progress: ${progress.toString()}% (${i.toString()}/${dayPrefixes.length.toString()} days processed, ${matchedObjects.toString()} matches found)`,
+      );
+    }
 
-        const match = await getMatchFromS3(client, bucket, object.Key);
-
-        if (match && matchIncludesParticipant(match, puuids)) {
-          matches.push(match);
-          matchedObjects++;
-        }
-      }
-    } catch (error) {
-      console.error(`[S3Query] Error listing objects for prefix ${prefix}: ${getErrorMessage(error)}`);
-      // Continue with other prefixes
-      // TODO: we probably want to throw an error here if this happens for too many days
-      // throw new Error(`Error listing objects for prefix ${prefix}: ${getErrorMessage(error)}`);
+    // Add a small delay between batches to be nice to S3
+    if (i + BATCH_SIZE < dayPrefixes.length) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
 

@@ -9,6 +9,7 @@ import type {
 import { getCompetitionStatus, rankToLeaguePoints, RankSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 import { sortBy } from "remeda";
 import { match } from "ts-pattern";
+import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { z } from "zod";
 import type { PrismaClient } from "../../../generated/prisma/client/index.js";
 import { queryMatchesByDateRange } from "../../storage/s3-query.js";
@@ -363,18 +364,36 @@ export async function calculateLeaderboard(
   // Get all PUUIDs for match querying
   const puuids = players.flatMap((p) => p.accounts.map((a) => a.puuid));
 
-  console.log(`[Leaderboard] Querying matches for ${puuids.length.toString()} accounts`);
+  // Determine if this criteria type needs match data
+  const needsMatchData = match(competition.criteria)
+    .with({ type: "HIGHEST_RANK" }, () => false)
+    .with({ type: "MOST_RANK_CLIMB" }, () => false)
+    .with({ type: "MOST_GAMES_PLAYED" }, () => true)
+    .with({ type: "MOST_WINS_PLAYER" }, () => true)
+    .with({ type: "MOST_WINS_CHAMPION" }, () => true)
+    .with({ type: "HIGHEST_WIN_RATE" }, () => true)
+    .exhaustive();
 
-  // Determine date range
-  // For active competitions, use current time as end date
-  const startDate = competition.startDate;
-  const endDate = competition.endDate ?? new Date();
+  let matches: MatchV5DTOs.MatchDto[] = [];
 
-  // Query matches from S3
-  // If no start date (shouldn't happen for non-DRAFT), use empty results
-  const matches = startDate ? await queryMatchesByDateRange(startDate, endDate, puuids) : [];
+  if (needsMatchData) {
+    console.log(`[Leaderboard] Querying matches for ${puuids.length.toString()} accounts`);
 
-  console.log(`[Leaderboard] Found ${matches.length.toString()} matches in date range`);
+    // Determine date range
+    // For active competitions, use current time as end date
+    const startDate = competition.startDate;
+    const endDate = competition.endDate ?? new Date();
+
+    // Query matches from S3
+    // If no start date (shouldn't happen for non-DRAFT), use empty results
+    matches = startDate ? await queryMatchesByDateRange(startDate, endDate, puuids) : [];
+
+    console.log(`[Leaderboard] Found ${matches.length.toString()} matches in date range`);
+  } else {
+    console.log(
+      `[Leaderboard] Criteria type ${competition.criteria.type} does not need match data - skipping S3 query`,
+    );
+  }
 
   // Fetch snapshot data if needed for rank-based criteria
   const snapshotData = await fetchSnapshotData(
