@@ -5,7 +5,7 @@ import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data";
 import { testAccountId, testPuuid } from "../../../testing/test-ids.js";
 describe("generateMatchReview", () => {
   describe("regular matches", () => {
-    test("generates review for a solo queue victory", () => {
+    test("generates review for a solo queue victory", async () => {
       // Use minimal type-safe fixture - only testing review generation logic
       const match = {
         queueType: "solo",
@@ -59,7 +59,7 @@ describe("generateMatchReview", () => {
         },
       } as unknown as CompletedMatch;
 
-      const review = generateMatchReview(match);
+      const review = await generateMatchReview(match);
 
       expect(review).toContain("TestPlayer");
       expect(review).toContain("Jinx");
@@ -68,7 +68,7 @@ describe("generateMatchReview", () => {
       expect(review).toContain("10/3/8");
     });
 
-    test("generates review for a flex queue defeat", () => {
+    test("generates review for a flex queue defeat", async () => {
       const match = {
         queueType: "flex",
         durationInSeconds: 2100,
@@ -112,7 +112,7 @@ describe("generateMatchReview", () => {
         },
       } as unknown as CompletedMatch;
 
-      const review = generateMatchReview(match);
+      const review = await generateMatchReview(match);
 
       expect(review).toContain("Player2");
       expect(review).toContain("Yasuo");
@@ -123,7 +123,7 @@ describe("generateMatchReview", () => {
   });
 
   describe("arena matches", () => {
-    test("generates review for arena match with 1st place", () => {
+    test("generates review for arena match with 1st place", async () => {
       const match = {
         queueType: "arena",
         durationInSeconds: 1200,
@@ -180,7 +180,7 @@ describe("generateMatchReview", () => {
         teams: [],
       } as unknown as ArenaMatch;
 
-      const review = generateMatchReview(match);
+      const review = await generateMatchReview(match);
 
       expect(review).toContain("ArenaPlayer");
       expect(review).toContain("1st place");
@@ -188,7 +188,7 @@ describe("generateMatchReview", () => {
       expect(review).toContain("Talon");
     });
 
-    test("generates review for arena match with 4th place", () => {
+    test("generates review for arena match with 4th place", async () => {
       const match = {
         queueType: "arena",
         durationInSeconds: 900,
@@ -245,7 +245,7 @@ describe("generateMatchReview", () => {
         teams: [],
       } as unknown as ArenaMatch;
 
-      const review = generateMatchReview(match);
+      const review = await generateMatchReview(match);
 
       expect(review).toContain("ArenaPlayer2");
       expect(review).toContain("4th place");
@@ -255,7 +255,7 @@ describe("generateMatchReview", () => {
   });
 
   describe("edge cases", () => {
-    test("handles match with no players", () => {
+    test("handles match with no players", async () => {
       const match = {
         queueType: "solo",
         durationInSeconds: 1800,
@@ -266,7 +266,7 @@ describe("generateMatchReview", () => {
         },
       } as unknown as CompletedMatch;
 
-      const review = generateMatchReview(match);
+      const review = await generateMatchReview(match);
 
       expect(review).toContain("Unable to generate review");
       expect(review).toContain("no player data found");

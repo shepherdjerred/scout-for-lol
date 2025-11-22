@@ -142,7 +142,8 @@ export async function generateMatchReport(
       // Generate AI review
       let aiReview: string | undefined;
       try {
-        aiReview = generateMatchReview(completedMatch);
+        const review = await generateMatchReview(completedMatch);
+        aiReview = review;
       } catch (error) {
         console.error(`[generateMatchReport] Error generating AI review:`, error);
       }

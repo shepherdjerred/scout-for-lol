@@ -43,6 +43,7 @@ export default {
   databaseUrl: getRequiredEnvVar("DATABASE_URL"),
   port: env.get("PORT").default("3000").asPortNumber(),
   s3BucketName: getOptionalEnvVar("S3_BUCKET_NAME"),
+  openaiApiKey: getOptionalEnvVar("OPENAI_API_KEY"),
 };
 
 console.log("✅ Configuration loaded successfully");

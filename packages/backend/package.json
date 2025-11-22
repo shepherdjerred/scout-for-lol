@@ -23,7 +23,8 @@
     "brand-types": "bun run scripts/brand-prisma-types.ts",
     "db:push": "bunx prisma db push",
     "db:migrate": "bunx prisma migrate dev",
-    "db:studio": "bunx prisma studio"
+    "db:studio": "bunx prisma studio",
+    "test:review": "bun run src/league/review/test-reviews.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.890.0",
@@ -31,12 +32,14 @@
     "@resvg/resvg-js": "^2.6.2",
     "@scout-for-lol/data": "workspace:*",
     "@scout-for-lol/report": "workspace:*",
+    "@scout-for-lol/report-ui": "workspace:*",
     "@sentry/node": "^10.0.0",
     "cron": "^4.1.4",
     "date-fns": "^4.1.0",
     "discord.js": "^14.18.0",
     "dotenv": "^17.0.1",
     "env-var": "^7.5.0",
+    "openai": "^6.9.1",
     "prisma": "latest",
     "prom-client": "^15.1.3",
     "react": "^19.1.0",
