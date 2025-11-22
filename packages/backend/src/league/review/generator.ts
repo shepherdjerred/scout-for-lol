@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { match as matchPattern } from "ts-pattern";
+import { z } from "zod";
 import config from "../../configuration.js";
 import { saveAIReviewImageToS3 } from "../../storage/s3.js";
 import {
@@ -40,6 +41,94 @@ function getGeminiClient(): GoogleGenerativeAI | undefined {
 }
 
 /**
+ * Art styles for AI-generated review images
+ */
+const ART_STYLES = [
+  // Comic & Graphic Novel Styles
+  "Marvel/Avengers style with bold inking and dynamic action poses",
+  "DC Comics with dramatic shadows, heroic composition, and intense atmosphere",
+  "Naruto/Shonen manga style with energetic action and bold line work",
+  "Avatar: The Last Airbender style with fluid movement and elemental effects",
+  "Indie comic book with unique line work, creative paneling, and distinctive color palette",
+  "Golden age comics with Ben-Day dots, vintage feel, and retro typography",
+  "Graphic novel noir with high contrast, moody shadows, and cinematic angles",
+  "Graphic novel style with dynamic paneling, dramatic angles, and sequential storytelling",
+
+  // Classic & Fine Art
+  "Impressionist painting style with visible brushstrokes, dappled light, and soft color blending",
+  "Oil painting with rich textures, classical composition, and painterly brushstrokes",
+  "Watercolor painting with artistic flair, flowing brushwork, and soft gradients",
+  "Art nouveau with decorative frames, elegant curves, and ornamental details",
+  "Art deco with geometric patterns, luxurious gold accents, and streamlined elegance",
+  "Surrealist dreamscape with impossible geometry, symbolic imagery, and ethereal atmosphere",
+  "Expressionist style with bold emotional colors, distorted forms, and raw intensity",
+  "Baroque painting with dramatic lighting, rich details, and dynamic movement",
+
+  // Illustration & Poster Art
+  "Movie poster style with cinematic composition and dramatic lighting",
+  "Epic fantasy illustration with dramatic composition and magical atmosphere",
+  "Soviet propaganda poster with bold typography, heroic figures, and striking red colors",
+  "Psychedelic 60s poster art with swirling patterns, vibrant colors, and groovy typography",
+  "Victorian Gothic illustration with intricate details, dark romanticism, and ornate borders",
+  "Medieval manuscript illumination with gold leaf, intricate borders, and vibrant miniatures",
+  "Tarot card art with mystical symbols, ornate frames, and esoteric imagery",
+
+  // Modern & Contemporary
+  "Pop art style with bold colors, Ben-Day dots, and comic-inspired compositions",
+  "Memphis design with bold geometric shapes, bright colors, and 80s postmodern aesthetic",
+  "Minimalist flat design with clean lines, limited color palette, and geometric simplicity",
+  "Bauhaus geometric style with primary colors, circles, squares, and functional beauty",
+  "Glitch art with digital corruption, chromatic aberration, and databending effects",
+
+  // Cultural & Traditional
+  "Ukiyo-e Japanese woodblock print style with flat colors and elegant lines",
+  "Chinese ink wash painting with flowing brushwork, misty atmosphere, and calligraphic elegance",
+  "Aztec/Mayan art with geometric patterns, bold symbols, and ancient iconography",
+  "Persian miniature painting with intricate patterns, rich colors, and delicate detail",
+  "Aboriginal dot painting with symbolic patterns, earth tones, and dreamtime storytelling",
+
+  // Urban & Contemporary
+  "Graffiti/street art style with bold colors, urban energy, and spray paint texture",
+  "Stencil art style with sharp edges, high contrast, and urban activist aesthetic",
+  "Neon sign art with glowing tubes, retro typography, and nighttime city vibes",
+
+  // Digital & Gaming
+  "Retro pixel art in detailed 16-bit game style with vibrant colors",
+  "Cyberpunk aesthetic with neon-soaked futuristic elements and urban grit",
+  "Synthwave/vaporwave aesthetic with pink and purple gradients, retro-futuristic vibes",
+  "Isometric game art with precise angles, pixel-perfect details, and strategic perspective",
+  "Bowling alley strike animation with campy over-the-top 3D CGI, dramatic explosions, and cheesy special effects",
+
+  // Textures & Materials
+  "Stained glass window style with bold outlines and colorful geometric segments",
+  "Paper cut-out art with layered depth, bold shapes, and clean shadows",
+  "Mosaic tile art with small colorful pieces forming larger images and patterns",
+  "Carved wood relief with dimensional depth, natural grain, and tactile texture",
+  "Embroidered tapestry style with thread texture, cross-stitch detail, and textile warmth",
+
+  // Photographic & Realistic
+  "Film noir photography with dramatic shadows, high contrast, and moody black and white",
+  "Hyperrealistic digital painting with meticulous detail, perfect lighting, and lifelike textures",
+  "Double exposure photography with overlapping images, dreamy transparency, and poetic layering",
+
+  // Animation Styles
+  "Studio Ghibli's dreamy, whimsical aesthetic with soft colors and emotional depth",
+  "Disney Renaissance style with expressive characters, musical energy, and theatrical storytelling",
+] as const;
+
+/**
+ * Randomly select an art style for image generation
+ */
+function selectRandomArtStyle(): string {
+  const randomIndex = Math.floor(Math.random() * ART_STYLES.length);
+  const style = ART_STYLES[randomIndex];
+  if (!style) {
+    throw new Error("Failed to select art style");
+  }
+  return style;
+}
+
+/**
  * Generate an AI-powered image from review text using Gemini
  */
 async function generateReviewImage(
@@ -53,31 +142,31 @@ async function generateReviewImage(
     return undefined;
   }
   try {
+    const artStyle = selectRandomArtStyle();
+    console.log(`[generateReviewImage] Selected art style: ${artStyle}`);
     console.log("[generateReviewImage] Calling Gemini API to generate image...");
+
     const model = client.getGenerativeModel({
       model: "gemini-3-pro-image-preview",
     });
-    const result = await model.generateContent(
-      `Generate a creative and visually striking image based on this League of Legends match review.
 
-Pick a unique and interesting art style - make it distinctive and engaging! Here are some ideas:
+    // Add timeout protection (60 seconds)
+    const TIMEOUT_MS = 60_000;
+    const startTime = Date.now();
 
-COMIC BOOK STYLES (especially great):
-- Marvel/Avengers style with bold inking and dynamic action
-- DC Comics dramatic shadows and heroic poses
-- Manga/anime styles: Studio Ghibli's dreamy aesthetic, Naruto's energetic action, Avatar: The Last Airbender's fluid movement
-- Indie comic book with unique line work and color palettes
-- Golden age comics with Ben-Day dots and vintage feel
-- Graphic novel noir with high contrast
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`Gemini API call timed out after ${TIMEOUT_MS.toString()}ms`));
+      }, TIMEOUT_MS);
+    });
 
-OTHER EXCITING STYLES:
-- Cyberpunk neon-soaked futuristic aesthetic
-- Fantasy illustration with epic composition
-- Retro pixel art or 8-bit/16-bit game style
-- Watercolor or ink wash with artistic flair
-- Art nouveau with decorative frames
-- Synthwave/vaporwave aesthetic
-- Movie poster or cinematic style
+    const result = await Promise.race([
+      model.generateContent(
+        `Generate a creative and visually striking image based on this League of Legends match review.
+
+Art style to use: ${artStyle}
+
+CRITICAL: You MUST use ONLY the art style specified above. Do not mix styles or use any other style. Commit fully to this specific aesthetic.
 
 Review text to visualize and elaborate on: "${reviewText}"
 
@@ -86,8 +175,15 @@ Important:
 - Create something visually interesting that captures the essence of the performance and feedback
 - Use your chosen art style consistently and make the composition dynamic
 - Add visual storytelling elements - show the action, emotion, and drama beyond the literal text
-- Make it feel like cover art or a key moment illustration`,
-    );
+- Make it feel like cover art or a key moment illustration
+- Stay true to the specified art style throughout the entire image`,
+      ),
+      timeoutPromise,
+    ]);
+
+    const duration = Date.now() - startTime;
+    console.log(`[generateReviewImage] Gemini API call completed in ${duration.toString()}ms`);
+
     const response = result.response;
     if (!response.candidates || response.candidates.length === 0) {
       console.log("[generateReviewImage] No candidates returned from Gemini");
@@ -98,7 +194,7 @@ Important:
       console.log("[generateReviewImage] No candidate or parts in response");
       return undefined;
     }
-    const imagePart = parts.find((part) => part.inlineData);
+    const imagePart = parts.find((part: { inlineData?: unknown }) => part.inlineData);
     const imageData = imagePart?.inlineData?.data;
     if (!imageData) {
       console.log("[generateReviewImage] No image data in response");
@@ -127,7 +223,17 @@ Important:
 
     return buffer;
   } catch (error) {
-    console.error("[generateReviewImage] Error generating image:", error);
+    // Validate error structure with Zod
+    const ErrorSchema = z.object({
+      message: z.string(),
+    });
+    const result = ErrorSchema.safeParse(error);
+
+    if (result.success && result.data.message.includes("timed out")) {
+      console.error("[generateReviewImage] Gemini API call timed out - request took too long");
+    } else {
+      console.error("[generateReviewImage] Error generating image:", error);
+    }
     return undefined;
   }
 }
@@ -255,7 +361,7 @@ async function generateAIReview(match: CompletedMatch | ArenaMatch): Promise<str
 
     console.log("[generateAIReview] Calling OpenAI API...");
     const completion = await client.chat.completions.create({
-      model: "gpt-5-nano",
+      model: "gpt-5",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },

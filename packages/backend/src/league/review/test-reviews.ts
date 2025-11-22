@@ -22,7 +22,7 @@ function parseArgs(): TestOptions {
   const args = process.argv.slice(2);
   const options: TestOptions = {
     matchType: "ranked",
-    count: 1,
+    count: 10,
     showPrompt: false,
   };
 
@@ -76,12 +76,12 @@ Usage: bun run src/league/review/test-reviews.ts [options]
 
 Options:
   -t, --type <type>      Match type: ranked, unranked, aram, arena (default: ranked)
-  -c, --count <n>        Number of reviews to generate (default: 1)
+  -c, --count <n>        Number of reviews to generate (default: 10)
   -p, --show-prompt      Show the system prompt used
   -h, --help             Show this help message
 
 Examples:
-  # Generate 1 ranked match review
+  # Generate 10 ranked match reviews (default)
   bun run src/league/review/test-reviews.ts
 
   # Generate 5 arena match reviews
