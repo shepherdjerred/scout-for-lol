@@ -9,6 +9,7 @@ globs: *.ts,*.tsx
 - **NEVER use `any`** - Always define proper types
 - **Avoid type assertions (`as`)** - Use type guards instead
 - **Use unknown for uncertain types** - Validate with Zod before processing
+- **Prefer `undefined` over `null`** - Use `undefined` for optional/missing values; only use `null` when required by external APIs or libraries
 - **Prefer advanced types** - Mapped types, conditional types, template literals
 - **Exhaustive pattern matching** - Use `ts-pattern` for complex branching
 

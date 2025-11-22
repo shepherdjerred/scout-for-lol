@@ -1,8 +1,9 @@
 import type { ArenaMatch, CompletedMatch, Lane } from "@scout-for-lol/data";
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { match as matchPattern } from "ts-pattern";
 import { z } from "zod";
 import config from "../../configuration.js";
@@ -10,6 +11,7 @@ import config from "../../configuration.js";
 const FILENAME = fileURLToPath(import.meta.url);
 const DIRNAME = dirname(FILENAME);
 const PROMPTS_DIR = join(DIRNAME, "prompts");
+const AI_IMAGES_DIR = join(DIRNAME, "ai-images");
 
 // Personality metadata schema
 const PersonalityMetadataSchema = z.strictObject({
@@ -204,6 +206,64 @@ function getOpenAIClient(): OpenAI | undefined {
 }
 
 /**
+ * Initialize Gemini client if API key is configured
+ */
+function getGeminiClient(): GoogleGenerativeAI | undefined {
+  if (!config.geminiApiKey) {
+    return undefined;
+  }
+  return new GoogleGenerativeAI(config.geminiApiKey);
+}
+
+/**
+ * Generate an AI-powered image from review text using Gemini
+ */
+async function generateReviewImage(reviewText: string): Promise<Buffer | undefined> {
+  const client = getGeminiClient();
+  if (!client) {
+    console.log("[generateReviewImage] Gemini API key not configured, skipping image generation");
+    return undefined;
+  }
+  try {
+    console.log("[generateReviewImage] Calling Gemini API to generate image...");
+    const model = client.getGenerativeModel({
+      model: "gemini-3-pro-image-preview",
+    });
+    const result = await model.generateContent(reviewText);
+    const response = result.response;
+    if (!response.candidates || response.candidates.length === 0) {
+      console.log("[generateReviewImage] No candidates returned from Gemini");
+      return undefined;
+    }
+    const parts = response.candidates[0]?.content.parts;
+    if (!parts) {
+      console.log("[generateReviewImage] No candidate or parts in response");
+      return undefined;
+    }
+    const imagePart = parts.find((part) => part.inlineData);
+    const imageData = imagePart?.inlineData?.data;
+    if (!imageData) {
+      console.log("[generateReviewImage] No image data in response");
+      return undefined;
+    }
+    const buffer = Buffer.from(imageData, "base64");
+    console.log("[generateReviewImage] Successfully generated image");
+    try {
+      mkdirSync(AI_IMAGES_DIR, { recursive: true });
+      const filepath = join(AI_IMAGES_DIR, `ai-review-${new Date().toISOString().replace(/[:.]/g, "-")}.png`);
+      writeFileSync(filepath, buffer);
+      console.log(`[generateReviewImage] Saved image to: ${filepath}`);
+    } catch (fsError) {
+      console.error("[generateReviewImage] Failed to save image to filesystem:", fsError);
+    }
+    return buffer;
+  } catch (error) {
+    console.error("[generateReviewImage] Error generating image:", error);
+    return undefined;
+  }
+}
+
+/**
  * Generate an AI-powered review using OpenAI
  */
 async function generateAIReview(match: CompletedMatch | ArenaMatch): Promise<string | undefined> {
@@ -355,29 +415,32 @@ async function generateAIReview(match: CompletedMatch | ArenaMatch): Promise<str
 }
 
 /**
- * Generates a post-game review for a player's performance.
- *
- * This function analyzes the match data and generates a text review
- * that will be attached to the post-game report image.
- *
- * The ai_reviews_enabled flag should be checked by the caller (where server context is available)
- * before calling this function. This function will attempt to generate an AI review if the
- * OpenAI API key is configured, otherwise it will fall back to a placeholder review.
- *
+ * Generates a post-game review for a player's performance with optional AI-generated image.
  * @param match - The completed match data (regular or arena)
- * @returns A promise that resolves to a string containing the review text
+ * @returns A promise that resolves to an object with review text and optional image
  */
-export async function generateMatchReview(match: CompletedMatch | ArenaMatch): Promise<string> {
+export async function generateMatchReview(
+  match: CompletedMatch | ArenaMatch,
+): Promise<{ text: string; image?: Buffer }> {
   // Try to generate AI review
   const aiReview = await generateAIReview(match);
-
-  // Fall back to placeholder if AI review generation failed or is not configured
+  const reviewText = aiReview ?? generatePlaceholderReview(match);
   if (!aiReview) {
     console.log("[generateMatchReview] Falling back to placeholder review");
-    return generatePlaceholderReview(match);
   }
-
-  return aiReview;
+  // Generate AI image from the review text (only if we have a real AI review)
+  if (aiReview) {
+    const reviewImage = await generateReviewImage(`Generate an image: ${aiReview}`);
+    if (reviewImage) {
+      return {
+        text: reviewText,
+        image: reviewImage,
+      };
+    }
+  }
+  return {
+    text: reviewText,
+  };
 }
 
 /**
@@ -385,22 +448,17 @@ export async function generateMatchReview(match: CompletedMatch | ArenaMatch): P
  */
 function generatePlaceholderReview(match: CompletedMatch | ArenaMatch): string {
   if (match.queueType === "arena") {
-    // Arena match review
-    const player = match.players[0]; // Primary tracked player
+    const player = match.players[0];
     if (!player) {
       return "Unable to generate review: no player data found.";
     }
-
     const placementStr = player.placement.toString();
     return `[Placeholder Review] ${player.playerConfig.alias} finished in ${placementStr}${getOrdinalSuffix(player.placement)} place playing ${player.champion.championName} with ${player.teammate.championName}.`;
-    // TODO: use ts-pattern for exhaustive match
   } else {
-    // Regular match review
-    const player = match.players[0]; // Primary tracked player
+    const player = match.players[0];
     if (!player) {
       return "Unable to generate review: no player data found.";
     }
-
     const outcome = player.outcome;
     const champion = player.champion;
     const killsStr = champion.kills.toString();
@@ -408,22 +466,16 @@ function generatePlaceholderReview(match: CompletedMatch | ArenaMatch): string {
     const assistsStr = champion.assists.toString();
     const kda = `${killsStr}/${deathsStr}/${assistsStr}`;
     const queueTypeStr = match.queueType ?? "unknown";
-
     return `[Placeholder Review] ${player.playerConfig.alias} played ${champion.championName} in ${queueTypeStr} and got a ${outcome} with a ${kda} KDA.`;
   }
 }
 
-/**
- * Helper function to get ordinal suffix for placement (1st, 2nd, 3rd, etc.)
- */
 function getOrdinalSuffix(num: number): string {
   const lastDigit = num % 10;
   const lastTwoDigits = num % 100;
-
   if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
     return "th";
   }
-
   switch (lastDigit) {
     case 1:
       return "st";

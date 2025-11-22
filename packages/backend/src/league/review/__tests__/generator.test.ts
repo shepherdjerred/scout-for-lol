@@ -61,11 +61,11 @@ describe("generateMatchReview", () => {
 
       const review = await generateMatchReview(match);
 
-      expect(review).toContain("TestPlayer");
-      expect(review).toContain("Jinx");
-      expect(review).toContain("solo");
-      expect(review).toContain("Victory");
-      expect(review).toContain("10/3/8");
+      expect(review.text).toContain("TestPlayer");
+      expect(review.text).toContain("Jinx");
+      expect(review.text).toContain("solo");
+      expect(review.text).toContain("Victory");
+      expect(review.text).toContain("10/3/8");
     });
 
     test("generates review for a flex queue defeat", async () => {
@@ -114,11 +114,11 @@ describe("generateMatchReview", () => {
 
       const review = await generateMatchReview(match);
 
-      expect(review).toContain("Player2");
-      expect(review).toContain("Yasuo");
-      expect(review).toContain("flex");
-      expect(review).toContain("Defeat");
-      expect(review).toContain("5/8/4");
+      expect(review.text).toContain("Player2");
+      expect(review.text).toContain("Yasuo");
+      expect(review.text).toContain("flex");
+      expect(review.text).toContain("Defeat");
+      expect(review.text).toContain("5/8/4");
     });
   });
 
@@ -182,10 +182,10 @@ describe("generateMatchReview", () => {
 
       const review = await generateMatchReview(match);
 
-      expect(review).toContain("ArenaPlayer");
-      expect(review).toContain("1st place");
-      expect(review).toContain("Zed");
-      expect(review).toContain("Talon");
+      expect(review.text).toContain("ArenaPlayer");
+      expect(review.text).toContain("1st place");
+      expect(review.text).toContain("Zed");
+      expect(review.text).toContain("Talon");
     });
 
     test("generates review for arena match with 4th place", async () => {
@@ -247,10 +247,10 @@ describe("generateMatchReview", () => {
 
       const review = await generateMatchReview(match);
 
-      expect(review).toContain("ArenaPlayer2");
-      expect(review).toContain("4th place");
-      expect(review).toContain("Ahri");
-      expect(review).toContain("Lux");
+      expect(review.text).toContain("ArenaPlayer2");
+      expect(review.text).toContain("4th place");
+      expect(review.text).toContain("Ahri");
+      expect(review.text).toContain("Lux");
     });
   });
 
@@ -268,8 +268,8 @@ describe("generateMatchReview", () => {
 
       const review = await generateMatchReview(match);
 
-      expect(review).toContain("Unable to generate review");
-      expect(review).toContain("no player data found");
+      expect(review.text).toContain("Unable to generate review");
+      expect(review.text).toContain("no player data found");
     });
   });
 });

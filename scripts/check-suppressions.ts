@@ -18,12 +18,12 @@ const SUPPRESSION_PATTERNS = [
   // Add more patterns as needed
 ];
 
-type Finding = {
+interface Finding {
   file: string;
   lineNumber: number;
   line: string;
   pattern: string;
-};
+}
 
 async function main(): Promise<void> {
   console.log("🔍 Checking for new code quality suppressions...\n");
@@ -42,12 +42,14 @@ async function main(): Promise<void> {
   let currentFile = "";
   let currentLineNumber = 0;
 
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
     // Track which file we're in
     if (line.startsWith("+++ ")) {
       // Extract filename (handles both "b/" and "i/" prefixes)
-      const match = /^\+\+\+ [a-z]\/(.*)/.exec(line);
-      if (match?.[1]) {
+      const match = line.match(/^\+\+\+ [a-z]\/(.*)/);
+      if (match) {
         currentFile = match[1];
         // Skip checking the suppression checker script itself
         if (currentFile === "scripts/check-suppressions.ts") {
@@ -64,9 +66,9 @@ async function main(): Promise<void> {
 
     // Track line numbers from diff hunks
     if (line.startsWith("@@")) {
-      const match = /\+(\d+)/.exec(line);
+      const match = line.match(/\+(\d+)/);
       if (match) {
-        currentLineNumber = parseInt(match[1] ?? "0", 10);
+        currentLineNumber = parseInt(match[1]);
       }
       continue;
     }
@@ -91,7 +93,7 @@ async function main(): Promise<void> {
       }
     }
 
-    currentLineNumber += 1;
+    currentLineNumber++;
   }
 
   if (findings.length === 0) {
@@ -103,19 +105,21 @@ async function main(): Promise<void> {
   console.error("❌ Found new code quality suppressions:\n");
 
   // Group by file
-  const byFile: Record<string, Finding[]> = {};
-  for (const finding of findings) {
-    byFile[finding.file] ??= [];
-    const fileFindings = byFile[finding.file];
-    if (fileFindings) {
-      fileFindings.push(finding);
-    }
-  }
+  const byFile = findings.reduce(
+    (acc, finding) => {
+      if (!acc[finding.file]) {
+        acc[finding.file] = [];
+      }
+      acc[finding.file].push(finding);
+      return acc;
+    },
+    {} as Record<string, Finding[]>,
+  );
 
   for (const [file, fileFindings] of Object.entries(byFile)) {
     console.error(`📄 ${file}`);
     for (const finding of fileFindings) {
-      console.error(`   Line ${String(finding.lineNumber)}: ${finding.line}`);
+      console.error(`   Line ${finding.lineNumber}: ${finding.line}`);
     }
     console.error("");
   }
@@ -135,4 +139,4 @@ async function main(): Promise<void> {
   process.exit(1);
 }
 
-void main();
+main();

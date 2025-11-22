@@ -152,13 +152,13 @@ async function main(): Promise<void> {
     }
 
     const startTime = Date.now();
-    const review = await generateMatchReview(match);
+    const reviewResult = await generateMatchReview(match);
     const duration = Date.now() - startTime;
 
     console.log("Generated Review:");
     console.log(`┌${"─".repeat(78)}┐`);
     // Word wrap the review to 76 chars
-    const words = review.split(" ");
+    const words = reviewResult.text.split(" ");
     let line = "│ ";
     for (const word of words) {
       if (line.length + word.length + 1 > 77) {
@@ -175,11 +175,14 @@ async function main(): Promise<void> {
     console.log();
 
     console.log(`Stats:`);
-    console.log(`  - Length: ${String(review.length)} characters`);
+    console.log(`  - Length: ${String(reviewResult.text.length)} characters`);
     console.log(`  - Generation time: ${String(duration)}ms`);
+    if (reviewResult.image) {
+      console.log(`  - AI Image: Generated (${String(reviewResult.image.length)} bytes)`);
+    }
     console.log();
 
-    if (review.length > 400) {
+    if (reviewResult.text.length > 400) {
       console.log(`⚠️  Warning: Review exceeds 400 character limit!`);
       console.log();
     }

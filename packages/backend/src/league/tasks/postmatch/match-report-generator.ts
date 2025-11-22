@@ -139,22 +139,34 @@ export async function generateMatchReport(
       }
       const completedMatch = toMatch(players, matchData, undefined, undefined);
 
-      // Generate AI review
-      let aiReview: string | undefined;
+      // Generate AI review (text and optional image)
+      let reviewText: string | undefined;
+      let reviewImage: Buffer | undefined;
       try {
         const review = await generateMatchReview(completedMatch);
-        aiReview = review;
+        reviewText = review.text;
+        reviewImage = review.image;
       } catch (error) {
         console.error(`[generateMatchReport] Error generating AI review:`, error);
       }
 
       // Create Discord message
-      const [attachment, embed] = await createMatchImage(completedMatch, matchId);
+      const [matchReportAttachment, matchReportEmbed] = await createMatchImage(completedMatch, matchId);
+
+      // Build files array - start with match report image
+      const files = [matchReportAttachment];
+
+      // Add AI-generated image if available
+      if (reviewImage) {
+        const aiImageAttachment = new AttachmentBuilder(reviewImage).setName("ai-review.png");
+        files.push(aiImageAttachment);
+        console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
+      }
 
       return {
-        files: [attachment],
-        embeds: [embed],
-        ...(aiReview && { content: aiReview }),
+        files: files,
+        embeds: [matchReportEmbed],
+        ...(reviewText && { content: reviewText }),
       };
     }
   } catch (error) {

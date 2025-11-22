@@ -6,8 +6,9 @@ import { noRedundantZodParse } from "./eslint-rules/no-redundant-zod-parse.ts";
 import { satoriBestPractices } from "./eslint-rules/satori-best-practices.ts";
 import { prismaClientDisconnect } from "./eslint-rules/prisma-client-disconnect.ts";
 import importPlugin from "eslint-plugin-import";
-import noRelativeImportPaths from "eslint-plugin-no-relative-import-paths";
-import * as regexpPlugin from "eslint-plugin-regexp";
+// TODO: Enable these plugins when ready
+// import noRelativeImportPaths from "eslint-plugin-no-relative-import-paths";
+// import * as regexpPlugin from "eslint-plugin-regexp";
 
 /**
  * Bridge typescript-eslint rule to ESLint plugin system
@@ -67,7 +68,14 @@ export default tseslint.config(
   // },
   {
     rules: {
+      // Code quality and complexity limits
       "max-lines": ["error", { max: 500, skipBlankLines: false, skipComments: false }],
+      // complexity: ["error", { max: 20 }],
+      // "max-depth": ["error", { max: 4 }],
+      // "max-params": ["error", { max: 4 }],
+      // curly: ["error", "all"],
+
+      // TypeScript configuration
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
       "@typescript-eslint/no-non-null-assertion": "error",
       "@typescript-eslint/no-unused-vars": [
@@ -85,8 +93,64 @@ export default tseslint.config(
           objectLiteralTypeAssertions: "never",
         },
       ],
+
+      // // Prefer Bun APIs over Node.js imports
+      // "no-restricted-imports": [
+      //   "error",
+      //   {
+      //     paths: [
+      //       {
+      //         name: "fs",
+      //         message:
+      //           "Use Bun.file() for reading and Bun.write() for writing instead of fs. See https://bun.sh/docs/api/file-io",
+      //       },
+      //       {
+      //         name: "node:fs",
+      //         message:
+      //           "Use Bun.file() for reading and Bun.write() for writing instead of node:fs. See https://bun.sh/docs/api/file-io",
+      //       },
+      //       {
+      //         name: "fs/promises",
+      //         message:
+      //           "Use Bun.file() for reading and Bun.write() for writing instead of fs/promises. See https://bun.sh/docs/api/file-io",
+      //       },
+      //       {
+      //         name: "node:fs/promises",
+      //         message:
+      //           "Use Bun.file() for reading and Bun.write() for writing instead of node:fs/promises. See https://bun.sh/docs/api/file-io",
+      //       },
+      //       {
+      //         name: "child_process",
+      //         message:
+      //           "Use Bun.spawn() instead of child_process for spawning processes. See https://bun.sh/docs/api/spawn",
+      //       },
+      //       {
+      //         name: "node:child_process",
+      //         message:
+      //           "Use Bun.spawn() instead of node:child_process for spawning processes. See https://bun.sh/docs/api/spawn",
+      //       },
+      //       {
+      //         name: "crypto",
+      //         message:
+      //           "Use Bun.password for password hashing, Bun.hash() for hashing, or Web Crypto API for cryptography instead of crypto. See https://bun.sh/docs/api/hashing",
+      //       },
+      //       {
+      //         name: "node:crypto",
+      //         message:
+      //           "Use Bun.password for password hashing, Bun.hash() for hashing, or Web Crypto API for cryptography instead of node:crypto. See https://bun.sh/docs/api/hashing",
+      //       },
+      //     ],
+      //     patterns: [
+      //       {
+      //         group: ["node:*"],
+      //         message: "Avoid node: imports. Bun provides faster, more modern alternatives. See https://bun.sh/docs",
+      //       },
+      //     ],
+      //   },
+      // ],
       "no-restricted-syntax": [
         "error",
+        // Zod validation over built-in type checks
         {
           selector: "UnaryExpression[operator='typeof']:not([argument.name='Bun'])",
           message: "Prefer Zod schema validation over typeof operator. Use z.string(), z.number(), etc. instead.",
@@ -118,6 +182,7 @@ export default tseslint.config(
           message:
             "Prefer Zod schema validation over type guard functions. Use z.schema.safeParse() instead of custom type guards.",
         },
+        // Type assertion restrictions
         {
           selector: "TSTypeAssertion:not([typeAnnotation.type='TSUnknownKeyword'])",
           message:
@@ -129,6 +194,32 @@ export default tseslint.config(
           message:
             "Type assertions are not allowed except for casting to 'unknown' or 'as const'. Use 'value as unknown' to widen to unknown, 'value as const' for const assertions, or Zod schema validation to safely narrow types.",
         },
+        //   // Bun-specific restrictions: prefer Bun APIs over Node.js globals
+        //   {
+        //     selector: "MemberExpression[object.name='process'][property.name='env']",
+        //     message:
+        //       "Use Bun.env instead of process.env to access environment variables. Bun.env is a more modern, typed alternative. See https://bun.sh/docs/runtime/env",
+        //   },
+        //   {
+        //     selector: "Identifier[name='__dirname']",
+        //     message:
+        //       "Use import.meta.dir instead of __dirname. import.meta.dir is the ESM-native way to get the directory path. See https://bun.sh/docs/api/import-meta",
+        //   },
+        //   {
+        //     selector: "Identifier[name='__filename']",
+        //     message:
+        //       "Use import.meta.path instead of __filename. import.meta.path is the ESM-native way to get the file path. See https://bun.sh/docs/api/import-meta",
+        //   },
+        //   {
+        //     selector: "CallExpression[callee.name='require']",
+        //     message:
+        //       "Use ESM import statements instead of require(). Bun fully supports ESM and it's the modern standard. Example: import { foo } from 'module'",
+        //   },
+        //   {
+        //     selector: "Identifier[name='Buffer']:not(VariableDeclarator > Identifier[name='Buffer'])",
+        //     message:
+        //       "Prefer Uint8Array or Bun's binary data APIs over Buffer. For file operations, use Bun.file() which handles binary data natively. See https://bun.sh/docs/api/binary-data",
+        //   },
       ],
     },
   },
@@ -169,15 +260,34 @@ export default tseslint.config(
     rules: {
       "no-restricted-syntax": [
         "error",
+        // Zod validation over built-in type checks (but allow instanceof for Discord.js)
         {
           selector: "UnaryExpression[operator='typeof']:not([argument.name='Bun'])",
           message: "Prefer Zod schema validation over typeof operator. Use z.string(), z.number(), etc. instead.",
+        },
+        {
+          selector: "CallExpression[callee.object.name='Array'][callee.property.name='isArray']",
+          message: "Prefer Zod schema validation over Array.isArray(). Use z.array() instead.",
+        },
+        {
+          selector: "CallExpression[callee.object.name='Number'][callee.property.name='isInteger']",
+          message: "Prefer Zod schema validation over Number.isInteger(). Use z.number().int() instead.",
+        },
+        {
+          selector: "CallExpression[callee.object.name='Number'][callee.property.name='isNaN']",
+          message:
+            "Prefer Zod schema validation over Number.isNaN(). Use z.number() with proper error handling instead.",
+        },
+        {
+          selector: "CallExpression[callee.object.name='Number'][callee.property.name='isFinite']",
+          message: "Prefer Zod schema validation over Number.isFinite(). Use z.number().finite() instead.",
         },
         {
           selector: "TSTypePredicate",
           message:
             "Prefer Zod schema validation over type guard functions. Use z.schema.safeParse() instead of custom type guards.",
         },
+        // Type assertion restrictions
         {
           selector: "TSTypeAssertion:not([typeAnnotation.type='TSUnknownKeyword'])",
           message:
@@ -189,6 +299,32 @@ export default tseslint.config(
           message:
             "Type assertions are not allowed except for casting to 'unknown' or 'as const'. Use 'value as unknown' to widen to unknown, 'value as const' for const assertions, or Zod schema validation to safely narrow types.",
         },
+        // Bun-specific restrictions: prefer Bun APIs over Node.js globals
+        // {
+        //   selector: "MemberExpression[object.name='process'][property.name='env']",
+        //   message:
+        //     "Use Bun.env instead of process.env to access environment variables. Bun.env is a more modern, typed alternative. See https://bun.sh/docs/runtime/env",
+        // },
+        // {
+        //   selector: "Identifier[name='__dirname']",
+        //   message:
+        //     "Use import.meta.dir instead of __dirname. import.meta.dir is the ESM-native way to get the directory path. See https://bun.sh/docs/api/import-meta",
+        // },
+        // {
+        //   selector: "Identifier[name='__filename']",
+        //   message:
+        //     "Use import.meta.path instead of __filename. import.meta.path is the ESM-native way to get the file path. See https://bun.sh/docs/api/import-meta",
+        // },
+        // {
+        //   selector: "CallExpression[callee.name='require']",
+        //   message:
+        //     "Use ESM import statements instead of require(). Bun fully supports ESM and it's the modern standard. Example: import { foo } from 'module'",
+        // },
+        // {
+        //   selector: "Identifier[name='Buffer']:not(VariableDeclarator > Identifier[name='Buffer'])",
+        //   message:
+        //     "Prefer Uint8Array or Bun's binary data APIs over Buffer. For file operations, use Bun.file() which handles binary data natively. See https://bun.sh/docs/api/binary-data",
+        // },
       ],
     },
   },
