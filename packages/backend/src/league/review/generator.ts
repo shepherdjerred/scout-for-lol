@@ -1,199 +1,23 @@
-import type { ArenaMatch, CompletedMatch, Lane } from "@scout-for-lol/data";
-import { readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
+import type { ArenaMatch, CompletedMatch, MatchId } from "@scout-for-lol/data";
+import { writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { match as matchPattern } from "ts-pattern";
-import { z } from "zod";
 import config from "../../configuration.js";
+import { saveAIReviewImageToS3 } from "../../storage/s3.js";
+import {
+  loadPromptFile,
+  selectRandomPersonality,
+  loadPlayerMetadata,
+  getLaneContext,
+  replaceTemplateVariables,
+} from "./prompts.js";
 
 const FILENAME = fileURLToPath(import.meta.url);
 const DIRNAME = dirname(FILENAME);
-const PROMPTS_DIR = join(DIRNAME, "prompts");
 const AI_IMAGES_DIR = join(DIRNAME, "ai-images");
-
-// Personality metadata schema
-const PersonalityMetadataSchema = z.strictObject({
-  name: z.string(),
-  description: z.string(),
-  favoriteChampions: z.array(z.string()),
-  favoriteLanes: z.array(z.string()),
-});
-
-type PersonalityMetadata = z.infer<typeof PersonalityMetadataSchema>;
-
-type Personality = {
-  metadata: PersonalityMetadata;
-  instructions: string;
-  filename: string;
-};
-
-// Player metadata schema
-const PlayerMetadataSchema = z.strictObject({
-  description: z.string(),
-  favoriteChampions: z.array(z.string()),
-  favoriteLanes: z.array(z.string()),
-});
-
-type PlayerMetadata = z.infer<typeof PlayerMetadataSchema>;
-
-// Lane context mapping
-const LANE_CONTEXT_MAP: Record<Lane, string> = {
-  top: "lanes/top.txt",
-  middle: "lanes/middle.txt",
-  jungle: "lanes/jungle.txt",
-  adc: "lanes/adc.txt",
-  support: "lanes/support.txt",
-};
-
-// Files to exclude from personality selection
-const EXCLUDED_FILES = new Set(["generic.json"]);
-
-/**
- * Load a prompt file from the prompts directory
- */
-function loadPromptFile(filename: string): string {
-  const filePath = join(PROMPTS_DIR, filename);
-  return readFileSync(filePath, "utf-8").trim();
-}
-
-/**
- * Load a personality (both JSON metadata and TXT instructions)
- */
-function loadPersonality(basename: string): Personality {
-  const personalitiesDir = join(PROMPTS_DIR, "personalities");
-
-  // Load JSON metadata
-  const jsonPath = join(personalitiesDir, `${basename}.json`);
-  const jsonContent = readFileSync(jsonPath, "utf-8");
-  const parsed: unknown = JSON.parse(jsonContent);
-  const metadata = PersonalityMetadataSchema.parse(parsed);
-
-  // Load TXT instructions
-  const txtPath = join(personalitiesDir, `${basename}.txt`);
-  const instructions = readFileSync(txtPath, "utf-8").trim();
-
-  return {
-    metadata,
-    instructions,
-    filename: basename,
-  };
-}
-
-/**
- * Get list of personality files from the filesystem
- */
-function getPersonalityFiles(): string[] {
-  const personalitiesDir = join(PROMPTS_DIR, "personalities");
-  const files = readdirSync(personalitiesDir);
-  return files.filter((file) => file.endsWith(".json") && !EXCLUDED_FILES.has(file));
-}
-
-/**
- * Select a random personality prompt
- */
-function selectRandomPersonality(): Personality {
-  const personalityFiles = getPersonalityFiles();
-  if (personalityFiles.length === 0) {
-    throw new Error("No personality files found");
-  }
-  const randomIndex = Math.floor(Math.random() * personalityFiles.length);
-  const selectedFile = personalityFiles[randomIndex];
-  if (!selectedFile) {
-    throw new Error("Failed to select personality file");
-  }
-  // Remove .json extension to get basename
-  const basename = selectedFile.replace(".json", "");
-  return loadPersonality(basename);
-}
-
-/**
- * Load player metadata from JSON file
- */
-function loadPlayerMetadata(playerAlias: string): PlayerMetadata {
-  const playersDir = join(PROMPTS_DIR, "players");
-
-  // Try to load player-specific file, fall back to generic
-  const playerFile = `${playerAlias.toLowerCase().replace(/\s+/g, "-")}.json`;
-  const filePath = join(playersDir, playerFile);
-
-  try {
-    const jsonContent = readFileSync(filePath, "utf-8");
-    const parsed: unknown = JSON.parse(jsonContent);
-    return PlayerMetadataSchema.parse(parsed);
-  } catch {
-    // Fall back to generic player metadata
-    const genericPath = join(playersDir, "generic.json");
-    const genericContent = readFileSync(genericPath, "utf-8");
-    const parsed: unknown = JSON.parse(genericContent);
-    return PlayerMetadataSchema.parse(parsed);
-  }
-}
-
-/**
- * Replace template variables in the base prompt
- */
-function replaceTemplateVariables(
-  template: string,
-  variables: {
-    reviewerName: string;
-    reviewerPersonality: string;
-    reviewerFavoriteChampions: string;
-    reviewerFavoriteLanes: string;
-    playerName: string;
-    playerPersonality: string;
-    playerFavoriteChampions: string;
-    playerFavoriteLanes: string;
-    playerChampion: string;
-    playerLane: string;
-    opponentChampion: string;
-    laneDescription: string;
-    matchReport: string;
-  },
-): string {
-  return template
-    .replaceAll("<REVIEWER NAME>", variables.reviewerName)
-    .replaceAll("<REVIEWER PERSONALITY>", variables.reviewerPersonality)
-    .replaceAll("<REVIEWER FAVORITE CHAMPIONS>", variables.reviewerFavoriteChampions)
-    .replaceAll("<REVIEWER FAVORITE LANES>", variables.reviewerFavoriteLanes)
-    .replaceAll("<PLAYER NAME>", variables.playerName)
-    .replaceAll("<PLAYER PERSONALITY>", variables.playerPersonality)
-    .replaceAll("<PLAYER FAVORITE CHAMPIONS>", variables.playerFavoriteChampions)
-    .replaceAll("<PLAYER FAVORITE LANES>", variables.playerFavoriteLanes)
-    .replaceAll("<PLAYER CHAMPION>", variables.playerChampion)
-    .replaceAll("<PLAYER LANE>", variables.playerLane)
-    .replaceAll("<OPPONENT CHAMPION>", variables.opponentChampion)
-    .replaceAll("<LANE DESCRIPTION>", variables.laneDescription)
-    .replaceAll("<MATCH REPORT>", variables.matchReport);
-}
-
-/**
- * Get lane context based on player's lane
- */
-function getLaneContext(lane: string | undefined): { content: string; filename: string } {
-  const lowerLane = lane?.toLowerCase();
-  let laneFile: string | undefined = undefined;
-
-  // Type-safe lane lookup
-  if (lowerLane) {
-    switch (lowerLane) {
-      case "top":
-      case "middle":
-      case "jungle":
-      case "adc":
-      case "support":
-        laneFile = LANE_CONTEXT_MAP[lowerLane];
-        break;
-    }
-  }
-
-  const filename = laneFile ?? "lanes/generic.txt";
-  return {
-    content: loadPromptFile(filename),
-    filename: filename,
-  };
-}
 
 /**
  * Initialize OpenAI client if API key is configured
@@ -218,7 +42,11 @@ function getGeminiClient(): GoogleGenerativeAI | undefined {
 /**
  * Generate an AI-powered image from review text using Gemini
  */
-async function generateReviewImage(reviewText: string): Promise<Buffer | undefined> {
+async function generateReviewImage(
+  reviewText: string,
+  matchId: MatchId,
+  queueType: string,
+): Promise<Buffer | undefined> {
   const client = getGeminiClient();
   if (!client) {
     console.log("[generateReviewImage] Gemini API key not configured, skipping image generation");
@@ -229,7 +57,37 @@ async function generateReviewImage(reviewText: string): Promise<Buffer | undefin
     const model = client.getGenerativeModel({
       model: "gemini-3-pro-image-preview",
     });
-    const result = await model.generateContent(reviewText);
+    const result = await model.generateContent(
+      `Generate a creative and visually striking image based on this League of Legends match review.
+
+Pick a unique and interesting art style - make it distinctive and engaging! Here are some ideas:
+
+COMIC BOOK STYLES (especially great):
+- Marvel/Avengers style with bold inking and dynamic action
+- DC Comics dramatic shadows and heroic poses
+- Manga/anime styles: Studio Ghibli's dreamy aesthetic, Naruto's energetic action, Avatar: The Last Airbender's fluid movement
+- Indie comic book with unique line work and color palettes
+- Golden age comics with Ben-Day dots and vintage feel
+- Graphic novel noir with high contrast
+
+OTHER EXCITING STYLES:
+- Cyberpunk neon-soaked futuristic aesthetic
+- Fantasy illustration with epic composition
+- Retro pixel art or 8-bit/16-bit game style
+- Watercolor or ink wash with artistic flair
+- Art nouveau with decorative frames
+- Synthwave/vaporwave aesthetic
+- Movie poster or cinematic style
+
+Review text to visualize and elaborate on: "${reviewText}"
+
+Important:
+- Interpret and expand on the themes, emotions, and key moments from the review
+- Create something visually interesting that captures the essence of the performance and feedback
+- Use your chosen art style consistently and make the composition dynamic
+- Add visual storytelling elements - show the action, emotion, and drama beyond the literal text
+- Make it feel like cover art or a key moment illustration`,
+    );
     const response = result.response;
     if (!response.candidates || response.candidates.length === 0) {
       console.log("[generateReviewImage] No candidates returned from Gemini");
@@ -248,14 +106,25 @@ async function generateReviewImage(reviewText: string): Promise<Buffer | undefin
     }
     const buffer = Buffer.from(imageData, "base64");
     console.log("[generateReviewImage] Successfully generated image");
+
+    // Save to local filesystem for debugging
     try {
       mkdirSync(AI_IMAGES_DIR, { recursive: true });
       const filepath = join(AI_IMAGES_DIR, `ai-review-${new Date().toISOString().replace(/[:.]/g, "-")}.png`);
       writeFileSync(filepath, buffer);
       console.log(`[generateReviewImage] Saved image to: ${filepath}`);
-    } catch (fsError) {
+    } catch (fsError: unknown) {
       console.error("[generateReviewImage] Failed to save image to filesystem:", fsError);
     }
+
+    // Upload to S3
+    try {
+      await saveAIReviewImageToS3(matchId, buffer, queueType);
+    } catch (s3Error: unknown) {
+      console.error("[generateReviewImage] Failed to save image to S3:", s3Error);
+      // Continue even if S3 upload fails
+    }
+
     return buffer;
   } catch (error) {
     console.error("[generateReviewImage] Error generating image:", error);
@@ -417,10 +286,12 @@ async function generateAIReview(match: CompletedMatch | ArenaMatch): Promise<str
 /**
  * Generates a post-game review for a player's performance with optional AI-generated image.
  * @param match - The completed match data (regular or arena)
+ * @param matchId - The match ID for S3 storage
  * @returns A promise that resolves to an object with review text and optional image
  */
 export async function generateMatchReview(
   match: CompletedMatch | ArenaMatch,
+  matchId: MatchId,
 ): Promise<{ text: string; image?: Buffer }> {
   // Try to generate AI review
   const aiReview = await generateAIReview(match);
@@ -430,7 +301,8 @@ export async function generateMatchReview(
   }
   // Generate AI image from the review text (only if we have a real AI review)
   if (aiReview) {
-    const reviewImage = await generateReviewImage(`Generate an image: ${aiReview}`);
+    const queueType = match.queueType === "arena" ? "arena" : (match.queueType ?? "unknown");
+    const reviewImage = await generateReviewImage(aiReview, matchId, queueType);
     if (reviewImage) {
       return {
         text: reviewText,

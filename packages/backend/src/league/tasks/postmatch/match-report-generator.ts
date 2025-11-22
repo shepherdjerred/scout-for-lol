@@ -143,7 +143,7 @@ export async function generateMatchReport(
       let reviewText: string | undefined;
       let reviewImage: Buffer | undefined;
       try {
-        const review = await generateMatchReview(completedMatch);
+        const review = await generateMatchReview(completedMatch, matchId);
         reviewText = review.text;
         reviewImage = review.image;
       } catch (error) {

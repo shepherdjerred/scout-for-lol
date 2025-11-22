@@ -1,8 +1,31 @@
-import { describe, expect, test } from "bun:test";
-import { generateMatchReview } from "../generator.ts";
-import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data";
+import { describe, expect, test, mock } from "bun:test";
+import type { ArenaMatch, CompletedMatch, MatchId } from "@scout-for-lol/data";
 
 import { testAccountId, testPuuid } from "../../../testing/test-ids.js";
+
+// Test match ID for all tests
+const TEST_MATCH_ID = "NA1_1234567890" as MatchId;
+
+// Mock the configuration module to prevent API calls
+// Use a factory function to read env vars at runtime so other tests can override
+void mock.module("../../../configuration.js", () => ({
+  default: {
+    version: process.env["VERSION"] ?? "test",
+    gitSha: process.env["GIT_SHA"] ?? "test",
+    sentryDsn: process.env["SENTRY_DSN"],
+    environment: (process.env["ENVIRONMENT"] as "dev" | "beta" | "prod") ?? "dev",
+    discordToken: process.env["DISCORD_TOKEN"] ?? "test",
+    applicationId: process.env["APPLICATION_ID"] ?? "test",
+    riotApiToken: process.env["RIOT_API_TOKEN"] ?? "test",
+    databaseUrl: process.env["DATABASE_URL"] ?? "test.db",
+    port: Number.parseInt(process.env["PORT"] ?? "3000"),
+    s3BucketName: process.env["S3_BUCKET_NAME"],
+    openaiApiKey: undefined, // Always undefined for this test to prevent API calls
+    geminiApiKey: undefined, // Always undefined for this test to prevent API calls
+  },
+}));
+
+import { generateMatchReview } from "../generator.ts";
 describe("generateMatchReview", () => {
   describe("regular matches", () => {
     test("generates review for a solo queue victory", async () => {
@@ -59,7 +82,7 @@ describe("generateMatchReview", () => {
         },
       } as unknown as CompletedMatch;
 
-      const review = await generateMatchReview(match);
+      const review = await generateMatchReview(match, TEST_MATCH_ID);
 
       expect(review.text).toContain("TestPlayer");
       expect(review.text).toContain("Jinx");
@@ -112,7 +135,7 @@ describe("generateMatchReview", () => {
         },
       } as unknown as CompletedMatch;
 
-      const review = await generateMatchReview(match);
+      const review = await generateMatchReview(match, TEST_MATCH_ID);
 
       expect(review.text).toContain("Player2");
       expect(review.text).toContain("Yasuo");
@@ -180,7 +203,7 @@ describe("generateMatchReview", () => {
         teams: [],
       } as unknown as ArenaMatch;
 
-      const review = await generateMatchReview(match);
+      const review = await generateMatchReview(match, TEST_MATCH_ID);
 
       expect(review.text).toContain("ArenaPlayer");
       expect(review.text).toContain("1st place");
@@ -245,7 +268,7 @@ describe("generateMatchReview", () => {
         teams: [],
       } as unknown as ArenaMatch;
 
-      const review = await generateMatchReview(match);
+      const review = await generateMatchReview(match, TEST_MATCH_ID);
 
       expect(review.text).toContain("ArenaPlayer2");
       expect(review.text).toContain("4th place");
@@ -266,7 +289,7 @@ describe("generateMatchReview", () => {
         },
       } as unknown as CompletedMatch;
 
-      const review = await generateMatchReview(match);
+      const review = await generateMatchReview(match, TEST_MATCH_ID);
 
       expect(review.text).toContain("Unable to generate review");
       expect(review.text).toContain("no player data found");

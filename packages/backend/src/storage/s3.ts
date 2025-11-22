@@ -230,3 +230,80 @@ export async function saveSvgToS3(
     throw new Error(`Failed to save SVG ${matchId} to S3: ${getErrorMessage(error)}`);
   }
 }
+
+/**
+ * Generate S3 key (path) for an AI review image
+ */
+function generateAIReviewImageKey(matchId: MatchId): string {
+  const now = new Date();
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(now.getUTCDate()).padStart(2, "0");
+
+  // Create hierarchical structure: ai-reviews/YYYY/MM/DD/matchId.png
+  return `ai-reviews/${year.toString()}/${month}/${day}/${matchId}.png`;
+}
+
+/**
+ * Save an AI-generated review image to S3 storage
+ * @param matchId The match ID
+ * @param imageBuffer The PNG image buffer
+ * @param queueType The queue type (for metadata)
+ * @returns Promise that resolves to the S3 URL when the image is saved, or undefined if S3 is not configured
+ */
+export async function saveAIReviewImageToS3(
+  matchId: MatchId,
+  imageBuffer: Buffer,
+  queueType: string,
+): Promise<string | undefined> {
+  const bucket = configuration.s3BucketName;
+
+  if (!bucket) {
+    console.warn(`[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping AI review image save for match: ${matchId}`);
+    return undefined;
+  }
+
+  console.log(`[S3Storage] ✨ Saving AI review image to S3: ${matchId}`);
+
+  try {
+    const client = new S3Client();
+    const key = generateAIReviewImageKey(matchId);
+
+    console.log(`[S3Storage] 📝 AI review image upload details:`, {
+      bucket,
+      key,
+      sizeBytes: imageBuffer.length,
+      queueType,
+    });
+
+    const startTime = Date.now();
+
+    const command = new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: imageBuffer,
+      ContentType: "image/png",
+      Metadata: {
+        matchId: matchId,
+        queueType: queueType,
+        format: "png",
+        type: "ai-review",
+        uploadedAt: new Date().toISOString(),
+      },
+    });
+
+    await client.send(command);
+
+    const uploadTime = Date.now() - startTime;
+    const s3Url = `s3://${bucket}/${key}`;
+    console.log(`[S3Storage] ✅ Successfully saved AI review image ${matchId} to S3 in ${uploadTime.toString()}ms`);
+    console.log(`[S3Storage] 🔗 S3 location: ${s3Url}`);
+
+    return s3Url;
+  } catch (error) {
+    console.error(`[S3Storage] ❌ Failed to save AI review image ${matchId} to S3:`, error);
+
+    // Re-throw the error so the caller can handle it appropriately
+    throw new Error(`Failed to save AI review image ${matchId} to S3: ${getErrorMessage(error)}`);
+  }
+}

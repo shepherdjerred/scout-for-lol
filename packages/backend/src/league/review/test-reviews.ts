@@ -7,6 +7,7 @@
 import { generateMatchReview } from "./generator.js";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example.js";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data";
+import { MatchIdSchema } from "@scout-for-lol/data";
 
 const MATCH_TYPES = ["ranked", "unranked", "aram", "arena"] as const;
 type MatchType = (typeof MATCH_TYPES)[number];
@@ -152,7 +153,8 @@ async function main(): Promise<void> {
     }
 
     const startTime = Date.now();
-    const reviewResult = await generateMatchReview(match);
+    const testMatchId = MatchIdSchema.parse(`NA1_${Date.now().toString()}`);
+    const reviewResult = await generateMatchReview(match, testMatchId);
     const duration = Date.now() - startTime;
 
     console.log("Generated Review:");
