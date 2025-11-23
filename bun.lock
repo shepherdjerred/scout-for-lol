@@ -75,8 +75,12 @@
       "name": "@scout-for-lol/data",
       "version": "0.1.0",
       "dependencies": {
+        "@google/generative-ai": "^0.21.0",
+        "@scout-for-lol/report": "workspace:*",
+        "openai": "^6.9.1",
         "remeda": "^2.21.2",
         "ts-pattern": "^5.7.0",
+        "twisted": "^1.66.1",
         "zod": "^4.0.0",
       },
       "devDependencies": {
@@ -139,6 +143,35 @@
         "bun-types": "latest",
         "typescript": "^5.0.0",
         "vite": "^7.0.0",
+      },
+    },
+    "packages/review-dev-tool": {
+      "name": "@scout-for-lol/review-dev-tool",
+      "version": "0.0.1",
+      "dependencies": {
+        "@astrojs/react": "^4.3.1",
+        "@aws-sdk/client-s3": "^3.728.0",
+        "@google/generative-ai": "^0.21.0",
+        "@scout-for-lol/data": "workspace:*",
+        "@scout-for-lol/report-ui": "workspace:*",
+        "@tailwindcss/postcss": "^4.1.11",
+        "@types/react": "^19.1.13",
+        "@types/react-dom": "^19.1.9",
+        "astro": "^5.0.9",
+        "fuse.js": "^7.1.0",
+        "openai": "^6.9.1",
+        "react": "^19.1.1",
+        "react-dom": "^19.1.1",
+        "remeda": "^2.20.2",
+        "tailwindcss": "^4.0.0",
+        "ts-pattern": "^5.5.2",
+        "twisted": "^1.61.0",
+        "zod": "^3.24.1",
+      },
+      "devDependencies": {
+        "@astrojs/check": "^0.9.4",
+        "bun-types": "latest",
+        "typescript": "^5.9.3",
       },
     },
   },
@@ -722,6 +755,8 @@
     "@scout-for-lol/report": ["@scout-for-lol/report@workspace:packages/report"],
 
     "@scout-for-lol/report-ui": ["@scout-for-lol/report-ui@workspace:packages/report-ui"],
+
+    "@scout-for-lol/review-dev-tool": ["@scout-for-lol/review-dev-tool@workspace:packages/review-dev-tool"],
 
     "@sentry/core": ["@sentry/core@10.25.0", "", {}, "sha512-mGi4BYIPwZjWdOXHrPoXz1AW4/cQbFoiuW/m+OOATmtSoGTDnWYwP+qZU7VLlL+v8ZEzxfPi2C1NPfJtPj7QWA=="],
 
@@ -1416,6 +1451,8 @@
     "function.prototype.name": ["function.prototype.name@1.1.8", "", { "dependencies": { "call-bind": "^1.0.8", "call-bound": "^1.0.3", "define-properties": "^1.2.1", "functions-have-names": "^1.2.3", "hasown": "^2.0.2", "is-callable": "^1.2.7" } }, "sha512-e5iwyodOHhbMr/yNrc7fDYG4qlbIvI5gajyzPnb5TCwyhjApznQh1BMFou9b30SevY43gCJKXycoCBjMbsuW0Q=="],
 
     "functions-have-names": ["functions-have-names@1.2.3", "", {}, "sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ=="],
+
+    "fuse.js": ["fuse.js@7.1.0", "", {}, "sha512-trLf4SzuuUxfusZADLINj+dE8clK1frKdmqiJNb1Es75fmI5oY6X2mxLVUciLLjxqw/xr72Dhy+lER6dGd02FQ=="],
 
     "generator-function": ["generator-function@2.0.1", "", {}, "sha512-SFdFmIJi+ybC0vjlHN0ZGVGHc3lgE0DxPAT0djjVg+kjOnSqclqmj0KQ7ykTOLP6YxoqOvuAODGdcHJn+43q3g=="],
 
@@ -2440,6 +2477,10 @@
     "@scout-for-lol/report-ui/bun-types": ["bun-types@1.3.3", "", { "dependencies": { "@types/node": "*" } }, "sha512-z3Xwlg7j2l9JY27x5Qn3Wlyos8YAp0kKRlrePAOjgjMGS5IG6E7Jnlx736vH9UVI4wUICwwhC9anYL++XeOgTQ=="],
 
     "@scout-for-lol/report-ui/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
+
+    "@scout-for-lol/review-dev-tool/bun-types": ["bun-types@1.3.3", "", { "dependencies": { "@types/node": "*" } }, "sha512-z3Xwlg7j2l9JY27x5Qn3Wlyos8YAp0kKRlrePAOjgjMGS5IG6E7Jnlx736vH9UVI4wUICwwhC9anYL++XeOgTQ=="],
+
+    "@scout-for-lol/review-dev-tool/zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
     "@sentry/node/minimatch": ["minimatch@9.0.5", "", { "dependencies": { "brace-expansion": "^2.0.1" } }, "sha512-G6T0ZX48xgozx7587koeX9Ys2NYy6Gmv//P89sEte9V9whIapMNF4idKxnW2QtCcLiTWlb/wfCabAtAFWhhBow=="],
 

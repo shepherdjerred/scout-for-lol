@@ -1,0 +1,54 @@
+The jungle is the most influential role early game - they decide which lanes get attention and which get left to die. Good junglers control objectives (dragons, barons, heralds), gank winning lanes, and out-path the enemy jungler. Bad junglers power farm while their team loses every lane.
+
+GOOD Performance:
+- 60%+ kill participation (involved in most team plays)
+- 30+ vision score (controlling vision and objectives)
+- 3+ objectives secured (dragons/barons/heralds)
+- 5+ CS/min with good KDA (2.0+)
+- Early game impact (first blood or assists before 10 min)
+
+BAD Performance:
+- Below 40% kill participation (not helping lanes)
+- Below 15 vision score (no map control)
+- 0-1 objectives secured while enemy has 3+ (objective diff)
+- Below 4 CS/min (not farming OR ganking effectively)
+- Multiple deaths in own jungle (getting invaded and dominated)
+
+What to look for in a jungler's performance:
+- KDA relative to participation: Junglers should be involved in most kills (high assist count)
+- Vision score: Should be one of the highest on the team (15+ is decent, 25+ is good). Low vision = jungle diff
+- Objective control: Did they secure dragons/barons or int them to enemy? Check objective kills
+- CS: Farm junglers aim for 6+ CS/min, ganking junglers 4-5+ is acceptable. Below 4 is running around doing nothing
+- Early game impact: First blood participation, early kills/assists matter more than late game cleanup
+- Death positioning: Dying in river/jungle means getting caught out or losing objective fights
+
+Common jungle scenarios:
+- "Jungle gap": One jungler is everywhere, the other is farming raptors while their team dies
+- "Better jungler wins": The enemy jungler ganked 10 times while yours full cleared
+- "Objective thief": Stealing baron/dragon with a smite steal (clutch or lucky?)
+- "AFK farming": 0/0/0 at 15 minutes with perfect CS while lanes are 0/5
+- "Getting invaded": Dying in their own jungle repeatedly (counterplay or getting dominated?)
+- "Perma ganking": Living in lanes with high kill participation but low CS
+
+20 SPECIFIC TIPS FOR JUNGLE REVIEWS:
+
+1. **First blood participation before 5 min**: Early gank impact securing lane advantages and setting game tempo
+2. **80%+ kill participation**: Peak jungle presence, involved in almost every play across the map
+3. **4+ dragons secured**: Objective dominance, controlling all major dragons leading to soul
+4. **Baron steal with smite**: Clutch 50/50 smite fight, stealing the most important objective
+5. **Below 10 vision score**: Unacceptable vision control for a jungler, no map awareness
+6. **0 objectives secured in 30+ min game**: Complete objective diff, enemy jungler took everything
+7. **Perfect KDA (0 deaths) but loss**: Playing for stats not wins, too scared to contest objectives
+8. **Died to jungle camps**: Executed by jungle monsters, embarrassing way to give gold
+9. **3+ successful ganks before 10 min**: Early game terrorizing, making enemy laners miserable
+10. **Counter jungling with kills**: Aggressive dominance, invading enemy jungle and securing kills
+11. **Herald charge top for 3 plates**: Efficient objective conversion, getting massive gold value
+12. **Below 3 CS/min**: Doing nothing productive, neither farming nor ganking effectively
+13. **Invading level 2 for first blood**: High risk high reward early aggression paying off
+14. **5+ deaths before first dragon**: Terrible early game, constantly getting caught out
+15. **Solo baron**: Risky but potentially game-changing play, requires specific champions
+16. **40+ vision score**: Support-level vision control, excellent map awareness
+17. **Level advantage over all laners**: Efficient jungling, out-farming and out-ganking simultaneously
+18. **Securing soul point dragon**: Critical objective control at the most important moment
+19. **Getting solo killed by enemy jungler in river**: Losing the jungle 1v1 matchup badly
+20. **Late game smite steal prevention**: Disciplined objective control, never losing smite fights

@@ -1,5 +1,5 @@
 import satori from "satori";
-import { CompletedMatch } from "@scout-for-lol/data";
+import type { CompletedMatch } from "@scout-for-lol/data";
 import { Report } from "./report.tsx";
 import { bunBeaufortFonts, bunSpiegelFonts } from "../assets/index.ts";
 

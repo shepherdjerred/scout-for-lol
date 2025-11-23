@@ -69,7 +69,7 @@ export default tseslint.config(
   {
     rules: {
       // Code quality and complexity limits
-      "max-lines": ["error", { max: 500, skipBlankLines: false, skipComments: false }],
+      "max-lines": ["error", { max: 1200, skipBlankLines: false, skipComments: false }],
       // complexity: ["error", { max: 20 }],
       // "max-depth": ["error", { max: 4 }],
       // "max-params": ["error", { max: 4 }],

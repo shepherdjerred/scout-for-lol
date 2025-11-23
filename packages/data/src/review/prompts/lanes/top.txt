@@ -1,0 +1,53 @@
+The top position is often isolated on an island, far from the team's action. It's all about winning the 1v1, managing waves, and trying not to get camped by the enemy jungler. Top laners either stomp their opponent into the ground or become the enemy team's punching bag.
+
+GOOD Performance:
+- 7+ CS/min with 1-3 deaths max
+- High damage dealt (30k+ in a 30min game for bruisers/carries)
+- Multiple solo kills or lane dominance
+- High kill participation despite being isolated (40%+ means good TP usage)
+- 2000+ structure damage from pressuring side lanes
+
+BAD Performance:
+- Below 5 CS/min (getting zoned off waves)
+- 5+ deaths (getting camped or skill diffed)
+- Bottom 2 in damage dealt as a carry/bruiser
+- 0 kill participation at 20+ minutes (pure island gameplay, not helping team)
+- Negative KDA with low impact
+
+What to look for in a top laner's performance:
+- CS/min: Good top laners aim for 6-7+ CS/min. Below 5 means they're getting bodied in lane
+- Solo kills: Did they dominate the 1v1 or get solokilled? This is the lane of honor (and shame)
+- Death count: Top is a long lane. Dying repeatedly here means severe mismanagement or getting hardcore camped
+- Damage dealt: Bruisers and tanks should be top damage or close to it. If they're bottom damage with tank stats, they were useless
+- Teleport usage: Good tops use TP to impact bot lane fights. Bad tops TP back to lane to catch a wave
+- Split pushing: High structure damage suggests they were pressuring side lanes (or just ignored teamfights entirely)
+
+Common top lane scenarios:
+- "Top gap": One top laner completely outclasses the other
+- "Getting camped": Dying to repeated ganks (check enemy jungle proximity)
+- "Split push god": High structure damage while team loses 4v5
+- "Inting Sion": Deliberately dying but taking towers (calculated or cope?)
+- "Top diff": The excuse for every loss
+
+20 SPECIFIC TIPS FOR TOP LANE REVIEWS:
+
+1. **Solo kill before 10 minutes**: Early solokill shows mechanical skill and matchup knowledge, setting tone for lane dominance
+2. **0 deaths with 7+ CS/min**: Disciplined scaling gameplay, playing safe while maintaining farm
+3. **5+ deaths before 15 minutes**: Dying this much indicates poor wave management or getting destroyed in lane
+4. **Highest damage on team as bruiser**: Fulfilling the carry role, fighting constantly throughout the game
+5. **3+ solo kills**: Complete lane domination, opponent couldn't play the game
+6. **Below 4 CS/min**: Getting completely zoned off waves, massive lane disadvantage
+7. **Tank with lowest damage on team**: Not frontlining properly or staying too far from fights
+8. **High structure damage + low teamfight participation**: Classic split pusher ignoring team while taking towers
+9. **Dying with TP available**: Poor summoner spell management, should have escaped
+10. **Negative KDA but team won**: Got carried by teammates despite poor individual performance
+11. **Perfect KDA (0 deaths) in a loss**: Too scared to make plays when the team needed it
+12. **First blood victim in a long lane**: Terrible start, dying early in the safest lane
+13. **1v2 double kill vs enemy top + jungle**: Clutch outplay, turning a gank into a massive advantage
+14. **10+ deaths as ranged top**: Negating the champion advantage, dying more than enemy frontline
+15. **Even CS but 3 level advantage**: Complete XP denial on opponent through wave control
+16. **Lower level than support**: Terminal feeding, died so much they're behind everyone
+17. **Pentakill as top laner**: Extremely rare achievement for isolated top lane
+18. **TP flanks winning teamfights**: Great macro play, using TP to impact fights across the map
+19. **Proxy farming (high CS but multiple deaths)**: Intentional death trading for pressure (Singed/Sion strategy)
+20. **Counterpicked and still won lane**: Skill expression despite unfavorable matchup

@@ -28,6 +28,7 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(400, () => "draft pick")
     .with(440, () => "flex")
     .with(450, () => "aram")
+    .with(720, () => "aram") // ARAM Clash
     .with(480, () => "swiftplay")
     .with(490, () => "quickplay")
     .with(900, () => "arurf")

@@ -143,9 +143,37 @@ export async function generateMatchReport(
       let reviewText: string | undefined;
       let reviewImage: Buffer | undefined;
       try {
-        const review = await generateMatchReview(completedMatch, matchId);
+        const review = await generateMatchReview(completedMatch, matchId, matchData);
         reviewText = review.text;
         reviewImage = review.image;
+
+        // Append debug metadata if available
+        if (review.metadata) {
+          const { reviewerName, playerName, style, themes } = review.metadata;
+          const debugInfo = [
+            "\n\n━━━━━━━━━━━━━━━━━━━━━━",
+            "📊 **Review Metadata**",
+            `👤 **Reviewer:** ${reviewerName}`,
+            `🎮 **Player:** ${playerName}`,
+          ];
+
+          if (style) {
+            debugInfo.push(`🎨 **Style:** ${style}`);
+          }
+
+          if (themes && themes.length > 0) {
+            if (themes.length === 1) {
+              const theme = themes[0];
+              if (theme) {
+                debugInfo.push(`🎭 **Theme:** ${theme}`);
+              }
+            } else {
+              debugInfo.push(`🎭 **Themes:** ${themes.join(" × ")}`);
+            }
+          }
+
+          reviewText = reviewText + "\n" + debugInfo.join("\n");
+        }
       } catch (error) {
         console.error(`[generateMatchReport] Error generating AI review:`, error);
       }
@@ -156,17 +184,23 @@ export async function generateMatchReport(
       // Build files array - start with match report image
       const files = [matchReportAttachment];
 
-      // Add AI-generated image if available
-      if (reviewImage) {
+      // Add AI-generated image if available, but only 30% of the time
+      const shouldShowImage = Math.random() < 0.3;
+      const showingImage = reviewImage !== undefined && shouldShowImage;
+
+      if (reviewImage && shouldShowImage) {
         const aiImageAttachment = new AttachmentBuilder(reviewImage).setName("ai-review.png");
         files.push(aiImageAttachment);
         console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
+      } else if (reviewImage && !shouldShowImage) {
+        console.log(`[generateMatchReport] 🎲 Skipped AI-generated image (random selection)`);
       }
 
       return {
         files: files,
         embeds: [matchReportEmbed],
-        ...(reviewText && { content: reviewText }),
+        // Only include review text if we're NOT showing the image
+        ...(reviewText && !showingImage && { content: reviewText }),
       };
     }
   } catch (error) {

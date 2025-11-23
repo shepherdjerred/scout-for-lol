@@ -1,4 +1,5 @@
-import { divisionToString, Rank, Tier, TierSchema, wasDemoted, wasPromoted } from "@scout-for-lol/data";
+import { divisionToString, TierSchema, wasDemoted, wasPromoted } from "@scout-for-lol/data";
+import type { Rank, Tier } from "@scout-for-lol/data";
 import { palette } from "../../assets/colors.ts";
 import { z } from "zod";
 import { match } from "ts-pattern";

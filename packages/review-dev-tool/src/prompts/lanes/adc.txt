@@ -1,0 +1,55 @@
+ADC (Attack Damage Carry) is the glass cannon role - high damage output but extremely squishy. Their job is to farm safely in lane, survive teamfights, and shred objectives and tanks in the late game. ADCs are either hard carrying or spam pinging their support while dying in 0.5 seconds.
+
+GOOD Performance:
+- 7.5+ CS/min (highest or second highest on team)
+- 45k+ damage in a 30min game
+- 0-3 deaths max (survival is key)
+- 60%+ kill participation with high assists
+- Highest or second highest gold earned
+
+BAD Performance:
+- Below 6 CS/min (losing lane or terrible fundamentals)
+- Bottom 3 in damage (dying too much or not in fights)
+- 7+ deaths (bad positioning or getting constantly dove)
+- Low kill participation despite being with team
+- Multiple levels down on enemy ADC
+
+What to look for in an ADC's performance:
+- CS/min: Should be highest or second highest on team. 7+ CS/min is good, 6-7 is acceptable, below 6 is struggling
+- Damage dealt: Should have the highest or second-highest damage on the team. Low damage = useless or dead too much
+- Deaths: ADCs should have LOW deaths (0-3 in a good game). High deaths = bad positioning or getting dove constantly
+- KDA: ADCs should pad stats with assists. A good ADC might have 5/2/12 (involved but not dying)
+- Gold income: Should be top 1-2 in gold. If not, they're not farming or they're running it down
+- Kill participation: Should be in most teamfights (50%+ KP) since they're with the team
+
+Common ADC scenarios:
+- "ADC diff": One ADC is 10/1 melting everyone, the other is 1/10 getting one-shot
+- "Positioning god": Low deaths with high damage (or high deaths from face-checking bushes)
+- "Getting dove": Dying to enemy tanks/assassins running past their team (team gap or positioning issue?)
+- "Late game insurance": Terrible KDA but highest damage because the game went 45 minutes
+- "Fed ADC": Taking over the game with massive damage and structure damage
+- "Support gap": The cope excuse when ADC dies - might actually be true if support has 0 vision score
+- "Crit roulette": One-shotting people or getting one-shot, no in between
+
+20 SPECIFIC TIPS FOR ADC REVIEWS:
+
+1. **Perfect CS at 10 min (100+ CS)**: Excellent laning fundamentals, not missing any farm
+2. **0 deaths with highest damage**: Perfect positioning throughout the game, untouchable ADC play
+3. **Pentakill**: Rare ADC achievement, surviving teamfight long enough to clean up everyone
+4. **10+ deaths**: Terrible positioning, constantly getting caught or dove
+5. **Double kill in lane pre-10 min**: Winning lane hard with support, creating bot advantage
+6. **Getting solo killed by enemy support**: Embarrassing death, positioning mistake or hook landed
+7. **Highest damage by 20k+**: Completely gapping the enemy team in damage output
+8. **Below 5 CS/min**: Losing lane catastrophically or not farming at all
+9. **First blood victim**: Dying early in lane sets you behind in the scaling role
+10. **Kiting backward in teamfights (high damage, low deaths)**: Proper ADC mechanics, staying alive while dealing damage
+11. **Face-checking brush and dying**: Classic ADC mistake, walking into unwarded areas
+12. **2+ items ahead of enemy ADC**: Massive gold lead, will dominate teamfights
+13. **Negative KDA in a win**: Got hard carried despite feeding
+14. **Critical strike damage spike powering teamfights**: Hitting item powerspikes and taking over
+15. **Dying with flash up**: Poor summoner usage, should have escaped
+16. **Stealing baron/dragon with auto attacks**: Rare clutch moment, securing objective
+17. **Being behind in levels to supports**: Fed so hard you're underleveled from respawn timers
+18. **Split pushing as ADC**: Questionable macro, ADCs should group with team
+19. **1v1 killing enemy assassin**: Outplay moment, surviving assassination attempt
+20. **Highest structure damage**: Doing ADC job, taking towers and ending game

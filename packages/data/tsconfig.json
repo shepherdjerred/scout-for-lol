@@ -2,7 +2,9 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ES2022",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
@@ -10,7 +12,12 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "allowJs": true,
-    "types": ["bun-types"],
+    "types": [
+      "bun-types"
+    ],
+    "jsx": "react-jsx",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "exactOptionalPropertyTypes": true,
@@ -23,6 +30,11 @@
     "noUnusedParameters": true,
     "useUnknownInCatchVariables": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "vendor"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "vendor"
+  ]
 }

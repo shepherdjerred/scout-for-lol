@@ -1,4 +1,5 @@
-import { CompletedMatch, leaguePointsDelta, lpDiffToString } from "@scout-for-lol/data";
+import { leaguePointsDelta, lpDiffToString } from "@scout-for-lol/data";
+import type { CompletedMatch } from "@scout-for-lol/data";
 import { palette } from "../assets/colors.ts";
 import { RankedBadge } from "./ranked/index.tsx";
 import { renderTeam } from "./team.tsx";

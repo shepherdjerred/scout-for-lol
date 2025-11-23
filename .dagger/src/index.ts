@@ -12,6 +12,7 @@ import { checkReport, getReportCoverage, getReportTestReport } from "./report";
 import { checkReportUi, getReportUiCoverage, getReportUiTestReport, buildReportUi } from "./report-ui";
 import { checkData, getDataCoverage, getDataTestReport } from "./data";
 import { checkFrontend, buildFrontend, deployFrontend } from "./frontend";
+import { checkReviewDevTool } from "./review-dev-tool";
 import { getGitHubContainer, getBunNodeContainer } from "./base";
 
 // Helper function to log with timestamp
@@ -60,7 +61,7 @@ export class ScoutForLol {
     // Run checks in parallel - force container execution with .sync()
     await withTiming("parallel package checks (lint, typecheck, tests)", async () => {
       logWithTimestamp("🔄 Running lint, typecheck, and tests in parallel for all packages...");
-      logWithTimestamp("📦 Packages being checked: backend, report, report-ui, data, frontend");
+      logWithTimestamp("📦 Packages being checked: backend, report, report-ui, data, frontend, review-dev-tool");
 
       // Force execution of all containers in parallel
       await Promise.all([
@@ -86,6 +87,11 @@ export class ScoutForLol {
         }),
         withTiming("frontend check (lint + typecheck)", async () => {
           const container = checkFrontend(source);
+          await container.sync();
+          return container;
+        }),
+        withTiming("review-dev-tool check (lint + typecheck)", async () => {
+          const container = checkReviewDevTool(source);
           await container.sync();
           return container;
         }),
@@ -745,5 +751,30 @@ export class ScoutForLol {
 
     logWithTimestamp("✅ Report-ui build completed successfully");
     return result;
+  }
+
+  /**
+   * Check the review-dev-tool package
+   * @param source The workspace source directory
+   * @returns A message indicating completion
+   */
+  @func()
+  async checkReviewDevTool(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Promise<string> {
+    logWithTimestamp("🔍 Starting review-dev-tool package check");
+
+    await withTiming("review-dev-tool package check", async () => {
+      const container = checkReviewDevTool(source);
+      await container.sync();
+      return container;
+    });
+
+    logWithTimestamp("✅ Review-dev-tool check completed successfully");
+    return "Review-dev-tool check completed successfully";
   }
 }

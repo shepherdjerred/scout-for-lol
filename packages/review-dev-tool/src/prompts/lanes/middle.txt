@@ -1,0 +1,55 @@
+Middle lane is the center of the map and often the "main character" of the game. Mid laners should win lane, roam to help side lanes, and carry teamfights with their burst damage or control. It's the shortest lane, so there's no excuse for bad CS. Getting solokilled mid is peak embarrassment.
+
+GOOD Performance:
+- 7.5+ CS/min (highest or second highest on team)
+- 40k+ damage in a 30min game for mages/assassins
+- 60%+ kill participation (roaming and impacting the map)
+- 2-3 deaths max with solid KDA (3.0+)
+- Highest or second highest gold on team
+
+BAD Performance:
+- Below 6 CS/min (losing lane hard or terrible fundamentals)
+- Bottom 3 in damage as a carry champion
+- Below 40% kill participation (AFK farming while team dies)
+- 7+ deaths (constantly getting caught or solo killed)
+- Multiple levels down on enemy mid laner
+
+What to look for in a mid laner's performance:
+- CS/min: Should be the highest on the team. 7-8+ CS/min is good, 6-7 is acceptable, below 6 is struggling
+- Damage dealt: Mages and assassins should have the highest or second-highest damage. Low damage = invisible
+- Kill participation: Mid should roam. 50%+ KP (kill participation) is good, below 40% means they AFK farmed
+- Solo kills: Did they dominate the 1v1 or get embarrassed mid lane?
+- Deaths: Dying mid means you're either going for risky plays or getting caught constantly
+- Gold income: As the priority lane, mid should be top 2-3 in gold earned
+
+Common mid lane scenarios:
+- "Mid gap": One mid laner is gigafed, the other is down 3 levels and 0/5
+- "Roam god": High kill participation despite decent CS - they're everywhere on the map
+- "AFK farming": Perfect CS but zero map presence (they're hitting minions while their team dies)
+- "Assassin popping off": 15/3 with massive damage (or 3/15 because assassins are feast or famine)
+- "Control mage prison": 50k damage but couldn't close out the game
+- "Getting camped mid": Dying to ganks repeatedly (skill issue or jungle gap?)
+- "One-shot machine": Fed assassin deleting squishies (or getting one-shot because they fell behind)
+
+20 SPECIFIC TIPS FOR MID LANE REVIEWS:
+
+1. **Solo kill before minions spawn (invade cheese)**: Level 1 invade kill creating massive early advantage
+2. **10+ CS/min**: World-class CS numbers, perfect wave management throughout the game
+3. **2+ solo kills in lane**: Complete lane dominance, gapping the opponent hard
+4. **80%+ kill participation**: Omnipresent roaming, involved in almost every team play
+5. **50k+ damage dealt**: Massive damage output, carrying teamfights consistently
+6. **Below 5 CS/min**: Terrible farming, getting zoned or completely mismanaging waves
+7. **Highest damage but most deaths**: Poor positioning despite damage, dying too much in fights
+8. **Perfect KDA with 70%+ KP**: Professional-level clean gameplay, high impact without deaths
+9. **Solo killed pre-6**: Terrible laning phase, dying before power spikes in shortest lane
+10. **Roaming bot and securing double kill**: Impactful macro play, turning bot lane in your favor
+11. **One-shot combo on fed carry**: Successful assassination, deleting priority target instantly
+12. **Missing every skillshot but winning**: Champion gap or opponent playing worse, skill issue masked
+13. **Stealing blue buff from own jungler**: Risky resource stealing that better result in lane advantage
+14. **3+ levels up on opponent**: Massive lane dominance through kills and CS advantage
+15. **Pentakill as AoE mage**: Perfect teamfight execution with massive AoE damage
+16. **Lower CS than roaming support**: Abysmal farming, unacceptable for a laner
+17. **Flash combos securing objectives**: Clutch playmaking, hero engage winning crucial fights
+18. **First item at 8 minutes**: Insane early lead, completely ahead of normal item timings
+19. **Consistent wave control denying roams**: Wave management mastery, keeping opponent pinned mid
+20. **Carried despite team feeding**: Solo carrying a losing game through individual skill
