@@ -103,7 +103,9 @@ export function AIReviewRater(): React.ReactNode {
   };
 
   const handleRate = (rating: 1 | 2 | 3 | 4) => {
-    if (!currentImage) {return;}
+    if (!currentImage) {
+      return;
+    }
 
     updateReviewRating(currentImage.id, rating, notes);
     const loadedImages = loadReviewImages();
@@ -120,7 +122,9 @@ export function AIReviewRater(): React.ReactNode {
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm("Delete this image?")) {return;}
+    if (!confirm("Delete this image?")) {
+      return;
+    }
 
     deleteReviewImage(id);
     const loadedImages = loadReviewImages();
@@ -143,7 +147,9 @@ export function AIReviewRater(): React.ReactNode {
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (viewMode !== "rate") {return;}
+      if (viewMode !== "rate") {
+        return;
+      }
 
       if (e.key === "ArrowLeft") {
         handlePrevious();

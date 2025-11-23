@@ -11,7 +11,12 @@ import { generateMatchReview, type GenerationProgress } from "@scout-for-lol/rev
 import { CostDisplay } from "@scout-for-lol/review-dev-tool/components/cost-display";
 import { HistoryPanel } from "@scout-for-lol/review-dev-tool/components/history-panel";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
-import { createPendingEntry, saveCompletedEntry, updateHistoryRating, type HistoryEntry } from "@scout-for-lol/review-dev-tool/lib/history-manager";
+import {
+  createPendingEntry,
+  saveCompletedEntry,
+  updateHistoryRating,
+  type HistoryEntry,
+} from "@scout-for-lol/review-dev-tool/lib/history-manager";
 import { StarRating } from "@scout-for-lol/review-dev-tool/components/star-rating";
 
 const ErrorSchema = z.object({ message: z.string() });
@@ -190,14 +195,18 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
   };
 
   const handleRatingChange = async (newRating: 1 | 2 | 3 | 4) => {
-    if (!selectedHistoryId) {return;}
+    if (!selectedHistoryId) {
+      return;
+    }
     setRating(newRating);
     await updateHistoryRating(selectedHistoryId, newRating, notes);
     setForceUpdate((n) => n + 1);
   };
 
   const handleNotesChange = async (newNotes: string) => {
-    if (!selectedHistoryId) {return;}
+    if (!selectedHistoryId) {
+      return;
+    }
     setNotes(newNotes);
     if (rating) {
       await updateHistoryRating(selectedHistoryId, rating, newNotes);

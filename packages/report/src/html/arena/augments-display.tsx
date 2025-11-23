@@ -4,7 +4,9 @@ import { filterDisplayAugments } from "@scout-for-lol/report/html/arena/utils.ts
 
 export function AugmentsDisplay({ augments }: { augments: Augment[] }) {
   const displayAugments = filterDisplayAugments(augments);
-  if (displayAugments.length === 0) {return null;}
+  if (displayAugments.length === 0) {
+    return null;
+  }
 
   const augmentPairs = [];
   for (let i = 0; i < displayAugments.length; i += 2) {

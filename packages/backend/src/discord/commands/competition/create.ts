@@ -20,7 +20,11 @@ import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import { getChampionId } from "@scout-for-lol/backend/utils/champion.js";
 import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
-import { formatCriteriaType, getStatusEmoji, formatDateInfo } from "@scout-for-lol/backend/discord/commands/competition/helpers.js";
+import {
+  formatCriteriaType,
+  getStatusEmoji,
+  formatDateInfo,
+} from "@scout-for-lol/backend/discord/commands/competition/helpers.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 
 // ============================================================================

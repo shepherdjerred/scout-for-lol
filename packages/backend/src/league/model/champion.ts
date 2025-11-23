@@ -59,7 +59,9 @@ export async function extractAugments(dto: MatchV5DTOs.ParticipantDto): Promise<
       ids.push(augment);
     }
   }
-  if (ids.length === 0) {return [];}
+  if (ids.length === 0) {
+    return [];
+  }
   try {
     const result = await mapAugmentIdsToUnion(ids);
     return result;

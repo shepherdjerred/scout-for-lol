@@ -7,7 +7,10 @@ import { processMostRankClimb } from "@scout-for-lol/backend/league/competition/
 import { processMostWinsPlayer } from "@scout-for-lol/backend/league/competition/processors/most-wins-player.js";
 import { processMostWinsChampion } from "@scout-for-lol/backend/league/competition/processors/most-wins-champion.js";
 import { processHighestWinRate } from "@scout-for-lol/backend/league/competition/processors/highest-win-rate.js";
-import type { LeaderboardEntry, PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";
+import type {
+  LeaderboardEntry,
+  PlayerWithAccounts,
+} from "@scout-for-lol/backend/league/competition/processors/types.js";
 
 /**
  * Snapshot data that may be needed for rank-based criteria

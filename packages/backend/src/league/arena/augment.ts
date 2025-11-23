@@ -27,7 +27,9 @@ let augmentMapCache: Record<number, FullAugment> | undefined = undefined;
 let loadPromise: Promise<Record<number, FullAugment>> | undefined = undefined;
 
 export async function initArenaAugmentsOnce(): Promise<Record<number, FullAugment>> {
-  if (augmentMapCache) {return augmentMapCache;}
+  if (augmentMapCache) {
+    return augmentMapCache;
+  }
   loadPromise ??= (async () => {
     const res = await fetch(ARENA_AUGMENTS_URL, { cache: "force-cache" });
     if (!res.ok) {
@@ -36,9 +38,15 @@ export async function initArenaAugmentsOnce(): Promise<Record<number, FullAugmen
     const data = await res.json();
     const parsed = ApiAugmentsResponseSchema.parse(data);
     const rarityFromNumber = (n: number): AugmentRarity => {
-      if (n === 1) {return "prismatic";}
-      if (n === 2) {return "gold";}
-      if (n === 3) {return "silver";}
+      if (n === 1) {
+        return "prismatic";
+      }
+      if (n === 2) {
+        return "gold";
+      }
+      if (n === 3) {
+        return "silver";
+      }
       return "silver";
     };
     augmentMapCache = {};
@@ -60,7 +68,9 @@ export function getArenaAugmentMapSync(): Record<number, FullAugment> | undefine
 }
 
 export async function getArenaAugmentMap(): Promise<Record<number, FullAugment>> {
-  if (augmentMapCache) {return augmentMapCache;}
+  if (augmentMapCache) {
+    return augmentMapCache;
+  }
   return initArenaAugmentsOnce();
 }
 

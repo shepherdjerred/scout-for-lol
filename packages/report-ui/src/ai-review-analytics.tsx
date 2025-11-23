@@ -1,7 +1,11 @@
 import React, { useState, useMemo } from "react";
 import { z } from "zod";
 import { StarRating } from "@scout-for-lol/report-ui/components/star-rating";
-import { StatisticsCards, RatingDistribution, TopPerformers } from "@scout-for-lol/report-ui/components/analytics-stats";
+import {
+  StatisticsCards,
+  RatingDistribution,
+  TopPerformers,
+} from "@scout-for-lol/report-ui/components/analytics-stats";
 import {
   loadReviewImages,
   exportReviewImages,
@@ -150,7 +154,9 @@ export function AIReviewAnalytics(): React.ReactNode {
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) {return;}
+    if (!file) {
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -172,7 +178,9 @@ export function AIReviewAnalytics(): React.ReactNode {
   };
 
   const handleClearAll = () => {
-    if (!confirm("This will delete ALL images and ratings. Are you sure?")) {return;}
+    if (!confirm("This will delete ALL images and ratings. Are you sure?")) {
+      return;
+    }
     clearAllReviewImages();
     refreshImages();
   };

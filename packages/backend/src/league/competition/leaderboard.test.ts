@@ -45,7 +45,9 @@ function assignRanks(entries: LeaderboardEntry[]): (LeaderboardEntry & { rank: n
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
-    if (!entry) {continue;} // Skip if undefined
+    if (!entry) {
+      continue;
+    } // Skip if undefined
 
     // Check for ties with previous entry
     if (i > 0) {

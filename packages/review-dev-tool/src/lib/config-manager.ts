@@ -41,7 +41,9 @@ export function loadSavedConfigs(): SavedConfig[] {
       })
       .array();
     const result = SavedConfigArraySchema.safeParse(parsed);
-    if (!result.success) {return [];}
+    if (!result.success) {
+      return [];
+    }
     // Map and validate each config
     const configs: SavedConfig[] = [];
     for (const item of result.data) {

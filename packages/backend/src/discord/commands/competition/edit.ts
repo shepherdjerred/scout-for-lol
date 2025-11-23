@@ -244,11 +244,21 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
       userId,
     };
 
-    if (title !== null) {baseArgsInput["title"] = title;}
-    if (description !== null) {baseArgsInput["description"] = description;}
-    if (channelId !== undefined) {baseArgsInput["channelId"] = channelId;}
-    if (visibility !== null) {baseArgsInput["visibility"] = visibility;}
-    if (maxParticipants !== null) {baseArgsInput["maxParticipants"] = maxParticipants;}
+    if (title !== null) {
+      baseArgsInput["title"] = title;
+    }
+    if (description !== null) {
+      baseArgsInput["description"] = description;
+    }
+    if (channelId !== undefined) {
+      baseArgsInput["channelId"] = channelId;
+    }
+    if (visibility !== null) {
+      baseArgsInput["visibility"] = visibility;
+    }
+    if (maxParticipants !== null) {
+      baseArgsInput["maxParticipants"] = maxParticipants;
+    }
 
     // Validate base args (always editable fields)
     const baseArgs = EditCommandArgsBaseSchema.parse(baseArgsInput);
@@ -295,9 +305,15 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
       const criteriaInput: Record<string, unknown> = {
         criteriaType,
       };
-      if (queue !== null) {criteriaInput["queue"] = queue;}
-      if (champion !== null) {criteriaInput["champion"] = champion;}
-      if (minGames !== null) {criteriaInput["minGames"] = minGames;}
+      if (queue !== null) {
+        criteriaInput["queue"] = queue;
+      }
+      if (champion !== null) {
+        criteriaInput["champion"] = champion;
+      }
+      if (minGames !== null) {
+        criteriaInput["minGames"] = minGames;
+      }
 
       args.criteria = CriteriaEditSchema.parse(criteriaInput);
     }
@@ -435,13 +451,27 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
 
     // Build response message
     const updatedFields: string[] = [];
-    if (updateInput.title !== undefined) {updatedFields.push("Title");}
-    if (updateInput.description !== undefined) {updatedFields.push("Description");}
-    if (updateInput.channelId !== undefined) {updatedFields.push("Channel");}
-    if (updateInput.visibility !== undefined) {updatedFields.push("Visibility");}
-    if (updateInput.maxParticipants !== undefined) {updatedFields.push("Max Participants");}
-    if (updateInput.dates !== undefined) {updatedFields.push("Dates");}
-    if (updateInput.criteria !== undefined) {updatedFields.push("Criteria");}
+    if (updateInput.title !== undefined) {
+      updatedFields.push("Title");
+    }
+    if (updateInput.description !== undefined) {
+      updatedFields.push("Description");
+    }
+    if (updateInput.channelId !== undefined) {
+      updatedFields.push("Channel");
+    }
+    if (updateInput.visibility !== undefined) {
+      updatedFields.push("Visibility");
+    }
+    if (updateInput.maxParticipants !== undefined) {
+      updatedFields.push("Max Participants");
+    }
+    if (updateInput.dates !== undefined) {
+      updatedFields.push("Dates");
+    }
+    if (updateInput.criteria !== undefined) {
+      updatedFields.push("Criteria");
+    }
 
     await interaction.reply({
       content: truncateDiscordMessage(`✅ **Competition Updated!**

@@ -509,7 +509,9 @@ describe("calculateLeaderboard integration tests", () => {
     const updatedCompetition = await prisma.competition.findUnique({
       where: { id: competition.id },
     });
-    if (!updatedCompetition) {throw new Error("Competition not found");}
+    if (!updatedCompetition) {
+      throw new Error("Competition not found");
+    }
 
     const leaderboard = await calculateLeaderboard(prisma, parseCompetition(updatedCompetition));
 

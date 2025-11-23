@@ -1,4 +1,3 @@
-
 /**
  * Unique instance ID for this bot process
  * Helps identify if multiple instances are running
@@ -15,7 +14,7 @@ const LOG_FILE = `LOG_DIR/competition-notifications.log`;
  * Initialize logging directory
  */
 function ensureLogDir(): void {
-  if (!await Bun.file(LOG_DIR).exists()) {
+  if (!(await Bun.file(LOG_DIR).exists())) {
     await Bun.write(`LOG_DIR, { recursive: true }/.keep`, "");
   }
 }

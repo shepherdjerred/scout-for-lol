@@ -5,7 +5,10 @@ import { useState } from "react";
 import { z } from "zod";
 import type { GlobalConfig, TabConfig } from "@scout-for-lol/review-dev-tool/config/schema";
 import { getBasePrompt, PERSONALITIES } from "@scout-for-lol/review-dev-tool/lib/prompts";
-import { exportGlobalConfigAsBlob, importGlobalConfigFromBlob } from "@scout-for-lol/review-dev-tool/lib/config-manager";
+import {
+  exportGlobalConfigAsBlob,
+  importGlobalConfigFromBlob,
+} from "@scout-for-lol/review-dev-tool/lib/config-manager";
 import { getModelsByCategory, modelSupportsParameter } from "@scout-for-lol/review-dev-tool/lib/models";
 
 const ErrorSchema = z.object({ message: z.string() });

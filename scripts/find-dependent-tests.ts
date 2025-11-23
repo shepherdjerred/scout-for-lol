@@ -15,7 +15,7 @@ if (args.length < 2) {
 }
 
 // Args are guaranteed to exist after length check
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- CLI args validated above
 const packageDir = args[0]!;
 const changedFiles = args.slice(1);
 
@@ -92,7 +92,7 @@ for (const sourceFile of sourceFiles) {
     // Handle import declarations
     if (ts.isImportDeclaration(node)) {
       const moduleSpecifier = node.moduleSpecifier;
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- TypeScript API can return undefined in edge cases
       if (moduleSpecifier && ts.isStringLiteral(moduleSpecifier)) {
         const importPath = moduleSpecifier.text;
         const resolved = resolveImport(filePath, importPath);
@@ -163,7 +163,9 @@ function resolveImport(fromFile: string, moduleName: string): string | null {
 const affectedFiles = new Set<string>(absoluteChangedFiles);
 
 function findDependents(file: string, visited = new Set<string>()) {
-  if (visited.has(file)) {return;}
+  if (visited.has(file)) {
+    return;
+  }
   visited.add(file);
 
   const dependents = reverseDeps.get(file);

@@ -58,7 +58,9 @@ export async function getChampionInfo(championName: string): Promise<
     const data = ChampionDataSchema.parse(await response.json());
     const championData = data.data[championName];
 
-    if (!championData) {return undefined;}
+    if (!championData) {
+      return undefined;
+    }
 
     const result = {
       spells: championData.spells.map((s) => ({

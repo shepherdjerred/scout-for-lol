@@ -15,7 +15,10 @@ import { prisma } from "@scout-for-lol/backend/database/index";
 import { fromError } from "zod-validation-error";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
-import { DISCORD_SERVER_INVITE, LIMIT_WARNING_THRESHOLD } from "@scout-for-lol/backend/configuration/subscription-limits.js";
+import {
+  DISCORD_SERVER_INVITE,
+  LIMIT_WARNING_THRESHOLD,
+} from "@scout-for-lol/backend/configuration/subscription-limits.js";
 import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.js";
 import { sendWelcomeMatch } from "@scout-for-lol/backend/discord/commands/subscription/welcome-match.js";
 

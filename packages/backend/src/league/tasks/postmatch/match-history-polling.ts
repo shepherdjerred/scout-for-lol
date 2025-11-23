@@ -12,7 +12,10 @@ import type { PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/dat
 import { MatchIdSchema } from "@scout-for-lol/data";
 import { send } from "@scout-for-lol/backend/league/discord/channel.js";
 import { shouldCheckPlayer, calculatePollingInterval } from "@scout-for-lol/backend/utils/polling-intervals.js";
-import { fetchMatchData, generateMatchReport } from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.js";
+import {
+  fetchMatchData,
+  generateMatchReport,
+} from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.js";
 
 type PlayerWithMatchIds = {
   player: PlayerConfigEntry;

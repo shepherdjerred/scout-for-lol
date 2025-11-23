@@ -26,7 +26,9 @@ export function getItemInfo(itemId: number):
     }
   | undefined {
   const itemData = items.data[itemId.toString()];
-  if (!itemData) {return undefined;}
+  if (!itemData) {
+    return undefined;
+  }
   return {
     name: itemData.name,
     description: itemData.description, // Full tooltip

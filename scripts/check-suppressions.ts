@@ -23,7 +23,7 @@ type Finding = {
   lineNumber: number;
   line: string;
   pattern: string;
-}
+};
 
 async function main(): Promise<void> {
   console.log("🔍 Checking for new code quality suppressions...\n");
@@ -43,7 +43,6 @@ async function main(): Promise<void> {
   let currentLineNumber = 0;
 
   for (const line of lines) {
-
     // Track which file we're in
     if (line.startsWith("+++ ")) {
       // Extract filename (handles both "b/" and "i/" prefixes)
@@ -133,4 +132,4 @@ async function main(): Promise<void> {
   process.exit(1);
 }
 
-main();
+await main();

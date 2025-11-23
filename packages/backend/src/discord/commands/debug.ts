@@ -82,7 +82,7 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
   console.log(`📁 Database path: ${databasePath}`);
 
   // Check if file exists
-  if (!await Bun.file(databasePath).exists()) {
+  if (!(await Bun.file(databasePath).exists())) {
     console.error(`❌ Database file not found at ${databasePath}`);
     await interaction.reply({
       content: `❌ Database file not found at: \`${databasePath}\``,

@@ -13,7 +13,10 @@ import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { z } from "zod";
 import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { queryMatchesByDateRange } from "@scout-for-lol/backend/storage/s3-query.js";
-import type { LeaderboardEntry, PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";
+import type {
+  LeaderboardEntry,
+  PlayerWithAccounts,
+} from "@scout-for-lol/backend/league/competition/processors/types.js";
 import { processCriteria, type SnapshotData } from "@scout-for-lol/backend/league/competition/processors/index.js";
 import { getSnapshot } from "@scout-for-lol/backend/league/competition/snapshots.js";
 import { api } from "@scout-for-lol/backend/league/api/api.js";
@@ -130,8 +133,12 @@ export async function fetchSnapshotData(
 
           if ("solo" in startSnapshot || "flex" in startSnapshot) {
             const data: Ranks = {};
-            if (startSnapshot.solo) {data.solo = startSnapshot.solo;}
-            if (startSnapshot.flex) {data.flex = startSnapshot.flex;}
+            if (startSnapshot.solo) {
+              data.solo = startSnapshot.solo;
+            }
+            if (startSnapshot.flex) {
+              data.flex = startSnapshot.flex;
+            }
             startSnapshots[playerId.toString()] = data;
           }
 
@@ -149,8 +156,12 @@ export async function fetchSnapshotData(
 
             if ("solo" in endSnapshot || "flex" in endSnapshot) {
               const data: Ranks = {};
-              if (endSnapshot.solo) {data.solo = endSnapshot.solo;}
-              if (endSnapshot.flex) {data.flex = endSnapshot.flex;}
+              if (endSnapshot.solo) {
+                data.solo = endSnapshot.solo;
+              }
+              if (endSnapshot.flex) {
+                data.flex = endSnapshot.flex;
+              }
               endSnapshots[playerId.toString()] = data;
             }
             // TODO: use ts-pattern for exhaustive match
@@ -192,8 +203,12 @@ export async function fetchSnapshotData(
 
             if ("solo" in endSnapshot || "flex" in endSnapshot) {
               const data: Ranks = {};
-              if (endSnapshot.solo) {data.solo = endSnapshot.solo;}
-              if (endSnapshot.flex) {data.flex = endSnapshot.flex;}
+              if (endSnapshot.solo) {
+                data.solo = endSnapshot.solo;
+              }
+              if (endSnapshot.flex) {
+                data.flex = endSnapshot.flex;
+              }
               currentRanks[playerId.toString()] = data;
             }
             // TODO: use ts-pattern for exhaustive match
@@ -268,7 +283,9 @@ function assignRanks(entries: LeaderboardEntry[]): RankedLeaderboardEntry[] {
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
-    if (!entry) {continue;} // Skip if undefined
+    if (!entry) {
+      continue;
+    } // Skip if undefined
 
     // Check for ties with previous entry
     if (i > 0) {

@@ -25,8 +25,8 @@ describe.serial("pruneOrphanedPlayers", () => {
         PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
       },
       stdout: "ignore",
-  stderr: "ignore",
-  stdin: "ignore",
+      stderr: "ignore",
+      stdin: "ignore",
     });
 
     // Create Prisma client

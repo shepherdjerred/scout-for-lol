@@ -63,7 +63,9 @@ export async function getResetPreview(): Promise<{
   const getCount = (key: string): number => {
     try {
       const stored = localStorage.getItem(key);
-      if (!stored) {return 0;}
+      if (!stored) {
+        return 0;
+      }
       const parsed = JSON.parse(stored) as unknown;
       const ArraySchema = z.array(z.unknown());
       const result = ArraySchema.safeParse(parsed);

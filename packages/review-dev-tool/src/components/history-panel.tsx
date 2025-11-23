@@ -66,10 +66,18 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) {return "Just now";}
-    if (minutes < 60) {return `${minutes.toString()}m ago`;}
-    if (hours < 24) {return `${hours.toString()}h ago`;}
-    if (days < 7) {return `${days.toString()}d ago`;}
+    if (minutes < 1) {
+      return "Just now";
+    }
+    if (minutes < 60) {
+      return `${minutes.toString()}m ago`;
+    }
+    if (hours < 24) {
+      return `${hours.toString()}h ago`;
+    }
+    if (days < 7) {
+      return `${days.toString()}d ago`;
+    }
 
     return date.toLocaleDateString();
   };

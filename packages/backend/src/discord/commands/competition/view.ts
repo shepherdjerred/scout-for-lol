@@ -338,9 +338,15 @@ async function addLeaderboard(
  * Returns medal emoji for top 3, empty string with spacing for others
  */
 function getMedalEmoji(rank: number): string {
-  if (rank === 1) {return "🥇";}
-  if (rank === 2) {return "🥈";}
-  if (rank === 3) {return "🥉";}
+  if (rank === 1) {
+    return "🥇";
+  }
+  if (rank === 2) {
+    return "🥈";
+  }
+  if (rank === 3) {
+    return "🥉";
+  }
   return "  "; // Two spaces for alignment
 }
 

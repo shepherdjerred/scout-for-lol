@@ -28,7 +28,9 @@ describe("toArenaMatch with real arena JSON", () => {
       expect(matchDto.info.participants.length).toBe(16);
       // choose first participant as the tracked player
       const tracked = matchDto.info.participants[0];
-      if (!tracked) {throw new Error("participants should not be empty in real data test");}
+      if (!tracked) {
+        throw new Error("participants should not be empty in real data test");
+      }
 
       const player = {
         config: {

@@ -35,7 +35,9 @@ const STORAGE_SIZE_WARNING_THRESHOLD = 4.5 * 1024 * 1024; // 4.5MB (warn before 
  */
 function getStorageSize(): number {
   const data = localStorage.getItem(STORAGE_KEY);
-  if (!data) {return 0;}
+  if (!data) {
+    return 0;
+  }
   // Approximate size in bytes (2 bytes per character in UTF-16)
   return data.length * 2;
 }

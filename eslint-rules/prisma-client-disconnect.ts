@@ -75,7 +75,9 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
       // Check for afterAll with disconnect
       "CallExpression[callee.name='afterAll']"(node: TSESTree.CallExpression) {
         const callback = node.arguments[0];
-        if (callback === undefined) {return;}
+        if (callback === undefined) {
+          return;
+        }
 
         // Check if the callback body contains a $disconnect call
         if (

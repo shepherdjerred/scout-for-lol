@@ -102,7 +102,9 @@ export function TopPerformers({
   stats: PerformanceStat[];
   countLabel: string;
 }): React.ReactNode {
-  if (stats.length === 0) {return null;}
+  if (stats.length === 0) {
+    return null;
+  }
 
   return (
     <div

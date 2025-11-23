@@ -2,7 +2,10 @@ import type { CompetitionWithCriteria } from "@scout-for-lol/data";
 import { parseCompetition } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { createSnapshotsForAllParticipants } from "@scout-for-lol/backend/league/competition/snapshots.js";
-import { calculateLeaderboard, type RankedLeaderboardEntry } from "@scout-for-lol/backend/league/competition/leaderboard.js";
+import {
+  calculateLeaderboard,
+  type RankedLeaderboardEntry,
+} from "@scout-for-lol/backend/league/competition/leaderboard.js";
 import { send as sendChannelMessage, ChannelSendError } from "@scout-for-lol/backend/league/discord/channel.js";
 import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { z } from "zod";

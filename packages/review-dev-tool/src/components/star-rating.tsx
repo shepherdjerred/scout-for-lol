@@ -24,7 +24,9 @@ export function StarRating({ rating, onRate, size = "medium", readonly = false }
   const starSize = SIZES[size];
 
   const handleClick = (starNumber: number) => {
-    if (!isInteractive) {return;}
+    if (!isInteractive) {
+      return;
+    }
 
     const result = RatingSchema.safeParse(starNumber);
     if (result.success) {
@@ -36,7 +38,9 @@ export function StarRating({ rating, onRate, size = "medium", readonly = false }
     <div
       className="inline-flex gap-1 items-center"
       onMouseLeave={() => {
-        if (isInteractive) {setHoverRating(null);}
+        if (isInteractive) {
+          setHoverRating(null);
+        }
       }}
     >
       {[1, 2, 3, 4].map((starNumber) => {
@@ -50,7 +54,9 @@ export function StarRating({ rating, onRate, size = "medium", readonly = false }
               handleClick(starNumber);
             }}
             onMouseEnter={() => {
-              if (isInteractive) {setHoverRating(starNumber);}
+              if (isInteractive) {
+                setHoverRating(starNumber);
+              }
             }}
             disabled={!isInteractive}
             className="border-none bg-transparent p-0 transition-transform disabled:cursor-default enabled:cursor-pointer enabled:hover:scale-110"

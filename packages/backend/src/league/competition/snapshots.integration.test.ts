@@ -1,6 +1,10 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
-import { createSnapshot, getSnapshot, createSnapshotsForAllParticipants } from "@scout-for-lol/backend/league/competition/snapshots.js";
+import {
+  createSnapshot,
+  getSnapshot,
+  createSnapshotsForAllParticipants,
+} from "@scout-for-lol/backend/league/competition/snapshots.js";
 import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
 import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";

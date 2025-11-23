@@ -121,7 +121,9 @@ export const satoriBestPractices = createRule({
     }
 
     function checkJSXElement(node: TSESTree.JSXElement) {
-      if (!isSatoriComponent()) {return;}
+      if (!isSatoriComponent()) {
+        return;
+      }
 
       // Check for unsupported HTML elements
       if (node.openingElement.name.type === AST_NODE_TYPES.JSXIdentifier) {
@@ -218,7 +220,9 @@ export const satoriBestPractices = createRule({
     }
 
     function checkJSXChild(node: TSESTree.JSXElement) {
-      if (!isSatoriComponent()) {return;}
+      if (!isSatoriComponent()) {
+        return;
+      }
 
       // Check for dynamic expressions in JSX children
       node.children.forEach((child) => {

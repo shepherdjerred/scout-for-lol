@@ -2,28 +2,15 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ES2022",
-    "lib": [
-      "ES2022"
-    ],
+    "lib": ["ES2022"],
     "moduleResolution": "node",
     "baseUrl": "../..",
     "paths": {
-      "@scout-for-lol/report/*": [
-        "./packages/report/src/*"
-      ],
-      "@scout-for-lol/report": [
-        "./packages/report/src/index.ts"
-      ],
-      "@scout-for-lol/data/*": [
-        "./packages/data/src/*"
-      ],
-      "@scout-for-lol/data": [
-        "./packages/data/src/index.ts"
-      ],
-      "@scout-for-lol/backend/*": [
-        "./packages/backend/src/*",
-        "./packages/backend/*"
-      ]
+      "@scout-for-lol/report/*": ["./packages/report/src/*"],
+      "@scout-for-lol/report": ["./packages/report/src/index.ts"],
+      "@scout-for-lol/data/*": ["./packages/data/src/*"],
+      "@scout-for-lol/data": ["./packages/data/src/index.ts"],
+      "@scout-for-lol/backend/*": ["./packages/backend/src/*", "./packages/backend/*"]
     },
     "strict": true,
     "esModuleInterop": true,
@@ -31,9 +18,7 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "allowJs": true,
-    "types": [
-      "bun-types"
-    ],
+    "types": ["bun-types"],
     "jsx": "react-jsx",
     "allowImportingTsExtensions": true,
     "allowSyntheticDefaultImports": true,
@@ -50,12 +35,6 @@
     "noUnusedParameters": true,
     "useUnknownInCatchVariables": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "vendor",
-    "test"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "vendor", "test"]
 }

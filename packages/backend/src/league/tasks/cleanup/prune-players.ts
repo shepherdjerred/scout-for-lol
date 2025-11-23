@@ -56,9 +56,15 @@ async function notifyServerOwner(
     const playerList = playerDetails
       .map((player) => {
         const reasons = [];
-        if (player.hadLeftCompetitions) {reasons.push("left competition");}
-        if (player.hadPendingInvites) {reasons.push("pending invite");}
-        if (reasons.length === 0) {reasons.push("no subscriptions");}
+        if (player.hadLeftCompetitions) {
+          reasons.push("left competition");
+        }
+        if (player.hadPendingInvites) {
+          reasons.push("pending invite");
+        }
+        if (reasons.length === 0) {
+          reasons.push("no subscriptions");
+        }
 
         const reasonStr = reasons.length > 0 ? ` (${reasons.join(", ")})` : "";
         return `• **${player.alias}** - ${player.accountCount.toString()} account(s)${reasonStr}`;

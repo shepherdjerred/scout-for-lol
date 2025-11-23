@@ -14,7 +14,12 @@ import { z } from "zod";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import config from "@scout-for-lol/backend/configuration.js";
 import { saveAIReviewImageToS3 } from "@scout-for-lol/backend/storage/s3.js";
-import { loadPromptFile, selectRandomPersonality, loadPlayerMetadata, getLaneContext } from "@scout-for-lol/backend/league/review/prompts.js";
+import {
+  loadPromptFile,
+  selectRandomPersonality,
+  loadPlayerMetadata,
+  getLaneContext,
+} from "@scout-for-lol/backend/league/review/prompts.js";
 
 const FILENAME = import.meta.path;
 const _DIRNAME = dirname(FILENAME);

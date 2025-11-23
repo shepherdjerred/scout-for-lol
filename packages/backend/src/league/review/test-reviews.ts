@@ -36,7 +36,9 @@ function parseArgs(): TestOptions {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (!arg) {continue;}
+    if (!arg) {
+      continue;
+    }
 
     switch (arg) {
       case "--type":
@@ -124,11 +126,15 @@ Environment:
 function getMatchSummary(match: CompletedMatch | ArenaMatch): string {
   if (match.queueType === "arena") {
     const arenaPlayer = match.players[0];
-    if (!arenaPlayer) {return "Unknown";}
+    if (!arenaPlayer) {
+      return "Unknown";
+    }
     return `${arenaPlayer.playerConfig.alias} | ${arenaPlayer.champion.championName} | ${String(arenaPlayer.placement)}${getOrdinalSuffix(arenaPlayer.placement)} place | ${String(arenaPlayer.champion.kills)}/${String(arenaPlayer.champion.deaths)}/${String(arenaPlayer.champion.assists)} KDA`;
   } else {
     const player = match.players[0];
-    if (!player) {return "Unknown";}
+    if (!player) {
+      return "Unknown";
+    }
     return `${player.playerConfig.alias} | ${player.champion.championName} | ${player.lane ?? "unknown"} | ${player.outcome} | ${String(player.champion.kills)}/${String(player.champion.deaths)}/${String(player.champion.assists)} KDA`;
   }
 }
@@ -315,7 +321,9 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
 
   for (const key of shuffled) {
     const matchDto = await fetchMatchFromS3(key);
-    if (!matchDto) {continue;}
+    if (!matchDto) {
+      continue;
+    }
 
     const queueType = parseQueueType(matchDto.info.queueId);
 

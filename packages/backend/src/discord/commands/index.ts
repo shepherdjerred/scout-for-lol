@@ -1,7 +1,11 @@
 import { type Client, MessageFlags, PermissionFlagsBits, PermissionsBitField } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { getFlag } from "@scout-for-lol/backend/configuration/flags.js";
-import { executeSubscriptionAdd, executeSubscriptionDelete, executeSubscriptionList } from "@scout-for-lol/backend/discord/commands/subscription/index.js";
+import {
+  executeSubscriptionAdd,
+  executeSubscriptionDelete,
+  executeSubscriptionList,
+} from "@scout-for-lol/backend/discord/commands/subscription/index.js";
 import { executeHelp } from "@scout-for-lol/backend/discord/commands/help";
 import {
   executeCompetitionCreate,

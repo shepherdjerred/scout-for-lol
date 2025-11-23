@@ -1,48 +1,22 @@
 {
-  "exclude": [
-    "dist"
-  ],
+  "exclude": ["dist"],
   "extends": "astro/tsconfigs/strictest",
-  "include": [
-    ".astro/types.d.ts",
-    "**/*"
-  ],
+  "include": [".astro/types.d.ts", "**/*"],
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "baseUrl": "../..",
     "paths": {
-      "@scout-for-lol/backend/*": [
-        "./packages/backend/src/*",
-        "./packages/backend/*"
-      ],
-      "@scout-for-lol/frontend/*": [
-        "./packages/frontend/src/*"
-      ],
-      "@scout-for-lol/data/*": [
-        "./packages/data/src/*"
-      ],
-      "@scout-for-lol/data": [
-        "./packages/data/src/index.ts"
-      ],
-      "@scout-for-lol/report/*": [
-        "./packages/report/src/*"
-      ],
-      "@scout-for-lol/report": [
-        "./packages/report/src/index.ts"
-      ],
-      "@scout-for-lol/report-ui/*": [
-        "./packages/report-ui/src/*"
-      ],
-      "@scout-for-lol/review-dev-tool/*": [
-        "./packages/review-dev-tool/src/*"
-      ]
+      "@scout-for-lol/backend/*": ["./packages/backend/src/*", "./packages/backend/*"],
+      "@scout-for-lol/frontend/*": ["./packages/frontend/src/*"],
+      "@scout-for-lol/data/*": ["./packages/data/src/*"],
+      "@scout-for-lol/data": ["./packages/data/src/index.ts"],
+      "@scout-for-lol/report/*": ["./packages/report/src/*"],
+      "@scout-for-lol/report": ["./packages/report/src/index.ts"],
+      "@scout-for-lol/report-ui/*": ["./packages/report-ui/src/*"],
+      "@scout-for-lol/review-dev-tool/*": ["./packages/review-dev-tool/src/*"]
     },
-    "lib": [
-      "ES2021",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2021", "DOM", "DOM.Iterable"],
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "allowUnreachableCode": false,

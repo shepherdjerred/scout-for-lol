@@ -204,7 +204,9 @@ export async function getEntryCount(): Promise<number> {
  */
 export async function trimToMaxEntries(maxCount: number): Promise<void> {
   const entries = await getAllEntries();
-  if (entries.length <= maxCount) {return;}
+  if (entries.length <= maxCount) {
+    return;
+  }
 
   const toDelete = entries.slice(maxCount);
   const db = await openDB();

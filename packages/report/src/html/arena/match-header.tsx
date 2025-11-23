@@ -8,7 +8,9 @@ export function MatchHeader({ match, highlightNames }: { match: ArenaMatch; high
 
   if (trackedTeams.length === 1) {
     const trackedTeam = trackedTeams[0];
-    if (!trackedTeam) {return null;}
+    if (!trackedTeam) {
+      return null;
+    }
     const isVictory = trackedTeam.placement <= 4;
 
     return (

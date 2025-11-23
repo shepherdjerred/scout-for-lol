@@ -184,7 +184,9 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
 
   // Auto-refresh today's matches every 10 minutes (if matches are already loaded)
   useEffect(() => {
-    if (!s3Config || matches.length === 0) {return;}
+    if (!s3Config || matches.length === 0) {
+      return;
+    }
 
     const interval = setInterval(
       () => {
@@ -200,7 +202,9 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
   }, [s3Config, matches.length, handleBrowse]);
 
   const handleSelectMatch = async (metadata: MatchMetadata) => {
-    if (!s3Config) {return;}
+    if (!s3Config) {
+      return;
+    }
 
     setLoading(true);
     setSelectedMetadata(metadata);

@@ -355,7 +355,9 @@ function formatWinsScore(wins: number, metadata?: Record<string, unknown>): stri
   const baseText = `${wins.toString()} win${wins === 1 ? "" : "s"}`;
 
   // If we have games in metadata, show win/loss record
-  if (!metadata) {return baseText;}
+  if (!metadata) {
+    return baseText;
+  }
 
   const MetadataSchema = z.object({
     games: z.number().positive(),
@@ -380,7 +382,9 @@ function formatWinRateScore(winRate: number, metadata?: Record<string, unknown>)
   const rateText = `${winRate.toFixed(1)}%`;
 
   // If we have wins and games in metadata, show record
-  if (!metadata) {return rateText;}
+  if (!metadata) {
+    return rateText;
+  }
 
   const MetadataSchema = z.object({
     wins: z.number(),
@@ -456,9 +460,15 @@ function getStatusText(status: CompetitionStatus, competition: CompetitionWithCr
  * Returns medal emoji for top 3, empty string with spacing for others
  */
 function getMedalEmoji(rank: number): string {
-  if (rank === 1) {return MEDAL_EMOJIS[1];}
-  if (rank === 2) {return MEDAL_EMOJIS[2];}
-  if (rank === 3) {return MEDAL_EMOJIS[3];}
+  if (rank === 1) {
+    return MEDAL_EMOJIS[1];
+  }
+  if (rank === 2) {
+    return MEDAL_EMOJIS[2];
+  }
+  if (rank === 3) {
+    return MEDAL_EMOJIS[3];
+  }
   return "  "; // Two spaces for alignment
 }
 

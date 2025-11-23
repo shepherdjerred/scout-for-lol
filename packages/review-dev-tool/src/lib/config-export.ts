@@ -11,7 +11,10 @@ import {
   loadCustomArtThemes,
   saveCustomArtThemes,
 } from "@scout-for-lol/review-dev-tool/lib/art-style-storage";
-import { loadCustomPersonalities, saveCustomPersonalities } from "@scout-for-lol/review-dev-tool/lib/personality-storage";
+import {
+  loadCustomPersonalities,
+  saveCustomPersonalities,
+} from "@scout-for-lol/review-dev-tool/lib/personality-storage";
 import { getPersonalityById } from "@scout-for-lol/review-dev-tool/lib/prompts";
 
 /**

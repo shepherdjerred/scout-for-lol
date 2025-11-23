@@ -126,7 +126,9 @@ describe("arena match integration", () => {
   it("builds full ArenaMatch via toArenaMatch", async () => {
     const dto = makeArenaMatchDto();
     const first = dto.info.participants[0];
-    if (!first) {throw new Error("participants should not be empty in test dto");}
+    if (!first) {
+      throw new Error("participants should not be empty in test dto");
+    }
     const puuid = LeaguePuuidSchema.parse(first.puuid);
     const player: Player = {
       config: {
@@ -142,7 +144,9 @@ describe("arena match integration", () => {
     expect(parsed.teams.length).toBe(8);
     expect(parsed.players.length).toBe(1);
     const firstPlayer = parsed.players[0];
-    if (!firstPlayer) {throw new Error("parsed players should not be empty");}
+    if (!firstPlayer) {
+      throw new Error("parsed players should not be empty");
+    }
     expect(firstPlayer.placement).toBeGreaterThanOrEqual(1);
     expect(firstPlayer.placement).toBeLessThanOrEqual(8);
   });
@@ -151,7 +155,9 @@ describe("arena match integration", () => {
     const dto = makeArenaMatchDto();
     const first = dto.info.participants[0];
     const second = dto.info.participants[2]; // Different team
-    if (!first || !second) {throw new Error("participants should not be empty in test dto");}
+    if (!first || !second) {
+      throw new Error("participants should not be empty in test dto");
+    }
 
     const puuid1 = LeaguePuuidSchema.parse(first.puuid);
     const puuid2 = LeaguePuuidSchema.parse(second.puuid);

@@ -145,9 +145,13 @@ export function groupArenaTeams(participants: MatchV5DTOs.ParticipantDto[]) {
 export function getArenaTeammate(participant: MatchV5DTOs.ParticipantDto, participants: MatchV5DTOs.ParticipantDto[]) {
   const sub = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
   for (const p of participants) {
-    if (p === participant) {continue;}
+    if (p === participant) {
+      continue;
+    }
     const otherSub = ArenaParticipantMinimalSchema.parse(p).playerSubteamId;
-    if (otherSub === sub) {return p;}
+    if (otherSub === sub) {
+      return p;
+    }
   }
   return undefined;
 }

@@ -30,8 +30,12 @@ async function findWelcomeChannel(guild: Guild): Promise<TextChannel | null> {
   // Find first text channel we can send to
   const channels = await guild.channels.fetch();
   for (const [, channel] of channels) {
-    if (!channel) {continue;}
-    if (channel.type !== ChannelType.GuildText) {continue;}
+    if (!channel) {
+      continue;
+    }
+    if (channel.type !== ChannelType.GuildText) {
+      continue;
+    }
 
     const permissions = channel.permissionsFor(guild.members.me ?? guild.client.user);
     if (permissions?.has(["ViewChannel", "SendMessages"])) {

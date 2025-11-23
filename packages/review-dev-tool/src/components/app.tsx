@@ -3,8 +3,18 @@
  */
 import { useState, useEffect } from "react";
 import type { GenerationResult, GlobalConfig, TabConfig } from "@scout-for-lol/review-dev-tool/config/schema";
-import { createDefaultGlobalConfig, createDefaultTabConfig, mergeConfigs, splitConfig } from "@scout-for-lol/review-dev-tool/config/schema";
-import { loadCurrentConfig, saveCurrentConfig, loadGlobalConfig, saveGlobalConfig } from "@scout-for-lol/review-dev-tool/lib/config-manager";
+import {
+  createDefaultGlobalConfig,
+  createDefaultTabConfig,
+  mergeConfigs,
+  splitConfig,
+} from "@scout-for-lol/review-dev-tool/config/schema";
+import {
+  loadCurrentConfig,
+  saveCurrentConfig,
+  loadGlobalConfig,
+  saveGlobalConfig,
+} from "@scout-for-lol/review-dev-tool/lib/config-manager";
 import { CostTracker } from "@scout-for-lol/review-dev-tool/lib/costs";
 import { TabBar } from "@scout-for-lol/review-dev-tool/components/tab-bar";
 import { ConfigModal } from "@scout-for-lol/review-dev-tool/components/config-modal";

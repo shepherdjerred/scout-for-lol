@@ -1,7 +1,12 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { PermissionsBitField, PermissionFlagsBits } from "discord.js";
 import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
-import { canCreateCompetition, grantPermission, hasPermission, revokePermission } from "@scout-for-lol/backend/database/competition/permissions.js";
+import {
+  canCreateCompetition,
+  grantPermission,
+  hasPermission,
+  revokePermission,
+} from "@scout-for-lol/backend/database/competition/permissions.js";
 import { clearAllRateLimits, recordCreation } from "@scout-for-lol/backend/database/competition/rate-limit.js";
 
 import { testGuildId, testAccountId } from "@scout-for-lol/backend/testing/test-ids.js";

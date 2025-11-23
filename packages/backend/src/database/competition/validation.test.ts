@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { CompetitionCreationSchema, CompetitionDatesSchema, isCompetitionActive } from "@scout-for-lol/backend/database/competition/validation.js";
+import {
+  CompetitionCreationSchema,
+  CompetitionDatesSchema,
+  isCompetitionActive,
+} from "@scout-for-lol/backend/database/competition/validation.js";
 
 import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
 // ============================================================================

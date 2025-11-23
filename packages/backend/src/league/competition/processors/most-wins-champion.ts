@@ -1,7 +1,14 @@
 import type { MostWinsChampionCriteria } from "@scout-for-lol/data";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import type { LeaderboardEntry, PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";
-import { getPlayerParticipant, isWin, matchesQueue } from "@scout-for-lol/backend/league/competition/processors/helpers.js";
+import type {
+  LeaderboardEntry,
+  PlayerWithAccounts,
+} from "@scout-for-lol/backend/league/competition/processors/types.js";
+import {
+  getPlayerParticipant,
+  isWin,
+  matchesQueue,
+} from "@scout-for-lol/backend/league/competition/processors/helpers.js";
 
 /**
  * Process "Most Wins (Champion)" criteria
@@ -19,7 +26,9 @@ export function processMostWinsChampion(
   // Count wins with the specific champion for each player
   for (const match of matches) {
     // Filter by queue if specified
-    if (criteria.queue && !matchesQueue(match, criteria.queue)) {continue;}
+    if (criteria.queue && !matchesQueue(match, criteria.queue)) {
+      continue;
+    }
 
     for (const participant of participants) {
       const participantData = getPlayerParticipant(participant, match);

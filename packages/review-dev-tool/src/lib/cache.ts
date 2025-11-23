@@ -41,7 +41,9 @@ let dbPromise: Promise<IDBDatabase> | null = null;
  * Initialize IndexedDB connection
  */
 function getDB(): Promise<IDBDatabase> {
-  if (dbPromise) {return dbPromise;}
+  if (dbPromise) {
+    return dbPromise;
+  }
 
   dbPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -128,7 +130,9 @@ let lastCleanupTime = 0;
 function cleanupExpiredEntries(): void {
   const now = Date.now();
   // Only run cleanup once per minute
-  if (now - lastCleanupTime < 60_000) {return;}
+  if (now - lastCleanupTime < 60_000) {
+    return;
+  }
   lastCleanupTime = now;
 
   try {
@@ -320,14 +324,18 @@ function evictOldCacheEntries(targetBytesToFree: number): number {
 
     // Sort: expired first, then by oldest timestamp
     entries.sort((a, b) => {
-      if (a.expired !== b.expired) {return a.expired ? -1 : 1;}
+      if (a.expired !== b.expired) {
+        return a.expired ? -1 : 1;
+      }
       return a.timestamp - b.timestamp;
     });
 
     // Remove entries until we've freed enough space
     let freedBytes = 0;
     for (const entry of entries) {
-      if (freedBytes >= targetBytesToFree) {break;}
+      if (freedBytes >= targetBytesToFree) {
+        break;
+      }
       localStorage.removeItem(entry.key);
       memoryCache.delete(entry.key);
       freedBytes += entry.size;
