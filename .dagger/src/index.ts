@@ -1,4 +1,4 @@
-/* eslint-disable max-lines */
+ 
 import { func, argument, Directory, object, Secret, Container } from "@dagger.io/dagger";
 import {
   checkBackend,
@@ -7,13 +7,13 @@ import {
   smokeTestBackendImage,
   getBackendCoverage,
   getBackendTestReport,
-} from "./backend";
-import { checkReport, getReportCoverage, getReportTestReport } from "./report";
-import { checkReportUi, getReportUiCoverage, getReportUiTestReport, buildReportUi } from "./report-ui";
-import { checkData, getDataCoverage, getDataTestReport } from "./data";
-import { checkFrontend, buildFrontend, deployFrontend } from "./frontend";
-import { checkReviewDevTool } from "./review-dev-tool";
-import { getGitHubContainer, getBunNodeContainer } from "./base";
+} from "@scout-for-lol/.dagger/src/backend";
+import { checkReport, getReportCoverage, getReportTestReport } from "@scout-for-lol/.dagger/src/report";
+import { checkReportUi, getReportUiCoverage, getReportUiTestReport, buildReportUi } from "@scout-for-lol/.dagger/src/report-ui";
+import { checkData, getDataCoverage, getDataTestReport } from "@scout-for-lol/.dagger/src/data";
+import { checkFrontend, buildFrontend, deployFrontend } from "@scout-for-lol/.dagger/src/frontend";
+import { checkReviewDevTool } from "@scout-for-lol/.dagger/src/review-dev-tool";
+import { getGitHubContainer, getBunNodeContainer } from "@scout-for-lol/.dagger/src/base";
 
 // Helper function to log with timestamp
 function logWithTimestamp(message: string): void {
@@ -203,7 +203,15 @@ export class ScoutForLol {
         logWithTimestamp("📦 Phase 3: Publishing Docker image to registry...");
 
         // Login to registry and publish
-        const publishedRefs = await publishBackendImage(source, version, gitSha, ghcrUsername, ghcrPassword);
+        const publishedRefs = await publishBackendImage({
+          workspaceSource: source,
+          version,
+          gitSha,
+          registryAuth: {
+            username: ghcrUsername,
+            password: ghcrPassword,
+          },
+        });
 
         logWithTimestamp(`✅ Images published: ${publishedRefs.join(", ")}`);
       });
@@ -224,7 +232,16 @@ export class ScoutForLol {
       await withTiming("CI frontend deploy phase", async () => {
         logWithTimestamp(`🚀 Phase 5: Deploying frontend to Cloudflare Pages (branch: ${branch})...`);
         const project = projectName ?? "scout-for-lol";
-        await this.deployFrontend(source, branch, gitSha, project, accountId, apiToken);
+        await this.deployFrontend({
+          workspaceSource: source,
+          branch,
+          gitSha,
+          cloudflare: {
+            projectName: project,
+            accountId,
+            apiToken,
+          },
+        });
         logWithTimestamp(
           `✅ Frontend deployed to https://${branch === "main" ? "" : `${branch}.`}${project}.pages.dev`,
         );
@@ -416,7 +433,13 @@ export class ScoutForLol {
     logWithTimestamp(`📦 Publishing backend Docker image for version ${version} (${gitSha})`);
 
     const result = await withTiming("backend Docker image publish", () =>
-      publishBackendImage(source, version, gitSha, registryUsername, registryPassword),
+      publishBackendImage({
+        workspaceSource: source,
+        version,
+        gitSha,
+        registryAuth:
+          registryUsername && registryPassword ? { username: registryUsername, password: registryPassword } : undefined,
+      }),
     );
 
     logWithTimestamp(`✅ Backend Docker image published successfully: ${result.join(", ")}`);
@@ -666,7 +689,16 @@ export class ScoutForLol {
     logWithTimestamp(`🚀 Deploying frontend to Cloudflare Pages (project: ${projectName}, branch: ${branch})`);
 
     const result = await withTiming("frontend deployment", () =>
-      deployFrontend(source, branch, gitSha, projectName, accountId, apiToken),
+      deployFrontend({
+        workspaceSource: source,
+        branch,
+        gitSha,
+        cloudflare: {
+          projectName,
+          accountId,
+          apiToken,
+        },
+      }),
     );
 
     logWithTimestamp("✅ Frontend deployment completed successfully");

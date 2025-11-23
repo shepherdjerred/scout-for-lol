@@ -163,7 +163,7 @@ function resolveImport(fromFile: string, moduleName: string): string | null {
 const affectedFiles = new Set<string>(absoluteChangedFiles);
 
 function findDependents(file: string, visited = new Set<string>()) {
-  if (visited.has(file)) return;
+  if (visited.has(file)) {return;}
   visited.add(file);
 
   const dependents = reverseDeps.get(file);

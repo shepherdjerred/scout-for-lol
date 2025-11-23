@@ -113,25 +113,25 @@ function transformPayloadType(typeAlias: TypeAliasDeclaration): number {
   console.log(`\n  Processing ${modelName}...`);
 
   const typeNode = typeAlias.getTypeNode();
-  if (!typeNode || typeNode.getKind() !== SyntaxKind.TypeLiteral) return 0;
+  if (!typeNode || typeNode.getKind() !== SyntaxKind.TypeLiteral) {return 0;}
 
   const typeLiteral = typeNode.asKindOrThrow(SyntaxKind.TypeLiteral);
   let count = 0;
 
   // Find the 'scalars' property
   for (const member of typeLiteral.getMembers()) {
-    if (member.getKind() !== SyntaxKind.PropertySignature) continue;
+    if (member.getKind() !== SyntaxKind.PropertySignature) {continue;}
 
     const prop = member.asKindOrThrow(SyntaxKind.PropertySignature);
-    if (prop.getName() !== "scalars") continue;
+    if (prop.getName() !== "scalars") {continue;}
 
     // The scalars property contains: $Extensions.GetPayloadResult<{...}, ...>
     const scalarTypeNode = prop.getTypeNode();
-    if (!scalarTypeNode) continue;
+    if (!scalarTypeNode) {continue;}
 
     // Find the first type argument (the object literal with field definitions)
     const typeArgs = scalarTypeNode.getType().getAliasTypeArguments();
-    if (typeArgs.length === 0) continue;
+    if (typeArgs.length === 0) {continue;}
 
     // We need to modify the source text directly since it's inside a generic
     // Get the full text of the scalars property
@@ -140,7 +140,7 @@ function transformPayloadType(typeAlias: TypeAliasDeclaration): number {
     // Extract the object literal part: $Extensions.GetPayloadResult<{ ... }, ...>
     const payloadPattern = /\$Extensions\.GetPayloadResult<\s*\{([^}]+)\}/;
     const match = payloadPattern.exec(fullText);
-    if (!match?.[1]) continue;
+    if (!match?.[1]) {continue;}
 
     const objectContent = match[1];
     let transformedContent = objectContent;
@@ -237,22 +237,22 @@ function transformInputType(typeAlias: TypeAliasDeclaration): number {
 
 function transformSimpleObjectType(typeAlias: TypeAliasDeclaration, modelName: string): number {
   const typeNode = typeAlias.getTypeNode();
-  if (!typeNode || typeNode.getKind() !== SyntaxKind.TypeLiteral) return 0;
+  if (!typeNode || typeNode.getKind() !== SyntaxKind.TypeLiteral) {return 0;}
 
   const typeLiteral = typeNode.asKindOrThrow(SyntaxKind.TypeLiteral);
   let count = 0;
 
   for (const member of typeLiteral.getMembers()) {
-    if (member.getKind() !== SyntaxKind.PropertySignature) continue;
+    if (member.getKind() !== SyntaxKind.PropertySignature) {continue;}
 
     const prop = member.asKindOrThrow(SyntaxKind.PropertySignature);
     const propName = prop.getName();
     const propTypeNode = prop.getTypeNode();
 
-    if (!propTypeNode) continue;
+    if (!propTypeNode) {continue;}
 
     const brandedType = getBrandedType(propName, modelName);
-    if (!brandedType) continue;
+    if (!brandedType) {continue;}
 
     const fullText = prop.getText();
 
@@ -320,16 +320,16 @@ function transformFieldRefsInterface(interfaceDecl: InterfaceDeclaration): numbe
   let count = 0;
 
   for (const member of interfaceDecl.getMembers()) {
-    if (member.getKind() !== SyntaxKind.PropertySignature) continue;
+    if (member.getKind() !== SyntaxKind.PropertySignature) {continue;}
 
     const prop = member.asKindOrThrow(SyntaxKind.PropertySignature);
     const propName = prop.getName();
     const propTypeNode = prop.getTypeNode();
 
-    if (!propTypeNode) continue;
+    if (!propTypeNode) {continue;}
 
     const brandedType = getBrandedType(propName, modelName);
-    if (!brandedType) continue;
+    if (!brandedType) {continue;}
 
     const fullText = prop.getText();
 

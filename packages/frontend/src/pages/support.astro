@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
+import InfoBox from "../components/InfoBox.astro";
 ---
 
 <Layout>
@@ -122,8 +123,8 @@ import Footer from "../components/Footer.astro";
         <!-- Help Tips -->
         <section class="mt-16">
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Before Asking for Help</h2>
-          <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-6">
-            <ul class="space-y-3 text-blue-900 dark:text-blue-300">
+          <InfoBox variant="info">
+            <ul class="space-y-3">
               <li class="flex items-start">
                 <svg
                   class="h-6 w-6 text-blue-600 dark:text-blue-400 mr-3 shrink-0"
@@ -188,7 +189,7 @@ import Footer from "../components/Footer.astro";
                 >
               </li>
             </ul>
-          </div>
+          </InfoBox>
         </section>
 
         <!-- Back to Home -->

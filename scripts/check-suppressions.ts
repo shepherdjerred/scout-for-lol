@@ -18,7 +18,7 @@ const SUPPRESSION_PATTERNS = [
   // Add more patterns as needed
 ];
 
-interface Finding {
+type Finding = {
   file: string;
   lineNumber: number;
   line: string;
@@ -105,7 +105,7 @@ async function main(): Promise<void> {
   console.error("❌ Found new code quality suppressions:\n");
 
   // Group by file
-  const byFile = findings.reduce(
+  const byFile = findings.reduce<Record<string, Finding[]>>(
     (acc, finding) => {
       if (!acc[finding.file]) {
         acc[finding.file] = [];
@@ -113,7 +113,7 @@ async function main(): Promise<void> {
       acc[finding.file].push(finding);
       return acc;
     },
-    {} as Record<string, Finding[]>,
+    {},
   );
 
   for (const [file, fileFindings] of Object.entries(byFile)) {

@@ -15,14 +15,15 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
-    "exactOptionalPropertyTypes": true,
+    "exactOptionalPropertyTypes": false,
     "noPropertyAccessFromIndexSignature": true,
     "allowUnusedLabels": false,
     "forceConsistentCasingInFileNames": true,
     "allowUnreachableCode": false,
     "paths": {
       "@dagger.io/dagger": ["./sdk/index.ts"],
-      "@dagger.io/dagger/telemetry": ["./sdk/telemetry.ts"]
+      "@dagger.io/dagger/telemetry": ["./sdk/telemetry.ts"],
+      "@scout-for-lol/.dagger/*": ["./*"]
     }
   }
 }

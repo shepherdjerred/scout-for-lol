@@ -1,0 +1,38 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  icon?: string;
+  gradient?: string;
+}
+
+const { title, description, icon, gradient = 'from-yellow-500 to-orange-600' } = Astro.props;
+---
+
+<div class="text-center">
+  <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+    <div class={`w-24 h-24 mx-auto mb-4 rounded-lg bg-linear-to-br ${gradient} flex items-center justify-center`}>
+      {icon ? (
+        <div set:html={icon} class="w-12 h-12 text-white" />
+      ) : (
+        <svg
+          class="w-12 h-12 text-white"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+          ></path>
+        </svg>
+      )}
+    </div>
+    <h4 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">{title}</h4>
+    <p class="text-gray-600 dark:text-gray-300">
+      {description}
+    </p>
+  </div>
+</div>

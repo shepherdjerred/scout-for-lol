@@ -3,8 +3,8 @@ import { z } from "zod";
 import { api } from "@scout-for-lol/backend/league/api/api.js";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.js";
-import type { PlayerConfigEntry, Region, MatchId, CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
-import { MatchIdSchema } from "@scout-for-lol/data";
+import type { PlayerConfigEntry, Region, MatchId, CompletedMatch, ArenaMatch, QueueType } from "@scout-for-lol/data";
+import { MatchIdSchema, queueTypeToDisplayString } from "@scout-for-lol/data";
 import { getPlayer } from "@scout-for-lol/backend/league/model/player.js";
 import { AttachmentBuilder, EmbedBuilder, MessageCreateOptions } from "discord.js";
 import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
@@ -40,6 +40,26 @@ export async function fetchMatchData(
     }
     return undefined;
   }
+}
+
+/**
+ * Format a natural language message about who finished the game
+ */
+function formatGameCompletionMessage(playerAliases: string[], queueType: QueueType): string {
+  const queueName = queueTypeToDisplayString(queueType);
+
+  if (playerAliases.length === 1) {
+    return `${playerAliases[0]} finished a ${queueName} game`;
+  } else if (playerAliases.length === 2) {
+    return `${playerAliases[0]} and ${playerAliases[1]} finished a ${queueName} game`;
+  } else if (playerAliases.length >= 3) {
+    const allButLast = playerAliases.slice(0, -1).join(", ");
+    const last = playerAliases[playerAliases.length - 1];
+    return `${allButLast}, and ${last} finished a ${queueName} game`;
+  }
+
+  // Fallback (shouldn't happen)
+  return `Game finished: ${queueName}`;
 }
 
 /**
@@ -126,7 +146,12 @@ export async function generateMatchReport(
       // Create Discord message for arena
       const [attachment, embed] = await createMatchImage(arenaMatch, matchId);
 
+      // Generate completion message
+      const playerAliases = playersInMatch.map((p) => p.alias);
+      const completionMessage = formatGameCompletionMessage(playerAliases, arenaMatch.queueType);
+
       return {
+        content: completionMessage,
         files: [attachment],
         embeds: [embed],
       };
@@ -204,11 +229,20 @@ export async function generateMatchReport(
         console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
       }
 
+      // Generate completion message
+      const playerAliases = playersInMatch.map((p) => p.alias);
+      const completionMessage = formatGameCompletionMessage(playerAliases, completedMatch.queueType);
+
+      // Combine completion message with review text if available
+      let messageContent = completionMessage;
+      if (reviewText && !reviewImage) {
+        messageContent = `${completionMessage}\n\n${reviewText}`;
+      }
+
       return {
         files: files,
         embeds: [matchReportEmbed],
-        // Include review text if available (without image, text is shown as message content)
-        ...(reviewText && !reviewImage && { content: reviewText }),
+        content: messageContent,
       };
     }
   } catch (error) {

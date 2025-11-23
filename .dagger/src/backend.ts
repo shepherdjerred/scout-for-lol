@@ -1,5 +1,5 @@
 import { Directory, Container, Secret } from "@dagger.io/dagger";
-import { installWorkspaceDeps, getBunContainer } from "./base";
+import { installWorkspaceDeps, getBunContainer } from "@scout-for-lol/.dagger/src/base";
 
 /**
  * Install dependencies for the backend
@@ -158,31 +158,31 @@ export async function smokeTestBackendImage(
   }
 }
 
+type PublishBackendImageOptions = {
+  workspaceSource: Directory;
+  version: string;
+  gitSha: string;
+  registryAuth?: {
+    username: string;
+    password: Secret;
+  };
+};
+
 /**
  * Publish the backend Docker image
- * @param workspaceSource The full workspace source directory
- * @param version The version tag
- * @param gitSha The git SHA
- * @param registryUsername Optional registry username for authentication
- * @param registryPassword Optional registry password for authentication
+ * @param options Publishing options including workspace source, version, git SHA, and optional registry auth
  * @returns The published image references
  */
-export async function publishBackendImage(
-  workspaceSource: Directory,
-  version: string,
-  gitSha: string,
-  registryUsername?: string,
-  registryPassword?: Secret,
-): Promise<string[]> {
-  let image = buildBackendImage(workspaceSource, version, gitSha);
+export async function publishBackendImage(options: PublishBackendImageOptions): Promise<string[]> {
+  let image = buildBackendImage(options.workspaceSource, options.version, options.gitSha);
 
   // Set up registry authentication if credentials provided
-  if (registryUsername && registryPassword) {
-    image = image.withRegistryAuth("ghcr.io", registryUsername, registryPassword);
+  if (options.registryAuth) {
+    image = image.withRegistryAuth("ghcr.io", options.registryAuth.username, options.registryAuth.password);
   }
 
-  const versionRef = await image.publish(`ghcr.io/shepherdjerred/scout-for-lol:${version}`);
-  const shaRef = await image.publish(`ghcr.io/shepherdjerred/scout-for-lol:${gitSha}`);
+  const versionRef = await image.publish(`ghcr.io/shepherdjerred/scout-for-lol:${options.version}`);
+  const shaRef = await image.publish(`ghcr.io/shepherdjerred/scout-for-lol:${options.gitSha}`);
 
   return [versionRef, shaRef];
 }

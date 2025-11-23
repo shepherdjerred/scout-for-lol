@@ -40,6 +40,7 @@ export default tseslint.config(
       "**/.cache/**/*",
       "**/node_modules/**/*",
       "**/.astro/**/*",
+      ".dagger/sdk/**/*",
     ],
   },
   {
@@ -247,6 +248,13 @@ export default tseslint.config(
             "Prefer Uint8Array or Bun's binary data APIs over Buffer. For file operations, use Bun.file() which handles binary data natively. See https://bun.sh/docs/api/binary-data",
         },
       ],
+    },
+  },
+  // Dagger index.ts - Dagger module API can have many parameters for external interface
+  {
+    files: [".dagger/src/index.ts"],
+    rules: {
+      "max-params": "off", // this is for the external interface of the Dagger module
     },
   },
   // Test files can be longer and use test-specific patterns

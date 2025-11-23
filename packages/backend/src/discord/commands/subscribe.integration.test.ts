@@ -5,12 +5,12 @@ import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client";
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
 
 // Create test database in temp directory
-const tempDir = fs.mkdtempSync(path.`"/tmp"/subscribe-test-`);
-const testDbPath = path.`tempDir/test.db`;
+const tempDir = fs.mkdtempSync(path.join("/tmp", "subscribe-test-"));
+const testDbPath = path.join(tempDir, "test.db");
 const testDatabaseUrl = `file:${testDbPath}`;
 
 // Push schema to test database
-const schemaPath = path.`import.meta.dir/../../../prisma/schema.prisma`;
+const schemaPath = path.join(import.meta.dir, "../../../prisma/schema.prisma");
 Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
   env: {
     ...Bun.env,

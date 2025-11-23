@@ -1,0 +1,65 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  variant?: 'indigo' | 'default';
+  buttons?: Array<{
+    text: string;
+    href: string;
+    variant?: 'primary' | 'secondary';
+  }>;
+}
+
+const { title, description, variant = 'indigo', buttons = [] } = Astro.props;
+const bgClass = variant === 'indigo' ? 'bg-indigo-600 dark:bg-indigo-700' : 'bg-white dark:bg-gray-900';
+const titleClass = variant === 'indigo' ? 'text-white' : 'text-gray-900 dark:text-white';
+const descClass = variant === 'indigo' ? 'text-indigo-200 dark:text-indigo-100' : 'text-gray-600 dark:text-gray-300';
+---
+
+<div class={bgClass}>
+  <div class="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 class={`text-balance text-4xl font-semibold tracking-tight ${titleClass} sm:text-5xl`}>
+        {title}
+      </h2>
+      {description && (
+        <p class={`mx-auto mt-6 max-w-xl text-lg/8 ${descClass}`}>
+          {description}
+        </p>
+      )}
+      {buttons.length > 0 && (
+        <div class="mt-10 flex items-center justify-center gap-x-6">
+          {buttons.map((button) => {
+            if (variant === 'indigo') {
+              return button.variant === 'secondary' ? (
+                <a href={button.href} class="text-sm/6 font-semibold text-white hover:text-indigo-100 dark:hover:text-indigo-200">
+                  {button.text} <span aria-hidden="true">→</span>
+                </a>
+              ) : (
+                <a
+                  href={button.href}
+                  class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-indigo-600 shadow-sm hover:bg-indigo-50 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-white"
+                >
+                  {button.text}
+                </a>
+              );
+            } else {
+              return button.variant === 'secondary' ? (
+                <a href={button.href} class="text-sm/6 font-semibold text-gray-900 dark:text-white">
+                  {button.text} <span aria-hidden="true">→</span>
+                </a>
+              ) : (
+                <a
+                  href={button.href}
+                  class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                >
+                  {button.text}
+                </a>
+              );
+            }
+          })}
+        </div>
+      )}
+    </div>
+  </div>
+</div>

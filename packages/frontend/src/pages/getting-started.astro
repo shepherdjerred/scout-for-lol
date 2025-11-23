@@ -2,6 +2,10 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
+import StepCard from "../components/StepCard.astro";
+import InfoBox from "../components/InfoBox.astro";
+import CommandBox from "../components/CommandBox.astro";
+import GalleryItem from "../components/GalleryItem.astro";
 ---
 
 <Layout>
@@ -22,21 +26,10 @@ import Footer from "../components/Footer.astro";
         </div>
 
         <!-- Step 1: Add Scout -->
-        <section class="mb-16">
-          <div class="flex items-center mb-6">
-            <div
-              class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xl font-bold mr-4"
-            >
-              1
-            </div>
-            <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Add Scout to Your Server</h2>
-          </div>
-
-          <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-6 mb-6">
-            <p class="text-blue-800 dark:text-blue-300">
-              <strong>Note:</strong> You need Administrator permissions in your Discord server to add Scout.
-            </p>
-          </div>
+        <StepCard number={1} title="Add Scout to Your Server">
+          <InfoBox variant="info">
+            <p><strong>Note:</strong> You need Administrator permissions in your Discord server to add Scout.</p>
+          </InfoBox>
 
           <div class="prose max-w-none mb-6">
             <ol class="list-decimal list-inside space-y-3 text-gray-700 dark:text-gray-300">
@@ -60,19 +53,10 @@ import Footer from "../components/Footer.astro";
               <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"></path>
             </svg>
           </a>
-        </section>
+        </StepCard>
 
         <!-- Step 2: Subscribe to a Player -->
-        <section class="mb-16">
-          <div class="flex items-center mb-6">
-            <div
-              class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xl font-bold mr-4"
-            >
-              2
-            </div>
-            <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Subscribe to a Player</h2>
-          </div>
-
+        <StepCard number={2} title="Subscribe to a Player">
           <div class="prose max-w-none mb-6">
             <p class="text-lg text-gray-700 dark:text-gray-300 mb-4">
               Once Scout is in your server, use the <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm"
@@ -80,11 +64,10 @@ import Footer from "../components/Footer.astro";
               > command to start tracking League players.
             </p>
 
-            <div class="bg-gray-900 dark:bg-gray-800 text-white p-6 rounded-lg mb-6">
-              <code class="text-sm"
-                >/subscription add channel:#general region:na1 riot-id:PlayerName#1234 alias:MyFriend</code
-              >
-            </div>
+            <CommandBox
+              command="/subscription add channel:#general region:na1 riot-id:PlayerName#1234 alias:MyFriend"
+              variant="dark"
+            />
 
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Command Parameters:</h3>
             <ul class="space-y-3 text-gray-700 dark:text-gray-300">
@@ -105,28 +88,16 @@ import Footer from "../components/Footer.astro";
             </ul>
           </div>
 
-          <div
-            class="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-6"
-          >
-            <h4 class="font-semibold text-yellow-800 dark:text-yellow-300 mb-2">💡 Pro Tip: Finding Riot IDs</h4>
-            <p class="text-yellow-700 dark:text-yellow-300">
+          <InfoBox variant="warning" title="💡 Pro Tip: Finding Riot IDs">
+            <p>
               You can find your Riot ID in the League client. It's displayed as <strong>GameName#TagLine</strong>. For
               example: <code class="bg-yellow-100 dark:bg-yellow-800/50 px-2 py-1 rounded">Faker#KR1</code>
             </p>
-          </div>
-        </section>
+          </InfoBox>
+        </StepCard>
 
         <!-- Step 3: Enjoy Automatic Updates -->
-        <section class="mb-16">
-          <div class="flex items-center mb-6">
-            <div
-              class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xl font-bold mr-4"
-            >
-              3
-            </div>
-            <h2 class="text-3xl font-bold text-gray-900 dark:text-white">Enjoy Automatic Updates</h2>
-          </div>
-
+        <StepCard number={3} title="Enjoy Automatic Updates">
           <div class="prose max-w-none">
             <p class="text-lg text-gray-700 dark:text-gray-300 mb-6">That's it! Scout will now automatically:</p>
 
@@ -154,18 +125,14 @@ import Footer from "../components/Footer.astro";
               <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Here's what your match notifications will look like:
               </h4>
-              <img
-                src="/solo-discord.png"
-                alt="Example of a Scout match notification in Discord showing player stats, KDA, and LP gains"
-                class="w-full rounded-lg shadow-lg ring-1 ring-gray-400/10 dark:ring-gray-600"
-                loading="lazy"
+              <GalleryItem
+                imageSrc="/solo-discord.png"
+                imageAlt="Example of a Scout match notification in Discord showing player stats, KDA, and LP gains"
+                caption="Scout automatically posts detailed match reports right in your Discord channel"
               />
-              <p class="text-sm text-gray-600 dark:text-gray-400 mt-3 text-center">
-                Scout automatically posts detailed match reports right in your Discord channel
-              </p>
             </div>
           </div>
-        </section>
+        </StepCard>
 
         <!-- Next Steps -->
         <section class="mb-16">
