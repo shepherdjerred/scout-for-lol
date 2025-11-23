@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from "react";
 import { z } from "zod";
-import { StarRating } from "./components/star-rating";
-import { StatisticsCards, RatingDistribution, TopPerformers } from "./components/analytics-stats";
+import { StarRating } from "@scout-for-lol/report-ui/components/star-rating";
+import { StatisticsCards, RatingDistribution, TopPerformers } from "@scout-for-lol/report-ui/components/analytics-stats";
 import {
   loadReviewImages,
   exportReviewImages,
   importReviewImages,
   clearAllReviewImages,
   type ReviewImageData,
-} from "./ai-review-storage";
+} from "@scout-for-lol/report-ui/ai-review-storage";
 
 type SortOption = "rating-desc" | "rating-asc" | "date-desc" | "date-asc";
 type FilterRating = "all" | "unrated" | "1" | "2" | "3" | "4";
@@ -150,7 +150,7 @@ export function AIReviewAnalytics(): React.ReactNode {
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {return;}
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -172,7 +172,7 @@ export function AIReviewAnalytics(): React.ReactNode {
   };
 
   const handleClearAll = () => {
-    if (!confirm("This will delete ALL images and ratings. Are you sure?")) return;
+    if (!confirm("This will delete ALL images and ratings. Are you sure?")) {return;}
     clearAllReviewImages();
     refreshImages();
   };

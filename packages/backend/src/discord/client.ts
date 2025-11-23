@@ -1,8 +1,8 @@
-import configuration from "../configuration";
+import configuration from "@scout-for-lol/backend/configuration";
 import { Client, GatewayIntentBits } from "discord.js";
-import { handleCommands } from "./commands/index";
-import { discordConnectionStatus, discordGuildsGauge, discordUsersGauge, discordLatency } from "../metrics/index.js";
-import { handleGuildCreate } from "./events/guild-create.js";
+import { handleCommands } from "@scout-for-lol/backend/discord/commands/index";
+import { discordConnectionStatus, discordGuildsGauge, discordUsersGauge, discordLatency } from "@scout-for-lol/backend/metrics/index.js";
+import { handleGuildCreate } from "@scout-for-lol/backend/discord/events/guild-create.js";
 
 console.log("🔌 Initializing Discord client");
 

@@ -78,7 +78,7 @@ export function getTimeRemaining(serverId: string, userId: string): number {
  */
 export function clearRateLimit(serverId: string, userId: string): void {
   const key = `${serverId}:${userId}`;
-  // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+  // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- Required for clearing rate limit entries
   delete rateLimitStore[key];
 }
 

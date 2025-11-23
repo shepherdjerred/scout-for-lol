@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { latestVersion } from "./version.js";
+import { latestVersion } from "@scout-for-lol/report/dataDragon/version.js";
 
 // Runes are organized by style (tree) with selections
 const RuneSchema = z.array(

@@ -1,11 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
-import { PrismaClient } from "../../../../generated/prisma/client/index.js";
-import { pruneOrphanedPlayers } from "./prune-players.js";
-import { execSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../../testing/test-ids.js";
+import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import { pruneOrphanedPlayers } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
 
 // Mark these tests as serial since they create temporary databases
 // and have timing constraints. Running them concurrently would slow them down.
@@ -16,19 +12,21 @@ describe.serial("pruneOrphanedPlayers", () => {
 
   beforeEach(async () => {
     // Create a temporary database for each test
-    testDir = mkdtempSync(join(tmpdir(), "prune-players-test-"));
-    testDbPath = join(testDir, "test.db");
+    testDir = `${Bun.env.TMPDIR ?? "/tmp"}/prune-players-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+    testDbPath = `${testDir}/test.db`;
 
     // Run Prisma migrations to set up the schema
-    const schemaPath = join(import.meta.dir, "../../../..", "prisma/schema.prisma");
-    execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
+    const schemaPath = `import.meta.dir/../../../../prisma/schema.prisma`;
+    Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
       env: {
-        ...process.env,
+        ...Bun.env,
         DATABASE_URL: `file:${testDbPath}`,
         PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
         PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
       },
-      stdio: "ignore",
+      stdout: "ignore",
+  stderr: "ignore",
+  stdin: "ignore",
     });
 
     // Create Prisma client

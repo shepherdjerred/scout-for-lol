@@ -3,8 +3,8 @@
  */
 import { useState } from "react";
 import { z } from "zod";
-import type { GlobalConfig } from "../config/schema";
-import { exportGlobalConfigAsBlob, importGlobalConfigFromBlob } from "../lib/config-manager";
+import type { GlobalConfig } from "@scout-for-lol/review-dev-tool/config/schema";
+import { exportGlobalConfigAsBlob, importGlobalConfigFromBlob } from "@scout-for-lol/review-dev-tool/lib/config-manager";
 
 const ErrorSchema = z.object({ message: z.string() });
 

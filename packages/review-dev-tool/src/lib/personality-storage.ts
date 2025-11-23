@@ -1,8 +1,8 @@
 /**
  * Custom personality storage in localStorage
  */
-import type { Personality } from "../config/schema";
-import { PersonalitySchema } from "../config/schema";
+import type { Personality } from "@scout-for-lol/review-dev-tool/config/schema";
+import { PersonalitySchema } from "@scout-for-lol/review-dev-tool/config/schema";
 
 const STORAGE_KEY = "review-dev-tool-custom-personalities";
 

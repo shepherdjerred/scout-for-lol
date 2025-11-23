@@ -1,8 +1,8 @@
 /**
  * Cost calculation for AI API usage
  */
-import type { GenerationMetadata, CostBreakdown } from "../config/schema";
-import { CostBreakdownSchema } from "../config/schema";
+import type { GenerationMetadata, CostBreakdown } from "@scout-for-lol/review-dev-tool/config/schema";
+import { CostBreakdownSchema } from "@scout-for-lol/review-dev-tool/config/schema";
 import {
   getModelPricing,
   getImagePricing,

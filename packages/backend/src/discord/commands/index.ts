@@ -1,8 +1,8 @@
 import { type Client, MessageFlags, PermissionFlagsBits, PermissionsBitField } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { getFlag } from "../../configuration/flags.js";
-import { executeSubscriptionAdd, executeSubscriptionDelete, executeSubscriptionList } from "./subscription/index.js";
-import { executeHelp } from "./help";
+import { getFlag } from "@scout-for-lol/backend/configuration/flags.js";
+import { executeSubscriptionAdd, executeSubscriptionDelete, executeSubscriptionList } from "@scout-for-lol/backend/discord/commands/subscription/index.js";
+import { executeHelp } from "@scout-for-lol/backend/discord/commands/help";
 import {
   executeCompetitionCreate,
   executeCompetitionEdit,
@@ -13,7 +13,7 @@ import {
   executeCompetitionLeave,
   executeCompetitionView,
   executeCompetitionList,
-} from "./competition/index.js";
+} from "@scout-for-lol/backend/discord/commands/competition/index.js";
 import {
   executePlayerEdit,
   executeAccountDelete,
@@ -24,7 +24,7 @@ import {
   executePlayerLinkDiscord,
   executePlayerUnlinkDiscord,
   executePlayerView,
-} from "./admin/index.js";
+} from "@scout-for-lol/backend/discord/commands/admin/index.js";
 import {
   executeDebugDatabase,
   executeDebugPolling,
@@ -32,9 +32,9 @@ import {
   executeDebugForceSnapshot,
   executeDebugForceLeaderboardUpdate,
   executeDebugManageParticipant,
-} from "./debug.js";
-import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
-import { searchChampions } from "../../utils/champion.js";
+} from "@scout-for-lol/backend/discord/commands/debug.js";
+import { discordCommandsTotal, discordCommandDuration } from "@scout-for-lol/backend/metrics/index.js";
+import { searchChampions } from "@scout-for-lol/backend/utils/champion.js";
 
 export function handleCommands(client: Client) {
   console.log("⚡ Setting up Discord command handlers");

@@ -11,15 +11,15 @@ import {
   type CuratedMatchData,
   type ReviewImageMetadata,
 } from "@scout-for-lol/data";
-import type { ReviewConfig, GenerationResult, GenerationMetadata, Personality } from "../config/schema";
+import type { ReviewConfig, GenerationResult, GenerationMetadata, Personality } from "@scout-for-lol/review-dev-tool/config/schema";
 import {
   getBasePrompt,
   selectRandomPersonality,
   getPersonalityById,
   getLaneContext,
   getGenericPlayerMetadata,
-} from "./prompts";
-import { selectRandomStyleAndTheme } from "./art-styles";
+} from "@scout-for-lol/review-dev-tool/lib/prompts";
+import { selectRandomStyleAndTheme } from "@scout-for-lol/review-dev-tool/lib/art-styles";
 
 export type GenerationStep = "text" | "image" | "complete";
 

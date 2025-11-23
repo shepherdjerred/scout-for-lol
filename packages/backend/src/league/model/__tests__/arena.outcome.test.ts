@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { getArenaPlacement } from "../match.js";
+import { getArenaPlacement } from "@scout-for-lol/backend/league/model/match.js";
 
 function makeParticipant(extra: Record<string, unknown> = {}): MatchV5DTOs.ParticipantDto {
   return {

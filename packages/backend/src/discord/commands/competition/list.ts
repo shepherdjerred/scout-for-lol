@@ -15,10 +15,10 @@ import {
   getCompetitionStatus,
 } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
-import { prisma } from "../../../database/index.js";
-import { getCompetitionsByServer } from "../../../database/competition/queries.js";
-import { getErrorMessage } from "../../../utils/errors.js";
-import { truncateDiscordMessage } from "../../utils/message.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { getCompetitionsByServer } from "@scout-for-lol/backend/database/competition/queries.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 
 const ITEMS_PER_PAGE = 5;
 

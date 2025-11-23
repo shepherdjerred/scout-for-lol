@@ -2,7 +2,7 @@
  * Editor for creating and editing custom art styles and themes
  */
 import { useState, useEffect } from "react";
-import type { CustomArtStyle, CustomArtTheme } from "../lib/art-style-storage";
+import type { CustomArtStyle, CustomArtTheme } from "@scout-for-lol/review-dev-tool/lib/art-style-storage";
 
 type EditorMode = "style" | "theme";
 

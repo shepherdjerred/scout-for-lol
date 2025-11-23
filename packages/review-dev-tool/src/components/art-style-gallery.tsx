@@ -2,7 +2,7 @@
  * Art style browser with visual examples
  */
 import { useState } from "react";
-import { getAllArtStyles, getAllArtThemes, getAllStyleThemePairs } from "../lib/art-styles";
+import { getAllArtStyles, getAllArtThemes, getAllStyleThemePairs } from "@scout-for-lol/review-dev-tool/lib/art-styles";
 
 type ViewMode = "styles" | "themes" | "pairs";
 

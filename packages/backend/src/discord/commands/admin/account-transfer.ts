@@ -1,12 +1,12 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { DiscordAccountIdSchema, DiscordGuildIdSchema, RegionSchema, RiotIdSchema } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { fromError } from "zod-validation-error";
-import { riotApi } from "../../../league/api/api.js";
-import { mapRegionToEnum } from "../../../league/model/region.js";
+import { riotApi } from "@scout-for-lol/backend/league/api/api.js";
+import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.js";
 import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
-import { getErrorMessage } from "../../../utils/errors.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 
 const ArgsSchema = z.object({
   riotId: RiotIdSchema,

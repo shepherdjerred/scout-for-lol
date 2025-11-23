@@ -2,7 +2,7 @@
  * Tab bar for switching between configurations
  */
 import { useState } from "react";
-import type { TabData } from "./app";
+import type { TabData } from "@scout-for-lol/review-dev-tool/components/app";
 
 type TabBarProps = {
   tabs: TabData[];
@@ -54,8 +54,8 @@ export function TabBar({ tabs, activeTabId, onTabSelect, onTabClose, onTabAdd, o
                 }}
                 onBlur={finishEditing}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") finishEditing();
-                  if (e.key === "Escape") setEditingTabId(null);
+                  if (e.key === "Enter") {finishEditing();}
+                  if (e.key === "Escape") {setEditingTabId(null);}
                 }}
                 className="px-2 py-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded text-sm"
                 autoFocus

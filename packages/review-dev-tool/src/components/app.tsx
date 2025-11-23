@@ -2,18 +2,18 @@
  * Main application component
  */
 import { useState, useEffect } from "react";
-import type { GenerationResult, GlobalConfig, TabConfig } from "../config/schema";
-import { createDefaultGlobalConfig, createDefaultTabConfig, mergeConfigs, splitConfig } from "../config/schema";
-import { loadCurrentConfig, saveCurrentConfig, loadGlobalConfig, saveGlobalConfig } from "../lib/config-manager";
-import { CostTracker } from "../lib/costs";
-import { TabBar } from "./tab-bar";
-import { ConfigModal } from "./config-modal";
-import { TabSettingsPanel } from "./tab-settings-panel";
-import { ResultsPanel } from "./results-panel";
-import { MatchBrowser } from "./match-browser";
-import { MatchDetailsPanel } from "./match-details-panel";
-import { RatingsAnalytics } from "./ratings-analytics";
-import { Footer } from "./footer";
+import type { GenerationResult, GlobalConfig, TabConfig } from "@scout-for-lol/review-dev-tool/config/schema";
+import { createDefaultGlobalConfig, createDefaultTabConfig, mergeConfigs, splitConfig } from "@scout-for-lol/review-dev-tool/config/schema";
+import { loadCurrentConfig, saveCurrentConfig, loadGlobalConfig, saveGlobalConfig } from "@scout-for-lol/review-dev-tool/lib/config-manager";
+import { CostTracker } from "@scout-for-lol/review-dev-tool/lib/costs";
+import { TabBar } from "@scout-for-lol/review-dev-tool/components/tab-bar";
+import { ConfigModal } from "@scout-for-lol/review-dev-tool/components/config-modal";
+import { TabSettingsPanel } from "@scout-for-lol/review-dev-tool/components/tab-settings-panel";
+import { ResultsPanel } from "@scout-for-lol/review-dev-tool/components/results-panel";
+import { MatchBrowser } from "@scout-for-lol/review-dev-tool/components/match-browser";
+import { MatchDetailsPanel } from "@scout-for-lol/review-dev-tool/components/match-details-panel";
+import { RatingsAnalytics } from "@scout-for-lol/review-dev-tool/components/ratings-analytics";
+import { Footer } from "@scout-for-lol/review-dev-tool/components/footer";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 
 export type TabData = {

@@ -8,16 +8,16 @@ import {
   RegionSchema,
   RiotIdSchema,
 } from "@scout-for-lol/data";
-import { riotApi } from "../../../league/api/api";
-import { mapRegionToEnum } from "../../../league/model/region";
+import { riotApi } from "@scout-for-lol/backend/league/api/api";
+import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region";
 import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
-import { prisma } from "../../../database/index";
+import { prisma } from "@scout-for-lol/backend/database/index";
 import { fromError } from "zod-validation-error";
-import { getErrorMessage } from "../../../utils/errors.js";
-import { getLimit } from "../../../configuration/flags.js";
-import { DISCORD_SERVER_INVITE, LIMIT_WARNING_THRESHOLD } from "../../../configuration/subscription-limits.js";
-import { backfillLastMatchTime } from "../../../league/api/backfill-match-history.js";
-import { sendWelcomeMatch } from "./welcome-match.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
+import { DISCORD_SERVER_INVITE, LIMIT_WARNING_THRESHOLD } from "@scout-for-lol/backend/configuration/subscription-limits.js";
+import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.js";
+import { sendWelcomeMatch } from "@scout-for-lol/backend/discord/commands/subscription/welcome-match.js";
 
 export const ArgsSchema = z.object({
   channel: DiscordChannelIdSchema,

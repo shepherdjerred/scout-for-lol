@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { getChampionId, getChampionDisplayName, searchChampions, getAllChampions } from "./champion.js";
+import { getChampionId, getChampionDisplayName, searchChampions, getAllChampions } from "@scout-for-lol/backend/utils/champion.js";
 
 describe("Champion utilities", () => {
   describe("getChampionId", () => {

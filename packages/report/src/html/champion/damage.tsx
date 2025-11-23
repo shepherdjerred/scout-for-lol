@@ -1,4 +1,4 @@
-import { palette } from "../../assets/colors.ts";
+import { palette } from "@scout-for-lol/report/assets/colors.ts";
 
 export function Damage({ value, percent, highlight }: { value: number; percent: number; highlight: boolean }) {
   return (

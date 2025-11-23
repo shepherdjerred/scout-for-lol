@@ -1,7 +1,7 @@
 import { describe, expect, test, mock } from "bun:test";
 import type { ArenaMatch, CompletedMatch, MatchId } from "@scout-for-lol/data";
 
-import { testAccountId, testPuuid } from "../../../testing/test-ids.js";
+import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
 
 // Test match ID for all tests
 const TEST_MATCH_ID = "NA1_1234567890" as MatchId;
@@ -10,22 +10,22 @@ const TEST_MATCH_ID = "NA1_1234567890" as MatchId;
 // Use a factory function to read env vars at runtime so other tests can override
 void mock.module("../../../configuration.js", () => ({
   default: {
-    version: process.env["VERSION"] ?? "test",
-    gitSha: process.env["GIT_SHA"] ?? "test",
-    sentryDsn: process.env["SENTRY_DSN"],
-    environment: (process.env["ENVIRONMENT"] as "dev" | "beta" | "prod") ?? "dev",
-    discordToken: process.env["DISCORD_TOKEN"] ?? "test",
-    applicationId: process.env["APPLICATION_ID"] ?? "test",
-    riotApiToken: process.env["RIOT_API_TOKEN"] ?? "test",
-    databaseUrl: process.env["DATABASE_URL"] ?? "test.db",
-    port: Number.parseInt(process.env["PORT"] ?? "3000"),
-    s3BucketName: process.env["S3_BUCKET_NAME"],
+    version: Bun.env["VERSION"] ?? "test",
+    gitSha: Bun.env["GIT_SHA"] ?? "test",
+    sentryDsn: Bun.env["SENTRY_DSN"],
+    environment: (Bun.env["ENVIRONMENT"] as "dev" | "beta" | "prod") ?? "dev",
+    discordToken: Bun.env["DISCORD_TOKEN"] ?? "test",
+    applicationId: Bun.env["APPLICATION_ID"] ?? "test",
+    riotApiToken: Bun.env["RIOT_API_TOKEN"] ?? "test",
+    databaseUrl: Bun.env["DATABASE_URL"] ?? "test.db",
+    port: Number.parseInt(Bun.env["PORT"] ?? "3000"),
+    s3BucketName: Bun.env["S3_BUCKET_NAME"],
     openaiApiKey: undefined, // Always undefined for this test to prevent API calls
     geminiApiKey: undefined, // Always undefined for this test to prevent API calls
   },
 }));
 
-import { generateMatchReview } from "../generator.ts";
+import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.ts";
 describe("generateMatchReview", () => {
   describe("when API keys are not configured", () => {
     test("returns undefined for regular match", async () => {

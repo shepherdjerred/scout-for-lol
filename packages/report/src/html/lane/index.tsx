@@ -10,7 +10,8 @@ if (typeof Bun !== "undefined") {
       await Promise.all(
         LaneSchema.options.map(async (lane): Promise<[Lane, string]> => {
           const image = await Bun.file(new URL(`./assets/${lane}.svg`, import.meta.url)).arrayBuffer();
-          return [lane, Buffer.from(image).toString("base64")];
+          const bytes = new Uint8Array(image);
+          return [lane, btoa(String.fromCharCode(...bytes))];
         }),
       ),
     ),

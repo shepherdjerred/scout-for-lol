@@ -2,7 +2,7 @@
  * Export and import all config data for sharing
  */
 import { z } from "zod";
-import { TabConfigSchema, PersonalitySchema } from "../config/schema";
+import { TabConfigSchema, PersonalitySchema } from "@scout-for-lol/review-dev-tool/config/schema";
 import {
   CustomArtStyleSchema,
   CustomArtThemeSchema,
@@ -10,9 +10,9 @@ import {
   saveCustomArtStyles,
   loadCustomArtThemes,
   saveCustomArtThemes,
-} from "./art-style-storage";
-import { loadCustomPersonalities, saveCustomPersonalities } from "./personality-storage";
-import { getPersonalityById } from "./prompts";
+} from "@scout-for-lol/review-dev-tool/lib/art-style-storage";
+import { loadCustomPersonalities, saveCustomPersonalities } from "@scout-for-lol/review-dev-tool/lib/personality-storage";
+import { getPersonalityById } from "@scout-for-lol/review-dev-tool/lib/prompts";
 
 /**
  * Complete exportable config bundle schema (tab-level)

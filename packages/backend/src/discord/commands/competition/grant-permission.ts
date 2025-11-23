@@ -1,10 +1,10 @@
 import { type ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
-import { prisma } from "../../../database/index.js";
-import { grantPermission } from "../../../database/competition/permissions.js";
-import { getErrorMessage } from "../../../utils/errors.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { grantPermission } from "@scout-for-lol/backend/database/competition/permissions.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { truncateDiscordMessage } from "../../utils/message.js";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 
 /**
  * Execute /competition grant-permission command

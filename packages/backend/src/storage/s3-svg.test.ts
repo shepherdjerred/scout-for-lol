@@ -7,7 +7,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
-import { saveSvgToS3 } from "./s3.js";
+import { saveSvgToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import { MatchIdSchema } from "@scout-for-lol/data";
 
 // Create S3 mock
@@ -15,7 +15,7 @@ const s3Mock = mockClient(S3Client);
 
 beforeEach(() => {
   // Ensure S3_BUCKET_NAME is set for tests
-  process.env["S3_BUCKET_NAME"] = "test-bucket";
+  Bun.env["S3_BUCKET_NAME"] = "test-bucket";
   // Reset mock before each test
   s3Mock.reset();
 });

@@ -1,8 +1,8 @@
 import type { Channel, PermissionsBitField, Client, User } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
-import { getErrorMessage } from "../../utils/errors";
-import { discordPermissionErrorsTotal, discordOwnerNotificationsTotal } from "../../metrics/index";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors";
+import { discordPermissionErrorsTotal, discordOwnerNotificationsTotal } from "@scout-for-lol/backend/metrics/index";
 
 /**
  * Schema for Discord API errors

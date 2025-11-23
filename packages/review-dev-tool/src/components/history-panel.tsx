@@ -2,9 +2,9 @@
  * Panel showing history of generated reviews
  */
 import { useState, useEffect } from "react";
-import type { HistoryEntry } from "../lib/history-manager";
-import { loadHistory, deleteHistoryEntry, clearHistory } from "../lib/history-manager";
-import { StarRating } from "./star-rating";
+import type { HistoryEntry } from "@scout-for-lol/review-dev-tool/lib/history-manager";
+import { loadHistory, deleteHistoryEntry, clearHistory } from "@scout-for-lol/review-dev-tool/lib/history-manager";
+import { StarRating } from "@scout-for-lol/review-dev-tool/components/star-rating";
 
 type HistoryPanelProps = {
   onSelectEntry: (entry: HistoryEntry) => void;
@@ -66,10 +66,10 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return "Just now";
-    if (minutes < 60) return `${minutes.toString()}m ago`;
-    if (hours < 24) return `${hours.toString()}h ago`;
-    if (days < 7) return `${days.toString()}d ago`;
+    if (minutes < 1) {return "Just now";}
+    if (minutes < 60) {return `${minutes.toString()}m ago`;}
+    if (hours < 24) {return `${hours.toString()}h ago`;}
+    if (days < 7) {return `${days.toString()}d ago`;}
 
     return date.toLocaleDateString();
   };

@@ -3,7 +3,7 @@
  */
 import { useState, useEffect, useRef } from "react";
 import { z } from "zod";
-import { clearAllCache, getCacheStats } from "../lib/cache";
+import { clearAllCache, getCacheStats } from "@scout-for-lol/review-dev-tool/lib/cache";
 
 export function CacheButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,7 +53,7 @@ export function CacheButton() {
   };
 
   const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return "0 B";
+    if (bytes === 0) {return "0 B";}
     const k = 1024;
     const sizes = ["B", "KB", "MB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));

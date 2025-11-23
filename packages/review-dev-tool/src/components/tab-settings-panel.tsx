@@ -3,13 +3,13 @@
  */
 import { useState, useEffect } from "react";
 import { z } from "zod";
-import type { TabConfig, Personality } from "../config/schema";
-import { createDefaultTabConfig } from "../config/schema";
-import { getBasePrompt, BUILTIN_PERSONALITIES } from "../lib/prompts";
-import { PersonalityEditor } from "./personality-editor";
-import { ArtStyleEditor } from "./art-style-editor";
-import { ConfigImportModal } from "./config-import-modal";
-import { downloadConfigBundle } from "../lib/config-export";
+import type { TabConfig, Personality } from "@scout-for-lol/review-dev-tool/config/schema";
+import { createDefaultTabConfig } from "@scout-for-lol/review-dev-tool/config/schema";
+import { getBasePrompt, BUILTIN_PERSONALITIES } from "@scout-for-lol/review-dev-tool/lib/prompts";
+import { PersonalityEditor } from "@scout-for-lol/review-dev-tool/components/personality-editor";
+import { ArtStyleEditor } from "@scout-for-lol/review-dev-tool/components/art-style-editor";
+import { ConfigImportModal } from "@scout-for-lol/review-dev-tool/components/config-import-modal";
+import { downloadConfigBundle } from "@scout-for-lol/review-dev-tool/lib/config-export";
 import { ART_STYLES, ART_THEMES } from "@scout-for-lol/data";
 
 const ErrorSchema = z.object({ message: z.string() });
@@ -20,8 +20,8 @@ import {
   deleteCustomPersonality,
   isCustomPersonality,
   generatePersonalityId,
-} from "../lib/personality-storage";
-import type { CustomArtStyle, CustomArtTheme } from "../lib/art-style-storage";
+} from "@scout-for-lol/review-dev-tool/lib/personality-storage";
+import type { CustomArtStyle, CustomArtTheme } from "@scout-for-lol/review-dev-tool/lib/art-style-storage";
 import {
   loadCustomArtStyles,
   addCustomArtStyle,
@@ -35,8 +35,8 @@ import {
   deleteCustomArtTheme,
   isCustomArtTheme,
   generateArtThemeId,
-} from "../lib/art-style-storage";
-import { modelSupportsParameter } from "../lib/models";
+} from "@scout-for-lol/review-dev-tool/lib/art-style-storage";
+import { modelSupportsParameter } from "@scout-for-lol/review-dev-tool/lib/models";
 
 type TabSettingsPanelProps = {
   config: TabConfig;

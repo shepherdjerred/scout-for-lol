@@ -6,7 +6,7 @@ import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import type { ArenaMatch, CompletedMatch, Champion } from "@scout-for-lol/data";
 import { parseQueueType, parseLane, getLaneOpponent, parseTeam, invertTeam } from "@scout-for-lol/data";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
-import { getCachedDataAsync, setCachedData } from "./cache";
+import { getCachedDataAsync, setCachedData } from "@scout-for-lol/review-dev-tool/lib/cache";
 import { match } from "ts-pattern";
 import { z } from "zod";
 

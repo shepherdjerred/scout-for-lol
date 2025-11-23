@@ -1,15 +1,15 @@
 import { describe, it, expect } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { ArenaMatchSchema, LeaguePuuidSchema, type Player } from "@scout-for-lol/data";
-import { toArenaMatch } from "../match.js";
+import { toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
-const currentDir = dirname(fileURLToPath(import.meta.url));
+const _currentDir = dirname(fileURLToPath(import.meta.url));
 
 const RAW_FILE_PATHS = [
-  join(currentDir, "testdata/matches_2025_09_19_NA1_5370969615.json"),
-  join(currentDir, "testdata/matches_2025_09_19_NA1_5370986469.json"),
+  `currentDir/testdata/matches_2025_09_19_NA1_5370969615.json`,
+  `currentDir/testdata/matches_2025_09_19_NA1_5370986469.json`,
 ];
 
 async function loadMatch(path: string): Promise<MatchV5DTOs.MatchDto> {
@@ -28,7 +28,7 @@ describe("toArenaMatch with real arena JSON", () => {
       expect(matchDto.info.participants.length).toBe(16);
       // choose first participant as the tracked player
       const tracked = matchDto.info.participants[0];
-      if (!tracked) throw new Error("participants should not be empty in real data test");
+      if (!tracked) {throw new Error("participants should not be empty in real data test");}
 
       const player = {
         config: {

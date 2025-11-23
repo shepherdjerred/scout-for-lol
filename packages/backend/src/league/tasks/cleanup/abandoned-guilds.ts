@@ -1,13 +1,13 @@
 import type { Client } from "discord.js";
-import { prisma } from "../../../database/index.js";
-import { getAbandonedGuilds, markGuildAsNotified } from "../../../database/guild-permission-errors.js";
-import { getErrorMessage } from "../../../utils/errors.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { getAbandonedGuilds, markGuildAsNotified } from "@scout-for-lol/backend/database/guild-permission-errors.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import {
   abandonedGuildsDetectedTotal,
   guildsLeftTotal,
   abandonmentNotificationsTotal,
   guildDataCleanupTotal,
-} from "../../../metrics/index.js";
+} from "@scout-for-lol/backend/metrics/index.js";
 import type { DiscordGuildId } from "@scout-for-lol/data";
 
 /**

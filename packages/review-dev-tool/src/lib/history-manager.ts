@@ -2,8 +2,8 @@
  * Manages generation history in IndexedDB (supports large images)
  */
 import { z } from "zod";
-import type { GenerationResult } from "../config/schema";
-import * as db from "./indexeddb";
+import type { GenerationResult } from "@scout-for-lol/review-dev-tool/config/schema";
+import * as db from "@scout-for-lol/review-dev-tool/lib/indexeddb";
 
 // Zod schemas for validation - using passthrough to preserve all fields
 // Note: We use `.optional()` which produces `T | undefined`, matching the exact optional properties
@@ -49,7 +49,7 @@ const MAX_HISTORY_ENTRIES = 50;
 async function migrateFromLocalStorage(): Promise<void> {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return; // Nothing to migrate
+    if (!stored) {return;} // Nothing to migrate
 
     const parsed = JSON.parse(stored) as unknown;
 
@@ -65,7 +65,7 @@ async function migrateFromLocalStorage(): Promise<void> {
     });
 
     const arrayResult = z.array(MigrationEntrySchema).safeParse(parsed);
-    if (!arrayResult.success || arrayResult.data.length === 0) return;
+    if (!arrayResult.success || arrayResult.data.length === 0) {return;}
 
     console.log("[History] Migrating", arrayResult.data.length.toString(), "entries from localStorage to IndexedDB");
 
@@ -236,7 +236,7 @@ export async function clearHistory(): Promise<void> {
 export async function getHistoryEntry(id: string): Promise<HistoryEntry | undefined> {
   try {
     const entry = await db.getEntry(id);
-    if (!entry) return undefined;
+    if (!entry) {return undefined;}
 
     const resultValidation = GenerationResultSchema.safeParse(entry.result);
     const configValidation = ConfigSnapshotSchema.safeParse(entry.configSnapshot);

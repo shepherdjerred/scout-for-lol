@@ -1,10 +1,10 @@
 import { type ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits } from "discord.js";
 import { CompetitionIdSchema, DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
-import { cancelCompetition, getCompetitionById } from "../../../database/competition/queries.js";
-import { getErrorMessage } from "../../../utils/errors.js";
-import { asTextChannel } from "../../utils/channel.js";
-import { truncateDiscordMessage } from "../../utils/message.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { cancelCompetition, getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { asTextChannel } from "@scout-for-lol/backend/discord/utils/channel.js";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 
 /**
  * Execute /competition cancel command

@@ -1,9 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { PrismaClient } from "../../../generated/prisma/client/index.js";
-import { execSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import {
   acceptInvitation,
   addParticipant,
@@ -11,26 +7,32 @@ import {
   getParticipantStatus,
   getParticipants,
   removeParticipant,
-} from "./participants.js";
-import { createCompetition, type CreateCompetitionInput } from "./queries.js";
-import { ErrorSchema } from "../../utils/errors.js";
+} from "@scout-for-lol/backend/database/competition/participants.js";
+import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
+import { ErrorSchema } from "@scout-for-lol/backend/utils/errors.js";
 import type { CompetitionId, DiscordAccountId, PlayerId } from "@scout-for-lol/data";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 
-import { testGuildId, testAccountId, testChannelId } from "../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
+
 // Create a test database
-const testDir = mkdtempSync(join(tmpdir(), "participants-test-"));
-const testDbPath = join(testDir, "test.db");
-const schemaPath = join(__dirname, "../../..", "prisma/schema.prisma");
-execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
-  cwd: join(__dirname, "../../.."),
+const tmpDir = import.meta.env.TMPDIR ?? "/tmp";
+const testDir = `${tmpDir}/participants-test-${Date.now().toString()}-${Math.random().toString(36).slice(2, 9)}`;
+await Bun.write(`${testDir}/.keep`, "");
+const testDbPath = `${testDir}/test.db`;
+const schemaPath = `${import.meta.dir}/../../../prisma/schema.prisma`;
+
+Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
+  cwd: `${import.meta.dir}/../../..`,
   env: {
-    ...process.env,
+    ...Bun.env,
     DATABASE_URL: `file:${testDbPath}`,
     PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
     PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
   },
-  stdio: "ignore",
+  stdout: "ignore",
+  stderr: "ignore",
+  stdin: "ignore",
 });
 
 const prisma = new PrismaClient({

@@ -4,7 +4,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { z } from "zod";
 import Fuse from "fuse.js";
-import type { ApiSettings } from "../config/schema";
+import type { ApiSettings } from "@scout-for-lol/review-dev-tool/config/schema";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 import {
   listMatchesFromS3,
@@ -13,8 +13,8 @@ import {
   extractMatchMetadataFromDto,
   type S3Config,
   type MatchMetadata,
-} from "../lib/s3";
-import { getCachedDataAsync, setCachedData } from "../lib/cache";
+} from "@scout-for-lol/review-dev-tool/lib/s3";
+import { getCachedDataAsync, setCachedData } from "@scout-for-lol/review-dev-tool/lib/cache";
 
 const ErrorSchema = z.object({ message: z.string() });
 const MatchMetadataArraySchema = z.array(
@@ -184,7 +184,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
 
   // Auto-refresh today's matches every 10 minutes (if matches are already loaded)
   useEffect(() => {
-    if (!s3Config || matches.length === 0) return;
+    if (!s3Config || matches.length === 0) {return;}
 
     const interval = setInterval(
       () => {
@@ -200,7 +200,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
   }, [s3Config, matches.length, handleBrowse]);
 
   const handleSelectMatch = async (metadata: MatchMetadata) => {
-    if (!s3Config) return;
+    if (!s3Config) {return;}
 
     setLoading(true);
     setSelectedMetadata(metadata);

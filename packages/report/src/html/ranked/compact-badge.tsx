@@ -1,6 +1,6 @@
-import { divisionToString, wasDemoted, wasPromoted , TierSchema } from "@scout-for-lol/data";
-import type { Rank , Tier } from "@scout-for-lol/data";
-import { palette } from "../../assets/colors.ts";
+import { divisionToString, wasDemoted, wasPromoted, TierSchema } from "@scout-for-lol/data";
+import type { Rank, Tier } from "@scout-for-lol/data";
+import { palette } from "@scout-for-lol/report/assets/colors.ts";
 import { match } from "ts-pattern";
 import { z } from "zod";
 
@@ -15,7 +15,8 @@ if (typeof Bun !== "undefined") {
           const image = await Bun.file(
             new URL(`./assets/Rank=${tier.charAt(0).toUpperCase() + tier.slice(1)}.png`, import.meta.url),
           ).arrayBuffer();
-          return [tier, Buffer.from(image).toString("base64")];
+          const bytes = new Uint8Array(image);
+          return [tier, btoa(String.fromCharCode(...bytes))];
         }),
       ),
     ),

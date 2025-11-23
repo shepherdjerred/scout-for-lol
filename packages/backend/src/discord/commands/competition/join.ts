@@ -5,12 +5,12 @@ import {
   DiscordGuildIdSchema,
   getCompetitionStatus,
 } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
-import { getCompetitionById } from "../../../database/competition/queries.js";
-import { addParticipant, acceptInvitation, getParticipantStatus } from "../../../database/competition/participants.js";
-import { getErrorMessage } from "../../../utils/errors.js";
-import { formatCriteriaType } from "./helpers.js";
-import { truncateDiscordMessage } from "../../utils/message.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
+import { addParticipant, acceptInvitation, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { formatCriteriaType } from "@scout-for-lol/backend/discord/commands/competition/helpers.js";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 
 /**
  * Execute /competition join command

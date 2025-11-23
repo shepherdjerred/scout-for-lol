@@ -2,7 +2,7 @@
   "name": "@scout-for-lol/report-ui",
   "version": "0.1.0",
   "type": "module",
-  "main": "src/example.ts",
+  "main": "src/index.ts",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

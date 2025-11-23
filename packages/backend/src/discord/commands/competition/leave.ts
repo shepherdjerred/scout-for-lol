@@ -1,10 +1,10 @@
 import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
-import { getCompetitionById } from "../../../database/competition/queries.js";
-import { removeParticipant, getParticipantStatus } from "../../../database/competition/participants.js";
-import { getErrorMessage } from "../../../utils/errors.js";
-import { truncateDiscordMessage } from "../../utils/message.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
+import { removeParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 
 /**
  * Execute /competition leave command

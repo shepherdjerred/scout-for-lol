@@ -2,19 +2,22 @@
   "extends": "./tsconfig.base.json",
   "references": [
     {
-      "path": "./data/tsconfig.json"
+      "path": "./packages/data/tsconfig.json"
     },
     {
-      "path": "./report/tsconfig.json"
+      "path": "./packages/report/tsconfig.json"
     },
     {
-      "path": "./backend/tsconfig.json"
+      "path": "./packages/backend/tsconfig.json"
     },
     {
-      "path": "./dagger/tsconfig.json"
+      "path": "./packages/frontend/tsconfig.json"
     },
     {
-      "path": "./frontend/tsconfig.json"
+      "path": "./packages/report-ui/tsconfig.json"
+    },
+    {
+      "path": "./packages/review-dev-tool/tsconfig.json"
     }
   ]
 }

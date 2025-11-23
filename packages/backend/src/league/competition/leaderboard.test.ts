@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import { PlayerIdSchema, type PlayerId, type Rank } from "@scout-for-lol/data";
-import type { LeaderboardEntry } from "./processors/types.js";
+import type { LeaderboardEntry } from "@scout-for-lol/backend/league/competition/processors/types.js";
 
 // Import the internal functions for testing by re-exporting them
 // We'll need to test the ranking logic directly
@@ -45,7 +45,7 @@ function assignRanks(entries: LeaderboardEntry[]): (LeaderboardEntry & { rank: n
 
   for (let i = 0; i < entries.length; i++) {
     const entry = entries[i];
-    if (!entry) continue; // Skip if undefined
+    if (!entry) {continue;} // Skip if undefined
 
     // Check for ties with previous entry
     if (i > 0) {

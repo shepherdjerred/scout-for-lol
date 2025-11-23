@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { z } from "zod";
-import { getExampleMatch } from "./example";
-import type { AnyMatch } from "./example";
+import { getExampleMatch } from "@scout-for-lol/report-ui/example";
+import type { AnyMatch } from "@scout-for-lol/report-ui/example";
 // Import from browser-safe entry point to avoid satori/resvg dependencies
 import { Report } from "@scout-for-lol/report/src/browser";
 import { ArenaReport } from "@scout-for-lol/report/src/html/arena/report";
-import { AIReviewRater } from "./ai-review-rater";
-import { AIReviewAnalytics } from "./ai-review-analytics";
+import { AIReviewRater } from "@scout-for-lol/report-ui/ai-review-rater";
+import { AIReviewAnalytics } from "@scout-for-lol/report-ui/ai-review-analytics";
 
 const MatchTypeSchema = z.enum(["ranked", "unranked", "aram", "arena"]);
 type MatchType = z.infer<typeof MatchTypeSchema>;

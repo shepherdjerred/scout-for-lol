@@ -1,6 +1,6 @@
 import React from "react";
-import { StarRating } from "./star-rating";
-import type { ReviewImageData } from "../ai-review-storage";
+import { StarRating } from "@scout-for-lol/report-ui/components/star-rating";
+import type { ReviewImageData } from "@scout-for-lol/report-ui/ai-review-storage";
 
 export function EmptyDropZone({
   isDragging,

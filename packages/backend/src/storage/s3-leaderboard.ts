@@ -1,7 +1,7 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { CachedLeaderboardSchema, type CachedLeaderboard } from "@scout-for-lol/data";
-import configuration from "../configuration.js";
-import { getErrorMessage } from "../utils/errors.js";
+import configuration from "@scout-for-lol/backend/configuration.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 
 // ============================================================================
 // S3 Key Generation

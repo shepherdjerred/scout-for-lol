@@ -1,6 +1,6 @@
-import { latestVersion } from "../../dataDragon/version";
-import { renderItems } from "../champion/item";
-import { Damage } from "./damage";
+import { latestVersion } from "@scout-for-lol/report/dataDragon/version";
+import { renderItems } from "@scout-for-lol/report/html/champion/item";
+import { Damage } from "@scout-for-lol/report/html/arena/damage";
 
 export function ChampionInfo({
   playerName,

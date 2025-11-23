@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { latestVersion } from "./version.js";
+import { latestVersion } from "@scout-for-lol/report/dataDragon/version.js";
 
 // schema created by https://transform.tools/json-to-zod
 export type Summoner = z.infer<typeof SummonerSchema>;

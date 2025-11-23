@@ -1,26 +1,24 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { PrismaClient } from "../../../../generated/prisma/client/index.js";
-import { execSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { createCompetition, type CreateCompetitionInput } from "../../../database/competition/queries.js";
+import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
 import type { CompetitionCriteria, CompetitionId, LeaguePuuid, PlayerId, Region } from "@scout-for-lol/data";
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
 
 // Create a test database
-const testDir = mkdtempSync(join(tmpdir(), "lifecycle-test-"));
-const testDbPath = join(testDir, "test.db");
-const schemaPath = join(__dirname, "../../../..", "prisma/schema.prisma");
-execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
-  cwd: join(__dirname, "../../../.."),
+const testDir = `${Bun.env.TMPDIR ?? "/tmp"}/lifecycle-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDbPath = `${testDir}/test.db`;
+const schemaPath = `import.meta.dir/../../../../prisma/schema.prisma`;
+Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
+  cwd: `${import.meta.dir}/../../../..`,
   env: {
-    ...process.env,
+    ...Bun.env,
     DATABASE_URL: `file:${testDbPath}`,
     PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
     PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
   },
-  stdio: "ignore",
+  stdout: "ignore",
+  stderr: "ignore",
+  stdin: "ignore",
 });
 
 const prisma = new PrismaClient({

@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { App } from "./app";
-import "./fonts.css";
+import { App } from "@scout-for-lol/report-ui/app";
+import "@scout-for-lol/report-ui/fonts.css";
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean; error: Error | null }> {
   constructor(props: { children: React.ReactNode }) {

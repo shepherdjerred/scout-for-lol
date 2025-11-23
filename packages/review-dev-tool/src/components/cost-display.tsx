@@ -1,8 +1,8 @@
 /**
  * Cost tracking display component
  */
-import type { CostTracker } from "../lib/costs";
-import { formatCost } from "../lib/costs";
+import type { CostTracker } from "@scout-for-lol/review-dev-tool/lib/costs";
+import { formatCost } from "@scout-for-lol/review-dev-tool/lib/costs";
 
 type CostDisplayProps = {
   costTracker: CostTracker;

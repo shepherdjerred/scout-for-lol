@@ -1,12 +1,12 @@
 import type { CompetitionWithCriteria } from "@scout-for-lol/data";
 import { parseCompetition } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
-import { createSnapshotsForAllParticipants } from "../../competition/snapshots.js";
-import { calculateLeaderboard, type RankedLeaderboardEntry } from "../../competition/leaderboard.js";
-import { send as sendChannelMessage, ChannelSendError } from "../../discord/channel.js";
-import type { PrismaClient } from "../../../../generated/prisma/client/index.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { createSnapshotsForAllParticipants } from "@scout-for-lol/backend/league/competition/snapshots.js";
+import { calculateLeaderboard, type RankedLeaderboardEntry } from "@scout-for-lol/backend/league/competition/leaderboard.js";
+import { send as sendChannelMessage, ChannelSendError } from "@scout-for-lol/backend/league/discord/channel.js";
+import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { z } from "zod";
-import { logNotification } from "../../../utils/notification-logger.js";
+import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.js";
 
 // ============================================================================
 // Discord Notifications

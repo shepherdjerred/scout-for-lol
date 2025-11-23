@@ -3,9 +3,9 @@
  */
 import { useState } from "react";
 import { z } from "zod";
-import type { ConfigBundle } from "../lib/config-export";
-import type { TabConfig } from "../config/schema";
-import { importAllConfigFromJSON, applyConfigBundle, getConfigBundleSummary } from "../lib/config-export";
+import type { ConfigBundle } from "@scout-for-lol/review-dev-tool/lib/config-export";
+import type { TabConfig } from "@scout-for-lol/review-dev-tool/config/schema";
+import { importAllConfigFromJSON, applyConfigBundle, getConfigBundleSummary } from "@scout-for-lol/review-dev-tool/lib/config-export";
 
 const ErrorSchema = z.object({ message: z.string() });
 

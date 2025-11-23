@@ -16,7 +16,7 @@ import {
 } from "@scout-for-lol/data";
 import { strict as assert } from "assert";
 import { match } from "ts-pattern";
-import { participantToArenaChampion, participantToChampion } from "./champion.js";
+import { participantToArenaChampion, participantToChampion } from "@scout-for-lol/backend/league/model/champion.js";
 
 function getTeams(participants: MatchV5DTOs.ParticipantDto[]) {
   return {
@@ -145,9 +145,9 @@ export function groupArenaTeams(participants: MatchV5DTOs.ParticipantDto[]) {
 export function getArenaTeammate(participant: MatchV5DTOs.ParticipantDto, participants: MatchV5DTOs.ParticipantDto[]) {
   const sub = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
   for (const p of participants) {
-    if (p === participant) continue;
+    if (p === participant) {continue;}
     const otherSub = ArenaParticipantMinimalSchema.parse(p).playerSubteamId;
-    if (otherSub === sub) return p;
+    if (otherSub === sub) {return p;}
   }
   return undefined;
 }

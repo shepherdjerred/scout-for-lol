@@ -1,5 +1,5 @@
 import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { getRecentMatchIds, filterNewMatches } from "../../api/match-history.js";
+import { getRecentMatchIds, filterNewMatches } from "@scout-for-lol/backend/league/api/match-history.js";
 import {
   getAccountsWithState,
   updateLastProcessedMatch,
@@ -7,12 +7,12 @@ import {
   getLastProcessedMatch,
   updateLastMatchTime,
   updateLastCheckedAt,
-} from "../../../database/index.js";
+} from "@scout-for-lol/backend/database/index.js";
 import type { PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/data";
 import { MatchIdSchema } from "@scout-for-lol/data";
-import { send } from "../../discord/channel.js";
-import { shouldCheckPlayer, calculatePollingInterval } from "../../../utils/polling-intervals.js";
-import { fetchMatchData, generateMatchReport } from "./match-report-generator.js";
+import { send } from "@scout-for-lol/backend/league/discord/channel.js";
+import { shouldCheckPlayer, calculatePollingInterval } from "@scout-for-lol/backend/utils/polling-intervals.js";
+import { fetchMatchData, generateMatchReport } from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.js";
 
 type PlayerWithMatchIds = {
   player: PlayerConfigEntry;

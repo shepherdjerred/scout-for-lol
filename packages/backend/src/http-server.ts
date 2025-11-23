@@ -1,5 +1,5 @@
-import configuration from "./configuration.js";
-import { getMetrics } from "./metrics/index.js";
+import configuration from "@scout-for-lol/backend/configuration.js";
+import { getMetrics } from "@scout-for-lol/backend/metrics/index.js";
 
 console.log("🌐 Initializing HTTP server");
 

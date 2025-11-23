@@ -10,9 +10,9 @@ export function ThemeSelector() {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const WindowSchema = z.object({}).passthrough();
     const windowResult = WindowSchema.safeParse(globalThis.window);
-    if (!windowResult.success) return true;
+    if (!windowResult.success) {return true;}
     const saved = localStorage.getItem("darkMode");
-    if (!saved) return true;
+    if (!saved) {return true;}
     try {
       const parsed: unknown = JSON.parse(saved);
       const result = BooleanSchema.safeParse(parsed);
@@ -26,7 +26,7 @@ export function ThemeSelector() {
   useEffect(() => {
     const WindowSchema = z.object({}).passthrough();
     const windowResult = WindowSchema.safeParse(globalThis.window);
-    if (!windowResult.success) return;
+    if (!windowResult.success) {return;}
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
     } else {

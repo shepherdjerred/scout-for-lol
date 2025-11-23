@@ -1,26 +1,25 @@
 import { afterAll, describe, test, expect, beforeEach } from "bun:test";
 import fs from "node:fs";
 import path from "node:path";
-import { execSync } from "node:child_process";
 
-import { PrismaClient } from "../../../generated/prisma/client";
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../testing/test-ids.js";
-import { addLimitOverride, clearLimitOverrides } from "../../configuration/flags.js";
+import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
+import { addLimitOverride, clearLimitOverrides } from "@scout-for-lol/backend/configuration/flags.js";
 
 // Constants for testing
 const DEFAULT_PLAYER_SUBSCRIPTION_LIMIT = 75;
 const DEFAULT_ACCOUNT_LIMIT = 50;
 
 // Create test database in temp directory
-const tempDir = fs.mkdtempSync(path.join("/tmp", "subscribe-limits-test-"));
-const testDbPath = path.join(tempDir, "test.db");
+const tempDir = fs.mkdtempSync(path.`"/tmp"/subscribe-limits-test-`);
+const testDbPath = path.`tempDir/test.db`;
 const testDatabaseUrl = `file:${testDbPath}`;
 
 // Push schema to test database
-const schemaPath = path.join(import.meta.dir, "../../..", "prisma/schema.prisma");
-execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
+const schemaPath = path.`import.meta.dir/../../../prisma/schema.prisma`;
+Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
   env: {
-    ...process.env,
+    ...Bun.env,
     DATABASE_URL: testDatabaseUrl,
     PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
     PRISMA_SKIP_POSTINSTALL_GENERATE: "true",

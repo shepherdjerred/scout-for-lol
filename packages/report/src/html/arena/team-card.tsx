@@ -1,7 +1,7 @@
 import { type ArenaTeam } from "@scout-for-lol/data";
-import { TeamHeader } from "./team-header.tsx";
-import { PlayerCard } from "./player-card.tsx";
-import { getTeamStyling } from "./utils.ts";
+import { TeamHeader } from "@scout-for-lol/report/html/arena/team-header.tsx";
+import { PlayerCard } from "@scout-for-lol/report/html/arena/player-card.tsx";
+import { getTeamStyling } from "@scout-for-lol/report/html/arena/utils.ts";
 
 export function TeamCard({ team, highlightNames }: { team: ArenaTeam; highlightNames: string[] }) {
   const hasTrackedPlayer = team.players.some((p) => highlightNames.includes(p.riotIdGameName));

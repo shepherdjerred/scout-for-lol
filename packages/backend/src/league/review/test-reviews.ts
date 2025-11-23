@@ -4,14 +4,14 @@
  * Usage: bun run src/league/review/test-reviews.ts [options]
  */
 
-import { generateMatchReview } from "./generator.js";
+import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example.js";
 import type { ArenaMatch, CompletedMatch, PlayerConfigEntry } from "@scout-for-lol/data";
 import { MatchIdSchema, LeaguePuuidSchema, parseQueueType } from "@scout-for-lol/data";
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 import { type MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import configuration from "../../configuration.js";
-import { toMatch, toArenaMatch } from "../model/match.js";
+import configuration from "@scout-for-lol/backend/configuration.js";
+import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
 
 const MATCH_TYPES = ["ranked", "unranked", "aram", "arena"] as const;
 type MatchType = (typeof MATCH_TYPES)[number];
@@ -36,7 +36,7 @@ function parseArgs(): TestOptions {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (!arg) continue;
+    if (!arg) {continue;}
 
     switch (arg) {
       case "--type":
@@ -124,11 +124,11 @@ Environment:
 function getMatchSummary(match: CompletedMatch | ArenaMatch): string {
   if (match.queueType === "arena") {
     const arenaPlayer = match.players[0];
-    if (!arenaPlayer) return "Unknown";
+    if (!arenaPlayer) {return "Unknown";}
     return `${arenaPlayer.playerConfig.alias} | ${arenaPlayer.champion.championName} | ${String(arenaPlayer.placement)}${getOrdinalSuffix(arenaPlayer.placement)} place | ${String(arenaPlayer.champion.kills)}/${String(arenaPlayer.champion.deaths)}/${String(arenaPlayer.champion.assists)} KDA`;
   } else {
     const player = match.players[0];
-    if (!player) return "Unknown";
+    if (!player) {return "Unknown";}
     return `${player.playerConfig.alias} | ${player.champion.championName} | ${player.lane ?? "unknown"} | ${player.outcome} | ${String(player.champion.kills)}/${String(player.champion.deaths)}/${String(player.champion.assists)} KDA`;
   }
 }
@@ -315,7 +315,7 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
 
   for (const key of shuffled) {
     const matchDto = await fetchMatchFromS3(key);
-    if (!matchDto) continue;
+    if (!matchDto) {continue;}
 
     const queueType = parseQueueType(matchDto.info.queueId);
 

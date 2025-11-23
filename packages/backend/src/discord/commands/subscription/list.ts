@@ -1,7 +1,7 @@
 import { type ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from "discord.js";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index";
-import { truncateDiscordMessage } from "../../utils/message.js";
+import { prisma } from "@scout-for-lol/backend/database/index";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 
 export async function executeSubscriptionList(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId) {

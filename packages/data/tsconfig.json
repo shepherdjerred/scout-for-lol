@@ -6,6 +6,25 @@
       "ES2022"
     ],
     "moduleResolution": "node",
+    "baseUrl": "../..",
+    "paths": {
+      "@scout-for-lol/data/*": [
+        "./packages/data/src/*"
+      ],
+      "@scout-for-lol/data": [
+        "./packages/data/src/index.ts"
+      ],
+      "@scout-for-lol/backend/*": [
+        "./packages/backend/src/*",
+        "./packages/backend/*"
+      ],
+      "@scout-for-lol/report/*": [
+        "./packages/report/src/*"
+      ],
+      "@scout-for-lol/report": [
+        "./packages/report/src/index.ts"
+      ]
+    },
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

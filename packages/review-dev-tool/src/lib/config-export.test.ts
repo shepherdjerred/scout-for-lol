@@ -9,10 +9,10 @@ import {
   applyConfigBundle,
   getConfigBundleSummary,
   type ConfigBundle,
-} from "./config-export";
-import { createDefaultTabConfig } from "../config/schema";
-import { saveCustomPersonalities } from "./personality-storage";
-import { saveCustomArtStyles, saveCustomArtThemes } from "./art-style-storage";
+} from "@scout-for-lol/review-dev-tool/lib/config-export";
+import { createDefaultTabConfig } from "@scout-for-lol/review-dev-tool/config/schema";
+import { saveCustomPersonalities } from "@scout-for-lol/review-dev-tool/lib/personality-storage";
+import { saveCustomArtStyles, saveCustomArtThemes } from "@scout-for-lol/review-dev-tool/lib/art-style-storage";
 
 // Mock localStorage for testing
 const localStorageMock = (() => {

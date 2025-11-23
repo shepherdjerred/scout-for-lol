@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { ChampionSchema } from "../champion.js";
-import { PlayerConfigEntrySchema } from "../player-config.js";
+import { ChampionSchema } from "@scout-for-lol/data/model/champion.js";
+import { PlayerConfigEntrySchema } from "@scout-for-lol/data/model/player-config.js";
 import { match } from "ts-pattern";
-import { AugmentSchema } from "./augment.js";
+import { AugmentSchema } from "@scout-for-lol/data/model/arena/augment.js";
 
 export type PlayerMetrics = z.infer<typeof PlayerMetricsSchema>;
 export const PlayerMetricsSchema = z.strictObject({

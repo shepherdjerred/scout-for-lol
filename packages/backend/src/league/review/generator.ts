@@ -8,20 +8,17 @@ import {
   curateMatchData,
   type CuratedMatchData,
 } from "@scout-for-lol/data";
-import { writeFileSync, mkdirSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import config from "../../configuration.js";
-import { saveAIReviewImageToS3 } from "../../storage/s3.js";
-import { loadPromptFile, selectRandomPersonality, loadPlayerMetadata, getLaneContext } from "./prompts.js";
+import config from "@scout-for-lol/backend/configuration.js";
+import { saveAIReviewImageToS3 } from "@scout-for-lol/backend/storage/s3.js";
+import { loadPromptFile, selectRandomPersonality, loadPlayerMetadata, getLaneContext } from "@scout-for-lol/backend/league/review/prompts.js";
 
-const FILENAME = fileURLToPath(import.meta.url);
-const DIRNAME = dirname(FILENAME);
-const AI_IMAGES_DIR = join(DIRNAME, "ai-images");
+const FILENAME = import.meta.path;
+const _DIRNAME = dirname(FILENAME);
+const AI_IMAGES_DIR = `DIRNAME/ai-images`;
 
 /**
  * Initialize OpenAI client if API key is configured
@@ -92,9 +89,9 @@ async function generateReviewImageBackend(
 
     // Save to local filesystem for debugging
     try {
-      mkdirSync(AI_IMAGES_DIR, { recursive: true });
+      await Bun.write(`AI_IMAGES_DIR, { recursive: true }/.keep`, "");
       const filepath = join(AI_IMAGES_DIR, `ai-review-${new Date().toISOString().replace(/[:.]/g, "-")}.png`);
-      writeFileSync(filepath, buffer);
+      await Bun.write(filepath, buffer);
       console.log(`[generateReviewImage] Saved image to: ${filepath}`);
     } catch (fsError: unknown) {
       console.error("[generateReviewImage] Failed to save image to filesystem:", fsError);

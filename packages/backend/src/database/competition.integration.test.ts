@@ -1,37 +1,34 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { PermissionsBitField, PermissionFlagsBits } from "discord.js";
-import { PrismaClient } from "../../generated/prisma/client/index.js";
-import { execSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { createCompetition, type CreateCompetitionInput } from "./competition/queries.js";
-import { addParticipant, getParticipantStatus } from "./competition/participants.js";
-import { validateOwnerLimit, validateServerLimit } from "./competition/validation.js";
-import { canCreateCompetition, grantPermission } from "./competition/permissions.js";
-import { clearAllRateLimits } from "./competition/rate-limit.js";
+import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
+import { addParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.js";
+import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/database/competition/validation.js";
+import { canCreateCompetition, grantPermission } from "@scout-for-lol/backend/database/competition/permissions.js";
+import { clearAllRateLimits } from "@scout-for-lol/backend/database/competition/rate-limit.js";
 import type { CompetitionId, DiscordAccountId, DiscordGuildId, PlayerId } from "@scout-for-lol/data";
 
-import { testGuildId, testAccountId, testChannelId } from "../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
 // ============================================================================
 // Test Database Setup
 // ============================================================================
 
-const testDir = mkdtempSync(join(tmpdir(), "competition-business-logic-test-"));
-const testDbPath = join(testDir, "test.db");
+const testDir = `${Bun.env.TMPDIR ?? "/tmp"}/competition-business-logic-test-${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+await Bun.write(`${testDir}/.keep`, "");
+const testDbPath = `${testDir}/test.db`;
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database
-const schemaPath = join(import.meta.dir, "../..", "prisma/schema.prisma");
-execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
+const schemaPath = `${import.meta.dir}/../../prisma/schema.prisma`;
+await Bun.spawn(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
   env: {
-    ...process.env,
+    ...Bun.env,
     DATABASE_URL: testDbUrl,
     PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
     PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
   },
-  stdio: "inherit",
-});
+  stdio: ["inherit", "inherit", "inherit"],
+}).exited;
 
 const prisma = new PrismaClient({
   datasources: {

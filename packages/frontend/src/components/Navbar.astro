@@ -11,7 +11,7 @@ const { activePage } = Astro.props;
     <div class="flex lg:flex-1">
       <a href="/" class="-m-1.5 p-1.5">
         <span class="sr-only">Scout for League of Legends</span>
-        <div class="h-8 w-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+        <div class="h-8 w-8 bg-linear-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
           <span class="text-white font-bold text-sm">S</span>
         </div>
       </a>
@@ -23,7 +23,14 @@ const { activePage } = Astro.props;
         id="mobile-menu-button"
       >
         <span class="sr-only">Open main menu</span>
-        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+        <svg
+          class="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
           <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path>
         </svg>
       </button>
@@ -31,29 +38,41 @@ const { activePage } = Astro.props;
     <div class="hidden lg:flex lg:gap-x-12">
       <a
         href="/"
-        class:list={["text-sm/6 font-semibold", activePage === "home" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100"]}
-        >Home</a
+        class:list={[
+          "text-sm/6 font-semibold",
+          activePage === "home" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100",
+        ]}>Home</a
       >
       <a
         href="/getting-started"
-        class:list={["text-sm/6 font-semibold", activePage === "getting-started" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100"]}
-        >Getting Started</a
+        class:list={[
+          "text-sm/6 font-semibold",
+          activePage === "getting-started"
+            ? "text-indigo-600 dark:text-indigo-400"
+            : "text-gray-900 dark:text-gray-100",
+        ]}>Getting Started</a
       >
       <a
         href="/docs"
-        class:list={["text-sm/6 font-semibold", activePage === "docs" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100"]}
-        >Documentation</a
+        class:list={[
+          "text-sm/6 font-semibold",
+          activePage === "docs" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100",
+        ]}>Documentation</a
       >
       <a
         href="/whatsnew"
-        class:list={["text-sm/6 font-semibold", activePage === "whatsnew" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100"]}
-        >What's New</a
+        class:list={[
+          "text-sm/6 font-semibold",
+          activePage === "whatsnew" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100",
+        ]}>What's New</a
       >
       <a
         href="/support"
         class:list={[
           "text-sm/6 font-semibold inline-flex items-center gap-1",
-          activePage === "support" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400",
+          activePage === "support"
+            ? "text-indigo-600 dark:text-indigo-400"
+            : "text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400",
         ]}
       >
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -83,7 +102,7 @@ const { activePage } = Astro.props;
     <div class="hidden lg:flex lg:flex-1 lg:justify-end">
       <a
         href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
-        class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+        class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
         >Add to Discord</a
       >
     </div>
@@ -96,39 +115,45 @@ const { activePage } = Astro.props;
         href="/"
         class:list={[
           "block rounded-md px-3 py-2 text-base font-medium",
-          activePage === "home" ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
-        ]}
-        >Home</a
+          activePage === "home"
+            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+            : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
+        ]}>Home</a
       >
       <a
         href="/getting-started"
         class:list={[
           "block rounded-md px-3 py-2 text-base font-medium",
-          activePage === "getting-started" ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
-        ]}
-        >Getting Started</a
+          activePage === "getting-started"
+            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+            : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
+        ]}>Getting Started</a
       >
       <a
         href="/docs"
         class:list={[
           "block rounded-md px-3 py-2 text-base font-medium",
-          activePage === "docs" ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
-        ]}
-        >Documentation</a
+          activePage === "docs"
+            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+            : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
+        ]}>Documentation</a
       >
       <a
         href="/whatsnew"
         class:list={[
           "block rounded-md px-3 py-2 text-base font-medium",
-          activePage === "whatsnew" ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
-        ]}
-        >What's New</a
+          activePage === "whatsnew"
+            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+            : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
+        ]}>What's New</a
       >
       <a
         href="/support"
         class:list={[
-          "block rounded-md px-3 py-2 text-base font-medium inline-flex items-center gap-2",
-          activePage === "support" ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
+          "rounded-md px-3 py-2 text-base font-medium inline-flex items-center gap-2",
+          activePage === "support"
+            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+            : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
         ]}
       >
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -144,7 +169,7 @@ const { activePage } = Astro.props;
         href="https://github.com/shepherdjerred/scout-for-lol"
         target="_blank"
         rel="noopener noreferrer"
-        class="block rounded-md px-3 py-2 text-base font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 inline-flex items-center gap-2"
+        class="rounded-md px-3 py-2 text-base font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 inline-flex items-center gap-2"
       >
         <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path
@@ -166,13 +191,13 @@ const { activePage } = Astro.props;
 </header>
 
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const button = document.getElementById('mobile-menu-button');
-    const menu = document.getElementById('mobile-menu');
+  document.addEventListener("DOMContentLoaded", () => {
+    const button = document.getElementById("mobile-menu-button");
+    const menu = document.getElementById("mobile-menu");
 
     if (button && menu) {
-      button.addEventListener('click', () => {
-        menu.classList.toggle('hidden');
+      button.addEventListener("click", () => {
+        menu.classList.toggle("hidden");
       });
     }
   });

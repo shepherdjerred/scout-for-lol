@@ -2,13 +2,13 @@ import { type ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from "di
 import { CompetitionIdSchema, getCompetitionStatus } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
 import { z } from "zod";
-import { prisma } from "../../../database/index.js";
-import { getCompetitionById } from "../../../database/competition/queries.js";
-import { getParticipants } from "../../../database/competition/participants.js";
-import { getErrorMessage } from "../../../utils/errors.js";
-import { formatScore } from "../../embeds/competition.js";
-import { loadCachedLeaderboard } from "../../../storage/s3-leaderboard.js";
-import { truncateDiscordMessage } from "../../utils/message.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
+import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { formatScore } from "@scout-for-lol/backend/discord/embeds/competition.js";
+import { loadCachedLeaderboard } from "@scout-for-lol/backend/storage/s3-leaderboard.js";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 
 // Schema for participant with player relation (when includePlayer=true)
 const ParticipantWithPlayerSchema = z.object({
@@ -338,9 +338,9 @@ async function addLeaderboard(
  * Returns medal emoji for top 3, empty string with spacing for others
  */
 function getMedalEmoji(rank: number): string {
-  if (rank === 1) return "🥇";
-  if (rank === 2) return "🥈";
-  if (rank === 3) return "🥉";
+  if (rank === 1) {return "🥇";}
+  if (rank === 2) {return "🥈";}
+  if (rank === 3) {return "🥉";}
   return "  "; // Two spaces for alignment
 }
 

@@ -1,7 +1,7 @@
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { getItemInfo, summoner, getRuneInfo, getRuneTreeName, getChampionInfo } from "@scout-for-lol/report";
 import { first, keys, pickBy } from "remeda";
-import type { CuratedParticipant, CuratedMatchData } from "./curator-types.js";
+import type { CuratedParticipant, CuratedMatchData } from "@scout-for-lol/data/review/curator-types.js";
 
 export type { CuratedParticipant, CuratedMatchData };
 
@@ -9,8 +9,7 @@ function getSummonerSpellName(spellId: number): string | undefined {
   return first(keys(pickBy(summoner.data, (s) => s.key === spellId.toString())));
 }
 
-export async function curateParticipantData(participant: MatchV5DTOs.ParticipantDto): Promise<CuratedParticipant> {
-  // Translate items
+function curateItems(participant: MatchV5DTOs.ParticipantDto) {
   const itemIds = [
     participant.item0,
     participant.item1,
@@ -21,7 +20,7 @@ export async function curateParticipantData(participant: MatchV5DTOs.Participant
     participant.item6,
   ];
 
-  const items = itemIds
+  return itemIds
     .filter((id) => id !== 0)
     .map((id) => {
       const info = getItemInfo(id);
@@ -32,12 +31,13 @@ export async function curateParticipantData(participant: MatchV5DTOs.Participant
         plaintext: info?.plaintext,
       };
     });
+}
 
-  // Translate summoner spells
+function curateSummonerSpells(participant: MatchV5DTOs.ParticipantDto) {
   const spell1Name = getSummonerSpellName(participant.summoner1Id);
   const spell2Name = getSummonerSpellName(participant.summoner2Id);
 
-  const summonerSpells = [
+  return [
     {
       id: participant.summoner1Id,
       name: spell1Name ?? `Spell ${participant.summoner1Id.toString()}`,
@@ -51,8 +51,9 @@ export async function curateParticipantData(participant: MatchV5DTOs.Participant
       casts: participant.summoner2Casts,
     },
   ];
+}
 
-  // Translate runes
+function curatePerks(participant: MatchV5DTOs.ParticipantDto) {
   const primaryStyle = participant.perks.styles[0];
   const subStyle = participant.perks.styles[1];
 
@@ -82,7 +83,7 @@ export async function curateParticipantData(participant: MatchV5DTOs.Participant
       };
     }) ?? [];
 
-  const perks = {
+  return {
     primaryStyle: {
       id: primaryStyle?.style ?? 0,
       name: getRuneTreeName(primaryStyle?.style ?? 0) ?? "Unknown",
@@ -95,8 +96,12 @@ export async function curateParticipantData(participant: MatchV5DTOs.Participant
     subSelections,
     statPerks: participant.perks.statPerks,
   };
+}
 
-  // Get champion ability info
+export async function curateParticipantData(participant: MatchV5DTOs.ParticipantDto): Promise<CuratedParticipant> {
+  const items = curateItems(participant);
+  const summonerSpells = curateSummonerSpells(participant);
+  const perks = curatePerks(participant);
   const championAbilities = await getChampionInfo(participant.championName);
 
   return {

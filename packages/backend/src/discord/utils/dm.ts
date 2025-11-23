@@ -6,7 +6,7 @@
 
 import { type Client, DiscordAPIError } from "discord.js";
 import { type DiscordAccountId } from "@scout-for-lol/data";
-import { getErrorMessage } from "../../utils/errors.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 
 /**
  * Send a DM to a Discord user

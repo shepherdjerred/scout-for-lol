@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { latestVersion } from "./version.js";
+import { latestVersion } from "@scout-for-lol/report/dataDragon/version.js";
 
 const ChampionSpellSchema = z.object({
   id: z.string(),
@@ -58,7 +58,7 @@ export async function getChampionInfo(championName: string): Promise<
     const data = ChampionDataSchema.parse(await response.json());
     const championData = data.data[championName];
 
-    if (!championData) return undefined;
+    if (!championData) {return undefined;}
 
     const result = {
       spells: championData.spells.map((s) => ({

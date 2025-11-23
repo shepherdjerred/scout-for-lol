@@ -1,30 +1,28 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { PrismaClient } from "../../../../generated/prisma/client/index.js";
-import { execSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { createCompetition } from "../../../database/competition/queries.js";
-import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
-import { addParticipant, getParticipantStatus, removeParticipant } from "../../../database/competition/participants.js";
+import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import { createCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
+import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
+import { addParticipant, getParticipantStatus, removeParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
 
-import { testGuildId, testAccountId, testChannelId } from "../../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
 // Create a test database for integration tests
-const testDir = mkdtempSync(join(tmpdir(), "competition-leave-test-"));
-const testDbPath = join(testDir, "test.db");
+const testDir = `${Bun.env.TMPDIR ?? "/tmp"}/competition-leave-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDbPath = `${testDir}/test.db`;
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database once before all tests
-const schemaPath = join(import.meta.dir, "../../../..", "prisma/schema.prisma");
-execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
-  cwd: join(import.meta.dir, "../../../.."),
+const schemaPath = `import.meta.dir/../../../../prisma/schema.prisma`;
+Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
+  cwd: `${import.meta.dir}/../../../..`,
   env: {
-    ...process.env,
+    ...Bun.env,
     DATABASE_URL: testDbUrl,
     PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
     PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
   },
-  stdio: "ignore",
+  stdout: "ignore",
+  stderr: "ignore",
+  stdin: "ignore",
 });
 import {
   type DiscordAccountId,

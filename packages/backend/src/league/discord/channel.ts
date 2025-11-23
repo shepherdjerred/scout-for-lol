@@ -1,16 +1,16 @@
 import { type Message, MessageCreateOptions, MessagePayload } from "discord.js";
 import { z } from "zod";
-import { client } from "../../discord/client";
-import { asTextChannel } from "../../discord/utils/channel";
+import { client } from "@scout-for-lol/backend/discord/client";
+import { asTextChannel } from "@scout-for-lol/backend/discord/utils/channel";
 import {
   checkSendMessagePermission,
   isPermissionError,
   formatPermissionErrorForLog,
   notifyServerOwnerAboutPermissionError,
-} from "../../discord/utils/permissions";
-import { discordPermissionErrorsTotal } from "../../metrics/index";
-import { prisma } from "../../database/index";
-import { recordPermissionError, recordSuccessfulSend } from "../../database/guild-permission-errors";
+} from "@scout-for-lol/backend/discord/utils/permissions";
+import { discordPermissionErrorsTotal } from "@scout-for-lol/backend/metrics/index";
+import { prisma } from "@scout-for-lol/backend/database/index";
+import { recordPermissionError, recordSuccessfulSend } from "@scout-for-lol/backend/database/guild-permission-errors";
 import type { DiscordChannelId, DiscordGuildId } from "@scout-for-lol/data";
 
 /**

@@ -1,9 +1,9 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { fromError } from "zod-validation-error";
-import { getLimit } from "../../../configuration/flags.js";
+import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
 
 const ArgsSchema = z.object({
   alias: z.string().min(1).max(100),

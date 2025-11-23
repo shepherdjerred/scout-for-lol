@@ -17,7 +17,7 @@ const s3Mock = mockClient(S3Client);
 // the S3 integration directly through the storage module
 
 beforeEach(() => {
-  process.env["S3_BUCKET_NAME"] = "test-bucket";
+  Bun.env["S3_BUCKET_NAME"] = "test-bucket";
   s3Mock.reset();
 });
 

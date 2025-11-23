@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { checkRateLimit, clearAllRateLimits, clearRateLimit, getTimeRemaining, recordCreation } from "./rate-limit.js";
+import { checkRateLimit, clearAllRateLimits, clearRateLimit, getTimeRemaining, recordCreation } from "@scout-for-lol/backend/database/competition/rate-limit.js";
 
-import { testAccountId } from "../../testing/test-ids.js";
+import { testAccountId } from "@scout-for-lol/backend/testing/test-ids.js";
 // Clean up before each test
 beforeEach(() => {
   clearAllRateLimits();

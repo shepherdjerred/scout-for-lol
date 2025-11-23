@@ -26,9 +26,13 @@ import {
   parseCompetition,
   participantStatusToString,
   visibilityToString,
-} from "./competition.js";
-import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "./discord.js";
-import type { Competition } from "../../../backend/generated/prisma/client/index.js";
+} from "@scout-for-lol/data/model/competition.js";
+import {
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data/model/discord.js";
+import type { Competition } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 
 describe("CompetitionId branded type", () => {
   test("accepts positive integers", () => {

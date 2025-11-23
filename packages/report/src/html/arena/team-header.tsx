@@ -1,6 +1,6 @@
 import { type ArenaTeam } from "@scout-for-lol/data";
-import { PlacementBadge } from "./placement-badge.tsx";
-import { TeamStats } from "./team-stats.tsx";
+import { PlacementBadge } from "@scout-for-lol/report/html/arena/placement-badge.tsx";
+import { TeamStats } from "@scout-for-lol/report/html/arena/team-stats.tsx";
 
 export function TeamHeader({ team }: { team: ArenaTeam }) {
   const teamKills = team.players.reduce((sum, p) => sum + p.kills, 0);

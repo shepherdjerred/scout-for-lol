@@ -155,8 +155,8 @@ function calculateSpecificity(attributes: FlagAttributes): number {
 function attributesMatch(overrideAttrs: FlagAttributes, queryAttrs: FlagAttributes): boolean {
   // All override attributes must match corresponding query attributes
   for (const [key, value] of Object.entries(overrideAttrs)) {
-    if (value === undefined) continue;
-    if (queryAttrs[key] !== value) return false;
+    if (value === undefined) {continue;}
+    if (queryAttrs[key] !== value) {return false;}
   }
   return true;
 }

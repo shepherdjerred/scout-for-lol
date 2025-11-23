@@ -14,7 +14,7 @@ import {
   type ArtTheme,
   type StyleCategory,
   type ThemeCategory,
-} from "./art-styles-data.js";
+} from "@scout-for-lol/data/review/art-styles-data.js";
 
 /**
  * Selection result - can have one or two themes

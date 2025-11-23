@@ -1,8 +1,8 @@
-import configuration from "./configuration.js";
+import configuration from "@scout-for-lol/backend/configuration.js";
 import * as Sentry from "@sentry/node";
 
 // Import type augmentations to extend third-party library types
-import "./types/twisted-augmentation.js";
+import "@scout-for-lol/backend/types/twisted-augmentation.js";
 
 console.log("🚀 Starting Scout for LoL backend application");
 console.log(`📦 Version: ${configuration.version}`);
@@ -24,11 +24,11 @@ if (configuration.sentryDsn) {
 
 // Initialize metrics (must be imported early to set up metrics collection)
 console.log("📊 Initializing metrics system");
-import "./metrics/index.js";
+import "@scout-for-lol/backend/metrics/index.js";
 
 // Initialize HTTP server for health checks and metrics
 console.log("🌐 Starting HTTP server for health checks and metrics");
-import { shutdownHttpServer } from "./http-server.js";
+import { shutdownHttpServer } from "@scout-for-lol/backend/http-server.js";
 
 // Preload Arena augments once at startup; continue if it fails
 console.log("🧩 Initializing Arena augments cache");
@@ -41,11 +41,11 @@ await initArenaAugmentsOnce()
   });
 
 console.log("🔌 Starting Discord bot initialization");
-import "./discord/index.js";
+import "@scout-for-lol/backend/discord/index.js";
 
 console.log("⏰ Starting cron job scheduler");
-import { startCronJobs } from "./league/cron.js";
-import { initArenaAugmentsOnce } from "./league/arena/augment.js";
+import { startCronJobs } from "@scout-for-lol/backend/league/cron.js";
+import { initArenaAugmentsOnce } from "@scout-for-lol/backend/league/arena/augment.js";
 startCronJobs();
 
 console.log("✅ Backend application startup complete");

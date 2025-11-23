@@ -4,7 +4,7 @@ import {
   checkSendMessagePermission,
   getPermissionErrorMessage,
   formatPermissionErrorForLog,
-} from "./permissions";
+} from "@scout-for-lol/backend/discord/utils/permissions";
 import { PermissionFlagsBits, type Channel, type User } from "discord.js";
 
 // Mock bot user for tests

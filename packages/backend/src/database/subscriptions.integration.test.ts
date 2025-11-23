@@ -1,10 +1,6 @@
 import { afterAll, test, expect, beforeEach, afterEach, describe } from "bun:test";
-import { PrismaClient } from "../../generated/prisma/client/index.js";
-import { execSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { getChannelsSubscribedToPlayers } from "./index.js";
+import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import { getChannelsSubscribedToPlayers } from "@scout-for-lol/backend/database/index.js";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -18,15 +14,15 @@ import {
 } from "@scout-for-lol/data";
 
 // Create a temporary database for testing
-const testDbDir = mkdtempSync(join(tmpdir(), "subscriptions-test-"));
-const testDbPath = join(testDbDir, "test.db");
+const _testDbDir = `${Bun.env.TMPDIR ?? "/tmp"}/subscriptions-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDbPath = `testDbDir/test.db`;
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database
-const schemaPath = join(import.meta.dir, "../..", "prisma/schema.prisma");
-execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
+const schemaPath = `import.meta.dir/../../prisma/schema.prisma`;
+Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
   env: {
-    ...process.env,
+    ...Bun.env,
     DATABASE_URL: testDbUrl,
     PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
     PRISMA_SKIP_POSTINSTALL_GENERATE: "true",

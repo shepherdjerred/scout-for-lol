@@ -1,15 +1,15 @@
 import { getCompetitionStatus, type CachedLeaderboard, type CompetitionWithCriteria } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
-import { getActiveCompetitions } from "../../../database/competition/queries.js";
-import { calculateLeaderboard } from "../../competition/leaderboard.js";
-import { generateLeaderboardEmbed } from "../../../discord/embeds/competition.js";
-import { send as sendChannelMessage, ChannelSendError } from "../../discord/channel.js";
-import { saveCachedLeaderboard } from "../../../storage/s3-leaderboard.js";
-import { createSnapshot, getSnapshot } from "../../competition/snapshots.js";
-import { getParticipants } from "../../../database/competition/participants.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { getActiveCompetitions } from "@scout-for-lol/backend/database/competition/queries.js";
+import { calculateLeaderboard } from "@scout-for-lol/backend/league/competition/leaderboard.js";
+import { generateLeaderboardEmbed } from "@scout-for-lol/backend/discord/embeds/competition.js";
+import { send as sendChannelMessage, ChannelSendError } from "@scout-for-lol/backend/league/discord/channel.js";
+import { saveCachedLeaderboard } from "@scout-for-lol/backend/storage/s3-leaderboard.js";
+import { createSnapshot, getSnapshot } from "@scout-for-lol/backend/league/competition/snapshots.js";
+import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.js";
 import { EmbedBuilder } from "discord.js";
 import { z } from "zod";
-import { logNotification } from "../../../utils/notification-logger.js";
+import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.js";
 
 // ============================================================================
 // Error Handling

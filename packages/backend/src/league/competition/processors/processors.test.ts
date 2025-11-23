@@ -2,10 +2,10 @@ import { describe, expect, it } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import type { ChampionId, LeaguePuuid, Rank, Ranks } from "@scout-for-lol/data";
 import { AccountIdSchema, ChampionIdSchema, PlayerIdSchema, rankToLeaguePoints } from "@scout-for-lol/data";
-import { processCriteria } from "./index.js";
-import type { PlayerWithAccounts } from "./types.js";
+import { processCriteria } from "@scout-for-lol/backend/league/competition/processors/index.js";
+import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";
 
-import { testAccountId, testPuuid } from "../../../testing/test-ids.js";
+import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
 // ============================================================================
 // Test Fixtures - Players
 // ============================================================================

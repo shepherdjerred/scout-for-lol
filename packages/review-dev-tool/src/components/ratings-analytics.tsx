@@ -2,7 +2,7 @@
  * Analytics view showing rating statistics
  */
 import { useMemo, useState, useEffect } from "react";
-import { loadHistory } from "../lib/history-manager";
+import { loadHistory } from "@scout-for-lol/review-dev-tool/lib/history-manager";
 
 export function RatingsAnalytics() {
   const [history, setHistory] = useState<Awaited<ReturnType<typeof loadHistory>>>([]);

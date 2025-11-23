@@ -1,4 +1,4 @@
-import { type PrismaClient } from "../../../generated/prisma/client/index.js";
+import { type PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import {
   CompetitionCriteriaSchema,
   CompetitionVisibilitySchema,
@@ -12,7 +12,7 @@ import {
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 
-import { getLimit } from "../../configuration/flags.js";
+import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
 
 // ============================================================================
 // Constants

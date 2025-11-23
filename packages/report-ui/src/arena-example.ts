@@ -1,5 +1,4 @@
-/* eslint-disable max-lines -- ok in this case since it's one data structure that happens to be giant */
-import { type ArenaMatch, AugmentSchema, LeaguePuuidSchema } from "../../data/src/index.ts";
+import { type ArenaMatch, AugmentSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 
 export function getArenaExampleMatch(): ArenaMatch {
   return {

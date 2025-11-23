@@ -3,16 +3,16 @@
  */
 import { useState, useEffect } from "react";
 import { z } from "zod";
-import type { ReviewConfig, GenerationResult } from "../config/schema";
+import type { ReviewConfig, GenerationResult } from "@scout-for-lol/review-dev-tool/config/schema";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
-import type { CostTracker } from "../lib/costs";
-import { calculateCost, formatCost } from "../lib/costs";
-import { generateMatchReview, type GenerationProgress } from "../lib/generator";
-import { CostDisplay } from "./cost-display";
-import { HistoryPanel } from "./history-panel";
+import type { CostTracker } from "@scout-for-lol/review-dev-tool/lib/costs";
+import { calculateCost, formatCost } from "@scout-for-lol/review-dev-tool/lib/costs";
+import { generateMatchReview, type GenerationProgress } from "@scout-for-lol/review-dev-tool/lib/generator";
+import { CostDisplay } from "@scout-for-lol/review-dev-tool/components/cost-display";
+import { HistoryPanel } from "@scout-for-lol/review-dev-tool/components/history-panel";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
-import { createPendingEntry, saveCompletedEntry, updateHistoryRating, type HistoryEntry } from "../lib/history-manager";
-import { StarRating } from "./star-rating";
+import { createPendingEntry, saveCompletedEntry, updateHistoryRating, type HistoryEntry } from "@scout-for-lol/review-dev-tool/lib/history-manager";
+import { StarRating } from "@scout-for-lol/review-dev-tool/components/star-rating";
 
 const ErrorSchema = z.object({ message: z.string() });
 
@@ -190,14 +190,14 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
   };
 
   const handleRatingChange = async (newRating: 1 | 2 | 3 | 4) => {
-    if (!selectedHistoryId) return;
+    if (!selectedHistoryId) {return;}
     setRating(newRating);
     await updateHistoryRating(selectedHistoryId, newRating, notes);
     setForceUpdate((n) => n + 1);
   };
 
   const handleNotesChange = async (newNotes: string) => {
-    if (!selectedHistoryId) return;
+    if (!selectedHistoryId) {return;}
     setNotes(newNotes);
     if (rating) {
       await updateHistoryRating(selectedHistoryId, rating, newNotes);

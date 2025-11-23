@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LaneSchema } from "./lane.js";
+import { LaneSchema } from "@scout-for-lol/data/model/lane.js";
 
 export type Champion = z.infer<typeof ChampionSchema>;
 export const ChampionSchema = z.object({

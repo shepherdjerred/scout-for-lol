@@ -1,18 +1,14 @@
 import { describe, expect, test, beforeAll, afterAll, beforeEach } from "bun:test";
 import { z } from "zod";
-import { PrismaClient } from "../../../generated/prisma/client/index.js";
-import { calculateLeaderboard } from "./leaderboard.js";
-import { createCompetition } from "../../database/competition/queries.js";
-import { addParticipant } from "../../database/competition/participants.js";
+import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import { calculateLeaderboard } from "@scout-for-lol/backend/league/competition/leaderboard.js";
+import { createCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
+import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
 import { PlayerIdSchema, parseCompetition, type Rank } from "@scout-for-lol/data";
-import { execSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
 // ============================================================================
 // S3 Mock Setup
 // ============================================================================
@@ -24,15 +20,15 @@ const s3Mock = mockClient(S3Client);
 // ============================================================================
 
 // Create a temporary database for testing
-const testDbDir = mkdtempSync(join(tmpdir(), "leaderboard-test-"));
-const testDbPath = join(testDbDir, "test.db");
+const _testDbDir = `${Bun.env.TMPDIR ?? "/tmp"}/leaderboard-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDbPath = `testDbDir/test.db`;
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database before tests run
-const schemaPath = join(import.meta.dir, "../../..", "prisma/schema.prisma");
-execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
+const schemaPath = `import.meta.dir/../../../prisma/schema.prisma`;
+Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
   env: {
-    ...process.env,
+    ...Bun.env,
     DATABASE_URL: testDbUrl,
     PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
     PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
@@ -513,7 +509,7 @@ describe("calculateLeaderboard integration tests", () => {
     const updatedCompetition = await prisma.competition.findUnique({
       where: { id: competition.id },
     });
-    if (!updatedCompetition) throw new Error("Competition not found");
+    if (!updatedCompetition) {throw new Error("Competition not found");}
 
     const leaderboard = await calculateLeaderboard(prisma, parseCompetition(updatedCompetition));
 

@@ -2,8 +2,8 @@
  * Personality management UI
  */
 import { useState, useEffect } from "react";
-import { BUILTIN_PERSONALITIES } from "../lib/prompts";
-import type { Personality } from "../config/schema";
+import { BUILTIN_PERSONALITIES } from "@scout-for-lol/review-dev-tool/lib/prompts";
+import type { Personality } from "@scout-for-lol/review-dev-tool/config/schema";
 import {
   loadCustomPersonalities,
   addCustomPersonality,
@@ -11,8 +11,8 @@ import {
   deleteCustomPersonality,
   isCustomPersonality,
   generatePersonalityId,
-} from "../lib/personality-storage";
-import { PersonalityEditor } from "./personality-editor";
+} from "@scout-for-lol/review-dev-tool/lib/personality-storage";
+import { PersonalityEditor } from "@scout-for-lol/review-dev-tool/components/personality-editor";
 
 type PersonalityManagerProps = {
   onPersonalitySelect: (personality: Personality) => void;

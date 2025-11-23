@@ -1,8 +1,8 @@
 import { parseDivision, Ranks, PlayerConfigEntry, Rank, TierSchema } from "@scout-for-lol/data";
-import { api } from "../api/api";
+import { api } from "@scout-for-lol/backend/league/api/api";
 import { SummonerLeagueDto } from "twisted/dist/models-dto/index.js";
 import { filter, first, pipe } from "remeda";
-import { mapRegionToEnum } from "./region";
+import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region";
 
 const solo = "RANKED_SOLO_5x5";
 const flex = "RANKED_FLEX_SR";

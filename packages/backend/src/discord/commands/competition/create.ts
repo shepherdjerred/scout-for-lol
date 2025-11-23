@@ -12,16 +12,16 @@ import {
   type CompetitionCriteria,
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
-import { prisma } from "../../../database/index.js";
-import { canCreateCompetition } from "../../../database/competition/permissions.js";
-import { type CreateCompetitionInput, createCompetition } from "../../../database/competition/queries.js";
-import { recordCreation } from "../../../database/competition/rate-limit.js";
-import { validateOwnerLimit, validateServerLimit } from "../../../database/competition/validation.js";
-import { getErrorMessage } from "../../../utils/errors.js";
-import { getChampionId } from "../../../utils/champion.js";
-import { addParticipant } from "../../../database/competition/participants.js";
-import { formatCriteriaType, getStatusEmoji, formatDateInfo } from "./helpers.js";
-import { truncateDiscordMessage } from "../../utils/message.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { canCreateCompetition } from "@scout-for-lol/backend/database/competition/permissions.js";
+import { type CreateCompetitionInput, createCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
+import { recordCreation } from "@scout-for-lol/backend/database/competition/rate-limit.js";
+import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/database/competition/validation.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { getChampionId } from "@scout-for-lol/backend/utils/champion.js";
+import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
+import { formatCriteriaType, getStatusEmoji, formatDateInfo } from "@scout-for-lol/backend/discord/commands/competition/helpers.js";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 
 // ============================================================================
 // Input Parsing Schema - Discriminated Unions

@@ -10,9 +10,9 @@
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { match as matchPattern } from "ts-pattern";
-import type { ArenaMatch, CompletedMatch } from "../model/index.js";
-import { generateImagePrompt } from "./image-prompt.js";
-import { replaceTemplateVariables } from "./prompts.js";
+import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
+import { generateImagePrompt } from "@scout-for-lol/data/review/image-prompt.js";
+import { replaceTemplateVariables } from "@scout-for-lol/data/review/prompts.js";
 
 /**
  * Personality type (from prompts module)

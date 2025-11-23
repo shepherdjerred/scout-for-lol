@@ -1,8 +1,8 @@
 import { describe, it, expect } from "bun:test";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { groupArenaTeams, getArenaTeammate, toArenaSubteams } from "../match.js";
+import { groupArenaTeams, getArenaTeammate, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.js";
 
-import { testPuuid } from "../../../testing/test-ids.js";
+import { testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
 
 function makeParticipant(extra: Record<string, unknown> = {}): MatchV5DTOs.ParticipantDto {
   return {

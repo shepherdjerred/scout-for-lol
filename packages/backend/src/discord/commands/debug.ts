@@ -1,11 +1,9 @@
 import { type ChatInputCommandInteraction, SlashCommandBuilder, AttachmentBuilder, EmbedBuilder } from "discord.js";
-import { readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
 import { formatDistanceToNow } from "date-fns";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import configuration from "../../configuration";
-import { getAccountsWithState, prisma } from "../../database/index.js";
-import { calculatePollingInterval, shouldCheckPlayer } from "../../utils/polling-intervals.js";
+import configuration from "@scout-for-lol/backend/configuration";
+import { getAccountsWithState, prisma } from "@scout-for-lol/backend/database/index.js";
+import { calculatePollingInterval, shouldCheckPlayer } from "@scout-for-lol/backend/utils/polling-intervals.js";
 export { executeDebugForceSnapshot } from "./debug/force-snapshot.js";
 export { executeDebugForceLeaderboardUpdate } from "./debug/force-leaderboard-update.js";
 export { executeDebugManageParticipant } from "./debug/manage-participant.js";
@@ -84,7 +82,7 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
   console.log(`📁 Database path: ${databasePath}`);
 
   // Check if file exists
-  if (!existsSync(databasePath)) {
+  if (!await Bun.file(databasePath).exists()) {
     console.error(`❌ Database file not found at ${databasePath}`);
     await interaction.reply({
       content: `❌ Database file not found at: \`${databasePath}\``,

@@ -1,6 +1,6 @@
 import { match, P } from "ts-pattern";
-import { palette } from "../../assets/colors.ts";
-import { latestVersion } from "../../dataDragon/version.ts";
+import { palette } from "@scout-for-lol/report/assets/colors.ts";
+import { latestVersion } from "@scout-for-lol/report/dataDragon/version.ts";
 import { last, map, pipe, take } from "remeda";
 
 const dimension = "7.5rem";

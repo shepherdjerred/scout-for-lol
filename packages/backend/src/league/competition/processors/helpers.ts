@@ -1,7 +1,7 @@
 import type { CompetitionQueueType, QueueType } from "@scout-for-lol/data";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { parseQueueType } from "@scout-for-lol/data";
-import type { PlayerWithAccounts } from "./types.js";
+import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";
 
 /**
  * Check if a player participated in a match based on their account PUUIDs

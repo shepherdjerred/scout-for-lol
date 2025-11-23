@@ -1,14 +1,14 @@
 import { CronJob } from "cron";
-import { logErrors } from "./util";
-import { checkPostMatch } from "./tasks/postmatch/index";
-import { runLifecycleCheck } from "./tasks/competition/lifecycle.js";
-import { runDailyLeaderboardUpdate } from "./tasks/competition/daily-update.js";
-import { runPlayerPruning } from "./tasks/cleanup/prune-players.js";
-import { checkAbandonedGuilds } from "./tasks/cleanup/abandoned-guilds.js";
-import { runDataValidation } from "./tasks/cleanup/validate-data.js";
-import { cronJobExecutionsTotal, cronJobDuration, cronJobLastSuccess } from "../metrics/index.js";
-import client from "../discord/client.js";
-import { logCronTrigger } from "../utils/notification-logger.js";
+import { logErrors } from "@scout-for-lol/backend/league/util";
+import { checkPostMatch } from "@scout-for-lol/backend/league/tasks/postmatch/index";
+import { runLifecycleCheck } from "@scout-for-lol/backend/league/tasks/competition/lifecycle.js";
+import { runDailyLeaderboardUpdate } from "@scout-for-lol/backend/league/tasks/competition/daily-update.js";
+import { runPlayerPruning } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.js";
+import { checkAbandonedGuilds } from "@scout-for-lol/backend/league/tasks/cleanup/abandoned-guilds.js";
+import { runDataValidation } from "@scout-for-lol/backend/league/tasks/cleanup/validate-data.js";
+import { cronJobExecutionsTotal, cronJobDuration, cronJobLastSuccess } from "@scout-for-lol/backend/metrics/index.js";
+import client from "@scout-for-lol/backend/discord/client.js";
+import { logCronTrigger } from "@scout-for-lol/backend/utils/notification-logger.js";
 
 export function startCronJobs() {
   console.log("⏰ Initializing cron job scheduler");

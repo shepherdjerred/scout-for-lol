@@ -1,6 +1,3 @@
-import { readFileSync, readdirSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import {
   PersonalityMetadataSchema,
   PlayerMetadataSchema,
@@ -10,33 +7,33 @@ import {
   type PlayerMetadata,
 } from "@scout-for-lol/data";
 
-const FILENAME = fileURLToPath(import.meta.url);
-const DIRNAME = dirname(FILENAME);
-const PROMPTS_DIR = join(DIRNAME, "prompts");
+const FILENAME = import.meta.path;
+const _DIRNAME = dirname(FILENAME);
+const PROMPTS_DIR = `DIRNAME/prompts`;
 
 /**
  * Load a prompt file from the prompts directory
  */
 export function loadPromptFile(filename: string): string {
   const filePath = join(PROMPTS_DIR, filename);
-  return readFileSync(filePath, "utf-8").trim();
+  return await Bun.file(filePath, "utf-8").text().trim();
 }
 
 /**
  * Load a personality (both JSON metadata and TXT instructions)
  */
 function loadPersonality(basename: string): Personality {
-  const personalitiesDir = join(PROMPTS_DIR, "personalities");
+  const personalitiesDir = `PROMPTS_DIR/personalities`;
 
   // Load JSON metadata
   const jsonPath = join(personalitiesDir, `${basename}.json`);
-  const jsonContent = readFileSync(jsonPath, "utf-8");
+  const jsonContent = await Bun.file(jsonPath, "utf-8").text();
   const parsed: unknown = JSON.parse(jsonContent);
   const metadata = PersonalityMetadataSchema.parse(parsed);
 
   // Load TXT instructions
   const txtPath = join(personalitiesDir, `${basename}.txt`);
-  const instructions = readFileSync(txtPath, "utf-8").trim();
+  const instructions = await Bun.file(txtPath, "utf-8").text().trim();
 
   return {
     metadata,
@@ -49,7 +46,7 @@ function loadPersonality(basename: string): Personality {
  * Get list of personality files from the filesystem
  */
 function getPersonalityFiles(): string[] {
-  const personalitiesDir = join(PROMPTS_DIR, "personalities");
+  const personalitiesDir = `PROMPTS_DIR/personalities`;
   const files = readdirSync(personalitiesDir);
   return files.filter((file) => file.endsWith(".json") && !EXCLUDED_PERSONALITY_FILES.has(file));
 }
@@ -76,20 +73,20 @@ export function selectRandomPersonality(): Personality {
  * Load player metadata from JSON file
  */
 export function loadPlayerMetadata(playerAlias: string): PlayerMetadata {
-  const playersDir = join(PROMPTS_DIR, "players");
+  const playersDir = `PROMPTS_DIR/players`;
 
   // Try to load player-specific file, fall back to generic
   const playerFile = `${playerAlias.toLowerCase().replace(/\s+/g, "-")}.json`;
   const filePath = join(playersDir, playerFile);
 
   try {
-    const jsonContent = readFileSync(filePath, "utf-8");
+    const jsonContent = await Bun.file(filePath, "utf-8").text();
     const parsed: unknown = JSON.parse(jsonContent);
     return PlayerMetadataSchema.parse(parsed);
   } catch {
     // Fall back to generic player metadata
-    const genericPath = join(playersDir, "generic.json");
-    const genericContent = readFileSync(genericPath, "utf-8");
+    const genericPath = `playersDir/generic.json`;
+    const genericContent = await Bun.file(genericPath, "utf-8").text();
     const parsed: unknown = JSON.parse(genericContent);
     return PlayerMetadataSchema.parse(parsed);
   }

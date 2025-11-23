@@ -13,7 +13,7 @@ import {
   competitionParticipantsTotal,
   avgPlayersPerServer,
   avgAccountsPerPlayer,
-} from "./index.js";
+} from "@scout-for-lol/backend/metrics/index.js";
 
 /**
  * Update usage metrics from database

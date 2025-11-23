@@ -1,7 +1,7 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import configuration from "../configuration.js";
-import { getErrorMessage } from "../utils/errors.js";
+import configuration from "@scout-for-lol/backend/configuration.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import type { MatchId } from "@scout-for-lol/data";
 import { MatchIdSchema } from "@scout-for-lol/data";
 

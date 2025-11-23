@@ -1,13 +1,13 @@
 import type { CompetitionCriteria, Ranks } from "@scout-for-lol/data";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { match } from "ts-pattern";
-import { processMostGamesPlayed } from "./most-games-played.js";
-import { processHighestRank } from "./highest-rank.js";
-import { processMostRankClimb } from "./most-rank-climb.js";
-import { processMostWinsPlayer } from "./most-wins-player.js";
-import { processMostWinsChampion } from "./most-wins-champion.js";
-import { processHighestWinRate } from "./highest-win-rate.js";
-import type { LeaderboardEntry, PlayerWithAccounts } from "./types.js";
+import { processMostGamesPlayed } from "@scout-for-lol/backend/league/competition/processors/most-games-played.js";
+import { processHighestRank } from "@scout-for-lol/backend/league/competition/processors/highest-rank.js";
+import { processMostRankClimb } from "@scout-for-lol/backend/league/competition/processors/most-rank-climb.js";
+import { processMostWinsPlayer } from "@scout-for-lol/backend/league/competition/processors/most-wins-player.js";
+import { processMostWinsChampion } from "@scout-for-lol/backend/league/competition/processors/most-wins-champion.js";
+import { processHighestWinRate } from "@scout-for-lol/backend/league/competition/processors/highest-win-rate.js";
+import type { LeaderboardEntry, PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";
 
 /**
  * Snapshot data that may be needed for rank-based criteria

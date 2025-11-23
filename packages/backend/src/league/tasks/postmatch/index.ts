@@ -1,4 +1,4 @@
-import { checkMatchHistory } from "./match-history-polling.js";
+import { checkMatchHistory } from "@scout-for-lol/backend/league/tasks/postmatch/match-history-polling.js";
 
 export async function checkPostMatch() {
   console.log("🏁 Starting post-match check task");

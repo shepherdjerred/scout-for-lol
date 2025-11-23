@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { z } from "zod";
-import { StarRating } from "./components/star-rating";
-import { EmptyDropZone, GalleryView } from "./components/rater-gallery";
+import { StarRating } from "@scout-for-lol/report-ui/components/star-rating";
+import { EmptyDropZone, GalleryView } from "@scout-for-lol/report-ui/components/rater-gallery";
 import {
   loadReviewImages,
   addReviewImage,
@@ -13,7 +13,7 @@ import {
   isStorageNearLimit,
   getStorageSizeMB,
   type ReviewImageData,
-} from "./ai-review-storage";
+} from "@scout-for-lol/report-ui/ai-review-storage";
 
 type ViewMode = "rate" | "gallery";
 
@@ -103,7 +103,7 @@ export function AIReviewRater(): React.ReactNode {
   };
 
   const handleRate = (rating: 1 | 2 | 3 | 4) => {
-    if (!currentImage) return;
+    if (!currentImage) {return;}
 
     updateReviewRating(currentImage.id, rating, notes);
     const loadedImages = loadReviewImages();
@@ -120,7 +120,7 @@ export function AIReviewRater(): React.ReactNode {
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm("Delete this image?")) return;
+    if (!confirm("Delete this image?")) {return;}
 
     deleteReviewImage(id);
     const loadedImages = loadReviewImages();
@@ -143,7 +143,7 @@ export function AIReviewRater(): React.ReactNode {
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (viewMode !== "rate") return;
+      if (viewMode !== "rate") {return;}
 
       if (e.key === "ArrowLeft") {
         handlePrevious();

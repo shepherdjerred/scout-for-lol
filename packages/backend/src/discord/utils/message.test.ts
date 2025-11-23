@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { truncateDiscordMessage, truncateEmbedFieldValue, truncateEmbedDescription } from "./message.js";
+import { truncateDiscordMessage, truncateEmbedFieldValue, truncateEmbedDescription } from "@scout-for-lol/backend/discord/utils/message.js";
 
 describe("truncateDiscordMessage", () => {
   test("does not truncate short messages", () => {

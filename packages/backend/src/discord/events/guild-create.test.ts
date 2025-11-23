@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, mock } from "bun:test";
-import { handleGuildCreate } from "./guild-create";
+import { handleGuildCreate } from "@scout-for-lol/backend/discord/events/guild-create";
 import { ChannelType } from "discord.js";
 
 describe("handleGuildCreate", () => {

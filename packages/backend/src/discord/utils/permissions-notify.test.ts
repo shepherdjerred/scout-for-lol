@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { notifyServerOwnerAboutPermissionError } from "./permissions";
+import { notifyServerOwnerAboutPermissionError } from "@scout-for-lol/backend/discord/utils/permissions";
 import type { Client } from "discord.js";
 
 describe("notifyServerOwnerAboutPermissionError", () => {

@@ -2,8 +2,8 @@
  * Configuration persistence and import/export
  */
 import { z } from "zod";
-import type { ReviewConfig, GlobalConfig } from "../config/schema";
-import { GlobalConfigSchema, ReviewConfigSchema } from "../config/schema";
+import type { ReviewConfig, GlobalConfig } from "@scout-for-lol/review-dev-tool/config/schema";
+import { GlobalConfigSchema, ReviewConfigSchema } from "@scout-for-lol/review-dev-tool/config/schema";
 
 const STORAGE_KEY = "review-dev-tool-configs";
 const CURRENT_CONFIG_KEY = "review-dev-tool-current";
@@ -41,7 +41,7 @@ export function loadSavedConfigs(): SavedConfig[] {
       })
       .array();
     const result = SavedConfigArraySchema.safeParse(parsed);
-    if (!result.success) return [];
+    if (!result.success) {return [];}
     // Map and validate each config
     const configs: SavedConfig[] = [];
     for (const item of result.data) {

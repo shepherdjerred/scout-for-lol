@@ -2,7 +2,7 @@
  * Reset tool settings to defaults while preserving API keys, cache, and cost data
  */
 import { z } from "zod";
-import { clearAllEntries } from "./indexeddb";
+import { clearAllEntries } from "@scout-for-lol/review-dev-tool/lib/indexeddb";
 
 /**
  * Reset all settings to defaults while preserving:
@@ -63,7 +63,7 @@ export async function getResetPreview(): Promise<{
   const getCount = (key: string): number => {
     try {
       const stored = localStorage.getItem(key);
-      if (!stored) return 0;
+      if (!stored) {return 0;}
       const parsed = JSON.parse(stored) as unknown;
       const ArraySchema = z.array(z.unknown());
       const result = ArraySchema.safeParse(parsed);

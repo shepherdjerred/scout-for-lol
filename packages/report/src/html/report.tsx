@@ -1,10 +1,10 @@
 import { leaguePointsDelta, lpDiffToString } from "@scout-for-lol/data";
 import type { CompletedMatch } from "@scout-for-lol/data";
-import { palette } from "../assets/colors.ts";
-import { RankedBadge } from "./ranked/index.tsx";
-import { renderTeam } from "./team.tsx";
+import { palette } from "@scout-for-lol/report/assets/colors.ts";
+import { RankedBadge } from "@scout-for-lol/report/html/ranked/index.tsx";
+import { renderTeam } from "@scout-for-lol/report/html/team.tsx";
 import { round } from "remeda";
-import { font } from "../assets/index.ts";
+import { font } from "@scout-for-lol/report/assets/index.ts";
 
 export function Report({ match }: { match: CompletedMatch }) {
   const minutes = round(match.durationInSeconds / 60, 0);

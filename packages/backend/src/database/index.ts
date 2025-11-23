@@ -1,4 +1,4 @@
-import { PrismaClient } from "../../generated/prisma/client";
+import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client";
 import {
   type DiscordChannelId,
   type LeaguePuuid,

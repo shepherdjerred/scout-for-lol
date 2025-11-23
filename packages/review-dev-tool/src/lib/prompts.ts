@@ -1,35 +1,35 @@
 /**
  * Prompt loading and management utilities
  */
-import type { Personality, PlayerMetadata } from "../config/schema";
-import { PersonalityMetadataSchema, PlayerMetadataSchema } from "../config/schema";
+import type { Personality, PlayerMetadata } from "@scout-for-lol/review-dev-tool/config/schema";
+import { PersonalityMetadataSchema, PlayerMetadataSchema } from "@scout-for-lol/review-dev-tool/config/schema";
 import type { Lane } from "@scout-for-lol/data";
 
 // Import personality files
-import aaronJson from "../prompts/personalities/aaron.json";
-import aaronTxt from "../prompts/personalities/aaron.txt?raw";
-import brianJson from "../prompts/personalities/brian.json";
-import brianTxt from "../prompts/personalities/brian.txt?raw";
-import irfanJson from "../prompts/personalities/irfan.json";
-import irfanTxt from "../prompts/personalities/irfan.txt?raw";
-import nekoryanjson from "../prompts/personalities/nekoryan.json";
-import nekoryanTxt from "../prompts/personalities/nekoryan.txt?raw";
-import genericJson from "../prompts/personalities/generic.json";
-import genericTxt from "../prompts/personalities/generic.txt?raw";
+import aaronJson from "@scout-for-lol/review-dev-tool/prompts/personalities/aaron.json";
+import aaronTxt from "@scout-for-lol/review-dev-tool/prompts/personalities/aaron.txt?raw";
+import brianJson from "@scout-for-lol/review-dev-tool/prompts/personalities/brian.json";
+import brianTxt from "@scout-for-lol/review-dev-tool/prompts/personalities/brian.txt?raw";
+import irfanJson from "@scout-for-lol/review-dev-tool/prompts/personalities/irfan.json";
+import irfanTxt from "@scout-for-lol/review-dev-tool/prompts/personalities/irfan.txt?raw";
+import nekoryanjson from "@scout-for-lol/review-dev-tool/prompts/personalities/nekoryan.json";
+import nekoryanTxt from "@scout-for-lol/review-dev-tool/prompts/personalities/nekoryan.txt?raw";
+import genericJson from "@scout-for-lol/review-dev-tool/prompts/personalities/generic.json";
+import genericTxt from "@scout-for-lol/review-dev-tool/prompts/personalities/generic.txt?raw";
 
 // Import lane contexts
-import topLane from "../prompts/lanes/top.txt?raw";
-import middleLane from "../prompts/lanes/middle.txt?raw";
-import jungleLane from "../prompts/lanes/jungle.txt?raw";
-import adcLane from "../prompts/lanes/adc.txt?raw";
-import supportLane from "../prompts/lanes/support.txt?raw";
-import genericLane from "../prompts/lanes/generic.txt?raw";
+import topLane from "@scout-for-lol/review-dev-tool/prompts/lanes/top.txt?raw";
+import middleLane from "@scout-for-lol/review-dev-tool/prompts/lanes/middle.txt?raw";
+import jungleLane from "@scout-for-lol/review-dev-tool/prompts/lanes/jungle.txt?raw";
+import adcLane from "@scout-for-lol/review-dev-tool/prompts/lanes/adc.txt?raw";
+import supportLane from "@scout-for-lol/review-dev-tool/prompts/lanes/support.txt?raw";
+import genericLane from "@scout-for-lol/review-dev-tool/prompts/lanes/generic.txt?raw";
 
 // Import base prompt
-import basePrompt from "../prompts/base.txt?raw";
+import basePrompt from "@scout-for-lol/review-dev-tool/prompts/base.txt?raw";
 
 // Import player metadata
-import genericPlayer from "../prompts/players/generic.json";
+import genericPlayer from "@scout-for-lol/review-dev-tool/prompts/players/generic.json";
 
 /**
  * Built-in personalities (from prompt files)

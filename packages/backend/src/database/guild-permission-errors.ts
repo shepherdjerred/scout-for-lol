@@ -1,5 +1,5 @@
 import { type DiscordChannelId, type DiscordGuildId } from "@scout-for-lol/data";
-import type { PrismaClient } from "../../generated/prisma/client/index.js";
+import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 
 /**
  * Record a permission error for a guild/channel

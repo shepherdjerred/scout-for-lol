@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { latestVersion } from "./version.js";
+import { latestVersion } from "@scout-for-lol/report/dataDragon/version.js";
 
 const ItemSchema = z.object({
   data: z.record(
@@ -26,7 +26,7 @@ export function getItemInfo(itemId: number):
     }
   | undefined {
   const itemData = items.data[itemId.toString()];
-  if (!itemData) return undefined;
+  if (!itemData) {return undefined;}
   return {
     name: itemData.name,
     description: itemData.description, // Full tooltip

@@ -1,5 +1,5 @@
 import { Registry, Counter, Gauge, Histogram } from "prom-client";
-import configuration from "../configuration.js";
+import configuration from "@scout-for-lol/backend/configuration.js";
 
 console.log("📊 Initializing Prometheus metrics");
 
@@ -474,7 +474,7 @@ console.log("✅ Prometheus metrics initialized successfully");
 // Import and initialize usage metrics collection
 // This must be after all metric definitions to avoid circular dependencies
 export { updateUsageMetrics } from "./usage.js";
-import "./usage.js";
+import "@scout-for-lol/backend/metrics/usage.js";
 
 // Import limit metrics
 export { updateLimitMetrics } from "./limits.js";

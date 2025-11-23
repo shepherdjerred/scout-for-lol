@@ -1,16 +1,16 @@
 import { describe, it, expect } from "bun:test";
 import { z } from "zod";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { participantToArenaChampion } from "../../model/champion.js";
+import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
 
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
-const currentDir = dirname(fileURLToPath(import.meta.url));
+const _currentDir = dirname(fileURLToPath(import.meta.url));
 
 const RAW_FILE_PATHS = [
-  join(currentDir, "testdata/matches_2025_09_19_NA1_5370969615.json"),
-  join(currentDir, "testdata/matches_2025_09_19_NA1_5370986469.json"),
+  `currentDir/testdata/matches_2025_09_19_NA1_5370969615.json`,
+  `currentDir/testdata/matches_2025_09_19_NA1_5370986469.json`,
 ];
 
 async function loadParticipants(path: string): Promise<MatchV5DTOs.ParticipantDto[]> {

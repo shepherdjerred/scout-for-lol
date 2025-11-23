@@ -10,7 +10,7 @@ import {
   clearFlagOverrides,
   type LimitName,
   type FlagName,
-} from "./flags";
+} from "@scout-for-lol/backend/configuration/flags";
 
 describe("Feature Flags System", () => {
   describe("getLimit", () => {

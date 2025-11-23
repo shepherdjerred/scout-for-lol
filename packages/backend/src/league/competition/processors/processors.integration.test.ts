@@ -8,18 +8,16 @@ import {
   type Rank,
   type Ranks,
 } from "@scout-for-lol/data";
-import { processCriteria } from "./index.js";
-import type { PlayerWithAccounts } from "./types.js";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { processCriteria } from "@scout-for-lol/backend/league/competition/processors/index.js";
+import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";
 
-import { testAccountId, testPuuid } from "../../../testing/test-ids.js";
+import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
 // ============================================================================
 // Test Fixtures - Load Real Match Data
 // ============================================================================
 
 function loadMatch(path: string): MatchV5DTOs.MatchDto {
-  const content = readFileSync(path, "utf-8");
+  const content = await Bun.file(path, "utf-8").text();
   return JSON.parse(content) as MatchV5DTOs.MatchDto;
 }
 
@@ -63,7 +61,7 @@ const testPlayers: PlayerWithAccounts[] = [
 
 describe("processCriteria integration tests", () => {
   it("should process real match data without crashing", () => {
-    const matchPath = join(import.meta.dir, "../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json");
+    const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match = loadMatch(matchPath);
 
     // Extract actual PUUIDs from the match
@@ -118,7 +116,7 @@ describe("processCriteria integration tests", () => {
   });
 
   it("should correctly filter by queue type", () => {
-    const matchPath = join(import.meta.dir, "../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json");
+    const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match = loadMatch(matchPath);
     const queueId = match.info.queueId;
 
@@ -166,7 +164,7 @@ describe("processCriteria integration tests", () => {
   });
 
   it("should calculate wins and losses correctly from real data", () => {
-    const matchPath = join(import.meta.dir, "../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json");
+    const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match = loadMatch(matchPath);
 
     // Get first participant and their win status
@@ -210,8 +208,8 @@ describe("processCriteria integration tests", () => {
   });
 
   it("should handle multiple matches from same player", () => {
-    const match1Path = join(import.meta.dir, "../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json");
-    const match2Path = join(import.meta.dir, "../../model/__tests__/testdata/matches_2025_09_19_NA1_5370986469.json");
+    const match1Path = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
+    const match2Path = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370986469.json`;
 
     const match1 = loadMatch(match1Path);
     const match2 = loadMatch(match2Path);
@@ -286,7 +284,7 @@ describe("processCriteria integration tests", () => {
   });
 
   it("should correctly filter by champion ID", () => {
-    const matchPath = join(import.meta.dir, "../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json");
+    const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match = loadMatch(matchPath);
 
     // Get first participant and their champion
@@ -331,7 +329,7 @@ describe("processCriteria integration tests", () => {
   });
 
   it("should handle win rate calculation with real data", () => {
-    const matchPath = join(import.meta.dir, "../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json");
+    const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match = loadMatch(matchPath);
 
     const firstParticipant = match.info.participants[0];

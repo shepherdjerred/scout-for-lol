@@ -31,7 +31,7 @@ export function StarRating({
   const starSize = SIZES[size];
 
   const handleClick = (starIndex: number) => {
-    if (!isInteractive) return;
+    if (!isInteractive) {return;}
 
     // Validate starIndex is 1-4 using Zod
     const result = RatingValueSchema.safeParse(starIndex);
@@ -49,7 +49,7 @@ export function StarRating({
         alignItems: "center",
       }}
       onMouseLeave={() => {
-        if (isInteractive) setHoverRating(null);
+        if (isInteractive) {setHoverRating(null);}
       }}
     >
       {Array.from({ length: maxRating }, (_, index) => {
@@ -64,7 +64,7 @@ export function StarRating({
               handleClick(starNumber);
             }}
             onMouseEnter={() => {
-              if (isInteractive) setHoverRating(starNumber);
+              if (isInteractive) {setHoverRating(starNumber);}
             }}
             disabled={!isInteractive}
             style={{

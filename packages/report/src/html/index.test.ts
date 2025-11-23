@@ -1,11 +1,11 @@
 import { type CompletedMatch, DiscordAccountIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
-import { matchToSvg, svgToPng } from "./index.js";
+import { matchToSvg, svgToPng } from "@scout-for-lol/report/html/index.js";
 import { test, expect } from "bun:test";
-import { writeFileSync } from "fs";
-import { createHash } from "crypto";
 
 function hashSvg(svg: string): string {
-  return createHash("sha256").update(svg).digest("hex");
+  const hasher = new Bun.CryptoHasher("sha256");
+  hasher.update(svg);
+  return hasher.digest("hex");
 }
 
 function getMatch(): CompletedMatch {
@@ -253,8 +253,8 @@ function getMatch(): CompletedMatch {
 test("sanity check", async () => {
   const svg = await matchToSvg(getMatch());
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match.png", import.meta.url), png);
-  writeFileSync(new URL("__snapshots__/match.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match.svg", import.meta.url), svg);
 
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -270,8 +270,8 @@ test("no items test", async () => {
 
   const svg = await matchToSvg(matchNoItems);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_no_items.png", import.meta.url), png);
-  writeFileSync(new URL("__snapshots__/match_no_items.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_no_items.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_no_items.svg", import.meta.url), svg);
 
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -333,8 +333,8 @@ test("all fields zeroed out test", async () => {
 
   const svg = await matchToSvg(matchZeroedOut);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_zeroed_out.png", import.meta.url), png);
-  writeFileSync(new URL("__snapshots__/match_zeroed_out.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_zeroed_out.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_zeroed_out.svg", import.meta.url), svg);
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -348,9 +348,9 @@ test("no rank test", async () => {
 
   const svg = await matchToSvg(matchNoRank);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_no_rank.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_no_rank.png", import.meta.url), png);
 
-  writeFileSync(new URL("__snapshots__/match_no_rank.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_no_rank.svg", import.meta.url), svg);
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -394,9 +394,9 @@ test("large values test", async () => {
 
   const svg = await matchToSvg(matchLargeValues);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_large_values.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_large_values.png", import.meta.url), png);
 
-  writeFileSync(new URL("__snapshots__/match_large_values.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_large_values.svg", import.meta.url), svg);
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -409,9 +409,9 @@ test("victory test", async () => {
 
   const svg = await matchToSvg(matchVictory);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_victory.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_victory.png", import.meta.url), png);
 
-  writeFileSync(new URL("__snapshots__/match_victory.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_victory.svg", import.meta.url), svg);
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -424,9 +424,9 @@ test("surrender test", async () => {
 
   const svg = await matchToSvg(matchSurrender);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_surrender.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_surrender.png", import.meta.url), png);
 
-  writeFileSync(new URL("__snapshots__/match_surrender.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_surrender.svg", import.meta.url), svg);
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -446,9 +446,9 @@ test("no rank before match test", async () => {
 
   const svg = await matchToSvg(matchNoRankBefore);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_no_rank_before.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_no_rank_before.png", import.meta.url), png);
 
-  writeFileSync(new URL("__snapshots__/match_no_rank_before.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_no_rank_before.svg", import.meta.url), svg);
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -526,9 +526,9 @@ test("multiple highlighted players test", async () => {
 
   const svg = await matchToSvg(match);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_multiple_highlighted_players.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_multiple_highlighted_players.png", import.meta.url), png);
 
-  writeFileSync(new URL("__snapshots__/match_multiple_highlighted_players.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_multiple_highlighted_players.svg", import.meta.url), svg);
   // Hash the SVG for snapshot comparison instead of storing the full content
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -540,8 +540,8 @@ test("clash game test", async () => {
 
   const svg = await matchToSvg(matchClash);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_clash.png", import.meta.url), png);
-  writeFileSync(new URL("__snapshots__/match_clash.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_clash.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_clash.svg", import.meta.url), svg);
 
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -553,8 +553,8 @@ test("aram clash game test", async () => {
 
   const svg = await matchToSvg(matchAramClash);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_aram_clash.png", import.meta.url), png);
-  writeFileSync(new URL("__snapshots__/match_aram_clash.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_aram_clash.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_aram_clash.svg", import.meta.url), svg);
 
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -714,8 +714,8 @@ test("multiple players with promotion and demotion test", async () => {
 
   const svg = await matchToSvg(match);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_promotion_demotion_mixed.png", import.meta.url), png);
-  writeFileSync(new URL("__snapshots__/match_promotion_demotion_mixed.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_promotion_demotion_mixed.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_promotion_demotion_mixed.svg", import.meta.url), svg);
 
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();

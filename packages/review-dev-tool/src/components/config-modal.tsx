@@ -3,9 +3,9 @@
  */
 import { useState, useEffect } from "react";
 import { z } from "zod";
-import type { GlobalConfig } from "../config/schema";
-import { ApiSettingsPanel } from "./api-settings-panel";
-import { resetToDefaults, getResetPreview } from "../lib/reset-defaults";
+import type { GlobalConfig } from "@scout-for-lol/review-dev-tool/config/schema";
+import { ApiSettingsPanel } from "@scout-for-lol/review-dev-tool/components/api-settings-panel";
+import { resetToDefaults, getResetPreview } from "@scout-for-lol/review-dev-tool/lib/reset-defaults";
 
 const ErrorSchema = z.object({ message: z.string() });
 
