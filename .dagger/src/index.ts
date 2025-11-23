@@ -1,4 +1,3 @@
- 
 import { func, argument, Directory, object, Secret, Container } from "@dagger.io/dagger";
 import {
   checkBackend,
@@ -9,7 +8,12 @@ import {
   getBackendTestReport,
 } from "@scout-for-lol/.dagger/src/backend";
 import { checkReport, getReportCoverage, getReportTestReport } from "@scout-for-lol/.dagger/src/report";
-import { checkReportUi, getReportUiCoverage, getReportUiTestReport, buildReportUi } from "@scout-for-lol/.dagger/src/report-ui";
+import {
+  checkReportUi,
+  getReportUiCoverage,
+  getReportUiTestReport,
+  buildReportUi,
+} from "@scout-for-lol/.dagger/src/report-ui";
 import { checkData, getDataCoverage, getDataTestReport } from "@scout-for-lol/.dagger/src/data";
 import { checkFrontend, buildFrontend, deployFrontend } from "@scout-for-lol/.dagger/src/frontend";
 import { checkReviewDevTool } from "@scout-for-lol/.dagger/src/review-dev-tool";

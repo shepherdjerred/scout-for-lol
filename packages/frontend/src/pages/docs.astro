@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
+import PageHeader from "../components/PageHeader.astro";
 import InfoBox from "../components/InfoBox.astro";
 import CommandBox from "../components/CommandBox.astro";
 import FAQItem from "../components/FAQItem.astro";
@@ -14,12 +15,10 @@ import FAQItem from "../components/FAQItem.astro";
     <!-- Main Content -->
     <div class="relative px-6 pt-14 lg:px-8">
       <div class="mx-auto max-w-4xl py-32 sm:py-48 lg:py-56">
-        <!-- Page Header -->
-        <div class="text-center mb-16">
-          <h1 class="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-6xl">Documentation</h1>
-          <p class="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300">
-            Complete reference for all Scout commands, features, and configuration options.
-          </p>
+        <PageHeader
+          title="Documentation"
+          subtitle="Complete reference for all Scout commands, features, and configuration options."
+        >
           <div class="mt-6">
             <a
               href="/getting-started"
@@ -27,7 +26,7 @@ import FAQItem from "../components/FAQItem.astro";
               >New to Scout? Check out the Getting Started guide →</a
             >
           </div>
-        </div>
+        </PageHeader>
 
         <!-- Table of Contents -->
         <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-12">

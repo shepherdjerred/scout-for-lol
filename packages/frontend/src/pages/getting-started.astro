@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
+import PageHeader from "../components/PageHeader.astro";
 import StepCard from "../components/StepCard.astro";
 import InfoBox from "../components/InfoBox.astro";
 import CommandBox from "../components/CommandBox.astro";
@@ -15,15 +16,10 @@ import GalleryItem from "../components/GalleryItem.astro";
     <!-- Main Content -->
     <div class="relative px-6 pt-14 lg:px-8">
       <div class="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56">
-        <!-- Page Header -->
-        <div class="text-center mb-16">
-          <h1 class="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-6xl">
-            Getting Started with Scout
-          </h1>
-          <p class="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300">
-            Start tracking your friends' League matches in just a few minutes.
-          </p>
-        </div>
+        <PageHeader
+          title="Getting Started with Scout"
+          subtitle="Start tracking your friends' League matches in just a few minutes."
+        />
 
         <!-- Step 1: Add Scout -->
         <StepCard number={1} title="Add Scout to Your Server">

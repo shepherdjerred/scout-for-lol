@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
+import PageHeader from "../components/PageHeader.astro";
 import InfoBox from "../components/InfoBox.astro";
 ---
 
@@ -12,13 +13,10 @@ import InfoBox from "../components/InfoBox.astro";
     <!-- Main Content -->
     <div class="relative px-6 pt-14 lg:px-8">
       <div class="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56">
-        <!-- Page Header -->
-        <div class="text-center mb-16">
-          <h1 class="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-6xl">Get Support</h1>
-          <p class="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300">
-            Need help with Scout? We're here to assist you.
-          </p>
-        </div>
+        <PageHeader
+          title="Get Support"
+          subtitle="Need help with Scout? We're here to assist you."
+        />
 
         <!-- Support Options -->
         <div class="space-y-8">

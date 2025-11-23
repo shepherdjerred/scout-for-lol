@@ -42,8 +42,7 @@ async function main(): Promise<void> {
   let currentFile = "";
   let currentLineNumber = 0;
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+  for (const line of lines) {
 
     // Track which file we're in
     if (line.startsWith("+++ ")) {
@@ -105,21 +104,16 @@ async function main(): Promise<void> {
   console.error("❌ Found new code quality suppressions:\n");
 
   // Group by file
-  const byFile = findings.reduce<Record<string, Finding[]>>(
-    (acc, finding) => {
-      if (!acc[finding.file]) {
-        acc[finding.file] = [];
-      }
-      acc[finding.file].push(finding);
-      return acc;
-    },
-    {},
-  );
+  const byFile = findings.reduce<Record<string, Finding[]>>((acc, finding) => {
+    acc[finding.file] ??= [];
+    acc[finding.file].push(finding);
+    return acc;
+  }, {});
 
   for (const [file, fileFindings] of Object.entries(byFile)) {
     console.error(`📄 ${file}`);
     for (const finding of fileFindings) {
-      console.error(`   Line ${finding.lineNumber}: ${finding.line}`);
+      console.error(`   Line ${String(finding.lineNumber)}: ${finding.line}`);
     }
     console.error("");
   }
