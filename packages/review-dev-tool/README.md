@@ -142,6 +142,7 @@ src/
 ### Architecture
 
 This is a **fully static application** that runs entirely in the browser:
+
 - No backend server required
 - All API calls (OpenAI, Gemini, S3) happen client-side
 - All data stored in browser (localStorage, IndexedDB)
