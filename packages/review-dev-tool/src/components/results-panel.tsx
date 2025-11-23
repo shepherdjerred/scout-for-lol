@@ -13,7 +13,7 @@ import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
 import { createPendingEntry, saveCompletedEntry, updateHistoryRating, type HistoryEntry } from "../lib/history-manager";
 import { StarRating } from "./star-rating";
 
-interface ResultsPanelProps {
+type ResultsPanelProps = {
   config: ReviewConfig;
   match?: CompletedMatch | ArenaMatch | undefined;
   result?: GenerationResult | undefined;
@@ -39,7 +39,7 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
 
   // Listen for cost updates
   if (typeof window !== "undefined") {
-    window.addEventListener("cost-update", () => setForceUpdate((n) => n + 1));
+    window.addEventListener("cost-update", () => { setForceUpdate((n) => n + 1); });
   }
 
   // Timer for progress animation for all active generations
@@ -55,7 +55,7 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       );
     }, 100);
 
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); };
   }, [activeGenerations]);
 
   const handleGenerate = async () => {
@@ -232,7 +232,7 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
               return (
                 <button
                   key={gen.id}
-                  onClick={() => handleSelectActiveGeneration(gen.id)}
+                  onClick={() => { handleSelectActiveGeneration(gen.id); }}
                   className={`w-full text-left p-3 rounded border transition-colors ${
                     isSelected
                       ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30"
@@ -270,7 +270,9 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
             )}
           </div>
           <button
-            onClick={handleGenerate}
+            onClick={() => {
+              void handleGenerate();
+            }}
             className="px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
           >
             Generate New Review
@@ -473,7 +475,7 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
                   <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2.5">
                     <div
                       className="bg-blue-600 dark:bg-blue-400 h-2.5 rounded-full transition-all duration-300"
-                      style={{ width: `${progressPercent}%` }}
+                      style={{ width: `${progressPercent.toString()}%` }}
                     ></div>
                   </div>
                   <div className="text-xs text-blue-700 dark:text-blue-300 text-center">{progressPercent}%</div>
@@ -536,7 +538,13 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
               <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Rate this generation</h3>
                 <div className="mb-3">
-                  <StarRating rating={rating} onRate={handleRatingChange} size="large" />
+                  <StarRating
+                    rating={rating}
+                    onRate={(newRating) => {
+                      void handleRatingChange(newRating);
+                    }}
+                    size="large"
+                  />
                 </div>
                 <div>
                   <label
@@ -548,7 +556,9 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
                   <textarea
                     id="rating-notes"
                     value={notes}
-                    onChange={(e) => handleNotesChange(e.target.value)}
+                    onChange={(e) => {
+                      void handleNotesChange(e.target.value);
+                    }}
                     placeholder="What did you like or dislike about this generation?"
                     className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent resize-vertical placeholder:text-gray-400 dark:placeholder:text-gray-500"
                     rows={2}

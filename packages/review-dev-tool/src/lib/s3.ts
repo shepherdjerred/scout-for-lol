@@ -1,16 +1,13 @@
 /**
- * S3 integration for fetching match data (via Astro API endpoints)
+ * S3 integration for fetching match data (direct client-side)
  */
+import { S3Client, ListObjectsV2Command, GetObjectCommand, type ListObjectsV2CommandOutput } from "@aws-sdk/client-s3";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import type { ArenaMatch, CompletedMatch, Champion } from "@scout-for-lol/data";
 import { parseQueueType, parseLane, getLaneOpponent, parseTeam, invertTeam } from "@scout-for-lol/data";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
 import { getCachedDataAsync, setCachedData } from "./cache";
 import { match } from "ts-pattern";
-import { z } from "zod";
-// Import match conversion utilities
-// These would normally come from the report-ui package
-// For now, we'll import what we can
 
 /**
  * S3 configuration
@@ -22,21 +19,6 @@ export type S3Config = {
   region: string;
   endpoint?: string; // For Cloudflare R2 or custom S3 endpoints
 };
-
-// Zod schema for S3 list response
-const S3ObjectSchema = z.object({
-  Key: z.string(),
-  LastModified: z.string().optional(),
-  ETag: z.string().optional(),
-  Size: z.number().optional(),
-  StorageClass: z.string().optional(),
-});
-
-const S3ListResponseSchema = z.object({
-  contents: z.array(S3ObjectSchema).optional(),
-  isTruncated: z.boolean().optional(),
-  nextContinuationToken: z.string().optional(),
-});
 
 /**
  * Generate date prefixes for S3 listing between start and end dates
@@ -63,11 +45,21 @@ function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
 }
 
 /**
- * List matches from S3 for the last 7 days (via API endpoint)
+ * List matches from S3 for the last 7 days (direct client-side)
  * Results are cached: 10 minutes for today, 24 hours for older days
  */
 export async function listMatchesFromS3(config: S3Config): Promise<{ key: string; lastModified?: Date }[]> {
   const allMatches: { key: string; lastModified?: Date }[] = [];
+
+  // Create S3 client
+  const client = new S3Client({
+    region: config.region,
+    ...(config.endpoint ? { endpoint: config.endpoint } : {}),
+    credentials: {
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
+    },
+  });
 
   // Fetch all 7 days (0 = today, 1 = yesterday, ..., 6 = 6 days ago)
   for (let daysBack = 0; daysBack < 7; daysBack++) {
@@ -106,61 +98,57 @@ export async function listMatchesFromS3(config: S3Config): Promise<{ key: string
             return { key: obj.key };
           });
         } else {
-          // Fetch from API
-          const response = await fetch("/api/r2/list", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              bucketName: config.bucketName,
-              accessKeyId: config.accessKeyId,
-              secretAccessKey: config.secretAccessKey,
-              region: config.region,
-              endpoint: config.endpoint,
-              prefix,
-            }),
-          });
+          // Fetch directly from S3
+          type S3Object = {
+            Key?: string | undefined;
+            LastModified?: Date | undefined;
+            ETag?: string | undefined;
+            Size?: number | undefined;
+            StorageClass?: string | undefined;
+          };
+          const allContents: S3Object[] = [];
+          let nextToken: string | undefined = undefined;
+          let iterations = 0;
+          const maxIterations = 10; // Max 10k objects (10 * 1000)
 
-          if (!response.ok) {
-            const text = await response.text();
-            console.error(`R2 list error response (${String(response.status)}):`, text);
-            try {
-              const errorData: unknown = JSON.parse(text);
-              const ErrorSchema = z.object({ error: z.string().optional() });
-              const errorResult = ErrorSchema.safeParse(errorData);
-              const errorMessage = errorResult.success ? errorResult.data.error : undefined;
-              throw new Error(errorMessage ?? "Failed to list objects");
-            } catch {
-              throw new Error(`Failed to list objects: ${text}`);
-            }
-          }
-
-          const rawData: unknown = await response.json();
-          const listResult = S3ListResponseSchema.safeParse(rawData);
-
-          if (listResult.success && listResult.data.contents) {
-            matches = listResult.data.contents
-              .filter((obj) => obj.Key)
-              .map((obj) => {
-                const match: { key: string; lastModified?: Date } = {
-                  key: obj.Key,
-                };
-                if (obj.LastModified) {
-                  match.lastModified = new Date(obj.LastModified);
-                }
-                return match;
-              });
-
-            // Cache the result (store dates as ISO strings for serialization)
-            const cacheableData = matches.map((m) => {
-              if (m.lastModified) {
-                return { key: m.key, lastModified: m.lastModified.toISOString() };
-              }
-              return { key: m.key };
+          do {
+            const command = new ListObjectsV2Command({
+              Bucket: config.bucketName,
+              Prefix: prefix,
+              MaxKeys: 1000,
+              ...(nextToken ? { ContinuationToken: nextToken } : {}),
             });
-            await setCachedData("r2-list", cacheParams, cacheableData, cacheTTL);
-          } else {
-            matches = [];
-          }
+
+            const response: ListObjectsV2CommandOutput = await client.send(command);
+
+            if (response.Contents) {
+              allContents.push(...response.Contents);
+            }
+
+            nextToken = response.NextContinuationToken;
+            iterations++;
+          } while (nextToken && iterations < maxIterations);
+
+          matches = allContents
+            .filter((obj) => obj.Key)
+            .map((obj) => {
+              const match: { key: string; lastModified?: Date } = {
+                key: obj.Key!,
+              };
+              if (obj.LastModified) {
+                match.lastModified = obj.LastModified;
+              }
+              return match;
+            });
+
+          // Cache the result (store dates as ISO strings for serialization)
+          const cacheableData = matches.map((m) => {
+            if (m.lastModified) {
+              return { key: m.key, lastModified: m.lastModified.toISOString() };
+            }
+            return { key: m.key };
+          });
+          await setCachedData("r2-list", cacheParams, cacheableData, cacheTTL);
         }
 
         allMatches.push(...matches);
@@ -174,7 +162,7 @@ export async function listMatchesFromS3(config: S3Config): Promise<{ key: string
 }
 
 /**
- * Fetch a match from S3 (via API endpoint)
+ * Fetch a match from S3 (direct client-side)
  * Results are cached for 7 days (match data is immutable)
  */
 export async function fetchMatchFromS3(config: S3Config, key: string): Promise<MatchV5DTOs.MatchDto | null> {
@@ -194,33 +182,38 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
       return cached;
     }
 
-    // Cache miss - fetch from API
-    console.log(`[HTTP] Fetching match: ${key}`);
-    const response = await fetch("/api/r2/get", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        bucketName: config.bucketName,
+    // Cache miss - fetch directly from S3
+    console.log(`[S3] Fetching match: ${key}`);
+
+    // Create S3 client
+    const client = new S3Client({
+      region: config.region,
+      ...(config.endpoint ? { endpoint: config.endpoint } : {}),
+      credentials: {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,
-        region: config.region,
-        endpoint: config.endpoint,
-        key,
-      }),
+      },
     });
 
-    if (!response.ok) {
-      const errorData: unknown = await response.json();
-      const ErrorSchema = z.object({ error: z.string().optional() });
-      const errorResult = ErrorSchema.safeParse(errorData);
-      const errorMessage = errorResult.success ? errorResult.data.error : undefined;
-      throw new Error(errorMessage ?? "Failed to get object");
+    // Get object
+    const command = new GetObjectCommand({
+      Bucket: config.bucketName,
+      Key: key,
+    });
+
+    const response = await client.send(command);
+
+    if (!response.Body) {
+      throw new Error("Object not found");
     }
 
-    const rawData: unknown = await response.json();
+    // Convert stream to string
+    const bodyString = await response.Body.transformToString();
+    const rawData: unknown = JSON.parse(bodyString);
+
     // Note: MatchV5DTOs.MatchDto is a complex external type from twisted library
-    // We trust the API response format matches the expected MatchDto structure
-    const matchDto = rawData as unknown as MatchV5DTOs.MatchDto;
+    // We trust the S3 data format matches the expected MatchDto structure
+    const matchDto = rawData as MatchV5DTOs.MatchDto;
 
     // Cache the result for 7 days (match data is immutable)
     await setCachedData("r2-get", cacheParams, matchDto, 7 * 24 * 60 * 60 * 1000);

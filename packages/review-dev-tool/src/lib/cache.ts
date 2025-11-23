@@ -149,7 +149,7 @@ function cleanupExpiredEntries(): void {
     }
 
     if (keysToRemove.length > 0) {
-      console.log(`Cleaned up ${keysToRemove.length} expired cache entries`);
+      console.log(`Cleaned up ${keysToRemove.length.toString()} expired cache entries`);
     }
   } catch (error) {
     console.warn("Error during cache cleanup:", error);
@@ -168,7 +168,7 @@ export function getCachedData<T>(endpoint: string, params: Record<string, unknow
   // Check in-memory cache first (fastest)
   const memoryEntry = memoryCache.get(cacheKey);
   if (memoryEntry && isCacheValid(memoryEntry)) {
-    return memoryEntry.data as unknown as T;
+    return memoryEntry.data as T;
   }
 
   // Check localStorage cache
@@ -181,7 +181,7 @@ export function getCachedData<T>(endpoint: string, params: Record<string, unknow
       if (result.success && isCacheValid(result.data)) {
         // Restore to memory cache for faster subsequent access
         memoryCache.set(cacheKey, result.data);
-        return result.data.data as unknown as T;
+        return result.data.data as T;
       }
 
       // Invalid or expired - clean up
@@ -203,7 +203,7 @@ export async function getCachedDataAsync<T>(endpoint: string, params: Record<str
   // Check in-memory cache first (fastest)
   const memoryEntry = memoryCache.get(cacheKey);
   if (memoryEntry && isCacheValid(memoryEntry)) {
-    return memoryEntry.data as unknown as T;
+    return memoryEntry.data as T;
   }
 
   // Check IndexedDB (primary storage)
@@ -234,7 +234,7 @@ export async function getCachedDataAsync<T>(endpoint: string, params: Record<str
     if (entry && isCacheValid(entry)) {
       // Restore to memory cache for faster subsequent access
       memoryCache.set(cacheKey, entry);
-      return entry.data as unknown as T;
+      return entry.data as T;
     }
   } catch (error) {
     console.warn("IndexedDB cache read error:", error);
@@ -250,7 +250,7 @@ export async function getCachedDataAsync<T>(endpoint: string, params: Record<str
       if (result.success && isCacheValid(result.data)) {
         // Restore to memory cache for faster subsequent access
         memoryCache.set(cacheKey, result.data);
-        return result.data.data as unknown as T;
+        return result.data.data as T;
       }
 
       // Invalid or expired - clean up

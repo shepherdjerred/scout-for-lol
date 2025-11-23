@@ -47,12 +47,12 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
 
   // Convert built-in styles to format with IDs
   const builtinStyles = ART_STYLES.map((style, index) => ({
-    id: `builtin-style-${index}`,
+    id: `builtin-style-${index.toString()}`,
     description: style.description,
   }));
 
   const builtinThemes = ART_THEMES.map((theme, index) => ({
-    id: `builtin-theme-${index}`,
+    id: `builtin-theme-${index.toString()}`,
     description: theme.description,
   }));
 
@@ -230,8 +230,8 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
           <div className="p-4">
             <h4 className="text-sm font-semibold text-gray-700 mb-3">
               {viewMode === "styles"
-                ? `Available Styles (${filteredStyles.length})`
-                : `Available Themes (${filteredThemes.length})`}
+                ? `Available Styles (${filteredStyles.length.toString()})`
+                : `Available Themes (${filteredThemes.length.toString()})`}
             </h4>
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {viewMode === "styles" &&

@@ -50,7 +50,7 @@ export function StarRating({ rating, onRate, size = "medium", readonly = false }
             }}
             disabled={!isInteractive}
             className="border-none bg-transparent p-0 transition-transform disabled:cursor-default enabled:cursor-pointer enabled:hover:scale-110"
-            aria-label={`Rate ${starNumber} star${starNumber > 1 ? "s" : ""}`}
+            aria-label={`Rate ${starNumber.toString()} star${starNumber > 1 ? "s" : ""}`}
           >
             <svg
               width={starSize}

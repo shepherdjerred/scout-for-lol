@@ -1,6 +1,6 @@
 # Review Generator Dev Tool
 
-A development tool for experimenting with match review generation settings for Scout for LoL.
+A fully static development tool for experimenting with match review generation settings for Scout for LoL. No backend or server required!
 
 ## Features
 
@@ -76,9 +76,10 @@ Access the personality editor via:
 
 #### Match Browser
 
-- Browse recent matches from S3
+- Browse recent matches from S3 (requires CORS configuration on bucket)
 - Filter by queue type
 - Preview match metadata
+- Direct client-side S3 access (no backend proxy needed)
 
 #### Cost Tracking
 
@@ -96,6 +97,24 @@ Access the personality editor via:
 
 ⚠️ This tool stores API keys in browser localStorage and is intended for **local development only**. Do not deploy this tool to production or share your API keys.
 
+### S3/R2 CORS Configuration
+
+If you want to browse matches from S3/R2, you'll need to configure CORS on your bucket to allow browser access. Example CORS configuration:
+
+```json
+[
+  {
+    "AllowedOrigins": ["http://localhost:4321"],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": [],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+For production deployments, update `AllowedOrigins` to match your domain.
+
 ## Development
 
 ### Project Structure
@@ -112,13 +131,21 @@ src/
 
 ### Key Technologies
 
-- **Astro** - Framework
+- **Astro** - Static site framework (no server/backend)
 - **React** - UI components
 - **Tailwind CSS** - Styling
-- **OpenAI SDK** - Text generation
-- **Google Generative AI** - Image generation
-- **AWS SDK** - S3 integration
+- **OpenAI SDK** - Text generation (client-side)
+- **Google Generative AI** - Image generation (client-side)
+- **AWS SDK** - S3 integration (client-side)
 - **Zod** - Validation
+
+### Architecture
+
+This is a **fully static application** that runs entirely in the browser:
+- No backend server required
+- All API calls (OpenAI, Gemini, S3) happen client-side
+- All data stored in browser (localStorage, IndexedDB)
+- Can be deployed to any static hosting service (GitHub Pages, Netlify, Vercel, etc.)
 
 ## License
 

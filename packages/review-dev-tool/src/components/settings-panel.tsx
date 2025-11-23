@@ -40,7 +40,7 @@ export function SettingsPanel({
 
   const handleExport = () => {
     const blob = exportGlobalConfigAsBlob(globalConfig);
-    navigator.clipboard.writeText(blob);
+    void navigator.clipboard.writeText(blob);
     alert("API config copied to clipboard! Share this with trusted users.");
   };
 

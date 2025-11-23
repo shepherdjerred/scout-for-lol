@@ -64,12 +64,12 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
 
   // Convert built-in styles/themes to format with IDs (use Array.from to avoid readonly issues)
   const builtinStylesFormatted = Array.from(ART_STYLES).map((style, index) => ({
-    id: `builtin-style-${index}`,
+    id: `builtin-style-${index.toString()}`,
     description: style.description,
   }));
 
   const builtinThemesFormatted = Array.from(ART_THEMES).map((theme, index) => ({
-    id: `builtin-theme-${index}`,
+    id: `builtin-theme-${index.toString()}`,
     description: theme.description,
   }));
 
@@ -126,7 +126,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
       // Create new custom personality (or copy of built-in)
       const newPersonality = {
         ...personality,
-        id: editingPersonality?.id || generatePersonalityId(personality.metadata.name),
+        id: editingPersonality?.id ?? generatePersonalityId(personality.metadata.name),
       };
       addCustomPersonality(newPersonality);
     }
@@ -142,7 +142,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
     } else {
       const newStyle = {
         ...style,
-        id: editingStyle?.id || generateArtStyleId(style.description),
+        id: editingStyle?.id ?? generateArtStyleId(style.description),
       };
       addCustomArtStyle(newStyle);
     }
@@ -158,7 +158,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
     } else {
       const newTheme = {
         ...theme,
-        id: editingTheme?.id || generateArtThemeId(theme.description),
+        id: editingTheme?.id ?? generateArtThemeId(theme.description),
       };
       addCustomArtTheme(newTheme);
     }

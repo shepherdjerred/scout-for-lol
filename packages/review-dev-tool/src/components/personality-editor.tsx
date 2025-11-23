@@ -35,7 +35,7 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
       };
 
       const newPersonality: Personality = {
-        id: personality?.id ?? `custom-${Date.now()}`,
+        id: personality?.id ?? `custom-${Date.now().toString()}`,
         metadata,
         instructions: instructions.trim(),
       };

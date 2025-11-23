@@ -156,7 +156,7 @@ export function RatingsAnalytics() {
                 <div key={rating} className="flex-1 flex flex-col items-center">
                   <div
                     className="w-full bg-blue-500 rounded-t transition-all flex items-start justify-center pt-2 text-white font-semibold text-sm"
-                    style={{ height: `${height}%`, minHeight: count > 0 ? "32px" : "0" }}
+                    style={{ height: `${height.toString()}%`, minHeight: count > 0 ? "32px" : "0" }}
                   >
                     {count > 0 && count}
                   </div>

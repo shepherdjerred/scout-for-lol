@@ -66,7 +66,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
 
         if (cachedMetadata && cachedMetadata.length > 0) {
           // Instant load from cache - no loading UI!
-          console.log(`[Cache HIT] Loaded ${cachedMetadata.length} matches from cache (IndexedDB/localStorage)`);
+          console.log(`[Cache HIT] Loaded ${cachedMetadata.length.toString()} matches from cache (IndexedDB/localStorage)`);
           setMatches(cachedMetadata);
           setError(null);
           return;
@@ -111,7 +111,6 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
           // Fetch batch in parallel
           const batchResults = await Promise.allSettled(
             batch.map(async (matchKey) => {
-              if (!matchKey) return null;
               const matchDto = await fetchMatchFromS3(s3Config, matchKey.key);
               if (matchDto) {
                 return extractMatchMetadataFromDto(matchDto, matchKey.key);
@@ -137,7 +136,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
         }
 
         // Cache the metadata array for fast subsequent loads (24 hour TTL)
-        console.log(`[Cache WRITE] Caching ${matchData.length} matches for 24 hours`);
+        console.log(`[Cache WRITE] Caching ${matchData.length.toString()} matches for 24 hours`);
         await setCachedData("match-metadata", cacheKey, matchData, 24 * 60 * 60 * 1000);
 
         setMatches(matchData);
@@ -160,7 +159,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
   // Auto-load matches on mount when S3 config is available
   useEffect(() => {
     if (s3Config && matches.length === 0 && !loading) {
-      handleBrowse();
+      void handleBrowse();
     }
   }, [s3Config?.bucketName]); // Only trigger when config changes, not on every render
 
@@ -171,7 +170,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     const interval = setInterval(
       () => {
         // Force refresh to get latest data (bypasses metadata cache)
-        handleBrowse(true);
+        void handleBrowse(true);
       },
       10 * 60 * 1000,
     ); // 10 minutes
@@ -227,7 +226,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     }
 
     // Player name fuzzy filter
-    if (filterPlayer && filterPlayer.trim()) {
+    if (filterPlayer?.trim()) {
       const fuse = new Fuse(result, {
         keys: ["playerName"],
         threshold: 0.3, // Lower = more strict, higher = more fuzzy
@@ -239,7 +238,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     }
 
     // Champion fuzzy filter
-    if (filterChampion && filterChampion.trim()) {
+    if (filterChampion?.trim()) {
       const fuse = new Fuse(result, {
         keys: ["champion"],
         threshold: 0.3,
@@ -281,7 +280,9 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
         {s3Config && (
           <div className="space-y-1">
             <button
-              onClick={() => handleBrowse(true)}
+              onClick={() => {
+                void handleBrowse(true);
+              }}
               disabled={loading}
               className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
@@ -391,7 +392,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${(loadingProgress.current / loadingProgress.total) * 100}%` }}
+                  style={{ width: `${((loadingProgress.current / loadingProgress.total) * 100).toString()}%` }}
                 />
               </div>
               <button
@@ -419,7 +420,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
             <span className="text-xs text-gray-600 dark:text-gray-400">
               Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredMatches.length)} of{" "}
               {filteredMatches.length} {filteredMatches.length === 1 ? "result" : "results"}
-              {matches.length !== filteredMatches.length && ` (filtered from ${matches.length})`}
+              {matches.length !== filteredMatches.length && ` (filtered from ${matches.length.toString()})`}
             </span>
             <select
               value={pageSize}
@@ -441,11 +442,15 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
             <div className="space-y-2 p-2">
               {paginatedMatches.map((match, idx) => {
                 const isSelected =
-                  selectedMetadata?.key === match.key && selectedMetadata?.playerName === match.playerName;
+                  selectedMetadata !== null &&
+                  selectedMetadata.key === match.key &&
+                  selectedMetadata.playerName === match.playerName;
                 return (
                   <div
-                    key={`${match.key}-${match.playerName}-${idx}`}
-                    onClick={() => handleSelectMatch(match)}
+                    key={`${match.key}-${match.playerName}-${idx.toString()}`}
+                    onClick={() => {
+                      void handleSelectMatch(match);
+                    }}
                     className={`rounded p-2 transition-colors cursor-pointer ${
                       isSelected
                         ? "bg-blue-100 dark:bg-blue-900 border-2 border-blue-500 dark:border-blue-400"

@@ -11,7 +11,7 @@ type MatchDetailsPanelProps = {
 function formatDuration(seconds: number): string {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
-  return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+  return `${minutes.toString()}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
 function isArenaMatch(match: CompletedMatch | ArenaMatch): match is ArenaMatch {
@@ -88,7 +88,7 @@ export function MatchDetailsPanel({ match }: MatchDetailsPanelProps) {
                 {!isArena && "rankAfterMatch" in player && player.rankAfterMatch && (
                   <div className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">
                     <strong>Rank:</strong> {player.rankAfterMatch.tier} {player.rankAfterMatch.division}
-                    {player.rankAfterMatch.lp !== undefined && ` (${player.rankAfterMatch.lp} LP)`}
+                    {player.rankAfterMatch.lp !== undefined && ` (${player.rankAfterMatch.lp.toString()} LP)`}
                   </div>
                 )}
               </div>

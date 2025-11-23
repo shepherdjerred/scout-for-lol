@@ -27,14 +27,14 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
   // Refresh on mount
   useEffect(() => {
     console.log("[History] HistoryPanel mounted");
-    refreshHistory();
+    void refreshHistory();
   }, []);
 
   // Refresh when trigger changes
   useEffect(() => {
     if (refreshTrigger !== undefined && refreshTrigger > 0) {
       console.log("[History] Refresh triggered:", refreshTrigger);
-      refreshHistory();
+      void refreshHistory();
     }
   }, [refreshTrigger]);
 
@@ -67,9 +67,9 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
     const days = Math.floor(diff / 86400000);
 
     if (minutes < 1) return "Just now";
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    if (days < 7) return `${days}d ago`;
+    if (minutes < 60) return `${minutes.toString()}m ago`;
+    if (hours < 24) return `${hours.toString()}h ago`;
+    if (days < 7) return `${days.toString()}d ago`;
 
     return date.toLocaleDateString();
   };
@@ -95,7 +95,9 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
           <div className="text-sm text-red-900 dark:text-red-200 mb-2">Are you sure you want to clear all history?</div>
           <div className="flex gap-2">
             <button
-              onClick={handleClearAll}
+              onClick={() => {
+                void handleClearAll();
+              }}
               className="px-3 py-1 bg-red-600 dark:bg-red-500 text-white text-sm rounded hover:bg-red-700 dark:hover:bg-red-600"
             >
               Yes, clear all
@@ -126,12 +128,20 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
             const hasError = entry.status === "error";
 
             return (
-              <button
+              <div
                 key={entry.id}
                 onClick={() => {
                   onSelectEntry(entry);
                 }}
-                className={`w-full text-left p-3 rounded border transition-colors ${
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelectEntry(entry);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                className={`w-full text-left p-3 rounded border transition-colors cursor-pointer ${
                   isSelected
                     ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30"
                     : isPending
@@ -197,7 +207,9 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
                       </button>
                     )}
                     <button
-                      onClick={(e) => handleDelete(entry.id, e)}
+                      onClick={(e) => {
+                        void handleDelete(entry.id, e);
+                      }}
                       className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                       title="Delete"
                     >
@@ -211,7 +223,7 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
                     </button>
                   </div>
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>

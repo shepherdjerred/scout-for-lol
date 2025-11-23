@@ -88,13 +88,13 @@ export default function App() {
 
   const addTab = () => {
     if (tabs.length >= MAX_TABS) {
-      alert(`Maximum ${MAX_TABS} tabs allowed`);
+      alert(`Maximum ${MAX_TABS.toString()} tabs allowed`);
       return;
     }
 
     const newTab: TabData = {
-      id: `tab-${Date.now()}`,
-      name: `Config ${tabs.length + 1}`,
+      id: `tab-${Date.now().toString()}`,
+      name: `Config ${(tabs.length + 1).toString()}`,
       config: createDefaultTabConfig(),
     };
 
@@ -104,7 +104,7 @@ export default function App() {
 
   const cloneTab = (id: string) => {
     if (tabs.length >= MAX_TABS) {
-      alert(`Maximum ${MAX_TABS} tabs allowed`);
+      alert(`Maximum ${MAX_TABS.toString()} tabs allowed`);
       return;
     }
 
@@ -114,7 +114,7 @@ export default function App() {
     }
 
     const newTab: TabData = {
-      id: `tab-${Date.now()}`,
+      id: `tab-${Date.now().toString()}`,
       name: `${tabToClone.name} (Copy)`,
       config: structuredClone(tabToClone.config),
       // Don't copy result or match - start fresh

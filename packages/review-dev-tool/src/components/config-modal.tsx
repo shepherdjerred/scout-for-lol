@@ -201,7 +201,9 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
                   Cancel
                 </button>
                 <button
-                  onClick={handleResetConfirm}
+                  onClick={() => {
+                    void handleResetConfirm();
+                  }}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                 >
                   Reset to Defaults

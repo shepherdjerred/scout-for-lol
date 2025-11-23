@@ -16,7 +16,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
 
   const handleExport = () => {
     const blob = exportGlobalConfigAsBlob(config);
-    navigator.clipboard.writeText(blob);
+    void navigator.clipboard.writeText(blob);
     alert("API config copied to clipboard! Share this with trusted users.");
   };
 
