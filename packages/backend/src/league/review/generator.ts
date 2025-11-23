@@ -6,6 +6,7 @@ import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { match as matchPattern } from "ts-pattern";
 import { z } from "zod";
+import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import config from "../../configuration.js";
 import { saveAIReviewImageToS3 } from "../../storage/s3.js";
 import {
@@ -15,6 +16,8 @@ import {
   getLaneContext,
   replaceTemplateVariables,
 } from "./prompts.js";
+import { selectRandomStyleAndTheme } from "./art-styles.js";
+import { curateMatchData, type CuratedMatchData } from "./curator.js";
 
 const FILENAME = fileURLToPath(import.meta.url);
 const DIRNAME = dirname(FILENAME);
@@ -41,100 +44,16 @@ function getGeminiClient(): GoogleGenerativeAI | undefined {
 }
 
 /**
- * Art styles for AI-generated review images
- */
-const ART_STYLES = [
-  // Comic & Graphic Novel Styles
-  "Marvel/Avengers style with bold inking and dynamic action poses",
-  "DC Comics with dramatic shadows, heroic composition, and intense atmosphere",
-  "Naruto/Shonen manga style with energetic action and bold line work",
-  "Avatar: The Last Airbender style with fluid movement and elemental effects",
-  "Indie comic book with unique line work, creative paneling, and distinctive color palette",
-  "Golden age comics with Ben-Day dots, vintage feel, and retro typography",
-  "Graphic novel noir with high contrast, moody shadows, and cinematic angles",
-  "Graphic novel style with dynamic paneling, dramatic angles, and sequential storytelling",
-
-  // Classic & Fine Art
-  "Impressionist painting style with visible brushstrokes, dappled light, and soft color blending",
-  "Oil painting with rich textures, classical composition, and painterly brushstrokes",
-  "Watercolor painting with artistic flair, flowing brushwork, and soft gradients",
-  "Art nouveau with decorative frames, elegant curves, and ornamental details",
-  "Art deco with geometric patterns, luxurious gold accents, and streamlined elegance",
-  "Surrealist dreamscape with impossible geometry, symbolic imagery, and ethereal atmosphere",
-  "Expressionist style with bold emotional colors, distorted forms, and raw intensity",
-  "Baroque painting with dramatic lighting, rich details, and dynamic movement",
-
-  // Illustration & Poster Art
-  "Movie poster style with cinematic composition and dramatic lighting",
-  "Epic fantasy illustration with dramatic composition and magical atmosphere",
-  "Soviet propaganda poster with bold typography, heroic figures, and striking red colors",
-  "Psychedelic 60s poster art with swirling patterns, vibrant colors, and groovy typography",
-  "Victorian Gothic illustration with intricate details, dark romanticism, and ornate borders",
-  "Medieval manuscript illumination with gold leaf, intricate borders, and vibrant miniatures",
-  "Tarot card art with mystical symbols, ornate frames, and esoteric imagery",
-
-  // Modern & Contemporary
-  "Pop art style with bold colors, Ben-Day dots, and comic-inspired compositions",
-  "Memphis design with bold geometric shapes, bright colors, and 80s postmodern aesthetic",
-  "Minimalist flat design with clean lines, limited color palette, and geometric simplicity",
-  "Bauhaus geometric style with primary colors, circles, squares, and functional beauty",
-  "Glitch art with digital corruption, chromatic aberration, and databending effects",
-
-  // Cultural & Traditional
-  "Ukiyo-e Japanese woodblock print style with flat colors and elegant lines",
-  "Chinese ink wash painting with flowing brushwork, misty atmosphere, and calligraphic elegance",
-  "Aztec/Mayan art with geometric patterns, bold symbols, and ancient iconography",
-  "Persian miniature painting with intricate patterns, rich colors, and delicate detail",
-  "Aboriginal dot painting with symbolic patterns, earth tones, and dreamtime storytelling",
-
-  // Urban & Contemporary
-  "Graffiti/street art style with bold colors, urban energy, and spray paint texture",
-  "Stencil art style with sharp edges, high contrast, and urban activist aesthetic",
-  "Neon sign art with glowing tubes, retro typography, and nighttime city vibes",
-
-  // Digital & Gaming
-  "Retro pixel art in detailed 16-bit game style with vibrant colors",
-  "Cyberpunk aesthetic with neon-soaked futuristic elements and urban grit",
-  "Synthwave/vaporwave aesthetic with pink and purple gradients, retro-futuristic vibes",
-  "Isometric game art with precise angles, pixel-perfect details, and strategic perspective",
-  "Bowling alley strike animation with campy over-the-top 3D CGI, dramatic explosions, and cheesy special effects",
-
-  // Textures & Materials
-  "Stained glass window style with bold outlines and colorful geometric segments",
-  "Paper cut-out art with layered depth, bold shapes, and clean shadows",
-  "Mosaic tile art with small colorful pieces forming larger images and patterns",
-  "Carved wood relief with dimensional depth, natural grain, and tactile texture",
-  "Embroidered tapestry style with thread texture, cross-stitch detail, and textile warmth",
-
-  // Photographic & Realistic
-  "Film noir photography with dramatic shadows, high contrast, and moody black and white",
-  "Hyperrealistic digital painting with meticulous detail, perfect lighting, and lifelike textures",
-  "Double exposure photography with overlapping images, dreamy transparency, and poetic layering",
-
-  // Animation Styles
-  "Studio Ghibli's dreamy, whimsical aesthetic with soft colors and emotional depth",
-  "Disney Renaissance style with expressive characters, musical energy, and theatrical storytelling",
-] as const;
-
-/**
- * Randomly select an art style for image generation
- */
-function selectRandomArtStyle(): string {
-  const randomIndex = Math.floor(Math.random() * ART_STYLES.length);
-  const style = ART_STYLES[randomIndex];
-  if (!style) {
-    throw new Error("Failed to select art style");
-  }
-  return style;
-}
-
-/**
  * Generate an AI-powered image from review text using Gemini
  */
 async function generateReviewImage(
   reviewText: string,
+  match: CompletedMatch | ArenaMatch,
   matchId: MatchId,
   queueType: string,
+  style: string,
+  themes: string[],
+  curatedData?: CuratedMatchData,
 ): Promise<Buffer | undefined> {
   const client = getGeminiClient();
   if (!client) {
@@ -142,8 +61,15 @@ async function generateReviewImage(
     return undefined;
   }
   try {
-    const artStyle = selectRandomArtStyle();
-    console.log(`[generateReviewImage] Selected art style: ${artStyle}`);
+    const isMashup = themes.length > 1;
+
+    console.log(`[generateReviewImage] Using art style: ${style}`);
+    if (isMashup) {
+      console.log(`[generateReviewImage] MASHUP! Themes: ${themes.join(" meets ")}`);
+    } else {
+      const firstTheme = themes[0];
+      console.log(`[generateReviewImage] Using theme: ${firstTheme ?? "unknown"}`);
+    }
     console.log("[generateReviewImage] Calling Gemini API to generate image...");
 
     const model = client.getGenerativeModel({
@@ -160,23 +86,51 @@ async function generateReviewImage(
       }, TIMEOUT_MS);
     });
 
+    // Build theme description
+    const themeDescription = isMashup
+      ? `Themes (MASHUP - blend these two): ${themes.join(" meets ")}`
+      : `Theme (subject matter): ${themes[0] ?? "unknown"}`;
+
+    const mashupInstructions = isMashup
+      ? `
+MASHUP MODE:
+- You have TWO themes to blend together in a creative crossover
+- Merge elements from both themes into a single cohesive image
+- Think of it as a crossover episode or collaboration between these universes
+- Be creative in how you combine the visual elements and characters from both themes
+`
+      : "";
+
     const result = await Promise.race([
       model.generateContent(
         `Generate a creative and visually striking image based on this League of Legends match review.
 
-Art style to use: ${artStyle}
+Art style (visual aesthetic): ${style}
 
-CRITICAL: You MUST use ONLY the art style specified above. Do not mix styles or use any other style. Commit fully to this specific aesthetic.
+${themeDescription}
 
+CRITICAL INSTRUCTIONS:
+- You MUST use the EXACT art style specified above for the visual aesthetic (how it looks)
+- You MUST incorporate the theme(s) specified above for the subject matter (what's depicted)
+- These are SEPARATE elements that must work together - apply the style TO the theme(s)
+- Do not change the specified style
+- Commit fully to both the visual aesthetic AND the subject matter
+${mashupInstructions}
 Review text to visualize and elaborate on: "${reviewText}"
 
 Important:
 - Interpret and expand on the themes, emotions, and key moments from the review
 - Create something visually interesting that captures the essence of the performance and feedback
-- Use your chosen art style consistently and make the composition dynamic
+- Apply the specified art style consistently throughout the entire image
+- Incorporate the specified theme(s) into the subject matter and characters
 - Add visual storytelling elements - show the action, emotion, and drama beyond the literal text
 - Make it feel like cover art or a key moment illustration
-- Stay true to the specified art style throughout the entire image`,
+- The art style defines HOW it looks, the theme(s) define WHAT is shown
+- DO NOT include long text strings or labels (e.g., no "irfan here:", no reviewer names, no text captions)
+- Small numerical stats are acceptable (e.g., kill counts, scores), but avoid any prose or identifying text
+- Focus on visual storytelling rather than text explanations
+
+Here is the match data: ${JSON.stringify(curatedData ? { processedMatch: match, detailedStats: curatedData } : match, null, 2)}`,
       ),
       timeoutPromise,
     ]);
@@ -239,9 +193,22 @@ Important:
 }
 
 /**
+ * Metadata about the generated review
+ */
+export type ReviewMetadata = {
+  reviewerName: string;
+  playerName: string;
+  style?: string;
+  themes?: string[];
+};
+
+/**
  * Generate an AI-powered review using OpenAI
  */
-async function generateAIReview(match: CompletedMatch | ArenaMatch): Promise<string | undefined> {
+async function generateAIReview(
+  match: CompletedMatch | ArenaMatch,
+  curatedData?: CuratedMatchData,
+): Promise<{ review: string; metadata: ReviewMetadata } | undefined> {
   const client = getOpenAIClient();
   if (!client) {
     console.log("[generateAIReview] OpenAI API key not configured, skipping AI review");
@@ -337,7 +304,16 @@ async function generateAIReview(match: CompletedMatch | ArenaMatch): Promise<str
     const playerLane = matchData["lane"] ?? "unknown lane";
     const opponentChampion = matchData["laneOpponent"] ?? "an unknown opponent";
     const laneDescription = laneContextInfo.content;
-    const matchReport = JSON.stringify(match, null, 2);
+    const matchReport = curatedData
+      ? JSON.stringify(
+          {
+            processedMatch: match,
+            detailedStats: curatedData,
+          },
+          null,
+          2,
+        )
+      : JSON.stringify(match, null, 2);
 
     // Replace all template variables
     const userPrompt = replaceTemplateVariables(basePromptTemplate, {
@@ -382,7 +358,13 @@ async function generateAIReview(match: CompletedMatch | ArenaMatch): Promise<str
     }
 
     console.log("[generateAIReview] Successfully generated AI review");
-    return review;
+    return {
+      review,
+      metadata: {
+        reviewerName,
+        playerName,
+      },
+    };
   } catch (error) {
     console.error("[generateAIReview] Error generating AI review:", error);
     return undefined;
@@ -393,31 +375,52 @@ async function generateAIReview(match: CompletedMatch | ArenaMatch): Promise<str
  * Generates a post-game review for a player's performance with optional AI-generated image.
  * @param match - The completed match data (regular or arena)
  * @param matchId - The match ID for S3 storage
- * @returns A promise that resolves to an object with review text and optional image
+ * @param rawMatchData - Optional raw match data from Riot API for detailed stats
+ * @returns A promise that resolves to an object with review text, optional image, and metadata
  */
 export async function generateMatchReview(
   match: CompletedMatch | ArenaMatch,
   matchId: MatchId,
-): Promise<{ text: string; image?: Buffer }> {
+  rawMatchData?: MatchV5DTOs.MatchDto,
+): Promise<{ text: string; image?: Buffer; metadata?: ReviewMetadata }> {
+  // Curate the raw match data if provided
+  const curatedData = rawMatchData ? await curateMatchData(rawMatchData) : undefined;
+
   // Try to generate AI review
-  const aiReview = await generateAIReview(match);
-  const reviewText = aiReview ?? generatePlaceholderReview(match);
-  if (!aiReview) {
+  const aiReviewResult = await generateAIReview(match, curatedData);
+
+  if (!aiReviewResult) {
     console.log("[generateMatchReview] Falling back to placeholder review");
+    const reviewText = generatePlaceholderReview(match);
+    return { text: reviewText };
   }
+
+  const { review: reviewText, metadata } = aiReviewResult;
+
   // Generate AI image from the review text (only if we have a real AI review)
-  if (aiReview) {
-    const queueType = match.queueType === "arena" ? "arena" : (match.queueType ?? "unknown");
-    const reviewImage = await generateReviewImage(aiReview, matchId, queueType);
-    if (reviewImage) {
-      return {
-        text: reviewText,
-        image: reviewImage,
-      };
-    }
+  const queueType = match.queueType === "arena" ? "arena" : (match.queueType ?? "unknown");
+  const { style, themes } = selectRandomStyleAndTheme();
+
+  // Add style and theme to metadata
+  const fullMetadata: ReviewMetadata = {
+    ...metadata,
+    style,
+    themes,
+  };
+
+  const reviewImage = await generateReviewImage(reviewText, match, matchId, queueType, style, themes, curatedData);
+
+  if (reviewImage) {
+    return {
+      text: reviewText,
+      image: reviewImage,
+      metadata: fullMetadata,
+    };
   }
+
   return {
     text: reviewText,
+    metadata: fullMetadata,
   };
 }
 

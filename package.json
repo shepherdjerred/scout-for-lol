@@ -6,7 +6,8 @@
     "packages/data",
     "packages/report",
     "packages/report-ui",
-    "packages/frontend"
+    "packages/frontend",
+    "packages/review-dev-tool"
   ],
   "trustedDependencies": [
     "husky"

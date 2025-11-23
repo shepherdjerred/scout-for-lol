@@ -1,0 +1,38 @@
+{
+  "name": "@scout-for-lol/review-dev-tool",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check",
+    "lint": "astro check && eslint src",
+    "format": "prettier --check .",
+    "test": "echo 'No tests configured' && exit 0"
+  },
+  "dependencies": {
+    "@astrojs/react": "^4.3.1",
+    "@aws-sdk/client-s3": "^3.728.0",
+    "@google/generative-ai": "^0.21.0",
+    "@scout-for-lol/data": "workspace:*",
+    "@scout-for-lol/report-ui": "workspace:*",
+    "@tailwindcss/postcss": "^4.1.11",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "astro": "^5.0.9",
+    "openai": "^4.76.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "remeda": "^2.20.2",
+    "tailwindcss": "^4.0.0",
+    "ts-pattern": "^5.5.2",
+    "twisted": "^1.61.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "typescript": "^5.9.3"
+  }
+}
