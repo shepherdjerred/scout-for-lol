@@ -28,7 +28,7 @@
     "@vitejs/plugin-react": "^5.0.0",
     "bun-types": "latest",
     "typescript": "^5.0.0",
-    "vite": "^5.0.0"
+    "vite": "^7.0.0"
   },
   "description": "Browser-compatible report UI for Scout for League of Legends",
   "keywords": [
