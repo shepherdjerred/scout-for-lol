@@ -533,3 +533,190 @@ test("multiple highlighted players test", async () => {
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
+
+test("clash game test", async () => {
+  const matchClash = getMatch();
+  matchClash.queueType = "clash";
+
+  const svg = await matchToSvg(matchClash);
+  const png = await svgToPng(svg);
+  writeFileSync(new URL("__snapshots__/match_clash.png", import.meta.url), png);
+  writeFileSync(new URL("__snapshots__/match_clash.svg", import.meta.url), svg);
+
+  const svgHash = hashSvg(svg);
+  expect(svgHash).toMatchSnapshot();
+});
+
+test("aram clash game test", async () => {
+  const matchAramClash = getMatch();
+  matchAramClash.queueType = "aram clash";
+
+  const svg = await matchToSvg(matchAramClash);
+  const png = await svgToPng(svg);
+  writeFileSync(new URL("__snapshots__/match_aram_clash.png", import.meta.url), png);
+  writeFileSync(new URL("__snapshots__/match_aram_clash.svg", import.meta.url), svg);
+
+  const svgHash = hashSvg(svg);
+  expect(svgHash).toMatchSnapshot();
+});
+
+test("multiple players with promotion and demotion test", async () => {
+  const match: CompletedMatch = getMatch();
+
+  // First player (top) - PROMOTED from Gold 4 to Gold 3
+  match.players[0]!.rankBeforeMatch = {
+    division: 4,
+    tier: "gold",
+    lp: 90,
+    wins: 10,
+    losses: 20,
+  };
+  match.players[0]!.rankAfterMatch = {
+    division: 3,
+    tier: "gold",
+    lp: 0,
+    wins: 11,
+    losses: 20,
+  };
+  match.players[0]!.outcome = "Victory";
+
+  // Second player (jungle) - DEMOTED from Platinum 4 to Gold 1
+  match.players.push({
+    playerConfig: {
+      alias: "jungler",
+      league: {
+        leagueAccount: {
+          puuid: LeaguePuuidSchema.parse(
+            "XtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
+          ),
+          region: "AMERICA_NORTH",
+        },
+      },
+      discordAccount: {
+        id: DiscordAccountIdSchema.parse("98765432109876543"),
+      },
+    },
+    rankBeforeMatch: {
+      division: 4,
+      tier: "platinum",
+      lp: 0,
+      wins: 30,
+      losses: 35,
+    },
+    rankAfterMatch: {
+      division: 1,
+      tier: "gold",
+      lp: 75,
+      wins: 30,
+      losses: 36,
+    },
+    wins: 30,
+    losses: 35,
+    champion: {
+      riotIdGameName: "zainji",
+      championName: "Nocturne",
+      kills: 9,
+      deaths: 8,
+      assists: 10,
+      items: [1031, 6631, 3133, 3156, 3047, 3071, 3363],
+      spells: [4, 11],
+      runes: [],
+      lane: "jungle",
+      creepScore: 188,
+      visionScore: 21,
+      damage: 22737,
+      gold: 13930,
+      level: 15,
+    },
+    outcome: "Defeat",
+    team: "blue",
+    lane: "jungle",
+    laneOpponent: {
+      riotIdGameName: "Oroulerd",
+      championName: "Zac",
+      kills: 0,
+      deaths: 7,
+      assists: 10,
+      items: [6665, 2055, 3047, 1033, 3068, 0, 3364],
+      spells: [11, 4],
+      runes: [],
+      lane: "jungle",
+      creepScore: 134,
+      visionScore: 32,
+      damage: 10916,
+      gold: 9051,
+      level: 14,
+    },
+  });
+
+  // Third player (mid) - PLACED (no rank before)
+  match.players.push({
+    playerConfig: {
+      alias: "midlaner",
+      league: {
+        leagueAccount: {
+          puuid: LeaguePuuidSchema.parse(
+            "YtEsV464OFaO3c0_q9REa6wYF0HpC2LK4laLnyM7WhfAVeuDz9biieJ5ZRD049AUCBjLjyBeeezTaw",
+          ),
+          region: "AMERICA_NORTH",
+        },
+      },
+      discordAccount: {
+        id: DiscordAccountIdSchema.parse("11111111111111111"),
+      },
+    },
+    rankBeforeMatch: undefined,
+    rankAfterMatch: {
+      division: 3,
+      tier: "silver",
+      lp: 0,
+      wins: 5,
+      losses: 5,
+    },
+    wins: 5,
+    losses: 5,
+    champion: {
+      riotIdGameName: "Neeeeeeelson",
+      championName: "Akali",
+      kills: 8,
+      deaths: 2,
+      assists: 11,
+      items: [3089, 3111, 3152, 2055, 1082, 4645, 3364],
+      spells: [12, 4],
+      runes: [],
+      lane: "middle",
+      creepScore: 215,
+      visionScore: 27,
+      damage: 23266,
+      gold: 12686,
+      level: 16,
+    },
+    outcome: "Victory",
+    team: "blue",
+    lane: "middle",
+    laneOpponent: {
+      riotIdGameName: "suggsyman",
+      championName: "Viktor",
+      kills: 4,
+      deaths: 7,
+      assists: 4,
+      items: [1056, 6653, 3020, 4645, 3135, 0, 3340],
+      spells: [12, 4],
+      runes: [],
+      lane: "middle",
+      creepScore: 193,
+      visionScore: 21,
+      damage: 15943,
+      gold: 11613,
+      level: 15,
+    },
+  });
+
+  const svg = await matchToSvg(match);
+  const png = await svgToPng(svg);
+  writeFileSync(new URL("__snapshots__/match_promotion_demotion_mixed.png", import.meta.url), png);
+  writeFileSync(new URL("__snapshots__/match_promotion_demotion_mixed.svg", import.meta.url), svg);
+
+  const svgHash = hashSvg(svg);
+  expect(svgHash).toMatchSnapshot();
+});

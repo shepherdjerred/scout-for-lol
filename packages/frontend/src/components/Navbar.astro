@@ -6,7 +6,7 @@ interface Props {
 const { activePage } = Astro.props;
 ---
 
-<header class="absolute inset-x-0 top-0 z-50 bg-white">
+<header class="absolute inset-x-0 top-0 z-50 bg-white dark:bg-gray-900">
   <nav class="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
     <div class="flex lg:flex-1">
       <a href="/" class="-m-1.5 p-1.5">
@@ -19,7 +19,7 @@ const { activePage } = Astro.props;
     <div class="flex lg:hidden">
       <button
         type="button"
-        class="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
+        class="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 dark:text-gray-300"
         id="mobile-menu-button"
       >
         <span class="sr-only">Open main menu</span>
@@ -31,29 +31,29 @@ const { activePage } = Astro.props;
     <div class="hidden lg:flex lg:gap-x-12">
       <a
         href="/"
-        class:list={["text-sm/6 font-semibold", activePage === "home" ? "text-indigo-600" : "text-gray-900"]}
+        class:list={["text-sm/6 font-semibold", activePage === "home" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100"]}
         >Home</a
       >
       <a
         href="/getting-started"
-        class:list={["text-sm/6 font-semibold", activePage === "getting-started" ? "text-indigo-600" : "text-gray-900"]}
+        class:list={["text-sm/6 font-semibold", activePage === "getting-started" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100"]}
         >Getting Started</a
       >
       <a
         href="/docs"
-        class:list={["text-sm/6 font-semibold", activePage === "docs" ? "text-indigo-600" : "text-gray-900"]}
+        class:list={["text-sm/6 font-semibold", activePage === "docs" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100"]}
         >Documentation</a
       >
       <a
         href="/whatsnew"
-        class:list={["text-sm/6 font-semibold", activePage === "whatsnew" ? "text-indigo-600" : "text-gray-900"]}
+        class:list={["text-sm/6 font-semibold", activePage === "whatsnew" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100"]}
         >What's New</a
       >
       <a
         href="/support"
         class:list={[
           "text-sm/6 font-semibold inline-flex items-center gap-1",
-          activePage === "support" ? "text-indigo-600" : "text-gray-900 hover:text-indigo-600",
+          activePage === "support" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400",
         ]}
       >
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -69,7 +69,7 @@ const { activePage } = Astro.props;
         href="https://github.com/shepherdjerred/scout-for-lol"
         target="_blank"
         rel="noopener noreferrer"
-        class="text-sm/6 font-semibold text-gray-900 hover:text-indigo-600 inline-flex items-center gap-1"
+        class="text-sm/6 font-semibold text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400 inline-flex items-center gap-1"
       >
         <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path
@@ -96,7 +96,7 @@ const { activePage } = Astro.props;
         href="/"
         class:list={[
           "block rounded-md px-3 py-2 text-base font-medium",
-          activePage === "home" ? "bg-indigo-50 text-indigo-600" : "text-gray-900 hover:bg-gray-50",
+          activePage === "home" ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
         ]}
         >Home</a
       >
@@ -104,7 +104,7 @@ const { activePage } = Astro.props;
         href="/getting-started"
         class:list={[
           "block rounded-md px-3 py-2 text-base font-medium",
-          activePage === "getting-started" ? "bg-indigo-50 text-indigo-600" : "text-gray-900 hover:bg-gray-50",
+          activePage === "getting-started" ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
         ]}
         >Getting Started</a
       >
@@ -112,7 +112,7 @@ const { activePage } = Astro.props;
         href="/docs"
         class:list={[
           "block rounded-md px-3 py-2 text-base font-medium",
-          activePage === "docs" ? "bg-indigo-50 text-indigo-600" : "text-gray-900 hover:bg-gray-50",
+          activePage === "docs" ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
         ]}
         >Documentation</a
       >
@@ -120,7 +120,7 @@ const { activePage } = Astro.props;
         href="/whatsnew"
         class:list={[
           "block rounded-md px-3 py-2 text-base font-medium",
-          activePage === "whatsnew" ? "bg-indigo-50 text-indigo-600" : "text-gray-900 hover:bg-gray-50",
+          activePage === "whatsnew" ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
         ]}
         >What's New</a
       >
@@ -128,7 +128,7 @@ const { activePage } = Astro.props;
         href="/support"
         class:list={[
           "block rounded-md px-3 py-2 text-base font-medium inline-flex items-center gap-2",
-          activePage === "support" ? "bg-indigo-50 text-indigo-600" : "text-gray-900 hover:bg-gray-50",
+          activePage === "support" ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
         ]}
       >
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -144,7 +144,7 @@ const { activePage } = Astro.props;
         href="https://github.com/shepherdjerred/scout-for-lol"
         target="_blank"
         rel="noopener noreferrer"
-        class="block rounded-md px-3 py-2 text-base font-medium text-gray-900 hover:bg-gray-50 inline-flex items-center gap-2"
+        class="block rounded-md px-3 py-2 text-base font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 inline-flex items-center gap-2"
       >
         <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path
@@ -154,7 +154,7 @@ const { activePage } = Astro.props;
         </svg>
         GitHub
       </a>
-      <div class="border-t border-gray-200 pt-4 mt-4">
+      <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
         <a
           href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
           class="block rounded-md bg-indigo-600 px-3 py-2 text-base font-semibold text-white text-center shadow-sm hover:bg-indigo-500"

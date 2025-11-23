@@ -1,5 +1,5 @@
 ---
-import '../styles/global.css';
+import "../styles/global.css";
 ---
 
 <!doctype html>
@@ -11,21 +11,24 @@ import '../styles/global.css';
     <meta name="generator" content={Astro.generator} />
     <title>Scout for League of Legends</title>
     <script is:inline>
-      // Apply dark mode based on system preference before page renders to avoid flash
-      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+      // TEMPORARY: Force dark mode for testing
+      document.documentElement.classList.add("dark");
 
-      // Listen for system preference changes
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        if (e.matches) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      });
+      // Apply dark mode based on system preference before page renders to avoid flash
+      // if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      //   document.documentElement.classList.add('dark');
+      // } else {
+      //   document.documentElement.classList.remove('dark');
+      // }
+
+      // // Listen for system preference changes
+      // window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      //   if (e.matches) {
+      //     document.documentElement.classList.add('dark');
+      //   } else {
+      //     document.documentElement.classList.remove('dark');
+      //   }
+      // });
     </script>
   </head>
   <body>

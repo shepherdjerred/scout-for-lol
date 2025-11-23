@@ -18,7 +18,11 @@
     "format": "prettier --check .",
     "lint": "astro check && eslint src",
     "preview": "astro preview",
-    "test": "echo 'No tests configured' && exit 0",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:report": "playwright show-report",
+    "test:install": "playwright install --with-deps",
     "typecheck": "astro check"
   },
   "type": "module",

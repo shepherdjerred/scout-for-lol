@@ -16,4 +16,10 @@ exports[`surrender test 1`] = `"72ed79ca5cbee332aecfa128359139fbc1d4ebab00014fb2
 
 exports[`no rank before match test 1`] = `"043d4c88ff0bc28bdd15e0fb963ae052d7159b704818285756197d88cf6abfc5"`;
 
-exports[`multiple highlighted players test 1`] = `"acc797474e9ce0b557a7bd348ff53c7569e00f16a3cc682ac481a9ec3261d05b"`;
+exports[`multiple highlighted players test 1`] = `"b3ebf770d0ece026734dd6c64072556fc60ab95d376462c088d9dfff414adcec"`;
+
+exports[`clash game test 1`] = `"55bc092f0f4432f025690f31b9695e986154660cfe8ffe01c2c348e82241797c"`;
+
+exports[`aram clash game test 1`] = `"cd6bf11da4ee09fd1fa39f1ce699b29b11268f5bc0c4260ef3a5630f6d54ee58"`;
+
+exports[`multiple players with promotion and demotion test 1`] = `"1d2e82ac2ea5feda3efc3797687fdb1211d44f4f7e2dfb563cd04d24d7914110"`;

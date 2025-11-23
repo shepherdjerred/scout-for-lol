@@ -6,7 +6,7 @@ import { changelog, formatChangelogDate, renderChangelogToHtml } from "../data/c
 ---
 
 <Layout>
-  <div class="bg-white">
+  <div class="bg-white dark:bg-gray-900">
     <Navbar activePage="whatsnew" />
 
     <!-- Hero Section -->
@@ -25,11 +25,11 @@ import { changelog, formatChangelogDate, renderChangelogToHtml } from "../data/c
       <div class="mx-auto max-w-3xl py-16 sm:py-20 lg:py-28">
         <div class="text-center">
           <h1
-            class="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl"
+            class="text-balance text-5xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-6xl"
           >
             What's New
           </h1>
-          <p class="mt-6 text-lg/8 text-gray-600">
+          <p class="mt-6 text-lg/8 text-gray-600 dark:text-gray-300">
             Check out the latest updates and improvements to Scout for League of
             Legends.
           </p>
@@ -43,27 +43,27 @@ import { changelog, formatChangelogDate, renderChangelogToHtml } from "../data/c
         <div class="space-y-12">
           {changelog.map((entry, index) => (
             <div
-              class={`pb-12 ${index !== changelog.length - 1 ? "border-b border-gray-200" : ""}`}
+              class={`pb-12 ${index !== changelog.length - 1 ? "border-b border-gray-200 dark:border-gray-700" : ""}`}
             >
               <!-- Date Header -->
               <div class="mb-6">
                 <div class="flex items-center gap-x-3">
-                  <div class="h-3 w-3 rounded-full bg-indigo-600"></div>
-                  <h2 class="text-2xl font-semibold text-gray-900">
+                  <div class="h-3 w-3 rounded-full bg-indigo-600 dark:bg-indigo-400"></div>
+                  <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">
                     {formatChangelogDate(entry)}
                   </h2>
                 </div>
               </div>
 
               <!-- Changes List -->
-              <div class="text-gray-700 pl-6 space-y-6" set:html={renderChangelogToHtml(entry.text)} />
+              <div class="text-gray-700 dark:text-gray-300 pl-6 space-y-6" set:html={renderChangelogToHtml(entry.text)} />
             </div>
           ))}
         </div>
 
         {changelog.length === 0 && (
           <div class="text-center py-12">
-            <p class="text-gray-600">
+            <p class="text-gray-600 dark:text-gray-400">
               No changelog entries found. Check back soon!
             </p>
           </div>
@@ -72,13 +72,13 @@ import { changelog, formatChangelogDate, renderChangelogToHtml } from "../data/c
     </div>
 
     <!-- CTA Section -->
-    <div class="bg-indigo-600">
+    <div class="bg-indigo-600 dark:bg-indigo-700">
       <div class="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
         <div class="mx-auto max-w-2xl text-center">
           <h2 class="text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl">
             Ready to get Scout?
           </h2>
-          <p class="mx-auto mt-6 max-w-xl text-lg/8 text-indigo-200">
+          <p class="mx-auto mt-6 max-w-xl text-lg/8 text-indigo-200 dark:text-indigo-100">
             Add Scout to your Discord server and start tracking your friends'
             League matches today.
           </p>
@@ -89,7 +89,7 @@ import { changelog, formatChangelogDate, renderChangelogToHtml } from "../data/c
             >
               Add to Discord
             </a>
-            <a href="/docs" class="text-sm/6 font-semibold text-white hover:text-indigo-100 transition-colors">
+            <a href="/docs" class="text-sm/6 font-semibold text-white hover:text-indigo-100 dark:hover:text-indigo-200 transition-colors">
               Read the docs <span aria-hidden="true">→</span>
             </a>
           </div>

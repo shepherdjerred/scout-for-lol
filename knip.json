@@ -5,8 +5,22 @@
     "type": true
   },
   "tags": ["-lintignore"],
-  "ignore": ["packages/backend/generated/**", "**/*.snap", "**/node_modules/**", "**/dist/**", "**/.astro/**"],
-  "ignoreDependencies": [],
+  "ignore": [
+    "packages/backend/generated/**",
+    "**/*.snap",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.astro/**",
+    "**/*-stub.ts",
+    "**/postcss.config.js"
+  ],
+  "ignoreDependencies": [
+    "@commitlint/cli",
+    "eslint-plugin-no-relative-import-paths",
+    "eslint-plugin-regex",
+    "eslint-plugin-regexp",
+    "bun-types"
+  ],
   "rules": {
     "files": "warn",
     "dependencies": "warn",
@@ -17,34 +31,53 @@
     "nsExports": "off",
     "nsTypes": "off",
     "enumMembers": "off",
-    "classMembers": "off"
+    "classMembers": "off",
+    "unlisted": "off",
+    "binaries": "off"
   },
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.ts"],
-      "project": ["scripts/**/*.ts"]
+      "entry": ["scripts/*.ts", ".husky/commit-msg", ".husky/pre-commit"],
+      "project": ["scripts/**/*.ts", "eslint-rules/**/*.ts"]
     },
     ".dagger": {
       "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/backend": {
-      "entry": ["src/database/migrate.ts"],
       "project": ["src/**/*.ts", "prisma/**/*.prisma"],
-      "ignore": ["generated/**", "scripts/**"]
+      "ignore": ["generated/**", "scripts/**"],
+      "ignoreDependencies": [
+        "@prisma/client",
+        "react",
+        "satori",
+        "@resvg/resvg-js",
+        "yoga-wasm-web",
+        "uuid",
+        "@types/uuid",
+        "glob"
+      ]
     },
     "packages/data": {
-      "entry": ["src/index.ts"],
       "project": ["src/**/*.ts"]
     },
     "packages/report": {
-      "entry": ["src/index.ts"],
-      "project": ["src/**/*.ts", "src/**/*.tsx"]
+      "project": ["src/**/*.ts", "src/**/*.tsx"],
+      "ignoreDependencies": ["react", "yoga-wasm-web", "@types/react"]
     },
     "packages/report-ui": {
+      "entry": ["src/main.tsx", "src/arena-example.ts"],
       "project": ["src/**/*.ts", "src/**/*.tsx"]
     },
-    "packages/frontend": {},
-    "packages/review-dev-tool": {}
+    "packages/frontend": {
+      "entry": ["src/pages/**/*.astro"],
+      "project": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.astro", "astro.config.mjs"],
+      "ignoreDependencies": ["@tailwindcss/postcss", "@astrojs/tailwind"]
+    },
+    "packages/review-dev-tool": {
+      "entry": ["src/pages/**/*.astro"],
+      "project": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.astro", "astro.config.mjs"],
+      "ignoreDependencies": ["@tailwindcss/postcss", "remeda"]
+    }
   }
 }

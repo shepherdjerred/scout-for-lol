@@ -17,6 +17,8 @@ export function Report({ match }: { match: CompletedMatch }) {
   // Highlight all relevant players by name
   const highlightNames = match.players.map((p) => p.champion.riotIdGameName);
 
+  const hasSingleTrackedPlayer = match.players.length === 1;
+
   return (
     <div
       style={{
@@ -96,8 +98,66 @@ export function Report({ match }: { match: CompletedMatch }) {
               )}
             </div>
           </div>
-          {mainPlayer?.rankAfterMatch && (
+          {match.queueType === "clash" || match.queueType === "aram clash" ? (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "4rem",
+                color: palette.gold[4],
+                backgroundColor: palette.blue.gradient.dark.end,
+                padding: "1rem 2rem",
+                borderRadius: "1.5rem",
+                border: `0.3rem solid ${palette.gold[4]}`,
+                fontWeight: "bold",
+                marginBottom: "1.5rem",
+              }}
+            >
+              {match.queueType === "clash" ? "CLASH" : "ARAM CLASH"}
+            </div>
+          ) : hasSingleTrackedPlayer && mainPlayer?.rankAfterMatch ? (
             <RankedBadge oldRank={mainPlayer.rankBeforeMatch} newRank={mainPlayer.rankAfterMatch} />
+          ) : (
+            // Multiple tracked players - show all badges with scaled style
+            match.players.some((p) => p.rankAfterMatch) && (
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  gap: "4rem",
+                  alignItems: "flex-end",
+                }}
+              >
+                {match.players
+                  .filter((p) => p.rankAfterMatch)
+                  .map((player) => (
+                    <div
+                      key={player.champion.riotIdGameName}
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: "0rem",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "3.5rem",
+                          color: palette.gold[1],
+                          textAlign: "center",
+                          marginBottom: "-2rem",
+                        }}
+                      >
+                        {player.champion.riotIdGameName}
+                      </span>
+                      {player.rankAfterMatch && (
+                        <RankedBadge oldRank={player.rankBeforeMatch} newRank={player.rankAfterMatch} scale={0.78} />
+                      )}
+                    </div>
+                  ))}
+              </div>
+            )
           )}
         </div>
         <div

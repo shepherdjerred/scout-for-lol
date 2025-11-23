@@ -40,18 +40,6 @@ Full support for League's Arena mode with detailed reports for all 16 players, i
 
 Track players across all League of Legends regions: NA, EUW, EUNE, KR, BR, LAN, LAS, TR, RU, OCE, JP, PH, SG, TH, TW, VN, ME.
 
-### ✨ AI-Powered Match Reviews _(Coming Soon)_
-
-> **Note**: This feature is currently in development. Match reviews currently show placeholder text while we integrate with LLM services.
-
-Intelligent, personalized match analysis powered by advanced AI:
-
-- Performance analysis based on champion, role, and game context
-- Comparison to typical performance metrics
-- Specific feedback on KDA, CS, damage, and objective participation
-- Recognition of exceptional plays and standout performances
-- Constructive suggestions for improvement
-
 ## Getting Started
 
 ### 1. Add Scout to Your Server
@@ -117,12 +105,6 @@ Scout automatically checks for matches every minute and posts:
 - `/admin player-link-discord` - Link a Discord user to a player
 - `/admin player-unlink-discord` - Unlink a Discord user from a player
 - `/admin player-view` - View detailed player information
-
-### Debug Commands (Owner Only)
-
-- `/debug server-info` - Display server statistics
-- `/debug database` - Download database file
-- `/debug polling` - View polling intervals
 
 ## Technical Details
 

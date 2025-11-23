@@ -22,7 +22,15 @@ if (typeof Bun !== "undefined") {
   );
 }
 
-export function RankedBadge({ oldRank, newRank }: { oldRank: Rank | undefined; newRank: Rank }) {
+export function RankedBadge({
+  oldRank,
+  newRank,
+  scale = 1,
+}: {
+  oldRank: Rank | undefined;
+  newRank: Rank;
+  scale?: number;
+}) {
   const environment = typeof Bun !== "undefined" ? "bun" : "browser";
 
   // Use the pre-loaded images in Bun environment, or construct a URL for browser
@@ -40,6 +48,38 @@ export function RankedBadge({ oldRank, newRank }: { oldRank: Rank | undefined; n
   const showPromoted = wasPromoted(oldRank, newRank);
   const showDemoted = wasDemoted(oldRank, newRank);
   const showPlacements = !oldRank && newRank;
+
+  // Scale all dimensions proportionally
+  const iconSize = 24 * scale;
+  const fontSize = 6 * scale;
+  const divisionLeftOffset = -8 * scale;
+  const divisionTopOffset = -2 * scale;
+  const promotedTextTop = 22 * scale;
+  const gap = 2 * scale;
+  const topOffset = -20 * scale;
+  const rightOffset = 2 * scale;
+
+  const outerStyle =
+    scale === 1
+      ? {
+          color: palette.gold[1],
+          fontSize: `${fontSize.toString()}rem`,
+          display: "flex" as const,
+          alignItems: "flex-end" as const,
+          gap: "4rem",
+          position: "absolute" as const,
+          right: `${rightOffset.toString()}rem`,
+          top: `${topOffset.toString()}rem`,
+        }
+      : {
+          color: palette.gold[1],
+          fontSize: `${fontSize.toString()}rem`,
+          display: "flex" as const,
+          alignItems: "flex-end" as const,
+          gap: "4rem",
+          position: "relative" as const,
+        };
+
   return (
     <div
       style={{
@@ -47,24 +87,13 @@ export function RankedBadge({ oldRank, newRank }: { oldRank: Rank | undefined; n
         position: "relative",
       }}
     >
-      <div
-        style={{
-          color: palette.gold[1],
-          fontSize: "6rem",
-          display: "flex",
-          alignItems: "flex-end",
-          gap: "4rem",
-          position: "absolute",
-          right: "2rem",
-          top: "-20rem",
-        }}
-      >
+      <div style={outerStyle}>
         <div
           style={{
             display: "flex",
             flexDirection: "column-reverse",
             alignItems: "stretch",
-            gap: "2rem",
+            gap: `${gap.toString()}rem`,
           }}
         >
           <span
@@ -74,14 +103,20 @@ export function RankedBadge({ oldRank, newRank }: { oldRank: Rank | undefined; n
               alignItems: "flex-end",
             }}
           >
-            <div style={{ width: "24rem", height: "24rem", display: "flex" }}>
+            <div style={{ width: `${iconSize.toString()}rem`, height: `${iconSize.toString()}rem`, display: "flex" }}>
               <img src={badge} style={{ width: "100%", height: "100%", display: "block" }} />
             </div>
-            <span style={{ position: "relative", left: "-8rem", top: "-2rem" }}>
+            <span
+              style={{
+                position: "relative",
+                left: `${divisionLeftOffset.toString()}rem`,
+                top: `${divisionTopOffset.toString()}rem`,
+              }}
+            >
               {divisionToString(newRank.division)}
             </span>
           </span>
-          <span style={{ position: "absolute", top: "22rem" }}>
+          <span style={{ position: "absolute", top: `${promotedTextTop.toString()}rem` }}>
             {showPromoted && `Promoted`}
             {showDemoted && `Demoted`}
             {showPlacements && `Placed`}
