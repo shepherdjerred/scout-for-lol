@@ -20,7 +20,7 @@
     "@scout-for-lol/report": "workspace:*",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "zod": "^3.22.0"
+    "zod": "^4.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
