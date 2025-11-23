@@ -12,6 +12,7 @@ import {
   loadCustomArtThemes,
   saveCustomArtThemes,
 } from "./art-style-storage";
+import { getPersonalityById } from "./prompts";
 
 /**
  * Complete exportable config bundle schema (tab-level)
@@ -29,11 +30,24 @@ export type ConfigBundle = z.infer<typeof ConfigBundleSchema>;
 
 /**
  * Export all config data as a JSON blob (tab-level)
+ * Includes the full personality data if a specific personality is selected
  */
 export function exportAllConfig(tabConfig: import("../config/schema").TabConfig): ConfigBundle {
+  // Clone the tab config to avoid mutating the original
+  const exportedTabConfig = structuredClone(tabConfig);
+
+  // If personalityId is set to a specific built-in personality (not "random"),
+  // resolve it and include the full personality data in customPersonality
+  if (exportedTabConfig.prompts.personalityId !== "random" && !exportedTabConfig.prompts.customPersonality) {
+    const personality = getPersonalityById(exportedTabConfig.prompts.personalityId);
+    if (personality) {
+      exportedTabConfig.prompts.customPersonality = personality;
+    }
+  }
+
   return {
     version: 1,
-    tabConfig,
+    tabConfig: exportedTabConfig,
     customPersonalities: loadCustomPersonalities(),
     customArtStyles: loadCustomArtStyles(),
     customArtThemes: loadCustomArtThemes(),

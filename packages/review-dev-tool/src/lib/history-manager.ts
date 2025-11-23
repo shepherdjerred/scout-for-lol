@@ -23,7 +23,7 @@ const MAX_HISTORY_ENTRIES = 50;
 
 /**
  * Load all history entries from localStorage
- * Automatically prunes incomplete/pending entries (they can't be recovered)
+ * Only completed and error entries are stored - pending entries are never persisted
  */
 export function loadHistory(): HistoryEntry[] {
   if (typeof window === "undefined") return [];
@@ -41,19 +41,7 @@ export function loadHistory(): HistoryEntry[] {
       timestamp: new Date(entry.timestamp),
     })) as HistoryEntry[];
 
-    // Filter out pending entries (they're unrecoverable after reload)
-    const completedEntries = entries.filter((entry) => entry.status !== "pending");
-
-    // Save back if we removed any pending entries
-    if (completedEntries.length !== entries.length) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(completedEntries));
-      } catch (error) {
-        console.error("Failed to save pruned history:", error);
-      }
-    }
-
-    return completedEntries;
+    return entries;
   } catch (error) {
     console.error("Failed to load history:", error);
     return [];
@@ -62,98 +50,31 @@ export function loadHistory(): HistoryEntry[] {
 
 /**
  * Create a new pending history entry (called when generation starts)
+ * Returns the entry ID for later updating - NOT saved to localStorage yet
  */
-export function createPendingEntry(configSnapshot: HistoryEntry["configSnapshot"]): string {
+export function createPendingEntry(_configSnapshot: HistoryEntry["configSnapshot"]): string {
   if (typeof window === "undefined") return "";
 
-  const entry: HistoryEntry = {
-    id: `gen-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-    timestamp: new Date(),
-    result: {
-      text: "",
-      metadata: {
-        textDurationMs: 0,
-        imageGenerated: false,
-      },
-    },
-    configSnapshot,
-    status: "pending",
-  };
-
-  const history = loadHistory();
-  history.unshift(entry); // Add to beginning
-
-  // Limit history size
-  const trimmed = history.slice(0, MAX_HISTORY_ENTRIES);
-
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
-    return entry.id;
-  } catch (error) {
-    console.error("Failed to save to history:", error);
-    // If localStorage is full, try removing old entries
-    if (history.length > 10) {
-      const reduced = history.slice(0, 10);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(reduced));
-        return entry.id;
-      } catch {
-        console.error("Failed to save even after reducing history");
-      }
-    }
-    return "";
-  }
+  const id = `gen-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  console.log("[History] Created pending entry ID:", id, "(not persisted yet)");
+  return id;
 }
 
 /**
- * Update an existing history entry with results
+ * Save a completed generation to history
+ * This is the ONLY way entries get persisted to localStorage
  */
-export function updateHistoryEntry(
+export function saveCompletedEntry(
   id: string,
   result: GenerationResult,
-  additionalConfig?: Partial<HistoryEntry["configSnapshot"]>,
+  configSnapshot: HistoryEntry["configSnapshot"],
 ): void {
   if (typeof window === "undefined") return;
 
-  const history = loadHistory();
-  const entryIndex = history.findIndex((entry) => entry.id === id);
-
-  if (entryIndex === -1) {
-    console.warn(`History entry ${id} not found`);
-    return;
-  }
-
-  const entry = history[entryIndex];
-  if (!entry) return;
-
-  // Update the entry
-  entry.result = result;
-  entry.status = result.error ? "error" : "complete";
-
-  // Update config snapshot with additional info (e.g., personality, art style)
-  if (additionalConfig) {
-    entry.configSnapshot = {
-      ...entry.configSnapshot,
-      ...additionalConfig,
-    };
-  }
-
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-  } catch (error) {
-    console.error("Failed to update history entry:", error);
-  }
-}
-
-/**
- * Save a new generation to history (legacy - kept for compatibility)
- * @deprecated Use createPendingEntry and updateHistoryEntry instead
- */
-export function saveToHistory(result: GenerationResult, configSnapshot: HistoryEntry["configSnapshot"]): string {
-  if (typeof window === "undefined") return "";
+  console.log("[History] Saving completed entry:", id);
 
   const entry: HistoryEntry = {
-    id: `gen-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+    id,
     timestamp: new Date(),
     result,
     configSnapshot,
@@ -161,28 +82,46 @@ export function saveToHistory(result: GenerationResult, configSnapshot: HistoryE
   };
 
   const history = loadHistory();
-  history.unshift(entry); // Add to beginning
+
+  // Check if entry already exists (shouldn't happen, but handle it)
+  const existingIndex = history.findIndex((e) => e.id === id);
+  if (existingIndex !== -1) {
+    console.log("[History] Entry already exists, updating");
+    history[existingIndex] = entry;
+  } else {
+    console.log("[History] Adding new entry");
+    history.unshift(entry); // Add to beginning
+  }
 
   // Limit history size
   const trimmed = history.slice(0, MAX_HISTORY_ENTRIES);
 
   try {
+    console.log("[History] Saving to localStorage");
     localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
-    return entry.id;
+    console.log("[History] Successfully saved entry");
   } catch (error) {
     console.error("Failed to save to history:", error);
     // If localStorage is full, try removing old entries
-    if (history.length > 10) {
-      const reduced = history.slice(0, 10);
+    if (trimmed.length > 10) {
+      const reduced = trimmed.slice(0, 10);
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(reduced));
-        return entry.id;
       } catch {
         console.error("Failed to save even after reducing history");
       }
     }
-    return "";
   }
+}
+
+/**
+ * Save a new generation to history (legacy - kept for compatibility)
+ * @deprecated Use createPendingEntry and saveCompletedEntry instead
+ */
+export function saveToHistory(result: GenerationResult, configSnapshot: HistoryEntry["configSnapshot"]): string {
+  const id = `gen-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  saveCompletedEntry(id, result, configSnapshot);
+  return id;
 }
 
 /**
@@ -228,15 +167,12 @@ export function updateHistoryRating(id: string, rating: 1 | 2 | 3 | 4, notes?: s
   if (typeof window === "undefined") return;
 
   const history = loadHistory();
-  const entryIndex = history.findIndex((entry) => entry.id === id);
+  const entry = history.find((e) => e.id === id);
 
-  if (entryIndex === -1) {
+  if (!entry) {
     console.warn(`History entry ${id} not found`);
     return;
   }
-
-  const entry = history[entryIndex];
-  if (!entry) return;
 
   entry.rating = rating;
   if (notes !== undefined) {

@@ -10,11 +10,10 @@ import { TabBar } from "./TabBar";
 import { ConfigModal } from "./ConfigModal";
 import { TabSettingsPanel } from "./TabSettingsPanel";
 import { ResultsPanel } from "./ResultsPanel";
-import { ComparisonView } from "./ComparisonView";
 import { MatchBrowser } from "./MatchBrowser";
 import { MatchDetailsPanel } from "./MatchDetailsPanel";
 import { RatingsAnalytics } from "./RatingsAnalytics";
-import { CacheButton } from "./CacheButton";
+import { Footer } from "./Footer";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 
 export interface TabData {
@@ -28,24 +27,6 @@ export interface TabData {
 const MAX_TABS = 5;
 
 export default function App() {
-  // Initialize dark mode from localStorage or default to dark
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
-    const saved = localStorage.getItem("darkMode");
-    return saved ? JSON.parse(saved) : true; // Default to dark mode
-  });
-
-  // Apply dark mode class to document
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-    localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
-  }, [isDarkMode]);
-
   // Initialize global config (API keys shared across tabs)
   const [globalConfig, setGlobalConfig] = useState<GlobalConfig>(() => {
     const loaded = loadGlobalConfig();
@@ -86,7 +67,6 @@ export default function App() {
 
   const [activeTabId, setActiveTabId] = useState("tab-1");
   const [costTracker] = useState(() => new CostTracker());
-  const [showComparison, setShowComparison] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
 
@@ -184,7 +164,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
@@ -192,31 +172,6 @@ export default function App() {
             <p className="text-sm text-gray-500 dark:text-gray-400">Experiment with match review generation settings</p>
           </div>
           <div className="flex gap-3">
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="px-4 py-2 bg-gray-700 dark:bg-gray-600 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-              title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
-            >
-              {isDarkMode ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                  />
-                </svg>
-              )}
-            </button>
             <button
               onClick={() => setShowConfigModal(true)}
               className="px-4 py-2 bg-gray-700 dark:bg-gray-600 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
@@ -239,12 +194,6 @@ export default function App() {
               Settings
             </button>
             <button
-              onClick={() => setShowComparison(!showComparison)}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              {showComparison ? "Normal View" : "Compare Tabs"}
-            </button>
-            <button
               onClick={() => setShowAnalytics(!showAnalytics)}
               className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
             >
@@ -256,9 +205,8 @@ export default function App() {
                   d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                 />
               </svg>
-              {showAnalytics ? "Hide Analytics" : "View Analytics"}
+              {showAnalytics ? "Hide Ratings" : "View Ratings"}
             </button>
-            <CacheButton />
           </div>
         </div>
       </header>
@@ -273,37 +221,39 @@ export default function App() {
         onTabRename={updateTabName}
       />
 
-      {showAnalytics ? (
-        <div className="p-6">
-          <RatingsAnalytics />
-        </div>
-      ) : showComparison ? (
-        <ComparisonView tabs={tabs} globalConfig={globalConfig} costTracker={costTracker} />
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-              <MatchBrowser
-                onMatchSelected={(match) => {
-                  updateTabMatch(activeTabId, match);
-                }}
-                apiSettings={globalConfig.api}
+      <div className="flex-1">
+        {showAnalytics ? (
+          <div className="p-6">
+            <RatingsAnalytics />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
+            <div className="space-y-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <MatchBrowser
+                  onMatchSelected={(match) => {
+                    updateTabMatch(activeTabId, match);
+                  }}
+                  apiSettings={globalConfig.api}
+                />
+              </div>
+              {activeTab.match && <MatchDetailsPanel match={activeTab.match} />}
+              <TabSettingsPanel config={activeTab.config} onChange={(config) => updateTabConfig(activeTabId, config)} />
+            </div>
+            <div className="space-y-6">
+              <ResultsPanel
+                config={mergeConfigs(globalConfig, activeTab.config)}
+                match={activeTab.match}
+                result={activeTab.result}
+                costTracker={costTracker}
+                onResultGenerated={(result) => updateTabResult(activeTabId, result)}
               />
             </div>
-            {activeTab.match && <MatchDetailsPanel match={activeTab.match} />}
-            <TabSettingsPanel config={activeTab.config} onChange={(config) => updateTabConfig(activeTabId, config)} />
           </div>
-          <div className="space-y-6">
-            <ResultsPanel
-              config={mergeConfigs(globalConfig, activeTab.config)}
-              match={activeTab.match}
-              result={activeTab.result}
-              costTracker={costTracker}
-              onResultGenerated={(result) => updateTabResult(activeTabId, result)}
-            />
-          </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      <Footer />
 
       {/* API Configuration Modal */}
       <ConfigModal

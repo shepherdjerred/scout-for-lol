@@ -10,13 +10,13 @@ import { generateMatchReview, type GenerationProgress } from "../lib/generator";
 import { CostDisplay } from "./CostDisplay";
 import { HistoryPanel } from "./HistoryPanel";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
-import { createPendingEntry, updateHistoryEntry, updateHistoryRating, type HistoryEntry } from "../lib/history-manager";
+import { createPendingEntry, saveCompletedEntry, updateHistoryRating, type HistoryEntry } from "../lib/history-manager";
 import { StarRating } from "./StarRating";
 
 interface ResultsPanelProps {
   config: ReviewConfig;
-  match?: CompletedMatch | ArenaMatch;
-  result?: GenerationResult;
+  match?: CompletedMatch | ArenaMatch | undefined;
+  result?: GenerationResult | undefined;
   costTracker: CostTracker;
   onResultGenerated: (result: GenerationResult) => void;
 }
@@ -43,23 +43,36 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
     setProgress(undefined);
     setViewingHistory(false); // Switch back to current result when generating
 
-    // Create pending entry immediately
+    // Create entry ID (not persisted yet)
+    console.log("[History] Creating entry ID");
     const historyId = createPendingEntry({
       model: config.textGeneration.model,
     });
+    console.log("[History] Created entry ID:", historyId);
     setSelectedHistoryId(historyId);
-    setForceUpdate((n) => n + 1); // Refresh history panel to show pending entry
 
     try {
       const generatedResult = await generateMatchReview(matchToUse, config, (p) => setProgress(p));
       onResultGenerated(generatedResult);
 
-      // Update history entry with results
-      updateHistoryEntry(historyId, generatedResult, {
-        personality: generatedResult.metadata.selectedPersonality,
-        artStyle: generatedResult.metadata.selectedArtStyle,
-        artTheme: generatedResult.metadata.selectedArtTheme,
-      });
+      // Build config snapshot with all metadata
+      const configSnapshot: HistoryEntry["configSnapshot"] = {
+        model: config.textGeneration.model,
+      };
+      if (generatedResult.metadata.selectedPersonality) {
+        configSnapshot.personality = generatedResult.metadata.selectedPersonality;
+      }
+      if (generatedResult.metadata.selectedArtStyle) {
+        configSnapshot.artStyle = generatedResult.metadata.selectedArtStyle;
+      }
+      if (generatedResult.metadata.selectedArtTheme) {
+        configSnapshot.artTheme = generatedResult.metadata.selectedArtTheme;
+      }
+
+      // Save completed entry to localStorage
+      console.log("[History] Saving completed entry:", historyId);
+      saveCompletedEntry(historyId, generatedResult, configSnapshot);
+      console.log("[History] Saved, triggering refresh");
 
       // Calculate and track cost
       if (!generatedResult.error && generatedResult.metadata) {
@@ -69,7 +82,10 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       }
 
       // Trigger history panel refresh
-      setForceUpdate((n) => n + 1);
+      setForceUpdate((n) => {
+        console.log("[History] Force update:", n + 1);
+        return n + 1;
+      });
     } catch (error) {
       const errorResult = {
         text: "",
@@ -81,8 +97,11 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       };
       onResultGenerated(errorResult);
 
-      // Update history entry with error
-      updateHistoryEntry(historyId, errorResult);
+      // Save error result to history
+      console.log("[History] Saving error result:", historyId);
+      saveCompletedEntry(historyId, errorResult, {
+        model: config.textGeneration.model,
+      });
       setForceUpdate((n) => n + 1);
     } finally {
       setGenerating(false);
@@ -115,23 +134,14 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
   };
 
   const handleCancelPending = (id: string) => {
-    updateHistoryEntry(id, {
-      text: "",
-      metadata: {
-        textDurationMs: 0,
-        imageGenerated: false,
-      },
-      error: "Cancelled by user",
-    });
+    // Pending entries are not persisted, so nothing to cancel
+    console.log("[History] Cancel requested for pending entry:", id);
     setForceUpdate((n) => n + 1);
   };
 
   const cost = result?.metadata
     ? calculateCost(result.metadata, config.textGeneration.model, config.imageGeneration.model)
     : null;
-
-  // Show which result we're viewing
-  const resultSource = viewingHistory ? "from history" : result ? "current" : "none";
 
   return (
     <div className="space-y-6">
@@ -140,7 +150,7 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
         onSelectEntry={handleSelectHistoryEntry}
         selectedEntryId={selectedHistoryId}
         onCancelPending={handleCancelPending}
-        key={forceUpdate}
+        refreshTrigger={forceUpdate}
       />
 
       {/* Current/Selected Result */}
@@ -164,6 +174,145 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
             No match selected. Using example match data.
           </div>
         )}
+
+        {/* Generation Configuration Details */}
+        <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded">
+          <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-3">Generation Configuration</h3>
+          <div className="space-y-2 text-sm">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              <div>
+                <span className="text-blue-700 dark:text-blue-300 font-medium">Text Model:</span>
+                <span className="ml-2 text-blue-900 dark:text-blue-100 font-mono text-xs">
+                  {config.textGeneration.model}
+                </span>
+              </div>
+              <div>
+                <span className="text-blue-700 dark:text-blue-300 font-medium">Personality:</span>
+                <span className="ml-2 text-blue-900 dark:text-blue-100">
+                  {config.prompts.personalityId === "random"
+                    ? "Random"
+                    : (config.prompts.customPersonality?.metadata.name ?? config.prompts.personalityId)}
+                </span>
+              </div>
+            </div>
+
+            {config.imageGeneration.enabled ? (
+              <>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                  <div>
+                    <span className="text-blue-700 dark:text-blue-300 font-medium">Image Model:</span>
+                    <span className="ml-2 text-blue-900 dark:text-blue-100 font-mono text-xs">
+                      {config.imageGeneration.model}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-blue-700 dark:text-blue-300 font-medium">Mashup Mode:</span>
+                    <span className="ml-2 text-blue-900 dark:text-blue-100">
+                      {config.imageGeneration.mashupMode ? "On (2 Themes)" : "Off"}
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-blue-700 dark:text-blue-300 font-medium">Art Style:</span>
+                  <span className="ml-2 text-blue-900 dark:text-blue-100 text-xs">
+                    {config.imageGeneration.artStyle === "random" ? (
+                      <span className="italic">Random</span>
+                    ) : config.imageGeneration.artStyle.length > 60 ? (
+                      `${config.imageGeneration.artStyle.substring(0, 60)}...`
+                    ) : (
+                      config.imageGeneration.artStyle
+                    )}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="text-blue-700 dark:text-blue-300 font-medium">Art Theme:</span>
+                  <span className="ml-2 text-blue-900 dark:text-blue-100 text-xs">
+                    {config.imageGeneration.artTheme === "random" ? (
+                      <span className="italic">Random</span>
+                    ) : config.imageGeneration.artTheme.length > 60 ? (
+                      `${config.imageGeneration.artTheme.substring(0, 60)}...`
+                    ) : (
+                      config.imageGeneration.artTheme
+                    )}
+                  </span>
+                </div>
+
+                {config.imageGeneration.mashupMode && (
+                  <div>
+                    <span className="text-blue-700 dark:text-blue-300 font-medium">Second Theme:</span>
+                    <span className="ml-2 text-blue-900 dark:text-blue-100 text-xs">
+                      {config.imageGeneration.secondArtTheme === "random" ? (
+                        <span className="italic">Random</span>
+                      ) : config.imageGeneration.secondArtTheme.length > 60 ? (
+                        `${config.imageGeneration.secondArtTheme.substring(0, 60)}...`
+                      ) : (
+                        config.imageGeneration.secondArtTheme
+                      )}
+                    </span>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div>
+                <span className="text-blue-700 dark:text-blue-300 font-medium">Image Generation:</span>
+                <span className="ml-2 text-blue-900 dark:text-blue-100">Disabled</span>
+              </div>
+            )}
+          </div>
+          {result &&
+            !result.error &&
+            (result.metadata.selectedPersonality ||
+              result.metadata.selectedArtStyle ||
+              result.metadata.selectedArtTheme) && (
+              <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
+                <h4 className="text-xs font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                  Actually Selected (for this generation):
+                </h4>
+                <div className="space-y-1.5 text-xs">
+                  {result.metadata.selectedPersonality && (
+                    <div>
+                      <span className="text-blue-700 dark:text-blue-300 font-medium">Personality:</span>
+                      <span className="ml-2 text-blue-900 dark:text-blue-100">
+                        {result.metadata.selectedPersonality}
+                      </span>
+                    </div>
+                  )}
+                  {result.metadata.selectedArtStyle && (
+                    <div>
+                      <span className="text-blue-700 dark:text-blue-300 font-medium">Art Style:</span>
+                      <span className="ml-2 text-blue-900 dark:text-blue-100 font-mono wrap-break-word">
+                        {result.metadata.selectedArtStyle.length > 80
+                          ? `${result.metadata.selectedArtStyle.substring(0, 80)}...`
+                          : result.metadata.selectedArtStyle}
+                      </span>
+                    </div>
+                  )}
+                  {result.metadata.selectedArtTheme && (
+                    <div>
+                      <span className="text-blue-700 dark:text-blue-300 font-medium">Art Theme:</span>
+                      <span className="ml-2 text-blue-900 dark:text-blue-100 wrap-break-word">
+                        {result.metadata.selectedArtTheme.length > 80
+                          ? `${result.metadata.selectedArtTheme.substring(0, 80)}...`
+                          : result.metadata.selectedArtTheme}
+                      </span>
+                    </div>
+                  )}
+                  {result.metadata.selectedSecondArtTheme && (
+                    <div>
+                      <span className="text-blue-700 dark:text-blue-300 font-medium">Second Art Theme:</span>
+                      <span className="ml-2 text-blue-900 dark:text-blue-100 wrap-break-word">
+                        {result.metadata.selectedSecondArtTheme.length > 80
+                          ? `${result.metadata.selectedSecondArtTheme.substring(0, 80)}...`
+                          : result.metadata.selectedSecondArtTheme}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+        </div>
 
         {generating && progress && (
           <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded">

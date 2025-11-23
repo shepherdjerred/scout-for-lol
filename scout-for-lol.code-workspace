@@ -25,6 +25,10 @@
       "path": "packages/frontend",
     },
     {
+      "name": "review-dev-tool",
+      "path": "packages/review-dev-tool",
+    },
+    {
       "name": "root",
       "path": ".",
     },

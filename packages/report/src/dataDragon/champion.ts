@@ -28,7 +28,7 @@ const ChampionDataSchema = z.object({
 const championCache = new Map<
   string,
   {
-    spells: Array<{ name: string; description: string; tooltip: string }>;
+    spells: { name: string; description: string; tooltip: string }[];
     passive: { name: string; description: string };
   }
 >();
@@ -36,7 +36,7 @@ const championCache = new Map<
 // Note: Champion data is fetched on-demand per champion
 export async function getChampionInfo(championName: string): Promise<
   | {
-      spells: Array<{ name: string; description: string; tooltip: string }>;
+      spells: { name: string; description: string; tooltip: string }[];
       passive: { name: string; description: string };
     }
   | undefined

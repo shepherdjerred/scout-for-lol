@@ -6,13 +6,20 @@ import { clearAllCache, getCacheStats } from "../lib/cache";
 
 export function CacheButton() {
   const [isOpen, setIsOpen] = useState(false);
-  const [stats, setStats] = useState({ memoryEntries: 0, localStorageEntries: 0, totalSizeBytes: 0 });
+  const [stats, setStats] = useState({
+    memoryEntries: 0,
+    indexedDBEntries: 0,
+    localStorageEntries: 0,
+    indexedDBSizeBytes: 0,
+    localStorageSizeBytes: 0,
+    totalSizeBytes: 0,
+  });
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Update stats when dropdown opens
   useEffect(() => {
     if (isOpen) {
-      setStats(getCacheStats());
+      getCacheStats().then(setStats);
     }
   }, [isOpen]);
 
@@ -33,10 +40,11 @@ export function CacheButton() {
     return undefined;
   }, [isOpen]);
 
-  const handleClearCache = () => {
+  const handleClearCache = async () => {
     if (confirm("Clear all cached CloudFlare R2 data? This will require re-fetching from the server.")) {
-      clearAllCache();
-      setStats(getCacheStats());
+      await clearAllCache();
+      const newStats = await getCacheStats();
+      setStats(newStats);
       alert("Cache cleared successfully!");
     }
   };
@@ -78,12 +86,20 @@ export function CacheButton() {
                 <span className="font-medium dark:text-gray-200">{stats.memoryEntries}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Stored entries:</span>
-                <span className="font-medium dark:text-gray-200">{stats.localStorageEntries}</span>
+                <span className="text-gray-600 dark:text-gray-400">IndexedDB entries:</span>
+                <span className="font-medium dark:text-gray-200">
+                  {stats.indexedDBEntries} ({formatBytes(stats.indexedDBSizeBytes)})
+                </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Total size:</span>
-                <span className="font-medium dark:text-gray-200">{formatBytes(stats.totalSizeBytes)}</span>
+                <span className="text-gray-600 dark:text-gray-400">localStorage entries:</span>
+                <span className="font-medium dark:text-gray-200">
+                  {stats.localStorageEntries} ({formatBytes(stats.localStorageSizeBytes)})
+                </span>
+              </div>
+              <div className="flex justify-between border-t border-gray-200 dark:border-gray-600 pt-2">
+                <span className="text-gray-700 dark:text-gray-300 font-semibold">Total size:</span>
+                <span className="font-semibold dark:text-gray-100">{formatBytes(stats.totalSizeBytes)}</span>
               </div>
             </div>
 

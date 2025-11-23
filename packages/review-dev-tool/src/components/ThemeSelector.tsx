@@ -4,48 +4,30 @@
 import { useState, useEffect } from "react";
 
 export function ThemeSelector() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    const saved = localStorage.getItem("darkMode");
+    return saved ? JSON.parse(saved) : true; // Default to dark mode
+  });
 
-  // Initialize theme from localStorage or system preference
+  // Apply dark mode class to document
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.classList.toggle("dark", savedTheme === "dark");
+    if (typeof window === "undefined") return;
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
     } else {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const initialTheme = prefersDark ? "dark" : "light";
-      setTheme(initialTheme);
-      document.documentElement.classList.toggle("dark", prefersDark);
+      document.documentElement.classList.remove("dark");
     }
-  }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
-  };
+    localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
+  }, [isDarkMode]);
 
   return (
     <button
-      onClick={toggleTheme}
+      onClick={() => setIsDarkMode(!isDarkMode)}
       className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
-      title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+      title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
     >
-      {theme === "light" ? (
-        <>
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-            />
-          </svg>
-          Dark
-        </>
-      ) : (
+      {isDarkMode ? (
         <>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -56,6 +38,18 @@ export function ThemeSelector() {
             />
           </svg>
           Light
+        </>
+      ) : (
+        <>
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+            />
+          </svg>
+          Dark
         </>
       )}
     </button>

@@ -8,21 +8,35 @@ import { StarRating } from "./StarRating";
 
 interface HistoryPanelProps {
   onSelectEntry: (entry: HistoryEntry) => void;
-  selectedEntryId?: string;
-  onCancelPending?: (id: string) => void;
+  selectedEntryId?: string | undefined;
+  onCancelPending?: ((id: string) => void) | undefined;
+  refreshTrigger?: number | undefined;
 }
 
-export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending }: HistoryPanelProps) {
+export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, refreshTrigger }: HistoryPanelProps) {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
 
   const refreshHistory = () => {
-    setHistory(loadHistory());
+    console.log("[History] Refreshing history");
+    const loaded = loadHistory();
+    console.log("[History] Loaded entries:", loaded.length, loaded);
+    setHistory(loaded);
   };
 
+  // Refresh on mount
   useEffect(() => {
+    console.log("[History] HistoryPanel mounted");
     refreshHistory();
   }, []);
+
+  // Refresh when trigger changes
+  useEffect(() => {
+    if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      console.log("[History] Refresh triggered:", refreshTrigger);
+      refreshHistory();
+    }
+  }, [refreshTrigger]);
 
   const handleDelete = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();

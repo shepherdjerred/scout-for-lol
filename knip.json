@@ -5,7 +5,46 @@
     "type": true
   },
   "tags": ["-lintignore"],
+  "ignore": ["packages/backend/generated/**", "**/*.snap", "**/node_modules/**", "**/dist/**", "**/.astro/**"],
+  "ignoreDependencies": [],
+  "rules": {
+    "files": "warn",
+    "dependencies": "warn",
+    "devDependencies": "warn",
+    "exports": "warn",
+    "duplicates": "warn",
+    "types": "off",
+    "nsExports": "off",
+    "nsTypes": "off",
+    "enumMembers": "off",
+    "classMembers": "off"
+  },
   "workspaces": {
-    ".": {}
+    ".": {
+      "entry": ["scripts/*.ts"],
+      "project": ["scripts/**/*.ts"]
+    },
+    ".dagger": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/backend": {
+      "entry": ["src/database/migrate.ts"],
+      "project": ["src/**/*.ts", "prisma/**/*.prisma"],
+      "ignore": ["generated/**", "scripts/**"]
+    },
+    "packages/data": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/report": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts", "src/**/*.tsx"]
+    },
+    "packages/report-ui": {
+      "project": ["src/**/*.ts", "src/**/*.tsx"]
+    },
+    "packages/frontend": {},
+    "packages/review-dev-tool": {}
   }
 }

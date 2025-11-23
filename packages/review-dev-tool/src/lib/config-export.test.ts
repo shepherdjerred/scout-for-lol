@@ -258,4 +258,49 @@ describe("config-export", () => {
     const summary = getConfigBundleSummary(bundle);
     expect(summary.hasTabConfig).toBe(true);
   });
+
+  it("should include built-in personality data when exporting specific personality", () => {
+    const tabConfig = createDefaultTabConfig();
+    tabConfig.prompts.personalityId = "aaron"; // Set to a specific built-in personality
+
+    const exported = exportAllConfig(tabConfig);
+
+    // The exported config should have the full personality data
+    expect(exported.tabConfig.prompts.customPersonality).toBeDefined();
+    expect(exported.tabConfig.prompts.customPersonality?.id).toBe("aaron");
+    expect(exported.tabConfig.prompts.customPersonality?.metadata).toBeDefined();
+    expect(exported.tabConfig.prompts.customPersonality?.instructions).toBeDefined();
+    expect(exported.tabConfig.prompts.customPersonality?.instructions.length).toBeGreaterThan(0);
+  });
+
+  it("should not include personality data when personalityId is random", () => {
+    const tabConfig = createDefaultTabConfig();
+    tabConfig.prompts.personalityId = "random";
+
+    const exported = exportAllConfig(tabConfig);
+
+    // Should not add a customPersonality when using "random"
+    expect(exported.tabConfig.prompts.customPersonality).toBeUndefined();
+  });
+
+  it("should preserve existing customPersonality if already set", () => {
+    const tabConfig = createDefaultTabConfig();
+    tabConfig.prompts.personalityId = "brian";
+    tabConfig.prompts.customPersonality = {
+      id: "custom-test",
+      metadata: {
+        name: "Custom Test",
+        description: "Custom personality",
+        favoriteChampions: ["Zed"],
+        favoriteLanes: ["mid"],
+      },
+      instructions: "Custom instructions",
+    };
+
+    const exported = exportAllConfig(tabConfig);
+
+    // Should preserve the existing customPersonality, not replace it
+    expect(exported.tabConfig.prompts.customPersonality?.id).toBe("custom-test");
+    expect(exported.tabConfig.prompts.customPersonality?.instructions).toBe("Custom instructions");
+  });
 });

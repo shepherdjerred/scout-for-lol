@@ -412,13 +412,17 @@ export function SettingsPanel({
 
         {/* Image Generation Settings (Per-Tab) */}
         <div>
-          <div className="w-full px-6 py-4 flex justify-between items-center bg-gray-50">
+          <button
+            onClick={() => toggleSection("image")}
+            className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
+          >
             <div className="flex items-center gap-2">
               <span className="font-semibold text-gray-900">Image Generation</span>
               <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">Per-Tab</span>
             </div>
-          </div>
-          <div>
+            <span className="text-gray-400">{openSections.has("image") ? "−" : "+"}</span>
+          </button>
+          {openSections.has("image") && (
             <div className="px-6 pb-4 space-y-4">
               <div className="flex items-center gap-2">
                 <input
@@ -519,18 +523,22 @@ export function SettingsPanel({
                 </div>
               )}
             </div>
-          </div>
+          )}
         </div>
 
         {/* Prompt Settings (Per-Tab) */}
         <div>
-          <div className="w-full px-6 py-4 flex justify-between items-center bg-gray-50">
+          <button
+            onClick={() => toggleSection("prompts")}
+            className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
+          >
             <div className="flex items-center gap-2">
               <span className="font-semibold text-gray-900">Prompts & Personality</span>
               <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">Per-Tab</span>
             </div>
-          </div>
-          <div>
+            <span className="text-gray-400">{openSections.has("prompts") ? "−" : "+"}</span>
+          </button>
+          {openSections.has("prompts") && (
             <div className="px-6 pb-4 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Base Prompt</label>
@@ -595,7 +603,7 @@ export function SettingsPanel({
                 )}
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

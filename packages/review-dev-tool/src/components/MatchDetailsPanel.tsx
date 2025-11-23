@@ -51,9 +51,12 @@ export function MatchDetailsPanel({ match }: MatchDetailsPanelProps) {
             {match.players.map((player, idx) => (
               <div key={idx} className="bg-gray-50 dark:bg-gray-900 rounded p-2">
                 <div className="flex justify-between items-start mb-1">
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {player.playerConfig.alias || "Unknown"}
-                  </span>
+                  <div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      {player.playerConfig.alias || "Unknown"}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Riot ID</div>
+                  </div>
                   {!isArena && "outcome" in player && (
                     <span
                       className={`text-xs px-2 py-1 rounded ${
@@ -99,24 +102,26 @@ export function MatchDetailsPanel({ match }: MatchDetailsPanelProps) {
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Teams</h4>
             <div className="grid grid-cols-2 gap-3">
               {/* Blue Team */}
-              <div className="bg-blue-50 rounded p-2">
-                <div className="text-xs font-semibold text-blue-900 mb-1">Blue Team</div>
-                <div className="space-y-1">
+              <div className="bg-blue-50 dark:bg-blue-950/30 rounded p-3 border border-blue-200 dark:border-blue-800">
+                <div className="text-xs font-semibold text-blue-900 dark:text-blue-300 mb-2">Blue Team</div>
+                <div className="space-y-1.5">
                   {match.teams.blue.map((champion, idx) => (
-                    <div key={idx} className="text-xs text-blue-800">
-                      {champion.championName}
+                    <div key={idx} className="text-xs">
+                      <div className="font-medium text-blue-900 dark:text-blue-200">{champion.riotIdGameName}</div>
+                      <div className="text-blue-700 dark:text-blue-400">{champion.championName}</div>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Red Team */}
-              <div className="bg-red-50 rounded p-2">
-                <div className="text-xs font-semibold text-red-900 mb-1">Red Team</div>
-                <div className="space-y-1">
+              <div className="bg-red-50 dark:bg-red-950/30 rounded p-3 border border-red-200 dark:border-red-800">
+                <div className="text-xs font-semibold text-red-900 dark:text-red-300 mb-2">Red Team</div>
+                <div className="space-y-1.5">
                   {match.teams.red.map((champion, idx) => (
-                    <div key={idx} className="text-xs text-red-800">
-                      {champion.championName}
+                    <div key={idx} className="text-xs">
+                      <div className="font-medium text-red-900 dark:text-red-200">{champion.riotIdGameName}</div>
+                      <div className="text-red-700 dark:text-red-400">{champion.championName}</div>
                     </div>
                   ))}
                 </div>

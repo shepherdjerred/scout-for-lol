@@ -1,7 +1,7 @@
 /**
  * S3 match browser for selecting real match data
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { ApiSettings } from "../config/schema";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 import {
@@ -27,6 +27,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
   const [filterPlayer, setFilterPlayer] = useState<string>("");
   const [filterChampion, setFilterChampion] = useState<string>("");
   const [filterOutcome, setFilterOutcome] = useState<string>("all");
+  const [selectedMetadata, setSelectedMetadata] = useState<MatchMetadata | null>(null);
 
   const s3Config: S3Config | null =
     apiSettings.s3BucketName && apiSettings.awsAccessKeyId && apiSettings.awsSecretAccessKey
@@ -84,47 +85,68 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     if (!s3Config) return;
 
     setLoading(true);
+    setSelectedMetadata(metadata);
     try {
       const matchDto = await fetchMatchFromS3(s3Config, metadata.key);
       if (matchDto) {
-        const match = await convertMatchDtoToInternalFormat(matchDto);
+        const match = await convertMatchDtoToInternalFormat(matchDto, metadata.playerName);
         onMatchSelected(match);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+      setSelectedMetadata(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredMatches = matches.filter((m) => {
-    // Queue type filter
-    if (filterQueueType !== "all" && m.queueType !== filterQueueType) {
-      return false;
-    }
-
-    // Player name filter (case-insensitive)
-    if (filterPlayer && !m.playerName.toLowerCase().includes(filterPlayer.toLowerCase())) {
-      return false;
-    }
-
-    // Champion filter (case-insensitive)
-    if (filterChampion && !m.champion.toLowerCase().includes(filterChampion.toLowerCase())) {
-      return false;
-    }
-
-    // Outcome filter
-    if (filterOutcome !== "all") {
-      if (filterOutcome === "victory" && !m.outcome.includes("Victory")) {
+  const filteredMatches = useMemo(() => {
+    const result = matches.filter((m) => {
+      // Queue type filter
+      if (filterQueueType !== "all" && m.queueType !== filterQueueType) {
         return false;
       }
-      if (filterOutcome === "defeat" && !m.outcome.includes("Defeat")) {
-        return false;
-      }
-    }
 
-    return true;
-  });
+      // Player name filter (case-insensitive, must START WITH search term)
+      if (filterPlayer && filterPlayer.trim()) {
+        const searchTerm = filterPlayer.trim().toLowerCase();
+        const fullName = m.playerName.toLowerCase();
+
+        // Extract game name (part before #) for Riot IDs like "PlayerName#TAG"
+        const gameName = m.playerName.includes("#") ? m.playerName.split("#")[0]?.toLowerCase() : fullName;
+
+        // Match if game name or full name STARTS WITH search term
+        const matchesGameName = gameName?.startsWith(searchTerm);
+        const matchesFullName = fullName.startsWith(searchTerm);
+
+        if (!matchesGameName && !matchesFullName) {
+          return false;
+        }
+      }
+
+      // Champion filter (case-insensitive, must START WITH search term)
+      if (filterChampion && filterChampion.trim()) {
+        const searchTerm = filterChampion.trim().toLowerCase();
+        if (!m.champion.toLowerCase().startsWith(searchTerm)) {
+          return false;
+        }
+      }
+
+      // Outcome filter
+      if (filterOutcome !== "all") {
+        if (filterOutcome === "victory" && !m.outcome.includes("Victory")) {
+          return false;
+        }
+        if (filterOutcome === "defeat" && !m.outcome.includes("Defeat")) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    return result;
+  }, [matches, filterQueueType, filterPlayer, filterChampion, filterOutcome]);
 
   return (
     <div className="p-4">
@@ -144,7 +166,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
           <input
             type="range"
             min="1"
-            max="30"
+            max="7"
             value={daysBack}
             onChange={(e) => setDaysBack(Number.parseInt(e.target.value))}
             className="w-full"
@@ -183,10 +205,10 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Player Name</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Player (Game Name)</label>
           <input
             type="text"
-            placeholder="Filter by player..."
+            placeholder="e.g. PlayerName (or PlayerName#TAG)"
             value={filterPlayer}
             onChange={(e) => setFilterPlayer(e.target.value)}
             className="w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded"
@@ -221,45 +243,66 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
 
       {filteredMatches.length > 0 && (
         <div className="border border-gray-200 dark:border-gray-700 rounded overflow-hidden">
-          <div className="max-h-96 overflow-y-auto">
+          <div className="px-2 py-1.5 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+            <span className="text-xs text-gray-600 dark:text-gray-400">
+              Showing {filteredMatches.length} {filteredMatches.length === 1 ? "result" : "results"}
+              {matches.length !== filteredMatches.length && ` (filtered from ${matches.length})`}
+            </span>
+          </div>
+          <div
+            className="max-h-96 overflow-y-auto"
+            key={`results-${filterPlayer}-${filterChampion}-${filterQueueType}-${filterOutcome}`}
+          >
             <div className="space-y-2 p-2">
-              {filteredMatches.map((match) => (
-                <div
-                  key={match.key}
-                  className="bg-gray-50 dark:bg-gray-900 rounded p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <div className="text-xs font-medium text-gray-900 dark:text-white">{match.champion}</div>
-                    <button
-                      onClick={() => handleSelectMatch(match)}
-                      className="px-2 py-0.5 bg-green-600 dark:bg-green-500 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 transition-colors text-xs"
-                    >
-                      Select
-                    </button>
-                  </div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
-                    <div>{match.playerName}</div>
-                    <div className="flex justify-between">
-                      <span className="capitalize">{match.queueType}</span>
-                      <span
-                        className={
-                          match.outcome.includes("Victory")
-                            ? "text-green-600 dark:text-green-400"
-                            : match.outcome.includes("Defeat")
-                              ? "text-red-600 dark:text-red-400"
-                              : ""
-                        }
+              {filteredMatches.map((match, idx) => {
+                const isSelected =
+                  selectedMetadata?.key === match.key && selectedMetadata?.playerName === match.playerName;
+                return (
+                  <div
+                    key={`${match.key}-${match.playerName}-${idx}`}
+                    className={`rounded p-2 transition-colors ${
+                      isSelected
+                        ? "bg-blue-100 dark:bg-blue-900 border-2 border-blue-500 dark:border-blue-400"
+                        : "bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-1">
+                      <div className="text-xs font-medium text-gray-900 dark:text-white">{match.champion}</div>
+                      <button
+                        onClick={() => handleSelectMatch(match)}
+                        className={`px-2 py-0.5 rounded transition-colors text-xs ${
+                          isSelected
+                            ? "bg-blue-600 dark:bg-blue-500 text-white hover:bg-blue-700 dark:hover:bg-blue-600"
+                            : "bg-green-600 dark:bg-green-500 text-white hover:bg-green-700 dark:hover:bg-green-600"
+                        }`}
                       >
-                        {match.outcome}
-                      </span>
+                        {isSelected ? "Selected" : "Select"}
+                      </button>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="font-mono">{match.kda}</span>
-                      <span>{match.timestamp.toLocaleDateString()}</span>
+                    <div className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
+                      <div>{match.playerName}</div>
+                      <div className="flex justify-between">
+                        <span className="capitalize">{match.queueType}</span>
+                        <span
+                          className={
+                            match.outcome.includes("Victory")
+                              ? "text-green-600 dark:text-green-400"
+                              : match.outcome.includes("Defeat")
+                                ? "text-red-600 dark:text-red-400"
+                                : ""
+                          }
+                        >
+                          {match.outcome}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-mono">{match.kda}</span>
+                        <span>{match.timestamp.toLocaleDateString()}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

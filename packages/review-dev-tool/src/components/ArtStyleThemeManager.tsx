@@ -305,10 +305,6 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
             {viewMode === "styles" && selectedStyle ? (
               <div className="space-y-4">
                 <div>
-                  <div className="text-sm font-medium text-gray-700 mb-1">Name</div>
-                  <div className="text-sm text-gray-900">{selectedStyle.name}</div>
-                </div>
-                <div>
                   <div className="text-sm font-medium text-gray-700 mb-1">Description</div>
                   <div className="text-sm text-gray-900 whitespace-pre-wrap">{selectedStyle.description}</div>
                 </div>
@@ -339,10 +335,6 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
               </div>
             ) : viewMode === "themes" && selectedTheme ? (
               <div className="space-y-4">
-                <div>
-                  <div className="text-sm font-medium text-gray-700 mb-1">Name</div>
-                  <div className="text-sm text-gray-900">{selectedTheme.name}</div>
-                </div>
                 <div>
                   <div className="text-sm font-medium text-gray-700 mb-1">Description</div>
                   <div className="text-sm text-gray-900 whitespace-pre-wrap">{selectedTheme.description}</div>

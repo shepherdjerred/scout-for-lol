@@ -74,6 +74,11 @@
       "bash -c 'cd packages/report-ui && bunx eslint --cache --fix'",
       "bun ./scripts/run-relevant-tests.ts packages/report-ui"
     ],
+    "packages/review-dev-tool/**/*.{ts,tsx,astro}": [
+      "bash -c 'cd packages/review-dev-tool && bun run typecheck'",
+      "bash -c 'cd packages/review-dev-tool && bunx eslint --cache --fix'",
+      "bun ./scripts/run-relevant-tests.ts packages/review-dev-tool"
+    ],
     "*.{ts,tsx,js,jsx}": "bun run scripts/check-suppressions.ts"
   },
   "dependencies": {

@@ -51,6 +51,13 @@ export const ImageGenerationSettingsSchema = z.object({
     .default("random"),
   useMatchingPairs: z.boolean().default(true),
   matchingPairProbability: z.number().min(0).max(1).default(0.7),
+  mashupMode: z.boolean().default(false),
+  secondArtTheme: z
+    .union([
+      z.literal("random"),
+      z.string(), // specific art theme
+    ])
+    .default("random"),
 });
 
 export type ImageGenerationSettings = z.infer<typeof ImageGenerationSettingsSchema>;
@@ -153,6 +160,7 @@ export const GenerationMetadataSchema = z.object({
   selectedPersonality: z.string().optional(),
   selectedArtStyle: z.string().optional(),
   selectedArtTheme: z.string().optional(),
+  selectedSecondArtTheme: z.string().optional(),
 });
 
 export type GenerationMetadata = z.infer<typeof GenerationMetadataSchema>;
@@ -211,6 +219,8 @@ export function createDefaultTabConfig(): TabConfig {
       artTheme: "random",
       useMatchingPairs: true,
       matchingPairProbability: 0.7,
+      mashupMode: false,
+      secondArtTheme: "random",
     },
     prompts: {
       basePrompt: "", // Will be loaded from file
@@ -242,6 +252,8 @@ export function createDefaultConfig(): ReviewConfig {
       artTheme: "random",
       useMatchingPairs: true,
       matchingPairProbability: 0.7,
+      mashupMode: false,
+      secondArtTheme: "random",
     },
     prompts: {
       basePrompt: "", // Will be loaded from file

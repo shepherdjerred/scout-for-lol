@@ -1,12 +1,12 @@
 /**
  * Personality editor modal for creating/editing personalities
  */
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { Personality, PersonalityMetadata } from "../config/schema";
 import { PersonalitySchema } from "../config/schema";
 
 interface PersonalityEditorProps {
-  personality?: Personality;
+  personality?: Personality | undefined;
   onSave: (personality: Personality) => void;
   onCancel: () => void;
 }

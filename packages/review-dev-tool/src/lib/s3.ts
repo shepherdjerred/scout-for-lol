@@ -2,8 +2,8 @@
  * S3 integration for fetching match data (via Astro API endpoints)
  */
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import type { ArenaMatch, CompletedMatch, PlayerConfigEntry } from "@scout-for-lol/data";
-import { LeaguePuuidSchema, parseQueueType } from "@scout-for-lol/data";
+import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data";
+import { parseQueueType } from "@scout-for-lol/data";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
 import { getCachedData, setCachedData } from "./cache";
 // Import match conversion utilities
@@ -71,7 +71,7 @@ export async function listMatchesFromS3(
       };
 
       // Try to get from cache first (5 minute TTL)
-      const cached = getCachedData<Array<{ key: string; lastModified?: string }>>("r2-list", cacheParams);
+      const cached = await getCachedData<Array<{ key: string; lastModified?: string }>>("r2-list", cacheParams);
 
       let matches: Array<{ key: string; lastModified?: Date }>;
 
@@ -131,7 +131,7 @@ export async function listMatchesFromS3(
             }
             return { key: m.key };
           });
-          setCachedData("r2-list", cacheParams, cacheableData, 5 * 60 * 1000); // 5 minutes
+          await setCachedData("r2-list", cacheParams, cacheableData, 5 * 60 * 1000); // 5 minutes
         } else {
           matches = [];
         }
@@ -161,7 +161,7 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
     };
 
     // Try to get from cache first (1 hour TTL - match data is immutable)
-    const cached = getCachedData<MatchV5DTOs.MatchDto>("r2-get", cacheParams);
+    const cached = await getCachedData<MatchV5DTOs.MatchDto>("r2-get", cacheParams);
 
     if (cached) {
       return cached;
@@ -190,7 +190,7 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
     const matchDto = data as MatchV5DTOs.MatchDto;
 
     // Cache the result for 1 hour
-    setCachedData("r2-get", cacheParams, matchDto, 60 * 60 * 1000);
+    await setCachedData("r2-get", cacheParams, matchDto, 60 * 60 * 1000);
 
     return matchDto;
   } catch (error) {
@@ -200,27 +200,15 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
 }
 
 /**
- * Create a minimal player config for testing
- */
-function createMinimalPlayerConfig(puuid: string, name: string): PlayerConfigEntry {
-  return {
-    alias: name,
-    league: {
-      leagueAccount: {
-        puuid: LeaguePuuidSchema.parse(puuid),
-        region: "AMERICA_NORTH",
-      },
-    },
-  };
-}
-
-/**
  * Convert a Riot API match to our internal format
  * This is a simplified conversion for dev tool purposes - we use example match structure
  * but populate it with real player data including Riot IDs
+ * @param matchDto - The Riot API match DTO
+ * @param selectedPlayerName - The Riot ID (GameName#Tagline) of the player to prioritize as first player
  */
 export async function convertMatchDtoToInternalFormat(
   matchDto: MatchV5DTOs.MatchDto,
+  selectedPlayerName?: string,
 ): Promise<CompletedMatch | ArenaMatch> {
   const queueType = parseQueueType(matchDto.info.queueId);
 
@@ -236,9 +224,27 @@ export async function convertMatchDtoToInternalFormat(
     baseMatch = getExampleMatch("unranked");
   }
 
+  // Reorder participants so selected player is first
+  let reorderedParticipants = [...matchDto.info.participants];
+  if (selectedPlayerName) {
+    const selectedIndex = reorderedParticipants.findIndex((p) => {
+      const riotId =
+        p.riotIdGameName && p.riotIdTagline ? `${p.riotIdGameName}#${p.riotIdTagline}` : (p.summonerName ?? "Unknown");
+      return riotId === selectedPlayerName;
+    });
+
+    if (selectedIndex !== -1 && selectedIndex !== 0) {
+      // Move selected player to first position
+      const selectedPlayer = reorderedParticipants[selectedIndex];
+      if (selectedPlayer) {
+        reorderedParticipants = [selectedPlayer, ...reorderedParticipants.filter((_, i) => i !== selectedIndex)];
+      }
+    }
+  }
+
   // Update players with real Riot IDs from the match
   const updatedPlayers = baseMatch.players.map((player, index) => {
-    const participant = matchDto.info.participants[index];
+    const participant = reorderedParticipants[index];
     if (participant) {
       // Build Riot ID (GameName#Tagline)
       const riotId =
@@ -259,15 +265,67 @@ export async function convertMatchDtoToInternalFormat(
           deaths: participant.deaths,
           assists: participant.assists,
         },
-      };
+      } as typeof player;
     }
     return player;
   });
 
-  return {
+  // Update match with real data
+  const updatedMatch = {
     ...baseMatch,
     players: updatedPlayers,
+    durationInSeconds: matchDto.info.gameDuration,
   };
+
+  // Update team rosters for non-arena matches
+  if (queueType !== "arena") {
+    // Build team rosters from all participants
+    const blueTeam = matchDto.info.participants
+      .filter((p) => p.teamId === 100)
+      .map((p) => ({
+        riotIdGameName: p.riotIdGameName && p.riotIdTagline ? p.riotIdGameName : (p.summonerName ?? "Unknown"),
+        championName: p.championName ?? "Unknown",
+        kills: p.kills,
+        deaths: p.deaths,
+        assists: p.assists,
+        level: p.champLevel,
+        items: [p.item0, p.item1, p.item2, p.item3, p.item4, p.item5, p.item6].filter((item) => item !== 0),
+        spells: [p.summoner1Id, p.summoner2Id],
+        gold: p.goldEarned,
+        runes: [],
+        creepScore: p.totalMinionsKilled + p.neutralMinionsKilled,
+        visionScore: p.visionScore,
+        damage: p.totalDamageDealtToChampions,
+      }));
+
+    const redTeam = matchDto.info.participants
+      .filter((p) => p.teamId === 200)
+      .map((p) => ({
+        riotIdGameName: p.riotIdGameName && p.riotIdTagline ? p.riotIdGameName : (p.summonerName ?? "Unknown"),
+        championName: p.championName ?? "Unknown",
+        kills: p.kills,
+        deaths: p.deaths,
+        assists: p.assists,
+        level: p.champLevel,
+        items: [p.item0, p.item1, p.item2, p.item3, p.item4, p.item5, p.item6].filter((item) => item !== 0),
+        spells: [p.summoner1Id, p.summoner2Id],
+        gold: p.goldEarned,
+        runes: [],
+        creepScore: p.totalMinionsKilled + p.neutralMinionsKilled,
+        visionScore: p.visionScore,
+        damage: p.totalDamageDealtToChampions,
+      }));
+
+    return {
+      ...updatedMatch,
+      teams: {
+        blue: blueTeam,
+        red: redTeam,
+      },
+    } as CompletedMatch;
+  }
+
+  return updatedMatch as ArenaMatch;
 }
 
 /**
@@ -338,13 +396,14 @@ export function extractMatchMetadata(match: CompletedMatch | ArenaMatch, key: st
       timestamp: new Date(),
     };
   } else {
+    const completedMatchPlayer = player as CompletedMatch["players"][0];
     return {
       key,
       queueType: match.queueType ?? "unknown",
-      playerName: player.playerConfig.alias,
-      champion: player.champion.championName,
-      outcome: player.outcome,
-      kda: `${player.champion.kills}/${player.champion.deaths}/${player.champion.assists}`,
+      playerName: completedMatchPlayer.playerConfig.alias,
+      champion: completedMatchPlayer.champion.championName,
+      outcome: completedMatchPlayer.outcome,
+      kda: `${completedMatchPlayer.champion.kills}/${completedMatchPlayer.champion.deaths}/${completedMatchPlayer.champion.assists}`,
       timestamp: new Date(),
     };
   }

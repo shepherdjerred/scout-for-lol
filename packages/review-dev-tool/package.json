@@ -10,7 +10,8 @@
     "typecheck": "astro check",
     "lint": "astro check && eslint src",
     "format": "prettier --check .",
-    "test": "echo 'No tests configured' && exit 0"
+    "test": "echo 'No tests configured' && exit 0",
+    "generate": "echo 'No code generation needed' && exit 0"
   },
   "dependencies": {
     "@astrojs/react": "^4.3.1",
@@ -34,5 +35,22 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
     "typescript": "^5.9.3"
+  },
+  "description": "Development tool for testing and refining League of Legends match reviews",
+  "keywords": [
+    "league-of-legends",
+    "development-tool",
+    "review",
+    "testing",
+    "astro"
+  ],
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shepherdjerred/scout-for-lol.git"
+  },
+  "homepage": "https://github.com/shepherdjerred/scout-for-lol",
+  "bugs": {
+    "url": "https://github.com/shepherdjerred/scout-for-lol/issues"
   }
 }

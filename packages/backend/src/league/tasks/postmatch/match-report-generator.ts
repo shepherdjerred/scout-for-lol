@@ -184,17 +184,23 @@ export async function generateMatchReport(
       // Build files array - start with match report image
       const files = [matchReportAttachment];
 
-      // Add AI-generated image if available
-      if (reviewImage) {
+      // Add AI-generated image if available, but only 30% of the time
+      const shouldShowImage = Math.random() < 0.3;
+      const showingImage = reviewImage !== undefined && shouldShowImage;
+
+      if (reviewImage && shouldShowImage) {
         const aiImageAttachment = new AttachmentBuilder(reviewImage).setName("ai-review.png");
         files.push(aiImageAttachment);
         console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
+      } else if (reviewImage && !shouldShowImage) {
+        console.log(`[generateMatchReport] 🎲 Skipped AI-generated image (random selection)`);
       }
 
       return {
         files: files,
         embeds: [matchReportEmbed],
-        ...(reviewText && { content: reviewText }),
+        // Only include review text if we're NOT showing the image
+        ...(reviewText && !showingImage && { content: reviewText }),
       };
     }
   } catch (error) {

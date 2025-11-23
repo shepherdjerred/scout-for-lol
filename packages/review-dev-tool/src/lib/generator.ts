@@ -209,6 +209,7 @@ async function generateReviewImage(
   // Select art style and theme
   let artStyle: string;
   let artTheme: string;
+  let secondArtTheme: string | undefined;
 
   if (config.imageGeneration.artStyle === "random" || config.imageGeneration.artTheme === "random") {
     const selected = selectRandomStyleAndTheme(
@@ -220,6 +221,19 @@ async function generateReviewImage(
   } else {
     artStyle = config.imageGeneration.artStyle;
     artTheme = config.imageGeneration.artTheme;
+  }
+
+  // Handle mashup mode with second theme
+  if (config.imageGeneration.mashupMode) {
+    if (config.imageGeneration.secondArtTheme === "random") {
+      const selected = selectRandomStyleAndTheme(
+        config.imageGeneration.useMatchingPairs,
+        config.imageGeneration.matchingPairProbability,
+      );
+      secondArtTheme = selected.theme;
+    } else {
+      secondArtTheme = config.imageGeneration.secondArtTheme;
+    }
   }
 
   const model = client.getGenerativeModel({
@@ -235,13 +249,19 @@ async function generateReviewImage(
     }, config.imageGeneration.timeoutMs);
   });
 
+  const themeInstruction = secondArtTheme
+    ? `Themes to use (blend these together creatively): ${artTheme} and ${secondArtTheme}
+
+MASHUP MODE: Creatively blend both themes together in a cohesive way. The two themes should complement each other and create a unique combined aesthetic. Don't just split the image in half - find creative ways to merge the themes' elements, moods, and visual languages.`
+    : `Theme to use: ${artTheme}`;
+
   const result = await Promise.race([
     model.generateContent(
       `Generate a creative and visually striking image based on this League of Legends match review.
 
 Art style to use: ${artStyle}
 
-Theme to use: ${artTheme}
+${themeInstruction}
 
 CRITICAL: You MUST use ONLY the art style specified above. Do not mix styles or use any other style. Commit fully to this specific aesthetic.
 
@@ -254,7 +274,7 @@ Important:
 - Add visual storytelling elements - show the action, emotion, and drama beyond the literal text
 - Make it feel like cover art or a key moment illustration
 - Stay true to the specified art style throughout the entire image
-- Incorporate the theme naturally into the composition
+- Incorporate the theme(s) naturally into the composition
 - DO NOT include long text strings or labels (e.g., no "irfan here:", no reviewer names, no text captions)
 - Small numerical stats are acceptable (e.g., kill counts, scores), but avoid any prose or identifying text
 - Focus on visual storytelling rather than text explanations`,
@@ -287,6 +307,7 @@ Important:
       imageDurationMs: duration,
       selectedArtStyle: artStyle,
       selectedArtTheme: artTheme,
+      selectedSecondArtTheme: secondArtTheme,
     },
   };
 }
@@ -308,14 +329,14 @@ export async function generateMatchReview(
 ): Promise<GenerationResult> {
   try {
     // Generate text review
-    onProgress?.({ step: "text", message: "Generating review text..." });
+    onProgress?.({ step: "text", message: "Generating review text... (this takes 30-60s)" });
     const textResult = await generateReviewText(match, config);
 
     // Generate image if enabled
     let imageResult: { image: string; metadata: Partial<GenerationMetadata> } | undefined;
     if (config.imageGeneration.enabled) {
       try {
-        onProgress?.({ step: "image", message: "Generating image..." });
+        onProgress?.({ step: "image", message: "Generating image... (this takes 30-60s)" });
         imageResult = await generateReviewImage(textResult.text, config);
       } catch (error) {
         console.error("Failed to generate image:", error);
@@ -335,6 +356,7 @@ export async function generateMatchReview(
       selectedPersonality: textResult.metadata.selectedPersonality,
       selectedArtStyle: imageResult?.metadata.selectedArtStyle,
       selectedArtTheme: imageResult?.metadata.selectedArtTheme,
+      selectedSecondArtTheme: imageResult?.metadata.selectedSecondArtTheme,
     };
 
     return {
