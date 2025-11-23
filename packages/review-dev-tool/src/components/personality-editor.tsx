@@ -2,8 +2,11 @@
  * Personality editor modal for creating/editing personalities
  */
 import { useState } from "react";
+import { z } from "zod";
 import type { Personality, PersonalityMetadata } from "../config/schema";
 import { PersonalitySchema } from "../config/schema";
+
+const ErrorSchema = z.object({ message: z.string() });
 
 type PersonalityEditorProps = {
   personality?: Personality | undefined;
@@ -45,7 +48,8 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
 
       onSave(newPersonality);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      const errorResult = ErrorSchema.safeParse(err);
+      setError(errorResult.success ? errorResult.data.message : String(err));
     }
   };
 

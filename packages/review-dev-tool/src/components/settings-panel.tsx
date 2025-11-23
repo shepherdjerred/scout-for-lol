@@ -2,10 +2,13 @@
  * Settings panel for configuring review generation
  */
 import { useState } from "react";
+import { z } from "zod";
 import type { GlobalConfig, TabConfig } from "../config/schema";
 import { getBasePrompt, PERSONALITIES } from "../lib/prompts";
 import { exportGlobalConfigAsBlob, importGlobalConfigFromBlob } from "../lib/config-manager";
 import { getModelsByCategory, modelSupportsParameter } from "../lib/models";
+
+const ErrorSchema = z.object({ message: z.string() });
 
 type SettingsPanelProps = {
   globalConfig: GlobalConfig;
@@ -52,7 +55,8 @@ export function SettingsPanel({
       setShowImportExport(false);
       alert("API config imported successfully!");
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to import config");
+      const errorResult = ErrorSchema.safeParse(error);
+      alert(errorResult.success ? errorResult.data.message : "Failed to import config");
     }
   };
 

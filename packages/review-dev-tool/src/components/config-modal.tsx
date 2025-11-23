@@ -2,9 +2,12 @@
  * Modal for API configuration settings
  */
 import { useState, useEffect } from "react";
+import { z } from "zod";
 import type { GlobalConfig } from "../config/schema";
 import { ApiSettingsPanel } from "./api-settings-panel";
 import { resetToDefaults, getResetPreview } from "../lib/reset-defaults";
+
+const ErrorSchema = z.object({ message: z.string() });
 
 type ConfigModalProps = {
   isOpen: boolean;
@@ -50,7 +53,8 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
         "Settings reset to defaults! API keys, cache, and cost data were preserved.\n\nPlease refresh the page to see changes.",
       );
     } catch (error) {
-      alert(`Failed to reset settings: ${error instanceof Error ? error.message : String(error)}`);
+      const errorResult = ErrorSchema.safeParse(error);
+      alert(`Failed to reset settings: ${errorResult.success ? errorResult.data.message : String(error)}`);
     }
   };
 

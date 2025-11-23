@@ -2,6 +2,7 @@
  * Results panel showing generated review and metadata
  */
 import { useState, useEffect } from "react";
+import { z } from "zod";
 import type { ReviewConfig, GenerationResult } from "../config/schema";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 import type { CostTracker } from "../lib/costs";
@@ -13,13 +14,15 @@ import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
 import { createPendingEntry, saveCompletedEntry, updateHistoryRating, type HistoryEntry } from "../lib/history-manager";
 import { StarRating } from "./star-rating";
 
+const ErrorSchema = z.object({ message: z.string() });
+
 type ResultsPanelProps = {
   config: ReviewConfig;
   match?: CompletedMatch | ArenaMatch | undefined;
   result?: GenerationResult | undefined;
   costTracker: CostTracker;
   onResultGenerated: (result: GenerationResult) => void;
-}
+};
 
 type ActiveGeneration = {
   id: string;
@@ -38,9 +41,16 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
   const [activeGenerationTimers, setActiveGenerationTimers] = useState<Map<string, number>>(new Map());
 
   // Listen for cost updates
-  if (typeof window !== "undefined") {
-    window.addEventListener("cost-update", () => { setForceUpdate((n) => n + 1); });
-  }
+  useEffect(() => {
+    const handleCostUpdate = () => {
+      setForceUpdate((n) => n + 1);
+    };
+
+    window.addEventListener("cost-update", handleCostUpdate);
+    return () => {
+      window.removeEventListener("cost-update", handleCostUpdate);
+    };
+  }, []);
 
   // Timer for progress animation for all active generations
   useEffect(() => {
@@ -55,7 +65,9 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       );
     }, 100);
 
-    return () => { clearInterval(interval); };
+    return () => {
+      clearInterval(interval);
+    };
   }, [activeGenerations]);
 
   const handleGenerate = async () => {
@@ -119,7 +131,7 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       console.log("[History] Saved, triggering refresh");
 
       // Calculate and track cost
-      if (!generatedResult.error && generatedResult.metadata) {
+      if (!generatedResult.error) {
         const cost = calculateCost(generatedResult.metadata, config.textGeneration.model, config.imageGeneration.model);
         costTracker.add(cost);
         window.dispatchEvent(new Event("cost-update"));
@@ -137,7 +149,7 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
           textDurationMs: 0,
           imageGenerated: false,
         },
-        error: error instanceof Error ? error.message : String(error),
+        error: ErrorSchema.safeParse(error).success ? ErrorSchema.parse(error).message : String(error),
       };
 
       // Only update displayed result if this is the selected generation
@@ -232,7 +244,9 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
               return (
                 <button
                   key={gen.id}
-                  onClick={() => { handleSelectActiveGeneration(gen.id); }}
+                  onClick={() => {
+                    handleSelectActiveGeneration(gen.id);
+                  }}
                   className={`w-full text-left p-3 rounded border transition-colors ${
                     isSelected
                       ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30"
@@ -373,8 +387,8 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
           </div>
           {result &&
             !result.error &&
-            (result.metadata.selectedPersonality ||
-              result.metadata.selectedArtStyle ||
+            (result.metadata.selectedPersonality ??
+              result.metadata.selectedArtStyle ??
               result.metadata.selectedArtTheme) && (
               <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
                 <h4 className="text-xs font-semibold text-blue-800 dark:text-blue-200 mb-2">
@@ -425,7 +439,7 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
         </div>
 
         {isViewingActiveGeneration &&
-          selectedGen?.progress &&
+          selectedGen.progress &&
           (() => {
             // Calculate progress percentage based on elapsed time
             // Text generation: ~60s, Image generation: ~20s
@@ -467,7 +481,10 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
                     </div>
                     <div className="flex-1">
                       <div className="text-sm font-medium text-blue-900 dark:text-blue-200">
-                        {selectedGen.progress.message?.split("(")[0]?.trim() ?? "Generating"} ({elapsedSeconds}s)
+                        {selectedGen.progress.message
+                          ? (selectedGen.progress.message.split("(")[0]?.trim() ?? "Generating")
+                          : "Generating"}{" "}
+                        ({elapsedSeconds}s)
                       </div>
                     </div>
                   </div>

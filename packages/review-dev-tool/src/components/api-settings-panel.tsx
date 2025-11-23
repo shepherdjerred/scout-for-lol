@@ -2,8 +2,11 @@
  * Global API settings panel (for modal)
  */
 import { useState } from "react";
+import { z } from "zod";
 import type { GlobalConfig } from "../config/schema";
 import { exportGlobalConfigAsBlob, importGlobalConfigFromBlob } from "../lib/config-manager";
+
+const ErrorSchema = z.object({ message: z.string() });
 
 type ApiSettingsPanelProps = {
   config: GlobalConfig;
@@ -28,7 +31,8 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
       setShowImportExport(false);
       alert("API config imported successfully!");
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to import config");
+      const errorResult = ErrorSchema.safeParse(error);
+      alert(errorResult.success ? errorResult.data.message : "Failed to import config");
     }
   };
 

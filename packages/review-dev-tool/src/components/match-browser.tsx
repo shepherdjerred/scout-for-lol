@@ -2,6 +2,7 @@
  * S3 match browser for selecting real match data
  */
 import { useState, useMemo, useCallback, useEffect } from "react";
+import { z } from "zod";
 import Fuse from "fuse.js";
 import type { ApiSettings } from "../config/schema";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
@@ -14,6 +15,20 @@ import {
   type MatchMetadata,
 } from "../lib/s3";
 import { getCachedDataAsync, setCachedData } from "../lib/cache";
+
+const ErrorSchema = z.object({ message: z.string() });
+const MatchMetadataArraySchema = z.array(
+  z.object({
+    key: z.string(),
+    queueType: z.string(),
+    playerName: z.string(),
+    champion: z.string(),
+    lane: z.string(),
+    outcome: z.string(),
+    kda: z.string(),
+    timestamp: z.date(),
+  }),
+);
 
 type MatchBrowserProps = {
   onMatchSelected: (match: CompletedMatch | ArenaMatch) => void;
@@ -62,16 +77,19 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
       };
 
       if (!forceRefresh) {
-        const cachedMetadata = await getCachedDataAsync<MatchMetadata[]>("match-metadata", cacheKey);
+        const cached: unknown = await getCachedDataAsync("match-metadata", cacheKey);
+        const cachedResult = MatchMetadataArraySchema.safeParse(cached);
 
-        if (cachedMetadata && cachedMetadata.length > 0) {
+        if (cachedResult.success && cachedResult.data.length > 0) {
           // Instant load from cache - no loading UI!
-          console.log(`[Cache HIT] Loaded ${cachedMetadata.length.toString()} matches from cache (IndexedDB/localStorage)`);
-          setMatches(cachedMetadata);
+          console.log(
+            `[Cache HIT] Loaded ${cachedResult.data.length.toString()} matches from cache (IndexedDB/localStorage)`,
+          );
+          setMatches(cachedResult.data);
           setError(null);
           return;
         } else {
-          console.log(`[Cache MISS] Need to fetch matches`, { forceRefresh, hasCachedData: !!cachedMetadata });
+          console.log(`[Cache MISS] Need to fetch matches`, { forceRefresh, hasCachedData: !!cached });
         }
       }
 
@@ -142,10 +160,11 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
         setMatches(matchData);
         setLoadingProgress(null);
       } catch (err) {
-        if (err instanceof Error && err.message === "Loading cancelled") {
+        const errorResult = ErrorSchema.safeParse(err);
+        if (errorResult.success && errorResult.data.message === "Loading cancelled") {
           setError("Loading cancelled");
         } else {
-          setError(err instanceof Error ? err.message : String(err));
+          setError(errorResult.success ? errorResult.data.message : String(err));
         }
       } finally {
         setLoading(false);
@@ -192,7 +211,8 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
         onMatchSelected(match);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      const errorResult = ErrorSchema.safeParse(err);
+      setError(errorResult.success ? errorResult.data.message : String(err));
       setSelectedMetadata(null);
     } finally {
       setLoading(false);
@@ -226,7 +246,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     }
 
     // Player name fuzzy filter
-    if (filterPlayer?.trim()) {
+    if (filterPlayer.trim()) {
       const fuse = new Fuse(result, {
         keys: ["playerName"],
         threshold: 0.3, // Lower = more strict, higher = more fuzzy
@@ -238,7 +258,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     }
 
     // Champion fuzzy filter
-    if (filterChampion?.trim()) {
+    if (filterChampion.trim()) {
       const fuse = new Fuse(result, {
         keys: ["champion"],
         threshold: 0.3,

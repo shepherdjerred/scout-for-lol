@@ -2,6 +2,7 @@
  * Cache management button with dropdown
  */
 import { useState, useEffect, useRef } from "react";
+import { z } from "zod";
 import { clearAllCache, getCacheStats } from "../lib/cache";
 
 export function CacheButton() {
@@ -26,7 +27,9 @@ export function CacheButton() {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const NodeSchema = z.instanceof(Node);
+      const targetResult = NodeSchema.safeParse(event.target);
+      if (dropdownRef.current && targetResult.success && !dropdownRef.current.contains(targetResult.data)) {
         setIsOpen(false);
       }
     };

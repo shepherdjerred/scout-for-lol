@@ -146,6 +146,7 @@ export const ReviewConfigSchema = z.object({
   prompts: PromptSettingsSchema,
 });
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- type definition needed for backward compatibility
 export type ReviewConfig = z.infer<typeof ReviewConfigSchema>;
 
 /**
@@ -234,6 +235,7 @@ export function createDefaultTabConfig(): TabConfig {
  * @deprecated Use createDefaultGlobalConfig() + createDefaultTabConfig() instead
  */
 export function createDefaultConfig(): ReviewConfig {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- function itself is deprecated for backward compat
   return ReviewConfigSchema.parse({
     api: {
       awsRegion: "us-east-1",

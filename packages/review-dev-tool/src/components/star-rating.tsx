@@ -1,4 +1,5 @@
 import React from "react";
+import { z } from "zod";
 
 type StarRatingProps = {
   rating: number | undefined;
@@ -13,6 +14,8 @@ const SIZES = {
   large: 32,
 };
 
+const RatingSchema = z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]);
+
 export function StarRating({ rating, onRate, size = "medium", readonly = false }: StarRatingProps) {
   const [hoverRating, setHoverRating] = React.useState<number | null>(null);
 
@@ -23,8 +26,9 @@ export function StarRating({ rating, onRate, size = "medium", readonly = false }
   const handleClick = (starNumber: number) => {
     if (!isInteractive) return;
 
-    if (starNumber >= 1 && starNumber <= 4) {
-      onRate?.(starNumber as 1 | 2 | 3 | 4);
+    const result = RatingSchema.safeParse(starNumber);
+    if (result.success) {
+      onRate(result.data);
     }
   };
 

@@ -2,9 +2,12 @@
  * Modal for importing config bundles
  */
 import { useState } from "react";
+import { z } from "zod";
 import type { ConfigBundle } from "../lib/config-export";
 import type { TabConfig } from "../config/schema";
 import { importAllConfigFromJSON, applyConfigBundle, getConfigBundleSummary } from "../lib/config-export";
+
+const ErrorSchema = z.object({ message: z.string() });
 
 type ConfigImportModalProps = {
   isOpen: boolean;
@@ -32,7 +35,8 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
       setParsedBundle(bundle);
       setParseError(null);
     } catch (error) {
-      setParseError(error instanceof Error ? error.message : String(error));
+      const errorResult = ErrorSchema.safeParse(error);
+      setParseError(errorResult.success ? errorResult.data.message : String(error));
       setParsedBundle(null);
     }
   };
@@ -55,7 +59,8 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
       onImportSuccess(importedTabConfig);
       handleClose();
     } catch (error) {
-      alert(`Failed to import config: ${error instanceof Error ? error.message : String(error)}`);
+      const errorResult = ErrorSchema.safeParse(error);
+      alert(`Failed to import config: ${errorResult.success ? errorResult.data.message : String(error)}`);
     }
   };
 
@@ -67,7 +72,12 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const content = e.target?.result as string;
+      const stringResult = z.string().safeParse(e.target?.result);
+      if (!stringResult.success) {
+        setParseError("Failed to read file");
+        return;
+      }
+      const content = stringResult.data;
       setJsonInput(content);
       // Auto-parse when file is loaded
       try {
@@ -75,7 +85,8 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
         setParsedBundle(bundle);
         setParseError(null);
       } catch (error) {
-        setParseError(error instanceof Error ? error.message : String(error));
+        const errorResult = ErrorSchema.safeParse(error);
+        setParseError(errorResult.success ? errorResult.data.message : String(error));
         setParsedBundle(null);
       }
     };

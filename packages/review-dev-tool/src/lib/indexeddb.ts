@@ -2,10 +2,33 @@
  * IndexedDB wrapper for storing history entries with large images
  * IndexedDB can handle much larger data than localStorage (hundreds of MB vs 5-10MB)
  */
+import { z } from "zod";
 
 const DB_NAME = "scout-review-history";
 const DB_VERSION = 1;
 const STORE_NAME = "history";
+
+const IDBOpenDBRequestSchema = z.instanceof(IDBOpenDBRequest);
+
+const DBHistoryEntrySchema = z.object({
+  id: z.string(),
+  timestamp: z.date(),
+  result: z.object({
+    text: z.string(),
+    image: z.string().optional(),
+    metadata: z.unknown(),
+    error: z.string().optional(),
+  }),
+  configSnapshot: z.object({
+    model: z.string(),
+    personality: z.string().optional(),
+    artStyle: z.string().optional(),
+    artTheme: z.string().optional(),
+  }),
+  status: z.enum(["pending", "complete", "error"]),
+  rating: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
+  notes: z.string().optional(),
+});
 
 export type DBHistoryEntry = {
   id: string;
@@ -36,21 +59,23 @@ async function openDB(): Promise<IDBDatabase> {
 
     request.onerror = () => {
       const error = request.error;
-      reject(error instanceof Error ? error : new Error(String(error)));
+      reject(error ?? new Error("IndexedDB operation failed"));
     };
     request.onsuccess = () => {
       resolve(request.result);
     };
 
     request.onupgradeneeded = (event) => {
-      const target = event.target as unknown;
-      const db = (target as IDBOpenDBRequest).result;
+      const targetResult = IDBOpenDBRequestSchema.safeParse(event.target);
+      if (targetResult.success) {
+        const db = targetResult.data.result;
 
-      // Create object store if it doesn't exist
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        const objectStore = db.createObjectStore(STORE_NAME, { keyPath: "id" });
-        objectStore.createIndex("timestamp", "timestamp", { unique: false });
-        objectStore.createIndex("status", "status", { unique: false });
+        // Create object store if it doesn't exist
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          const objectStore = db.createObjectStore(STORE_NAME, { keyPath: "id" });
+          objectStore.createIndex("timestamp", "timestamp", { unique: false });
+          objectStore.createIndex("status", "status", { unique: false });
+        }
       }
     };
   });
@@ -68,7 +93,7 @@ export async function saveEntry(entry: DBHistoryEntry): Promise<void> {
 
     request.onerror = () => {
       const error = request.error;
-      reject(error instanceof Error ? error : new Error(String(error)));
+      reject(error ?? new Error("IndexedDB operation failed"));
     };
     request.onsuccess = () => {
       resolve();
@@ -88,13 +113,19 @@ export async function getAllEntries(): Promise<DBHistoryEntry[]> {
 
     request.onerror = () => {
       const error = request.error;
-      reject(error instanceof Error ? error : new Error(String(error)));
+      reject(error ?? new Error("IndexedDB operation failed"));
     };
     request.onsuccess = () => {
-      const entries = request.result as unknown as DBHistoryEntry[];
-      // Sort by timestamp, newest first
-      entries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-      resolve(entries);
+      const result: unknown = request.result;
+      const entriesResult = z.array(DBHistoryEntrySchema).safeParse(result);
+      if (entriesResult.success) {
+        const entries = entriesResult.data;
+        // Sort by timestamp, newest first
+        entries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        resolve(entries);
+      } else {
+        resolve([]);
+      }
     };
   });
 }
@@ -111,10 +142,16 @@ export async function getEntry(id: string): Promise<DBHistoryEntry | undefined> 
 
     request.onerror = () => {
       const error = request.error;
-      reject(error instanceof Error ? error : new Error(String(error)));
+      reject(error ?? new Error("IndexedDB operation failed"));
     };
     request.onsuccess = () => {
-      resolve(request.result as unknown as DBHistoryEntry | undefined);
+      const result: unknown = request.result;
+      if (result === undefined) {
+        resolve(undefined);
+      } else {
+        const entryResult = DBHistoryEntrySchema.safeParse(result);
+        resolve(entryResult.success ? entryResult.data : undefined);
+      }
     };
   });
 }
@@ -131,7 +168,7 @@ export async function deleteEntry(id: string): Promise<void> {
 
     request.onerror = () => {
       const error = request.error;
-      reject(error instanceof Error ? error : new Error(String(error)));
+      reject(error ?? new Error("IndexedDB operation failed"));
     };
     request.onsuccess = () => {
       resolve();
@@ -151,7 +188,7 @@ export async function clearAllEntries(): Promise<void> {
 
     request.onerror = () => {
       const error = request.error;
-      reject(error instanceof Error ? error : new Error(String(error)));
+      reject(error ?? new Error("IndexedDB operation failed"));
     };
     request.onsuccess = () => {
       resolve();
@@ -171,7 +208,7 @@ export async function getEntryCount(): Promise<number> {
 
     request.onerror = () => {
       const error = request.error;
-      reject(error instanceof Error ? error : new Error(String(error)));
+      reject(error ?? new Error("IndexedDB operation failed"));
     };
     request.onsuccess = () => {
       resolve(request.result);
@@ -203,7 +240,8 @@ export async function trimToMaxEntries(maxCount: number): Promise<void> {
         }
       };
       request.onerror = () => {
-        reject(request.error);
+        const error = request.error;
+        reject(error ?? new Error("IndexedDB operation failed"));
       };
     }
   });

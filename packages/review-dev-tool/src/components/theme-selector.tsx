@@ -9,12 +9,12 @@ const BooleanSchema = z.boolean();
 export function ThemeSelector() {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const WindowSchema = z.object({}).passthrough();
-    const windowExists = WindowSchema.safeParse(typeof window !== "undefined" ? window : undefined).success;
-    if (!windowExists) return true;
+    const windowResult = WindowSchema.safeParse(globalThis.window);
+    if (!windowResult.success) return true;
     const saved = localStorage.getItem("darkMode");
     if (!saved) return true;
     try {
-      const parsed = JSON.parse(saved) as unknown;
+      const parsed: unknown = JSON.parse(saved);
       const result = BooleanSchema.safeParse(parsed);
       return result.success ? result.data : true;
     } catch {
@@ -25,8 +25,8 @@ export function ThemeSelector() {
   // Apply dark mode class to document
   useEffect(() => {
     const WindowSchema = z.object({}).passthrough();
-    const windowExists = WindowSchema.safeParse(typeof window !== "undefined" ? window : undefined).success;
-    if (!windowExists) return;
+    const windowResult = WindowSchema.safeParse(globalThis.window);
+    if (!windowResult.success) return;
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
     } else {

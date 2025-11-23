@@ -14,12 +14,9 @@ function formatDuration(seconds: number): string {
   return `${minutes.toString()}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
 
-function isArenaMatch(match: CompletedMatch | ArenaMatch): match is ArenaMatch {
-  return match.queueType === "arena";
-}
-
 export function MatchDetailsPanel({ match }: MatchDetailsPanelProps) {
-  const isArena = isArenaMatch(match);
+  // TypeScript narrows discriminated union based on queue type check
+  const isArena = match.queueType === "arena";
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
@@ -88,7 +85,7 @@ export function MatchDetailsPanel({ match }: MatchDetailsPanelProps) {
                 {!isArena && "rankAfterMatch" in player && player.rankAfterMatch && (
                   <div className="text-xs text-gray-600 dark:text-gray-400 dark:text-gray-500 mt-1">
                     <strong>Rank:</strong> {player.rankAfterMatch.tier} {player.rankAfterMatch.division}
-                    {player.rankAfterMatch.lp !== undefined && ` (${player.rankAfterMatch.lp.toString()} LP)`}
+                    {` (${player.rankAfterMatch.lp.toString()} LP)`}
                   </div>
                 )}
               </div>

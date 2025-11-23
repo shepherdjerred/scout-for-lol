@@ -5,6 +5,25 @@ import { z } from "zod";
 import type { GenerationResult } from "../config/schema";
 import * as db from "./indexeddb";
 
+// Zod schemas for validation - using passthrough to preserve all fields
+const GenerationResultSchema = z
+  .object({
+    text: z.string(),
+    image: z.string().optional(),
+    metadata: z.unknown(),
+    error: z.string().optional(),
+  })
+  .passthrough();
+
+const ConfigSnapshotSchema = z
+  .object({
+    model: z.string(),
+    personality: z.string().optional(),
+    artStyle: z.string().optional(),
+    artTheme: z.string().optional(),
+  })
+  .passthrough();
+
 export type HistoryEntry = {
   id: string;
   timestamp: Date;
@@ -44,17 +63,30 @@ async function migrateFromLocalStorage(): Promise<void> {
       notes: z.string().optional(),
     });
 
-    const ArrayResult = z.array(MigrationEntrySchema).safeParse(parsed);
-    if (!ArrayResult.success || ArrayResult.data.length === 0) return;
+    const arrayResult = z.array(MigrationEntrySchema).safeParse(parsed);
+    if (!arrayResult.success || arrayResult.data.length === 0) return;
 
-    console.log("[History] Migrating", ArrayResult.data.length.toString(), "entries from localStorage to IndexedDB");
+    console.log("[History] Migrating", arrayResult.data.length.toString(), "entries from localStorage to IndexedDB");
 
     // Save each entry to IndexedDB
-    for (const entry of ArrayResult.data) {
+    for (const entry of arrayResult.data) {
+      const resultValidation = GenerationResultSchema.safeParse(entry.result);
+      const configValidation = ConfigSnapshotSchema.safeParse(entry.configSnapshot);
+
+      if (!resultValidation.success || !configValidation.success) {
+        console.warn("[History] Skipping invalid entry during migration:", entry.id);
+        continue;
+      }
+
       const historyEntry: HistoryEntry = {
-        ...entry,
+        id: entry.id,
         timestamp: new Date(entry.timestamp),
-      } as HistoryEntry;
+        result: resultValidation.data,
+        configSnapshot: configValidation.data,
+        status: entry.status,
+        ...(entry.rating !== undefined && { rating: entry.rating }),
+        ...(entry.notes !== undefined && { notes: entry.notes }),
+      };
       await db.saveEntry(historyEntry);
     }
 
@@ -80,11 +112,27 @@ export async function loadHistory(): Promise<HistoryEntry[]> {
 
     const entries = await db.getAllEntries();
     // Convert to HistoryEntry type (IndexedDB stores Date objects correctly)
-    const result: HistoryEntry[] = entries.map((entry) => ({
-      ...entry,
-      timestamp: new Date(entry.timestamp), // Ensure it's a Date object
-    })) as HistoryEntry[];
-    return result;
+    const validEntries: HistoryEntry[] = [];
+    for (const entry of entries) {
+      const resultValidation = GenerationResultSchema.safeParse(entry.result);
+      const configValidation = ConfigSnapshotSchema.safeParse(entry.configSnapshot);
+
+      if (!resultValidation.success || !configValidation.success) {
+        console.warn("[History] Skipping invalid entry:", entry.id);
+        continue;
+      }
+
+      validEntries.push({
+        id: entry.id,
+        timestamp: new Date(entry.timestamp),
+        result: resultValidation.data,
+        configSnapshot: configValidation.data,
+        status: entry.status,
+        ...(entry.rating !== undefined && { rating: entry.rating }),
+        ...(entry.notes !== undefined && { notes: entry.notes }),
+      });
+    }
+    return validEntries;
   } catch (error) {
     console.error("Failed to load history from IndexedDB:", error);
     return [];
@@ -181,10 +229,24 @@ export async function getHistoryEntry(id: string): Promise<HistoryEntry | undefi
   try {
     const entry = await db.getEntry(id);
     if (!entry) return undefined;
+
+    const resultValidation = GenerationResultSchema.safeParse(entry.result);
+    const configValidation = ConfigSnapshotSchema.safeParse(entry.configSnapshot);
+
+    if (!resultValidation.success || !configValidation.success) {
+      console.warn("[History] Invalid entry data:", id);
+      return undefined;
+    }
+
     const result: HistoryEntry = {
-      ...entry,
+      id: entry.id,
       timestamp: new Date(entry.timestamp),
-    } as HistoryEntry;
+      result: resultValidation.data,
+      configSnapshot: configValidation.data,
+      status: entry.status,
+      ...(entry.rating !== undefined && { rating: entry.rating }),
+      ...(entry.notes !== undefined && { notes: entry.notes }),
+    };
     return result;
   } catch (error) {
     console.error("Failed to get history entry:", error);

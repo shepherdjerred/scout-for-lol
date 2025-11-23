@@ -2,6 +2,7 @@
  * Per-tab settings panel for tuning parameters
  */
 import { useState, useEffect } from "react";
+import { z } from "zod";
 import type { TabConfig, Personality } from "../config/schema";
 import { createDefaultTabConfig } from "../config/schema";
 import { getBasePrompt, BUILTIN_PERSONALITIES } from "../lib/prompts";
@@ -10,6 +11,8 @@ import { ArtStyleEditor } from "./art-style-editor";
 import { ConfigImportModal } from "./config-import-modal";
 import { downloadConfigBundle } from "../lib/config-export";
 import { ART_STYLES, ART_THEMES } from "@scout-for-lol/data";
+
+const ErrorSchema = z.object({ message: z.string() });
 import {
   loadCustomPersonalities,
   addCustomPersonality,
@@ -226,7 +229,8 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
     try {
       downloadConfigBundle(config);
     } catch (error) {
-      alert(`Failed to export config: ${error instanceof Error ? error.message : String(error)}`);
+      const errorResult = ErrorSchema.safeParse(error);
+      alert(`Failed to export config: ${errorResult.success ? errorResult.data.message : String(error)}`);
     }
   };
 

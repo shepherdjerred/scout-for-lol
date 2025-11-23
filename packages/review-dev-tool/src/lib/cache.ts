@@ -15,6 +15,13 @@ const CacheEntrySchema = z.object({
 
 type CacheEntry = z.infer<typeof CacheEntrySchema>;
 
+const IDBOpenDBRequestSchema = z.instanceof(IDBOpenDBRequest);
+
+// Schema for validating IDBRequest event targets with cursor results
+const IDBRequestEventTargetSchema = z.object({
+  result: z.union([z.instanceof(IDBCursorWithValue), z.null()]),
+});
+
 const CACHE_KEY_PREFIX = "r2-cache-";
 const DB_NAME = "r2-cache-db";
 const DB_VERSION = 1;
@@ -42,7 +49,7 @@ function getDB(): Promise<IDBDatabase> {
     request.onerror = () => {
       const error = request.error;
       console.warn("IndexedDB failed to open:", error);
-      reject(error instanceof Error ? error : new Error(String(error)));
+      reject(error ?? new Error("Cache operation failed"));
     };
 
     request.onsuccess = () => {
@@ -50,13 +57,15 @@ function getDB(): Promise<IDBDatabase> {
     };
 
     request.onupgradeneeded = (event) => {
-      const target = event.target as unknown;
-      const db = (target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        // Create object store with key path
-        const store = db.createObjectStore(STORE_NAME, { keyPath: "key" });
-        // Create index on timestamp for efficient cleanup
-        store.createIndex("timestamp", "timestamp", { unique: false });
+      const targetResult = IDBOpenDBRequestSchema.safeParse(event.target);
+      if (targetResult.success) {
+        const db = targetResult.data.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          // Create object store with key path
+          const store = db.createObjectStore(STORE_NAME, { keyPath: "key" });
+          // Create index on timestamp for efficient cleanup
+          store.createIndex("timestamp", "timestamp", { unique: false });
+        }
       }
     };
   });
@@ -70,7 +79,7 @@ function getDB(): Promise<IDBDatabase> {
 async function setInIndexedDB(key: string, entry: CacheEntry): Promise<boolean> {
   try {
     const db = await getDB();
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       const transaction = db.transaction([STORE_NAME], "readwrite");
       const store = transaction.objectStore(STORE_NAME);
       const request = store.put({ key, ...entry });
@@ -81,7 +90,7 @@ async function setInIndexedDB(key: string, entry: CacheEntry): Promise<boolean> 
 
       request.onerror = () => {
         const error = request.error;
-        reject(error instanceof Error ? error : new Error(String(error)));
+        reject(error ?? new Error("Cache operation failed"));
       };
     });
   } catch (error) {
@@ -158,8 +167,9 @@ function cleanupExpiredEntries(): void {
 
 /**
  * Get cached data if available and valid (synchronous - checks memory and localStorage only)
+ * Returns unknown data that must be validated by the caller
  */
-export function getCachedData<T>(endpoint: string, params: Record<string, unknown>): T | null {
+export function getCachedData(endpoint: string, params: Record<string, unknown>): unknown {
   const cacheKey = generateCacheKey(endpoint, params);
 
   // Periodically clean up expired entries
@@ -168,7 +178,7 @@ export function getCachedData<T>(endpoint: string, params: Record<string, unknow
   // Check in-memory cache first (fastest)
   const memoryEntry = memoryCache.get(cacheKey);
   if (memoryEntry && isCacheValid(memoryEntry)) {
-    return memoryEntry.data as T;
+    return memoryEntry.data;
   }
 
   // Check localStorage cache
@@ -181,7 +191,7 @@ export function getCachedData<T>(endpoint: string, params: Record<string, unknow
       if (result.success && isCacheValid(result.data)) {
         // Restore to memory cache for faster subsequent access
         memoryCache.set(cacheKey, result.data);
-        return result.data.data as T;
+        return result.data.data;
       }
 
       // Invalid or expired - clean up
@@ -196,14 +206,15 @@ export function getCachedData<T>(endpoint: string, params: Record<string, unknow
 
 /**
  * Get cached data if available and valid (async - checks memory, IndexedDB, and localStorage)
+ * Returns unknown data that must be validated by the caller
  */
-export async function getCachedDataAsync<T>(endpoint: string, params: Record<string, unknown>): Promise<T | null> {
+export async function getCachedDataAsync(endpoint: string, params: Record<string, unknown>): Promise<unknown> {
   const cacheKey = generateCacheKey(endpoint, params);
 
   // Check in-memory cache first (fastest)
   const memoryEntry = memoryCache.get(cacheKey);
   if (memoryEntry && isCacheValid(memoryEntry)) {
-    return memoryEntry.data as T;
+    return memoryEntry.data;
   }
 
   // Check IndexedDB (primary storage)
@@ -215,11 +226,22 @@ export async function getCachedDataAsync<T>(endpoint: string, params: Record<str
       const request = store.get(cacheKey);
 
       request.onsuccess = () => {
-        const result = request.result;
+        const result: unknown = request.result;
         if (result) {
-          // Extract the cache entry (key is stored in the object)
-          const { key: _key, ...entry } = result;
-          resolve(entry as unknown as CacheEntry);
+          // Validate the structure matches what we expect with the key
+          const KeyedEntrySchema = z.object({
+            key: z.string(),
+            data: z.unknown(),
+            timestamp: z.number(),
+            ttl: z.number(),
+          });
+          const validationResult = KeyedEntrySchema.safeParse(result);
+          if (validationResult.success) {
+            const { key: _key, ...entry } = validationResult.data;
+            resolve(entry);
+          } else {
+            resolve(null);
+          }
         } else {
           resolve(null);
         }
@@ -227,14 +249,14 @@ export async function getCachedDataAsync<T>(endpoint: string, params: Record<str
 
       request.onerror = () => {
         const error = request.error;
-        reject(error instanceof Error ? error : new Error(String(error)));
+        reject(error ?? new Error("Cache operation failed"));
       };
     });
 
     if (entry && isCacheValid(entry)) {
       // Restore to memory cache for faster subsequent access
       memoryCache.set(cacheKey, entry);
-      return entry.data as T;
+      return entry.data;
     }
   } catch (error) {
     console.warn("IndexedDB cache read error:", error);
@@ -250,7 +272,7 @@ export async function getCachedDataAsync<T>(endpoint: string, params: Record<str
       if (result.success && isCacheValid(result.data)) {
         // Restore to memory cache for faster subsequent access
         memoryCache.set(cacheKey, result.data);
-        return result.data.data as T;
+        return result.data.data;
       }
 
       // Invalid or expired - clean up
@@ -360,7 +382,9 @@ export async function setCachedData(
     localStorage.setItem(cacheKey, serialized);
   } catch (error) {
     // If quota exceeded, try to free up space and retry
-    if (error instanceof Error && error.name === "QuotaExceededError") {
+    const QuotaErrorSchema = z.object({ name: z.literal("QuotaExceededError") });
+    const errorResult = QuotaErrorSchema.safeParse(error);
+    if (errorResult.success) {
       console.warn("localStorage quota exceeded, attempting cache eviction...");
 
       const serialized = JSON.stringify(entry);
@@ -405,7 +429,7 @@ export async function clearAllCache(): Promise<void> {
       };
       request.onerror = () => {
         const error = request.error;
-        reject(error instanceof Error ? error : new Error(String(error)));
+        reject(error ?? new Error("Cache operation failed"));
       };
     });
   } catch (error) {
@@ -453,15 +477,19 @@ export async function clearCacheForEndpoint(endpoint: string): Promise<void> {
       const request = store.openCursor();
 
       request.onsuccess = (event) => {
-        const target = event.target as unknown;
-        const result = (target as IDBRequest).result as unknown;
-        const cursor = result as IDBCursorWithValue | null;
-        if (cursor) {
-          const key = cursor.value.key as string;
-          if (key.includes(`${endpoint}:`)) {
-            cursor.delete();
+        const targetResult = IDBRequestEventTargetSchema.safeParse(event.target);
+        if (targetResult.success) {
+          const cursor = targetResult.data.result;
+          if (cursor) {
+            const KeySchema = z.object({ key: z.string() });
+            const valueResult = KeySchema.safeParse(cursor.value);
+            if (valueResult.success && valueResult.data.key.includes(`${endpoint}:`)) {
+              cursor.delete();
+            }
+            cursor.continue();
+          } else {
+            resolve();
           }
-          cursor.continue();
         } else {
           resolve();
         }
@@ -469,7 +497,7 @@ export async function clearCacheForEndpoint(endpoint: string): Promise<void> {
 
       request.onerror = () => {
         const error = request.error;
-        reject(error instanceof Error ? error : new Error(String(error)));
+        reject(error ?? new Error("Cache operation failed"));
       };
     });
   } catch (error) {
@@ -534,16 +562,19 @@ export async function getCacheStats(): Promise<{
       const request = store.openCursor();
 
       request.onsuccess = (event) => {
-        const target = event.target as unknown;
-        const result = (target as IDBRequest).result as unknown;
-        const cursor = result as IDBCursorWithValue | null;
-        if (cursor) {
-          indexedDBEntries++;
-          // Estimate size (rough approximation)
-          const value = cursor.value;
-          const serialized = JSON.stringify(value);
-          indexedDBSizeBytes += serialized.length * 2; // UTF-16 encoding
-          cursor.continue();
+        const targetResult = IDBRequestEventTargetSchema.safeParse(event.target);
+        if (targetResult.success) {
+          const cursor = targetResult.data.result;
+          if (cursor) {
+            indexedDBEntries++;
+            // Estimate size (rough approximation)
+            const value: unknown = cursor.value;
+            const serialized = JSON.stringify(value);
+            indexedDBSizeBytes += serialized.length * 2; // UTF-16 encoding
+            cursor.continue();
+          } else {
+            resolve();
+          }
         } else {
           resolve();
         }
@@ -551,7 +582,7 @@ export async function getCacheStats(): Promise<{
 
       request.onerror = () => {
         const error = request.error;
-        reject(error instanceof Error ? error : new Error(String(error)));
+        reject(error ?? new Error("Cache operation failed"));
       };
     });
   } catch (error) {
