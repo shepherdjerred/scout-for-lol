@@ -14,12 +14,8 @@ interface PersonalityEditorProps {
 export function PersonalityEditor({ personality, onSave, onCancel }: PersonalityEditorProps) {
   const [name, setName] = useState(personality?.metadata.name ?? "");
   const [description, setDescription] = useState(personality?.metadata.description ?? "");
-  const [favoriteChampions, setFavoriteChampions] = useState(
-    personality?.metadata.favoriteChampions.join(", ") ?? "",
-  );
-  const [favoriteLanes, setFavoriteLanes] = useState(
-    personality?.metadata.favoriteLanes.join(", ") ?? "",
-  );
+  const [favoriteChampions, setFavoriteChampions] = useState(personality?.metadata.favoriteChampions.join(", ") ?? "");
+  const [favoriteLanes, setFavoriteLanes] = useState(personality?.metadata.favoriteLanes.join(", ") ?? "");
   const [instructions, setInstructions] = useState(personality?.instructions ?? "");
   const [error, setError] = useState<string | null>(null);
 

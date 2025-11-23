@@ -85,6 +85,9 @@ export function isCustomPersonality(id: string): boolean {
  * Generate a unique ID for a new personality
  */
 export function generatePersonalityId(name: string): string {
-  const slug = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+  const slug = name
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
   return `custom-${slug}-${Date.now().toString(36)}`;
 }

@@ -21,11 +21,7 @@ export function ComparisonView({ tabs, costTracker }: ComparisonViewProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {tabs.map((tab) => {
           const cost = tab.result?.metadata
-            ? calculateCost(
-                tab.result.metadata,
-                tab.config.textGeneration.model,
-                tab.config.imageGeneration.model,
-              )
+            ? calculateCost(tab.result.metadata, tab.config.textGeneration.model, tab.config.imageGeneration.model)
             : null;
 
           return (
@@ -49,9 +45,7 @@ export function ComparisonView({ tabs, costTracker }: ComparisonViewProps) {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Image Gen:</span>
-                      <span className="font-mono">
-                        {tab.config.imageGeneration.enabled ? "Yes" : "No"}
-                      </span>
+                      <span className="font-mono">{tab.config.imageGeneration.enabled ? "Yes" : "No"}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Personality:</span>
@@ -76,9 +70,7 @@ export function ComparisonView({ tabs, costTracker }: ComparisonViewProps) {
                           </div>
                           <div className="mt-1 text-xs text-gray-600">
                             {tab.result.text.length} chars
-                            {tab.result.text.length > 400 && (
-                              <span className="ml-2 text-orange-600">⚠️ Too long</span>
-                            )}
+                            {tab.result.text.length > 400 && <span className="ml-2 text-orange-600">⚠️ Too long</span>}
                           </div>
                         </div>
 
@@ -104,17 +96,14 @@ export function ComparisonView({ tabs, costTracker }: ComparisonViewProps) {
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Tokens:</span>
                                 <span className="font-mono">
-                                  {tab.result.metadata.textTokensPrompt} +{" "}
-                                  {tab.result.metadata.textTokensCompletion}
+                                  {tab.result.metadata.textTokensPrompt} + {tab.result.metadata.textTokensCompletion}
                                 </span>
                               </div>
                             )}
                             {tab.result.metadata.imageGenerated && (
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Image Gen:</span>
-                                <span className="font-mono">
-                                  {tab.result.metadata.imageDurationMs}ms
-                                </span>
+                                <span className="font-mono">{tab.result.metadata.imageDurationMs}ms</span>
                               </div>
                             )}
                           </div>
@@ -138,9 +127,7 @@ export function ComparisonView({ tabs, costTracker }: ComparisonViewProps) {
                               )}
                               <div className="flex justify-between border-t border-gray-200 pt-1">
                                 <span className="font-semibold">Total:</span>
-                                <span className="font-mono font-bold text-blue-600">
-                                  {formatCost(cost.totalCost)}
-                                </span>
+                                <span className="font-mono font-bold text-blue-600">{formatCost(cost.totalCost)}</span>
                               </div>
                             </div>
                           </div>
@@ -149,9 +136,7 @@ export function ComparisonView({ tabs, costTracker }: ComparisonViewProps) {
                     )}
                   </>
                 ) : (
-                  <div className="text-center py-8 text-gray-400 text-sm">
-                    No result generated yet
-                  </div>
+                  <div className="text-center py-8 text-gray-400 text-sm">No result generated yet</div>
                 )}
               </div>
             </div>
@@ -170,22 +155,16 @@ export function ComparisonView({ tabs, costTracker }: ComparisonViewProps) {
           <div>
             <div className="text-sm text-gray-600">Text Cost</div>
             <div className="text-2xl font-bold text-blue-600">
-              {formatCost(
-                costTracker.getTotal().textInputCost + costTracker.getTotal().textOutputCost,
-              )}
+              {formatCost(costTracker.getTotal().textInputCost + costTracker.getTotal().textOutputCost)}
             </div>
           </div>
           <div>
             <div className="text-sm text-gray-600">Image Cost</div>
-            <div className="text-2xl font-bold text-purple-600">
-              {formatCost(costTracker.getTotal().imageCost)}
-            </div>
+            <div className="text-2xl font-bold text-purple-600">{formatCost(costTracker.getTotal().imageCost)}</div>
           </div>
           <div>
             <div className="text-sm text-gray-600">Total Cost</div>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCost(costTracker.getTotal().totalCost)}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{formatCost(costTracker.getTotal().totalCost)}</div>
           </div>
         </div>
       </div>

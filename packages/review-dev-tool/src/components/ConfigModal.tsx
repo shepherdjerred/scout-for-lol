@@ -60,7 +60,11 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">API Configuration</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Settings shared across all tabs</p>
             </div>
-            <button onClick={onClose} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors" title="Close">
+            <button
+              onClick={onClose}
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              title="Close"
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -155,12 +159,16 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
                           {preview.reviewRatings} review rating{preview.reviewRatings !== 1 ? "s" : ""}
                         </li>
                       )}
-                      {!hasDataToReset && <li className="text-gray-400 dark:text-gray-500 italic">No custom data found</li>}
+                      {!hasDataToReset && (
+                        <li className="text-gray-400 dark:text-gray-500 italic">No custom data found</li>
+                      )}
                     </ul>
                     <p className="text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded p-2 mb-3">
                       ✓ API keys, cache, and cost data will be preserved
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">This cannot be undone. Continue?</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                      This cannot be undone. Continue?
+                    </p>
                   </div>
                 </div>
               </div>

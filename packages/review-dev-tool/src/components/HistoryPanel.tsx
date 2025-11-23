@@ -63,9 +63,7 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending }
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-          History ({history.length})
-        </h3>
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white">History ({history.length})</h3>
         {history.length > 0 && (
           <button
             onClick={() => setShowConfirmClear(true)}
@@ -78,9 +76,7 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending }
 
       {showConfirmClear && (
         <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded">
-          <div className="text-sm text-red-900 dark:text-red-200 mb-2">
-            Are you sure you want to clear all history?
-          </div>
+          <div className="text-sm text-red-900 dark:text-red-200 mb-2">Are you sure you want to clear all history?</div>
           <div className="flex gap-2">
             <button
               onClick={handleClearAll}
@@ -131,7 +127,9 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending }
                       {isPending ? (
                         <div className="flex items-center gap-1">
                           <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-yellow-600 dark:border-yellow-400" />
-                          <span className="text-yellow-600 dark:text-yellow-400 text-xs font-semibold">GENERATING...</span>
+                          <span className="text-yellow-600 dark:text-yellow-400 text-xs font-semibold">
+                            GENERATING...
+                          </span>
                         </div>
                       ) : hasError ? (
                         <span className="text-red-600 dark:text-red-400 text-xs font-semibold">ERROR</span>
@@ -143,13 +141,9 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending }
                       </span>
                     </div>
                     <div className="text-xs text-gray-700 dark:text-gray-300 space-y-0.5">
-                      <div className="font-mono truncate">
-                        {entry.configSnapshot.model}
-                      </div>
+                      <div className="font-mono truncate">{entry.configSnapshot.model}</div>
                       {entry.configSnapshot.personality && (
-                        <div className="truncate">
-                          🎭 {entry.configSnapshot.personality}
-                        </div>
+                        <div className="truncate">🎭 {entry.configSnapshot.personality}</div>
                       )}
                       {!isPending && !hasError && (
                         <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">

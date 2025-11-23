@@ -23,16 +23,13 @@ export const POST: APIRoute = async ({ request }) => {
     const result = RequestSchema.safeParse(body);
 
     if (!result.success) {
-      return new Response(
-        JSON.stringify({ error: "Invalid request body", details: result.error.message }),
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
-        }
-      );
+      return new Response(JSON.stringify({ error: "Invalid request body", details: result.error.message }), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
     }
 
     const { bucketName, accessKeyId, secretAccessKey, region, endpoint, key } = result.data;
@@ -56,16 +53,13 @@ export const POST: APIRoute = async ({ request }) => {
     const response = await client.send(command);
 
     if (!response.Body) {
-      return new Response(
-        JSON.stringify({ error: "Object not found" }),
-        {
-          status: 404,
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-          },
-        }
-      );
+      return new Response(JSON.stringify({ error: "Object not found" }), {
+        status: 404,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
     }
 
     // Convert stream to string
@@ -94,7 +88,7 @@ export const POST: APIRoute = async ({ request }) => {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
         },
-      }
+      },
     );
   }
 };

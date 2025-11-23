@@ -84,15 +84,11 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   // Merge built-in and custom, removing any duplicates based on description
   const allStyles = [
     ...builtinStylesFormatted,
-    ...customStyles.filter(
-      (cs) => !builtinStylesFormatted.some((bs) => bs.description === cs.description)
-    ),
+    ...customStyles.filter((cs) => !builtinStylesFormatted.some((bs) => bs.description === cs.description)),
   ];
   const allThemes = [
     ...builtinThemesFormatted,
-    ...customThemes.filter(
-      (ct) => !builtinThemesFormatted.some((bt) => bt.description === ct.description)
-    ),
+    ...customThemes.filter((ct) => !builtinThemesFormatted.some((bt) => bt.description === ct.description)),
   ];
 
   const handleCreateNewPersonality = () => {
@@ -257,7 +253,11 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   };
 
   const handleResetToDefaults = () => {
-    if (confirm("Reset this tab's settings to defaults? This will not affect custom personalities, art styles, or themes.")) {
+    if (
+      confirm(
+        "Reset this tab's settings to defaults? This will not affect custom personalities, art styles, or themes.",
+      )
+    ) {
       onChange(createDefaultTabConfig());
     }
   };
@@ -280,9 +280,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-lg font-bold text-gray-900 dark:text-white">Generation Settings</h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Tune parameters for this tab
-        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Tune parameters for this tab</p>
       </div>
 
       <div className="divide-y divide-gray-200">
@@ -472,7 +470,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                   className="rounded"
                   disabled={!config.imageGeneration.enabled}
                 />
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Use Matching Style-Theme Pairs</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Use Matching Style-Theme Pairs
+                </label>
               </div>
               {config.imageGeneration.useMatchingPairs && (
                 <div>
@@ -530,10 +530,12 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
 
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     <button
-                      onClick={() => onChange({
-                        ...config,
-                        imageGeneration: { ...config.imageGeneration, artStyle: "random" },
-                      })}
+                      onClick={() =>
+                        onChange({
+                          ...config,
+                          imageGeneration: { ...config.imageGeneration, artStyle: "random" },
+                        })
+                      }
                       className={`
                         w-full p-2 rounded border transition-colors text-left
                         ${config.imageGeneration.artStyle === "random" ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600"}
@@ -543,7 +545,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="text-xs font-medium text-gray-900 dark:text-white">Random</h4>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">Pick a random style for each review</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            Pick a random style for each review
+                          </p>
                         </div>
                         {config.imageGeneration.artStyle === "random" && (
                           <span className="text-blue-600 text-xs">✓</span>
@@ -570,13 +574,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                                     Custom
                                   </span>
                                 )}
-                                {isSelected && (
-                                  <span className="text-blue-600 text-xs flex-shrink-0">✓</span>
-                                )}
+                                {isSelected && <span className="text-blue-600 text-xs flex-shrink-0">✓</span>}
                               </div>
-                              <p className="text-xs text-gray-900 dark:text-white">
-                                {style.description}
-                              </p>
+                              <p className="text-xs text-gray-900 dark:text-white">{style.description}</p>
                             </div>
                             <div className="flex flex-col gap-1">
                               <button
@@ -646,10 +646,12 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
 
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     <button
-                      onClick={() => onChange({
-                        ...config,
-                        imageGeneration: { ...config.imageGeneration, artTheme: "random" },
-                      })}
+                      onClick={() =>
+                        onChange({
+                          ...config,
+                          imageGeneration: { ...config.imageGeneration, artTheme: "random" },
+                        })
+                      }
                       className={`
                         w-full p-2 rounded border transition-colors text-left
                         ${config.imageGeneration.artTheme === "random" ? "border-blue-500 bg-blue-50" : "border-gray-200 dark:border-gray-700 bg-white hover:border-gray-300 dark:border-gray-600"}
@@ -659,7 +661,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="text-xs font-medium text-gray-900 dark:text-white">Random</h4>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">Pick a random theme for each review</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            Pick a random theme for each review
+                          </p>
                         </div>
                         {config.imageGeneration.artTheme === "random" && (
                           <span className="text-blue-600 text-xs">✓</span>
@@ -686,13 +690,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                                     Custom
                                   </span>
                                 )}
-                                {isSelected && (
-                                  <span className="text-blue-600 text-xs flex-shrink-0">✓</span>
-                                )}
+                                {isSelected && <span className="text-blue-600 text-xs flex-shrink-0">✓</span>}
                               </div>
-                              <p className="text-xs text-gray-900 dark:text-white">
-                                {theme.description}
-                              </p>
+                              <p className="text-xs text-gray-900 dark:text-white">{theme.description}</p>
                             </div>
                             <div className="flex flex-col gap-1">
                               <button
@@ -796,10 +796,12 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
 
                   <div className="space-y-2 max-h-96 overflow-y-auto">
                     <button
-                      onClick={() => onChange({
-                        ...config,
-                        prompts: { ...config.prompts, personalityId: "random", customPersonality: undefined },
-                      })}
+                      onClick={() =>
+                        onChange({
+                          ...config,
+                          prompts: { ...config.prompts, personalityId: "random", customPersonality: undefined },
+                        })
+                      }
                       className={`
                         w-full p-3 rounded border transition-colors text-left
                         ${config.prompts.personalityId === "random" ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600"}
@@ -808,7 +810,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="text-sm font-medium text-gray-900 dark:text-white">Random</h4>
-                          <p className="text-xs text-gray-600 dark:text-gray-400">Pick a random personality for each review</p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            Pick a random personality for each review
+                          </p>
                         </div>
                         {config.prompts.personalityId === "random" && (
                           <span className="text-blue-600 text-xs">✓ Active</span>
@@ -830,15 +834,15 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">{personality.metadata.name}</h4>
+                                <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {personality.metadata.name}
+                                </h4>
                                 {isCustom && (
                                   <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded">
                                     Custom
                                   </span>
                                 )}
-                                {isSelected && (
-                                  <span className="text-blue-600 text-xs">✓</span>
-                                )}
+                                {isSelected && <span className="text-blue-600 text-xs">✓</span>}
                               </div>
                               <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
                                 {personality.metadata.description.substring(0, 80)}
@@ -902,56 +906,60 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
       {/* Tab Config Actions */}
       <div className="p-6 mt-8 border-t border-gray-200 dark:border-gray-700">
         <div className="flex gap-3 flex-wrap">
-        <button
-          onClick={handleExportConfig}
-          className="px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-          title="Export tab settings, custom personalities, art styles, and themes"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-            />
-          </svg>
-          Export Config
-        </button>
-        <button
-          onClick={handleImportConfig}
-          className="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-          title="Import config from JSON"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-            />
-          </svg>
-          Import Config
-        </button>
-        <button
-          onClick={handleResetToDefaults}
-          className="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-          title="Reset tab settings to defaults"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-            />
-          </svg>
-          Reset to Defaults
-        </button>
+          <button
+            onClick={handleExportConfig}
+            className="px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+            title="Export tab settings, custom personalities, art styles, and themes"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
+            </svg>
+            Export Config
+          </button>
+          <button
+            onClick={handleImportConfig}
+            className="px-5 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+            title="Import config from JSON"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+              />
+            </svg>
+            Import Config
+          </button>
+          <button
+            onClick={handleResetToDefaults}
+            className="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+            title="Reset tab settings to defaults"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            Reset to Defaults
+          </button>
         </div>
       </div>
 
       {/* Import Modal */}
-      <ConfigImportModal isOpen={showImportModal} onClose={() => setShowImportModal(false)} onImportSuccess={handleImportSuccess} />
+      <ConfigImportModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImportSuccess={handleImportSuccess}
+      />
     </div>
   );
 }

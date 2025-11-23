@@ -37,14 +37,18 @@ export const ImageGenerationSettingsSchema = z.object({
   enabled: z.boolean().default(true),
   model: z.string().default("gemini-3-pro-image-preview"),
   timeoutMs: z.number().int().min(10000).max(300000).default(60000),
-  artStyle: z.union([
-    z.literal("random"),
-    z.string(), // specific art style
-  ]).default("random"),
-  artTheme: z.union([
-    z.literal("random"),
-    z.string(), // specific art theme
-  ]).default("random"),
+  artStyle: z
+    .union([
+      z.literal("random"),
+      z.string(), // specific art style
+    ])
+    .default("random"),
+  artTheme: z
+    .union([
+      z.literal("random"),
+      z.string(), // specific art theme
+    ])
+    .default("random"),
   useMatchingPairs: z.boolean().default(true),
   matchingPairProbability: z.number().min(0).max(1).default(0.7),
 });
@@ -91,10 +95,12 @@ export type PlayerMetadata = z.infer<typeof PlayerMetadataSchema>;
 export const PromptSettingsSchema = z.object({
   basePrompt: z.string(),
   systemPromptPrefix: z.string().optional(),
-  personalityId: z.union([
-    z.literal("random"),
-    z.string(), // specific personality ID
-  ]).default("random"),
+  personalityId: z
+    .union([
+      z.literal("random"),
+      z.string(), // specific personality ID
+    ])
+    .default("random"),
   customPersonality: PersonalitySchema.optional(),
   laneContext: z.string().optional(), // Override lane context
   playerMetadata: PlayerMetadataSchema.optional(), // Override player metadata

@@ -45,7 +45,14 @@ export type CuratedParticipant = {
   perks: {
     primaryStyle: { id: number; name: string };
     subStyle: { id: number; name: string };
-    primarySelections: Array<{ id: number; name: string; description: string; var1: number; var2: number; var3: number }>;
+    primarySelections: Array<{
+      id: number;
+      name: string;
+      description: string;
+      var1: number;
+      var2: number;
+      var3: number;
+    }>;
     subSelections: Array<{ id: number; name: string; description: string; var1: number; var2: number; var3: number }>;
     statPerks: { offense: number; flex: number; defense: number };
   };
@@ -226,9 +233,7 @@ function getSummonerSpellName(spellId: number): string | undefined {
   return first(keys(pickBy(summoner.data, (s) => s.key === spellId.toString())));
 }
 
-export async function curateParticipantData(
-  participant: MatchV5DTOs.ParticipantDto,
-): Promise<CuratedParticipant> {
+export async function curateParticipantData(participant: MatchV5DTOs.ParticipantDto): Promise<CuratedParticipant> {
   // Translate items
   const itemIds = [
     participant.item0,
@@ -260,13 +265,13 @@ export async function curateParticipantData(
     {
       id: participant.summoner1Id,
       name: spell1Name ?? `Spell ${participant.summoner1Id.toString()}`,
-      description: spell1Name ? summoner.data[spell1Name]?.description ?? "" : "",
+      description: spell1Name ? (summoner.data[spell1Name]?.description ?? "") : "",
       casts: participant.summoner1Casts,
     },
     {
       id: participant.summoner2Id,
       name: spell2Name ?? `Spell ${participant.summoner2Id.toString()}`,
-      description: spell2Name ? summoner.data[spell2Name]?.description ?? "" : "",
+      description: spell2Name ? (summoner.data[spell2Name]?.description ?? "") : "",
       casts: participant.summoner2Casts,
     },
   ];

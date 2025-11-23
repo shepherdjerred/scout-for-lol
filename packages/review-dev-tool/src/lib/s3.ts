@@ -71,10 +71,7 @@ export async function listMatchesFromS3(
       };
 
       // Try to get from cache first (5 minute TTL)
-      const cached = getCachedData<Array<{ key: string; lastModified?: string }>>(
-        "r2-list",
-        cacheParams,
-      );
+      const cached = getCachedData<Array<{ key: string; lastModified?: string }>>("r2-list", cacheParams);
 
       let matches: Array<{ key: string; lastModified?: Date }>;
 
@@ -153,10 +150,7 @@ export async function listMatchesFromS3(
  * Fetch a match from S3 (via API endpoint)
  * Results are cached for 1 hour (match data is immutable)
  */
-export async function fetchMatchFromS3(
-  config: S3Config,
-  key: string,
-): Promise<MatchV5DTOs.MatchDto | null> {
+export async function fetchMatchFromS3(config: S3Config, key: string): Promise<MatchV5DTOs.MatchDto | null> {
   try {
     // Cache key parameters (exclude credentials for security)
     const cacheParams = {
@@ -247,9 +241,10 @@ export async function convertMatchDtoToInternalFormat(
     const participant = matchDto.info.participants[index];
     if (participant) {
       // Build Riot ID (GameName#Tagline)
-      const riotId = participant.riotIdGameName && participant.riotIdTagline
-        ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
-        : participant.summonerName ?? player.playerConfig.alias;
+      const riotId =
+        participant.riotIdGameName && participant.riotIdTagline
+          ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
+          : (participant.summonerName ?? player.playerConfig.alias);
 
       return {
         ...player,
@@ -297,9 +292,10 @@ export function extractMatchMetadataFromDto(matchDto: MatchV5DTOs.MatchDto, key:
 
   return matchDto.info.participants.map((participant) => {
     // Build Riot ID (GameName#Tagline)
-    const riotId = participant.riotIdGameName && participant.riotIdTagline
-      ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
-      : participant.summonerName ?? "Unknown";
+    const riotId =
+      participant.riotIdGameName && participant.riotIdTagline
+        ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
+        : (participant.summonerName ?? "Unknown");
 
     // Determine outcome
     let outcome: string;

@@ -21,13 +21,7 @@ interface ResultsPanelProps {
   onResultGenerated: (result: GenerationResult) => void;
 }
 
-export function ResultsPanel({
-  config,
-  match,
-  result,
-  costTracker,
-  onResultGenerated,
-}: ResultsPanelProps) {
+export function ResultsPanel({ config, match, result, costTracker, onResultGenerated }: ResultsPanelProps) {
   const [generating, setGenerating] = useState(false);
   const [progress, setProgress] = useState<GenerationProgress | undefined>();
   const [forceUpdate, setForceUpdate] = useState(0);
@@ -57,11 +51,7 @@ export function ResultsPanel({
     setForceUpdate((n) => n + 1); // Refresh history panel to show pending entry
 
     try {
-      const generatedResult = await generateMatchReview(
-        matchToUse,
-        config,
-        (p) => setProgress(p),
-      );
+      const generatedResult = await generateMatchReview(matchToUse, config, (p) => setProgress(p));
       onResultGenerated(generatedResult);
 
       // Update history entry with results
@@ -73,11 +63,7 @@ export function ResultsPanel({
 
       // Calculate and track cost
       if (!generatedResult.error && generatedResult.metadata) {
-        const cost = calculateCost(
-          generatedResult.metadata,
-          config.textGeneration.model,
-          config.imageGeneration.model,
-        );
+        const cost = calculateCost(generatedResult.metadata, config.textGeneration.model, config.imageGeneration.model);
         costTracker.add(cost);
         window.dispatchEvent(new Event("cost-update"));
       }
@@ -141,11 +127,7 @@ export function ResultsPanel({
   };
 
   const cost = result?.metadata
-    ? calculateCost(
-        result.metadata,
-        config.textGeneration.model,
-        config.imageGeneration.model,
-      )
+    ? calculateCost(result.metadata, config.textGeneration.model, config.imageGeneration.model)
     : null;
 
   // Show which result we're viewing
@@ -166,9 +148,7 @@ export function ResultsPanel({
         <div className="flex justify-between items-center mb-4">
           <div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">Generated Review</h2>
-            {viewingHistory && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Viewing from history</p>
-            )}
+            {viewingHistory && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Viewing from history</p>}
           </div>
           <button
             onClick={handleGenerate}
@@ -192,8 +172,12 @@ export function ResultsPanel({
               <div className="flex-1">
                 <div className="text-sm font-medium text-blue-900 dark:text-blue-200">{progress.message}</div>
                 <div className="mt-2 flex gap-2">
-                  <div className={`h-2 flex-1 rounded ${progress.step === "text" || progress.step === "image" || progress.step === "complete" ? "bg-blue-600 dark:bg-blue-400" : "bg-blue-200 dark:bg-blue-800"}`} />
-                  <div className={`h-2 flex-1 rounded ${progress.step === "image" || progress.step === "complete" ? "bg-blue-600 dark:bg-blue-400" : "bg-blue-200 dark:bg-blue-800"}`} />
+                  <div
+                    className={`h-2 flex-1 rounded ${progress.step === "text" || progress.step === "image" || progress.step === "complete" ? "bg-blue-600 dark:bg-blue-400" : "bg-blue-200 dark:bg-blue-800"}`}
+                  />
+                  <div
+                    className={`h-2 flex-1 rounded ${progress.step === "image" || progress.step === "complete" ? "bg-blue-600 dark:bg-blue-400" : "bg-blue-200 dark:bg-blue-800"}`}
+                  />
                 </div>
               </div>
             </div>
@@ -203,8 +187,16 @@ export function ResultsPanel({
         {result?.error && (
           <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded">
             <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              <svg
+                className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
               </svg>
               <div className="flex-1">
                 <div className="font-semibold text-red-900 dark:text-red-200 mb-1">Error</div>
@@ -249,7 +241,10 @@ export function ResultsPanel({
                   <StarRating rating={rating} onRate={handleRatingChange} size="large" />
                 </div>
                 <div>
-                  <label htmlFor="rating-notes" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                  <label
+                    htmlFor="rating-notes"
+                    className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                  >
                     Notes (optional)
                   </label>
                   <textarea
@@ -274,25 +269,33 @@ export function ResultsPanel({
                 {result.metadata.textTokensPrompt !== undefined && (
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Prompt Tokens:</span>
-                    <span className="font-mono text-gray-900 dark:text-gray-100">{result.metadata.textTokensPrompt}</span>
+                    <span className="font-mono text-gray-900 dark:text-gray-100">
+                      {result.metadata.textTokensPrompt}
+                    </span>
                   </div>
                 )}
                 {result.metadata.textTokensCompletion !== undefined && (
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Completion Tokens:</span>
-                    <span className="font-mono text-gray-900 dark:text-gray-100">{result.metadata.textTokensCompletion}</span>
+                    <span className="font-mono text-gray-900 dark:text-gray-100">
+                      {result.metadata.textTokensCompletion}
+                    </span>
                   </div>
                 )}
                 {result.metadata.imageGenerated && (
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Image Generation:</span>
-                    <span className="font-mono text-gray-900 dark:text-gray-100">{result.metadata.imageDurationMs}ms</span>
+                    <span className="font-mono text-gray-900 dark:text-gray-100">
+                      {result.metadata.imageDurationMs}ms
+                    </span>
                   </div>
                 )}
                 {result.metadata.selectedPersonality && (
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Personality:</span>
-                    <span className="font-mono text-gray-900 dark:text-gray-100">{result.metadata.selectedPersonality}</span>
+                    <span className="font-mono text-gray-900 dark:text-gray-100">
+                      {result.metadata.selectedPersonality}
+                    </span>
                   </div>
                 )}
                 {result.metadata.selectedArtStyle && (
@@ -324,7 +327,9 @@ export function ResultsPanel({
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Text Output:</span>
-                    <span className="font-mono text-gray-900 dark:text-gray-100">{formatCost(cost.textOutputCost)}</span>
+                    <span className="font-mono text-gray-900 dark:text-gray-100">
+                      {formatCost(cost.textOutputCost)}
+                    </span>
                   </div>
                   {cost.imageCost > 0 && (
                     <div className="flex justify-between">

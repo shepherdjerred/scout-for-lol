@@ -30,9 +30,7 @@ export function PersonalityManager({ onPersonalitySelect }: PersonalityManagerPr
   }, []);
 
   const allPersonalities = [...BUILTIN_PERSONALITIES.filter((p) => p.id !== "generic"), ...customPersonalities];
-  const selectedPersonality = selectedId
-    ? allPersonalities.find((p) => p.id === selectedId)
-    : null;
+  const selectedPersonality = selectedId ? allPersonalities.find((p) => p.id === selectedId) : null;
 
   const handleCreateNew = () => {
     setEditingPersonality(null);
@@ -111,10 +109,10 @@ export function PersonalityManager({ onPersonalitySelect }: PersonalityManagerPr
               {allPersonalities.map((personality) => {
                 const isCustom = isCustomPersonality(personality.id);
                 return (
-                <button
-                  key={personality.id}
-                  onClick={() => setSelectedId(personality.id)}
-                  className={`
+                  <button
+                    key={personality.id}
+                    onClick={() => setSelectedId(personality.id)}
+                    className={`
                     w-full text-left px-4 py-3 rounded border-2 transition-colors relative
                     ${
                       selectedId === personality.id
@@ -122,58 +120,53 @@ export function PersonalityManager({ onPersonalitySelect }: PersonalityManagerPr
                         : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                     }
                   `}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900 flex items-center gap-2">
-                        {personality.metadata.name}
-                        {isCustom && (
-                          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded">
-                            Custom
-                          </span>
-                        )}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 flex items-center gap-2">
+                          {personality.metadata.name}
+                          {isCustom && (
+                            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded">Custom</span>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">
+                          {personality.metadata.description.substring(0, 60)}
+                          {personality.metadata.description.length > 60 ? "..." : ""}
+                        </div>
+                        <div className="flex gap-2 mt-2">
+                          {personality.metadata.favoriteChampions.slice(0, 3).map((champ) => (
+                            <span key={champ} className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded">
+                              {champ}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600 mt-1">
-                        {personality.metadata.description.substring(0, 60)}
-                        {personality.metadata.description.length > 60 ? "..." : ""}
-                      </div>
-                      <div className="flex gap-2 mt-2">
-                        {personality.metadata.favoriteChampions.slice(0, 3).map((champ) => (
-                          <span
-                            key={champ}
-                            className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded"
+                      {isCustom && (
+                        <div className="flex flex-col gap-1 ml-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(personality);
+                            }}
+                            className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
                           >
-                            {champ}
-                          </span>
-                        ))}
-                      </div>
+                            Edit
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(personality.id);
+                            }}
+                            className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    {isCustom && (
-                      <div className="flex flex-col gap-1 ml-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEdit(personality);
-                          }}
-                          className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(personality.id);
-                          }}
-                          className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -188,19 +181,14 @@ export function PersonalityManager({ onPersonalitySelect }: PersonalityManagerPr
 
                 <div>
                   <h4 className="text-sm font-semibold text-gray-700 mb-2">Description</h4>
-                  <div className="text-sm text-gray-600">
-                    {selectedPersonality.metadata.description}
-                  </div>
+                  <div className="text-sm text-gray-600">{selectedPersonality.metadata.description}</div>
                 </div>
 
                 <div>
                   <h4 className="text-sm font-semibold text-gray-700 mb-2">Favorite Champions</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedPersonality.metadata.favoriteChampions.map((champ) => (
-                      <span
-                        key={champ}
-                        className="px-2 py-1 bg-purple-100 text-purple-700 text-sm rounded"
-                      >
+                      <span key={champ} className="px-2 py-1 bg-purple-100 text-purple-700 text-sm rounded">
                         {champ}
                       </span>
                     ))}
@@ -211,10 +199,7 @@ export function PersonalityManager({ onPersonalitySelect }: PersonalityManagerPr
                   <h4 className="text-sm font-semibold text-gray-700 mb-2">Favorite Lanes</h4>
                   <div className="flex flex-wrap gap-2">
                     {selectedPersonality.metadata.favoriteLanes.map((lane) => (
-                      <span
-                        key={lane}
-                        className="px-2 py-1 bg-blue-100 text-blue-700 text-sm rounded"
-                      >
+                      <span key={lane} className="px-2 py-1 bg-blue-100 text-blue-700 text-sm rounded">
                         {lane}
                       </span>
                     ))}

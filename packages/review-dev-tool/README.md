@@ -55,11 +55,13 @@ The app will be available at `http://localhost:4321`
 ### Features Detail
 
 #### Tab System
+
 - Create up to 5 configuration tabs
 - Compare results across different settings
 - Double-click tab names to rename
 
 #### Personality Editor
+
 - **Create Custom Personalities**: Define new reviewer personalities from scratch
 - **Edit Personalities**: Modify instructions, description, favorite champions/lanes
 - **Delete Custom Personalities**: Remove personalities you've created
@@ -68,20 +70,24 @@ The app will be available at `http://localhost:4321`
 - **Full Control**: Edit system prompt instructions and metadata
 
 Access the personality editor via:
+
 - "Manage Personalities" button in the header
 - "Manage" button next to personality dropdown in settings
 
 #### Match Browser
+
 - Browse recent matches from S3
 - Filter by queue type
 - Preview match metadata
 
 #### Cost Tracking
+
 - Per-request cost breakdown
 - Session total tracking
 - Export cost reports
 
 #### Comparison View
+
 - Side-by-side configuration comparison
 - Highlight differences
 - Session summary

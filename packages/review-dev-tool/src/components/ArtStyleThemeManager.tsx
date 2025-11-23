@@ -195,9 +195,7 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
             <button
               onClick={() => setViewMode("styles")}
               className={`px-4 py-2 rounded transition-colors ${
-                viewMode === "styles"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                viewMode === "styles" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
               Styles ({allStyles.length})
@@ -205,9 +203,7 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
             <button
               onClick={() => setViewMode("themes")}
               className={`px-4 py-2 rounded transition-colors ${
-                viewMode === "themes"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                viewMode === "themes" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
               Themes ({allThemes.length})
@@ -227,7 +223,9 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
           {/* List Panel */}
           <div className="p-4">
             <h4 className="text-sm font-semibold text-gray-700 mb-3">
-              {viewMode === "styles" ? `Available Styles (${filteredStyles.length})` : `Available Themes (${filteredThemes.length})`}
+              {viewMode === "styles"
+                ? `Available Styles (${filteredStyles.length})`
+                : `Available Themes (${filteredThemes.length})`}
             </h4>
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {viewMode === "styles" &&
@@ -247,18 +245,16 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
                       `}
                     >
                       <div className="flex justify-between items-start gap-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start gap-2">
-                              {isCustom && (
-                                <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded flex-shrink-0">
-                                  Custom
-                                </span>
-                              )}
-                              <div className="text-sm text-gray-900">
-                                {style.description}
-                              </div>
-                            </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start gap-2">
+                            {isCustom && (
+                              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded flex-shrink-0">
+                                Custom
+                              </span>
+                            )}
+                            <div className="text-sm text-gray-900">{style.description}</div>
                           </div>
+                        </div>
                       </div>
                     </button>
                   );
@@ -281,18 +277,16 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
                       `}
                     >
                       <div className="flex justify-between items-start gap-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start gap-2">
-                              {isCustom && (
-                                <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded flex-shrink-0">
-                                  Custom
-                                </span>
-                              )}
-                              <div className="text-sm text-gray-900">
-                                {theme.description}
-                              </div>
-                            </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start gap-2">
+                            {isCustom && (
+                              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded flex-shrink-0">
+                                Custom
+                              </span>
+                            )}
+                            <div className="text-sm text-gray-900">{theme.description}</div>
                           </div>
+                        </div>
                       </div>
                     </button>
                   );
@@ -316,9 +310,7 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
                 </div>
                 <div>
                   <div className="text-sm font-medium text-gray-700 mb-1">Description</div>
-                  <div className="text-sm text-gray-900 whitespace-pre-wrap">
-                    {selectedStyle.description}
-                  </div>
+                  <div className="text-sm text-gray-900 whitespace-pre-wrap">{selectedStyle.description}</div>
                 </div>
                 <div className="flex gap-2 pt-4">
                   <button
@@ -353,9 +345,7 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
                 </div>
                 <div>
                   <div className="text-sm font-medium text-gray-700 mb-1">Description</div>
-                  <div className="text-sm text-gray-900 whitespace-pre-wrap">
-                    {selectedTheme.description}
-                  </div>
+                  <div className="text-sm text-gray-900 whitespace-pre-wrap">{selectedTheme.description}</div>
                 </div>
                 <div className="flex gap-2 pt-4">
                   <button

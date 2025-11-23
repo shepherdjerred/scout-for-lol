@@ -79,7 +79,7 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   },
 
   // O-Series (Reasoning models)
-  "o1": {
+  o1: {
     id: "o1",
     name: "O1",
     description: "🧠 Advanced reasoning for complex problems • $15 input / $60 output per 1M tokens • No temp control",
@@ -273,7 +273,7 @@ export function getModelsByCategory(): Record<string, ModelInfo[]> {
     "gpt-4": [],
     "gpt-3.5": [],
     "o-series": [],
-    "other": [],
+    other: [],
   };
 
   for (const model of Object.values(OPENAI_MODELS)) {
@@ -293,10 +293,7 @@ export function getAllModelIds(): string[] {
 /**
  * Check if a model supports a specific parameter
  */
-export function modelSupportsParameter(
-  modelId: string,
-  parameter: "temperature" | "topP",
-): boolean {
+export function modelSupportsParameter(modelId: string, parameter: "temperature" | "topP"): boolean {
   const model = getModelInfo(modelId);
   if (!model) {
     // Default to false for unknown models to be safe

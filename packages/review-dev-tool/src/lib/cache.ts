@@ -24,10 +24,13 @@ const memoryCache = new Map<string, CacheEntry>();
 function generateCacheKey(endpoint: string, params: Record<string, unknown>): string {
   const sortedParams = Object.keys(params)
     .sort()
-    .reduce((acc, key) => {
-      acc[key] = params[key];
-      return acc;
-    }, {} as Record<string, unknown>);
+    .reduce(
+      (acc, key) => {
+        acc[key] = params[key];
+        return acc;
+      },
+      {} as Record<string, unknown>,
+    );
 
   return `${CACHE_KEY_PREFIX}${endpoint}:${JSON.stringify(sortedParams)}`;
 }
@@ -43,10 +46,7 @@ function isCacheValid(entry: CacheEntry): boolean {
 /**
  * Get cached data if available and valid
  */
-export function getCachedData<T>(
-  endpoint: string,
-  params: Record<string, unknown>,
-): T | null {
+export function getCachedData<T>(endpoint: string, params: Record<string, unknown>): T | null {
   const cacheKey = generateCacheKey(endpoint, params);
 
   // Check in-memory cache first (fastest)
@@ -81,12 +81,7 @@ export function getCachedData<T>(
 /**
  * Cache data with specified TTL (in milliseconds)
  */
-export function setCachedData(
-  endpoint: string,
-  params: Record<string, unknown>,
-  data: unknown,
-  ttl: number,
-): void {
+export function setCachedData(endpoint: string, params: Record<string, unknown>, data: unknown, ttl: number): void {
   const cacheKey = generateCacheKey(endpoint, params);
   const entry: CacheEntry = {
     data,

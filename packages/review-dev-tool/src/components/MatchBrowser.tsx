@@ -229,9 +229,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
                   className="bg-gray-50 dark:bg-gray-900 rounded p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <div className="text-xs font-medium text-gray-900 dark:text-white">
-                      {match.champion}
-                    </div>
+                    <div className="text-xs font-medium text-gray-900 dark:text-white">{match.champion}</div>
                     <button
                       onClick={() => handleSelectMatch(match)}
                       className="px-2 py-0.5 bg-green-600 dark:bg-green-500 text-white rounded hover:bg-green-700 dark:hover:bg-green-600 transition-colors text-xs"
@@ -243,7 +241,15 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
                     <div>{match.playerName}</div>
                     <div className="flex justify-between">
                       <span className="capitalize">{match.queueType}</span>
-                      <span className={match.outcome.includes("Victory") ? "text-green-600 dark:text-green-400" : match.outcome.includes("Defeat") ? "text-red-600 dark:text-red-400" : ""}>
+                      <span
+                        className={
+                          match.outcome.includes("Victory")
+                            ? "text-green-600 dark:text-green-400"
+                            : match.outcome.includes("Defeat")
+                              ? "text-red-600 dark:text-red-400"
+                              : ""
+                        }
+                      >
                         {match.outcome}
                       </span>
                     </div>

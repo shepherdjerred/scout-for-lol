@@ -8,7 +8,7 @@ import { getModelInfo } from "./models";
  * Gemini pricing (per image)
  */
 const GEMINI_PRICING = {
-  "gemini-3-pro-image-preview": 0.10, // $0.10 per image
+  "gemini-3-pro-image-preview": 0.1, // $0.10 per image
   "gemini-2.0-flash-exp": 0.05, // $0.05 per image (estimated)
   "gemini-1.5-pro": 0.08, // $0.08 per image (estimated)
 } as const;
@@ -45,17 +45,13 @@ export function getImagePricing(model: string): number {
   }
 
   // Default pricing if model not found
-  return 0.10;
+  return 0.1;
 }
 
 /**
  * Calculate cost breakdown from generation metadata
  */
-export function calculateCost(
-  metadata: GenerationMetadata,
-  textModel: string,
-  imageModel: string,
-): CostBreakdown {
+export function calculateCost(metadata: GenerationMetadata, textModel: string, imageModel: string): CostBreakdown {
   const modelPricing = getModelPricing(textModel);
   const imagePricing = getImagePricing(imageModel);
 

@@ -41,9 +41,10 @@ export function ArtStyleEditor({ mode, style, theme, onSave, onCancel }: ArtStyl
   };
 
   const modeLabel = mode === "style" ? "Art Style" : "Art Theme";
-  const modeDescription = mode === "style"
-    ? "Visual aesthetics and artistic techniques (e.g., 'Watercolor painting with soft gradients')"
-    : "Subject matter and thematic content (e.g., 'Studio Ghibli themes with nature')";
+  const modeDescription =
+    mode === "style"
+      ? "Visual aesthetics and artistic techniques (e.g., 'Watercolor painting with soft gradients')"
+      : "Subject matter and thematic content (e.g., 'Studio Ghibli themes with nature')";
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black dark:bg-opacity-70 flex items-center justify-center z-50 p-4">
@@ -59,7 +60,8 @@ export function ArtStyleEditor({ mode, style, theme, onSave, onCancel }: ArtStyl
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {mode === "style" ? "Art Style" : "Art Theme"} Description <span className="text-red-500 dark:text-red-400">*</span>
+              {mode === "style" ? "Art Style" : "Art Theme"} Description{" "}
+              <span className="text-red-500 dark:text-red-400">*</span>
             </label>
             <textarea
               value={description}

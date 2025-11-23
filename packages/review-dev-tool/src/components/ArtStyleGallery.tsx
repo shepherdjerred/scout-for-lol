@@ -12,11 +12,7 @@ interface ArtStyleGalleryProps {
   onPairSelect?: (style: string, theme: string) => void;
 }
 
-export function ArtStyleGallery({
-  onStyleSelect,
-  onThemeSelect,
-  onPairSelect,
-}: ArtStyleGalleryProps) {
+export function ArtStyleGallery({ onStyleSelect, onThemeSelect, onPairSelect }: ArtStyleGalleryProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("pairs");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -24,13 +20,9 @@ export function ArtStyleGallery({
   const allThemes = getAllArtThemes();
   const allPairs = getAllStyleThemePairs();
 
-  const filteredStyles = allStyles.filter((style) =>
-    style.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredStyles = allStyles.filter((style) => style.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  const filteredThemes = allThemes.filter((theme) =>
-    theme.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filteredThemes = allThemes.filter((theme) => theme.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const filteredPairs = allPairs.filter(
     (pair) =>
@@ -48,9 +40,7 @@ export function ArtStyleGallery({
             <button
               onClick={() => setViewMode("pairs")}
               className={`px-4 py-2 rounded transition-colors ${
-                viewMode === "pairs"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                viewMode === "pairs" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
               Pairs ({allPairs.length})
@@ -58,9 +48,7 @@ export function ArtStyleGallery({
             <button
               onClick={() => setViewMode("styles")}
               className={`px-4 py-2 rounded transition-colors ${
-                viewMode === "styles"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                viewMode === "styles" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
               Styles ({allStyles.length})
@@ -68,9 +56,7 @@ export function ArtStyleGallery({
             <button
               onClick={() => setViewMode("themes")}
               className={`px-4 py-2 rounded transition-colors ${
-                viewMode === "themes"
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                viewMode === "themes" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
               Themes ({allThemes.length})

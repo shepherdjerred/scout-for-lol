@@ -14,15 +14,7 @@ interface TabBarProps {
   onTabRename: (id: string, name: string) => void;
 }
 
-export function TabBar({
-  tabs,
-  activeTabId,
-  onTabSelect,
-  onTabClose,
-  onTabAdd,
-  onTabClone,
-  onTabRename,
-}: TabBarProps) {
+export function TabBar({ tabs, activeTabId, onTabSelect, onTabClose, onTabAdd, onTabClone, onTabRename }: TabBarProps) {
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
 

@@ -17,9 +17,7 @@ export const items = ItemSchema.parse(
   await (await fetch(`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/data/en_US/item.json`)).json(),
 );
 
-export function getItemInfo(
-  itemId: number,
-):
+export function getItemInfo(itemId: number):
   | {
       name: string;
       description: string;

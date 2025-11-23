@@ -13,12 +13,7 @@ const SIZES = {
   large: 32,
 };
 
-export function StarRating({
-  rating,
-  onRate,
-  size = "medium",
-  readonly = false,
-}: StarRatingProps) {
+export function StarRating({ rating, onRate, size = "medium", readonly = false }: StarRatingProps) {
   const [hoverRating, setHoverRating] = React.useState<number | null>(null);
 
   const displayRating = hoverRating ?? rating ?? 0;
@@ -73,11 +68,7 @@ export function StarRating({
           </button>
         );
       })}
-      {rating !== undefined && rating > 0 && (
-        <span className="ml-2 text-sm text-gray-600 font-medium">
-          {rating}/4
-        </span>
-      )}
+      {rating !== undefined && rating > 0 && <span className="ml-2 text-sm text-gray-600 font-medium">{rating}/4</span>}
     </div>
   );
 }

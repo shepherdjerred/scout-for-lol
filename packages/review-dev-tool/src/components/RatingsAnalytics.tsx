@@ -12,9 +12,8 @@ export function RatingsAnalytics() {
 
     // Overall stats
     const totalRated = ratedEntries.length;
-    const averageRating = totalRated > 0
-      ? ratedEntries.reduce((sum, entry) => sum + (entry.rating ?? 0), 0) / totalRated
-      : 0;
+    const averageRating =
+      totalRated > 0 ? ratedEntries.reduce((sum, entry) => sum + (entry.rating ?? 0), 0) / totalRated : 0;
 
     // Rating distribution
     const ratingCounts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0 };
@@ -132,9 +131,7 @@ export function RatingsAnalytics() {
             <div className="text-sm text-blue-700">Total Generations</div>
           </div>
           <div className="p-4 bg-green-50 rounded">
-            <div className="text-2xl font-bold text-green-900">
-              {statistics.averageRating.toFixed(2)}
-            </div>
+            <div className="text-2xl font-bold text-green-900">{statistics.averageRating.toFixed(2)}</div>
             <div className="text-sm text-green-700">Average Rating</div>
           </div>
         </div>
@@ -178,11 +175,11 @@ export function RatingsAnalytics() {
               >
                 <div className="flex-1">
                   <div className="text-sm font-medium text-gray-900 dark:text-white">{stat.personality}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">{stat.count} generations</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
+                    {stat.count} generations
+                  </div>
                 </div>
-                <div className="text-lg font-bold text-blue-600">
-                  {stat.average.toFixed(2)}
-                </div>
+                <div className="text-lg font-bold text-blue-600">{stat.average.toFixed(2)}</div>
               </div>
             ))}
           </div>
@@ -195,17 +192,14 @@ export function RatingsAnalytics() {
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Best Art Styles</h3>
           <div className="space-y-2">
             {statistics.styleStats.slice(0, 10).map((stat, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded"
-              >
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
                 <div className="flex-1">
                   <div className="text-sm font-medium text-gray-900 dark:text-white">{stat.style}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">{stat.count} generations</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
+                    {stat.count} generations
+                  </div>
                 </div>
-                <div className="text-lg font-bold text-blue-600">
-                  {stat.average.toFixed(2)}
-                </div>
+                <div className="text-lg font-bold text-blue-600">{stat.average.toFixed(2)}</div>
               </div>
             ))}
           </div>
@@ -218,17 +212,14 @@ export function RatingsAnalytics() {
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Best Art Themes</h3>
           <div className="space-y-2">
             {statistics.themeStats.slice(0, 10).map((stat, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded"
-              >
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
                 <div className="flex-1">
                   <div className="text-sm font-medium text-gray-900 dark:text-white">{stat.theme}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">{stat.count} generations</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
+                    {stat.count} generations
+                  </div>
                 </div>
-                <div className="text-lg font-bold text-blue-600">
-                  {stat.average.toFixed(2)}
-                </div>
+                <div className="text-lg font-bold text-blue-600">{stat.average.toFixed(2)}</div>
               </div>
             ))}
           </div>

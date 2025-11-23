@@ -29,13 +29,17 @@ export function MatchDetailsPanel({ match }: MatchDetailsPanelProps) {
         {/* Queue Type */}
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">Queue:</span>
-          <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">{match.queueType ?? "Unknown"}</span>
+          <span className="text-sm font-medium text-gray-900 dark:text-white capitalize">
+            {match.queueType ?? "Unknown"}
+          </span>
         </div>
 
         {/* Duration */}
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">Duration:</span>
-          <span className="text-sm font-medium text-gray-900 dark:text-white">{formatDuration(match.durationInSeconds)}</span>
+          <span className="text-sm font-medium text-gray-900 dark:text-white">
+            {formatDuration(match.durationInSeconds)}
+          </span>
         </div>
 
         {/* Players */}
@@ -47,7 +51,9 @@ export function MatchDetailsPanel({ match }: MatchDetailsPanelProps) {
             {match.players.map((player, idx) => (
               <div key={idx} className="bg-gray-50 dark:bg-gray-900 rounded p-2">
                 <div className="flex justify-between items-start mb-1">
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">{player.playerConfig.alias || "Unknown"}</span>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {player.playerConfig.alias || "Unknown"}
+                  </span>
                   {!isArena && "outcome" in player && (
                     <span
                       className={`text-xs px-2 py-1 rounded ${
@@ -122,7 +128,9 @@ export function MatchDetailsPanel({ match }: MatchDetailsPanelProps) {
         {/* Arena Teams */}
         {isArena && (
           <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Arena Teams ({match.teams.length})</h4>
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Arena Teams ({match.teams.length})
+            </h4>
             <div className="space-y-1 max-h-40 overflow-y-auto">
               {match.teams
                 .slice()
@@ -132,8 +140,12 @@ export function MatchDetailsPanel({ match }: MatchDetailsPanelProps) {
                     key={team.teamId}
                     className="flex justify-between items-center text-xs bg-gray-50 dark:bg-gray-900 rounded px-2 py-1"
                   >
-                    <span className="font-medium text-gray-900 dark:text-white">{formatArenaPlacement(team.placement)}</span>
-                    <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">{team.players.map((p) => p.championName).join(" & ")}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {formatArenaPlacement(team.placement)}
+                    </span>
+                    <span className="text-gray-600 dark:text-gray-400 dark:text-gray-500">
+                      {team.players.map((p) => p.championName).join(" & ")}
+                    </span>
                   </div>
                 ))}
             </div>

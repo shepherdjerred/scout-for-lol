@@ -5,12 +5,7 @@ import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { match as matchPattern } from "ts-pattern";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data";
-import type {
-  ReviewConfig,
-  GenerationResult,
-  GenerationMetadata,
-  Personality,
-} from "../config/schema";
+import type { ReviewConfig, GenerationResult, GenerationMetadata, Personality } from "../config/schema";
 import {
   getBasePrompt,
   selectRandomPersonality,

@@ -15,7 +15,13 @@ interface SettingsPanelProps {
   onOpenPersonalityManager?: () => void;
 }
 
-export function SettingsPanel({ globalConfig, tabConfig, onGlobalChange, onTabChange, onOpenPersonalityManager }: SettingsPanelProps) {
+export function SettingsPanel({
+  globalConfig,
+  tabConfig,
+  onGlobalChange,
+  onTabChange,
+  onOpenPersonalityManager,
+}: SettingsPanelProps) {
   const [showImportExport, setShowImportExport] = useState(false);
   const [importInput, setImportInput] = useState("");
   const [openSections, setOpenSections] = useState<Set<string>>(new Set(["text", "image", "prompts"]));
@@ -55,16 +61,12 @@ export function SettingsPanel({ globalConfig, tabConfig, onGlobalChange, onTabCh
       <div className="mb-4">
         <p className="text-sm text-gray-600">
           <span className="inline-flex items-center gap-1.5">
-            <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded">
-              Global
-            </span>
+            <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded">Global</span>
             settings are shared across all tabs
           </span>
           <span className="mx-2">•</span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
-              Per-Tab
-            </span>
+            <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">Per-Tab</span>
             settings are unique to each tab
           </span>
         </p>
@@ -76,198 +78,180 @@ export function SettingsPanel({ globalConfig, tabConfig, onGlobalChange, onTabCh
           <div className="w-full px-6 py-4 flex justify-between items-center bg-gray-50">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-gray-900">API Settings</span>
-              <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded">
-                Global
-              </span>
+              <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded">Global</span>
             </div>
           </div>
           <div className="px-6 pb-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  OpenAI API Key
-                </label>
-                <input
-                  type="password"
-                  value={globalConfig.api.openaiApiKey ?? ""}
-                  onChange={(e) =>
-                    onGlobalChange({
-                      ...globalConfig,
-                      api: { ...globalConfig.api, openaiApiKey: e.target.value || undefined },
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="sk-..."
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Gemini API Key
-                </label>
-                <input
-                  type="password"
-                  value={globalConfig.api.geminiApiKey ?? ""}
-                  onChange={(e) =>
-                    onGlobalChange({
-                      ...globalConfig,
-                      api: { ...globalConfig.api, geminiApiKey: e.target.value || undefined },
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="AI..."
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">OpenAI API Key</label>
+              <input
+                type="password"
+                value={globalConfig.api.openaiApiKey ?? ""}
+                onChange={(e) =>
+                  onGlobalChange({
+                    ...globalConfig,
+                    api: { ...globalConfig.api, openaiApiKey: e.target.value || undefined },
+                  })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="sk-..."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Gemini API Key</label>
+              <input
+                type="password"
+                value={globalConfig.api.geminiApiKey ?? ""}
+                onChange={(e) =>
+                  onGlobalChange({
+                    ...globalConfig,
+                    api: { ...globalConfig.api, geminiApiKey: e.target.value || undefined },
+                  })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="AI..."
+              />
+            </div>
 
-              <div className="pt-2 border-t border-gray-200">
-                <h5 className="text-sm font-semibold text-gray-700 mb-3">
-                  S3 / R2 Configuration (Optional)
-                </h5>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Bucket Name
-                    </label>
-                    <input
-                      type="text"
-                      value={globalConfig.api.s3BucketName ?? ""}
-                      onChange={(e) =>
-                        onGlobalChange({
-                          ...globalConfig,
-                          api: { ...globalConfig.api, s3BucketName: e.target.value || undefined },
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="my-bucket-name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Access Key ID
-                    </label>
-                    <input
-                      type="password"
-                      value={globalConfig.api.awsAccessKeyId ?? ""}
-                      onChange={(e) =>
-                        onGlobalChange({
-                          ...globalConfig,
-                          api: { ...globalConfig.api, awsAccessKeyId: e.target.value || undefined },
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="AKIA... or R2 access key"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Secret Access Key
-                    </label>
-                    <input
-                      type="password"
-                      value={globalConfig.api.awsSecretAccessKey ?? ""}
-                      onChange={(e) =>
-                        onGlobalChange({
-                          ...globalConfig,
-                          api: { ...globalConfig.api, awsSecretAccessKey: e.target.value || undefined },
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="••••••••"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Endpoint URL (for Cloudflare R2)
-                    </label>
-                    <input
-                      type="text"
-                      value={globalConfig.api.s3Endpoint ?? ""}
-                      onChange={(e) =>
-                        onGlobalChange({
-                          ...globalConfig,
-                          api: { ...globalConfig.api, s3Endpoint: e.target.value || undefined },
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="https://<account-id>.r2.cloudflarestorage.com"
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                      Leave empty for AWS S3. For R2, use your account endpoint.
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Region
-                    </label>
-                    <input
-                      type="text"
-                      value={globalConfig.api.awsRegion}
-                      onChange={(e) =>
-                        onGlobalChange({
-                          ...globalConfig,
-                          api: { ...globalConfig.api, awsRegion: e.target.value },
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="us-east-1 or auto for R2"
-                    />
-                    <p className="mt-1 text-xs text-gray-500">
-                      For R2, use "auto" or "us-east-1"
-                    </p>
-                  </div>
+            <div className="pt-2 border-t border-gray-200">
+              <h5 className="text-sm font-semibold text-gray-700 mb-3">S3 / R2 Configuration (Optional)</h5>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bucket Name</label>
+                  <input
+                    type="text"
+                    value={globalConfig.api.s3BucketName ?? ""}
+                    onChange={(e) =>
+                      onGlobalChange({
+                        ...globalConfig,
+                        api: { ...globalConfig.api, s3BucketName: e.target.value || undefined },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="my-bucket-name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Access Key ID</label>
+                  <input
+                    type="password"
+                    value={globalConfig.api.awsAccessKeyId ?? ""}
+                    onChange={(e) =>
+                      onGlobalChange({
+                        ...globalConfig,
+                        api: { ...globalConfig.api, awsAccessKeyId: e.target.value || undefined },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="AKIA... or R2 access key"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Secret Access Key</label>
+                  <input
+                    type="password"
+                    value={globalConfig.api.awsSecretAccessKey ?? ""}
+                    onChange={(e) =>
+                      onGlobalChange({
+                        ...globalConfig,
+                        api: { ...globalConfig.api, awsSecretAccessKey: e.target.value || undefined },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="••••••••"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Endpoint URL (for Cloudflare R2)
+                  </label>
+                  <input
+                    type="text"
+                    value={globalConfig.api.s3Endpoint ?? ""}
+                    onChange={(e) =>
+                      onGlobalChange({
+                        ...globalConfig,
+                        api: { ...globalConfig.api, s3Endpoint: e.target.value || undefined },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="https://<account-id>.r2.cloudflarestorage.com"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Leave empty for AWS S3. For R2, use your account endpoint.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Region</label>
+                  <input
+                    type="text"
+                    value={globalConfig.api.awsRegion}
+                    onChange={(e) =>
+                      onGlobalChange({
+                        ...globalConfig,
+                        api: { ...globalConfig.api, awsRegion: e.target.value },
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="us-east-1 or auto for R2"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">For R2, use "auto" or "us-east-1"</p>
                 </div>
               </div>
+            </div>
 
-              <div className="pt-4 border-t border-gray-200 space-y-3">
-                <h5 className="text-sm font-semibold text-gray-700">Share API Config</h5>
+            <div className="pt-4 border-t border-gray-200 space-y-3">
+              <h5 className="text-sm font-semibold text-gray-700">Share API Config</h5>
 
-                {!showImportExport ? (
+              {!showImportExport ? (
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleExport}
+                    className="flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
+                  >
+                    📋 Export (Copy to Clipboard)
+                  </button>
+                  <button
+                    onClick={() => setShowImportExport(true)}
+                    className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
+                  >
+                    📥 Import
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <textarea
+                    value={importInput}
+                    onChange={(e) => setImportInput(e.target.value)}
+                    placeholder="Paste config blob here..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500 font-mono text-xs"
+                  />
                   <div className="flex gap-2">
                     <button
-                      onClick={handleExport}
-                      className="flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
+                      onClick={handleImport}
+                      disabled={!importInput.trim()}
+                      className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
                     >
-                      📋 Export (Copy to Clipboard)
+                      Import
                     </button>
                     <button
-                      onClick={() => setShowImportExport(true)}
-                      className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
+                      onClick={() => {
+                        setShowImportExport(false);
+                        setImportInput("");
+                      }}
+                      className="flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors text-sm"
                     >
-                      📥 Import
+                      Cancel
                     </button>
                   </div>
-                ) : (
-                  <div className="space-y-2">
-                    <textarea
-                      value={importInput}
-                      onChange={(e) => setImportInput(e.target.value)}
-                      placeholder="Paste config blob here..."
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500 font-mono text-xs"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleImport}
-                        disabled={!importInput.trim()}
-                        className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm disabled:bg-gray-300 disabled:cursor-not-allowed"
-                      >
-                        Import
-                      </button>
-                      <button
-                        onClick={() => {
-                          setShowImportExport(false);
-                          setImportInput("");
-                        }}
-                        className="flex-1 px-3 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors text-sm"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
+                </div>
+              )}
 
-                <p className="text-xs text-gray-500">
-                  Export creates a base64-encoded blob with API keys. Only share with trusted users.
-                </p>
-              </div>
+              <p className="text-xs text-gray-500">
+                Export creates a base64-encoded blob with API keys. Only share with trusted users.
+              </p>
+            </div>
 
             <div className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded p-3">
               ⚠️ API keys are stored in browser localStorage and shared across all tabs.
@@ -283,9 +267,7 @@ export function SettingsPanel({ globalConfig, tabConfig, onGlobalChange, onTabCh
           >
             <div className="flex items-center gap-2">
               <span className="font-semibold text-gray-900">Text Generation</span>
-              <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
-                Per-Tab
-              </span>
+              <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">Per-Tab</span>
             </div>
             <span className="text-gray-400">{openSections.has("text") ? "−" : "+"}</span>
           </button>
@@ -425,7 +407,7 @@ export function SettingsPanel({ globalConfig, tabConfig, onGlobalChange, onTabCh
                 )}
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Image Generation Settings (Per-Tab) */}
@@ -433,9 +415,7 @@ export function SettingsPanel({ globalConfig, tabConfig, onGlobalChange, onTabCh
           <div className="w-full px-6 py-4 flex justify-between items-center bg-gray-50">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-gray-900">Image Generation</span>
-              <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
-                Per-Tab
-              </span>
+              <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">Per-Tab</span>
             </div>
           </div>
           <div>
@@ -547,9 +527,7 @@ export function SettingsPanel({ globalConfig, tabConfig, onGlobalChange, onTabCh
           <div className="w-full px-6 py-4 flex justify-between items-center bg-gray-50">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-gray-900">Prompts & Personality</span>
-              <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
-                Per-Tab
-              </span>
+              <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">Per-Tab</span>
             </div>
           </div>
           <div>

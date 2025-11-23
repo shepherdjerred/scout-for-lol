@@ -39,9 +39,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">API Keys</h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              OpenAI API Key
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">OpenAI API Key</label>
             <input
               type="password"
               value={config.api.openaiApiKey ?? ""}
@@ -56,9 +54,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Gemini API Key
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gemini API Key</label>
             <input
               type="password"
               value={config.api.geminiApiKey ?? ""}
@@ -82,9 +78,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
         </h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Bucket Name
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bucket Name</label>
             <input
               type="text"
               value={config.api.s3BucketName ?? ""}
@@ -99,9 +93,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Access Key ID
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Access Key ID</label>
             <input
               type="password"
               value={config.api.awsAccessKeyId ?? ""}
@@ -116,9 +108,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Secret Access Key
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Secret Access Key</label>
             <input
               type="password"
               value={config.api.awsSecretAccessKey ?? ""}
@@ -153,9 +143,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             </p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Region
-            </label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Region</label>
             <input
               type="text"
               value={config.api.awsRegion}
@@ -168,9 +156,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
               className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="us-east-1 or auto for R2"
             />
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              For R2, use "auto" or "us-east-1"
-            </p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">For R2, use "auto" or "us-east-1"</p>
           </div>
         </div>
       </div>
