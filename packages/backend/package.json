@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.890.0",
-    "@google/generative-ai": "^0.21.0",
+    "@google/generative-ai": "^0.24.0",
     "@prisma/client": "^6.0.0",
     "@resvg/resvg-js": "^2.6.2",
     "@scout-for-lol/data": "workspace:*",
