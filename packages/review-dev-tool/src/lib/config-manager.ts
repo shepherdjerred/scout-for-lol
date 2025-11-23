@@ -3,9 +3,7 @@
  */
 import { z } from "zod";
 import type { ReviewConfig, GlobalConfig } from "../config/schema";
-import { GlobalConfigSchema } from "../config/schema";
-// eslint-disable-next-line @typescript-eslint/no-deprecated,import/no-duplicates -- needed for backward compatibility
-import { ReviewConfigSchema } from "../config/schema";
+import { GlobalConfigSchema, ReviewConfigSchema } from "../config/schema";
 
 const STORAGE_KEY = "review-dev-tool-configs";
 const CURRENT_CONFIG_KEY = "review-dev-tool-current";

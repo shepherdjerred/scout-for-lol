@@ -174,4 +174,3 @@ export function selectRandomArtStyle(): string {
     return `${selection.style}. Themes: ${selection.themes.join(" meets ")}`;
   }
 }
-

@@ -296,4 +296,3 @@ export async function curateMatchData(matchDto: MatchV5DTOs.MatchDto): Promise<C
     participants,
   };
 }
-

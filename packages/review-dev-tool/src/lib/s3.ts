@@ -49,8 +49,8 @@ function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
  * List matches from S3 for the last 7 days (direct client-side)
  * Results are cached: 10 minutes for today, 24 hours for older days
  */
-export async function listMatchesFromS3(config: S3Config): Promise<{ key: string; lastModified?: Date }[]> {
-  const allMatches: { key: string; lastModified?: Date }[] = [];
+export async function listMatchesFromS3(config: S3Config): Promise<{ key: string; lastModified: Date | undefined }[]> {
+  const allMatches: { key: string; lastModified: Date | undefined }[] = [];
 
   // Create S3 client
   const client = new S3Client({
@@ -88,7 +88,7 @@ export async function listMatchesFromS3(config: S3Config): Promise<{ key: string
         // Try to get from cache first
         const cached: unknown = await getCachedDataAsync("r2-list", cacheParams);
 
-        let matches: { key: string; lastModified?: Date }[];
+        let matches: { key: string; lastModified: Date | undefined }[];
 
         // Validate cached data with Zod
         const CachedMatchListSchema = z.array(
@@ -101,11 +101,12 @@ export async function listMatchesFromS3(config: S3Config): Promise<{ key: string
         const cachedResult = CachedMatchListSchema.safeParse(cached);
         if (cachedResult.success && cachedResult.data.length > 0) {
           // Convert cached string dates back to Date objects
-          matches = cachedResult.data.map((obj): { key: string; lastModified?: Date } => {
-            if (obj.lastModified) {
-              return { key: obj.key, lastModified: new Date(obj.lastModified) };
-            }
-            return { key: obj.key };
+          matches = cachedResult.data.map((obj): { key: string; lastModified: Date | undefined } => {
+            const match: { key: string; lastModified: Date | undefined } = {
+              key: obj.key,
+              lastModified: obj.lastModified ? new Date(obj.lastModified) : undefined,
+            };
+            return match;
           });
         } else {
           // Fetch directly from S3
@@ -145,28 +146,18 @@ export async function listMatchesFromS3(config: S3Config): Promise<{ key: string
             LastModified: z.date().optional(),
           });
 
-          const NonNullMatchSchema = z.object({
-            key: z.string(),
-            lastModified: z.date().optional(),
+          matches = allContents.flatMap((obj) => {
+            const result = S3ObjectWithKeySchema.safeParse(obj);
+            if (!result.success) {
+              return [];
+            }
+            const validatedObj = result.data;
+            const match: { key: string; lastModified: Date | undefined } = {
+              key: validatedObj.Key,
+              lastModified: validatedObj.LastModified,
+            };
+            return [match];
           });
-
-          matches = allContents
-            .map((obj) => {
-              const result = S3ObjectWithKeySchema.safeParse(obj);
-              if (!result.success) {
-                return null;
-              }
-              const validatedObj = result.data;
-              const match: { key: string; lastModified?: Date } = {
-                key: validatedObj.Key,
-              };
-              if (validatedObj.LastModified) {
-                match.lastModified = validatedObj.LastModified;
-              }
-              return match;
-            })
-            .map((match) => (match === null ? null : NonNullMatchSchema.parse(match)))
-            .filter((match) => match !== null);
 
           // Cache the result (store dates as ISO strings for serialization)
           const cacheableData = matches.map((m) => {
@@ -226,11 +217,9 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
     const cachedResult = MatchDtoSchema.safeParse(cached);
     if (cachedResult.success) {
       // Data structure is valid. The passthrough schema validated the required fields
-      // and preserved all other fields. We widento unknown first, then the return type
-      // conversion is handled by TypeScript's structural typing.
-      const validated: unknown = cachedResult.data;
-      // TypeScript will convert unknown to MatchDto at the return boundary
-      return validated;
+      // and preserved all other fields. Cast required because MatchDto is complex external type.
+      // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, external type requires casting
+      return cachedResult.data as unknown as MatchV5DTOs.MatchDto;
     }
 
     // Cache miss - fetch directly from S3
@@ -268,9 +257,9 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
     // Cache the result for 7 days (match data is immutable)
     await setCachedData("r2-get", cacheParams, rawDataResult, 7 * 24 * 60 * 60 * 1000);
 
-    // Widen to unknown and let TypeScript handle the return type conversion
-    const validated: unknown = rawDataResult;
-    return validated;
+    // Return as MatchDto since validation passed. Cast required because MatchDto is complex external type.
+    // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, external type requires casting
+    return rawDataResult as unknown as MatchV5DTOs.MatchDto;
   } catch (error) {
     console.error(`Failed to fetch match ${key}:`, error);
     return null;
@@ -372,7 +361,7 @@ export function convertMatchDtoToInternalFormat(
 
       // For arena matches, player doesn't have a lane field or lane opponent
       if (queueType === "arena") {
-        const arenaPlayer = {
+        return {
           ...player,
           playerConfig: {
             ...player.playerConfig,
@@ -386,20 +375,22 @@ export function convertMatchDtoToInternalFormat(
             assists: participant.assists,
           },
         };
-        // Type annotation instead of assertion - compiler accepts this due to structural typing
-        const result: typeof player = arenaPlayer;
-        return result;
       }
 
       // For regular matches, convert participant to full champion and calculate lane opponent
       const champion = participantToChampion(participant);
       const team = parseTeam(participant.teamId);
-      const enemyTeam = team ? invertTeam(team) : undefined;
-      const laneOpponent = enemyTeam ? getLaneOpponent(champion, teams[enemyTeam]) : undefined;
+      // Team should always be defined for valid matches (teamId is 100 or 200)
+      if (!team) {
+        console.warn(`Invalid teamId ${participant.teamId.toString()} for participant`);
+        return player; // Keep original player if team is invalid
+      }
+      const enemyTeam = invertTeam(team);
+      const laneOpponent = getLaneOpponent(champion, teams[enemyTeam]);
       const outcome = getOutcome(participant);
 
       // For regular matches, include lane, lane opponent, outcome, and team
-      const completedPlayer = {
+      return {
         ...player,
         playerConfig: {
           ...player.playerConfig,
@@ -411,31 +402,29 @@ export function convertMatchDtoToInternalFormat(
         outcome,
         team,
       };
-      // Type annotation instead of assertion - compiler accepts this due to structural typing
-      const result: typeof player = completedPlayer;
-      return result;
     }
     return player;
   });
 
-  // Update match with real data
-  const updatedMatch = {
+  // Update team rosters for non-arena matches (use teams we already built)
+  if (queueType !== "arena") {
+    // Cast required: example match structure updated with real data, types don't match exactly
+    // eslint-disable-next-line no-restricted-syntax -- Real data validated, structural update requires casting
+    return {
+      ...baseMatch,
+      players: updatedPlayers,
+      durationInSeconds: matchDto.info.gameDuration,
+      teams,
+    } as unknown as CompletedMatch;
+  }
+
+  // For arena matches, no teams roster. Cast required: example match structure updated with real data
+  // eslint-disable-next-line no-restricted-syntax -- Real data validated, structural update requires casting
+  return {
     ...baseMatch,
     players: updatedPlayers,
     durationInSeconds: matchDto.info.gameDuration,
-  };
-
-  // Update team rosters for non-arena matches (use teams we already built)
-  if (queueType !== "arena") {
-    const completedMatch: CompletedMatch = {
-      ...updatedMatch,
-      teams,
-    };
-    return completedMatch;
-  }
-
-  const arenaMatch: ArenaMatch = updatedMatch;
-  return arenaMatch;
+  } as unknown as ArenaMatch;
 }
 
 /**

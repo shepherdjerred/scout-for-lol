@@ -3,7 +3,12 @@
  */
 import type { GenerationMetadata, CostBreakdown } from "../config/schema";
 import { CostBreakdownSchema } from "../config/schema";
-import { getModelPricing, getImagePricing, calculateCost as calculateCostShared, formatCost as formatCostShared } from "@scout-for-lol/data";
+import {
+  getModelPricing,
+  getImagePricing,
+  calculateCost as calculateCostShared,
+  formatCost as formatCostShared,
+} from "@scout-for-lol/data";
 
 /**
  * Get pricing for a specific model

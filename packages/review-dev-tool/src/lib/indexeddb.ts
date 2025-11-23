@@ -30,25 +30,8 @@ const DBHistoryEntrySchema = z.object({
   notes: z.string().optional(),
 });
 
-export type DBHistoryEntry = {
-  id: string;
-  timestamp: Date;
-  result: {
-    text: string;
-    image?: string | undefined; // base64 encoded
-    metadata: unknown;
-    error?: string | undefined;
-  };
-  configSnapshot: {
-    model: string;
-    personality?: string | undefined;
-    artStyle?: string | undefined;
-    artTheme?: string | undefined;
-  };
-  status: "pending" | "complete" | "error";
-  rating?: 1 | 2 | 3 | 4 | undefined;
-  notes?: string | undefined;
-};
+// Infer type from schema to ensure compatibility with exactOptionalPropertyTypes
+export type DBHistoryEntry = z.infer<typeof DBHistoryEntrySchema>;
 
 /**
  * Open IndexedDB connection

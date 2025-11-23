@@ -18,12 +18,7 @@ import { z } from "zod";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import config from "../../configuration.js";
 import { saveAIReviewImageToS3 } from "../../storage/s3.js";
-import {
-  loadPromptFile,
-  selectRandomPersonality,
-  loadPlayerMetadata,
-  getLaneContext,
-} from "./prompts.js";
+import { loadPromptFile, selectRandomPersonality, loadPlayerMetadata, getLaneContext } from "./prompts.js";
 
 const FILENAME = fileURLToPath(import.meta.url);
 const DIRNAME = dirname(FILENAME);
@@ -241,7 +236,15 @@ export async function generateMatchReview(
     themes,
   };
 
-  const reviewImage = await generateReviewImageBackend(reviewText, match, matchId, queueType, style, themes, curatedData);
+  const reviewImage = await generateReviewImageBackend(
+    reviewText,
+    match,
+    matchId,
+    queueType,
+    style,
+    themes,
+    curatedData,
+  );
 
   if (reviewImage) {
     return {

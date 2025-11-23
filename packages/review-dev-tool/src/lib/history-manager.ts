@@ -6,6 +6,7 @@ import type { GenerationResult } from "../config/schema";
 import * as db from "./indexeddb";
 
 // Zod schemas for validation - using passthrough to preserve all fields
+// Note: We use `.optional()` which produces `T | undefined`, matching the exact optional properties
 const GenerationResultSchema = z
   .object({
     text: z.string(),
@@ -78,11 +79,14 @@ async function migrateFromLocalStorage(): Promise<void> {
         continue;
       }
 
+      // Validated with Zod but metadata field is unknown for migration compatibility
       const historyEntry: HistoryEntry = {
         id: entry.id,
         timestamp: new Date(entry.timestamp),
-        result: resultValidation.data,
-        configSnapshot: configValidation.data,
+        // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, types require widening for compatibility
+        result: resultValidation.data as unknown as GenerationResult,
+        // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, types require widening for compatibility
+        configSnapshot: configValidation.data as unknown as HistoryEntry["configSnapshot"],
         status: entry.status,
         ...(entry.rating !== undefined && { rating: entry.rating }),
         ...(entry.notes !== undefined && { notes: entry.notes }),
@@ -122,15 +126,19 @@ export async function loadHistory(): Promise<HistoryEntry[]> {
         continue;
       }
 
-      validEntries.push({
+      // Validated with Zod but metadata field is unknown for migration compatibility
+      const historyEntry: HistoryEntry = {
         id: entry.id,
         timestamp: new Date(entry.timestamp),
-        result: resultValidation.data,
-        configSnapshot: configValidation.data,
+        // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, types require widening for compatibility
+        result: resultValidation.data as unknown as GenerationResult,
+        // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, types require widening for compatibility
+        configSnapshot: configValidation.data as unknown as HistoryEntry["configSnapshot"],
         status: entry.status,
         ...(entry.rating !== undefined && { rating: entry.rating }),
         ...(entry.notes !== undefined && { notes: entry.notes }),
-      });
+      };
+      validEntries.push(historyEntry);
     }
     return validEntries;
   } catch (error) {
@@ -238,11 +246,14 @@ export async function getHistoryEntry(id: string): Promise<HistoryEntry | undefi
       return undefined;
     }
 
+    // Validated with Zod but metadata field is unknown for migration compatibility
     const result: HistoryEntry = {
       id: entry.id,
       timestamp: new Date(entry.timestamp),
-      result: resultValidation.data,
-      configSnapshot: configValidation.data,
+      // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, types require widening for compatibility
+      result: resultValidation.data as unknown as GenerationResult,
+      // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, types require widening for compatibility
+      configSnapshot: configValidation.data as unknown as HistoryEntry["configSnapshot"],
       status: entry.status,
       ...(entry.rating !== undefined && { rating: entry.rating }),
       ...(entry.notes !== undefined && { notes: entry.notes }),

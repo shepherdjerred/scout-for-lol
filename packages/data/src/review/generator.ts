@@ -59,6 +59,8 @@ export type ReviewTextMetadata = {
   selectedPersonality?: string | undefined;
   reviewerName: string;
   playerName: string;
+  systemPrompt: string;
+  userPrompt: string;
 };
 
 /**
@@ -294,6 +296,8 @@ export async function generateReviewText(params: {
       selectedPersonality: personality.filename,
       reviewerName,
       playerName,
+      systemPrompt,
+      userPrompt,
     },
   };
 }

@@ -397,10 +397,16 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
                 <div className="space-y-1.5 text-xs">
                   {result.metadata.selectedPersonality && (
                     <div>
-                      <span className="text-blue-700 dark:text-blue-300 font-medium">Personality:</span>
+                      <span className="text-blue-700 dark:text-blue-300 font-medium">Personality File:</span>
                       <span className="ml-2 text-blue-900 dark:text-blue-100">
                         {result.metadata.selectedPersonality}
                       </span>
+                    </div>
+                  )}
+                  {result.metadata.reviewerName && (
+                    <div>
+                      <span className="text-blue-700 dark:text-blue-300 font-medium">Personality Name:</span>
+                      <span className="ml-2 text-blue-900 dark:text-blue-100">{result.metadata.reviewerName}</span>
                     </div>
                   )}
                   {result.metadata.selectedArtStyle && (
@@ -641,6 +647,54 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
                 )}
               </div>
             </div>
+
+            {(result.metadata.systemPrompt ?? result.metadata.userPrompt) && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Prompts Sent to OpenAI</h3>
+                <div className="space-y-3">
+                  {result.metadata.systemPrompt && (
+                    <details className="group">
+                      <summary className="cursor-pointer text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 list-none">
+                        <span className="inline-flex items-center gap-1">
+                          <svg
+                            className="w-4 h-4 transition-transform group-open:rotate-90"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                          System Prompt ({result.metadata.systemPrompt.length} chars)
+                        </span>
+                      </summary>
+                      <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 font-mono text-xs text-gray-900 dark:text-gray-100 whitespace-pre-wrap max-h-96 overflow-y-auto">
+                        {result.metadata.systemPrompt}
+                      </div>
+                    </details>
+                  )}
+                  {result.metadata.userPrompt && (
+                    <details className="group">
+                      <summary className="cursor-pointer text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 list-none">
+                        <span className="inline-flex items-center gap-1">
+                          <svg
+                            className="w-4 h-4 transition-transform group-open:rotate-90"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                          User Prompt ({result.metadata.userPrompt.length} chars)
+                        </span>
+                      </summary>
+                      <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 font-mono text-xs text-gray-900 dark:text-gray-100 whitespace-pre-wrap max-h-96 overflow-y-auto">
+                        {result.metadata.userPrompt}
+                      </div>
+                    </details>
+                  )}
+                </div>
+              </div>
+            )}
 
             {cost && (
               <div>

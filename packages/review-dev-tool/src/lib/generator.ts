@@ -162,9 +162,12 @@ export async function generateMatchReview(
       imageDurationMs: imageResult?.metadata.imageDurationMs,
       imageGenerated: Boolean(imageResult),
       selectedPersonality: textResult.metadata.selectedPersonality,
+      reviewerName: textResult.metadata.reviewerName,
       selectedArtStyle: imageResult?.metadata.selectedArtStyle,
       selectedArtTheme: imageResult?.metadata.selectedArtTheme,
       selectedSecondArtTheme: imageResult?.metadata.selectedSecondArtTheme,
+      systemPrompt: textResult.metadata.systemPrompt,
+      userPrompt: textResult.metadata.userPrompt,
     };
 
     return {
