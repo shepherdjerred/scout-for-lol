@@ -2,10 +2,12 @@
  * S3 integration for fetching match data (via Astro API endpoints)
  */
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data";
-import { parseQueueType } from "@scout-for-lol/data";
+import type { ArenaMatch, CompletedMatch, Champion } from "@scout-for-lol/data";
+import { parseQueueType, parseLane, getLaneOpponent, parseTeam, invertTeam } from "@scout-for-lol/data";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
-import { getCachedData, setCachedData } from "./cache";
+import { getCachedDataAsync, setCachedData } from "./cache";
+import { match } from "ts-pattern";
+import { z } from "zod";
 // Import match conversion utilities
 // These would normally come from the report-ui package
 // For now, we'll import what we can
@@ -13,13 +15,28 @@ import { getCachedData, setCachedData } from "./cache";
 /**
  * S3 configuration
  */
-export interface S3Config {
+export type S3Config = {
   bucketName: string;
   accessKeyId: string;
   secretAccessKey: string;
   region: string;
   endpoint?: string; // For Cloudflare R2 or custom S3 endpoints
-}
+};
+
+// Zod schema for S3 list response
+const S3ObjectSchema = z.object({
+  Key: z.string(),
+  LastModified: z.string().optional(),
+  ETag: z.string().optional(),
+  Size: z.number().optional(),
+  StorageClass: z.string().optional(),
+});
+
+const S3ListResponseSchema = z.object({
+  contents: z.array(S3ObjectSchema).optional(),
+  isTruncated: z.boolean().optional(),
+  nextContinuationToken: z.string().optional(),
+});
 
 /**
  * Generate date prefixes for S3 listing between start and end dates
@@ -46,100 +63,110 @@ function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
 }
 
 /**
- * List matches from S3 for the specified date range (via API endpoint)
- * Results are cached for 5 minutes per prefix
+ * List matches from S3 for the last 7 days (via API endpoint)
+ * Results are cached: 10 minutes for today, 24 hours for older days
  */
-export async function listMatchesFromS3(
-  config: S3Config,
-  daysBack: number,
-): Promise<Array<{ key: string; lastModified?: Date }>> {
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - daysBack);
+export async function listMatchesFromS3(config: S3Config): Promise<{ key: string; lastModified?: Date }[]> {
+  const allMatches: { key: string; lastModified?: Date }[] = [];
 
-  const prefixes = generateDatePrefixes(startDate, endDate);
-  const allMatches: Array<{ key: string; lastModified?: Date }> = [];
+  // Fetch all 7 days (0 = today, 1 = yesterday, ..., 6 = 6 days ago)
+  for (let daysBack = 0; daysBack < 7; daysBack++) {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() - daysBack);
 
-  for (const prefix of prefixes) {
-    try {
-      // Cache key parameters (exclude credentials for security)
-      const cacheParams = {
-        bucketName: config.bucketName,
-        region: config.region,
-        endpoint: config.endpoint,
-        prefix,
-      };
+    const startDate = new Date(targetDate);
+    const endDate = new Date(targetDate);
 
-      // Try to get from cache first (5 minute TTL)
-      const cached = await getCachedData<Array<{ key: string; lastModified?: string }>>("r2-list", cacheParams);
+    const prefixes = generateDatePrefixes(startDate, endDate);
 
-      let matches: Array<{ key: string; lastModified?: Date }>;
+    for (const prefix of prefixes) {
+      try {
+        // Cache key parameters (exclude credentials for security)
+        const cacheParams = {
+          bucketName: config.bucketName,
+          region: config.region,
+          endpoint: config.endpoint,
+          prefix,
+        };
 
-      if (cached) {
-        // Convert cached string dates back to Date objects
-        matches = cached.map((obj): { key: string; lastModified?: Date } => {
-          if (obj.lastModified) {
-            return { key: obj.key, lastModified: new Date(obj.lastModified) };
-          }
-          return { key: obj.key };
-        });
-      } else {
-        // Fetch from API
-        const response = await fetch("/api/r2/list", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            bucketName: config.bucketName,
-            accessKeyId: config.accessKeyId,
-            secretAccessKey: config.secretAccessKey,
-            region: config.region,
-            endpoint: config.endpoint,
-            prefix,
-          }),
-        });
+        // Dynamic TTL: 10 minutes for today, 24 hours for older days
+        const cacheTTL = daysBack === 0 ? 10 * 60 * 1000 : 24 * 60 * 60 * 1000;
 
-        if (!response.ok) {
-          const text = await response.text();
-          console.error(`R2 list error response (${response.status}):`, text);
-          try {
-            const error = JSON.parse(text);
-            throw new Error(error.error || "Failed to list objects");
-          } catch {
-            throw new Error(`Failed to list objects: ${text}`);
-          }
-        }
+        // Try to get from cache first
+        const cached = await getCachedDataAsync<{ key: string; lastModified?: string }[]>("r2-list", cacheParams);
 
-        const data = await response.json();
+        let matches: { key: string; lastModified?: Date }[];
 
-        if (data.contents && Array.isArray(data.contents)) {
-          matches = data.contents
-            .filter((obj: any) => obj.Key)
-            .map((obj: any) => {
-              const match: { key: string; lastModified?: Date } = {
-                key: obj.Key as string,
-              };
-              if (obj.LastModified) {
-                match.lastModified = new Date(obj.LastModified as string);
-              }
-              return match;
-            });
-
-          // Cache the result (store dates as ISO strings for serialization)
-          const cacheableData = matches.map((m) => {
-            if (m.lastModified) {
-              return { key: m.key, lastModified: m.lastModified.toISOString() };
+        if (cached) {
+          // Convert cached string dates back to Date objects
+          matches = cached.map((obj): { key: string; lastModified?: Date } => {
+            if (obj.lastModified) {
+              return { key: obj.key, lastModified: new Date(obj.lastModified) };
             }
-            return { key: m.key };
+            return { key: obj.key };
           });
-          await setCachedData("r2-list", cacheParams, cacheableData, 5 * 60 * 1000); // 5 minutes
         } else {
-          matches = [];
-        }
-      }
+          // Fetch from API
+          const response = await fetch("/api/r2/list", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              bucketName: config.bucketName,
+              accessKeyId: config.accessKeyId,
+              secretAccessKey: config.secretAccessKey,
+              region: config.region,
+              endpoint: config.endpoint,
+              prefix,
+            }),
+          });
 
-      allMatches.push(...matches);
-    } catch (error) {
-      console.warn(`Could not list ${prefix}:`, error);
+          if (!response.ok) {
+            const text = await response.text();
+            console.error(`R2 list error response (${String(response.status)}):`, text);
+            try {
+              const errorData: unknown = JSON.parse(text);
+              const ErrorSchema = z.object({ error: z.string().optional() });
+              const errorResult = ErrorSchema.safeParse(errorData);
+              const errorMessage = errorResult.success ? errorResult.data.error : undefined;
+              throw new Error(errorMessage ?? "Failed to list objects");
+            } catch {
+              throw new Error(`Failed to list objects: ${text}`);
+            }
+          }
+
+          const rawData: unknown = await response.json();
+          const listResult = S3ListResponseSchema.safeParse(rawData);
+
+          if (listResult.success && listResult.data.contents) {
+            matches = listResult.data.contents
+              .filter((obj) => obj.Key)
+              .map((obj) => {
+                const match: { key: string; lastModified?: Date } = {
+                  key: obj.Key,
+                };
+                if (obj.LastModified) {
+                  match.lastModified = new Date(obj.LastModified);
+                }
+                return match;
+              });
+
+            // Cache the result (store dates as ISO strings for serialization)
+            const cacheableData = matches.map((m) => {
+              if (m.lastModified) {
+                return { key: m.key, lastModified: m.lastModified.toISOString() };
+              }
+              return { key: m.key };
+            });
+            await setCachedData("r2-list", cacheParams, cacheableData, cacheTTL);
+          } else {
+            matches = [];
+          }
+        }
+
+        allMatches.push(...matches);
+      } catch (error) {
+        console.warn(`Could not list ${prefix}:`, error);
+      }
     }
   }
 
@@ -148,7 +175,7 @@ export async function listMatchesFromS3(
 
 /**
  * Fetch a match from S3 (via API endpoint)
- * Results are cached for 1 hour (match data is immutable)
+ * Results are cached for 7 days (match data is immutable)
  */
 export async function fetchMatchFromS3(config: S3Config, key: string): Promise<MatchV5DTOs.MatchDto | null> {
   try {
@@ -160,14 +187,15 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
       key,
     };
 
-    // Try to get from cache first (1 hour TTL - match data is immutable)
-    const cached = await getCachedData<MatchV5DTOs.MatchDto>("r2-get", cacheParams);
+    // Try to get from cache first (7 days TTL - match data is immutable)
+    const cached = await getCachedDataAsync<MatchV5DTOs.MatchDto>("r2-get", cacheParams);
 
     if (cached) {
       return cached;
     }
 
-    // Fetch from API
+    // Cache miss - fetch from API
+    console.log(`[HTTP] Fetching match: ${key}`);
     const response = await fetch("/api/r2/get", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -182,15 +210,20 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Failed to get object");
+      const errorData: unknown = await response.json();
+      const ErrorSchema = z.object({ error: z.string().optional() });
+      const errorResult = ErrorSchema.safeParse(errorData);
+      const errorMessage = errorResult.success ? errorResult.data.error : undefined;
+      throw new Error(errorMessage ?? "Failed to get object");
     }
 
-    const data = await response.json();
-    const matchDto = data as MatchV5DTOs.MatchDto;
+    const rawData: unknown = await response.json();
+    // Note: MatchV5DTOs.MatchDto is a complex external type from twisted library
+    // We trust the API response format matches the expected MatchDto structure
+    const matchDto = rawData as unknown as MatchV5DTOs.MatchDto;
 
-    // Cache the result for 1 hour
-    await setCachedData("r2-get", cacheParams, matchDto, 60 * 60 * 1000);
+    // Cache the result for 7 days (match data is immutable)
+    await setCachedData("r2-get", cacheParams, matchDto, 7 * 24 * 60 * 60 * 1000);
 
     return matchDto;
   } catch (error) {
@@ -200,16 +233,29 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
 }
 
 /**
+ * Get match outcome from participant data
+ * Mirrors backend implementation from packages/backend/src/league/model/match.ts
+ */
+function getOutcome(participant: MatchV5DTOs.ParticipantDto): "Victory" | "Defeat" | "Surrender" {
+  return match(participant)
+    .returnType<"Victory" | "Surrender" | "Defeat">()
+    .with({ win: true }, () => "Victory")
+    .with({ gameEndedInSurrender: true }, () => "Surrender")
+    .with({ win: false }, () => "Defeat")
+    .exhaustive();
+}
+
+/**
  * Convert a Riot API match to our internal format
  * This is a simplified conversion for dev tool purposes - we use example match structure
  * but populate it with real player data including Riot IDs
  * @param matchDto - The Riot API match DTO
  * @param selectedPlayerName - The Riot ID (GameName#Tagline) of the player to prioritize as first player
  */
-export async function convertMatchDtoToInternalFormat(
+export function convertMatchDtoToInternalFormat(
   matchDto: MatchV5DTOs.MatchDto,
   selectedPlayerName?: string,
-): Promise<CompletedMatch | ArenaMatch> {
+): CompletedMatch | ArenaMatch {
   const queueType = parseQueueType(matchDto.info.queueId);
 
   // Get base example match structure
@@ -228,8 +274,7 @@ export async function convertMatchDtoToInternalFormat(
   let reorderedParticipants = [...matchDto.info.participants];
   if (selectedPlayerName) {
     const selectedIndex = reorderedParticipants.findIndex((p) => {
-      const riotId =
-        p.riotIdGameName && p.riotIdTagline ? `${p.riotIdGameName}#${p.riotIdTagline}` : (p.summonerName ?? "Unknown");
+      const riotId = p.riotIdGameName && p.riotIdTagline ? `${p.riotIdGameName}#${p.riotIdTagline}` : "Unknown";
       return riotId === selectedPlayerName;
     });
 
@@ -242,7 +287,35 @@ export async function convertMatchDtoToInternalFormat(
     }
   }
 
-  // Update players with real Riot IDs from the match
+  // Helper function to convert participant to champion (like backend does)
+  const participantToChampion = (p: MatchV5DTOs.ParticipantDto): Champion => {
+    const riotIdGameName = p.riotIdGameName && p.riotIdTagline ? p.riotIdGameName : "Unknown";
+
+    return {
+      riotIdGameName,
+      championName: p.championName,
+      kills: p.kills,
+      deaths: p.deaths,
+      assists: p.assists,
+      level: p.champLevel,
+      items: [p.item0, p.item1, p.item2, p.item3, p.item4, p.item5, p.item6],
+      lane: parseLane(p.teamPosition),
+      spells: [p.summoner1Id, p.summoner2Id],
+      gold: p.goldEarned,
+      runes: [],
+      creepScore: p.totalMinionsKilled + p.neutralMinionsKilled,
+      visionScore: p.visionScore,
+      damage: p.totalDamageDealtToChampions,
+    };
+  };
+
+  // Build team rosters first (needed for lane opponent calculation)
+  const teams = {
+    blue: matchDto.info.participants.filter((p) => p.teamId === 100).map(participantToChampion),
+    red: matchDto.info.participants.filter((p) => p.teamId === 200).map(participantToChampion),
+  };
+
+  // Update players with real data from the match
   const updatedPlayers = baseMatch.players.map((player, index) => {
     const participant = reorderedParticipants[index];
     if (participant) {
@@ -250,22 +323,48 @@ export async function convertMatchDtoToInternalFormat(
       const riotId =
         participant.riotIdGameName && participant.riotIdTagline
           ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
-          : (participant.summonerName ?? player.playerConfig.alias);
+          : player.playerConfig.alias;
 
-      return {
+      // For arena matches, player doesn't have a lane field or lane opponent
+      if (queueType === "arena") {
+        const arenaPlayer = {
+          ...player,
+          playerConfig: {
+            ...player.playerConfig,
+            alias: riotId,
+          },
+          champion: {
+            ...player.champion,
+            championName: participant.championName,
+            kills: participant.kills,
+            deaths: participant.deaths,
+            assists: participant.assists,
+          },
+        };
+        return arenaPlayer as unknown as typeof player;
+      }
+
+      // For regular matches, convert participant to full champion and calculate lane opponent
+      const champion = participantToChampion(participant);
+      const team = parseTeam(participant.teamId);
+      const enemyTeam = team ? invertTeam(team) : undefined;
+      const laneOpponent = enemyTeam ? getLaneOpponent(champion, teams[enemyTeam]) : undefined;
+      const outcome = getOutcome(participant);
+
+      // For regular matches, include lane, lane opponent, outcome, and team
+      const completedPlayer = {
         ...player,
         playerConfig: {
           ...player.playerConfig,
           alias: riotId,
         },
-        champion: {
-          ...player.champion,
-          championName: participant.championName ?? player.champion.championName,
-          kills: participant.kills,
-          deaths: participant.deaths,
-          assists: participant.assists,
-        },
-      } as typeof player;
+        champion,
+        lane: champion.lane,
+        laneOpponent,
+        outcome,
+        team,
+      };
+      return completedPlayer as unknown as typeof player;
     }
     return player;
   });
@@ -277,99 +376,67 @@ export async function convertMatchDtoToInternalFormat(
     durationInSeconds: matchDto.info.gameDuration,
   };
 
-  // Update team rosters for non-arena matches
+  // Update team rosters for non-arena matches (use teams we already built)
   if (queueType !== "arena") {
-    // Build team rosters from all participants
-    const blueTeam = matchDto.info.participants
-      .filter((p) => p.teamId === 100)
-      .map((p) => ({
-        riotIdGameName: p.riotIdGameName && p.riotIdTagline ? p.riotIdGameName : (p.summonerName ?? "Unknown"),
-        championName: p.championName ?? "Unknown",
-        kills: p.kills,
-        deaths: p.deaths,
-        assists: p.assists,
-        level: p.champLevel,
-        items: [p.item0, p.item1, p.item2, p.item3, p.item4, p.item5, p.item6].filter((item) => item !== 0),
-        spells: [p.summoner1Id, p.summoner2Id],
-        gold: p.goldEarned,
-        runes: [],
-        creepScore: p.totalMinionsKilled + p.neutralMinionsKilled,
-        visionScore: p.visionScore,
-        damage: p.totalDamageDealtToChampions,
-      }));
-
-    const redTeam = matchDto.info.participants
-      .filter((p) => p.teamId === 200)
-      .map((p) => ({
-        riotIdGameName: p.riotIdGameName && p.riotIdTagline ? p.riotIdGameName : (p.summonerName ?? "Unknown"),
-        championName: p.championName ?? "Unknown",
-        kills: p.kills,
-        deaths: p.deaths,
-        assists: p.assists,
-        level: p.champLevel,
-        items: [p.item0, p.item1, p.item2, p.item3, p.item4, p.item5, p.item6].filter((item) => item !== 0),
-        spells: [p.summoner1Id, p.summoner2Id],
-        gold: p.goldEarned,
-        runes: [],
-        creepScore: p.totalMinionsKilled + p.neutralMinionsKilled,
-        visionScore: p.visionScore,
-        damage: p.totalDamageDealtToChampions,
-      }));
-
-    return {
+    const completedMatch: CompletedMatch = {
       ...updatedMatch,
-      teams: {
-        blue: blueTeam,
-        red: redTeam,
-      },
-    } as CompletedMatch;
+      teams,
+    } as unknown as CompletedMatch;
+    return completedMatch;
   }
 
-  return updatedMatch as ArenaMatch;
+  return updatedMatch as unknown as ArenaMatch;
 }
 
 /**
  * Match metadata for display
  */
-export interface MatchMetadata {
+export type MatchMetadata = {
   key: string;
   queueType: string;
   playerName: string;
   champion: string;
+  lane: string;
   outcome: string;
   kda: string;
   timestamp: Date;
-}
+};
 
 /**
  * Extract metadata for all participants from a Riot API match DTO
  */
 export function extractMatchMetadataFromDto(matchDto: MatchV5DTOs.MatchDto, key: string): MatchMetadata[] {
   const queueType = parseQueueType(matchDto.info.queueId);
-  const timestamp = new Date(matchDto.info.gameEndTimestamp ?? matchDto.info.gameStartTimestamp);
+  const timestamp = new Date(matchDto.info.gameEndTimestamp);
 
   return matchDto.info.participants.map((participant) => {
     // Build Riot ID (GameName#Tagline)
     const riotId =
       participant.riotIdGameName && participant.riotIdTagline
         ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
-        : (participant.summonerName ?? "Unknown");
+        : "Unknown";
 
     // Determine outcome
     let outcome: string;
     if (queueType === "arena") {
-      outcome = `${participant.placement ?? "?"}${getOrdinalSuffix(participant.placement ?? 1)} place`;
+      const placement = participant.placement ?? 1;
+      outcome = `${String(placement)}${getOrdinalSuffix(placement)} place`;
     } else {
       outcome = participant.win ? "Victory" : "Defeat";
     }
 
+    // Parse lane
+    const lane = parseLane(participant.teamPosition);
+
+    const laneStr = lane ?? "unknown";
     return {
       key,
       queueType: queueType ?? "unknown",
       playerName: riotId,
-      champion: participant.championName ?? "Unknown",
+      champion: participant.championName,
+      lane: laneStr,
       outcome,
-      kda: `${participant.kills}/${participant.deaths}/${participant.assists}`,
+      kda: `${String(participant.kills)}/${String(participant.deaths)}/${String(participant.assists)}`,
       timestamp,
     };
   });
@@ -385,25 +452,27 @@ export function extractMatchMetadata(match: CompletedMatch | ArenaMatch, key: st
   }
 
   if (match.queueType === "arena") {
-    const arenaPlayer = player as ArenaMatch["players"][0];
+    const arenaPlayer = player as unknown as ArenaMatch["players"][0];
     return {
       key,
       queueType: "arena",
       playerName: player.playerConfig.alias,
       champion: player.champion.championName,
-      outcome: `${arenaPlayer.placement}${getOrdinalSuffix(arenaPlayer.placement)} place`,
-      kda: `${player.champion.kills}/${player.champion.deaths}/${player.champion.assists}`,
+      lane: "N/A", // Arena doesn't have lanes
+      outcome: `${String(arenaPlayer.placement)}${getOrdinalSuffix(arenaPlayer.placement)} place`,
+      kda: `${String(player.champion.kills)}/${String(player.champion.deaths)}/${String(player.champion.assists)}`,
       timestamp: new Date(),
     };
   } else {
-    const completedMatchPlayer = player as CompletedMatch["players"][0];
+    const completedMatchPlayer = player as unknown as CompletedMatch["players"][0];
     return {
       key,
       queueType: match.queueType ?? "unknown",
       playerName: completedMatchPlayer.playerConfig.alias,
       champion: completedMatchPlayer.champion.championName,
+      lane: completedMatchPlayer.champion.lane ?? "unknown",
       outcome: completedMatchPlayer.outcome,
-      kda: `${completedMatchPlayer.champion.kills}/${completedMatchPlayer.champion.deaths}/${completedMatchPlayer.champion.assists}`,
+      kda: `${String(completedMatchPlayer.champion.kills)}/${String(completedMatchPlayer.champion.deaths)}/${String(completedMatchPlayer.champion.assists)}`,
       timestamp: new Date(),
     };
   }

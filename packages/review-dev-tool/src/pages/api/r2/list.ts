@@ -15,6 +15,7 @@ const RequestSchema = z.object({
   region: z.string(),
   endpoint: z.string().optional(),
   prefix: z.string(),
+  continuationToken: z.string().optional(),
 });
 
 export const POST: APIRoute = async ({ request }) => {
@@ -32,7 +33,7 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    const { bucketName, accessKeyId, secretAccessKey, region, endpoint, prefix } = result.data;
+    const { bucketName, accessKeyId, secretAccessKey, region, endpoint, prefix, continuationToken } = result.data;
 
     // Create S3 client
     const client = new S3Client({
@@ -44,18 +45,42 @@ export const POST: APIRoute = async ({ request }) => {
       },
     });
 
-    // List objects
-    const command = new ListObjectsV2Command({
-      Bucket: bucketName,
-      Prefix: prefix,
-      MaxKeys: 1000,
-    });
+    // List all objects with pagination support
+    type S3Object = {
+      Key?: string | undefined;
+      LastModified?: Date | undefined;
+      ETag?: string | undefined;
+      Size?: number | undefined;
+      StorageClass?: string | undefined;
+    };
+    const allContents: S3Object[] = [];
+    let nextToken: string | undefined = continuationToken;
+    let iterations = 0;
+    const maxIterations = 10; // Max 10k objects (10 * 1000)
 
-    const response = await client.send(command);
+    do {
+      const command = new ListObjectsV2Command({
+        Bucket: bucketName,
+        Prefix: prefix,
+        MaxKeys: 1000,
+        ...(nextToken ? { ContinuationToken: nextToken } : {}),
+      });
+
+      const response = await client.send(command);
+
+      if (response.Contents) {
+        allContents.push(...response.Contents);
+      }
+
+      nextToken = response.NextContinuationToken;
+      iterations++;
+    } while (nextToken && iterations < maxIterations);
 
     return new Response(
       JSON.stringify({
-        contents: response.Contents ?? [],
+        contents: allContents,
+        isTruncated: nextToken !== undefined,
+        nextContinuationToken: nextToken,
       }),
       {
         status: 200,

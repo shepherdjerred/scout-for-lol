@@ -93,13 +93,10 @@ async function setInIndexedDB(key: string, entry: CacheEntry): Promise<boolean> 
 function generateCacheKey(endpoint: string, params: Record<string, unknown>): string {
   const sortedParams = Object.keys(params)
     .sort()
-    .reduce(
-      (acc, key) => {
-        acc[key] = params[key];
-        return acc;
-      },
-      {} as Record<string, unknown>,
-    );
+    .reduce<Record<string, unknown>>((acc, key) => {
+      acc[key] = params[key];
+      return acc;
+    }, {});
 
   return `${CACHE_KEY_PREFIX}${endpoint}:${JSON.stringify(sortedParams)}`;
 }
@@ -157,7 +154,7 @@ function cleanupExpiredEntries(): void {
 }
 
 /**
- * Get cached data if available and valid
+ * Get cached data if available and valid (synchronous - checks memory and localStorage only)
  */
 export function getCachedData<T>(endpoint: string, params: Record<string, unknown>): T | null {
   const cacheKey = generateCacheKey(endpoint, params);
@@ -195,11 +192,79 @@ export function getCachedData<T>(endpoint: string, params: Record<string, unknow
 }
 
 /**
+ * Get cached data if available and valid (async - checks memory, IndexedDB, and localStorage)
+ */
+export async function getCachedDataAsync<T>(endpoint: string, params: Record<string, unknown>): Promise<T | null> {
+  const cacheKey = generateCacheKey(endpoint, params);
+
+  // Check in-memory cache first (fastest)
+  const memoryEntry = memoryCache.get(cacheKey);
+  if (memoryEntry && isCacheValid(memoryEntry)) {
+    return memoryEntry.data as T;
+  }
+
+  // Check IndexedDB (primary storage)
+  try {
+    const db = await getDB();
+    const entry = await new Promise<CacheEntry | null>((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], "readonly");
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get(cacheKey);
+
+      request.onsuccess = () => {
+        const result = request.result;
+        if (result) {
+          // Extract the cache entry (key is stored in the object)
+          const { key, ...entry } = result;
+          resolve(entry as CacheEntry);
+        } else {
+          resolve(null);
+        }
+      };
+
+      request.onerror = () => {
+        reject(request.error);
+      };
+    });
+
+    if (entry && isCacheValid(entry)) {
+      // Restore to memory cache for faster subsequent access
+      memoryCache.set(cacheKey, entry);
+      return entry.data as T;
+    }
+  } catch (error) {
+    console.warn("IndexedDB cache read error:", error);
+  }
+
+  // Check localStorage as fallback
+  try {
+    const stored = localStorage.getItem(cacheKey);
+    if (stored) {
+      const parsed: unknown = JSON.parse(stored);
+      const result = CacheEntrySchema.safeParse(parsed);
+
+      if (result.success && isCacheValid(result.data)) {
+        // Restore to memory cache for faster subsequent access
+        memoryCache.set(cacheKey, result.data);
+        return result.data.data as T;
+      }
+
+      // Invalid or expired - clean up
+      localStorage.removeItem(cacheKey);
+    }
+  } catch (error) {
+    console.warn("Cache read error:", error);
+  }
+
+  return null;
+}
+
+/**
  * Evict old cache entries to free up space
  * Removes expired entries first, then oldest non-expired entries
  */
 function evictOldCacheEntries(targetBytesToFree: number): number {
-  const entries: Array<{ key: string; timestamp: number; size: number; expired: boolean }> = [];
+  const entries: { key: string; timestamp: number; size: number; expired: boolean }[] = [];
 
   try {
     // Collect all cache entries with metadata
@@ -331,8 +396,12 @@ export async function clearAllCache(): Promise<void> {
       const store = transaction.objectStore(STORE_NAME);
       const request = store.clear();
 
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
+      request.onsuccess = () => {
+        resolve();
+      };
+      request.onerror = () => {
+        reject(request.error);
+      };
     });
   } catch (error) {
     console.warn("IndexedDB cache clear error:", error);
@@ -391,7 +460,9 @@ export async function clearCacheForEndpoint(endpoint: string): Promise<void> {
         }
       };
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        reject(request.error);
+      };
     });
   } catch (error) {
     console.warn("IndexedDB cache clear error:", error);
@@ -468,7 +539,9 @@ export async function getCacheStats(): Promise<{
         }
       };
 
-      request.onerror = () => reject(request.error);
+      request.onerror = () => {
+        reject(request.error);
+      };
     });
   } catch (error) {
     console.warn("Error calculating IndexedDB cache stats:", error);

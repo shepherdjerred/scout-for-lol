@@ -1,9 +1,10 @@
 /**
- * Manages generation history in localStorage
+ * Manages generation history in IndexedDB (supports large images)
  */
 import type { GenerationResult } from "../config/schema";
+import * as db from "./indexeddb";
 
-export interface HistoryEntry {
+export type HistoryEntry = {
   id: string;
   timestamp: Date;
   result: GenerationResult;
@@ -16,34 +17,65 @@ export interface HistoryEntry {
   status: "pending" | "complete" | "error";
   rating?: 1 | 2 | 3 | 4;
   notes?: string;
-}
+};
 
-const STORAGE_KEY = "scout-review-history";
+const STORAGE_KEY = "scout-review-history"; // For localStorage migration
 const MAX_HISTORY_ENTRIES = 50;
 
 /**
- * Load all history entries from localStorage
- * Only completed and error entries are stored - pending entries are never persisted
+ * Migrate old localStorage data to IndexedDB (one-time migration)
  */
-export function loadHistory(): HistoryEntry[] {
-  if (typeof window === "undefined") return [];
+async function migrateFromLocalStorage(): Promise<void> {
+  if (typeof window === "undefined") return;
 
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return [];
+    if (!stored) return; // Nothing to migrate
 
     const parsed = JSON.parse(stored) as unknown;
-    if (!Array.isArray(parsed)) return [];
+    if (!Array.isArray(parsed) || parsed.length === 0) return;
 
-    // Convert timestamp strings back to Date objects
-    const entries = parsed.map((entry) => ({
-      ...entry,
-      timestamp: new Date(entry.timestamp),
-    })) as HistoryEntry[];
+    console.log("[History] Migrating", parsed.length, "entries from localStorage to IndexedDB");
 
-    return entries;
+    // Save each entry to IndexedDB
+    for (const entry of parsed) {
+      const historyEntry: HistoryEntry = {
+        ...entry,
+        timestamp: new Date(entry.timestamp),
+      };
+      await db.saveEntry(historyEntry);
+    }
+
+    // Clear localStorage after successful migration
+    localStorage.removeItem(STORAGE_KEY);
+    console.log("[History] Migration complete");
   } catch (error) {
-    console.error("Failed to load history:", error);
+    console.error("Failed to migrate from localStorage:", error);
+  }
+}
+
+/**
+ * Load all history entries from IndexedDB
+ * Only completed and error entries are stored - pending entries are never persisted
+ */
+export async function loadHistory(): Promise<HistoryEntry[]> {
+  if (typeof window === "undefined") return [];
+
+  try {
+    // Check if migration is needed (only on first load)
+    const count = await db.getEntryCount();
+    if (count === 0) {
+      await migrateFromLocalStorage();
+    }
+
+    const entries = await db.getAllEntries();
+    // Convert to HistoryEntry type (IndexedDB stores Date objects correctly)
+    return entries.map((entry) => ({
+      ...entry,
+      timestamp: new Date(entry.timestamp), // Ensure it's a Date object
+    })) as HistoryEntry[];
+  } catch (error) {
+    console.error("Failed to load history from IndexedDB:", error);
     return [];
   }
 }
@@ -62,13 +94,14 @@ export function createPendingEntry(_configSnapshot: HistoryEntry["configSnapshot
 
 /**
  * Save a completed generation to history
- * This is the ONLY way entries get persisted to localStorage
+ * This is the ONLY way entries get persisted to IndexedDB
+ * IndexedDB can handle large images (MB+), unlike localStorage
  */
-export function saveCompletedEntry(
+export async function saveCompletedEntry(
   id: string,
   result: GenerationResult,
   configSnapshot: HistoryEntry["configSnapshot"],
-): void {
+): Promise<void> {
   if (typeof window === "undefined") return;
 
   console.log("[History] Saving completed entry:", id);
@@ -76,41 +109,20 @@ export function saveCompletedEntry(
   const entry: HistoryEntry = {
     id,
     timestamp: new Date(),
-    result,
+    result, // Keep images! IndexedDB can handle them
     configSnapshot,
     status: result.error ? "error" : "complete",
   };
 
-  const history = loadHistory();
-
-  // Check if entry already exists (shouldn't happen, but handle it)
-  const existingIndex = history.findIndex((e) => e.id === id);
-  if (existingIndex !== -1) {
-    console.log("[History] Entry already exists, updating");
-    history[existingIndex] = entry;
-  } else {
-    console.log("[History] Adding new entry");
-    history.unshift(entry); // Add to beginning
-  }
-
-  // Limit history size
-  const trimmed = history.slice(0, MAX_HISTORY_ENTRIES);
-
   try {
-    console.log("[History] Saving to localStorage");
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+    console.log("[History] Saving to IndexedDB (with images)");
+    await db.saveEntry(entry);
     console.log("[History] Successfully saved entry");
+
+    // Trim old entries if we exceed max
+    await db.trimToMaxEntries(MAX_HISTORY_ENTRIES);
   } catch (error) {
     console.error("Failed to save to history:", error);
-    // If localStorage is full, try removing old entries
-    if (trimmed.length > 10) {
-      const reduced = trimmed.slice(0, 10);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(reduced));
-      } catch {
-        console.error("Failed to save even after reducing history");
-      }
-    }
   }
 }
 
@@ -118,23 +130,23 @@ export function saveCompletedEntry(
  * Save a new generation to history (legacy - kept for compatibility)
  * @deprecated Use createPendingEntry and saveCompletedEntry instead
  */
-export function saveToHistory(result: GenerationResult, configSnapshot: HistoryEntry["configSnapshot"]): string {
+export async function saveToHistory(
+  result: GenerationResult,
+  configSnapshot: HistoryEntry["configSnapshot"],
+): Promise<string> {
   const id = `gen-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-  saveCompletedEntry(id, result, configSnapshot);
+  await saveCompletedEntry(id, result, configSnapshot);
   return id;
 }
 
 /**
  * Delete a specific history entry
  */
-export function deleteHistoryEntry(id: string): void {
+export async function deleteHistoryEntry(id: string): Promise<void> {
   if (typeof window === "undefined") return;
 
-  const history = loadHistory();
-  const filtered = history.filter((entry) => entry.id !== id);
-
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    await db.deleteEntry(id);
   } catch (error) {
     console.error("Failed to delete history entry:", error);
   }
@@ -143,10 +155,12 @@ export function deleteHistoryEntry(id: string): void {
 /**
  * Clear all history
  */
-export function clearHistory(): void {
+export async function clearHistory(): Promise<void> {
   if (typeof window === "undefined") return;
 
   try {
+    await db.clearAllEntries();
+    // Also clear old localStorage data if it exists
     localStorage.removeItem(STORAGE_KEY);
   } catch (error) {
     console.error("Failed to clear history:", error);
@@ -156,31 +170,39 @@ export function clearHistory(): void {
 /**
  * Get a specific history entry by ID
  */
-export function getHistoryEntry(id: string): HistoryEntry | undefined {
-  return loadHistory().find((entry) => entry.id === id);
+export async function getHistoryEntry(id: string): Promise<HistoryEntry | undefined> {
+  try {
+    const entry = await db.getEntry(id);
+    if (!entry) return undefined;
+    return {
+      ...entry,
+      timestamp: new Date(entry.timestamp),
+    } as HistoryEntry;
+  } catch (error) {
+    console.error("Failed to get history entry:", error);
+    return undefined;
+  }
 }
 
 /**
  * Update rating for a history entry
  */
-export function updateHistoryRating(id: string, rating: 1 | 2 | 3 | 4, notes?: string): void {
+export async function updateHistoryRating(id: string, rating: 1 | 2 | 3 | 4, notes?: string): Promise<void> {
   if (typeof window === "undefined") return;
 
-  const history = loadHistory();
-  const entry = history.find((e) => e.id === id);
-
-  if (!entry) {
-    console.warn(`History entry ${id} not found`);
-    return;
-  }
-
-  entry.rating = rating;
-  if (notes !== undefined) {
-    entry.notes = notes;
-  }
-
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    const entry = await db.getEntry(id);
+    if (!entry) {
+      console.warn(`History entry ${id} not found`);
+      return;
+    }
+
+    entry.rating = rating;
+    if (notes !== undefined) {
+      entry.notes = notes;
+    }
+
+    await db.saveEntry(entry);
   } catch (error) {
     console.error("Failed to update rating:", error);
   }

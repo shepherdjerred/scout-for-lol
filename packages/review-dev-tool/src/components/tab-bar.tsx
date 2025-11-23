@@ -2,9 +2,9 @@
  * Tab bar for switching between configurations
  */
 import { useState } from "react";
-import type { TabData } from "./App";
+import type { TabData } from "./app";
 
-interface TabBarProps {
+type TabBarProps = {
   tabs: TabData[];
   activeTabId: string;
   onTabSelect: (id: string) => void;
@@ -12,7 +12,7 @@ interface TabBarProps {
   onTabAdd: () => void;
   onTabClone: (id: string) => void;
   onTabRename: (id: string, name: string) => void;
-}
+};
 
 export function TabBar({ tabs, activeTabId, onTabSelect, onTabClose, onTabAdd, onTabClone, onTabRename }: TabBarProps) {
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
@@ -49,7 +49,9 @@ export function TabBar({ tabs, activeTabId, onTabSelect, onTabClose, onTabAdd, o
               <input
                 type="text"
                 value={editName}
-                onChange={(e) => setEditName(e.target.value)}
+                onChange={(e) => {
+                  setEditName(e.target.value);
+                }}
                 onBlur={finishEditing}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") finishEditing();
@@ -60,8 +62,12 @@ export function TabBar({ tabs, activeTabId, onTabSelect, onTabClose, onTabAdd, o
               />
             ) : (
               <span
-                onClick={() => onTabSelect(tab.id)}
-                onDoubleClick={() => startEditing(tab)}
+                onClick={() => {
+                  onTabSelect(tab.id);
+                }}
+                onDoubleClick={() => {
+                  startEditing(tab);
+                }}
                 className="font-medium whitespace-nowrap"
               >
                 {tab.name}

@@ -4,9 +4,9 @@
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 import { formatArenaPlacement } from "@scout-for-lol/data";
 
-interface MatchDetailsPanelProps {
+type MatchDetailsPanelProps = {
   match: CompletedMatch | ArenaMatch;
-}
+};
 
 function formatDuration(seconds: number): string {
   const minutes = Math.floor(seconds / 60);

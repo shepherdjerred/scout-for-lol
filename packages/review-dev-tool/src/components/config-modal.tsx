@@ -1,20 +1,38 @@
 /**
  * Modal for API configuration settings
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { GlobalConfig } from "../config/schema";
-import { ApiSettingsPanel } from "./ApiSettingsPanel";
+import { ApiSettingsPanel } from "./api-settings-panel";
 import { resetToDefaults, getResetPreview } from "../lib/reset-defaults";
 
-interface ConfigModalProps {
+type ConfigModalProps = {
   isOpen: boolean;
   onClose: () => void;
   globalConfig: GlobalConfig;
   onGlobalChange: (config: GlobalConfig) => void;
-}
+};
 
 export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: ConfigModalProps) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [preview, setPreview] = useState<Awaited<ReturnType<typeof getResetPreview>>>({
+    configs: 0,
+    historyEntries: 0,
+    customPersonalities: 0,
+    customArtStyles: 0,
+    customArtThemes: 0,
+    reviewRatings: 0,
+  });
+
+  // Load preview when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      void (async () => {
+        const previewData = await getResetPreview();
+        setPreview(previewData);
+      })();
+    }
+  }, [isOpen]);
 
   if (!isOpen) {
     return null;
@@ -24,9 +42,9 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
     setShowResetConfirm(true);
   };
 
-  const handleResetConfirm = () => {
+  const handleResetConfirm = async () => {
     try {
-      resetToDefaults();
+      await resetToDefaults();
       setShowResetConfirm(false);
       alert(
         "Settings reset to defaults! API keys, cache, and cost data were preserved.\n\nPlease refresh the page to see changes.",
@@ -40,7 +58,6 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
     setShowResetConfirm(false);
   };
 
-  const preview = getResetPreview();
   const hasDataToReset = Object.values(preview).some((count) => count > 0);
 
   return (
@@ -52,7 +69,9 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
       <div className="flex min-h-full items-center justify-center p-4">
         <div
           className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
         >
           {/* Header */}
           <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
@@ -110,7 +129,9 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
           <div className="flex min-h-full items-center justify-center p-4">
             <div
               className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
             >
               <div className="p-6">
                 <div className="flex items-start gap-4">

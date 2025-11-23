@@ -4,9 +4,9 @@
 import type { CostTracker } from "../lib/costs";
 import { formatCost } from "../lib/costs";
 
-interface CostDisplayProps {
+type CostDisplayProps = {
   costTracker: CostTracker;
-}
+};
 
 export function CostDisplay({ costTracker }: CostDisplayProps) {
   const total = costTracker.getTotal();

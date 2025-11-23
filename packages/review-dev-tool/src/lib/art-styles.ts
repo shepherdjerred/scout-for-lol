@@ -73,8 +73,8 @@ function selectRandomPair(): { style: string; theme: string } {
  * Select a random style and theme combination with weighted probability
  */
 export function selectRandomStyleAndTheme(
-  useMatchingPairs: boolean = true,
-  matchingPairProbability: number = 0.7,
+  useMatchingPairs = true,
+  matchingPairProbability = 0.7,
 ): { style: string; theme: string } {
   if (!useMatchingPairs) {
     // Always use random combination if matching pairs disabled
@@ -140,6 +140,6 @@ export function getAllArtThemes(): string[] {
 /**
  * Get all style-theme pairs
  */
-export function getAllStyleThemePairs(): ReadonlyArray<{ style: string; theme: string }> {
+export function getAllStyleThemePairs(): readonly { style: string; theme: string }[] {
   return STYLE_THEME_PAIRS;
 }

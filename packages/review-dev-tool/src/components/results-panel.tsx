@@ -1,17 +1,17 @@
 /**
  * Results panel showing generated review and metadata
  */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ReviewConfig, GenerationResult } from "../config/schema";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 import type { CostTracker } from "../lib/costs";
 import { calculateCost, formatCost } from "../lib/costs";
 import { generateMatchReview, type GenerationProgress } from "../lib/generator";
-import { CostDisplay } from "./CostDisplay";
-import { HistoryPanel } from "./HistoryPanel";
+import { CostDisplay } from "./cost-display";
+import { HistoryPanel } from "./history-panel";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
 import { createPendingEntry, saveCompletedEntry, updateHistoryRating, type HistoryEntry } from "../lib/history-manager";
-import { StarRating } from "./StarRating";
+import { StarRating } from "./star-rating";
 
 interface ResultsPanelProps {
   config: ReviewConfig;
@@ -29,13 +29,41 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
   const [viewingHistory, setViewingHistory] = useState(false);
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | undefined>();
   const [notes, setNotes] = useState("");
+  const [elapsedMs, setElapsedMs] = useState(0);
 
   // Listen for cost updates
   if (typeof window !== "undefined") {
     window.addEventListener("cost-update", () => setForceUpdate((n) => n + 1));
   }
 
+  // Timer for progress animation
+  useEffect(() => {
+    if (!generating || !progress) {
+      setElapsedMs(0);
+      return;
+    }
+
+    // Reset timer when step changes
+    setElapsedMs(0);
+
+    const interval = setInterval(() => {
+      setElapsedMs((prev) => prev + 100);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [generating, progress?.step]);
+
   const handleGenerate = async () => {
+    // If already generating, user wants to start a new one (cancels current)
+    if (generating) {
+      const confirmed = confirm(
+        "A generation is already in progress. Starting a new one will cancel the current generation. Continue?",
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
     // Use provided match or example match
     const matchToUse = match ?? getExampleMatch("ranked");
 
@@ -69,9 +97,9 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
         configSnapshot.artTheme = generatedResult.metadata.selectedArtTheme;
       }
 
-      // Save completed entry to localStorage
+      // Save completed entry to IndexedDB
       console.log("[History] Saving completed entry:", historyId);
-      saveCompletedEntry(historyId, generatedResult, configSnapshot);
+      await saveCompletedEntry(historyId, generatedResult, configSnapshot);
       console.log("[History] Saved, triggering refresh");
 
       // Calculate and track cost
@@ -99,7 +127,7 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
 
       // Save error result to history
       console.log("[History] Saving error result:", historyId);
-      saveCompletedEntry(historyId, errorResult, {
+      await saveCompletedEntry(historyId, errorResult, {
         model: config.textGeneration.model,
       });
       setForceUpdate((n) => n + 1);
@@ -117,18 +145,18 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
     onResultGenerated(entry.result);
   };
 
-  const handleRatingChange = (newRating: 1 | 2 | 3 | 4) => {
+  const handleRatingChange = async (newRating: 1 | 2 | 3 | 4) => {
     if (!selectedHistoryId) return;
     setRating(newRating);
-    updateHistoryRating(selectedHistoryId, newRating, notes);
+    await updateHistoryRating(selectedHistoryId, newRating, notes);
     setForceUpdate((n) => n + 1);
   };
 
-  const handleNotesChange = (newNotes: string) => {
+  const handleNotesChange = async (newNotes: string) => {
     if (!selectedHistoryId) return;
     setNotes(newNotes);
     if (rating) {
-      updateHistoryRating(selectedHistoryId, rating, newNotes);
+      await updateHistoryRating(selectedHistoryId, rating, newNotes);
       setForceUpdate((n) => n + 1);
     }
   };
@@ -162,12 +190,27 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
           </div>
           <button
             onClick={handleGenerate}
-            disabled={generating}
-            className="px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
           >
-            {generating ? "Generating..." : "Generate New Review"}
+            {generating ? "Generate Another (Cancel Current)" : "Generate New Review"}
           </button>
         </div>
+
+        {/* Show banner when viewing history while generation is in progress */}
+        {viewingHistory && generating && (
+          <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600 dark:border-yellow-400" />
+              <span className="text-sm text-yellow-800 dark:text-yellow-200">Generation in progress...</span>
+            </div>
+            <button
+              onClick={() => setViewingHistory(false)}
+              className="px-3 py-1 bg-yellow-600 dark:bg-yellow-500 text-white text-sm rounded hover:bg-yellow-700 dark:hover:bg-yellow-600 transition-colors"
+            >
+              View Progress
+            </button>
+          </div>
+        )}
 
         {!match && (
           <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded text-sm text-yellow-800 dark:text-yellow-200">
@@ -314,24 +357,64 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
             )}
         </div>
 
-        {generating && progress && (
-          <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded">
-            <div className="flex items-center gap-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 dark:border-blue-400" />
-              <div className="flex-1">
-                <div className="text-sm font-medium text-blue-900 dark:text-blue-200">{progress.message}</div>
-                <div className="mt-2 flex gap-2">
-                  <div
-                    className={`h-2 flex-1 rounded ${progress.step === "text" || progress.step === "image" || progress.step === "complete" ? "bg-blue-600 dark:bg-blue-400" : "bg-blue-200 dark:bg-blue-800"}`}
-                  />
-                  <div
-                    className={`h-2 flex-1 rounded ${progress.step === "image" || progress.step === "complete" ? "bg-blue-600 dark:bg-blue-400" : "bg-blue-200 dark:bg-blue-800"}`}
-                  />
+        {generating &&
+          progress &&
+          !viewingHistory &&
+          (() => {
+            // Calculate progress percentage based on elapsed time
+            // Text generation: ~60s, Image generation: ~20s
+            // Cap at 90% until complete, then jump to 100%
+            const expectedDuration = progress.step === "text" ? 60000 : 20000;
+            const progressPercent =
+              progress.step === "complete" ? 100 : Math.min(90, Math.floor((elapsedMs / expectedDuration) * 100));
+
+            const elapsedSeconds = Math.floor(elapsedMs / 1000);
+
+            return (
+              <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    {/* Spinning loader */}
+                    <div className="shrink-0">
+                      <svg
+                        className="animate-spin h-5 w-5 text-blue-600 dark:text-blue-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-blue-900 dark:text-blue-200">
+                        {progress.message?.split("(")[0]?.trim() ?? "Generating"} ({elapsedSeconds}s)
+                      </div>
+                    </div>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2.5">
+                    <div
+                      className="bg-blue-600 dark:bg-blue-400 h-2.5 rounded-full transition-all duration-300"
+                      style={{ width: `${progressPercent}%` }}
+                    ></div>
+                  </div>
+                  <div className="text-xs text-blue-700 dark:text-blue-300 text-center">{progressPercent}%</div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            );
+          })()}
 
         {result?.error && (
           <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded">

@@ -5,10 +5,10 @@ import { useState } from "react";
 import type { GlobalConfig } from "../config/schema";
 import { exportGlobalConfigAsBlob, importGlobalConfigFromBlob } from "../lib/config-manager";
 
-interface ApiSettingsPanelProps {
+type ApiSettingsPanelProps = {
   config: GlobalConfig;
   onChange: (config: GlobalConfig) => void;
-}
+};
 
 export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
   const [showImportExport, setShowImportExport] = useState(false);
@@ -43,12 +43,12 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             <input
               type="password"
               value={config.api.openaiApiKey ?? ""}
-              onChange={(e) =>
+              onChange={(e) => {
                 onChange({
                   ...config,
                   api: { ...config.api, openaiApiKey: e.target.value || undefined },
-                })
-              }
+                });
+              }}
               className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="sk-..."
             />
@@ -58,12 +58,12 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             <input
               type="password"
               value={config.api.geminiApiKey ?? ""}
-              onChange={(e) =>
+              onChange={(e) => {
                 onChange({
                   ...config,
                   api: { ...config.api, geminiApiKey: e.target.value || undefined },
-                })
-              }
+                });
+              }}
               className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="AI..."
             />
@@ -82,12 +82,12 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             <input
               type="text"
               value={config.api.s3BucketName ?? ""}
-              onChange={(e) =>
+              onChange={(e) => {
                 onChange({
                   ...config,
                   api: { ...config.api, s3BucketName: e.target.value || undefined },
-                })
-              }
+                });
+              }}
               className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="my-bucket-name"
             />
@@ -97,12 +97,12 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             <input
               type="password"
               value={config.api.awsAccessKeyId ?? ""}
-              onChange={(e) =>
+              onChange={(e) => {
                 onChange({
                   ...config,
                   api: { ...config.api, awsAccessKeyId: e.target.value || undefined },
-                })
-              }
+                });
+              }}
               className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="AKIA... or R2 access key"
             />
@@ -112,12 +112,12 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             <input
               type="password"
               value={config.api.awsSecretAccessKey ?? ""}
-              onChange={(e) =>
+              onChange={(e) => {
                 onChange({
                   ...config,
                   api: { ...config.api, awsSecretAccessKey: e.target.value || undefined },
-                })
-              }
+                });
+              }}
               className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="••••••••"
             />
@@ -129,12 +129,12 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             <input
               type="text"
               value={config.api.s3Endpoint ?? ""}
-              onChange={(e) =>
+              onChange={(e) => {
                 onChange({
                   ...config,
                   api: { ...config.api, s3Endpoint: e.target.value || undefined },
-                })
-              }
+                });
+              }}
               className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="https://<account-id>.r2.cloudflarestorage.com"
             />
@@ -147,12 +147,12 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             <input
               type="text"
               value={config.api.awsRegion}
-              onChange={(e) =>
+              onChange={(e) => {
                 onChange({
                   ...config,
                   api: { ...config.api, awsRegion: e.target.value },
-                })
-              }
+                });
+              }}
               className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="us-east-1 or auto for R2"
             />
@@ -174,7 +174,9 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
               📋 Export (Copy to Clipboard)
             </button>
             <button
-              onClick={() => setShowImportExport(true)}
+              onClick={() => {
+                setShowImportExport(true);
+              }}
               className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
             >
               📥 Import
@@ -184,7 +186,9 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
           <div className="space-y-2">
             <textarea
               value={importInput}
-              onChange={(e) => setImportInput(e.target.value)}
+              onChange={(e) => {
+                setImportInput(e.target.value);
+              }}
               placeholder="Paste config blob here..."
               rows={3}
               className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500 font-mono text-xs placeholder:text-gray-400 dark:placeholder:text-gray-500"

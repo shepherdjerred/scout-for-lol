@@ -6,11 +6,11 @@ import type { ConfigBundle } from "../lib/config-export";
 import type { TabConfig } from "../config/schema";
 import { importAllConfigFromJSON, applyConfigBundle, getConfigBundleSummary } from "../lib/config-export";
 
-interface ConfigImportModalProps {
+type ConfigImportModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onImportSuccess: (tabConfig?: TabConfig) => void;
-}
+};
 
 export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigImportModalProps) {
   const [jsonInput, setJsonInput] = useState("");
@@ -105,7 +105,9 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
       <div className="flex min-h-full items-center justify-center p-4">
         <div
           className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
         >
           {/* Header */}
           <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -144,7 +146,9 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
               <label className="block text-sm font-medium text-gray-700 mb-2">Or Paste JSON</label>
               <textarea
                 value={jsonInput}
-                onChange={(e) => setJsonInput(e.target.value)}
+                onChange={(e) => {
+                  setJsonInput(e.target.value);
+                }}
                 placeholder="Paste your config JSON here..."
                 className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
               />
@@ -188,7 +192,9 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                   <input
                     type="checkbox"
                     checked={importTabConfig}
-                    onChange={(e) => setImportTabConfig(e.target.checked)}
+                    onChange={(e) => {
+                      setImportTabConfig(e.target.checked);
+                    }}
                     className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">Import Tab Settings (text/image generation, prompts)</span>
@@ -198,7 +204,9 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                   <input
                     type="checkbox"
                     checked={importPersonalities}
-                    onChange={(e) => setImportPersonalities(e.target.checked)}
+                    onChange={(e) => {
+                      setImportPersonalities(e.target.checked);
+                    }}
                     className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">
@@ -210,7 +218,9 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                   <input
                     type="checkbox"
                     checked={importArtStyles}
-                    onChange={(e) => setImportArtStyles(e.target.checked)}
+                    onChange={(e) => {
+                      setImportArtStyles(e.target.checked);
+                    }}
                     className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">
@@ -222,7 +232,9 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                   <input
                     type="checkbox"
                     checked={importArtThemes}
-                    onChange={(e) => setImportArtThemes(e.target.checked)}
+                    onChange={(e) => {
+                      setImportArtThemes(e.target.checked);
+                    }}
                     className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">
@@ -235,7 +247,9 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                     <input
                       type="checkbox"
                       checked={mergeWithExisting}
-                      onChange={(e) => setMergeWithExisting(e.target.checked)}
+                      onChange={(e) => {
+                        setMergeWithExisting(e.target.checked);
+                      }}
                       className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                     />
                     <span className="text-sm text-gray-700 font-medium">

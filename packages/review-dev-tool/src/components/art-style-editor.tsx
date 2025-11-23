@@ -6,13 +6,13 @@ import type { CustomArtStyle, CustomArtTheme } from "../lib/art-style-storage";
 
 type EditorMode = "style" | "theme";
 
-interface ArtStyleEditorProps {
+type ArtStyleEditorProps = {
   mode: EditorMode;
   style?: CustomArtStyle | undefined;
   theme?: CustomArtTheme | undefined;
   onSave: (item: CustomArtStyle | CustomArtTheme) => void;
   onCancel: () => void;
-}
+};
 
 export function ArtStyleEditor({ mode, style, theme, onSave, onCancel }: ArtStyleEditorProps) {
   const isEditing = Boolean(style ?? theme);
@@ -54,7 +54,9 @@ export function ArtStyleEditor({ mode, style, theme, onSave, onCancel }: ArtStyl
       {/* Modal content */}
       <div
         className="relative bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
       >
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -72,7 +74,9 @@ export function ArtStyleEditor({ mode, style, theme, onSave, onCancel }: ArtStyl
             </label>
             <textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+              }}
               placeholder={
                 mode === "style"
                   ? "e.g., Soft watercolor painting with flowing brushwork, pastel colors, and dreamy atmosphere"

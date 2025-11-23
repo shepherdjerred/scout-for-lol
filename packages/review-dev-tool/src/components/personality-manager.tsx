@@ -12,11 +12,11 @@ import {
   isCustomPersonality,
   generatePersonalityId,
 } from "../lib/personality-storage";
-import { PersonalityEditor } from "./PersonalityEditor";
+import { PersonalityEditor } from "./personality-editor";
 
-interface PersonalityManagerProps {
+type PersonalityManagerProps = {
   onPersonalitySelect: (personality: Personality) => void;
-}
+};
 
 export function PersonalityManager({ onPersonalitySelect }: PersonalityManagerProps) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -111,7 +111,9 @@ export function PersonalityManager({ onPersonalitySelect }: PersonalityManagerPr
                 return (
                   <button
                     key={personality.id}
-                    onClick={() => setSelectedId(personality.id)}
+                    onClick={() => {
+                      setSelectedId(personality.id);
+                    }}
                     className={`
                     w-full text-left px-4 py-3 rounded border-2 transition-colors relative
                     ${
@@ -215,14 +217,18 @@ export function PersonalityManager({ onPersonalitySelect }: PersonalityManagerPr
 
                 <div className="flex gap-2">
                   <button
-                    onClick={() => onPersonalitySelect(selectedPersonality)}
+                    onClick={() => {
+                      onPersonalitySelect(selectedPersonality);
+                    }}
                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                   >
                     Use This Personality
                   </button>
                   {isCustomPersonality(selectedPersonality.id) && (
                     <button
-                      onClick={() => handleEdit(selectedPersonality)}
+                      onClick={() => {
+                        handleEdit(selectedPersonality);
+                      }}
                       className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
                     >
                       Edit

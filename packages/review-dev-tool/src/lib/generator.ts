@@ -302,7 +302,7 @@ Important:
 
   // Return base64 encoded image
   return {
-    image: imageData as string,
+    image: imageData,
     metadata: {
       imageDurationMs: duration,
       selectedArtStyle: artStyle,
@@ -314,10 +314,10 @@ Important:
 
 export type GenerationStep = "text" | "image" | "complete";
 
-export interface GenerationProgress {
+export type GenerationProgress = {
   step: GenerationStep;
   message: string;
-}
+};
 
 /**
  * Generate a complete match review with text and optional image
@@ -329,14 +329,14 @@ export async function generateMatchReview(
 ): Promise<GenerationResult> {
   try {
     // Generate text review
-    onProgress?.({ step: "text", message: "Generating review text... (this takes 30-60s)" });
+    onProgress?.({ step: "text", message: "Generating review text... (this takes ~60s)" });
     const textResult = await generateReviewText(match, config);
 
     // Generate image if enabled
     let imageResult: { image: string; metadata: Partial<GenerationMetadata> } | undefined;
     if (config.imageGeneration.enabled) {
       try {
-        onProgress?.({ step: "image", message: "Generating image... (this takes 30-60s)" });
+        onProgress?.({ step: "image", message: "Generating image... (this takes ~20s)" });
         imageResult = await generateReviewImage(textResult.text, config);
       } catch (error) {
         console.error("Failed to generate image:", error);

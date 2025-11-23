@@ -1,11 +1,11 @@
 import React from "react";
 
-interface StarRatingProps {
+type StarRatingProps = {
   rating: number | undefined;
   onRate?: (rating: 1 | 2 | 3 | 4) => void;
   size?: "small" | "medium" | "large";
   readonly?: boolean;
-}
+};
 
 const SIZES = {
   small: 16,
@@ -42,7 +42,9 @@ export function StarRating({ rating, onRate, size = "medium", readonly = false }
           <button
             key={starNumber}
             type="button"
-            onClick={() => handleClick(starNumber)}
+            onClick={() => {
+              handleClick(starNumber);
+            }}
             onMouseEnter={() => {
               if (isInteractive) setHoverRating(starNumber);
             }}

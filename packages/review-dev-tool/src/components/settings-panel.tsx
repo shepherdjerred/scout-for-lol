@@ -7,13 +7,13 @@ import { getBasePrompt, PERSONALITIES } from "../lib/prompts";
 import { exportGlobalConfigAsBlob, importGlobalConfigFromBlob } from "../lib/config-manager";
 import { getModelsByCategory, modelSupportsParameter } from "../lib/models";
 
-interface SettingsPanelProps {
+type SettingsPanelProps = {
   globalConfig: GlobalConfig;
   tabConfig: TabConfig;
   onGlobalChange: (config: GlobalConfig) => void;
   onTabChange: (config: TabConfig) => void;
   onOpenPersonalityManager?: () => void;
-}
+};
 
 export function SettingsPanel({
   globalConfig,
@@ -87,12 +87,12 @@ export function SettingsPanel({
               <input
                 type="password"
                 value={globalConfig.api.openaiApiKey ?? ""}
-                onChange={(e) =>
+                onChange={(e) => {
                   onGlobalChange({
                     ...globalConfig,
                     api: { ...globalConfig.api, openaiApiKey: e.target.value || undefined },
-                  })
-                }
+                  });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="sk-..."
               />
@@ -102,12 +102,12 @@ export function SettingsPanel({
               <input
                 type="password"
                 value={globalConfig.api.geminiApiKey ?? ""}
-                onChange={(e) =>
+                onChange={(e) => {
                   onGlobalChange({
                     ...globalConfig,
                     api: { ...globalConfig.api, geminiApiKey: e.target.value || undefined },
-                  })
-                }
+                  });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 placeholder="AI..."
               />
@@ -121,12 +121,12 @@ export function SettingsPanel({
                   <input
                     type="text"
                     value={globalConfig.api.s3BucketName ?? ""}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       onGlobalChange({
                         ...globalConfig,
                         api: { ...globalConfig.api, s3BucketName: e.target.value || undefined },
-                      })
-                    }
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="my-bucket-name"
                   />
@@ -136,12 +136,12 @@ export function SettingsPanel({
                   <input
                     type="password"
                     value={globalConfig.api.awsAccessKeyId ?? ""}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       onGlobalChange({
                         ...globalConfig,
                         api: { ...globalConfig.api, awsAccessKeyId: e.target.value || undefined },
-                      })
-                    }
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="AKIA... or R2 access key"
                   />
@@ -151,12 +151,12 @@ export function SettingsPanel({
                   <input
                     type="password"
                     value={globalConfig.api.awsSecretAccessKey ?? ""}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       onGlobalChange({
                         ...globalConfig,
                         api: { ...globalConfig.api, awsSecretAccessKey: e.target.value || undefined },
-                      })
-                    }
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="••••••••"
                   />
@@ -168,12 +168,12 @@ export function SettingsPanel({
                   <input
                     type="text"
                     value={globalConfig.api.s3Endpoint ?? ""}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       onGlobalChange({
                         ...globalConfig,
                         api: { ...globalConfig.api, s3Endpoint: e.target.value || undefined },
-                      })
-                    }
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="https://<account-id>.r2.cloudflarestorage.com"
                   />
@@ -186,12 +186,12 @@ export function SettingsPanel({
                   <input
                     type="text"
                     value={globalConfig.api.awsRegion}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       onGlobalChange({
                         ...globalConfig,
                         api: { ...globalConfig.api, awsRegion: e.target.value },
-                      })
-                    }
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="us-east-1 or auto for R2"
                   />
@@ -212,7 +212,9 @@ export function SettingsPanel({
                     📋 Export (Copy to Clipboard)
                   </button>
                   <button
-                    onClick={() => setShowImportExport(true)}
+                    onClick={() => {
+                      setShowImportExport(true);
+                    }}
                     className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm"
                   >
                     📥 Import
@@ -222,7 +224,9 @@ export function SettingsPanel({
                 <div className="space-y-2">
                   <textarea
                     value={importInput}
-                    onChange={(e) => setImportInput(e.target.value)}
+                    onChange={(e) => {
+                      setImportInput(e.target.value);
+                    }}
                     placeholder="Paste config blob here..."
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500 font-mono text-xs"
@@ -262,7 +266,9 @@ export function SettingsPanel({
         {/* Text Generation Settings (Per-Tab) */}
         <div>
           <button
-            onClick={() => toggleSection("text")}
+            onClick={() => {
+              toggleSection("text");
+            }}
             className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center gap-2">
@@ -277,12 +283,12 @@ export function SettingsPanel({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
                 <select
                   value={tabConfig.textGeneration.model}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onTabChange({
                       ...tabConfig,
                       textGeneration: { ...tabConfig.textGeneration, model: e.target.value },
-                    })
-                  }
+                    });
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   {(() => {
@@ -332,15 +338,15 @@ export function SettingsPanel({
                   max="100000"
                   step="100"
                   value={tabConfig.textGeneration.maxTokens}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onTabChange({
                       ...tabConfig,
                       textGeneration: {
                         ...tabConfig.textGeneration,
                         maxTokens: Number.parseInt(e.target.value),
                       },
-                    })
-                  }
+                    });
+                  }}
                   className="w-full"
                 />
               </div>
@@ -357,15 +363,15 @@ export function SettingsPanel({
                   max="2"
                   step="0.1"
                   value={tabConfig.textGeneration.temperature}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onTabChange({
                       ...tabConfig,
                       textGeneration: {
                         ...tabConfig.textGeneration,
                         temperature: Number.parseFloat(e.target.value),
                       },
-                    })
-                  }
+                    });
+                  }}
                   className="w-full"
                   disabled={!modelSupportsParameter(tabConfig.textGeneration.model, "temperature")}
                 />
@@ -388,15 +394,15 @@ export function SettingsPanel({
                   max="1"
                   step="0.05"
                   value={tabConfig.textGeneration.topP}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onTabChange({
                       ...tabConfig,
                       textGeneration: {
                         ...tabConfig.textGeneration,
                         topP: Number.parseFloat(e.target.value),
                       },
-                    })
-                  }
+                    });
+                  }}
                   className="w-full"
                   disabled={!modelSupportsParameter(tabConfig.textGeneration.model, "topP")}
                 />
@@ -413,7 +419,9 @@ export function SettingsPanel({
         {/* Image Generation Settings (Per-Tab) */}
         <div>
           <button
-            onClick={() => toggleSection("image")}
+            onClick={() => {
+              toggleSection("image");
+            }}
             className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center gap-2">
@@ -428,12 +436,12 @@ export function SettingsPanel({
                 <input
                   type="checkbox"
                   checked={tabConfig.imageGeneration.enabled}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onTabChange({
                       ...tabConfig,
                       imageGeneration: { ...tabConfig.imageGeneration, enabled: e.target.checked },
-                    })
-                  }
+                    });
+                  }}
                   className="rounded"
                 />
                 <label className="text-sm font-medium text-gray-700">Enable Image Generation</label>
@@ -442,12 +450,12 @@ export function SettingsPanel({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
                 <select
                   value={tabConfig.imageGeneration.model}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onTabChange({
                       ...tabConfig,
                       imageGeneration: { ...tabConfig.imageGeneration, model: e.target.value },
-                    })
-                  }
+                    });
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={!tabConfig.imageGeneration.enabled}
                 >
@@ -466,15 +474,15 @@ export function SettingsPanel({
                   max="300000"
                   step="5000"
                   value={tabConfig.imageGeneration.timeoutMs}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onTabChange({
                       ...tabConfig,
                       imageGeneration: {
                         ...tabConfig.imageGeneration,
                         timeoutMs: Number.parseInt(e.target.value),
                       },
-                    })
-                  }
+                    });
+                  }}
                   className="w-full"
                   disabled={!tabConfig.imageGeneration.enabled}
                 />
@@ -483,15 +491,15 @@ export function SettingsPanel({
                 <input
                   type="checkbox"
                   checked={tabConfig.imageGeneration.useMatchingPairs}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onTabChange({
                       ...tabConfig,
                       imageGeneration: {
                         ...tabConfig.imageGeneration,
                         useMatchingPairs: e.target.checked,
                       },
-                    })
-                  }
+                    });
+                  }}
                   className="rounded"
                   disabled={!tabConfig.imageGeneration.enabled}
                 />
@@ -508,15 +516,15 @@ export function SettingsPanel({
                     max="1"
                     step="0.05"
                     value={tabConfig.imageGeneration.matchingPairProbability}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       onTabChange({
                         ...tabConfig,
                         imageGeneration: {
                           ...tabConfig.imageGeneration,
                           matchingPairProbability: Number.parseFloat(e.target.value),
                         },
-                      })
-                    }
+                      });
+                    }}
                     className="w-full"
                     disabled={!tabConfig.imageGeneration.enabled}
                   />
@@ -529,7 +537,9 @@ export function SettingsPanel({
         {/* Prompt Settings (Per-Tab) */}
         <div>
           <button
-            onClick={() => toggleSection("prompts")}
+            onClick={() => {
+              toggleSection("prompts");
+            }}
             className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center gap-2">
@@ -544,23 +554,23 @@ export function SettingsPanel({
                 <label className="block text-sm font-medium text-gray-700 mb-1">Base Prompt</label>
                 <textarea
                   value={tabConfig.prompts.basePrompt || getBasePrompt()}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onTabChange({
                       ...tabConfig,
                       prompts: { ...tabConfig.prompts, basePrompt: e.target.value },
-                    })
-                  }
+                    });
+                  }}
                   rows={8}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
                   placeholder="Base prompt template..."
                 />
                 <button
-                  onClick={() =>
+                  onClick={() => {
                     onTabChange({
                       ...tabConfig,
                       prompts: { ...tabConfig.prompts, basePrompt: getBasePrompt() },
-                    })
-                  }
+                    });
+                  }}
                   className="mt-2 text-sm text-blue-600 hover:text-blue-700"
                 >
                   Reset to Default
@@ -571,12 +581,12 @@ export function SettingsPanel({
                 <div className="flex gap-2">
                   <select
                     value={tabConfig.prompts.personalityId}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       onTabChange({
                         ...tabConfig,
                         prompts: { ...tabConfig.prompts, personalityId: e.target.value },
-                      })
-                    }
+                      });
+                    }}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="random">Random</option>

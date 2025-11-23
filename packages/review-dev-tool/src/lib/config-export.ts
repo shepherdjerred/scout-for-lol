@@ -2,16 +2,16 @@
  * Export and import all config data for sharing
  */
 import { z } from "zod";
-import { TabConfigSchema } from "../config/schema";
-import { PersonalitySchema } from "../config/schema";
-import { CustomArtStyleSchema, CustomArtThemeSchema } from "./art-style-storage";
-import { loadCustomPersonalities, saveCustomPersonalities } from "./personality-storage";
+import { TabConfigSchema, PersonalitySchema } from "../config/schema";
 import {
+  CustomArtStyleSchema,
+  CustomArtThemeSchema,
   loadCustomArtStyles,
   saveCustomArtStyles,
   loadCustomArtThemes,
   saveCustomArtThemes,
 } from "./art-style-storage";
+import { loadCustomPersonalities, saveCustomPersonalities } from "./personality-storage";
 import { getPersonalityById } from "./prompts";
 
 /**

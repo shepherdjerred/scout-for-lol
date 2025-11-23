@@ -5,11 +5,11 @@ import { useState } from "react";
 import type { Personality, PersonalityMetadata } from "../config/schema";
 import { PersonalitySchema } from "../config/schema";
 
-interface PersonalityEditorProps {
+type PersonalityEditorProps = {
   personality?: Personality | undefined;
   onSave: (personality: Personality) => void;
   onCancel: () => void;
-}
+};
 
 export function PersonalityEditor({ personality, onSave, onCancel }: PersonalityEditorProps) {
   const [name, setName] = useState(personality?.metadata.name ?? "");
@@ -72,7 +72,9 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => {
+                setName(e.target.value);
+              }}
               className="w-full px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="e.g., Friendly Coach"
             />
@@ -84,7 +86,9 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
             </label>
             <textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+              }}
               rows={3}
               className="w-full px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="Brief description of this reviewer's personality"
@@ -98,7 +102,9 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
             <input
               type="text"
               value={favoriteChampions}
-              onChange={(e) => setFavoriteChampions(e.target.value)}
+              onChange={(e) => {
+                setFavoriteChampions(e.target.value);
+              }}
               className="w-full px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="e.g., Yasuo, Zed, Lee Sin"
             />
@@ -111,7 +117,9 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
             <input
               type="text"
               value={favoriteLanes}
-              onChange={(e) => setFavoriteLanes(e.target.value)}
+              onChange={(e) => {
+                setFavoriteLanes(e.target.value);
+              }}
               className="w-full px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="e.g., mid, jungle"
             />
@@ -123,7 +131,9 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
             </label>
             <textarea
               value={instructions}
-              onChange={(e) => setInstructions(e.target.value)}
+              onChange={(e) => {
+                setInstructions(e.target.value);
+              }}
               rows={15}
               className="w-full px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 font-mono text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="Detailed instructions for how this reviewer should behave and write reviews..."

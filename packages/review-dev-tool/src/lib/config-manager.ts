@@ -11,13 +11,13 @@ const GLOBAL_CONFIG_KEY = "review-dev-tool-global-config";
 /**
  * Saved configuration with name
  */
-export interface SavedConfig {
+export type SavedConfig = {
   id: string;
   name: string;
   config: ReviewConfig;
   createdAt: string;
   updatedAt: string;
-}
+};
 
 /**
  * Load all saved configurations from localStorage

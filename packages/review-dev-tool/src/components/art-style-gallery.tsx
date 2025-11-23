@@ -6,11 +6,11 @@ import { getAllArtStyles, getAllArtThemes, getAllStyleThemePairs } from "../lib/
 
 type ViewMode = "styles" | "themes" | "pairs";
 
-interface ArtStyleGalleryProps {
+type ArtStyleGalleryProps = {
   onStyleSelect?: (style: string) => void;
   onThemeSelect?: (theme: string) => void;
   onPairSelect?: (style: string, theme: string) => void;
-}
+};
 
 export function ArtStyleGallery({ onStyleSelect, onThemeSelect, onPairSelect }: ArtStyleGalleryProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("pairs");
@@ -38,7 +38,9 @@ export function ArtStyleGallery({ onStyleSelect, onThemeSelect, onPairSelect }: 
         <div className="flex gap-4 mb-4">
           <div className="flex gap-2">
             <button
-              onClick={() => setViewMode("pairs")}
+              onClick={() => {
+                setViewMode("pairs");
+              }}
               className={`px-4 py-2 rounded transition-colors ${
                 viewMode === "pairs" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
@@ -46,7 +48,9 @@ export function ArtStyleGallery({ onStyleSelect, onThemeSelect, onPairSelect }: 
               Pairs ({allPairs.length})
             </button>
             <button
-              onClick={() => setViewMode("styles")}
+              onClick={() => {
+                setViewMode("styles");
+              }}
               className={`px-4 py-2 rounded transition-colors ${
                 viewMode === "styles" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
@@ -54,7 +58,9 @@ export function ArtStyleGallery({ onStyleSelect, onThemeSelect, onPairSelect }: 
               Styles ({allStyles.length})
             </button>
             <button
-              onClick={() => setViewMode("themes")}
+              onClick={() => {
+                setViewMode("themes");
+              }}
               className={`px-4 py-2 rounded transition-colors ${
                 viewMode === "themes" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
@@ -67,7 +73,9 @@ export function ArtStyleGallery({ onStyleSelect, onThemeSelect, onPairSelect }: 
         <input
           type="text"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            setSearchTerm(e.target.value);
+          }}
           placeholder="Search..."
           className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />

@@ -23,7 +23,9 @@ export function ThemeSelector() {
 
   return (
     <button
-      onClick={() => setIsDarkMode(!isDarkMode)}
+      onClick={() => {
+        setIsDarkMode(!isDarkMode);
+      }}
       className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
       title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
     >

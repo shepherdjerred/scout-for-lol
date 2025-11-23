@@ -2,22 +2,22 @@
  * OpenAI model configurations and capabilities
  */
 
-export interface ModelCapabilities {
+export type ModelCapabilities = {
   supportsTemperature: boolean;
   supportsTopP: boolean;
   maxTokens: number;
   costPer1MInputTokens: number;
   costPer1MOutputTokens: number;
-}
+};
 
-export interface ModelInfo {
+export type ModelInfo = {
   id: string;
   name: string;
   description: string;
   capabilities: ModelCapabilities;
   category: "gpt-4" | "gpt-3.5" | "o-series" | "other";
   deprecated?: boolean;
-}
+};
 
 /**
  * Comprehensive list of OpenAI models with their capabilities

@@ -1,11 +1,18 @@
 /**
  * Analytics view showing rating statistics
  */
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { loadHistory } from "../lib/history-manager";
 
 export function RatingsAnalytics() {
-  const history = useMemo(() => loadHistory(), []);
+  const [history, setHistory] = useState<Awaited<ReturnType<typeof loadHistory>>>([]);
+
+  useEffect(() => {
+    void (async () => {
+      const loaded = await loadHistory();
+      setHistory(loaded);
+    })();
+  }, []);
 
   const statistics = useMemo(() => {
     const ratedEntries = history.filter((entry) => entry.rating && entry.status === "complete");

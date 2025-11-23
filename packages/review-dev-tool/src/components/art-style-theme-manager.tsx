@@ -18,14 +18,14 @@ import {
   isCustomArtTheme,
   generateArtThemeId,
 } from "../lib/art-style-storage";
-import { ArtStyleEditor } from "./ArtStyleEditor";
+import { ArtStyleEditor } from "./art-style-editor";
 
 type ViewMode = "styles" | "themes";
 
-interface ArtStyleThemeManagerProps {
+type ArtStyleThemeManagerProps = {
   onStyleSelect?: (style: string) => void;
   onThemeSelect?: (theme: string) => void;
-}
+};
 
 export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleThemeManagerProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("styles");
@@ -193,7 +193,9 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
 
           <div className="flex gap-2 mb-4">
             <button
-              onClick={() => setViewMode("styles")}
+              onClick={() => {
+                setViewMode("styles");
+              }}
               className={`px-4 py-2 rounded transition-colors ${
                 viewMode === "styles" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
@@ -201,7 +203,9 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
               Styles ({allStyles.length})
             </button>
             <button
-              onClick={() => setViewMode("themes")}
+              onClick={() => {
+                setViewMode("themes");
+              }}
               className={`px-4 py-2 rounded transition-colors ${
                 viewMode === "themes" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
@@ -213,7 +217,9 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+            }}
             placeholder={`Search ${viewMode}...`}
             className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
@@ -234,7 +240,9 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
                   return (
                     <button
                       key={style.id}
-                      onClick={() => setSelectedStyleId(style.id)}
+                      onClick={() => {
+                        setSelectedStyleId(style.id);
+                      }}
                       className={`
                         w-full text-left px-3 py-2 rounded border-2 transition-colors
                         ${
@@ -266,7 +274,9 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
                   return (
                     <button
                       key={theme.id}
-                      onClick={() => setSelectedThemeId(theme.id)}
+                      onClick={() => {
+                        setSelectedThemeId(theme.id);
+                      }}
                       className={`
                         w-full text-left px-3 py-2 rounded border-2 transition-colors
                         ${
@@ -310,7 +320,9 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
                 </div>
                 <div className="flex gap-2 pt-4">
                   <button
-                    onClick={() => handleUseStyle(selectedStyle)}
+                    onClick={() => {
+                      handleUseStyle(selectedStyle);
+                    }}
                     className="flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
                   >
                     Use This Style
@@ -318,13 +330,17 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
                   {isCustomArtStyle(selectedStyle.id) && (
                     <>
                       <button
-                        onClick={() => handleEditStyle(selectedStyle)}
+                        onClick={() => {
+                          handleEditStyle(selectedStyle);
+                        }}
                         className="px-3 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-sm"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDeleteStyle(selectedStyle.id)}
+                        onClick={() => {
+                          handleDeleteStyle(selectedStyle.id);
+                        }}
                         className="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
                       >
                         Delete
@@ -341,7 +357,9 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
                 </div>
                 <div className="flex gap-2 pt-4">
                   <button
-                    onClick={() => handleUseTheme(selectedTheme)}
+                    onClick={() => {
+                      handleUseTheme(selectedTheme);
+                    }}
                     className="flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
                   >
                     Use This Theme
@@ -349,13 +367,17 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
                   {isCustomArtTheme(selectedTheme.id) && (
                     <>
                       <button
-                        onClick={() => handleEditTheme(selectedTheme)}
+                        onClick={() => {
+                          handleEditTheme(selectedTheme);
+                        }}
                         className="px-3 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-sm"
                       >
                         Edit
                       </button>
                       <button
-                        onClick={() => handleDeleteTheme(selectedTheme.id)}
+                        onClick={() => {
+                          handleDeleteTheme(selectedTheme.id);
+                        }}
                         className="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
                       >
                         Delete

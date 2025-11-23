@@ -1,8 +1,8 @@
 /**
  * Footer component with cache management and theme selector
  */
-import { CacheButton } from "./CacheButton";
-import { ThemeSelector } from "./ThemeSelector";
+import { CacheButton } from "./cache-button";
+import { ThemeSelector } from "./theme-selector";
 
 export function Footer() {
   return (

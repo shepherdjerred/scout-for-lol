@@ -4,22 +4,22 @@
 import { useState, useEffect } from "react";
 import type { HistoryEntry } from "../lib/history-manager";
 import { loadHistory, deleteHistoryEntry, clearHistory } from "../lib/history-manager";
-import { StarRating } from "./StarRating";
+import { StarRating } from "./star-rating";
 
-interface HistoryPanelProps {
+type HistoryPanelProps = {
   onSelectEntry: (entry: HistoryEntry) => void;
   selectedEntryId?: string | undefined;
   onCancelPending?: ((id: string) => void) | undefined;
   refreshTrigger?: number | undefined;
-}
+};
 
 export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, refreshTrigger }: HistoryPanelProps) {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
 
-  const refreshHistory = () => {
+  const refreshHistory = async () => {
     console.log("[History] Refreshing history");
-    const loaded = loadHistory();
+    const loaded = await loadHistory();
     console.log("[History] Loaded entries:", loaded.length, loaded);
     setHistory(loaded);
   };
@@ -38,10 +38,10 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
     }
   }, [refreshTrigger]);
 
-  const handleDelete = (id: string, event: React.MouseEvent) => {
+  const handleDelete = async (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    deleteHistoryEntry(id);
-    refreshHistory();
+    await deleteHistoryEntry(id);
+    await refreshHistory();
   };
 
   const handleCancelPending = (id: string, event: React.MouseEvent) => {
@@ -50,12 +50,12 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
       onCancelPending(id);
     }
     // Small delay to let the update complete before refreshing
-    setTimeout(refreshHistory, 100);
+    setTimeout(() => void refreshHistory(), 100);
   };
 
-  const handleClearAll = () => {
-    clearHistory();
-    refreshHistory();
+  const handleClearAll = async () => {
+    await clearHistory();
+    await refreshHistory();
     setShowConfirmClear(false);
   };
 
@@ -80,7 +80,9 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
         <h3 className="text-lg font-bold text-gray-900 dark:text-white">History ({history.length})</h3>
         {history.length > 0 && (
           <button
-            onClick={() => setShowConfirmClear(true)}
+            onClick={() => {
+              setShowConfirmClear(true);
+            }}
             className="text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
           >
             Clear All
@@ -99,7 +101,9 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
               Yes, clear all
             </button>
             <button
-              onClick={() => setShowConfirmClear(false)}
+              onClick={() => {
+                setShowConfirmClear(false);
+              }}
               className="px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded hover:bg-gray-300 dark:hover:bg-gray-600"
             >
               Cancel
@@ -124,7 +128,9 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
             return (
               <button
                 key={entry.id}
-                onClick={() => onSelectEntry(entry)}
+                onClick={() => {
+                  onSelectEntry(entry);
+                }}
                 className={`w-full text-left p-3 rounded border transition-colors ${
                   isSelected
                     ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30"
@@ -175,7 +181,9 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
                   <div className="flex gap-1">
                     {isPending && (
                       <button
-                        onClick={(e) => handleCancelPending(entry.id, e)}
+                        onClick={(e) => {
+                          handleCancelPending(entry.id, e);
+                        }}
                         className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
                         title="Cancel (mark as interrupted)"
                       >

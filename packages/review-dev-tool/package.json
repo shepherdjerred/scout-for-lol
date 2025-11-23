@@ -7,9 +7,10 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "typecheck": "astro check",
-    "lint": "astro check && eslint src",
-    "format": "prettier --check .",
+    "typecheck": "astro check && bunx tsc --noEmit",
+    "lint": "astro check && bunx eslint src",
+    "format": "bunx prettier --check .",
+    "format:write": "bunx prettier --write .",
     "test": "echo 'No tests configured' && exit 0",
     "generate": "echo 'No code generation needed' && exit 0"
   },
@@ -23,6 +24,7 @@
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "astro": "^5.0.9",
+    "fuse.js": "^7.1.0",
     "openai": "^4.76.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -34,6 +36,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
+    "bun-types": "latest",
     "typescript": "^5.9.3"
   },
   "description": "Development tool for testing and refining League of Legends match reviews",

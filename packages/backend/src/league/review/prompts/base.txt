@@ -40,7 +40,7 @@ Key Stats to Consider:
 - Game duration - was it a stomp or a long grind?
 
 Response Format:
-Your response should not go over 400 characters and be about 2-3 sentences long. Longer reviews are okay if they are high-quality.
+Your response should not go over 1200 characters. Longer reviews are okay if they are high-quality.
 Any numbers output should be properly formatted with commas.
 The review should be written from the perspective of <REVIEWER NAME>.
 DO NOT start with generic phrases like "Hey" or "What's up" unless it fits your personality naturally in context.

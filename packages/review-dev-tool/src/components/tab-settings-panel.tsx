@@ -2,13 +2,12 @@
  * Per-tab settings panel for tuning parameters
  */
 import { useState, useEffect } from "react";
-import type { TabConfig } from "../config/schema";
-import type { Personality } from "../config/schema";
+import type { TabConfig, Personality } from "../config/schema";
 import { createDefaultTabConfig } from "../config/schema";
 import { getBasePrompt, BUILTIN_PERSONALITIES } from "../lib/prompts";
-import { PersonalityEditor } from "./PersonalityEditor";
-import { ArtStyleEditor } from "./ArtStyleEditor";
-import { ConfigImportModal } from "./ConfigImportModal";
+import { PersonalityEditor } from "./personality-editor";
+import { ArtStyleEditor } from "./art-style-editor";
+import { ConfigImportModal } from "./config-import-modal";
 import { downloadConfigBundle } from "../lib/config-export";
 import { ART_STYLES, ART_THEMES } from "../data/art-styles";
 import {
@@ -36,10 +35,10 @@ import {
 } from "../lib/art-style-storage";
 import { modelSupportsParameter } from "../lib/models";
 
-interface TabSettingsPanelProps {
+type TabSettingsPanelProps = {
   config: TabConfig;
   onChange: (config: TabConfig) => void;
-}
+};
 
 export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   const [customPersonalities, setCustomPersonalities] = useState<Personality[]>([]);
@@ -288,12 +287,12 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model</label>
                 <select
                   value={config.textGeneration.model}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onChange({
                       ...config,
                       textGeneration: { ...config.textGeneration, model: e.target.value },
-                    })
-                  }
+                    });
+                  }}
                   className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="gpt-5">GPT-5</option>
@@ -313,15 +312,15 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                   max="100000"
                   step="100"
                   value={config.textGeneration.maxTokens}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onChange({
                       ...config,
                       textGeneration: {
                         ...config.textGeneration,
                         maxTokens: Number.parseInt(e.target.value),
                       },
-                    })
-                  }
+                    });
+                  }}
                   className="w-full"
                 />
               </div>
@@ -335,15 +334,15 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                   max="2"
                   step="0.1"
                   value={config.textGeneration.temperature}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onChange({
                       ...config,
                       textGeneration: {
                         ...config.textGeneration,
                         temperature: Number.parseFloat(e.target.value),
                       },
-                    })
-                  }
+                    });
+                  }}
                   className="w-full"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -363,15 +362,15 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                   max="1"
                   step="0.05"
                   value={config.textGeneration.topP}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onChange({
                       ...config,
                       textGeneration: {
                         ...config.textGeneration,
                         topP: Number.parseFloat(e.target.value),
                       },
-                    })
-                  }
+                    });
+                  }}
                   className="w-full"
                   disabled={!modelSupportsParameter(config.textGeneration.model, "topP")}
                 />
@@ -396,12 +395,12 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                 <input
                   type="checkbox"
                   checked={config.imageGeneration.enabled}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onChange({
                       ...config,
                       imageGeneration: { ...config.imageGeneration, enabled: e.target.checked },
-                    })
-                  }
+                    });
+                  }}
                   className="rounded"
                 />
                 <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Enable Image Generation</label>
@@ -410,12 +409,12 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model</label>
                 <select
                   value={config.imageGeneration.model}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onChange({
                       ...config,
                       imageGeneration: { ...config.imageGeneration, model: e.target.value },
-                    })
-                  }
+                    });
+                  }}
                   className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
                   disabled={!config.imageGeneration.enabled}
                 >
@@ -434,15 +433,15 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                   max="300000"
                   step="5000"
                   value={config.imageGeneration.timeoutMs}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onChange({
                       ...config,
                       imageGeneration: {
                         ...config.imageGeneration,
                         timeoutMs: Number.parseInt(e.target.value),
                       },
-                    })
-                  }
+                    });
+                  }}
                   className="w-full"
                   disabled={!config.imageGeneration.enabled}
                 />
@@ -451,15 +450,15 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                 <input
                   type="checkbox"
                   checked={config.imageGeneration.useMatchingPairs}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onChange({
                       ...config,
                       imageGeneration: {
                         ...config.imageGeneration,
                         useMatchingPairs: e.target.checked,
                       },
-                    })
-                  }
+                    });
+                  }}
                   className="rounded"
                   disabled={!config.imageGeneration.enabled}
                 />
@@ -478,15 +477,15 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                     max="1"
                     step="0.05"
                     value={config.imageGeneration.matchingPairProbability}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       onChange({
                         ...config,
                         imageGeneration: {
                           ...config.imageGeneration,
                           matchingPairProbability: Number.parseFloat(e.target.value),
                         },
-                      })
-                    }
+                      });
+                    }}
                     className="w-full"
                     disabled={!config.imageGeneration.enabled}
                   />
@@ -523,12 +522,12 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
 
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     <button
-                      onClick={() =>
+                      onClick={() => {
                         onChange({
                           ...config,
                           imageGeneration: { ...config.imageGeneration, artStyle: "random" },
-                        })
-                      }
+                        });
+                      }}
                       className={`
                         w-full p-2 rounded border transition-colors text-left
                         ${config.imageGeneration.artStyle === "random" ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600"}
@@ -573,7 +572,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                             </div>
                             <div className="flex flex-col gap-1">
                               <button
-                                onClick={() => handleSelectStyle(style)}
+                                onClick={() => {
+                                  handleSelectStyle(style);
+                                }}
                                 className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 whitespace-nowrap"
                                 disabled={!config.imageGeneration.enabled}
                               >
@@ -592,7 +593,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                                     Edit
                                   </button>
                                   <button
-                                    onClick={() => handleDeleteStyle(style.id)}
+                                    onClick={() => {
+                                      handleDeleteStyle(style.id);
+                                    }}
                                     className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
                                     disabled={!config.imageGeneration.enabled}
                                   >
@@ -639,12 +642,12 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
 
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     <button
-                      onClick={() =>
+                      onClick={() => {
                         onChange({
                           ...config,
                           imageGeneration: { ...config.imageGeneration, artTheme: "random" },
-                        })
-                      }
+                        });
+                      }}
                       className={`
                         w-full p-2 rounded border transition-colors text-left
                         ${config.imageGeneration.artTheme === "random" ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600"}
@@ -689,7 +692,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                             </div>
                             <div className="flex flex-col gap-1">
                               <button
-                                onClick={() => handleSelectTheme(theme)}
+                                onClick={() => {
+                                  handleSelectTheme(theme);
+                                }}
                                 className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 whitespace-nowrap"
                                 disabled={!config.imageGeneration.enabled}
                               >
@@ -708,7 +713,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                                     Edit
                                   </button>
                                   <button
-                                    onClick={() => handleDeleteTheme(theme.id)}
+                                    onClick={() => {
+                                      handleDeleteTheme(theme.id);
+                                    }}
                                     className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
                                     disabled={!config.imageGeneration.enabled}
                                   >
@@ -731,15 +738,15 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                   <input
                     type="checkbox"
                     checked={config.imageGeneration.mashupMode}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       onChange({
                         ...config,
                         imageGeneration: {
                           ...config.imageGeneration,
                           mashupMode: e.target.checked,
                         },
-                      })
-                    }
+                      });
+                    }}
                     className="rounded"
                     disabled={!config.imageGeneration.enabled}
                   />
@@ -758,12 +765,12 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
 
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       <button
-                        onClick={() =>
+                        onClick={() => {
                           onChange({
                             ...config,
                             imageGeneration: { ...config.imageGeneration, secondArtTheme: "random" },
-                          })
-                        }
+                          });
+                        }}
                         className={`
                           w-full p-2 rounded border transition-colors text-left
                           ${config.imageGeneration.secondArtTheme === "random" ? "border-purple-500 dark:border-purple-400 bg-purple-50 dark:bg-purple-900/30" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600"}
@@ -807,12 +814,12 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                                 <p className="text-xs text-gray-900 dark:text-white">{theme.description}</p>
                               </div>
                               <button
-                                onClick={() =>
+                                onClick={() => {
                                   onChange({
                                     ...config,
                                     imageGeneration: { ...config.imageGeneration, secondArtTheme: theme.description },
-                                  })
-                                }
+                                  });
+                                }}
                                 className="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 whitespace-nowrap"
                                 disabled={!config.imageGeneration.enabled}
                               >
@@ -841,23 +848,23 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Base Prompt</label>
                 <textarea
                   value={config.prompts.basePrompt || getBasePrompt()}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     onChange({
                       ...config,
                       prompts: { ...config.prompts, basePrompt: e.target.value },
-                    })
-                  }
+                    });
+                  }}
                   rows={6}
                   className="w-full px-3 py-2 text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   placeholder="Base prompt template..."
                 />
                 <button
-                  onClick={() =>
+                  onClick={() => {
                     onChange({
                       ...config,
                       prompts: { ...config.prompts, basePrompt: getBasePrompt() },
-                    })
-                  }
+                    });
+                  }}
                   className="mt-2 text-sm text-blue-600 hover:text-blue-700"
                 >
                   Reset to Default
@@ -891,12 +898,12 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
 
                   <div className="space-y-2 max-h-96 overflow-y-auto">
                     <button
-                      onClick={() =>
+                      onClick={() => {
                         onChange({
                           ...config,
                           prompts: { ...config.prompts, personalityId: "random", customPersonality: undefined },
-                        })
-                      }
+                        });
+                      }}
                       className={`
                         w-full p-3 rounded border transition-colors text-left
                         ${config.prompts.personalityId === "random" ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600"}
@@ -956,7 +963,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                             </div>
                             <div className="flex flex-col gap-1 ml-2">
                               <button
-                                onClick={() => handleSelectPersonality(personality)}
+                                onClick={() => {
+                                  handleSelectPersonality(personality);
+                                }}
                                 className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 whitespace-nowrap"
                               >
                                 {isSelected ? "Active" : "Use"}
@@ -964,13 +973,17 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                               {isCustom ? (
                                 <>
                                   <button
-                                    onClick={() => handleEdit(personality, false)}
+                                    onClick={() => {
+                                      handleEdit(personality, false);
+                                    }}
                                     className="px-2 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700"
                                   >
                                     Edit
                                   </button>
                                   <button
-                                    onClick={() => handleDeletePersonality(personality.id)}
+                                    onClick={() => {
+                                      handleDeletePersonality(personality.id);
+                                    }}
                                     className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
                                   >
                                     Del
@@ -978,7 +991,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                                 </>
                               ) : (
                                 <button
-                                  onClick={() => handleEdit(personality, true)}
+                                  onClick={() => {
+                                    handleEdit(personality, true);
+                                  }}
                                   className="px-2 py-1 bg-amber-600 text-white text-xs rounded hover:bg-amber-700"
                                   title="Create an editable copy"
                                 >
@@ -1052,7 +1067,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
       {/* Import Modal */}
       <ConfigImportModal
         isOpen={showImportModal}
-        onClose={() => setShowImportModal(false)}
+        onClose={() => {
+          setShowImportModal(false);
+        }}
         onImportSuccess={handleImportSuccess}
       />
     </div>

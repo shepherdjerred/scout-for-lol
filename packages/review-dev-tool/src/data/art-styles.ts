@@ -233,7 +233,7 @@ export const ART_THEMES = [
 /**
  * Natural style-theme pairings (matching combinations)
  */
-export const STYLE_THEME_PAIRS: Array<{ style: string; theme: string }> = [
+export const STYLE_THEME_PAIRS: { style: string; theme: string }[] = [
   // Superhero Comics
   {
     style: "Bold comic book inking with dynamic action poses and dramatic shadows",

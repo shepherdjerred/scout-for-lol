@@ -6,23 +6,23 @@ import type { GenerationResult, GlobalConfig, TabConfig } from "../config/schema
 import { createDefaultGlobalConfig, createDefaultTabConfig, mergeConfigs, splitConfig } from "../config/schema";
 import { loadCurrentConfig, saveCurrentConfig, loadGlobalConfig, saveGlobalConfig } from "../lib/config-manager";
 import { CostTracker } from "../lib/costs";
-import { TabBar } from "./TabBar";
-import { ConfigModal } from "./ConfigModal";
-import { TabSettingsPanel } from "./TabSettingsPanel";
-import { ResultsPanel } from "./ResultsPanel";
-import { MatchBrowser } from "./MatchBrowser";
-import { MatchDetailsPanel } from "./MatchDetailsPanel";
-import { RatingsAnalytics } from "./RatingsAnalytics";
-import { Footer } from "./Footer";
+import { TabBar } from "./tab-bar";
+import { ConfigModal } from "./config-modal";
+import { TabSettingsPanel } from "./tab-settings-panel";
+import { ResultsPanel } from "./results-panel";
+import { MatchBrowser } from "./match-browser";
+import { MatchDetailsPanel } from "./match-details-panel";
+import { RatingsAnalytics } from "./ratings-analytics";
+import { Footer } from "./footer";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 
-export interface TabData {
+export type TabData = {
   id: string;
   name: string;
   config: TabConfig;
   result?: GenerationResult;
   match?: CompletedMatch | ArenaMatch;
-}
+};
 
 const MAX_TABS = 5;
 
@@ -173,7 +173,9 @@ export default function App() {
           </div>
           <div className="flex gap-3">
             <button
-              onClick={() => setShowConfigModal(true)}
+              onClick={() => {
+                setShowConfigModal(true);
+              }}
               className="px-4 py-2 bg-gray-700 dark:bg-gray-600 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
               title="Configure API keys and settings"
             >
@@ -194,7 +196,9 @@ export default function App() {
               Settings
             </button>
             <button
-              onClick={() => setShowAnalytics(!showAnalytics)}
+              onClick={() => {
+                setShowAnalytics(!showAnalytics);
+              }}
               className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,7 +242,12 @@ export default function App() {
                 />
               </div>
               {activeTab.match && <MatchDetailsPanel match={activeTab.match} />}
-              <TabSettingsPanel config={activeTab.config} onChange={(config) => updateTabConfig(activeTabId, config)} />
+              <TabSettingsPanel
+                config={activeTab.config}
+                onChange={(config) => {
+                  updateTabConfig(activeTabId, config);
+                }}
+              />
             </div>
             <div className="space-y-6">
               <ResultsPanel
@@ -246,7 +255,9 @@ export default function App() {
                 match={activeTab.match}
                 result={activeTab.result}
                 costTracker={costTracker}
-                onResultGenerated={(result) => updateTabResult(activeTabId, result)}
+                onResultGenerated={(result) => {
+                  updateTabResult(activeTabId, result);
+                }}
               />
             </div>
           </div>
@@ -258,7 +269,9 @@ export default function App() {
       {/* API Configuration Modal */}
       <ConfigModal
         isOpen={showConfigModal}
-        onClose={() => setShowConfigModal(false)}
+        onClose={() => {
+          setShowConfigModal(false);
+        }}
         globalConfig={globalConfig}
         onGlobalChange={setGlobalConfig}
       />
