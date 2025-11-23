@@ -1,6 +1,7 @@
 /**
  * Manages generation history in IndexedDB (supports large images)
  */
+import { z } from "zod";
 import type { GenerationResult } from "../config/schema";
 import * as db from "./indexeddb";
 
@@ -26,23 +27,34 @@ const MAX_HISTORY_ENTRIES = 50;
  * Migrate old localStorage data to IndexedDB (one-time migration)
  */
 async function migrateFromLocalStorage(): Promise<void> {
-  if (typeof window === "undefined") return;
-
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return; // Nothing to migrate
 
     const parsed = JSON.parse(stored) as unknown;
-    if (!Array.isArray(parsed) || parsed.length === 0) return;
 
-    console.log("[History] Migrating", parsed.length, "entries from localStorage to IndexedDB");
+    // Validate array structure with Zod
+    const MigrationEntrySchema = z.object({
+      id: z.string(),
+      timestamp: z.union([z.string(), z.date()]),
+      result: z.unknown(),
+      configSnapshot: z.unknown(),
+      status: z.enum(["pending", "complete", "error"]),
+      rating: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
+      notes: z.string().optional(),
+    });
+
+    const ArrayResult = z.array(MigrationEntrySchema).safeParse(parsed);
+    if (!ArrayResult.success || ArrayResult.data.length === 0) return;
+
+    console.log("[History] Migrating", ArrayResult.data.length.toString(), "entries from localStorage to IndexedDB");
 
     // Save each entry to IndexedDB
-    for (const entry of parsed) {
+    for (const entry of ArrayResult.data) {
       const historyEntry: HistoryEntry = {
         ...entry,
         timestamp: new Date(entry.timestamp),
-      };
+      } as HistoryEntry;
       await db.saveEntry(historyEntry);
     }
 
@@ -59,8 +71,6 @@ async function migrateFromLocalStorage(): Promise<void> {
  * Only completed and error entries are stored - pending entries are never persisted
  */
 export async function loadHistory(): Promise<HistoryEntry[]> {
-  if (typeof window === "undefined") return [];
-
   try {
     // Check if migration is needed (only on first load)
     const count = await db.getEntryCount();
@@ -70,10 +80,11 @@ export async function loadHistory(): Promise<HistoryEntry[]> {
 
     const entries = await db.getAllEntries();
     // Convert to HistoryEntry type (IndexedDB stores Date objects correctly)
-    return entries.map((entry) => ({
+    const result: HistoryEntry[] = entries.map((entry) => ({
       ...entry,
       timestamp: new Date(entry.timestamp), // Ensure it's a Date object
     })) as HistoryEntry[];
+    return result;
   } catch (error) {
     console.error("Failed to load history from IndexedDB:", error);
     return [];
@@ -85,11 +96,13 @@ export async function loadHistory(): Promise<HistoryEntry[]> {
  * Returns the entry ID for later updating - NOT saved to localStorage yet
  */
 export function createPendingEntry(_configSnapshot: HistoryEntry["configSnapshot"]): string {
-  if (typeof window === "undefined") return "";
-
-  const id = `gen-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-  console.log("[History] Created pending entry ID:", id, "(not persisted yet)");
-  return id;
+  try {
+    const id = `gen-${Date.now().toString()}-${Math.random().toString(36).slice(2, 9)}`;
+    console.log("[History] Created pending entry ID:", id, "(not persisted yet)");
+    return id;
+  } catch {
+    return "";
+  }
 }
 
 /**
@@ -102,8 +115,6 @@ export async function saveCompletedEntry(
   result: GenerationResult,
   configSnapshot: HistoryEntry["configSnapshot"],
 ): Promise<void> {
-  if (typeof window === "undefined") return;
-
   console.log("[History] Saving completed entry:", id);
 
   const entry: HistoryEntry = {
@@ -134,7 +145,7 @@ export async function saveToHistory(
   result: GenerationResult,
   configSnapshot: HistoryEntry["configSnapshot"],
 ): Promise<string> {
-  const id = `gen-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const id = `gen-${Date.now().toString()}-${Math.random().toString(36).slice(2, 9)}`;
   await saveCompletedEntry(id, result, configSnapshot);
   return id;
 }
@@ -143,8 +154,6 @@ export async function saveToHistory(
  * Delete a specific history entry
  */
 export async function deleteHistoryEntry(id: string): Promise<void> {
-  if (typeof window === "undefined") return;
-
   try {
     await db.deleteEntry(id);
   } catch (error) {
@@ -156,8 +165,6 @@ export async function deleteHistoryEntry(id: string): Promise<void> {
  * Clear all history
  */
 export async function clearHistory(): Promise<void> {
-  if (typeof window === "undefined") return;
-
   try {
     await db.clearAllEntries();
     // Also clear old localStorage data if it exists
@@ -174,10 +181,11 @@ export async function getHistoryEntry(id: string): Promise<HistoryEntry | undefi
   try {
     const entry = await db.getEntry(id);
     if (!entry) return undefined;
-    return {
+    const result: HistoryEntry = {
       ...entry,
       timestamp: new Date(entry.timestamp),
     } as HistoryEntry;
+    return result;
   } catch (error) {
     console.error("Failed to get history entry:", error);
     return undefined;
@@ -188,8 +196,6 @@ export async function getHistoryEntry(id: string): Promise<HistoryEntry | undefi
  * Update rating for a history entry
  */
 export async function updateHistoryRating(id: string, rating: 1 | 2 | 3 | 4, notes?: string): Promise<void> {
-  if (typeof window === "undefined") return;
-
   try {
     const entry = await db.getEntry(id);
     if (!entry) {

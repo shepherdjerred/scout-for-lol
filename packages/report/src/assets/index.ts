@@ -1,4 +1,4 @@
-import { Font } from "satori";
+import type { Font } from "satori";
 
 const fontPath = "fonts";
 

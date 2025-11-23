@@ -2,17 +2,31 @@
  * Theme selector for switching between light and dark modes
  */
 import { useState, useEffect } from "react";
+import { z } from "zod";
+
+const BooleanSchema = z.boolean();
 
 export function ThemeSelector() {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
+    const WindowSchema = z.object({}).passthrough();
+    const windowExists = WindowSchema.safeParse(typeof window !== "undefined" ? window : undefined).success;
+    if (!windowExists) return true;
     const saved = localStorage.getItem("darkMode");
-    return saved ? JSON.parse(saved) : true; // Default to dark mode
+    if (!saved) return true;
+    try {
+      const parsed = JSON.parse(saved) as unknown;
+      const result = BooleanSchema.safeParse(parsed);
+      return result.success ? result.data : true;
+    } catch {
+      return true;
+    }
   });
 
   // Apply dark mode class to document
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    const WindowSchema = z.object({}).passthrough();
+    const windowExists = WindowSchema.safeParse(typeof window !== "undefined" ? window : undefined).success;
+    if (!windowExists) return;
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
     } else {
@@ -21,11 +35,13 @@ export function ThemeSelector() {
     localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
   }, [isDarkMode]);
 
+  const handleToggle = (): void => {
+    setIsDarkMode(!isDarkMode);
+  };
+
   return (
     <button
-      onClick={() => {
-        setIsDarkMode(!isDarkMode);
-      }}
+      onClick={handleToggle}
       className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
       title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
     >

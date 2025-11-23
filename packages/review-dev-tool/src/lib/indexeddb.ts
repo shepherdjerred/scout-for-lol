@@ -35,14 +35,16 @@ async function openDB(): Promise<IDBDatabase> {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onerror = () => {
-      reject(request.error);
+      const error = request.error;
+      reject(error instanceof Error ? error : new Error(String(error)));
     };
     request.onsuccess = () => {
       resolve(request.result);
     };
 
     request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
+      const target = event.target as unknown;
+      const db = (target as IDBOpenDBRequest).result;
 
       // Create object store if it doesn't exist
       if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -65,7 +67,8 @@ export async function saveEntry(entry: DBHistoryEntry): Promise<void> {
     const request = store.put(entry);
 
     request.onerror = () => {
-      reject(request.error);
+      const error = request.error;
+      reject(error instanceof Error ? error : new Error(String(error)));
     };
     request.onsuccess = () => {
       resolve();
@@ -84,10 +87,11 @@ export async function getAllEntries(): Promise<DBHistoryEntry[]> {
     const request = store.getAll();
 
     request.onerror = () => {
-      reject(request.error);
+      const error = request.error;
+      reject(error instanceof Error ? error : new Error(String(error)));
     };
     request.onsuccess = () => {
-      const entries = request.result as DBHistoryEntry[];
+      const entries = request.result as unknown as DBHistoryEntry[];
       // Sort by timestamp, newest first
       entries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       resolve(entries);
@@ -106,10 +110,11 @@ export async function getEntry(id: string): Promise<DBHistoryEntry | undefined> 
     const request = store.get(id);
 
     request.onerror = () => {
-      reject(request.error);
+      const error = request.error;
+      reject(error instanceof Error ? error : new Error(String(error)));
     };
     request.onsuccess = () => {
-      resolve(request.result as DBHistoryEntry | undefined);
+      resolve(request.result as unknown as DBHistoryEntry | undefined);
     };
   });
 }
@@ -125,7 +130,8 @@ export async function deleteEntry(id: string): Promise<void> {
     const request = store.delete(id);
 
     request.onerror = () => {
-      reject(request.error);
+      const error = request.error;
+      reject(error instanceof Error ? error : new Error(String(error)));
     };
     request.onsuccess = () => {
       resolve();
@@ -144,7 +150,8 @@ export async function clearAllEntries(): Promise<void> {
     const request = store.clear();
 
     request.onerror = () => {
-      reject(request.error);
+      const error = request.error;
+      reject(error instanceof Error ? error : new Error(String(error)));
     };
     request.onsuccess = () => {
       resolve();
@@ -163,7 +170,8 @@ export async function getEntryCount(): Promise<number> {
     const request = store.count();
 
     request.onerror = () => {
-      reject(request.error);
+      const error = request.error;
+      reject(error instanceof Error ? error : new Error(String(error)));
     };
     request.onsuccess = () => {
       resolve(request.result);

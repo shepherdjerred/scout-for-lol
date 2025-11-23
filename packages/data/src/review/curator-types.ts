@@ -237,3 +237,4 @@ export type CuratedMatchData = {
   };
   participants: CuratedParticipant[];
 };
+

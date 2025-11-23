@@ -1,10 +1,19 @@
-import type { ArenaMatch, CompletedMatch, MatchId } from "@scout-for-lol/data";
+import {
+  generateReviewText,
+  generateReviewImage,
+  getOrdinalSuffix,
+  type ArenaMatch,
+  type CompletedMatch,
+  type MatchId,
+  selectRandomStyleAndTheme,
+  curateMatchData,
+  type CuratedMatchData,
+} from "@scout-for-lol/data";
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { match as matchPattern } from "ts-pattern";
 import { z } from "zod";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import config from "../../configuration.js";
@@ -14,10 +23,7 @@ import {
   selectRandomPersonality,
   loadPlayerMetadata,
   getLaneContext,
-  replaceTemplateVariables,
 } from "./prompts.js";
-import { selectRandomStyleAndTheme } from "./art-styles.js";
-import { curateMatchData, type CuratedMatchData } from "./curator.js";
 
 const FILENAME = fileURLToPath(import.meta.url);
 const DIRNAME = dirname(FILENAME);
@@ -44,9 +50,9 @@ function getGeminiClient(): GoogleGenerativeAI | undefined {
 }
 
 /**
- * Generate an AI-powered image from review text using Gemini
+ * Generate an AI-powered image from review text using Gemini (backend wrapper)
  */
-async function generateReviewImage(
+async function generateReviewImageBackend(
   reviewText: string,
   match: CompletedMatch | ArenaMatch,
   matchId: MatchId,
@@ -60,6 +66,7 @@ async function generateReviewImage(
     console.log("[generateReviewImage] Gemini API key not configured, skipping image generation");
     return undefined;
   }
+
   try {
     const isMashup = themes.length > 1;
 
@@ -72,89 +79,21 @@ async function generateReviewImage(
     }
     console.log("[generateReviewImage] Calling Gemini API to generate image...");
 
-    const model = client.getGenerativeModel({
+    // Call shared image generation function
+    const result = await generateReviewImage({
+      reviewText,
+      artStyle: style,
+      artTheme: themes[0] ?? "League of Legends gameplay",
+      secondArtTheme: themes[1],
+      matchData: JSON.stringify(curatedData ? { processedMatch: match, detailedStats: curatedData } : match, null, 2),
+      geminiClient: client,
       model: "gemini-3-pro-image-preview",
+      timeoutMs: 60_000,
     });
 
-    // Add timeout protection (60 seconds)
-    const TIMEOUT_MS = 60_000;
-    const startTime = Date.now();
+    console.log(`[generateReviewImage] Gemini API call completed in ${result.metadata.imageDurationMs.toString()}ms`);
 
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject(new Error(`Gemini API call timed out after ${TIMEOUT_MS.toString()}ms`));
-      }, TIMEOUT_MS);
-    });
-
-    // Build theme description
-    const themeDescription = isMashup
-      ? `Themes (MASHUP - blend these two): ${themes.join(" meets ")}`
-      : `Theme (subject matter): ${themes[0] ?? "unknown"}`;
-
-    const mashupInstructions = isMashup
-      ? `
-MASHUP MODE:
-- You have TWO themes to blend together in a creative crossover
-- Merge elements from both themes into a single cohesive image
-- Think of it as a crossover episode or collaboration between these universes
-- Be creative in how you combine the visual elements and characters from both themes
-`
-      : "";
-
-    const result = await Promise.race([
-      model.generateContent(
-        `Generate a creative and visually striking image based on this League of Legends match review.
-
-Art style (visual aesthetic): ${style}
-
-${themeDescription}
-
-CRITICAL INSTRUCTIONS:
-- You MUST use the EXACT art style specified above for the visual aesthetic (how it looks)
-- You MUST incorporate the theme(s) specified above for the subject matter (what's depicted)
-- These are SEPARATE elements that must work together - apply the style TO the theme(s)
-- Do not change the specified style
-- Commit fully to both the visual aesthetic AND the subject matter
-${mashupInstructions}
-Review text to visualize and elaborate on: "${reviewText}"
-
-Important:
-- Interpret and expand on the themes, emotions, and key moments from the review
-- Create something visually interesting that captures the essence of the performance and feedback
-- Apply the specified art style consistently throughout the entire image
-- Incorporate the specified theme(s) into the subject matter and characters
-- Add visual storytelling elements - show the action, emotion, and drama beyond the literal text
-- Make it feel like cover art or a key moment illustration
-- The art style defines HOW it looks, the theme(s) define WHAT is shown
-- DO NOT include long text strings or labels (e.g., no "irfan here:", no reviewer names, no text captions)
-- Small numerical stats are acceptable (e.g., kill counts, scores), but avoid any prose or identifying text
-- Focus on visual storytelling rather than text explanations
-
-Here is the match data: ${JSON.stringify(curatedData ? { processedMatch: match, detailedStats: curatedData } : match, null, 2)}`,
-      ),
-      timeoutPromise,
-    ]);
-
-    const duration = Date.now() - startTime;
-    console.log(`[generateReviewImage] Gemini API call completed in ${duration.toString()}ms`);
-
-    const response = result.response;
-    if (!response.candidates || response.candidates.length === 0) {
-      console.log("[generateReviewImage] No candidates returned from Gemini");
-      return undefined;
-    }
-    const parts = response.candidates[0]?.content.parts;
-    if (!parts) {
-      console.log("[generateReviewImage] No candidate or parts in response");
-      return undefined;
-    }
-    const imagePart = parts.find((part: { inlineData?: unknown }) => part.inlineData);
-    const imageData = imagePart?.inlineData?.data;
-    if (!imageData) {
-      console.log("[generateReviewImage] No image data in response");
-      return undefined;
-    }
-    const buffer = Buffer.from(imageData, "base64");
+    const buffer = Buffer.from(result.imageData, "base64");
     console.log("[generateReviewImage] Successfully generated image");
 
     // Save to local filesystem for debugging
@@ -203,7 +142,7 @@ export type ReviewMetadata = {
 };
 
 /**
- * Generate an AI-powered review using OpenAI
+ * Generate an AI-powered review using OpenAI (backend wrapper)
  */
 async function generateAIReview(
   match: CompletedMatch | ArenaMatch,
@@ -222,147 +161,41 @@ async function generateAIReview(
 
     console.log(`[generateAIReview] Selected personality: ${personality.filename}`);
 
-    // Build match data and lane context based on match type using ts-pattern
-    const { matchData, lane } = matchPattern(match)
-      .with({ queueType: "arena" }, (arenaMatch: ArenaMatch) => {
-        const player = arenaMatch.players[0];
-        if (!player) {
-          throw new Error("No player data found");
-        }
-
-        const placement = player.placement;
-        const kills = player.champion.kills;
-        const deaths = player.champion.deaths;
-        const assists = player.champion.assists;
-
-        return {
-          lane: undefined,
-          matchData: {
-            playerName: player.playerConfig.alias,
-            champion: player.champion.championName,
-            lane: "arena",
-            outcome: `${placement.toString()}${getOrdinalSuffix(placement)} place`,
-            kda: `${kills.toString()}/${deaths.toString()}/${assists.toString()}`,
-            queueType: arenaMatch.queueType,
-            teammate: player.teammate.championName,
-          },
-        };
-      })
-      .otherwise((regularMatch: CompletedMatch) => {
-        const player = regularMatch.players[0];
-        if (!player) {
-          throw new Error("No player data found");
-        }
-
-        const kills = player.champion.kills;
-        const deaths = player.champion.deaths;
-        const assists = player.champion.assists;
-
-        const data: Record<string, string> = {
-          playerName: player.playerConfig.alias,
-          champion: player.champion.championName,
-          lane: player.lane ?? "unknown",
-          outcome: player.outcome,
-          kda: `${kills.toString()}/${deaths.toString()}/${assists.toString()}`,
-          queueType: regularMatch.queueType ?? "unknown",
-        };
-
-        // Add lane opponent if available
-        if (player.laneOpponent) {
-          data["laneOpponent"] = player.laneOpponent.championName;
-        }
-
-        return {
-          lane: player.lane,
-          matchData: data,
-        };
-      });
-
+    // Get lane context
+    const player = match.players[0];
+    const lane = match.queueType === "arena" ? undefined : player && "lane" in player ? player.lane : undefined;
     const laneContextInfo = getLaneContext(lane);
     console.log(`[generateAIReview] Selected lane context: ${laneContextInfo.filename}`);
 
-    const playerName = matchData["playerName"];
+    // Get player metadata
+    const playerName = player?.playerConfig.alias;
     if (!playerName) {
       console.log("[generateAIReview] No player name found");
       return undefined;
     }
-
-    // Extract reviewer information from personality metadata
-    const reviewerName = personality.metadata.name;
-    const reviewerPersonality = personality.metadata.description;
-    const reviewerFavoriteChampions = JSON.stringify(personality.metadata.favoriteChampions);
-    const reviewerFavoriteLanes = JSON.stringify(personality.metadata.favoriteLanes);
-
-    // Load player information from JSON
     const playerMeta = loadPlayerMetadata(playerName);
-    const playerPersonality = playerMeta.description;
-    const playerFavoriteChampions = JSON.stringify(playerMeta.favoriteChampions);
-    const playerFavoriteLanes = JSON.stringify(playerMeta.favoriteLanes);
-
-    // Match-specific information
-    const playerChampion = matchData["champion"] ?? "unknown champion";
-    const playerLane = matchData["lane"] ?? "unknown lane";
-    const opponentChampion = matchData["laneOpponent"] ?? "an unknown opponent";
-    const laneDescription = laneContextInfo.content;
-    const matchReport = curatedData
-      ? JSON.stringify(
-          {
-            processedMatch: match,
-            detailedStats: curatedData,
-          },
-          null,
-          2,
-        )
-      : JSON.stringify(match, null, 2);
-
-    // Replace all template variables
-    const userPrompt = replaceTemplateVariables(basePromptTemplate, {
-      reviewerName,
-      reviewerPersonality,
-      reviewerFavoriteChampions,
-      reviewerFavoriteLanes,
-      playerName,
-      playerPersonality,
-      playerFavoriteChampions,
-      playerFavoriteLanes,
-      playerChampion,
-      playerLane,
-      opponentChampion,
-      laneDescription,
-      matchReport,
-    });
-
-    // System prompt remains separate with personality instructions and lane context
-    const systemPrompt = `${personality.instructions}\n\n${laneContextInfo.content}`;
 
     console.log("[generateAIReview] Calling OpenAI API...");
-    const completion = await client.chat.completions.create({
+
+    // Call shared review text generation function
+    const result = await generateReviewText({
+      match,
+      personality,
+      basePromptTemplate,
+      laneContext: laneContextInfo.content,
+      playerMetadata: playerMeta,
+      openaiClient: client,
       model: "gpt-5",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      max_completion_tokens: 25000,
+      maxTokens: 25000,
+      curatedData,
     });
-
-    const firstChoice = completion.choices[0];
-    if (!firstChoice) {
-      console.log("[generateAIReview] No choices returned from OpenAI");
-      return undefined;
-    }
-
-    const review = firstChoice.message.content?.trim();
-    if (!review) {
-      console.log("[generateAIReview] No review content returned from OpenAI");
-      return undefined;
-    }
 
     console.log("[generateAIReview] Successfully generated AI review");
     return {
-      review,
+      review: result.text,
       metadata: {
-        reviewerName,
-        playerName,
+        reviewerName: result.metadata.reviewerName,
+        playerName: result.metadata.playerName,
       },
     };
   } catch (error) {
@@ -408,7 +241,7 @@ export async function generateMatchReview(
     themes,
   };
 
-  const reviewImage = await generateReviewImage(reviewText, match, matchId, queueType, style, themes, curatedData);
+  const reviewImage = await generateReviewImageBackend(reviewText, match, matchId, queueType, style, themes, curatedData);
 
   if (reviewImage) {
     return {
@@ -448,23 +281,5 @@ function generatePlaceholderReview(match: CompletedMatch | ArenaMatch): string {
     const kda = `${killsStr}/${deathsStr}/${assistsStr}`;
     const queueTypeStr = match.queueType ?? "unknown";
     return `[Placeholder Review] ${player.playerConfig.alias} played ${champion.championName} in ${queueTypeStr} and got a ${outcome} with a ${kda} KDA.`;
-  }
-}
-
-function getOrdinalSuffix(num: number): string {
-  const lastDigit = num % 10;
-  const lastTwoDigits = num % 100;
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
-    return "th";
-  }
-  switch (lastDigit) {
-    case 1:
-      return "st";
-    case 2:
-      return "nd";
-    case 3:
-      return "rd";
-    default:
-      return "th";
   }
 }

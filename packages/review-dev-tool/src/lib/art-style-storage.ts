@@ -37,10 +37,9 @@ export function loadCustomArtStyles(): CustomArtStyle[] {
 
   try {
     const parsed = JSON.parse(stored) as unknown;
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed.map((s) => CustomArtStyleSchema.parse(s));
+    const ArraySchema = CustomArtStyleSchema.array();
+    const result = ArraySchema.safeParse(parsed);
+    return result.success ? result.data : [];
   } catch {
     return [];
   }
@@ -126,10 +125,9 @@ export function loadCustomArtThemes(): CustomArtTheme[] {
 
   try {
     const parsed = JSON.parse(stored) as unknown;
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-    return parsed.map((t) => CustomArtThemeSchema.parse(t));
+    const ArraySchema = CustomArtThemeSchema.array();
+    const result = ArraySchema.safeParse(parsed);
+    return result.success ? result.data : [];
   } catch {
     return [];
   }

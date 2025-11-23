@@ -40,8 +40,9 @@ function getDB(): Promise<IDBDatabase> {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onerror = () => {
-      console.warn("IndexedDB failed to open:", request.error);
-      reject(request.error);
+      const error = request.error;
+      console.warn("IndexedDB failed to open:", error);
+      reject(error instanceof Error ? error : new Error(String(error)));
     };
 
     request.onsuccess = () => {
@@ -49,7 +50,8 @@ function getDB(): Promise<IDBDatabase> {
     };
 
     request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
+      const target = event.target as unknown;
+      const db = (target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         // Create object store with key path
         const store = db.createObjectStore(STORE_NAME, { keyPath: "key" });
@@ -78,7 +80,8 @@ async function setInIndexedDB(key: string, entry: CacheEntry): Promise<boolean> 
       };
 
       request.onerror = () => {
-        reject(request.error);
+        const error = request.error;
+        reject(error instanceof Error ? error : new Error(String(error)));
       };
     });
   } catch (error) {
@@ -165,7 +168,7 @@ export function getCachedData<T>(endpoint: string, params: Record<string, unknow
   // Check in-memory cache first (fastest)
   const memoryEntry = memoryCache.get(cacheKey);
   if (memoryEntry && isCacheValid(memoryEntry)) {
-    return memoryEntry.data as T;
+    return memoryEntry.data as unknown as T;
   }
 
   // Check localStorage cache
@@ -178,7 +181,7 @@ export function getCachedData<T>(endpoint: string, params: Record<string, unknow
       if (result.success && isCacheValid(result.data)) {
         // Restore to memory cache for faster subsequent access
         memoryCache.set(cacheKey, result.data);
-        return result.data.data as T;
+        return result.data.data as unknown as T;
       }
 
       // Invalid or expired - clean up
@@ -200,7 +203,7 @@ export async function getCachedDataAsync<T>(endpoint: string, params: Record<str
   // Check in-memory cache first (fastest)
   const memoryEntry = memoryCache.get(cacheKey);
   if (memoryEntry && isCacheValid(memoryEntry)) {
-    return memoryEntry.data as T;
+    return memoryEntry.data as unknown as T;
   }
 
   // Check IndexedDB (primary storage)
@@ -215,22 +218,23 @@ export async function getCachedDataAsync<T>(endpoint: string, params: Record<str
         const result = request.result;
         if (result) {
           // Extract the cache entry (key is stored in the object)
-          const { key, ...entry } = result;
-          resolve(entry as CacheEntry);
+          const { key: _key, ...entry } = result;
+          resolve(entry as unknown as CacheEntry);
         } else {
           resolve(null);
         }
       };
 
       request.onerror = () => {
-        reject(request.error);
+        const error = request.error;
+        reject(error instanceof Error ? error : new Error(String(error)));
       };
     });
 
     if (entry && isCacheValid(entry)) {
       // Restore to memory cache for faster subsequent access
       memoryCache.set(cacheKey, entry);
-      return entry.data as T;
+      return entry.data as unknown as T;
     }
   } catch (error) {
     console.warn("IndexedDB cache read error:", error);
@@ -246,7 +250,7 @@ export async function getCachedDataAsync<T>(endpoint: string, params: Record<str
       if (result.success && isCacheValid(result.data)) {
         // Restore to memory cache for faster subsequent access
         memoryCache.set(cacheKey, result.data);
-        return result.data.data as T;
+        return result.data.data as unknown as T;
       }
 
       // Invalid or expired - clean up
@@ -400,7 +404,8 @@ export async function clearAllCache(): Promise<void> {
         resolve();
       };
       request.onerror = () => {
-        reject(request.error);
+        const error = request.error;
+        reject(error instanceof Error ? error : new Error(String(error)));
       };
     });
   } catch (error) {
@@ -448,7 +453,9 @@ export async function clearCacheForEndpoint(endpoint: string): Promise<void> {
       const request = store.openCursor();
 
       request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest).result as IDBCursorWithValue | null;
+        const target = event.target as unknown;
+        const result = (target as IDBRequest).result as unknown;
+        const cursor = result as IDBCursorWithValue | null;
         if (cursor) {
           const key = cursor.value.key as string;
           if (key.includes(`${endpoint}:`)) {
@@ -461,7 +468,8 @@ export async function clearCacheForEndpoint(endpoint: string): Promise<void> {
       };
 
       request.onerror = () => {
-        reject(request.error);
+        const error = request.error;
+        reject(error instanceof Error ? error : new Error(String(error)));
       };
     });
   } catch (error) {
@@ -526,7 +534,9 @@ export async function getCacheStats(): Promise<{
       const request = store.openCursor();
 
       request.onsuccess = (event) => {
-        const cursor = (event.target as IDBRequest).result as IDBCursorWithValue | null;
+        const target = event.target as unknown;
+        const result = (target as IDBRequest).result as unknown;
+        const cursor = result as IDBCursorWithValue | null;
         if (cursor) {
           indexedDBEntries++;
           // Estimate size (rough approximation)
@@ -540,7 +550,8 @@ export async function getCacheStats(): Promise<{
       };
 
       request.onerror = () => {
-        reject(request.error);
+        const error = request.error;
+        reject(error instanceof Error ? error : new Error(String(error)));
       };
     });
   } catch (error) {

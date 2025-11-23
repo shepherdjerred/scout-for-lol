@@ -1,6 +1,7 @@
 /**
  * Reset tool settings to defaults while preserving API keys, cache, and cost data
  */
+import { z } from "zod";
 import { clearAllEntries } from "./indexeddb";
 
 /**
@@ -19,8 +20,6 @@ import { clearAllEntries } from "./indexeddb";
  * - AI review ratings
  */
 export async function resetToDefaults(): Promise<void> {
-  if (typeof window === "undefined") return;
-
   const keysToRemove = [
     // Config storage
     "review-dev-tool-configs",
@@ -61,7 +60,34 @@ export async function getResetPreview(): Promise<{
   customArtThemes: number;
   reviewRatings: number;
 }> {
-  if (typeof window === "undefined") {
+  const getCount = (key: string): number => {
+    try {
+      const stored = localStorage.getItem(key);
+      if (!stored) return 0;
+      const parsed = JSON.parse(stored) as unknown;
+      const ArraySchema = z.array(z.unknown());
+      const result = ArraySchema.safeParse(parsed);
+      return result.success ? result.data.length : 1;
+    } catch {
+      return 0;
+    }
+  };
+
+  try {
+    // Get IndexedDB history count
+    const { getEntryCount } = await import("./indexeddb");
+    const historyEntries = await getEntryCount().catch(() => 0);
+
+    return {
+      configs: getCount("review-dev-tool-configs"),
+      historyEntries,
+      customPersonalities: getCount("review-dev-tool-custom-personalities"),
+      customArtStyles: getCount("review-dev-tool-custom-art-styles"),
+      customArtThemes: getCount("review-dev-tool-custom-art-themes"),
+      reviewRatings: getCount("ai-review-ratings"),
+    };
+  } catch {
+    // Return zeros if not in browser environment
     return {
       configs: 0,
       historyEntries: 0,
@@ -71,28 +97,4 @@ export async function getResetPreview(): Promise<{
       reviewRatings: 0,
     };
   }
-
-  const getCount = (key: string): number => {
-    try {
-      const stored = localStorage.getItem(key);
-      if (!stored) return 0;
-      const parsed = JSON.parse(stored);
-      return Array.isArray(parsed) ? parsed.length : 1;
-    } catch {
-      return 0;
-    }
-  };
-
-  // Get IndexedDB history count
-  const { getEntryCount } = await import("./indexeddb");
-  const historyEntries = await getEntryCount().catch(() => 0);
-
-  return {
-    configs: getCount("review-dev-tool-configs"),
-    historyEntries,
-    customPersonalities: getCount("review-dev-tool-custom-personalities"),
-    customArtStyles: getCount("review-dev-tool-custom-art-styles"),
-    customArtThemes: getCount("review-dev-tool-custom-art-themes"),
-    reviewRatings: getCount("ai-review-ratings"),
-  };
 }

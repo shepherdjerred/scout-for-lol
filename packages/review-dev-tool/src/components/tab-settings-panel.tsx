@@ -9,7 +9,7 @@ import { PersonalityEditor } from "./personality-editor";
 import { ArtStyleEditor } from "./art-style-editor";
 import { ConfigImportModal } from "./config-import-modal";
 import { downloadConfigBundle } from "../lib/config-export";
-import { ART_STYLES, ART_THEMES } from "../data/art-styles";
+import { ART_STYLES, ART_THEMES } from "@scout-for-lol/data";
 import {
   loadCustomPersonalities,
   addCustomPersonality,
@@ -65,12 +65,12 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   // Convert built-in styles/themes to format with IDs (use Array.from to avoid readonly issues)
   const builtinStylesFormatted = Array.from(ART_STYLES).map((style, index) => ({
     id: `builtin-style-${index}`,
-    description: style,
+    description: style.description,
   }));
 
   const builtinThemesFormatted = Array.from(ART_THEMES).map((theme, index) => ({
     id: `builtin-theme-${index}`,
-    description: theme,
+    description: theme.description,
   }));
 
   // Merge built-in and custom, removing any duplicates based on description
@@ -562,11 +562,11 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1 mb-1">
                                 {isCustom && (
-                                  <span className="px-1 py-0.5 bg-green-100 text-green-700 text-xs rounded flex-shrink-0">
+                                  <span className="px-1 py-0.5 bg-green-100 text-green-700 text-xs rounded shrink-0">
                                     Custom
                                   </span>
                                 )}
-                                {isSelected && <span className="text-blue-600 text-xs flex-shrink-0">✓</span>}
+                                {isSelected && <span className="text-blue-600 text-xs shrink-0">✓</span>}
                               </div>
                               <p className="text-xs text-gray-900 dark:text-white">{style.description}</p>
                             </div>
@@ -682,11 +682,11 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1 mb-1">
                                 {isCustom && (
-                                  <span className="px-1 py-0.5 bg-green-100 text-green-700 text-xs rounded flex-shrink-0">
+                                  <span className="px-1 py-0.5 bg-green-100 text-green-700 text-xs rounded shrink-0">
                                     Custom
                                   </span>
                                 )}
-                                {isSelected && <span className="text-blue-600 text-xs flex-shrink-0">✓</span>}
+                                {isSelected && <span className="text-blue-600 text-xs shrink-0">✓</span>}
                               </div>
                               <p className="text-xs text-gray-900 dark:text-white">{theme.description}</p>
                             </div>
@@ -805,11 +805,11 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1 mb-1">
                                   {isCustom && (
-                                    <span className="px-1 py-0.5 bg-green-100 text-green-700 text-xs rounded flex-shrink-0">
+                                    <span className="px-1 py-0.5 bg-green-100 text-green-700 text-xs rounded shrink-0">
                                       Custom
                                     </span>
                                   )}
-                                  {isSelected && <span className="text-purple-600 text-xs flex-shrink-0">✓</span>}
+                                  {isSelected && <span className="text-purple-600 text-xs shrink-0">✓</span>}
                                 </div>
                                 <p className="text-xs text-gray-900 dark:text-white">{theme.description}</p>
                               </div>

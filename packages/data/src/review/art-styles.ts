@@ -1,5 +1,5 @@
 /**
- * Art styles and themes for AI-generated review images
+ * Art styles and themes selection logic for AI-generated review images
  *
  * Styles = Visual aesthetics (how it looks)
  * Themes = Subject matter (what's depicted)
@@ -104,35 +104,58 @@ function selectMashup(): { style: ArtStyle; themes: [ArtTheme, ArtTheme] } {
 }
 
 /**
- * Select a random style and theme combination with weighted probability
- * 65% chance of matching pair (same category)
- * 25% chance of random mix (different categories)
- * 10% chance of mashup (two themes)
+ * Select a random style and theme combination with configurable options
+ *
+ * @param options Configuration for style/theme selection
+ * @param options.mashupMode If true, always return two themes (mashup)
+ * @param options.useMatchingPairs If true, prefer matching style/theme pairs
+ * @param options.matchingPairProbability Probability of matching pair (0-1), default 0.65
+ * @returns Selected style and theme(s)
  */
-export function selectRandomStyleAndTheme(): StyleThemeSelection {
-  const roll = Math.random();
+export function selectRandomStyleAndTheme(options?: {
+  mashupMode?: boolean | undefined;
+  useMatchingPairs?: boolean | undefined;
+  matchingPairProbability?: number | undefined;
+}): StyleThemeSelection {
+  const mashupMode = options?.mashupMode ?? false;
+  const useMatchingPairs = options?.useMatchingPairs ?? true;
+  const matchingPairProbability = options?.matchingPairProbability ?? 0.65;
 
-  if (roll < 0.65) {
-    // 65% - Matching pair
-    const { style, theme } = selectMatchingPair();
+  // If mashup mode is explicitly requested, always do mashup
+  if (mashupMode) {
+    const { style, themes } = selectMashup();
     return {
       style: style.description,
-      themes: [theme.description],
+      themes: themes.map((t) => t.description),
     };
-  } else if (roll < 0.9) {
-    // 25% - Random mix
-    const style = selectRandomStyle();
-    const theme = selectRandomTheme();
-    return {
-      style: style.description,
-      themes: [theme.description],
-    };
-  } else {
+  }
+
+  // Default behavior: weighted probability
+  // 65% matching pair, 25% random mix, 10% mashup (unless overridden)
+  const roll = Math.random();
+  const mashupThreshold = 1.0 - 0.1; // 10% mashup by default
+
+  if (roll >= mashupThreshold) {
     // 10% - Mashup (two themes)
     const { style, themes } = selectMashup();
     return {
       style: style.description,
       themes: themes.map((t) => t.description),
+    };
+  } else if (useMatchingPairs && roll < matchingPairProbability) {
+    // Matching pair (default 65%)
+    const { style, theme } = selectMatchingPair();
+    return {
+      style: style.description,
+      themes: [theme.description],
+    };
+  } else {
+    // Random mix (default 25%)
+    const style = selectRandomStyle();
+    const theme = selectRandomTheme();
+    return {
+      style: style.description,
+      themes: [theme.description],
     };
   }
 }
@@ -151,3 +174,4 @@ export function selectRandomArtStyle(): string {
     return `${selection.style}. Themes: ${selection.themes.join(" meets ")}`;
   }
 }
+

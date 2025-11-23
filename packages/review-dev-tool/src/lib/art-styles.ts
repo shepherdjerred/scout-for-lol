@@ -1,7 +1,7 @@
 /**
  * Art style selection utilities
  */
-import { ART_STYLES, ART_THEMES, STYLE_THEME_PAIRS } from "../data/art-styles";
+import { ART_STYLES, ART_THEMES } from "@scout-for-lol/data";
 import { loadCustomArtStyles, loadCustomArtThemes } from "./art-style-storage";
 
 /**
@@ -42,7 +42,7 @@ function selectRandomStyle(): string {
   if (!style) {
     throw new Error("Failed to select art style");
   }
-  return style;
+  return style.description;
 }
 
 /**
@@ -54,19 +54,19 @@ function selectRandomTheme(): string {
   if (!theme) {
     throw new Error("Failed to select art theme");
   }
-  return theme;
+  return theme.description;
 }
 
 /**
- * Select a random style-theme pair
+ * Select a random style-theme pair (simplified - just pick random for now)
  */
 function selectRandomPair(): { style: string; theme: string } {
-  const randomIndex = Math.floor(Math.random() * STYLE_THEME_PAIRS.length);
-  const pair = STYLE_THEME_PAIRS[randomIndex];
-  if (!pair) {
-    throw new Error("Failed to select style-theme pair");
-  }
-  return pair;
+  // For simplicity, just pick random style and theme
+  // The backend has more sophisticated category-based matching
+  return {
+    style: selectRandomStyle(),
+    theme: selectRandomTheme(),
+  };
 }
 
 /**
@@ -126,7 +126,7 @@ export function selectRandomStyleAndTheme(
  */
 export function getAllArtStyles(): string[] {
   const customStyles = loadCustomArtStyles();
-  return [...ART_STYLES, ...customStyles.map((s) => s.description)];
+  return [...ART_STYLES.map((s) => s.description), ...customStyles.map((s) => s.description)];
 }
 
 /**
@@ -134,12 +134,29 @@ export function getAllArtStyles(): string[] {
  */
 export function getAllArtThemes(): string[] {
   const customThemes = loadCustomArtThemes();
-  return [...ART_THEMES, ...customThemes.map((t) => t.description)];
+  return [...ART_THEMES.map((t) => t.description), ...customThemes.map((t) => t.description)];
 }
 
 /**
- * Get all style-theme pairs
+ * Get all style-theme pairs (for gallery display)
+ * Note: This creates simple pairs from the categorized data
  */
-export function getAllStyleThemePairs(): readonly { style: string; theme: string }[] {
-  return STYLE_THEME_PAIRS;
+export function getAllStyleThemePairs(): { style: string; theme: string }[] {
+  // Create some example pairs by matching styles and themes
+  // For simplicity, just pair first few styles with first few themes
+  const pairs: { style: string; theme: string }[] = [];
+  const maxPairs = Math.min(ART_STYLES.length, ART_THEMES.length, 50);
+
+  for (let i = 0; i < maxPairs; i++) {
+    const style = ART_STYLES[i];
+    const theme = ART_THEMES[i];
+    if (style && theme) {
+      pairs.push({
+        style: style.description,
+        theme: theme.description,
+      });
+    }
+  }
+
+  return pairs;
 }

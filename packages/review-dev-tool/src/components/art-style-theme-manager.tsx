@@ -2,7 +2,7 @@
  * Art Style and Theme management UI
  */
 import { useState, useEffect } from "react";
-import { ART_STYLES, ART_THEMES } from "../data/art-styles";
+import { ART_STYLES, ART_THEMES } from "@scout-for-lol/data";
 import type { CustomArtStyle, CustomArtTheme } from "../lib/art-style-storage";
 import {
   loadCustomArtStyles,
@@ -48,12 +48,12 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
   // Convert built-in styles to format with IDs
   const builtinStyles = ART_STYLES.map((style, index) => ({
     id: `builtin-style-${index}`,
-    description: style,
+    description: style.description,
   }));
 
   const builtinThemes = ART_THEMES.map((theme, index) => ({
     id: `builtin-theme-${index}`,
-    description: theme,
+    description: theme.description,
   }));
 
   const allStyles = [...builtinStyles, ...customStyles];
@@ -256,7 +256,7 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start gap-2">
                             {isCustom && (
-                              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded flex-shrink-0">
+                              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded shrink-0">
                                 Custom
                               </span>
                             )}
@@ -290,7 +290,7 @@ export function ArtStyleThemeManager({ onStyleSelect, onThemeSelect }: ArtStyleT
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start gap-2">
                             {isCustom && (
-                              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded flex-shrink-0">
+                              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded shrink-0">
                                 Custom
                               </span>
                             )}

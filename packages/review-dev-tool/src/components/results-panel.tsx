@@ -21,55 +21,46 @@ interface ResultsPanelProps {
   onResultGenerated: (result: GenerationResult) => void;
 }
 
+type ActiveGeneration = {
+  id: string;
+  progress?: GenerationProgress;
+  startTime: number;
+  configSnapshot: HistoryEntry["configSnapshot"];
+};
+
 export function ResultsPanel({ config, match, result, costTracker, onResultGenerated }: ResultsPanelProps) {
-  const [generating, setGenerating] = useState(false);
-  const [progress, setProgress] = useState<GenerationProgress | undefined>();
+  const [activeGenerations, setActiveGenerations] = useState<Map<string, ActiveGeneration>>(new Map());
   const [forceUpdate, setForceUpdate] = useState(0);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | undefined>();
   const [viewingHistory, setViewingHistory] = useState(false);
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | undefined>();
   const [notes, setNotes] = useState("");
-  const [elapsedMs, setElapsedMs] = useState(0);
+  const [activeGenerationTimers, setActiveGenerationTimers] = useState<Map<string, number>>(new Map());
 
   // Listen for cost updates
   if (typeof window !== "undefined") {
     window.addEventListener("cost-update", () => setForceUpdate((n) => n + 1));
   }
 
-  // Timer for progress animation
+  // Timer for progress animation for all active generations
   useEffect(() => {
-    if (!generating || !progress) {
-      setElapsedMs(0);
+    if (activeGenerations.size === 0) {
       return;
     }
 
-    // Reset timer when step changes
-    setElapsedMs(0);
-
     const interval = setInterval(() => {
-      setElapsedMs((prev) => prev + 100);
+      const now = Date.now();
+      setActiveGenerationTimers(
+        new Map(Array.from(activeGenerations.entries()).map(([id, gen]) => [id, now - gen.startTime])),
+      );
     }, 100);
 
     return () => clearInterval(interval);
-  }, [generating, progress?.step]);
+  }, [activeGenerations]);
 
   const handleGenerate = async () => {
-    // If already generating, user wants to start a new one (cancels current)
-    if (generating) {
-      const confirmed = confirm(
-        "A generation is already in progress. Starting a new one will cancel the current generation. Continue?",
-      );
-      if (!confirmed) {
-        return;
-      }
-    }
-
     // Use provided match or example match
     const matchToUse = match ?? getExampleMatch("ranked");
-
-    setGenerating(true);
-    setProgress(undefined);
-    setViewingHistory(false); // Switch back to current result when generating
 
     // Create entry ID (not persisted yet)
     console.log("[History] Creating entry ID");
@@ -77,16 +68,41 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       model: config.textGeneration.model,
     });
     console.log("[History] Created entry ID:", historyId);
+
+    // Build config snapshot
+    const configSnapshot: HistoryEntry["configSnapshot"] = {
+      model: config.textGeneration.model,
+    };
+
+    // Add to active generations
+    const newGen: ActiveGeneration = {
+      id: historyId,
+      startTime: Date.now(),
+      configSnapshot,
+    };
+    setActiveGenerations((prev) => new Map(prev).set(historyId, newGen));
     setSelectedHistoryId(historyId);
+    setViewingHistory(false); // Switch back to current result when generating
 
     try {
-      const generatedResult = await generateMatchReview(matchToUse, config, (p) => setProgress(p));
-      onResultGenerated(generatedResult);
+      const generatedResult = await generateMatchReview(matchToUse, config, (p) => {
+        setActiveGenerations((prev) => {
+          const updated = new Map(prev);
+          const gen = updated.get(historyId);
+          if (gen) {
+            gen.progress = p;
+            updated.set(historyId, gen);
+          }
+          return updated;
+        });
+      });
 
-      // Build config snapshot with all metadata
-      const configSnapshot: HistoryEntry["configSnapshot"] = {
-        model: config.textGeneration.model,
-      };
+      // Only update the displayed result if this is the selected generation
+      if (selectedHistoryId === historyId) {
+        onResultGenerated(generatedResult);
+      }
+
+      // Update config snapshot with actual selected values
       if (generatedResult.metadata.selectedPersonality) {
         configSnapshot.personality = generatedResult.metadata.selectedPersonality;
       }
@@ -123,17 +139,23 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
         },
         error: error instanceof Error ? error.message : String(error),
       };
-      onResultGenerated(errorResult);
+
+      // Only update displayed result if this is the selected generation
+      if (selectedHistoryId === historyId) {
+        onResultGenerated(errorResult);
+      }
 
       // Save error result to history
       console.log("[History] Saving error result:", historyId);
-      await saveCompletedEntry(historyId, errorResult, {
-        model: config.textGeneration.model,
-      });
+      await saveCompletedEntry(historyId, errorResult, configSnapshot);
       setForceUpdate((n) => n + 1);
     } finally {
-      setGenerating(false);
-      setProgress(undefined);
+      // Remove from active generations
+      setActiveGenerations((prev) => {
+        const updated = new Map(prev);
+        updated.delete(historyId);
+        return updated;
+      });
     }
   };
 
@@ -143,6 +165,16 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
     setRating(entry.rating);
     setNotes(entry.notes ?? "");
     onResultGenerated(entry.result);
+  };
+
+  const handleSelectActiveGeneration = (id: string) => {
+    setViewingHistory(false);
+    setSelectedHistoryId(id);
+    const gen = activeGenerations.get(id);
+    if (gen) {
+      // No result to display yet for active generation
+      // The UI will show the progress indicator
+    }
   };
 
   const handleRatingChange = async (newRating: 1 | 2 | 3 | 4) => {
@@ -171,6 +203,10 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
     ? calculateCost(result.metadata, config.textGeneration.model, config.imageGeneration.model)
     : null;
 
+  const selectedGen = selectedHistoryId ? activeGenerations.get(selectedHistoryId) : undefined;
+  const isViewingActiveGeneration = selectedGen !== undefined;
+  const elapsedMs = selectedHistoryId ? (activeGenerationTimers.get(selectedHistoryId) ?? 0) : 0;
+
   return (
     <div className="space-y-6">
       {/* History Panel */}
@@ -181,36 +217,65 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
         refreshTrigger={forceUpdate}
       />
 
+      {/* Active Generations Panel */}
+      {activeGenerations.size > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-3">
+            In Progress ({activeGenerations.size})
+          </h3>
+          <div className="space-y-2">
+            {Array.from(activeGenerations.values()).map((gen) => {
+              const isSelected = gen.id === selectedHistoryId;
+              const elapsed = activeGenerationTimers.get(gen.id) ?? 0;
+              const elapsedSeconds = Math.floor(elapsed / 1000);
+
+              return (
+                <button
+                  key={gen.id}
+                  onClick={() => handleSelectActiveGeneration(gen.id)}
+                  className={`w-full text-left p-3 rounded border transition-colors ${
+                    isSelected
+                      ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30"
+                      : "border-yellow-200 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-yellow-600 dark:border-yellow-400" />
+                    <span className="text-yellow-600 dark:text-yellow-400 text-xs font-semibold">GENERATING</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{elapsedSeconds}s</span>
+                  </div>
+                  <div className="text-xs text-gray-700 dark:text-gray-300 space-y-0.5">
+                    <div className="font-mono truncate">{gen.configSnapshot.model}</div>
+                    {gen.progress && (
+                      <div className="text-yellow-700 dark:text-yellow-300">
+                        {gen.progress.step === "text" ? "Generating text..." : "Generating image..."}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Current/Selected Result */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex justify-between items-center mb-4">
           <div>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">Generated Review</h2>
             {viewingHistory && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Viewing from history</p>}
+            {isViewingActiveGeneration && (
+              <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">Viewing active generation</p>
+            )}
           </div>
           <button
             onClick={handleGenerate}
             className="px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
           >
-            {generating ? "Generate Another (Cancel Current)" : "Generate New Review"}
+            Generate New Review
           </button>
         </div>
-
-        {/* Show banner when viewing history while generation is in progress */}
-        {viewingHistory && generating && (
-          <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600 dark:border-yellow-400" />
-              <span className="text-sm text-yellow-800 dark:text-yellow-200">Generation in progress...</span>
-            </div>
-            <button
-              onClick={() => setViewingHistory(false)}
-              className="px-3 py-1 bg-yellow-600 dark:bg-yellow-500 text-white text-sm rounded hover:bg-yellow-700 dark:hover:bg-yellow-600 transition-colors"
-            >
-              View Progress
-            </button>
-          </div>
-        )}
 
         {!match && (
           <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded text-sm text-yellow-800 dark:text-yellow-200">
@@ -357,16 +422,17 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
             )}
         </div>
 
-        {generating &&
-          progress &&
-          !viewingHistory &&
+        {isViewingActiveGeneration &&
+          selectedGen?.progress &&
           (() => {
             // Calculate progress percentage based on elapsed time
             // Text generation: ~60s, Image generation: ~20s
             // Cap at 90% until complete, then jump to 100%
-            const expectedDuration = progress.step === "text" ? 60000 : 20000;
+            const expectedDuration = selectedGen.progress.step === "text" ? 60000 : 20000;
             const progressPercent =
-              progress.step === "complete" ? 100 : Math.min(90, Math.floor((elapsedMs / expectedDuration) * 100));
+              selectedGen.progress.step === "complete"
+                ? 100
+                : Math.min(90, Math.floor((elapsedMs / expectedDuration) * 100));
 
             const elapsedSeconds = Math.floor(elapsedMs / 1000);
 
@@ -399,7 +465,7 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
                     </div>
                     <div className="flex-1">
                       <div className="text-sm font-medium text-blue-900 dark:text-blue-200">
-                        {progress.message?.split("(")[0]?.trim() ?? "Generating"} ({elapsedSeconds}s)
+                        {selectedGen.progress.message?.split("(")[0]?.trim() ?? "Generating"} ({elapsedSeconds}s)
                       </div>
                     </div>
                   </div>
@@ -420,7 +486,7 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
           <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded">
             <div className="flex items-start gap-3">
               <svg
-                className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5"
+                className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -466,7 +532,7 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
               </div>
             )}
 
-            {selectedHistoryId && result.image && (
+            {selectedHistoryId && result.image && viewingHistory && (
               <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700">
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Rate this generation</h3>
                 <div className="mb-3">

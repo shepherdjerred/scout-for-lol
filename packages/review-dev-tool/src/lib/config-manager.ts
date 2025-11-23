@@ -1,6 +1,7 @@
 /**
  * Configuration persistence and import/export
  */
+import { z } from "zod";
 import type { ReviewConfig, GlobalConfig } from "../config/schema";
 import { ReviewConfigSchema, GlobalConfigSchema } from "../config/schema";
 
@@ -30,10 +31,32 @@ export function loadSavedConfigs(): SavedConfig[] {
 
   try {
     const parsed = JSON.parse(stored) as unknown;
-    if (!Array.isArray(parsed)) {
-      return [];
+    const SavedConfigArraySchema = z
+      .object({
+        id: z.string(),
+        name: z.string(),
+        config: z.unknown(),
+        createdAt: z.string(),
+        updatedAt: z.string(),
+      })
+      .array();
+    const result = SavedConfigArraySchema.safeParse(parsed);
+    if (!result.success) return [];
+    // Map and validate each config
+    const configs: SavedConfig[] = [];
+    for (const item of result.data) {
+      const configResult = ReviewConfigSchema.safeParse(item.config);
+      if (configResult.success) {
+        configs.push({
+          id: item.id,
+          name: item.name,
+          config: configResult.data,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+        });
+      }
     }
-    return parsed as SavedConfig[];
+    return configs;
   } catch {
     return [];
   }
@@ -72,8 +95,13 @@ export function updateConfig(id: string, name: string, config: ReviewConfig): Sa
     return null;
   }
 
+  const existingConfig = configs[index];
+  if (!existingConfig) {
+    return null;
+  }
+
   const updatedConfig: SavedConfig = {
-    ...configs[index]!,
+    ...existingConfig,
     name,
     config,
     updatedAt: new Date().toISOString(),
@@ -111,7 +139,8 @@ export function loadCurrentConfig(): ReviewConfig | null {
 
   try {
     const parsed = JSON.parse(stored) as unknown;
-    return ReviewConfigSchema.parse(parsed);
+    const result = ReviewConfigSchema.safeParse(parsed);
+    return result.success ? result.data : null;
   } catch {
     return null;
   }
@@ -169,17 +198,42 @@ export function exportMultipleConfigs(configs: SavedConfig[]): string {
  */
 export function importMultipleConfigs(json: string): SavedConfig[] {
   const parsed = JSON.parse(json) as unknown;
-  if (!Array.isArray(parsed)) {
+  const SavedConfigArraySchema = z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      config: z.unknown(),
+      createdAt: z.string(),
+      updatedAt: z.string(),
+    })
+    .array();
+  const result = SavedConfigArraySchema.safeParse(parsed);
+  if (!result.success) {
     throw new Error("Invalid format: expected array of configurations");
   }
-  return parsed as SavedConfig[];
+  // Map and validate each config
+  const configs: SavedConfig[] = [];
+  for (const item of result.data) {
+    const configResult = ReviewConfigSchema.safeParse(item.config);
+    if (!configResult.success) {
+      throw new Error(`Invalid configuration format for item ${item.id}`);
+    }
+    configs.push({
+      id: item.id,
+      name: item.name,
+      config: configResult.data,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+    });
+  }
+  return configs;
 }
 
 /**
  * Generate a unique ID
  */
 function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  return `${Date.now().toString()}-${Math.random().toString(36).substring(2, 9)}`;
 }
 
 /**

@@ -2,87 +2,33 @@
  * Cost calculation for AI API usage
  */
 import type { GenerationMetadata, CostBreakdown } from "../config/schema";
-import { getModelInfo } from "./models";
-
-/**
- * Gemini pricing (per image)
- */
-const GEMINI_PRICING = {
-  "gemini-3-pro-image-preview": 0.1, // $0.10 per image
-  "gemini-2.0-flash-exp": 0.05, // $0.05 per image (estimated)
-  "gemini-1.5-pro": 0.08, // $0.08 per image (estimated)
-} as const;
+import { CostBreakdownSchema } from "../config/schema";
+import { getModelPricing, getImagePricing, calculateCost as calculateCostShared, formatCost as formatCostShared } from "@scout-for-lol/data";
 
 /**
  * Get pricing for a specific model
+ * @deprecated Use getModelPricing from @scout-for-lol/data instead
  */
-export function getModelPricing(model: string): { input: number; output: number } {
-  // Try to get pricing from centralized model info
-  const modelInfo = getModelInfo(model);
-  if (modelInfo) {
-    return {
-      input: modelInfo.capabilities.costPer1MInputTokens,
-      output: modelInfo.capabilities.costPer1MOutputTokens,
-    };
-  }
-
-  // Default pricing if model not found
-  return {
-    input: 5.0,
-    output: 15.0,
-  };
-}
+export { getModelPricing };
 
 /**
  * Get pricing for image generation
+ * @deprecated Use getImagePricing from @scout-for-lol/data instead
  */
-export function getImagePricing(model: string): number {
-  // Check Gemini models
-  for (const [modelName, pricing] of Object.entries(GEMINI_PRICING)) {
-    if (model.includes(modelName) || modelName.includes(model)) {
-      return pricing;
-    }
-  }
-
-  // Default pricing if model not found
-  return 0.1;
-}
+export { getImagePricing };
 
 /**
  * Calculate cost breakdown from generation metadata
  */
 export function calculateCost(metadata: GenerationMetadata, textModel: string, imageModel: string): CostBreakdown {
-  const modelPricing = getModelPricing(textModel);
-  const imagePricing = getImagePricing(imageModel);
-
-  // Calculate text generation costs
-  const inputTokens = metadata.textTokensPrompt ?? 0;
-  const outputTokens = metadata.textTokensCompletion ?? 0;
-
-  const textInputCost = (inputTokens / 1_000_000) * modelPricing.input;
-  const textOutputCost = (outputTokens / 1_000_000) * modelPricing.output;
-
-  // Calculate image generation cost
-  const imageCost = metadata.imageGenerated ? imagePricing : 0;
-
-  const totalCost = textInputCost + textOutputCost + imageCost;
-
-  return {
-    textInputCost,
-    textOutputCost,
-    imageCost,
-    totalCost,
-  };
+  return calculateCostShared(metadata, textModel, imageModel);
 }
 
 /**
  * Format cost as USD string
  */
 export function formatCost(cost: number): string {
-  if (cost < 0.01) {
-    return `$${cost.toFixed(4)}`;
-  }
-  return `$${cost.toFixed(2)}`;
+  return formatCostShared(cost);
 }
 
 const COST_STORAGE_KEY = "scout-review-costs";
@@ -99,27 +45,28 @@ export class CostTracker {
   }
 
   private loadFromStorage(): void {
-    if (typeof window === "undefined") return;
-
     try {
+      // Try to access localStorage - will throw in non-browser environments
       const stored = localStorage.getItem(COST_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as unknown;
-        if (Array.isArray(parsed)) {
-          this.costs = parsed as CostBreakdown[];
+        const ArraySchema = CostBreakdownSchema.array();
+        const result = ArraySchema.safeParse(parsed);
+        if (result.success) {
+          this.costs = result.data;
         }
       }
     } catch (error) {
+      // Silently fail in non-browser environments or if storage fails
       console.error("Failed to load costs from storage:", error);
     }
   }
 
   private saveToStorage(): void {
-    if (typeof window === "undefined") return;
-
     try {
       localStorage.setItem(COST_STORAGE_KEY, JSON.stringify(this.costs));
     } catch (error) {
+      // Silently fail in non-browser environments or if storage fails
       console.error("Failed to save costs to storage:", error);
     }
   }
@@ -164,7 +111,7 @@ export class CostTracker {
     const lines = [
       "Cost Report",
       "===========",
-      `Total Requests: ${this.getCount()}`,
+      `Total Requests: ${this.getCount().toString()}`,
       "",
       "Breakdown:",
       `  Text Input:  ${formatCost(total.textInputCost)}`,
@@ -177,7 +124,7 @@ export class CostTracker {
     ];
 
     this.costs.forEach((cost, i) => {
-      lines.push(`  Request ${i + 1}: ${formatCost(cost.totalCost)}`);
+      lines.push(`  Request ${(i + 1).toString()}: ${formatCost(cost.totalCost)}`);
     });
 
     return lines.join("\n");

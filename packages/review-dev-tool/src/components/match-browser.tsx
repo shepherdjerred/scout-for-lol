@@ -189,7 +189,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     try {
       const matchDto = await fetchMatchFromS3(s3Config, metadata.key);
       if (matchDto) {
-        const match = await convertMatchDtoToInternalFormat(matchDto, metadata.playerName);
+        const match = convertMatchDtoToInternalFormat(matchDto, metadata.playerName);
         onMatchSelected(match);
       }
     } catch (err) {

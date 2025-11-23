@@ -118,8 +118,13 @@ export function getLaneContext(lane: string | undefined): string {
   }
 
   const lowerLane = lane.toLowerCase();
-  if (lowerLane in LANE_CONTEXTS) {
-    return LANE_CONTEXTS[lowerLane as Lane];
+  // Check if lane is a valid key
+  const validLanes: Record<string, string> = LANE_CONTEXTS;
+  if (lowerLane in validLanes) {
+    const laneValue = validLanes[lowerLane];
+    if (laneValue) {
+      return laneValue;
+    }
   }
 
   return genericLane;

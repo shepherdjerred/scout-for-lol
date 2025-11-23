@@ -156,10 +156,10 @@ describe("config-export", () => {
     // Check that both exist
     const stored = localStorage.getItem("review-dev-tool-custom-personalities");
     expect(stored).toBeTruthy();
-    const personalities = JSON.parse(stored!);
+    const personalities = JSON.parse(stored!) as { id: string }[];
     expect(personalities).toHaveLength(2);
-    expect(personalities.find((p: { id: string }) => p.id === "existing-personality")).toBeTruthy();
-    expect(personalities.find((p: { id: string }) => p.id === "new-personality")).toBeTruthy();
+    expect(personalities.find((p) => p.id === "existing-personality")).toBeTruthy();
+    expect(personalities.find((p) => p.id === "new-personality")).toBeTruthy();
   });
 
   it("should replace config when merge is false", () => {
@@ -196,9 +196,9 @@ describe("config-export", () => {
     // Check that only new style exists
     const stored = localStorage.getItem("review-dev-tool-custom-art-styles");
     expect(stored).toBeTruthy();
-    const styles = JSON.parse(stored!);
+    const styles = JSON.parse(stored!) as { id: string }[];
     expect(styles).toHaveLength(1);
-    expect(styles[0].id).toBe("new-style");
+    expect(styles[0]?.id).toBe("new-style");
   });
 
   it("should generate correct summary", () => {

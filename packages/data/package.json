@@ -14,8 +14,12 @@
     "typecheck": "bunx tsc --noEmit"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "@scout-for-lol/report": "workspace:*",
+    "openai": "^6.9.1",
     "remeda": "^2.21.2",
     "ts-pattern": "^5.7.0",
+    "twisted": "^1.66.1",
     "zod": "^4.0.0"
   },
   "devDependencies": {
