@@ -46,7 +46,7 @@ async function main(): Promise<void> {
     // Track which file we're in
     if (line.startsWith("+++ ")) {
       // Extract filename (handles both "b/" and "i/" prefixes)
-      const match = line.match(/^\+\+\+ [a-z]\/(.*)/);
+      const match = /^\+\+\+ [a-z]\/(.*)/.exec(line);
       if (match) {
         currentFile = match[1];
         // Skip checking the suppression checker script itself
@@ -64,7 +64,7 @@ async function main(): Promise<void> {
 
     // Track line numbers from diff hunks
     if (line.startsWith("@@")) {
-      const match = line.match(/\+(\d+)/);
+      const match = /\+(\d+)/.exec(line);
       if (match) {
         currentLineNumber = parseInt(match[1]);
       }

@@ -52,6 +52,7 @@
       "orta.vscode-jest",
       "dbaeumer.vscode-eslint",
       "oven.bun-vscode",
+      "unifiedjs.vscode-mdx",
     ],
   },
   "settings": {

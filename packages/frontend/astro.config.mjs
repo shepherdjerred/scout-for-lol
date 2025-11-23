@@ -3,13 +3,14 @@ import { defineConfig } from "astro/config";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
 
+import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 
 const dirname = fileURLToPath(new URL(".", import.meta.url));
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [react()],
+  integrations: [mdx(), react()],
   vite: {
     optimizeDeps: {
       // Don't pre-bundle these native modules - they're only used server-side

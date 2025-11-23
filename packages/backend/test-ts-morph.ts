@@ -1,5 +1,5 @@
 import { Project } from "ts-morph";
-import { resolve } from "node:path";
+import { resolve } from "path";
 
 const project = new Project({
   tsConfigFilePath: resolve("./tsconfig.json"),

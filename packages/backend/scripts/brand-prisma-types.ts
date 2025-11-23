@@ -12,7 +12,7 @@
  */
 
 import { Project, SyntaxKind, type TypeAliasDeclaration, type InterfaceDeclaration } from "ts-morph";
-import { resolve } from "node:path";
+import { resolve } from "path";
 
 // Types that need to be imported
 const BRANDED_TYPES_TO_IMPORT = new Set<string>();
@@ -21,10 +21,10 @@ function main() {
   console.log("🔧 Branding Prisma types with AST transformation...");
 
   const project = new Project({
-    tsConfigFilePath: resolve(__dirname, "../tsconfig.json"),
+    tsConfigFilePath: resolve(import.meta.dir, "../tsconfig.json"),
   });
 
-  const prismaTypesPath = resolve(__dirname, "../generated/prisma/client/index.d.ts");
+  const prismaTypesPath = resolve(import.meta.dir, "../generated/prisma/client/index.d.ts");
   const sourceFile = project.addSourceFileAtPath(prismaTypesPath);
 
   console.log(`📄 Processing: ${prismaTypesPath}`);

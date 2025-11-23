@@ -5,13 +5,12 @@
  */
 
 import ts from "typescript";
-import { existsSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, resolve } from "path";
 
-const args = process.argv.slice(2);
+const args = Bun.argv.slice(2);
 if (args.length < 2) {
   console.error("Usage: find-dependent-tests.ts <package-dir> <changed-files...>");
-  process.exit(1);
+  throw new Error("Missing required arguments");
 }
 
 // Args are guaranteed to exist after length check
@@ -25,7 +24,7 @@ const absolutePackageDir = resolve(join(repoRoot, packageDir));
 
 // Find tsconfig.json
 const tsconfigPath = join(absolutePackageDir, "tsconfig.json");
-if (!existsSync(tsconfigPath)) {
+if (!(await Bun.file(tsconfigPath).exists())) {
   console.error(`No tsconfig.json found at ${tsconfigPath}`);
   process.exit(1);
 }
@@ -199,11 +198,11 @@ for (const file of affectedFiles) {
   const unitTest = `${base}.test.ts`;
   const integrationTest = `${base}.integration.test.ts`;
 
-  if (existsSync(unitTest)) {
+  if (await Bun.file(unitTest).exists()) {
     testFiles.add(unitTest);
   }
 
-  if (existsSync(integrationTest)) {
+  if (await Bun.file(integrationTest).exists()) {
     testFiles.add(integrationTest);
   }
 }

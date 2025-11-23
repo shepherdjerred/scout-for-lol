@@ -1,0 +1,145 @@
+---
+import Layout from "./Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import Footer from "../components/Footer.astro";
+import PageHeader from "../components/PageHeader.astro";
+
+interface Props {
+  title: string;
+  subtitle: string;
+}
+
+const { title, subtitle } = Astro.props;
+---
+
+<Layout>
+  <div class="bg-white dark:bg-gray-900">
+    <Navbar activePage="" />
+
+    <div class="relative px-6 pt-14 lg:px-8">
+      <div class="mx-auto max-w-4xl py-32 sm:py-48 lg:py-56">
+        <PageHeader
+          title={title}
+          subtitle={subtitle}
+        />
+
+        <article class="prose prose-lg dark:prose-invert max-w-none mt-12 text-gray-700 dark:text-gray-300 content-page">
+          <slot />
+        </article>
+      </div>
+    </div>
+
+    <Footer />
+  </div>
+</Layout>
+
+<style is:global>
+  /* Enhanced prose styling for content pages */
+  .content-page h2 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: rgb(17 24 39);
+    margin-top: 4rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgb(229 231 235);
+  }
+
+  .dark .content-page h2 {
+    color: rgb(255 255 255);
+    border-bottom-color: rgb(55 65 81);
+  }
+
+  .content-page h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: rgb(17 24 39);
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .dark .content-page h3 {
+    color: rgb(255 255 255);
+  }
+
+  .content-page p {
+    font-size: 1.125rem;
+    line-height: 1.75;
+    margin-bottom: 1.5rem;
+  }
+
+  .content-page ul {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .content-page li {
+    font-size: 1.125rem;
+    line-height: 1.75;
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .content-page strong {
+    color: rgb(17 24 39);
+    font-weight: 600;
+  }
+
+  .dark .content-page strong {
+    color: rgb(255 255 255);
+  }
+
+  .content-page a {
+    color: rgb(79 70 229);
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .content-page a:hover {
+    color: rgb(99 102 241);
+  }
+
+  .dark .content-page a {
+    color: rgb(165 180 252);
+  }
+
+  .dark .content-page a:hover {
+    color: rgb(199 210 254);
+  }
+
+  .content-page code {
+    background-color: rgb(243 244 246);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    color: rgb(17 24 39);
+  }
+
+  .dark .content-page code {
+    background-color: rgb(31 41 55);
+    color: rgb(243 244 246);
+  }
+
+  /* First paragraph styling */
+  .content-page > p:first-of-type {
+    font-size: 1.25rem;
+    color: rgb(17 24 39);
+    font-weight: 500;
+    margin-bottom: 2rem;
+  }
+
+  .dark .content-page > p:first-of-type {
+    color: rgb(255 255 255);
+  }
+
+  /* Horizontal rule styling */
+  .content-page hr {
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+    border-color: rgb(229 231 235);
+  }
+
+  .dark .content-page hr {
+    border-color: rgb(55 65 81);
+  }
+</style>

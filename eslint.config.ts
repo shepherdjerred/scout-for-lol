@@ -9,6 +9,14 @@ import importPlugin from "eslint-plugin-import";
 import noRelativeImportPaths from "eslint-plugin-no-relative-import-paths";
 import * as regexpPlugin from "eslint-plugin-regexp";
 import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
+import react from "eslint-plugin-react";
+import reactHooks from "eslint-plugin-react-hooks";
+import jsxA11y from "eslint-plugin-jsx-a11y";
+import astroPlugin from "eslint-plugin-astro";
+// Tailwind plugin currently disabled due to incompatibility with Tailwind CSS v4
+// // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- No type definitions available
+// // @ts-ignore
+// import tailwindcss from "eslint-plugin-tailwindcss";
 
 /**
  * Bridge typescript-eslint rule to ESLint plugin system
@@ -27,6 +35,7 @@ const customRulesPlugin = {
   },
 };
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- config() is the correct API for typescript-eslint v8+
 export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.strictTypeChecked,
@@ -48,12 +57,14 @@ export default tseslint.config(
       parserOptions: {
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
+        extraFileExtensions: [".astro"],
       },
     },
   },
   // ESLint disable directive rules
   {
     plugins: {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- ESLint plugin type compatibility
       "eslint-comments": eslintComments,
     },
     rules: {
@@ -396,6 +407,154 @@ export default tseslint.config(
       "custom-rules/satori-best-practices": "error",
     },
   },
+  // React and React Hooks rules for TSX files
+  {
+    files: ["**/*.tsx", "**/*.jsx"],
+    plugins: {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- ESLint plugin type compatibility
+      react,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- ESLint plugin type compatibility
+      "react-hooks": reactHooks,
+    },
+    settings: {
+      react: {
+        version: "detect",
+      },
+    },
+    rules: {
+      // React best practices
+      "react/jsx-key": "error",
+      "react/jsx-no-target-blank": "error",
+      "react/jsx-pascal-case": "error",
+      "react/no-children-prop": "error",
+      "react/no-danger": "warn",
+      "react/no-danger-with-children": "error",
+      "react/no-deprecated": "error",
+      "react/no-direct-mutation-state": "error",
+      "react/no-find-dom-node": "error",
+      "react/no-is-mounted": "error",
+      "react/no-render-return-value": "error",
+      "react/no-string-refs": "error",
+      "react/no-unescaped-entities": "error",
+      "react/no-unknown-property": "error",
+      "react/no-unsafe": "error",
+      "react/require-render-return": "error",
+      "react/void-dom-elements-no-children": "error",
+
+      // Disable prop-types (using TypeScript instead)
+      "react/prop-types": "off",
+      "react/react-in-jsx-scope": "off", // Not needed in React 17+
+
+      // React Hooks rules - critical for correctness
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "error",
+    },
+  },
+  // JSX Accessibility rules
+  {
+    files: ["**/*.tsx", "**/*.jsx", "**/*.astro"],
+    plugins: {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- ESLint plugin type compatibility
+      "jsx-a11y": jsxA11y,
+    },
+    rules: {
+      // Images must have alt text
+      "jsx-a11y/alt-text": "error",
+      // Enforce valid ARIA roles
+      "jsx-a11y/aria-role": "error",
+      // Enforce ARIA props are valid
+      "jsx-a11y/aria-props": "error",
+      // Enforce ARIA state and property values are valid
+      "jsx-a11y/aria-proptypes": "error",
+      // Enforce ARIA attributes are used correctly
+      "jsx-a11y/aria-unsupported-elements": "error",
+      // Enforce anchor elements are valid
+      "jsx-a11y/anchor-is-valid": "error",
+      // Enforce heading elements have content
+      "jsx-a11y/heading-has-content": "error",
+      // Enforce HTML elements have valid lang attribute
+      "jsx-a11y/html-has-lang": "error",
+      // Enforce iframe elements have title
+      "jsx-a11y/iframe-has-title": "error",
+      // Enforce img elements have alt attribute
+      "jsx-a11y/img-redundant-alt": "error",
+      // Enforce interactive elements are keyboard accessible
+      "jsx-a11y/interactive-supports-focus": "error",
+      // Enforce label elements have associated control
+      "jsx-a11y/label-has-associated-control": "error",
+      // Enforce media elements have captions
+      "jsx-a11y/media-has-caption": "warn",
+      // Enforce mouse events have keyboard equivalents
+      "jsx-a11y/mouse-events-have-key-events": "error",
+      // Enforce no access key attribute
+      "jsx-a11y/no-access-key": "error",
+      // Enforce no autofocus attribute
+      "jsx-a11y/no-autofocus": "warn",
+      // Enforce no distracting elements
+      "jsx-a11y/no-distracting-elements": "error",
+      // Enforce no interactive element to noninteractive role
+      "jsx-a11y/no-interactive-element-to-noninteractive-role": "error",
+      // Enforce no noninteractive element interactions
+      "jsx-a11y/no-noninteractive-element-interactions": "error",
+      // Enforce no noninteractive tabindex
+      "jsx-a11y/no-noninteractive-tabindex": "error",
+      // Enforce no redundant roles
+      "jsx-a11y/no-redundant-roles": "error",
+      // Enforce no static element interactions
+      "jsx-a11y/no-static-element-interactions": "error",
+      // Enforce tabindex value is not greater than zero
+      "jsx-a11y/tabindex-no-positive": "error",
+    },
+  },
+  // Astro-specific rules
+  {
+    files: ["**/*.astro"],
+    plugins: {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- ESLint plugin type compatibility
+      astro: astroPlugin,
+    },
+    // Astro parser doesn't support type-aware linting, so we need to disable those rules
+    rules: {
+      // Disable TypeScript type-checking rules for Astro files
+      "@typescript-eslint/await-thenable": "off",
+      "@typescript-eslint/no-floating-promises": "off",
+      "@typescript-eslint/no-misused-promises": "off",
+      "@typescript-eslint/require-await": "off",
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
+      "@typescript-eslint/no-unsafe-argument": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/restrict-template-expressions": "off",
+      "@typescript-eslint/restrict-plus-operands": "off",
+      "@typescript-eslint/unbound-method": "off",
+
+      // Astro best practices
+      "astro/no-conflict-set-directives": "error",
+      "astro/no-deprecated-astro-canonicalurl": "error",
+      "astro/no-deprecated-astro-fetchcontent": "error",
+      "astro/no-deprecated-astro-resolve": "error",
+      "astro/no-deprecated-getentrybyslug": "error",
+      "astro/no-unused-define-vars-in-style": "error",
+      "astro/valid-compile": "error",
+    },
+  },
+  // Tailwind CSS class validation and ordering
+  // Note: Disabled due to eslint-plugin-tailwindcss incompatibility with Tailwind CSS v4
+  // The plugin attempts to import 'tailwindcss/resolveConfig' which is not exported in v4
+  // Re-enable once plugin adds v4 support: https://github.com/francoismassart/eslint-plugin-tailwindcss/issues
+  // {
+  //   files: ["packages/frontend/**/*.{tsx,jsx,astro}", "packages/report-ui/**/*.{tsx,jsx}"],
+  //   plugins: {
+  //     tailwindcss,
+  //   },
+  //   rules: {
+  //     "tailwindcss/classnames-order": "warn",
+  //     "tailwindcss/no-contradicting-classname": "error",
+  //     "tailwindcss/no-custom-classname": "off",
+  //   },
+  // },
   // Variable and identifier naming conventions
   {
     rules: {
@@ -448,6 +607,13 @@ export default tseslint.config(
           format: ["PascalCase", "UPPER_CASE"],
         },
       ],
+    },
+  },
+  // Config file itself can use relative imports for local eslint rules
+  {
+    files: ["eslint.config.ts"],
+    rules: {
+      "no-relative-import-paths/no-relative-import-paths": "off",
     },
   },
 );

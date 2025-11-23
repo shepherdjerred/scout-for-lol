@@ -99,9 +99,8 @@ export const noRedundantZodParse = createRule({
                 safeParseArg !== undefined &&
                 context.sourceCode.getText(safeParseArg) === context.sourceCode.getText(argument);
 
-              if (isSameSchema && isSameArg) {
-                return true;
-              }
+              // Early return to reduce nesting depth
+              return isSameSchema && isSameArg;
             }
           }
         }

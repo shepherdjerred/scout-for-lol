@@ -1,6 +1,5 @@
 import { afterAll, describe, test, expect, beforeEach } from "bun:test";
-import fs from "node:fs";
-import path from "node:path";
+import { join } from "path";
 
 import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client";
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
@@ -10,9 +9,11 @@ import { addLimitOverride, clearLimitOverrides } from "@scout-for-lol/backend/co
 const DEFAULT_PLAYER_SUBSCRIPTION_LIMIT = 75;
 const DEFAULT_ACCOUNT_LIMIT = 50;
 
-// Create test database in temp directory
-const tempDir = fs.mkdtempSync(path.join("/tmp", "subscribe-limits-test-"));
-const testDbPath = path.join(tempDir, "test.db");
+// Create test database in temp directory using Bun's shell
+const tempDirName = `subscribe-limits-test-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+const tempDir = join("/tmp", tempDirName);
+Bun.spawnSync(["mkdir", "-p", tempDir]);
+const testDbPath = join(tempDir, "test.db");
 const testDatabaseUrl = `file:${testDbPath}`;
 
 // Push schema to test database
