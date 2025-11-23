@@ -31,9 +31,10 @@ Create custom competitions with configurable criteria:
 
 Full support for League's Arena mode with detailed reports for all 16 players, including:
 
-- Complete statistics for all 8 teams
-- Augments selected throughout the match
+- Complete statistics for all 8 teams with team KDA
+- Augment icons showing selections throughout the match
 - Final placements and performance metrics
+- Optimized report layout for better readability
 
 ### 🌍 Multi-Region Support
 
@@ -73,6 +74,11 @@ Use the `/subscription add` command to start tracking players:
 - `region`: League of Legends region (na1, euw1, kr, etc.)
 - `riot-id`: Player's Riot ID in format "GameName#TagLine"
 - `alias`: Friendly display name for notifications
+
+**Limits:**
+
+- Up to 50 unique Riot accounts per server
+- Up to 75 total subscriptions per server (same account can be tracked in multiple channels)
 
 ### 3. Enjoy Automatic Updates
 
@@ -163,6 +169,7 @@ The bot requires API tokens for Discord and Riot Games. In test mode (`NODE_ENV=
 
 - **Website**: [scout-for-lol.com](https://scout-for-lol.com)
 - **Documentation**: [scout-for-lol.com/docs](https://scout-for-lol.com/docs)
+- **What's New**: [scout-for-lol.com/whatsnew](https://scout-for-lol.com/whatsnew)
 - **Add to Discord**: [Install Scout](https://discord.com/oauth2/authorize?client_id=1182800769188110366)
 - **GitHub**: [shepherdjerred/scout-for-lol](https://github.com/shepherdjerred/scout-for-lol)
 - **Support**: [GitHub Issues](https://github.com/shepherdjerred/scout-for-lol/issues)

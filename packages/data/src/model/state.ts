@@ -5,6 +5,8 @@ export type QueueType = z.infer<typeof QueueTypeSchema>;
 export const QueueTypeSchema = z.enum([
   "solo",
   "flex",
+  "clash",
+  "aram clash",
   "aram",
   "arurf",
   "urf",
@@ -28,7 +30,8 @@ export function parseQueueType(input: number): QueueType | undefined {
     .with(400, () => "draft pick")
     .with(440, () => "flex")
     .with(450, () => "aram")
-    .with(720, () => "aram") // ARAM Clash
+    .with(700, () => "clash")
+    .with(720, () => "aram clash")
     .with(480, () => "swiftplay")
     .with(490, () => "quickplay")
     .with(900, () => "arurf")
@@ -49,6 +52,8 @@ export function queueTypeToDisplayString(queueType: QueueType): string {
     .returnType<string>()
     .with("solo", () => "ranked solo")
     .with("flex", () => "ranked flex")
+    .with("clash", () => "clash")
+    .with("aram clash", () => "ARAM clash")
     .with("aram", () => "ARAM")
     .with("arurf", () => "ARURF")
     .with("urf", () => "URF")

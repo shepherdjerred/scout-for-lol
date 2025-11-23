@@ -1,5 +1,5 @@
 ---
-import { changelog, formatChangelogDate } from "../data/changelog";
+import { changelog, formatChangelogDate, renderChangelogToHtml } from "../data/changelog";
 
 const latestEntry = changelog[0];
 ---
@@ -19,7 +19,7 @@ const latestEntry = changelog[0];
             </svg>
             <div>
               <p class="text-sm font-semibold leading-tight">What's New - {formatChangelogDate(latestEntry)}</p>
-              <p class="text-xs text-indigo-100 leading-snug" set:html={latestEntry.banner} />
+              <p class="text-xs text-indigo-100 leading-snug" set:html={renderChangelogToHtml(latestEntry.banner)} />
             </div>
           </div>
           <a

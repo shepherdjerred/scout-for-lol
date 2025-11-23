@@ -124,7 +124,7 @@ import Footer from "../components/Footer.astro";
           <div class="prose max-w-none">
             <p class="text-lg text-gray-700 mb-6">That's it! Scout will now automatically:</p>
 
-            <div class="space-y-4">
+            <div class="space-y-4 mb-8">
               <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
                 <h4 class="font-semibold text-purple-900 mb-2 flex items-center">
                   <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -141,6 +141,19 @@ import Footer from "../components/Footer.astro";
                 </p>
               </div>
             </div>
+
+            <div class="bg-gray-50 rounded-xl p-6 mb-6">
+              <h4 class="text-lg font-semibold text-gray-900 mb-4">Here's what your match notifications will look like:</h4>
+              <img
+                src="/solo-discord.png"
+                alt="Example of a Scout match notification in Discord showing player stats, KDA, and LP gains"
+                class="w-full rounded-lg shadow-lg ring-1 ring-gray-400/10"
+                loading="lazy"
+              />
+              <p class="text-sm text-gray-600 mt-3 text-center">
+                Scout automatically posts detailed match reports right in your Discord channel
+              </p>
+            </div>
           </div>
         </section>
 
@@ -156,6 +169,14 @@ import Footer from "../components/Footer.astro";
                   class="bg-gray-100 px-2 py-1 rounded text-sm">/competition create</code
                 > command.
               </p>
+              <div class="mt-4 mb-4">
+                <img
+                  src="/leaderboard-lp.png"
+                  alt="Example of a Scout competition leaderboard showing LP rankings"
+                  class="w-full rounded-lg shadow-md ring-1 ring-gray-400/10"
+                  loading="lazy"
+                />
+              </div>
               <a href="/docs#advanced-features" class="text-indigo-600 hover:text-indigo-500 font-medium"
                 >Learn about competitions →</a
               >

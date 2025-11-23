@@ -237,16 +237,21 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
     const champion = interaction.options.getString("champion");
     const minGames = interaction.options.getInteger("min-games");
 
-    // Validate base args (always editable fields)
-    const baseArgs = EditCommandArgsBaseSchema.parse({
+    // Build args object, only including non-null fields to avoid Zod validation issues
+    // Discord returns null for unset optional fields, but Zod expects undefined
+    const baseArgsInput: Record<string, unknown> = {
       competitionId,
       userId,
-      title,
-      description,
-      channelId,
-      visibility,
-      maxParticipants,
-    });
+    };
+
+    if (title !== null) baseArgsInput["title"] = title;
+    if (description !== null) baseArgsInput["description"] = description;
+    if (channelId !== undefined) baseArgsInput["channelId"] = channelId;
+    if (visibility !== null) baseArgsInput["visibility"] = visibility;
+    if (maxParticipants !== null) baseArgsInput["maxParticipants"] = maxParticipants;
+
+    // Validate base args (always editable fields)
+    const baseArgs = EditCommandArgsBaseSchema.parse(baseArgsInput);
 
     args = { ...baseArgs };
 
@@ -286,12 +291,15 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
         throw new Error("Cannot change criteria after competition has started");
       }
 
-      args.criteria = CriteriaEditSchema.parse({
+      // Build criteria input, only including non-null fields
+      const criteriaInput: Record<string, unknown> = {
         criteriaType,
-        queue,
-        champion,
-        minGames,
-      });
+      };
+      if (queue !== null) criteriaInput["queue"] = queue;
+      if (champion !== null) criteriaInput["champion"] = champion;
+      if (minGames !== null) criteriaInput["minGames"] = minGames;
+
+      args.criteria = CriteriaEditSchema.parse(criteriaInput);
     }
 
     // Check if DRAFT-only fields are provided when not in DRAFT

@@ -29,6 +29,7 @@ import Footer from "../components/Footer.astro";
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Table of Contents</h2>
           <nav class="space-y-2">
             <a href="#commands" class="block text-indigo-600 hover:text-indigo-500">Bot Commands</a>
+            <a href="#data-model" class="block text-indigo-600 hover:text-indigo-500">Understanding Players & Accounts</a>
             <a href="#advanced-features" class="block text-indigo-600 hover:text-indigo-500">Advanced Features</a>
             <a href="#permissions" class="block text-indigo-600 hover:text-indigo-500">Required Permissions</a>
             <a href="#regions" class="block text-indigo-600 hover:text-indigo-500">Supported Regions</a>
@@ -278,38 +279,273 @@ import Footer from "../components/Footer.astro";
               </div>
             </div>
 
-            <!-- Debug Commands -->
-            <div class="border border-gray-200 rounded-lg p-6">
-              <h3 class="text-xl font-semibold text-gray-900 mb-3">/debug</h3>
-              <p class="text-gray-600 mb-4">Debug commands for troubleshooting (owner only).</p>
+          </div>
+        </section>
 
-              <div class="space-y-3">
-                <div>
-                  <h4 class="font-medium text-gray-900 mb-2">/debug server-info</h4>
-                  <p class="text-sm text-gray-600 mb-2">
-                    View detailed server information including players, accounts, subscriptions, and competitions.
+        <!-- Data Model -->
+        <section id="data-model" class="mb-16">
+          <h2 class="text-3xl font-bold text-gray-900 mb-6">Understanding Players, Accounts & Subscriptions</h2>
+
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+            <p class="text-gray-700 mb-4">
+              Scout organizes data around <strong>Players</strong>, <strong>Accounts</strong>, and <strong>Subscriptions</strong>.
+              Understanding how these work together will help you manage your server's setup effectively.
+            </p>
+          </div>
+
+          <div class="space-y-8">
+            <!-- Data Model Explanation -->
+            <div>
+              <h3 class="text-2xl font-semibold text-gray-900 mb-4">How It Works</h3>
+
+              <div class="space-y-6">
+                <div class="border-l-4 border-indigo-400 bg-indigo-50 pl-6 py-4">
+                  <h4 class="font-semibold text-gray-900 mb-2">👤 Players</h4>
+                  <p class="text-gray-700 mb-3">
+                    A <strong>Player</strong> represents a person in your Discord server. Players have:
                   </p>
-                  <div class="bg-gray-50 rounded-md p-3">
-                    <code class="text-xs"> /debug server-info </code>
-                  </div>
+                  <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                    <li><strong>An alias:</strong> A display name used throughout Scout (e.g., "ToxicTopLaner")</li>
+                    <li><strong>Multiple League accounts:</strong> Players can have multiple League accounts tracked (mains, smurfs, etc.)</li>
+                    <li><strong>A Discord account (optional):</strong> Link a Discord user to help identify who is who in your server</li>
+                  </ul>
                 </div>
 
-                <div>
-                  <h4 class="font-medium text-gray-900 mb-2">/debug database</h4>
-                  <p class="text-sm text-gray-600 mb-2">Download the SQLite database file (owner only).</p>
-                  <div class="bg-gray-50 rounded-md p-3">
-                    <code class="text-xs"> /debug database </code>
-                  </div>
+                <div class="border-l-4 border-purple-400 bg-purple-50 pl-6 py-4">
+                  <h4 class="font-semibold text-gray-900 mb-2">🎮 Accounts</h4>
+                  <p class="text-gray-700 mb-3">
+                    An <strong>Account</strong> is an individual League of Legends account. Each account:
+                  </p>
+                  <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                    <li>Has a Riot ID (GameName#TagLine) and region</li>
+                    <li>Belongs to exactly one Player</li>
+                    <li>Is tracked independently for matches</li>
+                  </ul>
+                  <p class="text-gray-700 mt-3">
+                    <strong>Example:</strong> If "ToxicTopLaner" has both a main account and a smurf, both accounts belong to the
+                    same Player and their matches appear under the same alias.
+                  </p>
                 </div>
 
-                <div>
-                  <h4 class="font-medium text-gray-900 mb-2">/debug polling</h4>
-                  <p class="text-sm text-gray-600 mb-2">Show polling intervals for all tracked players (owner only).</p>
-                  <div class="bg-gray-50 rounded-md p-3">
-                    <code class="text-xs"> /debug polling </code>
-                  </div>
+                <div class="border-l-4 border-green-400 bg-green-50 pl-6 py-4">
+                  <h4 class="font-semibold text-gray-900 mb-2">📢 Subscriptions</h4>
+                  <p class="text-gray-700 mb-3">
+                    A <strong>Subscription</strong> links a Player to a Discord channel. Subscriptions:
+                  </p>
+                  <ul class="list-disc list-inside text-gray-700 space-y-1 ml-4">
+                    <li>Determine where match notifications are posted</li>
+                    <li>Can send notifications for a Player to multiple channels</li>
+                    <li>Trigger reports for ALL accounts belonging to that Player</li>
+                  </ul>
+                  <p class="text-gray-700 mt-3">
+                    <strong>Example:</strong> Subscribe "ToxicTopLaner" to #ranked-games, and all matches from all their accounts
+                    will post there.
+                  </p>
+                </div>
+
+                <div class="border-l-4 border-amber-400 bg-amber-50 pl-6 py-4">
+                  <h4 class="font-semibold text-gray-900 mb-2">🏷️ Aliases</h4>
+                  <p class="text-gray-700">
+                    An <strong>Alias</strong> is simply the Player's display name. It's used in all notifications and must be
+                    unique within your server. You can change a player's alias using
+                    <code class="bg-amber-100 px-2 py-1 rounded text-sm">/admin player-edit</code>.
+                  </p>
                 </div>
               </div>
+            </div>
+
+            <!-- Visual Example -->
+            <div class="bg-gray-50 border border-gray-300 rounded-lg p-6">
+              <h3 class="text-xl font-semibold text-gray-900 mb-4">📊 Complete Example</h3>
+              <div class="space-y-3 text-sm">
+                <div class="bg-white rounded p-3 border-l-4 border-indigo-400">
+                  <p class="font-semibold text-gray-900">Player: "ToxicTopLaner"</p>
+                  <p class="text-gray-600 ml-4">├─ Discord: @JohnDoe</p>
+                  <p class="text-gray-600 ml-4">├─ Account 1: TopMain#NA1 (na1)</p>
+                  <p class="text-gray-600 ml-4">├─ Account 2: Smurf420#NA1 (na1)</p>
+                  <p class="text-gray-600 ml-4">└─ Subscriptions: #ranked-games, #all-games</p>
+                </div>
+                <p class="text-gray-700">
+                  When either TopMain#NA1 or Smurf420#NA1 plays a game, a report will be posted to both #ranked-games and
+                  #all-games with the alias "ToxicTopLaner". The Discord link helps you identify that this player is @JohnDoe.
+                </p>
+              </div>
+            </div>
+
+            <!-- Common Operations -->
+            <div>
+              <h3 class="text-2xl font-semibold text-gray-900 mb-4">Common Operations</h3>
+
+              <div class="space-y-6">
+                <div class="border border-gray-200 rounded-lg p-5">
+                  <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <span class="text-green-600">✓</span>
+                    Adding a New Player with Their First Account
+                  </h4>
+                  <p class="text-gray-700 mb-3">
+                    Use <code class="bg-gray-100 px-2 py-1 rounded text-sm">/subscription add</code> to create a new player and
+                    subscribe them to a channel:
+                  </p>
+                  <div class="bg-gray-50 rounded-md p-3 mb-2">
+                    <code class="text-sm">
+                      /subscription add channel:#ranked riot-id:TopMain#NA1 region:na1 alias:ToxicTopLaner user:@JohnDoe
+                    </code>
+                  </div>
+                  <p class="text-gray-600 text-sm">
+                    This creates a new Player ("ToxicTopLaner"), adds their first account (TopMain#NA1), links their Discord
+                    account, and subscribes them to #ranked.
+                  </p>
+                </div>
+
+                <div class="border border-gray-200 rounded-lg p-5">
+                  <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <span class="text-green-600">✓</span>
+                    Adding Another Account to an Existing Player
+                  </h4>
+                  <p class="text-gray-700 mb-3">
+                    Use <code class="bg-gray-100 px-2 py-1 rounded text-sm">/subscription add</code> with the <strong
+                      >same alias</strong
+                    >:
+                  </p>
+                  <div class="bg-gray-50 rounded-md p-3 mb-2">
+                    <code class="text-sm">
+                      /subscription add channel:#ranked riot-id:Smurf420#NA1 region:na1 alias:ToxicTopLaner
+                    </code>
+                  </div>
+                  <p class="text-gray-600 text-sm">
+                    Scout recognizes the existing alias and adds this account to the same Player. Now both accounts post to
+                    #ranked.
+                  </p>
+                </div>
+
+                <div class="border border-gray-200 rounded-lg p-5">
+                  <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <span class="text-blue-600">🔗</span>
+                    Linking a Discord Account to a Player
+                  </h4>
+                  <p class="text-gray-700 mb-3">
+                    Use <code class="bg-gray-100 px-2 py-1 rounded text-sm">/admin player-link-discord</code>:
+                  </p>
+                  <div class="bg-gray-50 rounded-md p-3 mb-2">
+                    <code class="text-sm"> /admin player-link-discord player-alias:ToxicTopLaner discord-user:@JohnDoe </code>
+                  </div>
+                  <p class="text-gray-600 text-sm">
+                    This links @JohnDoe to the player, making it easy to identify who the player is in your server. You can also
+                    set this when first adding a player.
+                  </p>
+                </div>
+
+                <div class="border border-gray-200 rounded-lg p-5">
+                  <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <span class="text-blue-600">🔓</span>
+                    Unlinking a Discord Account from a Player
+                  </h4>
+                  <p class="text-gray-700 mb-3">
+                    Use <code class="bg-gray-100 px-2 py-1 rounded text-sm">/admin player-unlink-discord</code>:
+                  </p>
+                  <div class="bg-gray-50 rounded-md p-3 mb-2">
+                    <code class="text-sm"> /admin player-unlink-discord player-alias:ToxicTopLaner </code>
+                  </div>
+                  <p class="text-gray-600 text-sm">
+                    This removes the Discord link. Reports will still show the alias but the Discord association will be removed.
+                  </p>
+                </div>
+
+                <div class="border border-gray-200 rounded-lg p-5">
+                  <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <span class="text-orange-600">🔄</span>
+                    Moving an Account to a Different Player
+                  </h4>
+                  <p class="text-gray-700 mb-3">
+                    Use <code class="bg-gray-100 px-2 py-1 rounded text-sm">/admin account-transfer</code>:
+                  </p>
+                  <div class="bg-gray-50 rounded-md p-3 mb-2">
+                    <code class="text-sm">
+                      /admin account-transfer riot-id:Smurf420#NA1 region:na1 to-player-alias:AnotherPlayer
+                    </code>
+                  </div>
+                  <p class="text-gray-600 text-sm">
+                    This moves Smurf420#NA1 from its current player to "AnotherPlayer". Future matches from this account will use
+                    the new player's alias.
+                  </p>
+                </div>
+
+                <div class="border border-gray-200 rounded-lg p-5">
+                  <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <span class="text-red-600">✗</span>
+                    Removing an Account from a Player
+                  </h4>
+                  <p class="text-gray-700 mb-3">
+                    Use <code class="bg-gray-100 px-2 py-1 rounded text-sm">/admin account-delete</code>:
+                  </p>
+                  <div class="bg-gray-50 rounded-md p-3 mb-2">
+                    <code class="text-sm"> /admin account-delete riot-id:Smurf420#NA1 region:na1 </code>
+                  </div>
+                  <p class="text-gray-600 text-sm">
+                    This permanently removes the account from Scout. The player still exists, but this account is no longer
+                    tracked.
+                  </p>
+                </div>
+
+                <div class="border border-gray-200 rounded-lg p-5">
+                  <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <span class="text-purple-600">👁️</span>
+                    Viewing a Player's Details
+                  </h4>
+                  <p class="text-gray-700 mb-3">
+                    Use <code class="bg-gray-100 px-2 py-1 rounded text-sm">/admin player-view</code>:
+                  </p>
+                  <div class="bg-gray-50 rounded-md p-3 mb-2">
+                    <code class="text-sm"> /admin player-view alias:ToxicTopLaner </code>
+                  </div>
+                  <p class="text-gray-600 text-sm">
+                    This shows all accounts, subscriptions, Discord link, and competition participation for the player.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tips -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+              <h3 class="font-semibold text-gray-900 mb-3">💡 Tips & Best Practices</h3>
+              <ul class="space-y-2 text-gray-700">
+                <li class="flex items-start gap-2">
+                  <span class="text-yellow-600 font-bold">•</span>
+                  <span
+                    ><strong>Use consistent aliases:</strong> Keep player aliases simple and recognizable (e.g., Discord username or
+                    in-game name)</span
+                  >
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-yellow-600 font-bold">•</span>
+                  <span
+                    ><strong>Link Discord accounts:</strong> Linking helps you identify which Discord user corresponds to each
+                    player in Scout</span
+                  >
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-yellow-600 font-bold">•</span>
+                  <span
+                    ><strong>Multiple accounts work automatically:</strong> Once you add multiple accounts to a player, all their
+                    matches appear under the same alias</span
+                  >
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-yellow-600 font-bold">•</span>
+                  <span
+                    ><strong>View before deleting:</strong> Use
+                    <code class="bg-yellow-100 px-1 py-0.5 rounded text-sm">/admin player-view</code> to see all accounts before making
+                    changes</span
+                  >
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-yellow-600 font-bold">•</span>
+                  <span
+                    ><strong>Subscriptions are flexible:</strong> You can subscribe the same player to multiple channels for
+                    different notification setups</span
+                  >
+                </li>
+              </ul>
             </div>
           </div>
         </section>
@@ -467,93 +703,6 @@ import Footer from "../components/Footer.astro";
               </div>
             </div>
 
-            <!-- LLM-Generated Reviews -->
-            <div>
-              <div class="flex items-center gap-3 mb-4">
-                <div class="bg-green-100 rounded-lg p-2 flex items-center justify-center">
-                  <svg
-                    class="h-6 w-6 text-green-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z"
-                    ></path>
-                  </svg>
-                </div>
-                <h3 class="text-2xl font-semibold text-gray-900">
-                  AI-Powered Match Reviews <span
-                    class="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700"
-                    >COMING SOON</span
-                  >
-                </h3>
-              </div>
-
-              <div class="bg-green-50 border border-green-200 rounded-lg p-6">
-                <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
-                  <p class="text-sm text-yellow-800">
-                    <strong>🚧 Work in Progress:</strong> This feature is currently under development. Match reviews currently
-                    show placeholder text while we integrate with LLM services.
-                  </p>
-                </div>
-                <p class="text-gray-700 mb-4">
-                  Get intelligent, personalized match analysis powered by advanced AI. Scout will use large language
-                  models to provide insightful feedback on gameplay, highlighting both strengths and areas for
-                  improvement.
-                </p>
-
-                <h4 class="font-semibold text-gray-900 mb-3">What AI Reviews Include:</h4>
-                <ul class="list-disc list-inside space-y-2 text-gray-700 mb-6">
-                  <li>Performance analysis based on champion, role, and game context</li>
-                  <li>Comparison to typical performance metrics for that champion</li>
-                  <li>Specific feedback on KDA, CS, damage output, and objective participation</li>
-                  <li>Recognition of exceptional plays and standout performances</li>
-                  <li>Constructive suggestions for improvement in future matches</li>
-                  <li>Match context awareness (comeback wins, stomp losses, etc.)</li>
-                </ul>
-
-                <div class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-300 rounded-lg p-5 mb-4">
-                  <h5 class="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                    <svg
-                      class="h-5 w-5 text-green-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke-width="1.5"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M12 18v-5.25m0 0a6.01 6.01 0 0 0 1.5-.189m-1.5.189a6.01 6.01 0 0 1-1.5-.189m3.75 7.478a12.06 12.06 0 0 1-4.5 0m3.75 2.383a14.406 14.406 0 0 1-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 1 0-7.517 0c.85.493 1.509 1.333 1.509 2.316V18"
-                      ></path>
-                    </svg>
-                    Example AI Review:
-                  </h5>
-                  <p class="text-sm text-gray-700 italic">
-                    "Great comeback win! Your 8.5 KDA on Jinx shows excellent positioning in teamfights. The 245 CS at
-                    32 minutes is solid, though there's room to improve early game farming. Your 34.2k damage carried
-                    the late game - keep focusing on scaling champions when your team needs a carry. Consider warding
-                    more aggressively to avoid those 3 deaths mid-game."
-                  </p>
-                </div>
-
-                <div class="bg-white border border-green-300 rounded-md p-4 text-sm">
-                  <p class="text-gray-600 mb-2">
-                    <strong>Note:</strong> AI reviews will be automatically included in post-match reports and provide personalized
-                    insights for each player's performance. The AI will understand context like champion difficulty, match
-                    length, and team composition.
-                  </p>
-                  <p class="text-gray-600">
-                    Reviews will be generated using state-of-the-art language models trained to understand League of
-                    Legends gameplay and provide constructive feedback.
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -683,9 +832,6 @@ import Footer from "../components/Footer.astro";
               <h3 class="text-xl font-semibold text-gray-900 mb-4">Getting Help</h3>
               <p class="text-gray-600 mb-4">If you're still having issues, you can:</p>
               <ul class="list-disc list-inside text-gray-600 space-y-2">
-                <li>
-                  Use the <code class="bg-gray-100 px-2 py-1 rounded text-sm">/debug</code> command to check bot status
-                </li>
                 <li>Review your server's audit log for permission issues</li>
                 <li>Check Scout's status on our status page (if available)</li>
               </ul>
@@ -753,19 +899,6 @@ import Footer from "../components/Footer.astro";
             </div>
 
             <div class="border border-gray-200 rounded-lg p-6">
-              <h3 class="font-semibold text-gray-900 mb-3">Are AI-generated reviews always included?</h3>
-              <p class="text-gray-600 mb-2">
-                <strong>Currently:</strong> AI match reviews are still in development. Post-match reports currently show
-                placeholder review text while we integrate with LLM services.
-              </p>
-              <p class="text-gray-600">
-                <strong>Coming soon:</strong> AI-powered match reviews will be automatically generated for all post-match
-                reports. They will provide personalized feedback based on each player's performance, champion choice, and
-                match context. The reviews will be designed to be constructive and help players improve.
-              </p>
-            </div>
-
-            <div class="border border-gray-200 rounded-lg p-6">
               <h3 class="font-semibold text-gray-900 mb-3">
                 Can I track players from different regions in the same server?
               </h3>
@@ -778,8 +911,8 @@ import Footer from "../components/Footer.astro";
             <div class="border border-gray-200 rounded-lg p-6">
               <h3 class="font-semibold text-gray-900 mb-3">How many players can I track?</h3>
               <p class="text-gray-600 mb-3">
-                By default, each server can track up to <strong>10 players</strong> with a maximum of
-                <strong>10 League accounts</strong> total. This helps ensure reliable service for all users.
+                By default, each server can track up to <strong>75 players</strong> with a maximum of
+                <strong>50 League accounts</strong> total. This helps ensure reliable service for all users.
               </p>
               <p class="text-gray-600">
                 If you need to track more players, you can remove existing subscriptions using

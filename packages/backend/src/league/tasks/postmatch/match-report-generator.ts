@@ -139,43 +139,56 @@ export async function generateMatchReport(
       }
       const completedMatch = toMatch(players, matchData, undefined, undefined);
 
-      // Generate AI review (text and optional image)
+      // Generate AI review (text and optional image) - only for ranked queues (solo/flex/clash)
+      const isRankedQueue =
+        completedMatch.queueType === "solo" ||
+        completedMatch.queueType === "flex" ||
+        completedMatch.queueType === "clash" ||
+        completedMatch.queueType === "aram clash";
       let reviewText: string | undefined;
       let reviewImage: Buffer | undefined;
-      try {
-        const review = await generateMatchReview(completedMatch, matchId, matchData);
-        reviewText = review.text;
-        reviewImage = review.image;
+      if (isRankedQueue) {
+        try {
+          const review = await generateMatchReview(completedMatch, matchId, matchData);
+          if (review) {
+            reviewText = review.text;
+            reviewImage = review.image;
 
-        // Append debug metadata if available
-        if (review.metadata) {
-          const { reviewerName, playerName, style, themes } = review.metadata;
-          const debugInfo = [
-            "\n\n━━━━━━━━━━━━━━━━━━━━━━",
-            "📊 **Review Metadata**",
-            `👤 **Reviewer:** ${reviewerName}`,
-            `🎮 **Player:** ${playerName}`,
-          ];
+            // Append debug metadata if available
+            if (review.metadata) {
+              const { reviewerName, playerName, style, themes } = review.metadata;
+              const debugInfo = [
+                "\n\n━━━━━━━━━━━━━━━━━━━━━━",
+                "📊 **Review Metadata**",
+                `👤 **Reviewer:** ${reviewerName}`,
+                `🎮 **Player:** ${playerName}`,
+              ];
 
-          if (style) {
-            debugInfo.push(`🎨 **Style:** ${style}`);
-          }
-
-          if (themes && themes.length > 0) {
-            if (themes.length === 1) {
-              const theme = themes[0];
-              if (theme) {
-                debugInfo.push(`🎭 **Theme:** ${theme}`);
+              if (style) {
+                debugInfo.push(`🎨 **Style:** ${style}`);
               }
-            } else {
-              debugInfo.push(`🎭 **Themes:** ${themes.join(" × ")}`);
+
+              if (themes && themes.length > 0) {
+                if (themes.length === 1) {
+                  const theme = themes[0];
+                  if (theme) {
+                    debugInfo.push(`🎭 **Theme:** ${theme}`);
+                  }
+                } else {
+                  debugInfo.push(`🎭 **Themes:** ${themes.join(" × ")}`);
+                }
+              }
+
+              reviewText = reviewText + "\n" + debugInfo.join("\n");
             }
           }
-
-          reviewText = reviewText + "\n" + debugInfo.join("\n");
+        } catch (error) {
+          console.error(`[generateMatchReport] Error generating AI review:`, error);
         }
-      } catch (error) {
-        console.error(`[generateMatchReport] Error generating AI review:`, error);
+      } else {
+        console.log(
+          `[generateMatchReport] Skipping AI review - not a ranked solo/flex queue match (queueType: ${completedMatch.queueType ?? "unknown"})`,
+        );
       }
 
       // Create Discord message
@@ -184,23 +197,18 @@ export async function generateMatchReport(
       // Build files array - start with match report image
       const files = [matchReportAttachment];
 
-      // Add AI-generated image if available, but only 30% of the time
-      const shouldShowImage = Math.random() < 0.3;
-      const showingImage = reviewImage !== undefined && shouldShowImage;
-
-      if (reviewImage && shouldShowImage) {
+      // Add AI-generated image if available
+      if (reviewImage) {
         const aiImageAttachment = new AttachmentBuilder(reviewImage).setName("ai-review.png");
         files.push(aiImageAttachment);
         console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
-      } else if (reviewImage && !shouldShowImage) {
-        console.log(`[generateMatchReport] 🎲 Skipped AI-generated image (random selection)`);
       }
 
       return {
         files: files,
         embeds: [matchReportEmbed],
-        // Only include review text if we're NOT showing the image
-        ...(reviewText && !showingImage && { content: reviewText }),
+        // Include review text if available (without image, text is shown as message content)
+        ...(reviewText && !reviewImage && { content: reviewText }),
       };
     }
   } catch (error) {

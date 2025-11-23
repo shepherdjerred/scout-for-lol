@@ -2,7 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
-import { changelog, formatChangelogDate } from "../data/changelog";
+import { changelog, formatChangelogDate, renderChangelogToHtml } from "../data/changelog";
 ---
 
 <Layout>
@@ -56,7 +56,7 @@ import { changelog, formatChangelogDate } from "../data/changelog";
               </div>
 
               <!-- Changes List -->
-              <div class="text-gray-700 pl-6 space-y-6" set:html={entry.text} />
+              <div class="text-gray-700 pl-6 space-y-6" set:html={renderChangelogToHtml(entry.text)} />
             </div>
           ))}
         </div>

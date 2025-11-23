@@ -369,6 +369,13 @@ async function main(): Promise<void> {
     const reviewResult = await generateMatchReview(match, testMatchId);
     const duration = Date.now() - startTime;
 
+    if (!reviewResult) {
+      console.log("❌ No review generated - API keys not configured");
+      console.log(`   Set OPENAI_API_KEY environment variable to generate AI reviews`);
+      console.log();
+      continue;
+    }
+
     console.log("Generated Review:");
     console.log(`┌${"─".repeat(78)}┐`);
     // Word wrap the review to 76 chars

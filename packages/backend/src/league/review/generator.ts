@@ -1,7 +1,6 @@
 import {
   generateReviewText,
   generateReviewImage,
-  getOrdinalSuffix,
   type ArenaMatch,
   type CompletedMatch,
   type MatchId,
@@ -204,13 +203,13 @@ async function generateAIReview(
  * @param match - The completed match data (regular or arena)
  * @param matchId - The match ID for S3 storage
  * @param rawMatchData - Optional raw match data from Riot API for detailed stats
- * @returns A promise that resolves to an object with review text, optional image, and metadata
+ * @returns A promise that resolves to an object with review text, optional image, and metadata, or undefined if API keys are not configured
  */
 export async function generateMatchReview(
   match: CompletedMatch | ArenaMatch,
   matchId: MatchId,
   rawMatchData?: MatchV5DTOs.MatchDto,
-): Promise<{ text: string; image?: Buffer; metadata?: ReviewMetadata }> {
+): Promise<{ text: string; image?: Buffer; metadata?: ReviewMetadata } | undefined> {
   // Curate the raw match data if provided
   const curatedData = rawMatchData ? await curateMatchData(rawMatchData) : undefined;
 
@@ -218,9 +217,8 @@ export async function generateMatchReview(
   const aiReviewResult = await generateAIReview(match, curatedData);
 
   if (!aiReviewResult) {
-    console.log("[generateMatchReview] Falling back to placeholder review");
-    const reviewText = generatePlaceholderReview(match);
-    return { text: reviewText };
+    console.log("[generateMatchReview] OpenAI API key not configured, skipping review generation");
+    return undefined;
   }
 
   const { review: reviewText, metadata } = aiReviewResult;
@@ -258,31 +256,4 @@ export async function generateMatchReview(
     text: reviewText,
     metadata: fullMetadata,
   };
-}
-
-/**
- * Generate a placeholder review (used when AI reviews are disabled or not yet implemented)
- */
-function generatePlaceholderReview(match: CompletedMatch | ArenaMatch): string {
-  if (match.queueType === "arena") {
-    const player = match.players[0];
-    if (!player) {
-      return "Unable to generate review: no player data found.";
-    }
-    const placementStr = player.placement.toString();
-    return `[Placeholder Review] ${player.playerConfig.alias} finished in ${placementStr}${getOrdinalSuffix(player.placement)} place playing ${player.champion.championName} with ${player.teammate.championName}.`;
-  } else {
-    const player = match.players[0];
-    if (!player) {
-      return "Unable to generate review: no player data found.";
-    }
-    const outcome = player.outcome;
-    const champion = player.champion;
-    const killsStr = champion.kills.toString();
-    const deathsStr = champion.deaths.toString();
-    const assistsStr = champion.assists.toString();
-    const kda = `${killsStr}/${deathsStr}/${assistsStr}`;
-    const queueTypeStr = match.queueType ?? "unknown";
-    return `[Placeholder Review] ${player.playerConfig.alias} played ${champion.championName} in ${queueTypeStr} and got a ${outcome} with a ${kda} KDA.`;
-  }
 }

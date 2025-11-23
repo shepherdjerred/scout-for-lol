@@ -27,8 +27,8 @@ void mock.module("../../../configuration.js", () => ({
 
 import { generateMatchReview } from "../generator.ts";
 describe("generateMatchReview", () => {
-  describe("regular matches", () => {
-    test("generates review for a solo queue victory", async () => {
+  describe("when API keys are not configured", () => {
+    test("returns undefined for regular match", async () => {
       // Use minimal type-safe fixture - only testing review generation logic
       const match = {
         queueType: "solo",
@@ -84,69 +84,10 @@ describe("generateMatchReview", () => {
 
       const review = await generateMatchReview(match, TEST_MATCH_ID);
 
-      expect(review.text).toContain("TestPlayer");
-      expect(review.text).toContain("Jinx");
-      expect(review.text).toContain("solo");
-      expect(review.text).toContain("Victory");
-      expect(review.text).toContain("10/3/8");
+      expect(review).toBeUndefined();
     });
 
-    test("generates review for a flex queue defeat", async () => {
-      const match = {
-        queueType: "flex",
-        durationInSeconds: 2100,
-        players: [
-          {
-            playerConfig: {
-              alias: "Player2",
-              discord: { discordUserId: testAccountId("45600000000000000") },
-              league: {
-                leagueAccount: {
-                  puuid: testPuuid("test-puuid-2") as unknown,
-                  region: "AMERICA_NORTH",
-                  gameName: "Player2",
-                  tagLine: "NA1",
-                },
-              },
-            },
-            rankBeforeMatch: { tier: "silver", division: 3, leaguePoints: 30 },
-            rankAfterMatch: { tier: "silver", division: 3, leaguePoints: 15 },
-            wins: 25,
-            losses: 27,
-            champion: {
-              championName: "Yasuo",
-              kills: 5,
-              deaths: 8,
-              assists: 4,
-              cs: 150,
-              lane: "middle",
-              items: [],
-              summonerSpells: { spell1: 4, spell2: 12 },
-            },
-            outcome: "Defeat",
-            team: "red",
-            lane: "middle",
-            laneOpponent: undefined,
-          },
-        ],
-        teams: {
-          blue: [],
-          red: [],
-        },
-      } as unknown as CompletedMatch;
-
-      const review = await generateMatchReview(match, TEST_MATCH_ID);
-
-      expect(review.text).toContain("Player2");
-      expect(review.text).toContain("Yasuo");
-      expect(review.text).toContain("flex");
-      expect(review.text).toContain("Defeat");
-      expect(review.text).toContain("5/8/4");
-    });
-  });
-
-  describe("arena matches", () => {
-    test("generates review for arena match with 1st place", async () => {
+    test("returns undefined for arena match", async () => {
       const match = {
         queueType: "arena",
         durationInSeconds: 1200,
@@ -205,94 +146,7 @@ describe("generateMatchReview", () => {
 
       const review = await generateMatchReview(match, TEST_MATCH_ID);
 
-      expect(review.text).toContain("ArenaPlayer");
-      expect(review.text).toContain("1st place");
-      expect(review.text).toContain("Zed");
-      expect(review.text).toContain("Talon");
-    });
-
-    test("generates review for arena match with 4th place", async () => {
-      const match = {
-        queueType: "arena",
-        durationInSeconds: 900,
-        players: [
-          {
-            playerConfig: {
-              alias: "ArenaPlayer2",
-              discord: { discordUserId: testAccountId("89000000000000000") },
-              league: {
-                leagueAccount: {
-                  puuid: testPuuid("arena-puuid-2") as unknown,
-                  region: "AMERICA_NORTH",
-                  gameName: "ArenaPlayer2",
-                  tagLine: "NA1",
-                },
-              },
-            },
-            placement: 4,
-            champion: {
-              championName: "Ahri",
-              riotIdGameName: "ArenaPlayer2#NA1",
-              kills: 8,
-              deaths: 5,
-              assists: 6,
-              level: 16,
-              items: [],
-              gold: 8000,
-              damage: 35000,
-              augments: [],
-              arenaMetrics: {
-                augmentChoices: [],
-              },
-              teamSubteamId: 4,
-            },
-            teamId: 4,
-            teammate: {
-              championName: "Lux",
-              riotIdGameName: "Teammate2#NA1",
-              kills: 7,
-              deaths: 5,
-              assists: 8,
-              level: 16,
-              items: [],
-              gold: 7800,
-              damage: 33000,
-              augments: [],
-              arenaMetrics: {
-                augmentChoices: [],
-              },
-              teamSubteamId: 4,
-            },
-          },
-        ],
-        teams: [],
-      } as unknown as ArenaMatch;
-
-      const review = await generateMatchReview(match, TEST_MATCH_ID);
-
-      expect(review.text).toContain("ArenaPlayer2");
-      expect(review.text).toContain("4th place");
-      expect(review.text).toContain("Ahri");
-      expect(review.text).toContain("Lux");
-    });
-  });
-
-  describe("edge cases", () => {
-    test("handles match with no players", async () => {
-      const match = {
-        queueType: "solo",
-        durationInSeconds: 1800,
-        players: [],
-        teams: {
-          blue: [],
-          red: [],
-        },
-      } as unknown as CompletedMatch;
-
-      const review = await generateMatchReview(match, TEST_MATCH_ID);
-
-      expect(review.text).toContain("Unable to generate review");
-      expect(review.text).toContain("no player data found");
+      expect(review).toBeUndefined();
     });
   });
 });
