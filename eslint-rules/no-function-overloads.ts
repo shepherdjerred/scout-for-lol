@@ -22,12 +22,20 @@ export const noFunctionOverloads = createRule({
   defaultOptions: [],
   create(context) {
     // Track function declarations by name (simple approach - all in same file share scope)
-    const functionDeclarations = new Map<string, TSESTree.FunctionDeclaration[]>();
+    const functionDeclarations = new Map<
+      string,
+      Array<TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction>
+    >();
 
     return {
       ExportNamedDeclaration(node: TSESTree.ExportNamedDeclaration) {
-        if (node.declaration?.type === AST_NODE_TYPES.FunctionDeclaration) {
-          const funcDecl = node.declaration;
+        if (
+          node.declaration?.type === AST_NODE_TYPES.FunctionDeclaration ||
+          node.declaration?.type === AST_NODE_TYPES.TSDeclareFunction
+        ) {
+          const funcDecl = node.declaration as
+            | TSESTree.FunctionDeclaration
+            | TSESTree.TSDeclareFunction;
           if (funcDecl.id) {
             const functionName = funcDecl.id.name;
             const declarations = functionDeclarations.get(functionName) || [];
@@ -45,11 +53,22 @@ export const noFunctionOverloads = createRule({
           functionDeclarations.set(functionName, declarations);
         }
       },
+      TSDeclareFunction(node: TSESTree.TSDeclareFunction) {
+        // Track TypeScript declare function signatures (used for overloads)
+        if (node.id) {
+          const functionName = node.id.name;
+          const declarations = functionDeclarations.get(functionName) || [];
+          declarations.push(node);
+          functionDeclarations.set(functionName, declarations);
+        }
+      },
       "Program:exit"() {
         // After parsing the entire file, check for overloads
         for (const [functionName, declarations] of functionDeclarations.entries()) {
           // Deduplicate by node reference using WeakSet
-          const seen = new WeakSet<TSESTree.FunctionDeclaration>();
+          const seen = new WeakSet<
+            TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction
+          >();
           const uniqueDeclarations = declarations.filter((decl) => {
             if (seen.has(decl)) {
               return false;

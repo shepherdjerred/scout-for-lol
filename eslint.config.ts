@@ -312,7 +312,8 @@ export default tseslint.config(
       "custom-rules/prefer-zod-validation": "error",
       "custom-rules/prefer-bun-apis": "error",
       "custom-rules/no-re-exports": "error",
-      "custom-rules/prefer-date-fns": "warn",
+      // enable this one day
+      "custom-rules/prefer-date-fns": "off",
       "custom-rules/no-function-overloads": "error",
     },
   },
