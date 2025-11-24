@@ -7,8 +7,8 @@
  * - Review-dev-tool: UI config, browser clients, progress callbacks, display logic
  */
 
-import OpenAI from "openai";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import type OpenAI from "openai";
+import type { GoogleGenerativeAI } from "@google/generative-ai";
 import { match as matchPattern } from "ts-pattern";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
 import { generateImagePrompt } from "@scout-for-lol/data/review/image-prompt.js";

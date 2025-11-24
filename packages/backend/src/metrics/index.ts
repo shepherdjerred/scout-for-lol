@@ -167,7 +167,7 @@ export const discordSubscriptionsCleanedTotal = new Counter({
  * Total number of Riot API requests
  * TODO: Implement in Riot API wrapper
  */
-const riotApiRequestsTotal = new Counter({
+const _riotApiRequestsTotal = new Counter({
   name: "riot_api_requests_total",
   help: "Total number of Riot API requests",
   labelNames: ["endpoint", "status", "region"] as const,
@@ -179,7 +179,7 @@ const riotApiRequestsTotal = new Counter({
  * Shows how many accounts are in each refresh rate category
  * TODO: Implement in polling logic
  */
-const playerPollingIntervalDistribution = new Gauge({
+const _playerPollingIntervalDistribution = new Gauge({
   name: "player_polling_interval_distribution",
   help: "Number of player accounts in each polling interval bucket (by minutes)",
   labelNames: ["interval_minutes"] as const,
@@ -190,7 +190,7 @@ const playerPollingIntervalDistribution = new Gauge({
  * Number of players checked vs skipped in current cycle
  * TODO: Implement in polling logic
  */
-const playerPollingStats = new Gauge({
+const _playerPollingStats = new Gauge({
   name: "player_polling_stats",
   help: "Players checked or skipped in the current polling cycle",
   labelNames: ["status"] as const,
@@ -201,7 +201,7 @@ const playerPollingStats = new Gauge({
  * Duration of Riot API requests in seconds
  * TODO: Implement in Riot API wrapper
  */
-const riotApiRequestDuration = new Histogram({
+const _riotApiRequestDuration = new Histogram({
   name: "riot_api_request_duration_seconds",
   help: "Duration of Riot API requests in seconds",
   labelNames: ["endpoint", "region"] as const,
@@ -213,7 +213,7 @@ const riotApiRequestDuration = new Histogram({
  * Number of Riot API rate limit errors
  * TODO: Implement in Riot API error handling
  */
-const riotApiRateLimitErrors = new Counter({
+const _riotApiRateLimitErrors = new Counter({
   name: "riot_api_rate_limit_errors_total",
   help: "Total number of Riot API rate limit errors",
   labelNames: ["region"] as const,
@@ -228,7 +228,7 @@ const riotApiRateLimitErrors = new Counter({
  * Total number of database queries
  * TODO: Implement in Prisma middleware
  */
-const databaseQueriesTotal = new Counter({
+const _databaseQueriesTotal = new Counter({
   name: "database_queries_total",
   help: "Total number of database queries",
   labelNames: ["operation", "status"] as const,
@@ -239,7 +239,7 @@ const databaseQueriesTotal = new Counter({
  * Duration of database queries in seconds
  * TODO: Implement in Prisma middleware
  */
-const databaseQueryDuration = new Histogram({
+const _databaseQueryDuration = new Histogram({
   name: "database_query_duration_seconds",
   help: "Duration of database queries in seconds",
   labelNames: ["operation"] as const,
@@ -255,7 +255,7 @@ const databaseQueryDuration = new Histogram({
  * Total number of reports generated
  * TODO: Implement in report generation logic
  */
-const reportsGeneratedTotal = new Counter({
+const _reportsGeneratedTotal = new Counter({
   name: "reports_generated_total",
   help: "Total number of reports generated",
   labelNames: ["report_type", "status"] as const,
@@ -266,7 +266,7 @@ const reportsGeneratedTotal = new Counter({
  * Duration of report generation in seconds
  * TODO: Implement in report generation logic
  */
-const reportGenerationDuration = new Histogram({
+const _reportGenerationDuration = new Histogram({
   name: "report_generation_duration_seconds",
   help: "Duration of report generation in seconds",
   labelNames: ["report_type"] as const,

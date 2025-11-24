@@ -216,6 +216,11 @@ export async function clearHistory(): Promise<void> {
     console.error("Failed to clear history:", error);
   }
 }
+
+/**
+ * Get a history entry by ID (internal helper)
+ */
+async function _getHistoryEntry(id: string): Promise<HistoryEntry | undefined> {
   try {
     const entry = await db.getEntry(id);
     if (!entry) {

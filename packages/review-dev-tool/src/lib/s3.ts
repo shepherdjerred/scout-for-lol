@@ -22,6 +22,65 @@ import { getCachedDataAsync, setCachedData } from "@scout-for-lol/review-dev-too
 import { z } from "zod";
 
 /**
+ * Fetch all objects from S3 with pagination
+ */
+async function fetchAllS3Objects(
+  client: S3Client,
+  bucketName: string,
+  prefix: string,
+): Promise<{ key: string; lastModified: Date | undefined }[]> {
+  type S3Object = {
+    Key?: string | undefined;
+    LastModified?: Date | undefined;
+    ETag?: string | undefined;
+    Size?: number | undefined;
+    StorageClass?: string | undefined;
+  };
+  const allContents: S3Object[] = [];
+  let nextToken: string | undefined = undefined;
+  let iterations = 0;
+  const maxIterations = 10; // Max 10k objects (10 * 1000)
+
+  do {
+    const command = new ListObjectsV2Command({
+      Bucket: bucketName,
+      Prefix: prefix,
+      MaxKeys: 1000,
+      ...(nextToken ? { ContinuationToken: nextToken } : {}),
+    });
+
+    const response: ListObjectsV2CommandOutput = await client.send(command);
+
+    if (response.Contents) {
+      allContents.push(...response.Contents);
+    }
+
+    nextToken = response.NextContinuationToken;
+    iterations++;
+  } while (nextToken && iterations < maxIterations);
+
+  // Validate S3 objects have required Key field using Zod
+  const S3ObjectWithKeySchema = z.object({
+    Key: z.string(),
+    LastModified: z.date().optional(),
+  });
+
+  return allContents.flatMap((obj) => {
+    const result = S3ObjectWithKeySchema.safeParse(obj);
+    if (!result.success) {
+      return [];
+    }
+    const validatedObj = result.data;
+    return [
+      {
+        key: validatedObj.Key,
+        lastModified: validatedObj.LastModified,
+      },
+    ];
+  });
+}
+
+/**
  * S3 configuration
  */
 export type S3Config = {
@@ -121,52 +180,7 @@ export async function listMatchesFromS3(config: S3Config): Promise<{ key: string
           });
         } else {
           // Fetch directly from S3
-          type S3Object = {
-            Key?: string | undefined;
-            LastModified?: Date | undefined;
-            ETag?: string | undefined;
-            Size?: number | undefined;
-            StorageClass?: string | undefined;
-          };
-          const allContents: S3Object[] = [];
-          let nextToken: string | undefined = undefined;
-          let iterations = 0;
-          const maxIterations = 10; // Max 10k objects (10 * 1000)
-
-          do {
-            const command = new ListObjectsV2Command({
-              Bucket: config.bucketName,
-              Prefix: prefix,
-              MaxKeys: 1000,
-              ...(nextToken ? { ContinuationToken: nextToken } : {}),
-            });
-
-            const response: ListObjectsV2CommandOutput = await client.send(command);
-
-            if (response.Contents) allContents.push(...response.Contents);
-
-            nextToken = response.NextContinuationToken;
-            iterations++;
-          } while (nextToken && iterations < maxIterations);
-
-          // Validate S3 objects have required Key field using Zod
-          const S3ObjectWithKeySchema = z.object({
-            Key: z.string(),
-            LastModified: z.date().optional(),
-          });
-
-          matches = allContents.flatMap((obj) => {
-            const result = S3ObjectWithKeySchema.safeParse(obj);
-            if (!result.success) {
-              return [];
-            }
-            const validatedObj = result.data;
-            const match: { key: string; lastModified: Date | undefined } = {
-              key: validatedObj.Key,
-              lastModified: validatedObj.LastModified,
-            };
-            return [match];
-          });
+          matches = await fetchAllS3Objects(client, config.bucketName, prefix);
 
           // Cache the result (store dates as ISO strings for serialization)
           const cacheableData = matches.map((m) => {
@@ -502,7 +516,7 @@ export function extractMatchMetadataFromDto(matchDto: MatchDto, key: string): Ma
 /**
  * Extract metadata from a match
  */
-export function extractMatchMetadata(match: CompletedMatch | ArenaMatch, key: string): MatchMetadata {
+function _extractMatchMetadata(match: CompletedMatch | ArenaMatch, key: string): MatchMetadata {
   const player = match.players[0];
   if (!player) {
     throw new Error("No player data in match");

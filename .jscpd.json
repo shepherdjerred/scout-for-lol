@@ -1,6 +1,6 @@
 {
   "threshold": 12,
-  "reporters": ["console", "html"],
+  "reporters": ["console", "html", "json"],
   "ignore": [
     "**/*.test.ts",
     "**/*.test.tsx",
@@ -8,10 +8,12 @@
     "**/node_modules/**",
     "**/dist/**",
     "**/build/**",
-    "**/.next/**"
+    "**/.next/**",
+    "**/generated/**",
+    "**/*-stub.ts"
   ],
-  "minLines": 4,
-  "minTokens": 40,
+  "minLines": 3,
+  "minTokens": 30,
   "mode": "strict",
   "format": ["typescript", "tsx", "javascript", "jsx"],
   "absolute": true,

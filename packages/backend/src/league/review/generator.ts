@@ -1,4 +1,5 @@
-import {
+import type {
+  MatchDto,
   generateReviewText,
   generateReviewImage,
   type ArenaMatch,
@@ -6,8 +7,7 @@ import {
   type MatchId,
   selectRandomStyleAndTheme,
   curateMatchData,
-  type CuratedMatchData,
-  MatchDto,
+  type CuratedMatchData
 } from "@scout-for-lol/data";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";

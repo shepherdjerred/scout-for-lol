@@ -140,7 +140,7 @@ export async function setItem(storeName: string, key: string, value: unknown): P
 /**
  * Remove a single value from a store
  */
-export async function removeItem(storeName: string, key: string): Promise<boolean> {
+async function _removeItem(storeName: string, key: string): Promise<boolean> {
   try {
     const db = await getDB();
     return await new Promise((resolve, reject) => {
@@ -269,6 +269,41 @@ export async function clearStore(storeName: string): Promise<boolean> {
 }
 
 /**
+ * Migrate a single item from localStorage to IndexedDB
+ */
+async function migrateSingleItem(
+  localStorageKey: string,
+  store: string,
+  isArray?: boolean,
+  key?: string,
+): Promise<void> {
+  const stored = localStorage.getItem(localStorageKey);
+  if (!stored) {
+    return;
+  }
+
+  const parsed = JSON.parse(stored);
+
+  if (isArray) {
+    // For array data, store each item individually
+    const ArraySchema = z.array(z.unknown());
+    const result = ArraySchema.safeParse(parsed);
+    if (result.success) {
+      for (const item of result.data) {
+        await putItem(store, item);
+      }
+    }
+  } else if (key) {
+    // For single value data, store with specified key
+    await setItem(store, key, parsed);
+  }
+
+  // Remove from localStorage after successful migration
+  localStorage.removeItem(localStorageKey);
+  console.log(`Migrated ${localStorageKey} to IndexedDB`);
+}
+
+/**
  * Migrate data from localStorage to IndexedDB
  * This should be called once on app startup
  */
@@ -318,28 +353,7 @@ export async function migrateFromLocalStorage(): Promise<void> {
 
   for (const migration of migrations) {
     try {
-      const stored = localStorage.getItem(migration.localStorageKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-
-        if (migration.isArray) {
-          // For array data, store each item individually
-          const ArraySchema = z.array(z.unknown());
-          const result = ArraySchema.safeParse(parsed);
-          if (result.success) {
-            for (const item of result.data) {
-              await putItem(migration.store, item);
-            }
-          }
-        } else if (migration.key) {
-          // For single value data, store with specified key
-          await setItem(migration.store, migration.key, parsed);
-        }
-
-        // Remove from localStorage after successful migration
-        localStorage.removeItem(migration.localStorageKey);
-        console.log(`Migrated ${migration.localStorageKey} to IndexedDB`);
-      }
+      await migrateSingleItem(migration.localStorageKey, migration.store, migration.isArray, migration.key);
     } catch (error) {
       console.error(`Failed to migrate ${migration.localStorageKey}:`, error);
     }

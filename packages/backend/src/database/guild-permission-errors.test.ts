@@ -41,13 +41,12 @@ beforeEach(async () => {
 
 describe("recordPermissionError", () => {
   test("creates new error record on first occurrence", async () => {
-    await recordPermissionError(
-      prisma,
-      testGuildId("12300000000"),
-      testChannelId("456000000"),
-      "proactive_check",
-      "Missing Send Messages",
-    );
+    await recordPermissionError(prisma, {
+      serverId: testGuildId("12300000000"),
+      channelId: testChannelId("456000000"),
+      errorType: "proactive_check",
+      errorReason: "Missing Send Messages",
+    });
 
     const record = await prisma.guildPermissionError.findUnique({
       where: {
@@ -70,10 +69,18 @@ describe("recordPermissionError", () => {
 
   test("increments error count on subsequent occurrences", async () => {
     // First error
-    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("456000000"), "proactive_check");
+    await recordPermissionError(prisma, {
+      serverId: testGuildId("12300000000"),
+      channelId: testChannelId("456000000"),
+      errorType: "proactive_check",
+    });
 
     // Second error
-    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("456000000"), "api_error");
+    await recordPermissionError(prisma, {
+      serverId: testGuildId("12300000000"),
+      channelId: testChannelId("456000000"),
+      errorType: "api_error",
+    });
 
     const record = await prisma.guildPermissionError.findUnique({
       where: {

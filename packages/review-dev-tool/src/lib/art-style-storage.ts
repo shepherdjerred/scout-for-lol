@@ -59,7 +59,7 @@ export async function addCustomArtStyle(style: CustomArtStyle): Promise<void> {
 /**
  * Update a custom art style
  */
-export async function updateCustomArtStyle(id: string, style: CustomArtStyle): Promise<boolean> {
+export async function updateCustomArtStyle(style: CustomArtStyle): Promise<boolean> {
   return await putItem(STORES.ART_STYLES, style);
 }
 
@@ -127,7 +127,7 @@ export async function addCustomArtTheme(theme: CustomArtTheme): Promise<void> {
 /**
  * Update a custom art theme
  */
-export async function updateCustomArtTheme(id: string, theme: CustomArtTheme): Promise<boolean> {
+export async function updateCustomArtTheme(theme: CustomArtTheme): Promise<boolean> {
   return await putItem(STORES.ART_THEMES, theme);
 }
 

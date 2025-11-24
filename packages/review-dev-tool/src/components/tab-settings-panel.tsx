@@ -144,7 +144,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
 
   const handleSaveStyle = async (style: CustomArtStyle) => {
     if (editingStyle && customStyles.some((s) => s.id === editingStyle.id)) {
-      await updateCustomArtStyle(style.id, style);
+      await updateCustomArtStyle(style);
     } else {
       const newStyle = {
         ...style,
@@ -160,7 +160,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
 
   const handleSaveTheme = async (theme: CustomArtTheme) => {
     if (editingTheme && customThemes.some((t) => t.id === editingTheme.id)) {
-      await updateCustomArtTheme(theme.id, theme);
+      await updateCustomArtTheme(theme);
     } else {
       const newTheme = {
         ...theme,
@@ -291,8 +291,12 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
           <div>
             <div className="px-4 pb-4 space-y-3">
               <div>
-                <label htmlFor="model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model</label>
-                <select id="model"                   value={config.textGeneration.model}
+                <label htmlFor="model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Model
+                </label>
+                <select
+                  id="model"
+                  value={config.textGeneration.model}
                   onChange={(e) => {
                     onChange({
                       ...config,
@@ -417,11 +421,20 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                   }}
                   className="rounded"
                 />
-                <label htmlFor="enable-image-generation" className="text-sm font-medium text-gray-700 dark:text-gray-300">Enable Image Generation</label>
+                <label
+                  htmlFor="enable-image-generation"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Enable Image Generation
+                </label>
               </div>
               <div>
-                <label htmlFor="model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model</label>
-                <select id="model"                   value={config.imageGeneration.model}
+                <label htmlFor="model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Model
+                </label>
+                <select
+                  id="model"
+                  value={config.imageGeneration.model}
                   onChange={(e) => {
                     onChange({
                       ...config,
@@ -438,9 +451,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                 {(() => {
                   const pricing = getImagePricing(config.imageGeneration.model);
                   return (
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                      💵 ${pricing.toFixed(2)} per image
-                    </p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">💵 ${pricing.toFixed(2)} per image</p>
                   );
                 })()}
               </div>
@@ -483,7 +494,10 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                   className="rounded"
                   disabled={!config.imageGeneration.enabled}
                 />
-                <label htmlFor="use-matching-style-theme-pairs" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor="use-matching-style-theme-pairs"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
                   Use Matching Style-Theme Pairs
                 </label>
               </div>
@@ -492,7 +506,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Matching Pair Probability: {(config.imageGeneration.matchingPairProbability * 100).toFixed(0)}%
                   </label>
-                  <input id="use-matching-style-theme-pairs"                     type="range"
+                  <input
+                    id="use-matching-style-theme-pairs"
+                    type="range"
                     min="0"
                     max="1"
                     step="0.05"
@@ -770,7 +786,10 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                     className="rounded"
                     disabled={!config.imageGeneration.enabled}
                   />
-                  <label htmlFor="enable-mashup-mode-2-themes" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="enable-mashup-mode-2-themes"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
                     Enable Mashup Mode (2 Themes)
                   </label>
                 </div>
@@ -778,7 +797,10 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                 {config.imageGeneration.mashupMode && (
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <label htmlFor="second-art-theme" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label
+                        htmlFor="second-art-theme"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                      >
                         Second Art Theme
                       </label>
                     </div>
@@ -865,8 +887,15 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
           <div>
             <div className="px-4 pb-4 space-y-3">
               <div>
-                <label htmlFor="base-prompt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Base Prompt</label>
-                <textarea id="base-prompt"                   value={config.prompts.basePrompt || getBasePrompt()}
+                <label
+                  htmlFor="base-prompt"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Base Prompt
+                </label>
+                <textarea
+                  id="base-prompt"
+                  value={config.prompts.basePrompt || getBasePrompt()}
                   onChange={(e) => {
                     onChange({
                       ...config,

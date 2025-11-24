@@ -21,7 +21,7 @@
     "generate": "bun run --filter='*' generate",
     "prepare": "husky",
     "knip": "knip-bun",
-    "duplication-check": "jscpd packages/"
+    "duplication-check": "bun run scripts/check-duplication.ts"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.0.0",
@@ -41,7 +41,7 @@
     "eslint-plugin-no-relative-import-paths": "^1.5.5",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-regex": "^1.10.0",
+    "eslint-plugin-regexp": "^2.10.0",
     "eslint-plugin-unicorn": "^62.0.0",
     "husky": "^9.1.7",
     "jiti": "^2.6.0",

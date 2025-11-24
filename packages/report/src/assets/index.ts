@@ -8,7 +8,7 @@ export const font = {
   body: "Spiegel",
 };
 
-export const baseBeaufortFonts: (Omit<Font, "data"> & {
+const baseBeaufortFonts: (Omit<Font, "data"> & {
   src: string;
 })[] = [
   {
@@ -73,7 +73,7 @@ export const baseBeaufortFonts: (Omit<Font, "data"> & {
   },
 ];
 
-export const baseSpiegelFonts: (Omit<Font, "data"> & {
+const baseSpiegelFonts: (Omit<Font, "data"> & {
   src: string;
 })[] = [
   {

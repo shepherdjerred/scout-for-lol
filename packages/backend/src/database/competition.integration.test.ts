@@ -487,7 +487,12 @@ describe("Permission Enforcement - Create competition", () => {
     const normalPermissions = new PermissionsBitField([PermissionFlagsBits.SendMessages]);
 
     // Grant permission
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", testAccountId("45600000000"));
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: testAccountId("45600000000"),
+    });
 
     const result = await canCreateCompetition(prisma, serverId, userId, normalPermissions);
 
@@ -512,7 +517,12 @@ describe("Permission Enforcement - Create competition", () => {
     const normalPermissions = new PermissionsBitField([PermissionFlagsBits.SendMessages]);
 
     // Grant on server1
-    await grantPermission(prisma, server1, userId, "CREATE_COMPETITION", testAccountId("45600000000"));
+    await grantPermission(prisma, {
+      serverId: server1,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: testAccountId("45600000000"),
+    });
 
     // Can create on server1
     const result1 = await canCreateCompetition(prisma, server1, userId, normalPermissions);

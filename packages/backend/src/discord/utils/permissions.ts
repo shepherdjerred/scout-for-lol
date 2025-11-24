@@ -81,6 +81,7 @@ export async function checkSendMessagePermission(
     if (!targetForPermissions && guildChannelResult.data.guild?.members.fetch && botUser.id) {
       try {
         const fetchFunction = guildChannelResult.data.guild.members.fetch as unknown;
+
         // eslint-disable-next-line no-restricted-syntax -- Method existence validated by Zod schema check above
         targetForPermissions = await (fetchFunction as (userId: string) => Promise<unknown>)(botUser.id);
       } catch (fetchError) {
@@ -96,6 +97,7 @@ export async function checkSendMessagePermission(
     // Call permissionsFor - we know it exists from schema validation
     // Type assertion needed: Zod schema confirms permissionsFor exists, but TypeScript can't track this
     const permissionsForFunction = guildChannelResult.data.permissionsFor as unknown;
+
     // eslint-disable-next-line no-restricted-syntax -- Method existence validated by Zod schema check above
     const permissions = (permissionsForFunction as (target: unknown) => PermissionsBitField | null)(
       targetForPermissions,

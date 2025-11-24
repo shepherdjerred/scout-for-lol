@@ -148,7 +148,7 @@ export type ReviewConfig = {
 /**
  * Generation result metadata
  */
-export const GenerationMetadataSchema = z.object({
+const GenerationMetadataSchema = z.object({
   textTokensPrompt: z.number().optional(),
   textTokensCompletion: z.number().optional(),
   textDurationMs: z.number(),
@@ -171,7 +171,7 @@ export type GenerationMetadata = z.infer<typeof GenerationMetadataSchema>;
 /**
  * Generation result with costs
  */
-export const GenerationResultSchema = z.object({
+const GenerationResultSchema = z.object({
   text: z.string(),
   image: z.string().optional(), // base64 encoded
   metadata: GenerationMetadataSchema,

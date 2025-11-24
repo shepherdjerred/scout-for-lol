@@ -1,8 +1,9 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { fromError } from "zod-validation-error";
+import { validateCommandArgs, executeWithTiming } from "./utils/validation.js";
+import { findPlayerByAliasWithCompetitions } from "./utils/player-queries.js";
 import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
 
 const ArgsSchema = z.object({
@@ -11,69 +12,37 @@ const ArgsSchema = z.object({
 });
 
 export async function executePlayerView(interaction: ChatInputCommandInteraction) {
-  const startTime = Date.now();
-  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
-  const username = interaction.user.username;
+  const validation = await validateCommandArgs(
+    interaction,
+    ArgsSchema,
+    (i) => ({
+      alias: i.options.getString("alias"),
+      guildId: i.guildId,
+    }),
+    "player-view",
+  );
 
-  console.log(`ℹ️  Starting player info lookup for user ${username} (${userId})`);
-
-  let args: z.infer<typeof ArgsSchema>;
-
-  try {
-    args = ArgsSchema.parse({
-      alias: interaction.options.getString("alias"),
-      guildId: interaction.guildId,
-    });
-
-    console.log(`✅ Command arguments validated successfully`);
-    console.log(`📋 Args: alias="${args.alias}"`);
-  } catch (error) {
-    console.error(`❌ Invalid command arguments from ${username}:`, error);
-    const validationError = fromError(error);
-    await interaction.reply({
-      content: validationError.toString(),
-      ephemeral: true,
-    });
+  if (!validation.success) {
     return;
   }
 
+  const { data: args, username } = validation;
   const { alias, guildId } = args;
 
-  // Fetch player with all related data
-  const player = await prisma.player.findUnique({
-    where: {
-      serverId_alias: {
-        serverId: guildId,
-        alias: alias,
-      },
-    },
-    include: {
-      accounts: true,
-      subscriptions: true,
-      competitionParticipants: {
-        include: {
-          competition: true,
-        },
-      },
-    },
-  });
+  await executeWithTiming("player-view", username, async () => {
+    // Fetch player with all related data
+    const player = await findPlayerByAliasWithCompetitions(prisma, guildId, alias, interaction);
+    if (!player) {
+      return;
+    }
 
-  if (!player) {
-    console.log(`❌ Player not found: "${alias}"`);
-    await interaction.reply({
-      content: `❌ **Player not found**\n\nNo player with alias "${alias}" exists in this server.`,
-      ephemeral: true,
-    });
-    return;
-  }
+    console.log(`✅ Player found: ${player.alias} (ID: ${player.id.toString()})`);
 
-  console.log(`✅ Player found: ${player.alias} (ID: ${player.id.toString()})`);
-
-  // Get rate limiting info for the server
-  const accountLimitRaw = getLimit("accounts", { server: guildId });
-  const accountLimit = accountLimitRaw === "unlimited" ? null : accountLimitRaw;
-  const subscriptionLimitRaw = getLimit("player_subscriptions", { server: guildId });
-  const subscriptionLimit = subscriptionLimitRaw === "unlimited" ? null : subscriptionLimitRaw;
+    // Get rate limiting info for the server
+    const accountLimitRaw = getLimit("accounts", { server: guildId });
+    const accountLimit = accountLimitRaw === "unlimited" ? null : accountLimitRaw;
+    const subscriptionLimitRaw = getLimit("player_subscriptions", { server: guildId });
+    const subscriptionLimit = subscriptionLimitRaw === "unlimited" ? null : subscriptionLimitRaw;
 
   // Count total accounts and subscriptions in server for rate limit context
   const totalServerAccounts = await prisma.account.count({
@@ -179,57 +148,55 @@ export async function executePlayerView(interaction: ChatInputCommandInteraction
   sections.push(`**Updated:** <t:${Math.floor(player.updatedTime.getTime() / 1000).toString()}:F>`);
   sections.push(`**Creator Discord ID:** ${player.creatorDiscordId}`);
 
-  const executionTime = Date.now() - startTime;
-  console.log(`✅ Player info retrieved successfully in ${executionTime.toString()}ms`);
+    const content = sections.join("\n");
 
-  const content = sections.join("\n");
+    // Discord has a 2000 character limit for message content
+    if (content.length > 2000) {
+      // Split into multiple messages if needed
+      const chunks: string[] = [];
+      let currentChunk = "";
 
-  // Discord has a 2000 character limit for message content
-  if (content.length > 2000) {
-    // Split into multiple messages if needed
-    const chunks: string[] = [];
-    let currentChunk = "";
-
-    for (const section of sections) {
-      if (currentChunk.length + section.length + 1 > 1900) {
-        chunks.push(currentChunk);
-        currentChunk = section;
-      } else {
-        currentChunk += (currentChunk ? "\n" : "") + section;
+      for (const section of sections) {
+        if (currentChunk.length + section.length + 1 > 1900) {
+          chunks.push(currentChunk);
+          currentChunk = section;
+        } else {
+          currentChunk += (currentChunk ? "\n" : "") + section;
+        }
       }
-    }
 
-    if (currentChunk) {
-      chunks.push(currentChunk);
-    }
+      if (currentChunk) {
+        chunks.push(currentChunk);
+      }
 
-    const firstChunk = chunks[0];
-    if (firstChunk === undefined) {
-      await interaction.reply({
-        content: "❌ Error: No content to display",
-        ephemeral: true,
-      });
-      return;
-    }
-
-    await interaction.reply({
-      content: firstChunk,
-      ephemeral: true,
-    });
-
-    for (let i = 1; i < chunks.length; i++) {
-      const chunk = chunks[i];
-      if (chunk !== undefined) {
-        await interaction.followUp({
-          content: chunk,
+      const firstChunk = chunks[0];
+      if (firstChunk === undefined) {
+        await interaction.reply({
+          content: "❌ Error: No content to display",
           ephemeral: true,
         });
+        return;
       }
+
+      await interaction.reply({
+        content: firstChunk,
+        ephemeral: true,
+      });
+
+      for (let i = 1; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        if (chunk !== undefined) {
+          await interaction.followUp({
+            content: chunk,
+            ephemeral: true,
+          });
+        }
+      }
+    } else {
+      await interaction.reply({
+        content,
+        ephemeral: true,
+      });
     }
-  } else {
-    await interaction.reply({
-      content,
-      ephemeral: true,
-    });
-  }
+  });
 }

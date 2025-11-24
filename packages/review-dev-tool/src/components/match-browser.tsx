@@ -82,9 +82,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
 
         if (cachedResult.success && cachedResult.data.length > 0) {
           // Instant load from cache - no loading UI!
-          console.log(
-            `[Cache HIT] Loaded ${cachedResult.data.length.toString()} matches from cache (IndexedDB)`,
-          );
+          console.log(`[Cache HIT] Loaded ${cachedResult.data.length.toString()} matches from cache (IndexedDB)`);
           setMatches(cachedResult.data);
           setError(null);
           return;

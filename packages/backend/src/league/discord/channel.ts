@@ -1,4 +1,4 @@
-import { type Message, MessageCreateOptions, MessagePayload } from "discord.js";
+import type { MessageCreateOptions, MessagePayload , type Message } from "discord.js";
 import { z } from "zod";
 import { client } from "@scout-for-lol/backend/discord/client";
 import { asTextChannel } from "@scout-for-lol/backend/discord/utils/channel";
@@ -129,7 +129,12 @@ export async function send(
 
       // Record permission error in database and notify owner if serverId is provided
       if (serverId) {
-        void recordPermissionError(prisma, serverId, channelId, "api_error", permissionReason).catch((dbError) => {
+        void recordPermissionError(prisma, {
+          serverId,
+          channelId,
+          errorType: "api_error",
+          errorReason: permissionReason,
+        }).catch((dbError) => {
           console.error(`[ChannelSend] Failed to record permission error in DB:`, dbError);
         });
 

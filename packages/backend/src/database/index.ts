@@ -2,7 +2,6 @@ import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client";
 import {
   type DiscordChannelId,
   type LeaguePuuid,
-  type PlayerConfig,
   type PlayerConfigEntry,
   MatchIdSchema,
   type MatchId,

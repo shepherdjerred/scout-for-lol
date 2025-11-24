@@ -1,13 +1,4 @@
 import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
-export { executePlayerEdit } from "./player-edit";
-export { executeAccountDelete } from "./account-delete";
-export { executeAccountAdd } from "./account-add";
-export { executePlayerMerge } from "./player-merge";
-export { executePlayerDelete } from "./player-delete";
-export { executeAccountTransfer } from "./account-transfer";
-export { executePlayerLinkDiscord } from "./player-link-discord";
-export { executePlayerUnlinkDiscord } from "./player-unlink-discord";
-export { executePlayerView } from "./player-view";
 
 /**
  * Admin command for managing players and accounts

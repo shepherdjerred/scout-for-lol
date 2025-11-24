@@ -64,7 +64,7 @@ function formatLeaderboardEntry(entry: RankedLeaderboardEntry): string {
     entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : `${entry.rank.toString()}.`;
 
   let scoreDisplay: string;
-  // eslint-disable-next-line no-restricted-syntax -- this is okay because we're narrowing the type
+
   if (typeof entry.score === "number") {
     scoreDisplay = entry.score.toString();
   } else {

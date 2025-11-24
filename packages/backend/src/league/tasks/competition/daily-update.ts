@@ -142,9 +142,7 @@ async function backfillStartSnapshots(competition: CompetitionWithCriteria): Pro
  * Calculate leaderboard with error handling for missing snapshots
  * Returns null if calculation fails due to missing snapshots
  */
-async function calculateLeaderboardSafely(
-  competition: CompetitionWithRelations,
-): Promise<LeaderboardEntry[] | null> {
+async function calculateLeaderboardSafely(competition: CompetitionWithRelations): Promise<LeaderboardEntry[] | null> {
   try {
     return await calculateLeaderboard(prisma, competition);
   } catch (error) {

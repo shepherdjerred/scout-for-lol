@@ -1,4 +1,5 @@
-import { dag, Container, Directory } from "@dagger.io/dagger";
+import type { Container, Directory } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
 
 /**
  * Get a base Bun container

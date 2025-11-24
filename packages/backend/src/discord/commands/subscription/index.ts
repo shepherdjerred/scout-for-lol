@@ -1,10 +1,6 @@
 import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { RegionSchema, toReadableRegion } from "@scout-for-lol/data";
 
-export { executeSubscriptionAdd } from "./add";
-export { executeSubscriptionDelete } from "./delete";
-export { executeSubscriptionList } from "./list";
-
 /**
  * Subscription command for managing player subscriptions
  */

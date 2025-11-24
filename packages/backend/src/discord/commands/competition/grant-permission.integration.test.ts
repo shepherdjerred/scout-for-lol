@@ -49,7 +49,12 @@ describe("Admin grants permission", () => {
     const adminId = testAccountId("111111111111111111");
     const userId = testAccountId("222222222222222222");
 
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", adminId);
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: adminId,
+    });
 
     // Verify permission was created
     const permission = await prisma.serverPermission.findUnique({
@@ -82,7 +87,12 @@ describe("Admin grants permission", () => {
     expect(beforeGrant).toBe(false);
 
     // Grant permission
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", adminId);
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: adminId,
+    });
 
     // After granting
     const afterGrant = await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION");
@@ -101,10 +111,20 @@ describe("Idempotent grants", () => {
     const userId = testAccountId("222222222222222222");
 
     // First grant
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", adminId);
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: adminId,
+    });
 
     // Second grant (should be idempotent)
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", adminId);
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: adminId,
+    });
 
     // Verify only one record exists
     const permissions = await prisma.serverPermission.findMany({
@@ -125,7 +145,12 @@ describe("Idempotent grants", () => {
     const userId = testAccountId("222222222222222222");
 
     // First grant by admin1
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", admin1Id);
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: admin1Id,
+    });
 
     const firstGrant = await prisma.serverPermission.findUnique({
       where: {
@@ -146,7 +171,12 @@ describe("Idempotent grants", () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     // Second grant by admin2
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", admin2Id);
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: admin2Id,
+    });
 
     const secondGrant = await prisma.serverPermission.findUnique({
       where: {
@@ -175,7 +205,12 @@ describe("Grant to self", () => {
     const serverId = testGuildId("123456789012345678");
     const adminId = testAccountId("111111111111111111");
 
-    await grantPermission(prisma, serverId, adminId, "CREATE_COMPETITION", adminId);
+    await grantPermission(prisma, {
+      serverId,
+      userId: adminId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: adminId,
+    });
 
     const permission = await prisma.serverPermission.findUnique({
       where: {
@@ -207,7 +242,12 @@ describe("Server-specific permissions", () => {
     const userId = testAccountId("222222222222222222");
 
     // Grant on server 1
-    await grantPermission(prisma, server1Id, userId, "CREATE_COMPETITION", adminId);
+    await grantPermission(prisma, {
+      serverId: server1Id,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: adminId,
+    });
 
     // Check server 1 - should have permission
     const hasOnServer1 = await hasPermission(prisma, server1Id, userId, "CREATE_COMPETITION");
@@ -229,7 +269,12 @@ describe("Server-specific permissions", () => {
     await grantPermission(prisma, server1Id, userId, "CREATE_COMPETITION", admin1Id);
 
     // Grant on server 2
-    await grantPermission(prisma, server2Id, userId, "CREATE_COMPETITION", admin2Id);
+    await grantPermission(prisma, {
+      serverId: server2Id,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: admin2Id,
+    });
 
     // Verify both permissions exist
     const hasOnServer1 = await hasPermission(prisma, server1Id, userId, "CREATE_COMPETITION");
@@ -262,9 +307,24 @@ describe("Multiple users", () => {
     const user2Id = testAccountId("333333333333333333");
     const user3Id = testAccountId("444444444444444444");
 
-    await grantPermission(prisma, serverId, user1Id, "CREATE_COMPETITION", adminId);
-    await grantPermission(prisma, serverId, user2Id, "CREATE_COMPETITION", adminId);
-    await grantPermission(prisma, serverId, user3Id, "CREATE_COMPETITION", adminId);
+    await grantPermission(prisma, {
+      serverId,
+      userId: user1Id,
+      permission: "CREATE_COMPETITION",
+      grantedBy: adminId,
+    });
+    await grantPermission(prisma, {
+      serverId,
+      userId: user2Id,
+      permission: "CREATE_COMPETITION",
+      grantedBy: adminId,
+    });
+    await grantPermission(prisma, {
+      serverId,
+      userId: user3Id,
+      permission: "CREATE_COMPETITION",
+      grantedBy: adminId,
+    });
 
     // Verify all have permission
     const user1Has = await hasPermission(prisma, serverId, user1Id, "CREATE_COMPETITION");

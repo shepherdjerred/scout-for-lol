@@ -4,7 +4,7 @@ import { z } from "zod";
  * Zod schemas for type-safe localStorage operations
  */
 
-export const ReviewImageMetadataSchema = z.object({
+const ReviewImageMetadataSchema = z.object({
   style: z.string().optional(),
   themes: z.array(z.string()).optional(),
   reviewerName: z.string().optional(),
@@ -12,7 +12,7 @@ export const ReviewImageMetadataSchema = z.object({
 
 export type ReviewImageMetadata = z.infer<typeof ReviewImageMetadataSchema>;
 
-export const ReviewImageDataSchema = z.object({
+const ReviewImageDataSchema = z.object({
   id: z.string(),
   filename: z.string(),
   imageDataUrl: z.string(),
@@ -25,7 +25,7 @@ export const ReviewImageDataSchema = z.object({
 
 export type ReviewImageData = z.infer<typeof ReviewImageDataSchema>;
 
-export const ReviewImageCollectionSchema = z.array(ReviewImageDataSchema);
+const ReviewImageCollectionSchema = z.array(ReviewImageDataSchema);
 
 const STORAGE_KEY = "ai-review-ratings";
 const STORAGE_SIZE_WARNING_THRESHOLD = 4.5 * 1024 * 1024; // 4.5MB (warn before 5MB limit)
@@ -84,7 +84,7 @@ export function loadReviewImages(): ReviewImageData[] {
 /**
  * Save all review images to localStorage
  */
-export function saveReviewImages(images: ReviewImageData[]): boolean {
+function saveReviewImages(images: ReviewImageData[]): boolean {
   try {
     const validated = ReviewImageCollectionSchema.parse(images);
     const serialized = JSON.stringify(validated);

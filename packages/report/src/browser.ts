@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax -- report package is a library, so this is ok */
 // Browser-safe exports - only the Report component
 // No satori, no resvg, no server-side code
 export { Report } from "./html/report.tsx";

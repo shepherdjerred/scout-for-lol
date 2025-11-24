@@ -10,7 +10,6 @@ import {
   SeasonIdSchema,
 } from "@scout-for-lol/data";
 import { z } from "zod";
-import { fromZodError } from "zod-validation-error";
 
 import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
 

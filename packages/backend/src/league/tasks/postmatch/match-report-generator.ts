@@ -13,12 +13,41 @@ import type {
 } from "@scout-for-lol/data";
 import { MatchIdSchema, queueTypeToDisplayString, MatchDtoSchema } from "@scout-for-lol/data";
 import { getPlayer } from "@scout-for-lol/backend/league/model/player.js";
-import { AttachmentBuilder, EmbedBuilder, MessageCreateOptions } from "discord.js";
+import type { MessageCreateOptions } from "discord.js";
+import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
 import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
 import { match } from "ts-pattern";
+
+/**
+ * Append review metadata as debug information
+ */
+function appendReviewMetadata(
+  reviewText: string,
+  metadata: { reviewerName: string; playerName: string; style?: string; themes?: string[] },
+): string {
+  const { reviewerName, playerName, style, themes } = metadata;
+  const debugInfo = [
+    "\n\n━━━━━━━━━━━━━━━━━━━━━━",
+    "📊 **Review Metadata**",
+    `👤 **Reviewer:** ${reviewerName}`,
+    `🎮 **Player:** ${playerName}`,
+  ];
+
+  if (style) {
+    debugInfo.push(`🎨 **Style:** ${style}`);
+  }
+
+  if (themes && themes.length > 0) {
+    const themeText =
+      themes.length === 1 && themes[0] ? `🎭 **Theme:** ${themes[0]}` : `🎭 **Themes:** ${themes.join(" × ")}`;
+    debugInfo.push(themeText);
+  }
+
+  return reviewText + "\n" + debugInfo.join("\n");
+}
 
 /**
  * Fetch match data from Riot API
@@ -92,7 +121,7 @@ function formatGameCompletionMessage(playerAliases: string[], queueType: QueueTy
 /**
  * Create image attachments for Discord message
  */
-export async function createMatchImage(
+async function createMatchImage(
   match: CompletedMatch | ArenaMatch,
   matchId: MatchId,
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
@@ -207,24 +236,7 @@ export async function generateMatchReport(
 
               // Append debug metadata if available
               if (review.metadata) {
-                const { reviewerName, playerName, style, themes } = review.metadata;
-                const debugInfo = [
-                  "\n\n━━━━━━━━━━━━━━━━━━━━━━",
-                  "📊 **Review Metadata**",
-                  `👤 **Reviewer:** ${reviewerName}`,
-                  `🎮 **Player:** ${playerName}`,
-                ];
-
-                if (style) debugInfo.push(`🎨 **Style:** ${style}`);
-
-                if (themes && themes.length > 0) {
-                  const themeText = themes.length === 1 && themes[0]
-                    ? `🎭 **Theme:** ${themes[0]}`
-                    : `🎭 **Themes:** ${themes.join(" × ")}`;
-                  debugInfo.push(themeText);
-                }
-
-                reviewText = reviewText + "\n" + debugInfo.join("\n");
+                reviewText = appendReviewMetadata(reviewText, review.metadata);
               }
             }
           } catch (error) {

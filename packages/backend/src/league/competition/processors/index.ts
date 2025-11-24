@@ -55,6 +55,3 @@ export function processCriteria(
     .with({ type: "HIGHEST_WIN_RATE" }, (c) => processHighestWinRate(matches, participants, c))
     .exhaustive();
 }
-
-// Re-export types
-export type { LeaderboardEntry, PlayerWithAccounts } from "./types.js";

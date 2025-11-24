@@ -63,7 +63,6 @@ const BUILTIN_PERSONALITIES_INTERNAL: Personality[] = [
 ];
 
 export const BUILTIN_PERSONALITIES = BUILTIN_PERSONALITIES_INTERNAL;
-export const PERSONALITIES = BUILTIN_PERSONALITIES_INTERNAL;
 
 /**
  * Lane context mapping
@@ -136,7 +135,7 @@ export function getGenericPlayerMetadata(): PlayerMetadata {
 /**
  * Replace template variables in the base prompt
  */
-export function replaceTemplateVariables(
+function _replaceTemplateVariables(
   template: string,
   variables: {
     reviewerName: string;

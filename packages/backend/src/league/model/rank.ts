@@ -1,4 +1,13 @@
-import { parseDivision, Ranks, PlayerConfigEntry, Rank, TierSchema, SummonerLeagueDto, SummonerLeagueDtoSchema } from "@scout-for-lol/data";
+import type {
+  Ranks,
+  PlayerConfigEntry,
+  Rank,
+  SummonerLeagueDto} from "@scout-for-lol/data";
+import {
+  parseDivision,
+  TierSchema,
+  SummonerLeagueDtoSchema,
+} from "@scout-for-lol/data";
 import { api } from "@scout-for-lol/backend/league/api/api";
 import { filter, first, pipe } from "remeda";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region";
@@ -8,7 +17,7 @@ const solo = "RANKED_SOLO_5x5";
 const flex = "RANKED_FLEX_SR";
 export type RankedQueueTypes = typeof solo | typeof flex;
 
-export function getDto(dto: SummonerLeagueDto[], queue: RankedQueueTypes): SummonerLeagueDto | undefined {
+function getDto(dto: SummonerLeagueDto[], queue: RankedQueueTypes): SummonerLeagueDto | undefined {
   return pipe(
     dto,
     filter((entry: SummonerLeagueDto) => entry.queueType === queue),

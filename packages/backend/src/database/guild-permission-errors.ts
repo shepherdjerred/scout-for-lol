@@ -7,11 +7,14 @@ import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/clien
  */
 export async function recordPermissionError(
   prisma: PrismaClient,
-  serverId: DiscordGuildId,
-  channelId: DiscordChannelId,
-  errorType: string,
-  errorReason?: string,
+  params: {
+    serverId: DiscordGuildId;
+    channelId: DiscordChannelId;
+    errorType: string;
+    errorReason?: string;
+  },
 ): Promise<void> {
+  const { serverId, channelId, errorType, errorReason } = params;
   const now = new Date();
 
   // Try to find existing error record

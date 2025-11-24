@@ -8,9 +8,9 @@ import {
 import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
 import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
-import {
-  ChampionIdSchema,
+import type {
   CompetitionId,
+  ChampionIdSchema,
   CompetitionIdSchema,
   LeaguePuuidSchema,
   PlayerIdSchema,

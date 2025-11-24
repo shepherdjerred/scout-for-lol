@@ -23,7 +23,7 @@ export type ModelInfo = {
  * Comprehensive list of OpenAI models with their capabilities
  * Updated as of November 2025
  */
-export const OPENAI_MODELS: Record<string, ModelInfo> = {
+const OPENAI_MODELS: Record<string, ModelInfo> = {
   // GPT-4o Series (Most capable, multimodal)
   "gpt-4o": {
     id: "gpt-4o",
@@ -249,7 +249,7 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
 /**
  * Get model configuration by ID
  */
-export function getModelInfo(modelId: string): ModelInfo | undefined {
+function getModelInfo(modelId: string): ModelInfo | undefined {
   // Direct lookup
   if (OPENAI_MODELS[modelId]) {
     return OPENAI_MODELS[modelId];
@@ -268,7 +268,7 @@ export function getModelInfo(modelId: string): ModelInfo | undefined {
 /**
  * Get all models grouped by category
  */
-export function getModelsByCategory(): Record<string, ModelInfo[]> {
+function _getModelsByCategory(): Record<string, ModelInfo[]> {
   const grouped: Record<string, ModelInfo[]> = {
     "gpt-4": [],
     "gpt-3.5": [],
@@ -286,7 +286,7 @@ export function getModelsByCategory(): Record<string, ModelInfo[]> {
 /**
  * Get list of all model IDs
  */
-export function getAllModelIds(): string[] {
+function _getAllModelIds(): string[] {
   return Object.keys(OPENAI_MODELS);
 }
 
@@ -313,7 +313,7 @@ export function modelSupportsParameter(modelId: string, parameter: "temperature"
 /**
  * Get recommended max tokens for a model
  */
-export function getModelMaxTokens(modelId: string): number {
+function _getModelMaxTokens(modelId: string): number {
   const model = getModelInfo(modelId);
   return model?.capabilities.maxTokens ?? 4096;
 }

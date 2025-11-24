@@ -1,4 +1,4 @@
-import type { MatchDto , PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/data";
+import type { MatchDto, PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/data";
 import { getRecentMatchIds, filterNewMatches } from "@scout-for-lol/backend/league/api/match-history.js";
 import {
   getAccountsWithState,
@@ -70,7 +70,7 @@ async function processMatch(matchData: MatchDto, trackedPlayers: PlayerConfigEnt
  */
 async function processMatchAndUpdatePlayers(
   matchData: MatchDto,
-  allPlayerConfigs: Array<PlayerConfig>,
+  allPlayerConfigs: PlayerConfig[],
   processedMatchIds: Set<string>,
   matchId: string,
 ): Promise<void> {
@@ -221,10 +221,6 @@ export async function checkMatchHistory(): Promise<void> {
 
           // Process the match with all tracked players
           await processMatchAndUpdatePlayers(matchData, allPlayerConfigs, processedMatchIds, matchId);
-            console.log(
-              `[${trackedPlayer.alias}] 📝 Updated lastProcessedMatchId to ${matchId}, lastMatchTime to ${matchCreationTime.toISOString()}`,
-            );
-          }
         } catch (error) {
           console.error(`[${player.alias}] ❌ Error processing match ${matchId}:`, error);
           // Continue with next match even if this one fails

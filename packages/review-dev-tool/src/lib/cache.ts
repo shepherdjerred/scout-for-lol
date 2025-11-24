@@ -6,13 +6,13 @@
  */
 import { z } from "zod";
 
-const CacheEntrySchema = z.object({
+const _CacheEntrySchema = z.object({
   data: z.unknown(),
   timestamp: z.number(),
   ttl: z.number(),
 });
 
-type CacheEntry = z.infer<typeof CacheEntrySchema>;
+type CacheEntry = z.infer<typeof _CacheEntrySchema>;
 
 const IDBOpenDBRequestSchema = z.instanceof(IDBOpenDBRequest);
 
@@ -190,7 +190,7 @@ async function cleanupExpiredEntries(): Promise<void> {
  * Get cached data if available and valid (synchronous - checks memory only)
  * Returns unknown data that must be validated by the caller
  */
-export function getCachedData(endpoint: string, params: Record<string, unknown>): unknown {
+function getCachedData(endpoint: string, params: Record<string, unknown>): unknown {
   const cacheKey = generateCacheKey(endpoint, params);
 
   // Periodically clean up expired entries
@@ -327,7 +327,9 @@ async function evictOldCacheEntries(targetBytesToFree: number): Promise<number> 
     // Remove entries until we've freed enough space
     let freedBytes = 0;
     for (const entry of entries) {
-      if (freedBytes >= targetBytesToFree) break;
+      if (freedBytes >= targetBytesToFree) {
+        break;
+      }
 
       await new Promise<void>((resolve, reject) => {
         const transaction = db.transaction([STORE_NAME], "readwrite");
@@ -437,7 +439,7 @@ export async function clearAllCache(): Promise<void> {
 /**
  * Clear cached data for a specific endpoint
  */
-export async function clearCacheForEndpoint(endpoint: string): Promise<void> {
+async function clearCacheForEndpoint(endpoint: string): Promise<void> {
   // Clear from memory cache
   const keysToDelete: string[] = [];
   for (const key of memoryCache.keys()) {

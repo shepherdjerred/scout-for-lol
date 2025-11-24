@@ -47,21 +47,17 @@ export async function hasPermission(
 
 /**
  * Grant permission to a user
- *
- * @param prisma - Prisma client instance
- * @param serverId - Discord server ID
- * @param userId - Discord user ID
- * @param permission - Permission type to grant
- * @param grantedBy - Discord user ID of admin granting permission
- * @returns Created or existing ServerPermission record
  */
 export async function grantPermission(
   prisma: PrismaClient,
-  serverId: DiscordGuildId,
-  userId: DiscordAccountId,
-  permission: PermissionType,
-  grantedBy: DiscordAccountId,
+  params: {
+    serverId: DiscordGuildId;
+    userId: DiscordAccountId;
+    permission: PermissionType;
+    grantedBy: DiscordAccountId;
+  },
 ): Promise<void> {
+  const { serverId, userId, permission, grantedBy } = params;
   // Upsert to make this idempotent
   await prisma.serverPermission.upsert({
     where: {

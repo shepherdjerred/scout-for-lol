@@ -7,14 +7,17 @@
  */
 
 import {
-  ART_STYLES,
-  ART_THEMES,
   CATEGORY_COMPATIBILITY,
   type ArtStyle,
   type ArtTheme,
   type StyleCategory,
   type ThemeCategory,
-} from "@scout-for-lol/data/review/art-styles-data.js";
+} from "./art-categories.js";
+import { ART_STYLES } from "./art-styles-list.js";
+import { ART_THEMES } from "./art-themes-list.js";
+
+// Re-export for external use
+export { ART_STYLES, ART_THEMES };
 
 /**
  * Selection result - can have one or two themes
@@ -157,20 +160,5 @@ export function selectRandomStyleAndTheme(options?: {
       style: style.description,
       themes: [theme.description],
     };
-  }
-}
-
-/**
- * @deprecated Use selectRandomStyleAndTheme() instead for better style/theme separation
- *
- * Randomly select an art style for image generation (legacy function)
- */
-export function selectRandomArtStyle(): string {
-  const selection = selectRandomStyleAndTheme();
-  if (selection.themes.length === 1) {
-    const theme = selection.themes[0];
-    return `${selection.style}. Theme: ${theme ?? "unknown"}`;
-  } else {
-    return `${selection.style}. Themes: ${selection.themes.join(" meets ")}`;
   }
 }

@@ -20,7 +20,7 @@ import { getPersonalityById } from "@scout-for-lol/review-dev-tool/lib/prompts";
 /**
  * Complete exportable config bundle schema (tab-level)
  */
-export const ConfigBundleSchema = z.object({
+const ConfigBundleSchema = z.object({
   version: z.literal(1), // For future compatibility
   tabConfig: TabConfigSchema,
   customPersonalities: z.array(PersonalitySchema),
@@ -35,7 +35,7 @@ export type ConfigBundle = z.infer<typeof ConfigBundleSchema>;
  * Export all config data as a JSON blob (tab-level)
  * Includes the full personality data if a specific personality is selected
  */
-export function exportAllConfig(tabConfig: import("../config/schema").TabConfig): ConfigBundle {
+async function exportAllConfig(tabConfig: import("../config/schema").TabConfig): Promise<ConfigBundle> {
   // Clone the tab config to avoid mutating the original
   const exportedTabConfig = structuredClone(tabConfig);
 
@@ -51,9 +51,9 @@ export function exportAllConfig(tabConfig: import("../config/schema").TabConfig)
   return {
     version: 1,
     tabConfig: exportedTabConfig,
-    customPersonalities: loadCustomPersonalities(),
-    customArtStyles: loadCustomArtStyles(),
-    customArtThemes: loadCustomArtThemes(),
+    customPersonalities: await loadCustomPersonalities(),
+    customArtStyles: await loadCustomArtStyles(),
+    customArtThemes: await loadCustomArtThemes(),
     exportedAt: new Date().toISOString(),
   };
 }
@@ -61,15 +61,15 @@ export function exportAllConfig(tabConfig: import("../config/schema").TabConfig)
 /**
  * Export all config as JSON string
  */
-function exportAllConfigAsJSON(tabConfig: import("../config/schema").TabConfig): string {
-  return JSON.stringify(exportAllConfig(tabConfig), null, 2);
+async function exportAllConfigAsJSON(tabConfig: import("../config/schema").TabConfig): Promise<string> {
+  return JSON.stringify(await exportAllConfig(tabConfig), null, 2);
 }
 
 /**
  * Download config bundle as a JSON file
  */
-export function downloadConfigBundle(tabConfig: import("../config/schema").TabConfig): void {
-  const json = exportAllConfigAsJSON(tabConfig);
+export async function downloadConfigBundle(tabConfig: import("../config/schema").TabConfig): Promise<void> {
+  const json = await exportAllConfigAsJSON(tabConfig);
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -95,7 +95,7 @@ export function importAllConfigFromJSON(json: string): ConfigBundle {
  * @param options Import options
  * @returns The imported TabConfig if importTabConfig was true, undefined otherwise
  */
-export function applyConfigBundle(
+export async function applyConfigBundle(
   bundle: ConfigBundle,
   options: {
     importTabConfig: boolean;
@@ -104,7 +104,7 @@ export function applyConfigBundle(
     importArtThemes: boolean;
     mergeWithExisting: boolean;
   },
-): import("../config/schema").TabConfig | undefined {
+): Promise<import("../config/schema").TabConfig | undefined> {
   let importedTabConfig: import("../config/schema").TabConfig | undefined;
 
   if (options.importTabConfig) {
@@ -113,34 +113,34 @@ export function applyConfigBundle(
 
   if (options.importPersonalities) {
     if (options.mergeWithExisting) {
-      const existing = loadCustomPersonalities();
+      const existing = await loadCustomPersonalities();
       const existingIds = new Set(existing.map((p) => p.id));
       const newPersonalities = bundle.customPersonalities.filter((p) => !existingIds.has(p.id));
-      saveCustomPersonalities([...existing, ...newPersonalities]);
+      await saveCustomPersonalities([...existing, ...newPersonalities]);
     } else {
-      saveCustomPersonalities(bundle.customPersonalities);
+      await saveCustomPersonalities(bundle.customPersonalities);
     }
   }
 
   if (options.importArtStyles) {
     if (options.mergeWithExisting) {
-      const existing = loadCustomArtStyles();
+      const existing = await loadCustomArtStyles();
       const existingIds = new Set(existing.map((s) => s.id));
       const newStyles = bundle.customArtStyles.filter((s) => !existingIds.has(s.id));
-      saveCustomArtStyles([...existing, ...newStyles]);
+      await saveCustomArtStyles([...existing, ...newStyles]);
     } else {
-      saveCustomArtStyles(bundle.customArtStyles);
+      await saveCustomArtStyles(bundle.customArtStyles);
     }
   }
 
   if (options.importArtThemes) {
     if (options.mergeWithExisting) {
-      const existing = loadCustomArtThemes();
+      const existing = await loadCustomArtThemes();
       const existingIds = new Set(existing.map((t) => t.id));
       const newThemes = bundle.customArtThemes.filter((t) => !existingIds.has(t.id));
-      saveCustomArtThemes([...existing, ...newThemes]);
+      await saveCustomArtThemes([...existing, ...newThemes]);
     } else {
-      saveCustomArtThemes(bundle.customArtThemes);
+      await saveCustomArtThemes(bundle.customArtThemes);
     }
   }
 

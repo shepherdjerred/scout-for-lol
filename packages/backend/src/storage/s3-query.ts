@@ -38,6 +38,29 @@ function matchIncludesParticipant(match: MatchDto, puuids: string[]): boolean {
 }
 
 /**
+ * Process match download results and filter by participant PUUIDs
+ */
+function processMatchResults(
+  results: PromiseSettledResult<{ key: string; match: MatchDto | null }>[],
+  puuids: string[],
+): MatchDto[] {
+  const matches: MatchDto[] = [];
+  for (const result of results) {
+    if (result.status !== "fulfilled" || !result.value.match) {
+      continue;
+    }
+
+    const { match } = result.value;
+    if (!matchIncludesParticipant(match, puuids)) {
+      continue;
+    }
+
+    matches.push(match);
+  }
+  return matches;
+}
+
+/**
  * Fetch and parse a match from S3
  */
 async function getMatchFromS3(client: S3Client, bucket: string, key: string): Promise<MatchDto | null> {
@@ -149,16 +172,9 @@ export async function queryMatchesByDateRange(startDate: Date, endDate: Date, pu
           });
 
           const results = await Promise.allSettled(matchPromises);
-
-          for (const result of results) {
-            if (result.status !== "fulfilled" || !result.value.match) continue;
-
-            const { match } = result.value;
-            if (!matchIncludesParticipant(match, puuids)) continue;
-
-            matches.push(match);
-            matchedObjects++;
-          }
+          const batchMatches = processMatchResults(results, puuids);
+          matches.push(...batchMatches);
+          matchedObjects += batchMatches.length;
         }
       } catch (error) {
         console.error(`[S3Query] Error processing prefix ${prefix}: ${getErrorMessage(error)}`);

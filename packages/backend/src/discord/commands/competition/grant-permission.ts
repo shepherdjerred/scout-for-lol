@@ -62,13 +62,12 @@ export async function executeGrantPermission(interaction: ChatInputCommandIntera
   // ============================================================================
 
   try {
-    await grantPermission(
-      prisma,
+    await grantPermission(prisma, {
       serverId,
-      DiscordAccountIdSchema.parse(targetUser.id),
-      "CREATE_COMPETITION",
-      DiscordAccountIdSchema.parse(adminId),
-    );
+      userId: DiscordAccountIdSchema.parse(targetUser.id),
+      permission: "CREATE_COMPETITION",
+      grantedBy: DiscordAccountIdSchema.parse(adminId),
+    });
 
     console.log(`[Grant Permission] ${adminId} granted CREATE_COMPETITION to ${targetUser.id} on server ${serverId}`);
   } catch (error) {

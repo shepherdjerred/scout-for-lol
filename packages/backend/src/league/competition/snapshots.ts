@@ -10,7 +10,7 @@ import {
 } from "@scout-for-lol/data";
 import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.js";
 import { fetchSnapshotData } from "@scout-for-lol/backend/league/competition/leaderboard.js";
-import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 
 // ============================================================================
 // Snapshot Creation

@@ -1,4 +1,5 @@
-import { func, argument, Directory, object, Secret, Container } from "@dagger.io/dagger";
+import type { Directory, Secret, Container } from "@dagger.io/dagger";
+import { func, argument, object } from "@dagger.io/dagger";
 import {
   checkBackend,
   buildBackendImage,
@@ -113,6 +114,13 @@ export class ScoutForLol {
         }),
         withTiming("review-dev-tool check (lint + typecheck)", async () => {
           const container = checkReviewDevTool(source);
+          await container.sync();
+          return container;
+        }),
+        withTiming("code duplication check", async () => {
+          const container = getBunNodeContainer(source)
+            .withExec(["bun", "install", "--frozen-lockfile"])
+            .withExec(["bun", "run", "scripts/check-duplication.ts"]);
           await container.sync();
           return container;
         }),
@@ -829,5 +837,32 @@ export class ScoutForLol {
 
     logWithTimestamp("✅ Review-dev-tool check completed successfully");
     return "Review-dev-tool check completed successfully";
+  }
+
+  /**
+   * Check for code duplication across packages
+   * @param source The workspace source directory
+   * @returns A message indicating completion
+   */
+  @func()
+  async duplicationCheck(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Promise<string> {
+    logWithTimestamp("🔍 Starting code duplication check");
+
+    await withTiming("code duplication check", async () => {
+      const container = getBunNodeContainer(source)
+        .withExec(["bun", "install", "--frozen-lockfile"])
+        .withExec(["bun", "run", "scripts/check-duplication.ts"]);
+      await container.sync();
+      return container;
+    });
+
+    logWithTimestamp("✅ Code duplication check completed successfully");
+    return "Code duplication check completed successfully";
   }
 }

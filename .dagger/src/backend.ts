@@ -1,4 +1,4 @@
-import { Directory, Container, Secret } from "@dagger.io/dagger";
+import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { installWorkspaceDeps, getBunContainer } from "@scout-for-lol/.dagger/src/base";
 
 /**

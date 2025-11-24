@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax -- report package is a library, so this is ok */
 export { matchToImage, matchToSvg, svgToPng } from "./html/index.tsx";
 export { Report } from "./html/report.tsx";
 export { toMatch } from "./match.ts";

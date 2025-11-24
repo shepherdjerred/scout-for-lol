@@ -22,7 +22,7 @@ export async function participantToArenaChampion(dto: ParticipantDto): Promise<A
 }
 
 // Helpers for arena-specific fields
-export async function extractAugments(dto: ParticipantDto): Promise<Augment[]> {
+async function extractAugments(dto: ParticipantDto): Promise<Augment[]> {
   const ids: number[] = [];
   const augmentFields = [
     dto.playerAugment1,
@@ -53,7 +53,7 @@ export async function extractAugments(dto: ParticipantDto): Promise<Augment[]> {
   }
 }
 
-export function extractArenaMetrics(dto: ParticipantDto) {
+function extractArenaMetrics(dto: ParticipantDto) {
   return {
     playerScore0: dto.playerScore0 ?? 0,
     playerScore1: dto.playerScore1 ?? 0,
@@ -67,7 +67,7 @@ export function extractArenaMetrics(dto: ParticipantDto) {
   };
 }
 
-export function extractTeamSupport(dto: ParticipantDto) {
+function extractTeamSupport(dto: ParticipantDto) {
   return {
     damageShieldedOnTeammate: dto.totalDamageShieldedOnTeammates,
     healsOnTeammate: dto.totalHealsOnTeammates,
