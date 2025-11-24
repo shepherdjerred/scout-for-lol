@@ -9,6 +9,7 @@ import {
   getLaneOpponent,
   parseTeam,
   invertTeam,
+  getOrdinalSuffix,
   type MatchDto,
   type ParticipantDto,
   type ArenaMatch,
@@ -511,27 +512,4 @@ export function extractMatchMetadataFromDto(matchDto: MatchDto, key: string): Ma
       timestamp,
     };
   });
-}
-
-/**
- * Helper function to get ordinal suffix
- */
-function getOrdinalSuffix(num: number): string {
-  const lastDigit = num % 10;
-  const lastTwoDigits = num % 100;
-
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
-    return "th";
-  }
-
-  switch (lastDigit) {
-    case 1:
-      return "st";
-    case 2:
-      return "nd";
-    case 3:
-      return "rd";
-    default:
-      return "th";
-  }
 }

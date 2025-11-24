@@ -23,17 +23,17 @@ export function processHighestWinRate(
   // minGames has a default value of 10 in the schema
   const minGames = criteria.minGames;
 
-  return buildWinBasedLeaderboard(
+  return buildWinBasedLeaderboard({
     winCounts,
     totalGames,
     participants,
-    (wins, games) => (games > 0 ? wins / games : 0), // Score is win rate
-    (wins, games) => ({
+    scoreFn: (wins, games) => (games > 0 ? wins / games : 0), // Score is win rate
+    metadataFn: (wins, games) => ({
       wins,
       games,
       losses: games - wins,
       winRate: games > 0 ? wins / games : 0,
     }),
     minGames, // Apply minimum games filter
-  );
+  });
 }

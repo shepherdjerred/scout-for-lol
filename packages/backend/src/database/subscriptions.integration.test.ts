@@ -1,7 +1,7 @@
 import { afterAll, test, expect, beforeEach, afterEach, describe } from "bun:test";
 import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { getChannelsSubscribedToPlayers } from "@scout-for-lol/backend/database/index.js";
-import type {
+import {
   LeaguePuuid,
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,

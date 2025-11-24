@@ -101,9 +101,7 @@ describe("saveSvgToS3 - Success Cases", () => {
     const call = s3Mock.call(0);
     const command = call.args[0] as PutObjectCommand;
     // Body should be Uint8Array or string
-    expect(
-      command.input.Body instanceof Uint8Array || typeof command.input.Body === "string",
-    ).toBe(true);
+    expect(command.input.Body instanceof Uint8Array || typeof command.input.Body === "string").toBe(true);
 
     expect(result).toBeDefined();
   });
@@ -302,9 +300,7 @@ describe("saveSvgToS3 - Content Type and Metadata", () => {
     const command = call.args[0] as PutObjectCommand;
 
     // Body should be Uint8Array or string
-    expect(
-      command.input.Body instanceof Uint8Array || typeof command.input.Body === "string",
-    ).toBe(true);
+    expect(command.input.Body instanceof Uint8Array || typeof command.input.Body === "string").toBe(true);
 
     // Body should contain the UTF-8 encoded string
     const bodyData = command.input.Body;

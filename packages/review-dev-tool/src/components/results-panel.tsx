@@ -733,16 +733,12 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
 
             {result.metadata.geminiPrompt && (
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  Prompt Sent to Gemini
-                </h3>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Prompt Sent to Gemini</h3>
                 <div className="space-y-3">
                   {result.metadata.geminiModel && (
                     <div className="text-xs text-gray-600 dark:text-gray-400">
                       <span className="font-medium">Model:</span>{" "}
-                      <span className="font-mono text-gray-900 dark:text-gray-100">
-                        {result.metadata.geminiModel}
-                      </span>
+                      <span className="font-mono text-gray-900 dark:text-gray-100">{result.metadata.geminiModel}</span>
                     </div>
                   )}
                   <details className="group">

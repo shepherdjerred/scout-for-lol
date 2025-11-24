@@ -19,15 +19,15 @@ export function processMostWinsPlayer(
 ): LeaderboardEntry[] {
   const { wins: winCounts, games: totalGames } = countWinsAndGames(matches, participants, criteria.queue);
 
-  return buildWinBasedLeaderboard(
+  return buildWinBasedLeaderboard({
     winCounts,
     totalGames,
     participants,
-    (wins) => wins, // Score is just wins
-    (wins, games) => ({
+    scoreFn: (wins) => wins, // Score is just wins
+    metadataFn: (wins, games) => ({
       wins,
       games,
       losses: games - wins,
     }),
-  );
+  });
 }

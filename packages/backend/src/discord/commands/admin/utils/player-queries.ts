@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import type { PrismaClient, Prisma } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { type ChatInputCommandInteraction } from "discord.js";
 import { DiscordGuildIdSchema, type DiscordAccountId, type DiscordGuildId } from "@scout-for-lol/data";
 
@@ -7,14 +7,15 @@ export type PlayerWithSubscriptions = Awaited<ReturnType<typeof findPlayerByAlia
 export type PlayerWithCompetitions = Awaited<ReturnType<typeof findPlayerByAliasWithCompetitions>>;
 
 /**
- * Find a player by alias (basic query)
+ * Generic helper to find a player by alias with configurable includes
  */
-export async function findPlayerByAlias(
+async function findPlayerByAliasGeneric<T extends Prisma.PlayerInclude>(
   prisma: PrismaClient,
   serverId: DiscordGuildId,
   alias: string,
+  include: T,
   interaction?: ChatInputCommandInteraction,
-) {
+): Promise<Prisma.PlayerGetPayload<{ include: T }> | null> {
   const player = await prisma.player.findUnique({
     where: {
       serverId_alias: {
@@ -22,6 +23,7 @@ export async function findPlayerByAlias(
         alias,
       },
     },
+    include,
   });
 
   if (!player && interaction) {
@@ -33,6 +35,18 @@ export async function findPlayerByAlias(
   }
 
   return player;
+}
+
+/**
+ * Find a player by alias (basic query)
+ */
+export async function findPlayerByAlias(
+  prisma: PrismaClient,
+  serverId: DiscordGuildId,
+  alias: string,
+  interaction?: ChatInputCommandInteraction,
+) {
+  return findPlayerByAliasGeneric(prisma, serverId, alias, {}, interaction);
 }
 
 /**
@@ -44,27 +58,7 @@ export async function findPlayerByAliasWithAccounts(
   alias: string,
   interaction?: ChatInputCommandInteraction,
 ) {
-  const player = await prisma.player.findUnique({
-    where: {
-      serverId_alias: {
-        serverId,
-        alias,
-      },
-    },
-    include: {
-      accounts: true,
-    },
-  });
-
-  if (!player && interaction) {
-    console.log(`❌ Player not found: "${alias}"`);
-    await interaction.reply({
-      content: `❌ **Player not found**\n\nNo player with alias "${alias}" exists in this server.`,
-      ephemeral: true,
-    });
-  }
-
-  return player;
+  return findPlayerByAliasGeneric(prisma, serverId, alias, { accounts: true }, interaction);
 }
 
 /**
@@ -76,28 +70,7 @@ export async function findPlayerByAliasWithSubscriptions(
   alias: string,
   interaction?: ChatInputCommandInteraction,
 ) {
-  const player = await prisma.player.findUnique({
-    where: {
-      serverId_alias: {
-        serverId,
-        alias,
-      },
-    },
-    include: {
-      accounts: true,
-      subscriptions: true,
-    },
-  });
-
-  if (!player && interaction) {
-    console.log(`❌ Player not found: "${alias}"`);
-    await interaction.reply({
-      content: `❌ **Player not found**\n\nNo player with alias "${alias}" exists in this server.`,
-      ephemeral: true,
-    });
-  }
-
-  return player;
+  return findPlayerByAliasGeneric(prisma, serverId, alias, { accounts: true, subscriptions: true }, interaction);
 }
 
 /**
@@ -109,14 +82,11 @@ export async function findPlayerByAliasWithCompetitions(
   alias: string,
   interaction?: ChatInputCommandInteraction,
 ) {
-  const player = await prisma.player.findUnique({
-    where: {
-      serverId_alias: {
-        serverId,
-        alias,
-      },
-    },
-    include: {
+  return findPlayerByAliasGeneric(
+    prisma,
+    serverId,
+    alias,
+    {
       accounts: true,
       subscriptions: true,
       competitionParticipants: {
@@ -125,17 +95,8 @@ export async function findPlayerByAliasWithCompetitions(
         },
       },
     },
-  });
-
-  if (!player && interaction) {
-    console.log(`❌ Player not found: "${alias}"`);
-    await interaction.reply({
-      content: `❌ **Player not found**\n\nNo player with alias "${alias}" exists in this server.`,
-      ephemeral: true,
-    });
-  }
-
-  return player;
+    interaction,
+  );
 }
 
 /**

@@ -25,16 +25,16 @@ export function processMostWinsChampion(
     (participantData) => participantData.championId === criteria.championId,
   );
 
-  return buildWinBasedLeaderboard(
+  return buildWinBasedLeaderboard({
     winCounts,
     totalGames,
     participants,
-    (wins) => wins, // Score is just wins
-    (wins, games) => ({
+    scoreFn: (wins) => wins, // Score is just wins
+    metadataFn: (wins, games) => ({
       championId: criteria.championId,
       wins,
       games,
       losses: games - wins,
     }),
-  );
+  });
 }

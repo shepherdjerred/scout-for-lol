@@ -1,5 +1,5 @@
-import type {
-  MatchDto,
+import {
+  type MatchDto,
   generateReviewText,
   generateReviewImage,
   type ArenaMatch,
@@ -7,7 +7,7 @@ import type {
   type MatchId,
   selectRandomStyleAndTheme,
   curateMatchData,
-  type CuratedMatchData
+  type CuratedMatchData,
 } from "@scout-for-lol/data";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -47,15 +47,16 @@ function getGeminiClient(): GoogleGenerativeAI | undefined {
 /**
  * Generate an AI-powered image from review text using Gemini (backend wrapper)
  */
-async function generateReviewImageBackend(
-  reviewText: string,
-  match: CompletedMatch | ArenaMatch,
-  matchId: MatchId,
-  queueType: string,
-  style: string,
-  themes: string[],
-  curatedData?: CuratedMatchData,
-): Promise<Uint8Array | undefined> {
+async function generateReviewImageBackend(params: {
+  reviewText: string;
+  match: CompletedMatch | ArenaMatch;
+  matchId: MatchId;
+  queueType: string;
+  style: string;
+  themes: string[];
+  curatedData?: CuratedMatchData;
+}): Promise<Uint8Array | undefined> {
+  const { reviewText, match, matchId, queueType, style, themes, curatedData } = params;
   const client = getGeminiClient();
   if (!client) {
     console.log("[generateReviewImage] Gemini API key not configured, skipping image generation");
@@ -239,7 +240,7 @@ export async function generateMatchReview(
     themes,
   };
 
-  const reviewImage = await generateReviewImageBackend(
+  const reviewImage = await generateReviewImageBackend({
     reviewText,
     match,
     matchId,
@@ -247,7 +248,7 @@ export async function generateMatchReview(
     style,
     themes,
     curatedData,
-  );
+  });
 
   if (reviewImage) {
     return {

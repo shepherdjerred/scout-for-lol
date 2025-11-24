@@ -1,4 +1,4 @@
-import type { MatchDto, CompetitionQueueType } from "@scout-for-lol/data";
+import type { MatchDto, CompetitionQueueType, ParticipantDto } from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
@@ -8,7 +8,6 @@ import {
   isWin,
   matchesQueue,
 } from "@scout-for-lol/backend/league/competition/processors/helpers.js";
-import type { ParticipantDto } from "@scout-for-lol/data";
 
 /**
  * Win and game counts for a player
@@ -73,14 +72,15 @@ export function countWinsAndGames(
  * @param minGames - Optional minimum games threshold (players below this are excluded)
  * @returns Array of leaderboard entries
  */
-export function buildWinBasedLeaderboard(
-  winCounts: Record<number, number>,
-  totalGames: Record<number, number>,
-  participants: PlayerWithAccounts[],
-  scoreFn: (wins: number, games: number) => number,
-  metadataFn: (wins: number, games: number) => Record<string, unknown>,
-  minGames?: number,
-): LeaderboardEntry[] {
+export function buildWinBasedLeaderboard(params: {
+  winCounts: Record<number, number>;
+  totalGames: Record<number, number>;
+  participants: PlayerWithAccounts[];
+  scoreFn: (wins: number, games: number) => number;
+  metadataFn: (wins: number, games: number) => Record<string, unknown>;
+  minGames?: number;
+}): LeaderboardEntry[] {
+  const { winCounts, totalGames, participants, scoreFn, metadataFn, minGames } = params;
   const entries: LeaderboardEntry[] = [];
 
   for (const participant of participants) {

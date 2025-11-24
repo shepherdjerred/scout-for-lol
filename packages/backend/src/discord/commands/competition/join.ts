@@ -18,6 +18,7 @@ import {
   replyWithErrorFromException,
   replyWithError,
 } from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 
 /**
  * Execute /competition join command
@@ -70,7 +71,7 @@ You need to link your League of Legends account first. Use:
   // Step 3: Check if competition exists
   // ============================================================================
 
-  let competition;
+  let competition: Awaited<ReturnType<typeof getCompetitionById>>;
   try {
     competition = await getCompetitionById(prisma, competitionId);
   } catch (error) {

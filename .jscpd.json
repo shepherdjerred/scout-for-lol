@@ -10,7 +10,8 @@
     "**/build/**",
     "**/.next/**",
     "**/generated/**",
-    "**/*-stub.ts"
+    "**/*-stub.ts",
+    "**/.astro/content.d.ts"
   ],
   "minLines": 3,
   "minTokens": 30,

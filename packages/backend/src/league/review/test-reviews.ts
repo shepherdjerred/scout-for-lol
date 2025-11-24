@@ -7,7 +7,13 @@
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example.js";
 import type { ArenaMatch, CompletedMatch, PlayerConfigEntry, MatchDto } from "@scout-for-lol/data";
-import { MatchIdSchema, LeaguePuuidSchema, parseQueueType, MatchDtoSchema } from "@scout-for-lol/data";
+import {
+  MatchIdSchema,
+  LeaguePuuidSchema,
+  parseQueueType,
+  MatchDtoSchema,
+  getOrdinalSuffix,
+} from "@scout-for-lol/data";
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 import configuration from "@scout-for-lol/backend/configuration.js";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
@@ -135,26 +141,6 @@ function getMatchSummary(match: CompletedMatch | ArenaMatch): string {
       return "Unknown";
     }
     return `${player.playerConfig.alias} | ${player.champion.championName} | ${player.lane ?? "unknown"} | ${player.outcome} | ${String(player.champion.kills)}/${String(player.champion.deaths)}/${String(player.champion.assists)} KDA`;
-  }
-}
-
-function getOrdinalSuffix(num: number): string {
-  const lastDigit = num % 10;
-  const lastTwoDigits = num % 100;
-
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
-    return "th";
-  }
-
-  switch (lastDigit) {
-    case 1:
-      return "st";
-    case 2:
-      return "nd";
-    case 3:
-      return "rd";
-    default:
-      return "th";
   }
 }
 

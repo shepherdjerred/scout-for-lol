@@ -99,8 +99,22 @@ export default tseslint.config(
   {
     files: ["**/*.{ts,tsx}"],
     extends: [importPlugin.flatConfigs.recommended, importPlugin.flatConfigs.typescript],
-    rules: {
-      "import/no-unresolved": "off",
+    settings: {
+      "import/resolver": {
+        typescript: {
+          alwaysTryTypes: true,
+          project: [
+            "./packages/backend/tsconfig.json",
+            "./packages/data/tsconfig.json",
+            "./packages/report/tsconfig.json",
+            "./packages/frontend/tsconfig.json",
+            "./packages/review-dev-tool/tsconfig.json",
+          ],
+        },
+        node: {
+          extensions: [".js", ".jsx", ".ts", ".tsx"],
+        },
+      },
     },
   },
   // Backend package: use 'packages/backend/src' as rootDir to get correct path calculation
@@ -159,6 +173,7 @@ export default tseslint.config(
     rules: {
       // Code quality and complexity limits
       "max-lines": ["error", { max: 1200, skipBlankLines: false, skipComments: false }],
+      "max-lines-per-function": ["error", { max: 400, skipBlankLines: true, skipComments: true }],
       complexity: ["error", { max: 20 }],
       "max-depth": ["error", { max: 4 }],
       "max-params": ["error", { max: 4 }],
@@ -286,6 +301,7 @@ export default tseslint.config(
     },
     rules: {
       "max-lines": ["error", { max: 1500, skipBlankLines: false, skipComments: false }],
+      "max-lines-per-function": ["error", { max: 200, skipBlankLines: true, skipComments: true }],
       // Allow test mocks and doubles to use any and type assertions
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",

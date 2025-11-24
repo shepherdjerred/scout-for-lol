@@ -130,7 +130,7 @@ describe("saveImageToS3 - Success Cases", () => {
   test("handles large image buffers", async () => {
     const matchId = MatchIdSchema.parse("NA1_LARGE");
     // Create a 5MB buffer
-    const imageBuffer = Buffer.alloc(5 * 1024 * 1024);
+    const imageBuffer = new Uint8Array(5 * 1024 * 1024);
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({

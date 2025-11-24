@@ -36,12 +36,15 @@ export function toMatch(
 
   // Build CompletedMatch.players for all tracked players
   const matchPlayers = players.map((player) => {
-    const participant = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
-    if (participant === undefined) {
+    const participantRaw = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
+    if (participantRaw === undefined) {
       console.debug("Player PUUID:", player.config.league.leagueAccount.puuid);
       console.debug("Match Participants:", matchDto.info.participants);
       throw new Error(`participant not found for player ${player.config.alias}`);
     }
+
+    // TypeScript needs explicit narrowing after throw
+    const participant: ParticipantDto = participantRaw;
 
     const champion = participantToChampion(participant);
     const team = parseTeam(participant.teamId);

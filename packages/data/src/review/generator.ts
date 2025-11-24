@@ -9,10 +9,53 @@
 
 import type OpenAI from "openai";
 import type { GoogleGenerativeAI } from "@google/generative-ai";
+import { z } from "zod";
 import { match as matchPattern } from "ts-pattern";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
 import { generateImagePrompt } from "@scout-for-lol/data/review/image-prompt.js";
 import { replaceTemplateVariables } from "@scout-for-lol/data/review/prompts.js";
+
+const OpenAIChatCompletionChoiceSchema = z.object({
+  message: z.object({
+    content: z.string().nullable(),
+  }),
+});
+
+const OpenAIChatCompletionUsageSchema = z
+  .object({
+    prompt_tokens: z.number().optional(),
+    completion_tokens: z.number().optional(),
+  })
+  .loose();
+
+const OpenAIChatCompletionSchema = z
+  .object({
+    choices: z.array(OpenAIChatCompletionChoiceSchema),
+    usage: OpenAIChatCompletionUsageSchema.optional(),
+  })
+  .loose();
+
+const GeminiImagePartSchema = z
+  .object({
+    inlineData: z.object({
+      data: z.string(),
+    }),
+  })
+  .loose();
+
+const GeminiResponseSchema = z
+  .object({
+    response: z.object({
+      candidates: z.array(
+        z.object({
+          content: z.object({
+            parts: z.array(GeminiImagePartSchema),
+          }),
+        }),
+      ),
+    }),
+  })
+  .loose();
 
 /**
  * Personality type (from prompts module)
@@ -163,6 +206,89 @@ export function getOrdinalSuffix(num: number): string {
   }
 }
 
+function buildPromptVariables(params: {
+  matchData: Record<string, string>;
+  personality: Personality;
+  playerMetadata: PlayerMetadata;
+  laneContext: string;
+  match: CompletedMatch | ArenaMatch;
+  curatedData?: CuratedMatchData;
+}): Record<string, string> {
+  const { matchData, personality, playerMetadata, laneContext, match, curatedData } = params;
+  const playerName = matchData["playerName"];
+  if (!playerName) {
+    throw new Error("No player name found");
+  }
+
+  const reviewerName = personality.metadata.name;
+  const reviewerPersonality = personality.metadata.description;
+  const reviewerFavoriteChampions = JSON.stringify(personality.metadata.favoriteChampions);
+  const reviewerFavoriteLanes = JSON.stringify(personality.metadata.favoriteLanes);
+
+  const playerPersonality = playerMetadata.description;
+  const playerFavoriteChampions = JSON.stringify(playerMetadata.favoriteChampions);
+  const playerFavoriteLanes = JSON.stringify(playerMetadata.favoriteLanes);
+
+  const playerChampion = matchData["champion"] ?? "unknown champion";
+  const playerLane = matchData["lane"] ?? "unknown lane";
+  const opponentChampion = matchData["laneOpponent"] ?? "an unknown opponent";
+  const laneDescription = laneContext;
+  const matchReport = curatedData
+    ? JSON.stringify(
+        {
+          processedMatch: match,
+          detailedStats: curatedData,
+        },
+        null,
+        2,
+      )
+    : JSON.stringify(match, null, 2);
+
+  return {
+    reviewerName,
+    reviewerPersonality,
+    reviewerFavoriteChampions,
+    reviewerFavoriteLanes,
+    playerName,
+    playerPersonality,
+    playerFavoriteChampions,
+    playerFavoriteLanes,
+    playerChampion,
+    playerLane,
+    opponentChampion,
+    laneDescription,
+    matchReport,
+  };
+}
+
+function createCompletionParams(params: {
+  systemPrompt: string;
+  userPrompt: string;
+  model: string;
+  maxTokens: number;
+  temperature?: number;
+  topP?: number;
+}): OpenAI.Chat.ChatCompletionCreateParams {
+  const { systemPrompt, userPrompt, model, maxTokens, temperature, topP } = params;
+  const params: OpenAI.Chat.ChatCompletionCreateParams = {
+    model,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+    max_completion_tokens: maxTokens,
+  };
+
+  if (temperature !== undefined) {
+    params.temperature = temperature;
+  }
+  if (topP !== undefined) {
+    params.top_p = topP;
+  }
+
+  return params;
+}
+
 /**
  * Core review text generation function
  *
@@ -201,104 +327,54 @@ export async function generateReviewText(params: {
     systemPromptPrefix = "",
   } = params;
 
-  // Extract match data
   const { matchData } = extractMatchData(match);
-
-  const playerName = matchData["playerName"];
-  if (!playerName) {
-    throw new Error("No player name found");
-  }
-
-  // Extract reviewer information from personality
-  const reviewerName = personality.metadata.name;
-  const reviewerPersonality = personality.metadata.description;
-  const reviewerFavoriteChampions = JSON.stringify(personality.metadata.favoriteChampions);
-  const reviewerFavoriteLanes = JSON.stringify(personality.metadata.favoriteLanes);
-
-  // Player information
-  const playerPersonality = playerMetadata.description;
-  const playerFavoriteChampions = JSON.stringify(playerMetadata.favoriteChampions);
-  const playerFavoriteLanes = JSON.stringify(playerMetadata.favoriteLanes);
-
-  // Match-specific information
-  const playerChampion = matchData["champion"] ?? "unknown champion";
-  const playerLane = matchData["lane"] ?? "unknown lane";
-  const opponentChampion = matchData["laneOpponent"] ?? "an unknown opponent";
-  const laneDescription = laneContext;
-  const matchReport = curatedData
-    ? JSON.stringify(
-        {
-          processedMatch: match,
-          detailedStats: curatedData,
-        },
-        null,
-        2,
-      )
-    : JSON.stringify(match, null, 2);
-
-  // Replace all template variables
-  const userPrompt = replaceTemplateVariables(basePromptTemplate, {
-    reviewerName,
-    reviewerPersonality,
-    reviewerFavoriteChampions,
-    reviewerFavoriteLanes,
-    playerName,
-    playerPersonality,
-    playerFavoriteChampions,
-    playerFavoriteLanes,
-    playerChampion,
-    playerLane,
-    opponentChampion,
-    laneDescription,
-    matchReport,
+  const promptVariables = buildPromptVariables({
+    matchData,
+    personality,
+    playerMetadata,
+    laneContext,
+    match,
+    curatedData,
+  });
+  const userPrompt = replaceTemplateVariables(basePromptTemplate, promptVariables);
+  const systemPrompt = `${systemPromptPrefix}${personality.instructions}\n\n${laneContext}`;
+  const completionParams = createCompletionParams({
+    systemPrompt,
+    userPrompt,
+    model,
+    maxTokens,
+    temperature,
+    topP,
   });
 
-  // System prompt with personality instructions and lane context
-  const systemPrompt = `${systemPromptPrefix}${personality.instructions}\n\n${laneContext}`;
-
   const startTime = Date.now();
-
-  // Create completion with conditional parameters
-  const completionParams: OpenAI.Chat.ChatCompletionCreateParams = {
-    model,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    max_completion_tokens: maxTokens,
-  };
-
-  // Add optional parameters if provided
-  if (temperature !== undefined) {
-    completionParams.temperature = temperature;
-  }
-  if (topP !== undefined) {
-    completionParams.top_p = topP;
-  }
-
-  const completion = await openaiClient.chat.completions.create(completionParams);
-
+  const completionRaw = await openaiClient.chat.completions.create(completionParams);
   const duration = Date.now() - startTime;
 
-  const firstChoice = completion.choices[0];
-  if (!firstChoice) {
+  const completion = OpenAIChatCompletionSchema.parse(completionRaw);
+
+  if (completion.choices.length === 0) {
     throw new Error("No choices returned from OpenAI");
   }
 
-  const review = firstChoice.message.content?.trim();
-  if (!review) {
+  const firstChoice = completion.choices[0];
+  const messageContent = firstChoice.message.content;
+  if (!messageContent || messageContent.trim().length === 0) {
     throw new Error("No review content returned from OpenAI");
   }
+
+  const review = messageContent.trim();
+  const usage = completion.usage;
 
   return {
     text: review,
     metadata: {
-      textTokensPrompt: completion.usage?.prompt_tokens,
-      textTokensCompletion: completion.usage?.completion_tokens,
+      textTokensPrompt: usage?.prompt_tokens,
+      textTokensCompletion: usage?.completion_tokens,
       textDurationMs: duration,
       selectedPersonality: personality.filename,
-      reviewerName,
-      playerName,
+      reviewerName: promptVariables.reviewerName,
+      playerName: promptVariables.playerName,
       systemPrompt,
       userPrompt,
       openaiRequestParams: completionParams,
@@ -319,8 +395,8 @@ export async function generateReviewImage(params: {
   reviewText: string;
   artStyle: string;
   artTheme: string;
-  secondArtTheme?: string | undefined;
-  matchData?: string | undefined;
+  secondArtTheme?: string;
+  matchData?: string;
   geminiClient: GoogleGenerativeAI;
   model: string;
   timeoutMs: number;
@@ -346,24 +422,27 @@ export async function generateReviewImage(params: {
     matchData,
   });
 
-  const result = await Promise.race([geminiModel.generateContent(prompt), timeoutPromise]);
+  const resultRaw = await Promise.race([geminiModel.generateContent(prompt), timeoutPromise]);
 
   const duration = Date.now() - startTime;
 
-  const response = result.response;
-  if (!response.candidates || response.candidates.length === 0) {
+  const result = GeminiResponseSchema.parse(resultRaw);
+
+  if (result.response.candidates.length === 0) {
     throw new Error("No candidates returned from Gemini");
   }
 
-  const parts = response.candidates[0]?.content.parts;
-  if (!parts) {
-    throw new Error("No candidate or parts in response");
+  const firstCandidate = result.response.candidates[0];
+  const parts = firstCandidate.content.parts;
+
+  if (parts.length === 0) {
+    throw new Error("No parts found in response");
   }
 
-  const imagePart = parts.find((part: { inlineData?: unknown }) => part.inlineData);
-  const imageData = imagePart?.inlineData?.data;
-  if (!imageData) {
-    throw new Error("No image data in response");
+  const imagePart = parts[0];
+  const imageData = imagePart.inlineData.data;
+  if (imageData.length === 0) {
+    throw new Error("Empty image data in response");
   }
 
   return {

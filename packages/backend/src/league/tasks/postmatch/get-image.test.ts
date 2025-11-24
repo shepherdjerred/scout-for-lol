@@ -111,14 +111,14 @@ describe("Image Buffer Handling", () => {
 
     // Verify the exact buffer is passed
     expect(command.input.Body).toBe(imageBuffer);
-    expect(Buffer.isBuffer(command.input.Body)).toBe(true);
+    expect(command.input.Body instanceof Uint8Array).toBe(true);
   });
 
   test("handles empty image buffer", async () => {
     const { saveImageToS3 } = await import("../../../storage/s3.js");
 
     const matchId = MatchIdSchema.parse("NA1_EMPTY_BUFFER");
-    const imageBuffer = Buffer.alloc(0);
+    const imageBuffer = new Uint8Array(0);
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -132,7 +132,13 @@ describe("Image Buffer Handling", () => {
 
     const call = s3Mock.call(0);
     const command = call.args[0] as PutObjectCommand;
-    expect((command.input.Body as Buffer).length).toBe(0);
+    const bodyLength =
+      command.input.Body instanceof Uint8Array
+        ? command.input.Body.length
+        : typeof command.input.Body === "string"
+          ? command.input.Body.length
+          : 0;
+    expect(bodyLength).toBe(0);
   });
 });
 
