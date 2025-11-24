@@ -113,10 +113,7 @@ export async function getAllItems(storeName: string): Promise<unknown[]> {
     const store = getStore(transaction, storeName);
     const request = store.getAll();
     const result = await executeRequest<unknown[]>(request);
-    // executeRequest returns T | void, so result can be undefined
-    if (result === undefined) {
-      return [];
-    }
+    // Validate with Zod to ensure it's an array
     const ArraySchema = z.array(z.unknown());
     const parsed = ArraySchema.safeParse(result);
     if (!parsed.success) {

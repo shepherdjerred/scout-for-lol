@@ -4,7 +4,7 @@ import { runDailyLeaderboardUpdate } from "@scout-for-lol/backend/league/tasks/c
 import { runPlayerPruning } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.js";
 import { checkAbandonedGuilds } from "@scout-for-lol/backend/league/tasks/cleanup/abandoned-guilds.js";
 import { runDataValidation } from "@scout-for-lol/backend/league/tasks/cleanup/validate-data.js";
-import client from "@scout-for-lol/backend/discord/client.js";
+import { client } from "@scout-for-lol/backend/discord/client.js";
 import { createCronJob } from "@scout-for-lol/backend/league/cron/helpers.js";
 
 export function startCronJobs() {

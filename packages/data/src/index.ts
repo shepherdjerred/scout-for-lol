@@ -10,13 +10,12 @@ export * from "./review/image-prompt.js";
 export {
   generateReviewText,
   generateReviewImage,
-  extractMatchData,
-  getOrdinalSuffix,
   type ReviewTextMetadata,
   type ReviewImageMetadata,
   type CuratedMatchData,
   type ChatCompletionCreateParams,
 } from "./review/generator.js";
+export { extractMatchData, getOrdinalSuffix } from "./review/generator-helpers.js";
 export { curateMatchData, curateParticipantData } from "./review/curator.js";
 export * from "./league/match-dto.schema.js";
 export * from "./league/summoner-league-dto.schema.js";

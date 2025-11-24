@@ -1,4 +1,5 @@
 import { type Client, PermissionFlagsBits, PermissionsBitField } from "discord.js";
+import { z } from "zod";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { getFlag } from "@scout-for-lol/backend/configuration/flags.js";
 import { match } from "ts-pattern";
@@ -134,11 +135,10 @@ export function handleCommands(client: Client) {
         } else if (commandName === "admin") {
           // Check if user has Administrator permissions (applies to all admin subcommands)
           const member = interaction.member;
+          const PermissionSchema = z.object({ permissions: z.instanceof(PermissionsBitField) }).loose();
+          const permissionResult = PermissionSchema.safeParse(member);
           const hasAdminPermission =
-            member &&
-            "permissions" in member &&
-            member.permissions instanceof PermissionsBitField &&
-            member.permissions.has(PermissionFlagsBits.Administrator);
+            permissionResult.success && permissionResult.data.permissions.has(PermissionFlagsBits.Administrator);
 
           if (!hasAdminPermission) {
             console.warn(`⚠️  Unauthorized admin command access attempt by ${username} (${userId})`);

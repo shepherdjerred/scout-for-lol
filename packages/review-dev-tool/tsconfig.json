@@ -19,7 +19,8 @@
       "DOM",
       "DOM.Iterable"
     ],
-    "composite": true
+    "composite": true,
+    "noEmit": false
   },
   "references": [
     {

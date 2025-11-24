@@ -10,121 +10,83 @@ export const preferZodValidation = createRule({
     type: "suggestion",
     docs: {
       description:
-        "Prefer Zod schema validation over built-in JavaScript/TypeScript type checking methods for runtime validation.",
+        "Flag repeated type checking on nested properties. Use Zod to validate the entire structure once instead of checking multiple levels with typeof/instanceof chains.",
     },
     messages: {
-      preferZodOverTypeof:
-        "Prefer Zod schema validation over typeof operator. Use z.string(), z.number(), etc. instead.",
-      preferZodOverArrayIsArray: "Prefer Zod schema validation over Array.isArray(). Use z.array() instead.",
-      preferZodOverInstanceof:
-        "Prefer Zod schema validation over instanceof operator. Use appropriate z.instanceof() or custom Zod schemas instead. Exception: 'instanceof Error' is allowed for error handling.",
-      preferZodOverNumberIsInteger:
-        "Prefer Zod schema validation over Number.isInteger(). Use z.number().int() instead.",
-      preferZodOverNumberIsNaN:
-        "Prefer Zod schema validation over Number.isNaN(). Use z.number() with proper error handling instead.",
-      preferZodOverNumberIsFinite:
-        "Prefer Zod schema validation over Number.isFinite(). Use z.number().finite() instead.",
-      preferZodOverTypeGuard:
-        "Prefer Zod schema validation over type guard functions. Use z.schema.safeParse() instead of custom type guards.",
+      repeatedTypeChecking:
+        "Repeated type checking on nested properties should use Zod validation instead. Validate the entire structure once with a Zod schema.",
     },
-    schema: [
-      {
-        type: "object",
-        properties: {
-          allowInstanceof: {
-            type: "boolean",
-            description: "Allow instanceof checks (useful for Discord.js and similar libraries)",
-          },
-        },
-        additionalProperties: false,
-      },
-    ],
+    schema: [],
   },
-  defaultOptions: [{ allowInstanceof: false }],
-  create(context, [options]) {
+  defaultOptions: [],
+  create(context) {
+    // Track typeof/instanceof checks on member expressions
+    const typeCheckMap = new Map<string, typeof node[]>();
+
+    function getMemberPath(node: typeof node): string | null {
+      if (node.type === AST_NODE_TYPES.MemberExpression) {
+        const parts: string[] = [];
+        let current: typeof node | undefined = node;
+
+        while (current?.type === AST_NODE_TYPES.MemberExpression) {
+          if (current.property.type === AST_NODE_TYPES.Identifier) {
+            parts.unshift(current.property.name);
+          } else if (current.property.type === AST_NODE_TYPES.Literal && typeof current.property.value === "string") {
+            parts.unshift(current.property.value);
+          } else {
+            return null;
+          }
+          current = current.object;
+        }
+
+        if (current?.type === AST_NODE_TYPES.Identifier) {
+          parts.unshift(current.name);
+          return parts.join(".");
+        }
+      }
+
+      return null;
+    }
+
     return {
-      // Check for typeof operator (except typeof Bun)
+      // Track typeof checks on member expressions
       UnaryExpression(node) {
-        if (node.operator === "typeof") {
-          // Allow typeof Bun
-          if (node.argument.type === AST_NODE_TYPES.Identifier && node.argument.name === "Bun") {
-            return;
-          }
+        if (node.operator === "typeof" && node.argument.type === AST_NODE_TYPES.MemberExpression) {
+          const path = getMemberPath(node.argument);
+          if (path) {
+            const checks = typeCheckMap.get(path) || [];
+            checks.push(node);
+            typeCheckMap.set(path, checks);
 
-          context.report({
-            node,
-            messageId: "preferZodOverTypeof",
-          });
-        }
-      },
-
-      // Check for Array.isArray()
-      CallExpression(node) {
-        if (
-          node.callee.type === AST_NODE_TYPES.MemberExpression &&
-          node.callee.object.type === AST_NODE_TYPES.Identifier &&
-          node.callee.object.name === "Array" &&
-          node.callee.property.type === AST_NODE_TYPES.Identifier &&
-          node.callee.property.name === "isArray"
-        ) {
-          context.report({
-            node,
-            messageId: "preferZodOverArrayIsArray",
-          });
-        }
-
-        // Check for Number.isInteger(), Number.isNaN(), Number.isFinite()
-        if (
-          node.callee.type === AST_NODE_TYPES.MemberExpression &&
-          node.callee.object.type === AST_NODE_TYPES.Identifier &&
-          node.callee.object.name === "Number" &&
-          node.callee.property.type === AST_NODE_TYPES.Identifier
-        ) {
-          const methodName = node.callee.property.name;
-
-          if (methodName === "isInteger") {
-            context.report({
-              node,
-              messageId: "preferZodOverNumberIsInteger",
-            });
-          } else if (methodName === "isNaN") {
-            context.report({
-              node,
-              messageId: "preferZodOverNumberIsNaN",
-            });
-          } else if (methodName === "isFinite") {
-            context.report({
-              node,
-              messageId: "preferZodOverNumberIsFinite",
-            });
-          }
-        }
-      },
-
-      // Check for instanceof (except Error types)
-      BinaryExpression(node) {
-        if (node.operator === "instanceof" && !options.allowInstanceof) {
-          // Allow instanceof Error or types ending with Error
-          if (node.right.type === AST_NODE_TYPES.Identifier) {
-            const rightName = node.right.name;
-            if (rightName === "Error" || /Error$/.test(rightName)) {
-              return;
+            // Flag if we're checking the same path multiple times
+            if (checks.length > 1) {
+              context.report({
+                node,
+                messageId: "repeatedTypeChecking",
+              });
             }
           }
-
-          context.report({
-            node,
-            messageId: "preferZodOverInstanceof",
-          });
         }
       },
 
-      // Check for type predicates
-      TSTypePredicate(node) {
-        context.report({
-          node,
-          messageId: "preferZodOverTypeGuard",
-        });
+      // Track instanceof checks on member expressions
+      BinaryExpression(node) {
+        if (node.operator === "instanceof" && node.left.type === AST_NODE_TYPES.MemberExpression) {
+          const path = getMemberPath(node.left);
+          if (path) {
+            const checks = typeCheckMap.get(path) || [];
+            checks.push(node);
+            typeCheckMap.set(path, checks);
+
+            // Flag if we're checking the same path multiple times
+            if (checks.length > 1) {
+              context.report({
+                node,
+                messageId: "repeatedTypeChecking",
+              });
+            }
+          }
+        }
       },
     };
   },

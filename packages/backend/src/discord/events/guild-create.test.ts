@@ -22,7 +22,7 @@ function createMockGuild(overrides: {
   members: { me?: { id: string } | null };
   client: { user: { id: string } };
 }) {
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- rare case where this is ok
+  // eslint-disable-next-line custom-rules/no-type-assertions -- ok for Discord type
   return {
     name: overrides.name,
     id: overrides.id,

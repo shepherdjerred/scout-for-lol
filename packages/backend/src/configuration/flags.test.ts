@@ -232,7 +232,7 @@ describe("Feature Flags System", () => {
       ];
 
       for (const limit of validLimits) {
-        expect(typeof getLimit(limit)).toBe("number");
+        expect(getLimit(limit)).toBeNumber();
       }
     });
 
@@ -241,7 +241,7 @@ describe("Feature Flags System", () => {
       const validFlags: FlagName[] = ["ai_reviews_enabled"];
 
       for (const flag of validFlags) {
-        expect(typeof getFlag(flag)).toBe("boolean");
+        expect(getFlag(flag)).toBeBoolean();
       }
     });
   });

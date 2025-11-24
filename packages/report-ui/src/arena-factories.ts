@@ -1,4 +1,4 @@
-import { AugmentSchema } from "@scout-for-lol/data";
+import type { Augment } from "@scout-for-lol/data";
 
 export function createArenaMetrics(params: {
   playerScore0: number;
@@ -46,7 +46,7 @@ export function createArenaChampion(params: {
   items: number[];
   gold: number;
   damage: number;
-  augments: ReturnType<typeof AugmentSchema.parse>[];
+  augments: Augment[];
   arenaMetrics: ReturnType<typeof createArenaMetrics>;
   teamSupport: ReturnType<typeof createTeamSupport>;
 }) {

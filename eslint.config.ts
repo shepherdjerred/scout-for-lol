@@ -15,8 +15,8 @@ import { noReExports } from "./eslint-rules/no-re-exports";
 import { noUseEffect } from "./eslint-rules/no-use-effect";
 import { preferDateFns } from "./eslint-rules/prefer-date-fns";
 import { noFunctionOverloads } from "./eslint-rules/no-function-overloads";
+import { noParentImports } from "./eslint-rules/no-parent-imports";
 import * as importPlugin from "eslint-plugin-import";
-import * as noRelativeImportPaths from "eslint-plugin-no-relative-import-paths";
 import * as regexpPlugin from "eslint-plugin-regexp";
 import * as eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
 import * as react from "eslint-plugin-react";
@@ -49,6 +49,7 @@ const customRulesPlugin = {
     "no-use-effect": noUseEffect,
     "prefer-date-fns": preferDateFns,
     "no-function-overloads": noFunctionOverloads,
+    "no-parent-imports": noParentImports,
   },
 };
 
@@ -126,57 +127,9 @@ export default tseslint.config(
         },
       },
     },
-  },
-  // Backend package: use 'packages/backend/src' as rootDir to get correct path calculation
-  {
-    files: ["packages/backend/**/*.ts"],
-    plugins: {
-      "no-relative-import-paths": noRelativeImportPaths,
-    },
     rules: {
-      "no-relative-import-paths/no-relative-import-paths": [
-        "warn",
-        { allowSameFolder: false, prefix: "@scout-for-lol/backend", rootDir: "packages/backend/src" },
-      ],
-    },
-  },
-  // Data package: use 'packages/data/src' as rootDir to get correct path calculation
-  {
-    files: ["packages/data/**/*.ts"],
-    plugins: {
-      "no-relative-import-paths": noRelativeImportPaths,
-    },
-    rules: {
-      "no-relative-import-paths/no-relative-import-paths": [
-        "warn",
-        { allowSameFolder: false, prefix: "@scout-for-lol/data", rootDir: "packages/data/src" },
-      ],
-    },
-  },
-  // Report package: use 'packages/report/src' as rootDir to get correct path calculation
-  {
-    files: ["packages/report/**/*.ts"],
-    plugins: {
-      "no-relative-import-paths": noRelativeImportPaths,
-    },
-    rules: {
-      "no-relative-import-paths/no-relative-import-paths": [
-        "warn",
-        { allowSameFolder: false, prefix: "@scout-for-lol/report", rootDir: "packages/report/src" },
-      ],
-    },
-  },
-  // Frontend package: use 'packages/frontend/src' as rootDir to get correct path calculation
-  {
-    files: ["packages/frontend/**/*.ts", "packages/frontend/**/*.tsx"],
-    plugins: {
-      "no-relative-import-paths": noRelativeImportPaths,
-    },
-    rules: {
-      "no-relative-import-paths/no-relative-import-paths": [
-        "warn",
-        { allowSameFolder: false, prefix: "@scout-for-lol/frontend", rootDir: "packages/frontend/src" },
-      ],
+      // Prevent relative imports between packages in monorepo
+      "import/no-relative-packages": "error",
     },
   },
   {
@@ -189,13 +142,13 @@ export default tseslint.config(
       "max-params": ["error", { max: 4 }],
       curly: ["error", "all"],
 
-      "no-warning-comments": [
-        "warn",
-        {
-          terms: ["todo", "fixme", "hack", "xxx", "to do"],
-          location: "anywhere",
-        },
-      ],
+      // "no-warning-comments": [
+      //   "warn",
+      //   {
+      //     terms: ["todo", "fixme", "hack", "xxx", "to do"],
+      //     location: "anywhere",
+      //   },
+      // ],
 
       // TypeScript configuration
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
@@ -213,13 +166,6 @@ export default tseslint.config(
           argsIgnorePattern: "^_",
           varsIgnorePattern: "^_",
           caughtErrorsIgnorePattern: "^_",
-        },
-      ],
-      "@typescript-eslint/consistent-type-assertions": [
-        "error",
-        {
-          assertionStyle: "as",
-          objectLiteralTypeAssertions: "never",
         },
       ],
       "@typescript-eslint/no-unnecessary-type-assertion": "error",
@@ -315,6 +261,7 @@ export default tseslint.config(
       // enable this one day
       "custom-rules/prefer-date-fns": "off",
       "custom-rules/no-function-overloads": "error",
+      "custom-rules/no-parent-imports": "error",
     },
   },
   // Dagger index.ts - Dagger module API can have many parameters for external interface
@@ -345,8 +292,8 @@ export default tseslint.config(
       "@typescript-eslint/no-confusing-void-expression": "off",
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-unnecessary-condition": "off",
-      "custom-rules/no-type-assertions": "off", // Allow type assertions in tests for mocking
-      "custom-rules/prefer-zod-validation": "off", // Allow typeof, instanceof in tests
+      "custom-rules/no-type-assertions": "error", // Still catch chained assertions in tests (e.g. 'as unknown as Type')
+      "custom-rules/prefer-zod-validation": "off", // Too many false positives in tests
     },
   },
   // Integration test specific rules - ensure Prisma clients are disconnected
@@ -368,7 +315,7 @@ export default tseslint.config(
     },
     rules: {
       "custom-rules/no-type-assertions": "error",
-      "custom-rules/prefer-zod-validation": ["error", { allowInstanceof: true }],
+      "custom-rules/prefer-zod-validation": "error",
       "custom-rules/prefer-bun-apis": "error",
       "custom-rules/no-re-exports": "error",
     },

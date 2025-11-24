@@ -131,13 +131,14 @@ describe("Image Buffer Handling", () => {
     expect(result).toBeDefined();
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
-    const bodyLength =
-      command.input.Body instanceof Uint8Array
-        ? command.input.Body.length
-        : typeof command.input.Body === "string"
-          ? command.input.Body.length
-          : 0;
+    const command = call.args[0] as unknown as PutObjectCommand;
+    const body = (command as { input: { Body: unknown } }).input?.Body;
+    let bodyLength = 0;
+    if (body instanceof Uint8Array) {
+      bodyLength = body.length;
+    } else if (typeof body === "string") {
+      bodyLength = body.length;
+    }
     expect(bodyLength).toBe(0);
   });
 });

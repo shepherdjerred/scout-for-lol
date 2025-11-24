@@ -139,6 +139,7 @@ export function generateLeaderboardEmbed(
   // Add viewing user's position if they're outside top 10
   // Note: This feature is disabled for now as LeaderboardEntry doesn't include discordId
   // To enable this, we would need to modify the LeaderboardEntry type
+  // User position highlighting would be implemented here when LeaderboardEntry includes discordId
   if (viewingUserId) {
     // TODO: Implement user position highlighting when LeaderboardEntry includes discordId
   }

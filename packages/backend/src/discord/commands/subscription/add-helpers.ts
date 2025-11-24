@@ -1,5 +1,5 @@
 import { type ChatInputCommandInteraction } from "discord.js";
-import { DiscordGuildIdSchema, LeaguePuuidSchema, type DiscordGuildId, type Region } from "@scout-for-lol/data";
+import { type DiscordGuildId, type Region, type RiotId } from "@scout-for-lol/data";
 import { riotApi } from "@scout-for-lol/backend/league/api/api";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region";
 import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
@@ -10,7 +10,6 @@ import {
   LIMIT_WARNING_THRESHOLD,
 } from "@scout-for-lol/backend/configuration/subscription-limits.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import type { RiotId } from "@scout-for-lol/data";
 
 /**
  * Check subscription limit for a server

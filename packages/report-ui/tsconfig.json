@@ -11,7 +11,8 @@
     ],
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "composite": true
+    "composite": true,
+    "noEmit": false
   },
   "include": [
     "src",

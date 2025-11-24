@@ -1,5 +1,6 @@
 ---
 description: Zod validation patterns and best practices
+globs: "*.ts,*.tsx"
 ---
 
 # Zod Validation Patterns
@@ -229,3 +230,182 @@ const UserSchema = z.object({
   name: z.string(),
 });
 ```
+
+## ESLint Rules for Zod
+
+This project includes three custom ESLint rules that enforce Zod usage:
+
+### Rule: `zod-schema-naming`
+
+**Enforces:** All Zod schemas must use PascalCase with `Schema` suffix
+
+```typescript
+// ✅ CORRECT
+const UserSchema = z.object({ });
+const CompetitionDataSchema = z.object({ });
+
+// ❌ WRONG (triggers linter)
+const userSchema = z.object({ });      // camelCase
+const user_schema = z.object({ });     // snake_case
+const UserSchemaData = z.object({ });  // Wrong ending
+```
+
+**Error message:** "All Zod schemas must be named with PascalCase and end with 'Schema'"
+
+**Related:** See `eslint-custom-rules.mdc` for full details
+
+### Rule: `no-redundant-zod-parse`
+
+**Enforces:** Don't parse the same schema twice on the same value
+
+```typescript
+// ✅ CORRECT
+const UserSchema = z.object({ id: z.string() });
+const user = UserSchema.parse(data);
+console.log(user.id);  // Reuse, don't re-parse
+
+// ❌ WRONG (triggers linter)
+const user1 = UserSchema.parse(data);
+const user2 = UserSchema.parse(data);  // Redundant!
+```
+
+**Error message:** "Don't parse the same schema multiple times. Zod validates once, so reuse the result."
+
+**Related:** See `eslint-custom-rules.mdc` for full details
+
+### Rule: `prefer-zod-validation`
+
+**Enforces:** Use Zod instead of `typeof`, `instanceof`, `Array.isArray`, etc.
+
+```typescript
+// ✅ CORRECT
+const StringSchema = z.string();
+const result = StringSchema.safeParse(value);
+if (result.success) {
+  processString(result.data);
+}
+
+// ❌ WRONG (triggers linter)
+if (typeof value === "string" && value.length > 0) {
+  // Complex condition = violation
+  processString(value);
+}
+```
+
+**Error messages:**
+- "Prefer Zod schema validation over typeof operator"
+- "Prefer Zod schema validation over Array.isArray()"
+- "Prefer Zod schema validation over instanceof operator"
+- "Prefer Zod schema validation over Number.isInteger()"
+
+**Exceptions:**
+- Simple primitive checks like `typeof x === "string"` are OK in basic if statements
+- `instanceof Error` is always allowed for error handling
+
+**Related:** See `eslint-custom-rules.mdc` for full details
+
+## Running Checks
+
+```bash
+# All Zod-related checks are part of normal linting
+bun run lint
+mise run lint
+
+# These rules are enforced
+bun run typecheck  # zod-schema-naming via TypeScript
+```
+
+## Common ESLint Violations with Fixes
+
+### Violation 1: Schema naming
+
+```typescript
+// ❌ BEFORE
+const userDataSchema = z.object({ id: z.string() });
+
+// ✅ AFTER
+const UserDataSchema = z.object({ id: z.string() });
+```
+
+### Violation 2: Double parsing
+
+```typescript
+// ❌ BEFORE
+const data = UserSchema.parse(input);
+const validated = UserSchema.safeParse(data);  // Redundant!
+
+// ✅ AFTER
+const data = UserSchema.parse(input);
+// Use data directly, no re-parse needed
+```
+
+### Violation 3: Using typeof with Zod
+
+```typescript
+// ❌ BEFORE
+if (typeof value === "string" && value.includes("test")) {
+  process(value);
+}
+
+// ✅ AFTER
+const StringSchema = z.string().includes("test");
+const result = StringSchema.safeParse(value);
+if (result.success) {
+  process(result.data);
+}
+```
+
+### Violation 4: Missing schema validation
+
+```typescript
+// ❌ BEFORE
+const id = (data as unknown).id;  // Type assertion without validation
+
+// ✅ AFTER
+const DataSchema = z.object({ id: z.string() });
+const validated = DataSchema.parse(data);
+const id = validated.id;
+```
+
+## Tips for Satisfying ESLint
+
+1. **Always name schemas with PascalCase + Schema suffix**
+   - Automatically passes `zod-schema-naming`
+
+2. **Parse once and reuse the result**
+   - Automatically passes `no-redundant-zod-parse`
+
+3. **Prefer Zod validation over type checks**
+   - Use `StringSchema.safeParse()` instead of `typeof x === "string"`
+   - Use `z.array()` instead of `Array.isArray()`
+   - Use `z.number().int()` instead of `Number.isInteger()`
+
+4. **Define schemas at module level, use throughout**
+   - Promotes reuse and prevents redundant parsing
+
+```typescript
+// ✅ GOOD PATTERN
+const UserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+});
+
+function processUser(input: unknown) {
+  const user = UserSchema.parse(input);
+  // Use user throughout the function
+}
+
+function validateUser(input: unknown) {
+  const result = UserSchema.safeParse(input);
+  return result.success;
+}
+```
+
+## Related Documentation
+
+- **ESLint Custom Rules:** See `eslint-custom-rules.mdc`
+- **Type Assertions:** See `type-assertions-policy.mdc`
+- **Type Safety:** See `type-safety-strategy.mdc`
+- **Code Quality:** See `code-quality-checklist.mdc`
+- **Running Checks:** See `mise-and-dagger-usage.mdc`

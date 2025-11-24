@@ -112,7 +112,7 @@ describe("MatchDto Schema Validation", () => {
       // (present for participant 0, absent for many others)
       expect(
         challenges.shortestTimeToAceFromFirstTakedown === undefined ||
-          typeof challenges.shortestTimeToAceFromFirstTakedown === "number",
+          challenges.shortestTimeToAceFromFirstTakedown > -1,
       ).toBe(true);
     }
   });

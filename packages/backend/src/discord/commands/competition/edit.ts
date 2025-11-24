@@ -7,6 +7,7 @@ import {
   getCompetitionStatus,
   type CompetitionCriteria,
   type CompetitionId,
+  type CompetitionWithCriteria,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
@@ -17,7 +18,6 @@ import {
   type UpdateCompetitionInput,
   updateCompetition,
 } from "@scout-for-lol/backend/database/competition/queries.js";
-import { type CompetitionWithCriteria } from "@scout-for-lol/data";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import { getChampionId } from "@scout-for-lol/backend/utils/champion.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
@@ -73,11 +73,14 @@ type EditCommandArgs = z.infer<typeof EditCommandArgsBaseSchema> & {
  */
 async function parseEditArguments(
   interaction: ChatInputCommandInteraction,
-  competitionId: CompetitionId,
-  userId: DiscordAccountId,
-  isDraft: boolean,
-  username: string,
+  options: {
+    competitionId: CompetitionId;
+    userId: DiscordAccountId;
+    isDraft: boolean;
+    username: string;
+  },
 ): Promise<EditCommandArgs | null> {
+  const { competitionId, userId, isDraft, username } = options;
   try {
     // Parse Discord options
     const title = interaction.options.getString("title");
@@ -123,19 +126,14 @@ async function parseEditArguments(
     // Validate base args (always editable fields)
     const baseArgs = EditCommandArgsBaseSchema.parse(baseArgsInput);
 
-    let args: EditCommandArgs = { ...baseArgs };
-
     // Parse dates if provided
     const datesResult = parseDatesArgs(startDateStr, endDateStr, seasonStr, isDraft);
     if (!datesResult.success) {
       throw new Error(datesResult.error);
     }
-    // Assign dates if present
-    if ("dates" in datesResult && datesResult.dates !== undefined) {
-      args.dates = datesResult.dates;
-    }
 
     // Parse criteria if provided
+    let criteria: EditCommandArgs["criteria"] = undefined;
     if (criteriaType !== null) {
       if (!isDraft) {
         throw new Error("Cannot change criteria after competition has started");
@@ -155,8 +153,15 @@ async function parseEditArguments(
         criteriaInput["minGames"] = minGames;
       }
 
-      args.criteria = CriteriaEditSchema.parse(criteriaInput);
+      criteria = CriteriaEditSchema.parse(criteriaInput);
     }
+
+    // Build args object with dates and criteria if present
+    const args: EditCommandArgs = {
+      ...baseArgs,
+      ...(datesResult.dates !== undefined ? { dates: datesResult.dates } : {}),
+      ...(criteria !== undefined ? { criteria } : {}),
+    };
 
     // Check if DRAFT-only fields are provided when not in DRAFT
     if (!isDraft) {
@@ -400,7 +405,12 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
   // Step 4: Parse and validate edit arguments
   // ============================================================================
 
-  const args = await parseEditArguments(interaction, competitionId, userId, isDraft, username);
+  const args = await parseEditArguments(interaction, {
+    competitionId,
+    userId,
+    isDraft,
+    username,
+  });
   if (!args) {
     return;
   }

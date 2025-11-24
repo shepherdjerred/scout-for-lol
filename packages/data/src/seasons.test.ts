@@ -99,7 +99,7 @@ describe("seasons", () => {
   describe("getSeasonChoices", () => {
     test("should return Discord choices for non-ended seasons", () => {
       const choices = getSeasonChoices();
-      expect(Array.isArray(choices)).toBe(true);
+      expect(choices).toBeArray();
 
       for (const choice of choices) {
         expect(choice.name).toBeTruthy();

@@ -1,5 +1,6 @@
 ---
 description: When and how to use type assertions correctly
+globs: "*.ts,*.tsx"
 ---
 
 # Type Assertions Policy
@@ -129,3 +130,151 @@ const value = obj.dynamicKey;  // If dynamicKey is from index signature
 // ✅ CORRECT:
 const value = obj["dynamicKey"];
 ```
+
+## ESLint Enforcement: `no-type-assertions`
+
+This policy is enforced by the custom ESLint rule `no-type-assertions`.
+
+### What the Linter Checks
+
+The rule disallows type assertions except:
+1. `as unknown` - Widening type for later narrowing
+2. `as const` - Const assertions for literal types
+
+### Error Messages
+
+```
+error: Type assertions are not allowed except for casting to 'unknown' or 'as const'
+```
+
+### Examples Triggering the Linter
+
+```typescript
+// ❌ TRIGGERS LINTER - Direct type assertion
+const user = userData as User;
+
+// ❌ TRIGGERS LINTER - Multiple assertions
+const value = (data as unknown) as SpecificType;
+
+// ❌ TRIGGERS LINTER - Assert to any
+const result = value as any;
+
+// ❌ TRIGGERS LINTER - Assert Error type
+const message = (error as Error).message;
+```
+
+### Examples That Don't Trigger
+
+```typescript
+// ✅ OK - as unknown
+const unknownValue = someData as unknown;
+
+// ✅ OK - as const
+const config = { type: "production" } as const;
+
+// ✅ OK - With Zod validation first
+const UserSchema = z.object({ name: z.string() });
+const validated = UserSchema.parse(userData);  // No cast needed
+```
+
+### Fixing Violations
+
+**Option 1: Use Zod Validation (Preferred)**
+
+```typescript
+// ❌ LINTER ERROR
+const user = userData as User;
+
+// ✅ FIXED
+const UserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+const user = UserSchema.parse(userData);
+```
+
+**Option 2: Use Type Guards**
+
+```typescript
+// ❌ LINTER ERROR
+function getName(value: unknown) {
+  return (value as { name: string }).name;
+}
+
+// ✅ FIXED
+function getName(value: unknown): string {
+  if (typeof value === "object" && value !== null && "name" in value) {
+    const typed = value as unknown as { name: unknown };
+    if (typeof typed.name === "string") {
+      return typed.name;
+    }
+  }
+  throw new Error("Invalid value");
+}
+
+// OR with Zod
+const NameSchema = z.object({ name: z.string() });
+function getName(value: unknown): string {
+  const result = NameSchema.safeParse(value);
+  if (result.success) {
+    return result.data.name;
+  }
+  throw new Error("Invalid value");
+}
+```
+
+**Option 3: Use Optional Chaining**
+
+```typescript
+// ❌ LINTER ERROR
+const name = (user as any).profile.name;
+
+// ✅ FIXED
+const name = user?.profile?.name ?? "Unknown";
+```
+
+### When Assertions Are Allowed
+
+Two specific patterns are allowed:
+
+#### 1. `as unknown` (Type Widening)
+
+```typescript
+// Allowed - widening to unknown
+const unknown1 = someValue as unknown;
+
+// Allowed - widening in two steps
+const unknown2 = someValue as unknown as SpecificType;
+```
+
+#### 2. `as const` (Const Assertion)
+
+```typescript
+// Allowed - const assertion
+const CONFIG = {
+  type: "production" as const,
+  version: 1 as const,
+};
+
+// Allowed - const on entire object
+const obj = { a: 1, b: 2 } as const;
+```
+
+### Running the Linter
+
+```bash
+# Check for type assertion violations
+bun run lint
+mise run lint
+
+# The rule is always enabled for .ts and .tsx files
+# See eslint.config.ts for configuration
+```
+
+## Related Documentation
+
+- **ESLint Rule Details:** See `eslint-custom-rules.mdc`
+- **Type Safety Strategy:** See `type-safety-strategy.mdc`
+- **Zod Validation:** See `zod-validation-patterns.mdc`
+- **Code Quality Checks:** See `code-quality-checklist.mdc`
+- **Common TypeScript Pitfalls:** See `typescript-common-pitfalls.mdc`

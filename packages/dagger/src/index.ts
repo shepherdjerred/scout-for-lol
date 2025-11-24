@@ -76,14 +76,18 @@ export class ScoutForLol {
     source: Directory,
   ): Promise<string> {
     logWithTimestamp("🔍 Starting comprehensive check process");
-    logWithTimestamp("📋 This includes TypeScript type checking, ESLint, and tests for all packages");
+    logWithTimestamp(
+      "📋 This includes TypeScript type checking, ESLint, tests for all packages, and custom ESLint rules tests",
+    );
 
     logWithTimestamp("📁 Prepared source directories for all packages");
 
     // Run checks in parallel - force container execution with .sync()
     await withTiming("parallel package checks (lint, typecheck, tests)", async () => {
       logWithTimestamp("🔄 Running lint, typecheck, and tests in parallel for all packages...");
-      logWithTimestamp("📦 Packages being checked: backend, report, report-ui, data, frontend, review-dev-tool");
+      logWithTimestamp(
+        "📦 Packages being checked: backend, report, report-ui, data, frontend, review-dev-tool, eslint-rules",
+      );
 
       // Force execution of all containers in parallel
       await Promise.all([
@@ -117,6 +121,13 @@ export class ScoutForLol {
           await container.sync();
           return container;
         }),
+        withTiming("eslint-rules tests", async () => {
+          const container = getBunNodeContainer(source)
+            .withExec(["bun", "install", "--frozen-lockfile"])
+            .withExec(["bun", "test", "eslint-rules/"]);
+          await container.sync();
+          return container;
+        }),
         withTiming("code duplication check", async () => {
           const container = getBunNodeContainer(source)
             .withExec(["bun", "install", "--frozen-lockfile"])
@@ -128,7 +139,9 @@ export class ScoutForLol {
     });
 
     logWithTimestamp("🎉 All checks completed successfully");
-    logWithTimestamp("✅ All packages passed: TypeScript type checking, ESLint linting, and tests");
+    logWithTimestamp(
+      "✅ All packages passed: TypeScript type checking, ESLint linting, tests, and custom ESLint rules tests",
+    );
     return "All checks completed successfully";
   }
 

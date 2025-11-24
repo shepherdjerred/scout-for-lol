@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { z } from "zod";
 
 // Note: Full integration tests for checkAbandonedGuilds would require:
 // - Test database with GuildPermissionError records
@@ -11,7 +12,7 @@ describe("Abandoned Guilds - Unit Tests", () => {
   test("should export the main function", async () => {
     const { checkAbandonedGuilds } = await import("./abandoned-guilds");
     expect(checkAbandonedGuilds).toBeDefined();
-    expect(typeof checkAbandonedGuilds).toBe("function");
+    expect(checkAbandonedGuilds).toBeFunction();
   });
 });
 
@@ -28,10 +29,11 @@ describe("Abandoned Guild Metrics", () => {
     expect(guildDataCleanupTotal).toBeDefined();
 
     // Verify they have inc() method (Counter behavior)
-    expect(typeof abandonedGuildsDetectedTotal.inc).toBe("function");
-    expect(typeof guildsLeftTotal.inc).toBe("function");
-    expect(typeof abandonmentNotificationsTotal.inc).toBe("function");
-    expect(typeof guildDataCleanupTotal.inc).toBe("function");
+    const CounterSchema = z.object({ inc: z.function() }).loose();
+    expect(CounterSchema.safeParse(abandonedGuildsDetectedTotal).success).toBe(true);
+    expect(CounterSchema.safeParse(guildsLeftTotal).success).toBe(true);
+    expect(CounterSchema.safeParse(abandonmentNotificationsTotal).success).toBe(true);
+    expect(CounterSchema.safeParse(guildDataCleanupTotal).success).toBe(true);
   });
 
   test("metrics should increment without errors", async () => {

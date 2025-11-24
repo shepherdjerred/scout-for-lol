@@ -65,6 +65,8 @@ export function App() {
 
   const exampleMatch = getExampleMatch(matchType);
 
+  // Update URL when view mode or match type changes - this is a side effect that must happen after render
+  // eslint-disable-next-line custom-rules/no-use-effect -- URL synchronization requires side effect after state changes
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     params.set("view", viewMode);

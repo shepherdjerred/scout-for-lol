@@ -9,6 +9,7 @@ import {
   parseTeam,
   invertTeam,
   getOrdinalSuffix,
+  parseLane,
   type MatchDto,
   type ArenaMatch,
   type CompletedMatch,
@@ -305,18 +306,17 @@ export function convertMatchDtoToInternalFormat(
     red: matchDto.info.participants.filter((p) => p.teamId === 200).map(participantToChampion),
   };
 
-  // Update players with real data from the match
-  const updatedPlayers = baseMatch.players.map((player, index) => {
-    const participant = reorderedParticipants[index];
-    if (participant) {
-      // Build Riot ID (GameName#Tagline)
-      const riotId =
-        participant.riotIdGameName && participant.riotIdTagline
-          ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
-          : player.playerConfig.alias;
+  // Update players with real data from the match - split by queue type for proper typing
+  if (queueType === "arena") {
+    const updatedPlayers = baseMatch.players.map((player, index) => {
+      const participant = reorderedParticipants[index];
+      if (participant) {
+        // Build Riot ID (GameName#Tagline)
+        const riotId =
+          participant.riotIdGameName && participant.riotIdTagline
+            ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
+            : player.playerConfig.alias;
 
-      // For arena matches, player doesn't have a lane field or lane opponent
-      if (queueType === "arena") {
         return {
           ...player,
           playerConfig: {
@@ -332,8 +332,27 @@ export function convertMatchDtoToInternalFormat(
           },
         };
       }
+      return player;
+    });
 
-      // For regular matches, convert participant to full champion and calculate lane opponent
+    // For arena matches, no teams roster
+    return {
+      ...baseMatch,
+      players: updatedPlayers,
+      durationInSeconds: matchDto.info.gameDuration,
+    } as ArenaMatch;
+  }
+
+  // For regular matches, convert participant to full champion and calculate lane opponent
+  const updatedPlayers = baseMatch.players.map((player, index) => {
+    const participant = reorderedParticipants[index];
+    if (participant) {
+      // Build Riot ID (GameName#Tagline)
+      const riotId =
+        participant.riotIdGameName && participant.riotIdTagline
+          ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
+          : player.playerConfig.alias;
+
       const champion = participantToChampion(participant);
       const team = parseTeam(participant.teamId);
       // Team should always be defined for valid matches (teamId is 100 or 200)
@@ -362,25 +381,13 @@ export function convertMatchDtoToInternalFormat(
     return player;
   });
 
-  // Update team rosters for non-arena matches (use teams we already built)
-  if (queueType !== "arena") {
-    // Return completed match with updated players
-    const completedMatch: CompletedMatch = {
-      ...(baseMatch as unknown as CompletedMatch),
-      players: updatedPlayers,
-      durationInSeconds: matchDto.info.gameDuration,
-      teams,
-    };
-    return completedMatch;
-  }
-
-  // For arena matches, no teams roster
-  const arenaMatch: ArenaMatch = {
-    ...(baseMatch as unknown as ArenaMatch),
+  // Return completed match with updated players
+  return {
+    ...baseMatch,
     players: updatedPlayers,
     durationInSeconds: matchDto.info.gameDuration,
-  };
-  return arenaMatch;
+    teams,
+  } as CompletedMatch;
 }
 
 /**

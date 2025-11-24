@@ -7,6 +7,7 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
+import { z } from "zod";
 import { saveSvgToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import { MatchIdSchema } from "@scout-for-lol/data";
 
@@ -99,9 +100,10 @@ describe("saveSvgToS3 - Success Cases", () => {
     expect(s3Mock.calls().length).toBe(1);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0] as unknown as PutObjectCommand;
     // Body should be Uint8Array or string
-    expect(command.input.Body instanceof Uint8Array || typeof command.input.Body === "string").toBe(true);
+    const bodyValidator = z.union([z.instanceof(Uint8Array), z.string()]);
+    expect(bodyValidator.safeParse(command.input.Body).success).toBe(true);
 
     expect(result).toBeDefined();
   });
@@ -297,19 +299,21 @@ describe("saveSvgToS3 - Content Type and Metadata", () => {
     await saveSvgToS3(matchId, svgContent, queueType);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0] as unknown as PutObjectCommand;
 
     // Body should be Uint8Array or string
-    expect(command.input.Body instanceof Uint8Array || typeof command.input.Body === "string").toBe(true);
+    const bodyData = (command as { input: { Body: unknown } }).input?.Body;
+    const bodyValidator = z.union([z.instanceof(Uint8Array), z.string()]);
+    const validatedBody = bodyValidator.safeParse(bodyData);
+    expect(validatedBody.success).toBe(true);
 
     // Body should contain the UTF-8 encoded string
-    const bodyData = command.input.Body;
-    const bodyString =
-      bodyData instanceof Uint8Array
-        ? new TextDecoder().decode(bodyData)
-        : typeof bodyData === "string"
-          ? bodyData
-          : "";
+    let bodyString = "";
+    if (validatedBody.success && validatedBody.data instanceof Uint8Array) {
+      bodyString = new TextDecoder().decode(validatedBody.data);
+    } else if (validatedBody.success && validatedBody.data && typeof validatedBody.data === "string") {
+      bodyString = validatedBody.data;
+    }
     expect(bodyString).toBe(svgContent);
   });
 });

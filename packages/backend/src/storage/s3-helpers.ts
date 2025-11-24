@@ -1,4 +1,5 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { z } from "zod";
 import configuration from "@scout-for-lol/backend/configuration.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import type { MatchId } from "@scout-for-lol/data";
@@ -57,7 +58,17 @@ export async function saveToS3(config: SaveToS3Config): Promise<string | undefin
   try {
     const client = new S3Client();
     const key = generateS3Key(matchId, keyPrefix, keyExtension);
-    const bodyBuffer = typeof body === "string" ? new TextEncoder().encode(body) : body;
+    const StringSchema = z.string();
+    const BytesSchema = z.instanceof(Uint8Array);
+
+    // Try to validate as string first, then bytes
+    let bodyBuffer: Uint8Array;
+    const stringResult = StringSchema.safeParse(body);
+    if (stringResult.success) {
+      bodyBuffer = new TextEncoder().encode(stringResult.data);
+    } else {
+      bodyBuffer = BytesSchema.parse(body);
+    }
     const sizeBytes = bodyBuffer.length;
 
     console.log(`[S3Storage] 📝 Upload details:`, {

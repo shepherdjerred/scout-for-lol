@@ -10,7 +10,9 @@
   - I think we have a file analyzing what tests are helpful and which are not
 - Skipped tests
 - Remove dead code
+  - Continue running knip
 - Remove duplicated code
+  - Continue running dedupe script
 
 ## Done
 

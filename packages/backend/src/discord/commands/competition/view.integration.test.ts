@@ -301,7 +301,7 @@ describe("Competition View - ACTIVE Status", () => {
       expect(entry).toHaveProperty("playerName");
       expect(entry).toHaveProperty("score");
       expect(entry).toHaveProperty("rank");
-      expect(typeof entry.rank).toBe("number");
+      expect(entry.rank).toBeNumber();
       expect(entry.rank).toBeGreaterThan(0);
     }
 
@@ -401,7 +401,7 @@ describe("Competition View - ENDED Status", () => {
       expect(entry).toHaveProperty("playerName");
       expect(entry).toHaveProperty("score");
       expect(entry).toHaveProperty("rank");
-      expect(typeof entry.rank).toBe("number");
+      expect(entry.rank).toBeNumber();
       expect(entry.rank).toBeGreaterThan(0);
     }
 

@@ -3,12 +3,7 @@
  * IndexedDB can handle much larger data than localStorage (hundreds of MB vs 5-10MB)
  */
 import { z } from "zod";
-import {
-  openIndexedDB,
-  executeRequest,
-  executeRequestVoid,
-  getStore,
-} from "@scout-for-lol/review-dev-tool/lib/indexeddb-helpers.js";
+import { openIndexedDB, executeRequest, getStore } from "@scout-for-lol/review-dev-tool/lib/indexeddb-helpers.js";
 
 const DB_NAME = "scout-review-history";
 const DB_VERSION = 1;
@@ -72,7 +67,7 @@ export async function getAllEntries(): Promise<DBHistoryEntry[]> {
   const request = store.getAll();
   const result = await executeRequest<unknown[]>(request);
   // executeRequest returns T | void, so result can be undefined
-  if (result === undefined) {
+  if (!Array.isArray(result)) {
     return [];
   }
   const entriesResult = z.array(DBHistoryEntrySchema).safeParse(result);
@@ -109,7 +104,7 @@ export async function deleteEntry(id: string): Promise<void> {
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = getStore(transaction, STORE_NAME);
   const request = store.delete(id);
-  await executeRequest(request);
+  void (await executeRequest(request));
 }
 
 /**
@@ -120,7 +115,7 @@ export async function clearAllEntries(): Promise<void> {
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = getStore(transaction, STORE_NAME);
   const request = store.clear();
-  await executeRequest(request);
+  void (await executeRequest(request));
 }
 
 /**

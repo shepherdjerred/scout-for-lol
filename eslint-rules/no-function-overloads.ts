@@ -21,69 +21,98 @@ export const noFunctionOverloads = createRule({
   },
   defaultOptions: [],
   create(context) {
-    // Track function declarations by name (simple approach - all in same file share scope)
-    const functionDeclarations = new Map<
-      string,
-      Array<TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction>
+    // Track function declarations by name per scope
+    // Key: scope node (or "module" for top-level), Value: Map of function names to declarations
+    const scopeStack: (TSESTree.Node | "module")[] = ["module"];
+    const functionDeclarationsByScope = new Map<
+      TSESTree.Node | "module",
+      Map<string, (TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction)[]>
     >();
 
+    function getCurrentScope(): TSESTree.Node | "module" {
+      return scopeStack[scopeStack.length - 1] ?? "module";
+    }
+
+    function trackFunction(funcDecl: TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction): void {
+      if (!funcDecl.id) {
+        return;
+      }
+
+      const currentScope = getCurrentScope();
+      const functionName = funcDecl.id.name;
+
+      if (!functionDeclarationsByScope.has(currentScope)) {
+        functionDeclarationsByScope.set(currentScope, new Map());
+      }
+
+      const scopeFunctions = functionDeclarationsByScope.get(currentScope);
+      if (!scopeFunctions) {
+        return;
+      }
+      const declarations = scopeFunctions.get(functionName) ?? [];
+      declarations.push(funcDecl);
+      scopeFunctions.set(functionName, declarations);
+    }
+
     return {
-      ExportNamedDeclaration(node: TSESTree.ExportNamedDeclaration) {
-        if (
-          node.declaration?.type === AST_NODE_TYPES.FunctionDeclaration ||
-          node.declaration?.type === AST_NODE_TYPES.TSDeclareFunction
-        ) {
-          const funcDecl = node.declaration as
-            | TSESTree.FunctionDeclaration
-            | TSESTree.TSDeclareFunction;
-          if (funcDecl.id) {
-            const functionName = funcDecl.id.name;
-            const declarations = functionDeclarations.get(functionName) || [];
-            declarations.push(funcDecl);
-            functionDeclarations.set(functionName, declarations);
-          }
-        }
-      },
+      // Enter new scopes - functions create their own scope for nested functions
       FunctionDeclaration(node: TSESTree.FunctionDeclaration) {
-        // Track all function declarations (may duplicate with ExportNamedDeclaration)
-        if (node.id) {
-          const functionName = node.id.name;
-          const declarations = functionDeclarations.get(functionName) || [];
-          declarations.push(node);
-          functionDeclarations.set(functionName, declarations);
+        // Track this function in the current scope BEFORE entering its body
+        trackFunction(node);
+        // Now enter the function's body as a new scope
+        scopeStack.push(node);
+      },
+      "FunctionDeclaration:exit"() {
+        scopeStack.pop();
+      },
+      FunctionExpression(node: TSESTree.FunctionExpression) {
+        scopeStack.push(node);
+      },
+      "FunctionExpression:exit"() {
+        scopeStack.pop();
+      },
+      ArrowFunctionExpression(node: TSESTree.ArrowFunctionExpression) {
+        scopeStack.push(node);
+      },
+      "ArrowFunctionExpression:exit"() {
+        scopeStack.pop();
+      },
+
+      ExportNamedDeclaration(node: TSESTree.ExportNamedDeclaration) {
+        if (node.declaration?.type === AST_NODE_TYPES.FunctionDeclaration) {
+          trackFunction(node.declaration);
+        } else if (node.declaration?.type === AST_NODE_TYPES.TSDeclareFunction) {
+          trackFunction(node.declaration);
         }
       },
       TSDeclareFunction(node: TSESTree.TSDeclareFunction) {
-        // Track TypeScript declare function signatures (used for overloads)
-        if (node.id) {
-          const functionName = node.id.name;
-          const declarations = functionDeclarations.get(functionName) || [];
-          declarations.push(node);
-          functionDeclarations.set(functionName, declarations);
-        }
+        trackFunction(node);
       },
-      "Program:exit"() {
-        // After parsing the entire file, check for overloads
-        for (const [functionName, declarations] of functionDeclarations.entries()) {
-          // Deduplicate by node reference using WeakSet
-          const seen = new WeakSet<
-            TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction
-          >();
-          const uniqueDeclarations = declarations.filter((decl) => {
-            if (seen.has(decl)) {
-              return false;
-            }
-            seen.add(decl);
-            return true;
-          });
 
-          if (uniqueDeclarations.length > 1) {
-            // Found multiple declarations with the same name - this is an overload
-            for (const decl of uniqueDeclarations) {
-              context.report({
-                node: decl,
-                messageId: "functionOverload",
-              });
+      "Program:exit"() {
+        // Check for overloads in each scope
+        const allScopes = Array.from(functionDeclarationsByScope.values());
+        for (const scopeFunctions of allScopes) {
+          const allFunctionGroups = Array.from(scopeFunctions.values());
+          for (const declarations of allFunctionGroups) {
+            // Deduplicate by node reference
+            const seen = new WeakSet<TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction>();
+            const uniqueDeclarations = declarations.filter((decl) => {
+              if (seen.has(decl)) {
+                return false;
+              }
+              seen.add(decl);
+              return true;
+            });
+
+            if (uniqueDeclarations.length > 1) {
+              // Found multiple declarations with the same name in the same scope
+              for (const decl of uniqueDeclarations) {
+                context.report({
+                  node: decl,
+                  messageId: "functionOverload",
+                });
+              }
             }
           }
         }

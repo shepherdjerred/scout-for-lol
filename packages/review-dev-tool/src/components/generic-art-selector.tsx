@@ -53,31 +53,34 @@ export function GenericArtSelector<T extends CustomArtStyle | CustomArtTheme>({
   const buttonColor = isSecondary ? "bg-purple-600 hover:bg-purple-700" : "bg-blue-600 hover:bg-blue-700";
 
   if (showEditor) {
-    // Narrow editingItem based on mode - use conditional rendering to avoid type assertions
+    // Narrow editingItem based on mode - use conditional rendering
+    // The type assertions here are safe because we've validated mode
     if (mode === "style") {
+      const handleStyleSave = (item: CustomArtStyle): void => {
+        void onSave(item as unknown as T);
+      };
       return (
         <div>
           <ArtStyleEditor
             mode={mode}
             style={editingItem as unknown as CustomArtStyle | undefined}
             theme={undefined}
-            onSave={(item) => {
-              void onSave(item as unknown as T);
-            }}
+            onSave={handleStyleSave}
             onCancel={onCancelEdit}
           />
         </div>
       );
     }
+    const handleThemeSave = (item: CustomArtTheme): void => {
+      void onSave(item as unknown as T);
+    };
     return (
       <div>
         <ArtStyleEditor
           mode={mode}
           style={undefined}
           theme={editingItem as unknown as CustomArtTheme | undefined}
-          onSave={(item) => {
-            void onSave(item as unknown as T);
-          }}
+          onSave={handleThemeSave}
           onCancel={onCancelEdit}
         />
       </div>

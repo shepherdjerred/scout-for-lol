@@ -33,10 +33,9 @@ export function openIndexedDB(dbName: string, version: number, upgradeHandler?: 
 
 /**
  * Execute an IndexedDB request and return the result
+ * Resolves with the result or undefined if no result is available
  */
-export function executeRequest<T>(request: IDBRequest<T>): Promise<T>;
-export function executeRequest(request: IDBRequest<IDBValidKey>): Promise<void>;
-export function executeRequest<T>(request: IDBRequest<T>): Promise<T | void> {
+export function executeRequest<T = IDBValidKey>(request: IDBRequest<T>): Promise<T | undefined> {
   return new Promise((resolve, reject) => {
     request.onerror = () => {
       const error = request.error;
@@ -44,12 +43,7 @@ export function executeRequest<T>(request: IDBRequest<T>): Promise<T | void> {
     };
 
     request.onsuccess = () => {
-      const result = request.result;
-      if (result !== undefined) {
-        resolve(result);
-      } else {
-        resolve(undefined);
-      }
+      resolve(request.result);
     };
   });
 }

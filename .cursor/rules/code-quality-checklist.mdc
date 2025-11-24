@@ -1,0 +1,701 @@
+---
+description: Complete pre-commit workflow checklist and code quality verification guide
+globs: "*.ts,*.tsx"
+---
+
+# Code Quality Checklist and Verification Guide
+
+Before committing code, follow this checklist to ensure it passes all automated quality checks.
+
+## Pre-Commit Workflow: 30-Second Summary
+
+```bash
+# Run this ONE command before committing
+mise check
+
+# If it passes, you're good to commit!
+# If it fails, fix the errors and run mise check again
+```
+
+That's it! `mise check` runs all checks in parallel and is fast.
+
+## When Mise Passes but CI Fails
+
+If your code passes `mise check` locally but fails in GitHub Actions:
+
+```bash
+# Debug with CI-like environment
+dagger call check
+
+# Compare output with mise check
+# Look for environment-specific issues (paths, permissions, etc.)
+```
+
+## Complete Pre-Commit Checklist
+
+### Step 1: Format Your Code
+
+```bash
+# Auto-fix formatting (imports, spacing, line length)
+bun run format:write
+
+# Or use mise
+mise run format
+```
+
+**What it checks:**
+- Line length (120 characters)
+- Consistent spacing and indentation
+- Proper import formatting
+
+### Step 2: Run All Checks
+
+```bash
+# This runs lint, typecheck, format (no-fix), and test in parallel
+mise check
+
+# Takes ~30-60 seconds depending on codebase size
+```
+
+**What it includes:**
+- TypeScript compilation check
+- ESLint (including custom rules)
+- Format verification
+- Unit and integration tests
+- Unused code detection (Knip)
+- Copy-paste detection (JSCPD)
+
+### Step 3: Review Output
+
+If `mise check` fails, look at the error message to identify which check failed.
+
+#### TypeScript Errors
+
+```
+error TS2322: Type 'string' is not assignable to type 'number'
+```
+
+**Fix:** Update your type annotation or validate input with Zod
+
+**Related:** See `typescript-standards.mdc`
+
+#### ESLint Errors
+
+```
+error: 'no-type-assertions' - Type assertions are not allowed except for casting to 'unknown' or 'as const'
+```
+
+**Fix:** Use Zod validation instead, or use `as unknown` if necessary
+
+**Related:** See `eslint-custom-rules.mdc` for specific rule details
+
+#### Prettier Errors (Format)
+
+```
+error: Insert `\n` - Line too long (127 characters)
+```
+
+**Fix:** Run `bun run format:write` to auto-fix
+
+#### Linting Complexity Errors
+
+```
+error: 'max-lines' - Function exceeds maximum of 400 lines
+```
+
+**Fix:** Split the function into smaller, focused functions
+
+**Related:** See **Complexity Limits** section below
+
+#### Test Failures
+
+```
+✗ should fetch data successfully
+  error: Expected 200 but got 404
+```
+
+**Fix:** Debug the test or update test data
+
+#### Unused Code (Knip)
+
+```
+Unused variable: oldFunction
+```
+
+**Fix:** Delete the unused code or export/use it if it's needed
+
+**Related:** See `knip.json` configuration
+
+#### Duplicate Code (JSCPD)
+
+```
+2 duplicates found in src/utils.ts and src/helpers.ts
+```
+
+**Fix:** Extract common code into a shared utility
+
+**Related:** See **JSCPD Checks** section below
+
+### Step 4: Commit When All Checks Pass
+
+```bash
+git add .
+git commit -m "descriptive message"
+
+# DO NOT git push without user approval
+```
+
+## Individual Checks Reference
+
+### TypeScript Check
+
+```bash
+# Run alone
+bun run typecheck
+mise run typecheck
+
+# What it validates
+# - All types are correctly annotated
+# - No implicit `any`
+# - No `any` types allowed
+# - Null/undefined properly handled (strictNullChecks)
+# - All code is type-safe
+```
+
+**Common Issues:**
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `Type 'X' is not assignable to type 'Y'` | Type mismatch | Ensure variable matches expected type or use type guard |
+| `Object is possibly 'null'` | Missing null check | Add `if (obj !== null)` before access |
+| `Property 'X' does not exist` | Wrong field name or missing validation | Check the object structure or validate with Zod |
+| `This expression is not callable` | Trying to call non-function | Check if value is actually a function |
+
+**TypeScript Configuration:**
+- `tsconfig.base.json` sets strict mode
+- `strictNullChecks: true` - Forces null safety
+- `noImplicitAny: true` - Requires explicit types
+- `noImplicitThis: true` - `this` must be typed
+- `noUnusedLocals: true` - Catch unused variables
+- `noUnusedParameters: true` - Catch unused parameters
+- `noImplicitReturns: true` - All code paths must return
+
+### ESLint Check
+
+```bash
+# Run alone
+bun run lint
+mise run lint
+
+# What it validates
+# - Custom rules (12 project-specific rules)
+# - TypeScript rules (from @typescript-eslint)
+# - Import rules (no circular dependencies)
+# - React/JSX rules (for .tsx files)
+# - Accessibility rules (for .tsx/.jsx files)
+# - Naming conventions
+# - Code complexity limits
+```
+
+**Common Issues:**
+
+| Error | Rule | Fix |
+|-------|------|-----|
+| `Type assertions are not allowed` | `no-type-assertions` | Use Zod validation or `as unknown` |
+| `Prefer Zod schema validation over typeof` | `prefer-zod-validation` | Use Zod `.safeParse()` instead |
+| `Function overloads are not allowed` | `no-function-overloads` | Use conditional types or union types |
+| `All Zod schemas must be PascalCase` | `zod-schema-naming` | Rename to `MySchema` not `mySchema` |
+| `Function exceeds 400 lines` | `max-lines-per-function` | Split into smaller functions |
+| `Complexity exceeds 20` | `complexity` | Reduce branch count or split logic |
+| `Max depth of 4 exceeded` | `max-depth` | Flatten nested if statements |
+| `Max params of 4 exceeded` | `max-params` | Use object parameter instead |
+
+**Related:** See `eslint-custom-rules.mdc` for detailed documentation on each custom rule
+
+### Prettier Format Check
+
+```bash
+# Run alone
+bun run format
+mise run format
+
+# Auto-fix
+bun run format:write
+
+# What it validates
+# - Line length: 120 characters maximum
+# - Consistent spacing and indentation
+# - Proper import organization
+# - Consistent quote usage
+```
+
+### Test Check
+
+```bash
+# Run alone
+bun test
+mise run test
+
+# Run specific test file
+bun test src/database/competition.test.ts
+
+# Watch mode
+bun test --watch
+
+# Update snapshots
+bun test --update-snapshots
+```
+
+**What it validates:**
+- Unit tests pass
+- Integration tests pass
+- Database setup/cleanup works
+- Mocks are correct
+- No promise rejections
+
+### Knip Unused Code Check
+
+```bash
+# Knip runs as part of mise check
+# No standalone command
+```
+
+**What it detects:**
+- Unused imports
+- Unused exports
+- Unused variables (in some cases)
+- Dead code
+
+**Common False Positives:**
+- Re-exported types from `index.ts`
+- Test utilities used in multiple test files
+- Library entry points
+
+**Configuration:** `knip.json`
+
+### JSCPD Copy-Paste Check
+
+```bash
+# JSCPD runs as part of mise check
+# No standalone command
+
+# View report after check
+open jscpd-report/index.html
+```
+
+**What it detects:**
+- Duplicated code blocks (9+ lines, 30+ tokens)
+- Copy-paste violations
+- Duplicated logic
+
+**Threshold:** 12% total allowed duplication
+
+**Exempt:** Test files (`.test.ts`, `.spec.ts`)
+
+**Fix:** Extract duplicate code into shared utility function
+
+## Complexity Limits
+
+ESLint enforces these limits to keep code maintainable:
+
+| Limit | Value | File Type | Notes |
+|-------|-------|-----------|-------|
+| `max-lines` | 500 | Most files | Use `/* eslint-disable max-lines -- comment */` if justified |
+| `max-lines` | 1500 | Test files | Tests can be longer |
+| `max-lines-per-function` | 400 | Most files | 200 for test functions |
+| `complexity` | 20 | All files | Cyclomatic complexity |
+| `max-depth` | 4 | All files | Nested if/loop depth |
+| `max-params` | 4 | Most files | Function parameter count |
+
+**How to fix:**
+
+1. **Function too long:** Split into smaller functions
+
+```typescript
+// ❌ BEFORE
+function handleCompetition(data) {
+  // 450 lines of code
+}
+
+// ✅ AFTER
+function validateCompetition(data) { /* ... */ }
+function createCompetition(data) { /* ... */ }
+function notifyUsers(competition) { /* ... */ }
+function handleCompetition(data) {
+  const validated = validateCompetition(data);
+  const created = createCompetition(validated);
+  await notifyUsers(created);
+}
+```
+
+2. **Too many parameters:** Use object parameter
+
+```typescript
+// ❌ BEFORE
+function create(name, email, role, department, startDate, endDate) { }
+
+// ✅ AFTER
+function create(params: {
+  name: string;
+  email: string;
+  role: string;
+  department: string;
+  startDate: Date;
+  endDate: Date;
+}) { }
+```
+
+3. **Too many nested conditions:** Use early return or guard clause
+
+```typescript
+// ❌ BEFORE
+function process(data) {
+  if (isValid(data)) {
+    if (hasPermission(data)) {
+      if (isEnabled(data)) {
+        // 4 levels deep - VIOLATION
+        doWork(data);
+      }
+    }
+  }
+}
+
+// ✅ AFTER
+function process(data) {
+  if (!isValid(data)) return;
+  if (!hasPermission(data)) return;
+  if (!isEnabled(data)) return;
+  doWork(data);
+}
+```
+
+## Naming Conventions
+
+ESLint enforces TypeScript naming standards:
+
+| Category | Format | Examples | Notes |
+|----------|--------|----------|-------|
+| Functions | camelCase or PascalCase | `getUser`, `CreateUserComponent` | Components are PascalCase |
+| Variables | camelCase | `userName`, `itemCount` | - |
+| Constants | UPPER_CASE or camelCase | `MAX_ITEMS`, `defaultTimeout` | - |
+| Zod Schemas | PascalCase | `UserSchema`, `CompetitionDataSchema` | Always ends with `Schema` |
+| Types | PascalCase | `User`, `CompetitionStatus` | - |
+| Interfaces | PascalCase | `UserInterface` | Prefer `type` over `interface` |
+| Enums | PascalCase | `UserRole`, `Status` | Members can be PascalCase or UPPER_CASE |
+| Files | kebab-case | `user-service.ts`, `get-user.ts` | - |
+
+## Import Restrictions
+
+ESLint enforces these import rules:
+
+### No Node.js imports (use Bun APIs instead)
+
+```typescript
+// ❌ WRONG
+import fs from "fs";
+import { readFile } from "fs/promises";
+import { execSync } from "child_process";
+import crypto from "crypto";
+import path from "path";
+
+// ✅ CORRECT
+const file = await Bun.file(path).text();
+await Bun.write(path, content);
+const result = Bun.spawn(cmd);
+Bun.hash(data);
+```
+
+**Related:** See `prefer-bun-apis` in `eslint-custom-rules.mdc`
+
+### No re-exports (no barrel exports)
+
+```typescript
+// ❌ WRONG - in index.ts
+export * from "./utils";
+export { helper } from "./helpers";
+
+// ✅ CORRECT - explicit imports only
+import { helper } from "./helpers";
+export { helper };
+```
+
+**Related:** See `no-re-exports` in `eslint-custom-rules.mdc`
+
+### No parent directory imports in monorepo
+
+```typescript
+// ❌ WRONG
+import { Competition } from "../../../database";
+
+// ✅ CORRECT
+import { Competition } from "@scout-for-lol/data";
+```
+
+**Related:** See `no-parent-imports` in `eslint-custom-rules.mdc`
+
+### No restricted imports
+
+```typescript
+// ❌ WRONG
+import MatchDto from "twisted/dist/models-dto/MatchDto";
+
+// ✅ CORRECT
+import { MatchDtoSchema } from "@scout-for-lol/data";
+```
+
+## Order to Fix Issues
+
+When `mise check` fails, fix issues in this order:
+
+1. **TypeScript errors** → Fix type mismatches
+2. **ESLint errors** → Fix code issues
+3. **Prettier errors** → Auto-fix with `bun run format:write`
+4. **Test failures** → Debug and fix tests
+5. **Knip unused code** → Remove or use unused exports
+6. **JSCPD duplicates** → Refactor duplicated code
+
+**Why this order?**
+- TypeScript errors block ESLint from running properly
+- ESLint errors must be fixed by hand
+- Prettier can auto-fix format issues
+- Tests validate the fixes work
+- Knip/JSCPD are lower priority
+
+## CI vs Local: mise vs Dagger
+
+### Use mise (Local Development)
+
+```bash
+# 95% of the time, use mise
+mise check
+
+# Runs: lint, typecheck, format (no-fix), test
+# Speed: ~30-60 seconds
+# Matches: Local environment + CI environment
+```
+
+### Use Dagger (Debugging CI Failures)
+
+```bash
+# When mise passes but CI fails
+dagger call check
+
+# Runs: Same checks as CI pipeline
+# Speed: ~2-5 minutes (slower, more thorough)
+# Matches: Exact CI environment with Docker
+```
+
+**Related:** See `mise-and-dagger-usage.mdc` for detailed comparison
+
+## Common Violation Patterns
+
+### Pattern 1: Type Assertions Without Validation
+
+```typescript
+// ❌ WRONG - Triggers linter AND runtime risk
+const user = userData as User;
+
+// ✅ CORRECT - Validates first
+const user = UserSchema.parse(userData);
+```
+
+**Fixes:** Add Zod validation before using data
+
+### Pattern 2: Using typeof Instead of Zod
+
+```typescript
+// ❌ WRONG - Triggers linter
+if (typeof value === "string") {
+  processString(value);
+}
+
+// ✅ CORRECT - Use Zod
+const result = z.string().safeParse(value);
+if (result.success) {
+  processString(result.data);
+}
+```
+
+**Fixes:** Replace simple type checks with Zod schemas
+
+### Pattern 3: Zod Schema Naming
+
+```typescript
+// ❌ WRONG - camelCase triggers linter
+const userSchema = z.object({ /* ... */ });
+
+// ✅ CORRECT - PascalCase
+const UserSchema = z.object({ /* ... */ });
+```
+
+**Fixes:** Rename all `*schema` to `*Schema`
+
+### Pattern 4: Function Too Complex
+
+```typescript
+// ❌ WRONG - 25 branches, complexity exceeds 20
+function handleRequest(req) {
+  if (a) {
+    if (b) { }
+    else if (c) { }
+    else { }
+  } else if (d) {
+    // ... many more branches
+  }
+}
+
+// ✅ CORRECT - Split into helpers
+function validateRequest(req) { }
+function processValidRequest(req) { }
+function handleError(error) { }
+```
+
+**Fixes:** Extract conditional logic into separate functions
+
+### Pattern 5: Duplicate Code
+
+```typescript
+// ❌ WRONG - Appears in 3 places
+const formatted = value.trim().toLowerCase().replace(/\s+/g, "-");
+
+// ✅ CORRECT - Extract to utility
+function formatValue(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, "-");
+}
+```
+
+**Fixes:** Create utility function and import it
+
+### Pattern 6: Missing Null Check
+
+```typescript
+// ❌ WRONG - TypeScript error
+const date = competition.startDate;
+const isPast = now > date; // date might be null
+
+// ✅ CORRECT - Add null check
+const date = competition.startDate;
+const isPast = date && now > date;
+```
+
+**Fixes:** Add `if (value !== null)` checks
+
+### Pattern 7: Non-null Assertion
+
+```typescript
+// ❌ WRONG - Unsafe
+const name = user!.profile!.name;
+
+// ✅ CORRECT - Use optional chaining
+const name = user?.profile?.name;
+
+// ✅ BETTER - With default
+const name = user?.profile?.name ?? "Unknown";
+```
+
+**Fixes:** Use optional chaining (`?.`) instead of assertions (`!`)
+
+### Pattern 8: No Return Type on Exported Function
+
+```typescript
+// ❌ WRONG - Return type inferred
+export function getUser(id: string) {
+  return fetchUser(id);
+}
+
+// ✅ CORRECT - Explicit return type
+export function getUser(id: string): Promise<User> {
+  return fetchUser(id);
+}
+```
+
+**Fixes:** Add explicit return types to all exported functions
+
+### Pattern 9: Using `any` Type
+
+```typescript
+// ❌ WRONG
+function process(data: any) {
+  return data.field;
+}
+
+// ✅ CORRECT
+function process(data: unknown) {
+  const result = Schema.safeParse(data);
+  if (result.success) {
+    return result.data.field;
+  }
+  throw new Error("Invalid data");
+}
+```
+
+**Fixes:** Replace `any` with `unknown` and validate
+
+### Pattern 10: Function Overloads
+
+```typescript
+// ❌ WRONG - Multiple signatures
+function getValue(id: string): string;
+function getValue(id: number): number;
+function getValue(id: string | number) {
+  return typeof id === "string" ? "s" : 123;
+}
+
+// ✅ CORRECT - Conditional return type
+function getValue<T extends string | number>(
+  id: T
+): T extends string ? string : number {
+  return typeof id === "string" ? ("s" as never) : (123 as never);
+}
+```
+
+**Fixes:** Use conditional types or union types instead
+
+## Quick Reference
+
+### Commands
+
+| Command | Purpose | Duration |
+|---------|---------|----------|
+| `mise check` | Run all checks | 30-60s |
+| `bun run format:write` | Auto-fix formatting | 5-10s |
+| `bun run typecheck` | Check types | 10-20s |
+| `bun run lint` | Check code quality | 10-20s |
+| `bun test` | Run tests | 20-60s |
+| `dagger call check` | CI environment checks | 2-5m |
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `tsconfig.json` | TypeScript configuration |
+| `eslint.config.ts` | ESLint rules configuration |
+| `.prettierrc` | Prettier formatting rules |
+| `knip.json` | Unused code detection rules |
+| `.jscpd.json` | Copy-paste detection rules |
+
+### Rules
+
+| Rule | Type | Severity | Auto-Fix |
+|------|------|----------|----------|
+| TypeScript type errors | Compiler | Error | No |
+| ESLint errors | Linter | Error/Warn | Some |
+| Prettier formatting | Formatter | Warn | Yes |
+| Test failures | Runner | Error | No |
+| Knip unused code | Analyzer | Warn | No |
+| JSCPD duplicates | Analyzer | Warn | No |
+
+## Getting Help
+
+For detailed information on specific rules and patterns, see:
+
+- **TypeScript rules:** `typescript-standards.mdc`, `typescript-common-pitfalls.mdc`
+- **Zod validation:** `zod-validation-patterns.mdc`
+- **Type assertions:** `type-assertions-policy.mdc`
+- **Type safety:** `type-safety-strategy.mdc`
+- **ESLint custom rules:** `eslint-custom-rules.mdc`
+- **Testing:** `testing-patterns.mdc`
+- **Prisma:** `prisma-patterns.mdc`
+- **Mise and Dagger:** `mise-and-dagger-usage.mdc`
+- **Exhaustive case handling:** `exhaustive-case-handling.mdc`
+- **Union narrowing:** `typescript-union-narrowing.mdc`

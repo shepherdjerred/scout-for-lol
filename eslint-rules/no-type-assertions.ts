@@ -38,6 +38,17 @@ export const noTypeAssertions = createRule({
           return;
         }
 
+        // Disallow chained assertions like 'x as unknown as Type'
+        // This is checking the outer 'as Type' where expression is another TSAsExpression
+        if (node.expression.type === AST_NODE_TYPES.TSAsExpression) {
+          // The expression is already a type assertion, so this is a chain
+          context.report({
+            node,
+            messageId: "noAsExpression",
+          });
+          return;
+        }
+
         // All other 'as' assertions are disallowed
         context.report({
           node,
