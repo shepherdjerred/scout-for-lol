@@ -1,5 +1,5 @@
 import type { MostGamesPlayedCriteria } from "@scout-for-lol/data";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
+import type { MatchV5DTOs as _MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
@@ -11,7 +11,7 @@ import { isPlayerInMatch, matchesQueue } from "@scout-for-lol/backend/league/com
  * Counts the number of games played by each participant in the specified queue
  */
 export function processMostGamesPlayed(
-  matches: MatchV5DTOs.MatchDto[],
+  matches: MatchDto[],
   participants: PlayerWithAccounts[],
   criteria: MostGamesPlayedCriteria,
 ): LeaderboardEntry[] {

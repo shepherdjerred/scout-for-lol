@@ -70,14 +70,7 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
   const databaseUrl = configuration.databaseUrl;
 
   // Handle file:// URLs and extract the path
-  let databasePath: string;
-  if (databaseUrl.startsWith("file:")) {
-    // Remove 'file:' prefix and handle URL encoding
-    databasePath = databaseUrl.replace(/^file:/, "");
-    // TODO: use ts-pattern for exhaustive match
-  } else {
-    databasePath = databaseUrl;
-  }
+  const databasePath = databaseUrl.startsWith("file:") ? databaseUrl.replace(/^file:/, "") : databaseUrl;
 
   console.log(`📁 Database path: ${databasePath}`);
 

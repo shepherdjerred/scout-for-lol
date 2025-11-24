@@ -8,6 +8,7 @@ import {
   type SeasonId,
   parseCompetition,
 } from "@scout-for-lol/data";
+import { match } from "ts-pattern";
 import { type PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { type CompetitionDates } from "@scout-for-lol/backend/database/competition/validation.js";
 
@@ -49,17 +50,18 @@ export async function createCompetition(
   const now = new Date();
 
   // Extract dates based on type
-  let startDate: Date | null = null;
-  let endDate: Date | null = null;
-  let seasonId: SeasonId | null = null;
-
-  if (input.dates.type === "FIXED_DATES") {
-    startDate = input.dates.startDate;
-    endDate = input.dates.endDate;
-    // TODO: use ts-pattern for exhaustive match
-  } else {
-    seasonId = input.dates.seasonId;
-  }
+  const { startDate, endDate, seasonId } = match(input.dates)
+    .with({ type: "FIXED_DATES" }, (dates) => ({
+      startDate: dates.startDate,
+      endDate: dates.endDate,
+      seasonId: null as SeasonId | null,
+    }))
+    .with({ type: "SEASON" }, (dates) => ({
+      startDate: null as Date | null,
+      endDate: null as Date | null,
+      seasonId: dates.seasonId,
+    }))
+    .exhaustive();
 
   // Separate type from config for storage
   const { type: criteriaType, ...criteriaConfig } = input.criteria;
@@ -252,16 +254,22 @@ export async function updateCompetition(
 
   // Handle dates if provided
   if (input.dates !== undefined) {
-    if (input.dates.type === "FIXED_DATES") {
-      updateData.startDate = input.dates.startDate;
-      updateData.endDate = input.dates.endDate;
-      updateData.seasonId = null;
-      // TODO: use ts-pattern for exhaustive match
-    } else {
-      updateData.startDate = null;
-      updateData.endDate = null;
-      updateData.seasonId = input.dates.seasonId;
-    }
+    const dates = match(input.dates)
+      .with({ type: "FIXED_DATES" }, (d) => ({
+        startDate: d.startDate,
+        endDate: d.endDate,
+        seasonId: null as SeasonId | null,
+      }))
+      .with({ type: "SEASON" }, (d) => ({
+        startDate: null as Date | null,
+        endDate: null as Date | null,
+        seasonId: d.seasonId,
+      }))
+      .exhaustive();
+
+    updateData.startDate = dates.startDate;
+    updateData.endDate = dates.endDate;
+    updateData.seasonId = dates.seasonId;
   }
 
   // Handle criteria if provided

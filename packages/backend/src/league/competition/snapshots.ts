@@ -57,14 +57,14 @@ export async function createSnapshot(
   // Fetch snapshot data based on criteria - pass playerData directly
   // Prisma include returns branded types compatible with PlayerWithAccounts
   // Use 'create_snapshot' purpose to fetch current rank without validation
-  const snapshotDataContainer = await fetchSnapshotData(
+  const snapshotDataContainer = await fetchSnapshotData({
     prisma,
     competitionId,
     criteria,
-    [playerData],
-    "ACTIVE",
-    "create_snapshot",
-  );
+    participants: [playerData],
+    competitionStatus: "ACTIVE",
+    purpose: "create_snapshot",
+  });
 
   // Check if snapshots are needed for this criteria type
   // Some criteria (MOST_GAMES_PLAYED, MOST_WINS_*, etc.) don't use snapshots

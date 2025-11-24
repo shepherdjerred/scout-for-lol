@@ -1,6 +1,4 @@
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { filter, first, map, pipe } from "remeda";
-import {
+import type { MatchDto, ParticipantDto ,
   type CompletedMatch,
   getLaneOpponent,
   invertTeam,
@@ -10,11 +8,12 @@ import {
   type Rank,
   parseLane,
 } from "@scout-for-lol/data";
+import { filter, first, map, pipe } from "remeda";
 import { strict as assert } from "assert";
 import { match } from "ts-pattern";
 
 // Champion conversion function - adapted to match the expected Champion type
-function participantToChampion(participant: MatchV5DTOs.ParticipantDto) {
+function participantToChampion(participant: ParticipantDto) {
   return {
     riotIdGameName:
       participant.riotIdGameName && participant.riotIdGameName.length > 0 ? participant.riotIdGameName : "Unknown",
@@ -50,7 +49,7 @@ function getTeams(participants: MatchV5DTOs.ParticipantDto[]) {
 
 export function toMatch(
   player: Player,
-  matchDto: MatchV5DTOs.MatchDto,
+  matchDto: MatchDto,
   rankBeforeMatch: Rank | undefined,
   rankAfterMatch: Rank | undefined,
 ): CompletedMatch {

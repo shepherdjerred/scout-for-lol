@@ -7,11 +7,10 @@ import {
   selectRandomStyleAndTheme,
   curateMatchData,
   type CuratedMatchData,
-} from "@scout-for-lol/data";
+ MatchDto, ParticipantDto } from "@scout-for-lol/data";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import config from "@scout-for-lol/backend/configuration.js";
 import { saveAIReviewImageToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import {
@@ -215,7 +214,7 @@ async function generateAIReview(
 export async function generateMatchReview(
   match: CompletedMatch | ArenaMatch,
   matchId: MatchId,
-  rawMatchData?: MatchV5DTOs.MatchDto,
+  rawMatchData?: MatchDto,
 ): Promise<{ text: string; image?: Uint8Array; metadata?: ReviewMetadata } | undefined> {
   // Curate the raw match data if provided
   const curatedData = rawMatchData ? await curateMatchData(rawMatchData) : undefined;

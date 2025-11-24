@@ -1,5 +1,5 @@
 import type { MostWinsPlayerCriteria } from "@scout-for-lol/data";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
+import type { MatchV5DTOs as _MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
@@ -15,7 +15,7 @@ import {
  * Counts the total number of wins by each participant in the specified queue
  */
 export function processMostWinsPlayer(
-  matches: MatchV5DTOs.MatchDto[],
+  matches: MatchDto[],
   participants: PlayerWithAccounts[],
   criteria: MostWinsPlayerCriteria,
 ): LeaderboardEntry[] {

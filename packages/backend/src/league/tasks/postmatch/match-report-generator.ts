@@ -1,10 +1,17 @@
-import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { z } from "zod";
 import { api } from "@scout-for-lol/backend/league/api/api.js";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.js";
-import type { PlayerConfigEntry, Region, MatchId, CompletedMatch, ArenaMatch, QueueType } from "@scout-for-lol/data";
-import { MatchIdSchema, queueTypeToDisplayString } from "@scout-for-lol/data";
+import type {
+  PlayerConfigEntry,
+  Region,
+  MatchId,
+  CompletedMatch,
+  ArenaMatch,
+  QueueType,
+  MatchDto,
+} from "@scout-for-lol/data";
+import { MatchIdSchema, queueTypeToDisplayString, MatchDtoSchema } from "@scout-for-lol/data";
 import { getPlayer } from "@scout-for-lol/backend/league/model/player.js";
 import { AttachmentBuilder, EmbedBuilder, MessageCreateOptions } from "discord.js";
 import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
@@ -14,11 +21,10 @@ import { generateMatchReview } from "@scout-for-lol/backend/league/review/genera
 
 /**
  * Fetch match data from Riot API
+ *
+ * Validates the response against our schema to ensure type safety and catch API changes.
  */
-export async function fetchMatchData(
-  matchId: MatchId,
-  playerRegion: Region,
-): Promise<MatchV5DTOs.MatchDto | undefined> {
+export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Promise<MatchDto | undefined> {
   try {
     const region = mapRegionToEnum(playerRegion);
     const regionGroup = regionToRegionGroup(region);
@@ -26,7 +32,15 @@ export async function fetchMatchData(
     console.log(`[fetchMatchData] 📥 Fetching match data for ${matchId}`);
     const response = await api.MatchV5.get(matchId, regionGroup);
 
-    return response.response;
+    // Validate and parse the API response to ensure it matches our schema
+    try {
+      const validated = MatchDtoSchema.parse(response.response);
+      return validated;
+    } catch (parseError) {
+      console.error(`[fetchMatchData] ❌ Match data validation failed for ${matchId}:`, parseError);
+      console.error(`[fetchMatchData] This may indicate an API schema change or data corruption`);
+      return undefined;
+    }
   } catch (e) {
     const result = z.object({ status: z.number() }).safeParse(e);
     if (result.success) {
@@ -116,7 +130,7 @@ export async function createMatchImage(
  * @returns MessageCreateOptions ready to send to Discord, or undefined if no tracked players found
  */
 export async function generateMatchReport(
-  matchData: MatchV5DTOs.MatchDto,
+  matchData: MatchDto,
   trackedPlayers: PlayerConfigEntry[],
 ): Promise<MessageCreateOptions | undefined> {
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);

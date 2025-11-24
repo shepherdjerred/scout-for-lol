@@ -1,17 +1,16 @@
 import { describe, it, expect } from "bun:test";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { ArenaMatchSchema, ArenaTeamSchema, LeaguePuuidSchema, type Player } from "@scout-for-lol/data";
+import type { MatchDto as _MatchDto, ParticipantDto as _ParticipantDto , ArenaMatchSchema, ArenaTeamSchema, LeaguePuuidSchema, type Player } from "@scout-for-lol/data";
 import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
 import { toArenaMatch, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.js";
 
 function makeParticipant(
-  overrides: Partial<MatchV5DTOs.ParticipantDto> & {
+  overrides: Partial<ParticipantDto> & {
     playerSubteamId: number;
     placement: number;
     puuid: string;
   },
-): MatchV5DTOs.ParticipantDto {
-  const base: Partial<MatchV5DTOs.ParticipantDto> = {
+): ParticipantDto {
+  const base: Partial<ParticipantDto> = {
     riotIdGameName: "P#NA1",
     summonerName: "P",
     championName: "Lux",
@@ -59,12 +58,12 @@ function makeParticipant(
     totalDamageShieldedOnTeammates: 500,
     ...base,
     ...overrides,
-  } satisfies Partial<MatchV5DTOs.ParticipantDto> as unknown as MatchV5DTOs.ParticipantDto;
+  } satisfies Partial<ParticipantDto> as unknown as ParticipantDto;
 }
 
-function makeArenaMatchDto(): MatchV5DTOs.MatchDto {
+function makeArenaMatchDto(): MatchDto {
   const longPuuid = (label: string) => (label + "-".repeat(80)).slice(0, 78);
-  const participants: MatchV5DTOs.ParticipantDto[] = [];
+  const participants: ParticipantDto[] = [];
   for (let sub = 1; sub <= 8; sub++) {
     participants.push(
       makeParticipant({

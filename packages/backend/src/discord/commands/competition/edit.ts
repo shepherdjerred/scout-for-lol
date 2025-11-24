@@ -12,6 +12,7 @@ import {
   type CompetitionCriteria,
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
+import { match } from "ts-pattern";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import {
   getCompetitionById,
@@ -367,63 +368,54 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
 
     // Dates
     if (args.dates !== undefined) {
-      if (args.dates.dateType === "FIXED") {
-        updateInput.dates = {
-          type: "FIXED_DATES",
+      updateInput.dates = match(args.dates.dateType)
+        .with("FIXED", () => ({
+          type: "FIXED_DATES" as const,
           startDate: new Date(args.dates.startDate),
           endDate: new Date(args.dates.endDate),
-        };
-        // TODO: use ts-pattern for exhaustive match
-      } else {
-        updateInput.dates = {
-          type: "SEASON",
+        }))
+        .with("SEASON", () => ({
+          type: "SEASON" as const,
           seasonId: args.dates.season,
-        };
-      }
+        }))
+        .exhaustive();
     }
 
     // Criteria
     if (args.criteria !== undefined) {
-      let criteria: CompetitionCriteria;
-
-      if (args.criteria.criteriaType === "MOST_GAMES_PLAYED") {
-        criteria = { type: "MOST_GAMES_PLAYED", queue: args.criteria.queue };
-      } else if (args.criteria.criteriaType === "HIGHEST_RANK") {
-        criteria = { type: "HIGHEST_RANK", queue: args.criteria.queue };
-      } else if (args.criteria.criteriaType === "MOST_RANK_CLIMB") {
-        criteria = { type: "MOST_RANK_CLIMB", queue: args.criteria.queue };
-      } else if (args.criteria.criteriaType === "MOST_WINS_PLAYER") {
-        criteria = { type: "MOST_WINS_PLAYER", queue: args.criteria.queue };
-      } else if (args.criteria.criteriaType === "MOST_WINS_CHAMPION") {
-        // Convert champion string to number
-        let championId: number;
-        const championIdFromString = Number.parseInt(args.criteria.champion, 10);
-        if (!isNaN(championIdFromString)) {
-          championId = championIdFromString;
-        } else {
-          const idFromName = getChampionId(args.criteria.champion);
-          if (!idFromName) {
-            throw new Error(
-              `Invalid champion: "${args.criteria.champion}". Please select a champion from the autocomplete list.`,
-            );
+      const criteria: CompetitionCriteria = match(args.criteria.criteriaType)
+        .with("MOST_GAMES_PLAYED", () => ({ type: "MOST_GAMES_PLAYED" as const, queue: args.criteria.queue }))
+        .with("HIGHEST_RANK", () => ({ type: "HIGHEST_RANK" as const, queue: args.criteria.queue }))
+        .with("MOST_RANK_CLIMB", () => ({ type: "MOST_RANK_CLIMB" as const, queue: args.criteria.queue }))
+        .with("MOST_WINS_PLAYER", () => ({ type: "MOST_WINS_PLAYER" as const, queue: args.criteria.queue }))
+        .with("MOST_WINS_CHAMPION", () => {
+          // Convert champion string to number
+          let championId: number;
+          const championIdFromString = Number.parseInt(args.criteria.champion, 10);
+          if (!isNaN(championIdFromString)) {
+            championId = championIdFromString;
+          } else {
+            const idFromName = getChampionId(args.criteria.champion);
+            if (!idFromName) {
+              throw new Error(
+                `Invalid champion: "${args.criteria.champion}". Please select a champion from the autocomplete list.`,
+              );
+            }
+            championId = idFromName;
           }
-          championId = idFromName;
-        }
 
-        criteria = {
-          type: "MOST_WINS_CHAMPION",
-          championId: ChampionIdSchema.parse(championId),
-          queue: args.criteria.queue,
-        };
-        // TODO: use ts-pattern for exhaustive match
-      } else {
-        // HIGHEST_WIN_RATE
-        criteria = {
-          type: "HIGHEST_WIN_RATE",
+          return {
+            type: "MOST_WINS_CHAMPION" as const,
+            championId: ChampionIdSchema.parse(championId),
+            queue: args.criteria.queue,
+          };
+        })
+        .with("HIGHEST_WIN_RATE", () => ({
+          type: "HIGHEST_WIN_RATE" as const,
           minGames: args.criteria.minGames ?? 10,
           queue: args.criteria.queue,
-        };
-      }
+        }))
+        .exhaustive();
 
       updateInput.criteria = criteria;
     }

@@ -66,7 +66,7 @@ export async function getResetPreview(): Promise<{
       if (!stored) {
         return 0;
       }
-      const parsed = JSON.parse(stored) as unknown;
+      const parsed = JSON.parse(stored);
       const ArraySchema = z.array(z.unknown());
       const result = ArraySchema.safeParse(parsed);
       return result.success ? result.data.length : 1;

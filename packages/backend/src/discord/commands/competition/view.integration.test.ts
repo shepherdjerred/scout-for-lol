@@ -1,4 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
+import { match } from "ts-pattern";
 import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { createCompetition, getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
 import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
@@ -101,15 +102,25 @@ async function createTestCompetition(
   const nextWeek = new Date(now);
   nextWeek.setDate(nextWeek.getDate() + 7);
 
-  let criteria: CreateCompetitionInput["criteria"];
-  if (options?.criteriaType === "HIGHEST_RANK") {
-    criteria = { type: "HIGHEST_RANK", queue: "SOLO" };
-  } else if (options?.criteriaType === "MOST_WINS_CHAMPION" && options.championId) {
-    criteria = { type: "MOST_WINS_CHAMPION", championId: options.championId, queue: "SOLO" };
-    // TODO: use ts-pattern for exhaustive match
-  } else {
-    criteria = { type: "MOST_GAMES_PLAYED", queue: "SOLO" };
-  }
+  const criteria: CreateCompetitionInput["criteria"] = options?.criteriaType
+    ? match(options.criteriaType)
+        .with("HIGHEST_RANK", () => ({ type: "HIGHEST_RANK" as const, queue: "SOLO" as const }))
+        .with("MOST_WINS_CHAMPION", () => {
+          if (!options.championId) {
+            throw new Error("championId required for MOST_WINS_CHAMPION");
+          }
+          return {
+            type: "MOST_WINS_CHAMPION" as const,
+            championId: options.championId,
+            queue: "SOLO" as const,
+          };
+        })
+        .with("MOST_GAMES_PLAYED", () => ({ type: "MOST_GAMES_PLAYED" as const, queue: "SOLO" as const }))
+        .with("MOST_RANK_CLIMB", () => ({ type: "MOST_RANK_CLIMB" as const, queue: "SOLO" as const }))
+        .with("MOST_WINS_PLAYER", () => ({ type: "MOST_WINS_PLAYER" as const, queue: "SOLO" as const }))
+        .with("HIGHEST_WIN_RATE", () => ({ type: "HIGHEST_WIN_RATE" as const, minGames: 10, queue: "SOLO" as const }))
+        .exhaustive()
+    : { type: "MOST_GAMES_PLAYED" as const, queue: "SOLO" as const };
 
   const input: CreateCompetitionInput = {
     serverId,

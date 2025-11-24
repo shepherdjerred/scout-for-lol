@@ -16,7 +16,7 @@ export function loadCustomPersonalities(): Personality[] {
   }
 
   try {
-    const parsed = JSON.parse(stored) as unknown;
+    const parsed = JSON.parse(stored);
     const ArraySchema = PersonalitySchema.array();
     const result = ArraySchema.safeParse(parsed);
     return result.success ? result.data : [];

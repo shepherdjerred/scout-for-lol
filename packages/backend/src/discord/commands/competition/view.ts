@@ -139,13 +139,15 @@ async function buildCompetitionEmbed(
   embed.addFields({ name: "\u200B", value: "\u200B", inline: false });
 
   // Add leaderboard or participant list based on status
-  if (status === "DRAFT") {
-    addParticipantList(embed, participants);
-    // TODO: use ts-pattern for exhaustive match
-  } else {
-    // For ACTIVE, ENDED, or CANCELLED - calculate and show leaderboard
-    await addLeaderboard(embed, status, competition);
-  }
+  await match(status)
+    .with("DRAFT", () => {
+      addParticipantList(embed, participants);
+    })
+    .with("ACTIVE", "ENDED", "CANCELLED", async () => {
+      // For ACTIVE, ENDED, or CANCELLED - calculate and show leaderboard
+      await addLeaderboard(embed, status, competition);
+    })
+    .exhaustive();
 
   // Add footer with criteria description
   const criteriaDescription = getCriteriaDescription(competition.criteria);

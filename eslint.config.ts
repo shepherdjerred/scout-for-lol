@@ -15,7 +15,6 @@ import jsxA11y from "eslint-plugin-jsx-a11y";
 import astroPlugin, { configs as astroConfigs } from "eslint-plugin-astro";
 // MDX linting disabled - parser doesn't support type-aware rules
 // import mdx from "eslint-plugin-mdx";
-const astroParser = astroConfigs["flat/base"][1].languageOptions["parser"];
 // Tailwind linting disabled - plugin incompatible with Tailwind CSS v4
 // import tailwindcss from "eslint-plugin-tailwindcss";
 
@@ -36,7 +35,7 @@ const customRulesPlugin = {
   },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-deprecated -- tseslint.config() is the official way to configure typescript-eslint v8; the deprecation is for future versions
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- we will fix this later
 export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.strictTypeChecked,
@@ -55,12 +54,21 @@ export default tseslint.config(
       "**/*.mdx",
       "**/*.astro",
       "**/*.mjs",
+      "**/*.js",
+      "**/*.cjs",
     ],
   },
   {
     languageOptions: {
       parserOptions: {
-        project: "./tsconfig.lint.json",
+        projectService: {
+          allowDefaultProject: [
+            "eslint.config.ts",
+            "eslint-rules/*.ts",
+            ".dagger/src/*.ts",
+            "packages/*/scripts/*.ts",
+          ],
+        },
         tsconfigRootDir: import.meta.dirname,
         extraFileExtensions: [".astro"],
       },
@@ -69,8 +77,7 @@ export default tseslint.config(
   // ESLint disable directive rules
   {
     plugins: {
-      // Type assertion needed: plugin lacks proper TypeScript types
-      "eslint-comments": eslintComments as unknown,
+      "eslint-comments": eslintComments,
     },
     rules: {
       // Require specific rule names when disabling ESLint (no blanket eslint-disable)
@@ -514,9 +521,9 @@ export default tseslint.config(
     plugins: {
       astro: astroPlugin,
     },
+    // Extend astro's recommended flat config which includes the parser
+    extends: astroConfigs["flat/base"],
     languageOptions: {
-      // Use astro-eslint-parser from the plugin's flat config
-      parser: astroParser,
       parserOptions: {
         parser: "@typescript-eslint/parser",
         extraFileExtensions: [".astro"],

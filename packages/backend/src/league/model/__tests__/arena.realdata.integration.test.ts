@@ -1,6 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { ArenaMatchSchema, LeaguePuuidSchema, type Player } from "@scout-for-lol/data";
+import type { MatchDto as _MatchDto, ParticipantDto as _ParticipantDto , ArenaMatchSchema, LeaguePuuidSchema, type Player } from "@scout-for-lol/data";
 import { toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
@@ -12,10 +11,10 @@ const RAW_FILE_PATHS = [
   `currentDir/testdata/matches_2025_09_19_NA1_5370986469.json`,
 ];
 
-async function loadMatch(path: string): Promise<MatchV5DTOs.MatchDto> {
+async function loadMatch(path: string): Promise<MatchDto> {
   const file = Bun.file(path);
   const json = (await file.json()) as unknown;
-  return json as MatchV5DTOs.MatchDto;
+  return json as MatchDto;
 }
 
 describe("toArenaMatch with real arena JSON", () => {

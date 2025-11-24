@@ -36,7 +36,7 @@ export function loadCustomArtStyles(): CustomArtStyle[] {
   }
 
   try {
-    const parsed = JSON.parse(stored) as unknown;
+    const parsed = JSON.parse(stored);
     const ArraySchema = CustomArtStyleSchema.array();
     const result = ArraySchema.safeParse(parsed);
     return result.success ? result.data : [];
@@ -124,7 +124,7 @@ export function loadCustomArtThemes(): CustomArtTheme[] {
   }
 
   try {
-    const parsed = JSON.parse(stored) as unknown;
+    const parsed = JSON.parse(stored);
     const ArraySchema = CustomArtThemeSchema.array();
     const result = ArraySchema.safeParse(parsed);
     return result.success ? result.data : [];

@@ -1,4 +1,4 @@
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
+import type { MatchDto as _MatchDto, ParticipantDto as _ParticipantDto } from "@scout-for-lol/data";
 import { getItemInfo, summoner, getRuneInfo, getRuneTreeName, getChampionInfo } from "@scout-for-lol/report";
 import { first, keys, pickBy } from "remeda";
 import type { CuratedParticipant, CuratedMatchData } from "@scout-for-lol/data/review/curator-types.js";
@@ -9,7 +9,7 @@ function getSummonerSpellName(spellId: number): string | undefined {
   return first(keys(pickBy(summoner.data, (s) => s.key === spellId.toString())));
 }
 
-function curateItems(participant: MatchV5DTOs.ParticipantDto) {
+function curateItems(participant: ParticipantDto) {
   const itemIds = [
     participant.item0,
     participant.item1,
@@ -33,7 +33,7 @@ function curateItems(participant: MatchV5DTOs.ParticipantDto) {
     });
 }
 
-function curateSummonerSpells(participant: MatchV5DTOs.ParticipantDto) {
+function curateSummonerSpells(participant: ParticipantDto) {
   const spell1Name = getSummonerSpellName(participant.summoner1Id);
   const spell2Name = getSummonerSpellName(participant.summoner2Id);
 
@@ -53,7 +53,7 @@ function curateSummonerSpells(participant: MatchV5DTOs.ParticipantDto) {
   ];
 }
 
-function curatePerks(participant: MatchV5DTOs.ParticipantDto) {
+function curatePerks(participant: ParticipantDto) {
   const primaryStyle = participant.perks.styles[0];
   const subStyle = participant.perks.styles[1];
 
@@ -98,7 +98,7 @@ function curatePerks(participant: MatchV5DTOs.ParticipantDto) {
   };
 }
 
-export async function curateParticipantData(participant: MatchV5DTOs.ParticipantDto): Promise<CuratedParticipant> {
+export async function curateParticipantData(participant: ParticipantDto): Promise<CuratedParticipant> {
   const items = curateItems(participant);
   const summonerSpells = curateSummonerSpells(participant);
   const perks = curatePerks(participant);
@@ -289,7 +289,7 @@ export async function curateParticipantData(participant: MatchV5DTOs.Participant
   };
 }
 
-export async function curateMatchData(matchDto: MatchV5DTOs.MatchDto): Promise<CuratedMatchData> {
+export async function curateMatchData(matchDto: MatchDto): Promise<CuratedMatchData> {
   const participants = await Promise.all(matchDto.info.participants.map(curateParticipantData));
 
   return {

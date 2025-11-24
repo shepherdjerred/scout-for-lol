@@ -2,10 +2,19 @@
  * S3 integration for fetching match data (direct client-side)
  */
 import { S3Client, ListObjectsV2Command, GetObjectCommand, type ListObjectsV2CommandOutput } from "@aws-sdk/client-s3";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { MatchDtoSchema } from "@scout-for-lol/packages/review-dev-tool/src/lib/schemas/match-dto.schema.js";
-import type { ArenaMatch, CompletedMatch, Champion } from "@scout-for-lol/data";
-import { parseQueueType, parseLane, getLaneOpponent, parseTeam, invertTeam } from "@scout-for-lol/data";
+import {
+  MatchDtoSchema,
+  parseQueueType,
+  parseLane,
+  getLaneOpponent,
+  parseTeam,
+  invertTeam,
+  type MatchDto,
+  type ParticipantDto,
+  type ArenaMatch,
+  type CompletedMatch,
+  type Champion,
+} from "@scout-for-lol/data";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
 import { getCachedDataAsync, setCachedData } from "@scout-for-lol/review-dev-tool/lib/cache";
 import { match } from "ts-pattern";
@@ -184,7 +193,7 @@ export async function listMatchesFromS3(config: S3Config): Promise<{ key: string
  * Fetch a match from S3 (direct client-side)
  * Results are cached for 7 days (match data is immutable)
  */
-export async function fetchMatchFromS3(config: S3Config, key: string): Promise<MatchV5DTOs.MatchDto | null> {
+export async function fetchMatchFromS3(config: S3Config, key: string): Promise<MatchDto | null> {
   try {
     // Cache key parameters (exclude credentials for security)
     const cacheParams = {
@@ -197,7 +206,7 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
     // Try to get from cache first (7 days TTL - match data is immutable)
     const cached: unknown = await getCachedDataAsync("r2-get", cacheParams);
 
-    // Note: MatchV5DTOs.MatchDto is a very complex external type from twisted library
+    // Note: MatchDto is a very complex external type from twisted library
     // with many nested objects. For pragmatic reasons, we validate basic structure
     // and rely on the S3 data format being correct. Using passthrough() allows
     // additional properties beyond what we validate.
@@ -220,7 +229,7 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
       // Data structure is valid. The passthrough schema validated the required fields
       // and preserved all other fields. Cast required because MatchDto is complex external type.
       // TODO: use Zod schema to parse MatchDto
-      return cachedResult.data as unknown as MatchV5DTOs.MatchDto;
+      return cachedResult.data;
     }
 
     // Cache miss - fetch directly from S3
@@ -260,7 +269,7 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
 
     // Return as MatchDto since validation passed. Cast required because MatchDto is complex external type.
     // TODO: use Zod schema to parse MatchDto
-    return rawDataResult as unknown as MatchV5DTOs.MatchDto;
+    return rawDataResult;
   } catch (error) {
     console.error(`Failed to fetch match ${key}:`, error);
     return null;
@@ -288,7 +297,7 @@ function getOutcome(participant: MatchV5DTOs.ParticipantDto): "Victory" | "Defea
  * @param selectedPlayerName - The Riot ID (GameName#Tagline) of the player to prioritize as first player
  */
 export function convertMatchDtoToInternalFormat(
-  matchDto: MatchV5DTOs.MatchDto,
+  matchDto: MatchDto,
   selectedPlayerName?: string,
 ): CompletedMatch | ArenaMatch {
   const queueType = parseQueueType(matchDto.info.queueId);
@@ -323,7 +332,7 @@ export function convertMatchDtoToInternalFormat(
   }
 
   // Helper function to convert participant to champion (like backend does)
-  const participantToChampion = (p: MatchV5DTOs.ParticipantDto): Champion => {
+  const participantToChampion = (p: ParticipantDto): Champion => {
     const riotIdGameName = p.riotIdGameName && p.riotIdTagline ? p.riotIdGameName : "Unknown";
 
     return {
@@ -443,7 +452,7 @@ export type MatchMetadata = {
 /**
  * Extract metadata for all participants from a Riot API match DTO
  */
-export function extractMatchMetadataFromDto(matchDto: MatchV5DTOs.MatchDto, key: string): MatchMetadata[] {
+export function extractMatchMetadataFromDto(matchDto: MatchDto, key: string): MatchMetadata[] {
   const queueType = parseQueueType(matchDto.info.queueId);
   const timestamp = new Date(matchDto.info.gameEndTimestamp);
 

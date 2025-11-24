@@ -49,6 +49,9 @@ export async function generateMatchReview(
       // Validate and curate if it's a MatchDto
       // For now, skip validation - just pass undefined
       // TODO: Add MatchDto validation if needed
+      // TODO, WTF?
+      // 1. rawMatchData should _not_ be optional
+      // 2. we are never setting curated data
     }
 
     // Generate text review

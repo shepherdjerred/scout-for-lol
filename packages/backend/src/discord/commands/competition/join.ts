@@ -5,6 +5,7 @@ import {
   DiscordGuildIdSchema,
   getCompetitionStatus,
 } from "@scout-for-lol/data";
+import { match } from "ts-pattern";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
 import {
@@ -212,16 +213,20 @@ This competition has reached its maximum of ${competition.maxParticipants.toStri
   // ============================================================================
 
   try {
-    if (participantStatus === "INVITED") {
-      // User was invited, accept the invitation
-      await acceptInvitation(prisma, competitionId, player.id);
-      console.log(`[Competition Join] User ${userId} accepted invitation to competition ${competitionId.toString()}`);
-      // TODO: use ts-pattern for exhaustive match
-    } else {
-      // User is joining for the first time (OPEN or SERVER_WIDE)
-      await addParticipant(prisma, competitionId, player.id, "JOINED");
-      console.log(`[Competition Join] User ${userId} joined competition ${competitionId.toString()}`);
-    }
+    // At this point, participantStatus can only be "INVITED" or null
+    // ("JOINED" and "LEFT" are handled earlier)
+    await match(participantStatus)
+      .with("INVITED", async () => {
+        // User was invited, accept the invitation
+        await acceptInvitation(prisma, competitionId, player.id);
+        console.log(`[Competition Join] User ${userId} accepted invitation to competition ${competitionId.toString()}`);
+      })
+      .with(null, async () => {
+        // User is joining for the first time (OPEN or SERVER_WIDE)
+        await addParticipant({ prisma, competitionId, playerId: player.id, status: "JOINED" });
+        console.log(`[Competition Join] User ${userId} joined competition ${competitionId.toString()}`);
+      })
+      .exhaustive();
   } catch (error) {
     console.error(`[Competition Join] Error adding participant:`, error);
     await interaction.reply({

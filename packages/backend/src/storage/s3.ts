@@ -1,8 +1,7 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import configuration from "@scout-for-lol/backend/configuration.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import type { MatchId } from "@scout-for-lol/data";
+import type { MatchId, MatchDto as _MatchDto } from "@scout-for-lol/data";
 import { MatchIdSchema } from "@scout-for-lol/data";
 
 /**
@@ -36,7 +35,7 @@ function generateImageKey(matchId: MatchId): string {
  * @param match The match data to save
  * @returns Promise that resolves when the match is saved
  */
-export async function saveMatchToS3(match: MatchV5DTOs.MatchDto): Promise<void> {
+export async function saveMatchToS3(match: MatchDto): Promise<void> {
   const matchId = MatchIdSchema.parse(match.metadata.matchId);
   const bucket = configuration.s3BucketName;
 

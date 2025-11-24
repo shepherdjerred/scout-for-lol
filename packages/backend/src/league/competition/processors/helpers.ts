@@ -1,12 +1,12 @@
 import type { CompetitionQueueType, QueueType } from "@scout-for-lol/data";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
+import type { MatchV5DTOs as _MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { parseQueueType } from "@scout-for-lol/data";
 import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";
 
 /**
  * Check if a player participated in a match based on their account PUUIDs
  */
-export function isPlayerInMatch(player: PlayerWithAccounts, match: MatchV5DTOs.MatchDto): boolean {
+export function isPlayerInMatch(player: PlayerWithAccounts, match: MatchDto): boolean {
   const playerPuuids = player.accounts.map((account) => account.puuid);
   return match.metadata.participants.some((puuid) => playerPuuids.includes(puuid));
 }
@@ -14,7 +14,7 @@ export function isPlayerInMatch(player: PlayerWithAccounts, match: MatchV5DTOs.M
 /**
  * Check if a match belongs to the specified queue type
  */
-export function matchesQueue(match: MatchV5DTOs.MatchDto, queueFilter: CompetitionQueueType): boolean {
+export function matchesQueue(match: MatchDto, queueFilter: CompetitionQueueType): boolean {
   const queueType = parseQueueType(match.info.queueId);
 
   // Handle special queue filters
@@ -52,8 +52,8 @@ export function matchesQueue(match: MatchV5DTOs.MatchDto, queueFilter: Competiti
  */
 export function getPlayerParticipant(
   player: PlayerWithAccounts,
-  match: MatchV5DTOs.MatchDto,
-): MatchV5DTOs.ParticipantDto | undefined {
+  match: MatchDto,
+): ParticipantDto | undefined {
   const playerPuuids = player.accounts.map((account) => account.puuid);
   return match.info.participants.find((participant) => playerPuuids.includes(participant.puuid));
 }
@@ -61,7 +61,7 @@ export function getPlayerParticipant(
 /**
  * Check if a participant won the match
  */
-export function isWin(participant: MatchV5DTOs.ParticipantDto): boolean {
+export function isWin(participant: ParticipantDto): boolean {
   return participant.win;
 }
 
@@ -71,9 +71,9 @@ export function isWin(participant: MatchV5DTOs.ParticipantDto): boolean {
  */
 export function getAllPlayersInMatch(
   players: PlayerWithAccounts[],
-  match: MatchV5DTOs.MatchDto,
-): [PlayerWithAccounts, MatchV5DTOs.ParticipantDto][] {
-  const results: [PlayerWithAccounts, MatchV5DTOs.ParticipantDto][] = [];
+  match: MatchDto,
+): [PlayerWithAccounts, ParticipantDto][] {
+  const results: [PlayerWithAccounts, ParticipantDto][] = [];
 
   for (const player of players) {
     const participant = getPlayerParticipant(player, match);

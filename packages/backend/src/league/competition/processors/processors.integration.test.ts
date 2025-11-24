@@ -1,6 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import {
+import type { MatchDto, ParticipantDto ,
   AccountIdSchema,
   ChampionIdSchema,
   LeaguePuuidSchema,
@@ -16,9 +15,9 @@ import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-id
 // Test Fixtures - Load Real Match Data
 // ============================================================================
 
-function loadMatch(path: string): MatchV5DTOs.MatchDto {
+function loadMatch(path: string): MatchDto {
   const content = await Bun.file(path, "utf-8").text();
-  return JSON.parse(content) as MatchV5DTOs.MatchDto;
+  return JSON.parse(content) as MatchDto;
 }
 
 // ============================================================================
@@ -94,7 +93,7 @@ describe("processCriteria integration tests", () => {
   });
 
   it("should handle empty match data gracefully", () => {
-    const emptyMatches: MatchV5DTOs.MatchDto[] = [];
+    const emptyMatches: MatchDto[] = [];
     const players = testPlayers;
 
     // Test all criteria types with empty matches

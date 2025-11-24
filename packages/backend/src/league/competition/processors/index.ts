@@ -1,5 +1,5 @@
 import type { CompetitionCriteria, Ranks } from "@scout-for-lol/data";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
+import type { MatchV5DTOs as _MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { match } from "ts-pattern";
 import { processMostGamesPlayed } from "@scout-for-lol/backend/league/competition/processors/most-games-played.js";
 import { processHighestRank } from "@scout-for-lol/backend/league/competition/processors/highest-rank.js";
@@ -33,7 +33,7 @@ export type SnapshotData = {
  */
 export function processCriteria(
   criteria: CompetitionCriteria,
-  matches: MatchV5DTOs.MatchDto[],
+  matches: MatchDto[],
   participants: PlayerWithAccounts[],
   snapshotData?: SnapshotData,
 ): LeaderboardEntry[] {

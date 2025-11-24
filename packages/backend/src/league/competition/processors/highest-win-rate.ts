@@ -1,5 +1,5 @@
 import type { HighestWinRateCriteria } from "@scout-for-lol/data";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
+import type { MatchV5DTOs as _MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
@@ -16,7 +16,7 @@ import {
  * Only includes players who meet the minimum games threshold
  */
 export function processHighestWinRate(
-  matches: MatchV5DTOs.MatchDto[],
+  matches: MatchDto[],
   participants: PlayerWithAccounts[],
   criteria: HighestWinRateCriteria,
 ): LeaderboardEntry[] {

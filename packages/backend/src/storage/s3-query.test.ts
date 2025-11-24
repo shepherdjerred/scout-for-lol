@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
+import { MatchV5DTOs as _MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 
 // We'll need to test internal helper functions, so let's create a test version
 // that exposes these functions for testing
@@ -34,7 +34,7 @@ function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
 /**
  * Check if a match includes any of the specified participant PUUIDs
  */
-function matchIncludesParticipant(match: MatchV5DTOs.MatchDto, puuids: string[]): boolean {
+function matchIncludesParticipant(match: MatchDto, puuids: string[]): boolean {
   return match.metadata.participants.some((puuid) => puuids.includes(puuid));
 }
 
@@ -127,7 +127,7 @@ describe("generateDatePrefixes", () => {
 
 describe("matchIncludesParticipant", () => {
   // Create a mock match factory
-  function createMockMatch(participantPuuids: string[]): MatchV5DTOs.MatchDto {
+  function createMockMatch(participantPuuids: string[]): MatchDto {
     return {
       metadata: {
         dataVersion: "2",

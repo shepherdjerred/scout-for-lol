@@ -1,10 +1,10 @@
 import { describe, it, expect } from "bun:test";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
+import type { MatchDto as _MatchDto, ParticipantDto as _ParticipantDto } from "@scout-for-lol/data";
 import { groupArenaTeams, getArenaTeammate, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.js";
 
 import { testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
 
-function makeParticipant(extra: Record<string, unknown> = {}): MatchV5DTOs.ParticipantDto {
+function makeParticipant(extra: Record<string, unknown> = {}): ParticipantDto {
   return {
     puuid: crypto.randomUUID(),
     riotIdGameName: "P#NA1",
@@ -46,12 +46,12 @@ function makeParticipant(extra: Record<string, unknown> = {}): MatchV5DTOs.Parti
     PlayerScore7: 0,
     PlayerScore8: 0,
     ...extra,
-  } satisfies Partial<MatchV5DTOs.ParticipantDto> as unknown as MatchV5DTOs.ParticipantDto;
+  } satisfies Partial<ParticipantDto> as unknown as ParticipantDto;
 }
 
 describe("arena team grouping and teammate lookup", () => {
   it("groups participants into 8 subteams of 2", () => {
-    const participants: MatchV5DTOs.ParticipantDto[] = [];
+    const participants: ParticipantDto[] = [];
     for (let sub = 1; sub <= 8; sub++) {
       participants.push(makeParticipant({ playerSubteamId: sub }));
       participants.push(makeParticipant({ playerSubteamId: sub }));

@@ -44,7 +44,7 @@ export function loadSavedConfigs(): SavedConfig[] {
   }
 
   try {
-    const parsed = JSON.parse(stored) as unknown;
+    const parsed = JSON.parse(stored);
     const SavedConfigArraySchema = z
       .object({
         id: z.string(),
@@ -154,7 +154,7 @@ export function loadCurrentConfig(): ReviewConfig | null {
   }
 
   try {
-    const parsed = JSON.parse(stored) as unknown;
+    const parsed = JSON.parse(stored);
     const result = ReviewConfigSchema.safeParse(parsed);
     return result.success ? result.data : null;
   } catch {
@@ -180,7 +180,7 @@ export function exportConfigAsJSON(config: ReviewConfig): string {
  * Import configuration from JSON string
  */
 export function importConfigFromJSON(json: string): ReviewConfig {
-  const parsed = JSON.parse(json) as unknown;
+  const parsed = JSON.parse(json);
   return ReviewConfigSchema.parse(parsed);
 }
 
@@ -198,7 +198,7 @@ export function exportConfigAsURLHash(config: ReviewConfig): string {
  */
 export function importConfigFromURLHash(hash: string): ReviewConfig {
   const json = atob(hash);
-  const parsed = JSON.parse(json) as unknown;
+  const parsed = JSON.parse(json);
   return ReviewConfigSchema.parse(parsed);
 }
 
@@ -213,7 +213,7 @@ export function exportMultipleConfigs(configs: SavedConfig[]): string {
  * Import multiple configurations
  */
 export function importMultipleConfigs(json: string): SavedConfig[] {
-  const parsed = JSON.parse(json) as unknown;
+  const parsed = JSON.parse(json);
   const SavedConfigArraySchema = z
     .object({
       id: z.string(),
@@ -262,7 +262,7 @@ export function loadGlobalConfig(): GlobalConfig | null {
   }
 
   try {
-    const parsed = JSON.parse(stored) as unknown;
+    const parsed = JSON.parse(stored);
     return GlobalConfigSchema.parse(parsed);
   } catch {
     return null;
@@ -290,7 +290,7 @@ export function exportGlobalConfigAsBlob(config: GlobalConfig): string {
 export function importGlobalConfigFromBlob(blob: string): GlobalConfig {
   try {
     const json = atob(blob);
-    const parsed = JSON.parse(json) as unknown;
+    const parsed = JSON.parse(json);
     return GlobalConfigSchema.parse(parsed);
   } catch (_error) {
     throw new Error("Invalid config blob. Please check the format and try again.");

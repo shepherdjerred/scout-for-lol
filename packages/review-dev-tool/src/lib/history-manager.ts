@@ -53,7 +53,7 @@ async function migrateFromLocalStorage(): Promise<void> {
       return;
     } // Nothing to migrate
 
-    const parsed = JSON.parse(stored) as unknown;
+    const parsed = JSON.parse(stored);
 
     // Validate array structure with Zod
     const MigrationEntrySchema = z.object({

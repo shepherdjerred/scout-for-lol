@@ -1,6 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import type { ChampionId, LeaguePuuid, Rank, Ranks } from "@scout-for-lol/data";
+import type { MatchDto as _MatchDto, ParticipantDto as _ParticipantDto , ChampionId, LeaguePuuid, Rank, Ranks } from "@scout-for-lol/data";
 import { AccountIdSchema, ChampionIdSchema, PlayerIdSchema, rankToLeaguePoints } from "@scout-for-lol/data";
 import { processCriteria } from "@scout-for-lol/backend/league/competition/processors/index.js";
 import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";
@@ -65,7 +64,7 @@ function createMatch(
     championId: ChampionId;
     win: boolean;
   }[],
-): MatchV5DTOs.MatchDto {
+): MatchDto {
   return {
     metadata: {
       dataVersion: "2",
@@ -249,7 +248,7 @@ function createMatch(
       endOfGameResult: "WIN",
       gameVersion: "13.1.1",
     },
-  } as unknown as MatchV5DTOs.MatchDto;
+  };
 }
 
 // ============================================================================
@@ -826,7 +825,7 @@ describe("processHighestWinRate", () => {
 
 describe("processCriteria dispatcher", () => {
   it("should handle all criteria types without errors", () => {
-    const emptyMatches: MatchV5DTOs.MatchDto[] = [];
+    const emptyMatches: MatchDto[] = [];
     const emptyParticipants: PlayerWithAccounts[] = [];
     const emptySnapshots = {
       currentRanks: {},

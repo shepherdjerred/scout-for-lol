@@ -1,4 +1,3 @@
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { entries, filter, first, groupBy, map, pipe, sortBy } from "remeda";
 import { z } from "zod";
 import {
@@ -13,12 +12,14 @@ import {
   type Player,
   type Rank,
   type ArenaMatch,
+  type MatchDto,
+  type ParticipantDto,
 } from "@scout-for-lol/data";
 import { strict as assert } from "assert";
 import { match } from "ts-pattern";
 import { participantToArenaChampion, participantToChampion } from "@scout-for-lol/backend/league/model/champion.js";
 
-function getTeams(participants: MatchV5DTOs.ParticipantDto[]) {
+function getTeams(participants: ParticipantDto[]) {
   return {
     blue: pipe(participants.slice(0, 5), map(participantToChampion)),
     red: pipe(participants.slice(5, 10), map(participantToChampion)),
@@ -27,7 +28,7 @@ function getTeams(participants: MatchV5DTOs.ParticipantDto[]) {
 
 export function toMatch(
   players: Player[],
-  matchDto: MatchV5DTOs.MatchDto,
+  matchDto: MatchDto,
   rankBeforeMatch: Rank | undefined,
   rankAfterMatch: Rank | undefined,
 ): CompletedMatch {
@@ -76,7 +77,7 @@ export function toMatch(
   };
 }
 
-export function getOutcome(participant: MatchV5DTOs.ParticipantDto) {
+export function getOutcome(participant: ParticipantDto) {
   return match(participant)
     .returnType<"Victory" | "Surrender" | "Defeat">()
     .with({ win: true }, () => "Victory")
@@ -85,10 +86,7 @@ export function getOutcome(participant: MatchV5DTOs.ParticipantDto) {
     .exhaustive();
 }
 
-function findParticipant(
-  puuid: string,
-  participants: MatchV5DTOs.ParticipantDto[],
-): MatchV5DTOs.ParticipantDto | undefined {
+function findParticipant(puuid: string, participants: ParticipantDto[]): ParticipantDto | undefined {
   return pipe(
     participants,
     filter((participant) => participant.puuid === puuid),
@@ -115,11 +113,11 @@ const ArenaParticipantFieldsSchema = z.object({
   placement: z.number().int().min(1).max(8),
 });
 
-type ArenaParticipantValidatedMin = MatchV5DTOs.ParticipantDto & {
+type ArenaParticipantValidatedMin = ParticipantDto & {
   playerSubteamId: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 };
 
-export function groupArenaTeams(participants: MatchV5DTOs.ParticipantDto[]) {
+export function groupArenaTeams(participants: ParticipantDto[]) {
   const validated: ArenaParticipantValidatedMin[] = participants.map((p) => {
     const parsed = ArenaParticipantMinimalSchema.parse(p);
     return { ...p, playerSubteamId: parsed.playerSubteamId };
@@ -142,7 +140,7 @@ export function groupArenaTeams(participants: MatchV5DTOs.ParticipantDto[]) {
   return groups;
 }
 
-export function getArenaTeammate(participant: MatchV5DTOs.ParticipantDto, participants: MatchV5DTOs.ParticipantDto[]) {
+export function getArenaTeammate(participant: ParticipantDto, participants: ParticipantDto[]) {
   const sub = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
   for (const p of participants) {
     if (p === participant) {
@@ -156,7 +154,7 @@ export function getArenaTeammate(participant: MatchV5DTOs.ParticipantDto, partic
   return undefined;
 }
 
-export async function toArenaSubteams(participants: MatchV5DTOs.ParticipantDto[]): Promise<ArenaTeam[]> {
+export async function toArenaSubteams(participants: ParticipantDto[]): Promise<ArenaTeam[]> {
   const grouped = groupArenaTeams(participants);
   const result: ArenaTeam[] = [];
   for (const { subteamId, players } of grouped) {
@@ -177,7 +175,7 @@ export async function toArenaSubteams(participants: MatchV5DTOs.ParticipantDto[]
   return result;
 }
 
-export function getArenaPlacement(participant: MatchV5DTOs.ParticipantDto) {
+export function getArenaPlacement(participant: ParticipantDto) {
   return ArenaParticipantFieldsSchema.parse(participant).placement;
 }
 

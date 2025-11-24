@@ -1,4 +1,4 @@
-import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
+import type { MatchDto , PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/data";
 import { getRecentMatchIds, filterNewMatches } from "@scout-for-lol/backend/league/api/match-history.js";
 import {
   getAccountsWithState,
@@ -8,7 +8,6 @@ import {
   updateLastMatchTime,
   updateLastCheckedAt,
 } from "@scout-for-lol/backend/database/index.js";
-import type { PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/data";
 import { MatchIdSchema } from "@scout-for-lol/data";
 import { send } from "@scout-for-lol/backend/league/discord/channel.js";
 import { shouldCheckPlayer, calculatePollingInterval } from "@scout-for-lol/backend/utils/polling-intervals.js";
@@ -25,7 +24,7 @@ type PlayerWithMatchIds = {
 /**
  * Process a completed match and send Discord notifications
  */
-async function processMatch(matchData: MatchV5DTOs.MatchDto, trackedPlayers: PlayerConfigEntry[]): Promise<void> {
+async function processMatch(matchData: MatchDto, trackedPlayers: PlayerConfigEntry[]): Promise<void> {
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
   console.log(`[processMatch] 🎮 Processing match ${matchId}`);
 

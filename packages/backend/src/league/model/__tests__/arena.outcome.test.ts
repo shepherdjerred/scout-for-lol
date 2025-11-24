@@ -1,8 +1,8 @@
 import { describe, it, expect } from "bun:test";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
+import type { MatchDto as _MatchDto, ParticipantDto as _ParticipantDto } from "@scout-for-lol/data";
 import { getArenaPlacement } from "@scout-for-lol/backend/league/model/match.js";
 
-function makeParticipant(extra: Record<string, unknown> = {}): MatchV5DTOs.ParticipantDto {
+function makeParticipant(extra: Record<string, unknown> = {}): ParticipantDto {
   return {
     puuid: crypto.randomUUID(),
     riotIdGameName: "P#NA1",
@@ -44,7 +44,7 @@ function makeParticipant(extra: Record<string, unknown> = {}): MatchV5DTOs.Parti
     PlayerScore7: 0,
     PlayerScore8: 0,
     ...extra,
-  } satisfies Partial<MatchV5DTOs.ParticipantDto> as unknown as MatchV5DTOs.ParticipantDto;
+  } satisfies Partial<ParticipantDto> as unknown as ParticipantDto;
 }
 
 describe("arena placement extraction", () => {

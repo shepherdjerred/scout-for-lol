@@ -1,8 +1,8 @@
 import { describe, it, expect } from "bun:test";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
+import type { MatchDto as _MatchDto, ParticipantDto as _ParticipantDto } from "@scout-for-lol/data";
 import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
 
-const baseParticipant = (): MatchV5DTOs.ParticipantDto => {
+const baseParticipant = (): ParticipantDto => {
   const participant = {
     riotIdGameName: "Player#NA1",
     summonerName: "Player",
@@ -49,7 +49,7 @@ const baseParticipant = (): MatchV5DTOs.ParticipantDto => {
     } as unknown as MatchV5DTOs.ChallengesDto,
     // unused fields for this test
     teamId: 100,
-  } as unknown as MatchV5DTOs.ParticipantDto;
+  } as unknown as ParticipantDto;
   return participant;
 };
 

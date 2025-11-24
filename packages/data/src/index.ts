@@ -15,3 +15,4 @@ export {
   type CuratedMatchData,
 } from "./review/generator.js";
 export { curateMatchData, curateParticipantData, type CuratedParticipant } from "./review/curator.js";
+export * from "./league/match-dto.schema.js";

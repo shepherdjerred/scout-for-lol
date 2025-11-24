@@ -12,6 +12,7 @@ import {
   type CompetitionCriteria,
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
+import { match } from "ts-pattern";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { canCreateCompetition } from "@scout-for-lol/backend/database/competition/permissions.js";
 import { type CreateCompetitionInput, createCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
@@ -267,47 +268,39 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
   }
 
   // TypeScript narrows the union based on criteriaType!
-  let criteria: CompetitionCriteria;
-
-  // TODO: use pattern matching to remove else
-  if (args.criteriaType === "MOST_GAMES_PLAYED") {
-    criteria = { type: "MOST_GAMES_PLAYED", queue: args.queue };
-  } else if (args.criteriaType === "HIGHEST_RANK") {
-    criteria = { type: "HIGHEST_RANK", queue: args.queue };
-  } else if (args.criteriaType === "MOST_RANK_CLIMB") {
-    criteria = { type: "MOST_RANK_CLIMB", queue: args.queue };
-  } else if (args.criteriaType === "MOST_WINS_PLAYER") {
-    criteria = { type: "MOST_WINS_PLAYER", queue: args.queue };
-  } else if (args.criteriaType === "MOST_WINS_CHAMPION") {
-    // Convert champion string (ID from autocomplete) to number
-    // Try parsing as number first (from autocomplete), then try as name
-    let championId: number;
-    const championIdFromString = Number.parseInt(args.champion, 10);
-    if (!isNaN(championIdFromString)) {
-      championId = championIdFromString;
-    } else {
-      // Try looking up by name
-      const idFromName = getChampionId(args.champion);
-      if (!idFromName) {
-        throw new Error(`Invalid champion: "${args.champion}". Please select a champion from the autocomplete list.`);
+  const criteria: CompetitionCriteria = match(args.criteriaType)
+    .with("MOST_GAMES_PLAYED", () => ({ type: "MOST_GAMES_PLAYED" as const, queue: args.queue }))
+    .with("HIGHEST_RANK", () => ({ type: "HIGHEST_RANK" as const, queue: args.queue }))
+    .with("MOST_RANK_CLIMB", () => ({ type: "MOST_RANK_CLIMB" as const, queue: args.queue }))
+    .with("MOST_WINS_PLAYER", () => ({ type: "MOST_WINS_PLAYER" as const, queue: args.queue }))
+    .with("MOST_WINS_CHAMPION", () => {
+      // Convert champion string (ID from autocomplete) to number
+      // Try parsing as number first (from autocomplete), then try as name
+      let championId: number;
+      const championIdFromString = Number.parseInt(args.champion, 10);
+      if (!isNaN(championIdFromString)) {
+        championId = championIdFromString;
+      } else {
+        // Try looking up by name
+        const idFromName = getChampionId(args.champion);
+        if (!idFromName) {
+          throw new Error(`Invalid champion: "${args.champion}". Please select a champion from the autocomplete list.`);
+        }
+        championId = idFromName;
       }
-      championId = idFromName;
-    }
 
-    criteria = {
-      type: "MOST_WINS_CHAMPION",
-      championId: ChampionIdSchema.parse(championId),
-      queue: args.queue,
-    };
-    // TODO: use ts-pattern for exhaustive match
-  } else {
-    // Last case: HIGHEST_WIN_RATE
-    criteria = {
-      type: "HIGHEST_WIN_RATE",
+      return {
+        type: "MOST_WINS_CHAMPION" as const,
+        championId: ChampionIdSchema.parse(championId),
+        queue: args.queue,
+      };
+    })
+    .with("HIGHEST_WIN_RATE", () => ({
+      type: "HIGHEST_WIN_RATE" as const,
       minGames: args.minGames ?? 10,
       queue: args.queue,
-    };
-  }
+    }))
+    .exhaustive();
 
   console.log(`✅ Criteria built:`, criteria);
 

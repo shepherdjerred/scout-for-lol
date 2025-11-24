@@ -85,7 +85,7 @@ export function downloadConfigBundle(tabConfig: import("../config/schema").TabCo
  * Import config bundle from JSON string
  */
 export function importAllConfigFromJSON(json: string): ConfigBundle {
-  const parsed = JSON.parse(json) as unknown;
+  const parsed = JSON.parse(json);
   return ConfigBundleSchema.parse(parsed);
 }
 

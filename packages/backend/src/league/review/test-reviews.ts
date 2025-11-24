@@ -12,6 +12,7 @@ import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/clien
 import { type MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import configuration from "@scout-for-lol/backend/configuration.js";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
+import { MatchDtoSchema, type MatchDto } from "@scout-for-lol/backend/league/model/match-dto.schema.js";
 
 const MATCH_TYPES = ["ranked", "unranked", "aram", "arena"] as const;
 type MatchType = (typeof MATCH_TYPES)[number];
@@ -230,7 +231,7 @@ async function fetchMatchKeysFromS3(daysBack: number): Promise<string[]> {
 /**
  * Fetch and parse a match from S3
  */
-async function fetchMatchFromS3(key: string): Promise<MatchV5DTOs.MatchDto | null> {
+async function fetchMatchFromS3(key: string): Promise<MatchDto | null> {
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
@@ -252,8 +253,9 @@ async function fetchMatchFromS3(key: string): Promise<MatchV5DTOs.MatchDto | nul
     }
 
     const bodyString = await response.Body.transformToString();
-    // TODO: use Zod schema to parse MatchDto
-    return JSON.parse(bodyString) as MatchV5DTOs.MatchDto;
+    // Parse and validate the match data with Zod schema
+    const matchData = JSON.parse(bodyString);
+    return MatchDtoSchema.parse(matchData);
   } catch (error) {
     console.warn(`Failed to fetch match ${key}:`, error);
     return null;
@@ -278,7 +280,7 @@ function createMinimalPlayerConfig(puuid: string, name: string): PlayerConfigEnt
 /**
  * Convert a Riot API match to our internal format
  */
-async function convertMatchDtoToInternalFormat(matchDto: MatchV5DTOs.MatchDto): Promise<CompletedMatch | ArenaMatch> {
+async function convertMatchDtoToInternalFormat(matchDto: MatchDto): Promise<CompletedMatch | ArenaMatch> {
   const queueType = parseQueueType(matchDto.info.queueId);
 
   // Pick the first participant as our "tracked player"
@@ -336,7 +338,9 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
 
     if (isMatchingType) {
       console.log(`📦 Using match from S3: ${key}`);
-      return await convertMatchDtoToInternalFormat(matchDto);
+      // Cast to twisted library type - Zod schema ensures structural compatibility at runtime
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return await convertMatchDtoToInternalFormat(matchDto as any);
     }
   }
 
