@@ -63,10 +63,6 @@ export async function initArenaAugmentsOnce(): Promise<Record<number, FullAugmen
   return loadPromise;
 }
 
-export function getArenaAugmentMapSync(): Record<number, FullAugment> | undefined {
-  return augmentMapCache;
-}
-
 export async function getArenaAugmentMap(): Promise<Record<number, FullAugment>> {
   if (augmentMapCache) {
     return augmentMapCache;

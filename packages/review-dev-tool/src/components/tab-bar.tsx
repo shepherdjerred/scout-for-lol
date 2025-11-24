@@ -62,15 +62,22 @@ export function TabBar({ tabs, activeTabId, onTabSelect, onTabClose, onTabAdd, o
                   }
                 }}
                 className="px-2 py-1 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded text-sm"
-                autoFocus
               />
             ) : (
               <span
+                role="button"
+                tabIndex={0}
                 onClick={() => {
                   onTabSelect(tab.id);
                 }}
                 onDoubleClick={() => {
                   startEditing(tab);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    onTabSelect(tab.id);
+                  }
                 }}
                 className="font-medium whitespace-nowrap"
               >

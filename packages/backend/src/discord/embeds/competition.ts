@@ -270,7 +270,7 @@ export function generateCompetitionDetailsEmbed(competition: CompetitionWithCrit
  * @param criteria Competition criteria object
  * @returns Human-readable string description
  */
-export function formatCriteriaDescription(criteria: CompetitionCriteria): string {
+function formatCriteriaDescription(criteria: CompetitionCriteria): string {
   return match(criteria)
     .with({ type: "MOST_GAMES_PLAYED" }, (c) => `Most games played in ${formatQueue(c.queue)}`)
     .with({ type: "HIGHEST_RANK" }, (c) => `Highest rank in ${formatQueue(c.queue)}`)

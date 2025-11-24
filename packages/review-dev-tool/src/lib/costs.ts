@@ -4,6 +4,7 @@
 import type { GenerationMetadata, CostBreakdown } from "@scout-for-lol/review-dev-tool/config/schema";
 import { CostBreakdownSchema } from "@scout-for-lol/review-dev-tool/config/schema";
 import { calculateCost as calculateCostShared, formatCost as formatCostShared } from "@scout-for-lol/data";
+import { STORES, getItem, setItem } from "@scout-for-lol/review-dev-tool/lib/storage";
 
 /**
  * Calculate cost breakdown from generation metadata
@@ -19,52 +20,51 @@ export function formatCost(cost: number): string {
   return formatCostShared(cost);
 }
 
-const COST_STORAGE_KEY = "scout-review-costs";
-
 /**
- * Session cost tracker with localStorage persistence
+ * Session cost tracker with IndexedDB persistence
  */
 export class CostTracker {
   private costs: CostBreakdown[] = [];
+  private initPromise: Promise<void>;
 
   constructor() {
-    // Load costs from localStorage on initialization
-    this.loadFromStorage();
+    // Load costs from IndexedDB on initialization
+    this.initPromise = this.loadFromStorage();
   }
 
-  private loadFromStorage(): void {
+  private async loadFromStorage(): Promise<void> {
     try {
-      // Try to access localStorage - will throw in non-browser environments
-      const stored = localStorage.getItem(COST_STORAGE_KEY);
+      const stored = await getItem<unknown>(STORES.COSTS, "costs");
       if (stored) {
-        const parsed: unknown = JSON.parse(stored);
         const ArraySchema = CostBreakdownSchema.array();
-        const result = ArraySchema.safeParse(parsed);
+        const result = ArraySchema.safeParse(stored);
         if (result.success) {
           this.costs = result.data;
         }
       }
     } catch (error) {
-      // Silently fail in non-browser environments or if storage fails
+      // Silently fail if storage fails
       console.error("Failed to load costs from storage:", error);
     }
   }
 
-  private saveToStorage(): void {
+  private async saveToStorage(): Promise<void> {
     try {
-      localStorage.setItem(COST_STORAGE_KEY, JSON.stringify(this.costs));
+      await setItem(STORES.COSTS, "costs", this.costs);
     } catch (error) {
-      // Silently fail in non-browser environments or if storage fails
+      // Silently fail if storage fails
       console.error("Failed to save costs to storage:", error);
     }
   }
 
-  add(cost: CostBreakdown): void {
+  async add(cost: CostBreakdown): Promise<void> {
+    await this.initPromise;
     this.costs.push(cost);
-    this.saveToStorage();
+    await this.saveToStorage();
   }
 
-  getTotal(): CostBreakdown {
+  async getTotal(): Promise<CostBreakdown> {
+    await this.initPromise;
     return this.costs.reduce(
       (acc, cost) => ({
         textInputCost: acc.textInputCost + cost.textInputCost,
@@ -81,25 +81,29 @@ export class CostTracker {
     );
   }
 
-  getCount(): number {
+  async getCount(): Promise<number> {
+    await this.initPromise;
     return this.costs.length;
   }
 
-  getCosts(): CostBreakdown[] {
+  async getCosts(): Promise<CostBreakdown[]> {
+    await this.initPromise;
     return [...this.costs];
   }
 
-  clear(): void {
+  async clear(): Promise<void> {
+    await this.initPromise;
     this.costs = [];
-    this.saveToStorage();
+    await this.saveToStorage();
   }
 
-  export(): string {
-    const total = this.getTotal();
+  async export(): Promise<string> {
+    await this.initPromise;
+    const total = await this.getTotal();
     const lines = [
       "Cost Report",
       "===========",
-      `Total Requests: ${this.getCount().toString()}`,
+      `Total Requests: ${this.costs.length.toString()}`,
       "",
       "Breakdown:",
       `  Text Input:  ${formatCost(total.textInputCost)}`,

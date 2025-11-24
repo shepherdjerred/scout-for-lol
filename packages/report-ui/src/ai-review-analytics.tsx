@@ -274,8 +274,12 @@ export function AIReviewAnalytics(): React.ReactNode {
         }}
       >
         <div>
-          <label htmlFor="filter" style={{ fontSize: "14px", fontWeight: 500, marginRight: "8px", color: "#374151" }}>Filter:</label>
-          <select id="filter"             value={filterRating}
+          <label htmlFor="filter" style={{ fontSize: "14px", fontWeight: 500, marginRight: "8px", color: "#374151" }}>
+            Filter:
+          </label>
+          <select
+            id="filter"
+            value={filterRating}
             onChange={(e) => {
               const FilterRatingSchema = z.enum(["all", "unrated", "1", "2", "3", "4"]);
               const result = FilterRatingSchema.safeParse(e.target.value);
@@ -300,8 +304,12 @@ export function AIReviewAnalytics(): React.ReactNode {
           </select>
         </div>
         <div>
-          <label htmlFor="sort" style={{ fontSize: "14px", fontWeight: 500, marginRight: "8px", color: "#374151" }}>Sort:</label>
-          <select id="sort"             value={sortBy}
+          <label htmlFor="sort" style={{ fontSize: "14px", fontWeight: 500, marginRight: "8px", color: "#374151" }}>
+            Sort:
+          </label>
+          <select
+            id="sort"
+            value={sortBy}
             onChange={(e) => {
               const SortOptionSchema = z.enum(["rating-desc", "rating-asc", "date-desc", "date-asc"]);
               const result = SortOptionSchema.safeParse(e.target.value);
@@ -345,8 +353,16 @@ export function AIReviewAnalytics(): React.ReactNode {
               <img
                 src={image.imageDataUrl}
                 alt={image.filename}
+                role="button"
+                tabIndex={0}
                 onClick={() => {
                   setExpandedImage(expandedImage === image.id ? null : image.id);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setExpandedImage(expandedImage === image.id ? null : image.id);
+                  }
                 }}
                 style={{
                   width: "120px",

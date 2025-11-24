@@ -1,9 +1,8 @@
 /**
  * Client-side caching for CloudFlare R2 API calls
- * Uses a three-tier cache system:
+ * Uses a two-tier cache system:
  * 1. Memory (fastest, session-only)
  * 2. IndexedDB (fast, large capacity ~100s of MB)
- * 3. localStorage (fallback, ~5-10MB limit)
  */
 import { z } from "zod";
 
@@ -124,10 +123,10 @@ function isCacheValid(entry: CacheEntry): boolean {
 }
 
 /**
- * Periodically clean up expired entries (throttled to once per minute)
+ * Periodically clean up expired entries from IndexedDB (throttled to once per minute)
  */
 let lastCleanupTime = 0;
-function cleanupExpiredEntries(): void {
+async function cleanupExpiredEntries(): Promise<void> {
   const now = Date.now();
   // Only run cleanup once per minute
   if (now - lastCleanupTime < 60_000) {
@@ -136,80 +135,78 @@ function cleanupExpiredEntries(): void {
   lastCleanupTime = now;
 
   try {
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith(CACHE_KEY_PREFIX)) {
-        const value = localStorage.getItem(key);
-        if (value) {
-          try {
-            const parsed: unknown = JSON.parse(value);
-            const result = CacheEntrySchema.safeParse(parsed);
-            if (!result.success || !isCacheValid(result.data)) {
-              keysToRemove.push(key);
+    const db = await getDB();
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], "readwrite");
+      const store = transaction.objectStore(STORE_NAME);
+      const index = store.index("timestamp");
+      const request = index.openCursor();
+
+      let deleteCount = 0;
+
+      request.onsuccess = (event) => {
+        const targetResult = IDBRequestEventTargetSchema.safeParse(event.target);
+        if (targetResult.success) {
+          const cursor = targetResult.data.result;
+          if (cursor) {
+            const KeyedEntrySchema = z.object({
+              key: z.string(),
+              data: z.unknown(),
+              timestamp: z.number(),
+              ttl: z.number(),
+            });
+            const validationResult = KeyedEntrySchema.safeParse(cursor.value);
+            if (validationResult.success) {
+              const { key: _key, ...entry } = validationResult.data;
+              if (!isCacheValid(entry)) {
+                cursor.delete();
+                memoryCache.delete(validationResult.data.key);
+                deleteCount++;
+              }
             }
-          } catch {
-            // Invalid JSON - remove it
-            keysToRemove.push(key);
+            cursor.continue();
+          } else {
+            if (deleteCount > 0) {
+              console.log(`Cleaned up ${deleteCount.toString()} expired cache entries from IndexedDB`);
+            }
+            resolve();
           }
+        } else {
+          resolve();
         }
-      }
-    }
+      };
 
-    for (const key of keysToRemove) {
-      localStorage.removeItem(key);
-      memoryCache.delete(key);
-    }
-
-    if (keysToRemove.length > 0) {
-      console.log(`Cleaned up ${keysToRemove.length.toString()} expired cache entries`);
-    }
+      request.onerror = () => {
+        const error = request.error;
+        reject(error ?? new Error("Cache operation failed"));
+      };
+    });
   } catch (error) {
     console.warn("Error during cache cleanup:", error);
   }
 }
 
 /**
- * Get cached data if available and valid (synchronous - checks memory and localStorage only)
+ * Get cached data if available and valid (synchronous - checks memory only)
  * Returns unknown data that must be validated by the caller
  */
 export function getCachedData(endpoint: string, params: Record<string, unknown>): unknown {
   const cacheKey = generateCacheKey(endpoint, params);
 
   // Periodically clean up expired entries
-  cleanupExpiredEntries();
+  void cleanupExpiredEntries();
 
-  // Check in-memory cache first (fastest)
+  // Check in-memory cache only (synchronous)
   const memoryEntry = memoryCache.get(cacheKey);
   if (memoryEntry && isCacheValid(memoryEntry)) {
     return memoryEntry.data;
-  }
-
-  // Check localStorage cache
-  try {
-    const stored = localStorage.getItem(cacheKey);
-    if (stored) {
-      const parsed: unknown = JSON.parse(stored);
-      const result = CacheEntrySchema.safeParse(parsed);
-
-      if (result.success && isCacheValid(result.data)) {
-        // Restore to memory cache for faster subsequent access
-        memoryCache.set(cacheKey, result.data);
-        return result.data.data;
-      }
-
-      // Invalid or expired - clean up
-      localStorage.removeItem(cacheKey);
-    }
-  } catch (error) {
-    console.warn("Cache read error:", error);
   }
 
   return null;
 }
 
 /**
- * Get cached data if available and valid (async - checks memory, IndexedDB, and localStorage)
+ * Get cached data if available and valid (async - checks memory and IndexedDB)
  * Returns unknown data that must be validated by the caller
  */
 export async function getCachedDataAsync(endpoint: string, params: Record<string, unknown>): Promise<unknown> {
@@ -221,7 +218,7 @@ export async function getCachedDataAsync(endpoint: string, params: Record<string
     return memoryEntry.data;
   }
 
-  // Check IndexedDB (primary storage)
+  // Check IndexedDB
   try {
     const db = await getDB();
     const entry = await new Promise<CacheEntry | null>((resolve, reject) => {
@@ -266,61 +263,58 @@ export async function getCachedDataAsync(endpoint: string, params: Record<string
     console.warn("IndexedDB cache read error:", error);
   }
 
-  // Check localStorage as fallback
-  try {
-    const stored = localStorage.getItem(cacheKey);
-    if (stored) {
-      const parsed: unknown = JSON.parse(stored);
-      const result = CacheEntrySchema.safeParse(parsed);
-
-      if (result.success && isCacheValid(result.data)) {
-        // Restore to memory cache for faster subsequent access
-        memoryCache.set(cacheKey, result.data);
-        return result.data.data;
-      }
-
-      // Invalid or expired - clean up
-      localStorage.removeItem(cacheKey);
-    }
-  } catch (error) {
-    console.warn("Cache read error:", error);
-  }
-
   return null;
 }
 
 /**
- * Evict old cache entries to free up space
+ * Evict old cache entries from IndexedDB to free up space
  * Removes expired entries first, then oldest non-expired entries
  */
-function evictOldCacheEntries(targetBytesToFree: number): number {
-  const entries: { key: string; timestamp: number; size: number; expired: boolean }[] = [];
-
+async function evictOldCacheEntries(targetBytesToFree: number): Promise<number> {
   try {
+    const db = await getDB();
+    const entries: { key: string; timestamp: number; size: number; expired: boolean }[] = [];
+
     // Collect all cache entries with metadata
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith(CACHE_KEY_PREFIX)) {
-        const value = localStorage.getItem(key);
-        if (value) {
-          const size = key.length * 2 + value.length * 2; // UTF-16
-          try {
-            const parsed: unknown = JSON.parse(value);
-            const result = CacheEntrySchema.safeParse(parsed);
-            const expired = result.success ? !isCacheValid(result.data) : true;
-            entries.push({
-              key,
-              timestamp: result.success ? result.data.timestamp : 0,
-              size,
-              expired,
-            });
-          } catch {
-            // Invalid entry - mark for removal
-            entries.push({ key, timestamp: 0, size, expired: true });
-          }
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], "readonly");
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.openCursor();
+
+      request.onsuccess = (event) => {
+        const targetResult = IDBRequestEventTargetSchema.safeParse(event.target);
+        if (!targetResult.success) {
+          resolve();
+          return;
         }
-      }
-    }
+
+        const cursor = targetResult.data.result;
+        if (!cursor) {
+          resolve();
+          return;
+        }
+
+        const KeyedEntrySchema = z.object({
+          key: z.string(),
+          data: z.unknown(),
+          timestamp: z.number(),
+          ttl: z.number(),
+        });
+        const validationResult = KeyedEntrySchema.safeParse(cursor.value);
+        if (validationResult.success) {
+          const { key, timestamp, ttl, data } = validationResult.data;
+          const size = JSON.stringify(data).length * 2; // UTF-16 approximation
+          const expired = !isCacheValid({ data, timestamp, ttl });
+          entries.push({ key, timestamp, size, expired });
+        }
+        cursor.continue();
+      };
+
+      request.onerror = () => {
+        const error = request.error;
+        reject(error ?? new Error("Cache operation failed"));
+      };
+    });
 
     // Sort: expired first, then by oldest timestamp
     entries.sort((a, b) => {
@@ -333,11 +327,23 @@ function evictOldCacheEntries(targetBytesToFree: number): number {
     // Remove entries until we've freed enough space
     let freedBytes = 0;
     for (const entry of entries) {
-      if (freedBytes >= targetBytesToFree) {
-        break;
-      }
-      localStorage.removeItem(entry.key);
-      memoryCache.delete(entry.key);
+      if (freedBytes >= targetBytesToFree) break;
+
+      await new Promise<void>((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], "readwrite");
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.delete(entry.key);
+
+        request.onsuccess = () => {
+          memoryCache.delete(entry.key);
+          resolve();
+        };
+
+        request.onerror = () => {
+          const error = request.error;
+          reject(error ?? new Error("Cache operation failed"));
+        };
+      });
       freedBytes += entry.size;
     }
 
@@ -350,7 +356,7 @@ function evictOldCacheEntries(targetBytesToFree: number): number {
 
 /**
  * Cache data with specified TTL (in milliseconds)
- * Writes to memory → IndexedDB → localStorage (best effort)
+ * Writes to memory → IndexedDB
  */
 export async function setCachedData(
   endpoint: string,
@@ -368,57 +374,40 @@ export async function setCachedData(
   // Store in memory cache (always succeeds)
   memoryCache.set(cacheKey, entry);
 
-  // Store in IndexedDB (primary storage, large capacity)
+  // Store in IndexedDB
   try {
-    const success = await setInIndexedDB(cacheKey, entry);
-    if (success) {
-      // IndexedDB succeeded, also try localStorage as backup
-      try {
-        localStorage.setItem(cacheKey, JSON.stringify(entry));
-      } catch {
-        // localStorage failed but IndexedDB worked, that's fine
-      }
-      return;
-    }
-  } catch (error) {
-    console.warn("IndexedDB cache write error:", error);
-  }
-
-  // IndexedDB failed, fall back to localStorage only
-  try {
-    const serialized = JSON.stringify(entry);
-    localStorage.setItem(cacheKey, serialized);
+    await setInIndexedDB(cacheKey, entry);
   } catch (error) {
     // If quota exceeded, try to free up space and retry
     const QuotaErrorSchema = z.object({ name: z.literal("QuotaExceededError") });
     const errorResult = QuotaErrorSchema.safeParse(error);
     if (errorResult.success) {
-      console.warn("localStorage quota exceeded, attempting cache eviction...");
+      console.warn("IndexedDB quota exceeded, attempting cache eviction...");
 
       const serialized = JSON.stringify(entry);
-      const estimatedSize = (cacheKey.length + serialized.length) * 2; // UTF-16
-      const freedBytes = evictOldCacheEntries(estimatedSize * 2); // Free 2x the needed space
+      const estimatedSize = serialized.length * 2; // UTF-16 approximation
+      const freedBytes = await evictOldCacheEntries(estimatedSize * 2); // Free 2x the needed space
 
       if (freedBytes > 0) {
-        console.log(`Freed ${(freedBytes / 1024).toFixed(2)} KB from localStorage cache`);
+        console.log(`Freed ${(freedBytes / 1024).toFixed(2)} KB from IndexedDB cache`);
         try {
-          localStorage.setItem(cacheKey, serialized);
+          await setInIndexedDB(cacheKey, entry);
           return;
         } catch (retryError) {
-          console.warn("localStorage write failed after eviction:", retryError);
+          console.warn("IndexedDB write failed after eviction:", retryError);
         }
       } else {
-        console.warn("Could not free enough space for localStorage cache entry");
+        console.warn("Could not free enough space for IndexedDB cache entry");
       }
     } else {
-      console.warn("localStorage cache write error:", error);
+      console.warn("IndexedDB cache write error:", error);
     }
-    // If all persistent storage fails, memory cache still works
+    // If persistent storage fails, memory cache still works
   }
 }
 
 /**
- * Clear all cached data (memory, IndexedDB, and localStorage)
+ * Clear all cached data (memory and IndexedDB)
  */
 export async function clearAllCache(): Promise<void> {
   // Clear memory cache
@@ -442,22 +431,6 @@ export async function clearAllCache(): Promise<void> {
     });
   } catch (error) {
     console.warn("IndexedDB cache clear error:", error);
-  }
-
-  // Clear localStorage cache
-  try {
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith(CACHE_KEY_PREFIX)) {
-        keysToRemove.push(key);
-      }
-    }
-    for (const key of keysToRemove) {
-      localStorage.removeItem(key);
-    }
-  } catch (error) {
-    console.warn("localStorage cache clear error:", error);
   }
 }
 
@@ -511,22 +484,6 @@ export async function clearCacheForEndpoint(endpoint: string): Promise<void> {
   } catch (error) {
     console.warn("IndexedDB cache clear error:", error);
   }
-
-  // Clear from localStorage
-  try {
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith(CACHE_KEY_PREFIX) && key.includes(endpoint)) {
-        keysToRemove.push(key);
-      }
-    }
-    for (const key of keysToRemove) {
-      localStorage.removeItem(key);
-    }
-  } catch (error) {
-    console.warn("localStorage cache clear error:", error);
-  }
 }
 
 /**
@@ -535,31 +492,11 @@ export async function clearCacheForEndpoint(endpoint: string): Promise<void> {
 export async function getCacheStats(): Promise<{
   memoryEntries: number;
   indexedDBEntries: number;
-  localStorageEntries: number;
   indexedDBSizeBytes: number;
-  localStorageSizeBytes: number;
   totalSizeBytes: number;
 }> {
-  let localStorageEntries = 0;
-  let localStorageSizeBytes = 0;
   let indexedDBEntries = 0;
   let indexedDBSizeBytes = 0;
-
-  // Calculate localStorage stats
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith(CACHE_KEY_PREFIX)) {
-        localStorageEntries++;
-        const value = localStorage.getItem(key);
-        if (value) {
-          localStorageSizeBytes += key.length * 2 + value.length * 2; // UTF-16 encoding
-        }
-      }
-    }
-  } catch (error) {
-    console.warn("Error calculating localStorage cache stats:", error);
-  }
 
   // Calculate IndexedDB stats
   try {
@@ -600,9 +537,7 @@ export async function getCacheStats(): Promise<{
   return {
     memoryEntries: memoryCache.size,
     indexedDBEntries,
-    localStorageEntries,
     indexedDBSizeBytes,
-    localStorageSizeBytes,
-    totalSizeBytes: indexedDBSizeBytes + localStorageSizeBytes,
+    totalSizeBytes: indexedDBSizeBytes,
   };
 }

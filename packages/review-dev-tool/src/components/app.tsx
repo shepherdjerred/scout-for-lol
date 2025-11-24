@@ -16,6 +16,7 @@ import {
   saveGlobalConfig,
 } from "@scout-for-lol/review-dev-tool/lib/config-manager";
 import { CostTracker } from "@scout-for-lol/review-dev-tool/lib/costs";
+import { migrateFromLocalStorage } from "@scout-for-lol/review-dev-tool/lib/storage";
 import { TabBar } from "@scout-for-lol/review-dev-tool/components/tab-bar";
 import { ConfigModal } from "@scout-for-lol/review-dev-tool/components/config-modal";
 import { TabSettingsPanel } from "@scout-for-lol/review-dev-tool/components/tab-settings-panel";
@@ -37,43 +38,16 @@ export type TabData = {
 const MAX_TABS = 5;
 
 export default function App() {
-  // Initialize global config (API keys shared across tabs)
-  const [globalConfig, setGlobalConfig] = useState<GlobalConfig>(() => {
-    const loaded = loadGlobalConfig();
-    if (loaded) {
-      return loaded;
-    }
-    // Try migrating from old config
-    const oldConfig = loadCurrentConfig();
-    if (oldConfig) {
-      const { global } = splitConfig(oldConfig);
-      return global;
-    }
-    return createDefaultGlobalConfig();
-  });
-
-  // Initialize tabs with per-tab configs
-  const [tabs, setTabs] = useState<TabData[]>(() => {
-    // Try migrating from old config
-    const oldConfig = loadCurrentConfig();
-    if (oldConfig) {
-      const { tab } = splitConfig(oldConfig);
-      return [
-        {
-          id: "tab-1",
-          name: "Config 1",
-          config: tab,
-        },
-      ];
-    }
-    return [
-      {
-        id: "tab-1",
-        name: "Config 1",
-        config: createDefaultTabConfig(),
-      },
-    ];
-  });
+  // Initialize with defaults
+  const [globalConfig, setGlobalConfig] = useState<GlobalConfig>(createDefaultGlobalConfig());
+  const [tabs, setTabs] = useState<TabData[]>([
+    {
+      id: "tab-1",
+      name: "Config 1",
+      config: createDefaultTabConfig(),
+    },
+  ]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const [activeTabId, setActiveTabId] = useState("tab-1");
   const [costTracker] = useState(() => new CostTracker());
@@ -82,19 +56,59 @@ export default function App() {
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
 
-  // Save global config when it changes
+  // Migrate from localStorage and load initial configs
   useEffect(() => {
-    saveGlobalConfig(globalConfig);
-  }, [globalConfig]);
+    const initializeApp = async () => {
+      // First, migrate any localStorage data to IndexedDB
+      await migrateFromLocalStorage();
 
-  // Save current tab config when it changes
+      // Then load from IndexedDB
+      const loaded = await loadGlobalConfig();
+      if (loaded) {
+        setGlobalConfig(loaded);
+      } else {
+        // Try migrating from old merged config
+        const oldConfig = await loadCurrentConfig();
+        if (oldConfig) {
+          const { global } = splitConfig(oldConfig);
+          setGlobalConfig(global);
+        }
+      }
+
+      // Load tab config
+      const oldConfig = await loadCurrentConfig();
+      if (oldConfig) {
+        const { tab } = splitConfig(oldConfig);
+        setTabs([
+          {
+            id: "tab-1",
+            name: "Config 1",
+            config: tab,
+          },
+        ]);
+      }
+
+      setIsInitialized(true);
+    };
+
+    void initializeApp();
+  }, []);
+
+  // Save global config when it changes (after initialization)
   useEffect(() => {
-    if (activeTab) {
+    if (isInitialized) {
+      void saveGlobalConfig(globalConfig);
+    }
+  }, [globalConfig, isInitialized]);
+
+  // Save current tab config when it changes (after initialization)
+  useEffect(() => {
+    if (isInitialized && activeTab) {
       // Save as merged config for backwards compatibility
       const merged = mergeConfigs(globalConfig, activeTab.config);
-      saveCurrentConfig(merged);
+      void saveCurrentConfig(merged);
     }
-  }, [activeTab?.config, globalConfig]);
+  }, [activeTab?.config, globalConfig, isInitialized]);
 
   const addTab = () => {
     if (tabs.length >= MAX_TABS) {

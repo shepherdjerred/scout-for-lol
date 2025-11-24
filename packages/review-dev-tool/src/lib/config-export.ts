@@ -61,7 +61,7 @@ export function exportAllConfig(tabConfig: import("../config/schema").TabConfig)
 /**
  * Export all config as JSON string
  */
-export function exportAllConfigAsJSON(tabConfig: import("../config/schema").TabConfig): string {
+function exportAllConfigAsJSON(tabConfig: import("../config/schema").TabConfig): string {
   return JSON.stringify(exportAllConfig(tabConfig), null, 2);
 }
 

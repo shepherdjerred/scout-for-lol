@@ -36,6 +36,7 @@ export function StarRating({ rating, onRate, size = "medium", readonly = false }
 
   return (
     <div
+      role="presentation"
       className="inline-flex gap-1 items-center"
       onMouseLeave={() => {
         if (isInteractive) {

@@ -3,43 +3,60 @@
  */
 import { useState, useEffect } from "react";
 import { z } from "zod";
+import { STORES, getItem, setItem } from "@scout-for-lol/review-dev-tool/lib/storage";
 
 const BooleanSchema = z.boolean();
 
 export function ThemeSelector() {
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    const WindowSchema = z.object({}).passthrough();
-    const windowResult = WindowSchema.safeParse(globalThis.window);
-    if (!windowResult.success) {
-      return true;
-    }
-    const saved = localStorage.getItem("darkMode");
-    if (!saved) {
-      return true;
-    }
-    try {
-      const parsed: unknown = JSON.parse(saved);
-      const result = BooleanSchema.safeParse(parsed);
-      return result.success ? result.data : true;
-    } catch {
-      return true;
-    }
-  });
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
 
-  // Apply dark mode class to document
+  // Load theme preference from IndexedDB on mount
   useEffect(() => {
+    const loadTheme = async () => {
+      const WindowSchema = z.object({}).passthrough();
+      const windowResult = WindowSchema.safeParse(globalThis.window);
+      if (!windowResult.success) {
+        setIsInitialized(true);
+        return;
+      }
+
+      try {
+        const saved = await getItem<unknown>(STORES.PREFERENCES, "darkMode");
+        if (saved !== null) {
+          const result = BooleanSchema.safeParse(saved);
+          if (result.success) {
+            setIsDarkMode(result.data);
+          }
+        }
+      } catch {
+        // Use default (dark mode)
+      }
+      setIsInitialized(true);
+    };
+    void loadTheme();
+  }, []);
+
+  // Apply dark mode class to document and save to IndexedDB
+  useEffect(() => {
+    if (!isInitialized) {
+      return;
+    }
+
     const WindowSchema = z.object({}).passthrough();
     const windowResult = WindowSchema.safeParse(globalThis.window);
     if (!windowResult.success) {
       return;
     }
+
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
     }
-    localStorage.setItem("darkMode", JSON.stringify(isDarkMode));
-  }, [isDarkMode]);
+
+    void setItem(STORES.PREFERENCES, "darkMode", isDarkMode);
+  }, [isDarkMode, isInitialized]);
 
   const handleToggle = (): void => {
     setIsDarkMode(!isDarkMode);

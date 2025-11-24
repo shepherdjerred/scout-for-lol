@@ -67,43 +67,6 @@ export async function getChannelsSubscribedToPlayers(
   }
 }
 
-export async function getAccounts(): Promise<PlayerConfig> {
-  console.log("🔍 Fetching all player accounts");
-
-  try {
-    const startTime = Date.now();
-
-    const players = await prisma.player.findMany({
-      include: {
-        accounts: true,
-      },
-    });
-
-    const queryTime = Date.now() - startTime;
-    console.log(`📊 Found ${players.length.toString()} players in ${queryTime.toString()}ms`);
-
-    // transform
-    const result = players.flatMap((player): PlayerConfigEntry[] => {
-      return player.accounts.map((account): PlayerConfigEntry => {
-        return {
-          alias: player.alias,
-          league: {
-            leagueAccount: account,
-          },
-          discordAccount: {
-            id: player.discordId ?? undefined,
-          },
-        };
-      });
-    });
-
-    console.log(`📋 Returning ${result.length.toString()} player config entries`);
-    return result;
-  } catch (error) {
-    console.error("❌ Error fetching player accounts:", error);
-    throw error;
-  }
-}
 
 /**
  * Get all player accounts with their runtime state for polling.

@@ -16,7 +16,7 @@ function getItemIconUrl(itemId: number): string {
   return `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/item/${itemId.toString()}.png`;
 }
 
-export function renderItem(item: number) {
+function renderItem(item: number) {
   if (item !== 0) {
     const isPrismatic = isPrismaticItem(item);
     const iconUrl = getItemIconUrl(item);

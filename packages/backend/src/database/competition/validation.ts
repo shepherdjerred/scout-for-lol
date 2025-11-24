@@ -236,26 +236,3 @@ export async function validateServerLimit(
     );
   }
 }
-
-/**
- * Comprehensive validation for competition creation
- * Uses Zod schema for sync validations + async database checks
- */
-export async function validateCompetitionCreation(
-  prisma: PrismaClient,
-  input: CompetitionCreationInput,
-): Promise<CompetitionCreationInput> {
-  // First validate with Zod schema (throws ZodError if invalid)
-  const result = CompetitionCreationSchema.safeParse(input);
-  if (!result.success) {
-    throw fromZodError(result.error);
-  }
-
-  const validatedInput = result.data;
-
-  // Then run async database validations
-  await validateOwnerLimit(prisma, validatedInput.serverId, validatedInput.ownerId);
-  await validateServerLimit(prisma, validatedInput.serverId, validatedInput.ownerId);
-
-  return validatedInput;
-}

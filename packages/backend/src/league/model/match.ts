@@ -1,4 +1,4 @@
-import { entries, filter, first, groupBy, map, pipe, sortBy } from "remeda";
+import { entries, groupBy, map, pipe, sortBy } from "remeda";
 import { z } from "zod";
 import {
   ArenaPlacementSchema,
@@ -14,17 +14,12 @@ import {
   type ArenaMatch,
   type MatchDto,
   type ParticipantDto,
+  findParticipant,
+  getOutcome,
+  getTeams,
 } from "@scout-for-lol/data";
 import { strict as assert } from "assert";
-import { match } from "ts-pattern";
 import { participantToArenaChampion, participantToChampion } from "@scout-for-lol/backend/league/model/champion.js";
-
-function getTeams(participants: ParticipantDto[]) {
-  return {
-    blue: pipe(participants.slice(0, 5), map(participantToChampion)),
-    red: pipe(participants.slice(5, 10), map(participantToChampion)),
-  };
-}
 
 export function toMatch(
   players: Player[],
@@ -32,7 +27,7 @@ export function toMatch(
   rankBeforeMatch: Rank | undefined,
   rankAfterMatch: Rank | undefined,
 ): CompletedMatch {
-  const teams = getTeams(matchDto.info.participants);
+  const teams = getTeams(matchDto.info.participants, participantToChampion);
   const queueType = parseQueueType(matchDto.info.queueId);
 
   if (queueType === "arena") {
@@ -75,23 +70,6 @@ export function toMatch(
     durationInSeconds: matchDto.info.gameDuration,
     teams,
   };
-}
-
-export function getOutcome(participant: ParticipantDto) {
-  return match(participant)
-    .returnType<"Victory" | "Surrender" | "Defeat">()
-    .with({ win: true }, () => "Victory")
-    .with({ gameEndedInSurrender: true }, () => "Surrender")
-    .with({ win: false }, () => "Defeat")
-    .exhaustive();
-}
-
-function findParticipant(puuid: string, participants: ParticipantDto[]): ParticipantDto | undefined {
-  return pipe(
-    participants,
-    filter((participant) => participant.puuid === puuid),
-    first(),
-  );
 }
 
 // Arena helpers

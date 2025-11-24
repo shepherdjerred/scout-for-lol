@@ -114,15 +114,25 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-all" onClick={handleClose} />
+      <div
+        role="button"
+        tabIndex={0}
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-all"
+        onClick={handleClose}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleClose();
+          }
+        }}
+      />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div
+          role="dialog"
+          aria-modal="true"
           className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
         >
           {/* Header */}
           <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -141,8 +151,12 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
           <div className="p-6 space-y-4">
             {/* File Upload */}
             <div>
-              <label htmlFor="upload-config-file" className="block text-sm font-medium text-gray-700 mb-2">Upload Config File</label>
-              <input id="upload-config-file"                 type="file"
+              <label htmlFor="upload-config-file" className="block text-sm font-medium text-gray-700 mb-2">
+                Upload Config File
+              </label>
+              <input
+                id="upload-config-file"
+                type="file"
                 accept=".json"
                 onChange={handleFileUpload}
                 className="block w-full text-sm text-gray-500
@@ -157,8 +171,12 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
 
             {/* Or Paste JSON */}
             <div>
-              <label htmlFor="or-paste-json" className="block text-sm font-medium text-gray-700 mb-2">Or Paste JSON</label>
-              <textarea id="or-paste-json"                 value={jsonInput}
+              <label htmlFor="or-paste-json" className="block text-sm font-medium text-gray-700 mb-2">
+                Or Paste JSON
+              </label>
+              <textarea
+                id="or-paste-json"
+                value={jsonInput}
                 onChange={(e) => {
                   setJsonInput(e.target.value);
                 }}

@@ -20,7 +20,8 @@
     "clean": "rm -rf node_modules packages/*/node_modules",
     "generate": "bun run --filter='*' generate",
     "prepare": "husky",
-    "knip": "knip-bun"
+    "knip": "knip-bun",
+    "duplication-check": "jscpd packages/"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.0.0",
@@ -40,9 +41,11 @@
     "eslint-plugin-no-relative-import-paths": "^1.5.5",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-regex": "^1.10.0",
     "eslint-plugin-unicorn": "^62.0.0",
     "husky": "^9.1.7",
     "jiti": "^2.6.0",
+    "jscpd": "^4.0.5",
     "knip": "^5.70.1",
     "lint-staged": "^16.2.3",
     "markdownlint-cli2": "^0.19.0",

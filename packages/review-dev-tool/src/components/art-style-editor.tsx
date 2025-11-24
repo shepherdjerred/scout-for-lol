@@ -49,14 +49,24 @@ export function ArtStyleEditor({ mode, style, theme, onSave, onCancel }: ArtStyl
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop with blur */}
-      <div className="fixed inset-0 bg-black/30 dark:bg-black/50 backdrop-blur-sm" onClick={onCancel} />
+      <div
+        role="button"
+        tabIndex={0}
+        className="fixed inset-0 bg-black/30 dark:bg-black/50 backdrop-blur-sm"
+        onClick={onCancel}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onCancel();
+          }
+        }}
+      />
 
       {/* Modal content */}
       <div
+        role="dialog"
+        aria-modal="true"
         className="relative bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-        onClick={(e) => {
-          e.stopPropagation();
-        }}
       >
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">

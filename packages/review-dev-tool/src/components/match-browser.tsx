@@ -83,7 +83,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
         if (cachedResult.success && cachedResult.data.length > 0) {
           // Instant load from cache - no loading UI!
           console.log(
-            `[Cache HIT] Loaded ${cachedResult.data.length.toString()} matches from cache (IndexedDB/localStorage)`,
+            `[Cache HIT] Loaded ${cachedResult.data.length.toString()} matches from cache (IndexedDB)`,
           );
           setMatches(cachedResult.data);
           setError(null);
@@ -328,8 +328,12 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label htmlFor="queue-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Queue Type</label>
-            <select id="queue-type"               value={filterQueueType}
+            <label htmlFor="queue-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Queue Type
+            </label>
+            <select
+              id="queue-type"
+              value={filterQueueType}
               onChange={(e) => {
                 setFilterQueueType(e.target.value);
               }}
@@ -345,8 +349,12 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
           </div>
 
           <div>
-            <label htmlFor="lane" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lane</label>
-            <select id="lane"               value={filterLane}
+            <label htmlFor="lane" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Lane
+            </label>
+            <select
+              id="lane"
+              value={filterLane}
               onChange={(e) => {
                 setFilterLane(e.target.value);
               }}
@@ -362,8 +370,12 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
           </div>
 
           <div>
-            <label htmlFor="outcome" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Outcome</label>
-            <select id="outcome"               value={filterOutcome}
+            <label htmlFor="outcome" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Outcome
+            </label>
+            <select
+              id="outcome"
+              value={filterOutcome}
               onChange={(e) => {
                 setFilterOutcome(e.target.value);
               }}
@@ -377,8 +389,12 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
         </div>
 
         <div>
-          <label htmlFor="player-game-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Player (Game Name)</label>
-          <input id="player-game-name"             type="text"
+          <label htmlFor="player-game-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Player (Game Name)
+          </label>
+          <input
+            id="player-game-name"
+            type="text"
             placeholder="Fuzzy search player names..."
             value={filterPlayer}
             onChange={(e) => {
@@ -389,8 +405,12 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
         </div>
 
         <div>
-          <label htmlFor="champion" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Champion</label>
-          <input id="champion"             type="text"
+          <label htmlFor="champion" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Champion
+          </label>
+          <input
+            id="champion"
+            type="text"
             placeholder="Fuzzy search champions..."
             value={filterChampion}
             onChange={(e) => {
@@ -467,8 +487,16 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
                 return (
                   <div
                     key={`${match.key}-${match.playerName}-${idx.toString()}`}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => {
                       void handleSelectMatch(match);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        void handleSelectMatch(match);
+                      }
                     }}
                     className={`rounded p-2 transition-colors cursor-pointer ${
                       isSelected

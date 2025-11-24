@@ -151,13 +151,13 @@ export async function queryMatchesByDateRange(startDate: Date, endDate: Date, pu
           const results = await Promise.allSettled(matchPromises);
 
           for (const result of results) {
-            if (result.status === "fulfilled" && result.value.match) {
-              const { match } = result.value;
-              if (matchIncludesParticipant(match, puuids)) {
-                matches.push(match);
-                matchedObjects++;
-              }
-            }
+            if (result.status !== "fulfilled" || !result.value.match) continue;
+
+            const { match } = result.value;
+            if (!matchIncludesParticipant(match, puuids)) continue;
+
+            matches.push(match);
+            matchedObjects++;
           }
         }
       } catch (error) {

@@ -66,6 +66,37 @@ async function processMatch(matchData: MatchDto, trackedPlayers: PlayerConfigEnt
 }
 
 /**
+ * Process match and update all tracked players who participated
+ */
+async function processMatchAndUpdatePlayers(
+  matchData: MatchDto,
+  allPlayerConfigs: Array<PlayerConfig>,
+  processedMatchIds: Set<string>,
+  matchId: string,
+): Promise<void> {
+  // Get all tracked players in this match
+  const allTrackedPlayers = allPlayerConfigs.filter((p) =>
+    matchData.metadata.participants.includes(p.league.leagueAccount.puuid),
+  );
+
+  // Process the match
+  await processMatch(matchData, allTrackedPlayers);
+
+  // Mark as processed
+  processedMatchIds.add(matchId);
+
+  // Get match creation time for activity tracking
+  const matchCreationTime = new Date(matchData.info.gameCreation);
+
+  // Update lastProcessedMatchId and lastMatchTime for all players in this match
+  for (const trackedPlayer of allTrackedPlayers) {
+    const playerPuuid = trackedPlayer.league.leagueAccount.puuid;
+    await updateLastProcessedMatch(playerPuuid, matchId);
+    await updateLastMatchTime(playerPuuid, matchCreationTime);
+  }
+}
+
+/**
  * Main function to check for new matches via match history polling
  */
 export async function checkMatchHistory(): Promise<void> {
@@ -188,25 +219,8 @@ export async function checkMatchHistory(): Promise<void> {
             continue;
           }
 
-          // Get all tracked players in this match
-          const allTrackedPlayers = allPlayerConfigs.filter((p) =>
-            matchData.metadata.participants.includes(p.league.leagueAccount.puuid),
-          );
-
-          // Process the match
-          await processMatch(matchData, allTrackedPlayers);
-
-          // Mark as processed
-          processedMatchIds.add(matchId);
-
-          // Get match creation time for activity tracking
-          const matchCreationTime = new Date(matchData.info.gameCreation);
-
-          // Update lastProcessedMatchId and lastMatchTime for all players in this match
-          for (const trackedPlayer of allTrackedPlayers) {
-            const playerPuuid = trackedPlayer.league.leagueAccount.puuid;
-            await updateLastProcessedMatch(playerPuuid, matchId);
-            await updateLastMatchTime(playerPuuid, matchCreationTime);
+          // Process the match with all tracked players
+          await processMatchAndUpdatePlayers(matchData, allPlayerConfigs, processedMatchIds, matchId);
             console.log(
               `[${trackedPlayer.alias}] 📝 Updated lastProcessedMatchId to ${matchId}, lastMatchTime to ${matchCreationTime.toISOString()}`,
             );

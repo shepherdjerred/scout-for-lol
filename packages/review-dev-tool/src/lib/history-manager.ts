@@ -194,19 +194,6 @@ export async function saveCompletedEntry(
 }
 
 /**
- * Save a new generation to history (legacy - kept for compatibility)
- * @deprecated Use createPendingEntry and saveCompletedEntry instead
- */
-export async function saveToHistory(
-  result: GenerationResult,
-  configSnapshot: HistoryEntry["configSnapshot"],
-): Promise<string> {
-  const id = `gen-${Date.now().toString()}-${Math.random().toString(36).slice(2, 9)}`;
-  await saveCompletedEntry(id, result, configSnapshot);
-  return id;
-}
-
-/**
  * Delete a specific history entry
  */
 export async function deleteHistoryEntry(id: string): Promise<void> {
@@ -229,11 +216,6 @@ export async function clearHistory(): Promise<void> {
     console.error("Failed to clear history:", error);
   }
 }
-
-/**
- * Get a specific history entry by ID
- */
-export async function getHistoryEntry(id: string): Promise<HistoryEntry | undefined> {
   try {
     const entry = await db.getEntry(id);
     if (!entry) {

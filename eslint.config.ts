@@ -62,7 +62,7 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ["eslint.config.ts", "eslint-rules/*.ts", ".dagger/src/*.ts", "packages/*/scripts/*.ts"],
+          allowDefaultProject: ["eslint.config.ts", "eslint-rules/*.ts"],
         },
         tsconfigRootDir: import.meta.dirname,
         extraFileExtensions: [".astro"],
@@ -603,6 +603,22 @@ export default tseslint.config(
     files: ["eslint.config.ts"],
     rules: {
       "no-relative-import-paths/no-relative-import-paths": "off",
+    },
+  },
+  // Ban all re-exports - only allow exports of declarations in the same file
+  {
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "ExportAllDeclaration",
+          message: "Re-exports (export * from) are not allowed. Only export declarations from the same file.",
+        },
+        {
+          selector: "ExportNamedDeclaration[source]",
+          message: "Re-exports (export { ... } from) are not allowed. Only export declarations from the same file.",
+        },
+      ],
     },
   },
 );

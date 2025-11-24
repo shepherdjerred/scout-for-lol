@@ -1,0 +1,19 @@
+{
+  "threshold": 12,
+  "reporters": ["console", "html"],
+  "ignore": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/.next/**"
+  ],
+  "minLines": 4,
+  "minTokens": 40,
+  "mode": "strict",
+  "format": ["typescript", "tsx", "javascript", "jsx"],
+  "absolute": true,
+  "output": "./jscpd-report"
+}

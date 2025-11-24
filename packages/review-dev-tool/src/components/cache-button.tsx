@@ -10,9 +10,7 @@ export function CacheButton() {
   const [stats, setStats] = useState({
     memoryEntries: 0,
     indexedDBEntries: 0,
-    localStorageEntries: 0,
     indexedDBSizeBytes: 0,
-    localStorageSizeBytes: 0,
     totalSizeBytes: 0,
   });
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -96,12 +94,6 @@ export function CacheButton() {
                 <span className="text-gray-600 dark:text-gray-400">IndexedDB entries:</span>
                 <span className="font-medium dark:text-gray-200">
                   {stats.indexedDBEntries} ({formatBytes(stats.indexedDBSizeBytes)})
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">localStorage entries:</span>
-                <span className="font-medium dark:text-gray-200">
-                  {stats.localStorageEntries} ({formatBytes(stats.localStorageSizeBytes)})
                 </span>
               </div>
               <div className="flex justify-between border-t border-gray-200 dark:border-gray-600 pt-2">

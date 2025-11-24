@@ -19,10 +19,18 @@ export function EmptyDropZone({
     <div style={{ padding: "40px", textAlign: "center" }}>
       <h2 style={{ marginBottom: "20px" }}>AI Review Rater</h2>
       <div
+        role="button"
+        tabIndex={0}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         onClick={onClick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onClick();
+          }
+        }}
         style={{
           border: isDragging ? "3px dashed #3b82f6" : "2px dashed #d1d5db",
           borderRadius: "8px",
@@ -114,8 +122,16 @@ export function GalleryView({
         {images.map((image, index) => (
           <div
             key={image.id}
+            role="button"
+            tabIndex={0}
             onClick={() => {
               onSelectImage(index);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelectImage(index);
+              }
             }}
             style={{
               border: "2px solid #e5e7eb",
@@ -130,6 +146,14 @@ export function GalleryView({
               e.currentTarget.style.transform = "scale(1.02)";
             }}
             onMouseOut={(e) => {
+              e.currentTarget.style.borderColor = "#e5e7eb";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "#3b82f6";
+              e.currentTarget.style.transform = "scale(1.02)";
+            }}
+            onBlur={(e) => {
               e.currentTarget.style.borderColor = "#e5e7eb";
               e.currentTarget.style.transform = "scale(1)";
             }}

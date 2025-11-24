@@ -45,6 +45,7 @@ export function StarRating({
 
   return (
     <div
+      role="presentation"
       style={{
         display: "inline-flex",
         gap: "4px",

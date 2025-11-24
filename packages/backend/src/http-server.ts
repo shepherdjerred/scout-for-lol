@@ -75,5 +75,3 @@ export async function shutdownHttpServer(): Promise<void> {
   await server.stop();
   console.log("✅ HTTP server shut down successfully");
 }
-
-export default server;

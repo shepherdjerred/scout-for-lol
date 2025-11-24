@@ -139,6 +139,36 @@ async function backfillStartSnapshots(competition: CompetitionWithCriteria): Pro
 // ============================================================================
 
 /**
+ * Calculate leaderboard with error handling for missing snapshots
+ * Returns null if calculation fails due to missing snapshots
+ */
+async function calculateLeaderboardSafely(
+  competition: CompetitionWithRelations,
+): Promise<LeaderboardEntry[] | null> {
+  try {
+    return await calculateLeaderboard(prisma, competition);
+  } catch (error) {
+    const errorMessage = String(error);
+    const isMissingSnapshot =
+      errorMessage.includes("Missing START snapshot") ||
+      errorMessage.includes("Missing start rank data") ||
+      errorMessage.includes("Missing end rank data") ||
+      errorMessage.includes("Missing END snapshot");
+
+    if (isMissingSnapshot) {
+      console.error(
+        `[DailyLeaderboard] ❌ Missing snapshots for competition ${competition.id.toString()}:`,
+        errorMessage,
+      );
+      await postSnapshotErrorMessage(competition, errorMessage);
+      return null;
+    }
+
+    throw error;
+  }
+}
+
+/**
  * Post daily leaderboard updates for all active competitions
  *
  * This function:
@@ -188,32 +218,10 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
         await backfillStartSnapshots(competition);
 
         // Calculate current leaderboard
-        // This may throw if snapshots are missing for rank-based criteria
-        let leaderboard;
-        try {
-          leaderboard = await calculateLeaderboard(prisma, competition);
-        } catch (error) {
-          const errorMessage = String(error);
-
-          // Check if this is a missing snapshot error
-          if (
-            errorMessage.includes("Missing START snapshot") ||
-            errorMessage.includes("Missing start rank data") ||
-            errorMessage.includes("Missing end rank data") ||
-            errorMessage.includes("Missing END snapshot")
-          ) {
-            console.error(
-              `[DailyLeaderboard] ❌ Missing snapshots for competition ${competition.id.toString()}:`,
-              errorMessage,
-            );
-            // Post error message to Discord channel
-            await postSnapshotErrorMessage(competition, errorMessage);
-            failureCount++;
-            continue; // Skip this competition and move to next
-          }
-
-          // Not a snapshot error - re-throw to be handled by outer catch
-          throw error;
+        const leaderboard = await calculateLeaderboardSafely(competition);
+        if (!leaderboard) {
+          failureCount++;
+          continue;
         }
 
         // Cache leaderboard to S3 (both current and historical snapshot)

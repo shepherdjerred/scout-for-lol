@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax -- data package is a library, so this is ok */
 export * from "./model/index.js";
 export * from "./seasons.js";
 export * from "./review/art-styles-data.js";

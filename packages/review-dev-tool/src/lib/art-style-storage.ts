@@ -1,10 +1,8 @@
 /**
- * Custom art style and theme storage in localStorage
+ * Custom art style and theme storage in IndexedDB
  */
 import { z } from "zod";
-
-const STYLES_STORAGE_KEY = "review-dev-tool-custom-art-styles";
-const THEMES_STORAGE_KEY = "review-dev-tool-custom-art-themes";
+import { STORES, getAllItems, putItem, deleteItem } from "@scout-for-lol/review-dev-tool/lib/storage";
 
 /**
  * Custom art style schema
@@ -27,18 +25,13 @@ export const CustomArtThemeSchema = z.object({
 export type CustomArtTheme = z.infer<typeof CustomArtThemeSchema>;
 
 /**
- * Load custom art styles from localStorage
+ * Load custom art styles from IndexedDB
  */
-export function loadCustomArtStyles(): CustomArtStyle[] {
-  const stored = localStorage.getItem(STYLES_STORAGE_KEY);
-  if (!stored) {
-    return [];
-  }
-
+export async function loadCustomArtStyles(): Promise<CustomArtStyle[]> {
   try {
-    const parsed = JSON.parse(stored);
+    const stored = await getAllItems<unknown>(STORES.ART_STYLES);
     const ArraySchema = CustomArtStyleSchema.array();
-    const result = ArraySchema.safeParse(parsed);
+    const result = ArraySchema.safeParse(stored);
     return result.success ? result.data : [];
   } catch {
     return [];
@@ -46,57 +39,42 @@ export function loadCustomArtStyles(): CustomArtStyle[] {
 }
 
 /**
- * Save custom art styles to localStorage
+ * Save custom art styles to IndexedDB
  */
-export function saveCustomArtStyles(styles: CustomArtStyle[]): void {
-  localStorage.setItem(STYLES_STORAGE_KEY, JSON.stringify(styles));
+export async function saveCustomArtStyles(styles: CustomArtStyle[]): Promise<void> {
+  // This function is kept for compatibility but not used anymore
+  // Individual operations (add/update/delete) are preferred
+  for (const style of styles) {
+    await putItem(STORES.ART_STYLES, style);
+  }
 }
 
 /**
  * Add a custom art style
  */
-export function addCustomArtStyle(style: CustomArtStyle): void {
-  const customs = loadCustomArtStyles();
-  customs.push(style);
-  saveCustomArtStyles(customs);
+export async function addCustomArtStyle(style: CustomArtStyle): Promise<void> {
+  await putItem(STORES.ART_STYLES, style);
 }
 
 /**
  * Update a custom art style
  */
-export function updateCustomArtStyle(id: string, style: CustomArtStyle): boolean {
-  const customs = loadCustomArtStyles();
-  const index = customs.findIndex((s) => s.id === id);
-
-  if (index === -1) {
-    return false;
-  }
-
-  customs[index] = style;
-  saveCustomArtStyles(customs);
-  return true;
+export async function updateCustomArtStyle(id: string, style: CustomArtStyle): Promise<boolean> {
+  return await putItem(STORES.ART_STYLES, style);
 }
 
 /**
  * Delete a custom art style
  */
-export function deleteCustomArtStyle(id: string): boolean {
-  const customs = loadCustomArtStyles();
-  const filtered = customs.filter((s) => s.id !== id);
-
-  if (filtered.length === customs.length) {
-    return false;
-  }
-
-  saveCustomArtStyles(filtered);
-  return true;
+export async function deleteCustomArtStyle(id: string): Promise<boolean> {
+  return await deleteItem(STORES.ART_STYLES, id);
 }
 
 /**
  * Check if an art style is custom (not built-in)
  */
-export function isCustomArtStyle(id: string): boolean {
-  const customs = loadCustomArtStyles();
+export async function isCustomArtStyle(id: string): Promise<boolean> {
+  const customs = await loadCustomArtStyles();
   return customs.some((s) => s.id === id);
 }
 
@@ -115,18 +93,13 @@ export function generateArtStyleId(description: string): string {
 }
 
 /**
- * Load custom art themes from localStorage
+ * Load custom art themes from IndexedDB
  */
-export function loadCustomArtThemes(): CustomArtTheme[] {
-  const stored = localStorage.getItem(THEMES_STORAGE_KEY);
-  if (!stored) {
-    return [];
-  }
-
+export async function loadCustomArtThemes(): Promise<CustomArtTheme[]> {
   try {
-    const parsed = JSON.parse(stored);
+    const stored = await getAllItems<unknown>(STORES.ART_THEMES);
     const ArraySchema = CustomArtThemeSchema.array();
-    const result = ArraySchema.safeParse(parsed);
+    const result = ArraySchema.safeParse(stored);
     return result.success ? result.data : [];
   } catch {
     return [];
@@ -134,57 +107,42 @@ export function loadCustomArtThemes(): CustomArtTheme[] {
 }
 
 /**
- * Save custom art themes to localStorage
+ * Save custom art themes to IndexedDB
  */
-export function saveCustomArtThemes(themes: CustomArtTheme[]): void {
-  localStorage.setItem(THEMES_STORAGE_KEY, JSON.stringify(themes));
+export async function saveCustomArtThemes(themes: CustomArtTheme[]): Promise<void> {
+  // This function is kept for compatibility but not used anymore
+  // Individual operations (add/update/delete) are preferred
+  for (const theme of themes) {
+    await putItem(STORES.ART_THEMES, theme);
+  }
 }
 
 /**
  * Add a custom art theme
  */
-export function addCustomArtTheme(theme: CustomArtTheme): void {
-  const customs = loadCustomArtThemes();
-  customs.push(theme);
-  saveCustomArtThemes(customs);
+export async function addCustomArtTheme(theme: CustomArtTheme): Promise<void> {
+  await putItem(STORES.ART_THEMES, theme);
 }
 
 /**
  * Update a custom art theme
  */
-export function updateCustomArtTheme(id: string, theme: CustomArtTheme): boolean {
-  const customs = loadCustomArtThemes();
-  const index = customs.findIndex((t) => t.id === id);
-
-  if (index === -1) {
-    return false;
-  }
-
-  customs[index] = theme;
-  saveCustomArtThemes(customs);
-  return true;
+export async function updateCustomArtTheme(id: string, theme: CustomArtTheme): Promise<boolean> {
+  return await putItem(STORES.ART_THEMES, theme);
 }
 
 /**
  * Delete a custom art theme
  */
-export function deleteCustomArtTheme(id: string): boolean {
-  const customs = loadCustomArtThemes();
-  const filtered = customs.filter((t) => t.id !== id);
-
-  if (filtered.length === customs.length) {
-    return false;
-  }
-
-  saveCustomArtThemes(filtered);
-  return true;
+export async function deleteCustomArtTheme(id: string): Promise<boolean> {
+  return await deleteItem(STORES.ART_THEMES, id);
 }
 
 /**
  * Check if an art theme is custom (not built-in)
  */
-export function isCustomArtTheme(id: string): boolean {
-  const customs = loadCustomArtThemes();
+export async function isCustomArtTheme(id: string): Promise<boolean> {
+  const customs = await loadCustomArtThemes();
   return customs.some((t) => t.id === id);
 }
 

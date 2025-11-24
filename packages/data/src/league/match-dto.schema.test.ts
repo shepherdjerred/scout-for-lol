@@ -6,7 +6,6 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
 import { MatchDtoSchema } from "@scout-for-lol/packages/data/src/league/match-dto.schema.js";
 
 const REAL_MATCH_FILES = [
@@ -15,9 +14,9 @@ const REAL_MATCH_FILES = [
 ];
 
 describe("MatchDto Schema Validation", () => {
-  test("validates real Arena match data from Riot API", () => {
+  test("validates real Arena match data from Riot API", async () => {
     for (const filePath of REAL_MATCH_FILES) {
-      const data = JSON.parse(readFileSync(filePath, "utf-8"));
+      const data = JSON.parse(await Bun.file(filePath).text());
       const result = MatchDtoSchema.safeParse(data);
 
       expect(result.success).toBe(true);
@@ -97,7 +96,7 @@ describe("MatchDto Schema Validation", () => {
       // (present for participant 0, absent for many others)
       expect(
         challenges.shortestTimeToAceFromFirstTakedown === undefined ||
-          typeof challenges.shortestTimeToAceFromFirstTakedown === "number"
+          typeof challenges.shortestTimeToAceFromFirstTakedown === "number",
       ).toBe(true);
     }
   });

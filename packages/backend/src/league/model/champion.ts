@@ -1,64 +1,9 @@
-import { type Champion, type ArenaChampion, parseLane, type Augment, type ParticipantDto } from "@scout-for-lol/data";
-import { type Rune } from "@scout-for-lol/data/model/champion";
+import { type ArenaChampion, type Augment, type ParticipantDto } from "@scout-for-lol/data";
 import { mapAugmentIdsToUnion } from "@scout-for-lol/backend/league/arena/augment";
-import { getRuneInfo } from "@scout-for-lol/report";
+import { participantToChampion } from "@scout-for-lol/report";
 
-// Helper to extract rune details from participant perks
-function extractRunes(dto: ParticipantDto): Rune[] {
-  const runes: Rune[] = [];
-
-  // Extract primary rune selections
-  const primaryStyle = dto.perks.styles[0];
-  if (primaryStyle) {
-    for (const selection of primaryStyle.selections) {
-      const info = getRuneInfo(selection.perk);
-      runes.push({
-        id: selection.perk,
-        name: info?.name ?? `Rune ${selection.perk.toString()}`,
-        description: info?.longDesc ?? info?.shortDesc ?? "",
-      });
-    }
-  }
-
-  // Extract secondary rune selections
-  const subStyle = dto.perks.styles[1];
-  if (subStyle) {
-    for (const selection of subStyle.selections) {
-      const info = getRuneInfo(selection.perk);
-      runes.push({
-        id: selection.perk,
-        name: info?.name ?? `Rune ${selection.perk.toString()}`,
-        description: info?.longDesc ?? info?.shortDesc ?? "",
-      });
-    }
-  }
-
-  return runes;
-}
-
-// Base champion conversion for traditional games
-export function participantToChampion(dto: ParticipantDto): Champion {
-  if (!dto.riotIdGameName) {
-    throw new Error("Missing riotIdGameName");
-  }
-
-  return {
-    riotIdGameName: dto.riotIdGameName,
-    championName: dto.championName,
-    kills: dto.kills,
-    deaths: dto.deaths,
-    assists: dto.assists,
-    items: [dto.item0, dto.item1, dto.item2, dto.item3, dto.item4, dto.item5, dto.item6],
-    spells: [dto.summoner1Id, dto.summoner2Id],
-    runes: extractRunes(dto),
-    lane: parseLane(dto.teamPosition),
-    creepScore: dto.totalMinionsKilled + dto.neutralMinionsKilled,
-    visionScore: dto.visionScore,
-    damage: dto.totalDamageDealtToChampions,
-    gold: dto.goldEarned,
-    level: dto.champLevel,
-  };
-}
+// Re-export for convenience
+export { participantToChampion };
 
 // Arena champion conversion with arena-specific fields
 export async function participantToArenaChampion(dto: ParticipantDto): Promise<ArenaChampion> {

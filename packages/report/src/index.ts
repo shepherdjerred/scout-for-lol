@@ -1,6 +1,7 @@
 export { matchToImage, matchToSvg, svgToPng } from "./html/index.tsx";
 export { Report } from "./html/report.tsx";
 export { toMatch } from "./match.ts";
+export { extractRunes, participantToChampion } from "./participant-helpers.js";
 export { arenaMatchToImage, arenaMatchToSvg } from "./html/arena/index.tsx";
 export { getItemInfo, items } from "./dataDragon/item.js";
 export { getRuneInfo, getRuneTreeName, runes } from "./dataDragon/runes.js";

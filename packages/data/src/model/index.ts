@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-syntax -- data package is a library, so this is ok */
+
 export * from "./arena/index.js";
 export * from "./champion.js";
 export * from "./competition.js";
@@ -7,6 +9,7 @@ export * from "./lane.js";
 export * from "./league-account.js";
 export * from "./league-points.js";
 export * from "./match.js";
+export * from "./match-helpers.js";
 export * from "./player.js";
 export * from "./player-config.js";
 export * from "./rank.js";

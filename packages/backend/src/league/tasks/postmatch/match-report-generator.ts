@@ -215,19 +215,13 @@ export async function generateMatchReport(
                   `🎮 **Player:** ${playerName}`,
                 ];
 
-                if (style) {
-                  debugInfo.push(`🎨 **Style:** ${style}`);
-                }
+                if (style) debugInfo.push(`🎨 **Style:** ${style}`);
 
                 if (themes && themes.length > 0) {
-                  if (themes.length === 1) {
-                    const theme = themes[0];
-                    if (theme) {
-                      debugInfo.push(`🎭 **Theme:** ${theme}`);
-                    }
-                  } else {
-                    debugInfo.push(`🎭 **Themes:** ${themes.join(" × ")}`);
-                  }
+                  const themeText = themes.length === 1 && themes[0]
+                    ? `🎭 **Theme:** ${themes[0]}`
+                    : `🎭 **Themes:** ${themes.join(" × ")}`;
+                  debugInfo.push(themeText);
                 }
 
                 reviewText = reviewText + "\n" + debugInfo.join("\n");

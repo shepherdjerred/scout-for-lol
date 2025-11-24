@@ -143,9 +143,7 @@ export async function listMatchesFromS3(config: S3Config): Promise<{ key: string
 
             const response: ListObjectsV2CommandOutput = await client.send(command);
 
-            if (response.Contents) {
-              allContents.push(...response.Contents);
-            }
+            if (response.Contents) allContents.push(...response.Contents);
 
             nextToken = response.NextContinuationToken;
             iterations++;

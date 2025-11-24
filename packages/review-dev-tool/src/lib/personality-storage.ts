@@ -1,24 +1,18 @@
 /**
- * Custom personality storage in localStorage
+ * Custom personality storage in IndexedDB
  */
 import type { Personality } from "@scout-for-lol/review-dev-tool/config/schema";
 import { PersonalitySchema } from "@scout-for-lol/review-dev-tool/config/schema";
-
-const STORAGE_KEY = "review-dev-tool-custom-personalities";
+import { STORES, getAllItems, putItem, deleteItem } from "@scout-for-lol/review-dev-tool/lib/storage";
 
 /**
- * Load custom personalities from localStorage
+ * Load custom personalities from IndexedDB
  */
-export function loadCustomPersonalities(): Personality[] {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (!stored) {
-    return [];
-  }
-
+export async function loadCustomPersonalities(): Promise<Personality[]> {
   try {
-    const parsed: unknown = JSON.parse(stored);
+    const stored = await getAllItems<unknown>(STORES.PERSONALITIES);
     const ArraySchema = PersonalitySchema.array();
-    const result = ArraySchema.safeParse(parsed);
+    const result = ArraySchema.safeParse(stored);
     return result.success ? result.data : [];
   } catch {
     return [];
@@ -26,57 +20,42 @@ export function loadCustomPersonalities(): Personality[] {
 }
 
 /**
- * Save custom personalities to localStorage
+ * Save custom personalities to IndexedDB
  */
-export function saveCustomPersonalities(personalities: Personality[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(personalities));
+export async function saveCustomPersonalities(personalities: Personality[]): Promise<void> {
+  // This function is kept for compatibility but not used anymore
+  // Individual operations (add/update/delete) are preferred
+  for (const personality of personalities) {
+    await putItem(STORES.PERSONALITIES, personality);
+  }
 }
 
 /**
  * Add a custom personality
  */
-export function addCustomPersonality(personality: Personality): void {
-  const customs = loadCustomPersonalities();
-  customs.push(personality);
-  saveCustomPersonalities(customs);
+export async function addCustomPersonality(personality: Personality): Promise<void> {
+  await putItem(STORES.PERSONALITIES, personality);
 }
 
 /**
  * Update a custom personality
  */
-export function updateCustomPersonality(id: string, personality: Personality): boolean {
-  const customs = loadCustomPersonalities();
-  const index = customs.findIndex((p) => p.id === id);
-
-  if (index === -1) {
-    return false;
-  }
-
-  customs[index] = personality;
-  saveCustomPersonalities(customs);
-  return true;
+export async function updateCustomPersonality(id: string, personality: Personality): Promise<boolean> {
+  return await putItem(STORES.PERSONALITIES, personality);
 }
 
 /**
  * Delete a custom personality
  */
-export function deleteCustomPersonality(id: string): boolean {
-  const customs = loadCustomPersonalities();
-  const filtered = customs.filter((p) => p.id !== id);
-
-  if (filtered.length === customs.length) {
-    return false;
-  }
-
-  saveCustomPersonalities(filtered);
-  return true;
+export async function deleteCustomPersonality(id: string): Promise<boolean> {
+  return await deleteItem(STORES.PERSONALITIES, id);
 }
 
 /**
  * Check if a personality is custom (not built-in)
  */
-export function isCustomPersonality(id: string): boolean {
-  const customs = loadCustomPersonalities();
+export async function isCustomPersonality(id: string): Promise<boolean> {
+  const customs = await loadCustomPersonalities();
   return customs.some((p) => p.id === id);
 }
 

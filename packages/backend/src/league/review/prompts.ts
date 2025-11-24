@@ -128,6 +128,3 @@ export async function getLaneContext(lane: string | undefined): Promise<{ conten
     filename,
   };
 }
-
-// Re-export replaceTemplateVariables from data package
-export { replaceTemplateVariables } from "@scout-for-lol/data";
