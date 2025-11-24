@@ -2,7 +2,7 @@ import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { createCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
 import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { type DiscordGuildId, type DiscordAccountId, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
 // Create a test database
@@ -47,7 +47,7 @@ afterAll(async () => {
 // Helper Functions
 // ============================================================================
 
-async function createCompetitionWithPlayers(serverId: string, ownerId: string, playerCount: number) {
+async function createCompetitionWithPlayers(serverId: DiscordGuildId, ownerId: DiscordAccountId, playerCount: number) {
   const now = new Date();
   const startDate = new Date(now.getTime() + 1000 * 60 * 60); // 1 hour from now
   const endDate = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 7); // 7 days from now
@@ -74,18 +74,19 @@ async function createCompetitionWithPlayers(serverId: string, ownerId: string, p
 
   // Create players
   const players = await Promise.all(
-    Array.from({ length: playerCount }).map((_, idx) =>
-      prisma.player.create({
+    Array.from({ length: playerCount }).map((_, idx) => {
+      const playerNum = idx + 1;
+      return prisma.player.create({
         data: {
-          alias: `Player${idx + 1}`,
-          discordId: testAccountId(`${(idx + 1) * 100000000}`),
+          alias: `Player${playerNum.toString()}`,
+          discordId: testAccountId((playerNum * 100000000).toString()),
           serverId: DiscordGuildIdSchema.parse(serverId),
           creatorDiscordId: ownerId,
           createdTime: new Date(),
           updatedTime: new Date(),
         },
-      }),
-    ),
+      });
+    }),
   );
 
   return { competition, players };

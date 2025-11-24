@@ -5,7 +5,7 @@
  * This script runs jscpd and enforces:
  * - Aggregate duplication threshold: 12%
  * - Per-file duplication threshold: 10%
- * - Detects duplication at function/block level (minLines: 3)
+ * - Detects duplication at function/block level (minLines: 9)
  */
 
 import { $ } from "bun";

@@ -1,5 +1,5 @@
 import type { ParticipantDto, Champion, Rune } from "@scout-for-lol/data";
-import { parseLane } from "@scout-for-lol/data";
+import { participantToChampion as participantToChampionBase } from "@scout-for-lol/data/model/match-helpers.js";
 import { getRuneInfo } from "@scout-for-lol/report/dataDragon/runes.js";
 
 /**
@@ -41,32 +41,13 @@ export function extractRunes(participant: ParticipantDto): Rune[] {
 }
 
 /**
- * Converts a participant DTO to a Champion object with full details including runes
+ * Converts a participant DTO to a Champion object with full details including runes.
+ * This extends the base implementation from @scout-for-lol/data by adding rune extraction.
  */
 export function participantToChampion(participant: ParticipantDto): Champion {
+  const baseChampion = participantToChampionBase(participant);
   return {
-    riotIdGameName:
-      participant.riotIdGameName && participant.riotIdGameName.length > 0 ? participant.riotIdGameName : "Unknown",
-    championName: participant.championName,
-    kills: participant.kills,
-    deaths: participant.deaths,
-    assists: participant.assists,
-    level: participant.champLevel,
-    items: [
-      participant.item0,
-      participant.item1,
-      participant.item2,
-      participant.item3,
-      participant.item4,
-      participant.item5,
-      participant.item6,
-    ].filter((item) => item !== 0),
-    spells: [participant.summoner1Id, participant.summoner2Id],
-    gold: participant.goldEarned,
+    ...baseChampion,
     runes: extractRunes(participant),
-    creepScore: participant.totalMinionsKilled + participant.neutralMinionsKilled,
-    visionScore: participant.visionScore,
-    damage: participant.totalDamageDealtToChampions,
-    lane: parseLane(participant.teamPosition),
   };
 }

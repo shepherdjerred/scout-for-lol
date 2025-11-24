@@ -95,24 +95,29 @@ function parseDatesArgs(
     return { success: false, error: "Cannot specify both fixed dates and season" };
   }
 
-  if (hasFixedDates) {
+  if (hasFixedDates && startDateStr && endDateStr) {
     return {
       success: true,
       dates: FixedDatesEditArgsSchema.parse({
         dateType: "FIXED",
-        startDate: startDateStr!,
-        endDate: endDateStr!,
+        startDate: startDateStr,
+        endDate: endDateStr,
       }),
     };
   }
 
-  return {
-    success: true,
-    dates: SeasonEditArgsSchema.parse({
-      dateType: "SEASON",
-      season: seasonStr!,
-    }),
-  };
+  if (hasSeason && seasonStr) {
+    return {
+      success: true,
+      dates: SeasonEditArgsSchema.parse({
+        dateType: "SEASON",
+        season: seasonStr,
+      }),
+    };
+  }
+
+  // Should never reach here given the guards above
+  return { success: false, error: "Invalid date configuration" };
 }
 
 // ============================================================================

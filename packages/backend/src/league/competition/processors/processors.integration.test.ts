@@ -53,7 +53,7 @@ const testPlayers: PlayerWithAccounts[] = [
 // ============================================================================
 
 describe("processCriteria integration tests", () => {
-  it("should process real match data without crashing", () => {
+  it("should process real match data without crashing", async () => {
     const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match = await loadMatch(matchPath);
 
@@ -108,7 +108,7 @@ describe("processCriteria integration tests", () => {
     expect(championResult.every((entry) => entry.score === 0)).toBe(true);
   });
 
-  it("should correctly filter by queue type", () => {
+  it("should correctly filter by queue type", async () => {
     const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match = await loadMatch(matchPath);
     const queueId = match.info.queueId;
@@ -156,7 +156,7 @@ describe("processCriteria integration tests", () => {
     }
   });
 
-  it("should calculate wins and losses correctly from real data", () => {
+  it("should calculate wins and losses correctly from real data", async () => {
     const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match = await loadMatch(matchPath);
 
@@ -200,7 +200,7 @@ describe("processCriteria integration tests", () => {
     }
   });
 
-  it("should handle multiple matches from same player", () => {
+  it("should handle multiple matches from same player", async () => {
     const match1Path = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match2Path = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370986469.json`;
 
@@ -276,7 +276,7 @@ describe("processCriteria integration tests", () => {
     expect(result[1]?.score).toEqual(goldRank);
   });
 
-  it("should correctly filter by champion ID", () => {
+  it("should correctly filter by champion ID", async () => {
     const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match = await loadMatch(matchPath);
 
@@ -321,7 +321,7 @@ describe("processCriteria integration tests", () => {
     expect(nonMatchingResult[0]?.metadata?.["games"]).toBe(0);
   });
 
-  it("should handle win rate calculation with real data", () => {
+  it("should handle win rate calculation with real data", async () => {
     const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match = await loadMatch(matchPath);
 

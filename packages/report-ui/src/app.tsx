@@ -18,6 +18,21 @@ const MATCH_TYPES: { value: MatchType; label: string }[] = [
   { value: "arena", label: "Arena Match" },
 ];
 
+// Common form field styles
+const formLabelStyle: React.CSSProperties = {
+  display: "block",
+  marginBottom: "5px",
+  fontWeight: "bold",
+};
+
+const formInputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "8px",
+  borderRadius: "4px",
+  border: "1px solid #ccc",
+  boxSizing: "border-box",
+};
+
 function MatchReportRenderer({ match }: { match: AnyMatch }): React.ReactNode {
   if (match.queueType === "arena") {
     return <ArenaReport match={match} />;
@@ -192,7 +207,7 @@ export function App() {
         >
           <h3 style={{ marginTop: 0 }}>Fetch Real Match from Riot API</h3>
           <div style={{ marginBottom: "10px" }}>
-            <label htmlFor="riot-api-token" style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
+            <label htmlFor="riot-api-token" style={formLabelStyle}>
               Riot API Token:
             </label>
             <input
@@ -204,11 +219,7 @@ export function App() {
               }}
               placeholder="Paste your API token here"
               style={{
-                width: "100%",
-                padding: "8px",
-                borderRadius: "4px",
-                border: "1px solid #ccc",
-                boxSizing: "border-box",
+                ...formInputStyle,
                 marginBottom: "10px",
               }}
             />
@@ -223,7 +234,7 @@ export function App() {
 
           <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
             <div style={{ flex: 1 }}>
-              <label htmlFor="match-id" style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
+              <label htmlFor="match-id" style={formLabelStyle}>
                 Match ID:
               </label>
               <input
@@ -234,17 +245,11 @@ export function App() {
                   setMatchId(e.target.value);
                 }}
                 placeholder="e.g., NA1_1234567890"
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  borderRadius: "4px",
-                  border: "1px solid #ccc",
-                  boxSizing: "border-box",
-                }}
+                style={formInputStyle}
               />
             </div>
             <div style={{ flex: 0.5 }}>
-              <label htmlFor="region" style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
+              <label htmlFor="region" style={formLabelStyle}>
                 Region:
               </label>
               <select
@@ -253,13 +258,7 @@ export function App() {
                 onChange={(e) => {
                   setRegion(e.target.value);
                 }}
-                style={{
-                  width: "100%",
-                  padding: "8px",
-                  borderRadius: "4px",
-                  border: "1px solid #ccc",
-                  boxSizing: "border-box",
-                }}
+                style={formInputStyle}
               >
                 <option value="na1">NA1</option>
                 <option value="euw1">EUW1</option>

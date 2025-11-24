@@ -11,7 +11,13 @@
  * This should be run after `prisma generate`
  */
 
-import { Project, SyntaxKind, type TypeAliasDeclaration, type InterfaceDeclaration } from "ts-morph";
+import {
+  Project,
+  SyntaxKind,
+  type TypeAliasDeclaration,
+  type InterfaceDeclaration,
+  type PropertySignature,
+} from "ts-morph";
 import { resolve } from "path";
 
 // Types that need to be imported
@@ -248,6 +254,39 @@ function transformInputType(typeAlias: TypeAliasDeclaration): number {
   return transformSimpleObjectType(typeAlias, modelName);
 }
 
+/**
+ * Transform a property signature if it has a branded type
+ * Returns true if transformation occurred, false otherwise
+ */
+function transformPropertyType(
+  prop: PropertySignature,
+  modelName: string,
+  transformFn: (fullText: string, brandedType: string, propName: string) => string | null,
+): boolean {
+  const propName = prop.getName();
+  const propTypeNode = prop.getTypeNode();
+
+  if (!propTypeNode) {
+    return false;
+  }
+
+  const brandedType = getBrandedType(propName, modelName);
+  if (!brandedType) {
+    return false;
+  }
+
+  const fullText = prop.getText();
+  const newText = transformFn(fullText, brandedType, propName);
+
+  if (newText) {
+    prop.replaceWithText(newText);
+    BRANDED_TYPES_TO_IMPORT.add(brandedType);
+    return true;
+  }
+
+  return false;
+}
+
 function transformSimpleObjectType(typeAlias: TypeAliasDeclaration, modelName: string): number {
   const typeNode = typeAlias.getTypeNode();
   if (!typeNode || typeNode.getKind() !== SyntaxKind.TypeLiteral) {
@@ -263,61 +302,43 @@ function transformSimpleObjectType(typeAlias: TypeAliasDeclaration, modelName: s
     }
 
     const prop = member.asKindOrThrow(SyntaxKind.PropertySignature);
-    const propName = prop.getName();
-    const propTypeNode = prop.getTypeNode();
-
-    if (!propTypeNode) {
-      continue;
-    }
-
-    const brandedType = getBrandedType(propName, modelName);
-    if (!brandedType) {
-      continue;
-    }
-
-    const fullText = prop.getText();
 
     // Match patterns like: id?: number | IntFieldUpdateOperationsInput
     // OR: serverId?: string | StringFilter
     // We want to brand the primitive type part while keeping other types
-    const simpleNumberPattern = new RegExp(`${propName}\\??:\\s*number\\b`);
-    const simpleStringPattern = new RegExp(`${propName}\\??:\\s*string\\b`);
+    const transformed = transformPropertyType(prop, modelName, (fullText, brandedType, propName) => {
+      const simpleNumberPattern = new RegExp(`${propName}\\??:\\s*number\\b`);
+      const simpleStringPattern = new RegExp(`${propName}\\??:\\s*string\\b`);
 
-    const numberMatch = simpleNumberPattern.exec(fullText);
-    const stringMatch = simpleStringPattern.exec(fullText);
+      const numberMatch = simpleNumberPattern.exec(fullText);
+      const stringMatch = simpleStringPattern.exec(fullText);
 
-    if (numberMatch) {
-      const newText = fullText.replace(/:\s*number\b/, `: ${brandedType}`);
-      prop.replaceWithText(newText);
-      BRANDED_TYPES_TO_IMPORT.add(brandedType);
-      count++;
-      continue;
-    }
-
-    if (stringMatch) {
-      const newText = fullText.replace(/:\s*string\b/, `: ${brandedType}`);
-      prop.replaceWithText(newText);
-      BRANDED_TYPES_TO_IMPORT.add(brandedType);
-      count++;
-      continue;
-    }
-
-    // Match union patterns: number | SomeOtherType OR string | SomeOtherType
-    const unionPattern = new RegExp(`${propName}\\??:\\s*([^\\n]+)`);
-    const unionMatch = unionPattern.exec(fullText);
-    if (unionMatch?.[1]) {
-      const typeExpression = unionMatch[1];
-      if (typeExpression.includes("number")) {
-        const newText = fullText.replace(/\bnumber\b/, brandedType);
-        prop.replaceWithText(newText);
-        BRANDED_TYPES_TO_IMPORT.add(brandedType);
-        count++;
-      } else if (typeExpression.includes("string")) {
-        const newText = fullText.replace(/\bstring\b/, brandedType);
-        prop.replaceWithText(newText);
-        BRANDED_TYPES_TO_IMPORT.add(brandedType);
-        count++;
+      if (numberMatch) {
+        return fullText.replace(/:\s*number\b/, `: ${brandedType}`);
       }
+
+      if (stringMatch) {
+        return fullText.replace(/:\s*string\b/, `: ${brandedType}`);
+      }
+
+      // Match union patterns: number | SomeOtherType OR string | SomeOtherType
+      const unionPattern = new RegExp(`${propName}\\??:\\s*([^\\n]+)`);
+      const unionMatch = unionPattern.exec(fullText);
+      if (unionMatch?.[1]) {
+        const typeExpression = unionMatch[1];
+        if (typeExpression.includes("number")) {
+          return fullText.replace(/\bnumber\b/, brandedType);
+        }
+        if (typeExpression.includes("string")) {
+          return fullText.replace(/\bstring\b/, brandedType);
+        }
+      }
+
+      return null;
+    });
+
+    if (transformed) {
+      count++;
     }
   }
 
@@ -346,34 +367,25 @@ function transformFieldRefsInterface(interfaceDecl: InterfaceDeclaration): numbe
     }
 
     const prop = member.asKindOrThrow(SyntaxKind.PropertySignature);
-    const propName = prop.getName();
-    const propTypeNode = prop.getTypeNode();
-
-    if (!propTypeNode) {
-      continue;
-    }
-
-    const brandedType = getBrandedType(propName, modelName);
-    if (!brandedType) {
-      continue;
-    }
-
-    const fullText = prop.getText();
 
     // FieldRef pattern: readonly channelId: FieldRef<"Subscription", 'String'>
     // We need to replace the second type parameter with the branded type
     // Pattern: FieldRef<"Model", 'Int'> → FieldRef<"Model", BrandedType>
     // Pattern: FieldRef<"Model", 'String'> → FieldRef<"Model", BrandedType>
+    const transformed = transformPropertyType(prop, modelName, (fullText, brandedType, _propName) => {
+      // Match the FieldRef type parameter (Int, String, DateTime, etc.)
+      const fieldRefPattern = /FieldRef<"[^"]+",\s*'(Int|String|DateTime|Boolean|Float|Decimal|BigInt|Bytes|Json)'\s*>/;
+      const match = fieldRefPattern.exec(fullText);
 
-    // Match the FieldRef type parameter (Int, String, DateTime, etc.)
-    const fieldRefPattern = /FieldRef<"[^"]+",\s*'(Int|String|DateTime|Boolean|Float|Decimal|BigInt|Bytes|Json)'\s*>/;
-    const match = fieldRefPattern.exec(fullText);
+      if (match) {
+        // Replace the type parameter with the branded type (without quotes since it's a type, not a string literal)
+        return fullText.replace(fieldRefPattern, `FieldRef<"${modelName}", ${brandedType}>`);
+      }
 
-    if (match) {
-      // Replace the type parameter with the branded type (without quotes since it's a type, not a string literal)
-      const newText = fullText.replace(fieldRefPattern, `FieldRef<"${modelName}", ${brandedType}>`);
-      prop.replaceWithText(newText);
-      BRANDED_TYPES_TO_IMPORT.add(brandedType);
+      return null;
+    });
+
+    if (transformed) {
       count++;
     }
   }

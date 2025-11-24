@@ -16,6 +16,35 @@ type DiscordLinkValidationResult =
   | { success: false; errorResponse: { content: string; flags?: number } };
 
 /**
+ * Build a validation error response for player not found
+ */
+function buildPlayerNotFoundError(playerAlias: string): DiscordLinkValidationResult {
+  return {
+    success: false,
+    errorResponse: {
+      content: `❌ Player "${playerAlias}" not found`,
+      flags: MessageFlags.Ephemeral,
+    },
+  };
+}
+
+/**
+ * Build a validation error response from an error response builder function
+ */
+function buildValidationErrorResponse(errorResponse: {
+  content?: string;
+  flags?: number;
+}): DiscordLinkValidationResult {
+  return {
+    success: false,
+    errorResponse: {
+      content: errorResponse.content ?? "",
+      flags: MessageFlags.Ephemeral,
+    },
+  };
+}
+
+/**
  * Validate that a Discord ID can be linked to a player
  * Checks:
  * 1. Discord ID is not already linked to a different player
@@ -30,13 +59,7 @@ export async function validateDiscordLink(options: {
 }): Promise<DiscordLinkValidationResult> {
   const { prisma, guildId, player, discordUserId, playerAlias } = options;
   if (!player) {
-    return {
-      success: false,
-      errorResponse: {
-        content: `❌ Player "${playerAlias}" not found`,
-        flags: MessageFlags.Ephemeral,
-      },
-    };
+    return buildPlayerNotFoundError(playerAlias);
   }
 
   // Check if this Discord ID is already linked to a different player
@@ -52,27 +75,13 @@ export async function validateDiscordLink(options: {
 
   if (existingPlayer) {
     console.log(`❌ Discord ID already linked to player "${existingPlayer.alias}"`);
-    const errorResponse = buildDiscordIdInUseError(discordUserId, existingPlayer.alias);
-    return {
-      success: false,
-      errorResponse: {
-        content: errorResponse.content ?? "",
-        flags: MessageFlags.Ephemeral,
-      },
-    };
+    return buildValidationErrorResponse(buildDiscordIdInUseError(discordUserId, existingPlayer.alias));
   }
 
   // Check if player already has a Discord ID
   if (player.discordId) {
     console.log(`⚠️  Player already has Discord ID: ${player.discordId}`);
-    const errorResponse = buildDiscordAlreadyLinkedError(playerAlias, player.discordId);
-    return {
-      success: false,
-      errorResponse: {
-        content: errorResponse.content ?? "",
-        flags: MessageFlags.Ephemeral,
-      },
-    };
+    return buildValidationErrorResponse(buildDiscordAlreadyLinkedError(playerAlias, player.discordId));
   }
 
   return { success: true };
@@ -88,25 +97,12 @@ export function validateDiscordUnlink(
   playerAlias: string,
 ): DiscordLinkValidationResult {
   if (!player) {
-    return {
-      success: false,
-      errorResponse: {
-        content: `❌ Player "${playerAlias}" not found`,
-        flags: MessageFlags.Ephemeral,
-      },
-    };
+    return buildPlayerNotFoundError(playerAlias);
   }
 
   if (!player.discordId) {
     console.log(`⚠️  Player has no Discord ID to unlink`);
-    const errorResponse = buildPlayerNotLinkedError(playerAlias);
-    return {
-      success: false,
-      errorResponse: {
-        content: errorResponse.content ?? "",
-        flags: MessageFlags.Ephemeral,
-      },
-    };
+    return buildValidationErrorResponse(buildPlayerNotLinkedError(playerAlias));
   }
 
   return { success: true };

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import type { ChallengesDto, ParticipantDto, Player } from "@scout-for-lol/data";
+import type { ChallengesDto, ParticipantDto, Player, MatchDto } from "@scout-for-lol/data";
 import { ArenaMatchSchema, ArenaTeamSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
 import { toArenaMatch, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.js";

@@ -55,15 +55,40 @@ function generateMatchKey(matchId: string, date: Date): string {
 }
 
 // Helper to create a mock GetObjectCommandOutput
+// We need to mock the AWS SDK response for testing
+type MockBody = {
+  transformToString(): Promise<string>;
+  locked: boolean;
+  cancel(): Promise<void>;
+  getReader(): { read(): Promise<{ done: boolean; value?: unknown }> };
+  pipeThrough(): { readable: unknown; writable: unknown };
+  pipeTo(): Promise<void>;
+  [Symbol.asyncIterator](): AsyncIterator<unknown>;
+};
+
 function createMockGetObjectResponse(content: string): GetObjectCommandOutput {
-  const mockBody = {
+  const mockBody: MockBody = {
     transformToString: () => Promise.resolve(content),
+    locked: false,
+    cancel: () => Promise.resolve(),
+    getReader: () => ({
+      read: () => Promise.resolve({ done: true, value: undefined }),
+    }),
+    pipeThrough: () => ({ readable: undefined, writable: undefined }),
+    pipeTo: () => Promise.resolve(),
+    [Symbol.asyncIterator]: function* () {
+      return;
+    },
   };
 
+  // eslint-disable-next-line custom-rules/no-type-assertions
+  // Type assertion is necessary here: AWS SDK's GetObjectCommandOutput Body type is a complex
+  // union that includes ReadableStream and SdkStream. Our mock implements all required methods
+  // but TypeScript can't verify the full structural type. This is safe because this is test code.
   return {
     Body: mockBody,
     $metadata: {},
-  };
+  } as GetObjectCommandOutput;
 }
 
 beforeEach(() => {

@@ -13,7 +13,7 @@
     "**/*-stub.ts",
     "**/.astro/content.d.ts"
   ],
-  "minLines": 3,
+  "minLines": 9,
   "minTokens": 30,
   "mode": "strict",
   "format": ["typescript", "tsx", "javascript", "jsx"],

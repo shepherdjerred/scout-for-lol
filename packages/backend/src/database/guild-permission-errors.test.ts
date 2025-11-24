@@ -96,8 +96,16 @@ describe("recordPermissionError", () => {
   });
 
   test("tracks separate errors for different channels in same guild", async () => {
-    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("1000000001"), "proactive_check");
-    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("2000000002"), "proactive_check");
+    await recordPermissionError(prisma, {
+      serverId: testGuildId("12300000000"),
+      channelId: testChannelId("1000000001"),
+      errorType: "proactive_check",
+    });
+    await recordPermissionError(prisma, {
+      serverId: testGuildId("12300000000"),
+      channelId: testChannelId("2000000002"),
+      errorType: "proactive_check",
+    });
 
     const errors = await prisma.guildPermissionError.findMany({
       where: { serverId: testGuildId("12300000000") },
@@ -110,8 +118,16 @@ describe("recordPermissionError", () => {
 describe("recordSuccessfulSend", () => {
   test("resets error count when called", async () => {
     // Create some errors
-    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("456000000"), "proactive_check");
-    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("456000000"), "api_error");
+    await recordPermissionError(prisma, {
+      serverId: testGuildId("12300000000"),
+      channelId: testChannelId("456000000"),
+      errorType: "proactive_check",
+    });
+    await recordPermissionError(prisma, {
+      serverId: testGuildId("12300000000"),
+      channelId: testChannelId("456000000"),
+      errorType: "api_error",
+    });
 
     // Record successful send
     await recordSuccessfulSend(prisma, testGuildId("12300000000"), testChannelId("456000000"));
@@ -488,25 +504,27 @@ describe("Permission Error Workflow", () => {
     const channelId = testChannelId("0");
 
     // 1. First error
-    await recordPermissionError(prisma, serverId, channelId, "proactive_check");
+    await recordPermissionError(prisma, {
+      serverId,
+      channelId,
+      errorType: "proactive_check",
+    });
     let record = await prisma.guildPermissionError.findUnique({
       where: { serverId_channelId: { serverId, channelId } },
     });
     expect(record?.consecutiveErrorCount).toBe(1);
 
     // 2. More errors accumulate
-    await recordPermissionError(
-      prisma,
-      DiscordGuildIdSchema.parse(serverId),
-      DiscordChannelIdSchema.parse(channelId),
-      "api_error",
-    );
-    await recordPermissionError(
-      prisma,
-      DiscordGuildIdSchema.parse(serverId),
-      DiscordChannelIdSchema.parse(channelId),
-      "api_error",
-    );
+    await recordPermissionError(prisma, {
+      serverId,
+      channelId,
+      errorType: "api_error",
+    });
+    await recordPermissionError(prisma, {
+      serverId,
+      channelId,
+      errorType: "api_error",
+    });
     record = await prisma.guildPermissionError.findUnique({
       where: { serverId_channelId: { serverId, channelId } },
     });

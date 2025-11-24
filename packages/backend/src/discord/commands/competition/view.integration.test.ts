@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { createCompetition, getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
 import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
@@ -115,10 +115,7 @@ async function createTestCompetition(
             queue: "SOLO" as const,
           };
         })
-        .with(P.literal("MOST_GAMES_PLAYED"), () => ({ type: "MOST_GAMES_PLAYED" as const, queue: "SOLO" as const }))
-        .with(P.literal("MOST_RANK_CLIMB"), () => ({ type: "MOST_RANK_CLIMB" as const, queue: "SOLO" as const }))
-        .with(P.literal("MOST_WINS_PLAYER"), () => ({ type: "MOST_WINS_PLAYER" as const, queue: "SOLO" as const }))
-        .with("HIGHEST_WIN_RATE", () => ({ type: "HIGHEST_WIN_RATE" as const, minGames: 10, queue: "SOLO" as const }))
+        .with("MOST_GAMES_PLAYED", () => ({ type: "MOST_GAMES_PLAYED" as const, queue: "SOLO" as const }))
         .exhaustive()
     : { type: "MOST_GAMES_PLAYED" as const, queue: "SOLO" as const };
 

@@ -3,6 +3,7 @@ import { afterAll, describe, test, expect, beforeEach } from "bun:test";
 import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client";
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
 import { addLimitOverride, clearLimitOverrides } from "@scout-for-lol/backend/configuration/flags.js";
+import { type DiscordGuildId, type DiscordAccountId, type DiscordChannelId } from "@scout-for-lol/data";
 
 // Constants for testing
 const DEFAULT_PLAYER_SUBSCRIPTION_LIMIT = 75;
@@ -24,7 +25,7 @@ Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${sc
     PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
     PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
   },
-  stdio: "inherit",
+  stdio: ["ignore", "pipe", "pipe"],
 });
 
 // Test Prisma client with isolated database
@@ -52,11 +53,11 @@ afterAll(async () => {
 
 type TestPlayerOptions = {
   count: number;
-  serverId: string;
-  discordUserId: string;
+  serverId: DiscordGuildId;
+  channelId: DiscordChannelId;
+  discordUserId: DiscordAccountId;
   now: Date;
   prefix?: string;
-  channelId?: string;
 };
 
 async function createSubscribedPlayers(opts: TestPlayerOptions) {

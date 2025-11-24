@@ -26,9 +26,7 @@ export function extractCompetitionId(interaction: ChatInputCommandInteraction): 
  * Validate server context and return server ID
  * Returns null if validation fails (and sends error reply)
  */
-export async function validateServerContext(
-  interaction: ChatInputCommandInteraction,
-): Promise<DiscordGuildId | null> {
+export async function validateServerContext(interaction: ChatInputCommandInteraction): Promise<DiscordGuildId | null> {
   const serverId = interaction.guildId ? DiscordGuildIdSchema.parse(interaction.guildId) : null;
 
   if (!serverId) {
@@ -148,4 +146,42 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
   }
 
   return false;
+}
+
+/**
+ * Check if competition has reached participant limit
+ * Returns null if check fails (and sends error reply), otherwise returns the active participant count
+ */
+export async function checkParticipantLimit(
+  interaction: ChatInputCommandInteraction,
+  competitionId: number,
+  maxParticipants: number,
+  logContext: string,
+  fullMessage: string,
+): Promise<number | null> {
+  let activeParticipantCount;
+  try {
+    activeParticipantCount = await prisma.competitionParticipant.count({
+      where: {
+        competitionId,
+        status: { not: "LEFT" },
+      },
+    });
+  } catch (error) {
+    console.error(`[${logContext}] Error counting participants:`, error);
+    await replyWithErrorFromException(interaction, error, "checking participant limit");
+    return null;
+  }
+
+  if (activeParticipantCount >= maxParticipants) {
+    await replyWithError(
+      interaction,
+      `❌ Competition full
+
+This competition has reached its maximum of ${maxParticipants.toString()} participants. ${fullMessage}`,
+    );
+    return null;
+  }
+
+  return activeParticipantCount;
 }

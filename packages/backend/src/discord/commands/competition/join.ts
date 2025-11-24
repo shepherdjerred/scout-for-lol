@@ -19,6 +19,7 @@ import {
   fetchCompetitionWithErrorHandling,
   checkCompetitionCancelled,
   checkCompetitionEnded,
+  checkParticipantLimit,
 } from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 
@@ -148,27 +149,14 @@ This is an invite-only competition. Ask the competition owner (<@${competition.o
   // Step 8: Check participant limit
   // ============================================================================
 
-  let activeParticipantCount;
-  try {
-    activeParticipantCount = await prisma.competitionParticipant.count({
-      where: {
-        competitionId,
-        status: { not: "LEFT" },
-      },
-    });
-  } catch (error) {
-    console.error(`[Competition Join] Error counting participants:`, error);
-    await replyWithErrorFromException(interaction, error, "checking participant limit");
-    return;
-  }
-
-  if (activeParticipantCount >= competition.maxParticipants) {
-    await replyWithError(
-      interaction,
-      `❌ Competition full
-
-This competition has reached its maximum of ${competition.maxParticipants.toString()} participants. The competition is full!`,
-    );
+  const activeParticipantCount = await checkParticipantLimit(
+    interaction,
+    competitionId,
+    competition.maxParticipants,
+    "Competition Join",
+    "The competition is full!",
+  );
+  if (activeParticipantCount === null) {
     return;
   }
 
