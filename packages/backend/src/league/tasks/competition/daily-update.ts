@@ -1,7 +1,10 @@
 import { getCompetitionStatus, type CachedLeaderboard, type CompetitionWithCriteria } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { getActiveCompetitions } from "@scout-for-lol/backend/database/competition/queries.js";
-import { calculateLeaderboard, type RankedLeaderboardEntry } from "@scout-for-lol/backend/league/competition/leaderboard.js";
+import {
+  calculateLeaderboard,
+  type RankedLeaderboardEntry,
+} from "@scout-for-lol/backend/league/competition/leaderboard.js";
 import { generateLeaderboardEmbed } from "@scout-for-lol/backend/discord/embeds/competition.js";
 import { send as sendChannelMessage, ChannelSendError } from "@scout-for-lol/backend/league/discord/channel.js";
 import { saveCachedLeaderboard } from "@scout-for-lol/backend/storage/s3-leaderboard.js";
@@ -146,7 +149,9 @@ async function backfillStartSnapshots(competition: CompetitionWithCriteria): Pro
  * Calculate leaderboard with error handling for missing snapshots
  * Returns null if calculation fails due to missing snapshots
  */
-async function calculateLeaderboardSafely(competition: CompetitionWithCriteria): Promise<RankedLeaderboardEntry[] | null> {
+async function calculateLeaderboardSafely(
+  competition: CompetitionWithCriteria,
+): Promise<RankedLeaderboardEntry[] | null> {
   try {
     return await calculateLeaderboard(prisma, competition);
   } catch (error) {

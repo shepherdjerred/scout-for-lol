@@ -25,7 +25,7 @@ export async function executeGrantPermission(interaction: ChatInputCommandIntera
   if (!permissionsResult.success || !interaction.memberPermissions) {
     await interaction.reply({
       content: truncateDiscordMessage("Unable to verify permissions"),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -35,7 +35,7 @@ export async function executeGrantPermission(interaction: ChatInputCommandIntera
   if (!hasAdmin) {
     await interaction.reply({
       content: truncateDiscordMessage("Only server administrators can grant permissions"),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -50,7 +50,7 @@ export async function executeGrantPermission(interaction: ChatInputCommandIntera
   if (!serverId) {
     await interaction.reply({
       content: truncateDiscordMessage("This command can only be used in a server"),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -74,7 +74,7 @@ export async function executeGrantPermission(interaction: ChatInputCommandIntera
     console.error(`[Grant Permission] Error granting permission to ${targetUser.id}:`, error);
     await interaction.reply({
       content: truncateDiscordMessage(`Error granting permission: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -87,6 +87,6 @@ export async function executeGrantPermission(interaction: ChatInputCommandIntera
     content: truncateDiscordMessage(
       `✅ Granted **CREATE_COMPETITION** permission to ${targetUser.username}.\n\nThey can now create competitions on this server.`,
     ),
-    flags: MessageFlags.Ephemeral,
+    ephemeral: true,
   });
 }

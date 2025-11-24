@@ -20,115 +20,116 @@ const ArgsSchema = z.object({
 });
 
 export async function executeAccountTransfer(interaction: ChatInputCommandInteraction) {
-  return executeCommand(
+  return executeCommand({
     interaction,
-    ArgsSchema,
-    (i) => ({
+    schema: ArgsSchema,
+    argsBuilder: (i) => ({
       riotId: i.options.getString("riot-id"),
       region: i.options.getString("region"),
       toPlayerAlias: i.options.getString("to-player-alias"),
       guildId: i.guildId,
     }),
-    "account-transfer",
-    async ({ data: args }) => {
+    commandName: "account-transfer",
+    handler: async ({ data: args }) => {
       const { riotId, region, toPlayerAlias, guildId } = args;
-    // Resolve Riot ID to PUUID
-    const puuidResult = await resolvePuuidFromRiotId(riotId, region);
-    if (!puuidResult.success) {
-      await interaction.reply(buildRiotApiError(`${riotId.game_name}#${riotId.tag_line}`, puuidResult.error));
-      return;
-    }
+      // Resolve Riot ID to PUUID
+      const puuidResult = await resolvePuuidFromRiotId(riotId, region);
+      if (!puuidResult.success) {
+        await interaction.reply(buildRiotApiError(`${riotId.game_name}#${riotId.tag_line}`, puuidResult.error));
+        return;
+      }
 
-    const { puuid } = puuidResult;
+      const { puuid } = puuidResult;
 
-    // Find the account
-    const account = await prisma.account.findUnique({
-      where: {
-        serverId_puuid: {
-          serverId: guildId,
-          puuid: puuid,
-        },
-      },
-      include: {
-        player: {
-          include: {
-            accounts: true,
+      // Find the account
+      const account = await prisma.account.findUnique({
+        where: {
+          serverId_puuid: {
+            serverId: guildId,
+            puuid: puuid,
           },
         },
-      },
-    });
-
-    if (!account) {
-      console.log(`❌ Account not found: ${riotId.game_name}#${riotId.tag_line}`);
-      await interaction.reply({
-        content: `❌ **Account not found**\n\nNo account with Riot ID ${riotId.game_name}#${riotId.tag_line} exists in this server.`,
-        ephemeral: true,
+        include: {
+          player: {
+            include: {
+              accounts: true,
+            },
+          },
+        },
       });
-      return;
-    }
 
-    // Find the target player
-    const targetPlayer = await findPlayerByAliasWithAccounts(prisma, guildId, toPlayerAlias);
-    if (!targetPlayer) {
-      console.log(`❌ Target player not found: "${toPlayerAlias}"`);
-      await interaction.reply(buildPlayerNotFoundError(toPlayerAlias));
-      return;
-    }
+      if (!account) {
+        console.log(`❌ Account not found: ${riotId.game_name}#${riotId.tag_line}`);
+        await interaction.reply({
+          content: `❌ **Account not found**\n\nNo account with Riot ID ${riotId.game_name}#${riotId.tag_line} exists in this server.`,
+          ephemeral: true,
+        });
+        return;
+      }
 
-    const sourcePlayer = account.player;
+      // Find the target player
+      const targetPlayer = await findPlayerByAliasWithAccounts(prisma, guildId, toPlayerAlias);
+      if (!targetPlayer) {
+        console.log(`❌ Target player not found: "${toPlayerAlias}"`);
+        await interaction.reply(buildPlayerNotFoundError(toPlayerAlias));
+        return;
+      }
 
-    // Check if transferring to the same player
-    if (sourcePlayer.id === targetPlayer.id) {
-      console.log(`❌ Cannot transfer account to the same player`);
-      await interaction.reply({
-        content: `❌ **Invalid transfer**\n\nThe account is already owned by player "${toPlayerAlias}".`,
-        ephemeral: true,
-      });
-      return;
-    }
+      const sourcePlayer = account.player;
 
-    // Check if this is the last account for the source player
-    if (sourcePlayer.accounts.length === 1) {
+      // Check if transferring to the same player
+      if (sourcePlayer.id === targetPlayer.id) {
+        console.log(`❌ Cannot transfer account to the same player`);
+        await interaction.reply({
+          content: `❌ **Invalid transfer**\n\nThe account is already owned by player "${toPlayerAlias}".`,
+          ephemeral: true,
+        });
+        return;
+      }
+
+      // Check if this is the last account for the source player
+      if (sourcePlayer.accounts.length === 1) {
+        console.log(
+          `⚠️  Cannot transfer last account from player "${sourcePlayer.alias}" - player would have no accounts`,
+        );
+        await interaction.reply({
+          content: `❌ **Cannot transfer last account**\n\nPlayer "${sourcePlayer.alias}" only has one account. Transferring it would leave the player with no accounts.\n\nIf you want to merge these players, use \`/admin player-merge\` instead.`,
+          ephemeral: true,
+        });
+        return;
+      }
+
       console.log(
-        `⚠️  Cannot transfer last account from player "${sourcePlayer.alias}" - player would have no accounts`,
+        `💾 Transferring account ${riotId.game_name}#${riotId.tag_line} from "${sourcePlayer.alias}" to "${targetPlayer.alias}"`,
       );
-      await interaction.reply({
-        content: `❌ **Cannot transfer last account**\n\nPlayer "${sourcePlayer.alias}" only has one account. Transferring it would leave the player with no accounts.\n\nIf you want to merge these players, use \`/admin player-merge\` instead.`,
-        ephemeral: true,
-      });
-      return;
-    }
 
-    console.log(
-      `💾 Transferring account ${riotId.game_name}#${riotId.tag_line} from "${sourcePlayer.alias}" to "${targetPlayer.alias}"`,
-    );
+      try {
+        const now = new Date();
 
-    try {
-      const now = new Date();
+        // Update the account to point to the new player
+        await prisma.account.update({
+          where: {
+            id: account.id,
+          },
+          data: {
+            playerId: targetPlayer.id,
+            updatedTime: now,
+          },
+        });
 
-      // Update the account to point to the new player
-      await prisma.account.update({
-        where: {
-          id: account.id,
-        },
-        data: {
-          playerId: targetPlayer.id,
-          updatedTime: now,
-        },
-      });
+        const sourceRemainingAccounts = sourcePlayer.accounts.filter((acc) => acc.id !== account.id);
+        const targetNewAccounts = [...targetPlayer.accounts, account];
 
-      const sourceRemainingAccounts = sourcePlayer.accounts.filter((acc) => acc.id !== account.id);
-      const targetNewAccounts = [...targetPlayer.accounts, account];
-
-      await interaction.reply(
-        buildSuccessResponse(
-          `✅ **Account transferred successfully**\n\nTransferred ${riotId.game_name}#${riotId.tag_line} from "${sourcePlayer.alias}" to "${targetPlayer.alias}"`,
-          `**"${sourcePlayer.alias}" now has ${sourceRemainingAccounts.length.toString()} account(s)**\n**"${targetPlayer.alias}" now has ${targetNewAccounts.length.toString()} account(s)**`,
-        ),
-      );
-    } catch (error) {
-      console.error(`❌ Database error during account transfer:`, error);
-      await interaction.reply(buildDatabaseError("transfer account", error));
-    }
+        await interaction.reply(
+          buildSuccessResponse(
+            `✅ **Account transferred successfully**\n\nTransferred ${riotId.game_name}#${riotId.tag_line} from "${sourcePlayer.alias}" to "${targetPlayer.alias}"`,
+            `**"${sourcePlayer.alias}" now has ${sourceRemainingAccounts.length.toString()} account(s)**\n**"${targetPlayer.alias}" now has ${targetNewAccounts.length.toString()} account(s)**`,
+          ),
+        );
+      } catch (error) {
+        console.error(`❌ Database error during account transfer:`, error);
+        await interaction.reply(buildDatabaseError("transfer account", error));
+      }
+    },
   });
 }

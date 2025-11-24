@@ -76,7 +76,7 @@ Competition #${competitionId.toString()} doesn't exist. Use \`/competition list\
 
   await interaction.reply({
     embeds: [embed],
-    flags: MessageFlags.Ephemeral,
+    ephemeral: true,
   });
 }
 

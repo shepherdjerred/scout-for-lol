@@ -28,7 +28,7 @@ export async function executeSubscriptionList(interaction: ChatInputCommandInter
   if (subscriptions.length === 0) {
     await interaction.reply({
       content: truncateDiscordMessage("📭 No subscriptions found for this server."),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -74,6 +74,6 @@ export async function executeSubscriptionList(interaction: ChatInputCommandInter
 
   await interaction.reply({
     embeds: [embed],
-    flags: MessageFlags.Ephemeral,
+    ephemeral: true,
   });
 }

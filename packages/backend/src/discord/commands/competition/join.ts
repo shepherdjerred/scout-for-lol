@@ -251,7 +251,7 @@ Participants: ${updatedParticipantCount.toString()}/${competition.maxParticipant
 ${statusLine}
 
 Good luck! The leaderboard will be posted daily in <#${competition.channelId}>.`),
-    flags: MessageFlags.Ephemeral,
+    ephemeral: true,
   });
 }
 

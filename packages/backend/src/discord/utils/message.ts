@@ -30,7 +30,7 @@ const SAFE_MESSAGE_BUFFER = 100;
  * ```ts
  * await interaction.reply({
  *   content: truncateDiscordMessage(longErrorMessage),
- *   flags: MessageFlags.Ephemeral,
+ *   ephemeral: true,
  * });
  * ```
  */

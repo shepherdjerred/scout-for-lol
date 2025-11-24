@@ -151,7 +151,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
       console.warn(`⚠️  Non-admin ${username} attempted to use add-all-members option`);
       await interaction.reply({
         content: `**Permission denied:**\nThe \`add-all-members\` option requires Administrator permission.`,
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       });
       return;
     }
@@ -162,7 +162,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
       console.warn(`⚠️  Permission denied for ${username}: ${permissionCheck.reason ?? "unknown reason"}`);
       await interaction.reply({
         content: `**Permission denied:**\n${permissionCheck.reason ?? "No permission"}`,
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       });
       return;
     }

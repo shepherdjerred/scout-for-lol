@@ -34,7 +34,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
   if (!interaction.guildId) {
     await interaction.reply({
       content: truncateDiscordMessage("❌ This command can only be used in a server."),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -65,7 +65,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
     console.error("[Competition List] Error fetching competitions:", error);
     await interaction.reply({
       content: truncateDiscordMessage(`Error fetching competitions: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -83,7 +83,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
 
     await interaction.reply({
       content: truncateDiscordMessage(`📋 ${message}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -101,7 +101,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
   await interaction.reply({
     embeds: [embed],
     components,
-    flags: MessageFlags.Ephemeral,
+    ephemeral: true,
   });
 
   // ============================================================================
@@ -126,7 +126,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
         if (buttonInteraction.user.id !== interaction.user.id) {
           await buttonInteraction.reply({
             content: truncateDiscordMessage("These buttons aren't for you!"),
-            flags: MessageFlags.Ephemeral,
+            ephemeral: true,
           });
           return;
         }

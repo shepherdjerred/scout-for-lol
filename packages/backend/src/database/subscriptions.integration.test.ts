@@ -2,7 +2,6 @@ import { afterAll, test, expect, beforeEach, afterEach, describe } from "bun:tes
 import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { getChannelsSubscribedToPlayers } from "@scout-for-lol/backend/database/index.js";
 import {
-  LeaguePuuid,
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
@@ -10,11 +9,12 @@ import {
   type DiscordAccountId,
   type DiscordChannelId,
   type DiscordGuildId,
+  type LeaguePuuid,
   type PlayerId,
 } from "@scout-for-lol/data";
 
 // Create a temporary database for testing
-const testDbPath = `${Bun.env['TMPDIR'] ?? "/tmp"}/subscriptions-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}/test.db`;
+const testDbPath = `${Bun.env["TMPDIR"] ?? "/tmp"}/subscriptions-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}/test.db`;
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database

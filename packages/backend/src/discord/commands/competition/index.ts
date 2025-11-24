@@ -1,13 +1,4 @@
 import { InteractionContextType, SlashCommandBuilder } from "discord.js";
-import { executeCompetitionCreate } from "@scout-for-lol/backend/discord/commands/competition/create.js";
-import { executeCompetitionEdit } from "@scout-for-lol/backend/discord/commands/competition/edit.js";
-import { executeCompetitionCancel } from "@scout-for-lol/backend/discord/commands/competition/cancel.js";
-import { executeGrantPermission } from "@scout-for-lol/backend/discord/commands/competition/grant-permission.js";
-import { executeCompetitionJoin } from "@scout-for-lol/backend/discord/commands/competition/join.js";
-import { executeCompetitionInvite } from "@scout-for-lol/backend/discord/commands/competition/invite.js";
-import { executeCompetitionView } from "@scout-for-lol/backend/discord/commands/competition/view.js";
-import { executeCompetitionLeave } from "@scout-for-lol/backend/discord/commands/competition/leave.js";
-import { executeCompetitionList } from "@scout-for-lol/backend/discord/commands/competition/list.js";
 import { getSeasonChoices } from "@scout-for-lol/data";
 
 /**
@@ -312,14 +303,3 @@ export const competitionCommand = new SlashCommandBuilder()
       ),
   )
   .setContexts(InteractionContextType.Guild);
-
-// Functions are exported from their respective files - import directly:
-// - executeCompetitionCreate from "./create.js"
-// - executeCompetitionEdit from "./edit.js"
-// - executeCompetitionCancel from "./cancel.js"
-// - executeGrantPermission from "./grant-permission.js"
-// - executeCompetitionJoin from "./join.js"
-// - executeCompetitionInvite from "./invite.js"
-// - executeCompetitionLeave from "./leave.js"
-// - executeCompetitionView from "./view.js"
-// - executeCompetitionList from "./list.js"

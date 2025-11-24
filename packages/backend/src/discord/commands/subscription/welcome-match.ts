@@ -79,7 +79,7 @@ export async function sendWelcomeMatch(
       content: `Welcome to Scout! Here's the last match **${playerAlias}** was in. You'll see messages like this for future matches.`,
       files: message.files ?? [],
       embeds: message.embeds ?? [],
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
 
     console.log(`[WelcomeMatch] ✅ Successfully sent welcome match for ${playerAlias}`);

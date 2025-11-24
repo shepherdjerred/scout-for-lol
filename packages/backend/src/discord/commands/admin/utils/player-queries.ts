@@ -9,13 +9,14 @@ export type PlayerWithCompetitions = Awaited<ReturnType<typeof findPlayerByAlias
 /**
  * Generic helper to find a player by alias with configurable includes
  */
-async function findPlayerByAliasGeneric<T extends Prisma.PlayerInclude>(
-  prisma: PrismaClient,
-  serverId: DiscordGuildId,
-  alias: string,
-  include: T,
-  interaction?: ChatInputCommandInteraction,
-): Promise<Prisma.PlayerGetPayload<{ include: T }> | null> {
+async function findPlayerByAliasGeneric<T extends Prisma.PlayerInclude>(options: {
+  prisma: PrismaClient;
+  serverId: DiscordGuildId;
+  alias: string;
+  include: T;
+  interaction?: ChatInputCommandInteraction;
+}): Promise<Prisma.PlayerGetPayload<{ include: T }> | null> {
+  const { prisma, serverId, alias, include, interaction } = options;
   const player = await prisma.player.findUnique({
     where: {
       serverId_alias: {
@@ -46,7 +47,7 @@ export async function findPlayerByAlias(
   alias: string,
   interaction?: ChatInputCommandInteraction,
 ) {
-  return findPlayerByAliasGeneric(prisma, serverId, alias, {}, interaction);
+  return findPlayerByAliasGeneric({ prisma, serverId, alias, include: {}, interaction });
 }
 
 /**
@@ -58,7 +59,7 @@ export async function findPlayerByAliasWithAccounts(
   alias: string,
   interaction?: ChatInputCommandInteraction,
 ) {
-  return findPlayerByAliasGeneric(prisma, serverId, alias, { accounts: true }, interaction);
+  return findPlayerByAliasGeneric({ prisma, serverId, alias, include: { accounts: true }, interaction });
 }
 
 /**
@@ -70,7 +71,13 @@ export async function findPlayerByAliasWithSubscriptions(
   alias: string,
   interaction?: ChatInputCommandInteraction,
 ) {
-  return findPlayerByAliasGeneric(prisma, serverId, alias, { accounts: true, subscriptions: true }, interaction);
+  return findPlayerByAliasGeneric({
+    prisma,
+    serverId,
+    alias,
+    include: { accounts: true, subscriptions: true },
+    interaction,
+  });
 }
 
 /**
@@ -82,11 +89,11 @@ export async function findPlayerByAliasWithCompetitions(
   alias: string,
   interaction?: ChatInputCommandInteraction,
 ) {
-  return findPlayerByAliasGeneric(
+  return findPlayerByAliasGeneric({
     prisma,
     serverId,
     alias,
-    {
+    include: {
       accounts: true,
       subscriptions: true,
       competitionParticipants: {
@@ -96,7 +103,7 @@ export async function findPlayerByAliasWithCompetitions(
       },
     },
     interaction,
-  );
+  });
 }
 
 /**

@@ -9,7 +9,7 @@ import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 export function buildErrorReply(content: string): InteractionReplyOptions {
   return {
     content: truncateDiscordMessage(content),
-    flags: MessageFlags.Ephemeral,
+    ephemeral: true,
   };
 }
 
@@ -19,7 +19,7 @@ export function buildErrorReply(content: string): InteractionReplyOptions {
 export function buildSuccessReply(content: string): InteractionReplyOptions {
   return {
     content: truncateDiscordMessage(content),
-    flags: MessageFlags.Ephemeral,
+    ephemeral: true,
   };
 }
 

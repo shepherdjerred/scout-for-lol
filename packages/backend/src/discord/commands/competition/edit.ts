@@ -87,7 +87,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
     console.error(`❌ Error fetching competition ${competitionId.toString()}:`, error);
     await interaction.reply({
       content: truncateDiscordMessage(`**Error fetching competition:**\n${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -95,7 +95,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
   if (!competition) {
     await interaction.reply({
       content: `Competition with ID ${competitionId.toString()} not found`,
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -107,7 +107,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
   if (competition.ownerId !== userId) {
     await interaction.reply({
       content: "Only the competition owner can edit the competition",
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -121,7 +121,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
   if (status === "CANCELLED") {
     await interaction.reply({
       content: "Cannot edit a cancelled competition",
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -252,7 +252,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
     const validationError = fromError(error);
     await interaction.reply({
       content: truncateDiscordMessage(`**Invalid input:**\n${validationError.toString()}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -354,7 +354,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
   if (Object.keys(updateInput).length === 0) {
     await interaction.reply({
       content: "No fields to update. Please provide at least one field to edit.",
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -403,13 +403,13 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
 
 View the competition with:
 \`/competition view competition-id:${competitionId.toString()}\``),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
   } catch (error) {
     console.error(`❌ Database error during competition edit:`, error);
     await interaction.reply({
       content: truncateDiscordMessage(`**Error updating competition:**\n${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
   }
 }

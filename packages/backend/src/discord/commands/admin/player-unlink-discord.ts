@@ -10,7 +10,6 @@ import {
   validateDiscordUnlink,
   executeDiscordLinkOperation,
 } from "@scout-for-lol/backend/discord/commands/admin/utils/discord-link-helpers.js";
-import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
 
 const ArgsSchema = z.object({
   playerAlias: z.string().min(1).max(100),
@@ -18,15 +17,15 @@ const ArgsSchema = z.object({
 });
 
 export async function executePlayerUnlinkDiscord(interaction: ChatInputCommandInteraction) {
-  return executeCommand(
+  return executeCommand({
     interaction,
-    ArgsSchema,
-    (i) => ({
+    schema: ArgsSchema,
+    argsBuilder: (i) => ({
       playerAlias: i.options.getString("player-alias"),
       guildId: i.guildId,
     }),
-    "player-unlink-discord",
-    async ({ data: args }) => {
+    commandName: "player-unlink-discord",
+    handler: async ({ data: args }) => {
       const { playerAlias, guildId } = args;
 
       // Find the player
@@ -45,7 +44,12 @@ export async function executePlayerUnlinkDiscord(interaction: ChatInputCommandIn
         return;
       }
 
+      // After validation, we know discordId is not null
       const previousDiscordId = playerNonNull.discordId;
+      if (!previousDiscordId) {
+        // This should never happen due to validation, but TypeScript needs the check
+        return;
+      }
       console.log(`💾 Unlinking Discord ID ${previousDiscordId} from player "${playerAlias}"`);
 
       await executeDiscordLinkOperation(
@@ -53,8 +57,11 @@ export async function executePlayerUnlinkDiscord(interaction: ChatInputCommandIn
         async () => {
           const updatedPlayer = await updatePlayerDiscordId(prisma, playerNonNull.id, null);
           // updatePlayerDiscordId always returns a player (update operation never returns null)
-          // Type assertion needed because PlayerWithSubscriptions includes null union type
-          const updatedPlayerNonNull = updatedPlayer as unknown as NonNullable<PlayerWithSubscriptions>;
+          // Check that result is not null
+          if (!updatedPlayer) {
+            throw new Error("Failed to update player");
+          }
+          const updatedPlayerNonNull = updatedPlayer;
 
           await interaction.reply(
             buildPlayerUpdateResponse(
@@ -67,5 +74,5 @@ export async function executePlayerUnlinkDiscord(interaction: ChatInputCommandIn
         "unlink",
       );
     },
-  );
+  });
 }

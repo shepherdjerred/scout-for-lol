@@ -107,7 +107,7 @@ export function handleCommands(client: Client) {
               console.warn(`⚠️  Unknown subscription subcommand: ${subcommandName}`);
               return interaction.reply({
                 content: "Unknown subscription subcommand",
-                flags: MessageFlags.Ephemeral,
+                ephemeral: true,
               });
             });
         } else if (commandName === "competition") {
@@ -128,7 +128,7 @@ export function handleCommands(client: Client) {
               console.warn(`⚠️  Unknown competition subcommand: ${subcommandName}`);
               await interaction.reply({
                 content: "Unknown competition subcommand",
-                flags: MessageFlags.Ephemeral,
+                ephemeral: true,
               });
             });
         } else if (commandName === "admin") {
@@ -144,7 +144,7 @@ export function handleCommands(client: Client) {
             console.warn(`⚠️  Unauthorized admin command access attempt by ${username} (${userId})`);
             await interaction.reply({
               content: "❌ Admin commands require Administrator permissions in this server.",
-              flags: MessageFlags.Ephemeral,
+              ephemeral: true,
             });
             return;
           }
@@ -166,7 +166,7 @@ export function handleCommands(client: Client) {
               console.warn(`⚠️  Unknown admin subcommand: ${subcommandName}`);
               return interaction.reply({
                 content: "Unknown admin subcommand",
-                flags: MessageFlags.Ephemeral,
+                ephemeral: true,
               });
             });
         } else if (commandName === "debug") {
@@ -175,7 +175,7 @@ export function handleCommands(client: Client) {
             console.warn(`⚠️  Unauthorized debug command access attempt by ${username} (${userId})`);
             await interaction.reply({
               content: "❌ Debug commands are only available to authorized users.",
-              flags: MessageFlags.Ephemeral,
+              ephemeral: true,
             });
             return;
           }
@@ -194,7 +194,7 @@ export function handleCommands(client: Client) {
               console.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
               await interaction.reply({
                 content: "Unknown debug subcommand",
-                flags: MessageFlags.Ephemeral,
+                ephemeral: true,
               });
             });
         } else if (commandName === "help") {
@@ -233,12 +233,12 @@ export function handleCommands(client: Client) {
         if (interaction.replied || interaction.deferred) {
           await interaction.followUp({
             content: errorMessage,
-            flags: MessageFlags.Ephemeral,
+            ephemeral: true,
           });
         } else {
           await interaction.reply({
             content: errorMessage,
-            flags: MessageFlags.Ephemeral,
+            ephemeral: true,
           });
         }
       }

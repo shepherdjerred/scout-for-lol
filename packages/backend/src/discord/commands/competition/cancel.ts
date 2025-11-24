@@ -29,7 +29,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
     console.error(`[Competition Cancel] Error fetching competition ${competitionId.toString()}:`, error);
     await interaction.reply({
       content: truncateDiscordMessage(`Error fetching competition: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -37,7 +37,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   if (!competition) {
     await interaction.reply({
       content: truncateDiscordMessage(`Competition with ID ${competitionId.toString()} not found`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -63,7 +63,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   if (!isOwner && !isAdmin) {
     await interaction.reply({
       content: truncateDiscordMessage("Only the competition owner or server administrators can cancel competitions"),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -79,7 +79,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
     console.error(`[Competition Cancel] Error cancelling competition ${competitionId.toString()}:`, error);
     await interaction.reply({
       content: truncateDiscordMessage(`Error cancelling competition: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -90,7 +90,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
 
   await interaction.reply({
     content: truncateDiscordMessage(`Competition "${competition.title}" has been cancelled`),
-    flags: MessageFlags.Ephemeral,
+    ephemeral: true,
   });
 
   // ============================================================================

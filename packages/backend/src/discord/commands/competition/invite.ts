@@ -24,7 +24,7 @@ export async function executeCompetitionInvite(interaction: ChatInputCommandInte
   if (!serverId) {
     await interaction.reply({
       content: truncateDiscordMessage("This command can only be used in a server"),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -40,7 +40,7 @@ export async function executeCompetitionInvite(interaction: ChatInputCommandInte
     console.error(`[Competition Invite] Error fetching competition ${competitionId.toString()}:`, error);
     await interaction.reply({
       content: truncateDiscordMessage(`Error fetching competition: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -48,7 +48,7 @@ export async function executeCompetitionInvite(interaction: ChatInputCommandInte
   if (!competition) {
     await interaction.reply({
       content: truncateDiscordMessage(`Competition with ID ${competitionId.toString()} not found`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -62,7 +62,7 @@ export async function executeCompetitionInvite(interaction: ChatInputCommandInte
       content: truncateDiscordMessage(`❌ Permission denied
 
 Only the competition owner can invite participants. The owner of this competition is <@${competition.ownerId}>.`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -76,7 +76,7 @@ Only the competition owner can invite participants. The owner of this competitio
       content: truncateDiscordMessage(`❌ Competition cancelled
 
 This competition has been cancelled and is no longer accepting participants.`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -91,7 +91,7 @@ This competition has been cancelled and is no longer accepting participants.`),
       content: truncateDiscordMessage(`❌ Competition ended
 
 This competition has already ended on ${competition.endDate.toLocaleDateString()}.`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -112,7 +112,7 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
     console.error(`[Competition Invite] Error fetching player for user ${targetUser.id}:`, error);
     await interaction.reply({
       content: truncateDiscordMessage(`Error fetching player data: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -122,7 +122,7 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
       content: truncateDiscordMessage(`❌ Cannot invite user
 
 @${targetUser.username} doesn't have a linked League of Legends account. They need to use \`/subscription add\` first.`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -138,7 +138,7 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
     console.error(`[Competition Invite] Error checking participant status:`, error);
     await interaction.reply({
       content: truncateDiscordMessage(`Error checking participation status: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -149,7 +149,7 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
       content: truncateDiscordMessage(`❌ Already participating
 
 @${targetUser.username} is already in this competition.`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -160,7 +160,7 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
       content:
         truncateDiscordMessage(`@${targetUser.username} has already been invited to this competition. They can join with:
 \`/competition join competition-id:${competitionId.toString()}\``),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -170,7 +170,7 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
       content: truncateDiscordMessage(`❌ Cannot invite
 
 @${targetUser.username} previously left this competition and cannot be re-invited.`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -191,7 +191,7 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
     console.error(`[Competition Invite] Error counting participants:`, error);
     await interaction.reply({
       content: truncateDiscordMessage(`Error checking participant limit: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -201,7 +201,7 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
       content: truncateDiscordMessage(`❌ Competition full
 
 This competition has reached its maximum of ${competition.maxParticipants.toString()} participants. Cannot invite more users.`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -225,7 +225,7 @@ This competition has reached its maximum of ${competition.maxParticipants.toStri
     console.error(`[Competition Invite] Error adding participant:`, error);
     await interaction.reply({
       content: truncateDiscordMessage(`Error sending invitation: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -276,6 +276,6 @@ To join, use:
 
 Invited @${targetUser.username} to **${competition.title}**.
 They can join with \`/competition join competition-id:${competitionId.toString()}\`${dmWarning}`),
-    flags: MessageFlags.Ephemeral,
+    ephemeral: true,
   });
 }

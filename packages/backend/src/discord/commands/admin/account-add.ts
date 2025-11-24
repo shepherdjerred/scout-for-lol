@@ -27,17 +27,17 @@ const ArgsSchema = z.object({
 });
 
 export async function executeAccountAdd(interaction: ChatInputCommandInteraction) {
-  return executeCommand(
+  return executeCommand({
     interaction,
-    ArgsSchema,
-    (i) => ({
+    schema: ArgsSchema,
+    argsBuilder: (i) => ({
       riotId: i.options.getString("riot-id"),
       region: i.options.getString("region"),
       playerAlias: i.options.getString("player-alias"),
       guildId: i.guildId,
     }),
-    "account-add",
-    async ({ data: args, userId }) => {
+    commandName: "account-add",
+    handler: async ({ data: args, userId }) => {
       const { riotId, region, playerAlias, guildId } = args;
     // Find the player
     const player = await findPlayerByAliasWithAccounts(prisma, guildId, playerAlias, interaction);

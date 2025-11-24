@@ -10,7 +10,6 @@ import {
   validateDiscordLink,
   executeDiscordLinkOperation,
 } from "@scout-for-lol/backend/discord/commands/admin/utils/discord-link-helpers.js";
-import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
 
 const ArgsSchema = z.object({
   playerAlias: z.string().min(1).max(100),
@@ -19,16 +18,16 @@ const ArgsSchema = z.object({
 });
 
 export async function executePlayerLinkDiscord(interaction: ChatInputCommandInteraction) {
-  return executeCommand(
+  return executeCommand({
     interaction,
-    ArgsSchema,
-    (i) => ({
+    schema: ArgsSchema,
+    argsBuilder: (i) => ({
       playerAlias: i.options.getString("player-alias"),
       discordUserId: i.options.getUser("discord-user")?.id,
       guildId: i.guildId,
     }),
-    "player-link-discord",
-    async ({ data: args }) => {
+    commandName: "player-link-discord",
+    handler: async ({ data: args }) => {
       const { playerAlias, discordUserId, guildId } = args;
 
       // Find the player
@@ -41,7 +40,13 @@ export async function executePlayerLinkDiscord(interaction: ChatInputCommandInte
       const playerNonNull: NonNullable<typeof player> = player;
 
       // Validate Discord link
-      const validation = await validateDiscordLink(prisma, guildId, playerNonNull, discordUserId, playerAlias);
+      const validation = await validateDiscordLink({
+        prisma,
+        guildId,
+        player: playerNonNull,
+        discordUserId,
+        playerAlias,
+      });
       if (!validation.success) {
         await interaction.reply(validation.errorResponse);
         return;
@@ -54,8 +59,11 @@ export async function executePlayerLinkDiscord(interaction: ChatInputCommandInte
         async () => {
           const updatedPlayer = await updatePlayerDiscordId(prisma, playerNonNull.id, discordUserId);
           // updatePlayerDiscordId always returns a player (update operation never returns null)
-          // Type assertion needed because PlayerWithSubscriptions includes null union type
-          const updatedPlayerNonNull = updatedPlayer as unknown as NonNullable<PlayerWithSubscriptions>;
+          // Check that result is not null
+          if (!updatedPlayer) {
+            throw new Error("Failed to update player");
+          }
+          const updatedPlayerNonNull = updatedPlayer;
 
           await interaction.reply(
             buildPlayerUpdateResponse(
@@ -68,5 +76,5 @@ export async function executePlayerLinkDiscord(interaction: ChatInputCommandInte
         "link",
       );
     },
-  );
+  });
 }
