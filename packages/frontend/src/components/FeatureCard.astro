@@ -1,38 +1,25 @@
 ---
+import Card from './Card.astro';
+
 interface Props {
   title: string;
   description: string;
-  icon?: string; // SVG content as string
+  icon?: string; // SVG content as string or astro-icon name
   iconColor?: string;
 }
 
 const { title, description, icon, iconColor = 'bg-indigo-600' } = Astro.props;
+
+// Determine if icon is an astro-icon name or HTML
+const isIconName = icon && !icon.includes('<');
 ---
 
-<div class="relative pl-16">
-  <dt class="text-base/7 font-semibold text-gray-900 dark:text-white">
-    <div class={`absolute left-0 top-0 flex size-10 items-center justify-center rounded-lg ${iconColor}`}>
-      {icon ? (
-        <div set:html={icon} class="size-6 text-white" />
-      ) : (
-        <svg
-          class="size-6 text-white"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke-width="1.5"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-          ></path>
-        </svg>
-      )}
-    </div>
-    {title}
-  </dt>
-  <dd class="mt-2 text-base/7 text-gray-600 dark:text-gray-300">
-    {description}
-  </dd>
-</div>
+<Card
+  title={title}
+  description={description}
+  icon={isIconName ? icon : undefined}
+  iconHtml={!isIconName ? icon : undefined}
+  iconColor={iconColor}
+  asList={true}
+  layout="left"
+/>

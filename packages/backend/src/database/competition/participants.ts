@@ -19,21 +19,23 @@ import { match } from "ts-pattern";
 /**
  * Add a participant to a competition with JOINED or INVITED status
  *
- * @param prisma - Prisma client instance
- * @param competitionId - Competition ID
- * @param playerId - Player ID
- * @param status - JOINED or INVITED
- * @param invitedBy - Discord user ID of inviter (required for INVITED status)
+ * @param options - Function options
+ * @param options.prisma - Prisma client instance
+ * @param options.competitionId - Competition ID
+ * @param options.playerId - Player ID
+ * @param options.status - JOINED or INVITED
+ * @param options.invitedBy - Discord user ID of inviter (required for INVITED status)
  * @returns Created participant record
  * @throws If competition not found, participant limit reached, or duplicate participant
  */
-export async function addParticipant(
-  prisma: PrismaClient,
-  competitionId: CompetitionId,
-  playerId: PlayerId,
-  status: ParticipantStatus,
-  invitedBy?: DiscordAccountId,
-): Promise<CompetitionParticipant> {
+export async function addParticipant(options: {
+  prisma: PrismaClient;
+  competitionId: CompetitionId;
+  playerId: PlayerId;
+  status: ParticipantStatus;
+  invitedBy?: DiscordAccountId;
+}): Promise<CompetitionParticipant> {
+  const { prisma, competitionId, playerId, status, invitedBy } = options;
   const now = new Date();
 
   // Get competition to check limits and status

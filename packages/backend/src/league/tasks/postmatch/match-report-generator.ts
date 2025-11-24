@@ -49,12 +49,24 @@ function formatGameCompletionMessage(playerAliases: string[], queueType: QueueTy
   const queueName = queueTypeToDisplayString(queueType);
 
   if (playerAliases.length === 1) {
-    return `${playerAliases[0]} finished a ${queueName} game`;
+    const player = playerAliases[0];
+    if (player === undefined) {
+      return `Game finished: ${queueName}`;
+    }
+    return `${player} finished a ${queueName} game`;
   } else if (playerAliases.length === 2) {
-    return `${playerAliases[0]} and ${playerAliases[1]} finished a ${queueName} game`;
+    const player1 = playerAliases[0];
+    const player2 = playerAliases[1];
+    if (player1 === undefined || player2 === undefined) {
+      return `Game finished: ${queueName}`;
+    }
+    return `${player1} and ${player2} finished a ${queueName} game`;
   } else if (playerAliases.length >= 3) {
     const allButLast = playerAliases.slice(0, -1).join(", ");
     const last = playerAliases[playerAliases.length - 1];
+    if (last === undefined) {
+      return `Game finished: ${queueName}`;
+    }
     return `${allButLast}, and ${last} finished a ${queueName} game`;
   }
 
@@ -171,7 +183,7 @@ export async function generateMatchReport(
         completedMatch.queueType === "clash" ||
         completedMatch.queueType === "aram clash";
       let reviewText: string | undefined;
-      let reviewImage: Buffer | undefined;
+      let reviewImage: Uint8Array | undefined;
       if (isRankedQueue) {
         try {
           const review = await generateMatchReview(completedMatch, matchId, matchData);

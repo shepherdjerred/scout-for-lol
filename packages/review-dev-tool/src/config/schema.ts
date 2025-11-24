@@ -136,18 +136,14 @@ export const TabConfigSchema = z.object({
 export type TabConfig = z.infer<typeof TabConfigSchema>;
 
 /**
- * Complete review generation configuration
- * @deprecated Use GlobalConfig + TabConfig instead
+ * Complete review generation configuration (merged from GlobalConfig + TabConfig)
  */
-export const ReviewConfigSchema = z.object({
-  api: ApiSettingsSchema,
-  textGeneration: TextGenerationSettingsSchema,
-  imageGeneration: ImageGenerationSettingsSchema,
-  prompts: PromptSettingsSchema,
-});
-
-// eslint-disable-next-line @typescript-eslint/no-deprecated -- type definition needed for backward compatibility
-export type ReviewConfig = z.infer<typeof ReviewConfigSchema>;
+export type ReviewConfig = {
+  api: ApiSettings;
+  textGeneration: TextGenerationSettings;
+  imageGeneration: ImageGenerationSettings;
+  prompts: PromptSettings;
+};
 
 /**
  * Generation result metadata
@@ -209,40 +205,6 @@ export function createDefaultGlobalConfig(): GlobalConfig {
  */
 export function createDefaultTabConfig(): TabConfig {
   return TabConfigSchema.parse({
-    textGeneration: {
-      model: "gpt-5",
-      maxTokens: 25000,
-      temperature: 1.0,
-      topP: 1.0,
-    },
-    imageGeneration: {
-      enabled: true,
-      model: "gemini-3-pro-image-preview",
-      timeoutMs: 60000,
-      artStyle: "random",
-      artTheme: "random",
-      useMatchingPairs: true,
-      matchingPairProbability: 0.7,
-      mashupMode: false,
-      secondArtTheme: "random",
-    },
-    prompts: {
-      basePrompt: "", // Will be loaded from file
-      personalityId: "random",
-    },
-  });
-}
-
-/**
- * Default configuration factory
- * @deprecated Use createDefaultGlobalConfig() + createDefaultTabConfig() instead
- */
-export function createDefaultConfig(): ReviewConfig {
-  // eslint-disable-next-line @typescript-eslint/no-deprecated -- function itself is deprecated for backward compat
-  return ReviewConfigSchema.parse({
-    api: {
-      awsRegion: "us-east-1",
-    },
     textGeneration: {
       model: "gpt-5",
       maxTokens: 25000,

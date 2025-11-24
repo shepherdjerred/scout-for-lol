@@ -2,10 +2,11 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
-import PageHeader from "../components/PageHeader.astro";
+import Header from "../components/Header.astro";
 import InfoBox from "../components/InfoBox.astro";
 import CommandBox from "../components/CommandBox.astro";
 import FAQItem from "../components/FAQItem.astro";
+import Badge from "../components/Badge.astro";
 ---
 
 <Layout>
@@ -15,7 +16,8 @@ import FAQItem from "../components/FAQItem.astro";
     <!-- Main Content -->
     <div class="relative px-6 pt-14 lg:px-8">
       <div class="mx-auto max-w-4xl py-32 sm:py-48 lg:py-56">
-        <PageHeader
+        <Header
+          variant="page"
           title="Documentation"
           subtitle="Complete reference for all Scout commands, features, and configuration options."
         >
@@ -26,7 +28,7 @@ import FAQItem from "../components/FAQItem.astro";
               >New to Scout? Check out the Getting Started guide →</a
             >
           </div>
-        </PageHeader>
+        </Header>
 
         <!-- Table of Contents -->
         <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-12">
@@ -143,10 +145,7 @@ import FAQItem from "../components/FAQItem.astro";
 
                 <div>
                   <h4 class="font-medium text-gray-900 dark:text-white mb-2">
-                    /competition edit <span
-                      class="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-900/30 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-400"
-                      >NEW</span
-                    >
+                    /competition edit <Badge text="NEW" color="blue" size="sm" />
                   </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
                     Edit an existing competition. You can always change title, description, and channel. Other settings
@@ -160,10 +159,7 @@ import FAQItem from "../components/FAQItem.astro";
 
                 <div>
                   <h4 class="font-medium text-gray-900 dark:text-white mb-2">
-                    /competition list <span
-                      class="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-900/30 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-400"
-                      >NEW</span
-                    >
+                    /competition list <Badge text="NEW" color="blue" size="sm" />
                   </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
                     View all competitions in your server, with optional filters.
@@ -219,10 +215,7 @@ import FAQItem from "../components/FAQItem.astro";
             <!-- Admin Commands -->
             <div class="border border-red-300 dark:border-red-700 rounded-lg p-6 bg-red-50 dark:bg-red-900/20">
               <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                /admin <span
-                  class="inline-flex items-center rounded-md bg-red-100 dark:bg-red-900/30 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400"
-                  >NEW</span
-                >
+                /admin <Badge text="NEW" color="red" size="sm" />
               </h3>
               <p class="text-gray-600 dark:text-gray-300 mb-4">
                 Advanced player and account management commands for server administrators.
@@ -235,7 +228,7 @@ import FAQItem from "../components/FAQItem.astro";
                 </p>
               </InfoBox>
 
-              <div class="space-y-4">
+              <div class="space-y-4 mt-4">
                 <div>
                   <h4 class="font-medium text-gray-900 dark:text-white mb-2">/admin player-edit</h4>
                   <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
@@ -334,7 +327,7 @@ import FAQItem from "../components/FAQItem.astro";
           </h2>
 
           <InfoBox variant="info">
-            <p class="mb-4">
+            <p>
               Scout organizes data around <strong>Players</strong>, <strong>Accounts</strong>, and <strong
                 >Subscriptions</strong
               >. Understanding how these work together will help you manage your server's setup effectively.

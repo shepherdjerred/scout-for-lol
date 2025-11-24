@@ -22,6 +22,7 @@ function main() {
 
   const project = new Project({
     tsConfigFilePath: resolve(import.meta.dir, "../tsconfig.json"),
+    skipAddingFilesFromTsConfig: true, // Avoid loading all files to prevent stack overflow
   });
 
   const prismaTypesPath = resolve(import.meta.dir, "../generated/prisma/client/index.d.ts");

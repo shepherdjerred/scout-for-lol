@@ -24,6 +24,18 @@ function logWithTimestamp(message: string): void {
   console.log(`[${new Date().toISOString()}] ${message}`);
 }
 
+// Helper to extract message from unknown error value
+function getErrorMessage(error: unknown): string {
+  if (error === null || error === undefined) {
+    return String(error);
+  }
+  // Check if error has a message property that is a string
+  if (Object.prototype.hasOwnProperty.call(error, "message") && typeof (error as any).message === "string") {
+    return (error as any).message;
+  }
+  return JSON.stringify(error);
+}
+
 // Helper function to measure execution time
 async function withTiming<T>(operation: string, fn: () => Promise<T>): Promise<T> {
   const start = Date.now();
@@ -35,9 +47,8 @@ async function withTiming<T>(operation: string, fn: () => Promise<T>): Promise<T
     return result;
   } catch (error) {
     const duration = Date.now() - start;
-    logWithTimestamp(
-      `❌ ${operation} failed after ${duration.toString()}ms: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    const errorMessage = getErrorMessage(error);
+    logWithTimestamp(`❌ ${operation} failed after ${duration.toString()}ms: ${errorMessage}`);
     throw error;
   }
 }

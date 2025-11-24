@@ -14,18 +14,19 @@ function hashSvg(svg: string): string {
 const RAW_FILE_PATHS = [join(currentDir, "testdata/1.json"), join(currentDir, "testdata/2.json")];
 
 for (const path of RAW_FILE_PATHS) {
-  const fileName = path.split("/").pop();
-  if (!fileName) {
+  const fileNameOrUndefined = path.split("/").pop();
+  if (!fileNameOrUndefined) {
     throw new Error("fileName is undefined");
   }
+  const fileName: string = fileNameOrUndefined;
   const testName = `arena real data renders image for ${fileName}`;
   test(testName, async () => {
     const match = (await Bun.file(path).json()) as unknown;
     const svg = await arenaMatchToSvg(ArenaMatchSchema.parse(match));
     const png = await svgToPng(svg);
     expect(svg.length).toBeGreaterThan(1024); // basic sanity check
-    const fileName = path.split("/").pop()?.replace(".json", ".png") ?? "arena_real.png";
-    await Bun.write(new URL(`__snapshots__/${fileName}`, import.meta.url), png);
+    const outputFileName = path.split("/").pop()?.replace(".json", ".png") ?? "arena_real.png";
+    await Bun.write(new URL(`__snapshots__/${outputFileName}`, import.meta.url), png);
 
     // Hash the SVG for snapshot comparison instead of storing the full content
     const svgHash = hashSvg(svg);

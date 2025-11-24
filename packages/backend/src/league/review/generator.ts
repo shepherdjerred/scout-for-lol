@@ -56,7 +56,7 @@ async function generateReviewImageBackend(
   style: string,
   themes: string[],
   curatedData?: CuratedMatchData,
-): Promise<Buffer | undefined> {
+): Promise<Uint8Array | undefined> {
   const client = getGeminiClient();
   if (!client) {
     console.log("[generateReviewImage] Gemini API key not configured, skipping image generation");
@@ -89,7 +89,12 @@ async function generateReviewImageBackend(
 
     console.log(`[generateReviewImage] Gemini API call completed in ${result.metadata.imageDurationMs.toString()}ms`);
 
-    const buffer = Buffer.from(result.imageData, "base64");
+    // Decode base64 to Uint8Array
+    const binaryString = atob(result.imageData);
+    const buffer = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      buffer[i] = binaryString.charCodeAt(i);
+    }
     console.log("[generateReviewImage] Successfully generated image");
 
     // Save to local filesystem for debugging
@@ -211,7 +216,7 @@ export async function generateMatchReview(
   match: CompletedMatch | ArenaMatch,
   matchId: MatchId,
   rawMatchData?: MatchV5DTOs.MatchDto,
-): Promise<{ text: string; image?: Buffer; metadata?: ReviewMetadata } | undefined> {
+): Promise<{ text: string; image?: Uint8Array; metadata?: ReviewMetadata } | undefined> {
   // Curate the raw match data if provided
   const curatedData = rawMatchData ? await curateMatchData(rawMatchData) : undefined;
 

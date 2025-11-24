@@ -5,12 +5,13 @@ import { fileURLToPath } from "url";
 
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
+import icon from "astro-icon";
 
 const dirname = fileURLToPath(new URL(".", import.meta.url));
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [mdx(), react()],
+  integrations: [mdx(), react(), icon()],
   vite: {
     optimizeDeps: {
       // Don't pre-bundle these native modules - they're only used server-side

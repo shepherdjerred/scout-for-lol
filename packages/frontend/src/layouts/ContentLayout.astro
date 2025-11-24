@@ -4,12 +4,8 @@ import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
 import PageHeader from "../components/PageHeader.astro";
 
-interface Props {
-  title: string;
-  subtitle: string;
-}
-
-const { title, subtitle } = Astro.props;
+const { frontmatter } = Astro.props;
+const { title, subtitle } = frontmatter;
 ---
 
 <Layout>

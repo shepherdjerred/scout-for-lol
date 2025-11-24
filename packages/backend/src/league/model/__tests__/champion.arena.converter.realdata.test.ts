@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
 
-import { dirname, join } from "path";
+import { dirname } from "path";
 import { fileURLToPath } from "url";
 
 const _currentDir = dirname(fileURLToPath(import.meta.url));

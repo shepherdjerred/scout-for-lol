@@ -61,7 +61,7 @@ async function getMatchFromS3(client: S3Client, bucket: string, key: string): Pr
     // 1. We control all data written to S3 (see saveMatchToS3)
     // 2. MatchV5DTOs.MatchDto is an external API type we can't easily create a Zod schema for
     // 3. S3 is a trusted data source we manage
-    // eslint-disable-next-line no-restricted-syntax -- Trusted S3 data source we control
+    // TODO: use Zod schema to parse MatchDto
     const match = JSON.parse(bodyString) as MatchV5DTOs.MatchDto;
 
     return match;

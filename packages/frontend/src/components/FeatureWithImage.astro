@@ -1,4 +1,8 @@
 ---
+import Badge from './Badge.astro';
+import { Icon } from 'astro-icon/components';
+import type { ColorVariant } from '../lib/colors';
+
 interface Props {
   title: string;
   description: string;
@@ -7,7 +11,7 @@ interface Props {
   badge?: {
     text: string;
     icon?: string;
-    color?: string;
+    color?: ColorVariant;
   };
   checklist?: string[];
   imagePosition?: 'left' | 'right';
@@ -22,14 +26,6 @@ const {
   checklist = [],
   imagePosition = 'left'
 } = Astro.props;
-
-const badgeColor = badge?.color || 'purple';
-const badgeColorClasses = {
-  purple: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400',
-  blue: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
-  yellow: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
-  green: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
-};
 ---
 
 <div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 items-center">
@@ -43,11 +39,8 @@ const badgeColorClasses = {
   </div>
   <div class={imagePosition === 'right' ? 'order-1 lg:order-2' : 'order-1 lg:order-1'}>
     {badge && (
-      <div class={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${badgeColorClasses[badgeColor]} mb-4`}>
-        {badge.icon && (
-          <div set:html={badge.icon} class="h-4 w-4 mr-1" />
-        )}
-        {badge.text}
+      <div class="mb-4">
+        <Badge text={badge.text} icon={badge.icon} color={badge.color || 'purple'} />
       </div>
     )}
     <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">{title}</h3>
@@ -58,19 +51,7 @@ const badgeColorClasses = {
       <ul class="space-y-2 text-gray-600 dark:text-gray-300">
         {checklist.map((item) => (
           <li class="flex items-start">
-            <svg
-              class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2 shrink-0"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke-width="1.5"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-              ></path>
-            </svg>
+            <Icon name="heroicons:check-circle" class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2 shrink-0" />
             <span>{item}</span>
           </li>
         ))}

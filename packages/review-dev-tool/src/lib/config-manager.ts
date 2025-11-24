@@ -3,11 +3,25 @@
  */
 import { z } from "zod";
 import type { ReviewConfig, GlobalConfig } from "@scout-for-lol/review-dev-tool/config/schema";
-import { GlobalConfigSchema, ReviewConfigSchema } from "@scout-for-lol/review-dev-tool/config/schema";
+import {
+  GlobalConfigSchema,
+  ApiSettingsSchema,
+  TextGenerationSettingsSchema,
+  ImageGenerationSettingsSchema,
+  PromptSettingsSchema,
+} from "@scout-for-lol/review-dev-tool/config/schema";
 
 const STORAGE_KEY = "review-dev-tool-configs";
 const CURRENT_CONFIG_KEY = "review-dev-tool-current";
 const GLOBAL_CONFIG_KEY = "review-dev-tool-global-config";
+
+// Construct ReviewConfig schema from component schemas for backward compatibility
+const ReviewConfigSchema = z.object({
+  api: ApiSettingsSchema,
+  textGeneration: TextGenerationSettingsSchema,
+  imageGeneration: ImageGenerationSettingsSchema,
+  prompts: PromptSettingsSchema,
+});
 
 /**
  * Saved configuration with name
@@ -47,7 +61,6 @@ export function loadSavedConfigs(): SavedConfig[] {
     // Map and validate each config
     const configs: SavedConfig[] = [];
     for (const item of result.data) {
-      // eslint-disable-next-line @typescript-eslint/no-deprecated -- backward compatibility: validate old format configs
       const configResult = ReviewConfigSchema.safeParse(item.config);
       if (configResult.success) {
         configs.push({
@@ -142,7 +155,6 @@ export function loadCurrentConfig(): ReviewConfig | null {
 
   try {
     const parsed = JSON.parse(stored) as unknown;
-    // eslint-disable-next-line @typescript-eslint/no-deprecated -- backward compatibility: parse old format configs
     const result = ReviewConfigSchema.safeParse(parsed);
     return result.success ? result.data : null;
   } catch {
@@ -169,7 +181,6 @@ export function exportConfigAsJSON(config: ReviewConfig): string {
  */
 export function importConfigFromJSON(json: string): ReviewConfig {
   const parsed = JSON.parse(json) as unknown;
-  // eslint-disable-next-line @typescript-eslint/no-deprecated -- backward compatibility: parse old format configs
   return ReviewConfigSchema.parse(parsed);
 }
 
@@ -188,7 +199,6 @@ export function exportConfigAsURLHash(config: ReviewConfig): string {
 export function importConfigFromURLHash(hash: string): ReviewConfig {
   const json = atob(hash);
   const parsed = JSON.parse(json) as unknown;
-  // eslint-disable-next-line @typescript-eslint/no-deprecated -- backward compatibility: parse old format configs
   return ReviewConfigSchema.parse(parsed);
 }
 
@@ -220,7 +230,6 @@ export function importMultipleConfigs(json: string): SavedConfig[] {
   // Map and validate each config
   const configs: SavedConfig[] = [];
   for (const item of result.data) {
-    // eslint-disable-next-line @typescript-eslint/no-deprecated -- backward compatibility: validate old format configs
     const configResult = ReviewConfigSchema.safeParse(item.config);
     if (!configResult.success) {
       throw new Error(`Invalid configuration format for item ${item.id}`);

@@ -13,11 +13,6 @@ import { logCronTrigger } from "@scout-for-lol/backend/utils/notification-logger
 export function startCronJobs() {
   console.log("⏰ Initializing cron job scheduler");
 
-  // PRE-MATCH CHECK REMOVED
-  // The Spectator API has been deprecated by Riot Games
-  // We can no longer detect games in real-time
-  // Match detection now happens via post-match history polling
-
   // check match history every minute
   console.log("📅 Setting up match history polling job (every minute at :00)");
   new CronJob(

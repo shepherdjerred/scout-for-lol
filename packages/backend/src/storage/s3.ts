@@ -55,7 +55,7 @@ export async function saveMatchToS3(match: MatchV5DTOs.MatchDto): Promise<void> 
     console.log(`[S3Storage] 📝 Upload details:`, {
       bucket,
       key,
-      sizeBytes: Buffer.byteLength(body, "utf8"),
+      sizeBytes: new TextEncoder().encode(body).length,
       participants: match.info.participants.length,
       gameMode: match.info.gameMode,
       gameDuration: match.info.gameDuration,
@@ -100,7 +100,7 @@ export async function saveMatchToS3(match: MatchV5DTOs.MatchDto): Promise<void> 
  */
 export async function saveImageToS3(
   matchId: MatchId,
-  imageBuffer: Buffer,
+  imageBuffer: Uint8Array,
   queueType: string,
 ): Promise<string | undefined> {
   const bucket = configuration.s3BucketName;
@@ -191,7 +191,7 @@ export async function saveSvgToS3(
   try {
     const client = new S3Client();
     const key = generateSvgKey(matchId);
-    const svgBuffer = Buffer.from(svgContent, "utf8");
+    const svgBuffer = new TextEncoder().encode(svgContent);
 
     console.log(`[S3Storage] 📝 SVG upload details:`, {
       bucket,
@@ -253,7 +253,7 @@ function generateAIReviewImageKey(matchId: MatchId): string {
  */
 export async function saveAIReviewImageToS3(
   matchId: MatchId,
-  imageBuffer: Buffer,
+  imageBuffer: Uint8Array,
   queueType: string,
 ): Promise<string | undefined> {
   const bucket = configuration.s3BucketName;

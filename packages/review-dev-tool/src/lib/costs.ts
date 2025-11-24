@@ -3,24 +3,7 @@
  */
 import type { GenerationMetadata, CostBreakdown } from "@scout-for-lol/review-dev-tool/config/schema";
 import { CostBreakdownSchema } from "@scout-for-lol/review-dev-tool/config/schema";
-import {
-  getModelPricing,
-  getImagePricing,
-  calculateCost as calculateCostShared,
-  formatCost as formatCostShared,
-} from "@scout-for-lol/data";
-
-/**
- * Get pricing for a specific model
- * @deprecated Use getModelPricing from @scout-for-lol/data instead
- */
-export { getModelPricing };
-
-/**
- * Get pricing for image generation
- * @deprecated Use getImagePricing from @scout-for-lol/data instead
- */
-export { getImagePricing };
+import { calculateCost as calculateCostShared, formatCost as formatCostShared } from "@scout-for-lol/data";
 
 /**
  * Calculate cost breakdown from generation metadata

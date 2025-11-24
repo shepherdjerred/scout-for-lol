@@ -87,9 +87,7 @@ async function migrateFromLocalStorage(): Promise<void> {
       const historyEntry: HistoryEntry = {
         id: entry.id,
         timestamp: new Date(entry.timestamp),
-        // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, types require widening for compatibility
         result: resultValidation.data as unknown as GenerationResult,
-        // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, types require widening for compatibility
         configSnapshot: configValidation.data as unknown as HistoryEntry["configSnapshot"],
         status: entry.status,
         ...(entry.rating !== undefined && { rating: entry.rating }),
@@ -134,9 +132,7 @@ export async function loadHistory(): Promise<HistoryEntry[]> {
       const historyEntry: HistoryEntry = {
         id: entry.id,
         timestamp: new Date(entry.timestamp),
-        // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, types require widening for compatibility
         result: resultValidation.data as unknown as GenerationResult,
-        // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, types require widening for compatibility
         configSnapshot: configValidation.data as unknown as HistoryEntry["configSnapshot"],
         status: entry.status,
         ...(entry.rating !== undefined && { rating: entry.rating }),
@@ -256,9 +252,7 @@ export async function getHistoryEntry(id: string): Promise<HistoryEntry | undefi
     const result: HistoryEntry = {
       id: entry.id,
       timestamp: new Date(entry.timestamp),
-      // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, types require widening for compatibility
       result: resultValidation.data as unknown as GenerationResult,
-      // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, types require widening for compatibility
       configSnapshot: configValidation.data as unknown as HistoryEntry["configSnapshot"],
       status: entry.status,
       ...(entry.rating !== undefined && { rating: entry.rating }),

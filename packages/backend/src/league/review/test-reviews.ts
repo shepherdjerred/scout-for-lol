@@ -252,7 +252,7 @@ async function fetchMatchFromS3(key: string): Promise<MatchV5DTOs.MatchDto | nul
     }
 
     const bodyString = await response.Body.transformToString();
-    // eslint-disable-next-line no-restricted-syntax -- Trusted S3 data
+    // TODO: use Zod schema to parse MatchDto
     return JSON.parse(bodyString) as MatchV5DTOs.MatchDto;
   } catch (error) {
     console.warn(`Failed to fetch match ${key}:`, error);

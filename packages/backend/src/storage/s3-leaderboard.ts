@@ -64,7 +64,7 @@ export async function saveCachedLeaderboard(leaderboard: CachedLeaderboard): Pro
       bucket,
       currentKey,
       snapshotKey,
-      sizeBytes: Buffer.byteLength(body, "utf8"),
+      sizeBytes: new TextEncoder().encode(body).length,
       entryCount: leaderboard.entries.length,
       version: leaderboard.version,
       calculatedAt: leaderboard.calculatedAt,

@@ -1,23 +1,20 @@
 ---
+import Card from './Card.astro';
+
 interface Props {
   number: number;
   title: string;
-  description: string;
 }
 
-const { number, title, description } = Astro.props;
+const { number, title } = Astro.props;
 ---
 
-<div class="flex flex-col">
-  <dt class="flex items-center gap-x-3 text-base/7 font-semibold text-gray-900 dark:text-white">
-    <div class="h-10 w-10 flex items-center justify-center rounded-lg bg-indigo-600 text-white font-semibold">
+<section class="mb-16">
+  <div class="flex items-center mb-6">
+    <div class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xl font-bold mr-4">
       {number}
     </div>
-    {title}
-  </dt>
-  <dd class="mt-4 flex flex-auto flex-col text-base/7 text-gray-600 dark:text-gray-300">
-    <p class="flex-auto">
-      {description}
-    </p>
-  </dd>
-</div>
+    <h2 class="text-3xl font-bold text-gray-900 dark:text-white">{title}</h2>
+  </div>
+  <slot />
+</section>

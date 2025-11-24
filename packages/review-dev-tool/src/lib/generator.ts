@@ -88,8 +88,7 @@ export async function generateMatchReview(
       basePromptTemplate,
       laneContext: laneContextInfo,
       playerMetadata: playerMeta,
-      // eslint-disable-next-line no-restricted-syntax -- OpenAI version mismatch between packages, safe to cast
-      openaiClient: openaiClient as never,
+      openaiClient,
       model: config.textGeneration.model,
       maxTokens: config.textGeneration.maxTokens,
       temperature: config.textGeneration.temperature,
@@ -181,7 +180,6 @@ export async function generateMatchReview(
       metadata,
     };
   } catch (error) {
-    // eslint-disable-next-line no-restricted-syntax -- Error handling requires instanceof check
     const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       text: "",

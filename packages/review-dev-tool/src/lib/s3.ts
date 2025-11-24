@@ -3,6 +3,7 @@
  */
 import { S3Client, ListObjectsV2Command, GetObjectCommand, type ListObjectsV2CommandOutput } from "@aws-sdk/client-s3";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
+import { MatchDtoSchema } from "./schemas/match-dto.schema.js";
 import type { ArenaMatch, CompletedMatch, Champion } from "@scout-for-lol/data";
 import { parseQueueType, parseLane, getLaneOpponent, parseTeam, invertTeam } from "@scout-for-lol/data";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
@@ -218,7 +219,7 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
     if (cachedResult.success) {
       // Data structure is valid. The passthrough schema validated the required fields
       // and preserved all other fields. Cast required because MatchDto is complex external type.
-      // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, external type requires casting
+      // TODO: use Zod schema to parse MatchDto
       return cachedResult.data as unknown as MatchV5DTOs.MatchDto;
     }
 
@@ -258,7 +259,7 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
     await setCachedData("r2-get", cacheParams, rawDataResult, 7 * 24 * 60 * 60 * 1000);
 
     // Return as MatchDto since validation passed. Cast required because MatchDto is complex external type.
-    // eslint-disable-next-line no-restricted-syntax -- Zod validation complete, external type requires casting
+    // TODO: use Zod schema to parse MatchDto
     return rawDataResult as unknown as MatchV5DTOs.MatchDto;
   } catch (error) {
     console.error(`Failed to fetch match ${key}:`, error);
@@ -409,22 +410,20 @@ export function convertMatchDtoToInternalFormat(
   // Update team rosters for non-arena matches (use teams we already built)
   if (queueType !== "arena") {
     // Cast required: example match structure updated with real data, types don't match exactly
-    // eslint-disable-next-line no-restricted-syntax -- Real data validated, structural update requires casting
     return {
       ...baseMatch,
       players: updatedPlayers,
       durationInSeconds: matchDto.info.gameDuration,
       teams,
-    } as unknown as CompletedMatch;
+    } satisfies CompletedMatch;
   }
 
   // For arena matches, no teams roster. Cast required: example match structure updated with real data
-  // eslint-disable-next-line no-restricted-syntax -- Real data validated, structural update requires casting
   return {
     ...baseMatch,
     players: updatedPlayers,
     durationInSeconds: matchDto.info.gameDuration,
-  } as unknown as ArenaMatch;
+  } satisfies ArenaMatch;
 }
 
 /**

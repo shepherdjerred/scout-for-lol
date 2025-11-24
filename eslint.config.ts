@@ -13,9 +13,11 @@ import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import jsxA11y from "eslint-plugin-jsx-a11y";
 import astroPlugin from "eslint-plugin-astro";
-// Tailwind plugin currently disabled due to incompatibility with Tailwind CSS v4
-// // eslint-disable-next-line @typescript-eslint/ban-ts-comment -- No type definitions available
-// // @ts-ignore
+// MDX linting disabled - parser doesn't support type-aware rules
+// import mdx from "eslint-plugin-mdx";
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access -- Parser from plugin
+const astroParser = astroPlugin.configs["flat/base"]?.[1]?.languageOptions?.["parser"];
+// Tailwind linting disabled - plugin incompatible with Tailwind CSS v4
 // import tailwindcss from "eslint-plugin-tailwindcss";
 
 /**
@@ -35,7 +37,6 @@ const customRulesPlugin = {
   },
 };
 
-// eslint-disable-next-line @typescript-eslint/no-deprecated -- config() is the correct API for typescript-eslint v8+
 export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.strictTypeChecked,
@@ -50,6 +51,12 @@ export default tseslint.config(
       "**/node_modules/**/*",
       "**/.astro/**/*",
       ".dagger/sdk/**/*",
+      "eslint-rules/**/*",
+      "eslint.config.ts",
+      "**/*.md",
+      "**/*.mdx",
+      "**/*.astro",
+      "**/*.mjs",
     ],
   },
   {
@@ -64,7 +71,6 @@ export default tseslint.config(
   // ESLint disable directive rules
   {
     plugins: {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- ESLint plugin type compatibility
       "eslint-comments": eslintComments,
     },
     rules: {
@@ -198,9 +204,9 @@ export default tseslint.config(
           message: "Prefer Zod schema validation over Array.isArray(). Use z.array() instead.",
         },
         {
-          selector: "BinaryExpression[operator='instanceof']",
+          selector: "BinaryExpression[operator='instanceof']:not([right.name='Error']):not([right.name=/.*Error$/])",
           message:
-            "Prefer Zod schema validation over instanceof operator. Use appropriate z.instanceof() or custom Zod schemas instead.",
+            "Prefer Zod schema validation over instanceof operator. Use appropriate z.instanceof() or custom Zod schemas instead. Exception: 'instanceof Error' is allowed for error handling.",
         },
         {
           selector: "CallExpression[callee.object.name='Number'][callee.property.name='isInteger']",
@@ -411,9 +417,7 @@ export default tseslint.config(
   {
     files: ["**/*.tsx", "**/*.jsx"],
     plugins: {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- ESLint plugin type compatibility
       react,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- ESLint plugin type compatibility
       "react-hooks": reactHooks,
     },
     settings: {
@@ -454,7 +458,6 @@ export default tseslint.config(
   {
     files: ["**/*.tsx", "**/*.jsx", "**/*.astro"],
     plugins: {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- ESLint plugin type compatibility
       "jsx-a11y": jsxA11y,
     },
     rules: {
@@ -506,31 +509,23 @@ export default tseslint.config(
       "jsx-a11y/tabindex-no-positive": "error",
     },
   },
-  // Astro-specific rules
+  // Astro-specific rules with type-aware linting enabled
   {
     files: ["**/*.astro"],
     plugins: {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- ESLint plugin type compatibility
       astro: astroPlugin,
     },
-    // Astro parser doesn't support type-aware linting, so we need to disable those rules
+    languageOptions: {
+      // Use astro-eslint-parser from the plugin's flat config
+      parser: astroParser,
+      parserOptions: {
+        parser: "@typescript-eslint/parser",
+        extraFileExtensions: [".astro"],
+        // projectService is already enabled globally, so we don't need to set project here
+      },
+    },
     rules: {
-      // Disable TypeScript type-checking rules for Astro files
-      "@typescript-eslint/await-thenable": "off",
-      "@typescript-eslint/no-floating-promises": "off",
-      "@typescript-eslint/no-misused-promises": "off",
-      "@typescript-eslint/require-await": "off",
-      "@typescript-eslint/no-unnecessary-type-assertion": "off",
-      "@typescript-eslint/no-unsafe-argument": "off",
-      "@typescript-eslint/no-unsafe-assignment": "off",
-      "@typescript-eslint/no-unsafe-call": "off",
-      "@typescript-eslint/no-unsafe-member-access": "off",
-      "@typescript-eslint/no-unsafe-return": "off",
-      "@typescript-eslint/restrict-template-expressions": "off",
-      "@typescript-eslint/restrict-plus-operands": "off",
-      "@typescript-eslint/unbound-method": "off",
-
-      // Astro best practices
+      // Astro best practices rules
       "astro/no-conflict-set-directives": "error",
       "astro/no-deprecated-astro-canonicalurl": "error",
       "astro/no-deprecated-astro-fetchcontent": "error",
@@ -540,21 +535,8 @@ export default tseslint.config(
       "astro/valid-compile": "error",
     },
   },
-  // Tailwind CSS class validation and ordering
-  // Note: Disabled due to eslint-plugin-tailwindcss incompatibility with Tailwind CSS v4
-  // The plugin attempts to import 'tailwindcss/resolveConfig' which is not exported in v4
-  // Re-enable once plugin adds v4 support: https://github.com/francoismassart/eslint-plugin-tailwindcss/issues
-  // {
-  //   files: ["packages/frontend/**/*.{tsx,jsx,astro}", "packages/report-ui/**/*.{tsx,jsx}"],
-  //   plugins: {
-  //     tailwindcss,
-  //   },
-  //   rules: {
-  //     "tailwindcss/classnames-order": "warn",
-  //     "tailwindcss/no-contradicting-classname": "error",
-  //     "tailwindcss/no-custom-classname": "off",
-  //   },
-  // },
+  // MDX linting disabled - parser doesn't support type-aware rules forwarding
+  // Tailwind linting disabled - plugin incompatible with Tailwind v4 (hardcoded resolveConfig import)
   // Variable and identifier naming conventions
   {
     rules: {
