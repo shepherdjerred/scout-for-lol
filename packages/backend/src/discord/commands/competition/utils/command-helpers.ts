@@ -1,5 +1,4 @@
 import { type ChatInputCommandInteraction } from "discord.js";
-import { z } from "zod";
 import {
   CompetitionIdSchema,
   DiscordGuildIdSchema,
@@ -48,7 +47,7 @@ export async function fetchLinkedPlayerForUser(
   userId: string | DiscordAccountId,
   logContext: string,
 ): Promise<Awaited<ReturnType<typeof prisma.player.findFirst>> | null> {
-  const parsedUserId = typeof userId === 'string' ? DiscordAccountIdSchema.parse(userId) : userId;
+  const parsedUserId = typeof userId === "string" ? DiscordAccountIdSchema.parse(userId) : userId;
 
   let player;
   try {

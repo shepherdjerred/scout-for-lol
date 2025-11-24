@@ -150,8 +150,8 @@ export async function createSnapshot(
 export async function getSnapshot(
   prisma: PrismaClient,
   params: {
-    competitionId: number;
-    playerId: number;
+    competitionId: CompetitionId;
+    playerId: PlayerId;
     snapshotType: SnapshotType;
     criteria: CompetitionCriteria;
   },

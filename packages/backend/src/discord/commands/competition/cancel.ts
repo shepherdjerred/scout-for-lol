@@ -1,5 +1,4 @@
 import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
-import { z } from "zod";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { cancelCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
@@ -40,17 +39,14 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   const isOwner = competition.ownerId === userId;
 
   // Check if user is admin (only works in guild context)
-  // Validate member permissions structure with Zod
-  const PermissionsSchema = z.object({
-    has: z.function().returns(z.boolean()),
-  });
-
-  const MemberWithPermissionsSchema = z.object({
-    permissions: PermissionsSchema.nullable(),
-  });
-
-  const memberResult = MemberWithPermissionsSchema.safeParse(member);
-  const isAdmin = memberResult.success && (memberResult.data.permissions?.has(PermissionFlagsBits.Administrator) ?? false);
+  // Type guard for member permissions (Discord.js uses index signature)
+  const isAdmin =
+    member &&
+    typeof member === "object" &&
+    "permissions" in member &&
+    member.permissions &&
+    typeof member.permissions.has === "function" &&
+    member.permissions.has(PermissionFlagsBits.Administrator);
 
   if (!isOwner && !isAdmin) {
     await interaction.reply({

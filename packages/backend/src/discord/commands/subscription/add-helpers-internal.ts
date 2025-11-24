@@ -71,7 +71,7 @@ export async function createSubscriptionRecords(params: {
     }
 > {
   const { args, existingPlayer, puuid, userId, now } = params;
-  const { channel, region, riotId, user, alias, guildId } = args;
+  const { channel, region, user, alias, guildId } = args;
 
   try {
     const dbStartTime = Date.now();
@@ -261,9 +261,7 @@ export function handleWelcomeMatch(params: {
         region: RegionSchema.parse(region),
       },
     },
-    discordAccount: {
-      id: user ?? undefined,
-    },
+    ...(user && { discordAccount: { id: DiscordAccountIdSchema.parse(user) } }),
   };
 
   // Fire off async task to send welcome match

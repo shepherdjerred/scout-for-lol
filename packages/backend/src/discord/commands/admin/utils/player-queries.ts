@@ -71,7 +71,13 @@ export async function findPlayerByAliasWithAccounts(
   interaction?: ChatInputCommandInteraction,
 ) {
   return findPlayerByAliasGeneric(
-    buildFindPlayerOptions({ prisma, serverId, alias, include: { accounts: true }, ...(interaction && { interaction }) }),
+    buildFindPlayerOptions({
+      prisma,
+      serverId,
+      alias,
+      include: { accounts: true },
+      ...(interaction && { interaction }),
+    }),
   );
 }
 

@@ -571,10 +571,12 @@ describe("createSnapshot - Different criteria types", () => {
 
       const snapshot = await getSnapshot(
         prisma,
-        CompetitionIdSchema.parse(competitionId),
-        PlayerIdSchema.parse(playerId),
-        "START",
-        criteria,
+        {
+          competitionId: CompetitionIdSchema.parse(competitionId),
+          playerId: PlayerIdSchema.parse(playerId),
+          snapshotType: "START",
+          criteria,
+        },
       );
       if (snapshot) {
         // Should have wins structure
