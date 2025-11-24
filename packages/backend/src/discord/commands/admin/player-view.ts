@@ -4,6 +4,7 @@ import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { validateCommandArgs, executeWithTiming } from "./utils/validation.js";
 import { findPlayerByAliasWithCompetitions } from "./utils/player-queries.js";
+import type { PlayerWithCompetitions } from "./utils/player-queries.js";
 import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
 
 const ArgsSchema = z.object({
@@ -11,54 +12,13 @@ const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executePlayerView(interaction: ChatInputCommandInteraction) {
-  const validation = await validateCommandArgs(
-    interaction,
-    ArgsSchema,
-    (i) => ({
-      alias: i.options.getString("alias"),
-      guildId: i.guildId,
-    }),
-    "player-view",
-  );
-
-  if (!validation.success) {
-    return;
-  }
-
-  const { data: args, username } = validation;
-  const { alias, guildId } = args;
-
-  await executeWithTiming("player-view", username, async () => {
-    // Fetch player with all related data
-    const player = await findPlayerByAliasWithCompetitions(prisma, guildId, alias, interaction);
-    if (!player) {
-      return;
-    }
-
-    console.log(`✅ Player found: ${player.alias} (ID: ${player.id.toString()})`);
-
-    // Get rate limiting info for the server
-    const accountLimitRaw = getLimit("accounts", { server: guildId });
-    const accountLimit = accountLimitRaw === "unlimited" ? null : accountLimitRaw;
-    const subscriptionLimitRaw = getLimit("player_subscriptions", { server: guildId });
-    const subscriptionLimit = subscriptionLimitRaw === "unlimited" ? null : subscriptionLimitRaw;
-
-  // Count total accounts and subscriptions in server for rate limit context
-  const totalServerAccounts = await prisma.account.count({
-    where: { serverId: guildId },
-  });
-
-  const totalServerPlayers = await prisma.player.count({
-    where: {
-      serverId: guildId,
-      subscriptions: {
-        some: {},
-      },
-    },
-  });
-
-  // Build the response
+function buildPlayerInfoSections(
+  player: NonNullable<PlayerWithCompetitions>,
+  accountLimit: number | null,
+  subscriptionLimit: number | null,
+  totalServerAccounts: number,
+  totalServerPlayers: number,
+): string[] {
   const sections: string[] = [];
 
   // Player Info Section
@@ -147,6 +107,66 @@ export async function executePlayerView(interaction: ChatInputCommandInteraction
   sections.push(`**Created:** <t:${Math.floor(player.createdTime.getTime() / 1000).toString()}:F>`);
   sections.push(`**Updated:** <t:${Math.floor(player.updatedTime.getTime() / 1000).toString()}:F>`);
   sections.push(`**Creator Discord ID:** ${player.creatorDiscordId}`);
+
+  return sections;
+}
+
+export async function executePlayerView(interaction: ChatInputCommandInteraction) {
+  const validation = await validateCommandArgs(
+    interaction,
+    ArgsSchema,
+    (i) => ({
+      alias: i.options.getString("alias"),
+      guildId: i.guildId,
+    }),
+    "player-view",
+  );
+
+  if (!validation.success) {
+    return;
+  }
+
+  const { data: args, username } = validation;
+  const { alias, guildId } = args;
+
+  await executeWithTiming("player-view", username, async () => {
+    // Fetch player with all related data
+    const playerOrNull = await findPlayerByAliasWithCompetitions(prisma, guildId, alias, interaction);
+    if (!playerOrNull) {
+      return;
+    }
+
+    const player = playerOrNull;
+    console.log(`✅ Player found: ${player.alias} (ID: ${player.id.toString()})`);
+
+    // Get rate limiting info for the server
+    const accountLimitRaw = getLimit("accounts", { server: guildId });
+    const accountLimit = accountLimitRaw === "unlimited" ? null : accountLimitRaw;
+    const subscriptionLimitRaw = getLimit("player_subscriptions", { server: guildId });
+    const subscriptionLimit = subscriptionLimitRaw === "unlimited" ? null : subscriptionLimitRaw;
+
+    // Count total accounts and subscriptions in server for rate limit context
+    const totalServerAccounts = await prisma.account.count({
+      where: { serverId: guildId },
+    });
+
+    const totalServerPlayers = await prisma.player.count({
+      where: {
+        serverId: guildId,
+        subscriptions: {
+          some: {},
+        },
+      },
+    });
+
+    // Build the response sections
+    const sections = buildPlayerInfoSections(
+      player,
+      accountLimit,
+      subscriptionLimit,
+      totalServerAccounts,
+      totalServerPlayers,
+    );
 
     const content = sections.join("\n");
 

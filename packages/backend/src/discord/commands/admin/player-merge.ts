@@ -2,8 +2,8 @@ import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { fromError } from "zod-validation-error";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { validateCommandArgs, executeWithTiming } from "./utils/validation.js";
+import { buildDatabaseError } from "./utils/responses.js";
 
 const ArgsSchema = z.object({
   sourceAlias: z.string().min(1).max(100),
@@ -12,92 +12,82 @@ const ArgsSchema = z.object({
 });
 
 export async function executePlayerMerge(interaction: ChatInputCommandInteraction) {
-  const startTime = Date.now();
-  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
-  const username = interaction.user.username;
+  const validation = await validateCommandArgs(
+    interaction,
+    ArgsSchema,
+    (i) => ({
+      sourceAlias: i.options.getString("source-alias"),
+      targetAlias: i.options.getString("target-alias"),
+      guildId: i.guildId,
+    }),
+    "player-merge",
+  );
 
-  console.log(`🔀 Starting player merge for user ${username} (${userId})`);
-
-  let args: z.infer<typeof ArgsSchema>;
-
-  try {
-    args = ArgsSchema.parse({
-      sourceAlias: interaction.options.getString("source-alias"),
-      targetAlias: interaction.options.getString("target-alias"),
-      guildId: interaction.guildId,
-    });
-
-    console.log(`✅ Command arguments validated successfully`);
-    console.log(`📋 Args: sourceAlias="${args.sourceAlias}", targetAlias="${args.targetAlias}"`);
-  } catch (error) {
-    console.error(`❌ Invalid command arguments from ${username}:`, error);
-    const validationError = fromError(error);
-    await interaction.reply({
-      content: validationError.toString(),
-      ephemeral: true,
-    });
+  if (!validation.success) {
     return;
   }
 
+  const { data: args, userId, username } = validation;
   const { sourceAlias, targetAlias, guildId } = args;
 
-  // Check if trying to merge with self
-  if (sourceAlias === targetAlias) {
-    console.log(`❌ Cannot merge player with itself`);
-    await interaction.reply({
-      content: `❌ **Invalid merge**\n\nCannot merge a player with itself.`,
-      ephemeral: true,
-    });
-    return;
-  }
+  await executeWithTiming("player-merge", username, async () => {
+    // Check if trying to merge with self
+    if (sourceAlias === targetAlias) {
+      console.log(`❌ Cannot merge player with itself`);
+      await interaction.reply({
+        content: `❌ **Invalid merge**\n\nCannot merge a player with itself.`,
+        ephemeral: true,
+      });
+      return;
+    }
 
-  // Find source player
-  const sourcePlayer = await prisma.player.findUnique({
-    where: {
-      serverId_alias: {
-        serverId: guildId,
-        alias: sourceAlias,
+    // Find source player
+    const sourcePlayer = await prisma.player.findUnique({
+      where: {
+        serverId_alias: {
+          serverId: guildId,
+          alias: sourceAlias,
+        },
       },
-    },
-    include: {
-      accounts: true,
-      subscriptions: true,
-      competitionParticipants: true,
-    },
-  });
-
-  if (!sourcePlayer) {
-    console.log(`❌ Source player not found: "${sourceAlias}"`);
-    await interaction.reply({
-      content: `❌ **Source player not found**\n\nNo player with alias "${sourceAlias}" exists in this server.`,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  // Find target player
-  const targetPlayer = await prisma.player.findUnique({
-    where: {
-      serverId_alias: {
-        serverId: guildId,
-        alias: targetAlias,
+      include: {
+        accounts: true,
+        subscriptions: true,
+        competitionParticipants: true,
       },
-    },
-    include: {
-      accounts: true,
-      subscriptions: true,
-      competitionParticipants: true,
-    },
-  });
-
-  if (!targetPlayer) {
-    console.log(`❌ Target player not found: "${targetAlias}"`);
-    await interaction.reply({
-      content: `❌ **Target player not found**\n\nNo player with alias "${targetAlias}" exists in this server.`,
-      ephemeral: true,
     });
-    return;
-  }
+
+    if (!sourcePlayer) {
+      console.log(`❌ Source player not found: "${sourceAlias}"`);
+      await interaction.reply({
+        content: `❌ **Source player not found**\n\nNo player with alias "${sourceAlias}" exists in this server.`,
+        ephemeral: true,
+      });
+      return;
+    }
+
+    // Find target player
+    const targetPlayer = await prisma.player.findUnique({
+      where: {
+        serverId_alias: {
+          serverId: guildId,
+          alias: targetAlias,
+        },
+      },
+      include: {
+        accounts: true,
+        subscriptions: true,
+        competitionParticipants: true,
+      },
+    });
+
+    if (!targetPlayer) {
+      console.log(`❌ Target player not found: "${targetAlias}"`);
+      await interaction.reply({
+        content: `❌ **Target player not found**\n\nNo player with alias "${targetAlias}" exists in this server.`,
+        ephemeral: true,
+      });
+      return;
+    }
 
   console.log(
     `💾 Merging player "${sourceAlias}" (${sourcePlayer.accounts.length.toString()} accounts, ${sourcePlayer.subscriptions.length.toString()} subscriptions) into "${targetAlias}" (${targetPlayer.accounts.length.toString()} accounts, ${targetPlayer.subscriptions.length.toString()} subscriptions)`,

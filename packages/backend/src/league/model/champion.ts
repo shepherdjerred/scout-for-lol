@@ -2,9 +2,6 @@ import { type ArenaChampion, type Augment, type ParticipantDto } from "@scout-fo
 import { mapAugmentIdsToUnion } from "@scout-for-lol/backend/league/arena/augment";
 import { participantToChampion } from "@scout-for-lol/report";
 
-// Re-export for convenience
-export { participantToChampion };
-
 // Arena champion conversion with arena-specific fields
 export async function participantToArenaChampion(dto: ParticipantDto): Promise<ArenaChampion> {
   const baseChampion = participantToChampion(dto);

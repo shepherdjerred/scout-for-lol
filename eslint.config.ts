@@ -5,6 +5,10 @@ import { zodSchemaNaming } from "./eslint-rules/zod-schema-naming.ts";
 import { noRedundantZodParse } from "./eslint-rules/no-redundant-zod-parse.ts";
 import { satoriBestPractices } from "./eslint-rules/satori-best-practices.ts";
 import { prismaClientDisconnect } from "./eslint-rules/prisma-client-disconnect.ts";
+import { noTypeAssertions } from "./eslint-rules/no-type-assertions.ts";
+import { preferZodValidation } from "./eslint-rules/prefer-zod-validation.ts";
+import { preferBunApis } from "./eslint-rules/prefer-bun-apis.ts";
+import { noReExports } from "./eslint-rules/no-re-exports.ts";
 import importPlugin from "eslint-plugin-import";
 import noRelativeImportPaths from "eslint-plugin-no-relative-import-paths";
 import * as regexpPlugin from "eslint-plugin-regexp";
@@ -32,6 +36,10 @@ const customRulesPlugin = {
     "no-redundant-zod-parse": noRedundantZodParse,
     "satori-best-practices": satoriBestPractices,
     "prisma-client-disconnect": prismaClientDisconnect,
+    "no-type-assertions": noTypeAssertions,
+    "prefer-zod-validation": preferZodValidation,
+    "prefer-bun-apis": preferBunApis,
+    "no-re-exports": noReExports,
   },
 };
 
@@ -206,93 +214,18 @@ export default tseslint.config(
           ],
         },
       ],
-      "no-restricted-syntax": [
-        "error",
-        // Zod validation over built-in type checks
-        {
-          selector: "UnaryExpression[operator='typeof']:not([argument.name='Bun'])",
-          message:
-            "[Zod Validation] Prefer Zod schema validation over typeof operator. Use z.string(), z.number(), etc. instead.",
-        },
-        {
-          selector: "CallExpression[callee.object.name='Array'][callee.property.name='isArray']",
-          message: "[Zod Validation] Prefer Zod schema validation over Array.isArray(). Use z.array() instead.",
-        },
-        {
-          selector: "BinaryExpression[operator='instanceof']:not([right.name='Error']):not([right.name=/.*Error$/])",
-          message:
-            "[Zod Validation] Prefer Zod schema validation over instanceof operator. Use appropriate z.instanceof() or custom Zod schemas instead. Exception: 'instanceof Error' is allowed for error handling.",
-        },
-        {
-          selector: "CallExpression[callee.object.name='Number'][callee.property.name='isInteger']",
-          message:
-            "[Zod Validation] Prefer Zod schema validation over Number.isInteger(). Use z.number().int() instead.",
-        },
-        {
-          selector: "CallExpression[callee.object.name='Number'][callee.property.name='isNaN']",
-          message:
-            "[Zod Validation] Prefer Zod schema validation over Number.isNaN(). Use z.number() with proper error handling instead.",
-        },
-        {
-          selector: "CallExpression[callee.object.name='Number'][callee.property.name='isFinite']",
-          message:
-            "[Zod Validation] Prefer Zod schema validation over Number.isFinite(). Use z.number().finite() instead.",
-        },
-        {
-          selector: "TSTypePredicate",
-          message:
-            "[Zod Validation] Prefer Zod schema validation over type guard functions. Use z.schema.safeParse() instead of custom type guards.",
-        },
-        // Type assertion restrictions
-        {
-          selector: "TSTypeAssertion:not([typeAnnotation.type='TSUnknownKeyword'])",
-          message:
-            "[Type Assertion] Type assertions are not allowed except for casting to 'unknown'. Use 'value as unknown' if you need to cast to unknown, otherwise use Zod schema validation.",
-        },
-        {
-          selector:
-            "TSAsExpression:not([typeAnnotation.type='TSUnknownKeyword']):not([typeAnnotation.type='TSTypeReference'][typeAnnotation.typeName.name='const'])",
-          message:
-            "[Type Assertion] Type assertions are not allowed except for casting to 'unknown' or 'as const'. Use 'value as unknown' to widen to unknown, 'value as const' for const assertions, or Zod schema validation to safely narrow types.",
-        },
-        // Bun-specific restrictions: prefer Bun APIs over Node.js globals
-        {
-          selector: "MemberExpression[object.name='process'][property.name='env']",
-          message:
-            "[Bun API] Use Bun.env instead of process.env to access environment variables. Bun.env is a more modern, typed alternative. See https://bun.sh/docs/runtime/env",
-        },
-        {
-          selector: "Identifier[name='__dirname']",
-          message:
-            "[Bun API] Use import.meta.dir instead of __dirname. import.meta.dir is the ESM-native way to get the directory path. See https://bun.sh/docs/api/import-meta",
-        },
-        {
-          selector: "Identifier[name='__filename']",
-          message:
-            "[Bun API] Use import.meta.path instead of __filename. import.meta.path is the ESM-native way to get the file path. See https://bun.sh/docs/api/import-meta",
-        },
-        {
-          selector: "CallExpression[callee.name='require']",
-          message:
-            "[Bun API] Use ESM import statements instead of require(). Bun fully supports ESM and it's the modern standard. Example: import { foo } from 'module'",
-        },
-        {
-          selector: "Identifier[name='Buffer']:not(VariableDeclarator > Identifier[name='Buffer'])",
-          message:
-            "[Bun API] Prefer Uint8Array or Bun's binary data APIs over Buffer. For file operations, use Bun.file() which handles binary data natively. See https://bun.sh/docs/api/binary-data",
-        },
-        // Re-export restrictions
-        {
-          selector: "ExportAllDeclaration",
-          message:
-            "[Re-export] Re-exports (export * from) are not allowed. Only export declarations from the same file.",
-        },
-        {
-          selector: "ExportNamedDeclaration[source]",
-          message:
-            "[Re-export] Re-exports (export { ... } from) are not allowed. Only export declarations from the same file.",
-        },
-      ],
+    },
+  },
+  // Custom rules for type safety and best practices
+  {
+    plugins: {
+      "custom-rules": customRulesPlugin,
+    },
+    rules: {
+      "custom-rules/no-type-assertions": "error",
+      "custom-rules/prefer-zod-validation": "error",
+      "custom-rules/prefer-bun-apis": "error",
+      "custom-rules/no-re-exports": "error",
     },
   },
   // Dagger index.ts - Dagger module API can have many parameters for external interface
@@ -336,89 +269,14 @@ export default tseslint.config(
   {
     files: ["**/discord/**/*.ts", "**/league/discord/**/*.ts", "**/league/tasks/competition/**/*.ts"],
     ignores: ["**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts"],
+    plugins: {
+      "custom-rules": customRulesPlugin,
+    },
     rules: {
-      "no-restricted-syntax": [
-        "error",
-        // Zod validation over built-in type checks (but allow instanceof for Discord.js)
-        {
-          selector: "UnaryExpression[operator='typeof']:not([argument.name='Bun'])",
-          message:
-            "[Zod Validation] Prefer Zod schema validation over typeof operator. Use z.string(), z.number(), etc. instead.",
-        },
-        {
-          selector: "CallExpression[callee.object.name='Array'][callee.property.name='isArray']",
-          message: "[Zod Validation] Prefer Zod schema validation over Array.isArray(). Use z.array() instead.",
-        },
-        {
-          selector: "CallExpression[callee.object.name='Number'][callee.property.name='isInteger']",
-          message:
-            "[Zod Validation] Prefer Zod schema validation over Number.isInteger(). Use z.number().int() instead.",
-        },
-        {
-          selector: "CallExpression[callee.object.name='Number'][callee.property.name='isNaN']",
-          message:
-            "[Zod Validation] Prefer Zod schema validation over Number.isNaN(). Use z.number() with proper error handling instead.",
-        },
-        {
-          selector: "CallExpression[callee.object.name='Number'][callee.property.name='isFinite']",
-          message:
-            "[Zod Validation] Prefer Zod schema validation over Number.isFinite(). Use z.number().finite() instead.",
-        },
-        {
-          selector: "TSTypePredicate",
-          message:
-            "[Zod Validation] Prefer Zod schema validation over type guard functions. Use z.schema.safeParse() instead of custom type guards.",
-        },
-        // Type assertion restrictions
-        {
-          selector: "TSTypeAssertion:not([typeAnnotation.type='TSUnknownKeyword'])",
-          message:
-            "[Type Assertion] Type assertions are not allowed except for casting to 'unknown'. Use 'value as unknown' if you need to cast to unknown, otherwise use Zod schema validation.",
-        },
-        {
-          selector:
-            "TSAsExpression:not([typeAnnotation.type='TSUnknownKeyword']):not([typeAnnotation.type='TSTypeReference'][typeAnnotation.typeName.name='const'])",
-          message:
-            "[Type Assertion] Type assertions are not allowed except for casting to 'unknown' or 'as const'. Use 'value as unknown' to widen to unknown, 'value as const' for const assertions, or Zod schema validation to safely narrow types.",
-        },
-        // Bun-specific restrictions: prefer Bun APIs over Node.js globals
-        {
-          selector: "MemberExpression[object.name='process'][property.name='env']",
-          message:
-            "[Bun API] Use Bun.env instead of process.env to access environment variables. Bun.env is a more modern, typed alternative. See https://bun.sh/docs/runtime/env",
-        },
-        {
-          selector: "Identifier[name='__dirname']",
-          message:
-            "[Bun API] Use import.meta.dir instead of __dirname. import.meta.dir is the ESM-native way to get the directory path. See https://bun.sh/docs/api/import-meta",
-        },
-        {
-          selector: "Identifier[name='__filename']",
-          message:
-            "[Bun API] Use import.meta.path instead of __filename. import.meta.path is the ESM-native way to get the file path. See https://bun.sh/docs/api/import-meta",
-        },
-        {
-          selector: "CallExpression[callee.name='require']",
-          message:
-            "[Bun API] Use ESM import statements instead of require(). Bun fully supports ESM and it's the modern standard. Example: import { foo } from 'module'",
-        },
-        {
-          selector: "Identifier[name='Buffer']:not(VariableDeclarator > Identifier[name='Buffer'])",
-          message:
-            "[Bun API] Prefer Uint8Array or Bun's binary data APIs over Buffer. For file operations, use Bun.file() which handles binary data natively. See https://bun.sh/docs/api/binary-data",
-        },
-        // Re-export restrictions
-        {
-          selector: "ExportAllDeclaration",
-          message:
-            "[Re-export] Re-exports (export * from) are not allowed. Only export declarations from the same file.",
-        },
-        {
-          selector: "ExportNamedDeclaration[source]",
-          message:
-            "[Re-export] Re-exports (export { ... } from) are not allowed. Only export declarations from the same file.",
-        },
-      ],
+      "custom-rules/no-type-assertions": "error",
+      "custom-rules/prefer-zod-validation": ["error", { allowInstanceof: true }],
+      "custom-rules/prefer-bun-apis": "error",
+      "custom-rules/no-re-exports": "error",
     },
   },
   // File naming conventions

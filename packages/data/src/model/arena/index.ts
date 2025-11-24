@@ -1,3 +1,3 @@
-/* eslint-disable no-restricted-syntax -- data package is a library, so this is ok */
+/* eslint-disable custom-rules/no-re-exports -- data package is a library, so re-exports are intentional */
 export * from "./arena.js";
 export * from "./augment.js";

@@ -15,8 +15,7 @@
     "**/postcss.config.js",
     "eslint-rules/eslint-plugin-eslint-comments.d.ts",
     "packages/backend/src/database/migrate.ts",
-    "packages/backend/src/health.ts",
-    "packages/backend/src/metrics/helpers.ts"
+    "packages/backend/src/health.ts"
   ],
   "ignoreDependencies": ["@commitlint/cli", "bun-types"],
   "rules": {
@@ -78,8 +77,8 @@
       ]
     },
     "packages/review-dev-tool": {
-      "entry": ["src/pages/**/*.astro"],
-      "project": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.astro", "astro.config.mjs"],
+      "entry": ["src/main.tsx"],
+      "project": ["src/**/*.ts", "src/**/*.tsx"],
       "ignoreDependencies": ["@tailwindcss/postcss"]
     }
   }

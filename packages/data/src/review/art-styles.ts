@@ -16,8 +16,6 @@ import {
 import { ART_STYLES } from "./art-styles-list.js";
 import { ART_THEMES } from "./art-themes-list.js";
 
-// Re-export for external use
-export { ART_STYLES, ART_THEMES };
 
 /**
  * Selection result - can have one or two themes

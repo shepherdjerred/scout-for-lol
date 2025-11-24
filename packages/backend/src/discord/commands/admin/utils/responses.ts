@@ -36,7 +36,7 @@ export function buildDatabaseError(operation: string, error: unknown): Interacti
 /**
  * Build a Riot API error response
  */
-export function buildRiotApiError(riotId: string, error: string): InteractionReplyOptions {
+export function buildRiotApiError(_riotId: string, error: string): InteractionReplyOptions {
   return {
     content: `❌ **Error looking up Riot ID**\n\n${error}`,
     ephemeral: true,

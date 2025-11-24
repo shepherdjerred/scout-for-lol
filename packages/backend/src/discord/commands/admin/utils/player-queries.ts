@@ -1,6 +1,6 @@
 import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { type ChatInputCommandInteraction } from "discord.js";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 export type PlayerWithAccounts = Awaited<ReturnType<typeof findPlayerByAliasWithAccounts>>;
 export type PlayerWithSubscriptions = Awaited<ReturnType<typeof findPlayerByAliasWithSubscriptions>>;
@@ -149,8 +149,8 @@ export async function findPlayerByDiscordId(
 ) {
   const player = await prisma.player.findFirst({
     where: {
-      serverId,
-      discordId,
+      serverId: DiscordGuildIdSchema.parse(serverId),
+      discordId: DiscordAccountIdSchema.parse(discordId),
     },
     include: {
       accounts: true,
@@ -188,4 +188,3 @@ export async function requireGuildId(interaction: ChatInputCommandInteraction): 
   }
   return guildId;
 }
-

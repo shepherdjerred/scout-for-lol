@@ -1,4 +1,4 @@
-/* eslint-disable no-restricted-syntax -- data package is a library, so this is ok */
+/* eslint-disable custom-rules/no-re-exports -- data package is a library, so re-exports are intentional */
 export * from "./model/index.js";
 export * from "./seasons.js";
 export * from "./review/art-styles.js";

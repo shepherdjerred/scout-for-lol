@@ -3,9 +3,6 @@ import { z } from "zod";
 import { PlayerIdSchema, type PlayerId, type Rank } from "@scout-for-lol/data";
 import type { LeaderboardEntry } from "@scout-for-lol/backend/league/competition/processors/types.js";
 
-// Import the internal functions for testing by re-exporting them
-// We'll need to test the ranking logic directly
-
 // ============================================================================
 // Test Helpers
 // ============================================================================

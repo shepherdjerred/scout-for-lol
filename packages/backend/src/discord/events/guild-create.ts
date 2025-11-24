@@ -40,7 +40,7 @@ async function findWelcomeChannel(guild: Guild): Promise<TextChannel | null> {
     const permissions = channel.permissionsFor(guild.members.me ?? guild.client.user);
     if (permissions?.has(["ViewChannel", "SendMessages"])) {
       // Type assertion is safe here: we checked channel.type === GuildText above
-      // eslint-disable-next-line no-restricted-syntax -- Checked type above, safe assertion
+      // eslint-disable-next-line custom-rules/no-type-assertions -- Type assertion is safe here because we checked the type above
       return channel as unknown as TextChannel;
     }
   }
