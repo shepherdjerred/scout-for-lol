@@ -1,4 +1,3 @@
-import { join } from "path";
 import {
   PersonalityMetadataSchema,
   PlayerMetadataSchema,
@@ -14,7 +13,7 @@ const PROMPTS_DIR = `${import.meta.dir}/prompts`;
  * Load a prompt file from the prompts directory
  */
 export async function loadPromptFile(filename: string): Promise<string> {
-  const filePath = join(PROMPTS_DIR, filename);
+  const filePath = `${PROMPTS_DIR}/${filename}`;
   const text = await Bun.file(filePath).text();
   return text.trim();
 }
@@ -26,13 +25,13 @@ async function loadPersonality(basename: string): Promise<Personality> {
   const personalitiesDir = `${PROMPTS_DIR}/personalities`;
 
   // Load JSON metadata
-  const jsonPath = join(personalitiesDir, `${basename}.json`);
+  const jsonPath = `${personalitiesDir}/${basename}.json`;
   const jsonContent = await Bun.file(jsonPath).text();
   const parsed: unknown = JSON.parse(jsonContent);
   const metadata = PersonalityMetadataSchema.parse(parsed);
 
   // Load TXT instructions
-  const txtPath = join(personalitiesDir, `${basename}.txt`);
+  const txtPath = `${personalitiesDir}/${basename}.txt`;
   const instructionsText = await Bun.file(txtPath).text();
   const instructions = instructionsText.trim();
 
@@ -86,7 +85,7 @@ export async function loadPlayerMetadata(playerAlias: string): Promise<PlayerMet
 
   // Try to load player-specific file, fall back to generic
   const playerFile = `${playerAlias.toLowerCase().replace(/\s+/g, "-")}.json`;
-  const filePath = join(playersDir, playerFile);
+  const filePath = `${playersDir}/${playerFile}`;
 
   try {
     const jsonContent = await Bun.file(filePath).text();

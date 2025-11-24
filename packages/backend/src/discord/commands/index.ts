@@ -4,17 +4,15 @@ import { getFlag } from "@scout-for-lol/backend/configuration/flags.js";
 import { match } from "ts-pattern";
 
 import { executeHelp } from "@scout-for-lol/backend/discord/commands/help";
-import {
-  executeCompetitionCreate,
-  executeCompetitionEdit,
-  executeCompetitionCancel,
-  executeGrantPermission,
-  executeCompetitionJoin,
-  executeCompetitionInvite,
-  executeCompetitionLeave,
-  executeCompetitionView,
-  executeCompetitionList,
-} from "@scout-for-lol/backend/discord/commands/competition/index.js";
+import { executeCompetitionCreate } from "@scout-for-lol/backend/discord/commands/competition/create.js";
+import { executeCompetitionEdit } from "@scout-for-lol/backend/discord/commands/competition/edit.js";
+import { executeCompetitionCancel } from "@scout-for-lol/backend/discord/commands/competition/cancel.js";
+import { executeGrantPermission } from "@scout-for-lol/backend/discord/commands/competition/grant-permission.js";
+import { executeCompetitionJoin } from "@scout-for-lol/backend/discord/commands/competition/join.js";
+import { executeCompetitionInvite } from "@scout-for-lol/backend/discord/commands/competition/invite.js";
+import { executeCompetitionLeave } from "@scout-for-lol/backend/discord/commands/competition/leave.js";
+import { executeCompetitionView } from "@scout-for-lol/backend/discord/commands/competition/view.js";
+import { executeCompetitionList } from "@scout-for-lol/backend/discord/commands/competition/list.js";
 
 import {
   executeDebugDatabase,

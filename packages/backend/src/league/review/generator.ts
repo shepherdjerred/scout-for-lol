@@ -12,7 +12,6 @@ import {
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
-import { join } from "path";
 import config from "@scout-for-lol/backend/configuration.js";
 import { saveAIReviewImageToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import {
@@ -80,7 +79,7 @@ async function generateReviewImageBackend(params: {
       reviewText,
       artStyle: style,
       artTheme: themes[0] ?? "League of Legends gameplay",
-      ...(themes[1] ? { secondArtTheme: themes[1] } : {}),
+      ...(themes[1] !== undefined ? { secondArtTheme: themes[1] } : {}),
       matchData: JSON.stringify(curatedData ? { processedMatch: match, detailedStats: curatedData } : match, null, 2),
       geminiClient: client,
       model: "gemini-3-pro-image-preview",
@@ -99,7 +98,7 @@ async function generateReviewImageBackend(params: {
 
     // Save to local filesystem for debugging
     try {
-      const filepath: string = join(AI_IMAGES_DIR, `ai-review-${new Date().toISOString().replace(/[:.]/g, "-")}.png`);
+      const filepath: string = `${AI_IMAGES_DIR}/ai-review-${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
       await Bun.write(filepath, buffer);
       console.log(`[generateReviewImage] Saved image to: ${filepath}`);
     } catch (fsError: unknown) {

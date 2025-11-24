@@ -19,7 +19,8 @@ import {
   getTeams,
 } from "@scout-for-lol/data";
 import { strict as assert } from "assert";
-import { participantToArenaChampion, participantToChampion } from "@scout-for-lol/backend/league/model/champion.js";
+import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
+import { participantToChampion } from "@scout-for-lol/data/model/match-helpers";
 
 export function toMatch(
   players: Player[],

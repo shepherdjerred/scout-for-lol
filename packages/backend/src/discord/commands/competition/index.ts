@@ -313,14 +313,13 @@ export const competitionCommand = new SlashCommandBuilder()
   )
   .setContexts(InteractionContextType.Guild);
 
-export {
-  executeCompetitionCreate,
-  executeCompetitionEdit,
-  executeCompetitionCancel,
-  executeGrantPermission,
-  executeCompetitionJoin,
-  executeCompetitionInvite,
-  executeCompetitionLeave,
-  executeCompetitionView,
-  executeCompetitionList,
-};
+// Functions are exported from their respective files - import directly:
+// - executeCompetitionCreate from "./create.js"
+// - executeCompetitionEdit from "./edit.js"
+// - executeCompetitionCancel from "./cancel.js"
+// - executeGrantPermission from "./grant-permission.js"
+// - executeCompetitionJoin from "./join.js"
+// - executeCompetitionInvite from "./invite.js"
+// - executeCompetitionLeave from "./leave.js"
+// - executeCompetitionView from "./view.js"
+// - executeCompetitionList from "./list.js"

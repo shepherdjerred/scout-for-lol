@@ -65,21 +65,21 @@ function formatLeaderboardEntry(entry: RankedLeaderboardEntry): string {
 
   let scoreDisplay: string;
 
-  const numberScoreSchema = z.number();
-  const rankScoreSchema = z.object({ tier: z.string(), division: z.number(), lp: z.number() });
-  const scoreSchema = z.union([numberScoreSchema, rankScoreSchema]);
+  const NumberScoreSchema = z.number();
+  const RankScoreSchema = z.object({ tier: z.string(), division: z.number(), lp: z.number() });
+  const ScoreSchema = z.union([NumberScoreSchema, RankScoreSchema]);
 
-  const scoreValidation = scoreSchema.safeParse(entry.score);
+  const scoreValidation = ScoreSchema.safeParse(entry.score);
 
   if (!scoreValidation.success) {
-    throw new Error(`Invalid score type in leaderboard entry: ${String(entry.score)}`);
+    throw new Error(`Invalid score type in leaderboard entry: ${JSON.stringify(entry.score)}`);
   }
 
-  if (numberScoreSchema.safeParse(scoreValidation.data).success) {
+  if (NumberScoreSchema.safeParse(scoreValidation.data).success) {
     scoreDisplay = scoreValidation.data.toString();
   } else {
     // It's a Rank object
-    const rankScore = rankScoreSchema.parse(scoreValidation.data);
+    const rankScore = RankScoreSchema.parse(scoreValidation.data);
     scoreDisplay = `${rankScore.tier} ${rankScore.division.toString()} ${rankScore.lp.toString()} LP`;
   }
 

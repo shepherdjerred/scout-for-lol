@@ -28,6 +28,16 @@ export async function validateDiscordLink(
   discordUserId: DiscordAccountId,
   playerAlias: string,
 ): Promise<DiscordLinkValidationResult> {
+  if (!player) {
+    return {
+      success: false,
+      errorResponse: {
+        content: `❌ Player "${playerAlias}" not found`,
+        ephemeral: true,
+      },
+    };
+  }
+
   // Check if this Discord ID is already linked to a different player
   const existingPlayer = await prisma.player.findFirst({
     where: {
@@ -76,6 +86,16 @@ export function validateDiscordUnlink(
   player: PlayerWithSubscriptions,
   playerAlias: string,
 ): DiscordLinkValidationResult {
+  if (!player) {
+    return {
+      success: false,
+      errorResponse: {
+        content: `❌ Player "${playerAlias}" not found`,
+        ephemeral: true,
+      },
+    };
+  }
+
   if (!player.discordId) {
     console.log(`⚠️  Player has no Discord ID to unlink`);
     const errorResponse = buildPlayerNotLinkedError(playerAlias);

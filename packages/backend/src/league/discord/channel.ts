@@ -133,7 +133,7 @@ export async function send(
           serverId,
           channelId,
           errorType: "api_error",
-          errorReason: permissionReason ?? undefined,
+          ...(permissionReason ? { errorReason: permissionReason } : {}),
         }).catch((dbError) => {
           console.error(`[ChannelSend] Failed to record permission error in DB:`, dbError);
         });

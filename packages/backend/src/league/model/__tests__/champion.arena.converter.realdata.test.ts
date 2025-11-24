@@ -3,11 +3,9 @@ import { z } from "zod";
 // Types from @scout-for-lol/data are used by TypeScript for type checking
 import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
 
-import { dirname } from "path";
-import { fileURLToPath } from "url";
 import type { ParticipantDto } from "@scout-for-lol/data/index";
 
-const currentDir = dirname(fileURLToPath(import.meta.url));
+const currentDir = import.meta.dirname;
 
 const RAW_FILE_PATHS = [
   `${currentDir}/testdata/matches_2025_09_19_NA1_5370969615.json`,

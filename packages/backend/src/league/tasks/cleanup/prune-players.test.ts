@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
-import { rmSync } from "fs";
 import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { pruneOrphanedPlayers } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.js";
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
@@ -43,7 +42,7 @@ describe.serial("pruneOrphanedPlayers", () => {
   afterEach(async () => {
     // Clean up
     await prisma.$disconnect();
-    rmSync(testDir, { recursive: true, force: true });
+    await Bun.spawn(["rm", "-rf", testDir]).exited;
   });
 
   it("should prune players with no subscriptions and no active competitions", async () => {
