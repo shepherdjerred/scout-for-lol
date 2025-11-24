@@ -20,7 +20,7 @@
     "clean": "rm -rf node_modules packages/*/node_modules",
     "generate": "bun run --filter='*' generate",
     "prepare": "husky",
-    "knip": "knip"
+    "knip": "knip-bun"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.0.0",

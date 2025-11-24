@@ -410,7 +410,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
             const idFromName = getChampionId(narrowedCriteria.champion);
             if (!idFromName) {
               throw new Error(
-                `Invalid champion: "${narrowedCriteria.champion}". Please select a champion from the autocomplete list.`
+                `Invalid champion: "${narrowedCriteria.champion}". Please select a champion from the autocomplete list.`,
               );
             }
             championId = idFromName;

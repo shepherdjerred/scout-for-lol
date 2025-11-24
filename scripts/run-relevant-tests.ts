@@ -27,7 +27,7 @@ if (findResult.exitCode !== 0) {
   const stderr = new TextDecoder().decode(findResult.stderr);
   console.error("Error finding test files:");
   console.error(stderr);
-  throw new Error(`find-dependent-tests failed with exit code ${findResult.exitCode}`);
+  throw new Error(`find-dependent-tests failed with exit code ${String(findResult.exitCode)}`);
 }
 
 // Parse test files from stdout (one per line)
@@ -46,7 +46,7 @@ if (stderr) {
 // Check if we got any test files
 if (testFiles.length === 0) {
   console.log("No test files found for changed files, skipping tests.");
-  Bun.exit(0);
+  process.exit(0);
 }
 
 console.log(`Running ${String(testFiles.length)} relevant test file(s)...`);
@@ -63,4 +63,4 @@ const testResult = Bun.spawnSync(["bun", "test", ...testFiles], {
   stdin: "inherit",
 });
 
-Bun.exit(testResult.exitCode);
+process.exit(testResult.exitCode ?? 1);

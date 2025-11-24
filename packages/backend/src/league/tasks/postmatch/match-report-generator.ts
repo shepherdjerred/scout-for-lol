@@ -18,6 +18,7 @@ import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
 import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
+import { match } from "ts-pattern";
 
 /**
  * Fetch match data from Riot API
@@ -163,8 +164,8 @@ export async function generateMatchReport(
     const players = await Promise.all(playersInMatch.map((playerConfig) => getPlayer(playerConfig)));
 
     // Process match based on queue type
-    return await match(matchData.info.queueId)
-      .with(1700, async () => {
+    return await match<number, Promise<MessageCreateOptions>>(matchData.info.queueId)
+      .with(1700, async (): Promise<MessageCreateOptions> => {
         console.log(`[generateMatchReport] 🎯 Processing as arena match`);
         const arenaMatch = await toArenaMatch(players, matchData);
 
@@ -181,7 +182,7 @@ export async function generateMatchReport(
           embeds: [embed],
         };
       })
-      .otherwise(async () => {
+      .otherwise(async (): Promise<MessageCreateOptions> => {
         console.log(`[generateMatchReport] ⚔️  Processing as standard match`);
         // Process match for all tracked players
         if (players.length === 0) {

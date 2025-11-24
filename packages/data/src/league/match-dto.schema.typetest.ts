@@ -16,18 +16,21 @@ import type { MatchDto as _MatchDto } from "@scout-for-lol/packages/data/src/lea
 /**
  * Expects true - fails at compile time if not true
  */
-type _Expect<T extends true> = T;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type Expect<T extends true> = T;
 
 /**
  * Check if two types are exactly equal
  * This is a more precise check than just extends
  */
-type _Equal<X, Y> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2 ? true : false;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type Equal<X, Y> = (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2 ? true : false;
 
 /**
  * Check if type A is assignable to type B (A extends B)
  */
-type _Extends<A, B> = A extends B ? true : false;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type Extends<A, B> = A extends B ? true : false;
 
 // ============================================================================
 // Type Compatibility Tests

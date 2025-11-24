@@ -54,11 +54,11 @@ export async function createCompetition(
     .with({ type: "FIXED_DATES" }, (dates) => ({
       startDate: dates.startDate,
       endDate: dates.endDate,
-      seasonId: null as SeasonId | null,
+      seasonId: null,
     }))
     .with({ type: "SEASON" }, (dates) => ({
-      startDate: null as Date | null,
-      endDate: null as Date | null,
+      startDate: null,
+      endDate: null,
       seasonId: dates.seasonId,
     }))
     .exhaustive();
@@ -258,11 +258,11 @@ export async function updateCompetition(
       .with({ type: "FIXED_DATES" }, (d) => ({
         startDate: d.startDate,
         endDate: d.endDate,
-        seasonId: null as SeasonId | null,
+        seasonId: null,
       }))
       .with({ type: "SEASON" }, (d) => ({
-        startDate: null as Date | null,
-        endDate: null as Date | null,
+        startDate: null,
+        endDate: null,
         seasonId: d.seasonId,
       }))
       .exhaustive();

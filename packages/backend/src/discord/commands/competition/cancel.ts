@@ -50,20 +50,14 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   const isOwner = competition.ownerId === userId;
 
   // Check if user is admin (only works in guild context)
-  // Note: We cannot use z.function() here because it loses the 'this' context
-  // when Zod validates by calling the function. Instead, we use a type guard.
-  let isAdmin = false;
-  if (
+  // Use optional chaining to safely access permissions
+  const isAdmin = Boolean(
     member &&
-    typeof member === "object" &&
     "permissions" in member &&
     member.permissions &&
-    typeof member.permissions === "object" &&
     "has" in member.permissions &&
-    typeof member.permissions.has === "function"
-  ) {
-    isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
-  }
+    member.permissions.has(PermissionFlagsBits.Administrator)
+  );
 
   if (!isOwner && !isAdmin) {
     await interaction.reply({

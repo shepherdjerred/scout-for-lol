@@ -83,16 +83,16 @@ async function migrateFromLocalStorage(): Promise<void> {
         continue;
       }
 
-      // Validated with Zod but metadata field is unknown for migration compatibility
-      const historyEntry = {
+      // Validated with Zod but need to cast for compatibility
+      const historyEntry: HistoryEntry = {
         id: entry.id,
         timestamp: new Date(entry.timestamp),
-        result: resultValidation.data as unknown,
-        configSnapshot: configValidation.data as unknown,
+        result: resultValidation.data,
+        configSnapshot: configValidation.data,
         status: entry.status,
         ...(entry.rating !== undefined && { rating: entry.rating }),
         ...(entry.notes !== undefined && { notes: entry.notes }),
-      } as unknown as HistoryEntry;
+      };
       await db.saveEntry(historyEntry);
     }
 
@@ -128,16 +128,16 @@ export async function loadHistory(): Promise<HistoryEntry[]> {
         continue;
       }
 
-      // Validated with Zod but metadata field is unknown for migration compatibility
-      const historyEntry = {
+      // Validated with Zod but need to cast for compatibility
+      const historyEntry: HistoryEntry = {
         id: entry.id,
         timestamp: new Date(entry.timestamp),
-        result: resultValidation.data as unknown,
-        configSnapshot: configValidation.data as unknown,
+        result: resultValidation.data,
+        configSnapshot: configValidation.data,
         status: entry.status,
         ...(entry.rating !== undefined && { rating: entry.rating }),
         ...(entry.notes !== undefined && { notes: entry.notes }),
-      } as unknown as HistoryEntry;
+      };
       validEntries.push(historyEntry);
     }
     return validEntries;
@@ -248,16 +248,16 @@ export async function getHistoryEntry(id: string): Promise<HistoryEntry | undefi
       return undefined;
     }
 
-    // Validated with Zod but metadata field is unknown for migration compatibility
-    const result = {
+    // Validated with Zod but need to cast for compatibility
+    const result: HistoryEntry = {
       id: entry.id,
       timestamp: new Date(entry.timestamp),
-      result: resultValidation.data as unknown,
-      configSnapshot: configValidation.data as unknown,
+      result: resultValidation.data,
+      configSnapshot: configValidation.data,
       status: entry.status,
       ...(entry.rating !== undefined && { rating: entry.rating }),
       ...(entry.notes !== undefined && { notes: entry.notes }),
-    } as unknown as HistoryEntry;
+    };
     return result;
   } catch (error) {
     console.error("Failed to get history entry:", error);

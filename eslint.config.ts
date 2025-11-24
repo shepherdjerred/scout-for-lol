@@ -72,7 +72,8 @@ export default tseslint.config(
   // ESLint disable directive rules
   {
     plugins: {
-      "eslint-comments": eslintComments,
+      // Type assertion needed due to ESLint plugin type incompatibility
+      "eslint-comments": eslintComments as unknown,
     },
     rules: {
       // Require specific rule names when disabling ESLint (no blanket eslint-disable)
@@ -192,7 +193,8 @@ export default tseslint.config(
             },
             {
               group: ["twisted/dist/models-dto*"],
-              message: "Do not import DTO types from twisted. Use Zod schemas from @scout-for-lol/data instead (e.g., MatchDto, SummonerLeagueDto from @scout-for-lol/data).",
+              message:
+                "Do not import DTO types from twisted. Use Zod schemas from @scout-for-lol/data instead (e.g., MatchDto, SummonerLeagueDto from @scout-for-lol/data).",
             },
           ],
         },
