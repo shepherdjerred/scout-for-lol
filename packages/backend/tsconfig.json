@@ -7,9 +7,7 @@
     "types": [
       "bun-types",
       "node"
-    ],
-    "composite": true,
-    "noEmit": false
+    ]
   },
   "include": [
     "src/**/*",
@@ -19,13 +17,5 @@
   "exclude": [
     "node_modules",
     "vendor"
-  ],
-  "references": [
-    {
-      "path": "../data"
-    },
-    {
-      "path": "../report"
-    }
   ]
 }

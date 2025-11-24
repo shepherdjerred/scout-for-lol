@@ -18,6 +18,7 @@
 - lower allowed complexity, duplication, and line length
 - rename DTO -> raw
   - add check that DTO objects must have "raw" in the var/param name
+- we should probably use a package or something for test mocks. rn, as an example S3 uses Zod
 
 ## Done
 

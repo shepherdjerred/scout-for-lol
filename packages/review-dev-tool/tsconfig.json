@@ -18,13 +18,6 @@
       "ES2021",
       "DOM",
       "DOM.Iterable"
-    ],
-    "composite": true,
-    "noEmit": false
-  },
-  "references": [
-    {
-      "path": "../data"
-    }
-  ]
+    ]
+  }
 }

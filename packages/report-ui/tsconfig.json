@@ -10,9 +10,7 @@
       "DOM.Iterable"
     ],
     "jsx": "react-jsx",
-    "jsxImportSource": "react",
-    "composite": true,
-    "noEmit": false
+    "jsxImportSource": "react"
   },
   "include": [
     "src",
@@ -21,13 +19,5 @@
   "exclude": [
     "node_modules",
     "dist"
-  ],
-  "references": [
-    {
-      "path": "../data"
-    },
-    {
-      "path": "../report"
-    }
   ]
 }

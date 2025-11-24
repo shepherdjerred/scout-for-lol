@@ -14,6 +14,30 @@ import { MatchIdSchema } from "@scout-for-lol/data";
 // Create S3 mock
 const s3Mock = mockClient(S3Client);
 
+// Zod schema for validating PutObjectCommand structure from mocks
+const PutObjectCommandSchema = z.object({
+  input: z.object({
+    Bucket: z.string(),
+    Key: z.string(),
+    Body: z.union([z.instanceof(Uint8Array), z.string()]),
+    ContentType: z.string(),
+    Metadata: z
+      .object({
+        matchId: z.string(),
+        queueType: z.string(),
+        uploadedAt: z.string(),
+      })
+      .optional(),
+  }),
+});
+
+// Helper to safely get and validate command from mock call
+function getValidatedCommand(callIndex: number) {
+  const call = s3Mock.call(callIndex);
+  const command = call?.args?.[0];
+  return PutObjectCommandSchema.parse(command);
+}
+
 beforeEach(() => {
   // Ensure S3_BUCKET_NAME is set for tests
   Bun.env["S3_BUCKET_NAME"] = "test-bucket";
@@ -46,12 +70,12 @@ describe("saveSvgToS3 - Success Cases", () => {
     // Verify S3 command was called once
     expect(s3Mock.calls().length).toBe(1);
 
-    // Get the command that was called
-    const call = s3Mock.call(0);
-    expect(call.args[0]).toBeInstanceOf(PutObjectCommand);
+    // Get and validate the command that was called
+    const command = getValidatedCommand(0);
+    expect(command.input.Bucket).toBe("test-bucket");
+    expect(command.input.ContentType).toBe("image/svg+xml");
 
-    // Verify command type and return value
-    expect(call.args[0]).toBeInstanceOf(PutObjectCommand);
+    // Verify return value format
     expect(result).toMatch(/^s3:\/\/test-bucket\/images\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\.svg$/);
   });
 
@@ -68,8 +92,8 @@ describe("saveSvgToS3 - Success Cases", () => {
 
     expect(s3Mock.calls().length).toBe(1);
 
-    const call = s3Mock.call(0);
-    expect(call.args[0]).toBeInstanceOf(PutObjectCommand);
+    const command = getValidatedCommand(0);
+    expect(command.input.Key).toContain("NA1_ARENA");
 
     expect(result).toBeDefined();
   });
@@ -88,11 +112,11 @@ describe("saveSvgToS3 - Success Cases", () => {
 
     expect(s3Mock.calls().length).toBe(1);
 
-    const call = s3Mock.call(0);
-    const command = call.args[0] as unknown;
+    const command = getValidatedCommand(0);
     // Body should be Uint8Array or string
-    const bodyValidator = z.union([z.instanceof(Uint8Array), z.string()]);
-    expect(bodyValidator.safeParse(command.input.Body).success).toBe(true);
+    expect(command.input.Body).toBeDefined();
+    const isValidBody = command.input.Body instanceof Uint8Array || typeof command.input.Body === "string";
+    expect(isValidBody).toBe(true);
 
     expect(result).toBeDefined();
   });
@@ -176,11 +200,10 @@ describe("saveSvgToS3 - S3 Key Format", () => {
 
     await saveSvgToS3(matchId, svgContent, queueType);
 
-    const call = s3Mock.call(0);
-    const command = call.args[0];
+    const command = getValidatedCommand(0);
 
     // Verify key structure
-    const key = command.input.Key!;
+    const key = command.input.Key;
     expect(key).toMatch(/^images\/\d{4}\/\d{2}\/\d{2}\/NA1_DATE_TEST\.svg$/);
 
     // Verify it uses today's date
@@ -203,8 +226,7 @@ describe("saveSvgToS3 - S3 Key Format", () => {
 
     await saveSvgToS3(matchId, svgContent, queueType);
 
-    const call = s3Mock.call(0);
-    const command = call.args[0];
+    const command = getValidatedCommand(0);
 
     expect(command.input.Key).toEndWith(".svg");
   });
@@ -242,8 +264,7 @@ describe("saveSvgToS3 - Content Type and Metadata", () => {
 
     await saveSvgToS3(matchId, svgContent, queueType);
 
-    const call = s3Mock.call(0);
-    const command = call.args[0];
+    const command = getValidatedCommand(0);
 
     expect(command.input.ContentType).toBe("image/svg+xml");
   });
@@ -259,8 +280,10 @@ describe("saveSvgToS3 - Content Type and Metadata", () => {
 
     await saveSvgToS3(matchId, svgContent, queueType);
 
-    const call = s3Mock.call(0);
-    expect(call.args[0]).toBeInstanceOf(PutObjectCommand);
+    const command = getValidatedCommand(0);
+    expect(command.input.Metadata?.matchId).toBe(matchId);
+    expect(command.input.Metadata?.queueType).toBe(queueType);
+    expect(command.input.Metadata?.uploadedAt).toBeDefined();
   });
 
   test("converts SVG string to UTF-8 buffer", async () => {
@@ -274,8 +297,10 @@ describe("saveSvgToS3 - Content Type and Metadata", () => {
 
     await saveSvgToS3(matchId, svgContent, queueType);
 
-    const call = s3Mock.call(0);
-    expect(call.args[0]).toBeInstanceOf(PutObjectCommand);
+    const command = getValidatedCommand(0);
+    expect(command.input.Body).toBeDefined();
+    // Body should be a Uint8Array (UTF-8 encoded)
+    expect(command.input.Body instanceof Uint8Array || typeof command.input.Body === "string").toBe(true);
   });
 });
 

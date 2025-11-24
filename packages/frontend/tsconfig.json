@@ -13,13 +13,6 @@
   ],
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "react",
-    "composite": true,
-    "noEmit": false
-  },
-  "references": [
-    {
-      "path": "../data"
-    }
-  ]
+    "jsxImportSource": "react"
+  }
 }

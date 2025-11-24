@@ -7,9 +7,7 @@
     "jsx": "react-jsx",
     "types": [
       "bun-types"
-    ],
-    "composite": true,
-    "noEmit": false
+    ]
   },
   "include": [
     "src/**/*"
@@ -18,10 +16,5 @@
     "node_modules",
     "vendor",
     "test"
-  ],
-  "references": [
-    {
-      "path": "../data"
-    }
   ]
 }
