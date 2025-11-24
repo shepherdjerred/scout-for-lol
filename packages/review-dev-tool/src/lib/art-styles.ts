@@ -2,7 +2,6 @@
  * Art style selection utilities
  */
 import { ART_STYLES, ART_THEMES } from "@scout-for-lol/data";
-import { loadCustomArtStyles, loadCustomArtThemes } from "@scout-for-lol/review-dev-tool/lib/art-style-storage";
 
 /**
  * Styles that may not work well with character-specific themes

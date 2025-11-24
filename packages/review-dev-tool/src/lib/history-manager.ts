@@ -218,41 +218,6 @@ export async function clearHistory(): Promise<void> {
 }
 
 /**
- * Get a history entry by ID (internal helper)
- */
-async function _getHistoryEntry(id: string): Promise<HistoryEntry | undefined> {
-  try {
-    const entry = await db.getEntry(id);
-    if (!entry) {
-      return undefined;
-    }
-
-    const resultValidation = GenerationResultSchema.safeParse(entry.result);
-    const configValidation = ConfigSnapshotSchema.safeParse(entry.configSnapshot);
-
-    if (!resultValidation.success || !configValidation.success) {
-      console.warn("[History] Invalid entry data:", id);
-      return undefined;
-    }
-
-    // Validated with Zod but need to cast for compatibility
-    const result: HistoryEntry = {
-      id: entry.id,
-      timestamp: new Date(entry.timestamp),
-      result: resultValidation.data,
-      configSnapshot: configValidation.data,
-      status: entry.status,
-      ...(entry.rating !== undefined && { rating: entry.rating }),
-      ...(entry.notes !== undefined && { notes: entry.notes }),
-    };
-    return result;
-  } catch (error) {
-    console.error("Failed to get history entry:", error);
-    return undefined;
-  }
-}
-
-/**
  * Update rating for a history entry
  */
 export async function updateHistoryRating(id: string, rating: 1 | 2 | 3 | 4, notes?: string): Promise<void> {

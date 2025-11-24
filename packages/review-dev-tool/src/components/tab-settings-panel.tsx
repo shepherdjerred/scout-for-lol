@@ -127,7 +127,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
 
     if (editingPersonality && existsInCustom) {
       // Update existing custom personality
-      await updateCustomPersonality(personality.id, personality);
+      await updateCustomPersonality(personality);
     } else {
       // Create new custom personality (or copy of built-in)
       const newPersonality = {
@@ -584,7 +584,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                     </button>
 
                     {allStyles.map((style) => {
-                      const isCustom = isCustomArtStyle(style.id);
+                      const isCustom = customStyles.some((s) => s.id === style.id);
                       const isSelected = config.imageGeneration.artStyle === style.description;
                       return (
                         <div
@@ -704,7 +704,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                     </button>
 
                     {allThemes.map((theme) => {
-                      const isCustom = isCustomArtTheme(theme.id);
+                      const isCustom = customThemes.some((t) => t.id === theme.id);
                       const isSelected = config.imageGeneration.artTheme === theme.description;
                       return (
                         <div
@@ -833,7 +833,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                       </button>
 
                       {allThemes.map((theme) => {
-                        const isCustom = isCustomArtTheme(theme.id);
+                        const isCustom = customThemes.some((t) => t.id === theme.id);
                         const isSelected = config.imageGeneration.secondArtTheme === theme.description;
                         return (
                           <div
@@ -971,7 +971,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                     </button>
 
                     {allPersonalities.map((personality) => {
-                      const isCustom = isCustomPersonality(personality.id);
+                      const isCustom = customPersonalities.some((p) => p.id === personality.id);
                       const isSelected = config.prompts.personalityId === personality.id;
                       return (
                         <div

@@ -99,6 +99,7 @@ describe("seasons", () => {
   describe("getSeasonChoices", () => {
     test("should return Discord choices for non-ended seasons", () => {
       const choices = getSeasonChoices();
+      // eslint-disable-next-line custom-rules/prefer-zod-validation -- Testing array structure
       expect(Array.isArray(choices)).toBe(true);
 
       for (const choice of choices) {

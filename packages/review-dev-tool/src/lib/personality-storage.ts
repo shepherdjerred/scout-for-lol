@@ -40,7 +40,7 @@ export async function addCustomPersonality(personality: Personality): Promise<vo
 /**
  * Update a custom personality
  */
-export async function updateCustomPersonality(id: string, personality: Personality): Promise<boolean> {
+export async function updateCustomPersonality(personality: Personality): Promise<boolean> {
   return await putItem(STORES.PERSONALITIES, personality);
 }
 

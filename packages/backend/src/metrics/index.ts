@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars -- ok here*/
 import { Registry, Counter, Gauge, Histogram } from "prom-client";
 import configuration from "@scout-for-lol/backend/configuration.js";
 
@@ -143,7 +144,8 @@ export const guildDataCleanupTotal = new Counter({
  * Total number of Discord channels deleted (event handler triggered)
  * TODO: Implement channel deletion tracking
  */
-const discordChannelsDeletedTotal = new Counter({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Placeholder metric for future implementation
+const _discordChannelsDeletedTotal = new Counter({
   name: "discord_channels_deleted_total",
   help: "Total number of Discord channels deleted (event handler triggered)",
   registers: [registry],

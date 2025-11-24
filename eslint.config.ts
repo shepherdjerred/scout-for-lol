@@ -71,7 +71,6 @@ export default tseslint.config(
       parserOptions: {
         projectService: {
           allowDefaultProject: ["eslint.config.ts", "eslint-rules/*.ts"],
-          defaultProject: "./tsconfig.eslint.json",
         },
         tsconfigRootDir: import.meta.dirname,
         extraFileExtensions: [".astro"],
@@ -143,9 +142,9 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
+          // argsIgnorePattern: "^_",
+          // varsIgnorePattern: "^_",
+          // caughtErrorsIgnorePattern: "^_",
         },
       ],
       "@typescript-eslint/consistent-type-assertions": [
@@ -239,6 +238,9 @@ export default tseslint.config(
   // Test files can be longer and use test-specific patterns
   {
     files: ["**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts"],
+    plugins: {
+      "custom-rules": customRulesPlugin,
+    },
     rules: {
       "max-lines": ["error", { max: 1500, skipBlankLines: false, skipComments: false }],
       // Allow test mocks and doubles to use any and type assertions
@@ -253,7 +255,8 @@ export default tseslint.config(
       "@typescript-eslint/no-confusing-void-expression": "off",
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-unnecessary-condition": "off",
-      "no-restricted-syntax": "off", // Allow type assertions, typeof, instanceof in tests
+      "custom-rules/no-type-assertions": "off", // Allow type assertions in tests for mocking
+      "custom-rules/prefer-zod-validation": "off", // Allow typeof, instanceof in tests
     },
   },
   // Integration test specific rules - ensure Prisma clients are disconnected

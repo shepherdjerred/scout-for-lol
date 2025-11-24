@@ -190,7 +190,7 @@ async function cleanupExpiredEntries(): Promise<void> {
  * Get cached data if available and valid (synchronous - checks memory only)
  * Returns unknown data that must be validated by the caller
  */
-function getCachedData(endpoint: string, params: Record<string, unknown>): unknown {
+function _getCachedData(endpoint: string, params: Record<string, unknown>): unknown {
   const cacheKey = generateCacheKey(endpoint, params);
 
   // Periodically clean up expired entries
@@ -439,7 +439,7 @@ export async function clearAllCache(): Promise<void> {
 /**
  * Clear cached data for a specific endpoint
  */
-async function clearCacheForEndpoint(endpoint: string): Promise<void> {
+async function _clearCacheForEndpoint(endpoint: string): Promise<void> {
   // Clear from memory cache
   const keysToDelete: string[] = [];
   for (const key of memoryCache.keys()) {

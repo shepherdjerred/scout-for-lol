@@ -138,32 +138,6 @@ export async function setItem(storeName: string, key: string, value: unknown): P
 }
 
 /**
- * Remove a single value from a store
- */
-async function _removeItem(storeName: string, key: string): Promise<boolean> {
-  try {
-    const db = await getDB();
-    return await new Promise((resolve, reject) => {
-      const transaction = db.transaction([storeName], "readwrite");
-      const store = transaction.objectStore(storeName);
-      const request = store.delete(key);
-
-      request.onsuccess = () => {
-        resolve(true);
-      };
-
-      request.onerror = () => {
-        const error = request.error;
-        reject(error ?? new Error("Storage operation failed"));
-      };
-    });
-  } catch (error) {
-    console.warn(`Failed to remove item from ${storeName}:`, error);
-    return false;
-  }
-}
-
-/**
  * Get all values from a store (for stores with keyPath)
  */
 export async function getAllItems<T>(storeName: string): Promise<T[]> {

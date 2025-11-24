@@ -266,31 +266,6 @@ function getModelInfo(modelId: string): ModelInfo | undefined {
 }
 
 /**
- * Get all models grouped by category
- */
-function _getModelsByCategory(): Record<string, ModelInfo[]> {
-  const grouped: Record<string, ModelInfo[]> = {
-    "gpt-4": [],
-    "gpt-3.5": [],
-    "o-series": [],
-    other: [],
-  };
-
-  for (const model of Object.values(OPENAI_MODELS)) {
-    grouped[model.category]?.push(model);
-  }
-
-  return grouped;
-}
-
-/**
- * Get list of all model IDs
- */
-function _getAllModelIds(): string[] {
-  return Object.keys(OPENAI_MODELS);
-}
-
-/**
  * Check if a model supports a specific parameter
  */
 export function modelSupportsParameter(modelId: string, parameter: "temperature" | "topP"): boolean {
@@ -310,10 +285,3 @@ export function modelSupportsParameter(modelId: string, parameter: "temperature"
   }
 }
 
-/**
- * Get recommended max tokens for a model
- */
-function _getModelMaxTokens(modelId: string): number {
-  const model = getModelInfo(modelId);
-  return model?.capabilities.maxTokens ?? 4096;
-}
