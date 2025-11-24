@@ -6,6 +6,8 @@ import {
   DiscordAccountIdSchema,
   getCompetitionStatus,
   type CompetitionCriteria,
+  type CompetitionId,
+  type DiscordAccountId,
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import { match, P } from "ts-pattern";
@@ -14,6 +16,7 @@ import {
   getCompetitionById,
   type UpdateCompetitionInput,
   updateCompetition,
+  type Competition,
 } from "@scout-for-lol/backend/database/competition/queries.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import { getChampionId } from "@scout-for-lol/backend/utils/champion.js";
@@ -119,67 +122,65 @@ function parseDatesArgs(
 /**
  * Execute /competition edit command
  */
+async function fetchAndValidateEditCompetition(
+  interaction: ChatInputCommandInteraction,
+  userId: DiscordAccountId,
+): Promise<{ competition: Competition; competitionId: CompetitionId; isDraft: boolean } | null> {
+  const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
+
+  try {
+    const competition = await getCompetitionById(prisma, competitionId);
+    if (!competition) {
+      await interaction.reply({
+        content: `Competition with ID ${competitionId.toString()} not found`,
+        ephemeral: true,
+      });
+      return null;
+    }
+
+    if (competition.ownerId !== userId) {
+      await interaction.reply({
+        content: "Only the competition owner can edit the competition",
+        ephemeral: true,
+      });
+      return null;
+    }
+
+    const status = getCompetitionStatus(competition);
+    if (status === "CANCELLED") {
+      await interaction.reply({
+        content: "Cannot edit a cancelled competition",
+        ephemeral: true,
+      });
+      return null;
+    }
+
+    const isDraft = status === "DRAFT";
+    console.log(`📊 Competition status: ${status} (isDraft: ${isDraft.toString()})`);
+
+    return { competition, competitionId, isDraft };
+  } catch (error) {
+    console.error(`❌ Error fetching competition:`, error);
+    await interaction.reply({
+      content: truncateDiscordMessage(`**Error fetching competition:**\n${getErrorMessage(error)}`),
+      ephemeral: true,
+    });
+    return null;
+  }
+}
+
 export async function executeCompetitionEdit(interaction: ChatInputCommandInteraction): Promise<void> {
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
   console.log(`📝 Starting competition edit for user ${username} (${userId})`);
 
-  // ============================================================================
-  // Step 1: Parse competition ID and fetch competition
-  // ============================================================================
-
-  const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
-
-  let competition;
-  try {
-    competition = await getCompetitionById(prisma, competitionId);
-  } catch (error) {
-    console.error(`❌ Error fetching competition ${competitionId.toString()}:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`**Error fetching competition:**\n${getErrorMessage(error)}`),
-      ephemeral: true,
-    });
+  // Step 1-3: Fetch and validate competition
+  const result = await fetchAndValidateEditCompetition(interaction, userId);
+  if (!result) {
     return;
   }
-
-  if (!competition) {
-    await interaction.reply({
-      content: `Competition with ID ${competitionId.toString()} not found`,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  // ============================================================================
-  // Step 2: Check ownership
-  // ============================================================================
-
-  if (competition.ownerId !== userId) {
-    await interaction.reply({
-      content: "Only the competition owner can edit the competition",
-      ephemeral: true,
-    });
-    return;
-  }
-
-  // ============================================================================
-  // Step 3: Check competition status
-  // ============================================================================
-
-  const status = getCompetitionStatus(competition);
-
-  if (status === "CANCELLED") {
-    await interaction.reply({
-      content: "Cannot edit a cancelled competition",
-      ephemeral: true,
-    });
-    return;
-  }
-
-  const isDraft = status === "DRAFT";
-
-  console.log(`📊 Competition status: ${status} (isDraft: ${isDraft.toString()})`);
+  const { competitionId, isDraft } = result;
 
   // ============================================================================
   // Step 4: Parse and validate edit arguments

@@ -41,7 +41,7 @@ async function findPlayerByAliasGeneric<T extends Prisma.PlayerInclude>(options:
 /**
  * Find a player by alias (basic query)
  */
-export async function findPlayerByAlias(
+async function findPlayerByAlias(
   prisma: PrismaClient,
   serverId: DiscordGuildId,
   alias: string,
@@ -109,7 +109,7 @@ export async function findPlayerByAliasWithCompetitions(
 /**
  * Find player by Discord ID
  */
-export async function findPlayerByDiscordId(
+async function findPlayerByDiscordId(
   prisma: PrismaClient,
   serverId: DiscordGuildId,
   discordId: DiscordAccountId,
@@ -139,14 +139,14 @@ export async function findPlayerByDiscordId(
 /**
  * Extract guild ID from interaction with validation
  */
-export function extractGuildId(interaction: ChatInputCommandInteraction): string | null {
+function extractGuildId(interaction: ChatInputCommandInteraction): string | null {
   return interaction.guildId ? DiscordGuildIdSchema.parse(interaction.guildId) : null;
 }
 
 /**
  * Check if guild ID is valid and reply with error if not
  */
-export async function requireGuildId(interaction: ChatInputCommandInteraction): Promise<string | null> {
+async function requireGuildId(interaction: ChatInputCommandInteraction): Promise<string | null> {
   const guildId = extractGuildId(interaction);
   if (!guildId) {
     await interaction.reply({

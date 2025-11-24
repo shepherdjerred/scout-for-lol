@@ -6,7 +6,7 @@ import type { MatchId } from "@scout-for-lol/data";
 /**
  * Generate S3 key (path) for a file with date-based hierarchy
  */
-export function generateS3Key(matchId: MatchId, prefix: string, extension: string): string {
+function generateS3Key(matchId: MatchId, prefix: string, extension: string): string {
   const now = new Date();
   const year = now.getUTCFullYear();
   const month = String(now.getUTCMonth() + 1).padStart(2, "0");

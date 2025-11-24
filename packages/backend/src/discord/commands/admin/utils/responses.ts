@@ -14,7 +14,7 @@ export function buildPlayerNotFoundError(alias: string): InteractionReplyOptions
 /**
  * Build a validation error response
  */
-export function buildValidationError(error: unknown): InteractionReplyOptions {
+function buildValidationError(error: unknown): InteractionReplyOptions {
   const errorMessage = getErrorMessage(error);
   return {
     content: `❌ **Validation Error**\n\n${errorMessage}`,
@@ -57,7 +57,7 @@ export function buildSuccessResponse(message: string, details?: string): Interac
 /**
  * Build a server-only command error
  */
-export function buildServerOnlyError(): InteractionReplyOptions {
+function buildServerOnlyError(): InteractionReplyOptions {
   return {
     content: "This command can only be used in a server",
     ephemeral: true,

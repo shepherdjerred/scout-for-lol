@@ -34,7 +34,7 @@ export async function validateDiscordLink(options: {
       success: false,
       errorResponse: {
         content: `❌ Player "${playerAlias}" not found`,
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       },
     };
   }
@@ -57,7 +57,7 @@ export async function validateDiscordLink(options: {
       success: false,
       errorResponse: {
         content: errorResponse.content ?? "",
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       },
     };
   }
@@ -70,7 +70,7 @@ export async function validateDiscordLink(options: {
       success: false,
       errorResponse: {
         content: errorResponse.content ?? "",
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       },
     };
   }
@@ -92,7 +92,7 @@ export function validateDiscordUnlink(
       success: false,
       errorResponse: {
         content: `❌ Player "${playerAlias}" not found`,
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       },
     };
   }
@@ -104,7 +104,7 @@ export function validateDiscordUnlink(
       success: false,
       errorResponse: {
         content: errorResponse.content ?? "",
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       },
     };
   }

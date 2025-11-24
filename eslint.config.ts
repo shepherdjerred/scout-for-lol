@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- can't really split this up */
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 import unicorn from "eslint-plugin-unicorn";
@@ -175,7 +176,7 @@ export default tseslint.config(
   {
     rules: {
       // Code quality and complexity limits
-      "max-lines": ["error", { max: 1200, skipBlankLines: false, skipComments: false }],
+      "max-lines": ["error", { max: 500, skipBlankLines: false, skipComments: false }],
       "max-lines-per-function": ["error", { max: 400, skipBlankLines: true, skipComments: true }],
       complexity: ["error", { max: 20 }],
       "max-depth": ["error", { max: 4 }],

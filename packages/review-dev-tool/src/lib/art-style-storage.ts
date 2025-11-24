@@ -73,7 +73,7 @@ export async function deleteCustomArtStyle(id: string): Promise<boolean> {
 /**
  * Check if an art style is custom (not built-in)
  */
-export async function isCustomArtStyle(id: string): Promise<boolean> {
+async function isCustomArtStyle(id: string): Promise<boolean> {
   const customs = await loadCustomArtStyles();
   return customs.some((s) => s.id === id);
 }
@@ -141,7 +141,7 @@ export async function deleteCustomArtTheme(id: string): Promise<boolean> {
 /**
  * Check if an art theme is custom (not built-in)
  */
-export async function isCustomArtTheme(id: string): Promise<boolean> {
+async function isCustomArtTheme(id: string): Promise<boolean> {
   const customs = await loadCustomArtThemes();
   return customs.some((t) => t.id === id);
 }

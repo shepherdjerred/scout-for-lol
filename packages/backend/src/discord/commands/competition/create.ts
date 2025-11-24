@@ -69,27 +69,13 @@ type CreateCommandArgs = z.infer<typeof CreateCommandArgsSchema>;
 /**
  * Execute /competition create command
  */
-export async function executeCompetitionCreate(interaction: ChatInputCommandInteraction): Promise<void> {
-  const startTime = Date.now();
-  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
+async function parseCreateArgs(interaction: ChatInputCommandInteraction): Promise<CreateCommandArgs | null> {
   const username = interaction.user.username;
-  const guildId = interaction.guildId;
-
-  console.log(`🏆 Starting competition creation for user ${username} (${userId}) in guild ${guildId ?? "unknown"}`);
-
-  // ============================================================================
-  // Step 1: Parse and validate Discord command options
-  // ============================================================================
-
-  let args: CreateCommandArgs;
-
   try {
-    // Parse Discord options
     const startDateStr = interaction.options.getString("start-date");
     const endDateStr = interaction.options.getString("end-date");
     const seasonStr = interaction.options.getString("season");
 
-    // Determine date type
     const hasFixedDates = startDateStr !== null && endDateStr !== null;
     const hasSeason = seasonStr !== null;
 
@@ -102,13 +88,13 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
 
     const dateType = hasFixedDates ? ("FIXED" as const) : ("SEASON" as const);
 
-    args = CreateCommandArgsSchema.parse({
+    const args = CreateCommandArgsSchema.parse({
       title: interaction.options.getString("title"),
       description: interaction.options.getString("description"),
       criteriaType: interaction.options.getString("criteria-type"),
       channelId: interaction.options.getChannel("channel")?.id,
-      guildId,
-      userId,
+      guildId: interaction.guildId,
+      userId: DiscordAccountIdSchema.parse(interaction.user.id),
       dateType,
       startDate: startDateStr ?? undefined,
       endDate: endDateStr ?? undefined,
@@ -123,37 +109,35 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
 
     console.log(`✅ Command arguments validated successfully`);
     console.log(`📋 Title: "${args.title}", Criteria: ${args.criteriaType}, Channel: ${args.channelId}`);
+    return args;
   } catch (error) {
     console.error(`❌ Invalid command arguments from ${username}:`, error);
     const validationError = fromError(error);
     await replyWithError(interaction, `**Invalid input:**\n${validationError.toString()}`);
-    return;
+    return null;
   }
+}
 
-  // ============================================================================
-  // Step 2: Permission and rate limit checks
-  // ============================================================================
-
-  let isAdmin = false;
-
+async function checkPermissionsForCreate(
+  interaction: ChatInputCommandInteraction,
+  args: CreateCommandArgs,
+  username: string,
+): Promise<boolean> {
   try {
-    // Get member to check permissions
-    const member = await interaction.guild?.members.fetch(userId);
+    const member = await interaction.guild?.members.fetch(args.userId);
     if (!member) {
       throw new Error("Could not fetch member from guild");
     }
 
-    // Check if user is an admin
-    isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
+    const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-    // If addAllMembers is true, require admin permission
     if (args.addAllMembers && !isAdmin) {
       console.warn(`⚠️  Non-admin ${username} attempted to use add-all-members option`);
       await interaction.reply({
         content: `**Permission denied:**\nThe \`add-all-members\` option requires Administrator permission.`,
         ephemeral: true,
       });
-      return;
+      return false;
     }
 
     const permissionCheck = await canCreateCompetition(prisma, args.guildId, args.userId, member.permissions);
@@ -164,13 +148,35 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
         content: `**Permission denied:**\n${permissionCheck.reason ?? "No permission"}`,
         ephemeral: true,
       });
-      return;
+      return false;
     }
 
     console.log(`✅ Permission check passed for ${username}`);
+    return true;
   } catch (error) {
     console.error(`❌ Permission check failed:`, error);
     await replyWithErrorFromException(interaction, error, "checking permissions");
+    return false;
+  }
+}
+
+export async function executeCompetitionCreate(interaction: ChatInputCommandInteraction): Promise<void> {
+  const startTime = Date.now();
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
+  const username = interaction.user.username;
+  const guildId = interaction.guildId;
+
+  console.log(`🏆 Starting competition creation for user ${username} (${userId}) in guild ${guildId ?? "unknown"}`);
+
+  // Step 1: Parse and validate Discord command options
+  const args = await parseCreateArgs(interaction);
+  if (!args) {
+    return;
+  }
+
+  // Step 2: Permission and rate limit checks
+  const hasPermission = await checkPermissionsForCreate(interaction, args, username);
+  if (!hasPermission) {
     return;
   }
 

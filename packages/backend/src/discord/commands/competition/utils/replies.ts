@@ -5,7 +5,7 @@ import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 /**
  * Build an ephemeral error reply for competition commands
  */
-export function buildErrorReply(content: string): InteractionReplyOptions {
+function buildErrorReply(content: string): InteractionReplyOptions {
   return {
     content: truncateDiscordMessage(content),
     ephemeral: true,
@@ -15,7 +15,7 @@ export function buildErrorReply(content: string): InteractionReplyOptions {
 /**
  * Build an ephemeral success reply for competition commands
  */
-export function buildSuccessReply(content: string): InteractionReplyOptions {
+function buildSuccessReply(content: string): InteractionReplyOptions {
   return {
     content: truncateDiscordMessage(content),
     ephemeral: true,

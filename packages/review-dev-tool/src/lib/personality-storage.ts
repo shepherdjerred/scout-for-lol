@@ -54,7 +54,7 @@ export async function deleteCustomPersonality(id: string): Promise<boolean> {
 /**
  * Check if a personality is custom (not built-in)
  */
-export async function isCustomPersonality(id: string): Promise<boolean> {
+async function isCustomPersonality(id: string): Promise<boolean> {
   const customs = await loadCustomPersonalities();
   return customs.some((p) => p.id === id);
 }
