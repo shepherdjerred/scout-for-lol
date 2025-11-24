@@ -69,8 +69,8 @@ export async function getAllEntries(): Promise<DBHistoryEntry[]> {
   const db = await openDB();
   const transaction = db.transaction([STORE_NAME], "readonly");
   const store = getStore(transaction, STORE_NAME);
-  const request = store.getAll();
-  const result = await executeRequest<unknown>(request as unknown);
+  const request: IDBRequest<unknown[]> = store.getAll();
+  const result = await executeRequest(request);
   const entriesResult = z.array(DBHistoryEntrySchema).safeParse(result);
   if (entriesResult.success) {
     const entries = entriesResult.data;
@@ -104,8 +104,8 @@ export async function deleteEntry(id: string): Promise<void> {
   const db = await openDB();
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = getStore(transaction, STORE_NAME);
-  const request = store.delete(id);
-  return executeRequestVoid(request as unknown);
+  const request: IDBRequest<IDBValidKey> = store.delete(id);
+  return executeRequestVoid(request);
 }
 
 /**
@@ -115,8 +115,8 @@ export async function clearAllEntries(): Promise<void> {
   const db = await openDB();
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = getStore(transaction, STORE_NAME);
-  const request = store.clear();
-  await executeRequestVoid(request as unknown);
+  const request: IDBRequest<IDBValidKey> = store.clear();
+  await executeRequestVoid(request);
 }
 
 /**
@@ -144,5 +144,10 @@ export async function trimToMaxEntries(maxCount: number): Promise<void> {
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = getStore(transaction, STORE_NAME);
 
-  await Promise.all(toDelete.map((entry) => executeRequestVoid(store.delete(entry.id) as unknown)));
+  await Promise.all(
+    toDelete.map((entry) => {
+      const request: IDBRequest<IDBValidKey> = store.delete(entry.id);
+      return executeRequestVoid(request);
+    }),
+  );
 }

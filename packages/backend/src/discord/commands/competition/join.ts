@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { type ChatInputCommandInteraction } from "discord.js";
 import {
   CompetitionIdSchema,
   DiscordAccountIdSchema,

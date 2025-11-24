@@ -127,7 +127,7 @@ export function ArtStyleSelector({
                       </button>
                       <button
                         onClick={() => {
-                          void onDelete(style.id);
+                          onDelete(style.id);
                         }}
                         className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
                         disabled={!enabled}

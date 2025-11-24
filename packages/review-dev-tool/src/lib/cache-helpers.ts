@@ -46,13 +46,13 @@ export async function executeIDBCursor(
   operation: (cursor: IDBCursorWithValue, entry: unknown) => boolean | undefined,
   operationName = "IndexedDB cursor",
 ): Promise<void> {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     const request = index.openCursor();
 
-    request.onsuccess = (event) => {
-      const cursor = event.target.result;
+    request.onsuccess = () => {
+      const cursor = request.result;
       if (cursor) {
-        const result = operation(cursor, cursor.value as unknown);
+        const result = operation(cursor, cursor.value);
         if (result === false) {
           // Stop iteration if operation returns false
           resolve();

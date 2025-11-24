@@ -1,4 +1,4 @@
-import { MessageFlags, type ChatInputCommandInteraction } from "discord.js";
+import { type ChatInputCommandInteraction } from "discord.js";
 import type { PlayerConfigEntry } from "@scout-for-lol/data";
 import { getRecentMatchIds } from "@scout-for-lol/backend/league/api/match-history.js";
 import {

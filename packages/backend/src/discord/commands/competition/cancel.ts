@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits } from "discord.js";
+import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
 import { CompetitionIdSchema, DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { cancelCompetition, getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";

@@ -1,5 +1,4 @@
 import type { ChatInputCommandInteraction, InteractionReplyOptions } from "discord.js";
-import { MessageFlags } from "discord.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 

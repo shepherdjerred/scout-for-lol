@@ -53,6 +53,84 @@ function resolvePersonality(config: ReviewConfig): Personality {
 }
 
 /**
+ * Get prompt context from config and match
+ */
+function getPromptContext(config: ReviewConfig, match: CompletedMatch | ArenaMatch) {
+  const basePromptTemplate = config.prompts.basePrompt || getBasePrompt();
+  const player = match.players[0];
+  const lane = match.queueType === "arena" ? undefined : player && "lane" in player ? player.lane : undefined;
+  const laneContextInfo = config.prompts.laneContext ?? getLaneContext(lane);
+  const playerMeta = config.prompts.playerMetadata ?? getGenericPlayerMetadata();
+
+  return { basePromptTemplate, laneContextInfo, playerMeta };
+}
+
+/**
+ * Select art styles and themes for image generation
+ */
+function selectArtThemes(config: ReviewConfig): {
+  artStyle: string;
+  artTheme: string;
+  secondArtTheme?: string;
+} {
+  let artStyle: string;
+  let artTheme: string;
+  let secondArtTheme: string | undefined;
+
+  if (config.imageGeneration.artStyle === "random" || config.imageGeneration.artTheme === "random") {
+    const selected = selectRandomStyleAndTheme(
+      config.imageGeneration.useMatchingPairs,
+      config.imageGeneration.matchingPairProbability,
+    );
+    artStyle = config.imageGeneration.artStyle === "random" ? selected.style : config.imageGeneration.artStyle;
+    artTheme = config.imageGeneration.artTheme === "random" ? selected.theme : config.imageGeneration.artTheme;
+  } else {
+    artStyle = config.imageGeneration.artStyle;
+    artTheme = config.imageGeneration.artTheme;
+  }
+
+  if (config.imageGeneration.mashupMode) {
+    if (config.imageGeneration.secondArtTheme === "random") {
+      const selected = selectRandomStyleAndTheme(
+        config.imageGeneration.useMatchingPairs,
+        config.imageGeneration.matchingPairProbability,
+      );
+      secondArtTheme = selected.theme;
+    } else {
+      secondArtTheme = config.imageGeneration.secondArtTheme;
+    }
+  }
+
+  return { artStyle, artTheme, secondArtTheme };
+}
+
+/**
+ * Build generation metadata from results
+ */
+function buildGenerationMetadata(
+  textResult: Awaited<ReturnType<typeof generateReviewText>>,
+  imageResult?: { imageData: string; metadata: ReviewImageMetadata },
+): GenerationMetadata {
+  return {
+    textTokensPrompt: textResult.metadata.textTokensPrompt,
+    textTokensCompletion: textResult.metadata.textTokensCompletion,
+    textDurationMs: textResult.metadata.textDurationMs,
+    imageDurationMs: imageResult?.metadata.imageDurationMs,
+    imageGenerated: Boolean(imageResult),
+    selectedPersonality: textResult.metadata.selectedPersonality,
+    reviewerName: textResult.metadata.reviewerName,
+    selectedArtStyle: imageResult?.metadata.selectedArtStyle,
+    selectedArtTheme: imageResult?.metadata.selectedArtTheme,
+    selectedSecondArtTheme: imageResult?.metadata.selectedSecondArtTheme,
+    systemPrompt: textResult.metadata.systemPrompt,
+    userPrompt: textResult.metadata.userPrompt,
+    openaiRequestParams: textResult.metadata.openaiRequestParams,
+    geminiPrompt: imageResult?.metadata.geminiPrompt,
+    geminiModel: imageResult?.metadata.geminiModel,
+  };
+}
+
+/**
  * Generate a complete match review with text and optional image
  */
 export async function generateMatchReview(
@@ -74,12 +152,8 @@ export async function generateMatchReview(
     // Get personality from config
     const personality = resolvePersonality(config);
 
-    // Get base prompt and lane context
-    const basePromptTemplate = config.prompts.basePrompt || getBasePrompt();
-    const player = match.players[0];
-    const lane = match.queueType === "arena" ? undefined : player && "lane" in player ? player.lane : undefined;
-    const laneContextInfo = config.prompts.laneContext ?? getLaneContext(lane);
-    const playerMeta = config.prompts.playerMetadata ?? getGenericPlayerMetadata();
+    // Get prompt context
+    const { basePromptTemplate, laneContextInfo, playerMeta } = getPromptContext(config, match);
 
     // Initialize OpenAI client
     const openaiClient = new OpenAI({
@@ -110,33 +184,7 @@ export async function generateMatchReview(
         onProgress?.({ step: "image", message: "Generating image..." });
 
         // Select art style and theme
-        let artStyle: string;
-        let artTheme: string;
-        let secondArtTheme: string | undefined;
-
-        if (config.imageGeneration.artStyle === "random" || config.imageGeneration.artTheme === "random") {
-          const selected = selectRandomStyleAndTheme(
-            config.imageGeneration.useMatchingPairs,
-            config.imageGeneration.matchingPairProbability,
-          );
-          artStyle = config.imageGeneration.artStyle === "random" ? selected.style : config.imageGeneration.artStyle;
-          artTheme = config.imageGeneration.artTheme === "random" ? selected.theme : config.imageGeneration.artTheme;
-        } else {
-          artStyle = config.imageGeneration.artStyle;
-          artTheme = config.imageGeneration.artTheme;
-        }
-
-        if (config.imageGeneration.mashupMode) {
-          if (config.imageGeneration.secondArtTheme === "random") {
-            const selected = selectRandomStyleAndTheme(
-              config.imageGeneration.useMatchingPairs,
-              config.imageGeneration.matchingPairProbability,
-            );
-            secondArtTheme = selected.theme;
-          } else {
-            secondArtTheme = config.imageGeneration.secondArtTheme;
-          }
-        }
+        const { artStyle, artTheme, secondArtTheme } = selectArtThemes(config);
 
         // Initialize Gemini client
         const geminiClient = new GoogleGenerativeAI(config.api.geminiApiKey ?? "");
@@ -164,24 +212,8 @@ export async function generateMatchReview(
 
     onProgress?.({ step: "complete", message: "Complete!" });
 
-    // Combine metadata
-    const metadata: GenerationMetadata = {
-      textTokensPrompt: textResult.metadata.textTokensPrompt,
-      textTokensCompletion: textResult.metadata.textTokensCompletion,
-      textDurationMs: textResult.metadata.textDurationMs,
-      imageDurationMs: imageResult?.metadata.imageDurationMs,
-      imageGenerated: Boolean(imageResult),
-      selectedPersonality: textResult.metadata.selectedPersonality,
-      reviewerName: textResult.metadata.reviewerName,
-      selectedArtStyle: imageResult?.metadata.selectedArtStyle,
-      selectedArtTheme: imageResult?.metadata.selectedArtTheme,
-      selectedSecondArtTheme: imageResult?.metadata.selectedSecondArtTheme,
-      systemPrompt: textResult.metadata.systemPrompt,
-      userPrompt: textResult.metadata.userPrompt,
-      openaiRequestParams: textResult.metadata.openaiRequestParams,
-      geminiPrompt: imageResult?.metadata.geminiPrompt,
-      geminiModel: imageResult?.metadata.geminiModel,
-    };
+    // Build metadata
+    const metadata = buildGenerationMetadata(textResult, imageResult);
 
     return {
       text: textResult.text,

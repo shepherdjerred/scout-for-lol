@@ -1,4 +1,4 @@
-import { MessageFlags, type ChatInputCommandInteraction } from "discord.js";
+import { type ChatInputCommandInteraction } from "discord.js";
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
 import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";

@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from "discord.js";
+import { type ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";

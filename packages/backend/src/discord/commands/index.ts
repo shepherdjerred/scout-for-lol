@@ -1,4 +1,4 @@
-import { type Client, MessageFlags, PermissionFlagsBits, PermissionsBitField } from "discord.js";
+import { type Client, PermissionFlagsBits, PermissionsBitField } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { getFlag } from "@scout-for-lol/backend/configuration/flags.js";
 import { match } from "ts-pattern";

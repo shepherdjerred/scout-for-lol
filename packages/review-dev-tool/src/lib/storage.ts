@@ -78,7 +78,7 @@ export async function getItem<T>(storeName: string, key: string): Promise<T | nu
     const transaction = db.transaction([storeName], "readonly");
     const store = getStore(transaction, storeName);
     const request = store.get(key);
-    const result = await executeRequest<T | undefined>(request);
+    const result: unknown = await executeRequest(request);
     return result ?? null;
   } catch (error) {
     console.warn(`Failed to get item from ${storeName}:`, error);
@@ -112,8 +112,10 @@ export async function getAllItems<T>(storeName: string): Promise<T[]> {
     const transaction = db.transaction([storeName], "readonly");
     const store = getStore(transaction, storeName);
     const request = store.getAll();
-    const result = await executeRequest<T[] | undefined>(request as unknown);
-    return result ?? [];
+    const result: unknown = await executeRequest(request);
+    const ArraySchema = z.array(z.unknown());
+    const parsed = ArraySchema.safeParse(result);
+    return parsed.success ? parsed.data : [];
   } catch (error) {
     console.warn(`Failed to get all items from ${storeName}:`, error);
     return [];

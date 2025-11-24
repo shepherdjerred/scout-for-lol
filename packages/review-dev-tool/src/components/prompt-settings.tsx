@@ -97,8 +97,12 @@ export function PromptSettings({
             onSelectRandom={handleSelectRandom}
             onCreateNew={onCreateNewPersonality}
             onEdit={onEditPersonality}
-            onDelete={onDeletePersonality}
-            onSave={onSavePersonality}
+            onDelete={(id) => {
+              void onDeletePersonality(id);
+            }}
+            onSave={(personality) => {
+              void onSavePersonality(personality);
+            }}
             onCancelEdit={onCancelPersonalityEdit}
           />
         </div>
