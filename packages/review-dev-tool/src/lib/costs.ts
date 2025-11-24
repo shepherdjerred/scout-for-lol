@@ -37,7 +37,7 @@ export class CostTracker {
       // Try to access localStorage - will throw in non-browser environments
       const stored = localStorage.getItem(COST_STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
+        const parsed: unknown = JSON.parse(stored);
         const ArraySchema = CostBreakdownSchema.array();
         const result = ArraySchema.safeParse(parsed);
         if (result.success) {

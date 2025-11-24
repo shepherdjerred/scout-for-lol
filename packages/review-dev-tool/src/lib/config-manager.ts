@@ -44,7 +44,7 @@ export function loadSavedConfigs(): SavedConfig[] {
   }
 
   try {
-    const parsed = JSON.parse(stored);
+    const parsed: unknown = JSON.parse(stored);
     const SavedConfigArraySchema = z
       .object({
         id: z.string(),

@@ -10,6 +10,7 @@ import {
   importGlobalConfigFromBlob,
 } from "@scout-for-lol/review-dev-tool/lib/config-manager";
 import { getModelsByCategory, modelSupportsParameter } from "@scout-for-lol/review-dev-tool/lib/models";
+import { getModelPricing, getImagePricing } from "@scout-for-lol/data";
 
 const ErrorSchema = z.object({ message: z.string() });
 
@@ -334,6 +335,22 @@ export function SettingsPanel({
                     );
                   })()}
                 </select>
+                {(() => {
+                  try {
+                    const pricing = getModelPricing(tabConfig.textGeneration.model);
+                    return (
+                      <p className="text-xs text-gray-600 mt-1">
+                        💵 ${pricing.input.toFixed(2)} input / ${pricing.output.toFixed(2)} output per 1M tokens
+                      </p>
+                    );
+                  } catch {
+                    return (
+                      <p className="text-xs text-red-600 mt-1">
+                        ⚠️ Pricing not defined for this model
+                      </p>
+                    );
+                  }
+                })()}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -470,6 +487,22 @@ export function SettingsPanel({
                   <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Experimental)</option>
                   <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
                 </select>
+                {(() => {
+                  try {
+                    const pricing = getImagePricing(tabConfig.imageGeneration.model);
+                    return (
+                      <p className="text-xs text-gray-600 mt-1">
+                        💵 ${pricing.toFixed(2)} per image
+                      </p>
+                    );
+                  } catch {
+                    return (
+                      <p className="text-xs text-red-600 mt-1">
+                        ⚠️ Pricing not defined for this model
+                      </p>
+                    );
+                  }
+                })()}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

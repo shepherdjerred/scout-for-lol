@@ -260,12 +260,13 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
  * Mirrors backend implementation from packages/backend/src/league/model/match.ts
  */
 function getOutcome(participant: MatchV5DTOs.ParticipantDto): "Victory" | "Defeat" | "Surrender" {
-  return match(participant)
-    .returnType<"Victory" | "Surrender" | "Defeat">()
-    .with({ win: true }, () => "Victory")
-    .with({ gameEndedInSurrender: true }, () => "Surrender")
-    .with({ win: false }, () => "Defeat")
-    .exhaustive();
+  if (participant.win) {
+    return "Victory";
+  }
+  if (participant.gameEndedInSurrender) {
+    return "Surrender";
+  }
+  return "Defeat";
 }
 
 /**
@@ -321,7 +322,7 @@ export function convertMatchDtoToInternalFormat(
         const info = getRuneInfo(selection.perk);
         runes.push({
           id: selection.perk,
-          name: info?.name ?? `Rune ${selection.perk}`,
+          name: info?.name ?? `Rune ${selection.perk.toString()}`,
           description: info?.longDesc ?? info?.shortDesc ?? "",
         });
       }
@@ -334,7 +335,7 @@ export function convertMatchDtoToInternalFormat(
         const info = getRuneInfo(selection.perk);
         runes.push({
           id: selection.perk,
-          name: info?.name ?? `Rune ${selection.perk}`,
+          name: info?.name ?? `Rune ${selection.perk.toString()}`,
           description: info?.longDesc ?? info?.shortDesc ?? "",
         });
       }

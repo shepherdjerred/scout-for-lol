@@ -25,7 +25,7 @@ for (const path of RAW_FILE_PATHS) {
     const svg = await arenaMatchToSvg(ArenaMatchSchema.parse(match));
     const png = await svgToPng(svg);
     expect(svg.length).toBeGreaterThan(1024); // basic sanity check
-    const outputFileName = path.split("/").pop()?.replace(".json", ".png") ?? "arena_real.png";
+    const outputFileName: string = path.split("/").pop()?.replace(".json", ".png") ?? "arena_real.png";
     await Bun.write(new URL(`__snapshots__/${outputFileName}`, import.meta.url), png);
 
     // Hash the SVG for snapshot comparison instead of storing the full content

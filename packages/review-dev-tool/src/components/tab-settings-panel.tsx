@@ -10,7 +10,7 @@ import { PersonalityEditor } from "@scout-for-lol/review-dev-tool/components/per
 import { ArtStyleEditor } from "@scout-for-lol/review-dev-tool/components/art-style-editor";
 import { ConfigImportModal } from "@scout-for-lol/review-dev-tool/components/config-import-modal";
 import { downloadConfigBundle } from "@scout-for-lol/review-dev-tool/lib/config-export";
-import { ART_STYLES, ART_THEMES } from "@scout-for-lol/data";
+import { ART_STYLES, ART_THEMES, getModelPricing, getImagePricing } from "@scout-for-lol/data";
 
 const ErrorSchema = z.object({ message: z.string() });
 import {
@@ -305,6 +305,14 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                   <option value="gpt-4">GPT-4</option>
                   <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
                 </select>
+                {(() => {
+                  const pricing = getModelPricing(config.textGeneration.model);
+                  return (
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      💵 ${pricing.input.toFixed(2)} input / ${pricing.output.toFixed(2)} output per 1M tokens
+                    </p>
+                  );
+                })()}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -426,6 +434,14 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                   <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (Experimental)</option>
                   <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
                 </select>
+                {(() => {
+                  const pricing = getImagePricing(config.imageGeneration.model);
+                  return (
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      💵 ${pricing.toFixed(2)} per image
+                    </p>
+                  );
+                })()}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

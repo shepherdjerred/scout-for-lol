@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import type { MatchDto, ParticipantDto ,
+import type {
+  MatchDto,
   AccountIdSchema,
   ChampionIdSchema,
   LeaguePuuidSchema,

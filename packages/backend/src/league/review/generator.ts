@@ -8,7 +8,6 @@ import {
   curateMatchData,
   type CuratedMatchData,
   MatchDto,
-  ParticipantDto,
 } from "@scout-for-lol/data";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -103,7 +102,7 @@ async function generateReviewImageBackend(
       await Bun.write(`AI_IMAGES_DIR, { recursive: true }/.keep`, "");
       const filepath = join(AI_IMAGES_DIR, `ai-review-${new Date().toISOString().replace(/[:.]/g, "-")}.png`);
       await Bun.write(filepath, buffer);
-      console.log(`[generateReviewImage] Saved image to: ${filepath}`);
+      console.log(`[generateReviewImage] Saved image to: ${String(filepath)}`);
     } catch (fsError: unknown) {
       console.error("[generateReviewImage] Failed to save image to filesystem:", fsError);
     }

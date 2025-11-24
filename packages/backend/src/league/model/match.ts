@@ -179,7 +179,7 @@ export function getArenaPlacement(participant: ParticipantDto) {
   return ArenaParticipantFieldsSchema.parse(participant).placement;
 }
 
-export async function toArenaMatch(players: Player[], matchDto: MatchV5DTOs.MatchDto): Promise<ArenaMatch> {
+export async function toArenaMatch(players: Player[], matchDto: MatchDto): Promise<ArenaMatch> {
   const subteams = await toArenaSubteams(matchDto.info.participants);
 
   // Build ArenaMatch.players for all tracked players

@@ -1,5 +1,4 @@
-import type { CompetitionQueueType, QueueType } from "@scout-for-lol/data";
-import type { MatchV5DTOs as _MatchV5DTOs } from "twisted/dist/models-dto/index.js";
+import type { CompetitionQueueType, QueueType, MatchDto, ParticipantDto } from "@scout-for-lol/data";
 import { parseQueueType } from "@scout-for-lol/data";
 import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";
 
@@ -50,10 +49,7 @@ export function matchesQueue(match: MatchDto, queueFilter: CompetitionQueueType)
  * Get the participant data for a player in a match
  * Returns undefined if player not found
  */
-export function getPlayerParticipant(
-  player: PlayerWithAccounts,
-  match: MatchDto,
-): ParticipantDto | undefined {
+export function getPlayerParticipant(player: PlayerWithAccounts, match: MatchDto): ParticipantDto | undefined {
   const playerPuuids = player.accounts.map((account) => account.puuid);
   return match.info.participants.find((participant) => playerPuuids.includes(participant.puuid));
 }

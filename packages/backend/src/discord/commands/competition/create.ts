@@ -284,7 +284,9 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
         // Try looking up by name
         const idFromName = getChampionId(args.champion);
         if (!idFromName) {
-          throw new Error(`Invalid champion: "${args.champion}". Please select a champion from the autocomplete list.`);
+          throw new Error(
+            `Invalid champion: "${args.champion.toString()}". Please select a champion from the autocomplete list.`,
+          );
         }
         championId = idFromName;
       }
@@ -326,7 +328,9 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
       .with("SEASON", () => {
         // Validate season hasn't ended yet
         if (hasSeasonEnded(args.season)) {
-          throw new Error(`Cannot create competition for season ${args.season} - this season has already ended`);
+          throw new Error(
+            `Cannot create competition for season ${args.season.toString()} - this season has already ended`,
+          );
         }
 
         return {

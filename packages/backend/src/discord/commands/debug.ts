@@ -90,7 +90,7 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
 
     console.log(`📖 Reading database file from ${databasePath}`);
     const fileBuffer = await readFile(databasePath);
-    console.log(`✅ Successfully read database file (${fileBuffer.length.toString()} bytes)`);
+    console.log(`✅ Successfully read database file (${String(fileBuffer.length)} bytes)`);
 
     // Create attachment
     const attachment = new AttachmentBuilder(fileBuffer, { name: "database.sqlite" });

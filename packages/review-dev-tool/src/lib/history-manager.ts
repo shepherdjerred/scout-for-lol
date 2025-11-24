@@ -53,7 +53,7 @@ async function migrateFromLocalStorage(): Promise<void> {
       return;
     } // Nothing to migrate
 
-    const parsed = JSON.parse(stored);
+    const parsed: unknown = JSON.parse(stored);
 
     // Validate array structure with Zod
     const MigrationEntrySchema = z.object({
@@ -84,15 +84,15 @@ async function migrateFromLocalStorage(): Promise<void> {
       }
 
       // Validated with Zod but metadata field is unknown for migration compatibility
-      const historyEntry: HistoryEntry = {
+      const historyEntry = {
         id: entry.id,
         timestamp: new Date(entry.timestamp),
-        result: resultValidation.data as unknown as GenerationResult,
-        configSnapshot: configValidation.data as unknown as HistoryEntry["configSnapshot"],
+        result: resultValidation.data as unknown,
+        configSnapshot: configValidation.data as unknown,
         status: entry.status,
         ...(entry.rating !== undefined && { rating: entry.rating }),
         ...(entry.notes !== undefined && { notes: entry.notes }),
-      };
+      } as unknown as HistoryEntry;
       await db.saveEntry(historyEntry);
     }
 
@@ -129,15 +129,15 @@ export async function loadHistory(): Promise<HistoryEntry[]> {
       }
 
       // Validated with Zod but metadata field is unknown for migration compatibility
-      const historyEntry: HistoryEntry = {
+      const historyEntry = {
         id: entry.id,
         timestamp: new Date(entry.timestamp),
-        result: resultValidation.data as unknown as GenerationResult,
-        configSnapshot: configValidation.data as unknown as HistoryEntry["configSnapshot"],
+        result: resultValidation.data as unknown,
+        configSnapshot: configValidation.data as unknown,
         status: entry.status,
         ...(entry.rating !== undefined && { rating: entry.rating }),
         ...(entry.notes !== undefined && { notes: entry.notes }),
-      };
+      } as unknown as HistoryEntry;
       validEntries.push(historyEntry);
     }
     return validEntries;
@@ -249,15 +249,15 @@ export async function getHistoryEntry(id: string): Promise<HistoryEntry | undefi
     }
 
     // Validated with Zod but metadata field is unknown for migration compatibility
-    const result: HistoryEntry = {
+    const result = {
       id: entry.id,
       timestamp: new Date(entry.timestamp),
-      result: resultValidation.data as unknown as GenerationResult,
-      configSnapshot: configValidation.data as unknown as HistoryEntry["configSnapshot"],
+      result: resultValidation.data as unknown,
+      configSnapshot: configValidation.data as unknown,
       status: entry.status,
       ...(entry.rating !== undefined && { rating: entry.rating }),
       ...(entry.notes !== undefined && { notes: entry.notes }),
-    };
+    } as unknown as HistoryEntry;
     return result;
   } catch (error) {
     console.error("Failed to get history entry:", error);
