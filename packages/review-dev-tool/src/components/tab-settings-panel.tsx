@@ -1,7 +1,7 @@
 /**
  * Per-tab settings panel for tuning parameters
  */
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { z } from "zod";
 import type { TabConfig, Personality } from "@scout-for-lol/review-dev-tool/config/schema";
 import { createDefaultTabConfig } from "@scout-for-lol/review-dev-tool/config/schema";
@@ -41,28 +41,66 @@ type TabSettingsPanelProps = {
   onChange: (config: TabConfig) => void;
 };
 
+// Store for custom data
+type CustomDataState = {
+  personalities: Personality[];
+  styles: CustomArtStyle[];
+  themes: CustomArtTheme[];
+};
+
+let customDataState: CustomDataState = {
+  personalities: [],
+  styles: [],
+  themes: [],
+};
+
+const customDataListeners = new Set<() => void>();
+
+function subscribeToCustomData(callback: () => void) {
+  customDataListeners.add(callback);
+  return () => {
+    customDataListeners.delete(callback);
+  };
+}
+
+function getCustomDataSnapshot() {
+  return customDataState;
+}
+
+// Load custom data at module level
+let customDataLoadPromise: Promise<void> | null = null;
+
+function loadCustomData() {
+  customDataLoadPromise ??= (async () => {
+    customDataState = {
+      personalities: await loadCustomPersonalities(),
+      styles: await loadCustomArtStyles(),
+      themes: await loadCustomArtThemes(),
+    };
+    customDataListeners.forEach((listener) => {
+      listener();
+    });
+  })();
+  return customDataLoadPromise;
+}
+
+// Start loading immediately
+void loadCustomData();
+
 export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
-  const [customPersonalities, setCustomPersonalities] = useState<Personality[]>([]);
+  // Subscribe to custom data store
+  const customData = useSyncExternalStore(subscribeToCustomData, getCustomDataSnapshot, getCustomDataSnapshot);
+  const { personalities: customPersonalities, styles: customStyles, themes: customThemes } = customData;
+
   const [editingPersonality, setEditingPersonality] = useState<Personality | null>(null);
   const [showPersonalityEditor, setShowPersonalityEditor] = useState(false);
 
-  const [customStyles, setCustomStyles] = useState<CustomArtStyle[]>([]);
-  const [customThemes, setCustomThemes] = useState<CustomArtTheme[]>([]);
   const [editingStyle, setEditingStyle] = useState<CustomArtStyle | null>(null);
   const [editingTheme, setEditingTheme] = useState<CustomArtTheme | null>(null);
   const [showStyleEditor, setShowStyleEditor] = useState(false);
   const [showThemeEditor, setShowThemeEditor] = useState(false);
 
   const [showImportModal, setShowImportModal] = useState(false);
-
-  useEffect(() => {
-    const loadData = async () => {
-      setCustomPersonalities(await loadCustomPersonalities());
-      setCustomStyles(await loadCustomArtStyles());
-      setCustomThemes(await loadCustomArtThemes());
-    };
-    void loadData();
-  }, []);
 
   const allPersonalities = [...BUILTIN_PERSONALITIES.filter((p) => p.id !== "generic"), ...customPersonalities];
 
@@ -124,6 +162,17 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
     setShowPersonalityEditor(true);
   };
 
+  const refreshCustomData = async () => {
+    customDataState = {
+      personalities: await loadCustomPersonalities(),
+      styles: await loadCustomArtStyles(),
+      themes: await loadCustomArtThemes(),
+    };
+    customDataListeners.forEach((listener) => {
+      listener();
+    });
+  };
+
   const handleSavePersonality = async (personality: Personality) => {
     const existsInCustom = customPersonalities.some((p) => p.id === personality.id);
 
@@ -139,7 +188,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
       await addCustomPersonality(newPersonality);
     }
 
-    setCustomPersonalities(await loadCustomPersonalities());
+    await refreshCustomData();
     setShowPersonalityEditor(false);
     setEditingPersonality(null);
   };
@@ -155,7 +204,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
       await addCustomArtStyle(newStyle);
     }
 
-    setCustomStyles(await loadCustomArtStyles());
+    await refreshCustomData();
     setShowStyleEditor(false);
     setEditingStyle(null);
   };
@@ -171,7 +220,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
       await addCustomArtTheme(newTheme);
     }
 
-    setCustomThemes(await loadCustomArtThemes());
+    await refreshCustomData();
     setShowThemeEditor(false);
     setEditingTheme(null);
   };
@@ -179,7 +228,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   const handleDeletePersonality = async (id: string) => {
     if (confirm("Are you sure you want to delete this personality?")) {
       await deleteCustomPersonality(id);
-      setCustomPersonalities(await loadCustomPersonalities());
+      await refreshCustomData();
       if (config.prompts.personalityId === id) {
         onChange({
           ...config,
@@ -192,7 +241,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   const handleDeleteStyle = async (id: string) => {
     if (confirm("Are you sure you want to delete this custom art style?")) {
       await deleteCustomArtStyle(id);
-      setCustomStyles(await loadCustomArtStyles());
+      await refreshCustomData();
       // If this style was selected, reset to random
       const deletedStyle = customStyles.find((s) => s.id === id);
       if (deletedStyle && config.imageGeneration.artStyle === deletedStyle.description) {
@@ -207,7 +256,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   const handleDeleteTheme = async (id: string) => {
     if (confirm("Are you sure you want to delete this custom art theme?")) {
       await deleteCustomArtTheme(id);
-      setCustomThemes(await loadCustomArtThemes());
+      await refreshCustomData();
       // If this theme was selected, reset to random
       const deletedTheme = customThemes.find((t) => t.id === id);
       if (deletedTheme && config.imageGeneration.artTheme === deletedTheme.description) {
@@ -251,9 +300,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
       onChange(tabConfig);
     }
     // Reload personalities/styles/themes from storage
-    setCustomPersonalities(await loadCustomPersonalities());
-    setCustomStyles(await loadCustomArtStyles());
-    setCustomThemes(await loadCustomArtThemes());
+    await refreshCustomData();
   };
 
   const handleResetToDefaults = () => {

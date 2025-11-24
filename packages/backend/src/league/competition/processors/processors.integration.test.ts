@@ -1,6 +1,12 @@
 import { describe, expect, it } from "bun:test";
-import type { MatchDto, Rank, Ranks } from "@scout-for-lol/data";
-import { AccountIdSchema, ChampionIdSchema, LeaguePuuidSchema, PlayerIdSchema } from "@scout-for-lol/data";
+import type { MatchDto, ParticipantDto, Rank, Ranks } from "@scout-for-lol/data";
+import {
+  AccountIdSchema,
+  ChampionIdSchema,
+  LeaguePuuidSchema,
+  MatchDtoSchema,
+  PlayerIdSchema,
+} from "@scout-for-lol/data";
 import { processCriteria } from "@scout-for-lol/backend/league/competition/processors/index.js";
 import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";
 
@@ -11,7 +17,7 @@ import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-id
 
 async function loadMatch(path: string): Promise<MatchDto> {
   const content = await Bun.file(path, "utf-8").text();
-  return JSON.parse(content) as MatchDto;
+  return MatchDtoSchema.parse(JSON.parse(content));
 }
 
 // ============================================================================

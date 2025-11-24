@@ -1,7 +1,7 @@
 /**
  * Cache management button with dropdown
  */
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { z } from "zod";
 import { clearAllCache, getCacheStats } from "@scout-for-lol/review-dev-tool/lib/cache";
 
@@ -14,32 +14,6 @@ export function CacheButton() {
     totalSizeBytes: 0,
   });
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Update stats when dropdown opens
-  useEffect(() => {
-    if (isOpen) {
-      void getCacheStats().then(setStats);
-    }
-  }, [isOpen]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const NodeSchema = z.instanceof(Node);
-      const targetResult = NodeSchema.safeParse(event.target);
-      if (dropdownRef.current && targetResult.success && !dropdownRef.current.contains(targetResult.data)) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-    return undefined;
-  }, [isOpen]);
 
   const handleClearCache = async () => {
     if (confirm("Clear all cached CloudFlare R2 data? This will require re-fetching from the server.")) {
@@ -61,10 +35,35 @@ export function CacheButton() {
   };
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div
+      className="relative"
+      ref={dropdownRef}
+      onMouseDown={(e) => {
+        // Handle clicks on the dropdown container itself
+        e.stopPropagation();
+      }}
+    >
+      {isOpen && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 40 }}
+          onMouseDown={(e) => {
+            // Close when clicking the overlay
+            const NodeSchema = z.instanceof(Node);
+            const targetResult = NodeSchema.safeParse(e.target);
+            if (targetResult.success && e.target === e.currentTarget) {
+              setIsOpen(false);
+            }
+          }}
+        />
+      )}
       <button
         onClick={() => {
-          setIsOpen(!isOpen);
+          const newIsOpen = !isOpen;
+          setIsOpen(newIsOpen);
+          // Load stats when opening dropdown
+          if (newIsOpen) {
+            void getCacheStats().then(setStats);
+          }
         }}
         className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
         title="R2 Cache Management"

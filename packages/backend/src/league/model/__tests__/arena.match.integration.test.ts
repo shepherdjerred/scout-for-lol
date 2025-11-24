@@ -50,10 +50,12 @@ function makeParticipant(
     PlayerScore6: 0,
     PlayerScore7: 0,
     PlayerScore8: 0,
+    // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
     challenges: {
       damageTakenOnTeamPercentage: 0.2,
     } satisfies Partial<ChallengesDto> as unknown as ChallengesDto,
   };
+  // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
   return {
     totalHealsOnTeammates: 300,
     totalDamageShieldedOnTeammates: 500,

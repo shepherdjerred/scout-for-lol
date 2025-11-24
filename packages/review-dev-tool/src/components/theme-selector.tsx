@@ -1,65 +1,104 @@
 /**
  * Theme selector for switching between light and dark modes
  */
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import { z } from "zod";
 import { STORES, getItem, setItem } from "@scout-for-lol/review-dev-tool/lib/storage";
 
 const BooleanSchema = z.boolean();
 
-export function ThemeSelector() {
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
-  const [isInitialized, setIsInitialized] = useState<boolean>(false);
+// Store for theme state
+let themeState: { isDarkMode: boolean; isInitialized: boolean } = {
+  isDarkMode: true,
+  isInitialized: false,
+};
 
-  // Load theme preference from IndexedDB on mount
-  useEffect(() => {
-    const loadTheme = async () => {
-      const WindowSchema = z.object({}).passthrough();
-      const windowResult = WindowSchema.safeParse(globalThis.window);
-      if (!windowResult.success) {
-        setIsInitialized(true);
-        return;
-      }
+const themeListeners = new Set<() => void>();
 
-      try {
-        const saved = await getItem(STORES.PREFERENCES, "darkMode");
-        if (saved !== null) {
-          const result = BooleanSchema.safeParse(saved);
-          if (result.success) {
-            setIsDarkMode(result.data);
-          }
-        }
-      } catch {
-        // Use default (dark mode)
-      }
-      setIsInitialized(true);
-    };
-    void loadTheme();
-  }, []);
+function subscribeToTheme(callback: () => void) {
+  themeListeners.add(callback);
+  return () => {
+    themeListeners.delete(callback);
+  };
+}
 
-  // Apply dark mode class to document and save to IndexedDB
-  useEffect(() => {
-    if (!isInitialized) {
-      return;
-    }
+function getThemeSnapshot() {
+  return themeState;
+}
 
+// Load theme preference at module level
+let themeLoadPromise: Promise<void> | null = null;
+
+function loadThemeData() {
+  themeLoadPromise ??= (async () => {
     const WindowSchema = z.object({}).passthrough();
     const windowResult = WindowSchema.safeParse(globalThis.window);
     if (!windowResult.success) {
+      themeState = { isDarkMode: true, isInitialized: true };
+      themeListeners.forEach((listener) => {
+        listener();
+      });
       return;
     }
 
-    if (isDarkMode) {
+    try {
+      const saved = await getItem(STORES.PREFERENCES, "darkMode");
+      if (saved !== null) {
+        const result = BooleanSchema.safeParse(saved);
+        if (result.success) {
+          themeState = { isDarkMode: result.data, isInitialized: true };
+          // Apply to DOM
+          if (result.data) {
+            document.documentElement.classList.add("dark");
+          } else {
+            document.documentElement.classList.remove("dark");
+          }
+        } else {
+          themeState = { isDarkMode: true, isInitialized: true };
+        }
+      } else {
+        themeState = { isDarkMode: true, isInitialized: true };
+        // Apply default to DOM
+        document.documentElement.classList.add("dark");
+      }
+    } catch {
+      // Use default (dark mode)
+      themeState = { isDarkMode: true, isInitialized: true };
       document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
     }
+    themeListeners.forEach((listener) => {
+      listener();
+    });
+  })();
+  return themeLoadPromise;
+}
 
-    void setItem(STORES.PREFERENCES, "darkMode", isDarkMode);
-  }, [isDarkMode, isInitialized]);
+// Start loading immediately
+void loadThemeData();
+
+export function ThemeSelector() {
+  // Subscribe to theme state
+  const theme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getThemeSnapshot);
+  const { isDarkMode } = theme;
 
   const handleToggle = (): void => {
-    setIsDarkMode(!isDarkMode);
+    const newDarkMode = !isDarkMode;
+    themeState = { ...themeState, isDarkMode: newDarkMode };
+    themeListeners.forEach((listener) => {
+      listener();
+    });
+
+    // Apply theme change immediately and save
+    const WindowSchema = z.object({}).passthrough();
+    const windowResult = WindowSchema.safeParse(globalThis.window);
+    if (windowResult.success) {
+      if (newDarkMode) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+      void setItem(STORES.PREFERENCES, "darkMode", newDarkMode);
+    }
   };
 
   return (

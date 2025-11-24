@@ -1,7 +1,7 @@
 /**
  * S3 match browser for selecting real match data
  */
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { z } from "zod";
 import Fuse from "fuse.js";
 import type { ApiSettings } from "@scout-for-lol/review-dev-tool/config/schema";
@@ -179,32 +179,6 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     [s3Config, abortController],
   );
 
-  // Auto-load matches on mount when S3 config is available
-  useEffect(() => {
-    if (s3Config && matches.length === 0 && !loading) {
-      void handleBrowse();
-    }
-  }, [s3Config, matches.length, loading, handleBrowse]);
-
-  // Auto-refresh today's matches every 10 minutes (if matches are already loaded)
-  useEffect(() => {
-    if (!s3Config || matches.length === 0) {
-      return;
-    }
-
-    const interval = setInterval(
-      () => {
-        // Force refresh to get latest data (bypasses metadata cache)
-        void handleBrowse(true);
-      },
-      10 * 60 * 1000,
-    ); // 10 minutes
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [s3Config, matches.length, handleBrowse]);
-
   const handleSelectMatch = async (metadata: MatchMetadata) => {
     if (!s3Config) {
       return;
@@ -280,10 +254,13 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     return result;
   }, [matches, filterQueueType, filterLane, filterPlayer, filterChampion, filterOutcome]);
 
-  // Reset to page 1 when filters change
-  useEffect(() => {
+  // Reset to page 1 when filters change - calculate derived state during render
+  const filterKey = `${filterQueueType}-${filterLane}-${filterPlayer}-${filterChampion}-${filterOutcome}`;
+  const previousFilterKeyRef = useRef(filterKey);
+  if (previousFilterKeyRef.current !== filterKey && currentPage !== 1) {
     setCurrentPage(1);
-  }, [filterQueueType, filterLane, filterPlayer, filterChampion, filterOutcome]);
+    previousFilterKeyRef.current = filterKey;
+  }
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredMatches.length / pageSize);
@@ -324,9 +301,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
               </svg>
               {loading ? "Loading..." : "Refresh Matches"}
             </button>
-            <p className="text-xs text-center text-gray-500 dark:text-gray-400">
-              Auto-loads last 7 days • Refreshes every 10 min
-            </p>
+            <p className="text-xs text-center text-gray-500 dark:text-gray-400">Loads last 7 days of matches</p>
           </div>
         )}
 

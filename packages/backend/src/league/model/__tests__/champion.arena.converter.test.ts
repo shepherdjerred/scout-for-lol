@@ -3,6 +3,7 @@ import type { ParticipantDto } from "@scout-for-lol/data";
 import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
 
 const baseParticipant = (): ParticipantDto => {
+  // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
   const participant = {
     riotIdGameName: "Player#NA1",
     summonerName: "Player",
@@ -44,6 +45,7 @@ const baseParticipant = (): ParticipantDto => {
     PlayerScore6: 7,
     PlayerScore7: 8,
     PlayerScore8: 9,
+    // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
     challenges: {
       damageTakenOnTeamPercentage: 0.2,
     } as unknown as ParticipantDto["challenges"],

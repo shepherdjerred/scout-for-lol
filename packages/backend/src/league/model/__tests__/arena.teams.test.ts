@@ -5,6 +5,7 @@ import { groupArenaTeams, getArenaTeammate, toArenaSubteams } from "@scout-for-l
 import { testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
 
 function makeParticipant(extra: Record<string, unknown> = {}): ParticipantDto {
+  // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
   return {
     puuid: crypto.randomUUID(),
     riotIdGameName: "P#NA1",

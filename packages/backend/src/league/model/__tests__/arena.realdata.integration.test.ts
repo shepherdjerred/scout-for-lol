@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import type { MatchDto, Player } from "@scout-for-lol/data";
-import { ArenaMatchSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import { ArenaMatchSchema, LeaguePuuidSchema, MatchDtoSchema } from "@scout-for-lol/data";
 import { toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
 
 const currentDir = new URL(".", import.meta.url).pathname;
@@ -13,7 +13,7 @@ const RAW_FILE_PATHS = [
 async function loadMatch(path: string): Promise<MatchDto> {
   const file = Bun.file(path);
   const json = (await file.json()) as unknown;
-  return json as MatchDto;
+  return MatchDtoSchema.parse(json);
 }
 
 describe("toArenaMatch with real arena JSON", () => {

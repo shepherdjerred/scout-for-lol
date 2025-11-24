@@ -13,6 +13,11 @@
   - Continue running knip
 - Remove duplicated code
   - Continue running dedupe script
+- Add eslint rules to detect overusage of Zod
+- eslint rule to avoid .then and .catch
+- lower allowed complexity, duplication, and line length
+- rename DTO -> raw
+  - add check that DTO objects must have "raw" in the var/param name
 
 ## Done
 

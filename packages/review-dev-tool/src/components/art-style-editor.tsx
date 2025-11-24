@@ -1,7 +1,7 @@
 /**
  * Editor for creating and editing custom art styles and themes
  */
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { CustomArtStyle, CustomArtTheme } from "@scout-for-lol/review-dev-tool/lib/art-style-storage";
 
 type EditorMode = "style" | "theme";
@@ -16,15 +16,15 @@ type ArtStyleEditorProps = {
 
 export function ArtStyleEditor({ mode, style, theme, onSave, onCancel }: ArtStyleEditorProps) {
   const isEditing = Boolean(style ?? theme);
-  const [description, setDescription] = useState("");
+  // Initialize description from style/theme prop - recalculate when key changes
+  const initialDescription = style?.description ?? theme?.description ?? "";
+  const [description, setDescription] = useState(initialDescription);
 
-  useEffect(() => {
-    if (style) {
-      setDescription(style.description);
-    } else if (theme) {
-      setDescription(theme.description);
-    }
-  }, [style, theme]);
+  // Reset description when editing different item (when style/theme ID changes)
+  const itemId = style?.id ?? theme?.id ?? "";
+  if (itemId && description !== initialDescription && initialDescription) {
+    setDescription(initialDescription);
+  }
 
   const handleSave = () => {
     if (!description.trim()) {

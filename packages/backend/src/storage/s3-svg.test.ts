@@ -51,7 +51,7 @@ describe("saveSvgToS3 - Success Cases", () => {
     expect(call.args[0]).toBeInstanceOf(PutObjectCommand);
 
     // Verify command parameters
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
     expect(command.input.Bucket).toBe("test-bucket");
     expect(command.input.Key).toMatch(/^images\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\.svg$/);
     expect(command.input.ContentType).toBe("image/svg+xml");
@@ -78,7 +78,7 @@ describe("saveSvgToS3 - Success Cases", () => {
     expect(s3Mock.calls().length).toBe(1);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
     expect(command.input.Metadata?.["queueType"]).toBe("arena");
     expect(command.input.Metadata?.["format"]).toBe("svg");
 
@@ -100,7 +100,7 @@ describe("saveSvgToS3 - Success Cases", () => {
     expect(s3Mock.calls().length).toBe(1);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as unknown as PutObjectCommand;
+    const command = call.args[0] as unknown;
     // Body should be Uint8Array or string
     const bodyValidator = z.union([z.instanceof(Uint8Array), z.string()]);
     expect(bodyValidator.safeParse(command.input.Body).success).toBe(true);
@@ -188,7 +188,7 @@ describe("saveSvgToS3 - S3 Key Format", () => {
     await saveSvgToS3(matchId, svgContent, queueType);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
 
     // Verify key structure
     const key = command.input.Key!;
@@ -215,7 +215,7 @@ describe("saveSvgToS3 - S3 Key Format", () => {
     await saveSvgToS3(matchId, svgContent, queueType);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
 
     expect(command.input.Key).toEndWith(".svg");
   });
@@ -254,7 +254,7 @@ describe("saveSvgToS3 - Content Type and Metadata", () => {
     await saveSvgToS3(matchId, svgContent, queueType);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
 
     expect(command.input.ContentType).toBe("image/svg+xml");
   });
@@ -271,7 +271,7 @@ describe("saveSvgToS3 - Content Type and Metadata", () => {
     await saveSvgToS3(matchId, svgContent, queueType);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
     const metadata = command.input.Metadata!;
 
     expect(metadata["matchId"]).toBe(matchId);
@@ -299,7 +299,7 @@ describe("saveSvgToS3 - Content Type and Metadata", () => {
     await saveSvgToS3(matchId, svgContent, queueType);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as unknown as PutObjectCommand;
+    const command = call.args[0] as unknown;
 
     // Body should be Uint8Array or string
     const bodyData = (command as { input: { Body: unknown } }).input?.Body;

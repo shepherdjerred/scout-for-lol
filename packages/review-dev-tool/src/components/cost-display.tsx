@@ -1,7 +1,7 @@
 /**
  * Cost tracking display component
  */
-import { useEffect, useState } from "react";
+import { useSyncExternalStore, useRef } from "react";
 import type { CostTracker } from "@scout-for-lol/review-dev-tool/lib/costs";
 import type { CostBreakdown } from "@scout-for-lol/review-dev-tool/config/schema";
 import { formatCost } from "@scout-for-lol/review-dev-tool/lib/costs";
@@ -10,28 +10,69 @@ type CostDisplayProps = {
   costTracker: CostTracker;
 };
 
-export function CostDisplay({ costTracker }: CostDisplayProps) {
-  const [total, setTotal] = useState<CostBreakdown | null>(null);
-  const count = costTracker.getCount();
+// External store for cost update events
+function subscribeToCostUpdates(callback: () => void) {
+  window.addEventListener("cost-update", callback);
+  return () => {
+    window.removeEventListener("cost-update", callback);
+  };
+}
 
-  useEffect(() => {
-    void (async () => {
-      const totalData = await costTracker.getTotal();
-      setTotal(totalData);
+function getCostUpdateSnapshot() {
+  return Date.now();
+}
+
+// Store for async cost total data
+let costTotalData: CostBreakdown | null = null;
+let costTotalPromise: Promise<void> | null = null;
+const costTotalListeners = new Set<() => void>();
+
+function subscribeToCostTotal(callback: () => void, costTracker: CostTracker) {
+  costTotalListeners.add(callback);
+  // Load data if not already loading
+  if (costTotalPromise === null && costTotalData === null) {
+    costTotalPromise = (async () => {
+      costTotalData = await costTracker.getTotal();
+      costTotalListeners.forEach((listener) => {
+        listener();
+      });
+      costTotalPromise = null;
     })();
+  }
+  return () => {
+    costTotalListeners.delete(callback);
+  };
+}
 
-    // Re-fetch when cost updates
-    const handleUpdate = () => {
-      void (async () => {
-        const totalData = await costTracker.getTotal();
-        setTotal(totalData);
-      })();
-    };
-    window.addEventListener("cost-update", handleUpdate);
-    return () => {
-      window.removeEventListener("cost-update", handleUpdate);
-    };
-  }, [costTracker]);
+function getCostTotalSnapshot() {
+  return costTotalData;
+}
+
+export function CostDisplay({ costTracker }: CostDisplayProps) {
+  const count = costTracker.getCount();
+  const costTrackerRef = useRef(costTracker);
+  costTrackerRef.current = costTracker;
+
+  // Subscribe to cost update events - triggers reload of total
+  const updateTrigger = useSyncExternalStore(subscribeToCostUpdates, getCostUpdateSnapshot, getCostUpdateSnapshot);
+
+  // Reload when cost update events fire
+  if (updateTrigger > 0 && costTotalPromise === null) {
+    costTotalPromise = (async () => {
+      costTotalData = await costTrackerRef.current.getTotal();
+      costTotalListeners.forEach((listener) => {
+        listener();
+      });
+      costTotalPromise = null;
+    })();
+  }
+
+  // Subscribe to cost total updates
+  const total = useSyncExternalStore(
+    (callback) => subscribeToCostTotal(callback, costTrackerRef.current),
+    getCostTotalSnapshot,
+    getCostTotalSnapshot,
+  );
 
   if (!total) {
     return (
@@ -98,7 +139,6 @@ export function CostDisplay({ costTracker }: CostDisplayProps) {
             onClick={() => {
               if (confirm("Clear cost history?")) {
                 void costTracker.clear().then(() => {
-                  // Force re-render
                   window.dispatchEvent(new Event("cost-update"));
                 });
               }

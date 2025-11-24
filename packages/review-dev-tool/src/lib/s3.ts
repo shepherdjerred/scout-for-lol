@@ -340,7 +340,7 @@ export function convertMatchDtoToInternalFormat(
       ...baseMatch,
       players: updatedPlayers,
       durationInSeconds: matchDto.info.gameDuration,
-    } as ArenaMatch;
+    };
   }
 
   // For regular matches, convert participant to full champion and calculate lane opponent
@@ -387,7 +387,7 @@ export function convertMatchDtoToInternalFormat(
     players: updatedPlayers,
     durationInSeconds: matchDto.info.gameDuration,
     teams,
-  } as CompletedMatch;
+  };
 }
 
 /**

@@ -53,7 +53,7 @@ describe("saveImageToS3 - Success Cases", () => {
     expect(call.args[0]).toBeInstanceOf(PutObjectCommand);
 
     // Verify command parameters
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
     expect(command.input.Bucket).toBe("test-bucket");
     expect(command.input.Key).toMatch(/^images\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\.png$/);
     expect(command.input.Body).toBe(imageBuffer);
@@ -80,7 +80,7 @@ describe("saveImageToS3 - Success Cases", () => {
     expect(s3Mock.calls().length).toBe(1);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
     expect(command.input.Metadata?.["queueType"]).toBe("arena");
 
     expect(result).toBeDefined();
@@ -101,7 +101,7 @@ describe("saveImageToS3 - Success Cases", () => {
     expect(s3Mock.calls().length).toBe(1);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
     expect(command.input.Metadata?.["queueType"]).toBe("flex");
 
     expect(result).toBeDefined();
@@ -121,7 +121,7 @@ describe("saveImageToS3 - Success Cases", () => {
     expect(s3Mock.calls().length).toBe(1);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
     expect(command.input.Metadata?.["queueType"]).toBe("unknown");
 
     expect(result).toBeDefined();
@@ -142,7 +142,7 @@ describe("saveImageToS3 - Success Cases", () => {
     expect(s3Mock.calls().length).toBe(1);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
     expect(command.input.Body).toBe(imageBuffer);
     expect(imageBuffer.length).toBe(5 * 1024 * 1024);
 
@@ -163,7 +163,7 @@ describe("saveImageToS3 - Success Cases", () => {
     expect(s3Mock.calls().length).toBe(1);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
     expect(command.input.Key).toContain(matchId);
     expect(command.input.Metadata?.["matchId"]).toBe(matchId);
 
@@ -285,7 +285,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
     await saveImageToS3(matchId, imageBuffer, queueType);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
 
     // Verify key structure
     const key = command.input.Key!;
@@ -312,7 +312,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
     await saveImageToS3(matchId, imageBuffer, queueType);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
 
     expect(command.input.Key).toEndWith(".png");
   });
@@ -351,7 +351,7 @@ describe("saveImageToS3 - Metadata", () => {
     await saveImageToS3(matchId, imageBuffer, queueType);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
     const metadata = command.input.Metadata!;
 
     expect(metadata["matchId"]).toBe(matchId);
@@ -382,7 +382,7 @@ describe("saveImageToS3 - Metadata", () => {
     const afterUpload = new Date();
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
     const uploadedAtValue = command.input.Metadata!["uploadedAt"];
     const uploadedAt = new Date(uploadedAtValue!);
 

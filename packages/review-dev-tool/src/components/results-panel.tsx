@@ -1,7 +1,7 @@
 /**
  * Results panel showing generated review and metadata
  */
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore, useMemo } from "react";
 import { z } from "zod";
 import type { ReviewConfig, GenerationResult } from "@scout-for-lol/review-dev-tool/config/schema";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
@@ -46,41 +46,29 @@ type ActiveGeneration = {
 
 export function ResultsPanel({ config, match, result, costTracker, onResultGenerated }: ResultsPanelProps) {
   const [activeGenerations, setActiveGenerations] = useState<Map<string, ActiveGeneration>>(new Map());
-  const [forceUpdate, setForceUpdate] = useState(0);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | undefined>();
   const [viewingHistory, setViewingHistory] = useState(false);
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | undefined>();
   const [notes, setNotes] = useState("");
-  const [activeGenerationTimers, setActiveGenerationTimers] = useState<Map<string, number>>(new Map());
-
-  // Listen for cost updates
-  useEffect(() => {
-    const handleCostUpdate = () => {
-      setForceUpdate((n) => n + 1);
-    };
-
-    window.addEventListener("cost-update", handleCostUpdate);
+  // Subscribe to cost update events using useSyncExternalStore
+  function subscribeToCostUpdates(callback: () => void) {
+    window.addEventListener("cost-update", callback);
     return () => {
-      window.removeEventListener("cost-update", handleCostUpdate);
+      window.removeEventListener("cost-update", callback);
     };
-  }, []);
+  }
 
-  // Timer for progress animation for all active generations
-  useEffect(() => {
-    if (activeGenerations.size === 0) {
-      return;
-    }
+  function getCostUpdateSnapshot() {
+    return Date.now();
+  }
 
-    const interval = setInterval(() => {
-      const now = Date.now();
-      setActiveGenerationTimers(
-        new Map(Array.from(activeGenerations.entries()).map(([id, gen]) => [id, now - gen.startTime])),
-      );
-    }, 100);
+  useSyncExternalStore(subscribeToCostUpdates, getCostUpdateSnapshot, getCostUpdateSnapshot);
 
-    return () => {
-      clearInterval(interval);
-    };
+  // Calculate elapsed times during render - recalculates on every render
+  // This is fine since renders happen frequently enough for smooth animation
+  const activeGenerationTimers = useMemo(() => {
+    const now = Date.now();
+    return new Map(Array.from(activeGenerations.entries()).map(([id, gen]) => [id, now - gen.startTime]));
   }, [activeGenerations]);
 
   const handleGenerate = async () => {
@@ -154,11 +142,9 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
           });
       }
 
-      // Trigger history panel refresh
-      setForceUpdate((n) => {
-        console.log("[History] Force update:", n + 1);
-        return n + 1;
-      });
+      // Trigger history panel refresh via history store
+      // History store will be updated by the history manager
+      console.log("[History] Generation complete, history should refresh");
     } catch (error) {
       const errorResult = {
         text: "",
@@ -177,7 +163,6 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       // Save error result to history
       console.log("[History] Saving error result:", historyId);
       await saveCompletedEntry(historyId, errorResult, configSnapshot);
-      setForceUpdate((n) => n + 1);
     } finally {
       // Remove from active generations
       setActiveGenerations((prev) => {
@@ -207,7 +192,6 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
     }
     setRating(newRating);
     await updateHistoryRating(selectedHistoryId, newRating, notes);
-    setForceUpdate((n) => n + 1);
   };
 
   const handleNotesChange = async (newNotes: string) => {
@@ -217,14 +201,12 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
     setNotes(newNotes);
     if (rating) {
       await updateHistoryRating(selectedHistoryId, rating, newNotes);
-      setForceUpdate((n) => n + 1);
     }
   };
 
   const handleCancelPending = (id: string) => {
     // Pending entries are not persisted, so nothing to cancel
     console.log("[History] Cancel requested for pending entry:", id);
-    setForceUpdate((n) => n + 1);
   };
 
   const cost = result?.metadata
@@ -242,7 +224,6 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
         onSelectEntry={handleSelectHistoryEntry}
         selectedEntryId={selectedHistoryId}
         onCancelPending={handleCancelPending}
-        refreshTrigger={forceUpdate}
       />
 
       {/* Active Generations Panel */}
@@ -331,7 +312,7 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
         )}
       </div>
 
-      <CostDisplay costTracker={costTracker} key={forceUpdate} />
+      <CostDisplay costTracker={costTracker} />
     </div>
   );
 }

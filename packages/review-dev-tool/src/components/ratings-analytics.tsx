@@ -1,18 +1,43 @@
 /**
  * Analytics view showing rating statistics
  */
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { loadHistory } from "@scout-for-lol/review-dev-tool/lib/history-manager";
 
-export function RatingsAnalytics() {
-  const [history, setHistory] = useState<Awaited<ReturnType<typeof loadHistory>>>([]);
+// Store for history data
+let historyData: Awaited<ReturnType<typeof loadHistory>> = [];
+const historyListeners = new Set<() => void>();
 
-  useEffect(() => {
-    void (async () => {
-      const loaded = await loadHistory();
-      setHistory(loaded);
-    })();
-  }, []);
+function subscribeToHistory(callback: () => void) {
+  historyListeners.add(callback);
+  return () => {
+    historyListeners.delete(callback);
+  };
+}
+
+function getHistorySnapshot() {
+  return historyData;
+}
+
+// Load history data at module level
+let historyLoadPromise: Promise<void> | null = null;
+
+function loadHistoryData() {
+  historyLoadPromise ??= (async () => {
+    historyData = await loadHistory();
+    historyListeners.forEach((listener) => {
+      listener();
+    });
+  })();
+  return historyLoadPromise;
+}
+
+// Start loading immediately
+void loadHistoryData();
+
+export function RatingsAnalytics() {
+  // Subscribe to history data store
+  const history = useSyncExternalStore(subscribeToHistory, getHistorySnapshot, getHistorySnapshot);
 
   const statistics = useMemo(() => {
     const ratedEntries = history.filter((entry) => entry.rating && entry.status === "complete");

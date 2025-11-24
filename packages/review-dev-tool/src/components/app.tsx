@@ -1,7 +1,7 @@
 /**
  * Main application component
  */
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import type { GenerationResult, GlobalConfig, TabConfig } from "@scout-for-lol/review-dev-tool/config/schema";
 import {
   createDefaultGlobalConfig,
@@ -37,17 +37,100 @@ export type TabData = {
 
 const MAX_TABS = 5;
 
-export default function App() {
-  // Initialize with defaults
-  const [globalConfig, setGlobalConfig] = useState<GlobalConfig>(createDefaultGlobalConfig());
-  const [tabs, setTabs] = useState<TabData[]>([
+// Store for app initialization state
+type AppInitState = {
+  globalConfig: GlobalConfig;
+  tabs: TabData[];
+  isInitialized: boolean;
+};
+
+let appInitState: AppInitState = {
+  globalConfig: createDefaultGlobalConfig(),
+  tabs: [
     {
       id: "tab-1",
       name: "Config 1",
       config: createDefaultTabConfig(),
     },
-  ]);
-  const [isInitialized, setIsInitialized] = useState(false);
+  ],
+  isInitialized: false,
+};
+
+const appInitListeners = new Set<() => void>();
+
+function subscribeToAppInit(callback: () => void) {
+  appInitListeners.add(callback);
+  return () => {
+    appInitListeners.delete(callback);
+  };
+}
+
+function getAppInitSnapshot() {
+  return appInitState;
+}
+
+// Module-level initialization - runs once per app load
+let appInitPromise: Promise<void> | null = null;
+
+function initializeAppData() {
+  appInitPromise ??= (async () => {
+    // First, migrate any localStorage data to IndexedDB
+    await migrateFromLocalStorage();
+
+    // Then load from IndexedDB
+    let globalConfig = await loadGlobalConfig();
+    if (!globalConfig) {
+      // Try migrating from old merged config
+      const oldConfig = await loadCurrentConfig();
+      if (oldConfig) {
+        const { global } = splitConfig(oldConfig);
+        globalConfig = global;
+      } else {
+        globalConfig = createDefaultGlobalConfig();
+      }
+    }
+
+    // Load tab config
+    let tabs: TabData[];
+    const oldConfig = await loadCurrentConfig();
+    if (oldConfig) {
+      const { tab } = splitConfig(oldConfig);
+      tabs = [
+        {
+          id: "tab-1",
+          name: "Config 1",
+          config: tab,
+        },
+      ];
+    } else {
+      tabs = [
+        {
+          id: "tab-1",
+          name: "Config 1",
+          config: createDefaultTabConfig(),
+        },
+      ];
+    }
+
+    appInitState = {
+      globalConfig,
+      tabs,
+      isInitialized: true,
+    };
+    appInitListeners.forEach((listener) => {
+      listener();
+    });
+  })();
+  return appInitPromise;
+}
+
+// Start initialization immediately
+void initializeAppData();
+
+export default function App() {
+  // Subscribe to app initialization state
+  const initState = useSyncExternalStore(subscribeToAppInit, getAppInitSnapshot, getAppInitSnapshot);
+  const { globalConfig, tabs, isInitialized } = initState;
 
   const [activeTabId, setActiveTabId] = useState("tab-1");
   const [costTracker] = useState(() => new CostTracker());
@@ -56,59 +139,17 @@ export default function App() {
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
 
-  // Migrate from localStorage and load initial configs
-  useEffect(() => {
-    const initializeApp = async () => {
-      // First, migrate any localStorage data to IndexedDB
-      await migrateFromLocalStorage();
-
-      // Then load from IndexedDB
-      const loaded = await loadGlobalConfig();
-      if (loaded) {
-        setGlobalConfig(loaded);
-      } else {
-        // Try migrating from old merged config
-        const oldConfig = await loadCurrentConfig();
-        if (oldConfig) {
-          const { global } = splitConfig(oldConfig);
-          setGlobalConfig(global);
-        }
-      }
-
-      // Load tab config
-      const oldConfig = await loadCurrentConfig();
-      if (oldConfig) {
-        const { tab } = splitConfig(oldConfig);
-        setTabs([
-          {
-            id: "tab-1",
-            name: "Config 1",
-            config: tab,
-          },
-        ]);
-      }
-
-      setIsInitialized(true);
-    };
-
-    void initializeApp();
-  }, []);
-
-  // Save global config when it changes (after initialization)
-  useEffect(() => {
+  // Wrapper to save global config when it changes
+  const updateGlobalConfig = (config: GlobalConfig) => {
+    appInitState = { ...appInitState, globalConfig: config };
+    appInitListeners.forEach((listener) => {
+      listener();
+    });
+    // Save config when it changes (after initialization)
     if (isInitialized) {
-      void saveGlobalConfig(globalConfig);
+      void saveGlobalConfig(config);
     }
-  }, [globalConfig, isInitialized]);
-
-  // Save current tab config when it changes (after initialization)
-  useEffect(() => {
-    if (isInitialized && activeTab) {
-      // Save as merged config for backwards compatibility
-      const merged = mergeConfigs(globalConfig, activeTab.config);
-      void saveCurrentConfig(merged);
-    }
-  }, [activeTab, activeTab?.config, globalConfig, isInitialized]);
+  };
 
   const addTab = () => {
     if (tabs.length >= MAX_TABS) {
@@ -122,7 +163,10 @@ export default function App() {
       config: createDefaultTabConfig(),
     };
 
-    setTabs([...tabs, newTab]);
+    appInitState = { ...appInitState, tabs: [...tabs, newTab] };
+    appInitListeners.forEach((listener) => {
+      listener();
+    });
     setActiveTabId(newTab.id);
   };
 
@@ -144,7 +188,10 @@ export default function App() {
       // Don't copy result or match - start fresh
     };
 
-    setTabs([...tabs, newTab]);
+    appInitState = { ...appInitState, tabs: [...tabs, newTab] };
+    appInitListeners.forEach((listener) => {
+      listener();
+    });
     setActiveTabId(newTab.id);
   };
 
@@ -156,7 +203,10 @@ export default function App() {
 
     const index = tabs.findIndex((t) => t.id === id);
     const newTabs = tabs.filter((t) => t.id !== id);
-    setTabs(newTabs);
+    appInitState = { ...appInitState, tabs: newTabs };
+    appInitListeners.forEach((listener) => {
+      listener();
+    });
 
     // Set active tab to the one before or after the closed tab
     if (activeTabId === id) {
@@ -168,19 +218,43 @@ export default function App() {
   };
 
   const updateTabConfig = (id: string, config: TabConfig) => {
-    setTabs(tabs.map((t) => (t.id === id ? { ...t, config } : t)));
+    const newTabs = tabs.map((t) => (t.id === id ? { ...t, config } : t));
+    appInitState = { ...appInitState, tabs: newTabs };
+    appInitListeners.forEach((listener) => {
+      listener();
+    });
+    // Save config when it changes (after initialization)
+    if (isInitialized) {
+      const updatedTab = newTabs.find((t) => t.id === id);
+      if (updatedTab) {
+        const merged = mergeConfigs(globalConfig, updatedTab.config);
+        void saveCurrentConfig(merged);
+      }
+    }
   };
 
   const updateTabResult = (id: string, result: GenerationResult) => {
-    setTabs(tabs.map((t) => (t.id === id ? { ...t, result } : t)));
+    const newTabs = tabs.map((t) => (t.id === id ? { ...t, result } : t));
+    appInitState = { ...appInitState, tabs: newTabs };
+    appInitListeners.forEach((listener) => {
+      listener();
+    });
   };
 
   const updateTabMatch = (id: string, match: CompletedMatch | ArenaMatch) => {
-    setTabs(tabs.map((t) => (t.id === id ? { ...t, match } : t)));
+    const newTabs = tabs.map((t) => (t.id === id ? { ...t, match } : t));
+    appInitState = { ...appInitState, tabs: newTabs };
+    appInitListeners.forEach((listener) => {
+      listener();
+    });
   };
 
   const updateTabName = (id: string, name: string) => {
-    setTabs(tabs.map((t) => (t.id === id ? { ...t, name } : t)));
+    const newTabs = tabs.map((t) => (t.id === id ? { ...t, name } : t));
+    appInitState = { ...appInitState, tabs: newTabs };
+    appInitListeners.forEach((listener) => {
+      listener();
+    });
   };
 
   if (!activeTab) {
@@ -297,7 +371,7 @@ export default function App() {
           setShowConfigModal(false);
         }}
         globalConfig={globalConfig}
-        onGlobalChange={setGlobalConfig}
+        onGlobalChange={updateGlobalConfig}
       />
     </div>
   );

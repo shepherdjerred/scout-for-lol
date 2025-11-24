@@ -1,10 +1,10 @@
 import { describe, expect, test, mock } from "bun:test";
-import type { ArenaMatch, CompletedMatch, MatchId } from "@scout-for-lol/data";
+import { MatchIdSchema, type ArenaMatch, type CompletedMatch } from "@scout-for-lol/data";
 
 import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
 
 // Test match ID for all tests
-const TEST_MATCH_ID = "NA1_1234567890" as MatchId;
+const TEST_MATCH_ID = MatchIdSchema.parse("NA1_1234567890");
 
 // Mock the configuration module to prevent API calls
 // Use a factory function to read env vars at runtime so other tests can override
@@ -13,7 +13,7 @@ void mock.module("../../../configuration.js", () => ({
     version: Bun.env["VERSION"] ?? "test",
     gitSha: Bun.env["GIT_SHA"] ?? "test",
     sentryDsn: Bun.env["SENTRY_DSN"],
-    environment: (Bun.env["ENVIRONMENT"] as "dev" | "beta" | "prod") ?? "dev",
+    environment: Bun.env["ENVIRONMENT"] ?? "dev",
     discordToken: Bun.env["DISCORD_TOKEN"] ?? "test",
     applicationId: Bun.env["APPLICATION_ID"] ?? "test",
     riotApiToken: Bun.env["RIOT_API_TOKEN"] ?? "test",
@@ -40,7 +40,7 @@ describe("generateMatchReview", () => {
               discord: { discordUserId: testAccountId("12300000000000000") },
               league: {
                 leagueAccount: {
-                  puuid: testPuuid("test-puuid") as unknown,
+                  puuid: testPuuid("test-puuid"),
                   region: "AMERICA_NORTH",
                   gameName: "TestPlayer",
                   tagLine: "NA1",
@@ -80,7 +80,7 @@ describe("generateMatchReview", () => {
           blue: [],
           red: [],
         },
-      } as unknown as CompletedMatch;
+      } satisfies CompletedMatch;
 
       const review = await generateMatchReview(match, TEST_MATCH_ID);
 
@@ -118,9 +118,24 @@ describe("generateMatchReview", () => {
               damage: 50000,
               augments: [],
               arenaMetrics: {
-                augmentChoices: [],
+                playerScore0: 0,
+                playerScore1: 0,
+                playerScore2: 0,
+                playerScore3: 0,
+                playerScore4: 0,
+                playerScore5: 0,
+                playerScore6: 0,
+                playerScore7: 0,
+                playerScore8: 0,
+                playerScore9: 0,
+                playerScore10: 0,
+                playerScore11: 0,
               },
-              teamSubteamId: 1,
+              teamSupport: {
+                damageShieldedOnTeammate: 0,
+                healsOnTeammate: 0,
+                damageTakenPercentage: 0,
+              },
             },
             teamId: 1,
             teammate: {
@@ -135,14 +150,29 @@ describe("generateMatchReview", () => {
               damage: 45000,
               augments: [],
               arenaMetrics: {
-                augmentChoices: [],
+                playerScore0: 0,
+                playerScore1: 0,
+                playerScore2: 0,
+                playerScore3: 0,
+                playerScore4: 0,
+                playerScore5: 0,
+                playerScore6: 0,
+                playerScore7: 0,
+                playerScore8: 0,
+                playerScore9: 0,
+                playerScore10: 0,
+                playerScore11: 0,
               },
-              teamSubteamId: 1,
+              teamSupport: {
+                damageShieldedOnTeammate: 0,
+                healsOnTeammate: 0,
+                damageTakenPercentage: 0,
+              },
             },
           },
         ],
         teams: [],
-      } as unknown as ArenaMatch;
+      } satisfies ArenaMatch;
 
       const review = await generateMatchReview(match, TEST_MATCH_ID);
 

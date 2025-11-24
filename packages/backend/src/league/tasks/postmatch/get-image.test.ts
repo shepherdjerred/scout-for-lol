@@ -62,7 +62,7 @@ describe("getImage S3 Integration", () => {
     expect(result).toBeDefined();
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
     expect(command.input.Metadata?.["queueType"]).toBe("arena");
   });
 
@@ -107,7 +107,7 @@ describe("Image Buffer Handling", () => {
     await saveImageToS3(MatchIdSchema.parse(matchId), imageBuffer, queueType);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
 
     // Verify the exact buffer is passed
     expect(command.input.Body).toBe(imageBuffer);
@@ -131,8 +131,8 @@ describe("Image Buffer Handling", () => {
     expect(result).toBeDefined();
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as unknown as PutObjectCommand;
-    const body = (command as { input: { Body: unknown } }).input?.Body;
+    const command = call.args[0];
+    const body = command.input?.Body;
     let bodyLength = 0;
     if (body instanceof Uint8Array) {
       bodyLength = body.length;
@@ -160,7 +160,7 @@ describe("Queue Type Handling", () => {
       await saveImageToS3(MatchIdSchema.parse(matchId), imageBuffer, queueType);
 
       const call = s3Mock.call(0);
-      const command = call.args[0] as PutObjectCommand;
+      const command = call.args[0];
       expect(command.input.Metadata?.["queueType"]).toBe(queueType);
     });
   }
@@ -200,7 +200,7 @@ describe("Match ID Handling", () => {
     await saveImageToS3(MatchIdSchema.parse(matchId), imageBuffer, "solo");
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
 
     expect(command.input.Key).toContain(matchId);
     expect(command.input.Key).toEndWith(`${matchId}.png`);
@@ -276,7 +276,7 @@ describe("ContentType and S3 Configuration", () => {
     await saveImageToS3(MatchIdSchema.parse(matchId), imageBuffer, "solo");
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
 
     expect(command.input.ContentType).toBe("image/png");
   });

@@ -104,7 +104,7 @@ export async function deleteEntry(id: string): Promise<void> {
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = getStore(transaction, STORE_NAME);
   const request = store.delete(id);
-  void (await executeRequest(request));
+  await executeRequest(request);
 }
 
 /**
@@ -115,7 +115,7 @@ export async function clearAllEntries(): Promise<void> {
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = getStore(transaction, STORE_NAME);
   const request = store.clear();
-  void (await executeRequest(request));
+  await executeRequest(request);
 }
 
 /**

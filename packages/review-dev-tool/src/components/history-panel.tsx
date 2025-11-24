@@ -1,7 +1,7 @@
 /**
  * Panel showing history of generated reviews
  */
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore, useRef } from "react";
 import type { HistoryEntry } from "@scout-for-lol/review-dev-tool/lib/history-manager";
 import { loadHistory, deleteHistoryEntry, clearHistory } from "@scout-for-lol/review-dev-tool/lib/history-manager";
 import { StarRating } from "./star-rating";
@@ -14,30 +14,55 @@ type HistoryPanelProps = {
   refreshTrigger?: number | undefined;
 };
 
+// Store for history data
+let historyData: HistoryEntry[] = [];
+const historyListeners = new Set<() => void>();
+
+function subscribeToHistory(callback: () => void) {
+  historyListeners.add(callback);
+  return () => {
+    historyListeners.delete(callback);
+  };
+}
+
+function getHistorySnapshot() {
+  return historyData;
+}
+
+// Load history data at module level
+let historyLoadPromise: Promise<void> | null = null;
+
+function loadHistoryData() {
+  historyLoadPromise = (async () => {
+    historyData = await loadHistory();
+    historyListeners.forEach((listener) => {
+      listener();
+    });
+  })();
+  return historyLoadPromise;
+}
+
+// Start loading immediately
+void loadHistoryData();
+
 export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, refreshTrigger }: HistoryPanelProps) {
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  // Subscribe to history data store
+  const history = useSyncExternalStore(subscribeToHistory, getHistorySnapshot, getHistorySnapshot);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
+
+  // Track previous refreshTrigger to detect changes
+  const prevRefreshTriggerRef = useRef(refreshTrigger);
+  if (refreshTrigger !== undefined && refreshTrigger !== prevRefreshTriggerRef.current && refreshTrigger > 0) {
+    prevRefreshTriggerRef.current = refreshTrigger;
+    // Refresh when trigger changes
+    void loadHistoryData();
+  }
 
   const refreshHistory = async () => {
     console.log("[History] Refreshing history");
-    const loaded = await loadHistory();
-    console.log("[History] Loaded entries:", loaded.length, loaded);
-    setHistory(loaded);
+    await loadHistoryData();
+    console.log("[History] Loaded entries:", historyData.length, historyData);
   };
-
-  // Refresh on mount
-  useEffect(() => {
-    console.log("[History] HistoryPanel mounted");
-    void refreshHistory();
-  }, []);
-
-  // Refresh when trigger changes
-  useEffect(() => {
-    if (refreshTrigger !== undefined && refreshTrigger > 0) {
-      console.log("[History] Refresh triggered:", refreshTrigger);
-      void refreshHistory();
-    }
-  }, [refreshTrigger]);
 
   const handleDelete = async (id: string, event: React.MouseEvent) => {
     event.stopPropagation();

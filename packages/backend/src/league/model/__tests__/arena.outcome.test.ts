@@ -3,6 +3,7 @@ import type { ParticipantDto } from "@scout-for-lol/data";
 import { getArenaPlacement } from "@scout-for-lol/backend/league/model/match.js";
 
 function makeParticipant(extra: Record<string, unknown> = {}): ParticipantDto {
+  // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
   return {
     puuid: crypto.randomUUID(),
     riotIdGameName: "P#NA1",

@@ -36,7 +36,6 @@ export const ArenaChampionSchema = ChampionSchema.omit({
   runes: true,
 }).extend({
   augments: z.array(AugmentSchema).max(6),
-  // eslint-disable-next-line no-warning-comments -- TODO comment needed to track potential feature: arenaMetrics may exist in normal games too
   // TODO: perhaps these are in normal games, too
   arenaMetrics: PlayerMetricsSchema,
   teamSupport: TeamSupportMetricsSchema,

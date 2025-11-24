@@ -57,13 +57,13 @@ export function GenericArtSelector<T extends CustomArtStyle | CustomArtTheme>({
     // The type assertions here are safe because we've validated mode
     if (mode === "style") {
       const handleStyleSave = (item: CustomArtStyle): void => {
-        void onSave(item as unknown as T);
+        void onSave(item);
       };
       return (
         <div>
           <ArtStyleEditor
             mode={mode}
-            style={editingItem as unknown as CustomArtStyle | undefined}
+            style={editingItem}
             theme={undefined}
             onSave={handleStyleSave}
             onCancel={onCancelEdit}
@@ -72,14 +72,14 @@ export function GenericArtSelector<T extends CustomArtStyle | CustomArtTheme>({
       );
     }
     const handleThemeSave = (item: CustomArtTheme): void => {
-      void onSave(item as unknown as T);
+      void onSave(item);
     };
     return (
       <div>
         <ArtStyleEditor
           mode={mode}
           style={undefined}
-          theme={editingItem as unknown as CustomArtTheme | undefined}
+          theme={editingItem}
           onSave={handleThemeSave}
           onCancel={onCancelEdit}
         />
