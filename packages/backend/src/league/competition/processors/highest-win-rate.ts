@@ -4,10 +4,9 @@ import type {
   PlayerWithAccounts,
 } from "@scout-for-lol/backend/league/competition/processors/types.js";
 import {
-  getPlayerParticipant,
-  isWin,
-  matchesQueue,
-} from "@scout-for-lol/backend/league/competition/processors/helpers.js";
+  countWinsAndGames,
+  buildWinBasedLeaderboard,
+} from "@scout-for-lol/backend/league/competition/processors/generic-win-counter.js";
 
 /**
  * Process "Highest Win Rate" criteria
@@ -19,56 +18,22 @@ export function processHighestWinRate(
   participants: PlayerWithAccounts[],
   criteria: HighestWinRateCriteria,
 ): LeaderboardEntry[] {
-  const winCounts: Record<number, number> = {};
-  const totalGames: Record<number, number> = {};
+  const { wins: winCounts, games: totalGames } = countWinsAndGames(matches, participants, criteria.queue);
 
-  // Count wins and games for each player
-  for (const match of matches) {
-    // Filter by queue
-    if (!matchesQueue(match, criteria.queue)) {
-      continue;
-    }
-
-    for (const participant of participants) {
-      const participantData = getPlayerParticipant(participant, match);
-      if (participantData) {
-        const currentWins = winCounts[participant.id] ?? 0;
-        const currentGames = totalGames[participant.id] ?? 0;
-
-        if (isWin(participantData)) {
-          winCounts[participant.id] = currentWins + 1;
-        }
-        totalGames[participant.id] = currentGames + 1;
-      }
-    }
-  }
-
-  // Convert to leaderboard entries, applying minimum games filter
-  const entries: LeaderboardEntry[] = [];
   // minGames has a default value of 10 in the schema
   const minGames = criteria.minGames;
 
-  for (const participant of participants) {
-    const wins = winCounts[participant.id] ?? 0;
-    const games = totalGames[participant.id] ?? 0;
-
-    // Only include if they meet the minimum games requirement
-    if (games >= minGames) {
-      const winRate = games > 0 ? wins / games : 0;
-
-      entries.push({
-        playerId: participant.id,
-        playerName: participant.alias,
-        score: winRate,
-        metadata: {
-          wins,
-          games,
-          losses: games - wins,
-          winRate,
-        },
-      });
-    }
-  }
-
-  return entries;
+  return buildWinBasedLeaderboard(
+    winCounts,
+    totalGames,
+    participants,
+    (wins, games) => (games > 0 ? wins / games : 0), // Score is win rate
+    (wins, games) => ({
+      wins,
+      games,
+      losses: games - wins,
+      winRate: games > 0 ? wins / games : 0,
+    }),
+    minGames, // Apply minimum games filter
+  );
 }

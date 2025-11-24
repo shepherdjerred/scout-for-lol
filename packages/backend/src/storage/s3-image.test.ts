@@ -35,7 +35,7 @@ afterEach(() => {
 describe("saveImageToS3 - Success Cases", () => {
   test("uploads image with correct parameters", async () => {
     const matchId = MatchIdSchema.parse("NA1_1234567890");
-    const imageBuffer = Buffer.from("fake-png-data");
+    const imageBuffer = new TextEncoder().encode("fake-png-data");
     const queueType = "solo";
 
     // Mock successful S3 upload
@@ -68,7 +68,7 @@ describe("saveImageToS3 - Success Cases", () => {
 
   test("handles arena queue type", async () => {
     const matchId = MatchIdSchema.parse("NA1_9999999999");
-    const imageBuffer = Buffer.from("arena-image-data");
+    const imageBuffer = new TextEncoder().encode("arena-image-data");
     const queueType = "arena";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -89,7 +89,7 @@ describe("saveImageToS3 - Success Cases", () => {
 
   test("handles flex queue type", async () => {
     const matchId = MatchIdSchema.parse("EUW1_5555555555");
-    const imageBuffer = Buffer.from("flex-image-data");
+    const imageBuffer = new TextEncoder().encode("flex-image-data");
     const queueType = "flex";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -109,7 +109,7 @@ describe("saveImageToS3 - Success Cases", () => {
 
   test("handles unknown queue type", async () => {
     const matchId = MatchIdSchema.parse("KR_1111111111");
-    const imageBuffer = Buffer.from("unknown-image-data");
+    const imageBuffer = new TextEncoder().encode("unknown-image-data");
     const queueType = "unknown";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -151,7 +151,7 @@ describe("saveImageToS3 - Success Cases", () => {
 
   test("handles match IDs with special characters", async () => {
     const matchId = MatchIdSchema.parse("NA1_1234567890_SPECIAL");
-    const imageBuffer = Buffer.from("special-image-data");
+    const imageBuffer = new TextEncoder().encode("special-image-data");
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -204,7 +204,7 @@ describe("saveImageToS3 - Configuration", () => {
 describe("saveImageToS3 - Error Handling", () => {
   test("throws error when S3 upload fails", async () => {
     const matchId = MatchIdSchema.parse("NA1_ERROR_CASE");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
 
     // Mock S3 error
@@ -219,7 +219,7 @@ describe("saveImageToS3 - Error Handling", () => {
 
   test("throws error with match ID in error message", async () => {
     const matchId = MatchIdSchema.parse("EUW1_SPECIFIC_ERROR");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "flex";
 
     s3Mock.on(PutObjectCommand).rejects(new Error("Network timeout"));
@@ -231,7 +231,7 @@ describe("saveImageToS3 - Error Handling", () => {
 
   test("throws error when S3 returns non-200 status", async () => {
     const matchId = MatchIdSchema.parse("NA1_BAD_STATUS");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -249,7 +249,7 @@ describe("saveImageToS3 - Error Handling", () => {
 
   test("preserves original error details", async () => {
     const matchId = MatchIdSchema.parse("NA1_DETAILED_ERROR");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
 
     const originalError = new Error("Access Denied");
@@ -275,7 +275,7 @@ describe("saveImageToS3 - Error Handling", () => {
 describe("saveImageToS3 - S3 Key Format", () => {
   test("uses current date in S3 key", async () => {
     const matchId = MatchIdSchema.parse("NA1_DATE_TEST");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -302,7 +302,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
 
   test("uses .png extension", async () => {
     const matchId = MatchIdSchema.parse("NA1_PNG_EXT");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -319,7 +319,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
 
   test("returns s3:// URL format", async () => {
     const matchId = MatchIdSchema.parse("NA1_URL_FORMAT");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -341,7 +341,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
 describe("saveImageToS3 - Metadata", () => {
   test("includes all required metadata fields", async () => {
     const matchId = MatchIdSchema.parse("NA1_METADATA");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -368,7 +368,7 @@ describe("saveImageToS3 - Metadata", () => {
 
   test("uploadedAt timestamp is recent", async () => {
     const matchId = MatchIdSchema.parse("NA1_TIMESTAMP");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
 
     const beforeUpload = new Date();

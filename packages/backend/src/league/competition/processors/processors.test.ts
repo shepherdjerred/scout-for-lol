@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import type { ChampionId, LeaguePuuid, Rank, Ranks } from "@scout-for-lol/data";
+import type { ChampionId, LeaguePuuid, MatchDto, Rank, Ranks } from "@scout-for-lol/data";
 import { AccountIdSchema, ChampionIdSchema, PlayerIdSchema, rankToLeaguePoints } from "@scout-for-lol/data";
 import { processCriteria } from "@scout-for-lol/backend/league/competition/processors/index.js";
 import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";

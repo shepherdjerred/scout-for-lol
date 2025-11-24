@@ -137,7 +137,8 @@ const CriteriaEditSchema = z
   .optional();
 
 // Union of date edit schemas
-type DatesEditSchema = z.infer<typeof z.union([FixedDatesEditArgsSchema, SeasonEditArgsSchema]).optional()>;
+const DatesEditSchemaUnion = z.union([FixedDatesEditArgsSchema, SeasonEditArgsSchema]).optional();
+type DatesEditSchema = z.infer<typeof DatesEditSchemaUnion>;
 
 type EditCommandArgs = z.infer<typeof EditCommandArgsBaseSchema> & {
   dates?: DatesEditSchema;

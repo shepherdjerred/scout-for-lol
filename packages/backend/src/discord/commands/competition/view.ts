@@ -5,10 +5,12 @@ import { z } from "zod";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
 import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import { formatScore } from "@scout-for-lol/backend/discord/embeds/competition.js";
 import { loadCachedLeaderboard } from "@scout-for-lol/backend/storage/s3-leaderboard.js";
-import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
+import {
+  replyWithErrorFromException,
+  replyWithError,
+} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
 
 // Schema for participant with player relation (when includePlayer=true)
 const ParticipantWithPlayerSchema = z.object({
@@ -37,20 +39,17 @@ export async function executeCompetitionView(interaction: ChatInputCommandIntera
     competition = await getCompetitionById(prisma, competitionId);
   } catch (error) {
     console.error(`[Competition View] Error fetching competition ${competitionId.toString()}:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`Error fetching competition: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithErrorFromException(interaction, error, "fetching competition");
     return;
   }
 
   if (!competition) {
-    await interaction.reply({
-      content: truncateDiscordMessage(`❌ Competition not found
+    await replyWithError(
+      interaction,
+      `❌ Competition not found
 
-Competition #${competitionId.toString()} doesn't exist. Use \`/competition list\` to see all available competitions.`),
-      flags: MessageFlags.Ephemeral,
-    });
+Competition #${competitionId.toString()} doesn't exist. Use \`/competition list\` to see all available competitions.`,
+    );
     return;
   }
 
@@ -65,10 +64,7 @@ Competition #${competitionId.toString()} doesn't exist. Use \`/competition list\
     participants = await getParticipants(prisma, competitionId, "JOINED", true);
   } catch (error) {
     console.error(`[Competition View] Error fetching participants:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`Error fetching participants: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithErrorFromException(interaction, error, "fetching participants");
     return;
   }
 

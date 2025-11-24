@@ -18,6 +18,7 @@ import {
   buildRiotApiError,
   buildAccountExistsError,
   buildDatabaseError,
+  buildSuccessResponse,
 } from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
 import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.js";
 
@@ -139,10 +140,12 @@ export async function executeAccountAdd(interaction: ChatInputCommandInteraction
           ? updatedPlayer.subscriptions.map((sub) => `<#${sub.channelId}>`).join(", ")
           : "No active subscriptions.";
 
-      await interaction.reply({
-        content: `✅ **Account added successfully**\n\nAdded ${riotId.game_name}#${riotId.tag_line} (${region}) to player "${playerAlias}"\n\n**All accounts (${updatedPlayer?.accounts.length.toString() ?? "0"}):**\n${accountsList}\n\n**Subscribed channels:** ${subscriptionsList}`,
-        ephemeral: true,
-      });
+      await interaction.reply(
+        buildSuccessResponse(
+          `✅ **Account added successfully**\n\nAdded ${riotId.game_name}#${riotId.tag_line} (${region}) to player "${playerAlias}"`,
+          `**All accounts (${updatedPlayer?.accounts.length.toString() ?? "0"}):**\n${accountsList}\n\n**Subscribed channels:** ${subscriptionsList}`,
+        ),
+      );
     } catch (error) {
       console.error(`❌ Database error during account addition:`, error);
       await interaction.reply(buildDatabaseError("add account", error));

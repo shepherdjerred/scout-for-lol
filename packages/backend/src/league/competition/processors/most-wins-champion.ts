@@ -4,10 +4,9 @@ import type {
   PlayerWithAccounts,
 } from "@scout-for-lol/backend/league/competition/processors/types.js";
 import {
-  getPlayerParticipant,
-  isWin,
-  matchesQueue,
-} from "@scout-for-lol/backend/league/competition/processors/helpers.js";
+  countWinsAndGames,
+  buildWinBasedLeaderboard,
+} from "@scout-for-lol/backend/league/competition/processors/generic-win-counter.js";
 
 /**
  * Process "Most Wins (Champion)" criteria
@@ -19,49 +18,23 @@ export function processMostWinsChampion(
   participants: PlayerWithAccounts[],
   criteria: MostWinsChampionCriteria,
 ): LeaderboardEntry[] {
-  const winCounts: Record<number, number> = {};
-  const totalGames: Record<number, number> = {};
+  const { wins: winCounts, games: totalGames } = countWinsAndGames(
+    matches,
+    participants,
+    criteria.queue ?? "ALL",
+    (participantData) => participantData.championId === criteria.championId,
+  );
 
-  // Count wins with the specific champion for each player
-  for (const match of matches) {
-    // Filter by queue if specified
-    if (criteria.queue && !matchesQueue(match, criteria.queue)) {
-      continue;
-    }
-
-    for (const participant of participants) {
-      const participantData = getPlayerParticipant(participant, match);
-
-      if (participantData && participantData.championId === criteria.championId) {
-        const currentWins = winCounts[participant.id] ?? 0;
-        const currentGames = totalGames[participant.id] ?? 0;
-
-        if (isWin(participantData)) {
-          winCounts[participant.id] = currentWins + 1;
-        }
-        totalGames[participant.id] = currentGames + 1;
-      }
-    }
-  }
-
-  // Convert to leaderboard entries
-  const entries: LeaderboardEntry[] = [];
-  for (const participant of participants) {
-    const wins = winCounts[participant.id] ?? 0;
-    const games = totalGames[participant.id] ?? 0;
-
-    entries.push({
-      playerId: participant.id,
-      playerName: participant.alias,
-      score: wins,
-      metadata: {
-        championId: criteria.championId,
-        wins,
-        games,
-        losses: games - wins,
-      },
-    });
-  }
-
-  return entries;
+  return buildWinBasedLeaderboard(
+    winCounts,
+    totalGames,
+    participants,
+    (wins) => wins, // Score is just wins
+    (wins, games) => ({
+      championId: criteria.championId,
+      wins,
+      games,
+      losses: games - wins,
+    }),
+  );
 }

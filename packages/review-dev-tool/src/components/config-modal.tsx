@@ -24,7 +24,6 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
     customPersonalities: 0,
     customArtStyles: 0,
     customArtThemes: 0,
-    reviewRatings: 0,
   });
 
   // Load preview when modal opens

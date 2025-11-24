@@ -36,7 +36,7 @@ import {
   isCustomArtTheme,
   generateArtThemeId,
 } from "@scout-for-lol/review-dev-tool/lib/art-style-storage";
-import { modelSupportsParameter } from "@scout-for-lol/review-dev-tool/lib/models";
+import { modelSupportsParameter } from "@scout-for-lol/data";
 
 type TabSettingsPanelProps = {
   config: TabConfig;

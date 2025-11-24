@@ -7,7 +7,14 @@ import {
   executeWithTiming,
 } from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
 import { findPlayerByAliasWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
-import { buildDatabaseError } from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
+import {
+  buildDatabaseError,
+  buildSuccessResponse,
+} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
+import {
+  formatPlayerAccountsList,
+  formatPlayerSubscriptionsList,
+} from "@scout-for-lol/backend/discord/commands/admin/utils/player-responses.js";
 
 const ArgsSchema = z.object({
   currentAlias: z.string().min(1).max(100),
@@ -80,13 +87,15 @@ export async function executePlayerEdit(interaction: ChatInputCommandInteraction
         },
       });
 
-      const accountsList = updatedPlayer.accounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
-      const subscriptionsList = updatedPlayer.subscriptions.map((sub) => `<#${sub.channelId}>`).join(", ");
+      const accountsList = formatPlayerAccountsList(updatedPlayer);
+      const subscriptionsList = formatPlayerSubscriptionsList(updatedPlayer);
 
-      await interaction.reply({
-        content: `✅ **Alias updated successfully**\n\nPlayer alias changed from "${currentAlias}" to "${newAlias}"\n\n**Accounts (${updatedPlayer.accounts.length.toString()}):**\n${accountsList}\n\n${updatedPlayer.subscriptions.length > 0 ? `**Subscribed channels:** ${subscriptionsList}` : "No active subscriptions."}`,
-        ephemeral: true,
-      });
+      await interaction.reply(
+        buildSuccessResponse(
+          `✅ **Alias updated successfully**\n\nPlayer alias changed from "${currentAlias}" to "${newAlias}"`,
+          `**Accounts (${updatedPlayer.accounts.length.toString()}):**\n${accountsList}\n\n**Subscribed channels:** ${subscriptionsList}`,
+        ),
+      );
     } catch (error) {
       console.error(`❌ Database error during alias update:`, error);
       await interaction.reply(buildDatabaseError("update player alias", error));

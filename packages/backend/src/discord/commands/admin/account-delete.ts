@@ -4,7 +4,11 @@ import { DiscordGuildIdSchema, RegionSchema, RiotIdSchema } from "@scout-for-lol
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { validateCommandArgs, executeWithTiming } from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
 import { resolvePuuidFromRiotId } from "@scout-for-lol/backend/discord/commands/admin/utils/riot-api.js";
-import { buildRiotApiError, buildDatabaseError } from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
+import {
+  buildRiotApiError,
+  buildDatabaseError,
+  buildSuccessResponse,
+} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
 
 const ArgsSchema = z.object({
   riotId: RiotIdSchema,
@@ -94,10 +98,12 @@ export async function executeAccountDelete(interaction: ChatInputCommandInteract
       const remainingAccounts = player.accounts.filter((acc) => acc.id !== account.id);
       const accountsList = remainingAccounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
 
-      await interaction.reply({
-        content: `✅ **Account deleted successfully**\n\nDeleted ${riotId.game_name}#${riotId.tag_line} from player "${player.alias}"\n\n**Remaining accounts (${remainingAccountsCount.toString()}):**\n${accountsList}`,
-        ephemeral: true,
-      });
+      await interaction.reply(
+        buildSuccessResponse(
+          `✅ **Account deleted successfully**\n\nDeleted ${riotId.game_name}#${riotId.tag_line} from player "${player.alias}"`,
+          `**Remaining accounts (${remainingAccountsCount.toString()}):**\n${accountsList}`,
+        ),
+      );
     } catch (error) {
       console.error(`❌ Database error during account deletion:`, error);
       await interaction.reply(buildDatabaseError("delete account", error));

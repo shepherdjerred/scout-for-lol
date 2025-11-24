@@ -12,6 +12,7 @@ import {
   buildDiscordIdInUseError,
   buildDatabaseError,
 } from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
+import { buildPlayerUpdateResponse } from "@scout-for-lol/backend/discord/commands/admin/utils/player-responses.js";
 
 const ArgsSchema = z.object({
   playerAlias: z.string().min(1).max(100),
@@ -89,16 +90,13 @@ export async function executePlayerLinkDiscord(interaction: ChatInputCommandInte
         },
       });
 
-      const accountsList = updatedPlayer.accounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
-      const subscriptionsList =
-        updatedPlayer.subscriptions.length > 0
-          ? updatedPlayer.subscriptions.map((sub) => `<#${sub.channelId}>`).join(", ")
-          : "No active subscriptions.";
-
-      await interaction.reply({
-        content: `✅ **Discord ID linked successfully**\n\nLinked <@${discordUserId}> to player "${playerAlias}"\n\n**Accounts (${updatedPlayer.accounts.length.toString()}):**\n${accountsList}\n\n**Subscribed channels:** ${subscriptionsList}`,
-        ephemeral: true,
-      });
+      await interaction.reply(
+        buildPlayerUpdateResponse(
+          updatedPlayer,
+          "✅ **Discord ID linked successfully**",
+          `Linked <@${discordUserId}> to player "${playerAlias}"`,
+        ),
+      );
     } catch (error) {
       console.error(`❌ Database error during Discord link:`, error);
       await interaction.reply(buildDatabaseError("link Discord ID", error));

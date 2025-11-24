@@ -1,16 +1,43 @@
 /**
  * Cost tracking display component
  */
+import { useEffect, useState } from "react";
 import type { CostTracker } from "@scout-for-lol/review-dev-tool/lib/costs";
-import { formatCost } from "@scout-for-lol/review-dev-tool/lib/costs";
+import { formatCost, type CostBreakdown } from "@scout-for-lol/review-dev-tool/lib/costs";
 
 type CostDisplayProps = {
   costTracker: CostTracker;
 };
 
 export function CostDisplay({ costTracker }: CostDisplayProps) {
-  const total = costTracker.getTotal();
+  const [total, setTotal] = useState<CostBreakdown | null>(null);
   const count = costTracker.getCount();
+
+  useEffect(() => {
+    void (async () => {
+      const totalData = await costTracker.getTotal();
+      setTotal(totalData);
+    })();
+
+    // Re-fetch when cost updates
+    const handleUpdate = () => {
+      void (async () => {
+        const totalData = await costTracker.getTotal();
+        setTotal(totalData);
+      })();
+    };
+    window.addEventListener("cost-update", handleUpdate);
+    return () => window.removeEventListener("cost-update", handleUpdate);
+  }, [costTracker]);
+
+  if (!total) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Session Costs</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">

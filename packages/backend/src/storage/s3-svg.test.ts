@@ -100,8 +100,10 @@ describe("saveSvgToS3 - Success Cases", () => {
 
     const call = s3Mock.call(0);
     const command = call.args[0] as PutObjectCommand;
-    // Buffer length should match the UTF-8 encoded string
-    expect(Buffer.isBuffer(command.input.Body)).toBe(true);
+    // Body should be Uint8Array or string
+    expect(
+      command.input.Body instanceof Uint8Array || typeof command.input.Body === "string",
+    ).toBe(true);
 
     expect(result).toBeDefined();
   });
@@ -299,12 +301,20 @@ describe("saveSvgToS3 - Content Type and Metadata", () => {
     const call = s3Mock.call(0);
     const command = call.args[0] as PutObjectCommand;
 
-    // Body should be a Buffer
-    expect(Buffer.isBuffer(command.input.Body)).toBe(true);
+    // Body should be Uint8Array or string
+    expect(
+      command.input.Body instanceof Uint8Array || typeof command.input.Body === "string",
+    ).toBe(true);
 
-    // Buffer should contain the UTF-8 encoded string
-    const bodyBuffer = command.input.Body as Buffer;
-    expect(bodyBuffer.toString("utf8")).toBe(svgContent);
+    // Body should contain the UTF-8 encoded string
+    const bodyData = command.input.Body;
+    const bodyString =
+      bodyData instanceof Uint8Array
+        ? new TextDecoder().decode(bodyData)
+        : typeof bodyData === "string"
+          ? bodyData
+          : "";
+    expect(bodyString).toBe(svgContent);
   });
 });
 

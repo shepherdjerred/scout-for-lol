@@ -6,7 +6,11 @@ import {
   validateCommandArgs,
   executeWithTiming,
 } from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
-import { buildDatabaseError } from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
+import {
+  buildDatabaseError,
+  buildSuccessResponse,
+  buildPlayerNotFoundError,
+} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
 
 const ArgsSchema = z.object({
   alias: z.string().min(1).max(100),
@@ -70,10 +74,7 @@ export async function executePlayerDelete(interaction: ChatInputCommandInteracti
 
     if (!player) {
       console.log(`❌ Player not found: "${alias}"`);
-      await interaction.reply({
-        content: `❌ **Player not found**\n\nNo player with alias "${alias}" exists in this server.`,
-        ephemeral: true,
-      });
+      await interaction.reply(buildPlayerNotFoundError(alias));
       return;
     }
 
@@ -147,10 +148,12 @@ export async function executePlayerDelete(interaction: ChatInputCommandInteracti
         console.log(`✅ Deleted player "${alias}"`);
       });
 
-      await interaction.reply({
-        content: `✅ **Player deleted successfully**\n\nDeleted player "${alias}"\n\n**Removed:**\n• ${player.accounts.length.toString()} account(s)\n• ${player.subscriptions.length.toString()} subscription(s)\n• ${player.competitionParticipants.length.toString()} competition participation(s)\n\n⚠️ This action cannot be undone.`,
-        ephemeral: true,
-      });
+      await interaction.reply(
+        buildSuccessResponse(
+          `✅ **Player deleted successfully**\n\nDeleted player "${alias}"`,
+          `**Removed:**\n• ${player.accounts.length.toString()} account(s)\n• ${player.subscriptions.length.toString()} subscription(s)\n• ${player.competitionParticipants.length.toString()} competition participation(s)\n\n⚠️ This action cannot be undone.`,
+        ),
+      );
     } catch (error) {
       console.error(`❌ Database error during player deletion:`, error);
       await interaction.reply(buildDatabaseError("delete player", error));

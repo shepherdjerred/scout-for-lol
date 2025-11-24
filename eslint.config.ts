@@ -9,6 +9,7 @@ import { noTypeAssertions } from "./eslint-rules/no-type-assertions";
 import { preferZodValidation } from "./eslint-rules/prefer-zod-validation";
 import { preferBunApis } from "./eslint-rules/prefer-bun-apis";
 import { noReExports } from "./eslint-rules/no-re-exports";
+import { noUseEffect } from "./eslint-rules/no-use-effect";
 import importPlugin from "eslint-plugin-import";
 import noRelativeImportPaths from "eslint-plugin-no-relative-import-paths";
 import * as regexpPlugin from "eslint-plugin-regexp";
@@ -40,6 +41,7 @@ const customRulesPlugin = {
     "prefer-zod-validation": preferZodValidation,
     "prefer-bun-apis": preferBunApis,
     "no-re-exports": noReExports,
+    "no-use-effect": noUseEffect,
   },
 };
 
@@ -364,6 +366,7 @@ export default tseslint.config(
     plugins: {
       react,
       "react-hooks": reactHooks,
+      "custom-rules": customRulesPlugin,
     },
     settings: {
       react: {
@@ -397,6 +400,9 @@ export default tseslint.config(
       // React Hooks rules - critical for correctness
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "error",
+
+      // Avoid useEffect - use better patterns
+      "custom-rules/no-use-effect": "warn",
     },
   },
   // JSX Accessibility rules

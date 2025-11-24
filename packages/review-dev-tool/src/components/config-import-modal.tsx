@@ -50,22 +50,24 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
       return;
     }
 
-    try {
-      const importedTabConfig = applyConfigBundle(parsedBundle, {
-        importTabConfig,
-        importPersonalities,
-        importArtStyles,
-        importArtThemes,
-        mergeWithExisting,
-      });
+    void (async () => {
+      try {
+        const importedTabConfig = await applyConfigBundle(parsedBundle, {
+          importTabConfig,
+          importPersonalities,
+          importArtStyles,
+          importArtThemes,
+          mergeWithExisting,
+        });
 
-      alert("Config imported successfully!");
-      onImportSuccess(importedTabConfig);
-      handleClose();
-    } catch (error) {
-      const errorResult = ErrorSchema.safeParse(error);
-      alert(`Failed to import config: ${errorResult.success ? errorResult.data.message : String(error)}`);
-    }
+        alert("Config imported successfully!");
+        onImportSuccess(importedTabConfig);
+        handleClose();
+      } catch (error) {
+        const errorResult = ErrorSchema.safeParse(error);
+        alert(`Failed to import config: ${errorResult.success ? errorResult.data.message : String(error)}`);
+      }
+    })();
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

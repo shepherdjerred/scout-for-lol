@@ -12,6 +12,7 @@ import {
   buildRiotApiError,
   buildPlayerNotFoundError,
   buildDatabaseError,
+  buildSuccessResponse,
 } from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
 
 const ArgsSchema = z.object({
@@ -130,10 +131,12 @@ export async function executeAccountTransfer(interaction: ChatInputCommandIntera
       const sourceRemainingAccounts = sourcePlayer.accounts.filter((acc) => acc.id !== account.id);
       const targetNewAccounts = [...targetPlayer.accounts, account];
 
-      await interaction.reply({
-        content: `✅ **Account transferred successfully**\n\nTransferred ${riotId.game_name}#${riotId.tag_line} from "${sourcePlayer.alias}" to "${targetPlayer.alias}"\n\n**"${sourcePlayer.alias}" now has ${sourceRemainingAccounts.length.toString()} account(s)**\n**"${targetPlayer.alias}" now has ${targetNewAccounts.length.toString()} account(s)**`,
-        ephemeral: true,
-      });
+      await interaction.reply(
+        buildSuccessResponse(
+          `✅ **Account transferred successfully**\n\nTransferred ${riotId.game_name}#${riotId.tag_line} from "${sourcePlayer.alias}" to "${targetPlayer.alias}"`,
+          `**"${sourcePlayer.alias}" now has ${sourceRemainingAccounts.length.toString()} account(s)**\n**"${targetPlayer.alias}" now has ${targetNewAccounts.length.toString()} account(s)**`,
+        ),
+      );
     } catch (error) {
       console.error(`❌ Database error during account transfer:`, error);
       await interaction.reply(buildDatabaseError("transfer account", error));

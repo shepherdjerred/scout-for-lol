@@ -18,7 +18,6 @@ import { canCreateCompetition } from "@scout-for-lol/backend/database/competitio
 import { type CreateCompetitionInput, createCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
 import { recordCreation } from "@scout-for-lol/backend/database/competition/rate-limit.js";
 import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/database/competition/validation.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import { getChampionId } from "@scout-for-lol/backend/utils/champion.js";
 import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
 import {
@@ -26,7 +25,11 @@ import {
   getStatusEmoji,
   formatDateInfo,
 } from "@scout-for-lol/backend/discord/commands/competition/helpers.js";
-import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
+import {
+  replyWithErrorFromException,
+  replyWithError,
+  replyWithSuccess,
+} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
 
 // ============================================================================
 // Input Parsing Schema - Discriminated Unions
@@ -213,10 +216,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
   } catch (error) {
     console.error(`❌ Invalid command arguments from ${username}:`, error);
     const validationError = fromError(error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`**Invalid input:**\n${validationError.toString()}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithError(interaction, `**Invalid input:**\n${validationError.toString()}`);
     return;
   }
 
@@ -260,10 +260,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     console.log(`✅ Permission check passed for ${username}`);
   } catch (error) {
     console.error(`❌ Permission check failed:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`**Error checking permissions:**\n${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithErrorFromException(interaction, error, "checking permissions");
     return;
   }
 
@@ -364,10 +361,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     console.log(`✅ Competition input built (fully type-safe)`);
   } catch (error) {
     console.error(`❌ Failed to build competition input:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`**Invalid competition data:**\n${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithErrorFromException(interaction, error, "building competition data");
     return;
   }
 
@@ -390,10 +384,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     console.log(`✅ Business validation passed`);
   } catch (error) {
     console.error(`❌ Business validation failed:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`**Validation failed:**\n${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithErrorFromException(interaction, error, "validating competition");
     return;
   }
 
@@ -489,15 +480,9 @@ ${competition.description}
 \`/competition join competition-id:${competition.id.toString()}\``;
     }
 
-    await interaction.reply({
-      content: truncateDiscordMessage(successMessage),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithSuccess(interaction, successMessage);
   } catch (error) {
     console.error(`❌ Database error during competition creation:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`**Error creating competition:**\n${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithErrorFromException(interaction, error, "creating competition");
   }
 }

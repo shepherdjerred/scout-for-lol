@@ -101,13 +101,12 @@ async function backfillStartSnapshots(competition: CompetitionWithCriteria): Pro
   for (const participant of participants) {
     try {
       // Check if START snapshot exists
-      const existingSnapshot = await getSnapshot(
-        prisma,
-        competition.id,
-        participant.playerId,
-        "START",
-        competition.criteria,
-      );
+      const existingSnapshot = await getSnapshot(prisma, {
+        competitionId: competition.id,
+        playerId: participant.playerId,
+        snapshotType: "START",
+        criteria: competition.criteria,
+      });
 
       // If snapshot exists, skip this participant
       if (existingSnapshot) {
@@ -121,7 +120,12 @@ async function backfillStartSnapshots(competition: CompetitionWithCriteria): Pro
         `[DailyLeaderboard] Attempting to create START snapshot for player ${participant.playerId.toString()} who was previously unranked`,
       );
 
-      await createSnapshot(prisma, competition.id, participant.playerId, "START", competition.criteria);
+      await createSnapshot(prisma, {
+        competitionId: competition.id,
+        playerId: participant.playerId,
+        snapshotType: "START",
+        criteria: competition.criteria,
+      });
 
       console.log(`[DailyLeaderboard] ✅ Created START snapshot for player ${participant.playerId.toString()}`);
     } catch (error) {

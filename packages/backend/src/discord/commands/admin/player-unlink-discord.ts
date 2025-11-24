@@ -11,6 +11,7 @@ import {
   buildPlayerNotLinkedError,
   buildDatabaseError,
 } from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
+import { buildPlayerUpdateResponse } from "@scout-for-lol/backend/discord/commands/admin/utils/player-responses.js";
 
 const ArgsSchema = z.object({
   playerAlias: z.string().min(1).max(100),
@@ -70,16 +71,13 @@ export async function executePlayerUnlinkDiscord(interaction: ChatInputCommandIn
         },
       });
 
-      const accountsList = updatedPlayer.accounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
-      const subscriptionsList =
-        updatedPlayer.subscriptions.length > 0
-          ? updatedPlayer.subscriptions.map((sub) => `<#${sub.channelId}>`).join(", ")
-          : "No active subscriptions.";
-
-      await interaction.reply({
-        content: `✅ **Discord ID unlinked successfully**\n\nUnlinked <@${previousDiscordId}> from player "${playerAlias}"\n\n**Accounts (${updatedPlayer.accounts.length.toString()}):**\n${accountsList}\n\n**Subscribed channels:** ${subscriptionsList}`,
-        ephemeral: true,
-      });
+      await interaction.reply(
+        buildPlayerUpdateResponse(
+          updatedPlayer,
+          "✅ **Discord ID unlinked successfully**",
+          `Unlinked <@${previousDiscordId}> from player "${playerAlias}"`,
+        ),
+      );
     } catch (error) {
       console.error(`❌ Database error during Discord unlink:`, error);
       await interaction.reply(buildDatabaseError("unlink Discord ID", error));

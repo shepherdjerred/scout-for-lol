@@ -122,7 +122,12 @@ export async function fetchSnapshotData(options: {
           .with("calculate_leaderboard", async () => {
             // When calculating leaderboard, we need the START snapshot to compare against
             // Always get START snapshot (captured when competition began)
-            const startSnapshot = await getSnapshot(prisma, competitionId, playerId, "START", criteria);
+            const startSnapshot = await getSnapshot(prisma, {
+              competitionId,
+              playerId,
+              snapshotType: "START",
+              criteria,
+            });
 
             // Validate START snapshot exists - cannot calculate rank climb without baseline
             if (!startSnapshot) {
@@ -146,7 +151,12 @@ export async function fetchSnapshotData(options: {
             await match(competitionStatus)
               .with("ENDED", async () => {
                 // For ended competitions, use the stored END snapshot
-                const endSnapshot = await getSnapshot(prisma, competitionId, playerId, "END", criteria);
+                const endSnapshot = await getSnapshot(prisma, {
+                  competitionId,
+                  playerId,
+                  snapshotType: "END",
+                  criteria,
+                });
 
                 // Validate END snapshot exists for ended competitions
                 if (!endSnapshot) {
@@ -197,7 +207,12 @@ export async function fetchSnapshotData(options: {
             await match(competitionStatus)
               .with("ENDED", async () => {
                 // For ended competitions, use the stored END snapshot
-                const endSnapshot = await getSnapshot(prisma, competitionId, playerId, "END", criteria);
+                const endSnapshot = await getSnapshot(prisma, {
+                  competitionId,
+                  playerId,
+                  snapshotType: "END",
+                  criteria,
+                });
 
                 // Validate END snapshot exists for ended competitions
                 if (!endSnapshot) {
