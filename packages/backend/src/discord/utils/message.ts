@@ -8,7 +8,7 @@
  * Discord's message content limit
  * @see https://discord.com/developers/docs/resources/channel#create-message
  */
-export const DISCORD_MESSAGE_MAX_LENGTH = 2000;
+const DISCORD_MESSAGE_MAX_LENGTH = 2000;
 
 /**
  * Safe buffer to leave room for markdown formatting and other content

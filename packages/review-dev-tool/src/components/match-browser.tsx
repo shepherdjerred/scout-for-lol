@@ -328,9 +328,8 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Queue Type</label>
-            <select
-              value={filterQueueType}
+            <label htmlFor="queue-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Queue Type</label>
+            <select id="queue-type"               value={filterQueueType}
               onChange={(e) => {
                 setFilterQueueType(e.target.value);
               }}
@@ -346,9 +345,8 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lane</label>
-            <select
-              value={filterLane}
+            <label htmlFor="lane" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Lane</label>
+            <select id="lane"               value={filterLane}
               onChange={(e) => {
                 setFilterLane(e.target.value);
               }}
@@ -364,9 +362,8 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Outcome</label>
-            <select
-              value={filterOutcome}
+            <label htmlFor="outcome" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Outcome</label>
+            <select id="outcome"               value={filterOutcome}
               onChange={(e) => {
                 setFilterOutcome(e.target.value);
               }}
@@ -380,9 +377,8 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Player (Game Name)</label>
-          <input
-            type="text"
+          <label htmlFor="player-game-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Player (Game Name)</label>
+          <input id="player-game-name"             type="text"
             placeholder="Fuzzy search player names..."
             value={filterPlayer}
             onChange={(e) => {
@@ -393,9 +389,8 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Champion</label>
-          <input
-            type="text"
+          <label htmlFor="champion" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Champion</label>
+          <input id="champion"             type="text"
             placeholder="Fuzzy search champions..."
             value={filterChampion}
             onChange={(e) => {

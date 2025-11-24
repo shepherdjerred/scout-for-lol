@@ -46,8 +46,11 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">API Keys</h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">OpenAI API Key</label>
+            <label htmlFor="openai-api-key" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              OpenAI API Key
+            </label>
             <input
+              id="openai-api-key"
               type="password"
               value={config.api.openaiApiKey ?? ""}
               onChange={(e) => {
@@ -61,8 +64,11 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gemini API Key</label>
+            <label htmlFor="gemini-api-key" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Gemini API Key
+            </label>
             <input
+              id="gemini-api-key"
               type="password"
               value={config.api.geminiApiKey ?? ""}
               onChange={(e) => {
@@ -85,8 +91,11 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
         </h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bucket Name</label>
+            <label htmlFor="s3-bucket-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Bucket Name
+            </label>
             <input
+              id="s3-bucket-name"
               type="text"
               value={config.api.s3BucketName ?? ""}
               onChange={(e) => {
@@ -100,8 +109,14 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Access Key ID</label>
+            <label
+              htmlFor="aws-access-key-id"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Access Key ID
+            </label>
             <input
+              id="aws-access-key-id"
               type="password"
               value={config.api.awsAccessKeyId ?? ""}
               onChange={(e) => {
@@ -115,8 +130,14 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Secret Access Key</label>
+            <label
+              htmlFor="aws-secret-access-key"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Secret Access Key
+            </label>
             <input
+              id="aws-secret-access-key"
               type="password"
               value={config.api.awsSecretAccessKey ?? ""}
               onChange={(e) => {
@@ -130,10 +151,11 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="s3-endpoint" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Endpoint URL (for Cloudflare R2)
             </label>
             <input
+              id="s3-endpoint"
               type="text"
               value={config.api.s3Endpoint ?? ""}
               onChange={(e) => {
@@ -150,8 +172,11 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
             </p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Region</label>
+            <label htmlFor="aws-region" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Region
+            </label>
             <input
+              id="aws-region"
               type="text"
               value={config.api.awsRegion}
               onChange={(e) => {

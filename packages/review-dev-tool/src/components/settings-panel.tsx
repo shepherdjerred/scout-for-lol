@@ -91,9 +91,8 @@ export function SettingsPanel({
           </div>
           <div className="px-6 pb-4 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">OpenAI API Key</label>
-              <input
-                type="password"
+              <label htmlFor="openai-api-key" className="block text-sm font-medium text-gray-700 mb-1">OpenAI API Key</label>
+              <input id="openai-api-key"                 type="password"
                 value={globalConfig.api.openaiApiKey ?? ""}
                 onChange={(e) => {
                   onGlobalChange({
@@ -106,9 +105,8 @@ export function SettingsPanel({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Gemini API Key</label>
-              <input
-                type="password"
+              <label htmlFor="gemini-api-key" className="block text-sm font-medium text-gray-700 mb-1">Gemini API Key</label>
+              <input id="gemini-api-key"                 type="password"
                 value={globalConfig.api.geminiApiKey ?? ""}
                 onChange={(e) => {
                   onGlobalChange({
@@ -125,9 +123,8 @@ export function SettingsPanel({
               <h5 className="text-sm font-semibold text-gray-700 mb-3">S3 / R2 Configuration (Optional)</h5>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bucket Name</label>
-                  <input
-                    type="text"
+                  <label htmlFor="bucket-name" className="block text-sm font-medium text-gray-700 mb-1">Bucket Name</label>
+                  <input id="bucket-name"                     type="text"
                     value={globalConfig.api.s3BucketName ?? ""}
                     onChange={(e) => {
                       onGlobalChange({
@@ -140,9 +137,8 @@ export function SettingsPanel({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Access Key ID</label>
-                  <input
-                    type="password"
+                  <label htmlFor="access-key-id" className="block text-sm font-medium text-gray-700 mb-1">Access Key ID</label>
+                  <input id="access-key-id"                     type="password"
                     value={globalConfig.api.awsAccessKeyId ?? ""}
                     onChange={(e) => {
                       onGlobalChange({
@@ -155,9 +151,8 @@ export function SettingsPanel({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Secret Access Key</label>
-                  <input
-                    type="password"
+                  <label htmlFor="secret-access-key" className="block text-sm font-medium text-gray-700 mb-1">Secret Access Key</label>
+                  <input id="secret-access-key"                     type="password"
                     value={globalConfig.api.awsSecretAccessKey ?? ""}
                     onChange={(e) => {
                       onGlobalChange({
@@ -170,11 +165,10 @@ export function SettingsPanel({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="endpoint-url-for-cloudflare-r2" className="block text-sm font-medium text-gray-700 mb-1">
                     Endpoint URL (for Cloudflare R2)
                   </label>
-                  <input
-                    type="text"
+                  <input id="endpoint-url-for-cloudflare-r2"                     type="text"
                     value={globalConfig.api.s3Endpoint ?? ""}
                     onChange={(e) => {
                       onGlobalChange({
@@ -190,9 +184,8 @@ export function SettingsPanel({
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Region</label>
-                  <input
-                    type="text"
+                  <label htmlFor="region" className="block text-sm font-medium text-gray-700 mb-1">Region</label>
+                  <input id="region"                     type="text"
                     value={globalConfig.api.awsRegion}
                     onChange={(e) => {
                       onGlobalChange({
@@ -288,9 +281,8 @@ export function SettingsPanel({
           {openSections.has("text") && (
             <div className="px-6 pb-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
-                <select
-                  value={tabConfig.textGeneration.model}
+                <label htmlFor="model" className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                <select id="model"                   value={tabConfig.textGeneration.model}
                   onChange={(e) => {
                     onTabChange({
                       ...tabConfig,
@@ -468,12 +460,11 @@ export function SettingsPanel({
                   }}
                   className="rounded"
                 />
-                <label className="text-sm font-medium text-gray-700">Enable Image Generation</label>
+                <label htmlFor="enable-image-generation" className="text-sm font-medium text-gray-700">Enable Image Generation</label>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
-                <select
-                  value={tabConfig.imageGeneration.model}
+                <label htmlFor="model" className="block text-sm font-medium text-gray-700 mb-1">Model</label>
+                <select id="model"                   value={tabConfig.imageGeneration.model}
                   onChange={(e) => {
                     onTabChange({
                       ...tabConfig,
@@ -543,15 +534,14 @@ export function SettingsPanel({
                   className="rounded"
                   disabled={!tabConfig.imageGeneration.enabled}
                 />
-                <label className="text-sm font-medium text-gray-700">Use Matching Style-Theme Pairs</label>
+                <label htmlFor="use-matching-style-theme-pairs" className="text-sm font-medium text-gray-700">Use Matching Style-Theme Pairs</label>
               </div>
               {tabConfig.imageGeneration.useMatchingPairs && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Matching Pair Probability: {(tabConfig.imageGeneration.matchingPairProbability * 100).toFixed(0)}%
                   </label>
-                  <input
-                    type="range"
+                  <input id="use-matching-style-theme-pairs"                     type="range"
                     min="0"
                     max="1"
                     step="0.05"
@@ -591,9 +581,8 @@ export function SettingsPanel({
           {openSections.has("prompts") && (
             <div className="px-6 pb-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Base Prompt</label>
-                <textarea
-                  value={tabConfig.prompts.basePrompt || getBasePrompt()}
+                <label htmlFor="base-prompt" className="block text-sm font-medium text-gray-700 mb-1">Base Prompt</label>
+                <textarea id="base-prompt"                   value={tabConfig.prompts.basePrompt || getBasePrompt()}
                   onChange={(e) => {
                     onTabChange({
                       ...tabConfig,
@@ -617,10 +606,9 @@ export function SettingsPanel({
                 </button>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Personality</label>
+                <label htmlFor="personality" className="block text-sm font-medium text-gray-700 mb-1">Personality</label>
                 <div className="flex gap-2">
-                  <select
-                    value={tabConfig.prompts.personalityId}
+                  <select id="personality"                     value={tabConfig.prompts.personalityId}
                     onChange={(e) => {
                       onTabChange({
                         ...tabConfig,

@@ -236,9 +236,8 @@ export function App() {
           >
             <h3 style={{ marginTop: 0 }}>Fetch Real Match from Riot API</h3>
             <div style={{ marginBottom: "10px" }}>
-              <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Riot API Token:</label>
-              <input
-                type="password"
+              <label htmlFor="riot-api-token" style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Riot API Token:</label>
+              <input id="riot-api-token"                 type="password"
                 value={apiToken}
                 onChange={(e) => {
                   setApiToken(e.target.value);
@@ -264,9 +263,8 @@ export function App() {
 
             <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
               <div style={{ flex: 1 }}>
-                <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Match ID:</label>
-                <input
-                  type="text"
+                <label htmlFor="match-id" style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Match ID:</label>
+                <input id="match-id"                   type="text"
                   value={matchId}
                   onChange={(e) => {
                     setMatchId(e.target.value);
@@ -282,9 +280,8 @@ export function App() {
                 />
               </div>
               <div style={{ flex: 0.5 }}>
-                <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Region:</label>
-                <select
-                  value={region}
+                <label htmlFor="region" style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>Region:</label>
+                <select id="region"                   value={region}
                   onChange={(e) => {
                     setRegion(e.target.value);
                   }}

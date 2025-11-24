@@ -12,15 +12,10 @@
     "**/dist/**",
     "**/.astro/**",
     "**/*-stub.ts",
-    "**/postcss.config.js"
+    "**/postcss.config.js",
+    "eslint-rules/eslint-plugin-eslint-comments.d.ts"
   ],
-  "ignoreDependencies": [
-    "@commitlint/cli",
-    "eslint-plugin-no-relative-import-paths",
-    "eslint-plugin-regex",
-    "eslint-plugin-regexp",
-    "bun-types"
-  ],
+  "ignoreDependencies": ["@commitlint/cli", "bun-types"],
   "rules": {
     "files": "warn",
     "dependencies": "warn",
@@ -72,7 +67,12 @@
     "packages/frontend": {
       "entry": ["src/pages/**/*.astro"],
       "project": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.astro", "astro.config.mjs"],
-      "ignoreDependencies": ["@tailwindcss/postcss", "@astrojs/tailwind"]
+      "ignoreDependencies": [
+        "@tailwindcss/postcss",
+        "@astrojs/tailwind",
+        "@iconify-json/heroicons",
+        "@iconify-json/simple-icons"
+      ]
     },
     "packages/review-dev-tool": {
       "entry": ["src/pages/**/*.astro"],

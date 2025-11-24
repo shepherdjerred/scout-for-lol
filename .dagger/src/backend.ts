@@ -73,6 +73,8 @@ export function getBackendTestReport(workspaceSource: Directory): Directory {
  * @returns The built container
  */
 export function buildBackendImage(workspaceSource: Directory, version: string, gitSha: string): Container {
+  // Health check available via: bun run src/health.ts
+  // This should be configured in K8s manifests as a liveness/readiness probe
   return installBackendDeps(workspaceSource)
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
@@ -84,7 +86,11 @@ export function buildBackendImage(workspaceSource: Directory, version: string, g
     .withExec(["bun", "run", "generate"])
     .withEntrypoint(["sh", "-c", "bun run src/database/migrate.ts && bun run src/index.ts"])
     .withLabel("org.opencontainers.image.title", "scout-for-lol-backend")
-    .withLabel("org.opencontainers.image.description", "Scout for LoL Discord bot backend");
+    .withLabel("org.opencontainers.image.description", "Scout for LoL Discord bot backend")
+    .withLabel("healthcheck.command", "bun run src/health.ts")
+    .withLabel("healthcheck.interval", "30s")
+    .withLabel("healthcheck.timeout", "10s")
+    .withLabel("healthcheck.retries", "3");
 }
 
 /**

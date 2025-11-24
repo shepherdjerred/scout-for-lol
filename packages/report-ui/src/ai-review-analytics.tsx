@@ -274,9 +274,8 @@ export function AIReviewAnalytics(): React.ReactNode {
         }}
       >
         <div>
-          <label style={{ fontSize: "14px", fontWeight: 500, marginRight: "8px", color: "#374151" }}>Filter:</label>
-          <select
-            value={filterRating}
+          <label htmlFor="filter" style={{ fontSize: "14px", fontWeight: 500, marginRight: "8px", color: "#374151" }}>Filter:</label>
+          <select id="filter"             value={filterRating}
             onChange={(e) => {
               const FilterRatingSchema = z.enum(["all", "unrated", "1", "2", "3", "4"]);
               const result = FilterRatingSchema.safeParse(e.target.value);
@@ -301,9 +300,8 @@ export function AIReviewAnalytics(): React.ReactNode {
           </select>
         </div>
         <div>
-          <label style={{ fontSize: "14px", fontWeight: 500, marginRight: "8px", color: "#374151" }}>Sort:</label>
-          <select
-            value={sortBy}
+          <label htmlFor="sort" style={{ fontSize: "14px", fontWeight: 500, marginRight: "8px", color: "#374151" }}>Sort:</label>
+          <select id="sort"             value={sortBy}
             onChange={(e) => {
               const SortOptionSchema = z.enum(["rating-desc", "rating-asc", "date-desc", "date-asc"]);
               const result = SortOptionSchema.safeParse(e.target.value);

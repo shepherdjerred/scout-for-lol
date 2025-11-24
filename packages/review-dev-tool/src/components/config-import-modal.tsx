@@ -141,9 +141,8 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
           <div className="p-6 space-y-4">
             {/* File Upload */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Upload Config File</label>
-              <input
-                type="file"
+              <label htmlFor="upload-config-file" className="block text-sm font-medium text-gray-700 mb-2">Upload Config File</label>
+              <input id="upload-config-file"                 type="file"
                 accept=".json"
                 onChange={handleFileUpload}
                 className="block w-full text-sm text-gray-500
@@ -158,9 +157,8 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
 
             {/* Or Paste JSON */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Or Paste JSON</label>
-              <textarea
-                value={jsonInput}
+              <label htmlFor="or-paste-json" className="block text-sm font-medium text-gray-700 mb-2">Or Paste JSON</label>
+              <textarea id="or-paste-json"                 value={jsonInput}
                 onChange={(e) => {
                   setJsonInput(e.target.value);
                 }}

@@ -70,10 +70,11 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="personality-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Name <span className="text-red-500 dark:text-red-400">*</span>
             </label>
             <input
+              id="personality-name"
               type="text"
               value={name}
               onChange={(e) => {
@@ -85,10 +86,11 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="personality-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Description <span className="text-red-500 dark:text-red-400">*</span>
             </label>
             <textarea
+              id="personality-description"
               value={description}
               onChange={(e) => {
                 setDescription(e.target.value);
@@ -100,11 +102,10 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="favorite-champions-comma-separated" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Favorite Champions (comma-separated)
             </label>
-            <input
-              type="text"
+            <input id="favorite-champions-comma-separated"               type="text"
               value={favoriteChampions}
               onChange={(e) => {
                 setFavoriteChampions(e.target.value);
@@ -115,11 +116,10 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="favorite-lanes-comma-separated" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Favorite Lanes (comma-separated)
             </label>
-            <input
-              type="text"
+            <input id="favorite-lanes-comma-separated"               type="text"
               value={favoriteLanes}
               onChange={(e) => {
                 setFavoriteLanes(e.target.value);
@@ -130,10 +130,11 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="personality-instructions" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Instructions / System Prompt <span className="text-red-500 dark:text-red-400">*</span>
             </label>
             <textarea
+              id="personality-instructions"
               value={instructions}
               onChange={(e) => {
                 setInstructions(e.target.value);

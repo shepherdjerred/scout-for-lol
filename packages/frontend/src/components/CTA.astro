@@ -1,4 +1,6 @@
 ---
+import Button from './Button.astro';
+
 interface Props {
   title: string;
   description?: string;
@@ -29,35 +31,15 @@ const descClass = variant === 'indigo' ? 'text-indigo-200 dark:text-indigo-100' 
       )}
       {buttons.length > 0 && (
         <div class="mt-10 flex items-center justify-center gap-x-6">
-          {buttons.map((button) => {
-            if (variant === 'indigo') {
-              return button.variant === 'secondary' ? (
-                <a href={button.href} class="text-sm/6 font-semibold text-white hover:text-indigo-100 dark:hover:text-indigo-200">
-                  {button.text} <span aria-hidden="true">→</span>
-                </a>
-              ) : (
-                <a
-                  href={button.href}
-                  class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-indigo-600 shadow-sm hover:bg-indigo-50 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-white"
-                >
-                  {button.text}
-                </a>
-              );
-            } else {
-              return button.variant === 'secondary' ? (
-                <a href={button.href} class="text-sm/6 font-semibold text-gray-900 dark:text-white">
-                  {button.text} <span aria-hidden="true">→</span>
-                </a>
-              ) : (
-                <a
-                  href={button.href}
-                  class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                >
-                  {button.text}
-                </a>
-              );
-            }
-          })}
+          {buttons.map((button) => (
+            <Button
+              href={button.href}
+              variant={button.variant === 'secondary' ? 'text' : 'primary'}
+              color={variant === 'indigo' ? 'white' : 'indigo'}
+            >
+              {button.text}
+            </Button>
+          ))}
         </div>
       )}
     </div>

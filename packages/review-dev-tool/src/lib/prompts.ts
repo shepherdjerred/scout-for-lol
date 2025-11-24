@@ -34,7 +34,7 @@ import genericPlayer from "@scout-for-lol/review-dev-tool/prompts/players/generi
 /**
  * Built-in personalities (from prompt files)
  */
-export const BUILTIN_PERSONALITIES: Personality[] = [
+const BUILTIN_PERSONALITIES_INTERNAL: Personality[] = [
   {
     id: "aaron",
     metadata: PersonalityMetadataSchema.parse(aaronJson),
@@ -62,12 +62,8 @@ export const BUILTIN_PERSONALITIES: Personality[] = [
   },
 ];
 
-/**
- * Legacy export for backwards compatibility
- * Note: This only includes built-in personalities
- * Use getAllPersonalities() in React components to get custom ones too
- */
-export const PERSONALITIES = BUILTIN_PERSONALITIES;
+export const BUILTIN_PERSONALITIES = BUILTIN_PERSONALITIES_INTERNAL;
+export const PERSONALITIES = BUILTIN_PERSONALITIES_INTERNAL;
 
 /**
  * Lane context mapping
@@ -92,7 +88,7 @@ export function getBasePrompt(): string {
  */
 export function selectRandomPersonality(): Personality {
   // Exclude generic from random selection
-  const selectablePersonalities = BUILTIN_PERSONALITIES.filter((p) => p.id !== "generic");
+  const selectablePersonalities = BUILTIN_PERSONALITIES_INTERNAL.filter((p) => p.id !== "generic");
   const randomIndex = Math.floor(Math.random() * selectablePersonalities.length);
   const selected = selectablePersonalities[randomIndex];
   if (!selected) {
@@ -106,7 +102,7 @@ export function selectRandomPersonality(): Personality {
  * For custom personalities, use the personality storage functions directly
  */
 export function getPersonalityById(id: string): Personality | undefined {
-  return BUILTIN_PERSONALITIES.find((p) => p.id === id);
+  return BUILTIN_PERSONALITIES_INTERNAL.find((p) => p.id === id);
 }
 
 /**
