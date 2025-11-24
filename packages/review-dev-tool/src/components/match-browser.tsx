@@ -50,16 +50,18 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
-  const s3Config: S3Config | null =
-    apiSettings.s3BucketName && apiSettings.awsAccessKeyId && apiSettings.awsSecretAccessKey
-      ? {
-          bucketName: apiSettings.s3BucketName,
-          accessKeyId: apiSettings.awsAccessKeyId,
-          secretAccessKey: apiSettings.awsSecretAccessKey,
-          region: apiSettings.awsRegion,
-          ...(apiSettings.s3Endpoint ? { endpoint: apiSettings.s3Endpoint } : {}),
-        }
-      : null;
+  const s3Config = useMemo<S3Config | null>(() => {
+    if (apiSettings.s3BucketName && apiSettings.awsAccessKeyId && apiSettings.awsSecretAccessKey) {
+      return {
+        bucketName: apiSettings.s3BucketName,
+        accessKeyId: apiSettings.awsAccessKeyId,
+        secretAccessKey: apiSettings.awsSecretAccessKey,
+        region: apiSettings.awsRegion,
+        ...(apiSettings.s3Endpoint ? { endpoint: apiSettings.s3Endpoint } : {}),
+      };
+    }
+    return null;
+  }, [apiSettings]);
 
   const handleBrowse = useCallback(
     async (forceRefresh = false) => {
@@ -178,7 +180,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     if (s3Config && matches.length === 0 && !loading) {
       void handleBrowse();
     }
-  }, [s3Config?.bucketName]); // Only trigger when config changes, not on every render
+  }, [s3Config, matches.length, loading, handleBrowse]);
 
   // Auto-refresh today's matches every 10 minutes (if matches are already loaded)
   useEffect(() => {

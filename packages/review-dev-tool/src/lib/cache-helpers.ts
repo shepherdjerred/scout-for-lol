@@ -26,13 +26,14 @@ export function executeIDBRequest<T>(
  * Execute an IndexedDB transaction operation
  * Creates a transaction, gets the store, and executes the operation
  */
-export async function executeIDBTransaction<T>(
-  db: IDBDatabase,
-  storeName: string,
-  mode: IDBTransactionMode,
-  operation: (store: IDBObjectStore) => IDBRequest<T>,
-  operationName: string = "IndexedDB transaction",
-): Promise<T> {
+export async function executeIDBTransaction<T>(options: {
+  db: IDBDatabase;
+  storeName: string;
+  mode: IDBTransactionMode;
+  operation: (store: IDBObjectStore) => IDBRequest<T>;
+  operationName?: string;
+}): Promise<T> {
+  const { db, storeName, mode, operation, operationName = "IndexedDB transaction" } = options;
   const transaction = db.transaction([storeName], mode);
   const store = transaction.objectStore(storeName);
   const request = operation(store);
@@ -45,8 +46,8 @@ export async function executeIDBTransaction<T>(
  */
 export async function executeIDBCursor<T>(
   index: IDBIndex,
-  operation: (cursor: IDBCursorWithValue, entry: T) => void | boolean,
-  operationName: string = "IndexedDB cursor",
+  operation: (cursor: IDBCursorWithValue, entry: T) => boolean | undefined,
+  operationName = "IndexedDB cursor",
 ): Promise<void> {
   return new Promise((resolve, reject) => {
     const request = index.openCursor();
@@ -72,4 +73,3 @@ export async function executeIDBCursor<T>(
     };
   });
 }
-

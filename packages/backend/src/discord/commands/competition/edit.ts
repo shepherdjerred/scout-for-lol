@@ -62,6 +62,57 @@ type EditCommandArgs = z.infer<typeof EditCommandArgsBaseSchema> & {
 };
 
 // ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Parse dates from edit arguments
+ */
+function parseDatesArgs(
+  startDateStr: string | null,
+  endDateStr: string | null,
+  seasonStr: string | null,
+  isDraft: boolean,
+): { success: true; dates: DatesEditSchema } | { success: false; error: string } {
+  if (startDateStr === null && endDateStr === null && seasonStr === null) {
+    return { success: true, dates: undefined as unknown as DatesEditSchema };
+  }
+
+  if (!isDraft) {
+    return { success: false, error: "Cannot change dates after competition has started" };
+  }
+
+  const hasFixedDates = startDateStr !== null && endDateStr !== null;
+  const hasSeason = seasonStr !== null;
+
+  if (!hasFixedDates && !hasSeason) {
+    return { success: false, error: "Must specify either (start-date AND end-date) OR season" };
+  }
+  if (hasFixedDates && hasSeason) {
+    return { success: false, error: "Cannot specify both fixed dates and season" };
+  }
+
+  if (hasFixedDates) {
+    return {
+      success: true,
+      dates: FixedDatesEditArgsSchema.parse({
+        dateType: "FIXED",
+        startDate: startDateStr!,
+        endDate: endDateStr!,
+      }),
+    };
+  }
+
+  return {
+    success: true,
+    dates: SeasonEditArgsSchema.parse({
+      dateType: "SEASON",
+      season: seasonStr!,
+    }),
+  };
+}
+
+// ============================================================================
 // Command Execution
 // ============================================================================
 
@@ -184,33 +235,12 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
     args = { ...baseArgs };
 
     // Parse dates if provided
-    if (startDateStr !== null || endDateStr !== null || seasonStr !== null) {
-      if (!isDraft) {
-        throw new Error("Cannot change dates after competition has started");
-      }
-
-      const hasFixedDates = startDateStr !== null && endDateStr !== null;
-      const hasSeason = seasonStr !== null;
-
-      if (!hasFixedDates && !hasSeason) {
-        throw new Error("Must specify either (start-date AND end-date) OR season");
-      }
-      if (hasFixedDates && hasSeason) {
-        throw new Error("Cannot specify both fixed dates and season");
-      }
-
-      if (hasFixedDates) {
-        args.dates = FixedDatesEditArgsSchema.parse({
-          dateType: "FIXED",
-          startDate: startDateStr,
-          endDate: endDateStr,
-        });
-      } else {
-        args.dates = SeasonEditArgsSchema.parse({
-          dateType: "SEASON",
-          season: seasonStr,
-        });
-      }
+    const datesResult = parseDatesArgs(startDateStr, endDateStr, seasonStr, isDraft);
+    if (!datesResult.success) {
+      throw new Error(datesResult.error);
+    }
+    if (datesResult.dates !== undefined) {
+      args.dates = datesResult.dates;
     }
 
     // Parse criteria if provided

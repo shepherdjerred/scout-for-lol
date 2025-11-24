@@ -70,7 +70,7 @@ export async function getAllEntries(): Promise<DBHistoryEntry[]> {
   const transaction = db.transaction([STORE_NAME], "readonly");
   const store = getStore(transaction, STORE_NAME);
   const request = store.getAll();
-  const result = await executeRequest<unknown>(request as unknown as IDBRequest<unknown>);
+  const result = await executeRequest<unknown>(request as unknown);
   const entriesResult = z.array(DBHistoryEntrySchema).safeParse(result);
   if (entriesResult.success) {
     const entries = entriesResult.data;

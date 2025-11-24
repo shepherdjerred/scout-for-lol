@@ -192,7 +192,7 @@ export async function loadHistory(): Promise<HistoryEntry[]> {
  * Create a new pending history entry (called when generation starts)
  * Returns the entry ID for later updating - NOT saved to localStorage yet
  */
-export function createPendingEntry(_unusedConfigSnapshot: HistoryEntry["configSnapshot"]): string {
+export function createPendingEntry(): string {
   try {
     const id = `gen-${Date.now().toString()}-${Math.random().toString(36).slice(2, 9)}`;
     console.log("[History] Created pending entry ID:", id, "(not persisted yet)");

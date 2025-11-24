@@ -1122,7 +1122,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
         onClose={() => {
           setShowImportModal(false);
         }}
-        onImportSuccess={handleImportSuccess}
+        onImportSuccess={(tabConfig) => {
+          void handleImportSuccess(tabConfig);
+        }}
       />
     </div>
   );
