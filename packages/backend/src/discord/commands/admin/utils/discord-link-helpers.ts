@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction } from "discord.js";
+import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
 import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
@@ -34,7 +34,7 @@ export async function validateDiscordLink(options: {
       success: false,
       errorResponse: {
         content: `❌ Player "${playerAlias}" not found`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       },
     };
   }
@@ -57,7 +57,7 @@ export async function validateDiscordLink(options: {
       success: false,
       errorResponse: {
         content: errorResponse.content ?? "",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       },
     };
   }
@@ -70,7 +70,7 @@ export async function validateDiscordLink(options: {
       success: false,
       errorResponse: {
         content: errorResponse.content ?? "",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       },
     };
   }
@@ -92,7 +92,7 @@ export function validateDiscordUnlink(
       success: false,
       errorResponse: {
         content: `❌ Player "${playerAlias}" not found`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       },
     };
   }
@@ -104,7 +104,7 @@ export function validateDiscordUnlink(
       success: false,
       errorResponse: {
         content: errorResponse.content ?? "",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       },
     };
   }

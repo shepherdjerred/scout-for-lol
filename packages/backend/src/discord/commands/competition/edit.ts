@@ -16,8 +16,8 @@ import {
   getCompetitionById,
   type UpdateCompetitionInput,
   updateCompetition,
-  type Competition,
 } from "@scout-for-lol/backend/database/competition/queries.js";
+import { type CompetitionWithCriteria } from "@scout-for-lol/data";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import { getChampionId } from "@scout-for-lol/backend/utils/champion.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
@@ -125,7 +125,7 @@ function parseDatesArgs(
 async function fetchAndValidateEditCompetition(
   interaction: ChatInputCommandInteraction,
   userId: DiscordAccountId,
-): Promise<{ competition: Competition; competitionId: CompetitionId; isDraft: boolean } | null> {
+): Promise<{ competition: CompetitionWithCriteria; competitionId: CompetitionId; isDraft: boolean } | null> {
   const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
 
   try {

@@ -1,7 +1,7 @@
 /**
  * Result rating component (star rating and notes)
  */
-import { StarRating } from "@scout-for-lol/report-ui/components/star-rating";
+import { StarRating } from "./star-rating";
 
 type ResultRatingProps = {
   rating: 1 | 2 | 3 | 4 | undefined;

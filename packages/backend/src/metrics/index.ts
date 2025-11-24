@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars -- ok here */
 import { Registry, Counter, Gauge, Histogram } from "prom-client";
 import configuration from "@scout-for-lol/backend/configuration.js";
 
@@ -141,137 +140,12 @@ export const guildDataCleanupTotal = new Counter({
 });
 
 /**
- * Total number of Discord channels deleted (event handler triggered)
- * TODO: Implement channel deletion tracking
- */
-const _discordChannelsDeletedTotal = new Counter({
-  name: "discord_channels_deleted_total",
-  help: "Total number of Discord channels deleted (event handler triggered)",
-  registers: [registry],
-});
-
-/**
  * Total number of subscriptions automatically cleaned up
  */
 export const discordSubscriptionsCleanedTotal = new Counter({
   name: "discord_subscriptions_cleaned_total",
   help: "Total number of subscriptions automatically cleaned up",
   labelNames: ["reason"] as const,
-  registers: [registry],
-});
-
-// =======================
-// League of Legends API Metrics
-// =======================
-
-/**
- * Total number of Riot API requests
- * TODO: Implement in Riot API wrapper
- */
-const _riotApiRequestsTotal = new Counter({
-  name: "riot_api_requests_total",
-  help: "Total number of Riot API requests",
-  labelNames: ["endpoint", "status", "region"] as const,
-  registers: [registry],
-});
-
-/**
- * Distribution of player accounts across polling interval buckets
- * Shows how many accounts are in each refresh rate category
- * TODO: Implement in polling logic
- */
-const _playerPollingIntervalDistribution = new Gauge({
-  name: "player_polling_interval_distribution",
-  help: "Number of player accounts in each polling interval bucket (by minutes)",
-  labelNames: ["interval_minutes"] as const,
-  registers: [registry],
-});
-
-/**
- * Number of players checked vs skipped in current cycle
- * TODO: Implement in polling logic
- */
-const _playerPollingStats = new Gauge({
-  name: "player_polling_stats",
-  help: "Players checked or skipped in the current polling cycle",
-  labelNames: ["status"] as const,
-  registers: [registry],
-});
-
-/**
- * Duration of Riot API requests in seconds
- * TODO: Implement in Riot API wrapper
- */
-const _riotApiRequestDuration = new Histogram({
-  name: "riot_api_request_duration_seconds",
-  help: "Duration of Riot API requests in seconds",
-  labelNames: ["endpoint", "region"] as const,
-  buckets: [0.1, 0.5, 1, 2, 5, 10],
-  registers: [registry],
-});
-
-/**
- * Number of Riot API rate limit errors
- * TODO: Implement in Riot API error handling
- */
-const _riotApiRateLimitErrors = new Counter({
-  name: "riot_api_rate_limit_errors_total",
-  help: "Total number of Riot API rate limit errors",
-  labelNames: ["region"] as const,
-  registers: [registry],
-});
-
-// =======================
-// Database Metrics
-// =======================
-
-/**
- * Total number of database queries
- * TODO: Implement in Prisma middleware
- */
-const _databaseQueriesTotal = new Counter({
-  name: "database_queries_total",
-  help: "Total number of database queries",
-  labelNames: ["operation", "status"] as const,
-  registers: [registry],
-});
-
-/**
- * Duration of database queries in seconds
- * TODO: Implement in Prisma middleware
- */
-const _databaseQueryDuration = new Histogram({
-  name: "database_query_duration_seconds",
-  help: "Duration of database queries in seconds",
-  labelNames: ["operation"] as const,
-  buckets: [0.001, 0.01, 0.1, 0.5, 1, 5],
-  registers: [registry],
-});
-
-// =======================
-// Report Generation Metrics
-// =======================
-
-/**
- * Total number of reports generated
- * TODO: Implement in report generation logic
- */
-const _reportsGeneratedTotal = new Counter({
-  name: "reports_generated_total",
-  help: "Total number of reports generated",
-  labelNames: ["report_type", "status"] as const,
-  registers: [registry],
-});
-
-/**
- * Duration of report generation in seconds
- * TODO: Implement in report generation logic
- */
-const _reportGenerationDuration = new Histogram({
-  name: "report_generation_duration_seconds",
-  help: "Duration of report generation in seconds",
-  labelNames: ["report_type"] as const,
-  buckets: [0.5, 1, 2, 5, 10, 30, 60],
   registers: [registry],
 });
 

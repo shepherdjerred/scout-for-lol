@@ -2,32 +2,24 @@ import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/clien
 import configuration from "@scout-for-lol/backend/configuration.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import { MatchDtoSchema, type MatchDto } from "@scout-for-lol/data";
+import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
 
 /**
  * Generate date prefixes for S3 listing between start and end dates (inclusive)
  * Returns paths in format: matches/YYYY/MM/DD/
  */
 function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
-  const prefixes: string[] = [];
-  const current = new Date(startDate);
+  const days = eachDayOfInterval({
+    start: startOfDay(startDate),
+    end: endOfDay(endDate),
+  });
 
-  // Normalize to start of day in UTC
-  current.setUTCHours(0, 0, 0, 0);
-  const end = new Date(endDate);
-  end.setUTCHours(23, 59, 59, 999);
-
-  while (current <= end) {
-    const year = current.getUTCFullYear();
-    const month = String(current.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(current.getUTCDate()).padStart(2, "0");
-
-    prefixes.push(`matches/${year.toString()}/${month}/${day}/`);
-
-    // Move to next day
-    current.setUTCDate(current.getUTCDate() + 1);
-  }
-
-  return prefixes;
+  return days.map((day) => {
+    const year = format(day, "yyyy");
+    const month = format(day, "MM");
+    const dayStr = format(day, "dd");
+    return `matches/${year}/${month}/${dayStr}/`;
+  });
 }
 
 /**

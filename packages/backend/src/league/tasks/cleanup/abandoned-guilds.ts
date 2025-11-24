@@ -9,6 +9,7 @@ import {
   guildDataCleanupTotal,
 } from "@scout-for-lol/backend/metrics/index.js";
 import type { DiscordGuildId } from "@scout-for-lol/data";
+import { differenceInCalendarDays } from "date-fns";
 
 /**
  * Check for abandoned guilds and handle cleanup
@@ -124,7 +125,7 @@ async function notifyOwnerOfAbandonment(
   try {
     const owner = await guild.fetchOwner();
 
-    const daysSinceFirstError = Math.floor((Date.now() - firstErrorDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysSinceFirstError = differenceInCalendarDays(new Date(), firstErrorDate);
 
     const message = `👋 **Scout for LoL - Server Departure Notice**
 

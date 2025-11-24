@@ -13,6 +13,7 @@ import { preferZodValidation } from "./eslint-rules/prefer-zod-validation";
 import { preferBunApis } from "./eslint-rules/prefer-bun-apis";
 import { noReExports } from "./eslint-rules/no-re-exports";
 import { noUseEffect } from "./eslint-rules/no-use-effect";
+import { preferDateFns } from "./eslint-rules/prefer-date-fns";
 import * as importPlugin from "eslint-plugin-import";
 import * as noRelativeImportPaths from "eslint-plugin-no-relative-import-paths";
 import * as regexpPlugin from "eslint-plugin-regexp";
@@ -45,6 +46,7 @@ const customRulesPlugin = {
     "prefer-bun-apis": preferBunApis,
     "no-re-exports": noReExports,
     "no-use-effect": noUseEffect,
+    "prefer-date-fns": preferDateFns,
   },
 };
 
@@ -308,6 +310,7 @@ export default tseslint.config(
       "custom-rules/prefer-zod-validation": "error",
       "custom-rules/prefer-bun-apis": "error",
       "custom-rules/no-re-exports": "error",
+      "custom-rules/prefer-date-fns": "warn",
     },
   },
   // Dagger index.ts - Dagger module API can have many parameters for external interface

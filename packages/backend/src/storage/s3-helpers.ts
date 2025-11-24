@@ -2,17 +2,16 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import configuration from "@scout-for-lol/backend/configuration.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import type { MatchId } from "@scout-for-lol/data";
+import { format } from "date-fns";
 
 /**
  * Generate S3 key (path) for a file with date-based hierarchy
  */
 function generateS3Key(matchId: MatchId, prefix: string, extension: string): string {
   const now = new Date();
-  const year = now.getUTCFullYear();
-  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(now.getUTCDate()).padStart(2, "0");
+  const dateStr = format(now, "yyyy/MM/dd");
 
-  return `${prefix}/${year.toString()}/${month}/${day}/${matchId}.${extension}`;
+  return `${prefix}/${dateStr}/${matchId}.${extension}`;
 }
 
 type SaveToS3Config = {

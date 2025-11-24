@@ -5,6 +5,7 @@ import {
   DiscordAccountIdSchema,
   type CompetitionId,
   type DiscordGuildId,
+  type DiscordAccountId,
 } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
@@ -25,7 +26,9 @@ export function extractCompetitionId(interaction: ChatInputCommandInteraction): 
  * Validate server context and return server ID
  * Returns null if validation fails (and sends error reply)
  */
-export async function validateServerContext(interaction: ChatInputCommandInteraction): Promise<string | null> {
+export async function validateServerContext(
+  interaction: ChatInputCommandInteraction,
+): Promise<DiscordGuildId | null> {
   const serverId = interaction.guildId ? DiscordGuildIdSchema.parse(interaction.guildId) : null;
 
   if (!serverId) {
@@ -43,10 +46,10 @@ export async function validateServerContext(interaction: ChatInputCommandInterac
 export async function fetchLinkedPlayerForUser(
   interaction: ChatInputCommandInteraction,
   serverId: DiscordGuildId,
-  userId: string,
+  userId: string | DiscordAccountId,
   logContext: string,
 ): Promise<Awaited<ReturnType<typeof prisma.player.findFirst>> | null> {
-  const parsedUserId = DiscordAccountIdSchema.parse(userId);
+  const parsedUserId = typeof userId === "string" ? DiscordAccountIdSchema.parse(userId) : userId;
 
   let player;
   try {

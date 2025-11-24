@@ -21,6 +21,7 @@ import { getRuneInfo } from "@scout-for-lol/report";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
 import { getCachedDataAsync, setCachedData } from "@scout-for-lol/review-dev-tool/lib/cache";
 import { z } from "zod";
+import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
 
 /**
  * Fetch all objects from S3 with pagination
@@ -96,24 +97,17 @@ export type S3Config = {
  * Generate date prefixes for S3 listing between start and end dates
  */
 function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
-  const prefixes: string[] = [];
-  const current = new Date(startDate);
+  const days = eachDayOfInterval({
+    start: startOfDay(startDate),
+    end: endOfDay(endDate),
+  });
 
-  current.setUTCHours(0, 0, 0, 0);
-  const end = new Date(endDate);
-  end.setUTCHours(23, 59, 59, 999);
-
-  while (current <= end) {
-    const year = current.getUTCFullYear();
-    const month = String(current.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(current.getUTCDate()).padStart(2, "0");
-
-    prefixes.push(`matches/${year.toString()}/${month}/${day}/`);
-
-    current.setUTCDate(current.getUTCDate() + 1);
-  }
-
-  return prefixes;
+  return days.map((day) => {
+    const year = format(day, "yyyy");
+    const month = format(day, "MM");
+    const dayStr = format(day, "dd");
+    return `matches/${year}/${month}/${dayStr}/`;
+  });
 }
 
 /**

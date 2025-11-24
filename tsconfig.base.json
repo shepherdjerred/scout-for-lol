@@ -63,7 +63,8 @@
     "isolatedModules": true,
     "noErrorTruncation": true,
     // Performance - enable incremental compilation
-    "incremental": true
+    "incremental": true,
+    "noEmit": true
   },
   "exclude": [
     "node_modules",

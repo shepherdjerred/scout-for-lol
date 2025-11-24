@@ -2,7 +2,7 @@
   "name": "@scout-for-lol/report",
   "version": "0.1.0",
   "type": "module",
-  "main": "src/index.ts",
+  "main": "src/index.tsx",
   "scripts": {
     "test": "bun test",
     "test:watch": "bun test --watch",

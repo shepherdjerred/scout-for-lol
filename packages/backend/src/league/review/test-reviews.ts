@@ -17,6 +17,7 @@ import {
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 import configuration from "@scout-for-lol/backend/configuration.js";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
+import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
 
 const MATCH_TYPES = ["ranked", "unranked", "aram", "arena"] as const;
 type MatchType = (typeof MATCH_TYPES)[number];
@@ -148,24 +149,17 @@ function getMatchSummary(match: CompletedMatch | ArenaMatch): string {
  * Generate date prefixes for S3 listing between start and end dates (inclusive)
  */
 function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
-  const prefixes: string[] = [];
-  const current = new Date(startDate);
+  const days = eachDayOfInterval({
+    start: startOfDay(startDate),
+    end: endOfDay(endDate),
+  });
 
-  current.setUTCHours(0, 0, 0, 0);
-  const end = new Date(endDate);
-  end.setUTCHours(23, 59, 59, 999);
-
-  while (current <= end) {
-    const year = current.getUTCFullYear();
-    const month = String(current.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(current.getUTCDate()).padStart(2, "0");
-
-    prefixes.push(`matches/${year.toString()}/${month}/${day}/`);
-
-    current.setUTCDate(current.getUTCDate() + 1);
-  }
-
-  return prefixes;
+  return days.map((day) => {
+    const year = format(day, "yyyy");
+    const month = format(day, "MM");
+    const dayStr = format(day, "dd");
+    return `matches/${year}/${month}/${dayStr}/`;
+  });
 }
 
 /**

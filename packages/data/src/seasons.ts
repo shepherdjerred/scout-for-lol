@@ -67,7 +67,7 @@ export function getAllSeasons(): SeasonData[] {
  */
 export function getCurrentSeason(): SeasonData | undefined {
   const now = new Date();
-  return getAllSeasons().find((season) => season.startDate <= now && season.endDate >= now);
+  return getAllSeasons().find((season) => isWithinInterval(now, { start: season.startDate, end: season.endDate }));
 }
 
 /**
@@ -112,5 +112,5 @@ export function hasSeasonEnded(seasonId: string, now: Date = new Date()): boolea
   if (!season) {
     return undefined;
   }
-  return season.endDate < now;
+  return isAfter(now, season.endDate);
 }

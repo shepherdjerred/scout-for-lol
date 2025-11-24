@@ -4,7 +4,8 @@
 import { useState, useEffect } from "react";
 import type { HistoryEntry } from "@scout-for-lol/review-dev-tool/lib/history-manager";
 import { loadHistory, deleteHistoryEntry, clearHistory } from "@scout-for-lol/review-dev-tool/lib/history-manager";
-import { StarRating } from "@scout-for-lol/report-ui/components/star-rating";
+import { StarRating } from "./star-rating";
+import { differenceInMinutes, differenceInHours, differenceInDays, format } from "date-fns";
 
 type HistoryPanelProps = {
   onSelectEntry: (entry: HistoryEntry) => void;
@@ -61,25 +62,24 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
 
   const formatTimestamp = (date: Date) => {
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
+    const minutes = differenceInMinutes(now, date);
+    const hours = differenceInHours(now, date);
+    const days = differenceInDays(now, date);
 
     if (minutes < 1) {
       return "Just now";
     }
     if (minutes < 60) {
-      return `${minutes.toString()}m ago`;
+      return `${minutes}m ago`;
     }
     if (hours < 24) {
-      return `${hours.toString()}h ago`;
+      return `${hours}h ago`;
     }
     if (days < 7) {
-      return `${days.toString()}d ago`;
+      return `${days}d ago`;
     }
 
-    return date.toLocaleDateString();
+    return format(date, "MMM d, yyyy");
   };
 
   return (

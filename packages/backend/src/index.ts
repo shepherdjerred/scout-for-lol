@@ -1,9 +1,6 @@
 import configuration from "@scout-for-lol/backend/configuration.js";
 import * as Sentry from "@sentry/node";
 
-// Import type augmentations to extend third-party library types
-import "@scout-for-lol/backend/types/twisted-augmentation.js";
-
 console.log("🚀 Starting Scout for LoL backend application");
 console.log(`📦 Version: ${configuration.version}`);
 console.log(`🔧 Environment: ${configuration.environment}`);

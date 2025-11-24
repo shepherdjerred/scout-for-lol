@@ -4,6 +4,7 @@ import { match } from "ts-pattern";
 import { z } from "zod";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.js";
+import type { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
 import { formatScore } from "@scout-for-lol/backend/discord/embeds/competition.js";
 import { loadCachedLeaderboard } from "@scout-for-lol/backend/storage/s3-leaderboard.js";
 import { replyWithErrorFromException } from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
@@ -11,6 +12,39 @@ import {
   extractCompetitionId,
   fetchCompetitionWithErrorHandling,
 } from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.js";
+
+// ============================================================================
+// Utility functions
+// ============================================================================
+
+function daysUntil(date: Date, from: Date): number {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.ceil((date.getTime() - from.getTime()) / msPerDay);
+}
+
+function formatHumanDateTime(date: Date): string {
+  return `${(date.getMonth() + 1).toString()}/${date.getDate().toString()}/${date.getFullYear().toString()} ${date.getHours().toString()}:${String(date.getMinutes()).padStart(2, "0")} ${date.getHours() >= 12 ? "PM" : "AM"}`;
+}
+
+function formatTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffSecs < 60) {
+    return `${diffSecs.toString()}s ago`;
+  }
+  if (diffMins < 60) {
+    return `${diffMins.toString()}m ago`;
+  }
+  if (diffHours < 24) {
+    return `${diffHours.toString()}h ago`;
+  }
+  return `${diffDays.toString()}d ago`;
+}
 
 // Schema for participant with player relation (when includePlayer=true)
 const ParticipantWithPlayerSchema = z.object({
@@ -165,7 +199,7 @@ function getStatusText(
     })
     .with("ENDED", () => {
       if (competition.endDate) {
-        const dateStr = formatHumanDateTime(competition.endDate).split(" ")[0]; // Get just the date part
+        const dateStr = formatHumanDateTime(competition.endDate).split(" ")[0] ?? "";
         return `🔴 Ended (Completed ${dateStr})`;
       }
       return "🔴 Ended";
