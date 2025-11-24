@@ -7,7 +7,13 @@ import type {
   Ranks,
   MatchDto,
 } from "@scout-for-lol/data";
-import { getCompetitionStatus, rankToLeaguePoints, RankSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import {
+  getCompetitionStatus,
+  rankToLeaguePoints,
+  RankSchema,
+  LeaguePuuidSchema,
+  SummonerLeagueDtoSchema,
+} from "@scout-for-lol/data";
 import { sortBy } from "remeda";
 import { match } from "ts-pattern";
 import { z } from "zod";
@@ -92,8 +98,11 @@ export async function fetchSnapshotData(options: {
             const region = account.region;
             const response = await api.League.byPUUID(account.puuid, mapRegionToEnum(region));
 
-            const solo = getRank(response.response, "RANKED_SOLO_5x5");
-            const flex = getRank(response.response, "RANKED_FLEX_SR");
+            // Validate response with Zod schema to ensure proper types
+            const validatedResponse = z.array(SummonerLeagueDtoSchema).parse(response.response);
+
+            const solo = getRank(validatedResponse, "RANKED_SOLO_5x5");
+            const flex = getRank(validatedResponse, "RANKED_FLEX_SR");
 
             allRanks[LeaguePuuidSchema.parse(account.puuid)] = {
               solo: solo,

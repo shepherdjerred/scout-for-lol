@@ -1,4 +1,5 @@
 import { type ArenaChampion, type Augment, type ParticipantDto } from "@scout-for-lol/data";
+import { participantToChampion } from "@scout-for-lol/data/model/match-helpers";
 import { mapAugmentIdsToUnion } from "@scout-for-lol/backend/league/arena/augment";
 
 // Arena champion conversion with arena-specific fields

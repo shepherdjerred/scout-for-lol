@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     // Environment setup & latest features
-    "lib": ["ESNext"],
+    "lib": [
+      "ESNext"
+    ],
     "target": "ESNext",
     "module": "Preserve",
     "moduleDetection": "force",
@@ -14,14 +16,31 @@
     // Workspace path mappings
     "baseUrl": ".",
     "paths": {
-      "@scout-for-lol/backend/*": ["./packages/backend/src/*", "./packages/backend/*"],
-      "@scout-for-lol/frontend/*": ["./packages/frontend/src/*"],
-      "@scout-for-lol/data/*": ["./packages/data/src/*"],
-      "@scout-for-lol/data": ["./packages/data/src/index.ts"],
-      "@scout-for-lol/report/*": ["./packages/report/src/*"],
-      "@scout-for-lol/report": ["./packages/report/src/index.ts"],
-      "@scout-for-lol/report-ui/*": ["./packages/report-ui/src/*"],
-      "@scout-for-lol/review-dev-tool/*": ["./packages/review-dev-tool/src/*"]
+      "@scout-for-lol/backend/*": [
+        "./packages/backend/src/*",
+        "./packages/backend/*"
+      ],
+      "@scout-for-lol/frontend/*": [
+        "./packages/frontend/src/*"
+      ],
+      "@scout-for-lol/data/*": [
+        "./packages/data/src/*"
+      ],
+      "@scout-for-lol/data": [
+        "./packages/data/src/index.ts"
+      ],
+      "@scout-for-lol/report/*": [
+        "./packages/report/src/*"
+      ],
+      "@scout-for-lol/report": [
+        "./packages/report/src/index.ts"
+      ],
+      "@scout-for-lol/report-ui/*": [
+        "./packages/report-ui/src/*"
+      ],
+      "@scout-for-lol/review-dev-tool/*": [
+        "./packages/review-dev-tool/src/*"
+      ]
     },
     // Best practices
     "strict": true,
@@ -32,7 +51,7 @@
     // Maximum strictness for safety
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-    "exactOptionalPropertyTypes": false,
+    "exactOptionalPropertyTypes": true,
     "noImplicitReturns": true,
     "noPropertyAccessFromIndexSignature": true,
     "noUnusedLocals": true,
@@ -46,5 +65,10 @@
     // Performance - enable incremental compilation
     "incremental": true
   },
-  "exclude": ["node_modules", "dist", "**/node_modules", "**/dist"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/node_modules",
+    "**/dist"
+  ]
 }

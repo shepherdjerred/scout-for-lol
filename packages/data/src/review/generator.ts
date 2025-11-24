@@ -7,13 +7,23 @@
  * - Review-dev-tool: UI config, browser clients, progress callbacks, display logic
  */
 
-import type OpenAI from "openai";
 import type { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 import { match as matchPattern } from "ts-pattern";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
 import { generateImagePrompt } from "@scout-for-lol/data/review/image-prompt.js";
 import { replaceTemplateVariables } from "@scout-for-lol/data/review/prompts.js";
+
+/**
+ * Chat completion parameters - extracted to avoid dependency on concrete OpenAI types
+ */
+export type ChatCompletionCreateParams = {
+  model: string;
+  messages: { role: "system" | "user" | "assistant"; content: string }[];
+  max_completion_tokens: number;
+  temperature?: number;
+  top_p?: number;
+};
 
 const OpenAIChatCompletionChoiceSchema = z.object({
   message: z.object({
@@ -104,7 +114,7 @@ export type ReviewTextMetadata = {
   playerName: string;
   systemPrompt: string;
   userPrompt: string;
-  openaiRequestParams?: OpenAI.Chat.ChatCompletionCreateParams | undefined;
+  openaiRequestParams?: ChatCompletionCreateParams | undefined;
 };
 
 /**
@@ -213,7 +223,21 @@ function buildPromptVariables(params: {
   laneContext: string;
   match: CompletedMatch | ArenaMatch;
   curatedData?: CuratedMatchData;
-}): Record<string, string> {
+}): {
+  reviewerName: string;
+  reviewerPersonality: string;
+  reviewerFavoriteChampions: string;
+  reviewerFavoriteLanes: string;
+  playerName: string;
+  playerPersonality: string;
+  playerFavoriteChampions: string;
+  playerFavoriteLanes: string;
+  playerChampion: string;
+  playerLane: string;
+  opponentChampion: string;
+  laneDescription: string;
+  matchReport: string;
+} {
   const { matchData, personality, playerMetadata, laneContext, match, curatedData } = params;
   const playerName = matchData["playerName"];
   if (!playerName) {
@@ -268,9 +292,9 @@ function createCompletionParams(params: {
   maxTokens: number;
   temperature?: number;
   topP?: number;
-}): OpenAI.Chat.ChatCompletionCreateParams {
+}): ChatCompletionCreateParams {
   const { systemPrompt, userPrompt, model, maxTokens, temperature, topP } = params;
-  const params: OpenAI.Chat.ChatCompletionCreateParams = {
+  const completionParams: ChatCompletionCreateParams = {
     model,
     messages: [
       { role: "system", content: systemPrompt },
@@ -280,13 +304,13 @@ function createCompletionParams(params: {
   };
 
   if (temperature !== undefined) {
-    params.temperature = temperature;
+    completionParams.temperature = temperature;
   }
   if (topP !== undefined) {
-    params.top_p = topP;
+    completionParams.top_p = topP;
   }
 
-  return params;
+  return completionParams;
 }
 
 /**
@@ -304,7 +328,23 @@ export async function generateReviewText(params: {
   basePromptTemplate: string;
   laneContext: string;
   playerMetadata: PlayerMetadata;
-  openaiClient: OpenAI;
+  openaiClient: {
+    chat: {
+      completions: {
+        create(params: ChatCompletionCreateParams): Promise<{
+          choices: {
+            message: {
+              content: string | null;
+            };
+          }[];
+          usage?: {
+            prompt_tokens?: number;
+            completion_tokens?: number;
+          };
+        }>;
+      };
+    };
+  };
   model: string;
   maxTokens: number;
   temperature?: number | undefined;
@@ -334,7 +374,7 @@ export async function generateReviewText(params: {
     playerMetadata,
     laneContext,
     match,
-    curatedData,
+    ...(curatedData !== undefined && { curatedData }),
   });
   const userPrompt = replaceTemplateVariables(basePromptTemplate, promptVariables);
   const systemPrompt = `${systemPromptPrefix}${personality.instructions}\n\n${laneContext}`;
@@ -343,8 +383,8 @@ export async function generateReviewText(params: {
     userPrompt,
     model,
     maxTokens,
-    temperature,
-    topP,
+    ...(temperature !== undefined && { temperature }),
+    ...(topP !== undefined && { topP }),
   });
 
   const startTime = Date.now();
@@ -358,6 +398,9 @@ export async function generateReviewText(params: {
   }
 
   const firstChoice = completion.choices[0];
+  if (!firstChoice) {
+    throw new Error("No choices returned from OpenAI");
+  }
   const messageContent = firstChoice.message.content;
   if (!messageContent || messageContent.trim().length === 0) {
     throw new Error("No review content returned from OpenAI");
@@ -433,6 +476,9 @@ export async function generateReviewImage(params: {
   }
 
   const firstCandidate = result.response.candidates[0];
+  if (!firstCandidate) {
+    throw new Error("No candidates returned from Gemini");
+  }
   const parts = firstCandidate.content.parts;
 
   if (parts.length === 0) {
@@ -440,6 +486,9 @@ export async function generateReviewImage(params: {
   }
 
   const imagePart = parts[0];
+  if (!imagePart) {
+    throw new Error("No image part found in response");
+  }
   const imageData = imagePart.inlineData.data;
   if (imageData.length === 0) {
     throw new Error("Empty image data in response");

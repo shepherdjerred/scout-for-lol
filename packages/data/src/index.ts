@@ -15,6 +15,7 @@ export {
   type ReviewTextMetadata,
   type ReviewImageMetadata,
   type CuratedMatchData,
+  type ChatCompletionCreateParams,
 } from "./review/generator.js";
 export { curateMatchData, curateParticipantData, type CuratedParticipant } from "./review/curator.js";
 export * from "./league/match-dto.schema.js";

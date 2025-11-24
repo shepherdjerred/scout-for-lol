@@ -3,8 +3,6 @@ import { getItemInfo, summoner, getRuneInfo, getRuneTreeName, getChampionInfo } 
 import { first, keys, pickBy } from "remeda";
 import type { CuratedParticipant, CuratedMatchData } from "@scout-for-lol/data/review/curator-types.js";
 
-export type { CuratedParticipant, CuratedMatchData };
-
 function getSummonerSpellName(spellId: number): string | undefined {
   return first(keys(pickBy(summoner.data, (s) => s.key === spellId.toString())));
 }
@@ -252,7 +250,7 @@ export async function curateParticipantData(participant: ParticipantDto): Promis
     // Communication
     allInPings: participant.allInPings,
     assistMePings: participant.assistMePings,
-    baitPings: participant.baitPings,
+    baitPings: participant.baitPings ?? 0,
     basicPings: participant.basicPings,
     commandPings: participant.commandPings,
     dangerPings: participant.dangerPings,

@@ -46,7 +46,7 @@ const baseParticipant = (): ParticipantDto => {
     PlayerScore8: 9,
     challenges: {
       damageTakenOnTeamPercentage: 0.2,
-    } as unknown as MatchV5DTOs.ChallengesDto,
+    } as unknown as ParticipantDto["challenges"],
     // unused fields for this test
     teamId: 100,
   } as unknown as ParticipantDto;

@@ -212,7 +212,12 @@ export async function createSnapshotsForAllParticipants(
   // Create snapshots in parallel
   const results = await Promise.allSettled(
     participants.map((participant) =>
-      createSnapshot(prisma, competitionId, participant.playerId, snapshotType, criteria),
+      createSnapshot(prisma, {
+        competitionId,
+        playerId: participant.playerId,
+        snapshotType,
+        criteria,
+      }),
     ),
   );
 

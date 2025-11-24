@@ -10,7 +10,7 @@ import { PersonalityEditor } from "@scout-for-lol/review-dev-tool/components/per
 import { ArtStyleEditor } from "@scout-for-lol/review-dev-tool/components/art-style-editor";
 import { ConfigImportModal } from "@scout-for-lol/review-dev-tool/components/config-import-modal";
 import { downloadConfigBundle } from "@scout-for-lol/review-dev-tool/lib/config-export";
-import { ART_STYLES, ART_THEMES, getModelPricing, getImagePricing } from "@scout-for-lol/data";
+import { ART_STYLES, ART_THEMES, getModelPricing, getImagePricing, modelSupportsParameter } from "@scout-for-lol/data";
 
 const ErrorSchema = z.object({ message: z.string() });
 import {
@@ -33,7 +33,6 @@ import {
   deleteCustomArtTheme,
   generateArtThemeId,
 } from "@scout-for-lol/review-dev-tool/lib/art-style-storage";
-import { modelSupportsParameter } from "@scout-for-lol/data";
 
 type TabSettingsPanelProps = {
   config: TabConfig;
@@ -230,12 +229,10 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   };
 
   const handleExportConfig = () => {
-    try {
-      downloadConfigBundle(config);
-    } catch (error) {
+    void downloadConfigBundle(config).catch((error) => {
       const errorResult = ErrorSchema.safeParse(error);
       alert(`Failed to export config: ${errorResult.success ? errorResult.data.message : String(error)}`);
-    }
+    });
   };
 
   const handleImportConfig = () => {
@@ -535,7 +532,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                   <ArtStyleEditor
                     mode="style"
                     style={editingStyle ?? undefined}
-                    onSave={handleSaveStyle}
+                    onSave={(style) => {
+                      void handleSaveStyle(style);
+                    }}
                     onCancel={() => {
                       setShowStyleEditor(false);
                       setEditingStyle(null);
@@ -631,7 +630,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                                   </button>
                                   <button
                                     onClick={() => {
-                                      handleDeleteStyle(style.id);
+                                      void handleDeleteStyle(style.id);
                                     }}
                                     className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
                                     disabled={!config.imageGeneration.enabled}
@@ -655,7 +654,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                   <ArtStyleEditor
                     mode="theme"
                     theme={editingTheme ?? undefined}
-                    onSave={handleSaveTheme}
+                    onSave={(theme) => {
+                      void handleSaveTheme(theme);
+                    }}
                     onCancel={() => {
                       setShowThemeEditor(false);
                       setEditingTheme(null);
@@ -751,7 +752,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                                   </button>
                                   <button
                                     onClick={() => {
-                                      handleDeleteTheme(theme.id);
+                                      void handleDeleteTheme(theme.id);
                                     }}
                                     className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
                                     disabled={!config.imageGeneration.enabled}
@@ -924,7 +925,9 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                 <div>
                   <PersonalityEditor
                     personality={editingPersonality ?? undefined}
-                    onSave={handleSavePersonality}
+                    onSave={(personality) => {
+                      void handleSavePersonality(personality);
+                    }}
                     onCancel={() => {
                       setShowPersonalityEditor(false);
                       setEditingPersonality(null);
@@ -1031,7 +1034,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
                                   </button>
                                   <button
                                     onClick={() => {
-                                      handleDeletePersonality(personality.id);
+                                      void handleDeletePersonality(personality.id);
                                     }}
                                     className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
                                   >

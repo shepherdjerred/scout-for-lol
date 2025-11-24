@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { rmSync } from "fs";
 import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { pruneOrphanedPlayers } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.js";
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
@@ -12,7 +13,7 @@ describe.serial("pruneOrphanedPlayers", () => {
 
   beforeEach(async () => {
     // Create a temporary database for each test
-    testDir = `${Bun.env.TMPDIR ?? "/tmp"}/prune-players-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+    testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/prune-players-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
     testDbPath = `${testDir}/test.db`;
 
     // Run Prisma migrations to set up the schema

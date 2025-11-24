@@ -1,12 +1,10 @@
 /**
  * Cost calculation for AI API usage
  */
-import type { GenerationMetadata } from "@scout-for-lol/review-dev-tool/config/schema";
-import { CostBreakdownSchema, type CostBreakdown } from "@scout-for-lol/review-dev-tool/config/schema";
+import type { GenerationMetadata, CostBreakdown } from "@scout-for-lol/review-dev-tool/config/schema";
+import { CostBreakdownSchema } from "@scout-for-lol/review-dev-tool/config/schema";
 import { calculateCost as calculateCostShared, formatCost as formatCostShared } from "@scout-for-lol/data";
 import { STORES, getItem, setItem } from "@scout-for-lol/review-dev-tool/lib/storage";
-
-export type { CostBreakdown };
 
 /**
  * Calculate cost breakdown from generation metadata

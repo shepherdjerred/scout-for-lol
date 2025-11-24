@@ -1,4 +1,4 @@
-import type { MessageCreateOptions, MessagePayload , type Message } from "discord.js";
+import type { MessageCreateOptions, MessagePayload, Message } from "discord.js";
 import { z } from "zod";
 import { client } from "@scout-for-lol/backend/discord/client";
 import { asTextChannel } from "@scout-for-lol/backend/discord/utils/channel";
@@ -133,7 +133,7 @@ export async function send(
           serverId,
           channelId,
           errorType: "api_error",
-          errorReason: permissionReason,
+          errorReason: permissionReason ?? undefined,
         }).catch((dbError) => {
           console.error(`[ChannelSend] Failed to record permission error in DB:`, dbError);
         });

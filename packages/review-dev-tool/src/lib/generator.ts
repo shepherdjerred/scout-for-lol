@@ -179,7 +179,7 @@ export async function generateMatchReview(
 
     return {
       text: textResult.text,
-      image: imageResult?.imageData,
+      ...(imageResult?.imageData !== undefined && { image: imageResult.imageData }),
       metadata,
     };
   } catch (error) {

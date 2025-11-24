@@ -3,6 +3,27 @@ import { parseLane } from "@scout-for-lol/data";
 import { getRuneInfo } from "@scout-for-lol/report/dataDragon/runes.js";
 
 /**
+ * Helper to extract runes from a single rune style
+ */
+function extractRunesFromStyle(style: ParticipantDto["perks"]["styles"][number] | undefined): Rune[] {
+  const runes: Rune[] = [];
+  if (!style) {
+    return runes;
+  }
+
+  for (const selection of style.selections) {
+    const info = getRuneInfo(selection.perk);
+    runes.push({
+      id: selection.perk,
+      name: info?.name ?? `Rune ${selection.perk.toString()}`,
+      description: info?.longDesc ?? info?.shortDesc ?? "",
+    });
+  }
+
+  return runes;
+}
+
+/**
  * Helper to extract rune details from participant perks
  */
 export function extractRunes(participant: ParticipantDto): Rune[] {
@@ -10,29 +31,11 @@ export function extractRunes(participant: ParticipantDto): Rune[] {
 
   // Extract primary rune selections
   const primaryStyle = participant.perks.styles[0];
-  if (primaryStyle) {
-    for (const selection of primaryStyle.selections) {
-      const info = getRuneInfo(selection.perk);
-      runes.push({
-        id: selection.perk,
-        name: info?.name ?? `Rune ${selection.perk.toString()}`,
-        description: info?.longDesc ?? info?.shortDesc ?? "",
-      });
-    }
-  }
+  runes.push(...extractRunesFromStyle(primaryStyle));
 
   // Extract secondary rune selections
   const subStyle = participant.perks.styles[1];
-  if (subStyle) {
-    for (const selection of subStyle.selections) {
-      const info = getRuneInfo(selection.perk);
-      runes.push({
-        id: selection.perk,
-        name: info?.name ?? `Rune ${selection.perk.toString()}`,
-        description: info?.longDesc ?? info?.shortDesc ?? "",
-      });
-    }
-  }
+  runes.push(...extractRunesFromStyle(subStyle));
 
   return runes;
 }

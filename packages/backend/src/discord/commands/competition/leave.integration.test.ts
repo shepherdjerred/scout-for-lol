@@ -10,7 +10,7 @@ import {
 
 import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
 // Create a test database for integration tests
-const testDir = `${Bun.env.TMPDIR ?? "/tmp"}/competition-leave-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDir = `${Bun.env['TMPDIR'] ?? "/tmp"}/competition-leave-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 const testDbPath = `${testDir}/test.db`;
 const testDbUrl = `file:${testDbPath}`;
 
@@ -150,7 +150,7 @@ describe("Competition Leave - Integration Tests", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
 
     // Join competition
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
 
     // Verify joined
     const statusBeforeLeave = await getParticipantStatus(prisma, competitionId, player1Id);
@@ -179,7 +179,7 @@ describe("Competition Leave - Integration Tests", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
 
     // Add as invited
-    await addParticipant(prisma, competitionId, player1Id, "INVITED", ownerId);
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "INVITED", invitedBy: ownerId });
 
     // Verify invited
     const statusBeforeLeave = await getParticipantStatus(prisma, competitionId, player1Id);
@@ -226,7 +226,7 @@ describe("Competition Leave - Integration Tests", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // Join and then leave
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
     await removeParticipant(prisma, competitionId, player1Id);
 
     // Verify already left
@@ -249,12 +249,12 @@ describe("Competition Leave - Integration Tests", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // Join, leave, then try to rejoin
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
     await removeParticipant(prisma, competitionId, player1Id);
 
     // Act & Assert - Try to rejoin
     expect(async () => {
-      await addParticipant(prisma, competitionId, player1Id, "JOINED");
+      await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
     }).toThrow("Cannot rejoin a competition after leaving");
   });
 
@@ -278,7 +278,7 @@ describe("Competition Leave - Integration Tests", () => {
     });
 
     // Join competition while it's active
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
 
     // Now simulate competition ending by updating the end date to the past
     const twoDaysAgo = new Date();
@@ -317,7 +317,7 @@ describe("Competition Leave - Integration Tests", () => {
     });
 
     // Join competition while it's active
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
 
     // Now cancel the competition
     await prisma.competition.update({
@@ -343,7 +343,7 @@ describe("Competition Leave - Integration Tests", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
 
     // Add as invited
-    const invitedParticipant = await addParticipant(prisma, competitionId, player1Id, "INVITED", ownerId);
+    const invitedParticipant = await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "INVITED", invitedBy: ownerId });
     const invitedAt = invitedParticipant.invitedAt;
 
     // Accept invitation (transition to JOINED)
@@ -379,8 +379,8 @@ describe("Competition Leave - Integration Tests", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // Both join
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
-    await addParticipant(prisma, competitionId, player2Id, "JOINED");
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player2Id, status: "JOINED" });
 
     // Act - Player 1 leaves
     await removeParticipant(prisma, competitionId, player1Id);
@@ -409,8 +409,8 @@ describe("Competition Leave - Integration Tests", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId);
 
     // Both join
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
-    await addParticipant(prisma, competitionId, player2Id, "JOINED");
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player2Id, status: "JOINED" });
 
     // Verify count
     const countBefore = await prisma.competitionParticipant.count({
@@ -456,18 +456,18 @@ describe("Competition Leave - Integration Tests", () => {
     });
 
     // Player 1 joins (fills the spot)
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
 
     // Player 2 cannot join (full)
     expect(async () => {
-      await addParticipant(prisma, competitionId, player2Id, "JOINED");
+      await addParticipant({ prisma, competitionId: competitionId, playerId: player2Id, status: "JOINED" });
     }).toThrow("Competition has reached maximum participants");
 
     // Act - Player 1 leaves
     await removeParticipant(prisma, competitionId, player1Id);
 
     // Assert - Player 2 can now join
-    await addParticipant(prisma, competitionId, player2Id, "JOINED");
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player2Id, status: "JOINED" });
     const player2Status = await getParticipantStatus(prisma, competitionId, player2Id);
     expect(player2Status).toBe("JOINED");
 

@@ -3,6 +3,7 @@
  */
 import { z } from "zod";
 import { TabConfigSchema, PersonalitySchema } from "@scout-for-lol/review-dev-tool/config/schema";
+import type { TabConfig } from "@scout-for-lol/review-dev-tool/config/schema";
 import {
   CustomArtStyleSchema,
   CustomArtThemeSchema,
@@ -35,7 +36,7 @@ export type ConfigBundle = z.infer<typeof ConfigBundleSchema>;
  * Export all config data as a JSON blob (tab-level)
  * Includes the full personality data if a specific personality is selected
  */
-async function exportAllConfig(tabConfig: import("../config/schema").TabConfig): Promise<ConfigBundle> {
+async function exportAllConfig(tabConfig: TabConfig): Promise<ConfigBundle> {
   // Clone the tab config to avoid mutating the original
   const exportedTabConfig = structuredClone(tabConfig);
 
@@ -61,14 +62,14 @@ async function exportAllConfig(tabConfig: import("../config/schema").TabConfig):
 /**
  * Export all config as JSON string
  */
-async function exportAllConfigAsJSON(tabConfig: import("../config/schema").TabConfig): Promise<string> {
+async function exportAllConfigAsJSON(tabConfig: TabConfig): Promise<string> {
   return JSON.stringify(await exportAllConfig(tabConfig), null, 2);
 }
 
 /**
  * Download config bundle as a JSON file
  */
-export async function downloadConfigBundle(tabConfig: import("../config/schema").TabConfig): Promise<void> {
+export async function downloadConfigBundle(tabConfig: TabConfig): Promise<void> {
   const json = await exportAllConfigAsJSON(tabConfig);
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -104,8 +105,8 @@ export async function applyConfigBundle(
     importArtThemes: boolean;
     mergeWithExisting: boolean;
   },
-): Promise<import("../config/schema").TabConfig | undefined> {
-  let importedTabConfig: import("../config/schema").TabConfig | undefined;
+): Promise<TabConfig | undefined> {
+  let importedTabConfig: TabConfig | undefined;
 
   if (options.importTabConfig) {
     importedTabConfig = bundle.tabConfig;

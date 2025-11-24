@@ -3,10 +3,7 @@ import type {
   LeaderboardEntry,
   PlayerWithAccounts,
 } from "@scout-for-lol/backend/league/competition/processors/types.js";
-import {
-  countWinsAndGames,
-  buildWinBasedLeaderboard,
-} from "@scout-for-lol/backend/league/competition/processors/generic-win-counter.js";
+import { createWinBasedProcessor } from "@scout-for-lol/backend/league/competition/processors/processor-helpers.js";
 
 /**
  * Process "Highest Win Rate" criteria
@@ -18,15 +15,13 @@ export function processHighestWinRate(
   participants: PlayerWithAccounts[],
   criteria: HighestWinRateCriteria,
 ): LeaderboardEntry[] {
-  const { wins: winCounts, games: totalGames } = countWinsAndGames(matches, participants, criteria.queue);
-
   // minGames has a default value of 10 in the schema
   const minGames = criteria.minGames;
 
-  return buildWinBasedLeaderboard({
-    winCounts,
-    totalGames,
+  return createWinBasedProcessor({
+    matches,
     participants,
+    queue: criteria.queue,
     scoreFn: (wins, games) => (games > 0 ? wins / games : 0), // Score is win rate
     metadataFn: (wins, games) => ({
       wins,
@@ -34,6 +29,7 @@ export function processHighestWinRate(
       losses: games - wins,
       winRate: games > 0 ? wins / games : 0,
     }),
+    criteria,
     minGames, // Apply minimum games filter
   });
 }

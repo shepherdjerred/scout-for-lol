@@ -13,7 +13,7 @@ import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backen
 // Test Database Setup
 // ============================================================================
 
-const testDir = `${Bun.env.TMPDIR ?? "/tmp"}/competition-business-logic-test-${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/competition-business-logic-test-${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 await Bun.write(`${testDir}/.keep`, "");
 const testDbPath = `${testDir}/test.db`;
 const testDbUrl = `file:${testDbPath}`;
@@ -138,7 +138,7 @@ describe("Participant Management - Cannot join inactive competition", () => {
       isCancelled: true,
     });
 
-    await expect(addParticipant(prisma, competitionId, playerId, "JOINED")).rejects.toThrow(
+    await expect(addParticipant({ prisma, competitionId, playerId, status: "JOINED" })).rejects.toThrow(
       "Cannot join an inactive competition",
     );
   });
@@ -156,7 +156,7 @@ describe("Participant Management - Cannot join inactive competition", () => {
       endDate: yesterday,
     });
 
-    await expect(addParticipant(prisma, competitionId, playerId, "JOINED")).rejects.toThrow(
+    await expect(addParticipant({ prisma, competitionId, playerId, status: "JOINED" })).rejects.toThrow(
       "Cannot join an inactive competition",
     );
   });
@@ -174,7 +174,7 @@ describe("Participant Management - Cannot join inactive competition", () => {
       endDate: nextWeek,
     });
 
-    const participant = await addParticipant(prisma, competitionId, playerId, "JOINED");
+    const participant = await addParticipant({ prisma, competitionId, playerId, status: "JOINED" });
     expect(participant.status).toBe("JOINED");
   });
 });
@@ -190,12 +190,12 @@ describe("Participant Management - Participant limit enforcement", () => {
     // Add 2 participants (reaches limit)
     const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
-    await addParticipant(prisma, competitionId, player2Id, "JOINED");
+    await addParticipant({ prisma, competitionId, playerId: player1Id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId, playerId: player2Id, status: "JOINED" });
 
     // Try to add 3rd participant
     const { playerId: player3Id } = await createTestPlayer(serverId, testAccountId("300000000030"), "Player3");
-    await expect(addParticipant(prisma, competitionId, player3Id, "JOINED")).rejects.toThrow(
+    await expect(addParticipant({ prisma, competitionId, playerId: player3Id, status: "JOINED" })).rejects.toThrow(
       "Competition has reached maximum participants (2)",
     );
   });
@@ -209,11 +209,11 @@ describe("Participant Management - Participant limit enforcement", () => {
 
     // Add 1 participant (below limit)
     const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
+    await addParticipant({ prisma, competitionId, playerId: player1Id, status: "JOINED" });
 
     // Can add 2nd participant
     const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
-    const participant = await addParticipant(prisma, competitionId, player2Id, "JOINED");
+    const participant = await addParticipant({ prisma, competitionId, playerId: player2Id, status: "JOINED" });
     expect(participant.status).toBe("JOINED");
   });
 
@@ -227,8 +227,8 @@ describe("Participant Management - Participant limit enforcement", () => {
     // Add 2 participants
     const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
-    await addParticipant(prisma, competitionId, player2Id, "JOINED");
+    await addParticipant({ prisma, competitionId, playerId: player1Id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId, playerId: player2Id, status: "JOINED" });
 
     // Player1 leaves
     await prisma.competitionParticipant.update({
@@ -246,7 +246,7 @@ describe("Participant Management - Participant limit enforcement", () => {
 
     // Now player3 can join (only 1 active participant)
     const { playerId: player3Id } = await createTestPlayer(serverId, testAccountId("300000000030"), "Player3");
-    const participant = await addParticipant(prisma, competitionId, player3Id, "JOINED");
+    const participant = await addParticipant({ prisma, competitionId, playerId: player3Id, status: "JOINED" });
     expect(participant.status).toBe("JOINED");
   });
 });
@@ -259,7 +259,7 @@ describe("Participant Management - Cannot rejoin after leaving", () => {
     const { playerId } = await createTestPlayer(serverId, testAccountId("456000004560"), "TestPlayer");
 
     // Join and then leave
-    await addParticipant(prisma, competitionId, playerId, "JOINED");
+    await addParticipant({ prisma, competitionId, playerId, status: "JOINED" });
     await prisma.competitionParticipant.update({
       where: {
         competitionId_playerId: {
@@ -274,7 +274,7 @@ describe("Participant Management - Cannot rejoin after leaving", () => {
     });
 
     // Try to rejoin
-    await expect(addParticipant(prisma, competitionId, playerId, "JOINED")).rejects.toThrow(
+    await expect(addParticipant({ prisma, competitionId, playerId, status: "JOINED" })).rejects.toThrow(
       "Cannot rejoin a competition after leaving",
     );
   });
@@ -285,7 +285,7 @@ describe("Participant Management - Cannot rejoin after leaving", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId);
     const { playerId } = await createTestPlayer(serverId, testAccountId("456000004560"), "TestPlayer");
 
-    await addParticipant(prisma, competitionId, playerId, "JOINED");
+    await addParticipant({ prisma, competitionId, playerId, status: "JOINED" });
     await prisma.competitionParticipant.update({
       where: {
         competitionId_playerId: {
@@ -314,7 +314,13 @@ describe("Participant Management - Invitation system", () => {
     });
     const { playerId } = await createTestPlayer(serverId, testAccountId("456000004560"), "TestPlayer");
 
-    const participant = await addParticipant(prisma, competitionId, playerId, "INVITED", inviterId);
+    const participant = await addParticipant({
+      prisma,
+      competitionId,
+      playerId,
+      status: "INVITED",
+      invitedBy: inviterId,
+    });
 
     expect(participant.status).toBe("INVITED");
     expect(participant.invitedBy).toBe(inviterId);
@@ -333,14 +339,14 @@ describe("Participant Management - Invitation system", () => {
     // Invite 2 participants (reaches limit)
     const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
-    await addParticipant(prisma, competitionId, player1Id, "INVITED", ownerId);
-    await addParticipant(prisma, competitionId, player2Id, "INVITED", ownerId);
+    await addParticipant({ prisma, competitionId, playerId: player1Id, status: "INVITED", invitedBy: ownerId });
+    await addParticipant({ prisma, competitionId, playerId: player2Id, status: "INVITED", invitedBy: ownerId });
 
     // Cannot invite 3rd participant
     const { playerId: player3Id } = await createTestPlayer(serverId, testAccountId("300000000030"), "Player3");
-    await expect(addParticipant(prisma, competitionId, player3Id, "INVITED", ownerId)).rejects.toThrow(
-      "Competition has reached maximum participants (2)",
-    );
+    await expect(
+      addParticipant({ prisma, competitionId, playerId: player3Id, status: "INVITED", invitedBy: ownerId }),
+    ).rejects.toThrow("Competition has reached maximum participants (2)");
   });
 
   test("cannot add duplicate participant", async () => {
@@ -349,10 +355,12 @@ describe("Participant Management - Invitation system", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId);
     const { playerId } = await createTestPlayer(serverId, testAccountId("456000004560"), "TestPlayer");
 
-    await addParticipant(prisma, competitionId, playerId, "JOINED");
+    await addParticipant({ prisma, competitionId, playerId, status: "JOINED" });
 
     // Try to add same participant again
-    await expect(addParticipant(prisma, competitionId, playerId, "JOINED")).rejects.toThrow("is already a participant");
+    await expect(addParticipant({ prisma, competitionId, playerId, status: "JOINED" })).rejects.toThrow(
+      "is already a participant",
+    );
   });
 });
 
@@ -550,7 +558,7 @@ describe("Integration - Competition lifecycle", () => {
 
     // Player joins
     const { playerId } = await createTestPlayer(serverId, testAccountId("456000004560"), "TestPlayer");
-    const participant = await addParticipant(prisma, competitionId, playerId, "JOINED");
+    const participant = await addParticipant({ prisma, competitionId, playerId, status: "JOINED" });
     expect(participant.status).toBe("JOINED");
 
     // Verify joined status
@@ -576,7 +584,7 @@ describe("Integration - Competition lifecycle", () => {
     expect(status2).toBe("LEFT");
 
     // Cannot rejoin
-    await expect(addParticipant(prisma, competitionId, playerId, "JOINED")).rejects.toThrow(
+    await expect(addParticipant({ prisma, competitionId, playerId, status: "JOINED" })).rejects.toThrow(
       "Cannot rejoin a competition after leaving",
     );
   });
@@ -592,7 +600,13 @@ describe("Integration - Competition lifecycle", () => {
 
     // Owner invites player
     const { playerId } = await createTestPlayer(serverId, testAccountId("456000004560"), "TestPlayer");
-    const invitation = await addParticipant(prisma, competitionId, playerId, "INVITED", ownerId);
+    const invitation = await addParticipant({
+      prisma,
+      competitionId,
+      playerId,
+      status: "INVITED",
+      invitedBy: ownerId,
+    });
     expect(invitation.status).toBe("INVITED");
     expect(invitation.invitedBy).toBe(ownerId);
 

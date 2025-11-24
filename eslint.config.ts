@@ -101,7 +101,10 @@ export default tseslint.config(
     extends: [importPlugin.flatConfigs.recommended, importPlugin.flatConfigs.typescript],
     settings: {
       "import/resolver": {
-        typescript: {
+        // Use the Bun-specific TypeScript resolver which properly handles Bun built-in modules
+        // (e.g., bun:test, bun:sqlite) without requiring ignore patterns or manual configuration.
+        // See: https://www.npmjs.com/package/eslint-import-resolver-typescript-bun
+        "typescript-bun": {
           alwaysTryTypes: true,
           project: [
             "./packages/backend/tsconfig.json",
@@ -212,6 +215,14 @@ export default tseslint.config(
           objectLiteralTypeAssertions: "never",
         },
       ],
+      "@typescript-eslint/no-unnecessary-type-assertion": "error",
+      "@typescript-eslint/prefer-ts-expect-error": "error",
+      "@typescript-eslint/switch-exhaustiveness-check": "error",
+      "@typescript-eslint/no-redundant-type-constituents": "error",
+      "@typescript-eslint/no-duplicate-type-constituents": "error",
+      "@typescript-eslint/no-meaningless-void-operator": "error",
+      "@typescript-eslint/no-mixed-enums": "error",
+      "@typescript-eslint/prefer-return-this-type": "error",
 
       // Prefer Bun APIs over Node.js imports
       "no-restricted-imports": [
@@ -257,6 +268,16 @@ export default tseslint.config(
               name: "node:crypto",
               message:
                 "Use Bun.password for password hashing, Bun.hash() for hashing, or Web Crypto API for cryptography instead of node:crypto. See https://bun.sh/docs/api/hashing",
+            },
+            {
+              name: "path",
+              message:
+                "Use Bun's built-in path utilities or import.meta.dirname instead of path. See https://bun.sh/docs/api/file-io",
+            },
+            {
+              name: "node:path",
+              message:
+                "Use Bun's built-in path utilities or import.meta.dirname instead of node:path. See https://bun.sh/docs/api/file-io",
             },
           ],
           patterns: [

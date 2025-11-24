@@ -112,8 +112,8 @@ export async function getAllItems<T>(storeName: string): Promise<T[]> {
     const transaction = db.transaction([storeName], "readonly");
     const store = getStore(transaction, storeName);
     const request = store.getAll();
-    const result = await executeRequest<T[] | undefined>(request);
-    return result || [];
+    const result = await executeRequest<T[] | undefined>(request as unknown as IDBRequest<T[] | undefined>);
+    return result ?? [];
   } catch (error) {
     console.warn(`Failed to get all items from ${storeName}:`, error);
     return [];
@@ -146,7 +146,7 @@ export async function deleteItem(storeName: string, key: string): Promise<boolea
     const transaction = db.transaction([storeName], "readwrite");
     const store = getStore(transaction, storeName);
     const request = store.delete(key);
-    await executeRequestVoid(request);
+    await executeRequestVoid(request as unknown as IDBRequest<IDBValidKey>);
     return true;
   } catch (error) {
     console.warn(`Failed to delete item from ${storeName}:`, error);
@@ -163,7 +163,7 @@ export async function clearStore(storeName: string): Promise<boolean> {
     const transaction = db.transaction([storeName], "readwrite");
     const store = getStore(transaction, storeName);
     const request = store.clear();
-    await executeRequestVoid(request);
+    await executeRequestVoid(request as unknown as IDBRequest<IDBValidKey>);
     return true;
   } catch (error) {
     console.warn(`Failed to clear store ${storeName}:`, error);

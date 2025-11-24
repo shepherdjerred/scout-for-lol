@@ -2,10 +2,7 @@ import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { DiscordGuildIdSchema, RegionSchema, RiotIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
-import {
-  validateCommandArgs,
-  executeWithTiming,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
+import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/command-wrapper.js";
 import { findPlayerByAliasWithAccounts } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
 import { resolvePuuidFromRiotId } from "@scout-for-lol/backend/discord/commands/admin/utils/riot-api.js";
 import {
@@ -23,7 +20,7 @@ const ArgsSchema = z.object({
 });
 
 export async function executeAccountTransfer(interaction: ChatInputCommandInteraction) {
-  const validation = await validateCommandArgs(
+  return executeCommand(
     interaction,
     ArgsSchema,
     (i) => ({
@@ -33,16 +30,8 @@ export async function executeAccountTransfer(interaction: ChatInputCommandIntera
       guildId: i.guildId,
     }),
     "account-transfer",
-  );
-
-  if (!validation.success) {
-    return;
-  }
-
-  const { data: args, username } = validation;
-  const { riotId, region, toPlayerAlias, guildId } = args;
-
-  await executeWithTiming("account-transfer", username, async () => {
+    async ({ data: args }) => {
+      const { riotId, region, toPlayerAlias, guildId } = args;
     // Resolve Riot ID to PUUID
     const puuidResult = await resolvePuuidFromRiotId(riotId, region);
     if (!puuidResult.success) {

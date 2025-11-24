@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import type { MatchDto } from "@scout-for-lol/data";
 
 // We'll need to test internal helper functions, so let's create a test version
 // that exposes these functions for testing
@@ -34,7 +35,7 @@ function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
  * Check if a match includes any of the specified participant PUUIDs
  */
 function matchIncludesParticipant(match: MatchDto, puuids: string[]): boolean {
-  return match.metadata.participants.some((puuid) => puuids.includes(puuid));
+  return match.metadata.participants.some((puuid: string) => puuids.includes(puuid));
 }
 
 // ============================================================================

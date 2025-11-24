@@ -70,7 +70,7 @@ async function processMatch(matchData: MatchDto, trackedPlayers: PlayerConfigEnt
  */
 async function processMatchAndUpdatePlayers(
   matchData: MatchDto,
-  allPlayerConfigs: PlayerConfig[],
+  allPlayerConfigs: PlayerConfigEntry[],
   processedMatchIds: Set<string>,
   matchId: string,
 ): Promise<void> {
@@ -91,7 +91,8 @@ async function processMatchAndUpdatePlayers(
   // Update lastProcessedMatchId and lastMatchTime for all players in this match
   for (const trackedPlayer of allTrackedPlayers) {
     const playerPuuid = trackedPlayer.league.leagueAccount.puuid;
-    await updateLastProcessedMatch(playerPuuid, matchId);
+    const brandedMatchId = MatchIdSchema.parse(matchId);
+    await updateLastProcessedMatch(playerPuuid, brandedMatchId);
     await updateLastMatchTime(playerPuuid, matchCreationTime);
   }
 }

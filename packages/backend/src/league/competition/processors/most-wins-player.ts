@@ -3,10 +3,7 @@ import type {
   LeaderboardEntry,
   PlayerWithAccounts,
 } from "@scout-for-lol/backend/league/competition/processors/types.js";
-import {
-  countWinsAndGames,
-  buildWinBasedLeaderboard,
-} from "@scout-for-lol/backend/league/competition/processors/generic-win-counter.js";
+import { createWinBasedProcessor } from "@scout-for-lol/backend/league/competition/processors/processor-helpers.js";
 
 /**
  * Process "Most Wins (Player)" criteria
@@ -17,17 +14,16 @@ export function processMostWinsPlayer(
   participants: PlayerWithAccounts[],
   criteria: MostWinsPlayerCriteria,
 ): LeaderboardEntry[] {
-  const { wins: winCounts, games: totalGames } = countWinsAndGames(matches, participants, criteria.queue);
-
-  return buildWinBasedLeaderboard({
-    winCounts,
-    totalGames,
+  return createWinBasedProcessor({
+    matches,
     participants,
+    queue: criteria.queue,
     scoreFn: (wins) => wins, // Score is just wins
     metadataFn: (wins, games) => ({
       wins,
       games,
       losses: games - wins,
     }),
+    criteria,
   });
 }

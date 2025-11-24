@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import type { GetObjectCommandOutput } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
+import type { MatchDto } from "@scout-for-lol/data";
 import { queryMatchesByDateRange } from "@scout-for-lol/backend/storage/s3-query.js";
 
 // Create S3 mock

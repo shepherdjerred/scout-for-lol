@@ -16,7 +16,7 @@ function createChampion(params: {
   assists: number;
   items: number[];
   spells: number[];
-  lane: string;
+  lane?: "top" | "jungle" | "middle" | "adc" | "support";
   creepScore: number;
   visionScore: number;
   damage: number;
@@ -207,6 +207,10 @@ function getMatch(): CompletedMatch {
   const playerChampion = blueTeam[0];
   const laneOpponent = redTeam[0];
 
+  if (!playerChampion || !laneOpponent) {
+    throw new Error("Teams must have at least one player");
+  }
+
   return {
     queueType: "solo",
     players: [
@@ -244,7 +248,7 @@ function getMatch(): CompletedMatch {
         champion: playerChampion,
         outcome: "Defeat",
         team: "blue",
-        lane: "top",
+        lane: "top" as const,
         laneOpponent,
       },
     ],

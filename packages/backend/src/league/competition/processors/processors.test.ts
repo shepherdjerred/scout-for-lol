@@ -154,6 +154,7 @@ function createMatch(
         onMyWayPings: 0,
         participantId: index + 1,
         pentaKills: 0,
+        profileIcon: 1,
         physicalDamageDealt: 0,
         physicalDamageDealtToChampions: 0,
         physicalDamageTaken: 0,

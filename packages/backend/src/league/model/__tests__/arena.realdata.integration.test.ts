@@ -1,10 +1,9 @@
 import { describe, it, expect } from "bun:test";
-import type { ArenaMatchSchema, LeaguePuuidSchema, type Player } from "@scout-for-lol/data";
+import type { MatchDto, Player } from "@scout-for-lol/data";
+import { ArenaMatchSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 import { toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
-import { dirname } from "path";
-import { fileURLToPath } from "url";
 
-const currentDir = dirname(fileURLToPath(import.meta.url));
+const currentDir = new URL(".", import.meta.url).pathname;
 
 const RAW_FILE_PATHS = [
   `${currentDir}/testdata/matches_2025_09_19_NA1_5370969615.json`,

@@ -2,17 +2,15 @@ import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
-import {
-  validateCommandArgs,
-  executeWithTiming,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
+import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/command-wrapper.js";
 import { findPlayerByAliasWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
-import {
-  buildPlayerNotLinkedError,
-  buildDatabaseError,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
 import { buildPlayerUpdateResponse } from "@scout-for-lol/backend/discord/commands/admin/utils/player-responses.js";
 import { updatePlayerDiscordId } from "@scout-for-lol/backend/discord/commands/admin/utils/player-updates.js";
+import {
+  validateDiscordUnlink,
+  executeDiscordLinkOperation,
+} from "@scout-for-lol/backend/discord/commands/admin/utils/discord-link-helpers.js";
+import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
 
 const ArgsSchema = z.object({
   playerAlias: z.string().min(1).max(100),
@@ -20,7 +18,7 @@ const ArgsSchema = z.object({
 });
 
 export async function executePlayerUnlinkDiscord(interaction: ChatInputCommandInteraction) {
-  const validation = await validateCommandArgs(
+  return executeCommand(
     interaction,
     ArgsSchema,
     (i) => ({
@@ -28,45 +26,46 @@ export async function executePlayerUnlinkDiscord(interaction: ChatInputCommandIn
       guildId: i.guildId,
     }),
     "player-unlink-discord",
-  );
+    async ({ data: args }) => {
+      const { playerAlias, guildId } = args;
 
-  if (!validation.success) {
-    return;
-  }
+      // Find the player
+      const player = await findPlayerByAliasWithSubscriptions(prisma, guildId, playerAlias, interaction);
+      if (!player) {
+        return;
+      }
 
-  const { data: args, username } = validation;
-  const { playerAlias, guildId } = args;
+      // TypeScript narrowing: player is non-null here
+      const playerNonNull: NonNullable<typeof player> = player;
 
-  await executeWithTiming("player-unlink-discord", username, async () => {
-    // Find the player
-    const player = await findPlayerByAliasWithSubscriptions(prisma, guildId, playerAlias, interaction);
-    if (!player) {
-      return;
-    }
+      // Validate Discord unlink
+      const validation = validateDiscordUnlink(playerNonNull, playerAlias);
+      if (!validation.success) {
+        await interaction.reply(validation.errorResponse);
+        return;
+      }
 
-    // Check if player has a Discord ID
-    if (!player.discordId) {
-      console.log(`⚠️  Player has no Discord ID to unlink`);
-      await interaction.reply(buildPlayerNotLinkedError(playerAlias));
-      return;
-    }
+      const previousDiscordId = playerNonNull.discordId;
+      console.log(`💾 Unlinking Discord ID ${previousDiscordId} from player "${playerAlias}"`);
 
-    const previousDiscordId = player.discordId;
-    console.log(`💾 Unlinking Discord ID ${previousDiscordId} from player "${playerAlias}"`);
+      await executeDiscordLinkOperation(
+        interaction,
+        async () => {
+          const updatedPlayer = await updatePlayerDiscordId(prisma, playerNonNull.id, null);
+          // updatePlayerDiscordId always returns a player (update operation never returns null)
+          // Type assertion needed because PlayerWithSubscriptions includes null union type
+          const updatedPlayerNonNull = updatedPlayer as unknown as NonNullable<PlayerWithSubscriptions>;
 
-    try {
-      const updatedPlayer = await updatePlayerDiscordId(prisma, player.id, null);
-
-      await interaction.reply(
-        buildPlayerUpdateResponse(
-          updatedPlayer,
-          "✅ **Discord ID unlinked successfully**",
-          `Unlinked <@${previousDiscordId}> from player "${playerAlias}"`,
-        ),
+          await interaction.reply(
+            buildPlayerUpdateResponse(
+              updatedPlayerNonNull,
+              "✅ **Discord ID unlinked successfully**",
+              `Unlinked <@${previousDiscordId}> from player "${playerAlias}"`,
+            ),
+          );
+        },
+        "unlink",
       );
-    } catch (error) {
-      console.error(`❌ Database error during Discord unlink:`, error);
-      await interaction.reply(buildDatabaseError("unlink Discord ID", error));
-    }
-  });
+    },
+  );
 }

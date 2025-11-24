@@ -4,4 +4,4 @@
  */
 
 Bun.env.NODE_ENV = "test";
-Bun.env.S3_BUCKET_NAME = "test-bucket";
+Bun.env['S3_BUCKET_NAME'] = "test-bucket";

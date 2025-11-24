@@ -108,7 +108,7 @@ export default function App() {
       const merged = mergeConfigs(globalConfig, activeTab.config);
       void saveCurrentConfig(merged);
     }
-  }, [activeTab?.config, globalConfig, isInitialized]);
+  }, [activeTab, activeTab?.config, globalConfig, isInitialized]);
 
   const addTab = () => {
     if (tabs.length >= MAX_TABS) {

@@ -1,35 +1,15 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "module": "ES2022",
+    "moduleResolution": "node",
     "lib": [
       "ES2021",
       "DOM",
       "DOM.Iterable"
     ],
     "jsx": "react-jsx",
-    "jsxImportSource": "react",
-    "baseUrl": "../..",
-    "paths": {
-      "@scout-for-lol/report-ui/*": [
-        "./packages/report-ui/src/*"
-      ],
-      "@scout-for-lol/data/*": [
-        "./packages/data/src/*"
-      ],
-      "@scout-for-lol/data": [
-        "./packages/data/src/index.ts"
-      ],
-      "@scout-for-lol/report/*": [
-        "./packages/report/src/*"
-      ],
-      "@scout-for-lol/report": [
-        "./packages/report/src/index.ts"
-      ],
-      "@scout-for-lol/backend/*": [
-        "./packages/backend/src/*",
-        "./packages/backend/*"
-      ]
-    }
+    "jsxImportSource": "react"
   },
   "include": [
     "src",

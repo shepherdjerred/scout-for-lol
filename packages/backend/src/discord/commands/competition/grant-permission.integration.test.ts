@@ -3,7 +3,7 @@ import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/ind
 import { grantPermission, hasPermission } from "@scout-for-lol/backend/database/competition/permissions.js";
 
 // Create a test database for integration tests
-const testDir = `${Bun.env.TMPDIR ?? "/tmp"}/grant-permission-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/grant-permission-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 const testDbPath = `${testDir}/test.db`;
 const testDbUrl = `file:${testDbPath}`;
 
@@ -266,7 +266,12 @@ describe("Server-specific permissions", () => {
     const userId = testAccountId("222222222222222222");
 
     // Grant on server 1
-    await grantPermission(prisma, server1Id, userId, "CREATE_COMPETITION", admin1Id);
+    await grantPermission(prisma, {
+      serverId: server1Id,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: admin1Id,
+    });
 
     // Grant on server 2
     await grantPermission(prisma, {

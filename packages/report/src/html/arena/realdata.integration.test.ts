@@ -11,7 +11,7 @@ function hashSvg(svg: string): string {
   return hasher.digest("hex");
 }
 
-const RAW_FILE_PATHS = [join(currentDir, "testdata/1.json"), join(currentDir, "testdata/2.json")];
+const RAW_FILE_PATHS = [`${currentDir}testdata/1.json`, `${currentDir}testdata/2.json`];
 
 for (const path of RAW_FILE_PATHS) {
   const fileNameOrUndefined = path.split("/").pop();

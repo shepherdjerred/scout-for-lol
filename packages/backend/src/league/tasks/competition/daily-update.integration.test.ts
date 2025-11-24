@@ -61,7 +61,7 @@ void mock.module("../../../storage/s3-leaderboard.js", () => ({
 }));
 
 // Create a test database
-const testDir = `${Bun.env.TMPDIR ?? "/tmp"}/daily-update-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDir = `${Bun.env['TMPDIR'] ?? "/tmp"}/daily-update-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 const testDbPath = `${testDir}/test.db`;
 const schemaPath = `import.meta.dir/../../../../prisma/schema.prisma`;
 Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {

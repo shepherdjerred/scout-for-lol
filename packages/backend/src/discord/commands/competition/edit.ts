@@ -3,11 +3,7 @@ import { z } from "zod";
 import {
   ChampionIdSchema,
   CompetitionIdSchema,
-  CompetitionQueueTypeSchema,
-  CompetitionVisibilitySchema,
   DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  SeasonIdSchema,
   getCompetitionStatus,
   type CompetitionCriteria,
 } from "@scout-for-lol/data";
@@ -22,101 +18,22 @@ import {
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import { getChampionId } from "@scout-for-lol/backend/utils/champion.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
+import {
+  EditableAlwaysArgsSchema,
+  EditableDraftOnlyArgsSchema,
+  FixedDatesEditArgsSchema,
+  SeasonEditArgsSchema,
+  MostGamesPlayedEditArgsSchema,
+  HighestRankEditArgsSchema,
+  MostRankClimbEditArgsSchema,
+  MostWinsPlayerEditArgsSchema,
+  MostWinsChampionEditArgsSchema,
+  HighestWinRateEditArgsSchema,
+} from "@scout-for-lol/backend/discord/commands/competition/schemas.js";
 
 // ============================================================================
 // Input Parsing Schema - Editable Fields
 // ============================================================================
-
-/**
- * Fields that can be edited at any time (even after competition starts)
- */
-const EditableAlwaysArgsSchema = z.object({
-  competitionId: z.number().int().positive(),
-  userId: DiscordAccountIdSchema,
-  title: z.string().min(1).max(100).optional(),
-  description: z.string().min(1).max(500).optional(),
-  channelId: DiscordChannelIdSchema.optional(),
-});
-
-/**
- * Fields that can ONLY be edited before competition starts (DRAFT status)
- */
-const EditableDraftOnlyArgsSchema = z.object({
-  visibility: CompetitionVisibilitySchema.optional(),
-  maxParticipants: z.number().int().min(2).max(100).optional(),
-});
-
-/**
- * Date-related fields that can ONLY be edited in DRAFT status
- */
-const FixedDatesEditArgsSchema = z
-  .object({
-    dateType: z.literal("FIXED"),
-    startDate: z.string(),
-    endDate: z.string(),
-  })
-  .refine(
-    (data) => {
-      const start = new Date(data.startDate);
-      const end = new Date(data.endDate);
-      return !isNaN(start.getTime()) && !isNaN(end.getTime());
-    },
-    {
-      message: "Invalid date format. Use ISO 8601 format (YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, or with timezone Z/+HH:mm)",
-      path: ["startDate"],
-    },
-  )
-  .refine(
-    (data) => {
-      const start = new Date(data.startDate);
-      const end = new Date(data.endDate);
-      return start < end;
-    },
-    {
-      message: "Start date must be before end date",
-      path: ["startDate"],
-    },
-  );
-
-const SeasonEditArgsSchema = z.object({
-  dateType: z.literal("SEASON"),
-  season: SeasonIdSchema,
-});
-
-/**
- * Criteria-specific edit schemas (same as create, but all optional at the args level)
- */
-const MostGamesPlayedEditArgsSchema = z.object({
-  criteriaType: z.literal("MOST_GAMES_PLAYED"),
-  queue: CompetitionQueueTypeSchema,
-});
-
-const HighestRankEditArgsSchema = z.object({
-  criteriaType: z.literal("HIGHEST_RANK"),
-  queue: z.enum(["SOLO", "FLEX"]),
-});
-
-const MostRankClimbEditArgsSchema = z.object({
-  criteriaType: z.literal("MOST_RANK_CLIMB"),
-  queue: z.enum(["SOLO", "FLEX"]),
-});
-
-const MostWinsPlayerEditArgsSchema = z.object({
-  criteriaType: z.literal("MOST_WINS_PLAYER"),
-  queue: CompetitionQueueTypeSchema,
-});
-
-const MostWinsChampionEditArgsSchema = z.object({
-  criteriaType: z.literal("MOST_WINS_CHAMPION"),
-  champion: z.string().min(1),
-  queue: CompetitionQueueTypeSchema.optional(),
-});
-
-const HighestWinRateEditArgsSchema = z.object({
-  criteriaType: z.literal("HIGHEST_WIN_RATE"),
-  queue: CompetitionQueueTypeSchema,
-  minGames: z.number().int().positive().optional(),
-});
 
 /**
  * Combined schema for all possible edit arguments

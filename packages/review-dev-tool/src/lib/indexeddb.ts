@@ -70,7 +70,7 @@ export async function getAllEntries(): Promise<DBHistoryEntry[]> {
   const transaction = db.transaction([STORE_NAME], "readonly");
   const store = getStore(transaction, STORE_NAME);
   const request = store.getAll();
-  const result = await executeRequest<unknown>(request);
+  const result = await executeRequest<unknown>(request as unknown as IDBRequest<unknown>);
   const entriesResult = z.array(DBHistoryEntrySchema).safeParse(result);
   if (entriesResult.success) {
     const entries = entriesResult.data;
@@ -105,7 +105,7 @@ export async function deleteEntry(id: string): Promise<void> {
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = getStore(transaction, STORE_NAME);
   const request = store.delete(id);
-  return executeRequestVoid(request);
+  return executeRequestVoid(request as unknown as IDBRequest<IDBValidKey>);
 }
 
 /**
@@ -116,7 +116,7 @@ export async function clearAllEntries(): Promise<void> {
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = getStore(transaction, STORE_NAME);
   const request = store.clear();
-  return executeRequestVoid(request);
+  await executeRequestVoid(request as unknown as IDBRequest<IDBValidKey>);
 }
 
 /**
@@ -144,5 +144,7 @@ export async function trimToMaxEntries(maxCount: number): Promise<void> {
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = getStore(transaction, STORE_NAME);
 
-  await Promise.all(toDelete.map((entry) => executeRequestVoid(store.delete(entry.id))));
+  await Promise.all(
+    toDelete.map((entry) => executeRequestVoid(store.delete(entry.id) as unknown as IDBRequest<IDBValidKey>)),
+  );
 }

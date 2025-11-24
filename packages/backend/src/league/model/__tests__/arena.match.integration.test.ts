@@ -1,11 +1,6 @@
 import { describe, it, expect } from "bun:test";
-import type {
-  ParticipantDto,
-  ArenaMatchSchema,
-  ArenaTeamSchema,
-  LeaguePuuidSchema,
-  type Player,
-} from "@scout-for-lol/data";
+import type { ChallengesDto, ParticipantDto, Player } from "@scout-for-lol/data";
+import { ArenaMatchSchema, ArenaTeamSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
 import { toArenaMatch, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.js";
 
@@ -57,7 +52,7 @@ function makeParticipant(
     PlayerScore8: 0,
     challenges: {
       damageTakenOnTeamPercentage: 0.2,
-    } satisfies Partial<MatchV5DTOs.ChallengesDto> as unknown as MatchV5DTOs.ChallengesDto,
+    } satisfies Partial<ChallengesDto> as unknown as ChallengesDto,
   };
   return {
     totalHealsOnTeammates: 300,

@@ -57,10 +57,10 @@ export function createCronJob(config: CronJobConfig): CronJob {
         throw error;
       }
     }),
-    undefined,
+    null,
     true,
     timezone,
-    undefined,
+    null,
     runOnInit,
   );
 }

@@ -53,10 +53,11 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   // Use optional chaining to safely access permissions
   const isAdmin = Boolean(
     member &&
-    "permissions" in member &&
-    member.permissions &&
-    "has" in member.permissions &&
-    member.permissions.has(PermissionFlagsBits.Administrator)
+      "permissions" in member &&
+      member.permissions &&
+      typeof member.permissions === "object" &&
+      "has" in member.permissions &&
+      member.permissions.has(PermissionFlagsBits.Administrator),
   );
 
   if (!isOwner && !isAdmin) {

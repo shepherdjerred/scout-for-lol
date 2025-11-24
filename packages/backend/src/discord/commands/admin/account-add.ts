@@ -8,10 +8,7 @@ import {
   RiotIdSchema,
 } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
-import {
-  validateCommandArgs,
-  executeWithTiming,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
+import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/command-wrapper.js";
 import { findPlayerByAliasWithAccounts } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
 import { resolvePuuidFromRiotId } from "@scout-for-lol/backend/discord/commands/admin/utils/riot-api.js";
 import {
@@ -30,7 +27,7 @@ const ArgsSchema = z.object({
 });
 
 export async function executeAccountAdd(interaction: ChatInputCommandInteraction) {
-  const validation = await validateCommandArgs(
+  return executeCommand(
     interaction,
     ArgsSchema,
     (i) => ({
@@ -40,16 +37,8 @@ export async function executeAccountAdd(interaction: ChatInputCommandInteraction
       guildId: i.guildId,
     }),
     "account-add",
-  );
-
-  if (!validation.success) {
-    return;
-  }
-
-  const { data: args, userId, username } = validation;
-  const { riotId, region, playerAlias, guildId } = args;
-
-  await executeWithTiming("account-add", username, async () => {
+    async ({ data: args, userId }) => {
+      const { riotId, region, playerAlias, guildId } = args;
     // Find the player
     const player = await findPlayerByAliasWithAccounts(prisma, guildId, playerAlias, interaction);
     if (!player) {

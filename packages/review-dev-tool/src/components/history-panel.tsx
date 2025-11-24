@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import type { HistoryEntry } from "@scout-for-lol/review-dev-tool/lib/history-manager";
 import { loadHistory, deleteHistoryEntry, clearHistory } from "@scout-for-lol/review-dev-tool/lib/history-manager";
-import { StarRating } from "@scout-for-lol/review-dev-tool/components/star-rating";
+import { StarRating } from "@scout-for-lol/report-ui/components/star-rating";
 
 type HistoryPanelProps = {
   onSelectEntry: (entry: HistoryEntry) => void;
@@ -202,7 +202,7 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
                         onClick={(e) => {
                           handleCancelPending(entry.id, e);
                         }}
-                        className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+                        className="shrink-0 text-gray-400 dark:text-gray-500 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
                         title="Cancel (mark as interrupted)"
                       >
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -218,7 +218,7 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
                       onClick={(e) => {
                         void handleDelete(entry.id, e);
                       }}
-                      className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                      className="shrink-0 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                       title="Delete"
                     >
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

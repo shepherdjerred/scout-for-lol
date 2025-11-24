@@ -6,13 +6,11 @@
  */
 import { z } from "zod";
 
-const _CacheEntrySchema = z.object({
-  data: z.unknown(),
-  timestamp: z.number(),
-  ttl: z.number(),
-});
-
-type CacheEntry = z.infer<typeof _CacheEntrySchema>;
+type CacheEntry = {
+  data: unknown;
+  timestamp: number;
+  ttl: number;
+};
 
 const IDBOpenDBRequestSchema = z.instanceof(IDBOpenDBRequest);
 
@@ -157,10 +155,15 @@ export async function cleanupExpiredEntries(): Promise<void> {
             });
             const validationResult = KeyedEntrySchema.safeParse(cursor.value);
             if (validationResult.success) {
-              const { key: _key, ...entry } = validationResult.data;
+              const { key, ...rest } = validationResult.data;
+              const entry: CacheEntry = {
+                data: rest.data,
+                timestamp: rest.timestamp,
+                ttl: rest.ttl,
+              };
               if (!isCacheValid(entry)) {
                 cursor.delete();
-                memoryCache.delete(validationResult.data.key);
+                memoryCache.delete(key);
                 deleteCount++;
               }
             }
@@ -219,7 +222,12 @@ export async function getCachedDataAsync(endpoint: string, params: Record<string
           });
           const validationResult = KeyedEntrySchema.safeParse(result);
           if (validationResult.success) {
-            const { key: _key, ...entry } = validationResult.data;
+            const { key: _unused, ...rest } = validationResult.data;
+            const entry: CacheEntry = {
+              data: rest.data,
+              timestamp: rest.timestamp,
+              ttl: rest.ttl,
+            };
             resolve(entry);
           } else {
             resolve(null);

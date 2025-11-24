@@ -30,13 +30,19 @@ describe("MatchDto Schema Validation", () => {
 
         // Verify first participant has challenges
         const firstParticipant = result.data.info.participants[0];
-        expect(firstParticipant.challenges).toBeDefined();
+        if (firstParticipant) {
+          expect(firstParticipant.challenges).toBeDefined();
+        }
       }
     }
   });
 
-  test("schema matches real API data structure", () => {
-    const data = JSON.parse(readFileSync(REAL_MATCH_FILES[0], "utf-8"));
+  test("schema matches real API data structure", async () => {
+    const filePath = REAL_MATCH_FILES[0];
+    if (!filePath) {
+      throw new Error("No test file path");
+    }
+    const data = JSON.parse(await Bun.file(filePath).text());
     const result = MatchDtoSchema.safeParse(data);
 
     expect(result.success).toBe(true);
@@ -44,13 +50,15 @@ describe("MatchDto Schema Validation", () => {
     if (result.success) {
       // Fields that are MISSING in real API but REQUIRED in twisted types
       const firstParticipant = result.data.info.participants[0];
-      expect(firstParticipant.baitPings).toBeUndefined(); // Missing in real API
-      expect(firstParticipant.bountyLevel).toBeUndefined(); // Missing in real API
+      if (firstParticipant) {
+        expect(firstParticipant.baitPings).toBeUndefined(); // Missing in real API
+        expect(firstParticipant.bountyLevel).toBeUndefined(); // Missing in real API
 
-      // Fields that ARE present in real API
-      expect(firstParticipant.assists).toBeNumber();
-      expect(firstParticipant.basicPings).toBeNumber();
-      expect(firstParticipant.challenges).toBeDefined();
+        // Fields that ARE present in real API
+        expect(firstParticipant.assists).toBeNumber();
+        expect(firstParticipant.basicPings).toBeNumber();
+        expect(firstParticipant.challenges).toBeDefined();
+      }
 
       // Verify endOfGameResult and tournamentCode are present
       expect(result.data.info.endOfGameResult).toBe("GameComplete");
@@ -58,14 +66,22 @@ describe("MatchDto Schema Validation", () => {
     }
   });
 
-  test("challenge fields optionality matches real API", () => {
-    const data = JSON.parse(readFileSync(REAL_MATCH_FILES[0], "utf-8"));
+  test("challenge fields optionality matches real API", async () => {
+    const filePath = REAL_MATCH_FILES[0];
+    if (!filePath) {
+      throw new Error("No test file path");
+    }
+    const data = JSON.parse(await Bun.file(filePath).text());
     const result = MatchDtoSchema.safeParse(data);
 
     expect(result.success).toBe(true);
 
     if (result.success) {
-      const challenges = result.data.info.participants[0].challenges;
+      const firstParticipant = result.data.info.participants[0];
+      if (!firstParticipant) {
+        throw new Error("No participants found");
+      }
+      const challenges = firstParticipant.challenges;
 
       // Fields that ARE present in real API
       expect(challenges.abilityUses).toBeNumber();

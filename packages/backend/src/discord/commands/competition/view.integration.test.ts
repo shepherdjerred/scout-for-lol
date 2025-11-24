@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { createCompetition, getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
 import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
@@ -17,7 +17,7 @@ import {
 } from "@scout-for-lol/data";
 
 // Create a test database for integration tests
-const testDir = `${Bun.env.TMPDIR ?? "/tmp"}/competition-view-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/competition-view-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 const testDbPath = `${testDir}/test.db`;
 const testDbUrl = `file:${testDbPath}`;
 
@@ -115,9 +115,9 @@ async function createTestCompetition(
             queue: "SOLO" as const,
           };
         })
-        .with("MOST_GAMES_PLAYED", () => ({ type: "MOST_GAMES_PLAYED" as const, queue: "SOLO" as const }))
-        .with("MOST_RANK_CLIMB", () => ({ type: "MOST_RANK_CLIMB" as const, queue: "SOLO" as const }))
-        .with("MOST_WINS_PLAYER", () => ({ type: "MOST_WINS_PLAYER" as const, queue: "SOLO" as const }))
+        .with(P.literal("MOST_GAMES_PLAYED"), () => ({ type: "MOST_GAMES_PLAYED" as const, queue: "SOLO" as const }))
+        .with(P.literal("MOST_RANK_CLIMB"), () => ({ type: "MOST_RANK_CLIMB" as const, queue: "SOLO" as const }))
+        .with(P.literal("MOST_WINS_PLAYER"), () => ({ type: "MOST_WINS_PLAYER" as const, queue: "SOLO" as const }))
         .with("HIGHEST_WIN_RATE", () => ({ type: "HIGHEST_WIN_RATE" as const, minGames: 10, queue: "SOLO" as const }))
         .exhaustive()
     : { type: "MOST_GAMES_PLAYED" as const, queue: "SOLO" as const };
@@ -187,9 +187,9 @@ describe("Competition View - DRAFT Status", () => {
     const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
     const { playerId: player3Id } = await createTestPlayer(serverId, testAccountId("300000000030"), "Player3");
 
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
-    await addParticipant(prisma, competitionId, player2Id, "JOINED");
-    await addParticipant(prisma, competitionId, player3Id, "JOINED");
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player2Id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player3Id, status: "JOINED" });
 
     const competition = await getCompetitionById(prisma, competitionId);
     expect(competition).not.toBeNull();
@@ -278,8 +278,8 @@ describe("Competition View - ACTIVE Status", () => {
     // Add participants
     const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
-    await addParticipant(prisma, competitionId, player2Id, "JOINED");
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player2Id, status: "JOINED" });
 
     const competition = await getCompetitionById(prisma, competitionId);
     expect(competition).not.toBeNull();
@@ -364,8 +364,8 @@ describe("Competition View - ENDED Status", () => {
     // Add participants while competition is active
     const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
-    await addParticipant(prisma, competitionId, player2Id, "JOINED");
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player2Id, status: "JOINED" });
 
     // Now update the competition to have ended
     const yesterday = new Date(now);

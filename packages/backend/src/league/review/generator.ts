@@ -80,7 +80,7 @@ async function generateReviewImageBackend(params: {
       reviewText,
       artStyle: style,
       artTheme: themes[0] ?? "League of Legends gameplay",
-      secondArtTheme: themes[1],
+      ...(themes[1] ? { secondArtTheme: themes[1] } : {}),
       matchData: JSON.stringify(curatedData ? { processedMatch: match, detailedStats: curatedData } : match, null, 2),
       geminiClient: client,
       model: "gemini-3-pro-image-preview",
@@ -247,7 +247,7 @@ export async function generateMatchReview(
     queueType,
     style,
     themes,
-    curatedData,
+    ...(curatedData !== undefined && { curatedData }),
   });
 
   if (reviewImage) {

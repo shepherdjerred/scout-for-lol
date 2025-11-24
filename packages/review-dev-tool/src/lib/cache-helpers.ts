@@ -1,0 +1,75 @@
+/**
+ * IndexedDB operation helpers to reduce duplication
+ */
+
+/**
+ * Execute an IndexedDB operation with proper error handling
+ * Wraps the common pattern of creating a promise from an IDBRequest
+ */
+export function executeIDBRequest<T>(
+  request: IDBRequest<T>,
+  operationName: string = "IndexedDB operation",
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+
+    request.onerror = () => {
+      const error = request.error;
+      reject(error ?? new Error(`${operationName} failed`));
+    };
+  });
+}
+
+/**
+ * Execute an IndexedDB transaction operation
+ * Creates a transaction, gets the store, and executes the operation
+ */
+export async function executeIDBTransaction<T>(
+  db: IDBDatabase,
+  storeName: string,
+  mode: IDBTransactionMode,
+  operation: (store: IDBObjectStore) => IDBRequest<T>,
+  operationName: string = "IndexedDB transaction",
+): Promise<T> {
+  const transaction = db.transaction([storeName], mode);
+  const store = transaction.objectStore(storeName);
+  const request = operation(store);
+  return executeIDBRequest(request, operationName);
+}
+
+/**
+ * Execute an IndexedDB cursor operation
+ * Iterates through all entries matching the cursor
+ */
+export async function executeIDBCursor<T>(
+  index: IDBIndex,
+  operation: (cursor: IDBCursorWithValue, entry: T) => void | boolean,
+  operationName: string = "IndexedDB cursor",
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const request = index.openCursor();
+
+    request.onsuccess = (event) => {
+      const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
+      if (cursor) {
+        const result = operation(cursor, cursor.value as T);
+        if (result === false) {
+          // Stop iteration if operation returns false
+          resolve();
+        } else {
+          cursor.continue();
+        }
+      } else {
+        resolve();
+      }
+    };
+
+    request.onerror = () => {
+      const error = request.error;
+      reject(error ?? new Error(`${operationName} failed`));
+    };
+  });
+}
+

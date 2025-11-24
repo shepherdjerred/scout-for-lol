@@ -446,18 +446,18 @@ export function convertMatchDtoToInternalFormat(
     // Cast required: example match structure updated with real data, types don't match exactly
     return {
       ...baseMatch,
-      players: updatedPlayers,
+      players: updatedPlayers as unknown as CompletedMatch["players"],
       durationInSeconds: matchDto.info.gameDuration,
       teams,
-    } satisfies CompletedMatch;
+    } as CompletedMatch;
   }
 
   // For arena matches, no teams roster. Cast required: example match structure updated with real data
   return {
     ...baseMatch,
-    players: updatedPlayers,
+    players: updatedPlayers as unknown as ArenaMatch["players"],
     durationInSeconds: matchDto.info.gameDuration,
-  } satisfies ArenaMatch;
+  } as ArenaMatch;
 }
 
 /**
@@ -492,7 +492,11 @@ export function extractMatchMetadataFromDto(matchDto: MatchDto, key: string): Ma
     let outcome: string;
     if (queueType === "arena") {
       const placement = participant.placement;
-      outcome = `${String(placement)}${getOrdinalSuffix(placement)} place`;
+      if (placement === undefined) {
+        outcome = "Unknown";
+      } else {
+        outcome = `${String(placement)}${getOrdinalSuffix(placement)} place`;
+      }
     } else {
       outcome = participant.win ? "Victory" : "Defeat";
     }

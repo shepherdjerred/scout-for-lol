@@ -3,27 +3,24 @@
  */
 import { z } from "zod";
 import type { GenerationResult } from "@scout-for-lol/review-dev-tool/config/schema";
+import { GenerationMetadataSchema } from "@scout-for-lol/review-dev-tool/config/schema";
 import * as db from "@scout-for-lol/review-dev-tool/lib/indexeddb";
 
-// Zod schemas for validation - using passthrough to preserve all fields
+// Zod schemas for validation
 // Note: We use `.optional()` which produces `T | undefined`, matching the exact optional properties
-const GenerationResultSchema = z
-  .object({
-    text: z.string(),
-    image: z.string().optional(),
-    metadata: z.unknown(),
-    error: z.string().optional(),
-  })
-  .passthrough();
+const GenerationResultSchema = z.object({
+  text: z.string(),
+  image: z.string().optional(),
+  metadata: z.unknown(),
+  error: z.string().optional(),
+});
 
-const ConfigSnapshotSchema = z
-  .object({
-    model: z.string(),
-    personality: z.string().optional(),
-    artStyle: z.string().optional(),
-    artTheme: z.string().optional(),
-  })
-  .passthrough();
+const ConfigSnapshotSchema = z.object({
+  model: z.string(),
+  personality: z.string().optional(),
+  artStyle: z.string().optional(),
+  artTheme: z.string().optional(),
+});
 
 export type HistoryEntry = {
   id: string;
@@ -83,12 +80,34 @@ async function migrateFromLocalStorage(): Promise<void> {
         continue;
       }
 
-      // Validated with Zod but need to cast for compatibility
+      // Validated with Zod - map optional properties to match exactOptionalPropertyTypes
+      const configData = configValidation.data;
+      const configSnapshot: HistoryEntry["configSnapshot"] = {
+        model: configData.model,
+        ...(configData.personality !== undefined ? { personality: configData.personality } : {}),
+        ...(configData.artStyle !== undefined ? { artStyle: configData.artStyle } : {}),
+        ...(configData.artTheme !== undefined ? { artTheme: configData.artTheme } : {}),
+      };
+
+      const resultData = resultValidation.data;
+      const metadataValidation = GenerationMetadataSchema.safeParse(resultData.metadata);
+      const metadata = metadataValidation.success
+        ? metadataValidation.data
+        : {
+            textDurationMs: 0,
+            imageGenerated: false,
+          };
+      const result: GenerationResult = {
+        text: resultData.text,
+        ...(resultData.image !== undefined && { image: resultData.image }),
+        metadata,
+        ...(resultData.error !== undefined && { error: resultData.error }),
+      };
       const historyEntry: HistoryEntry = {
         id: entry.id,
         timestamp: new Date(entry.timestamp),
-        result: resultValidation.data,
-        configSnapshot: configValidation.data,
+        result,
+        configSnapshot,
         status: entry.status,
         ...(entry.rating !== undefined && { rating: entry.rating }),
         ...(entry.notes !== undefined && { notes: entry.notes }),
@@ -128,12 +147,34 @@ export async function loadHistory(): Promise<HistoryEntry[]> {
         continue;
       }
 
-      // Validated with Zod but need to cast for compatibility
+      // Validated with Zod - map optional properties to match exactOptionalPropertyTypes
+      const configData = configValidation.data;
+      const configSnapshot: HistoryEntry["configSnapshot"] = {
+        model: configData.model,
+        ...(configData.personality !== undefined ? { personality: configData.personality } : {}),
+        ...(configData.artStyle !== undefined ? { artStyle: configData.artStyle } : {}),
+        ...(configData.artTheme !== undefined ? { artTheme: configData.artTheme } : {}),
+      };
+
+      const resultData = resultValidation.data;
+      const metadataValidation = GenerationMetadataSchema.safeParse(resultData.metadata);
+      const metadata = metadataValidation.success
+        ? metadataValidation.data
+        : {
+            textDurationMs: 0,
+            imageGenerated: false,
+          };
+      const result: GenerationResult = {
+        text: resultData.text,
+        ...(resultData.image !== undefined && { image: resultData.image }),
+        metadata,
+        ...(resultData.error !== undefined && { error: resultData.error }),
+      };
       const historyEntry: HistoryEntry = {
         id: entry.id,
         timestamp: new Date(entry.timestamp),
-        result: resultValidation.data,
-        configSnapshot: configValidation.data,
+        result,
+        configSnapshot,
         status: entry.status,
         ...(entry.rating !== undefined && { rating: entry.rating }),
         ...(entry.notes !== undefined && { notes: entry.notes }),
@@ -151,7 +192,7 @@ export async function loadHistory(): Promise<HistoryEntry[]> {
  * Create a new pending history entry (called when generation starts)
  * Returns the entry ID for later updating - NOT saved to localStorage yet
  */
-export function createPendingEntry(_configSnapshot: HistoryEntry["configSnapshot"]): string {
+export function createPendingEntry(_unusedConfigSnapshot: HistoryEntry["configSnapshot"]): string {
   try {
     const id = `gen-${Date.now().toString()}-${Math.random().toString(36).slice(2, 9)}`;
     console.log("[History] Created pending entry ID:", id, "(not persisted yet)");

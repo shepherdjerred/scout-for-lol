@@ -211,7 +211,13 @@ This competition has reached its maximum of ${competition.maxParticipants.toStri
   // ============================================================================
 
   try {
-    await addParticipant(prisma, competitionId, player.id, "INVITED", userId);
+    await addParticipant({
+      prisma,
+      competitionId,
+      playerId: player.id,
+      status: "INVITED",
+      invitedBy: userId,
+    });
     console.log(
       `[Competition Invite] User ${userId} invited ${targetUser.id} to competition ${competitionId.toString()}`,
     );

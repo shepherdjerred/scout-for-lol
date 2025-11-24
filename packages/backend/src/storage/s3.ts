@@ -3,19 +3,6 @@ import { MatchIdSchema } from "@scout-for-lol/data";
 import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.js";
 
 /**
- * Generate S3 key (path) for a match image
- */
-function generateImageKey(matchId: MatchId): string {
-  const now = new Date();
-  const year = now.getUTCFullYear();
-  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(now.getUTCDate()).padStart(2, "0");
-
-  // Create hierarchical structure: images/YYYY/MM/DD/matchId.png
-  return `images/${year.toString()}/${month}/${day}/${matchId}.png`;
-}
-
-/**
  * Save a League of Legends match to S3 storage
  * @param match The match data to save
  * @returns Promise that resolves when the match is saved

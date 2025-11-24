@@ -2,18 +2,15 @@ import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
-import {
-  validateCommandArgs,
-  executeWithTiming,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
+import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/command-wrapper.js";
 import { findPlayerByAliasWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
-import {
-  buildDiscordAlreadyLinkedError,
-  buildDiscordIdInUseError,
-  buildDatabaseError,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
 import { buildPlayerUpdateResponse } from "@scout-for-lol/backend/discord/commands/admin/utils/player-responses.js";
 import { updatePlayerDiscordId } from "@scout-for-lol/backend/discord/commands/admin/utils/player-updates.js";
+import {
+  validateDiscordLink,
+  executeDiscordLinkOperation,
+} from "@scout-for-lol/backend/discord/commands/admin/utils/discord-link-helpers.js";
+import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
 
 const ArgsSchema = z.object({
   playerAlias: z.string().min(1).max(100),
@@ -22,7 +19,7 @@ const ArgsSchema = z.object({
 });
 
 export async function executePlayerLinkDiscord(interaction: ChatInputCommandInteraction) {
-  const validation = await validateCommandArgs(
+  return executeCommand(
     interaction,
     ArgsSchema,
     (i) => ({
@@ -31,61 +28,45 @@ export async function executePlayerLinkDiscord(interaction: ChatInputCommandInte
       guildId: i.guildId,
     }),
     "player-link-discord",
-  );
+    async ({ data: args }) => {
+      const { playerAlias, discordUserId, guildId } = args;
 
-  if (!validation.success) {
-    return;
-  }
+      // Find the player
+      const player = await findPlayerByAliasWithSubscriptions(prisma, guildId, playerAlias, interaction);
+      if (!player) {
+        return;
+      }
 
-  const { data: args, username } = validation;
-  const { playerAlias, discordUserId, guildId } = args;
+      // TypeScript narrowing: player is non-null here
+      const playerNonNull: NonNullable<typeof player> = player;
 
-  await executeWithTiming("player-link-discord", username, async () => {
-    // Find the player
-    const player = await findPlayerByAliasWithSubscriptions(prisma, guildId, playerAlias, interaction);
-    if (!player) {
-      return;
-    }
+      // Validate Discord link
+      const validation = await validateDiscordLink(prisma, guildId, playerNonNull, discordUserId, playerAlias);
+      if (!validation.success) {
+        await interaction.reply(validation.errorResponse);
+        return;
+      }
 
-    // Check if this Discord ID is already linked to a different player
-    const existingPlayer = await prisma.player.findFirst({
-      where: {
-        serverId: guildId,
-        discordId: discordUserId,
-        NOT: {
-          id: player.id,
+      console.log(`💾 Linking Discord ID ${discordUserId} to player "${playerAlias}"`);
+
+      await executeDiscordLinkOperation(
+        interaction,
+        async () => {
+          const updatedPlayer = await updatePlayerDiscordId(prisma, playerNonNull.id, discordUserId);
+          // updatePlayerDiscordId always returns a player (update operation never returns null)
+          // Type assertion needed because PlayerWithSubscriptions includes null union type
+          const updatedPlayerNonNull = updatedPlayer as unknown as NonNullable<PlayerWithSubscriptions>;
+
+          await interaction.reply(
+            buildPlayerUpdateResponse(
+              updatedPlayerNonNull,
+              "✅ **Discord ID linked successfully**",
+              `Linked <@${discordUserId}> to player "${playerAlias}"`,
+            ),
+          );
         },
-      },
-    });
-
-    if (existingPlayer) {
-      console.log(`❌ Discord ID already linked to player "${existingPlayer.alias}"`);
-      await interaction.reply(buildDiscordIdInUseError(discordUserId, existingPlayer.alias));
-      return;
-    }
-
-    // Check if player already has a Discord ID
-    if (player.discordId) {
-      console.log(`⚠️  Player already has Discord ID: ${player.discordId}`);
-      await interaction.reply(buildDiscordAlreadyLinkedError(playerAlias, player.discordId));
-      return;
-    }
-
-    console.log(`💾 Linking Discord ID ${discordUserId} to player "${playerAlias}"`);
-
-    try {
-      const updatedPlayer = await updatePlayerDiscordId(prisma, player.id, discordUserId);
-
-      await interaction.reply(
-        buildPlayerUpdateResponse(
-          updatedPlayer,
-          "✅ **Discord ID linked successfully**",
-          `Linked <@${discordUserId}> to player "${playerAlias}"`,
-        ),
+        "link",
       );
-    } catch (error) {
-      console.error(`❌ Database error during Discord link:`, error);
-      await interaction.reply(buildDatabaseError("link Discord ID", error));
-    }
-  });
+    },
+  );
 }

@@ -17,7 +17,7 @@ import {
   updateHistoryRating,
   type HistoryEntry,
 } from "@scout-for-lol/review-dev-tool/lib/history-manager";
-import { StarRating } from "@scout-for-lol/review-dev-tool/components/star-rating";
+import { StarRating } from "@scout-for-lol/report-ui/components/star-rating";
 
 const ErrorSchema = z.object({ message: z.string() });
 
@@ -138,8 +138,9 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       // Calculate and track cost
       if (!generatedResult.error) {
         const cost = calculateCost(generatedResult.metadata, config.textGeneration.model, config.imageGeneration.model);
-        costTracker.add(cost);
-        window.dispatchEvent(new Event("cost-update"));
+        void costTracker.add(cost).then(() => {
+          window.dispatchEvent(new Event("cost-update"));
+        });
       }
 
       // Trigger history panel refresh

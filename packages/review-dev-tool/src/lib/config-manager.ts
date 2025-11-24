@@ -81,7 +81,7 @@ export function importGlobalConfigFromBlob(blob: string): GlobalConfig {
     const json = atob(blob);
     const parsed = JSON.parse(json);
     return GlobalConfigSchema.parse(parsed);
-  } catch (_error) {
+  } catch {
     throw new Error("Invalid config blob. Please check the format and try again.");
   }
 }

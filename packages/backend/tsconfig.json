@@ -1,58 +1,14 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
     "module": "ES2022",
-    "lib": [
-      "ES2022"
-    ],
     "moduleResolution": "node",
-    "baseUrl": "../..",
-    "paths": {
-      "@scout-for-lol/backend/*": [
-        "./packages/backend/src/*",
-        "./packages/backend/*"
-      ],
-      "@scout-for-lol/data/*": [
-        "./packages/data/src/*"
-      ],
-      "@scout-for-lol/data": [
-        "./packages/data/src/index.ts"
-      ],
-      "@scout-for-lol/report/*": [
-        "./packages/report/src/*"
-      ],
-      "@scout-for-lol/report": [
-        "./packages/report/src/index.ts"
-      ],
-      "@scout-for-lol/report-ui/*": [
-        "./packages/report-ui/src/*"
-      ]
-    },
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "allowJs": true,
+    "jsx": "react-jsx",
+    "checkJs": true,
     "types": [
       "bun-types",
       "node"
-    ],
-    "jsx": "react-jsx",
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
-    "checkJs": true,
-    "exactOptionalPropertyTypes": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noUncheckedIndexedAccess": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "useUnknownInCatchVariables": true
+    ]
   },
   "include": [
     "src/**/*",

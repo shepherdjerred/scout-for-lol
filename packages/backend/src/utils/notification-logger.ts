@@ -93,7 +93,7 @@ export function logNotification(
     try {
       await ensureLogDir();
       const logLine = formatLogEntry(entry) + "\n";
-      await Bun.write(LOG_FILE, logLine, { append: true });
+      await Bun.write(Bun.file(LOG_FILE), logLine, { append: true });
     } catch (error) {
       console.error("❌ Failed to write notification log:", error);
     }

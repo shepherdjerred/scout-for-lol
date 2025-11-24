@@ -256,14 +256,16 @@ export async function generateMatchReport(
 
         // Add AI-generated image if available
         if (reviewImage) {
-          const aiImageAttachment = new AttachmentBuilder(reviewImage).setName("ai-review.png");
+          // Convert Uint8Array to Buffer for Discord.js
+          const aiImageAttachment = new AttachmentBuilder(Buffer.from(reviewImage)).setName("ai-review.png");
           files.push(aiImageAttachment);
           console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
         }
 
         // Generate completion message
         const playerAliases = playersInMatch.map((p) => p.alias);
-        const completionMessage = formatGameCompletionMessage(playerAliases, completedMatch.queueType);
+        const queueType = completedMatch.queueType ?? "custom";
+        const completionMessage = formatGameCompletionMessage(playerAliases, queueType);
 
         // Combine completion message with review text if available
         let messageContent = completionMessage;

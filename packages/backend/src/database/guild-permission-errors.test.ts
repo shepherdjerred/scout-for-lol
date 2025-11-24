@@ -11,7 +11,7 @@ import { DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/dat
 
 import { testGuildId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
 // Create a test database
-const testDir = `${Bun.env.TMPDIR ?? "/tmp"}/guild-errors-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDir = `${Bun.env['TMPDIR'] ?? "/tmp"}/guild-errors-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 const testDbPath = `${testDir}/test.db`;
 
 // Initialize test database
@@ -23,7 +23,7 @@ Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${sc
     PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
     PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
   },
-  stdio: "pipe",
+  stdio: "pipe" as const,
 });
 
 const prisma = new PrismaClient({

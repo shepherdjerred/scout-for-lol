@@ -3,7 +3,8 @@
  */
 import { useEffect, useState } from "react";
 import type { CostTracker } from "@scout-for-lol/review-dev-tool/lib/costs";
-import { formatCost, type CostBreakdown } from "@scout-for-lol/review-dev-tool/lib/costs";
+import type { CostBreakdown } from "@scout-for-lol/review-dev-tool/config/schema";
+import { formatCost } from "@scout-for-lol/review-dev-tool/lib/costs";
 
 type CostDisplayProps = {
   costTracker: CostTracker;
@@ -27,7 +28,9 @@ export function CostDisplay({ costTracker }: CostDisplayProps) {
       })();
     };
     window.addEventListener("cost-update", handleUpdate);
-    return () => window.removeEventListener("cost-update", handleUpdate);
+    return () => {
+      window.removeEventListener("cost-update", handleUpdate);
+    };
   }, [costTracker]);
 
   if (!total) {
@@ -75,15 +78,17 @@ export function CostDisplay({ costTracker }: CostDisplayProps) {
 
         <div className="flex gap-2 pt-3">
           <button
-            onClick={async () => {
-              const report = await costTracker.export();
-              const blob = new Blob([report], { type: "text/plain" });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `cost-report-${new Date().toISOString()}.txt`;
-              a.click();
-              URL.revokeObjectURL(url);
+            onClick={() => {
+              void (async () => {
+                const report = await costTracker.export();
+                const blob = new Blob([report], { type: "text/plain" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `cost-report-${new Date().toISOString()}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+              })();
             }}
             className="flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
           >
@@ -92,9 +97,10 @@ export function CostDisplay({ costTracker }: CostDisplayProps) {
           <button
             onClick={() => {
               if (confirm("Clear cost history?")) {
-                costTracker.clear();
-                // Force re-render
-                window.dispatchEvent(new Event("cost-update"));
+                void costTracker.clear().then(() => {
+                  // Force re-render
+                  window.dispatchEvent(new Event("cost-update"));
+                });
               }
             }}
             className="flex-1 px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"

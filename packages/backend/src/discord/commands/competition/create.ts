@@ -2,12 +2,7 @@ import { type ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits } f
 import { z } from "zod";
 import {
   ChampionIdSchema,
-  CompetitionQueueTypeSchema,
-  CompetitionVisibilitySchema,
   DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
-  SeasonIdSchema,
   hasSeasonEnded,
   type CompetitionCriteria,
 } from "@scout-for-lol/data";
@@ -30,106 +25,21 @@ import {
   replyWithError,
   replyWithSuccess,
 } from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
+import {
+  CommonArgsSchema,
+  FixedDatesArgsSchema,
+  SeasonArgsSchema,
+  MostGamesPlayedArgsSchema,
+  HighestRankArgsSchema,
+  MostRankClimbArgsSchema,
+  MostWinsPlayerArgsSchema,
+  MostWinsChampionArgsSchema,
+  HighestWinRateArgsSchema,
+} from "@scout-for-lol/backend/discord/commands/competition/schemas.js";
 
 // ============================================================================
 // Input Parsing Schema - Discriminated Unions
 // ============================================================================
-
-/**
- * Common fields for all variants
- */
-const CommonArgsSchema = z.object({
-  title: z.string().min(1).max(100),
-  description: z.string().min(1).max(500),
-  channelId: DiscordChannelIdSchema,
-  guildId: DiscordGuildIdSchema,
-  userId: DiscordAccountIdSchema,
-  visibility: CompetitionVisibilitySchema.optional(),
-  maxParticipants: z.number().int().min(2).max(100).optional(),
-  addAllMembers: z.boolean().optional(),
-});
-
-/**
- * Fixed dates variant with date string validation
- * Supports ISO 8601 formats including timezone information:
- * - YYYY-MM-DD (defaults to midnight local time)
- * - YYYY-MM-DDTHH:mm:ss (local time)
- * - YYYY-MM-DDTHH:mm:ssZ (UTC)
- * - YYYY-MM-DDTHH:mm:ss+HH:mm (with timezone offset)
- */
-const FixedDatesArgsSchema = z
-  .object({
-    dateType: z.literal("FIXED"),
-    startDate: z.string(),
-    endDate: z.string(),
-  })
-  .refine(
-    (data) => {
-      const start = new Date(data.startDate);
-      const end = new Date(data.endDate);
-      return !isNaN(start.getTime()) && !isNaN(end.getTime());
-    },
-    {
-      message: "Invalid date format. Use ISO 8601 format (YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, or with timezone Z/+HH:mm)",
-      path: ["startDate"],
-    },
-  )
-  .refine(
-    (data) => {
-      const start = new Date(data.startDate);
-      const end = new Date(data.endDate);
-      return start < end;
-    },
-    {
-      message: "Start date must be before end date",
-      path: ["startDate"],
-    },
-  );
-
-/**
- * Season variant using predefined season IDs
- */
-const SeasonArgsSchema = z.object({
-  dateType: z.literal("SEASON"),
-  season: SeasonIdSchema,
-});
-
-/**
- * Criteria-specific args (using union of all possible combinations)
- */
-const MostGamesPlayedArgsSchema = z.object({
-  criteriaType: z.literal("MOST_GAMES_PLAYED"),
-  queue: CompetitionQueueTypeSchema,
-});
-
-const HighestRankArgsSchema = z.object({
-  criteriaType: z.literal("HIGHEST_RANK"),
-  queue: z.enum(["SOLO", "FLEX"]),
-});
-
-const MostRankClimbArgsSchema = z.object({
-  criteriaType: z.literal("MOST_RANK_CLIMB"),
-  queue: z.enum(["SOLO", "FLEX"]),
-});
-
-const MostWinsPlayerArgsSchema = z.object({
-  criteriaType: z.literal("MOST_WINS_PLAYER"),
-  queue: CompetitionQueueTypeSchema,
-});
-
-const MostWinsChampionArgsSchema = z.object({
-  criteriaType: z.literal("MOST_WINS_CHAMPION"),
-  // Champion can be provided as string (from autocomplete with ID) or name
-  // We'll convert it to championId during parsing
-  champion: z.string().min(1),
-  queue: CompetitionQueueTypeSchema.optional(),
-});
-
-const HighestWinRateArgsSchema = z.object({
-  criteriaType: z.literal("HIGHEST_WIN_RATE"),
-  queue: CompetitionQueueTypeSchema,
-  minGames: z.number().int().positive().optional(),
-});
 
 /**
  * Union of all possible argument combinations
@@ -429,7 +339,14 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
 
         // Add each player as a participant
         const addResults = await Promise.allSettled(
-          players.map((player) => addParticipant(prisma, competition.id, player.id, "JOINED")),
+          players.map((player) =>
+            addParticipant({
+              prisma,
+              competitionId: competition.id,
+              playerId: player.id,
+              status: "JOINED",
+            }),
+          ),
         );
 
         // Count successful additions
