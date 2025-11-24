@@ -14,7 +14,9 @@ import {
   type ArenaMatch,
   type CompletedMatch,
   type Champion,
+  type Rune,
 } from "@scout-for-lol/data";
+import { getRuneInfo } from "@scout-for-lol/report";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
 import { getCachedDataAsync, setCachedData } from "@scout-for-lol/review-dev-tool/lib/cache";
 import { match } from "ts-pattern";
@@ -206,29 +208,8 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
     // Try to get from cache first (7 days TTL - match data is immutable)
     const cached: unknown = await getCachedDataAsync("r2-get", cacheParams);
 
-    // Note: MatchDto is a very complex external type from twisted library
-    // with many nested objects. For pragmatic reasons, we validate basic structure
-    // and rely on the S3 data format being correct. Using passthrough() allows
-    // additional properties beyond what we validate.
-    const MatchDtoSchema = z
-      .object({
-        metadata: z.object({
-          matchId: z.string(),
-        }),
-        info: z.object({
-          gameEndTimestamp: z.number(),
-          gameDuration: z.number(),
-          queueId: z.number(),
-          participants: z.array(z.unknown()),
-        }),
-      })
-      .passthrough();
-
     const cachedResult = MatchDtoSchema.safeParse(cached);
     if (cachedResult.success) {
-      // Data structure is valid. The passthrough schema validated the required fields
-      // and preserved all other fields. Cast required because MatchDto is complex external type.
-      // TODO: use Zod schema to parse MatchDto
       return cachedResult.data;
     }
 
@@ -261,14 +242,12 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
     const bodyString = await response.Body.transformToString();
     const rawData: unknown = JSON.parse(bodyString);
 
-    // Validate basic structure before using
+    // Validate using proper MatchDto schema
     const rawDataResult = MatchDtoSchema.parse(rawData);
 
     // Cache the result for 7 days (match data is immutable)
     await setCachedData("r2-get", cacheParams, rawDataResult, 7 * 24 * 60 * 60 * 1000);
 
-    // Return as MatchDto since validation passed. Cast required because MatchDto is complex external type.
-    // TODO: use Zod schema to parse MatchDto
     return rawDataResult;
   } catch (error) {
     console.error(`Failed to fetch match ${key}:`, error);
@@ -331,6 +310,39 @@ export function convertMatchDtoToInternalFormat(
     }
   }
 
+  // Helper to extract rune details from participant perks
+  const extractRunes = (p: ParticipantDto): Rune[] => {
+    const runes: Rune[] = [];
+
+    // Extract primary rune selections
+    const primaryStyle = p.perks.styles[0];
+    if (primaryStyle) {
+      for (const selection of primaryStyle.selections) {
+        const info = getRuneInfo(selection.perk);
+        runes.push({
+          id: selection.perk,
+          name: info?.name ?? `Rune ${selection.perk}`,
+          description: info?.longDesc ?? info?.shortDesc ?? "",
+        });
+      }
+    }
+
+    // Extract secondary rune selections
+    const subStyle = p.perks.styles[1];
+    if (subStyle) {
+      for (const selection of subStyle.selections) {
+        const info = getRuneInfo(selection.perk);
+        runes.push({
+          id: selection.perk,
+          name: info?.name ?? `Rune ${selection.perk}`,
+          description: info?.longDesc ?? info?.shortDesc ?? "",
+        });
+      }
+    }
+
+    return runes;
+  };
+
   // Helper function to convert participant to champion (like backend does)
   const participantToChampion = (p: ParticipantDto): Champion => {
     const riotIdGameName = p.riotIdGameName && p.riotIdTagline ? p.riotIdGameName : "Unknown";
@@ -346,7 +358,7 @@ export function convertMatchDtoToInternalFormat(
       lane: parseLane(p.teamPosition),
       spells: [p.summoner1Id, p.summoner2Id],
       gold: p.goldEarned,
-      runes: [],
+      runes: extractRunes(p),
       creepScore: p.totalMinionsKilled + p.neutralMinionsKilled,
       visionScore: p.visionScore,
       damage: p.totalDamageDealtToChampions,

@@ -457,9 +457,9 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
           selectedGen.progress &&
           (() => {
             // Calculate progress percentage based on elapsed time
-            // Text generation: ~60s, Image generation: ~20s
+            // Text generation: ~30s, Image generation: ~20s
             // Cap at 90% until complete, then jump to 100%
-            const expectedDuration = selectedGen.progress.step === "text" ? 60000 : 20000;
+            const expectedDuration = selectedGen.progress.step === "text" ? 30000 : 20000;
             const progressPercent =
               selectedGen.progress.step === "complete"
                 ? 100
@@ -701,6 +701,68 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
                       </div>
                     </details>
                   )}
+                </div>
+              </div>
+            )}
+
+            {result.metadata.openaiRequestParams && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  OpenAI Request Parameters
+                </h3>
+                <details className="group">
+                  <summary className="cursor-pointer text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 list-none">
+                    <span className="inline-flex items-center gap-1">
+                      <svg
+                        className="w-4 h-4 transition-transform group-open:rotate-90"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                      Full Request Object (JSON)
+                    </span>
+                  </summary>
+                  <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 font-mono text-xs text-gray-900 dark:text-gray-100 whitespace-pre-wrap max-h-96 overflow-y-auto">
+                    {JSON.stringify(result.metadata.openaiRequestParams, null, 2)}
+                  </div>
+                </details>
+              </div>
+            )}
+
+            {result.metadata.geminiPrompt && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  Prompt Sent to Gemini
+                </h3>
+                <div className="space-y-3">
+                  {result.metadata.geminiModel && (
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      <span className="font-medium">Model:</span>{" "}
+                      <span className="font-mono text-gray-900 dark:text-gray-100">
+                        {result.metadata.geminiModel}
+                      </span>
+                    </div>
+                  )}
+                  <details className="group">
+                    <summary className="cursor-pointer text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 list-none">
+                      <span className="inline-flex items-center gap-1">
+                        <svg
+                          className="w-4 h-4 transition-transform group-open:rotate-90"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        Image Generation Prompt ({result.metadata.geminiPrompt.length} chars)
+                      </span>
+                    </summary>
+                    <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 font-mono text-xs text-gray-900 dark:text-gray-100 whitespace-pre-wrap max-h-96 overflow-y-auto">
+                      {result.metadata.geminiPrompt}
+                    </div>
+                  </details>
                 </div>
               </div>
             )}

@@ -100,15 +100,15 @@ export function ArtStyleEditor({ mode, style, theme, onSave, onCancel }: ArtStyl
             <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
               {mode === "style" ? (
                 <>
-                  <li>• "Bold comic book inking with dynamic action poses and dramatic shadows"</li>
-                  <li>• "Synthwave aesthetic with pink and purple gradients, retro-futuristic vibes"</li>
-                  <li>• "Watercolor painting with artistic flair, flowing brushwork, and soft gradients"</li>
+                  <li>• &quot;Bold comic book inking with dynamic action poses and dramatic shadows&quot;</li>
+                  <li>• &quot;Synthwave aesthetic with pink and purple gradients, retro-futuristic vibes&quot;</li>
+                  <li>• &quot;Watercolor painting with artistic flair, flowing brushwork, and soft gradients&quot;</li>
                 </>
               ) : (
                 <>
-                  <li>• "Avatar: The Last Airbender with fluid elemental bending and team Avatar"</li>
-                  <li>• "Studio Ghibli themes with nature and emotional journeys"</li>
-                  <li>• "Cyberpunk dystopia with neon-soaked futuristic elements and urban grit"</li>
+                  <li>• &quot;Avatar: The Last Airbender with fluid elemental bending and team Avatar&quot;</li>
+                  <li>• &quot;Studio Ghibli themes with nature and emotional journeys&quot;</li>
+                  <li>• &quot;Cyberpunk dystopia with neon-soaked futuristic elements and urban grit&quot;</li>
                 </>
               )}
             </ul>

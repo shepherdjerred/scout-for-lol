@@ -393,7 +393,7 @@ export function AIReviewAnalytics(): React.ReactNode {
                       fontStyle: "italic",
                     }}
                   >
-                    "{image.notes}"
+                    &quot;{image.notes}&quot;
                   </div>
                 )}
               </div>

@@ -6,10 +6,12 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import {
   generateReviewText,
   generateReviewImage,
+  curateMatchData,
   type ArenaMatch,
   type CompletedMatch,
   type CuratedMatchData,
   type ReviewImageMetadata,
+  type MatchDto,
 } from "@scout-for-lol/data";
 import type {
   ReviewConfig,
@@ -40,22 +42,17 @@ export async function generateMatchReview(
   match: CompletedMatch | ArenaMatch,
   config: ReviewConfig,
   onProgress?: (progress: GenerationProgress) => void,
-  rawMatchData?: unknown,
+  rawMatchData?: MatchDto,
 ): Promise<GenerationResult> {
   try {
     // Curate match data if provided (like backend does)
     let curatedData: CuratedMatchData | undefined;
     if (rawMatchData) {
-      // Validate and curate if it's a MatchDto
-      // For now, skip validation - just pass undefined
-      // TODO: Add MatchDto validation if needed
-      // TODO, WTF?
-      // 1. rawMatchData should _not_ be optional
-      // 2. we are never setting curated data
+      curatedData = await curateMatchData(rawMatchData);
     }
 
     // Generate text review
-    onProgress?.({ step: "text", message: "Generating review text... (this takes ~60s)" });
+    onProgress?.({ step: "text", message: "Generating review text..." });
 
     // Get personality from config
     let personality: Personality;
@@ -104,7 +101,7 @@ export async function generateMatchReview(
     let imageResult: { imageData: string; metadata: ReviewImageMetadata } | undefined;
     if (config.imageGeneration.enabled) {
       try {
-        onProgress?.({ step: "image", message: "Generating image... (this takes ~20s)" });
+        onProgress?.({ step: "image", message: "Generating image..." });
 
         // Select art style and theme
         let artStyle: string;
@@ -175,6 +172,9 @@ export async function generateMatchReview(
       selectedSecondArtTheme: imageResult?.metadata.selectedSecondArtTheme,
       systemPrompt: textResult.metadata.systemPrompt,
       userPrompt: textResult.metadata.userPrompt,
+      openaiRequestParams: textResult.metadata.openaiRequestParams,
+      geminiPrompt: imageResult?.metadata.geminiPrompt,
+      geminiModel: imageResult?.metadata.geminiModel,
     };
 
     return {

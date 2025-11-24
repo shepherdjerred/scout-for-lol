@@ -312,28 +312,29 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
 
   try {
     // Parse dates - schema already validated format and presence
-    let dates: CreateCompetitionInput["dates"];
-    if (args.dateType === "FIXED") {
-      if (!args.startDate || !args.endDate) {
-        throw new Error("startDate/endDate required for FIXED (validation error)");
-      }
-      dates = {
-        type: "FIXED_DATES" as const,
-        startDate: new Date(args.startDate),
-        endDate: new Date(args.endDate),
-      };
-      // TODO: use ts-pattern for exhaustive match
-    } else {
-      // Validate season hasn't ended yet
-      if (hasSeasonEnded(args.season)) {
-        throw new Error(`Cannot create competition for season ${args.season} - this season has already ended`);
-      }
+    const dates: CreateCompetitionInput["dates"] = match(args.dateType)
+      .with("FIXED", () => {
+        if (!args.startDate || !args.endDate) {
+          throw new Error("startDate/endDate required for FIXED (validation error)");
+        }
+        return {
+          type: "FIXED_DATES" as const,
+          startDate: new Date(args.startDate),
+          endDate: new Date(args.endDate),
+        };
+      })
+      .with("SEASON", () => {
+        // Validate season hasn't ended yet
+        if (hasSeasonEnded(args.season)) {
+          throw new Error(`Cannot create competition for season ${args.season} - this season has already ended`);
+        }
 
-      dates = {
-        type: "SEASON" as const,
-        seasonId: args.season,
-      };
-    }
+        return {
+          type: "SEASON" as const,
+          seasonId: args.season,
+        };
+      })
+      .exhaustive();
 
     // args is already validated and has branded types from CommonArgsSchema
     competitionInput = {

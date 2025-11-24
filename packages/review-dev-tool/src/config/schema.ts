@@ -161,6 +161,9 @@ export const GenerationMetadataSchema = z.object({
   selectedSecondArtTheme: z.string().optional(),
   systemPrompt: z.string().optional(),
   userPrompt: z.string().optional(),
+  openaiRequestParams: z.unknown().optional(),
+  geminiPrompt: z.string().optional(),
+  geminiModel: z.string().optional(),
 });
 
 export type GenerationMetadata = z.infer<typeof GenerationMetadataSchema>;

@@ -1,4 +1,4 @@
-import type { MatchDto as _MatchDto, ParticipantDto as _ParticipantDto } from "@scout-for-lol/data";
+import type { MatchDto as MatchDto, ParticipantDto as ParticipantDto } from "@scout-for-lol/data";
 import { getItemInfo, summoner, getRuneInfo, getRuneTreeName, getChampionInfo } from "@scout-for-lol/report";
 import { first, keys, pickBy } from "remeda";
 import type { CuratedParticipant, CuratedMatchData } from "@scout-for-lol/data/review/curator-types.js";

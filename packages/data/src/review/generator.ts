@@ -61,6 +61,7 @@ export type ReviewTextMetadata = {
   playerName: string;
   systemPrompt: string;
   userPrompt: string;
+  openaiRequestParams?: OpenAI.Chat.ChatCompletionCreateParams | undefined;
 };
 
 /**
@@ -71,6 +72,8 @@ export type ReviewImageMetadata = {
   selectedArtStyle: string;
   selectedArtTheme: string;
   selectedSecondArtTheme?: string | undefined;
+  geminiPrompt?: string | undefined;
+  geminiModel?: string | undefined;
 };
 
 /**
@@ -298,6 +301,7 @@ export async function generateReviewText(params: {
       playerName,
       systemPrompt,
       userPrompt,
+      openaiRequestParams: completionParams,
     },
   };
 }
@@ -369,6 +373,8 @@ export async function generateReviewImage(params: {
       selectedArtStyle: artStyle,
       selectedArtTheme: artTheme,
       selectedSecondArtTheme: secondArtTheme,
+      geminiPrompt: prompt,
+      geminiModel: model,
     },
   };
 }

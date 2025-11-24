@@ -159,14 +159,17 @@ describe("createSnapshot - START snapshot", () => {
         expect(snapshotData).toBeDefined();
       }
     } catch (error) {
-      // TODO: the tests should not pass in this case...
-      // calling the API is a bit weird but makes a little sense
-      // would be better if we could cache the response locally
-      // If Riot API is unavailable, test passes with warning
-      // Error can be either a fetch error or a validation error (when API returns invalid data)
-      console.warn("Riot API unavailable, snapshot creation failed as expected:", String(error));
+      // Test should fail if API calls fail - this ensures we're testing real functionality
+      // If Riot API is unavailable, skip this test with a clear error message
       const errorStr = String(error);
-      expect(errorStr.includes("Failed to fetch") || errorStr.includes("Invalid input")).toBe(true);
+      if (errorStr.includes("Failed to fetch") || errorStr.includes("Invalid input")) {
+        throw new Error(
+          `Riot API unavailable or returned invalid data. This integration test requires API access. ` +
+          `Original error: ${errorStr}`
+        );
+      }
+      // Re-throw any other errors
+      throw error;
     }
   });
 

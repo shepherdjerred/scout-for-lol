@@ -291,7 +291,26 @@ describe("Competition View - ACTIVE Status", () => {
     const status = getCompetitionStatus(competition);
     expect(status).toBe("ACTIVE");
 
-    // TODO: When Task 19 is implemented, test leaderboard calculation here
+    // Test leaderboard calculation
+    const { calculateLeaderboard } = await import("@scout-for-lol/backend/league/competition/leaderboard");
+    const leaderboard = await calculateLeaderboard(prisma, competition);
+
+    // Should have entries for both participants
+    expect(leaderboard).toHaveLength(2);
+
+    // Verify leaderboard structure
+    for (const entry of leaderboard) {
+      expect(entry).toHaveProperty("playerId");
+      expect(entry).toHaveProperty("playerName");
+      expect(entry).toHaveProperty("score");
+      expect(entry).toHaveProperty("rank");
+      expect(typeof entry.rank).toBe("number");
+      expect(entry.rank).toBeGreaterThan(0);
+    }
+
+    // Verify ranks are assigned correctly (should be 1 or 2)
+    const ranks = leaderboard.map((e) => e.rank);
+    expect(ranks).toContain(1);
   });
 });
 
@@ -372,7 +391,27 @@ describe("Competition View - ENDED Status", () => {
     });
     expect(participants).toHaveLength(2);
 
-    // TODO: When Task 19 is implemented, test final leaderboard here
+    // Test final leaderboard for ended competition
+    const { calculateLeaderboard } = await import("@scout-for-lol/backend/league/competition/leaderboard");
+    const leaderboard = await calculateLeaderboard(prisma, competition);
+
+    // Should have entries for both participants
+    expect(leaderboard).toHaveLength(2);
+
+    // Verify final standings structure
+    for (const entry of leaderboard) {
+      expect(entry).toHaveProperty("playerId");
+      expect(entry).toHaveProperty("playerName");
+      expect(entry).toHaveProperty("score");
+      expect(entry).toHaveProperty("rank");
+      expect(typeof entry.rank).toBe("number");
+      expect(entry.rank).toBeGreaterThan(0);
+    }
+
+    // Verify final rankings are assigned (1st and 2nd place)
+    const ranks = leaderboard.map((e) => e.rank);
+    expect(ranks).toContain(1);
+    expect(Math.max(...ranks)).toBeLessThanOrEqual(2);
   });
 });
 

@@ -6,13 +6,11 @@
 
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example.js";
-import type { ArenaMatch, CompletedMatch, PlayerConfigEntry } from "@scout-for-lol/data";
-import { MatchIdSchema, LeaguePuuidSchema, parseQueueType } from "@scout-for-lol/data";
+import type { ArenaMatch, CompletedMatch, PlayerConfigEntry, MatchDto } from "@scout-for-lol/data";
+import { MatchIdSchema, LeaguePuuidSchema, parseQueueType, MatchDtoSchema } from "@scout-for-lol/data";
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
-import { type MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import configuration from "@scout-for-lol/backend/configuration.js";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
-import { MatchDtoSchema, type MatchDto } from "@scout-for-lol/backend/league/model/match-dto.schema.js";
 
 const MATCH_TYPES = ["ranked", "unranked", "aram", "arena"] as const;
 type MatchType = (typeof MATCH_TYPES)[number];
@@ -338,9 +336,7 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
 
     if (isMatchingType) {
       console.log(`📦 Using match from S3: ${key}`);
-      // Cast to twisted library type - Zod schema ensures structural compatibility at runtime
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return await convertMatchDtoToInternalFormat(matchDto as any);
+      return await convertMatchDtoToInternalFormat(matchDto);
     }
   }
 

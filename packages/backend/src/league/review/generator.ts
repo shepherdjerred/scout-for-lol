@@ -7,7 +7,9 @@ import {
   selectRandomStyleAndTheme,
   curateMatchData,
   type CuratedMatchData,
- MatchDto, ParticipantDto } from "@scout-for-lol/data";
+  MatchDto,
+  ParticipantDto,
+} from "@scout-for-lol/data";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
@@ -156,15 +158,15 @@ async function generateAIReview(
 
   try {
     // Get personality and base prompt template
-    const personality = selectRandomPersonality();
-    const basePromptTemplate = loadPromptFile("base.txt");
+    const personality = await selectRandomPersonality();
+    const basePromptTemplate = await loadPromptFile("base.txt");
 
     console.log(`[generateAIReview] Selected personality: ${personality.filename}`);
 
     // Get lane context
     const player = match.players[0];
     const lane = match.queueType === "arena" ? undefined : player && "lane" in player ? player.lane : undefined;
-    const laneContextInfo = getLaneContext(lane);
+    const laneContextInfo = await getLaneContext(lane);
     console.log(`[generateAIReview] Selected lane context: ${laneContextInfo.filename}`);
 
     // Get player metadata
@@ -173,7 +175,7 @@ async function generateAIReview(
       console.log("[generateAIReview] No player name found");
       return undefined;
     }
-    const playerMeta = loadPlayerMetadata(playerName);
+    const playerMeta = await loadPlayerMetadata(playerName);
 
     console.log("[generateAIReview] Calling OpenAI API...");
 

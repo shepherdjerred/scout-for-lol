@@ -1,7 +1,7 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import configuration from "@scout-for-lol/backend/configuration.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import type { MatchId, MatchDto as _MatchDto } from "@scout-for-lol/data";
+import type { MatchId, MatchDto } from "@scout-for-lol/data";
 import { MatchIdSchema } from "@scout-for-lol/data";
 
 /**

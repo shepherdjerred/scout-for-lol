@@ -202,7 +202,7 @@ export function SettingsPanel({
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="us-east-1 or auto for R2"
                   />
-                  <p className="mt-1 text-xs text-gray-500">For R2, use "auto" or "us-east-1"</p>
+                  <p className="mt-1 text-xs text-gray-500">For R2, use &quot;auto&quot; or &quot;us-east-1&quot;</p>
                 </div>
               </div>
             </div>

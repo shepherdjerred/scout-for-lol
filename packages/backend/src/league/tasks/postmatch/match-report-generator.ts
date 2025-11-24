@@ -162,115 +162,114 @@ export async function generateMatchReport(
     // Get full player data with ranks
     const players = await Promise.all(playersInMatch.map((playerConfig) => getPlayer(playerConfig)));
 
-    // Check if it's an arena match
-    const isArena = matchData.info.queueId === 1700;
+    // Process match based on queue type
+    return await match(matchData.info.queueId)
+      .with(1700, async () => {
+        console.log(`[generateMatchReport] 🎯 Processing as arena match`);
+        const arenaMatch = await toArenaMatch(players, matchData);
 
-    if (isArena) {
-      console.log(`[generateMatchReport] 🎯 Processing as arena match`);
-      const arenaMatch = await toArenaMatch(players, matchData);
+        // Create Discord message for arena
+        const [attachment, embed] = await createMatchImage(arenaMatch, matchId);
 
-      // Create Discord message for arena
-      const [attachment, embed] = await createMatchImage(arenaMatch, matchId);
+        // Generate completion message
+        const playerAliases = playersInMatch.map((p) => p.alias);
+        const completionMessage = formatGameCompletionMessage(playerAliases, arenaMatch.queueType);
 
-      // Generate completion message
-      const playerAliases = playersInMatch.map((p) => p.alias);
-      const completionMessage = formatGameCompletionMessage(playerAliases, arenaMatch.queueType);
-
-      return {
-        content: completionMessage,
-        files: [attachment],
-        embeds: [embed],
-      };
-      // TODO: use ts-pattern for exhaustive match
-    } else {
-      console.log(`[generateMatchReport] ⚔️  Processing as standard match`);
-      // Process match for all tracked players
-      if (players.length === 0) {
-        throw new Error("No player data available");
-      }
-      const completedMatch = toMatch(players, matchData, undefined, undefined);
-
-      // Generate AI review (text and optional image) - only for ranked queues (solo/flex/clash)
-      const isRankedQueue =
-        completedMatch.queueType === "solo" ||
-        completedMatch.queueType === "flex" ||
-        completedMatch.queueType === "clash" ||
-        completedMatch.queueType === "aram clash";
-      let reviewText: string | undefined;
-      let reviewImage: Uint8Array | undefined;
-      if (isRankedQueue) {
-        try {
-          const review = await generateMatchReview(completedMatch, matchId, matchData);
-          if (review) {
-            reviewText = review.text;
-            reviewImage = review.image;
-
-            // Append debug metadata if available
-            if (review.metadata) {
-              const { reviewerName, playerName, style, themes } = review.metadata;
-              const debugInfo = [
-                "\n\n━━━━━━━━━━━━━━━━━━━━━━",
-                "📊 **Review Metadata**",
-                `👤 **Reviewer:** ${reviewerName}`,
-                `🎮 **Player:** ${playerName}`,
-              ];
-
-              if (style) {
-                debugInfo.push(`🎨 **Style:** ${style}`);
-              }
-
-              if (themes && themes.length > 0) {
-                if (themes.length === 1) {
-                  const theme = themes[0];
-                  if (theme) {
-                    debugInfo.push(`🎭 **Theme:** ${theme}`);
-                  }
-                } else {
-                  debugInfo.push(`🎭 **Themes:** ${themes.join(" × ")}`);
-                }
-              }
-
-              reviewText = reviewText + "\n" + debugInfo.join("\n");
-            }
-          }
-        } catch (error) {
-          console.error(`[generateMatchReport] Error generating AI review:`, error);
+        return {
+          content: completionMessage,
+          files: [attachment],
+          embeds: [embed],
+        };
+      })
+      .otherwise(async () => {
+        console.log(`[generateMatchReport] ⚔️  Processing as standard match`);
+        // Process match for all tracked players
+        if (players.length === 0) {
+          throw new Error("No player data available");
         }
-      } else {
-        console.log(
-          `[generateMatchReport] Skipping AI review - not a ranked solo/flex queue match (queueType: ${completedMatch.queueType ?? "unknown"})`,
-        );
-      }
+        const completedMatch = toMatch(players, matchData, undefined, undefined);
 
-      // Create Discord message
-      const [matchReportAttachment, matchReportEmbed] = await createMatchImage(completedMatch, matchId);
+        // Generate AI review (text and optional image) - only for ranked queues (solo/flex/clash)
+        const isRankedQueue =
+          completedMatch.queueType === "solo" ||
+          completedMatch.queueType === "flex" ||
+          completedMatch.queueType === "clash" ||
+          completedMatch.queueType === "aram clash";
+        let reviewText: string | undefined;
+        let reviewImage: Uint8Array | undefined;
+        if (isRankedQueue) {
+          try {
+            const review = await generateMatchReview(completedMatch, matchId, matchData);
+            if (review) {
+              reviewText = review.text;
+              reviewImage = review.image;
 
-      // Build files array - start with match report image
-      const files = [matchReportAttachment];
+              // Append debug metadata if available
+              if (review.metadata) {
+                const { reviewerName, playerName, style, themes } = review.metadata;
+                const debugInfo = [
+                  "\n\n━━━━━━━━━━━━━━━━━━━━━━",
+                  "📊 **Review Metadata**",
+                  `👤 **Reviewer:** ${reviewerName}`,
+                  `🎮 **Player:** ${playerName}`,
+                ];
 
-      // Add AI-generated image if available
-      if (reviewImage) {
-        const aiImageAttachment = new AttachmentBuilder(reviewImage).setName("ai-review.png");
-        files.push(aiImageAttachment);
-        console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
-      }
+                if (style) {
+                  debugInfo.push(`🎨 **Style:** ${style}`);
+                }
 
-      // Generate completion message
-      const playerAliases = playersInMatch.map((p) => p.alias);
-      const completionMessage = formatGameCompletionMessage(playerAliases, completedMatch.queueType);
+                if (themes && themes.length > 0) {
+                  if (themes.length === 1) {
+                    const theme = themes[0];
+                    if (theme) {
+                      debugInfo.push(`🎭 **Theme:** ${theme}`);
+                    }
+                  } else {
+                    debugInfo.push(`🎭 **Themes:** ${themes.join(" × ")}`);
+                  }
+                }
 
-      // Combine completion message with review text if available
-      let messageContent = completionMessage;
-      if (reviewText && !reviewImage) {
-        messageContent = `${completionMessage}\n\n${reviewText}`;
-      }
+                reviewText = reviewText + "\n" + debugInfo.join("\n");
+              }
+            }
+          } catch (error) {
+            console.error(`[generateMatchReport] Error generating AI review:`, error);
+          }
+        } else {
+          console.log(
+            `[generateMatchReport] Skipping AI review - not a ranked solo/flex queue match (queueType: ${completedMatch.queueType ?? "unknown"})`,
+          );
+        }
 
-      return {
-        files: files,
-        embeds: [matchReportEmbed],
-        content: messageContent,
-      };
-    }
+        // Create Discord message
+        const [matchReportAttachment, matchReportEmbed] = await createMatchImage(completedMatch, matchId);
+
+        // Build files array - start with match report image
+        const files = [matchReportAttachment];
+
+        // Add AI-generated image if available
+        if (reviewImage) {
+          const aiImageAttachment = new AttachmentBuilder(reviewImage).setName("ai-review.png");
+          files.push(aiImageAttachment);
+          console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
+        }
+
+        // Generate completion message
+        const playerAliases = playersInMatch.map((p) => p.alias);
+        const completionMessage = formatGameCompletionMessage(playerAliases, completedMatch.queueType);
+
+        // Combine completion message with review text if available
+        let messageContent = completionMessage;
+        if (reviewText && !reviewImage) {
+          messageContent = `${completionMessage}\n\n${reviewText}`;
+        }
+
+        return {
+          files: files,
+          embeds: [matchReportEmbed],
+          content: messageContent,
+        };
+      });
   } catch (error) {
     console.error(`[generateMatchReport] ❌ Error generating match report for ${matchId}:`, error);
     throw error;

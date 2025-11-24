@@ -62,12 +62,7 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: [
-            "eslint.config.ts",
-            "eslint-rules/*.ts",
-            ".dagger/src/*.ts",
-            "packages/*/scripts/*.ts",
-          ],
+          allowDefaultProject: ["eslint.config.ts", "eslint-rules/*.ts", ".dagger/src/*.ts", "packages/*/scripts/*.ts"],
         },
         tsconfigRootDir: import.meta.dirname,
         extraFileExtensions: [".astro"],

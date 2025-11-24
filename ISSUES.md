@@ -10,7 +10,6 @@
 - Remove unhelpful tests
   - I think we have a file analyzing what tests are helpful and which are not
 - Skipped tests
-- resolve TODO comments
 
 ## Done
 
@@ -18,3 +17,4 @@
 - [x] Use branded types over string/number
 - [x] Remove stuff due to spectator API being deprecated
 - [x] Fix competition notifications firing at random times and on bot startup
+- [x] resolve TODO comments

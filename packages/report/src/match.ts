@@ -1,16 +1,42 @@
-import type { MatchDto, ParticipantDto ,
-  type CompletedMatch,
-  getLaneOpponent,
-  invertTeam,
-  parseQueueType,
-  parseTeam,
-  type Player,
-  type Rank,
-  parseLane,
-} from "@scout-for-lol/data";
+import type { MatchDto, ParticipantDto, CompletedMatch, Player, Rank, Rune } from "@scout-for-lol/data";
+import { getLaneOpponent, invertTeam, parseQueueType, parseTeam, parseLane } from "@scout-for-lol/data";
+import { getRuneInfo } from "@scout-for-lol/report/dataDragon/runes.js";
 import { filter, first, map, pipe } from "remeda";
 import { strict as assert } from "assert";
 import { match } from "ts-pattern";
+
+// Helper to extract rune details from participant perks
+function extractRunes(participant: ParticipantDto): Rune[] {
+  const runes: Rune[] = [];
+
+  // Extract primary rune selections
+  const primaryStyle = participant.perks.styles[0];
+  if (primaryStyle) {
+    for (const selection of primaryStyle.selections) {
+      const info = getRuneInfo(selection.perk);
+      runes.push({
+        id: selection.perk,
+        name: info?.name ?? `Rune ${selection.perk.toString()}`,
+        description: info?.longDesc ?? info?.shortDesc ?? "",
+      });
+    }
+  }
+
+  // Extract secondary rune selections
+  const subStyle = participant.perks.styles[1];
+  if (subStyle) {
+    for (const selection of subStyle.selections) {
+      const info = getRuneInfo(selection.perk);
+      runes.push({
+        id: selection.perk,
+        name: info?.name ?? `Rune ${selection.perk.toString()}`,
+        description: info?.longDesc ?? info?.shortDesc ?? "",
+      });
+    }
+  }
+
+  return runes;
+}
 
 // Champion conversion function - adapted to match the expected Champion type
 function participantToChampion(participant: ParticipantDto) {
@@ -32,7 +58,7 @@ function participantToChampion(participant: ParticipantDto) {
     ].filter((item) => item !== 0),
     spells: [participant.summoner1Id, participant.summoner2Id],
     gold: participant.goldEarned,
-    runes: [], // TODO: Extract runes from participant.perks if needed
+    runes: extractRunes(participant),
     creepScore: participant.totalMinionsKilled + participant.neutralMinionsKilled,
     visionScore: participant.visionScore,
     damage: participant.totalDamageDealtToChampions,
@@ -40,7 +66,7 @@ function participantToChampion(participant: ParticipantDto) {
   };
 }
 
-function getTeams(participants: MatchV5DTOs.ParticipantDto[]) {
+function getTeams(participants: ParticipantDto[]) {
   return {
     blue: pipe(participants.slice(0, 5), map(participantToChampion)),
     red: pipe(participants.slice(5, 10), map(participantToChampion)),
@@ -95,7 +121,7 @@ export function toMatch(
   };
 }
 
-export function getOutcome(participant: MatchV5DTOs.ParticipantDto) {
+export function getOutcome(participant: ParticipantDto) {
   return match(participant)
     .returnType<"Victory" | "Surrender" | "Defeat">()
     .with({ win: true }, () => "Victory")
@@ -104,10 +130,7 @@ export function getOutcome(participant: MatchV5DTOs.ParticipantDto) {
     .exhaustive();
 }
 
-function findParticipant(
-  puuid: string,
-  participants: MatchV5DTOs.ParticipantDto[],
-): MatchV5DTOs.ParticipantDto | undefined {
+function findParticipant(puuid: string, participants: ParticipantDto[]): ParticipantDto | undefined {
   return pipe(
     participants,
     filter((participant) => participant.puuid === puuid),

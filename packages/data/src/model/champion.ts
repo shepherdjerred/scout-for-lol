@@ -1,6 +1,14 @@
 import { z } from "zod";
 import { LaneSchema } from "@scout-for-lol/data/model/lane.js";
 
+export const RuneSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  description: z.string(),
+});
+
+export type Rune = z.infer<typeof RuneSchema>;
+
 export type Champion = z.infer<typeof ChampionSchema>;
 export const ChampionSchema = z.object({
   riotIdGameName: z.string().min(0),
@@ -14,7 +22,7 @@ export const ChampionSchema = z.object({
   lane: LaneSchema.optional(),
   spells: z.array(z.number()),
   gold: z.number().nonnegative(),
-  runes: z.array(z.strictObject({})),
+  runes: z.array(RuneSchema),
   creepScore: z.number().nonnegative(),
   visionScore: z.number().nonnegative(),
   damage: z.number().nonnegative(),

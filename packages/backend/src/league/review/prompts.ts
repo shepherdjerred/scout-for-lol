@@ -1,3 +1,4 @@
+import { join } from "path";
 import {
   PersonalityMetadataSchema,
   PlayerMetadataSchema,
@@ -7,33 +8,33 @@ import {
   type PlayerMetadata,
 } from "@scout-for-lol/data";
 
-const FILENAME = import.meta.path;
-const _DIRNAME = dirname(FILENAME);
-const PROMPTS_DIR = `DIRNAME/prompts`;
+const PROMPTS_DIR = `${import.meta.dir}/prompts`;
 
 /**
  * Load a prompt file from the prompts directory
  */
-export function loadPromptFile(filename: string): string {
+export async function loadPromptFile(filename: string): Promise<string> {
   const filePath = join(PROMPTS_DIR, filename);
-  return await Bun.file(filePath, "utf-8").text().trim();
+  const text = await Bun.file(filePath).text();
+  return text.trim();
 }
 
 /**
  * Load a personality (both JSON metadata and TXT instructions)
  */
-function loadPersonality(basename: string): Personality {
-  const personalitiesDir = `PROMPTS_DIR/personalities`;
+async function loadPersonality(basename: string): Promise<Personality> {
+  const personalitiesDir = `${PROMPTS_DIR}/personalities`;
 
   // Load JSON metadata
   const jsonPath = join(personalitiesDir, `${basename}.json`);
-  const jsonContent = await Bun.file(jsonPath, "utf-8").text();
+  const jsonContent = await Bun.file(jsonPath).text();
   const parsed: unknown = JSON.parse(jsonContent);
   const metadata = PersonalityMetadataSchema.parse(parsed);
 
   // Load TXT instructions
   const txtPath = join(personalitiesDir, `${basename}.txt`);
-  const instructions = await Bun.file(txtPath, "utf-8").text().trim();
+  const instructionsText = await Bun.file(txtPath).text();
+  const instructions = instructionsText.trim();
 
   return {
     metadata,
@@ -45,17 +46,25 @@ function loadPersonality(basename: string): Personality {
 /**
  * Get list of personality files from the filesystem
  */
-function getPersonalityFiles(): string[] {
-  const personalitiesDir = `PROMPTS_DIR/personalities`;
-  const files = readdirSync(personalitiesDir);
-  return files.filter((file) => file.endsWith(".json") && !EXCLUDED_PERSONALITY_FILES.has(file));
+async function getPersonalityFiles(): Promise<string[]> {
+  const personalitiesDir = `${PROMPTS_DIR}/personalities`;
+  const glob = new Bun.Glob("*.json");
+  const files: string[] = [];
+
+  for await (const file of glob.scan({ cwd: personalitiesDir })) {
+    if (!EXCLUDED_PERSONALITY_FILES.has(file)) {
+      files.push(file);
+    }
+  }
+
+  return files;
 }
 
 /**
  * Select a random personality prompt
  */
-export function selectRandomPersonality(): Personality {
-  const personalityFiles = getPersonalityFiles();
+export async function selectRandomPersonality(): Promise<Personality> {
+  const personalityFiles = await getPersonalityFiles();
   if (personalityFiles.length === 0) {
     throw new Error("No personality files found");
   }
@@ -72,21 +81,21 @@ export function selectRandomPersonality(): Personality {
 /**
  * Load player metadata from JSON file
  */
-export function loadPlayerMetadata(playerAlias: string): PlayerMetadata {
-  const playersDir = `PROMPTS_DIR/players`;
+export async function loadPlayerMetadata(playerAlias: string): Promise<PlayerMetadata> {
+  const playersDir = `${PROMPTS_DIR}/players`;
 
   // Try to load player-specific file, fall back to generic
   const playerFile = `${playerAlias.toLowerCase().replace(/\s+/g, "-")}.json`;
   const filePath = join(playersDir, playerFile);
 
   try {
-    const jsonContent = await Bun.file(filePath, "utf-8").text();
+    const jsonContent = await Bun.file(filePath).text();
     const parsed: unknown = JSON.parse(jsonContent);
     return PlayerMetadataSchema.parse(parsed);
   } catch {
     // Fall back to generic player metadata
-    const genericPath = `playersDir/generic.json`;
-    const genericContent = await Bun.file(genericPath, "utf-8").text();
+    const genericPath = `${playersDir}/generic.json`;
+    const genericContent = await Bun.file(genericPath).text();
     const parsed: unknown = JSON.parse(genericContent);
     return PlayerMetadataSchema.parse(parsed);
   }
@@ -95,7 +104,7 @@ export function loadPlayerMetadata(playerAlias: string): PlayerMetadata {
 /**
  * Get lane context based on player's lane
  */
-export function getLaneContext(lane: string | undefined): { content: string; filename: string } {
+export async function getLaneContext(lane: string | undefined): Promise<{ content: string; filename: string }> {
   const lowerLane = lane?.toLowerCase();
   let laneFile: string | undefined = undefined;
 
@@ -113,9 +122,10 @@ export function getLaneContext(lane: string | undefined): { content: string; fil
   }
 
   const filename = laneFile ?? "lanes/generic.txt";
+  const content = await loadPromptFile(filename);
   return {
-    content: loadPromptFile(filename),
-    filename: filename,
+    content,
+    filename,
   };
 }
 

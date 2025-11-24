@@ -5,7 +5,8 @@ import type {
   LeaguePuuid,
   Rank,
   Ranks,
- MatchDto } from "@scout-for-lol/data";
+  MatchDto,
+} from "@scout-for-lol/data";
 import { getCompetitionStatus, rankToLeaguePoints, RankSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 import { sortBy } from "remeda";
 import { match } from "ts-pattern";
