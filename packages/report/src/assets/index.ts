@@ -26,12 +26,13 @@ function generateFonts(
 ): (Omit<Font, "data"> & { src: string })[] {
   return configs.flatMap((config) =>
     config.variants.map((variant) => {
-      return {
+      const font: Omit<Font, "data"> & { src: string } = {
         name: fontName,
         src: `${fontPath}/${fontFamily}/${variant.filename}`,
-        weight: config.weight as unknown as Font["weight"],
-        style: variant.style,
-      } as unknown as Omit<Font, "data"> & { src: string };
+      };
+      font.weight = config.weight;
+      font.style = variant.style;
+      return font;
     }),
   );
 }

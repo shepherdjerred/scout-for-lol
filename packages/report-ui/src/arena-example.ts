@@ -185,7 +185,10 @@ function getMainPlayer() {
   } satisfies ArenaMatchPlayer;
 }
 
-function getTeam1(masterAugment: ReturnType<typeof createMasterOfDualityAugment>, courageAugment: ReturnType<typeof createCourageAugment>): ArenaTeam {
+function getTeam1(
+  masterAugment: ReturnType<typeof createMasterOfDualityAugment>,
+  courageAugment: ReturnType<typeof createCourageAugment>,
+): ArenaTeam {
   return {
     teamId: 1 as const,
     placement: 2 as const,
