@@ -222,7 +222,7 @@ export async function getCachedDataAsync(endpoint: string, params: Record<string
           });
           const validationResult = KeyedEntrySchema.safeParse(result);
           if (validationResult.success) {
-            const { key, ...rest } = validationResult.data;
+            const { key: _key, ...rest } = validationResult.data;
             const entry: CacheEntry = {
               data: rest.data,
               timestamp: rest.timestamp,

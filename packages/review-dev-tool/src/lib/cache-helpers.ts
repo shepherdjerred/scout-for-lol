@@ -8,7 +8,7 @@
  */
 export function executeIDBRequest<T>(
   request: IDBRequest<T>,
-  operationName: string = "IndexedDB operation",
+  operationName = "IndexedDB operation",
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => {
@@ -44,9 +44,9 @@ export async function executeIDBTransaction<T>(options: {
  * Execute an IndexedDB cursor operation
  * Iterates through all entries matching the cursor
  */
-export async function executeIDBCursor<T>(
+export async function executeIDBCursor(
   index: IDBIndex,
-  operation: (cursor: IDBCursorWithValue, entry: T) => boolean | undefined,
+  operation: (cursor: IDBCursorWithValue, entry: unknown) => boolean | undefined,
   operationName = "IndexedDB cursor",
 ): Promise<void> {
   return new Promise((resolve, reject) => {
