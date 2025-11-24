@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { MatchDtoSchema } from "@scout-for-lol/packages/data/src/league/match-dto.schema.js";
+import { MatchDtoSchema } from "@scout-for-lol/data/league/match-dto.schema.js";
 
 const REAL_MATCH_FILES = [
   "/workspaces/scout-for-lol/packages/backend/src/league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",

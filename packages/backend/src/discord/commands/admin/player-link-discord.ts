@@ -13,6 +13,7 @@ import {
   buildDatabaseError,
 } from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
 import { buildPlayerUpdateResponse } from "@scout-for-lol/backend/discord/commands/admin/utils/player-responses.js";
+import { updatePlayerDiscordId } from "@scout-for-lol/backend/discord/commands/admin/utils/player-updates.js";
 
 const ArgsSchema = z.object({
   playerAlias: z.string().min(1).max(100),
@@ -73,22 +74,7 @@ export async function executePlayerLinkDiscord(interaction: ChatInputCommandInte
     console.log(`💾 Linking Discord ID ${discordUserId} to player "${playerAlias}"`);
 
     try {
-      const now = new Date();
-
-      // Update the player with Discord ID
-      const updatedPlayer = await prisma.player.update({
-        where: {
-          id: player.id,
-        },
-        data: {
-          discordId: discordUserId,
-          updatedTime: now,
-        },
-        include: {
-          accounts: true,
-          subscriptions: true,
-        },
-      });
+      const updatedPlayer = await updatePlayerDiscordId(prisma, player.id, discordUserId);
 
       await interaction.reply(
         buildPlayerUpdateResponse(

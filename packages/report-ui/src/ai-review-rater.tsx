@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { z } from "zod";
 import { StarRating } from "@scout-for-lol/report-ui/components/star-rating";
 import { EmptyDropZone, GalleryView } from "@scout-for-lol/report-ui/components/rater-gallery";
@@ -102,16 +102,6 @@ export function AIReviewRater(): React.ReactNode {
     }
   };
 
-  const handleRate = (rating: 1 | 2 | 3 | 4) => {
-    if (!currentImage) {
-      return;
-    }
-
-    updateReviewRating(currentImage.id, rating, notes);
-    const loadedImages = loadReviewImages();
-    setImages(loadedImages);
-  };
-
   const handleNotesChange = (newNotes: string) => {
     setNotes(newNotes);
     if (currentImage?.rating) {
@@ -136,13 +126,26 @@ export function AIReviewRater(): React.ReactNode {
     }
   };
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     setCurrentIndex((prev) => (prev > 0 ? prev - 1 : images.length - 1));
-  };
+  }, [images.length]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     setCurrentIndex((prev) => (prev < images.length - 1 ? prev + 1 : 0));
-  };
+  }, [images.length]);
+
+  const handleRate = useCallback(
+    (rating: 1 | 2 | 3 | 4) => {
+      if (!currentImage) {
+        return;
+      }
+
+      updateReviewRating(currentImage.id, rating, notes);
+      const loadedImages = loadReviewImages();
+      setImages(loadedImages);
+    },
+    [currentImage, notes],
+  );
 
   // Keyboard navigation
   useEffect(() => {
@@ -169,7 +172,7 @@ export function AIReviewRater(): React.ReactNode {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [viewMode, currentIndex, images, notes]);
+  }, [viewMode, handlePrevious, handleNext, handleRate]);
 
   if (images.length === 0) {
     return (

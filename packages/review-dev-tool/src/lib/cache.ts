@@ -126,7 +126,7 @@ function isCacheValid(entry: CacheEntry): boolean {
  * Periodically clean up expired entries from IndexedDB (throttled to once per minute)
  */
 let lastCleanupTime = 0;
-async function cleanupExpiredEntries(): Promise<void> {
+export async function cleanupExpiredEntries(): Promise<void> {
   const now = Date.now();
   // Only run cleanup once per minute
   if (now - lastCleanupTime < 60_000) {
@@ -420,7 +420,7 @@ export async function clearAllCache(): Promise<void> {
 /**
  * Clear cached data for a specific endpoint
  */
-async function _clearCacheForEndpoint(endpoint: string): Promise<void> {
+export async function clearCacheForEndpoint(endpoint: string): Promise<void> {
   // Clear from memory cache
   const keysToDelete: string[] = [];
   for (const key of memoryCache.keys()) {

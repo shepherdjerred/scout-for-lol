@@ -35,7 +35,7 @@ const { title, description, imageSrc, imageAlt, badge, checklist = [], imagePosi
     {
       badge && (
         <div class="mb-4">
-          <Badge text={badge.text} icon={badge.icon} color={badge.color || "purple"} />
+          <Badge text={badge.text} {...(badge.icon ? { icon: badge.icon } : {})} color={badge.color || "purple"} />
         </div>
       )
     }

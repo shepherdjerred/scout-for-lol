@@ -1,37 +1,24 @@
-export function Damage({ value, percent, highlight }: { value: number; percent: number; highlight: boolean }) {
+import { Damage as BaseDamage } from "@scout-for-lol/report/html/shared/damage.js";
+
+export function Damage(props: { value: number; percent: number; highlight: boolean }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 6,
-        minWidth: 120,
-      }}
-    >
-      <div style={{ display: "flex", gap: 4, fontSize: 16, fontWeight: 600, color: highlight ? "#fbbf24" : "#d1d5db" }}>
-        <span>{value.toLocaleString()}</span>
-        <span>dmg</span>
-      </div>
-      <span
-        style={{
-          width: 100,
-          height: 12,
-          backgroundColor: "#5B5A56",
-          borderRadius: 2,
-          overflow: "hidden",
-        }}
-      >
-        <span
-          style={{
-            display: "flex",
-            width: `${percent.toString()}%`,
-            height: "100%",
-            backgroundColor: highlight ? "#fbbf24" : "#d1d5db",
-            borderRadius: 2,
-          }}
-        />
-      </span>
-    </div>
+    <BaseDamage
+      {...props}
+      containerGap={6}
+      containerMinWidth={120}
+      textGap={4}
+      textFontSize={16}
+      textFontWeight={600}
+      textColor={props.highlight ? "#fbbf24" : "#d1d5db"}
+      textLayout="split"
+      barWidth={100}
+      barHeight={12}
+      barBackgroundColor="#5B5A56"
+      barBorderRadius={2}
+      barOverflow="hidden"
+      fillHighlightColor="#fbbf24"
+      fillDefaultColor="#d1d5db"
+      fillBorderRadius={2}
+    />
   );
 }

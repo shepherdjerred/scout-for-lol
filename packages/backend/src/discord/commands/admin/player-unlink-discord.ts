@@ -12,6 +12,7 @@ import {
   buildDatabaseError,
 } from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
 import { buildPlayerUpdateResponse } from "@scout-for-lol/backend/discord/commands/admin/utils/player-responses.js";
+import { updatePlayerDiscordId } from "@scout-for-lol/backend/discord/commands/admin/utils/player-updates.js";
 
 const ArgsSchema = z.object({
   playerAlias: z.string().min(1).max(100),
@@ -54,22 +55,7 @@ export async function executePlayerUnlinkDiscord(interaction: ChatInputCommandIn
     console.log(`💾 Unlinking Discord ID ${previousDiscordId} from player "${playerAlias}"`);
 
     try {
-      const now = new Date();
-
-      // Update the player to remove Discord ID
-      const updatedPlayer = await prisma.player.update({
-        where: {
-          id: player.id,
-        },
-        data: {
-          discordId: null,
-          updatedTime: now,
-        },
-        include: {
-          accounts: true,
-          subscriptions: true,
-        },
-      });
+      const updatedPlayer = await updatePlayerDiscordId(prisma, player.id, null);
 
       await interaction.reply(
         buildPlayerUpdateResponse(

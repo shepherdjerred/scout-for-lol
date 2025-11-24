@@ -8,111 +8,103 @@ export const font = {
   body: "Spiegel",
 };
 
-const baseBeaufortFonts: (Omit<Font, "data"> & {
-  src: string;
-})[] = [
+type FontConfig = {
+  weight: Font["weight"];
+  variants: {
+    style: "normal" | "italic";
+    filename: string;
+  }[];
+};
+
+/**
+ * Generate font definitions from weight/style configurations
+ */
+function generateFonts(
+  fontName: string,
+  fontFamily: string,
+  configs: FontConfig[],
+): (Omit<Font, "data"> & { src: string })[] {
+  const fonts: (Omit<Font, "data"> & { src: string })[] = [];
+
+  for (const config of configs) {
+    for (const variant of config.variants) {
+      fonts.push({
+        name: fontName,
+        src: `${fontPath}/${fontFamily}/${variant.filename}`,
+        // @ts-expect-error - Weight type from satori is overly restrictive, but these values are valid
+        weight: config.weight,
+        style: variant.style,
+      } as Omit<Font, "data"> & { src: string });
+    }
+  }
+
+  return fonts;
+}
+
+const beaufortConfigs: FontConfig[] = [
   {
-    name: font.title,
-    src: `${fontPath}/BeaufortForLoL-TTF/BeaufortforLOL-Light.ttf`,
-    weight: 300,
-    style: "normal",
+    weight: 300 as Font["weight"],
+    variants: [
+      { style: "normal", filename: "BeaufortforLOL-Light.ttf" },
+      { style: "italic", filename: "BeaufortforLOL-LightItalic.ttf" },
+    ],
   },
   {
-    name: font.title,
-    src: `${fontPath}/BeaufortForLoL-TTF/BeaufortforLOL-LightItalic.ttf`,
-    weight: 300,
-    style: "italic",
+    weight: 400 as Font["weight"],
+    variants: [
+      { style: "normal", filename: "BeaufortforLOL-Regular.ttf" },
+      { style: "italic", filename: "BeaufortforLOL-Italic.ttf" },
+    ],
   },
   {
-    name: font.title,
-    src: `${fontPath}/BeaufortForLoL-TTF/BeaufortforLOL-Regular.ttf`,
-    weight: 400,
-    style: "normal",
+    weight: 500 as Font["weight"],
+    variants: [
+      { style: "normal", filename: "BeaufortforLOL-Medium.ttf" },
+      { style: "italic", filename: "BeaufortforLOL-MediumItalic.ttf" },
+    ],
   },
   {
-    name: font.title,
-    src: `${fontPath}/BeaufortForLoL-TTF/BeaufortforLOL-Italic.ttf`,
-    weight: 400,
-    style: "italic",
+    weight: 700 as Font["weight"],
+    variants: [
+      { style: "normal", filename: "BeaufortforLOL-Bold.ttf" },
+      { style: "italic", filename: "BeaufortforLOL-BoldItalic.ttf" },
+    ],
   },
   {
-    name: font.title,
-    src: `${fontPath}/BeaufortForLoL-TTF/BeaufortforLOL-Medium.ttf`,
-    weight: 500,
-    style: "normal",
-  },
-  {
-    name: font.title,
-    src: `${fontPath}/BeaufortForLoL-TTF/BeaufortforLOL-MediumItalic.ttf`,
-    weight: 500,
-    style: "italic",
-  },
-  {
-    name: font.title,
-    src: `${fontPath}/BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf`,
-    weight: 700,
-    style: "normal",
-  },
-  {
-    name: font.title,
-    src: `${fontPath}/BeaufortForLoL-TTF/BeaufortforLOL-BoldItalic.ttf`,
-    weight: 700,
-    style: "italic",
-  },
-  {
-    name: font.title,
-    src: `${fontPath}/BeaufortForLoL-TTF/BeaufortforLOL-Heavy.ttf`,
-    weight: 800,
-    style: "normal",
-  },
-  {
-    name: font.title,
-    src: `${fontPath}/BeaufortForLoL-TTF/BeaufortforLOL-HeavyItalic.ttf`,
-    weight: 800,
-    style: "italic",
+    weight: 800 as Font["weight"],
+    variants: [
+      { style: "normal", filename: "BeaufortforLOL-Heavy.ttf" },
+      { style: "italic", filename: "BeaufortforLOL-HeavyItalic.ttf" },
+    ],
   },
 ];
 
-const baseSpiegelFonts: (Omit<Font, "data"> & {
-  src: string;
-})[] = [
+const spiegelConfigs: FontConfig[] = [
   {
-    name: font.body,
-    src: `${fontPath}/Spiegel-TTF/Spiegel_TT_Regular.ttf`,
-    weight: 400,
-    style: "normal",
+    weight: 400 as Font["weight"],
+    variants: [
+      { style: "normal", filename: "Spiegel_TT_Regular.ttf" },
+      { style: "italic", filename: "Spiegel_TT_Regular_Italic.ttf" },
+    ],
   },
   {
-    name: font.body,
-    src: `${fontPath}/Spiegel-TTF/Spiegel_TT_Regular_Italic.ttf`,
-    weight: 400,
-    style: "italic",
+    weight: 500 as Font["weight"],
+    variants: [
+      { style: "normal", filename: "Spiegel_TT_SemiBold.ttf" },
+      { style: "italic", filename: "Spiegel_TT_SemiBold_Italic.ttf" },
+    ],
   },
   {
-    name: font.body,
-    src: `${fontPath}/Spiegel-TTF/Spiegel_TT_SemiBold.ttf`,
-    weight: 500,
-    style: "normal",
-  },
-  {
-    name: font.body,
-    src: `${fontPath}/Spiegel-TTF/Spiegel_TT_SemiBold_Italic.ttf`,
-    weight: 500,
-    style: "italic",
-  },
-  {
-    name: font.body,
-    src: `${fontPath}/Spiegel-TTF/Spiegel_TT_Bold.ttf`,
-    weight: 700,
-    style: "normal",
-  },
-  {
-    name: font.body,
-    src: `${fontPath}/Spiegel-TTF/Spiegel_TT_Bold_Italic.ttf`,
-    weight: 700,
-    style: "italic",
+    weight: 700 as Font["weight"],
+    variants: [
+      { style: "normal", filename: "Spiegel_TT_Bold.ttf" },
+      { style: "italic", filename: "Spiegel_TT_Bold_Italic.ttf" },
+    ],
   },
 ];
+
+const baseBeaufortFonts = generateFonts(font.title, "BeaufortForLoL-TTF", beaufortConfigs);
+const baseSpiegelFonts = generateFonts(font.body, "Spiegel-TTF", spiegelConfigs);
 
 /**
  * These fonts are used by satori.

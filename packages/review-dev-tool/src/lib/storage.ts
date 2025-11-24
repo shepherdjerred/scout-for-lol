@@ -3,6 +3,12 @@
  * Replaces localStorage with a more robust and capable storage solution
  */
 import { z } from "zod";
+import {
+  openIndexedDB,
+  executeRequest,
+  executeRequestVoid,
+  getStore,
+} from "@scout-for-lol/review-dev-tool/lib/indexeddb-helpers.js";
 
 const DB_NAME = "scout-review-storage";
 const DB_VERSION = 1;
@@ -19,8 +25,6 @@ export const STORES = {
   PREFERENCES: "preferences",
 } as const;
 
-const IDBOpenDBRequestSchema = z.instanceof(IDBOpenDBRequest);
-
 /**
  * IndexedDB connection (lazy initialized)
  */
@@ -34,51 +38,32 @@ function getDB(): Promise<IDBDatabase> {
     return dbPromise;
   }
 
-  dbPromise = new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onerror = () => {
-      const error = request.error;
-      console.warn("IndexedDB failed to open:", error);
-      reject(error ?? new Error("Storage operation failed"));
-    };
-
-    request.onsuccess = () => {
-      resolve(request.result);
-    };
-
-    request.onupgradeneeded = (event) => {
-      const targetResult = IDBOpenDBRequestSchema.safeParse(event.target);
-      if (targetResult.success) {
-        const db = targetResult.data.result;
-
-        // Create all object stores if they don't exist
-        if (!db.objectStoreNames.contains(STORES.CONFIGS)) {
-          db.createObjectStore(STORES.CONFIGS, { keyPath: "id" });
-        }
-        if (!db.objectStoreNames.contains(STORES.CURRENT_CONFIG)) {
-          db.createObjectStore(STORES.CURRENT_CONFIG);
-        }
-        if (!db.objectStoreNames.contains(STORES.GLOBAL_CONFIG)) {
-          db.createObjectStore(STORES.GLOBAL_CONFIG);
-        }
-        if (!db.objectStoreNames.contains(STORES.PERSONALITIES)) {
-          db.createObjectStore(STORES.PERSONALITIES, { keyPath: "id" });
-        }
-        if (!db.objectStoreNames.contains(STORES.ART_STYLES)) {
-          db.createObjectStore(STORES.ART_STYLES, { keyPath: "id" });
-        }
-        if (!db.objectStoreNames.contains(STORES.ART_THEMES)) {
-          db.createObjectStore(STORES.ART_THEMES, { keyPath: "id" });
-        }
-        if (!db.objectStoreNames.contains(STORES.COSTS)) {
-          db.createObjectStore(STORES.COSTS);
-        }
-        if (!db.objectStoreNames.contains(STORES.PREFERENCES)) {
-          db.createObjectStore(STORES.PREFERENCES);
-        }
-      }
-    };
+  dbPromise = openIndexedDB(DB_NAME, DB_VERSION, (db) => {
+    // Create all object stores if they don't exist
+    if (!db.objectStoreNames.contains(STORES.CONFIGS)) {
+      db.createObjectStore(STORES.CONFIGS, { keyPath: "id" });
+    }
+    if (!db.objectStoreNames.contains(STORES.CURRENT_CONFIG)) {
+      db.createObjectStore(STORES.CURRENT_CONFIG);
+    }
+    if (!db.objectStoreNames.contains(STORES.GLOBAL_CONFIG)) {
+      db.createObjectStore(STORES.GLOBAL_CONFIG);
+    }
+    if (!db.objectStoreNames.contains(STORES.PERSONALITIES)) {
+      db.createObjectStore(STORES.PERSONALITIES, { keyPath: "id" });
+    }
+    if (!db.objectStoreNames.contains(STORES.ART_STYLES)) {
+      db.createObjectStore(STORES.ART_STYLES, { keyPath: "id" });
+    }
+    if (!db.objectStoreNames.contains(STORES.ART_THEMES)) {
+      db.createObjectStore(STORES.ART_THEMES, { keyPath: "id" });
+    }
+    if (!db.objectStoreNames.contains(STORES.COSTS)) {
+      db.createObjectStore(STORES.COSTS);
+    }
+    if (!db.objectStoreNames.contains(STORES.PREFERENCES)) {
+      db.createObjectStore(STORES.PREFERENCES);
+    }
   });
 
   return dbPromise;
@@ -90,21 +75,11 @@ function getDB(): Promise<IDBDatabase> {
 export async function getItem<T>(storeName: string, key: string): Promise<T | null> {
   try {
     const db = await getDB();
-    return await new Promise((resolve, reject) => {
-      const transaction = db.transaction([storeName], "readonly");
-      const store = transaction.objectStore(storeName);
-      const request = store.get(key);
-
-      request.onsuccess = () => {
-        const result: T | undefined = request.result;
-        resolve(result ?? null);
-      };
-
-      request.onerror = () => {
-        const error = request.error;
-        reject(error ?? new Error("Storage operation failed"));
-      };
-    });
+    const transaction = db.transaction([storeName], "readonly");
+    const store = getStore(transaction, storeName);
+    const request = store.get(key);
+    const result = await executeRequest<T | undefined>(request);
+    return result ?? null;
   } catch (error) {
     console.warn(`Failed to get item from ${storeName}:`, error);
     return null;
@@ -117,20 +92,11 @@ export async function getItem<T>(storeName: string, key: string): Promise<T | nu
 export async function setItem(storeName: string, key: string, value: unknown): Promise<boolean> {
   try {
     const db = await getDB();
-    return await new Promise((resolve, reject) => {
-      const transaction = db.transaction([storeName], "readwrite");
-      const store = transaction.objectStore(storeName);
-      const request = store.put(value, key);
-
-      request.onsuccess = () => {
-        resolve(true);
-      };
-
-      request.onerror = () => {
-        const error = request.error;
-        reject(error ?? new Error("Storage operation failed"));
-      };
-    });
+    const transaction = db.transaction([storeName], "readwrite");
+    const store = getStore(transaction, storeName);
+    const request = store.put(value, key);
+    await executeRequestVoid(request);
+    return true;
   } catch (error) {
     console.warn(`Failed to set item in ${storeName}:`, error);
     return false;
@@ -143,21 +109,11 @@ export async function setItem(storeName: string, key: string, value: unknown): P
 export async function getAllItems<T>(storeName: string): Promise<T[]> {
   try {
     const db = await getDB();
-    return await new Promise((resolve, reject) => {
-      const transaction = db.transaction([storeName], "readonly");
-      const store = transaction.objectStore(storeName);
-      const request = store.getAll();
-
-      request.onsuccess = () => {
-        const result: T[] | undefined = request.result;
-        resolve(result || []);
-      };
-
-      request.onerror = () => {
-        const error = request.error;
-        reject(error ?? new Error("Storage operation failed"));
-      };
-    });
+    const transaction = db.transaction([storeName], "readonly");
+    const store = getStore(transaction, storeName);
+    const request = store.getAll();
+    const result = await executeRequest<T[] | undefined>(request);
+    return result || [];
   } catch (error) {
     console.warn(`Failed to get all items from ${storeName}:`, error);
     return [];
@@ -170,20 +126,11 @@ export async function getAllItems<T>(storeName: string): Promise<T[]> {
 export async function putItem(storeName: string, value: unknown): Promise<boolean> {
   try {
     const db = await getDB();
-    return await new Promise((resolve, reject) => {
-      const transaction = db.transaction([storeName], "readwrite");
-      const store = transaction.objectStore(storeName);
-      const request = store.put(value);
-
-      request.onsuccess = () => {
-        resolve(true);
-      };
-
-      request.onerror = () => {
-        const error = request.error;
-        reject(error ?? new Error("Storage operation failed"));
-      };
-    });
+    const transaction = db.transaction([storeName], "readwrite");
+    const store = getStore(transaction, storeName);
+    const request = store.put(value);
+    await executeRequestVoid(request);
+    return true;
   } catch (error) {
     console.warn(`Failed to put item in ${storeName}:`, error);
     return false;
@@ -196,20 +143,11 @@ export async function putItem(storeName: string, value: unknown): Promise<boolea
 export async function deleteItem(storeName: string, key: string): Promise<boolean> {
   try {
     const db = await getDB();
-    return await new Promise((resolve, reject) => {
-      const transaction = db.transaction([storeName], "readwrite");
-      const store = transaction.objectStore(storeName);
-      const request = store.delete(key);
-
-      request.onsuccess = () => {
-        resolve(true);
-      };
-
-      request.onerror = () => {
-        const error = request.error;
-        reject(error ?? new Error("Storage operation failed"));
-      };
-    });
+    const transaction = db.transaction([storeName], "readwrite");
+    const store = getStore(transaction, storeName);
+    const request = store.delete(key);
+    await executeRequestVoid(request);
+    return true;
   } catch (error) {
     console.warn(`Failed to delete item from ${storeName}:`, error);
     return false;
@@ -222,20 +160,11 @@ export async function deleteItem(storeName: string, key: string): Promise<boolea
 export async function clearStore(storeName: string): Promise<boolean> {
   try {
     const db = await getDB();
-    return await new Promise((resolve, reject) => {
-      const transaction = db.transaction([storeName], "readwrite");
-      const store = transaction.objectStore(storeName);
-      const request = store.clear();
-
-      request.onsuccess = () => {
-        resolve(true);
-      };
-
-      request.onerror = () => {
-        const error = request.error;
-        reject(error ?? new Error("Storage operation failed"));
-      };
-    });
+    const transaction = db.transaction([storeName], "readwrite");
+    const store = getStore(transaction, storeName);
+    const request = store.clear();
+    await executeRequestVoid(request);
+    return true;
   } catch (error) {
     console.warn(`Failed to clear store ${storeName}:`, error);
     return false;

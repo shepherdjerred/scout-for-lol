@@ -18,7 +18,6 @@ import {
   addCustomPersonality,
   updateCustomPersonality,
   deleteCustomPersonality,
-  isCustomPersonality,
   generatePersonalityId,
 } from "@scout-for-lol/review-dev-tool/lib/personality-storage";
 import type { CustomArtStyle, CustomArtTheme } from "@scout-for-lol/review-dev-tool/lib/art-style-storage";
@@ -27,13 +26,11 @@ import {
   addCustomArtStyle,
   updateCustomArtStyle,
   deleteCustomArtStyle,
-  isCustomArtStyle,
   generateArtStyleId,
   loadCustomArtThemes,
   addCustomArtTheme,
   updateCustomArtTheme,
   deleteCustomArtTheme,
-  isCustomArtTheme,
   generateArtThemeId,
 } from "@scout-for-lol/review-dev-tool/lib/art-style-storage";
 import { modelSupportsParameter } from "@scout-for-lol/data";
@@ -68,13 +65,13 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
 
   const allPersonalities = [...BUILTIN_PERSONALITIES.filter((p) => p.id !== "generic"), ...customPersonalities];
 
-  // Convert built-in styles/themes to format with IDs (use Array.from to avoid readonly issues)
-  const builtinStylesFormatted = Array.from(ART_STYLES).map((style, index) => ({
+  // Convert built-in styles/themes to format with IDs
+  const builtinStylesFormatted = ART_STYLES.map((style: { description: string }, index: number) => ({
     id: `builtin-style-${index.toString()}`,
     description: style.description,
   }));
 
-  const builtinThemesFormatted = Array.from(ART_THEMES).map((theme, index) => ({
+  const builtinThemesFormatted = ART_THEMES.map((theme: { description: string }, index: number) => ({
     id: `builtin-theme-${index.toString()}`,
     description: theme.description,
   }));
@@ -82,11 +79,15 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   // Merge built-in and custom, removing any duplicates based on description
   const allStyles = [
     ...builtinStylesFormatted,
-    ...customStyles.filter((cs) => !builtinStylesFormatted.some((bs) => bs.description === cs.description)),
+    ...customStyles.filter(
+      (cs) => !builtinStylesFormatted.some((bs: { description: string }) => bs.description === cs.description),
+    ),
   ];
   const allThemes = [
     ...builtinThemesFormatted,
-    ...customThemes.filter((ct) => !builtinThemesFormatted.some((bt) => bt.description === ct.description)),
+    ...customThemes.filter(
+      (ct) => !builtinThemesFormatted.some((bt: { description: string }) => bt.description === ct.description),
+    ),
   ];
 
   const handleCreateNewPersonality = () => {

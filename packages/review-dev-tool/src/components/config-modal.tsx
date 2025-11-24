@@ -198,11 +198,6 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
                           {preview.customArtThemes} custom art theme{preview.customArtThemes !== 1 ? "s" : ""}
                         </li>
                       )}
-                      {preview.reviewRatings > 0 && (
-                        <li>
-                          {preview.reviewRatings} review rating{preview.reviewRatings !== 1 ? "s" : ""}
-                        </li>
-                      )}
                       {!hasDataToReset && (
                         <li className="text-gray-400 dark:text-gray-500 italic">No custom data found</li>
                       )}

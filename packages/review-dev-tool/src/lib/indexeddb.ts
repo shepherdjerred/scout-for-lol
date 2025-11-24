@@ -3,12 +3,16 @@
  * IndexedDB can handle much larger data than localStorage (hundreds of MB vs 5-10MB)
  */
 import { z } from "zod";
+import {
+  openIndexedDB,
+  executeRequest,
+  executeRequestVoid,
+  getStore,
+} from "@scout-for-lol/review-dev-tool/lib/indexeddb-helpers.js";
 
 const DB_NAME = "scout-review-history";
 const DB_VERSION = 1;
 const STORE_NAME = "history";
-
-const IDBOpenDBRequestSchema = z.instanceof(IDBOpenDBRequest);
 
 const DBHistoryEntrySchema = z.object({
   id: z.string(),
@@ -37,30 +41,13 @@ export type DBHistoryEntry = z.infer<typeof DBHistoryEntrySchema>;
  * Open IndexedDB connection
  */
 async function openDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onerror = () => {
-      const error = request.error;
-      reject(error ?? new Error("IndexedDB operation failed"));
-    };
-    request.onsuccess = () => {
-      resolve(request.result);
-    };
-
-    request.onupgradeneeded = (event) => {
-      const targetResult = IDBOpenDBRequestSchema.safeParse(event.target);
-      if (targetResult.success) {
-        const db = targetResult.data.result;
-
-        // Create object store if it doesn't exist
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          const objectStore = db.createObjectStore(STORE_NAME, { keyPath: "id" });
-          objectStore.createIndex("timestamp", "timestamp", { unique: false });
-          objectStore.createIndex("status", "status", { unique: false });
-        }
-      }
-    };
+  return openIndexedDB(DB_NAME, DB_VERSION, (db) => {
+    // Create object store if it doesn't exist
+    if (!db.objectStoreNames.contains(STORE_NAME)) {
+      const objectStore = db.createObjectStore(STORE_NAME, { keyPath: "id" });
+      objectStore.createIndex("timestamp", "timestamp", { unique: false });
+      objectStore.createIndex("status", "status", { unique: false });
+    }
   });
 }
 
@@ -69,19 +56,10 @@ async function openDB(): Promise<IDBDatabase> {
  */
 export async function saveEntry(entry: DBHistoryEntry): Promise<void> {
   const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.put(entry);
-
-    request.onerror = () => {
-      const error = request.error;
-      reject(error ?? new Error("IndexedDB operation failed"));
-    };
-    request.onsuccess = () => {
-      resolve();
-    };
-  });
+  const transaction = db.transaction([STORE_NAME], "readwrite");
+  const store = getStore(transaction, STORE_NAME);
+  const request = store.put(entry);
+  return executeRequestVoid(request);
 }
 
 /**
@@ -89,28 +67,18 @@ export async function saveEntry(entry: DBHistoryEntry): Promise<void> {
  */
 export async function getAllEntries(): Promise<DBHistoryEntry[]> {
   const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readonly");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.getAll();
-
-    request.onerror = () => {
-      const error = request.error;
-      reject(error ?? new Error("IndexedDB operation failed"));
-    };
-    request.onsuccess = () => {
-      const result: unknown = request.result;
-      const entriesResult = z.array(DBHistoryEntrySchema).safeParse(result);
-      if (entriesResult.success) {
-        const entries = entriesResult.data;
-        // Sort by timestamp, newest first
-        entries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-        resolve(entries);
-      } else {
-        resolve([]);
-      }
-    };
-  });
+  const transaction = db.transaction([STORE_NAME], "readonly");
+  const store = getStore(transaction, STORE_NAME);
+  const request = store.getAll();
+  const result = await executeRequest<unknown>(request);
+  const entriesResult = z.array(DBHistoryEntrySchema).safeParse(result);
+  if (entriesResult.success) {
+    const entries = entriesResult.data;
+    // Sort by timestamp, newest first
+    entries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    return entries;
+  }
+  return [];
 }
 
 /**
@@ -118,25 +86,15 @@ export async function getAllEntries(): Promise<DBHistoryEntry[]> {
  */
 export async function getEntry(id: string): Promise<DBHistoryEntry | undefined> {
   const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readonly");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.get(id);
-
-    request.onerror = () => {
-      const error = request.error;
-      reject(error ?? new Error("IndexedDB operation failed"));
-    };
-    request.onsuccess = () => {
-      const result: unknown = request.result;
-      if (result === undefined) {
-        resolve(undefined);
-      } else {
-        const entryResult = DBHistoryEntrySchema.safeParse(result);
-        resolve(entryResult.success ? entryResult.data : undefined);
-      }
-    };
-  });
+  const transaction = db.transaction([STORE_NAME], "readonly");
+  const store = getStore(transaction, STORE_NAME);
+  const request = store.get(id);
+  const result = await executeRequest<unknown>(request);
+  if (result === undefined) {
+    return undefined;
+  }
+  const entryResult = DBHistoryEntrySchema.safeParse(result);
+  return entryResult.success ? entryResult.data : undefined;
 }
 
 /**
@@ -144,19 +102,10 @@ export async function getEntry(id: string): Promise<DBHistoryEntry | undefined> 
  */
 export async function deleteEntry(id: string): Promise<void> {
   const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.delete(id);
-
-    request.onerror = () => {
-      const error = request.error;
-      reject(error ?? new Error("IndexedDB operation failed"));
-    };
-    request.onsuccess = () => {
-      resolve();
-    };
-  });
+  const transaction = db.transaction([STORE_NAME], "readwrite");
+  const store = getStore(transaction, STORE_NAME);
+  const request = store.delete(id);
+  return executeRequestVoid(request);
 }
 
 /**
@@ -164,19 +113,10 @@ export async function deleteEntry(id: string): Promise<void> {
  */
 export async function clearAllEntries(): Promise<void> {
   const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.clear();
-
-    request.onerror = () => {
-      const error = request.error;
-      reject(error ?? new Error("IndexedDB operation failed"));
-    };
-    request.onsuccess = () => {
-      resolve();
-    };
-  });
+  const transaction = db.transaction([STORE_NAME], "readwrite");
+  const store = getStore(transaction, STORE_NAME);
+  const request = store.clear();
+  return executeRequestVoid(request);
 }
 
 /**
@@ -184,19 +124,10 @@ export async function clearAllEntries(): Promise<void> {
  */
 export async function getEntryCount(): Promise<number> {
   const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readonly");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.count();
-
-    request.onerror = () => {
-      const error = request.error;
-      reject(error ?? new Error("IndexedDB operation failed"));
-    };
-    request.onsuccess = () => {
-      resolve(request.result);
-    };
-  });
+  const transaction = db.transaction([STORE_NAME], "readonly");
+  const store = getStore(transaction, STORE_NAME);
+  const request = store.count();
+  return executeRequest(request);
 }
 
 /**
@@ -210,24 +141,8 @@ export async function trimToMaxEntries(maxCount: number): Promise<void> {
 
   const toDelete = entries.slice(maxCount);
   const db = await openDB();
+  const transaction = db.transaction([STORE_NAME], "readwrite");
+  const store = getStore(transaction, STORE_NAME);
 
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([STORE_NAME], "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-
-    let deletedCount = 0;
-    for (const entry of toDelete) {
-      const request = store.delete(entry.id);
-      request.onsuccess = () => {
-        deletedCount++;
-        if (deletedCount === toDelete.length) {
-          resolve();
-        }
-      };
-      request.onerror = () => {
-        const error = request.error;
-        reject(error ?? new Error("IndexedDB operation failed"));
-      };
-    }
-  });
+  await Promise.all(toDelete.map((entry) => executeRequestVoid(store.delete(entry.id))));
 }

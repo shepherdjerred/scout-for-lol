@@ -75,8 +75,8 @@ export function CostDisplay({ costTracker }: CostDisplayProps) {
 
         <div className="flex gap-2 pt-3">
           <button
-            onClick={() => {
-              const report = costTracker.export();
+            onClick={async () => {
+              const report = await costTracker.export();
               const blob = new Blob([report], { type: "text/plain" });
               const url = URL.createObjectURL(blob);
               const a = document.createElement("a");

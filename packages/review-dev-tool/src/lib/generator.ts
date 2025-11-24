@@ -140,7 +140,7 @@ export async function generateMatchReview(
           reviewText: textResult.text,
           artStyle,
           artTheme,
-          secondArtTheme,
+          ...(secondArtTheme ? { secondArtTheme } : {}),
           matchData: JSON.stringify(
             curatedData ? { processedMatch: match, detailedStats: curatedData } : match,
             null,

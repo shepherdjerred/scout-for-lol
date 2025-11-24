@@ -705,7 +705,7 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
               </div>
             )}
 
-            {result.metadata.openaiRequestParams && (
+            {result.metadata.openaiRequestParams !== undefined && result.metadata.openaiRequestParams !== null && (
               <div>
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   OpenAI Request Parameters
