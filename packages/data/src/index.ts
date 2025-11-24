@@ -17,6 +17,6 @@ export {
   type CuratedMatchData,
   type ChatCompletionCreateParams,
 } from "./review/generator.js";
-export { curateMatchData, curateParticipantData, type CuratedParticipant } from "./review/curator.js";
+export { curateMatchData, curateParticipantData } from "./review/curator.js";
 export * from "./league/match-dto.schema.js";
 export * from "./league/summoner-league-dto.schema.js";

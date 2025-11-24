@@ -4,7 +4,6 @@
 import { getBasePrompt } from "@scout-for-lol/review-dev-tool/lib/prompts";
 import type { TabConfig, Personality } from "@scout-for-lol/review-dev-tool/config/schema";
 import { PersonalitySelector } from "@scout-for-lol/review-dev-tool/components/personality-selector";
-import type { CustomArtStyle, CustomArtTheme } from "@scout-for-lol/review-dev-tool/lib/art-style-storage";
 
 type PromptSettingsProps = {
   config: TabConfig;

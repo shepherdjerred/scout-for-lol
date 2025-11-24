@@ -391,18 +391,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
               void handleSelectMatch(metadata);
             }}
           />
-          <MatchPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            pageSize={pageSize}
-            totalMatches={matches.length}
-            filteredMatches={filteredMatches.length}
-            onPageChange={setCurrentPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setCurrentPage(1);
-            }}
-          />
+          <MatchPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         </div>
       )}
 

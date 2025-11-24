@@ -5,7 +5,7 @@ import { ArtStyleEditor } from "@scout-for-lol/review-dev-tool/components/art-st
 import type { CustomArtTheme } from "@scout-for-lol/review-dev-tool/lib/art-style-storage";
 
 type ArtThemeSelectorProps = {
-  themes: Array<{ id: string; description: string }>;
+  themes: { id: string; description: string }[];
   customThemes: CustomArtTheme[];
   selectedTheme: string;
   editingTheme: CustomArtTheme | null;
@@ -136,7 +136,7 @@ export function ArtThemeSelector({
                       </button>
                       <button
                         onClick={() => {
-                          void onDelete(theme.id);
+                          onDelete(theme.id);
                         }}
                         className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
                         disabled={!enabled}

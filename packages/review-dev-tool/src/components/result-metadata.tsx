@@ -1,8 +1,7 @@
 /**
  * Result metadata display (metadata, prompts, cost breakdown)
  */
-import type { GenerationResult, ReviewConfig } from "@scout-for-lol/review-dev-tool/config/schema";
-import type { CostBreakdown } from "@scout-for-lol/review-dev-tool/config/schema";
+import type { GenerationResult, CostBreakdown } from "@scout-for-lol/review-dev-tool/config/schema";
 import { formatCost } from "@scout-for-lol/review-dev-tool/lib/costs";
 
 type ResultMetadataProps = {
@@ -23,33 +22,25 @@ export function ResultMetadata({ result, cost }: ResultMetadataProps) {
           {result.metadata.textTokensPrompt !== undefined && (
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Prompt Tokens:</span>
-              <span className="font-mono text-gray-900 dark:text-gray-100">
-                {result.metadata.textTokensPrompt}
-              </span>
+              <span className="font-mono text-gray-900 dark:text-gray-100">{result.metadata.textTokensPrompt}</span>
             </div>
           )}
           {result.metadata.textTokensCompletion !== undefined && (
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Completion Tokens:</span>
-              <span className="font-mono text-gray-900 dark:text-gray-100">
-                {result.metadata.textTokensCompletion}
-              </span>
+              <span className="font-mono text-gray-900 dark:text-gray-100">{result.metadata.textTokensCompletion}</span>
             </div>
           )}
           {result.metadata.imageGenerated && (
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Image Generation:</span>
-              <span className="font-mono text-gray-900 dark:text-gray-100">
-                {result.metadata.imageDurationMs}ms
-              </span>
+              <span className="font-mono text-gray-900 dark:text-gray-100">{result.metadata.imageDurationMs}ms</span>
             </div>
           )}
           {result.metadata.selectedPersonality && (
             <div className="flex justify-between">
               <span className="text-gray-600 dark:text-gray-400">Personality:</span>
-              <span className="font-mono text-gray-900 dark:text-gray-100">
-                {result.metadata.selectedPersonality}
-              </span>
+              <span className="font-mono text-gray-900 dark:text-gray-100">{result.metadata.selectedPersonality}</span>
             </div>
           )}
           {result.metadata.selectedArtStyle && (
@@ -121,9 +112,7 @@ export function ResultMetadata({ result, cost }: ResultMetadataProps) {
 
       {result.metadata.openaiRequestParams !== undefined && result.metadata.openaiRequestParams !== null && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            OpenAI Request Parameters
-          </h3>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">OpenAI Request Parameters</h3>
           <details className="group">
             <summary className="cursor-pointer text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 list-none">
               <span className="inline-flex items-center gap-1">
@@ -197,9 +186,7 @@ export function ResultMetadata({ result, cost }: ResultMetadataProps) {
             )}
             <div className="flex justify-between border-t border-gray-200 dark:border-gray-700 pt-2">
               <span className="font-semibold text-gray-900 dark:text-white">Total:</span>
-              <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
-                {formatCost(cost.totalCost)}
-              </span>
+              <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{formatCost(cost.totalCost)}</span>
             </div>
           </div>
         </div>
@@ -207,4 +194,3 @@ export function ResultMetadata({ result, cost }: ResultMetadataProps) {
     </div>
   );
 }
-

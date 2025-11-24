@@ -9,8 +9,8 @@ import type { CustomArtStyle, CustomArtTheme } from "@scout-for-lol/review-dev-t
 
 type ImageGenerationSettingsProps = {
   config: TabConfig;
-  allStyles: Array<{ id: string; description: string }>;
-  allThemes: Array<{ id: string; description: string }>;
+  allStyles: { id: string; description: string }[];
+  allThemes: { id: string; description: string }[];
   customStyles: CustomArtStyle[];
   customThemes: CustomArtTheme[];
   editingStyle: CustomArtStyle | null;
@@ -229,7 +229,11 @@ export function ImageGenerationSettings({
             onSelectRandom={handleSelectStyleRandom}
             onCreateNew={onCreateNewStyle}
             onEdit={onEditStyle}
-            onDelete={onDeleteStyle}
+            onDelete={(id) => {
+              onDeleteStyle(id).catch(() => {
+                // Error handling is done in the parent component
+              });
+            }}
             onSave={onSaveStyle}
             onCancelEdit={onCancelStyleEdit}
           />
@@ -247,7 +251,11 @@ export function ImageGenerationSettings({
             onSelectRandom={handleSelectThemeRandom}
             onCreateNew={onCreateNewTheme}
             onEdit={onEditTheme}
-            onDelete={onDeleteTheme}
+            onDelete={(id) => {
+              onDeleteTheme(id).catch(() => {
+                // Error handling is done in the parent component
+              });
+            }}
             onSave={onSaveTheme}
             onCancelEdit={onCancelThemeEdit}
           />

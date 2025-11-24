@@ -4,22 +4,10 @@
 type MatchPaginationProps = {
   currentPage: number;
   totalPages: number;
-  pageSize: number;
-  totalMatches: number;
-  filteredMatches: number;
   onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
 };
 
-export function MatchPagination({
-  currentPage,
-  totalPages,
-  pageSize,
-  totalMatches,
-  filteredMatches,
-  onPageChange,
-  onPageSizeChange,
-}: MatchPaginationProps) {
+export function MatchPagination({ currentPage, totalPages, onPageChange }: MatchPaginationProps) {
   if (totalPages <= 1) {
     return null;
   }

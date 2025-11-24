@@ -128,9 +128,7 @@ export function PersonalitySelector({
                       </button>
                       <button
                         onClick={() => {
-                          onDelete(personality.id).catch(() => {
-                            // Error handling is done in the parent component
-                          });
+                          onDelete(personality.id);
                         }}
                         className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
                       >
