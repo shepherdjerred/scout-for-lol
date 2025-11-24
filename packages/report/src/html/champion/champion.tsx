@@ -30,6 +30,7 @@ export function renderChampion(champion: Champion, highlight: boolean, durationI
       <div style={{ width: size, height: size, display: "flex" }}>
         <img
           src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/spell/${name}.png`}
+          alt=""
           style={{
             backgroundColor: palette.blue[5],
             border: `.01rem solid ${palette.gold.bright}`,

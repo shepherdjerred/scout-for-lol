@@ -12,11 +12,10 @@ import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import jsxA11y from "eslint-plugin-jsx-a11y";
-import astroPlugin from "eslint-plugin-astro";
+import astroPlugin, { configs as astroConfigs } from "eslint-plugin-astro";
 // MDX linting disabled - parser doesn't support type-aware rules
 // import mdx from "eslint-plugin-mdx";
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access -- Parser from plugin
-const astroParser = astroPlugin.configs["flat/base"]?.[1]?.languageOptions?.["parser"];
+const astroParser = astroConfigs["flat/base"][1].languageOptions["parser"];
 // Tailwind linting disabled - plugin incompatible with Tailwind CSS v4
 // import tailwindcss from "eslint-plugin-tailwindcss";
 
@@ -37,6 +36,7 @@ const customRulesPlugin = {
   },
 };
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- tseslint.config() is the official way to configure typescript-eslint v8; the deprecation is for future versions
 export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.strictTypeChecked,
@@ -51,8 +51,6 @@ export default tseslint.config(
       "**/node_modules/**/*",
       "**/.astro/**/*",
       ".dagger/sdk/**/*",
-      "eslint-rules/**/*",
-      "eslint.config.ts",
       "**/*.md",
       "**/*.mdx",
       "**/*.astro",
@@ -62,7 +60,7 @@ export default tseslint.config(
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        project: "./tsconfig.lint.json",
         tsconfigRootDir: import.meta.dirname,
         extraFileExtensions: [".astro"],
       },
@@ -71,7 +69,8 @@ export default tseslint.config(
   // ESLint disable directive rules
   {
     plugins: {
-      "eslint-comments": eslintComments,
+      // Type assertion needed: plugin lacks proper TypeScript types
+      "eslint-comments": eslintComments as unknown,
     },
     rules: {
       // Require specific rule names when disabling ESLint (no blanket eslint-disable)

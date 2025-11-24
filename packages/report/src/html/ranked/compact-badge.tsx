@@ -54,7 +54,7 @@ export function CompactRankedBadge({ oldRank, newRank }: { oldRank: Rank | undef
     >
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
         <div style={{ width: "8rem", height: "8rem", display: "flex" }}>
-          <img src={badge} style={{ width: "100%", height: "100%", display: "block" }} />
+          <img src={badge} alt="" style={{ width: "100%", height: "100%", display: "block" }} />
         </div>
         <span style={{ fontSize: "4rem", fontWeight: 700 }}>{divisionToString(newRank.division)}</span>
       </div>

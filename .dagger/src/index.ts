@@ -29,11 +29,17 @@ function getErrorMessage(error: unknown): string {
   if (error === null || error === undefined) {
     return String(error);
   }
-  // Check if error has a message property that is a string
-  if (Object.prototype.hasOwnProperty.call(error, "message") && typeof (error as any).message === "string") {
-    return (error as any).message;
+  // Check if it's an Error object with message
+  if (error instanceof Error) {
+    return error.message;
   }
-  return JSON.stringify(error);
+  // Try JSON stringify for other types
+  try {
+    return JSON.stringify(error);
+  } catch {
+    // Fallback if stringify fails - return generic message
+    return "Unknown error occurred";
+  }
 }
 
 // Helper function to measure execution time

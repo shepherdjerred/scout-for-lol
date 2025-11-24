@@ -33,6 +33,7 @@ export function renderItem(item: number) {
       >
         <img
           src={iconUrl}
+          alt=""
           style={{
             backgroundColor: palette.blue[5],
             border: isPrismatic ? `.15rem solid transparent` : `.01rem solid ${palette.gold.bright}`,

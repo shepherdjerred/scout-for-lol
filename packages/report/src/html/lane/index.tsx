@@ -30,7 +30,7 @@ export function Lane({ lane }: { lane: Lane }) {
   return (
     <span style={{ width: "20rem", display: "flex", justifyContent: "center" }}>
       <div style={{ width: "8rem", height: "8rem", display: "flex" }}>
-        <img src={image} style={{ width: "100%", height: "100%", display: "block" }} />
+        <img src={image} alt="" style={{ width: "100%", height: "100%", display: "block" }} />
       </div>
     </span>
   );

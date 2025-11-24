@@ -105,7 +105,7 @@ export function RankedBadge({
             }}
           >
             <div style={{ width: `${iconSize.toString()}rem`, height: `${iconSize.toString()}rem`, display: "flex" }}>
-              <img src={badge} style={{ width: "100%", height: "100%", display: "block" }} />
+              <img src={badge} alt="" style={{ width: "100%", height: "100%", display: "block" }} />
             </div>
             <span
               style={{

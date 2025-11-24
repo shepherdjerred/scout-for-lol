@@ -15,93 +15,115 @@ const RoleSchema = z.enum(["SOLO", "NONE", "CARRY", "SUPPORT"]);
 const LaneSchema = z.enum(["TOP", "JUNGLE", "MIDDLE", "BOTTOM"]);
 
 // Nested DTOs
-const EpicMonsterKillDtoSchema = z.object({
-  featState: z.number(),
-});
+const EpicMonsterKillDtoSchema = z
+  .object({
+    featState: z.number(),
+  })
+  .strict();
 
-const FeatsDtoSchema = z.object({
-  EPIC_MONSTER_KILL: EpicMonsterKillDtoSchema,
-  FIRST_BLOOD: EpicMonsterKillDtoSchema,
-  FIRST_TURRET: EpicMonsterKillDtoSchema,
-});
+const FeatsDtoSchema = z
+  .object({
+    EPIC_MONSTER_KILL: EpicMonsterKillDtoSchema,
+    FIRST_BLOOD: EpicMonsterKillDtoSchema,
+    FIRST_TURRET: EpicMonsterKillDtoSchema,
+  })
+  .strict();
 
-const ObjectiveDtoSchema = z.object({
-  first: z.boolean(),
-  kills: z.number(),
-});
+const ObjectiveDtoSchema = z
+  .object({
+    first: z.boolean(),
+    kills: z.number(),
+  })
+  .strict();
 
-const ObjectivesDtoSchema = z.object({
-  baron: ObjectiveDtoSchema,
-  champion: ObjectiveDtoSchema,
-  dragon: ObjectiveDtoSchema,
-  inhibitor: ObjectiveDtoSchema,
-  riftHerald: ObjectiveDtoSchema,
-  tower: ObjectiveDtoSchema,
-  horde: ObjectiveDtoSchema.optional(),
-  atakhan: ObjectiveDtoSchema.optional(),
-});
+const ObjectivesDtoSchema = z
+  .object({
+    baron: ObjectiveDtoSchema,
+    champion: ObjectiveDtoSchema,
+    dragon: ObjectiveDtoSchema,
+    inhibitor: ObjectiveDtoSchema,
+    riftHerald: ObjectiveDtoSchema,
+    tower: ObjectiveDtoSchema,
+    horde: ObjectiveDtoSchema.optional(),
+    atakhan: ObjectiveDtoSchema.optional(),
+  })
+  .strict();
 
-const BanDtoSchema = z.object({
-  championId: z.number(),
-  pickTurn: z.number(),
-});
+const BanDtoSchema = z
+  .object({
+    championId: z.number(),
+    pickTurn: z.number(),
+  })
+  .strict();
 
-const TeamDtoSchema = z.object({
-  bans: z.array(BanDtoSchema),
-  objectives: ObjectivesDtoSchema,
-  feats: FeatsDtoSchema.optional(),
-  teamId: z.number(),
-  win: z.boolean(),
-});
+const TeamDtoSchema = z
+  .object({
+    bans: z.array(BanDtoSchema),
+    objectives: ObjectivesDtoSchema,
+    feats: FeatsDtoSchema.optional(),
+    teamId: z.number(),
+    win: z.boolean(),
+  })
+  .strict();
 
-const PerkStyleSelectionDtoSchema = z.object({
-  perk: z.number(),
-  var1: z.number(),
-  var2: z.number(),
-  var3: z.number(),
-});
+const PerkStyleSelectionDtoSchema = z
+  .object({
+    perk: z.number(),
+    var1: z.number(),
+    var2: z.number(),
+    var3: z.number(),
+  })
+  .strict();
 
-const PerkStyleDtoSchema = z.object({
-  description: DescriptionSchema,
-  selections: z.array(PerkStyleSelectionDtoSchema),
-  style: z.number(),
-});
+const PerkStyleDtoSchema = z
+  .object({
+    description: DescriptionSchema,
+    selections: z.array(PerkStyleSelectionDtoSchema),
+    style: z.number(),
+  })
+  .strict();
 
-const PerkStatsDtoSchema = z.object({
-  defense: z.number(),
-  flex: z.number(),
-  offense: z.number(),
-});
+const PerkStatsDtoSchema = z
+  .object({
+    defense: z.number(),
+    flex: z.number(),
+    offense: z.number(),
+  })
+  .strict();
 
-const PerksDtoSchema = z.object({
-  statPerks: PerkStatsDtoSchema,
-  styles: z.array(PerkStyleDtoSchema),
-});
+const PerksDtoSchema = z
+  .object({
+    statPerks: PerkStatsDtoSchema,
+    styles: z.array(PerkStyleDtoSchema),
+  })
+  .strict();
 
 /**
  * Missions DTO - Arena games only
  * Values are only set in arena games
  */
-const MissionsDtoSchema = z.object({
-  playerScore0: z.number(),
-  playerScore1: z.number(),
-  playerScore2: z.number(),
-  playerScore3: z.number(),
-  playerScore4: z.number(),
-  playerScore5: z.number(),
-  playerScore6: z.number(),
-  playerScore7: z.number(),
-  playerScore8: z.number(),
-  playerScore9: z.number(),
-});
+const MissionsDtoSchema = z
+  .object({
+    playerScore0: z.number(),
+    playerScore1: z.number(),
+    playerScore2: z.number(),
+    playerScore3: z.number(),
+    playerScore4: z.number(),
+    playerScore5: z.number(),
+    playerScore6: z.number(),
+    playerScore7: z.number(),
+    playerScore8: z.number(),
+    playerScore9: z.number(),
+    playerScore10: z.number(),
+    playerScore11: z.number(),
+  })
+  .strict();
 
 /**
  * Challenges DTO - Contains detailed match statistics and challenges
  * Many fields are optional as they may not be present in all game modes or patches
- * Using partial() to make all fields optional since different game modes have different fields
  */
-const ChallengesDtoSchema = z
-  .object({
+const ChallengesDtoSchema = z.object({
     "12AssistStreakCount": z.number(),
     HealFromMapSources: z.number(),
     InfernalScalePickup: z.number(),
@@ -247,17 +269,18 @@ const ChallengesDtoSchema = z
     earliestElderDragon: z.number(),
   })
   .partial()
-  .passthrough();
+  .strict();
 
 /**
  * Participant DTO - Contains all data for a single participant in a match
+ * Many fields are optional as they may not be present in all game modes (e.g., Arena vs Classic)
  */
 const ParticipantDtoSchema = z.object({
   assists: z.number(),
-  baitPings: z.number(),
+  baitPings: z.number().optional(),
   baronKills: z.number(),
   basicPings: z.number(),
-  bountyLevel: z.number(),
+  bountyLevel: z.number().optional(),
   challenges: ChallengesDtoSchema,
   champExperience: z.number(),
   champLevel: z.number(),
@@ -414,47 +437,53 @@ const ParticipantDtoSchema = z.object({
   playerSubteamId: z.number().optional(),
   placement: z.number().optional(),
   subteamPlacement: z.number().optional(),
-});
+}).strict();
 
 /**
  * Metadata DTO - Contains match identification information
  */
-const MetadataDtoSchema = z.object({
-  dataVersion: z.string(),
-  matchId: z.string(),
-  participants: z.array(z.string()),
-});
+const MetadataDtoSchema = z
+  .object({
+    dataVersion: z.string(),
+    matchId: z.string(),
+    participants: z.array(z.string()),
+  })
+  .strict();
 
 /**
  * Info DTO - Contains the main match information
  */
-const InfoDtoSchema = z.object({
-  endOfGameResult: z.string().optional(),
-  gameCreation: z.number(),
-  gameDuration: z.number(),
-  gameEndTimestamp: z.number(),
-  gameId: z.number(),
-  gameMode: z.string(),
-  gameName: z.string(),
-  gameStartTimestamp: z.number(),
-  gameType: z.string(),
-  gameVersion: z.string(),
-  mapId: z.number(),
-  participants: z.array(ParticipantDtoSchema),
-  platformId: z.string(),
-  queueId: z.number(),
-  teams: z.array(TeamDtoSchema),
-  tournamentCode: z.string(),
-});
+const InfoDtoSchema = z
+  .object({
+    endOfGameResult: z.string().optional(),
+    gameCreation: z.number(),
+    gameDuration: z.number(),
+    gameEndTimestamp: z.number(),
+    gameId: z.number(),
+    gameMode: z.string(),
+    gameName: z.string(),
+    gameStartTimestamp: z.number(),
+    gameType: z.string(),
+    gameVersion: z.string(),
+    mapId: z.number(),
+    participants: z.array(ParticipantDtoSchema),
+    platformId: z.string(),
+    queueId: z.number(),
+    teams: z.array(TeamDtoSchema),
+    tournamentCode: z.string(),
+  })
+  .strict();
 
 /**
  * Main MatchDto schema
  * Represents a complete match from Riot Games Match V5 API
  */
-export const MatchDtoSchema = z.object({
-  metadata: MetadataDtoSchema,
-  info: InfoDtoSchema,
-});
+export const MatchDtoSchema = z
+  .object({
+    metadata: MetadataDtoSchema,
+    info: InfoDtoSchema,
+  })
+  .strict();
 
 // Type inference from the Zod schema
 export type MatchDto = z.infer<typeof MatchDtoSchema>;

@@ -3,7 +3,7 @@
  */
 import { S3Client, ListObjectsV2Command, GetObjectCommand, type ListObjectsV2CommandOutput } from "@aws-sdk/client-s3";
 import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { MatchDtoSchema } from "./schemas/match-dto.schema.js";
+import { MatchDtoSchema } from "@scout-for-lol/packages/review-dev-tool/src/lib/schemas/match-dto.schema.js";
 import type { ArenaMatch, CompletedMatch, Champion } from "@scout-for-lol/data";
 import { parseQueueType, parseLane, getLaneOpponent, parseTeam, invertTeam } from "@scout-for-lol/data";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";

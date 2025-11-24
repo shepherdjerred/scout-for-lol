@@ -18,6 +18,7 @@ export function renderAugment(augment: Augment) {
         >
           <img
             src={iconUrl}
+            alt=""
             style={{
               width: augmentIconSize,
               height: augmentIconSize,
