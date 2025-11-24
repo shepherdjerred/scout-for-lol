@@ -9,19 +9,20 @@ export type PlayerWithCompetitions = Awaited<ReturnType<typeof findPlayerByAlias
 /**
  * Build options object, conditionally including interaction if defined
  */
-function buildFindPlayerOptions<T extends Prisma.PlayerInclude>(
-  prisma: PrismaClient,
-  serverId: DiscordGuildId,
-  alias: string,
-  include: T,
-  interaction: ChatInputCommandInteraction | undefined,
-): {
+function buildFindPlayerOptions<T extends Prisma.PlayerInclude>(options: {
+  prisma: PrismaClient;
+  serverId: DiscordGuildId;
+  alias: string;
+  include: T;
+  interaction?: ChatInputCommandInteraction;
+}): {
   prisma: PrismaClient;
   serverId: DiscordGuildId;
   alias: string;
   include: T;
   interaction?: ChatInputCommandInteraction;
 } {
+  const { prisma, serverId, alias, include, interaction } = options;
   if (interaction) {
     return { prisma, serverId, alias, include, interaction };
   }
@@ -69,7 +70,9 @@ export async function findPlayerByAliasWithAccounts(
   alias: string,
   interaction?: ChatInputCommandInteraction,
 ) {
-  return findPlayerByAliasGeneric(buildFindPlayerOptions(prisma, serverId, alias, { accounts: true }, interaction));
+  return findPlayerByAliasGeneric(
+    buildFindPlayerOptions({ prisma, serverId, alias, include: { accounts: true }, interaction }),
+  );
 }
 
 /**
@@ -82,7 +85,13 @@ export async function findPlayerByAliasWithSubscriptions(
   interaction?: ChatInputCommandInteraction,
 ) {
   return findPlayerByAliasGeneric(
-    buildFindPlayerOptions(prisma, serverId, alias, { accounts: true, subscriptions: true }, interaction),
+    buildFindPlayerOptions({
+      prisma,
+      serverId,
+      alias,
+      include: { accounts: true, subscriptions: true },
+      interaction,
+    }),
   );
 }
 
@@ -96,11 +105,11 @@ export async function findPlayerByAliasWithCompetitions(
   interaction?: ChatInputCommandInteraction,
 ) {
   return findPlayerByAliasGeneric(
-    buildFindPlayerOptions(
+    buildFindPlayerOptions({
       prisma,
       serverId,
       alias,
-      {
+      include: {
         accounts: true,
         subscriptions: true,
         competitionParticipants: {
@@ -110,6 +119,6 @@ export async function findPlayerByAliasWithCompetitions(
         },
       },
       interaction,
-    ),
+    }),
   );
 }

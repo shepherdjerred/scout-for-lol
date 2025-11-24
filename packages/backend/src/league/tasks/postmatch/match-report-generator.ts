@@ -256,8 +256,8 @@ export async function generateMatchReport(
 
         // Add AI-generated image if available
         if (reviewImage) {
-          // Discord.js AttachmentBuilder accepts Buffer
-          const aiImageAttachment = new AttachmentBuilder(Buffer.from(reviewImage)).setName("ai-review.png");
+          // Discord.js AttachmentBuilder accepts Uint8Array
+          const aiImageAttachment = new AttachmentBuilder(reviewImage).setName("ai-review.png");
           files.push(aiImageAttachment);
           console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
         }

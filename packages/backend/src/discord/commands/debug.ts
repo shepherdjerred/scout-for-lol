@@ -86,15 +86,16 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
     await interaction.deferReply({ ephemeral: true });
 
     console.log(`📖 Reading database file from ${databasePath}`);
-    const fileBuffer = await Bun.file(databasePath).arrayBuffer();
-    const buffer = Buffer.from(fileBuffer);
-    console.log(`✅ Successfully read database file (${String(buffer.length)} bytes)`);
+    const file = Bun.file(databasePath);
+    const buffer = await file.arrayBuffer();
+    const uint8Array = new Uint8Array(buffer);
+    console.log(`✅ Successfully read database file (${String(uint8Array.length)} bytes)`);
 
-    // Create attachment - Discord.js AttachmentBuilder accepts Buffer
-    const attachment = new AttachmentBuilder(buffer, { name: "database.sqlite" });
+    // Create attachment - Discord.js AttachmentBuilder accepts Uint8Array
+    const attachment = new AttachmentBuilder(uint8Array, { name: "database.sqlite" });
 
     await interaction.editReply({
-      content: `✅ Database file uploaded successfully\n\nPath: \`${databasePath}\`\nSize: ${(buffer.length / 1024).toFixed(2)} KB`,
+      content: `✅ Database file uploaded successfully\n\nPath: \`${databasePath}\`\nSize: ${(uint8Array.length / 1024).toFixed(2)} KB`,
       files: [attachment],
     });
 

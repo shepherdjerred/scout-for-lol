@@ -98,7 +98,7 @@ async function generateReviewImageBackend(params: {
 
     // Save to local filesystem for debugging
     try {
-      const filepath: string = `${AI_IMAGES_DIR}/ai-review-${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
+      const filepath = `${AI_IMAGES_DIR}/ai-review-${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
       await Bun.write(filepath, buffer);
       console.log(`[generateReviewImage] Saved image to: ${filepath}`);
     } catch (fsError: unknown) {

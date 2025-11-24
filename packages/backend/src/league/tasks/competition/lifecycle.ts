@@ -75,8 +75,9 @@ function formatLeaderboardEntry(entry: RankedLeaderboardEntry): string {
     throw new Error(`Invalid score type in leaderboard entry: ${JSON.stringify(entry.score)}`);
   }
 
-  if (NumberScoreSchema.safeParse(scoreValidation.data).success) {
-    scoreDisplay = scoreValidation.data.toString();
+  const numberScoreResult = NumberScoreSchema.safeParse(scoreValidation.data);
+  if (numberScoreResult.success) {
+    scoreDisplay = numberScoreResult.data.toString();
   } else {
     // It's a Rank object
     const rankScore = RankScoreSchema.parse(scoreValidation.data);

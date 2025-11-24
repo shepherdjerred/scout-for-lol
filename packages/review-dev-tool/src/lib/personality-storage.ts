@@ -10,7 +10,7 @@ import { STORES, getAllItems, putItem, deleteItem } from "@scout-for-lol/review-
  */
 export async function loadCustomPersonalities(): Promise<Personality[]> {
   try {
-    const stored = await getAllItems<unknown>(STORES.PERSONALITIES);
+    const stored = await getAllItems(STORES.PERSONALITIES);
     const ArraySchema = PersonalitySchema.array();
     const result = ArraySchema.safeParse(stored);
     return result.success ? result.data : [];

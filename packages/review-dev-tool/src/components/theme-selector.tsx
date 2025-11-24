@@ -22,7 +22,7 @@ export function ThemeSelector() {
       }
 
       try {
-        const saved = await getItem<unknown>(STORES.PREFERENCES, "darkMode");
+        const saved = await getItem(STORES.PREFERENCES, "darkMode");
         if (saved !== null) {
           const result = BooleanSchema.safeParse(saved);
           if (result.success) {

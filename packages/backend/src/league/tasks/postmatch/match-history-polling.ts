@@ -22,6 +22,39 @@ type PlayerWithMatchIds = {
 };
 
 /**
+ * Process a single match for a player
+ * Extracted to reduce nesting depth
+ */
+async function processMatchForPlayer(
+  player: PlayerConfigEntry,
+  matchId: MatchId,
+  allPlayerConfigs: PlayerConfigEntry[],
+  processedMatchIds: Set<MatchId>,
+): Promise<void> {
+  try {
+    // Skip if we've already processed this match in this run
+    if (processedMatchIds.has(matchId)) {
+      console.log(`[${player.alias}] ⏭️  Match ${matchId} already processed in this run`);
+      return;
+    }
+
+    // Fetch match data
+    const matchData = await fetchMatchData(matchId, player.league.leagueAccount.region);
+
+    if (!matchData) {
+      console.log(`[${player.alias}] ⚠️  Could not fetch match data for ${matchId}, skipping`);
+      return;
+    }
+
+    // Process the match with all tracked players
+    await processMatchAndUpdatePlayers(matchData, allPlayerConfigs, processedMatchIds, matchId);
+  } catch (error) {
+    console.error(`[${player.alias}] ❌ Error processing match ${matchId}:`, error);
+    // Continue with next match even if this one fails
+  }
+}
+
+/**
  * Process a completed match and send Discord notifications
  */
 async function processMatch(matchData: MatchDto, trackedPlayers: PlayerConfigEntry[]): Promise<void> {
@@ -205,27 +238,7 @@ export async function checkMatchHistory(): Promise<void> {
 
     for (const { player, matchIds } of playersWithMatches) {
       for (const matchId of matchIds) {
-        try {
-          // Skip if we've already processed this match in this run
-          if (processedMatchIds.has(matchId)) {
-            console.log(`[${player.alias}] ⏭️  Match ${matchId} already processed in this run`);
-            continue;
-          }
-
-          // Fetch match data
-          const matchData = await fetchMatchData(matchId, player.league.leagueAccount.region);
-
-          if (!matchData) {
-            console.log(`[${player.alias}] ⚠️  Could not fetch match data for ${matchId}, skipping`);
-            continue;
-          }
-
-          // Process the match with all tracked players
-          await processMatchAndUpdatePlayers(matchData, allPlayerConfigs, processedMatchIds, matchId);
-        } catch (error) {
-          console.error(`[${player.alias}] ❌ Error processing match ${matchId}:`, error);
-          // Continue with next match even if this one fails
-        }
+        await processMatchForPlayer(player, matchId, allPlayerConfigs, processedMatchIds);
       }
     }
 

@@ -18,6 +18,50 @@ import {
 } from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import type { CompetitionId } from "@scout-for-lol/data";
+
+/**
+ * Handle existing participant status
+ * Returns true if status was handled (and function should return), false otherwise
+ */
+async function handleExistingParticipantStatus(
+  interaction: ChatInputCommandInteraction,
+  participantStatus: "JOINED" | "INVITED" | "LEFT" | null,
+  username: string,
+  competitionId: CompetitionId,
+): Promise<boolean> {
+  if (participantStatus === "JOINED") {
+    await replyWithError(
+      interaction,
+      `❌ Already participating
+
+@${username} is already in this competition.`,
+    );
+    return true;
+  }
+
+  if (participantStatus === "INVITED") {
+    // Idempotent - already invited, just acknowledge
+    await replyWithSuccess(
+      interaction,
+      `@${username} has already been invited to this competition. They can join with:
+\`/competition join competition-id:${competitionId.toString()}\``,
+    );
+    return true;
+  }
+
+  if (participantStatus === "LEFT") {
+    await replyWithError(
+      interaction,
+      `❌ Cannot invite
+
+@${username} previously left this competition and cannot be re-invited.`,
+    );
+    return true;
+  }
+
+  return false;
+}
 
 /**
  * Execute /competition invite command
@@ -117,33 +161,13 @@ Only the competition owner can invite participants. The owner of this competitio
   }
 
   // Handle existing participant statuses
-  if (participantStatus === "JOINED") {
-    await replyWithError(
-      interaction,
-      `❌ Already participating
-
-@${targetUser.username} is already in this competition.`,
-    );
-    return;
-  }
-
-  if (participantStatus === "INVITED") {
-    // Idempotent - already invited, just acknowledge
-    await replyWithSuccess(
-      interaction,
-      `@${targetUser.username} has already been invited to this competition. They can join with:
-\`/competition join competition-id:${competitionId.toString()}\``,
-    );
-    return;
-  }
-
-  if (participantStatus === "LEFT") {
-    await replyWithError(
-      interaction,
-      `❌ Cannot invite
-
-@${targetUser.username} previously left this competition and cannot be re-invited.`,
-    );
+  const statusHandled = await handleExistingParticipantStatus(
+    interaction,
+    participantStatus,
+    targetUser.username,
+    competitionId,
+  );
+  if (statusHandled) {
     return;
   }
 
@@ -151,13 +175,13 @@ Only the competition owner can invite participants. The owner of this competitio
   // Step 8: Check participant limit
   // ============================================================================
 
-  const activeParticipantCount = await checkParticipantLimit(
+  const activeParticipantCount = await checkParticipantLimit({
     interaction,
     competitionId,
-    competition.maxParticipants,
-    "Competition Invite",
-    "Cannot invite more users.",
-  );
+    maxParticipants: competition.maxParticipants,
+    logContext: "Competition Invite",
+    fullMessage: "Cannot invite more users.",
+  });
   if (activeParticipantCount === null) {
     return;
   }

@@ -78,14 +78,23 @@ function validateAndTransformEntry(
   entry: {
     id: string;
     timestamp: string | Date;
-    result: unknown;
-    configSnapshot: unknown;
+    result?: unknown;
+    configSnapshot?: unknown;
     status: "pending" | "complete" | "error";
-    rating?: 1 | 2 | 3 | 4;
-    notes?: string;
+    rating?: 1 | 2 | 3 | 4 | undefined;
+    notes?: string | undefined;
   },
   context: "migration" | "load",
 ): HistoryEntry | null {
+  if (entry.result === undefined || entry.configSnapshot === undefined) {
+    const prefix =
+      context === "migration"
+        ? "[History] Skipping invalid entry during migration:"
+        : "[History] Skipping invalid entry:";
+    console.warn(prefix, entry.id);
+    return null;
+  }
+
   const resultValidation = GenerationResultSchema.safeParse(entry.result);
   const configValidation = ConfigSnapshotSchema.safeParse(entry.configSnapshot);
 

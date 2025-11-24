@@ -52,6 +52,69 @@ const testPlayers: PlayerWithAccounts[] = [
 // Integration Tests
 // ============================================================================
 
+/**
+ * Create test player from PUUID
+ */
+function createTestPlayerFromPuuid(puuid: string, index: number): PlayerWithAccounts {
+  return {
+    id: PlayerIdSchema.parse(index + 1),
+    alias: `Player${(index + 1).toString()}`,
+    discordId: testAccountId((index + 1).toString()),
+    accounts: [
+      {
+        id: AccountIdSchema.parse(index + 1),
+        alias: `Player${(index + 1).toString()}`,
+        puuid: LeaguePuuidSchema.parse(puuid),
+        region: "AMERICA_NORTH",
+      },
+    ],
+  };
+}
+
+/**
+ * Create test player from participant
+ */
+function createTestPlayerFromParticipant(participant: ParticipantDto): PlayerWithAccounts {
+  return {
+    id: PlayerIdSchema.parse(1),
+    alias: "TestPlayer",
+    discordId: testAccountId("100000000"),
+    accounts: [
+      {
+        id: AccountIdSchema.parse(1),
+        alias: "TestPlayer",
+        puuid: LeaguePuuidSchema.parse(participant.puuid),
+        region: "AMERICA_NORTH",
+      },
+    ],
+  };
+}
+
+/**
+ * Test empty match data handling
+ */
+function testEmptyMatchData() {
+  const emptyMatches: MatchDto[] = [];
+  const players = testPlayers;
+
+  // Test all criteria types with empty matches
+  const gamesResult = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "SOLO" }, emptyMatches, players);
+  expect(gamesResult).toBeDefined();
+  expect(gamesResult.every((entry) => entry.score === 0)).toBe(true);
+
+  const winsResult = processCriteria({ type: "MOST_WINS_PLAYER", queue: "SOLO" }, emptyMatches, players);
+  expect(winsResult).toBeDefined();
+  expect(winsResult.every((entry) => entry.score === 0)).toBe(true);
+
+  const championResult = processCriteria(
+    { type: "MOST_WINS_CHAMPION", championId: ChampionIdSchema.parse(157), queue: "SOLO" },
+    emptyMatches,
+    players,
+  );
+  expect(championResult).toBeDefined();
+  expect(championResult.every((entry) => entry.score === 0)).toBe(true);
+}
+
 describe("processCriteria integration tests", () => {
   it("should process real match data without crashing", async () => {
     const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
@@ -61,19 +124,7 @@ describe("processCriteria integration tests", () => {
     const puuids = match.metadata.participants.slice(0, 2); // Take first 2 players
 
     // Create players with actual PUUIDs
-    const players: PlayerWithAccounts[] = puuids.map((puuid, index) => ({
-      id: PlayerIdSchema.parse(index + 1),
-      alias: `Player${(index + 1).toString()}`,
-      discordId: testAccountId((index + 1).toString()),
-      accounts: [
-        {
-          id: AccountIdSchema.parse(index + 1),
-          alias: `Player${(index + 1).toString()}`,
-          puuid: LeaguePuuidSchema.parse(puuid),
-          region: "AMERICA_NORTH",
-        },
-      ],
-    }));
+    const players: PlayerWithAccounts[] = puuids.map((puuid, index) => createTestPlayerFromPuuid(puuid, index));
 
     // Test MOST_GAMES_PLAYED
     const gamesResult = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "SOLO" }, [match], players);
@@ -87,25 +138,7 @@ describe("processCriteria integration tests", () => {
   });
 
   it("should handle empty match data gracefully", () => {
-    const emptyMatches: MatchDto[] = [];
-    const players = testPlayers;
-
-    // Test all criteria types with empty matches
-    const gamesResult = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "SOLO" }, emptyMatches, players);
-    expect(gamesResult).toBeDefined();
-    expect(gamesResult.every((entry) => entry.score === 0)).toBe(true);
-
-    const winsResult = processCriteria({ type: "MOST_WINS_PLAYER", queue: "SOLO" }, emptyMatches, players);
-    expect(winsResult).toBeDefined();
-    expect(winsResult.every((entry) => entry.score === 0)).toBe(true);
-
-    const championResult = processCriteria(
-      { type: "MOST_WINS_CHAMPION", championId: ChampionIdSchema.parse(157), queue: "SOLO" },
-      emptyMatches,
-      players,
-    );
-    expect(championResult).toBeDefined();
-    expect(championResult.every((entry) => entry.score === 0)).toBe(true);
+    testEmptyMatchData();
   });
 
   it("should correctly filter by queue type", async () => {
@@ -119,19 +152,7 @@ describe("processCriteria integration tests", () => {
       throw new Error("No participants in match fixture");
     }
 
-    const player: PlayerWithAccounts = {
-      id: PlayerIdSchema.parse(1),
-      alias: "TestPlayer",
-      discordId: testAccountId("100000000"),
-      accounts: [
-        {
-          id: AccountIdSchema.parse(1),
-          alias: "TestPlayer",
-          puuid: LeaguePuuidSchema.parse(puuid),
-          region: "AMERICA_NORTH",
-        },
-      ],
-    };
+    const player = createTestPlayerFromPuuid(puuid, 0);
 
     // Test matching queue filter
     // queueId 1700 = ARENA, 420 = SOLO, 440 = FLEX
@@ -166,19 +187,7 @@ describe("processCriteria integration tests", () => {
       throw new Error("No participants in match fixture");
     }
 
-    const player: PlayerWithAccounts = {
-      id: PlayerIdSchema.parse(1),
-      alias: "TestPlayer",
-      discordId: testAccountId("100000000"),
-      accounts: [
-        {
-          id: AccountIdSchema.parse(1),
-          alias: "TestPlayer",
-          puuid: LeaguePuuidSchema.parse(firstParticipant.puuid),
-          region: "AMERICA_NORTH",
-        },
-      ],
-    };
+    const player = createTestPlayerFromParticipant(firstParticipant);
 
     const result = processCriteria({ type: "MOST_WINS_PLAYER", queue: "ALL" }, [match], [player]);
 

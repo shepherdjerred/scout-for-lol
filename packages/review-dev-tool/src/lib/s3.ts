@@ -5,23 +5,19 @@ import { S3Client, ListObjectsV2Command, GetObjectCommand, type ListObjectsV2Com
 import {
   MatchDtoSchema,
   parseQueueType,
-  parseLane,
   getLaneOpponent,
   parseTeam,
   invertTeam,
   getOrdinalSuffix,
   type MatchDto,
-  type ParticipantDto,
   type ArenaMatch,
   type CompletedMatch,
-  type Champion,
-  type Rune,
 } from "@scout-for-lol/data";
-import { getRuneInfo } from "@scout-for-lol/report";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
 import { getCachedDataAsync, setCachedData } from "@scout-for-lol/review-dev-tool/lib/cache";
 import { z } from "zod";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
+import { getOutcome, participantToChampion } from "@scout-for-lol/review-dev-tool/lib/s3-helpers";
 
 /**
  * Fetch all objects from S3 with pagination
@@ -262,20 +258,6 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
 }
 
 /**
- * Get match outcome from participant data
- * Mirrors backend implementation from packages/backend/src/league/model/match.ts
- */
-function getOutcome(participant: ParticipantDto): "Victory" | "Defeat" | "Surrender" {
-  if (participant.win) {
-    return "Victory";
-  }
-  if (participant.gameEndedInSurrender) {
-    return "Surrender";
-  }
-  return "Defeat";
-}
-
-/**
  * Convert a Riot API match to our internal format
  * This is a simplified conversion for dev tool purposes - we use example match structure
  * but populate it with real player data including Riot IDs
@@ -316,61 +298,6 @@ export function convertMatchDtoToInternalFormat(
       }
     }
   }
-
-  // Helper to extract rune details from participant perks
-  const extractRunes = (p: ParticipantDto): Rune[] => {
-    const runes: Rune[] = [];
-
-    // Extract primary rune selections
-    const primaryStyle = p.perks.styles[0];
-    if (primaryStyle) {
-      for (const selection of primaryStyle.selections) {
-        const info = getRuneInfo(selection.perk);
-        runes.push({
-          id: selection.perk,
-          name: info?.name ?? `Rune ${selection.perk.toString()}`,
-          description: info?.longDesc ?? info?.shortDesc ?? "",
-        });
-      }
-    }
-
-    // Extract secondary rune selections
-    const subStyle = p.perks.styles[1];
-    if (subStyle) {
-      for (const selection of subStyle.selections) {
-        const info = getRuneInfo(selection.perk);
-        runes.push({
-          id: selection.perk,
-          name: info?.name ?? `Rune ${selection.perk.toString()}`,
-          description: info?.longDesc ?? info?.shortDesc ?? "",
-        });
-      }
-    }
-
-    return runes;
-  };
-
-  // Helper function to convert participant to champion (like backend does)
-  const participantToChampion = (p: ParticipantDto): Champion => {
-    const riotIdGameName = p.riotIdGameName && p.riotIdTagline ? p.riotIdGameName : "Unknown";
-
-    return {
-      riotIdGameName,
-      championName: p.championName,
-      kills: p.kills,
-      deaths: p.deaths,
-      assists: p.assists,
-      level: p.champLevel,
-      items: [p.item0, p.item1, p.item2, p.item3, p.item4, p.item5, p.item6],
-      lane: parseLane(p.teamPosition),
-      spells: [p.summoner1Id, p.summoner2Id],
-      gold: p.goldEarned,
-      runes: extractRunes(p),
-      creepScore: p.totalMinionsKilled + p.neutralMinionsKilled,
-      visionScore: p.visionScore,
-      damage: p.totalDamageDealtToChampions,
-    };
-  };
 
   // Build team rosters first (needed for lane opponent calculation)
   const teams = {
@@ -438,20 +365,22 @@ export function convertMatchDtoToInternalFormat(
   // Update team rosters for non-arena matches (use teams we already built)
   if (queueType !== "arena") {
     // Return completed match with updated players
-    return {
-      ...baseMatch,
+    const completedMatch: CompletedMatch = {
+      ...(baseMatch as unknown as CompletedMatch),
       players: updatedPlayers,
       durationInSeconds: matchDto.info.gameDuration,
       teams,
-    } as CompletedMatch;
+    };
+    return completedMatch;
   }
 
   // For arena matches, no teams roster
-  return {
-    ...baseMatch,
+  const arenaMatch: ArenaMatch = {
+    ...(baseMatch as unknown as ArenaMatch),
     players: updatedPlayers,
     durationInSeconds: matchDto.info.gameDuration,
-  } as ArenaMatch;
+  };
+  return arenaMatch;
 }
 
 /**

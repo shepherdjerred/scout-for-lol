@@ -18,5 +18,13 @@
   "exclude": [
     "node_modules",
     "vendor"
+  ],
+  "references": [
+    {
+      "path": "../data"
+    },
+    {
+      "path": "../report"
+    }
   ]
 }

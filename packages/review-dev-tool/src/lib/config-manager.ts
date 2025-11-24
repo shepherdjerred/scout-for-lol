@@ -25,7 +25,7 @@ const ReviewConfigSchema = z.object({
  */
 export async function loadCurrentConfig(): Promise<ReviewConfig | null> {
   try {
-    const stored = await getItem<unknown>(STORES.CURRENT_CONFIG, "current");
+    const stored = await getItem(STORES.CURRENT_CONFIG, "current");
     if (!stored) {
       return null;
     }
@@ -48,7 +48,7 @@ export async function saveCurrentConfig(config: ReviewConfig): Promise<void> {
  */
 export async function loadGlobalConfig(): Promise<GlobalConfig | null> {
   try {
-    const stored = await getItem<unknown>(STORES.GLOBAL_CONFIG, "global");
+    const stored = await getItem(STORES.GLOBAL_CONFIG, "global");
     if (!stored) {
       return null;
     }

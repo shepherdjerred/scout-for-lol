@@ -29,7 +29,7 @@ export type CustomArtTheme = z.infer<typeof CustomArtThemeSchema>;
  */
 export async function loadCustomArtStyles(): Promise<CustomArtStyle[]> {
   try {
-    const stored = await getAllItems<unknown>(STORES.ART_STYLES);
+    const stored = await getAllItems(STORES.ART_STYLES);
     const ArraySchema = CustomArtStyleSchema.array();
     const result = ArraySchema.safeParse(stored);
     return result.success ? result.data : [];
@@ -89,7 +89,7 @@ export function generateArtStyleId(description: string): string {
  */
 export async function loadCustomArtThemes(): Promise<CustomArtTheme[]> {
   try {
-    const stored = await getAllItems<unknown>(STORES.ART_THEMES);
+    const stored = await getAllItems(STORES.ART_THEMES);
     const ArraySchema = CustomArtThemeSchema.array();
     const result = ArraySchema.safeParse(stored);
     return result.success ? result.data : [];

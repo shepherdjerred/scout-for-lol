@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-const IDBOpenDBRequestSchema = z.instanceof(IDBOpenDBRequest);
-
 type UpgradeHandler = (db: IDBDatabase) => void;
 
 /**
@@ -22,11 +20,11 @@ export function openIndexedDB(dbName: string, version: number, upgradeHandler?: 
 
     if (upgradeHandler) {
       request.onupgradeneeded = (event) => {
-        if (event.target instanceof IDBOpenDBRequest) {
-          const db = event.target.result;
-          if (db) {
-            upgradeHandler(db);
-          }
+        const IDBOpenDBRequestSchema = z.instanceof(IDBOpenDBRequest);
+        const targetResult = IDBOpenDBRequestSchema.safeParse(event.target);
+        if (targetResult.success) {
+          const db = targetResult.data.result;
+          upgradeHandler(db);
         }
       };
     }
@@ -60,8 +58,17 @@ export function executeRequest<T>(request: IDBRequest<T>): Promise<T | void> {
  * Execute an IndexedDB request that doesn't return a value
  * @deprecated Use executeRequest instead
  */
-export function executeRequestVoid(request: IDBRequest<IDBValidKey>): Promise<void> {
-  return executeRequest(request);
+export function executeRequestVoid(request: IDBRequest<IDBValidKey> | IDBRequest<undefined>): Promise<void> {
+  return new Promise((resolve, reject) => {
+    request.onerror = () => {
+      const error = request.error;
+      reject(error ?? new Error("IndexedDB operation failed"));
+    };
+
+    request.onsuccess = () => {
+      resolve();
+    };
+  });
 }
 
 /**

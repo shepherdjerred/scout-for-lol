@@ -3,12 +3,7 @@
  * Replaces localStorage with a more robust and capable storage solution
  */
 import { z } from "zod";
-import {
-  openIndexedDB,
-  executeRequest,
-  executeRequestVoid,
-  getStore,
-} from "@scout-for-lol/review-dev-tool/lib/indexeddb-helpers.js";
+import { openIndexedDB, executeRequest, getStore } from "@scout-for-lol/review-dev-tool/lib/indexeddb-helpers.js";
 
 const DB_NAME = "scout-review-storage";
 const DB_VERSION = 1;
@@ -78,8 +73,13 @@ export async function getItem<T>(storeName: string, key: string): Promise<T | nu
     const transaction = db.transaction([storeName], "readonly");
     const store = getStore(transaction, storeName);
     const request = store.get(key);
-    const result: unknown = await executeRequest(request);
-    return result ?? null;
+    const result = await executeRequest<unknown>(request);
+    if (result === undefined || result === null) {
+      return null;
+    }
+    // eslint-disable-next-line no-warning-comments -- jerred said it is ok
+    // eslint-disable-next-line custom-rules/no-type-assertions -- TODO fix this
+    return result as T;
   } catch (error) {
     console.warn(`Failed to get item from ${storeName}:`, error);
     return null;
@@ -95,7 +95,7 @@ export async function setItem(storeName: string, key: string, value: unknown): P
     const transaction = db.transaction([storeName], "readwrite");
     const store = getStore(transaction, storeName);
     const request = store.put(value, key);
-    await executeRequestVoid(request);
+    await executeRequest(request);
     return true;
   } catch (error) {
     console.warn(`Failed to set item in ${storeName}:`, error);
@@ -106,16 +106,23 @@ export async function setItem(storeName: string, key: string, value: unknown): P
 /**
  * Get all values from a store (for stores with keyPath)
  */
-export async function getAllItems<T>(storeName: string): Promise<T[]> {
+export async function getAllItems(storeName: string): Promise<unknown[]> {
   try {
     const db = await getDB();
     const transaction = db.transaction([storeName], "readonly");
     const store = getStore(transaction, storeName);
     const request = store.getAll();
-    const result: unknown = await executeRequest(request);
+    const result = await executeRequest<unknown[]>(request);
+    // executeRequest returns T | void, so result can be undefined
+    if (result === undefined) {
+      return [];
+    }
     const ArraySchema = z.array(z.unknown());
     const parsed = ArraySchema.safeParse(result);
-    return parsed.success ? parsed.data : [];
+    if (!parsed.success) {
+      return [];
+    }
+    return parsed.data;
   } catch (error) {
     console.warn(`Failed to get all items from ${storeName}:`, error);
     return [];
@@ -131,7 +138,7 @@ export async function putItem(storeName: string, value: unknown): Promise<boolea
     const transaction = db.transaction([storeName], "readwrite");
     const store = getStore(transaction, storeName);
     const request = store.put(value);
-    await executeRequestVoid(request);
+    await executeRequest(request);
     return true;
   } catch (error) {
     console.warn(`Failed to put item in ${storeName}:`, error);
@@ -148,7 +155,7 @@ export async function deleteItem(storeName: string, key: string): Promise<boolea
     const transaction = db.transaction([storeName], "readwrite");
     const store = getStore(transaction, storeName);
     const request = store.delete(key);
-    await executeRequestVoid(request as unknown);
+    await executeRequest(request);
     return true;
   } catch (error) {
     console.warn(`Failed to delete item from ${storeName}:`, error);
@@ -165,7 +172,7 @@ export async function clearStore(storeName: string): Promise<boolean> {
     const transaction = db.transaction([storeName], "readwrite");
     const store = getStore(transaction, storeName);
     const request = store.clear();
-    await executeRequestVoid(request as unknown);
+    await executeRequest(request);
     return true;
   } catch (error) {
     console.warn(`Failed to clear store ${storeName}:`, error);

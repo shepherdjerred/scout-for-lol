@@ -149,13 +149,13 @@ This is an invite-only competition. Ask the competition owner (<@${competition.o
   // Step 8: Check participant limit
   // ============================================================================
 
-  const activeParticipantCount = await checkParticipantLimit(
+  const activeParticipantCount = await checkParticipantLimit({
     interaction,
     competitionId,
-    competition.maxParticipants,
-    "Competition Join",
-    "The competition is full!",
-  );
+    maxParticipants: competition.maxParticipants,
+    logContext: "Competition Join",
+    fullMessage: "The competition is full!",
+  });
   if (activeParticipantCount === null) {
     return;
   }

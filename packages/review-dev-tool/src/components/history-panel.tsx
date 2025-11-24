@@ -70,13 +70,13 @@ export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, 
       return "Just now";
     }
     if (minutes < 60) {
-      return `${minutes}m ago`;
+      return `${minutes.toString()}m ago`;
     }
     if (hours < 24) {
-      return `${hours}h ago`;
+      return `${hours.toString()}h ago`;
     }
     if (days < 7) {
-      return `${days}d ago`;
+      return `${days.toString()}d ago`;
     }
 
     return format(date, "MMM d, yyyy");

@@ -59,7 +59,7 @@ export async function saveEntry(entry: DBHistoryEntry): Promise<void> {
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = getStore(transaction, STORE_NAME);
   const request = store.put(entry);
-  return executeRequestVoid(request);
+  await executeRequest(request);
 }
 
 /**
@@ -71,6 +71,7 @@ export async function getAllEntries(): Promise<DBHistoryEntry[]> {
   const store = getStore(transaction, STORE_NAME);
   const request = store.getAll();
   const result = await executeRequest<unknown[]>(request);
+  // executeRequest returns T | void, so result can be undefined
   if (result === undefined) {
     return [];
   }
@@ -108,7 +109,7 @@ export async function deleteEntry(id: string): Promise<void> {
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = getStore(transaction, STORE_NAME);
   const request = store.delete(id);
-  return executeRequestVoid(request);
+  await executeRequest(request);
 }
 
 /**
@@ -119,7 +120,7 @@ export async function clearAllEntries(): Promise<void> {
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = getStore(transaction, STORE_NAME);
   const request = store.clear();
-  await executeRequestVoid(request);
+  await executeRequest(request);
 }
 
 /**
@@ -130,7 +131,8 @@ export async function getEntryCount(): Promise<number> {
   const transaction = db.transaction([STORE_NAME], "readonly");
   const store = getStore(transaction, STORE_NAME);
   const request = store.count();
-  return executeRequest(request);
+  const result = await executeRequest<number>(request);
+  return result ?? 0;
 }
 
 /**
@@ -150,7 +152,7 @@ export async function trimToMaxEntries(maxCount: number): Promise<void> {
   await Promise.all(
     toDelete.map((entry) => {
       const request = store.delete(entry.id);
-      return executeRequestVoid(request);
+      return executeRequest(request);
     }),
   );
 }

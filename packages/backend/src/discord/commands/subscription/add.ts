@@ -8,19 +8,16 @@ import {
   RegionSchema,
   RiotIdSchema,
 } from "@scout-for-lol/data";
-import { riotApi } from "@scout-for-lol/backend/league/api/api";
-import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region";
-import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
 import { prisma } from "@scout-for-lol/backend/database/index";
 import { fromError } from "zod-validation-error";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
-import {
-  DISCORD_SERVER_INVITE,
-  LIMIT_WARNING_THRESHOLD,
-} from "@scout-for-lol/backend/configuration/subscription-limits.js";
 import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.js";
 import { sendWelcomeMatch } from "@scout-for-lol/backend/discord/commands/subscription/welcome-match.js";
+import {
+  checkSubscriptionLimit,
+  checkAccountLimit,
+  resolveRiotIdToPuuid,
+} from "@scout-for-lol/backend/discord/commands/subscription/add-helpers.js";
 
 export const ArgsSchema = z.object({
   channel: DiscordChannelIdSchema,
@@ -77,115 +74,20 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
   });
 
   // Check subscription limit (only if creating a new player)
-  if (!existingPlayer) {
-    const subscriptionLimit = getLimit("player_subscriptions", { server: guildId });
-    const isUnlimited = subscriptionLimit === "unlimited";
-
-    if (!isUnlimited) {
-      console.log(`🔍 Checking subscription limit for server ${guildId}: ${subscriptionLimit.toString()} players`);
-
-      // Count unique players with subscriptions in this server
-      const subscribedPlayerCount = await prisma.player.count({
-        where: {
-          serverId: guildId,
-          subscriptions: {
-            some: {},
-          },
-        },
-      });
-
-      console.log(`📊 Current subscribed players: ${subscribedPlayerCount.toString()}/${subscriptionLimit.toString()}`);
-
-      if (subscribedPlayerCount >= subscriptionLimit) {
-        console.log(
-          `❌ Subscription limit reached for server ${guildId} (${subscribedPlayerCount.toString()}/${subscriptionLimit.toString()})`,
-        );
-
-        await interaction.reply({
-          content: `❌ **Subscription limit reached**\n\nThis server can subscribe to a maximum of ${subscriptionLimit.toString()} players. You currently have ${subscribedPlayerCount.toString()} subscribed players.\n\nTo subscribe to a new player, please unsubscribe from an existing player first using \`/subscription delete\`.\n\nIf you need more subscriptions, please contact us: ${DISCORD_SERVER_INVITE}`,
-          ephemeral: true,
-        });
-        return;
-      }
-
-      // Warn if approaching limit (threshold or fewer slots remaining)
-      const remainingSlots = subscriptionLimit - subscribedPlayerCount - 1;
-      if (remainingSlots <= LIMIT_WARNING_THRESHOLD && remainingSlots > 0) {
-        await interaction.followUp({
-          content: `⚠️  **Approaching subscription limit**\n\nYou will have ${remainingSlots.toString()} subscription slot${remainingSlots === 1 ? "" : "s"} remaining after this addition.\n\nIf you need more subscriptions, please contact us: ${DISCORD_SERVER_INVITE}`,
-          ephemeral: true,
-        });
-      }
-    } else {
-      console.log(`♾️ Server ${guildId} has unlimited subscriptions`);
-    }
-  } else {
-    console.log(
-      `📌 Adding account to existing player "${alias}" (ID: ${existingPlayer.id.toString()}) - no limit check needed`,
-    );
+  const subscriptionLimitPassed = await checkSubscriptionLimit(interaction, guildId, existingPlayer);
+  if (!subscriptionLimitPassed) {
+    return;
   }
 
   // Check account limit (always check, even for existing players)
-  const accountLimit = getLimit("accounts", { server: guildId });
-  const isUnlimitedAccounts = accountLimit === "unlimited";
-
-  if (!isUnlimitedAccounts) {
-    console.log(`🔍 Checking account limit for server ${guildId}: ${accountLimit.toString()} accounts`);
-
-    // Count all accounts in this server
-    const accountCount = await prisma.account.count({
-      where: {
-        serverId: guildId,
-      },
-    });
-
-    console.log(`📊 Current accounts: ${accountCount.toString()}/${accountLimit.toString()}`);
-
-    if (accountCount >= accountLimit) {
-      console.log(
-        `❌ Account limit reached for server ${guildId} (${accountCount.toString()}/${accountLimit.toString()})`,
-      );
-
-      await interaction.reply({
-        content: `❌ **Account limit reached**\n\nThis server can have a maximum of ${accountLimit.toString()} accounts. You currently have ${accountCount.toString()} accounts.\n\nTo add a new account, please remove an existing account first.\n\nIf you need more accounts, please contact us: ${DISCORD_SERVER_INVITE}`,
-        ephemeral: true,
-      });
-      return;
-    }
-
-    // Warn if approaching limit (threshold or fewer slots remaining)
-    const remainingAccountSlots = accountLimit - accountCount - 1;
-    if (remainingAccountSlots <= LIMIT_WARNING_THRESHOLD && remainingAccountSlots > 0) {
-      await interaction.followUp({
-        content: `⚠️  **Approaching account limit**\n\nYou will have ${remainingAccountSlots.toString()} account slot${remainingAccountSlots === 1 ? "" : "s"} remaining after this addition.\n\nIf you need more accounts, please contact us: ${DISCORD_SERVER_INVITE}`,
-        ephemeral: true,
-      });
-    }
-  } else {
-    console.log(`♾️ Server ${guildId} has unlimited accounts`);
+  const accountLimitPassed = await checkAccountLimit(interaction, guildId);
+  if (!accountLimitPassed) {
+    return;
   }
 
-  console.log(`🔍 Looking up Riot ID: ${riotId.game_name}#${riotId.tag_line} in region ${region}`);
-
-  let puuid: string;
-  try {
-    const apiStartTime = Date.now();
-    const regionGroup = regionToRegionGroupForAccountAPI(mapRegionToEnum(region));
-
-    console.log(`🌐 Using region group: ${regionGroup}`);
-
-    const account = await riotApi.Account.getByRiotId(riotId.game_name, riotId.tag_line, regionGroup);
-
-    const apiTime = Date.now() - apiStartTime;
-    puuid = account.response.puuid;
-
-    console.log(`✅ Successfully resolved Riot ID to PUUID: ${puuid} (${apiTime.toString()}ms)`);
-  } catch (error) {
-    console.error(`❌ Failed to resolve Riot ID ${riotId.game_name}#${riotId.tag_line}:`, error);
-    await interaction.reply({
-      content: `Error looking up Riot ID: ${getErrorMessage(error)}`,
-      ephemeral: true,
-    });
+  // Resolve Riot ID to PUUID
+  const puuid = await resolveRiotIdToPuuid(interaction, riotId, region);
+  if (!puuid) {
     return;
   }
 

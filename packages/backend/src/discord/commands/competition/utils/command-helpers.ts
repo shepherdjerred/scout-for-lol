@@ -1,4 +1,5 @@
 import { type ChatInputCommandInteraction } from "discord.js";
+import { z } from "zod";
 import {
   CompetitionIdSchema,
   DiscordGuildIdSchema,
@@ -47,7 +48,8 @@ export async function fetchLinkedPlayerForUser(
   userId: string | DiscordAccountId,
   logContext: string,
 ): Promise<Awaited<ReturnType<typeof prisma.player.findFirst>> | null> {
-  const parsedUserId = typeof userId === "string" ? DiscordAccountIdSchema.parse(userId) : userId;
+  const StringUserIdSchema = z.string();
+  const parsedUserId = StringUserIdSchema.safeParse(userId).success ? DiscordAccountIdSchema.parse(userId) : userId;
 
   let player;
   try {
@@ -152,13 +154,14 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
  * Check if competition has reached participant limit
  * Returns null if check fails (and sends error reply), otherwise returns the active participant count
  */
-export async function checkParticipantLimit(
-  interaction: ChatInputCommandInteraction,
-  competitionId: number,
-  maxParticipants: number,
-  logContext: string,
-  fullMessage: string,
-): Promise<number | null> {
+export async function checkParticipantLimit(options: {
+  interaction: ChatInputCommandInteraction;
+  competitionId: number;
+  maxParticipants: number;
+  logContext: string;
+  fullMessage: string;
+}): Promise<number | null> {
+  const { interaction, competitionId, maxParticipants, logContext, fullMessage } = options;
   let activeParticipantCount;
   try {
     activeParticipantCount = await prisma.competitionParticipant.count({

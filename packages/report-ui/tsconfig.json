@@ -20,5 +20,13 @@
   "exclude": [
     "node_modules",
     "dist"
+  ],
+  "references": [
+    {
+      "path": "../data"
+    },
+    {
+      "path": "../report"
+    }
   ]
 }

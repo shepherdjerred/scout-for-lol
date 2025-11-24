@@ -8,7 +8,8 @@
   ],
   "include": [
     ".astro/types.d.ts",
-    "**/*"
+    "src/**/*",
+    "postcss.config.ts"
   ],
   "compilerOptions": {
     "jsx": "react-jsx",
@@ -20,8 +21,9 @@
     ],
     "composite": true
   },
-  "include": [
-    "src/**/*",
-    "postcss.config.ts"
+  "references": [
+    {
+      "path": "../data"
+    }
   ]
 }
