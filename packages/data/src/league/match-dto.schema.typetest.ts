@@ -7,7 +7,6 @@
  * Based on: https://frontendmasters.com/blog/testing-types-in-typescript/
  */
 
-import type { MatchV5DTOs as _MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import type { MatchDto as _MatchDto } from "@scout-for-lol/packages/data/src/league/match-dto.schema.js";
 
 // ============================================================================

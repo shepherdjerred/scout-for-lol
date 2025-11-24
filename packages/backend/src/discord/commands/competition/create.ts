@@ -12,7 +12,7 @@ import {
   type CompetitionCriteria,
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { canCreateCompetition } from "@scout-for-lol/backend/database/competition/permissions.js";
 import { type CreateCompetitionInput, createCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
@@ -267,25 +267,38 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     return;
   }
 
-  // TypeScript narrows the union based on criteriaType!
-  const criteria: CompetitionCriteria = match(args.criteriaType)
-    .with("MOST_GAMES_PLAYED", () => ({ type: "MOST_GAMES_PLAYED" as const, queue: args.queue }))
-    .with("HIGHEST_RANK", () => ({ type: "HIGHEST_RANK" as const, queue: args.queue }))
-    .with("MOST_RANK_CLIMB", () => ({ type: "MOST_RANK_CLIMB" as const, queue: args.queue }))
-    .with("MOST_WINS_PLAYER", () => ({ type: "MOST_WINS_PLAYER" as const, queue: args.queue }))
-    .with("MOST_WINS_CHAMPION", () => {
+  // Match on full args object to properly narrow discriminated union types
+  const criteria: CompetitionCriteria = match(args)
+    .with({ criteriaType: "MOST_GAMES_PLAYED", queue: P.select() }, (queue) => ({
+      type: "MOST_GAMES_PLAYED" as const,
+      queue,
+    }))
+    .with({ criteriaType: "HIGHEST_RANK", queue: P.select() }, (queue) => ({
+      type: "HIGHEST_RANK" as const,
+      queue,
+    }))
+    .with({ criteriaType: "MOST_RANK_CLIMB", queue: P.select() }, (queue) => ({
+      type: "MOST_RANK_CLIMB" as const,
+      queue,
+    }))
+    .with({ criteriaType: "MOST_WINS_PLAYER", queue: P.select() }, (queue) => ({
+      type: "MOST_WINS_PLAYER" as const,
+      queue,
+    }))
+    .with({ criteriaType: "MOST_WINS_CHAMPION" }, (narrowedArgs) => {
+      // TypeScript now knows narrowedArgs has the champion field
       // Convert champion string (ID from autocomplete) to number
       // Try parsing as number first (from autocomplete), then try as name
       let championId: number;
-      const championIdFromString = Number.parseInt(args.champion, 10);
+      const championIdFromString = Number.parseInt(narrowedArgs.champion, 10);
       if (!isNaN(championIdFromString)) {
         championId = championIdFromString;
       } else {
         // Try looking up by name
-        const idFromName = getChampionId(args.champion);
+        const idFromName = getChampionId(narrowedArgs.champion);
         if (!idFromName) {
           throw new Error(
-            `Invalid champion: "${args.champion.toString()}". Please select a champion from the autocomplete list.`,
+            `Invalid champion: "${narrowedArgs.champion}". Please select a champion from the autocomplete list.`,
           );
         }
         championId = idFromName;
@@ -294,13 +307,13 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
       return {
         type: "MOST_WINS_CHAMPION" as const,
         championId: ChampionIdSchema.parse(championId),
-        queue: args.queue,
+        queue: narrowedArgs.queue,
       };
     })
-    .with("HIGHEST_WIN_RATE", () => ({
+    .with({ criteriaType: "HIGHEST_WIN_RATE" }, (narrowedArgs) => ({
       type: "HIGHEST_WIN_RATE" as const,
-      minGames: args.minGames ?? 10,
-      queue: args.queue,
+      minGames: narrowedArgs.minGames ?? 10,
+      queue: narrowedArgs.queue,
     }))
     .exhaustive();
 
@@ -314,28 +327,23 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
 
   try {
     // Parse dates - schema already validated format and presence
-    const dates: CreateCompetitionInput["dates"] = match(args.dateType)
-      .with("FIXED", () => {
-        if (!args.startDate || !args.endDate) {
-          throw new Error("startDate/endDate required for FIXED (validation error)");
-        }
-        return {
-          type: "FIXED_DATES" as const,
-          startDate: new Date(args.startDate),
-          endDate: new Date(args.endDate),
-        };
-      })
-      .with("SEASON", () => {
+    const dates: CreateCompetitionInput["dates"] = match(args)
+      .with({ dateType: "FIXED" }, (narrowedArgs) => ({
+        type: "FIXED_DATES" as const,
+        startDate: new Date(narrowedArgs.startDate),
+        endDate: new Date(narrowedArgs.endDate),
+      }))
+      .with({ dateType: "SEASON" }, (narrowedArgs) => {
         // Validate season hasn't ended yet
-        if (hasSeasonEnded(args.season)) {
+        if (hasSeasonEnded(narrowedArgs.season)) {
           throw new Error(
-            `Cannot create competition for season ${args.season.toString()} - this season has already ended`,
+            `Cannot create competition for season ${narrowedArgs.season} - this season has already ended`,
           );
         }
 
         return {
           type: "SEASON" as const,
-          seasonId: args.season,
+          seasonId: narrowedArgs.season,
         };
       })
       .exhaustive();

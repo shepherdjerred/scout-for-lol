@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { MatchV5DTOs as _MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 
 // We'll need to test internal helper functions, so let's create a test version
 // that exposes these functions for testing

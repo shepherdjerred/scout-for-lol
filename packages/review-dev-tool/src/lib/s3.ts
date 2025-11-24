@@ -19,7 +19,6 @@ import {
 import { getRuneInfo } from "@scout-for-lol/report";
 import { getExampleMatch } from "@scout-for-lol/report-ui/src/example";
 import { getCachedDataAsync, setCachedData } from "@scout-for-lol/review-dev-tool/lib/cache";
-import { match } from "ts-pattern";
 import { z } from "zod";
 
 /**

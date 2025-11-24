@@ -1,5 +1,4 @@
 import type { HighestWinRateCriteria } from "@scout-for-lol/data";
-import type { MatchV5DTOs as _MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,

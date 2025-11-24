@@ -1,8 +1,8 @@
-import { parseDivision, Ranks, PlayerConfigEntry, Rank, TierSchema } from "@scout-for-lol/data";
+import { parseDivision, Ranks, PlayerConfigEntry, Rank, TierSchema, SummonerLeagueDto, SummonerLeagueDtoSchema } from "@scout-for-lol/data";
 import { api } from "@scout-for-lol/backend/league/api/api";
-import { SummonerLeagueDto } from "twisted/dist/models-dto/index.js";
 import { filter, first, pipe } from "remeda";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region";
+import { z } from "zod";
 
 const solo = "RANKED_SOLO_5x5";
 const flex = "RANKED_FLEX_SR";
@@ -42,8 +42,11 @@ export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
     mapRegionToEnum(player.league.leagueAccount.region),
   );
 
+  // Validate the response with Zod schema
+  const validatedResponse = z.array(SummonerLeagueDtoSchema).parse(response.response);
+
   return {
-    solo: getRank(response.response, solo),
-    flex: getRank(response.response, flex),
+    solo: getRank(validatedResponse, solo),
+    flex: getRank(validatedResponse, flex),
   };
 }

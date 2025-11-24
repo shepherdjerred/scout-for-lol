@@ -190,6 +190,10 @@ export default tseslint.config(
               group: ["node:*"],
               message: "Avoid node: imports. Bun provides faster, more modern alternatives. See https://bun.sh/docs",
             },
+            {
+              group: ["twisted/dist/models-dto*"],
+              message: "Do not import DTO types from twisted. Use Zod schemas from @scout-for-lol/data instead (e.g., MatchDto, SummonerLeagueDto from @scout-for-lol/data).",
+            },
           ],
         },
       ],
