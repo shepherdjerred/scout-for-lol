@@ -14,7 +14,7 @@ type PersonalitySelectorProps = {
   onSelectRandom: () => void;
   onCreateNew: () => void;
   onEdit: (personality: Personality, createCopy?: boolean) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<void>;
   onSave: (personality: Personality) => Promise<void>;
   onCancelEdit: () => void;
 };
@@ -128,7 +128,7 @@ export function PersonalitySelector({
                       </button>
                       <button
                         onClick={() => {
-                          onDelete(personality.id);
+                          void onDelete(personality.id);
                         }}
                         className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
                       >

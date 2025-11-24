@@ -98,7 +98,10 @@ export const noReExports = createRule({
           // ExportSpecifier is the only type for specifiers in ExportNamedDeclaration without source
           const exportSpecifier = specifier as TSESTree.ExportSpecifier;
 
-          // ExportSpecifier.local is always an Identifier
+          // ExportSpecifier.local is always an Identifier (type narrowing)
+          if (exportSpecifier.local.type !== "Identifier") {
+            continue;
+          }
           const localName = exportSpecifier.local.name;
 
           // Flag if it's imported but not locally declared (i.e., it's a re-export)

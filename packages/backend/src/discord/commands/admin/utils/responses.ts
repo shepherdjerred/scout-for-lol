@@ -12,17 +12,6 @@ export function buildPlayerNotFoundError(alias: string): InteractionReplyOptions
 }
 
 /**
- * Build a validation error response
- */
-function buildValidationError(error: unknown): InteractionReplyOptions {
-  const errorMessage = getErrorMessage(error);
-  return {
-    content: `❌ **Validation Error**\n\n${errorMessage}`,
-    ephemeral: true,
-  };
-}
-
-/**
  * Build a database error response
  */
 export function buildDatabaseError(operation: string, error: unknown): InteractionReplyOptions {
@@ -50,16 +39,6 @@ export function buildSuccessResponse(message: string, details?: string): Interac
   const content = details ? `${message}\n\n${details}` : message;
   return {
     content,
-    ephemeral: true,
-  };
-}
-
-/**
- * Build a server-only command error
- */
-function buildServerOnlyError(): InteractionReplyOptions {
-  return {
-    content: "This command can only be used in a server",
     ephemeral: true,
   };
 }

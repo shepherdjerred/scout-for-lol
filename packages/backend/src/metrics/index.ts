@@ -144,7 +144,7 @@ export const guildDataCleanupTotal = new Counter({
  * Total number of Discord channels deleted (event handler triggered)
  * TODO: Implement channel deletion tracking
  */
-const discordChannelsDeletedTotal = new Counter({
+const _discordChannelsDeletedTotal = new Counter({
   name: "discord_channels_deleted_total",
   help: "Total number of Discord channels deleted (event handler triggered)",
   registers: [registry],

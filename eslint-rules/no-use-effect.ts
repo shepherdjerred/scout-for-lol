@@ -48,7 +48,12 @@ export const noUseEffect = createRule<[], MessageIds>({
           const effectArg = node.arguments[0];
           const depsArg = node.arguments[1];
 
-          let suggestion = "useEffectWithDeps" as const;
+          let suggestion:
+            | "useEffectWithDeps"
+            | "useEffectWithoutDeps"
+            | "useEffectTransformData"
+            | "useEffectEventHandler"
+            | "useEffectStateSync" = "useEffectWithDeps";
 
           // Heuristic: check if there's no dependency array
           if (!depsArg) {

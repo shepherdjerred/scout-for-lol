@@ -3,9 +3,17 @@
   "compilerOptions": {
     "module": "ES2022",
     "moduleResolution": "node",
-    "types": ["bun-types"],
-    "jsx": "react-jsx"
+    "checkJs": false,
+    "jsx": "react-jsx",
+    "types": [
+      "bun-types"
+    ]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "vendor"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "vendor"
+  ]
 }

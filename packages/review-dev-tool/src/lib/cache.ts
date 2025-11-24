@@ -123,71 +123,6 @@ function isCacheValid(entry: CacheEntry): boolean {
 /**
  * Periodically clean up expired entries from IndexedDB (throttled to once per minute)
  */
-let lastCleanupTime = 0;
-async function cleanupExpiredEntries(): Promise<void> {
-  const now = Date.now();
-  // Only run cleanup once per minute
-  if (now - lastCleanupTime < 60_000) {
-    return;
-  }
-  lastCleanupTime = now;
-
-  try {
-    const db = await getDB();
-    await new Promise<void>((resolve, reject) => {
-      const transaction = db.transaction([STORE_NAME], "readwrite");
-      const store = transaction.objectStore(STORE_NAME);
-      const index = store.index("timestamp");
-      const request = index.openCursor();
-
-      let deleteCount = 0;
-
-      request.onsuccess = (event) => {
-        const targetResult = IDBRequestEventTargetSchema.safeParse(event.target);
-        if (targetResult.success) {
-          const cursor = targetResult.data.result;
-          if (cursor) {
-            const KeyedEntrySchema = z.object({
-              key: z.string(),
-              data: z.unknown(),
-              timestamp: z.number(),
-              ttl: z.number(),
-            });
-            const validationResult = KeyedEntrySchema.safeParse(cursor.value);
-            if (validationResult.success) {
-              const { key, ...rest } = validationResult.data;
-              const entry: CacheEntry = {
-                data: rest.data,
-                timestamp: rest.timestamp,
-                ttl: rest.ttl,
-              };
-              if (!isCacheValid(entry)) {
-                cursor.delete();
-                memoryCache.delete(key);
-                deleteCount++;
-              }
-            }
-            cursor.continue();
-          } else {
-            if (deleteCount > 0) {
-              console.log(`Cleaned up ${deleteCount.toString()} expired cache entries from IndexedDB`);
-            }
-            resolve();
-          }
-        } else {
-          resolve();
-        }
-      };
-
-      request.onerror = () => {
-        const error = request.error;
-        reject(error ?? new Error("Cache operation failed"));
-      };
-    });
-  } catch (error) {
-    console.warn("Error during cache cleanup:", error);
-  }
-}
 
 /**
  * Get cached data if available and valid (async - checks memory and IndexedDB)
@@ -415,58 +350,6 @@ export async function clearAllCache(): Promise<void> {
       request.onsuccess = () => {
         resolve();
       };
-      request.onerror = () => {
-        const error = request.error;
-        reject(error ?? new Error("Cache operation failed"));
-      };
-    });
-  } catch (error) {
-    console.warn("IndexedDB cache clear error:", error);
-  }
-}
-
-/**
- * Clear cached data for a specific endpoint
- */
-async function clearCacheForEndpoint(endpoint: string): Promise<void> {
-  // Clear from memory cache
-  const keysToDelete: string[] = [];
-  for (const key of memoryCache.keys()) {
-    if (key.includes(`${endpoint}:`)) {
-      keysToDelete.push(key);
-    }
-  }
-  for (const key of keysToDelete) {
-    memoryCache.delete(key);
-  }
-
-  // Clear from IndexedDB
-  try {
-    const db = await getDB();
-    await new Promise<void>((resolve, reject) => {
-      const transaction = db.transaction([STORE_NAME], "readwrite");
-      const store = transaction.objectStore(STORE_NAME);
-      const request = store.openCursor();
-
-      request.onsuccess = (event) => {
-        const targetResult = IDBRequestEventTargetSchema.safeParse(event.target);
-        if (targetResult.success) {
-          const cursor = targetResult.data.result;
-          if (cursor) {
-            const KeySchema = z.object({ key: z.string() });
-            const valueResult = KeySchema.safeParse(cursor.value);
-            if (valueResult.success && valueResult.data.key.includes(`${endpoint}:`)) {
-              cursor.delete();
-            }
-            cursor.continue();
-          } else {
-            resolve();
-          }
-        } else {
-          resolve();
-        }
-      };
-
       request.onerror = () => {
         const error = request.error;
         reject(error ?? new Error("Cache operation failed"));

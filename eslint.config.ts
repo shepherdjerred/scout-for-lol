@@ -1,6 +1,8 @@
 /* eslint-disable max-lines -- can't really split this up */
-import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+import * as eslint from "@eslint/js";
+import * as tseslint from "typescript-eslint";
 import unicorn from "eslint-plugin-unicorn";
 import { zodSchemaNaming } from "./eslint-rules/zod-schema-naming";
 import { noRedundantZodParse } from "./eslint-rules/no-redundant-zod-parse";
@@ -11,14 +13,14 @@ import { preferZodValidation } from "./eslint-rules/prefer-zod-validation";
 import { preferBunApis } from "./eslint-rules/prefer-bun-apis";
 import { noReExports } from "./eslint-rules/no-re-exports";
 import { noUseEffect } from "./eslint-rules/no-use-effect";
-import importPlugin from "eslint-plugin-import";
-import noRelativeImportPaths from "eslint-plugin-no-relative-import-paths";
+import * as importPlugin from "eslint-plugin-import";
+import * as noRelativeImportPaths from "eslint-plugin-no-relative-import-paths";
 import * as regexpPlugin from "eslint-plugin-regexp";
-import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
-import react from "eslint-plugin-react";
-import reactHooks from "eslint-plugin-react-hooks";
-import jsxA11y from "eslint-plugin-jsx-a11y";
-import astroPlugin, { configs as astroConfigs } from "eslint-plugin-astro";
+import * as eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
+import * as react from "eslint-plugin-react";
+import * as reactHooks from "eslint-plugin-react-hooks";
+import * as jsxA11y from "eslint-plugin-jsx-a11y";
+import * as astroPlugin from "eslint-plugin-astro";
 // MDX linting disabled - parser doesn't support type-aware rules
 // import mdx from "eslint-plugin-mdx";
 // Tailwind linting disabled - plugin incompatible with Tailwind CSS v4
@@ -75,7 +77,7 @@ export default tseslint.config(
         projectService: {
           allowDefaultProject: ["eslint.config.ts", "eslint-rules/*.ts"],
         },
-        tsconfigRootDir: import.meta.dirname,
+        tsconfigRootDir: dirname(fileURLToPath(import.meta.url)),
         extraFileExtensions: [".astro"],
       },
     },
@@ -505,7 +507,7 @@ export default tseslint.config(
       astro: astroPlugin,
     },
     // Extend astro's recommended flat config which includes the parser
-    extends: astroConfigs["flat/base"],
+    extends: (astroPlugin.configs ?? {})["flat/base"],
     languageOptions: {
       parserOptions: {
         parser: "@typescript-eslint/parser",

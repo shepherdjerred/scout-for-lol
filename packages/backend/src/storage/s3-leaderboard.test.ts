@@ -125,7 +125,7 @@ describe("CachedLeaderboard Schema Validation", () => {
   test("rejects invalid competitionId", () => {
     const invalidLeaderboard = {
       version: "v1",
-      competitionId: -1 as any, // Negative ID (invalid)
+      competitionId: -1, // Negative ID (invalid)
       calculatedAt: new Date().toISOString(),
       entries: [],
     };
@@ -153,7 +153,7 @@ describe("CachedLeaderboard Schema Validation", () => {
       calculatedAt: new Date().toISOString(),
       entries: [
         {
-          playerId: -1 as any, // Negative ID (invalid)
+          playerId: -1, // Negative ID (invalid)
           playerName: "Player1",
           score: 100,
           rank: 1,

@@ -71,14 +71,6 @@ export async function deleteCustomArtStyle(id: string): Promise<boolean> {
 }
 
 /**
- * Check if an art style is custom (not built-in)
- */
-async function isCustomArtStyle(id: string): Promise<boolean> {
-  const customs = await loadCustomArtStyles();
-  return customs.some((s) => s.id === id);
-}
-
-/**
  * Generate a unique ID for a new art style
  */
 export function generateArtStyleId(description: string): string {
@@ -136,14 +128,6 @@ export async function updateCustomArtTheme(theme: CustomArtTheme): Promise<boole
  */
 export async function deleteCustomArtTheme(id: string): Promise<boolean> {
   return await deleteItem(STORES.ART_THEMES, id);
-}
-
-/**
- * Check if an art theme is custom (not built-in)
- */
-async function isCustomArtTheme(id: string): Promise<boolean> {
-  const customs = await loadCustomArtThemes();
-  return customs.some((t) => t.id === id);
 }
 
 /**

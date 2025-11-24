@@ -87,10 +87,10 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
 
     console.log(`📖 Reading database file from ${databasePath}`);
     const fileBuffer = await Bun.file(databasePath).arrayBuffer();
-    const buffer = new Uint8Array(fileBuffer);
+    const buffer = Buffer.from(fileBuffer);
     console.log(`✅ Successfully read database file (${String(buffer.length)} bytes)`);
 
-    // Create attachment - Discord.js AttachmentBuilder accepts Uint8Array
+    // Create attachment - Discord.js AttachmentBuilder accepts Buffer
     const attachment = new AttachmentBuilder(buffer, { name: "database.sqlite" });
 
     await interaction.editReply({

@@ -1,7 +1,6 @@
 import {
   type ChatInputCommandInteraction,
   EmbedBuilder,
-  MessageFlags,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,

@@ -8,7 +8,7 @@ import { ChannelType } from "discord.js";
 
 describe("handleGuildCreate", () => {
   it("should send welcome message to system channel when available", async () => {
-    const sendMock = mock(() => Promise.resolve({} as any));
+    const sendMock = mock(() => Promise.resolve({}));
 
     const mockGuild = {
       name: "Test Server",
@@ -31,7 +31,7 @@ describe("handleGuildCreate", () => {
       client: {
         user: { id: "bot-id" },
       },
-    } as any;
+    };
 
     await handleGuildCreate(mockGuild);
 
@@ -45,7 +45,7 @@ describe("handleGuildCreate", () => {
   });
 
   it("should find first available text channel if system channel unavailable", async () => {
-    const sendMock = mock(() => Promise.resolve({} as any));
+    const sendMock = mock(() => Promise.resolve({}));
 
     const mockChannel = {
       type: ChannelType.GuildText,
@@ -65,7 +65,7 @@ describe("handleGuildCreate", () => {
         fetch: mock(() =>
           Promise.resolve(
             new Map([
-              ["channel1", { type: ChannelType.GuildVoice } as any],
+              ["channel1", { type: ChannelType.GuildVoice }],
               ["channel2", mockChannel],
             ] as const),
           ),
@@ -77,7 +77,7 @@ describe("handleGuildCreate", () => {
       client: {
         user: { id: "bot-id" },
       },
-    } as any;
+    };
 
     await handleGuildCreate(mockGuild);
 
@@ -117,7 +117,7 @@ describe("handleGuildCreate", () => {
       client: {
         user: { id: "bot-id" },
       },
-    } as any;
+    };
 
     // Should not throw error, just log warning
     await expect(handleGuildCreate(mockGuild)).resolves.toBeUndefined();
@@ -147,7 +147,7 @@ describe("handleGuildCreate", () => {
       client: {
         user: { id: "bot-id" },
       },
-    } as any;
+    };
 
     // Should not throw error, just log it
     await expect(handleGuildCreate(mockGuild)).resolves.toBeUndefined();

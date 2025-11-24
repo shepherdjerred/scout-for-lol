@@ -101,7 +101,14 @@ function selectArtThemes(config: ReviewConfig): {
     }
   }
 
-  return { artStyle, artTheme, secondArtTheme };
+  const result: { artStyle: string; artTheme: string; secondArtTheme?: string } = {
+    artStyle,
+    artTheme,
+  };
+  if (secondArtTheme) {
+    result.secondArtTheme = secondArtTheme;
+  }
+  return result;
 }
 
 /**

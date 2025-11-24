@@ -61,7 +61,7 @@ function createMockGetObjectResponse(content: string): GetObjectCommandOutput {
   };
 
   return {
-    Body: mockBody as any,
+    Body: mockBody,
     $metadata: {},
   };
 }

@@ -443,23 +443,21 @@ export function convertMatchDtoToInternalFormat(
 
   // Update team rosters for non-arena matches (use teams we already built)
   if (queueType !== "arena") {
-    // Cast required: example match structure updated with real data, types don't match exactly
-    const completedMatch: CompletedMatch = {
+    // Return completed match with updated players
+    return {
       ...baseMatch,
-      players: updatedPlayers as unknown,
+      players: updatedPlayers,
       durationInSeconds: matchDto.info.gameDuration,
       teams,
-    };
-    return completedMatch;
+    } as CompletedMatch;
   }
 
-  // For arena matches, no teams roster. Cast required: example match structure updated with real data
-  const arenaMatch: ArenaMatch = {
+  // For arena matches, no teams roster
+  return {
     ...baseMatch,
-    players: updatedPlayers as unknown,
+    players: updatedPlayers,
     durationInSeconds: matchDto.info.gameDuration,
-  };
-  return arenaMatch;
+  } as ArenaMatch;
 }
 
 /**

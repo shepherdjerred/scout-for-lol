@@ -104,7 +104,7 @@ export async function deleteEntry(id: string): Promise<void> {
   const db = await openDB();
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = getStore(transaction, STORE_NAME);
-  const request: IDBRequest<IDBValidKey> = store.delete(id);
+  const request = store.delete(id);
   return executeRequestVoid(request);
 }
 
@@ -115,7 +115,7 @@ export async function clearAllEntries(): Promise<void> {
   const db = await openDB();
   const transaction = db.transaction([STORE_NAME], "readwrite");
   const store = getStore(transaction, STORE_NAME);
-  const request: IDBRequest<IDBValidKey> = store.clear();
+  const request = store.clear();
   await executeRequestVoid(request);
 }
 
@@ -146,7 +146,7 @@ export async function trimToMaxEntries(maxCount: number): Promise<void> {
 
   await Promise.all(
     toDelete.map((entry) => {
-      const request: IDBRequest<IDBValidKey> = store.delete(entry.id);
+      const request = store.delete(entry.id);
       return executeRequestVoid(request);
     }),
   );

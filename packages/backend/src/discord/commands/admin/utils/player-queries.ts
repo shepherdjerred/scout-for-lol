@@ -7,6 +7,28 @@ export type PlayerWithSubscriptions = Awaited<ReturnType<typeof findPlayerByAlia
 export type PlayerWithCompetitions = Awaited<ReturnType<typeof findPlayerByAliasWithCompetitions>>;
 
 /**
+ * Build options object, conditionally including interaction if defined
+ */
+function buildFindPlayerOptions<T extends Prisma.PlayerInclude>(
+  prisma: PrismaClient,
+  serverId: DiscordGuildId,
+  alias: string,
+  include: T,
+  interaction: ChatInputCommandInteraction | undefined,
+): {
+  prisma: PrismaClient;
+  serverId: DiscordGuildId;
+  alias: string;
+  include: T;
+  interaction?: ChatInputCommandInteraction;
+} {
+  if (interaction) {
+    return { prisma, serverId, alias, include, interaction };
+  }
+  return { prisma, serverId, alias, include };
+}
+
+/**
  * Generic helper to find a player by alias with configurable includes
  */
 async function findPlayerByAliasGeneric<T extends Prisma.PlayerInclude>(options: {
@@ -39,18 +61,6 @@ async function findPlayerByAliasGeneric<T extends Prisma.PlayerInclude>(options:
 }
 
 /**
- * Find a player by alias (basic query)
- */
-async function findPlayerByAlias(
-  prisma: PrismaClient,
-  serverId: DiscordGuildId,
-  alias: string,
-  interaction?: ChatInputCommandInteraction,
-) {
-  return findPlayerByAliasGeneric({ prisma, serverId, alias, include: {}, interaction });
-}
-
-/**
  * Find a player by alias with accounts included
  */
 export async function findPlayerByAliasWithAccounts(
@@ -59,7 +69,7 @@ export async function findPlayerByAliasWithAccounts(
   alias: string,
   interaction?: ChatInputCommandInteraction,
 ) {
-  return findPlayerByAliasGeneric({ prisma, serverId, alias, include: { accounts: true }, interaction });
+  return findPlayerByAliasGeneric(buildFindPlayerOptions(prisma, serverId, alias, { accounts: true }, interaction));
 }
 
 /**
@@ -71,13 +81,15 @@ export async function findPlayerByAliasWithSubscriptions(
   alias: string,
   interaction?: ChatInputCommandInteraction,
 ) {
-  return findPlayerByAliasGeneric({
-    prisma,
-    serverId,
-    alias,
-    include: { accounts: true, subscriptions: true },
-    interaction,
-  });
+  return findPlayerByAliasGeneric(
+    buildFindPlayerOptions(
+      prisma,
+      serverId,
+      alias,
+      { accounts: true, subscriptions: true },
+      interaction,
+    ),
+  );
 }
 
 /**
@@ -89,51 +101,23 @@ export async function findPlayerByAliasWithCompetitions(
   alias: string,
   interaction?: ChatInputCommandInteraction,
 ) {
-  return findPlayerByAliasGeneric({
-    prisma,
-    serverId,
-    alias,
-    include: {
-      accounts: true,
-      subscriptions: true,
-      competitionParticipants: {
-        include: {
-          competition: true,
+  return findPlayerByAliasGeneric(
+    buildFindPlayerOptions(
+      prisma,
+      serverId,
+      alias,
+      {
+        accounts: true,
+        subscriptions: true,
+        competitionParticipants: {
+          include: {
+            competition: true,
+          },
         },
       },
-    },
-    interaction,
-  });
-}
-
-/**
- * Find player by Discord ID
- */
-async function findPlayerByDiscordId(
-  prisma: PrismaClient,
-  serverId: DiscordGuildId,
-  discordId: DiscordAccountId,
-  interaction?: ChatInputCommandInteraction,
-) {
-  const player = await prisma.player.findFirst({
-    where: {
-      serverId: serverId,
-      discordId: discordId,
-    },
-    include: {
-      accounts: true,
-    },
-  });
-
-  if (!player && interaction) {
-    console.log(`❌ No player found with Discord ID: ${discordId}`);
-    await interaction.reply({
-      content: `❌ **No League account linked**\n\nYou need to link your League of Legends account first.`,
-      ephemeral: true,
-    });
-  }
-
-  return player;
+      interaction,
+    ),
+  );
 }
 
 /**
@@ -143,16 +127,3 @@ function extractGuildId(interaction: ChatInputCommandInteraction): string | null
   return interaction.guildId ? DiscordGuildIdSchema.parse(interaction.guildId) : null;
 }
 
-/**
- * Check if guild ID is valid and reply with error if not
- */
-async function requireGuildId(interaction: ChatInputCommandInteraction): Promise<string | null> {
-  const guildId = extractGuildId(interaction);
-  if (!guildId) {
-    await interaction.reply({
-      content: "This command can only be used in a server",
-      ephemeral: true,
-    });
-  }
-  return guildId;
-}

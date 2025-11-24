@@ -23,7 +23,7 @@ Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${sc
     PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
     PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
   },
-  stdio: "pipe" as const,
+  stdio: ["pipe", "pipe", "pipe"],
 });
 
 const prisma = new PrismaClient({
