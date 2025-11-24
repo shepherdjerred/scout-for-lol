@@ -50,7 +50,7 @@ export async function executeIDBCursor(
     const request = index.openCursor();
 
     request.onsuccess = (event) => {
-      const cursor = (event.target).result;
+      const cursor = event.target.result;
       if (cursor) {
         const result = operation(cursor, cursor.value as unknown);
         if (result === false) {
