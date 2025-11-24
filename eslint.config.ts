@@ -101,7 +101,7 @@ export default tseslint.config(
       "import/no-unresolved": "off",
     },
   },
-  // Backend package: use 'packages/backend' as rootDir to get correct path calculation
+  // Backend package: use 'packages/backend/src' as rootDir to get correct path calculation
   {
     files: ["packages/backend/**/*.ts"],
     plugins: {
@@ -110,11 +110,11 @@ export default tseslint.config(
     rules: {
       "no-relative-import-paths/no-relative-import-paths": [
         "warn",
-        { allowSameFolder: false, prefix: "@scout-for-lol/backend", rootDir: "packages/backend" },
+        { allowSameFolder: false, prefix: "@scout-for-lol/backend", rootDir: "packages/backend/src" },
       ],
     },
   },
-  // Data package: use 'packages/data' as rootDir to get correct path calculation
+  // Data package: use 'packages/data/src' as rootDir to get correct path calculation
   {
     files: ["packages/data/**/*.ts"],
     plugins: {
@@ -123,11 +123,11 @@ export default tseslint.config(
     rules: {
       "no-relative-import-paths/no-relative-import-paths": [
         "warn",
-        { allowSameFolder: false, prefix: "@scout-for-lol/data", rootDir: "packages/data" },
+        { allowSameFolder: false, prefix: "@scout-for-lol/data", rootDir: "packages/data/src" },
       ],
     },
   },
-  // Report package: use 'packages/report' as rootDir to get correct path calculation
+  // Report package: use 'packages/report/src' as rootDir to get correct path calculation
   {
     files: ["packages/report/**/*.ts"],
     plugins: {
@@ -136,11 +136,11 @@ export default tseslint.config(
     rules: {
       "no-relative-import-paths/no-relative-import-paths": [
         "warn",
-        { allowSameFolder: false, prefix: "@scout-for-lol/report", rootDir: "packages/report" },
+        { allowSameFolder: false, prefix: "@scout-for-lol/report", rootDir: "packages/report/src" },
       ],
     },
   },
-  // Frontend package: use 'packages/frontend' as rootDir to get correct path calculation
+  // Frontend package: use 'packages/frontend/src' as rootDir to get correct path calculation
   {
     files: ["packages/frontend/**/*.ts", "packages/frontend/**/*.tsx"],
     plugins: {
@@ -149,7 +149,7 @@ export default tseslint.config(
     rules: {
       "no-relative-import-paths/no-relative-import-paths": [
         "warn",
-        { allowSameFolder: false, prefix: "@scout-for-lol/frontend", rootDir: "packages/frontend" },
+        { allowSameFolder: false, prefix: "@scout-for-lol/frontend", rootDir: "packages/frontend/src" },
       ],
     },
   },

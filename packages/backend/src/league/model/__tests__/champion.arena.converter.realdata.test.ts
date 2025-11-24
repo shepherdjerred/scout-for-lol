@@ -1,22 +1,23 @@
 import { describe, it, expect } from "bun:test";
 import { z } from "zod";
-import type { MatchDto as _MatchDto, ParticipantDto as _ParticipantDto } from "@scout-for-lol/data";
+// Types from @scout-for-lol/data are used by TypeScript for type checking
 import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
 
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import type { ParticipantDto } from "@scout-for-lol/data/index";
 
-const _currentDir = dirname(fileURLToPath(import.meta.url));
+const currentDir = dirname(fileURLToPath(import.meta.url));
 
 const RAW_FILE_PATHS = [
-  `currentDir/testdata/matches_2025_09_19_NA1_5370969615.json`,
-  `currentDir/testdata/matches_2025_09_19_NA1_5370986469.json`,
+  `${currentDir}/testdata/matches_2025_09_19_NA1_5370969615.json`,
+  `${currentDir}/testdata/matches_2025_09_19_NA1_5370986469.json`,
 ];
 
 async function loadParticipants(path: string): Promise<ParticipantDto[]> {
   const file = Bun.file(path);
 
-  const json = (await file.json());
+  const json = await file.json();
   return json.info.participants;
 }
 

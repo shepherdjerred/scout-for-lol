@@ -1,14 +1,14 @@
 import { describe, it, expect } from "bun:test";
-import type { MatchDto as _MatchDto, ParticipantDto as _ParticipantDto , ArenaMatchSchema, LeaguePuuidSchema, type Player } from "@scout-for-lol/data";
+import type { ArenaMatchSchema, LeaguePuuidSchema, type Player } from "@scout-for-lol/data";
 import { toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 
-const _currentDir = dirname(fileURLToPath(import.meta.url));
+const currentDir = dirname(fileURLToPath(import.meta.url));
 
 const RAW_FILE_PATHS = [
-  `currentDir/testdata/matches_2025_09_19_NA1_5370969615.json`,
-  `currentDir/testdata/matches_2025_09_19_NA1_5370986469.json`,
+  `${currentDir}/testdata/matches_2025_09_19_NA1_5370969615.json`,
+  `${currentDir}/testdata/matches_2025_09_19_NA1_5370986469.json`,
 ];
 
 async function loadMatch(path: string): Promise<MatchDto> {

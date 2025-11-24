@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import type { MatchDto as _MatchDto, ParticipantDto as _ParticipantDto } from "@scout-for-lol/data";
+import type { ParticipantDto } from "@scout-for-lol/data";
 import { getArenaPlacement } from "@scout-for-lol/backend/league/model/match.js";
 
 function makeParticipant(extra: Record<string, unknown> = {}): ParticipantDto {

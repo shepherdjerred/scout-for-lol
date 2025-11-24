@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import type { MatchDto as _MatchDto, ParticipantDto as _ParticipantDto } from "@scout-for-lol/data";
+import type { ParticipantDto } from "@scout-for-lol/data";
 import { groupArenaTeams, getArenaTeammate, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.js";
 
 import { testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";

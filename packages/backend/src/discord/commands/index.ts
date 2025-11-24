@@ -23,21 +23,21 @@ import {
 } from "@scout-for-lol/backend/discord/commands/debug.js";
 import { discordCommandsTotal, discordCommandDuration } from "@scout-for-lol/backend/metrics/index.js";
 import { searchChampions } from "@scout-for-lol/backend/utils/champion.js";
-import { executeAccountAdd } from "./admin/account-add";
-import { executeAccountDelete } from "./admin/account-delete";
-import { executeAccountTransfer } from "./admin/account-transfer";
-import { executePlayerDelete } from "./admin/player-delete";
-import { executePlayerEdit } from "./admin/player-edit";
-import { executePlayerLinkDiscord } from "./admin/player-link-discord";
-import { executePlayerMerge } from "./admin/player-merge";
-import { executePlayerUnlinkDiscord } from "./admin/player-unlink-discord";
-import { executePlayerView } from "./admin/player-view";
-import { executeDebugForceLeaderboardUpdate } from "./debug/force-leaderboard-update";
-import { executeDebugForceSnapshot } from "./debug/force-snapshot";
-import { executeDebugManageParticipant } from "./debug/manage-participant";
-import { executeSubscriptionAdd } from "./subscription/add";
-import { executeSubscriptionDelete } from "./subscription/delete";
-import { executeSubscriptionList } from "./subscription/list";
+import { executeAccountAdd } from "@scout-for-lol/backend/discord/commands/admin/account-add";
+import { executeAccountDelete } from "@scout-for-lol/backend/discord/commands/admin/account-delete";
+import { executeAccountTransfer } from "@scout-for-lol/backend/discord/commands/admin/account-transfer";
+import { executePlayerDelete } from "@scout-for-lol/backend/discord/commands/admin/player-delete";
+import { executePlayerEdit } from "@scout-for-lol/backend/discord/commands/admin/player-edit";
+import { executePlayerLinkDiscord } from "@scout-for-lol/backend/discord/commands/admin/player-link-discord";
+import { executePlayerMerge } from "@scout-for-lol/backend/discord/commands/admin/player-merge";
+import { executePlayerUnlinkDiscord } from "@scout-for-lol/backend/discord/commands/admin/player-unlink-discord";
+import { executePlayerView } from "@scout-for-lol/backend/discord/commands/admin/player-view";
+import { executeDebugForceLeaderboardUpdate } from "@scout-for-lol/backend/discord/commands/debug/force-leaderboard-update";
+import { executeDebugForceSnapshot } from "@scout-for-lol/backend/discord/commands/debug/force-snapshot";
+import { executeDebugManageParticipant } from "@scout-for-lol/backend/discord/commands/debug/manage-participant";
+import { executeSubscriptionAdd } from "@scout-for-lol/backend/discord/commands/subscription/add";
+import { executeSubscriptionDelete } from "@scout-for-lol/backend/discord/commands/subscription/delete";
+import { executeSubscriptionList } from "@scout-for-lol/backend/discord/commands/subscription/list";
 
 export function handleCommands(client: Client) {
   console.log("⚡ Setting up Discord command handlers");
