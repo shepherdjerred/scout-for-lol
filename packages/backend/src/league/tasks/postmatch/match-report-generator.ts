@@ -15,7 +15,7 @@ import { MatchIdSchema, queueTypeToDisplayString, MatchDtoSchema } from "@scout-
 import { getPlayer } from "@scout-for-lol/backend/league/model/player.js";
 import type { MessageCreateOptions } from "discord.js";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
-import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
+import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report/src/index.ts";
 import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
@@ -125,20 +125,54 @@ async function createMatchImage(
   match: CompletedMatch | ArenaMatch,
   matchId: MatchId,
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
-  const isArena = match.queueType === "arena";
-  const svg = isArena ? await arenaMatchToSvg(match) : await matchToSvg(match);
-  const image = await svgToPng(svg);
+  let svg: string;
+  try {
+    let svgData: string;
+    if (match.queueType === "arena") {
+      const arenaMatch: ArenaMatch = match;
+      svgData = await arenaMatchToSvg(arenaMatch);
+    } else {
+      const completedMatch: CompletedMatch = match;
+      svgData = await matchToSvg(completedMatch);
+    }
+    const SvgSchema = z.string();
+    svg = SvgSchema.parse(svgData);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(`[createMatchImage] Failed to generate SVG:`, error);
+      throw error;
+    }
+    const wrappedError = new Error(String(error));
+    console.error(`[createMatchImage] Failed to generate SVG:`, wrappedError);
+    throw wrappedError;
+  }
+
+  let image: Uint8Array;
+  try {
+    const imageData = await svgToPng(svg);
+    const ImageSchema = z.instanceof(Uint8Array);
+    image = ImageSchema.parse(imageData);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(`[createMatchImage] Failed to convert SVG to PNG:`, error);
+      throw error;
+    }
+    const wrappedError = new Error(String(error));
+    console.error(`[createMatchImage] Failed to convert SVG to PNG:`, wrappedError);
+    throw wrappedError;
+  }
 
   // Save both PNG and SVG to S3
   try {
-    const queueTypeForStorage = isArena ? "arena" : (match.queueType ?? "unknown");
+    const queueTypeForStorage = match.queueType === "arena" ? "arena" : (match.queueType ?? "unknown");
     await saveImageToS3(matchId, image, queueTypeForStorage);
     await saveSvgToS3(matchId, svg, queueTypeForStorage);
   } catch (error) {
     console.error(`[createMatchImage] Failed to save images to S3:`, error);
   }
 
-  const attachment = new AttachmentBuilder(image).setName("match.png");
+  // eslint-disable-next-line custom-rules/prefer-bun-apis -- Discord.js AttachmentBuilder requires Buffer type
+  const attachment = new AttachmentBuilder(Buffer.from(image)).setName("match.png");
   if (!attachment.name) {
     throw new Error("[createMatchImage] Attachment name is null");
   }
@@ -256,8 +290,8 @@ export async function generateMatchReport(
 
         // Add AI-generated image if available
         if (reviewImage) {
-          // Discord.js AttachmentBuilder accepts Uint8Array
-          const aiImageAttachment = new AttachmentBuilder(reviewImage).setName("ai-review.png");
+          // eslint-disable-next-line custom-rules/prefer-bun-apis -- Discord.js AttachmentBuilder requires Buffer type
+          const aiImageAttachment = new AttachmentBuilder(Buffer.from(reviewImage)).setName("ai-review.png");
           files.push(aiImageAttachment);
           console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
         }

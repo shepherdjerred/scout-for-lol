@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect, mock } from "bun:test";
+import { z } from "zod";
 import { handleGuildCreate } from "@scout-for-lol/backend/discord/events/guild-create";
 import { ChannelType } from "discord.js";
 import { mockGuild, mockTextChannel } from "@scout-for-lol/backend/testing/discord-mocks";
@@ -40,12 +41,13 @@ describe("handleGuildCreate", () => {
     expect(sendMock).toHaveBeenCalledTimes(1);
     // Verify the welcome message contains expected content
     const calls = sendMock.mock.calls;
-    const firstCall = calls[0]?.[0] as unknown;
-    const firstCallRecord = firstCall as Record<string, unknown>;
-    const content = firstCallRecord.content as unknown;
-    if (typeof content !== "string") {
-      throw new Error("content is not a string");
+    const firstCall = calls[0]?.[0];
+    const MessageSchema = z.object({ content: z.string() });
+    const result = MessageSchema.safeParse(firstCall);
+    if (!result.success) {
+      throw new Error(`Invalid message structure: ${result.error.message}`);
     }
+    const { content } = result.data;
     expect(content).toContain("Thanks for adding Scout");
     expect(content).toContain("https://scout-for-lol.com/getting-started");
     expect(content).toContain("/help");
@@ -90,12 +92,13 @@ describe("handleGuildCreate", () => {
     expect(sendMock).toHaveBeenCalledTimes(1);
     // Verify the welcome message contains expected content
     const calls = sendMock.mock.calls;
-    const firstCall = calls[0]?.[0] as unknown;
-    const firstCallRecord = firstCall as Record<string, unknown>;
-    const content = firstCallRecord.content as unknown;
-    if (typeof content !== "string") {
-      throw new Error("content is not a string");
+    const firstCall = calls[0]?.[0];
+    const MessageSchema = z.object({ content: z.string() });
+    const result = MessageSchema.safeParse(firstCall);
+    if (!result.success) {
+      throw new Error(`Invalid message structure: ${result.error.message}`);
     }
+    const { content } = result.data;
     expect(content).toContain("Thanks for adding Scout");
     expect(content).toContain("/help");
   });

@@ -4,10 +4,8 @@
 import { ArtStyleEditor } from "@scout-for-lol/review-dev-tool/components/art-style-editor";
 import type { CustomArtStyle, CustomArtTheme } from "@scout-for-lol/review-dev-tool/lib/art-style-storage";
 
-type ArtItem = { id: string; description: string };
-
 type GenericArtSelectorProps<T extends CustomArtStyle | CustomArtTheme> = {
-  items: ArtItem[];
+  items: T[];
   customItems: T[];
   selectedItem: string;
   editingItem: T | null;
@@ -17,10 +15,10 @@ type GenericArtSelectorProps<T extends CustomArtStyle | CustomArtTheme> = {
   mode: "style" | "theme";
   label: string;
   randomDescription: string;
-  onSelect: (item: ArtItem) => void;
+  onSelect: (item: T) => void;
   onSelectRandom: () => void;
   onCreateNew: () => void;
-  onEdit: (item: ArtItem) => void;
+  onEdit: (item: T) => void;
   onDelete: (id: string) => void;
   onSave: (item: T) => Promise<void>;
   onCancelEdit: () => void;
@@ -53,33 +51,17 @@ export function GenericArtSelector<T extends CustomArtStyle | CustomArtTheme>({
   const buttonColor = isSecondary ? "bg-purple-600 hover:bg-purple-700" : "bg-blue-600 hover:bg-blue-700";
 
   if (showEditor) {
-    // Narrow editingItem based on mode - use conditional rendering
-    if (mode === "style") {
-      const handleSaveStyle = (item: CustomArtStyle): void => {
-        void onSave(item as unknown);
-      };
-      return (
-        <div>
-          <ArtStyleEditor
-            mode={mode}
-            style={editingItem ?? undefined}
-            theme={undefined}
-            onSave={handleSaveStyle}
-            onCancel={onCancelEdit}
-          />
-        </div>
-      );
+    if (!editingItem) {
+      return null;
     }
-    const handleSaveTheme = (item: CustomArtTheme): void => {
-      void onSave(item as unknown);
-    };
     return (
       <div>
         <ArtStyleEditor
           mode={mode}
-          style={undefined}
-          theme={editingItem ?? undefined}
-          onSave={handleSaveTheme}
+          item={editingItem}
+          onSave={(item) => {
+            void onSave(item);
+          }}
           onCancel={onCancelEdit}
         />
       </div>

@@ -2,7 +2,6 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "module": "ES2022",
-    "moduleResolution": "node",
     "checkJs": false,
     "jsx": "react-jsx",
     "types": [

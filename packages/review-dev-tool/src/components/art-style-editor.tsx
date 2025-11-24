@@ -6,25 +6,22 @@ import type { CustomArtStyle, CustomArtTheme } from "@scout-for-lol/review-dev-t
 
 type EditorMode = "style" | "theme";
 
-type ArtStyleEditorProps = {
+type ArtStyleEditorProps<T extends CustomArtStyle | CustomArtTheme> = {
   mode: EditorMode;
-  style?: CustomArtStyle | undefined;
-  theme?: CustomArtTheme | undefined;
-  onSave: (item: CustomArtStyle | CustomArtTheme) => void;
+  item: T;
+  onSave: (item: T) => void;
   onCancel: () => void;
 };
 
-export function ArtStyleEditor({ mode, style, theme, onSave, onCancel }: ArtStyleEditorProps) {
-  const isEditing = Boolean(style ?? theme);
-  // Initialize description from style/theme prop - recalculate when key changes
-  const initialDescription = style?.description ?? theme?.description ?? "";
+export function ArtStyleEditor<T extends CustomArtStyle | CustomArtTheme>({
+  mode,
+  item,
+  onSave,
+  onCancel,
+}: ArtStyleEditorProps<T>) {
+  const isEditing = Boolean(item);
+  const initialDescription = item.description;
   const [description, setDescription] = useState(initialDescription);
-
-  // Reset description when editing different item (when style/theme ID changes)
-  const itemId = style?.id ?? theme?.id ?? "";
-  if (itemId && description !== initialDescription && initialDescription) {
-    setDescription(initialDescription);
-  }
 
   const handleSave = () => {
     if (!description.trim()) {
@@ -32,12 +29,7 @@ export function ArtStyleEditor({ mode, style, theme, onSave, onCancel }: ArtStyl
       return;
     }
 
-    const item = {
-      id: (style ?? theme)?.id ?? "",
-      description: description.trim(),
-    };
-
-    onSave(item);
+    onSave({ ...item, description: description.trim() });
   };
 
   const modeLabel = mode === "style" ? "Art Style" : "Art Theme";
