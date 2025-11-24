@@ -95,7 +95,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
   const totalPages = Math.ceil(competitions.length / ITEMS_PER_PAGE);
   const currentPage = 0;
 
-  const embed = buildListEmbed(competitions, currentPage, totalPages, showActiveOnly, showOwnOnly);
+  const embed = buildListEmbed({ competitions, currentPage, totalPages, showActiveOnly, showOwnOnly });
   const components = totalPages > 1 ? [buildPaginationButtons(currentPage, totalPages)] : [];
 
   await interaction.reply({
@@ -143,7 +143,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
         }
 
         // Update the message
-        const newEmbed = buildListEmbed(competitions, page, totalPages, showActiveOnly, showOwnOnly);
+        const newEmbed = buildListEmbed({ competitions, currentPage: page, totalPages, showActiveOnly, showOwnOnly });
         const newComponents = [buildPaginationButtons(page, totalPages)];
 
         await buttonInteraction.update({
@@ -165,13 +165,14 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
 /**
  * Build embed for competition list page
  */
-function buildListEmbed(
-  competitions: Awaited<ReturnType<typeof getCompetitionsByServer>>,
-  currentPage: number,
-  totalPages: number,
-  showActiveOnly: boolean,
-  showOwnOnly: boolean,
-): EmbedBuilder {
+function buildListEmbed(params: {
+  competitions: Awaited<ReturnType<typeof getCompetitionsByServer>>;
+  currentPage: number;
+  totalPages: number;
+  showActiveOnly: boolean;
+  showOwnOnly: boolean;
+}): EmbedBuilder {
+  const { competitions, currentPage, totalPages, showActiveOnly, showOwnOnly } = params;
   const embed = new EmbedBuilder().setColor(0x5865f2); // Blue
 
   // Build title

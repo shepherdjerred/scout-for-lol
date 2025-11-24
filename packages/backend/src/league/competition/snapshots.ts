@@ -31,11 +31,14 @@ import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/clien
  */
 export async function createSnapshot(
   prisma: PrismaClient,
-  competitionId: CompetitionId,
-  playerId: PlayerId,
-  snapshotType: SnapshotType,
-  criteria: CompetitionCriteria,
+  params: {
+    competitionId: CompetitionId;
+    playerId: PlayerId;
+    snapshotType: SnapshotType;
+    criteria: CompetitionCriteria;
+  },
 ): Promise<void> {
+  const { competitionId, playerId, snapshotType, criteria } = params;
   console.log(
     `[Snapshots] Creating ${snapshotType} snapshot for competition ${competitionId.toString()}, player ${playerId.toString()}`,
   );
@@ -146,11 +149,14 @@ export async function createSnapshot(
  */
 export async function getSnapshot(
   prisma: PrismaClient,
-  competitionId: number,
-  playerId: number,
-  snapshotType: SnapshotType,
-  criteria: CompetitionCriteria,
+  params: {
+    competitionId: number;
+    playerId: number;
+    snapshotType: SnapshotType;
+    criteria: CompetitionCriteria;
+  },
 ): Promise<RankSnapshotData | GamesPlayedSnapshotData | WinsSnapshotData | null> {
+  const { competitionId, playerId, snapshotType, criteria } = params;
   const snapshot = await prisma.competitionSnapshot.findUnique({
     where: {
       competitionId_playerId_snapshotType: {
