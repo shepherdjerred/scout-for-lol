@@ -307,8 +307,9 @@ export function convertMatchDtoToInternalFormat(
   };
 
   // Update players with real data from the match - split by queue type for proper typing
-  if (queueType === "arena") {
-    const updatedPlayers = baseMatch.players.map((player, index) => {
+  if (baseMatch.queueType === "arena") {
+    const arenaMatch: ArenaMatch = baseMatch;
+    const updatedPlayers = arenaMatch.players.map((player, index) => {
       const participant = reorderedParticipants[index];
       if (participant) {
         // Build Riot ID (GameName#Tagline)
@@ -337,14 +338,15 @@ export function convertMatchDtoToInternalFormat(
 
     // For arena matches, no teams roster
     return {
-      ...baseMatch,
+      ...arenaMatch,
       players: updatedPlayers,
       durationInSeconds: matchDto.info.gameDuration,
     };
   }
 
   // For regular matches, convert participant to full champion and calculate lane opponent
-  const updatedPlayers = baseMatch.players.map((player, index) => {
+  const completedMatch = baseMatch;
+  const updatedPlayers = completedMatch.players.map((player, index) => {
     const participant = reorderedParticipants[index];
     if (participant) {
       // Build Riot ID (GameName#Tagline)
@@ -383,7 +385,7 @@ export function convertMatchDtoToInternalFormat(
 
   // Return completed match with updated players
   return {
-    ...baseMatch,
+    ...completedMatch,
     players: updatedPlayers,
     durationInSeconds: matchDto.info.gameDuration,
     teams,

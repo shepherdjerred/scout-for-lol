@@ -66,7 +66,6 @@ export const ArenaPlacementSchema = z.union([
   z.literal(8),
 ]);
 
-// eslint-disable-next-line no-warning-comments -- TODO comment needed to track potential feature: mapping integer IDs to readable names
 // TODO: map ints -> name (e.g. minion, krug, etc.)
 export type ArenaTeam = z.infer<typeof ArenaTeamSchema>;
 export const ArenaTeamSchema = z.strictObject({

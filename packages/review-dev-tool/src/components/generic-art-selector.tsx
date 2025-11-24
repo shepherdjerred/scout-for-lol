@@ -54,33 +54,32 @@ export function GenericArtSelector<T extends CustomArtStyle | CustomArtTheme>({
 
   if (showEditor) {
     // Narrow editingItem based on mode - use conditional rendering
-    // The type assertions here are safe because we've validated mode
     if (mode === "style") {
-      const handleStyleSave = (item: CustomArtStyle): void => {
-        void onSave(item);
+      const handleSaveStyle = (item: CustomArtStyle): void => {
+        void onSave(item as unknown);
       };
       return (
         <div>
           <ArtStyleEditor
             mode={mode}
-            style={editingItem}
+            style={editingItem ?? undefined}
             theme={undefined}
-            onSave={handleStyleSave}
+            onSave={handleSaveStyle}
             onCancel={onCancelEdit}
           />
         </div>
       );
     }
-    const handleThemeSave = (item: CustomArtTheme): void => {
-      void onSave(item);
+    const handleSaveTheme = (item: CustomArtTheme): void => {
+      void onSave(item as unknown);
     };
     return (
       <div>
         <ArtStyleEditor
           mode={mode}
           style={undefined}
-          theme={editingItem}
-          onSave={handleThemeSave}
+          theme={editingItem ?? undefined}
+          onSave={handleSaveTheme}
           onCancel={onCancelEdit}
         />
       </div>

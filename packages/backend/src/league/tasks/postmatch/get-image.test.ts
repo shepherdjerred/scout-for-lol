@@ -63,7 +63,7 @@ describe("getImage S3 Integration", () => {
 
     const call = s3Mock.call(0);
     const command = call.args[0];
-    expect(command.input.Metadata?.["queueType"]).toBe("arena");
+    expect(command.input.Metadata?.queueType).toBe("arena");
   });
 
   test("image upload failure doesn't crash post-match flow", async () => {
@@ -161,7 +161,7 @@ describe("Queue Type Handling", () => {
 
       const call = s3Mock.call(0);
       const command = call.args[0];
-      expect(command.input.Metadata?.["queueType"]).toBe(queueType);
+      expect(command.input.Metadata?.queueType).toBe(queueType);
     });
   }
 });

@@ -39,11 +39,17 @@ describe("handleGuildCreate", () => {
 
     expect(sendMock).toHaveBeenCalledTimes(1);
     // Verify the welcome message contains expected content
-    const calls = sendMock.mock.calls as unknown as [{ content: string }][];
-    expect(calls[0]?.[0]?.content).toContain("Thanks for adding Scout");
-    expect(calls[0]?.[0]?.content).toContain("https://scout-for-lol.com/getting-started");
-    expect(calls[0]?.[0]?.content).toContain("/help");
-    expect(calls[0]?.[0]?.content).toContain("/subscription add");
+    const calls = sendMock.mock.calls;
+    const firstCall = calls[0]?.[0] as unknown;
+    const firstCallRecord = firstCall as Record<string, unknown>;
+    const content = firstCallRecord.content as unknown;
+    if (typeof content !== "string") {
+      throw new Error("content is not a string");
+    }
+    expect(content).toContain("Thanks for adding Scout");
+    expect(content).toContain("https://scout-for-lol.com/getting-started");
+    expect(content).toContain("/help");
+    expect(content).toContain("/subscription add");
   });
 
   it("should find first available text channel if system channel unavailable", async () => {
@@ -65,7 +71,7 @@ describe("handleGuildCreate", () => {
       systemChannel: null,
       channels: {
         fetch: mock(() => {
-          const channelMap = new Map<string, unknown>();
+          const channelMap = new Map();
           channelMap.set("channel1", { type: ChannelType.GuildVoice });
           channelMap.set("channel2", mockChannel);
           return Promise.resolve(channelMap);
@@ -83,9 +89,15 @@ describe("handleGuildCreate", () => {
 
     expect(sendMock).toHaveBeenCalledTimes(1);
     // Verify the welcome message contains expected content
-    const calls = sendMock.mock.calls as unknown as [{ content: string }][];
-    expect(calls[0]?.[0]?.content).toContain("Thanks for adding Scout");
-    expect(calls[0]?.[0]?.content).toContain("/help");
+    const calls = sendMock.mock.calls;
+    const firstCall = calls[0]?.[0] as unknown;
+    const firstCallRecord = firstCall as Record<string, unknown>;
+    const content = firstCallRecord.content as unknown;
+    if (typeof content !== "string") {
+      throw new Error("content is not a string");
+    }
+    expect(content).toContain("Thanks for adding Scout");
+    expect(content).toContain("/help");
   });
 
   it("should handle case when no suitable channel found", async () => {
@@ -96,7 +108,7 @@ describe("handleGuildCreate", () => {
       systemChannel: null,
       channels: {
         fetch: mock(() => {
-          const channelMap = new Map<string, unknown>();
+          const channelMap = new Map();
           channelMap.set(
             "channel1",
             mockTextChannel({
