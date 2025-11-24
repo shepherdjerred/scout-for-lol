@@ -4,13 +4,41 @@
 
 import { describe, it, expect, mock } from "bun:test";
 import { handleGuildCreate } from "@scout-for-lol/backend/discord/events/guild-create";
-import { ChannelType } from "discord.js";
+import { ChannelType, type Guild } from "discord.js";
+
+// Helper to create a Guild-like object for testing
+// Uses Parameters to infer the exact type expected by handleGuildCreate
+function createMockGuild(overrides: {
+  name: string;
+  id: string;
+  memberCount: number;
+  systemChannel?: {
+    type: ChannelType;
+    name: string;
+    permissionsFor: () => { has: () => boolean };
+    send: () => Promise<unknown>;
+  } | null;
+  channels: { fetch: () => Promise<Map<string, unknown>> };
+  members: { me?: { id: string } | null };
+  client: { user: { id: string } };
+}) {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- rare case where this is ok
+  return {
+    name: overrides.name,
+    id: overrides.id,
+    memberCount: overrides.memberCount,
+    systemChannel: overrides.systemChannel ?? null,
+    channels: overrides.channels,
+    members: overrides.members,
+    client: overrides.client,
+  } as Guild;
+}
 
 describe("handleGuildCreate", () => {
   it("should send welcome message to system channel when available", async () => {
     const sendMock = mock(() => Promise.resolve({}));
 
-    const mockGuild = {
+    const mockGuild = createMockGuild({
       name: "Test Server",
       id: "123456789",
       memberCount: 100,
@@ -31,7 +59,7 @@ describe("handleGuildCreate", () => {
       client: {
         user: { id: "bot-id" },
       },
-    };
+    });
 
     await handleGuildCreate(mockGuild);
 
@@ -56,7 +84,7 @@ describe("handleGuildCreate", () => {
       send: sendMock,
     };
 
-    const mockGuild = {
+    const mockGuild = createMockGuild({
       name: "Test Server",
       id: "123456789",
       memberCount: 50,
@@ -77,7 +105,7 @@ describe("handleGuildCreate", () => {
       client: {
         user: { id: "bot-id" },
       },
-    };
+    });
 
     await handleGuildCreate(mockGuild);
 
@@ -89,7 +117,7 @@ describe("handleGuildCreate", () => {
   });
 
   it("should handle case when no suitable channel found", async () => {
-    const mockGuild = {
+    const mockGuild = createMockGuild({
       name: "Test Server",
       id: "123456789",
       memberCount: 25,
@@ -117,7 +145,7 @@ describe("handleGuildCreate", () => {
       client: {
         user: { id: "bot-id" },
       },
-    };
+    });
 
     // Should not throw error, just log warning
     await expect(handleGuildCreate(mockGuild)).resolves.toBeUndefined();
@@ -126,7 +154,7 @@ describe("handleGuildCreate", () => {
   it("should handle errors gracefully when sending message fails", async () => {
     const sendMock = mock(() => Promise.reject(new Error("Permission denied")));
 
-    const mockGuild = {
+    const mockGuild = createMockGuild({
       name: "Test Server",
       id: "123456789",
       memberCount: 75,
@@ -147,7 +175,7 @@ describe("handleGuildCreate", () => {
       client: {
         user: { id: "bot-id" },
       },
-    };
+    });
 
     // Should not throw error, just log it
     await expect(handleGuildCreate(mockGuild)).resolves.toBeUndefined();

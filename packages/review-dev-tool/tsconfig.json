@@ -19,5 +19,9 @@
       "DOM.Iterable"
     ],
     "composite": true
-  }
+  },
+  "include": [
+    "src/**/*",
+    "postcss.config.ts"
+  ]
 }

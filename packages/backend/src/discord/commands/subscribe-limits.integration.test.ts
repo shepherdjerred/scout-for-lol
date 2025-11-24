@@ -169,7 +169,7 @@ describe("Subscribe Command - Subscription Limits", () => {
     });
 
     // Create 3 players WITHOUT subscriptions
-    await createUnsubscribedPlayers({ count: 3, serverId, discordUserId, now, prefix: "Unsubscribed" });
+    await createUnsubscribedPlayers({ count: 3, serverId, channelId, discordUserId, now, prefix: "Unsubscribed" });
 
     // Verify only players with subscriptions are counted
     const subscribedPlayerCount = await testPrisma.player.count({
@@ -344,12 +344,13 @@ describe("Subscribe Command - Account Limits", () => {
   test("allows accounts up to the account limit", async () => {
     const now = new Date();
     const serverId = testGuildId("007");
+    const channelId = testChannelId("00001");
     const discordUserId = testAccountId("0000001");
 
     // Create a smaller subset for faster testing
     const testAccountLimit = Math.min(5, DEFAULT_ACCOUNT_LIMIT);
 
-    await createUnsubscribedPlayers({ count: testAccountLimit, serverId, discordUserId, now });
+    await createUnsubscribedPlayers({ count: testAccountLimit, serverId, channelId, discordUserId, now });
 
     // Verify we created the correct number of accounts
     const accountCount = await testPrisma.account.count({
@@ -378,7 +379,7 @@ describe("Subscribe Command - Account Limits", () => {
     });
 
     // Create 3 accounts WITHOUT subscriptions
-    await createUnsubscribedPlayers({ count: 3, serverId, discordUserId, now, prefix: "Unsubscribed" });
+    await createUnsubscribedPlayers({ count: 3, serverId, channelId, discordUserId, now, prefix: "Unsubscribed" });
 
     // Verify total account count is 8 (5 + 3)
     const accountCount = await testPrisma.account.count({
@@ -406,12 +407,14 @@ describe("Subscribe Command - Account Limits", () => {
     const now = new Date();
     const server1Id = testGuildId("009");
     const server2Id = testGuildId("010");
+    const channelId = testChannelId("00001");
     const discordUserId = testAccountId("0000001");
 
     // Create limit number of accounts in server 1
     await createUnsubscribedPlayers({
       count: DEFAULT_ACCOUNT_LIMIT,
       serverId: server1Id,
+      channelId,
       discordUserId,
       now,
       prefix: "Server1",
@@ -421,6 +424,7 @@ describe("Subscribe Command - Account Limits", () => {
     await createUnsubscribedPlayers({
       count: DEFAULT_ACCOUNT_LIMIT,
       serverId: server2Id,
+      channelId,
       discordUserId,
       now,
       prefix: "Server2",
@@ -446,6 +450,7 @@ describe("Subscribe Command - Account Limits", () => {
   test("unlimited servers bypass account limit", async () => {
     const now = new Date();
     const serverId = testGuildId("011");
+    const channelId = testChannelId("00001");
     const discordUserId = testAccountId("0000001");
 
     // Add unlimited override for accounts
@@ -457,6 +462,7 @@ describe("Subscribe Command - Account Limits", () => {
       await createUnsubscribedPlayers({
         count: DEFAULT_ACCOUNT_LIMIT + extraAccounts,
         serverId,
+        channelId,
         discordUserId,
         now,
         prefix: "Unlimited",

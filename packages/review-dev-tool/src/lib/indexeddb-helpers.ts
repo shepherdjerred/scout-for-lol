@@ -22,9 +22,11 @@ export function openIndexedDB(dbName: string, version: number, upgradeHandler?: 
 
     if (upgradeHandler) {
       request.onupgradeneeded = (event) => {
-        const targetResult = IDBOpenDBRequestSchema.safeParse(event.target);
-        if (targetResult.success) {
-          upgradeHandler(targetResult.data.result);
+        if (event.target instanceof IDBOpenDBRequest) {
+          const db = event.target.result;
+          if (db) {
+            upgradeHandler(db);
+          }
         }
       };
     }
@@ -44,7 +46,12 @@ export function executeRequest<T>(request: IDBRequest<T>): Promise<T | void> {
     };
 
     request.onsuccess = () => {
-      resolve(request.result);
+      const result = request.result;
+      if (result !== undefined) {
+        resolve(result);
+      } else {
+        resolve(undefined);
+      }
     };
   });
 }

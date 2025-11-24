@@ -4,7 +4,7 @@ import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/ind
 import { calculateLeaderboard } from "@scout-for-lol/backend/league/competition/leaderboard.js";
 import { createCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
 import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
-import { PlayerIdSchema, parseCompetition, type Rank } from "@scout-for-lol/data";
+import { PlayerIdSchema, parseCompetition, type Rank, type DiscordGuildId } from "@scout-for-lol/data";
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 
@@ -73,7 +73,7 @@ function getActiveCompetitionDates(): { startDate: Date; endDate: Date } {
 }
 
 // Helper to create a test player with account
-async function createTestPlayer(discordId: string, alias: string, serverId: string, puuid: string) {
+async function createTestPlayer(discordId: string, alias: string, serverId: DiscordGuildId, puuid: string) {
   return prisma.player.create({
     data: {
       discordId: testAccountId(discordId),
@@ -261,8 +261,8 @@ describe("calculateLeaderboard integration tests - Scoring", () => {
     });
 
     // Add participants
-    await addParticipant(prisma, competition.id, player1.id, "JOINED");
-    await addParticipant(prisma, competition.id, player2.id, "JOINED");
+    await addParticipant({ prisma, competitionId: competition.id, playerId: player1.id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId: competition.id, playerId: player2.id, status: "JOINED" });
 
     // Note: No matches in S3, so scores will be 0
 
@@ -350,8 +350,8 @@ describe("calculateLeaderboard integration tests - Scoring", () => {
     });
 
     // Add participants
-    await addParticipant(prisma, competition.id, player1.id, "JOINED");
-    await addParticipant(prisma, competition.id, player2.id, "JOINED");
+    await addParticipant({ prisma, competitionId: competition.id, playerId: player1.id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId: competition.id, playerId: player2.id, status: "JOINED" });
 
     // Create START snapshots with rank data (realistic for active competition)
     const goldRank: Rank = {
@@ -431,8 +431,8 @@ describe("calculateLeaderboard - HIGHEST_RANK Criteria", () => {
       criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
     });
 
-    await addParticipant(prisma, competition.id, player1.id, "JOINED");
-    await addParticipant(prisma, competition.id, player2.id, "JOINED");
+    await addParticipant({ prisma, competitionId: competition.id, playerId: player1.id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId: competition.id, playerId: player2.id, status: "JOINED" });
 
     const endedDate = new Date();
     endedDate.setDate(endedDate.getDate() - 1);
@@ -554,8 +554,8 @@ describe("calculateLeaderboard - HIGHEST_RANK Criteria", () => {
     });
 
     // Add participants
-    await addParticipant(prisma, competition.id, player1.id, "JOINED");
-    await addParticipant(prisma, competition.id, player2.id, "JOINED");
+    await addParticipant({ prisma, competitionId: competition.id, playerId: player1.id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId: competition.id, playerId: player2.id, status: "JOINED" });
 
     // Player 1: Silver 1 50LP → Gold 2 50LP (climbed ~2 divisions = 400 LP)
     await prisma.competitionSnapshot.create({
@@ -726,9 +726,9 @@ describe("calculateLeaderboard integration tests - Filters", () => {
     });
 
     // Add participants with different statuses
-    await addParticipant(prisma, competition.id, player1.id, "JOINED");
-    await addParticipant(prisma, competition.id, player2.id, "INVITED"); // Should not appear
-    await addParticipant(prisma, competition.id, player3.id, "JOINED");
+    await addParticipant({ prisma, competitionId: competition.id, playerId: player1.id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId: competition.id, playerId: player2.id, status: "INVITED" }); // Should not appear
+    await addParticipant({ prisma, competitionId: competition.id, playerId: player3.id, status: "JOINED" });
 
     // Set player3 to LEFT status
     await prisma.competitionParticipant.update({

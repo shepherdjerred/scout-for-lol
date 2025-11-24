@@ -5,8 +5,17 @@
     "moduleResolution": "node",
     "checkJs": false,
     "jsx": "react-jsx",
-    "types": ["bun-types"]
+    "types": [
+      "bun-types"
+    ],
+    "composite": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "vendor", "test"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "vendor",
+    "test"
+  ]
 }

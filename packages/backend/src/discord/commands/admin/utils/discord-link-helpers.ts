@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { type ChatInputCommandInteraction, type InteractionReplyOptions, MessageFlags } from "discord.js";
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
 import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
@@ -31,10 +31,7 @@ function buildPlayerNotFoundError(playerAlias: string): DiscordLinkValidationRes
 /**
  * Build a validation error response from an error response builder function
  */
-function buildValidationErrorResponse(errorResponse: {
-  content?: string;
-  flags?: number;
-}): DiscordLinkValidationResult {
+function buildValidationErrorResponse(errorResponse: InteractionReplyOptions): DiscordLinkValidationResult {
   return {
     success: false,
     errorResponse: {

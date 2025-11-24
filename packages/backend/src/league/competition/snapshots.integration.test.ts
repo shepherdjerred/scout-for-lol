@@ -457,13 +457,12 @@ describe("getSnapshot", () => {
     const puuid = LeaguePuuidSchema.parse("d".repeat(78));
     const { playerId } = await createTestPlayer("NoSnapshotPlayer", puuid, "AMERICA_NORTH");
 
-    const snapshot = await getSnapshot(
-      prisma,
-      CompetitionIdSchema.parse(competitionId),
-      PlayerIdSchema.parse(playerId),
-      "START",
+    const snapshot = await getSnapshot(prisma, {
+      competitionId: CompetitionIdSchema.parse(competitionId),
+      playerId: PlayerIdSchema.parse(playerId),
+      snapshotType: "START",
       criteria,
-    );
+    });
 
     expect(snapshot).toBeNull();
   });
@@ -499,13 +498,12 @@ describe("getSnapshot", () => {
       },
     });
 
-    const snapshot = await getSnapshot(
-      prisma,
-      CompetitionIdSchema.parse(competitionId),
-      PlayerIdSchema.parse(playerId),
-      "START",
+    const snapshot = await getSnapshot(prisma, {
+      competitionId: CompetitionIdSchema.parse(competitionId),
+      playerId: PlayerIdSchema.parse(playerId),
+      snapshotType: "START",
       criteria,
-    );
+    });
 
     expect(snapshot).not.toBeNull();
     if (snapshot) {
@@ -542,7 +540,7 @@ describe("createSnapshot - Different criteria types", () => {
         criteria,
       });
 
-      const snapshot = await getSnapshot(prisma, competitionId, playerId, "START", criteria);
+      const snapshot = await getSnapshot(prisma, { competitionId, playerId, snapshotType: "START", criteria });
       if (snapshot) {
         // Should have rank structure
         expect(snapshot).toHaveProperty("solo");
@@ -607,7 +605,7 @@ describe("createSnapshot - Different criteria types", () => {
         criteria,
       });
 
-      const snapshot = await getSnapshot(prisma, competitionId, playerId, "START", criteria);
+      const snapshot = await getSnapshot(prisma, { competitionId, playerId, snapshotType: "START", criteria });
       if (snapshot) {
         // Should have wins structure
         expect(snapshot).toHaveProperty("wins");

@@ -76,19 +76,19 @@ function createMockGetObjectResponse(content: string): GetObjectCommandOutput {
     }),
     pipeThrough: () => ({ readable: undefined, writable: undefined }),
     pipeTo: () => Promise.resolve(),
-    [Symbol.asyncIterator]: function* () {
-      return;
+    async *[Symbol.asyncIterator]() {
+      // Empty async generator
+      yield* [];
     },
   };
 
-  // eslint-disable-next-line custom-rules/no-type-assertions
-  // Type assertion is necessary here: AWS SDK's GetObjectCommandOutput Body type is a complex
-  // union that includes ReadableStream and SdkStream. Our mock implements all required methods
-  // but TypeScript can't verify the full structural type. This is safe because this is test code.
+  // Create a response object that matches GetObjectCommandOutput structure
+  // The mock body implements transformToString() which is what's actually used
+  // TypeScript can't verify the full structural match, but the mock works at runtime
   return {
     Body: mockBody,
     $metadata: {},
-  } as GetObjectCommandOutput;
+  };
 }
 
 beforeEach(() => {

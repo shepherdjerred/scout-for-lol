@@ -42,7 +42,7 @@ const {
 const iconBgClass =
   iconColor ||
   (withCard && gradient
-    ? `bg-linear-to-br ${gradientColors[gradient] || gradientColors.yellow}`
+    ? `bg-linear-to-br ${gradientColors[gradient] || gradientColors["yellow"]}`
     : number
       ? "bg-indigo-600 text-white"
       : iconColors[color]);

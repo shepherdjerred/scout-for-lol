@@ -104,7 +104,9 @@ describe("Add all members to competition", () => {
 
     // Simulate the bulk add operation from the command
     const addResults = await Promise.allSettled(
-      players.map((player) => addParticipant(prisma, competition.id, player.id, "JOINED")),
+      players.map((player) =>
+        addParticipant({ prisma, competitionId: competition.id, playerId: player.id, status: "JOINED" }),
+      ),
     );
 
     // All should succeed
@@ -129,11 +131,13 @@ describe("Add all members to competition", () => {
     const { competition, players } = await createCompetitionWithPlayers(serverId, ownerId, 3);
 
     // Player A already joined manually
-    await addParticipant(prisma, competition.id, players[0]!.id, "JOINED");
+    await addParticipant({ prisma, competitionId: competition.id, playerId: players[0]!.id, status: "JOINED" });
 
     // Try to add all players (should fail for Player A)
     const addResults = await Promise.allSettled(
-      players.map((player) => addParticipant(prisma, competition.id, player.id, "JOINED")),
+      players.map((player) =>
+        addParticipant({ prisma, competitionId: competition.id, playerId: player.id, status: "JOINED" }),
+      ),
     );
 
     // First should fail (already joined), others should succeed
@@ -165,7 +169,9 @@ describe("Add all members to competition", () => {
     // This is expected behavior - the limit is checked at read time, but by the time
     // all writes happen, multiple may have passed the check
     const addResults = await Promise.allSettled(
-      players.map((player) => addParticipant(prisma, competition.id, player.id, "JOINED")),
+      players.map((player) =>
+        addParticipant({ prisma, competitionId: competition.id, playerId: player.id, status: "JOINED" }),
+      ),
     );
 
     // With concurrent operations, all may succeed due to race condition
@@ -224,7 +230,9 @@ describe("Add all members to competition", () => {
 
     // Try to add all players (empty array)
     const addResults = await Promise.allSettled(
-      players.map((player) => addParticipant(prisma, competition.id, player.id, "JOINED")),
+      players.map((player) =>
+        addParticipant({ prisma, competitionId: competition.id, playerId: player.id, status: "JOINED" }),
+      ),
     );
 
     // No operations should have been attempted

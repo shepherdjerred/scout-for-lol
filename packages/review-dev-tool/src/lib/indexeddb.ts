@@ -69,8 +69,11 @@ export async function getAllEntries(): Promise<DBHistoryEntry[]> {
   const db = await openDB();
   const transaction = db.transaction([STORE_NAME], "readonly");
   const store = getStore(transaction, STORE_NAME);
-  const request: IDBRequest<unknown[]> = store.getAll();
-  const result = await executeRequest(request);
+  const request = store.getAll();
+  const result = await executeRequest<unknown[]>(request);
+  if (result === undefined) {
+    return [];
+  }
   const entriesResult = z.array(DBHistoryEntrySchema).safeParse(result);
   if (entriesResult.success) {
     const entries = entriesResult.data;
@@ -90,7 +93,7 @@ export async function getEntry(id: string): Promise<DBHistoryEntry | undefined> 
   const store = getStore(transaction, STORE_NAME);
   const request = store.get(id);
   const result = await executeRequest<unknown>(request);
-  if (result === undefined) {
+  if (result === undefined || result === null) {
     return undefined;
   }
   const entryResult = DBHistoryEntrySchema.safeParse(result);
