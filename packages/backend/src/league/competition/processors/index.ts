@@ -1,4 +1,4 @@
-import type { CompetitionCriteria, Ranks } from "@scout-for-lol/data";
+import type { CompetitionCriteria, Ranks, MatchDto } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
 import { processMostGamesPlayed } from "@scout-for-lol/backend/league/competition/processors/most-games-played.js";
 import { processHighestRank } from "@scout-for-lol/backend/league/competition/processors/highest-rank.js";
