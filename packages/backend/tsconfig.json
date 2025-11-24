@@ -5,18 +5,8 @@
     "moduleResolution": "node",
     "jsx": "react-jsx",
     "checkJs": true,
-    "types": [
-      "bun-types",
-      "node"
-    ]
+    "types": ["bun-types", "node"]
   },
-  "include": [
-    "src/**/*",
-    "scripts/**/*",
-    "test-*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "vendor"
-  ]
+  "include": ["src/**/*", "scripts/**/*", "test-*.ts"],
+  "exclude": ["node_modules", "vendor"]
 }

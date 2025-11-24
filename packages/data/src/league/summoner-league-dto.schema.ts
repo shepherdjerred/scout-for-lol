@@ -73,4 +73,3 @@ export const SummonerLeagueDtoSchema = z
 
 // Type inference from the Zod schema
 export type SummonerLeagueDto = z.infer<typeof SummonerLeagueDtoSchema>;
-

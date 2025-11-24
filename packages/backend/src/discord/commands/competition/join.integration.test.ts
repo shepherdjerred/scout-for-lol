@@ -6,7 +6,7 @@ import { addParticipant, getParticipantStatus } from "@scout-for-lol/backend/dat
 
 import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
 // Create a test database for integration tests
-const testDir = `${Bun.env['TMPDIR'] ?? "/tmp"}/competition-join-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/competition-join-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 const testDbPath = `${testDir}/test.db`;
 const testDbUrl = `file:${testDbPath}`;
 
@@ -209,7 +209,13 @@ describe("Join INVITE_ONLY when invited", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
 
     // Owner invites user
-    await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "INVITED", invitedBy: ownerId });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "INVITED",
+      invitedBy: ownerId,
+    });
 
     // Verify status is INVITED
     let status = await getParticipantStatus(prisma, competitionId, playerId);
@@ -318,7 +324,9 @@ describe("Join when at participant limit", () => {
     expect(count).toBe(2);
 
     // 3rd user tries to join - should fail
-    expect(addParticipant({ prisma, competitionId: competitionId, playerId: player3Id, status: "JOINED" })).rejects.toThrow(/maximum participants/i);
+    expect(
+      addParticipant({ prisma, competitionId: competitionId, playerId: player3Id, status: "JOINED" }),
+    ).rejects.toThrow(/maximum participants/i);
   });
 });
 
@@ -343,7 +351,9 @@ describe("Join already joined competition", () => {
     expect(status).toBe("JOINED");
 
     // Try to join again - should fail
-    expect(addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" })).rejects.toThrow(/already a participant/i);
+    expect(
+      addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" }),
+    ).rejects.toThrow(/already a participant/i);
   });
 });
 
@@ -382,7 +392,9 @@ describe("Join after leaving", () => {
     expect(status).toBe("LEFT");
 
     // Try to rejoin - should fail
-    expect(addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" })).rejects.toThrow(/cannot rejoin/i);
+    expect(
+      addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" }),
+    ).rejects.toThrow(/cannot rejoin/i);
   });
 });
 
@@ -407,7 +419,9 @@ describe("Join CANCELLED competition", () => {
     expect(competition?.isCancelled).toBe(true);
 
     // Try to join - should fail
-    expect(addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" })).rejects.toThrow(/inactive competition/i);
+    expect(
+      addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" }),
+    ).rejects.toThrow(/inactive competition/i);
   });
 });
 
@@ -492,6 +506,8 @@ describe("Join ended competition", () => {
     }
 
     // Try to join - should fail
-    expect(addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" })).rejects.toThrow(/inactive competition/i);
+    expect(
+      addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" }),
+    ).rejects.toThrow(/inactive competition/i);
   });
 });

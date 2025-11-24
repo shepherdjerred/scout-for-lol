@@ -15,6 +15,10 @@ import {
   type MatchMetadata,
 } from "@scout-for-lol/review-dev-tool/lib/s3";
 import { getCachedDataAsync, setCachedData } from "@scout-for-lol/review-dev-tool/lib/cache";
+import { MatchFilters } from "@scout-for-lol/review-dev-tool/components/match-filters";
+import { MatchList } from "@scout-for-lol/review-dev-tool/components/match-list";
+import { MatchPagination } from "@scout-for-lol/review-dev-tool/components/match-pagination";
+import { MatchLoadingState } from "@scout-for-lol/review-dev-tool/components/match-loading-state";
 
 const ErrorSchema = z.object({ message: z.string() });
 const MatchMetadataArraySchema = z.array(
@@ -326,126 +330,27 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label htmlFor="queue-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Queue Type
-            </label>
-            <select
-              id="queue-type"
-              value={filterQueueType}
-              onChange={(e) => {
-                setFilterQueueType(e.target.value);
-              }}
-              className="w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded"
-            >
-              <option value="all">All</option>
-              <option value="solo">Ranked Solo</option>
-              <option value="flex">Ranked Flex</option>
-              <option value="arena">Arena</option>
-              <option value="aram">ARAM</option>
-              <option value="quickplay">Quickplay</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="lane" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Lane
-            </label>
-            <select
-              id="lane"
-              value={filterLane}
-              onChange={(e) => {
-                setFilterLane(e.target.value);
-              }}
-              className="w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded"
-            >
-              <option value="all">All</option>
-              <option value="top">Top</option>
-              <option value="jungle">Jungle</option>
-              <option value="middle">Mid</option>
-              <option value="adc">ADC</option>
-              <option value="support">Support</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="outcome" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Outcome
-            </label>
-            <select
-              id="outcome"
-              value={filterOutcome}
-              onChange={(e) => {
-                setFilterOutcome(e.target.value);
-              }}
-              className="w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded"
-            >
-              <option value="all">All</option>
-              <option value="victory">Victory</option>
-              <option value="defeat">Defeat</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="player-game-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Player (Game Name)
-          </label>
-          <input
-            id="player-game-name"
-            type="text"
-            placeholder="Fuzzy search player names..."
-            value={filterPlayer}
-            onChange={(e) => {
-              setFilterPlayer(e.target.value);
-            }}
-            className="w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="champion" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Champion
-          </label>
-          <input
-            id="champion"
-            type="text"
-            placeholder="Fuzzy search champions..."
-            value={filterChampion}
-            onChange={(e) => {
-              setFilterChampion(e.target.value);
-            }}
-            className="w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded"
-          />
-        </div>
+        <MatchFilters
+          filterQueueType={filterQueueType}
+          filterLane={filterLane}
+          filterPlayer={filterPlayer}
+          filterChampion={filterChampion}
+          filterOutcome={filterOutcome}
+          onQueueTypeChange={setFilterQueueType}
+          onLaneChange={setFilterLane}
+          onPlayerChange={setFilterPlayer}
+          onChampionChange={setFilterChampion}
+          onOutcomeChange={setFilterOutcome}
+        />
       </div>
 
-      {loading && (
-        <div className="text-center py-2 text-sm text-gray-600 dark:text-gray-400">
-          {loadingProgress ? (
-            <div className="space-y-2">
-              <div>
-                Loading matches... {loadingProgress.current}/{loadingProgress.total}
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${((loadingProgress.current / loadingProgress.total) * 100).toString()}%` }}
-                />
-              </div>
-              <button
-                onClick={() => abortController?.abort()}
-                className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <div>Loading matches...</div>
-          )}
-        </div>
-      )}
+      <MatchLoadingState
+        loading={loading}
+        loadingProgress={loadingProgress}
+        onCancel={() => {
+          abortController?.abort();
+        }}
+      />
 
       {error && (
         <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded text-sm text-red-800 dark:text-red-200 mb-3">
@@ -474,111 +379,30 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
               <option value={100}>100 per page</option>
             </select>
           </div>
-          <div
-            className="max-h-96 overflow-y-auto"
-            key={`results-${filterPlayer}-${filterChampion}-${filterQueueType}-${filterLane}-${filterOutcome}`}
-          >
-            <div className="space-y-2 p-2">
-              {paginatedMatches.map((match, idx) => {
-                const isSelected =
-                  selectedMetadata !== null &&
-                  selectedMetadata.key === match.key &&
-                  selectedMetadata.playerName === match.playerName;
-                return (
-                  <div
-                    key={`${match.key}-${match.playerName}-${idx.toString()}`}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => {
-                      void handleSelectMatch(match);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        void handleSelectMatch(match);
-                      }
-                    }}
-                    className={`rounded p-2 transition-colors cursor-pointer ${
-                      isSelected
-                        ? "bg-blue-100 dark:bg-blue-900 border-2 border-blue-500 dark:border-blue-400"
-                        : "bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 border-2 border-transparent"
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-1">
-                      <div className="flex items-center gap-2">
-                        <div className="text-xs font-medium text-gray-900 dark:text-white">{match.champion}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">({match.lane})</div>
-                      </div>
-                      {isSelected && (
-                        <div className="text-xs font-semibold text-blue-600 dark:text-blue-400">✓ Selected</div>
-                      )}
-                    </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
-                      <div>{match.playerName}</div>
-                      <div className="flex justify-between">
-                        <span className="capitalize">{match.queueType}</span>
-                        <span
-                          className={
-                            match.outcome.includes("Victory")
-                              ? "text-green-600 dark:text-green-400"
-                              : match.outcome.includes("Defeat")
-                                ? "text-red-600 dark:text-red-400"
-                                : ""
-                          }
-                        >
-                          {match.outcome}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="font-mono">{match.kda}</span>
-                        <span>{match.timestamp.toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          {totalPages > 1 && (
-            <div className="px-2 py-2 bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
-              <button
-                onClick={() => {
-                  setCurrentPage((p) => Math.max(1, p - 1));
-                }}
-                disabled={currentPage === 1}
-                className="px-3 py-1 text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-600 dark:text-gray-400">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <input
-                  type="number"
-                  min={1}
-                  max={totalPages}
-                  value={currentPage}
-                  onChange={(e) => {
-                    const page = Number(e.target.value);
-                    if (page >= 1 && page <= totalPages) {
-                      setCurrentPage(page);
-                    }
-                  }}
-                  className="w-16 px-2 py-0.5 text-xs text-center bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded"
-                />
-              </div>
-              <button
-                onClick={() => {
-                  setCurrentPage((p) => Math.min(totalPages, p + 1));
-                }}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </div>
-          )}
+          <MatchList
+            matches={paginatedMatches}
+            selectedMetadata={selectedMetadata}
+            filterPlayer={filterPlayer}
+            filterChampion={filterChampion}
+            filterQueueType={filterQueueType}
+            filterLane={filterLane}
+            filterOutcome={filterOutcome}
+            onSelectMatch={(metadata) => {
+              void handleSelectMatch(metadata);
+            }}
+          />
+          <MatchPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalMatches={matches.length}
+            filteredMatches={filteredMatches.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
+          />
         </div>
       )}
 

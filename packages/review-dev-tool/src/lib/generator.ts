@@ -36,6 +36,23 @@ export type GenerationProgress = {
 };
 
 /**
+ * Resolve personality from config
+ */
+function resolvePersonality(config: ReviewConfig): Personality {
+  if (config.prompts.customPersonality) {
+    return config.prompts.customPersonality;
+  }
+  if (config.prompts.personalityId === "random") {
+    return selectRandomPersonality();
+  }
+  const found = getPersonalityById(config.prompts.personalityId);
+  if (!found) {
+    throw new Error(`Personality not found: ${config.prompts.personalityId}`);
+  }
+  return found;
+}
+
+/**
  * Generate a complete match review with text and optional image
  */
 export async function generateMatchReview(
@@ -55,18 +72,7 @@ export async function generateMatchReview(
     onProgress?.({ step: "text", message: "Generating review text..." });
 
     // Get personality from config
-    let personality: Personality;
-    if (config.prompts.customPersonality) {
-      personality = config.prompts.customPersonality;
-    } else if (config.prompts.personalityId === "random") {
-      personality = selectRandomPersonality();
-    } else {
-      const found = getPersonalityById(config.prompts.personalityId);
-      if (!found) {
-        throw new Error(`Personality not found: ${config.prompts.personalityId}`);
-      }
-      personality = found;
-    }
+    const personality = resolvePersonality(config);
 
     // Get base prompt and lane context
     const basePromptTemplate = config.prompts.basePrompt || getBasePrompt();

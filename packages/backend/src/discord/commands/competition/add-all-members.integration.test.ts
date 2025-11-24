@@ -6,7 +6,7 @@ import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
 // Create a test database
-const testDir = `${Bun.env['TMPDIR'] ?? "/tmp"}/add-all-members-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/add-all-members-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 const testDbPath = `${testDir}/test.db`;
 const schemaPath = `import.meta.dir/../../../../prisma/schema.prisma`;
 Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {

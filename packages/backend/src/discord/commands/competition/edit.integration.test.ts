@@ -20,7 +20,7 @@ import {
 } from "@scout-for-lol/data";
 
 // Create a test database for integration tests
-const testDir = `${Bun.env['TMPDIR'] ?? "/tmp"}/competition-edit-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/competition-edit-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 const testDbPath = `${testDir}/test.db`;
 const testDbUrl = `file:${testDbPath}`;
 

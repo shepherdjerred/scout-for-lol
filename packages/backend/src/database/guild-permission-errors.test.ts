@@ -11,7 +11,7 @@ import { DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/dat
 
 import { testGuildId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
 // Create a test database
-const testDir = `${Bun.env['TMPDIR'] ?? "/tmp"}/guild-errors-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/guild-errors-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 const testDbPath = `${testDir}/test.db`;
 
 // Initialize test database

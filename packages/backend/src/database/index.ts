@@ -66,7 +66,6 @@ export async function getChannelsSubscribedToPlayers(
   }
 }
 
-
 /**
  * Get all player accounts with their runtime state for polling.
  * Includes lastMatchTime and lastCheckedAt to determine polling intervals.

@@ -5,7 +5,7 @@ import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/com
 
 import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
 // Create a test database for integration tests
-const testDir = `${Bun.env['TMPDIR'] ?? "/tmp"}/competition-cancel-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/competition-cancel-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 const testDbPath = `${testDir}/test.db`;
 const testDbUrl = `file:${testDbPath}`;
 

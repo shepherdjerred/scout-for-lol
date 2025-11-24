@@ -6,10 +6,7 @@
  * Execute an IndexedDB operation with proper error handling
  * Wraps the common pattern of creating a promise from an IDBRequest
  */
-export function executeIDBRequest<T>(
-  request: IDBRequest<T>,
-  operationName = "IndexedDB operation",
-): Promise<T> {
+export function executeIDBRequest<T>(request: IDBRequest<T>, operationName = "IndexedDB operation"): Promise<T> {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => {
       resolve(request.result);
@@ -53,9 +50,9 @@ export async function executeIDBCursor(
     const request = index.openCursor();
 
     request.onsuccess = (event) => {
-      const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
+      const cursor = (event.target).result;
       if (cursor) {
-        const result = operation(cursor, cursor.value as T);
+        const result = operation(cursor, cursor.value as unknown);
         if (result === false) {
           // Stop iteration if operation returns false
           resolve();

@@ -10,7 +10,7 @@ import {
 
 import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
 // Create a test database for integration tests
-const testDir = `${Bun.env['TMPDIR'] ?? "/tmp"}/competition-leave-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/competition-leave-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 const testDbPath = `${testDir}/test.db`;
 const testDbUrl = `file:${testDbPath}`;
 
@@ -179,7 +179,13 @@ describe("Competition Leave - Integration Tests", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
 
     // Add as invited
-    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "INVITED", invitedBy: ownerId });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: player1Id,
+      status: "INVITED",
+      invitedBy: ownerId,
+    });
 
     // Verify invited
     const statusBeforeLeave = await getParticipantStatus(prisma, competitionId, player1Id);
@@ -343,7 +349,13 @@ describe("Competition Leave - Integration Tests", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
 
     // Add as invited
-    const invitedParticipant = await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "INVITED", invitedBy: ownerId });
+    const invitedParticipant = await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: player1Id,
+      status: "INVITED",
+      invitedBy: ownerId,
+    });
     const invitedAt = invitedParticipant.invitedAt;
 
     // Accept invitation (transition to JOINED)

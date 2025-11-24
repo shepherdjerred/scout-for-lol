@@ -103,7 +103,12 @@ describe("addParticipant - JOINED status", () => {
     const { competitionId } = await createTestCompetition();
     const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
 
-    const participant = await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+    const participant = await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "JOINED",
+    });
 
     expect(participant.competitionId).toBe(competitionId);
     expect(participant.playerId).toBe(playerId);
@@ -119,7 +124,12 @@ describe("addParticipant - JOINED status", () => {
     const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
 
     const before = new Date();
-    const participant = await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "JOINED" });
+    const participant = await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "JOINED",
+    });
     const after = new Date();
 
     expect(participant.joinedAt).not.toBeNull();
@@ -140,7 +150,13 @@ describe("addParticipant - INVITED status", () => {
     const { playerId } = await createTestPlayer("TestPlayer", testAccountId("111111111111111111"));
     const inviterId = testAccountId("222222222222222222");
 
-    const participant = await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "INVITED", invitedBy: inviterId });
+    const participant = await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "INVITED",
+      invitedBy: inviterId,
+    });
 
     expect(participant.status).toBe("INVITED");
     expect(participant.invitedAt).toBeInstanceOf(Date);

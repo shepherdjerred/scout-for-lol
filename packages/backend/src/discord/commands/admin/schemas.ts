@@ -1,10 +1,5 @@
 import { z } from "zod";
-import {
-  DiscordAccountIdSchema,
-  DiscordGuildIdSchema,
-  RegionSchema,
-  RiotIdSchema,
-} from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, DiscordGuildIdSchema, RegionSchema, RiotIdSchema } from "@scout-for-lol/data";
 
 /**
  * Common player alias schema (used across many admin commands)
@@ -38,4 +33,3 @@ export const RiotAccountSchema = z.object({
 export const DiscordUserSchema = z.object({
   discordUserId: DiscordAccountIdSchema,
 });
-

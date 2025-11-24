@@ -6,7 +6,7 @@ import { addParticipant, getParticipantStatus } from "@scout-for-lol/backend/dat
 
 import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
 // Create a test database for integration tests
-const testDir = `${Bun.env['TMPDIR'] ?? "/tmp"}/competition-invite-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/competition-invite-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 const testDbPath = `${testDir}/test.db`;
 const testDbUrl = `file:${testDbPath}`;
 
@@ -143,7 +143,13 @@ describe("Owner invites user", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
 
     // Owner invites target user
-    await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "INVITED", invitedBy: ownerId });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "INVITED",
+      invitedBy: ownerId,
+    });
 
     // Verify participant created with INVITED status
     const status = await getParticipantStatus(prisma, competitionId, playerId);
@@ -205,7 +211,13 @@ describe("Invite to OPEN competition", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "OPEN" });
 
     // Owner invites target user (works for any visibility type)
-    await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "INVITED", invitedBy: ownerId });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "INVITED",
+      invitedBy: ownerId,
+    });
 
     // Verify participant created with INVITED status
     const status = await getParticipantStatus(prisma, competitionId, playerId);
@@ -257,16 +269,28 @@ describe("Invite already invited user", () => {
     const { competitionId } = await createTestCompetition(serverId, ownerId, { visibility: "INVITE_ONLY" });
 
     // Owner invites target user
-    await addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "INVITED", invitedBy: ownerId });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: playerId,
+      status: "INVITED",
+      invitedBy: ownerId,
+    });
 
     // Check status - already invited
     const status = await getParticipantStatus(prisma, competitionId, playerId);
     expect(status).toBe("INVITED");
 
     // Try to invite again - addParticipant will throw error
-    expect(addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "INVITED", invitedBy: ownerId })).rejects.toThrow(
-      /already a participant/i,
-    );
+    expect(
+      addParticipant({
+        prisma,
+        competitionId: competitionId,
+        playerId: playerId,
+        status: "INVITED",
+        invitedBy: ownerId,
+      }),
+    ).rejects.toThrow(/already a participant/i);
 
     // But command logic would detect this and handle gracefully (idempotent)
     expect(status).toBe("INVITED");
@@ -332,9 +356,15 @@ describe("Invite when at limit", () => {
     expect(count).toBe(2);
 
     // Owner tries to invite 3rd user - should fail
-    expect(addParticipant({ prisma, competitionId: competitionId, playerId: player3Id, status: "INVITED", invitedBy: ownerId })).rejects.toThrow(
-      /maximum participants/i,
-    );
+    expect(
+      addParticipant({
+        prisma,
+        competitionId: competitionId,
+        playerId: player3Id,
+        status: "INVITED",
+        invitedBy: ownerId,
+      }),
+    ).rejects.toThrow(/maximum participants/i);
   });
 });
 
@@ -396,9 +426,15 @@ describe("Invite to cancelled competition", () => {
     expect(competition?.isCancelled).toBe(true);
 
     // Try to invite - should fail due to inactive competition
-    expect(addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "INVITED", invitedBy: ownerId })).rejects.toThrow(
-      /inactive competition/i,
-    );
+    expect(
+      addParticipant({
+        prisma,
+        competitionId: competitionId,
+        playerId: playerId,
+        status: "INVITED",
+        invitedBy: ownerId,
+      }),
+    ).rejects.toThrow(/inactive competition/i);
   });
 });
 
@@ -434,9 +470,15 @@ describe("Invite to ended competition", () => {
     }
 
     // Try to invite - should fail due to inactive competition
-    expect(addParticipant({ prisma, competitionId: competitionId, playerId: playerId, status: "INVITED", invitedBy: ownerId })).rejects.toThrow(
-      /inactive competition/i,
-    );
+    expect(
+      addParticipant({
+        prisma,
+        competitionId: competitionId,
+        playerId: playerId,
+        status: "INVITED",
+        invitedBy: ownerId,
+      }),
+    ).rejects.toThrow(/inactive competition/i);
   });
 });
 
@@ -457,9 +499,27 @@ describe("Multiple invitations", () => {
     const { playerId: player3Id } = await createTestPlayer(serverId, testAccountId("3000000000000"), "Player3");
 
     // Owner invites all 3
-    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "INVITED", invitedBy: ownerId });
-    await addParticipant({ prisma, competitionId: competitionId, playerId: player2Id, status: "INVITED", invitedBy: ownerId });
-    await addParticipant({ prisma, competitionId: competitionId, playerId: player3Id, status: "INVITED", invitedBy: ownerId });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: player1Id,
+      status: "INVITED",
+      invitedBy: ownerId,
+    });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: player2Id,
+      status: "INVITED",
+      invitedBy: ownerId,
+    });
+    await addParticipant({
+      prisma,
+      competitionId: competitionId,
+      playerId: player3Id,
+      status: "INVITED",
+      invitedBy: ownerId,
+    });
 
     // Verify all 3 have INVITED status
     const status1 = await getParticipantStatus(prisma, competitionId, player1Id);

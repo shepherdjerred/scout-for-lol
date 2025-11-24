@@ -446,7 +446,7 @@ export function convertMatchDtoToInternalFormat(
     // Cast required: example match structure updated with real data, types don't match exactly
     const completedMatch: CompletedMatch = {
       ...baseMatch,
-      players: updatedPlayers as unknown as CompletedMatch["players"],
+      players: updatedPlayers as unknown,
       durationInSeconds: matchDto.info.gameDuration,
       teams,
     };
@@ -456,7 +456,7 @@ export function convertMatchDtoToInternalFormat(
   // For arena matches, no teams roster. Cast required: example match structure updated with real data
   const arenaMatch: ArenaMatch = {
     ...baseMatch,
-    players: updatedPlayers as unknown as ArenaMatch["players"],
+    players: updatedPlayers as unknown,
     durationInSeconds: matchDto.info.gameDuration,
   };
   return arenaMatch;

@@ -12,7 +12,7 @@ import {
 import { ChampionIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 // Create a test database
-const testDir = `${Bun.env['TMPDIR'] ?? "/tmp"}/competition-queries-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
+const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/competition-queries-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
 await Bun.write(`${testDir}/.keep`, "");
 const testDbPath = `${testDir}/test.db`;
 const schemaPath = `${import.meta.dir}/../../../prisma/schema.prisma`;
