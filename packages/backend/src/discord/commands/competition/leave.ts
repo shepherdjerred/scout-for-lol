@@ -1,13 +1,18 @@
 import { type ChatInputCommandInteraction } from "discord.js";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
 import { removeParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.js";
 import {
   replyWithErrorFromException,
   replyWithError,
   replyWithSuccess,
 } from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
+import {
+  extractCompetitionId,
+  validateServerContext,
+  fetchCompetitionWithErrorHandling,
+  fetchLinkedPlayerForUser,
+} from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.js";
 
 /**
  * Execute /competition leave command
@@ -18,12 +23,10 @@ export async function executeCompetitionLeave(interaction: ChatInputCommandInter
   // Step 1: Extract and validate input
   // ============================================================================
 
-  const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
+  const competitionId = extractCompetitionId(interaction);
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
-  const serverId = interaction.guildId ? DiscordGuildIdSchema.parse(interaction.guildId) : null;
-
+  const serverId = await validateServerContext(interaction);
   if (!serverId) {
-    await replyWithError(interaction, "This command can only be used in a server");
     return;
   }
 
@@ -31,28 +34,8 @@ export async function executeCompetitionLeave(interaction: ChatInputCommandInter
   // Step 2: Get user's linked Player account
   // ============================================================================
 
-  let player;
-  try {
-    player = await prisma.player.findFirst({
-      where: {
-        serverId,
-        discordId: userId,
-      },
-    });
-  } catch (error) {
-    console.error(`[Competition Leave] Error fetching player for user ${userId}:`, error);
-    await replyWithErrorFromException(interaction, error, "fetching player data");
-    return;
-  }
-
+  const player = await fetchLinkedPlayerForUser(interaction, serverId, userId, "Competition Leave");
   if (!player) {
-    await replyWithError(
-      interaction,
-      `❌ No League account linked
-
-You need to link your League of Legends account first. Use:
-\`/subscription add region:NA1 riot-id:YourName#NA1 alias:YourName channel:#updates\``,
-    );
     return;
   }
 
@@ -60,22 +43,8 @@ You need to link your League of Legends account first. Use:
   // Step 3: Check if competition exists
   // ============================================================================
 
-  let competition;
-  try {
-    competition = await getCompetitionById(prisma, competitionId);
-  } catch (error) {
-    console.error(`[Competition Leave] Error fetching competition ${competitionId.toString()}:`, error);
-    await replyWithErrorFromException(interaction, error, "fetching competition");
-    return;
-  }
-
+  const competition = await fetchCompetitionWithErrorHandling(interaction, competitionId, "Competition Leave");
   if (!competition) {
-    await replyWithError(
-      interaction,
-      `❌ Competition not found
-
-Competition with ID ${competitionId.toString()} does not exist.`,
-    );
     return;
   }
 

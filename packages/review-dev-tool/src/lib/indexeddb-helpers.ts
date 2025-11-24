@@ -34,7 +34,9 @@ export function openIndexedDB(dbName: string, version: number, upgradeHandler?: 
 /**
  * Execute an IndexedDB request and return the result
  */
-export function executeRequest<T>(request: IDBRequest<T>): Promise<T> {
+export function executeRequest<T>(request: IDBRequest<T>): Promise<T>;
+export function executeRequest(request: IDBRequest<IDBValidKey>): Promise<void>;
+export function executeRequest<T>(request: IDBRequest<T>): Promise<T | void> {
   return new Promise((resolve, reject) => {
     request.onerror = () => {
       const error = request.error;
@@ -49,18 +51,10 @@ export function executeRequest<T>(request: IDBRequest<T>): Promise<T> {
 
 /**
  * Execute an IndexedDB request that doesn't return a value
+ * @deprecated Use executeRequest instead
  */
 export function executeRequestVoid(request: IDBRequest<IDBValidKey>): Promise<void> {
-  return new Promise((resolve, reject) => {
-    request.onerror = () => {
-      const error = request.error;
-      reject(error ?? new Error("IndexedDB operation failed"));
-    };
-
-    request.onsuccess = () => {
-      resolve();
-    };
-  });
+  return executeRequest(request);
 }
 
 /**

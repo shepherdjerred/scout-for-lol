@@ -1,13 +1,8 @@
 import { type ChatInputCommandInteraction } from "discord.js";
-import {
-  CompetitionIdSchema,
-  DiscordAccountIdSchema,
-  DiscordGuildIdSchema,
-  getCompetitionStatus,
-} from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, getCompetitionStatus } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
+import { differenceInCalendarDays } from "date-fns";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
 import {
   addParticipant,
   acceptInvitation,
@@ -18,6 +13,13 @@ import {
   replyWithErrorFromException,
   replyWithError,
 } from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
+import {
+  extractCompetitionId,
+  validateServerContext,
+  fetchCompetitionWithErrorHandling,
+  checkCompetitionCancelled,
+  checkCompetitionEnded,
+} from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 
 /**
@@ -29,12 +31,10 @@ export async function executeCompetitionJoin(interaction: ChatInputCommandIntera
   // Step 1: Extract and validate input
   // ============================================================================
 
-  const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
+  const competitionId = extractCompetitionId(interaction);
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
-  const serverId = interaction.guildId ? DiscordGuildIdSchema.parse(interaction.guildId) : null;
-
+  const serverId = await validateServerContext(interaction);
   if (!serverId) {
-    await replyWithError(interaction, "This command can only be used in a server");
     return;
   }
 
@@ -71,17 +71,8 @@ You need to link your League of Legends account first. Use:
   // Step 3: Check if competition exists
   // ============================================================================
 
-  let competition: Awaited<ReturnType<typeof getCompetitionById>>;
-  try {
-    competition = await getCompetitionById(prisma, competitionId);
-  } catch (error) {
-    console.error(`[Competition Join] Error fetching competition ${competitionId.toString()}:`, error);
-    await replyWithErrorFromException(interaction, error, "fetching competition");
-    return;
-  }
-
+  const competition = await fetchCompetitionWithErrorHandling(interaction, competitionId, "Competition Join");
   if (!competition) {
-    await replyWithError(interaction, `Competition with ID ${competitionId.toString()} not found`);
     return;
   }
 
@@ -89,13 +80,7 @@ You need to link your League of Legends account first. Use:
   // Step 4: Check if competition is cancelled
   // ============================================================================
 
-  if (competition.isCancelled) {
-    await replyWithError(
-      interaction,
-      `❌ Competition cancelled
-
-This competition has been cancelled and is no longer accepting participants.`,
-    );
+  if (await checkCompetitionCancelled(interaction, competition)) {
     return;
   }
 
@@ -104,13 +89,7 @@ This competition has been cancelled and is no longer accepting participants.`,
   // ============================================================================
 
   const now = new Date();
-  if (competition.endDate && competition.endDate < now) {
-    await replyWithError(
-      interaction,
-      `❌ Competition ended
-
-This competition has already ended on ${competition.endDate.toLocaleDateString()}.`,
-    );
+  if (await checkCompetitionEnded(interaction, competition)) {
     return;
   }
 
@@ -283,15 +262,13 @@ function formatStatusForJoinMessage(
  */
 function getRelativeTimeString(date: Date): string {
   const now = new Date();
-  const diffMs = date.getTime() - now.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = differenceInCalendarDays(date, now);
 
   if (diffDays > 0) {
     return `in ${diffDays.toString()} day${diffDays === 1 ? "" : "s"}`;
   }
-  if (diffHours > 0) {
-    return `in ${diffHours.toString()} hour${diffHours === 1 ? "" : "s"}`;
+  if (diffDays === 0) {
+    return "today";
   }
   return "soon";
 }

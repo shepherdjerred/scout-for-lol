@@ -72,6 +72,33 @@ function getActiveCompetitionDates(): { startDate: Date; endDate: Date } {
   return { startDate, endDate };
 }
 
+// Helper to create a test player with account
+async function createTestPlayer(discordId: string, alias: string, serverId: string, puuid: string) {
+  return prisma.player.create({
+    data: {
+      discordId: testAccountId(discordId),
+      alias,
+      serverId,
+      creatorDiscordId: testAccountId(discordId),
+      createdTime: new Date(),
+      updatedTime: new Date(),
+      accounts: {
+        create: [
+          {
+            puuid: testPuuid(puuid),
+            alias,
+            region: "AMERICA_NORTH",
+            serverId,
+            creatorDiscordId: testAccountId(discordId),
+            createdTime: new Date(),
+            updatedTime: new Date(),
+          },
+        ],
+      },
+    },
+  });
+}
+
 beforeEach(async () => {
   // Reset S3 mock before each test
   s3Mock.reset();
@@ -154,7 +181,9 @@ describe("calculateLeaderboard integration tests", () => {
 
     expect(leaderboard).toHaveLength(0);
   });
+});
 
+describe("calculateLeaderboard integration tests - Scoring", () => {
   test("should calculate leaderboard with participants but no matches", async () => {
     // Create players
     const player1 = await prisma.player.create({
@@ -377,62 +406,18 @@ describe("calculateLeaderboard integration tests", () => {
     expect(leaderboard[1]?.rank).toBe(2);
     expect(leaderboard[1]?.score).toMatchObject(silverRank);
   });
+});
 
+describe("calculateLeaderboard - HIGHEST_RANK Criteria", () => {
   test("should handle HIGHEST_RANK criteria with END snapshots (ended competition)", async () => {
-    // Create players
-    const player1 = await prisma.player.create({
-      data: {
-        discordId: testAccountId("300000000"),
-        alias: "Player3",
-        serverId: testGuildId("000000"),
-        creatorDiscordId: testAccountId("300000000"),
-        createdTime: new Date(),
-        updatedTime: new Date(),
-        accounts: {
-          create: [
-            {
-              puuid: testPuuid("3"),
-              alias: "Player3",
-              region: "AMERICA_NORTH",
-              serverId: testGuildId("000000"),
-              creatorDiscordId: testAccountId("300000000"),
-              createdTime: new Date(),
-              updatedTime: new Date(),
-            },
-          ],
-        },
-      },
-    });
+    // Create players using helper
+    const player1 = await createTestPlayer("300000000", "Player3", testGuildId("000000"), "3");
+    const player2 = await createTestPlayer("400000000", "Player4", testGuildId("000000"), "4");
 
-    const player2 = await prisma.player.create({
-      data: {
-        discordId: testAccountId("400000000"),
-        alias: "Player4",
-        serverId: testGuildId("000000"),
-        creatorDiscordId: testAccountId("400000000"),
-        createdTime: new Date(),
-        updatedTime: new Date(),
-        accounts: {
-          create: [
-            {
-              puuid: testPuuid("4"),
-              alias: "Player4",
-              region: "AMERICA_NORTH",
-              serverId: testGuildId("000000"),
-              creatorDiscordId: testAccountId("400000000"),
-              createdTime: new Date(),
-              updatedTime: new Date(),
-            },
-          ],
-        },
-      },
-    });
-
-    // Create an ACTIVE competition first (so we can add participants)
     const activeEndDate = new Date();
-    activeEndDate.setDate(activeEndDate.getDate() + 1); // Ends tomorrow (still active)
+    activeEndDate.setDate(activeEndDate.getDate() + 1);
     const startDate = new Date();
-    startDate.setDate(startDate.getDate() - 30); // Started 30 days ago
+    startDate.setDate(startDate.getDate() - 30);
 
     const competition = await createCompetition(prisma, {
       serverId: testGuildId("000000"),
@@ -442,47 +427,23 @@ describe("calculateLeaderboard integration tests", () => {
       description: "Test",
       visibility: "OPEN",
       maxParticipants: 10,
-      dates: {
-        type: "FIXED_DATES",
-        startDate,
-        endDate: activeEndDate,
-      },
-      criteria: {
-        type: "HIGHEST_RANK",
-        queue: "SOLO",
-      },
+      dates: { type: "FIXED_DATES", startDate, endDate: activeEndDate },
+      criteria: { type: "HIGHEST_RANK", queue: "SOLO" },
     });
 
-    // Add participants while competition is still active
     await addParticipant(prisma, competition.id, player1.id, "JOINED");
     await addParticipant(prisma, competition.id, player2.id, "JOINED");
 
-    // Now manually update the competition to be ended (for testing purposes)
     const endedDate = new Date();
-    endedDate.setDate(endedDate.getDate() - 1); // Ended yesterday
+    endedDate.setDate(endedDate.getDate() - 1);
     await prisma.competition.update({
       where: { id: competition.id },
       data: { endDate: endedDate },
     });
 
-    // Create END snapshots with rank data (typical for ended competition)
-    const goldRank: Rank = {
-      tier: "gold",
-      division: 2,
-      lp: 50,
-      wins: 100,
-      losses: 80,
-    };
+    const goldRank: Rank = { tier: "gold", division: 2, lp: 50, wins: 100, losses: 80 };
+    const silverRank: Rank = { tier: "silver", division: 1, lp: 75, wins: 80, losses: 70 };
 
-    const silverRank: Rank = {
-      tier: "silver",
-      division: 1,
-      lp: 75,
-      wins: 80,
-      losses: 70,
-    };
-
-    // Player 1 ends at Gold (higher)
     await prisma.competitionSnapshot.create({
       data: {
         competitionId: competition.id,
@@ -492,8 +453,6 @@ describe("calculateLeaderboard integration tests", () => {
         snapshotTime: new Date(),
       },
     });
-
-    // Player 2 ends at Silver (lower)
     await prisma.competitionSnapshot.create({
       data: {
         competitionId: competition.id,
@@ -504,10 +463,7 @@ describe("calculateLeaderboard integration tests", () => {
       },
     });
 
-    // Re-fetch the competition to get the updated endDate
-    const updatedCompetition = await prisma.competition.findUnique({
-      where: { id: competition.id },
-    });
+    const updatedCompetition = await prisma.competition.findUnique({ where: { id: competition.id } });
     if (!updatedCompetition) {
       throw new Error("Competition not found");
     }
@@ -515,13 +471,9 @@ describe("calculateLeaderboard integration tests", () => {
     const leaderboard = await calculateLeaderboard(prisma, parseCompetition(updatedCompetition));
 
     expect(leaderboard).toHaveLength(2);
-
-    // Player 1 (Gold) should be rank 1
     expect(leaderboard[0]?.playerId).toBe(PlayerIdSchema.parse(player1.id));
     expect(leaderboard[0]?.rank).toBe(1);
     expect(leaderboard[0]?.score).toMatchObject(goldRank);
-
-    // Player 2 (Silver) should be rank 2
     expect(leaderboard[1]?.playerId).toBe(PlayerIdSchema.parse(player2.id));
     expect(leaderboard[1]?.rank).toBe(2);
     expect(leaderboard[1]?.score).toMatchObject(silverRank);
@@ -676,7 +628,9 @@ describe("calculateLeaderboard integration tests", () => {
     const score1 = z.number().parse(leaderboard[1]?.score);
     expect(score0).toBeGreaterThan(score1);
   });
+});
 
+describe("calculateLeaderboard integration tests - Filters", () => {
   test("should only include JOINED participants, not INVITED or LEFT", async () => {
     // Create players
     const player1 = await prisma.player.create({

@@ -41,6 +41,78 @@ const STORAGE_KEY = "scout-review-history"; // For localStorage migration
 const MAX_HISTORY_ENTRIES = 50;
 
 /**
+ * Build config snapshot from validated config data
+ */
+function buildConfigSnapshot(configData: z.infer<typeof ConfigSnapshotSchema>): HistoryEntry["configSnapshot"] {
+  return {
+    model: configData.model,
+    ...(configData.personality !== undefined ? { personality: configData.personality } : {}),
+    ...(configData.artStyle !== undefined ? { artStyle: configData.artStyle } : {}),
+    ...(configData.artTheme !== undefined ? { artTheme: configData.artTheme } : {}),
+  };
+}
+
+/**
+ * Build generation result from validated result data
+ */
+function buildGenerationResult(resultData: z.infer<typeof GenerationResultSchema>): GenerationResult {
+  const metadataValidation = GenerationMetadataSchema.safeParse(resultData.metadata);
+  const metadata = metadataValidation.success
+    ? metadataValidation.data
+    : {
+        textDurationMs: 0,
+        imageGenerated: false,
+      };
+  return {
+    text: resultData.text,
+    ...(resultData.image !== undefined && { image: resultData.image }),
+    metadata,
+    ...(resultData.error !== undefined && { error: resultData.error }),
+  };
+}
+
+/**
+ * Validate and transform an entry into a HistoryEntry
+ */
+function validateAndTransformEntry(
+  entry: {
+    id: string;
+    timestamp: string | Date;
+    result: unknown;
+    configSnapshot: unknown;
+    status: "pending" | "complete" | "error";
+    rating?: 1 | 2 | 3 | 4;
+    notes?: string;
+  },
+  context: "migration" | "load",
+): HistoryEntry | null {
+  const resultValidation = GenerationResultSchema.safeParse(entry.result);
+  const configValidation = ConfigSnapshotSchema.safeParse(entry.configSnapshot);
+
+  if (!resultValidation.success || !configValidation.success) {
+    const prefix =
+      context === "migration"
+        ? "[History] Skipping invalid entry during migration:"
+        : "[History] Skipping invalid entry:";
+    console.warn(prefix, entry.id);
+    return null;
+  }
+
+  const configSnapshot = buildConfigSnapshot(configValidation.data);
+  const result = buildGenerationResult(resultValidation.data);
+
+  return {
+    id: entry.id,
+    timestamp: new Date(entry.timestamp),
+    result,
+    configSnapshot,
+    status: entry.status,
+    ...(entry.rating !== undefined && { rating: entry.rating }),
+    ...(entry.notes !== undefined && { notes: entry.notes }),
+  };
+}
+
+/**
  * Migrate old localStorage data to IndexedDB (one-time migration)
  */
 async function migrateFromLocalStorage(): Promise<void> {
@@ -72,47 +144,10 @@ async function migrateFromLocalStorage(): Promise<void> {
 
     // Save each entry to IndexedDB
     for (const entry of arrayResult.data) {
-      const resultValidation = GenerationResultSchema.safeParse(entry.result);
-      const configValidation = ConfigSnapshotSchema.safeParse(entry.configSnapshot);
-
-      if (!resultValidation.success || !configValidation.success) {
-        console.warn("[History] Skipping invalid entry during migration:", entry.id);
-        continue;
+      const historyEntry = validateAndTransformEntry(entry, "migration");
+      if (historyEntry) {
+        await db.saveEntry(historyEntry);
       }
-
-      // Validated with Zod - map optional properties to match exactOptionalPropertyTypes
-      const configData = configValidation.data;
-      const configSnapshot: HistoryEntry["configSnapshot"] = {
-        model: configData.model,
-        ...(configData.personality !== undefined ? { personality: configData.personality } : {}),
-        ...(configData.artStyle !== undefined ? { artStyle: configData.artStyle } : {}),
-        ...(configData.artTheme !== undefined ? { artTheme: configData.artTheme } : {}),
-      };
-
-      const resultData = resultValidation.data;
-      const metadataValidation = GenerationMetadataSchema.safeParse(resultData.metadata);
-      const metadata = metadataValidation.success
-        ? metadataValidation.data
-        : {
-            textDurationMs: 0,
-            imageGenerated: false,
-          };
-      const result: GenerationResult = {
-        text: resultData.text,
-        ...(resultData.image !== undefined && { image: resultData.image }),
-        metadata,
-        ...(resultData.error !== undefined && { error: resultData.error }),
-      };
-      const historyEntry: HistoryEntry = {
-        id: entry.id,
-        timestamp: new Date(entry.timestamp),
-        result,
-        configSnapshot,
-        status: entry.status,
-        ...(entry.rating !== undefined && { rating: entry.rating }),
-        ...(entry.notes !== undefined && { notes: entry.notes }),
-      };
-      await db.saveEntry(historyEntry);
     }
 
     // Clear localStorage after successful migration
@@ -139,47 +174,10 @@ export async function loadHistory(): Promise<HistoryEntry[]> {
     // Convert to HistoryEntry type (IndexedDB stores Date objects correctly)
     const validEntries: HistoryEntry[] = [];
     for (const entry of entries) {
-      const resultValidation = GenerationResultSchema.safeParse(entry.result);
-      const configValidation = ConfigSnapshotSchema.safeParse(entry.configSnapshot);
-
-      if (!resultValidation.success || !configValidation.success) {
-        console.warn("[History] Skipping invalid entry:", entry.id);
-        continue;
+      const historyEntry = validateAndTransformEntry(entry, "load");
+      if (historyEntry) {
+        validEntries.push(historyEntry);
       }
-
-      // Validated with Zod - map optional properties to match exactOptionalPropertyTypes
-      const configData = configValidation.data;
-      const configSnapshot: HistoryEntry["configSnapshot"] = {
-        model: configData.model,
-        ...(configData.personality !== undefined ? { personality: configData.personality } : {}),
-        ...(configData.artStyle !== undefined ? { artStyle: configData.artStyle } : {}),
-        ...(configData.artTheme !== undefined ? { artTheme: configData.artTheme } : {}),
-      };
-
-      const resultData = resultValidation.data;
-      const metadataValidation = GenerationMetadataSchema.safeParse(resultData.metadata);
-      const metadata = metadataValidation.success
-        ? metadataValidation.data
-        : {
-            textDurationMs: 0,
-            imageGenerated: false,
-          };
-      const result: GenerationResult = {
-        text: resultData.text,
-        ...(resultData.image !== undefined && { image: resultData.image }),
-        metadata,
-        ...(resultData.error !== undefined && { error: resultData.error }),
-      };
-      const historyEntry: HistoryEntry = {
-        id: entry.id,
-        timestamp: new Date(entry.timestamp),
-        result,
-        configSnapshot,
-        status: entry.status,
-        ...(entry.rating !== undefined && { rating: entry.rating }),
-        ...(entry.notes !== undefined && { notes: entry.notes }),
-      };
-      validEntries.push(historyEntry);
     }
     return validEntries;
   } catch (error) {

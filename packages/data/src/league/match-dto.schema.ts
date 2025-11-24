@@ -503,7 +503,6 @@ export type PerksDto = z.infer<typeof PerksDtoSchema>;
 export type TeamDto = z.infer<typeof TeamDtoSchema>;
 export type ObjectivesDto = z.infer<typeof ObjectivesDtoSchema>;
 export type MissionsDto = z.infer<typeof MissionsDtoSchema>;
-
 // Internal enum schemas - not exported to avoid conflicts with @scout-for-lol/data/model types
 // These are specific to the Riot API MatchDto format
 // export { PositionSchema, RoleSchema, LaneSchema, DescriptionSchema };

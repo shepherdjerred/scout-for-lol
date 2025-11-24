@@ -36,6 +36,7 @@ export const ArenaChampionSchema = ChampionSchema.omit({
   runes: true,
 }).extend({
   augments: z.array(AugmentSchema).max(6),
+  // eslint-disable-next-line no-warning-comments
   // TODO: perhaps these are in normal games, too
   arenaMetrics: PlayerMetricsSchema,
   teamSupport: TeamSupportMetricsSchema,
@@ -66,8 +67,8 @@ export const ArenaPlacementSchema = z.union([
   z.literal(8),
 ]);
 
-// TODO: map ints -> name
-// e.g. minion, krug, etc.
+// eslint-disable-next-line no-warning-comments
+// TODO: map ints -> name (e.g. minion, krug, etc.)
 export type ArenaTeam = z.infer<typeof ArenaTeamSchema>;
 export const ArenaTeamSchema = z.strictObject({
   teamId: ArenaTeamIdSchema,

@@ -1,16 +1,16 @@
 import { type ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
-import { CompetitionIdSchema, getCompetitionStatus } from "@scout-for-lol/data";
+import { getCompetitionStatus } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
 import { z } from "zod";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
 import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.js";
 import { formatScore } from "@scout-for-lol/backend/discord/embeds/competition.js";
 import { loadCachedLeaderboard } from "@scout-for-lol/backend/storage/s3-leaderboard.js";
+import { replyWithErrorFromException } from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
 import {
-  replyWithErrorFromException,
-  replyWithError,
-} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
+  extractCompetitionId,
+  fetchCompetitionWithErrorHandling,
+} from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.js";
 
 // Schema for participant with player relation (when includePlayer=true)
 const ParticipantWithPlayerSchema = z.object({
@@ -28,28 +28,14 @@ export async function executeCompetitionView(interaction: ChatInputCommandIntera
   // Step 1: Extract and validate input
   // ============================================================================
 
-  const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
+  const competitionId = extractCompetitionId(interaction);
 
   // ============================================================================
   // Step 2: Fetch competition
   // ============================================================================
 
-  let competition;
-  try {
-    competition = await getCompetitionById(prisma, competitionId);
-  } catch (error) {
-    console.error(`[Competition View] Error fetching competition ${competitionId.toString()}:`, error);
-    await replyWithErrorFromException(interaction, error, "fetching competition");
-    return;
-  }
-
+  const competition = await fetchCompetitionWithErrorHandling(interaction, competitionId, "Competition View");
   if (!competition) {
-    await replyWithError(
-      interaction,
-      `❌ Competition not found
-
-Competition #${competitionId.toString()} doesn't exist. Use \`/competition list\` to see all available competitions.`,
-    );
     return;
   }
 
@@ -165,21 +151,22 @@ function getStatusText(
   return match(status)
     .with("DRAFT", () => {
       if (competition.startDate) {
-        const daysUntilStart = Math.ceil((competition.startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const daysUntilStart = daysUntil(competition.startDate, now);
         return `🔵 Draft (starts in ${daysUntilStart.toString()} day${daysUntilStart === 1 ? "" : "s"})`;
       }
       return "🔵 Draft";
     })
     .with("ACTIVE", () => {
       if (competition.endDate) {
-        const daysRemaining = Math.ceil((competition.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const daysRemaining = daysUntil(competition.endDate, now);
         return `🟢 Active (${daysRemaining.toString()} day${daysRemaining === 1 ? "" : "s"} remaining)`;
       }
       return "🟢 Active";
     })
     .with("ENDED", () => {
       if (competition.endDate) {
-        return `🔴 Ended (Completed ${competition.endDate.toLocaleDateString()})`;
+        const dateStr = formatHumanDateTime(competition.endDate).split(" ")[0]; // Get just the date part
+        return `🔴 Ended (Completed ${dateStr})`;
       }
       return "🔴 Ended";
     })
@@ -302,27 +289,8 @@ async function addLeaderboard(
   }
 
   // Add cache timestamp
-  const now = new Date();
-  const ageMs = now.getTime() - cachedAt.getTime();
-  const ageHours = Math.floor(ageMs / (1000 * 60 * 60));
-  const ageMinutes = Math.floor((ageMs % (1000 * 60 * 60)) / (1000 * 60));
-
-  let ageText = "";
-  if (ageHours > 0) {
-    ageText = `${ageHours.toString()} hour${ageHours === 1 ? "" : "s"} ago`;
-  } else if (ageMinutes > 0) {
-    ageText = `${ageMinutes.toString()} minute${ageMinutes === 1 ? "" : "s"} ago`;
-  } else {
-    ageText = "just now";
-  }
-
-  const dateStr = cachedAt.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const ageText = formatTimeAgo(cachedAt);
+  const dateStr = formatHumanDateTime(cachedAt);
 
   embed.addFields({
     name: "\u200B",

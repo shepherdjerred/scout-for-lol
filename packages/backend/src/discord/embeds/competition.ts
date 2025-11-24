@@ -5,6 +5,7 @@ import { match } from "ts-pattern";
 import { z } from "zod";
 import { getChampionName } from "twisted/dist/constants/champions.js";
 import type { RankedLeaderboardEntry } from "@scout-for-lol/backend/league/competition/leaderboard.js";
+import { differenceInCalendarDays, format } from "date-fns";
 
 // ============================================================================
 // Types
@@ -428,25 +429,21 @@ function getStatusText(status: CompetitionStatus, competition: CompetitionWithCr
   return match(status)
     .with("DRAFT", () => {
       if (competition.startDate) {
-        const daysUntilStart = Math.ceil((competition.startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const daysUntilStart = differenceInCalendarDays(competition.startDate, now);
         return `${emoji} Draft (starts in ${daysUntilStart.toString()} day${daysUntilStart === 1 ? "" : "s"})`;
       }
       return `${emoji} Draft`;
     })
     .with("ACTIVE", () => {
       if (competition.endDate) {
-        const daysRemaining = Math.ceil((competition.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const daysRemaining = differenceInCalendarDays(competition.endDate, now);
         return `${emoji} Active (${daysRemaining.toString()} day${daysRemaining === 1 ? "" : "s"} remaining)`;
       }
       return `${emoji} Active`;
     })
     .with("ENDED", () => {
       if (competition.endDate) {
-        const endedDate = competition.endDate.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        });
+        const endedDate = format(competition.endDate, "MMM d, yyyy");
         return `${emoji} Ended (Completed ${endedDate})`;
       }
       return `${emoji} Ended`;
