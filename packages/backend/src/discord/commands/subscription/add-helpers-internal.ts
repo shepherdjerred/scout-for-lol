@@ -1,5 +1,5 @@
 import type { ChatInputCommandInteraction } from "discord.js";
-import { DiscordAccountIdSchema, LeaguePuuidSchema, type RiotId } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, LeaguePuuidSchema, RegionSchema, type RiotId } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.js";
@@ -39,17 +39,17 @@ export function validateSubscriptionArgs(
 
 export async function createSubscriptionRecords(params: {
   args: ArgsType;
-  existingPlayer: { id: bigint } | null;
+  existingPlayer: { id: number } | null;
   puuid: string;
   userId: string;
   now: Date;
 }): Promise<
   | {
       success: true;
-      subscription: { id: bigint };
+      subscription: { id: number };
       playerAccount: {
         player: {
-          id: bigint;
+          id: number;
           alias: string;
           accounts: { alias: string; region: string }[];
         };
@@ -62,7 +62,7 @@ export async function createSubscriptionRecords(params: {
       error: string;
       playerAccount?: {
         player: {
-          id: bigint;
+          id: number;
           alias: string;
           accounts: { alias: string; region: string }[];
         };
@@ -71,7 +71,7 @@ export async function createSubscriptionRecords(params: {
     }
 > {
   const { args, existingPlayer, puuid, userId, now } = params;
-  const { channel, region, _riotId, user, alias, guildId } = args;
+  const { channel, region, riotId, user, alias, guildId } = args;
 
   try {
     const dbStartTime = Date.now();
@@ -258,7 +258,7 @@ export function handleWelcomeMatch(params: {
     league: {
       leagueAccount: {
         puuid: LeaguePuuidSchema.parse(puuid),
-        region: region,
+        region: RegionSchema.parse(region),
       },
     },
     discordAccount: {

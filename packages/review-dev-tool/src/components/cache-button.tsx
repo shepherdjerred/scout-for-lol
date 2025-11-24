@@ -2,7 +2,6 @@
  * Cache management button with dropdown
  */
 import { useState, useRef } from "react";
-import { z } from "zod";
 import { clearAllCache, getCacheStats } from "@scout-for-lol/review-dev-tool/lib/cache";
 
 export function CacheButton() {
@@ -35,22 +34,21 @@ export function CacheButton() {
   };
 
   return (
-    <div
-      className="relative"
-      ref={dropdownRef}
-      onMouseDown={(e) => {
-        // Handle clicks on the dropdown container itself
-        e.stopPropagation();
-      }}
-    >
+    <div className="relative" ref={dropdownRef}>
       {isOpen && (
         <div
+          role="button"
+          tabIndex={-1}
+          aria-label="Close dropdown"
           style={{ position: "fixed", inset: 0, zIndex: 40 }}
           onMouseDown={(e) => {
             // Close when clicking the overlay
-            const NodeSchema = z.instanceof(Node);
-            const targetResult = NodeSchema.safeParse(e.target);
-            if (targetResult.success && e.target === e.currentTarget) {
+            if (e.target === e.currentTarget) {
+              setIsOpen(false);
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
               setIsOpen(false);
             }
           }}

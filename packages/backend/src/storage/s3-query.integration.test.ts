@@ -86,7 +86,7 @@ function createMockGetObjectResponse(content: string): GetObjectCommandOutput {
   // The mock body implements transformToString() which is what's actually used
   // TypeScript can't verify the full structural match, but the mock works at runtime
   return {
-    Body: mockBody,
+    Body: mockBody as any,
     $metadata: {},
   };
 }

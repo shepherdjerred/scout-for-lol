@@ -42,7 +42,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   // Check if user is admin (only works in guild context)
   // Validate member permissions structure with Zod
   const PermissionsSchema = z.object({
-    has: z.function(),
+    has: z.function().returns(z.boolean()),
   });
 
   const MemberWithPermissionsSchema = z.object({
@@ -50,7 +50,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   });
 
   const memberResult = MemberWithPermissionsSchema.safeParse(member);
-  const isAdmin = memberResult.success && memberResult.data.permissions?.has(PermissionFlagsBits.Administrator);
+  const isAdmin = memberResult.success && (memberResult.data.permissions?.has(PermissionFlagsBits.Administrator) ?? false);
 
   if (!isOwner && !isAdmin) {
     await interaction.reply({

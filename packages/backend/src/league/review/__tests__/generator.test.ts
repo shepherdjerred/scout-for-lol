@@ -42,8 +42,6 @@ describe("generateMatchReview", () => {
                 leagueAccount: {
                   puuid: testPuuid("test-puuid"),
                   region: "AMERICA_NORTH",
-                  gameName: "TestPlayer",
-                  tagLine: "NA1",
                 },
               },
             },

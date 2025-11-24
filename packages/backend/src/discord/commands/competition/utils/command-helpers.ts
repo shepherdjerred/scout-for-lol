@@ -48,8 +48,7 @@ export async function fetchLinkedPlayerForUser(
   userId: string | DiscordAccountId,
   logContext: string,
 ): Promise<Awaited<ReturnType<typeof prisma.player.findFirst>> | null> {
-  const StringUserIdSchema = z.string();
-  const parsedUserId = StringUserIdSchema.safeParse(userId).success ? DiscordAccountIdSchema.parse(userId) : userId;
+  const parsedUserId = typeof userId === 'string' ? DiscordAccountIdSchema.parse(userId) : userId;
 
   let player;
   try {
@@ -156,7 +155,7 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
  */
 export async function checkParticipantLimit(options: {
   interaction: ChatInputCommandInteraction;
-  competitionId: number;
+  competitionId: CompetitionId;
   maxParticipants: number;
   logContext: string;
   fullMessage: string;

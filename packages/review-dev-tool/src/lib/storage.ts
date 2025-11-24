@@ -77,7 +77,6 @@ export async function getItem<T>(storeName: string, key: string): Promise<T | nu
     if (result === undefined || result === null) {
       return null;
     }
-    // eslint-disable-next-line no-warning-comments -- jerred said it is ok
     // eslint-disable-next-line custom-rules/no-type-assertions -- TODO fix this
     return result as T;
   } catch (error) {

@@ -41,7 +41,7 @@ describe("handleGuildCreate", () => {
     expect(sendMock).toHaveBeenCalledTimes(1);
     // Verify the welcome message contains expected content
     const calls = sendMock.mock.calls;
-    const firstCall = calls[0]?.[0];
+    const firstCall = calls[0]?.[0] as unknown;
     const MessageSchema = z.object({ content: z.string() });
     const result = MessageSchema.safeParse(firstCall);
     if (!result.success) {
@@ -92,7 +92,7 @@ describe("handleGuildCreate", () => {
     expect(sendMock).toHaveBeenCalledTimes(1);
     // Verify the welcome message contains expected content
     const calls = sendMock.mock.calls;
-    const firstCall = calls[0]?.[0];
+    const firstCall = calls[0]?.[0] as unknown;
     const MessageSchema = z.object({ content: z.string() });
     const result = MessageSchema.safeParse(firstCall);
     if (!result.success) {

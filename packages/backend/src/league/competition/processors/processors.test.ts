@@ -349,7 +349,7 @@ function createMatch(
         wardsKilled: 10,
         wardsPlaced: 15,
         // Add missing fields from ParticipantDto
-        lane: "MID",
+        lane: "MIDDLE",
         missions: {},
         perks: {
           statPerks: {

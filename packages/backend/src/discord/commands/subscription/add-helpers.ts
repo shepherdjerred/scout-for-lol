@@ -18,7 +18,7 @@ import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 export async function checkSubscriptionLimit(
   interaction: ChatInputCommandInteraction,
   guildId: DiscordGuildId,
-  existingPlayer: { id: bigint } | null,
+  existingPlayer: { id: number } | null,
 ): Promise<boolean> {
   // Check subscription limit (only if creating a new player)
   if (existingPlayer) {

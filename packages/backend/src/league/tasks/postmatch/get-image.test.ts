@@ -200,7 +200,7 @@ describe("Match ID Handling", () => {
     await saveImageToS3(MatchIdSchema.parse(matchId), imageBuffer, "solo");
 
     const call = s3Mock.call(0);
-    const command = call.args[0];
+    const command = call.args[0] as { input: { Key?: string; ContentType?: string } };
 
     expect(command.input.Key).toContain(matchId);
     expect(command.input.Key).toEndWith(`${matchId}.png`);
@@ -276,7 +276,7 @@ describe("ContentType and S3 Configuration", () => {
     await saveImageToS3(MatchIdSchema.parse(matchId), imageBuffer, "solo");
 
     const call = s3Mock.call(0);
-    const command = call.args[0];
+    const command = call.args[0] as { input: { Key?: string; ContentType?: string } };
 
     expect(command.input.ContentType).toBe("image/png");
   });
