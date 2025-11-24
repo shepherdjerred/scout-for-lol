@@ -77,7 +77,9 @@ async function handleAbandonedGuild(
   try {
     guild = await client.guilds.fetch(serverId);
   } catch (_error) {
-    console.warn(`[AbandonedGuilds] Could not fetch guild ${serverId} - may have already been removed`);
+    console.warn(
+      `[AbandonedGuilds] Could not fetch guild ${serverId} - may have already been removed. Error details: ${getErrorMessage(_error)}`,
+    );
     // Mark as notified so we don't keep trying
     await markGuildAsNotified(prisma, serverId);
     return;

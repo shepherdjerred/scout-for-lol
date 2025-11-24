@@ -284,4 +284,3 @@ export function modelSupportsParameter(modelId: string, parameter: "temperature"
       return false;
   }
 }
-

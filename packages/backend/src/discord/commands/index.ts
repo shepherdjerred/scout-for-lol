@@ -2,11 +2,7 @@ import { type Client, MessageFlags, PermissionFlagsBits, PermissionsBitField } f
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { getFlag } from "@scout-for-lol/backend/configuration/flags.js";
 import { match } from "ts-pattern";
-import {
-  executeSubscriptionAdd,
-  executeSubscriptionDelete,
-  executeSubscriptionList,
-} from "@scout-for-lol/backend/discord/commands/subscription/index.js";
+
 import { executeHelp } from "@scout-for-lol/backend/discord/commands/help";
 import {
   executeCompetitionCreate,
@@ -19,27 +15,29 @@ import {
   executeCompetitionView,
   executeCompetitionList,
 } from "@scout-for-lol/backend/discord/commands/competition/index.js";
-import {
-  executePlayerEdit,
-  executeAccountDelete,
-  executeAccountAdd,
-  executePlayerMerge,
-  executePlayerDelete,
-  executeAccountTransfer,
-  executePlayerLinkDiscord,
-  executePlayerUnlinkDiscord,
-  executePlayerView,
-} from "@scout-for-lol/backend/discord/commands/admin/index.js";
+
 import {
   executeDebugDatabase,
   executeDebugPolling,
   executeDebugServerInfo,
-  executeDebugForceSnapshot,
-  executeDebugForceLeaderboardUpdate,
-  executeDebugManageParticipant,
 } from "@scout-for-lol/backend/discord/commands/debug.js";
 import { discordCommandsTotal, discordCommandDuration } from "@scout-for-lol/backend/metrics/index.js";
 import { searchChampions } from "@scout-for-lol/backend/utils/champion.js";
+import { executeAccountAdd } from "./admin/account-add";
+import { executeAccountDelete } from "./admin/account-delete";
+import { executeAccountTransfer } from "./admin/account-transfer";
+import { executePlayerDelete } from "./admin/player-delete";
+import { executePlayerEdit } from "./admin/player-edit";
+import { executePlayerLinkDiscord } from "./admin/player-link-discord";
+import { executePlayerMerge } from "./admin/player-merge";
+import { executePlayerUnlinkDiscord } from "./admin/player-unlink-discord";
+import { executePlayerView } from "./admin/player-view";
+import { executeDebugForceLeaderboardUpdate } from "./debug/force-leaderboard-update";
+import { executeDebugForceSnapshot } from "./debug/force-snapshot";
+import { executeDebugManageParticipant } from "./debug/manage-participant";
+import { executeSubscriptionAdd } from "./subscription/add";
+import { executeSubscriptionDelete } from "./subscription/delete";
+import { executeSubscriptionList } from "./subscription/list";
 
 export function handleCommands(client: Client) {
   console.log("⚡ Setting up Discord command handlers");
@@ -104,12 +102,12 @@ export function handleCommands(client: Client) {
           console.log(`🔔 Executing subscription ${subcommandName} command`);
 
           await match(subcommandName)
-            .with("add", async () => executeSubscriptionAdd(interaction))
-            .with("delete", async () => executeSubscriptionDelete(interaction))
-            .with("list", async () => executeSubscriptionList(interaction))
-            .otherwise(async () => {
+            .with("add", () => executeSubscriptionAdd(interaction))
+            .with("delete", () => executeSubscriptionDelete(interaction))
+            .with("list", () => executeSubscriptionList(interaction))
+            .otherwise(() => {
               console.warn(`⚠️  Unknown subscription subcommand: ${subcommandName}`);
-              await interaction.reply({
+              return interaction.reply({
                 content: "Unknown subscription subcommand",
                 flags: MessageFlags.Ephemeral,
               });
@@ -157,18 +155,18 @@ export function handleCommands(client: Client) {
           console.log(`🔧 Executing admin ${subcommandName} command (authorized: ${username})`);
 
           await match(subcommandName)
-            .with("player-edit", async () => executePlayerEdit(interaction))
-            .with("account-delete", async () => executeAccountDelete(interaction))
-            .with("account-add", async () => executeAccountAdd(interaction))
-            .with("account-transfer", async () => executeAccountTransfer(interaction))
-            .with("player-merge", async () => executePlayerMerge(interaction))
-            .with("player-delete", async () => executePlayerDelete(interaction))
-            .with("player-link-discord", async () => executePlayerLinkDiscord(interaction))
-            .with("player-unlink-discord", async () => executePlayerUnlinkDiscord(interaction))
-            .with("player-view", async () => executePlayerView(interaction))
-            .otherwise(async () => {
+            .with("player-edit", () => executePlayerEdit(interaction))
+            .with("account-delete", () => executeAccountDelete(interaction))
+            .with("account-add", () => executeAccountAdd(interaction))
+            .with("account-transfer", () => executeAccountTransfer(interaction))
+            .with("player-merge", () => executePlayerMerge(interaction))
+            .with("player-delete", () => executePlayerDelete(interaction))
+            .with("player-link-discord", () => executePlayerLinkDiscord(interaction))
+            .with("player-unlink-discord", () => executePlayerUnlinkDiscord(interaction))
+            .with("player-view", () => executePlayerView(interaction))
+            .otherwise(() => {
               console.warn(`⚠️  Unknown admin subcommand: ${subcommandName}`);
-              await interaction.reply({
+              return interaction.reply({
                 content: "Unknown admin subcommand",
                 flags: MessageFlags.Ephemeral,
               });

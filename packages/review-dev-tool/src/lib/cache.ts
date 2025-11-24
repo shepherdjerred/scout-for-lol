@@ -187,25 +187,6 @@ async function cleanupExpiredEntries(): Promise<void> {
 }
 
 /**
- * Get cached data if available and valid (synchronous - checks memory only)
- * Returns unknown data that must be validated by the caller
- */
-function _getCachedData(endpoint: string, params: Record<string, unknown>): unknown {
-  const cacheKey = generateCacheKey(endpoint, params);
-
-  // Periodically clean up expired entries
-  void cleanupExpiredEntries();
-
-  // Check in-memory cache only (synchronous)
-  const memoryEntry = memoryCache.get(cacheKey);
-  if (memoryEntry && isCacheValid(memoryEntry)) {
-    return memoryEntry.data;
-  }
-
-  return null;
-}
-
-/**
  * Get cached data if available and valid (async - checks memory and IndexedDB)
  * Returns unknown data that must be validated by the caller
  */

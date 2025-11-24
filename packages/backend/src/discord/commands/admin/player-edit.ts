@@ -2,9 +2,12 @@ import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { validateCommandArgs, executeWithTiming } from "./utils/validation.js";
-import { findPlayerByAliasWithSubscriptions } from "./utils/player-queries.js";
-import { buildDatabaseError } from "./utils/responses.js";
+import {
+  validateCommandArgs,
+  executeWithTiming,
+} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
+import { findPlayerByAliasWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
+import { buildDatabaseError } from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
 
 const ArgsSchema = z.object({
   currentAlias: z.string().min(1).max(100),

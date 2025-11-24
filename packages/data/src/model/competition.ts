@@ -293,8 +293,8 @@ export function parseCompetition(raw: Competition): CompetitionWithCriteria {
     throw new Error(`Invalid criteria for competition ${raw.id.toString()}: ${result.error.message}`);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- we only need `rest` from this destructure
-  const { criteriaType, criteriaConfig, ...rest } = raw;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- ok
+  const { criteriaType: _type, criteriaConfig: _config, ...rest } = raw;
 
   // Transparently populate dates from season if seasonId is set
   let startDate = raw.startDate;

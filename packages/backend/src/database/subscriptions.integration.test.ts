@@ -14,8 +14,7 @@ import type {
 } from "@scout-for-lol/data";
 
 // Create a temporary database for testing
-const _testDbDir = `${Bun.env.TMPDIR ?? "/tmp"}/subscriptions-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
-const testDbPath = `testDbDir/test.db`;
+const testDbPath = `${Bun.env.TMPDIR ?? "/tmp"}/subscriptions-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}/test.db`;
 const testDbUrl = `file:${testDbPath}`;
 
 // Push schema to test database

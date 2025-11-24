@@ -8,10 +8,17 @@ import {
   RiotIdSchema,
 } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { validateCommandArgs, executeWithTiming } from "./utils/validation.js";
-import { findPlayerByAliasWithAccounts } from "./utils/player-queries.js";
-import { resolvePuuidFromRiotId } from "./utils/riot-api.js";
-import { buildRiotApiError, buildAccountExistsError, buildDatabaseError } from "./utils/responses.js";
+import {
+  validateCommandArgs,
+  executeWithTiming,
+} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
+import { findPlayerByAliasWithAccounts } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
+import { resolvePuuidFromRiotId } from "@scout-for-lol/backend/discord/commands/admin/utils/riot-api.js";
+import {
+  buildRiotApiError,
+  buildAccountExistsError,
+  buildDatabaseError,
+} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
 import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.js";
 
 const ArgsSchema = z.object({
