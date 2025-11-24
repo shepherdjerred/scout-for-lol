@@ -1,4 +1,4 @@
-import type { MostWinsChampionCriteria } from "@scout-for-lol/data";
+import type { MostWinsChampionCriteria, MatchDto } from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,

@@ -258,7 +258,7 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
  * Get match outcome from participant data
  * Mirrors backend implementation from packages/backend/src/league/model/match.ts
  */
-function getOutcome(participant: MatchV5DTOs.ParticipantDto): "Victory" | "Defeat" | "Surrender" {
+function getOutcome(participant: ParticipantDto): "Victory" | "Defeat" | "Surrender" {
   if (participant.win) {
     return "Victory";
   }

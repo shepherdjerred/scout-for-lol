@@ -89,14 +89,15 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
     await interaction.deferReply({ ephemeral: true });
 
     console.log(`📖 Reading database file from ${databasePath}`);
-    const fileBuffer = await readFile(databasePath);
-    console.log(`✅ Successfully read database file (${String(fileBuffer.length)} bytes)`);
+    const fileBuffer = await Bun.file(databasePath).arrayBuffer();
+    const buffer = Buffer.from(fileBuffer);
+    console.log(`✅ Successfully read database file (${buffer.length} bytes)`);
 
     // Create attachment
-    const attachment = new AttachmentBuilder(fileBuffer, { name: "database.sqlite" });
+    const attachment = new AttachmentBuilder(buffer, { name: "database.sqlite" });
 
     await interaction.editReply({
-      content: `✅ Database file uploaded successfully\n\nPath: \`${databasePath}\`\nSize: ${(fileBuffer.length / 1024).toFixed(2)} KB`,
+      content: `✅ Database file uploaded successfully\n\nPath: \`${databasePath}\`\nSize: ${(buffer.length / 1024).toFixed(2)} KB`,
       files: [attachment],
     });
 

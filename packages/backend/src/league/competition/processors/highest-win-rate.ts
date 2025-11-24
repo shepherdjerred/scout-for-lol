@@ -1,4 +1,4 @@
-import type { HighestWinRateCriteria } from "@scout-for-lol/data";
+import type { HighestWinRateCriteria, MatchDto } from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,

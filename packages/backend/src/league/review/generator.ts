@@ -12,6 +12,7 @@ import {
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
+import { join } from "path";
 import config from "@scout-for-lol/backend/configuration.js";
 import { saveAIReviewImageToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import {
@@ -21,9 +22,7 @@ import {
   getLaneContext,
 } from "@scout-for-lol/backend/league/review/prompts.js";
 
-const FILENAME = import.meta.path;
-const _DIRNAME = dirname(FILENAME);
-const AI_IMAGES_DIR = `DIRNAME/ai-images`;
+const AI_IMAGES_DIR = `${import.meta.dir}/ai-images`;
 
 /**
  * Initialize OpenAI client if API key is configured
@@ -99,10 +98,9 @@ async function generateReviewImageBackend(
 
     // Save to local filesystem for debugging
     try {
-      await Bun.write(`AI_IMAGES_DIR, { recursive: true }/.keep`, "");
-      const filepath = join(AI_IMAGES_DIR, `ai-review-${new Date().toISOString().replace(/[:.]/g, "-")}.png`);
+      const filepath: string = join(AI_IMAGES_DIR, `ai-review-${new Date().toISOString().replace(/[:.]/g, "-")}.png`);
       await Bun.write(filepath, buffer);
-      console.log(`[generateReviewImage] Saved image to: ${String(filepath)}`);
+      console.log(`[generateReviewImage] Saved image to: ${filepath}`);
     } catch (fsError: unknown) {
       console.error("[generateReviewImage] Failed to save image to filesystem:", fsError);
     }
