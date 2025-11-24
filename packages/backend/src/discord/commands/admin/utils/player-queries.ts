@@ -1,6 +1,6 @@
 import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { type ChatInputCommandInteraction } from "discord.js";
-import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { DiscordGuildIdSchema, type DiscordAccountId, type DiscordGuildId } from "@scout-for-lol/data";
 
 export type PlayerWithAccounts = Awaited<ReturnType<typeof findPlayerByAliasWithAccounts>>;
 export type PlayerWithSubscriptions = Awaited<ReturnType<typeof findPlayerByAliasWithSubscriptions>>;
@@ -11,7 +11,7 @@ export type PlayerWithCompetitions = Awaited<ReturnType<typeof findPlayerByAlias
  */
 export async function findPlayerByAlias(
   prisma: PrismaClient,
-  serverId: string,
+  serverId: DiscordGuildId,
   alias: string,
   interaction?: ChatInputCommandInteraction,
 ) {
@@ -40,7 +40,7 @@ export async function findPlayerByAlias(
  */
 export async function findPlayerByAliasWithAccounts(
   prisma: PrismaClient,
-  serverId: string,
+  serverId: DiscordGuildId,
   alias: string,
   interaction?: ChatInputCommandInteraction,
 ) {
@@ -72,7 +72,7 @@ export async function findPlayerByAliasWithAccounts(
  */
 export async function findPlayerByAliasWithSubscriptions(
   prisma: PrismaClient,
-  serverId: string,
+  serverId: DiscordGuildId,
   alias: string,
   interaction?: ChatInputCommandInteraction,
 ) {
@@ -105,7 +105,7 @@ export async function findPlayerByAliasWithSubscriptions(
  */
 export async function findPlayerByAliasWithCompetitions(
   prisma: PrismaClient,
-  serverId: string,
+  serverId: DiscordGuildId,
   alias: string,
   interaction?: ChatInputCommandInteraction,
 ) {
@@ -143,14 +143,14 @@ export async function findPlayerByAliasWithCompetitions(
  */
 export async function findPlayerByDiscordId(
   prisma: PrismaClient,
-  serverId: string,
-  discordId: string,
+  serverId: DiscordGuildId,
+  discordId: DiscordAccountId,
   interaction?: ChatInputCommandInteraction,
 ) {
   const player = await prisma.player.findFirst({
     where: {
-      serverId: DiscordGuildIdSchema.parse(serverId),
-      discordId: DiscordAccountIdSchema.parse(discordId),
+      serverId: serverId,
+      discordId: discordId,
     },
     include: {
       accounts: true,

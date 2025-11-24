@@ -2,8 +2,11 @@ import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { validateCommandArgs, executeWithTiming } from "./utils/validation.js";
-import { buildDatabaseError } from "./utils/responses.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import {
+  validateCommandArgs,
+  executeWithTiming,
+} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
 
 const ArgsSchema = z.object({
   sourceAlias: z.string().min(1).max(100),
@@ -89,155 +92,155 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
       return;
     }
 
-  console.log(
-    `💾 Merging player "${sourceAlias}" (${sourcePlayer.accounts.length.toString()} accounts, ${sourcePlayer.subscriptions.length.toString()} subscriptions) into "${targetAlias}" (${targetPlayer.accounts.length.toString()} accounts, ${targetPlayer.subscriptions.length.toString()} subscriptions)`,
-  );
+    console.log(
+      `💾 Merging player "${sourceAlias}" (${sourcePlayer.accounts.length.toString()} accounts, ${sourcePlayer.subscriptions.length.toString()} subscriptions) into "${targetAlias}" (${targetPlayer.accounts.length.toString()} accounts, ${targetPlayer.subscriptions.length.toString()} subscriptions)`,
+    );
 
-  try {
-    const now = new Date();
+    try {
+      const now = new Date();
 
-    // Use a transaction to ensure all operations succeed or fail together
-    await prisma.$transaction(async (tx) => {
-      // 1. Move all accounts from source to target
-      await tx.account.updateMany({
-        where: {
-          playerId: sourcePlayer.id,
-        },
-        data: {
-          playerId: targetPlayer.id,
-          updatedTime: now,
-        },
-      });
-
-      console.log(`✅ Moved ${sourcePlayer.accounts.length.toString()} accounts to target player`);
-
-      // 2. Handle subscriptions - keep target's subscriptions, delete source's duplicates
-      // Get all unique channel IDs from both players
-      const sourceChannelIds = new Set(sourcePlayer.subscriptions.map((sub) => sub.channelId));
-      const targetChannelIds = new Set(targetPlayer.subscriptions.map((sub) => sub.channelId));
-
-      // Delete source subscriptions (including duplicates)
-      await tx.subscription.deleteMany({
-        where: {
-          playerId: sourcePlayer.id,
-        },
-      });
-
-      console.log(`✅ Removed ${sourcePlayer.subscriptions.length.toString()} subscriptions from source player`);
-
-      // Create new subscriptions for channels that were only in source
-      const uniqueSourceChannels = Array.from(sourceChannelIds).filter((channelId) => !targetChannelIds.has(channelId));
-
-      if (uniqueSourceChannels.length > 0) {
-        await tx.subscription.createMany({
-          data: uniqueSourceChannels.map((channelId) => ({
+      // Use a transaction to ensure all operations succeed or fail together
+      await prisma.$transaction(async (tx) => {
+        // 1. Move all accounts from source to target
+        await tx.account.updateMany({
+          where: {
+            playerId: sourcePlayer.id,
+          },
+          data: {
             playerId: targetPlayer.id,
-            channelId: channelId,
-            serverId: guildId,
-            creatorDiscordId: userId,
-            createdTime: now,
             updatedTime: now,
-          })),
+          },
         });
 
-        console.log(`✅ Added ${uniqueSourceChannels.length.toString()} new subscriptions to target player`);
-      }
+        console.log(`✅ Moved ${sourcePlayer.accounts.length.toString()} accounts to target player`);
 
-      // 3. Handle competition participants
-      // For each competition, if both players are participants, keep target's and delete source's
-      const sourceCompetitionIds = new Set(sourcePlayer.competitionParticipants.map((cp) => cp.competitionId));
-      const targetCompetitionIds = new Set(targetPlayer.competitionParticipants.map((cp) => cp.competitionId));
+        // 2. Handle subscriptions - keep target's subscriptions, delete source's duplicates
+        // Get all unique channel IDs from both players
+        const sourceChannelIds = new Set(sourcePlayer.subscriptions.map((sub) => sub.channelId));
+        const targetChannelIds = new Set(targetPlayer.subscriptions.map((sub) => sub.channelId));
 
-      // Delete all source competition participants
-      await tx.competitionParticipant.deleteMany({
-        where: {
-          playerId: sourcePlayer.id,
-        },
-      });
+        // Delete source subscriptions (including duplicates)
+        await tx.subscription.deleteMany({
+          where: {
+            playerId: sourcePlayer.id,
+          },
+        });
 
-      console.log(
-        `✅ Removed ${sourcePlayer.competitionParticipants.length.toString()} competition participants from source player`,
-      );
+        console.log(`✅ Removed ${sourcePlayer.subscriptions.length.toString()} subscriptions from source player`);
 
-      // Create new participants for competitions that were only in source
-      const uniqueSourceCompetitions = Array.from(sourceCompetitionIds).filter(
-        (competitionId) => !targetCompetitionIds.has(competitionId),
-      );
-
-      if (uniqueSourceCompetitions.length > 0) {
-        // Get the original participation data to preserve status and timestamps
-        const sourceParticipations = sourcePlayer.competitionParticipants.filter((cp) =>
-          uniqueSourceCompetitions.includes(cp.competitionId),
+        // Create new subscriptions for channels that were only in source
+        const uniqueSourceChannels = Array.from(sourceChannelIds).filter(
+          (channelId) => !targetChannelIds.has(channelId),
         );
 
-        await tx.competitionParticipant.createMany({
-          data: sourceParticipations.map((cp) => ({
-            competitionId: cp.competitionId,
-            playerId: targetPlayer.id,
-            status: cp.status,
-            invitedBy: cp.invitedBy,
-            invitedAt: cp.invitedAt,
-            joinedAt: cp.joinedAt,
-            leftAt: cp.leftAt,
-          })),
+        if (uniqueSourceChannels.length > 0) {
+          await tx.subscription.createMany({
+            data: uniqueSourceChannels.map((channelId) => ({
+              playerId: targetPlayer.id,
+              channelId: channelId,
+              serverId: guildId,
+              creatorDiscordId: DiscordAccountIdSchema.parse(userId),
+              createdTime: now,
+              updatedTime: now,
+            })),
+          });
+
+          console.log(`✅ Added ${uniqueSourceChannels.length.toString()} new subscriptions to target player`);
+        }
+
+        // 3. Handle competition participants
+        // For each competition, if both players are participants, keep target's and delete source's
+        const sourceCompetitionIds = new Set(sourcePlayer.competitionParticipants.map((cp) => cp.competitionId));
+        const targetCompetitionIds = new Set(targetPlayer.competitionParticipants.map((cp) => cp.competitionId));
+
+        // Delete all source competition participants
+        await tx.competitionParticipant.deleteMany({
+          where: {
+            playerId: sourcePlayer.id,
+          },
         });
 
         console.log(
-          `✅ Added ${uniqueSourceCompetitions.length.toString()} competition participations to target player`,
+          `✅ Removed ${sourcePlayer.competitionParticipants.length.toString()} competition participants from source player`,
         );
-      }
 
-      // 4. Handle competition snapshots - move all to target player
-      await tx.competitionSnapshot.updateMany({
-        where: {
-          playerId: sourcePlayer.id,
-        },
-        data: {
-          playerId: targetPlayer.id,
-        },
+        // Create new participants for competitions that were only in source
+        const uniqueSourceCompetitions = Array.from(sourceCompetitionIds).filter(
+          (competitionId) => !targetCompetitionIds.has(competitionId),
+        );
+
+        if (uniqueSourceCompetitions.length > 0) {
+          // Get the original participation data to preserve status and timestamps
+          const sourceParticipations = sourcePlayer.competitionParticipants.filter((cp) =>
+            uniqueSourceCompetitions.includes(cp.competitionId),
+          );
+
+          await tx.competitionParticipant.createMany({
+            data: sourceParticipations.map((cp) => ({
+              competitionId: cp.competitionId,
+              playerId: targetPlayer.id,
+              status: cp.status,
+              invitedBy: cp.invitedBy,
+              invitedAt: cp.invitedAt,
+              joinedAt: cp.joinedAt,
+              leftAt: cp.leftAt,
+            })),
+          });
+
+          console.log(
+            `✅ Added ${uniqueSourceCompetitions.length.toString()} competition participations to target player`,
+          );
+        }
+
+        // 4. Handle competition snapshots - move all to target player
+        await tx.competitionSnapshot.updateMany({
+          where: {
+            playerId: sourcePlayer.id,
+          },
+          data: {
+            playerId: targetPlayer.id,
+          },
+        });
+
+        console.log(`✅ Moved competition snapshots to target player`);
+
+        // 5. Delete the source player
+        await tx.player.delete({
+          where: {
+            id: sourcePlayer.id,
+          },
+        });
+
+        console.log(`✅ Deleted source player "${sourceAlias}"`);
+
+        // 6. Update target player's metadata
+        await tx.player.update({
+          where: {
+            id: targetPlayer.id,
+          },
+          data: {
+            updatedTime: now,
+          },
+        });
       });
 
-      console.log(`✅ Moved competition snapshots to target player`);
+      const totalAccounts = sourcePlayer.accounts.length + targetPlayer.accounts.length;
+      const totalSubscriptions =
+        targetPlayer.subscriptions.length +
+        sourcePlayer.subscriptions.filter(
+          (sourceSub) => !targetPlayer.subscriptions.some((targetSub) => targetSub.channelId === sourceSub.channelId),
+        ).length;
 
-      // 5. Delete the source player
-      await tx.player.delete({
-        where: {
-          id: sourcePlayer.id,
-        },
+      await interaction.reply({
+        content: `✅ **Players merged successfully**\n\nMerged "${sourceAlias}" into "${targetAlias}"\n\n**Result:**\n• Total accounts: ${totalAccounts.toString()}\n• Total subscriptions: ${totalSubscriptions.toString()}\n• Source player "${sourceAlias}" has been deleted`,
+        ephemeral: true,
       });
-
-      console.log(`✅ Deleted source player "${sourceAlias}"`);
-
-      // 6. Update target player's metadata
-      await tx.player.update({
-        where: {
-          id: targetPlayer.id,
-        },
-        data: {
-          updatedTime: now,
-        },
+    } catch (error) {
+      console.error(`❌ Database error during player merge:`, error);
+      await interaction.reply({
+        content: `❌ **Error merging players**\n\nFailed to merge players: ${getErrorMessage(error)}\n\nNo changes were made.`,
+        ephemeral: true,
       });
-    });
-
-    const executionTime = Date.now() - startTime;
-    console.log(`✅ Player merge completed successfully in ${executionTime.toString()}ms`);
-
-    const totalAccounts = sourcePlayer.accounts.length + targetPlayer.accounts.length;
-    const totalSubscriptions =
-      targetPlayer.subscriptions.length +
-      sourcePlayer.subscriptions.filter(
-        (sourceSub) => !targetPlayer.subscriptions.some((targetSub) => targetSub.channelId === sourceSub.channelId),
-      ).length;
-
-    await interaction.reply({
-      content: `✅ **Players merged successfully**\n\nMerged "${sourceAlias}" into "${targetAlias}"\n\n**Result:**\n• Total accounts: ${totalAccounts.toString()}\n• Total subscriptions: ${totalSubscriptions.toString()}\n• Source player "${sourceAlias}" has been deleted`,
-      ephemeral: true,
-    });
-  } catch (error) {
-    console.error(`❌ Database error during player merge:`, error);
-    await interaction.reply({
-      content: `❌ **Error merging players**\n\nFailed to merge players: ${getErrorMessage(error)}\n\nNo changes were made.`,
-      ephemeral: true,
-    });
-  }
+    }
+  });
 }

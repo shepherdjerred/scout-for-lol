@@ -1,14 +1,14 @@
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 import unicorn from "eslint-plugin-unicorn";
-import { zodSchemaNaming } from "./eslint-rules/zod-schema-naming.ts";
-import { noRedundantZodParse } from "./eslint-rules/no-redundant-zod-parse.ts";
-import { satoriBestPractices } from "./eslint-rules/satori-best-practices.ts";
-import { prismaClientDisconnect } from "./eslint-rules/prisma-client-disconnect.ts";
-import { noTypeAssertions } from "./eslint-rules/no-type-assertions.ts";
-import { preferZodValidation } from "./eslint-rules/prefer-zod-validation.ts";
-import { preferBunApis } from "./eslint-rules/prefer-bun-apis.ts";
-import { noReExports } from "./eslint-rules/no-re-exports.ts";
+import { zodSchemaNaming } from "./eslint-rules/zod-schema-naming";
+import { noRedundantZodParse } from "./eslint-rules/no-redundant-zod-parse";
+import { satoriBestPractices } from "./eslint-rules/satori-best-practices";
+import { prismaClientDisconnect } from "./eslint-rules/prisma-client-disconnect";
+import { noTypeAssertions } from "./eslint-rules/no-type-assertions";
+import { preferZodValidation } from "./eslint-rules/prefer-zod-validation";
+import { preferBunApis } from "./eslint-rules/prefer-bun-apis";
+import { noReExports } from "./eslint-rules/no-re-exports";
 import importPlugin from "eslint-plugin-import";
 import noRelativeImportPaths from "eslint-plugin-no-relative-import-paths";
 import * as regexpPlugin from "eslint-plugin-regexp";
@@ -71,6 +71,7 @@ export default tseslint.config(
       parserOptions: {
         projectService: {
           allowDefaultProject: ["eslint.config.ts", "eslint-rules/*.ts"],
+          defaultProject: "./tsconfig.eslint.json",
         },
         tsconfigRootDir: import.meta.dirname,
         extraFileExtensions: [".astro"],

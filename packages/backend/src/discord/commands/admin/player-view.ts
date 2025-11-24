@@ -1,10 +1,14 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { validateCommandArgs, executeWithTiming } from "./utils/validation.js";
-import { findPlayerByAliasWithCompetitions } from "./utils/player-queries.js";
-import type { PlayerWithCompetitions } from "./utils/player-queries.js";
+import {
+  validateCommandArgs,
+  executeWithTiming,
+} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
+import { findPlayerByAliasWithCompetitions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
+import type { PlayerWithCompetitions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
 import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
 
 const ArgsSchema = z.object({
@@ -12,14 +16,34 @@ const ArgsSchema = z.object({
   guildId: DiscordGuildIdSchema,
 });
 
+async function getRateLimitInfo(guildId: DiscordGuildId) {
+  const accountLimitRaw = getLimit("accounts", { server: guildId });
+  const accountLimit = accountLimitRaw === "unlimited" ? null : accountLimitRaw;
+  const subscriptionLimitRaw = getLimit("player_subscriptions", { server: guildId });
+  const subscriptionLimit = subscriptionLimitRaw === "unlimited" ? null : subscriptionLimitRaw;
+
+  const totalServerAccounts = await prisma.account.count({
+    where: { serverId: guildId },
+  });
+
+  const totalServerPlayers = await prisma.player.count({
+    where: {
+      serverId: guildId,
+      subscriptions: {
+        some: {},
+      },
+    },
+  });
+
+  return { accountLimit, subscriptionLimit, totalServerAccounts, totalServerPlayers };
+}
+
 function buildPlayerInfoSections(
   player: NonNullable<PlayerWithCompetitions>,
-  accountLimit: number | null,
-  subscriptionLimit: number | null,
-  totalServerAccounts: number,
-  totalServerPlayers: number,
+  rateLimits: Awaited<ReturnType<typeof getRateLimitInfo>>,
 ): string[] {
   const sections: string[] = [];
+  const { accountLimit, subscriptionLimit, totalServerAccounts, totalServerPlayers } = rateLimits;
 
   // Player Info Section
   sections.push(`# 👤 Player Info: ${player.alias}`);
@@ -111,6 +135,59 @@ function buildPlayerInfoSections(
   return sections;
 }
 
+async function sendPlayerInfo(interaction: ChatInputCommandInteraction, sections: string[]): Promise<void> {
+  const content = sections.join("\n");
+
+  // Discord has a 2000 character limit for message content
+  if (content.length > 2000) {
+    // Split into multiple messages if needed
+    const chunks: string[] = [];
+    let currentChunk = "";
+
+    for (const section of sections) {
+      if (currentChunk.length + section.length + 1 > 1900) {
+        chunks.push(currentChunk);
+        currentChunk = section;
+      } else {
+        currentChunk += (currentChunk ? "\n" : "") + section;
+      }
+    }
+
+    if (currentChunk) {
+      chunks.push(currentChunk);
+    }
+
+    const firstChunk = chunks[0];
+    if (firstChunk === undefined) {
+      await interaction.reply({
+        content: "❌ Error: No content to display",
+        ephemeral: true,
+      });
+      return;
+    }
+
+    await interaction.reply({
+      content: firstChunk,
+      ephemeral: true,
+    });
+
+    for (let i = 1; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      if (chunk !== undefined) {
+        await interaction.followUp({
+          content: chunk,
+          ephemeral: true,
+        });
+      }
+    }
+  } else {
+    await interaction.reply({
+      content,
+      ephemeral: true,
+    });
+  }
+}
+
 export async function executePlayerView(interaction: ChatInputCommandInteraction) {
   const validation = await validateCommandArgs(
     interaction,
@@ -130,93 +207,15 @@ export async function executePlayerView(interaction: ChatInputCommandInteraction
   const { alias, guildId } = args;
 
   await executeWithTiming("player-view", username, async () => {
-    // Fetch player with all related data
-    const playerOrNull = await findPlayerByAliasWithCompetitions(prisma, guildId, alias, interaction);
-    if (!playerOrNull) {
+    const player = await findPlayerByAliasWithCompetitions(prisma, guildId, alias, interaction);
+    if (!player) {
       return;
     }
 
-    const player = playerOrNull;
     console.log(`✅ Player found: ${player.alias} (ID: ${player.id.toString()})`);
 
-    // Get rate limiting info for the server
-    const accountLimitRaw = getLimit("accounts", { server: guildId });
-    const accountLimit = accountLimitRaw === "unlimited" ? null : accountLimitRaw;
-    const subscriptionLimitRaw = getLimit("player_subscriptions", { server: guildId });
-    const subscriptionLimit = subscriptionLimitRaw === "unlimited" ? null : subscriptionLimitRaw;
-
-    // Count total accounts and subscriptions in server for rate limit context
-    const totalServerAccounts = await prisma.account.count({
-      where: { serverId: guildId },
-    });
-
-    const totalServerPlayers = await prisma.player.count({
-      where: {
-        serverId: guildId,
-        subscriptions: {
-          some: {},
-        },
-      },
-    });
-
-    // Build the response sections
-    const sections = buildPlayerInfoSections(
-      player,
-      accountLimit,
-      subscriptionLimit,
-      totalServerAccounts,
-      totalServerPlayers,
-    );
-
-    const content = sections.join("\n");
-
-    // Discord has a 2000 character limit for message content
-    if (content.length > 2000) {
-      // Split into multiple messages if needed
-      const chunks: string[] = [];
-      let currentChunk = "";
-
-      for (const section of sections) {
-        if (currentChunk.length + section.length + 1 > 1900) {
-          chunks.push(currentChunk);
-          currentChunk = section;
-        } else {
-          currentChunk += (currentChunk ? "\n" : "") + section;
-        }
-      }
-
-      if (currentChunk) {
-        chunks.push(currentChunk);
-      }
-
-      const firstChunk = chunks[0];
-      if (firstChunk === undefined) {
-        await interaction.reply({
-          content: "❌ Error: No content to display",
-          ephemeral: true,
-        });
-        return;
-      }
-
-      await interaction.reply({
-        content: firstChunk,
-        ephemeral: true,
-      });
-
-      for (let i = 1; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        if (chunk !== undefined) {
-          await interaction.followUp({
-            content: chunk,
-            ephemeral: true,
-          });
-        }
-      }
-    } else {
-      await interaction.reply({
-        content,
-        ephemeral: true,
-      });
-    }
+    const rateLimits = await getRateLimitInfo(guildId);
+    const sections = buildPlayerInfoSections(player, rateLimits);
+    await sendPlayerInfo(interaction, sections);
   });
 }
