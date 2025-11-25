@@ -20,6 +20,12 @@ import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "@scout-for-lol/backen
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
 import { match } from "ts-pattern";
+import {
+  logPlayerConfigDebugInfo,
+  logPlayerDebugInfo,
+  logCompletedMatchPlayersDebugInfo,
+  logErrorDetails,
+} from "./match-report-debug.js";
 
 /**
  * Append review metadata as debug information
@@ -200,6 +206,118 @@ async function createMatchImage(
 }
 
 /**
+ * Check if queue type is ranked
+ */
+function isRankedQueue(queueType: QueueType | undefined): boolean {
+  return queueType === "solo" || queueType === "flex" || queueType === "clash" || queueType === "aram clash";
+}
+
+/**
+ * Process arena match and generate Discord message
+ */
+async function processArenaMatch(
+  players: Awaited<ReturnType<typeof getPlayer>>[],
+  matchData: MatchDto,
+  matchId: MatchId,
+  playersInMatch: PlayerConfigEntry[],
+): Promise<MessageCreateOptions> {
+  console.log(`[generateMatchReport] 🎯 Processing as arena match`);
+  const arenaMatch = await toArenaMatch(players, matchData);
+
+  // Create Discord message for arena
+  const [attachment, embed] = await createMatchImage(arenaMatch, matchId);
+
+  // Generate completion message
+  const playerAliases = playersInMatch.map((p) => p.alias);
+  const completionMessage = formatGameCompletionMessage(playerAliases, arenaMatch.queueType);
+
+  return {
+    content: completionMessage,
+    files: [attachment],
+    embeds: [embed],
+  };
+}
+
+/**
+ * Process standard match and generate Discord message
+ */
+async function processStandardMatch(
+  players: Awaited<ReturnType<typeof getPlayer>>[],
+  matchData: MatchDto,
+  matchId: MatchId,
+  playersInMatch: PlayerConfigEntry[],
+): Promise<MessageCreateOptions> {
+  console.log(`[generateMatchReport] ⚔️  Processing as standard match`);
+  // Process match for all tracked players
+  if (players.length === 0) {
+    throw new Error("No player data available");
+  }
+  console.log(`[debug][generateMatchReport] Calling toMatch with ${players.length.toString()} player(s)`);
+  const completedMatch = toMatch(players, matchData, undefined, undefined);
+  console.log(
+    `[debug][generateMatchReport] toMatch returned match with ${completedMatch.players.length.toString()} player(s)`,
+  );
+  logCompletedMatchPlayersDebugInfo(completedMatch);
+
+  // Generate AI review (text and optional image) - only for ranked queues (solo/flex/clash)
+  let reviewText: string | undefined;
+  let reviewImage: Uint8Array | undefined;
+  if (isRankedQueue(completedMatch.queueType)) {
+    try {
+      const review = await generateMatchReview(completedMatch, matchId, matchData);
+      if (review) {
+        reviewText = review.text;
+        reviewImage = review.image;
+
+        // Append debug metadata if available
+        if (review.metadata) {
+          reviewText = appendReviewMetadata(reviewText, review.metadata);
+        }
+      }
+    } catch (error) {
+      console.error(`[generateMatchReport] Error generating AI review:`, error);
+    }
+  } else {
+    console.log(
+      `[generateMatchReport] Skipping AI review - not a ranked solo/flex queue match (queueType: ${completedMatch.queueType ?? "unknown"})`,
+    );
+  }
+
+  // Create Discord message
+  const [matchReportAttachment, matchReportEmbed] = await createMatchImage(completedMatch, matchId);
+
+  // Build files array - start with match report image
+  const files = [matchReportAttachment];
+
+  // Add AI-generated image if available
+  if (reviewImage) {
+    // Convert Uint8Array to Buffer for Discord.js type compatibility
+    // Using Bun's Buffer (not Node.js) - Discord.js types require Buffer, not Uint8Array
+    const aiBuffer = Buffer.from(reviewImage);
+    const aiImageAttachment = new AttachmentBuilder(aiBuffer).setName("ai-review.png");
+    files.push(aiImageAttachment);
+    console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
+  }
+
+  // Generate completion message
+  const playerAliases = playersInMatch.map((p) => p.alias);
+  const queueType = completedMatch.queueType ?? "custom";
+  const completionMessage = formatGameCompletionMessage(playerAliases, queueType);
+
+  // Combine completion message with review text if available
+  let messageContent = completionMessage;
+  if (reviewText && !reviewImage) {
+    messageContent = `${completionMessage}\n\n${reviewText}`;
+  }
+
+  return {
+    files: files,
+    embeds: [matchReportEmbed],
+    content: messageContent,
+  };
+}
+
+/**
  * Generate a match report message for Discord
  *
  * @param matchData - The match data from Riot API
@@ -239,150 +357,18 @@ export async function generateMatchReport(
 
     // Get full player data with ranks
     console.log(`[debug][generateMatchReport] Getting player data for ${playersInMatch.length.toString()} player(s)`);
-
-    // Debug: Check playerConfigs before calling getPlayer
-    for (let i = 0; i < playersInMatch.length; i++) {
-      const playerConfig = playersInMatch[i];
-      if (playerConfig) {
-        console.log(`[debug][generateMatchReport] playersInMatch[${i.toString()}] keys:`, Object.keys(playerConfig));
-        console.log(`[debug][generateMatchReport] playersInMatch[${i.toString()}] has puuid:`, "puuid" in playerConfig);
-        if ("puuid" in playerConfig) {
-          console.error(
-            `[debug][generateMatchReport] ⚠️  ERROR: playersInMatch[${i.toString()}] has puuid at top level!`,
-            JSON.stringify(playerConfig, null, 2),
-          );
-        }
-      }
-    }
+    logPlayerConfigDebugInfo(playersInMatch);
 
     const players = await Promise.all(playersInMatch.map((playerConfig) => getPlayer(playerConfig)));
     console.log(`[debug][generateMatchReport] Got ${players.length.toString()} player(s)`);
-    for (let i = 0; i < players.length; i++) {
-      const player = players[i];
-      if (player) {
-        console.log(`[debug][generateMatchReport] Player ${i.toString()} keys:`, Object.keys(player));
-        if ("puuid" in player) {
-          console.error(`[debug][generateMatchReport] ⚠️  WARNING: Player ${i.toString()} has puuid field!`, player);
-        }
-        if ("puuid" in player.config) {
-          console.error(
-            `[debug][generateMatchReport] ⚠️  WARNING: Player ${i.toString()}.config has puuid field!`,
-            player.config,
-          );
-        }
-      }
-    }
+    logPlayerDebugInfo(players);
 
     // Process match based on queue type
     return await match<number, Promise<MessageCreateOptions>>(matchData.info.queueId)
-      .with(1700, async (): Promise<MessageCreateOptions> => {
-        console.log(`[generateMatchReport] 🎯 Processing as arena match`);
-        const arenaMatch = await toArenaMatch(players, matchData);
-
-        // Create Discord message for arena
-        const [attachment, embed] = await createMatchImage(arenaMatch, matchId);
-
-        // Generate completion message
-        const playerAliases = playersInMatch.map((p) => p.alias);
-        const completionMessage = formatGameCompletionMessage(playerAliases, arenaMatch.queueType);
-
-        return {
-          content: completionMessage,
-          files: [attachment],
-          embeds: [embed],
-        };
-      })
-      .otherwise(async (): Promise<MessageCreateOptions> => {
-        console.log(`[generateMatchReport] ⚔️  Processing as standard match`);
-        // Process match for all tracked players
-        if (players.length === 0) {
-          throw new Error("No player data available");
-        }
-        console.log(`[debug][generateMatchReport] Calling toMatch with ${players.length.toString()} player(s)`);
-        const completedMatch = toMatch(players, matchData, undefined, undefined);
-        console.log(
-          `[debug][generateMatchReport] toMatch returned match with ${completedMatch.players.length.toString()} player(s)`,
-        );
-        for (let i = 0; i < completedMatch.players.length; i++) {
-          const playerObj = completedMatch.players[i];
-          if (playerObj) {
-            console.log(
-              `[debug][generateMatchReport] CompletedMatch.players[${i.toString()}] keys:`,
-              Object.keys(playerObj),
-            );
-            if ("puuid" in playerObj) {
-              console.error(
-                `[debug][generateMatchReport] ⚠️  ERROR: CompletedMatch.players[${i.toString()}] has puuid field!`,
-                playerObj,
-              );
-            }
-          }
-        }
-
-        // Generate AI review (text and optional image) - only for ranked queues (solo/flex/clash)
-        const isRankedQueue =
-          completedMatch.queueType === "solo" ||
-          completedMatch.queueType === "flex" ||
-          completedMatch.queueType === "clash" ||
-          completedMatch.queueType === "aram clash";
-        let reviewText: string | undefined;
-        let reviewImage: Uint8Array | undefined;
-        if (isRankedQueue) {
-          try {
-            const review = await generateMatchReview(completedMatch, matchId, matchData);
-            if (review) {
-              reviewText = review.text;
-              reviewImage = review.image;
-
-              // Append debug metadata if available
-              if (review.metadata) {
-                reviewText = appendReviewMetadata(reviewText, review.metadata);
-              }
-            }
-          } catch (error) {
-            console.error(`[generateMatchReport] Error generating AI review:`, error);
-          }
-        } else {
-          console.log(
-            `[generateMatchReport] Skipping AI review - not a ranked solo/flex queue match (queueType: ${completedMatch.queueType ?? "unknown"})`,
-          );
-        }
-
-        // Create Discord message
-        const [matchReportAttachment, matchReportEmbed] = await createMatchImage(completedMatch, matchId);
-
-        // Build files array - start with match report image
-        const files = [matchReportAttachment];
-
-        // Add AI-generated image if available
-        if (reviewImage) {
-          // Convert Uint8Array to Buffer for Discord.js type compatibility
-          // Using Bun's Buffer (not Node.js) - Discord.js types require Buffer, not Uint8Array
-          const aiBuffer = Buffer.from(reviewImage);
-          const aiImageAttachment = new AttachmentBuilder(aiBuffer).setName("ai-review.png");
-          files.push(aiImageAttachment);
-          console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
-        }
-
-        // Generate completion message
-        const playerAliases = playersInMatch.map((p) => p.alias);
-        const queueType = completedMatch.queueType ?? "custom";
-        const completionMessage = formatGameCompletionMessage(playerAliases, queueType);
-
-        // Combine completion message with review text if available
-        let messageContent = completionMessage;
-        if (reviewText && !reviewImage) {
-          messageContent = `${completionMessage}\n\n${reviewText}`;
-        }
-
-        return {
-          files: files,
-          embeds: [matchReportEmbed],
-          content: messageContent,
-        };
-      });
+      .with(1700, () => processArenaMatch(players, matchData, matchId, playersInMatch))
+      .otherwise(() => processStandardMatch(players, matchData, matchId, playersInMatch));
   } catch (error) {
-    console.error(`[generateMatchReport] ❌ Error generating match report for ${matchId}:`, error);
+    logErrorDetails(error, matchId, matchData, trackedPlayers);
     throw error;
   }
 }
