@@ -65,9 +65,7 @@ impl LcuConnection {
     fn find_league_client() -> Result<(u16, String), String> {
         info!("Searching for League Client process...");
 
-        let system = System::new_with_specifics(
-            RefreshKind::new().with_processes(ProcessRefreshKind::everything()),
-        );
+        let system = System::new_with_specifics(RefreshKind::everything());
 
         // Look for LeagueClientUx process
         for (_, process) in system.processes() {

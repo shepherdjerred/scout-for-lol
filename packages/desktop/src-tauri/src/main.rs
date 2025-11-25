@@ -15,6 +15,8 @@ mod lcu;
 #[cfg(test)]
 mod tests;
 
+use std::fs;
+use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::State;
 use tokio::sync::Mutex;
@@ -139,7 +141,53 @@ async fn get_monitoring_status(state: State<'_, AppState>) -> Result<bool, Strin
     Ok(*is_monitoring)
 }
 
+#[cfg(target_os = "windows")]
+fn extract_embedded_dll() -> Result<(), Box<dyn std::error::Error>> {
+    // Embed the DLL at compile time from resources directory
+    const DLL_BYTES: &[u8] = include_bytes!("../resources/WebView2Loader.dll");
+
+    // Get the executable's directory
+    let exe_path = std::env::current_exe()
+        .or_else(|_| std::env::var("CARGO_MANIFEST_DIR").map(PathBuf::from))
+        .map_err(|_| "Failed to get executable path")?;
+
+    let exe_dir = exe_path
+        .parent()
+        .ok_or("Failed to get executable directory")?;
+    let dll_path = exe_dir.join("WebView2Loader.dll");
+
+    // Extract DLL if it doesn't exist or is different
+    let needs_extraction = match fs::read(&dll_path) {
+        Ok(existing) => existing != DLL_BYTES,
+        Err(_) => true, // File doesn't exist
+    };
+
+    if needs_extraction {
+        fs::write(&dll_path, DLL_BYTES)
+            .map_err(|e| format!("Failed to write DLL to {:?}: {}", dll_path, e))?;
+        eprintln!("Extracted WebView2Loader.dll to {:?}", dll_path);
+    }
+
+    Ok(())
+}
+
+#[cfg(not(target_os = "windows"))]
+fn extract_embedded_dll() -> Result<(), Box<dyn std::error::Error>> {
+    // No-op on non-Windows platforms
+    Ok(())
+}
+
 fn main() {
+    // Extract embedded DLL FIRST on Windows - before anything else
+    // This must happen before Tauri/WinRT tries to load WebView2Loader.dll
+    #[cfg(target_os = "windows")]
+    {
+        if let Err(e) = extract_embedded_dll() {
+            eprintln!("Failed to extract WebView2Loader.dll: {}", e);
+            // Continue anyway - might work if DLL is already present
+        }
+    }
+
     // Initialize tracing
     tracing_subscriber::fmt()
         .with_env_filter(
