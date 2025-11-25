@@ -349,22 +349,39 @@ export async function toArenaMatch(players: Player[], matchDto: MatchDto): Promi
 
   // Build ArenaMatch.players for all tracked players
   const arenaPlayers = await Promise.all(
-    players.map(async (player) => {
-      const participant = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
+    players.map(async (player, index) => {
+      console.log(`[debug][toArenaMatch] Processing player ${index.toString()}: ${player.config.alias}`);
+      console.log(`[debug][toArenaMatch] Player.config keys:`, Object.keys(player.config));
+
+      // CRITICAL: Validate player.config doesn't have puuid at top level
+      // This ensures no participant data leaks into player config
+      const configValidation = PlayerConfigEntrySchema.safeParse(player.config);
+      if (!configValidation.success) {
+        console.error(
+          `[debug][toArenaMatch] ⚠️  ERROR: player.config validation failed for ${player.config.alias}:`,
+          configValidation.error,
+        );
+        console.error(`[debug][toArenaMatch] player.config structure:`, JSON.stringify(player.config, null, 2));
+        throw new Error(`Invalid player config for ${player.config.alias}: config has unexpected fields`);
+      }
+      // Use validated config to ensure no extra fields
+      const validatedConfig = configValidation.data;
+
+      const participant = findParticipant(validatedConfig.league.leagueAccount.puuid, matchDto.info.participants);
       if (participant === undefined) {
-        throw new Error(`participant not found for player ${player.config.alias}`);
+        throw new Error(`participant not found for player ${validatedConfig.alias}`);
       }
       const subteamId = validateArenaSubteamId(participant);
       const placement = getArenaPlacement(participant);
       const champion = await participantToArenaChampion(participant);
       const teammateDto = getArenaTeammate(participant, matchDto.info.participants);
       if (!teammateDto) {
-        throw new Error(`arena teammate not found for player ${player.config.alias}`);
+        throw new Error(`arena teammate not found for player ${validatedConfig.alias}`);
       }
       const arenaTeammate = await participantToArenaChampion(teammateDto);
 
       return {
-        playerConfig: player.config,
+        playerConfig: validatedConfig,
         placement: ArenaPlacementSchema.parse(placement),
         champion,
         teamId: ArenaTeamIdSchema.parse(subteamId),
