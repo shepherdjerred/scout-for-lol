@@ -10,10 +10,10 @@
     "./*": "./src/*"
   },
   "scripts": {
-    "test": "bun test",
-    "test:watch": "bun test --watch",
-    "test:coverage": "bun test --coverage",
-    "test:ci": "bun test --bail --coverage --reporter=junit --reporter-outfile=./junit.xml",
+    "test": "DATA_DRAGON_VERSION=15.23.1 bun test",
+    "test:watch": "DATA_DRAGON_VERSION=15.23.1 bun test --watch",
+    "test:coverage": "DATA_DRAGON_VERSION=15.23.1 bun test --coverage",
+    "test:ci": "DATA_DRAGON_VERSION=15.23.1 bun test --bail --coverage --reporter=junit --reporter-outfile=./junit.xml",
     "build": "bun run build.ts",
     "lint": "bunx eslint src",
     "format": "bunx prettier --check src",
