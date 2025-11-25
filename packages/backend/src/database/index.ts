@@ -5,6 +5,7 @@ import {
   type PlayerConfigEntry,
   MatchIdSchema,
   type MatchId,
+  LeagueAccountSchema,
 } from "@scout-for-lol/data";
 import { uniqueBy } from "remeda";
 
@@ -91,11 +92,18 @@ export async function getAccountsWithState(prismaClient: PrismaClient = prisma):
     // transform
     const result = players.flatMap((player): PlayerAccountWithState[] => {
       return player.accounts.map((account): PlayerAccountWithState => {
+        // Extract and validate only the fields needed for LeagueAccountSchema
+        // Prisma account has many extra fields that shouldn't be in the config
+        const leagueAccount = LeagueAccountSchema.parse({
+          puuid: account.puuid,
+          region: account.region,
+        });
+
         return {
           config: {
             alias: player.alias,
             league: {
-              leagueAccount: account,
+              leagueAccount,
             },
             discordAccount: {
               id: player.discordId ?? undefined,
