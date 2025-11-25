@@ -136,6 +136,8 @@ async fn run_event_loop(lcu: LcuConnection, discord: DiscordClient) -> Result<()
     let (mut write, mut read) = ws_stream.split();
 
     // Subscribe to game events
+    // Note: Kill, multikill, and objective events may come through gameflow-phase
+    // or require additional subscriptions to /lol-gameflow/v1/gameflow-phase
     let subscriptions = vec![
         json_message(5, "/lol-gameflow/v1/gameflow-phase"),
         json_message(5, "/lol-champ-select/v1/session"),
@@ -183,21 +185,28 @@ fn json_message(opcode: u8, path: &str) -> String {
 }
 
 async fn handle_event(msg: &LcuWebSocketMessage, discord: &DiscordClient) -> Result<(), String> {
+    // Use event_type to determine how to handle the event
+    let event_type = &msg.event_type;
+
     match msg.uri.as_str() {
         uri if uri.contains("/lol-gameflow/v1/gameflow-phase") => {
-            handle_gameflow_event(&msg.data, discord).await
+            handle_gameflow_event(&msg.data, discord, event_type).await
         }
         uri if uri.contains("/lol-champ-select/v1/session") => {
-            handle_champ_select_event(&msg.data, discord).await
+            handle_champ_select_event(&msg.data, discord, event_type).await
         }
         uri if uri.contains("/lol-end-of-game/v1/eog-stats-block") => {
-            handle_end_of_game_event(&msg.data, discord).await
+            handle_end_of_game_event(&msg.data, discord, event_type).await
         }
         _ => Ok(()),
     }
 }
 
-async fn handle_gameflow_event(data: &Value, discord: &DiscordClient) -> Result<(), String> {
+async fn handle_gameflow_event(
+    data: &Value,
+    discord: &DiscordClient,
+    event_type: &str,
+) -> Result<(), String> {
     if let Some(phase) = data.as_str() {
         match phase {
             "InProgress" => {
@@ -208,6 +217,9 @@ async fn handle_gameflow_event(data: &Value, discord: &DiscordClient) -> Result<
             }
             "WaitingForStats" | "PreEndOfGame" => {
                 info!("Game ending");
+                discord
+                    .post_game_event("Game Ending", "Match is concluding...")
+                    .await?;
             }
             "EndOfGame" => {
                 info!("Game ended");
@@ -215,23 +227,44 @@ async fn handle_gameflow_event(data: &Value, discord: &DiscordClient) -> Result<
             "ChampSelect" => {
                 info!("Champion select started");
                 discord
-                    .post_message("⚔️ Champion Select has started!".to_string())
+                    .post_game_event("Champion Select", "Matchmaking found a game!")
                     .await?;
             }
             _ => {
-                debug!("Unhandled game phase: {}", phase);
+                debug!("Unhandled game phase: {} (event type: {})", phase, event_type);
             }
+        }
+            } else if let Some(obj) = data.as_object() {
+        // Handle structured game event data
+        // Attempt to parse and post kill, multikill, and objective events
+        if let Err(e) = parse_and_post_game_events(data, discord).await {
+            debug!("Failed to parse game events: {}", e);
         }
     }
     Ok(())
 }
 
-async fn handle_champ_select_event(_data: &Value, _discord: &DiscordClient) -> Result<(), String> {
-    // TODO: Parse champion select data and post to Discord
+async fn handle_champ_select_event(
+    data: &Value,
+    discord: &DiscordClient,
+    event_type: &str,
+) -> Result<(), String> {
+    // Parse champion select data and post to Discord
+    if let Some(obj) = data.as_object() {
+        if event_type == "Update" && !obj.is_empty() {
+            discord
+                .post_game_event("Champion Select", "Teams are selecting champions...")
+                .await?;
+        }
+    }
     Ok(())
 }
 
-async fn handle_end_of_game_event(data: &Value, discord: &DiscordClient) -> Result<(), String> {
+async fn handle_end_of_game_event(
+    data: &Value,
+    discord: &DiscordClient,
+    _event_type: &str,
+) -> Result<(), String> {
     if !data.is_null() {
         // Extract game duration and winning team
         let duration = data.get("gameLength").and_then(|v| v.as_u64()).unwrap_or(0);
@@ -241,10 +274,94 @@ async fn handle_end_of_game_event(data: &Value, discord: &DiscordClient) -> Resu
         let duration_str = format!("{}:{:02}", minutes, seconds);
 
         // Try to determine winning team
-        let winning_team = "Blue Side"; // TODO: Parse from data
+        let winning_team = if let Some(teams) = data.get("teams").and_then(|v| v.as_array()) {
+            teams
+                .iter()
+                .find_map(|team| {
+                    if team.get("win").and_then(|v| v.as_bool()) == Some(true) {
+                        team.get("teamId")
+                            .and_then(|v| v.as_u64())
+                            .map(|id| if id == 100 { "Blue Side" } else { "Red Side" })
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or("Blue Side")
+        } else {
+            "Blue Side"
+        };
 
         discord.post_game_end(winning_team, &duration_str).await?;
     }
+    Ok(())
+}
+
+/// Parses game event data and posts to Discord using appropriate methods
+/// This function attempts to detect kill, multikill, and objective events
+async fn parse_and_post_game_events(data: &Value, discord: &DiscordClient) -> Result<(), String> {
+    // Try to parse kill events
+    if let Some(kills) = data.get("kills").and_then(|v| v.as_array()) {
+        for kill in kills {
+            if let (Some(killer), Some(victim), Some(time)) = (
+                kill.get("killerName").and_then(|v| v.as_str()),
+                kill.get("victimName").and_then(|v| v.as_str()),
+                kill.get("gameTime").and_then(|v| v.as_str()),
+            ) {
+                // Create a GameEvent for structured handling
+                let event = GameEvent::ChampionKill {
+                    killer: killer.to_string(),
+                    victim: victim.to_string(),
+                    game_time: time.to_string(),
+                };
+                // Post to Discord using the dedicated method
+                discord.post_kill(killer, victim, time).await?;
+                debug!("Posted kill event: {:?}", event);
+            }
+        }
+    }
+
+    // Try to parse multikill events
+    if let Some(multikills) = data.get("multikills").and_then(|v| v.as_array()) {
+        for multikill in multikills {
+            if let (Some(killer), Some(multikill_type), Some(time)) = (
+                multikill.get("killerName").and_then(|v| v.as_str()),
+                multikill.get("type").and_then(|v| v.as_str()),
+                multikill.get("gameTime").and_then(|v| v.as_str()),
+            ) {
+                // Create a GameEvent for structured handling
+                let event = GameEvent::MultiKill {
+                    killer: killer.to_string(),
+                    multikill_type: multikill_type.to_string(),
+                    game_time: time.to_string(),
+                };
+                // Post to Discord using the dedicated method
+                discord.post_multikill(killer, multikill_type, time).await?;
+                debug!("Posted multikill event: {:?}", event);
+            }
+        }
+    }
+
+    // Try to parse objective events
+    if let Some(objectives) = data.get("objectives").and_then(|v| v.as_array()) {
+        for objective in objectives {
+            if let (Some(team), Some(objective_type), Some(time)) = (
+                objective.get("teamName").and_then(|v| v.as_str()),
+                objective.get("type").and_then(|v| v.as_str()),
+                objective.get("gameTime").and_then(|v| v.as_str()),
+            ) {
+                // Create a GameEvent for structured handling
+                let event = GameEvent::Objective {
+                    team: team.to_string(),
+                    objective: objective_type.to_string(),
+                    game_time: time.to_string(),
+                };
+                // Post to Discord using the dedicated method
+                discord.post_objective(team, objective_type, time).await?;
+                debug!("Posted objective event: {:?}", event);
+            }
+        }
+    }
+
     Ok(())
 }
 

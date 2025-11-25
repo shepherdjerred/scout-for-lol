@@ -30,7 +30,7 @@ export function LeagueClientSection({
 }: LeagueClientSectionProps) {
   return (
     <section>
-      <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+      <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-black">
         League Client
       </h2>
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-800">
@@ -54,7 +54,7 @@ export function LeagueClientSection({
             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
               Summoner:
             </span>
-            <span className="text-sm text-gray-900 dark:text-white">
+            <span className="text-sm text-gray-900 dark:text-black">
               {lcuStatus.summonerName}
             </span>
           </div>
@@ -65,7 +65,7 @@ export function LeagueClientSection({
             <button
               onClick={onConnect}
               disabled={loading !== null}
-              className="w-full rounded-lg bg-discord-blurple px-4 py-3 font-medium text-white transition-colors hover:bg-discord-blurple/90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-lg bg-discord-blurple px-4 py-3 font-medium text-black transition-colors hover:bg-discord-blurple/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Connect to League Client
             </button>
@@ -73,7 +73,7 @@ export function LeagueClientSection({
             <button
               onClick={onDisconnect}
               disabled={loading !== null}
-              className="w-full rounded-lg bg-gray-500 px-4 py-3 font-medium text-white transition-colors hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-lg bg-gray-500 px-4 py-3 font-medium text-black transition-colors hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Disconnect
             </button>
@@ -105,7 +105,7 @@ export function DiscordConfigSection({
 }: DiscordConfigSectionProps) {
   return (
     <section>
-      <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+      <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-black">
         Discord Configuration
       </h2>
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-800">
@@ -141,7 +141,7 @@ export function DiscordConfigSection({
                   onBotTokenChange(e.target.value);
                 }}
                 placeholder="Your Discord bot token"
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-discord-blurple focus:outline-none focus:ring-2 focus:ring-discord-blurple/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-400"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-discord-blurple focus:outline-none focus:ring-2 focus:ring-discord-blurple/20 dark:border-gray-700 dark:bg-gray-900 dark:text-black dark:placeholder-gray-400"
               />
             </div>
 
@@ -160,14 +160,14 @@ export function DiscordConfigSection({
                   onChannelIdChange(e.target.value);
                 }}
                 placeholder="Discord channel ID"
-                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-discord-blurple focus:outline-none focus:ring-2 focus:ring-discord-blurple/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder-gray-400"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-discord-blurple focus:outline-none focus:ring-2 focus:ring-discord-blurple/20 dark:border-gray-700 dark:bg-gray-900 dark:text-black dark:placeholder-gray-400"
               />
             </div>
 
             <button
               onClick={onConfigure}
               disabled={loading !== null}
-              className="w-full rounded-lg bg-discord-blurple px-4 py-3 font-medium text-white transition-colors hover:bg-discord-blurple/90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-lg bg-discord-blurple px-4 py-3 font-medium text-black transition-colors hover:bg-discord-blurple/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Configure Discord
             </button>
@@ -193,7 +193,7 @@ export function MonitoringSection({
 }: MonitoringSectionProps) {
   return (
     <section>
-      <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+      <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-black">
         Monitoring
       </h2>
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-800">
@@ -217,7 +217,7 @@ export function MonitoringSection({
             <button
               onClick={onStart}
               disabled={loading !== null}
-              className="w-full rounded-lg bg-discord-green px-4 py-3 font-medium text-white transition-colors hover:bg-discord-green/90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-lg bg-discord-green px-4 py-3 font-medium text-black transition-colors hover:bg-discord-green/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Start Monitoring
             </button>
@@ -225,7 +225,7 @@ export function MonitoringSection({
             <button
               onClick={onStop}
               disabled={loading !== null}
-              className="w-full rounded-lg bg-discord-red px-4 py-3 font-medium text-white transition-colors hover:bg-discord-red/90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-lg bg-discord-red px-4 py-3 font-medium text-black transition-colors hover:bg-discord-red/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Stop Monitoring
             </button>
@@ -265,7 +265,7 @@ export function DebugPanel({
     <aside className="lg:w-96">
       <div className="sticky top-8 rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-800">
         <div className="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-black">
             Debug Panel
           </h3>
         </div>
@@ -317,7 +317,7 @@ export function DebugPanel({
 
           <div className="mt-6">
             <div className="mb-2 flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-black">
                 Logs
               </h4>
               <button

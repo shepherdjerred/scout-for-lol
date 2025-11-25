@@ -2,7 +2,7 @@
 
 use base64::Engine;
 use serde::{Deserialize, Serialize};
-use sysinfo::{ProcessRefreshKind, RefreshKind, System};
+use sysinfo::{RefreshKind, System};
 use tracing::{debug, info};
 
 /// Represents the connection status of the League Client
@@ -176,11 +176,12 @@ impl LcuConnection {
     }
 
     /// Gets the current LCU connection status
-    pub fn get_status(&self) -> LcuStatus {
+    pub async fn get_status(&self) -> LcuStatus {
+        let summoner_name = self.get_current_summoner().await.ok();
         LcuStatus {
             connected: true,
-            summoner_name: None, // Will be populated when needed
-            in_game: false,      // TODO: Implement game detection
+            summoner_name,
+            in_game: false, // TODO: Implement game detection
         }
     }
 

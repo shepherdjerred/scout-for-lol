@@ -33,7 +33,7 @@ struct AppState {
 async fn get_lcu_status(state: State<'_, AppState>) -> Result<lcu::LcuStatus, String> {
     let connection = state.lcu_connection.lock().await;
     match connection.as_ref() {
-        Some(conn) => Ok(conn.get_status()),
+        Some(conn) => Ok(conn.get_status().await),
         None => Ok(lcu::LcuStatus {
             connected: false,
             summoner_name: None,
