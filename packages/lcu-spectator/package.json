@@ -1,0 +1,92 @@
+{
+  "name": "@scout-for-lol/lcu-spectator",
+  "version": "1.0.0",
+  "description": "LCU Spectator - Real-time League of Legends game event announcements to Discord",
+  "main": "dist/main/main.js",
+  "author": "Scout for LoL",
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "dev": "concurrently \"bun run dev:main\" \"bun run dev:renderer\"",
+    "dev:main": "tsc -w --project tsconfig.main.json",
+    "dev:renderer": "vite",
+    "build": "bun run build:main && bun run build:renderer",
+    "build:main": "tsc --project tsconfig.main.json",
+    "build:renderer": "vite build",
+    "lint": "bunx eslint src",
+    "format": "bunx prettier --check src",
+    "format:write": "bunx prettier --write src",
+    "typecheck": "bunx tsc --noEmit --project tsconfig.json && bunx tsc --noEmit --project tsconfig.main.json",
+    "test": "bun test",
+    "package": "electron-builder",
+    "package:win": "electron-builder --win",
+    "package:mac": "electron-builder --mac",
+    "dist": "bun run build && electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "@scout-for-lol/backend": "workspace:*",
+    "electron-updater": "^6.1.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^8.2.2",
+    "electron": "^32.0.0",
+    "electron-builder": "^25.1.8",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.9",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.0"
+  },
+  "build": {
+    "appId": "com.scoutforlol.lcu-spectator",
+    "productName": "LCU Spectator",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "publisherName": "Scout for LoL"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.games",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "LCU Spectator",
+      "include": "installer.nsh"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "shepherdjerred",
+      "repo": "scout-for-lol"
+    }
+  }
+}

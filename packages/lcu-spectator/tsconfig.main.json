@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "moduleResolution": "node",
+    "outDir": "./dist/main",
+    "rootDir": "./src/main",
+    "noEmit": false,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["bun-types", "node"]
+  },
+  "include": ["src/main/**/*"],
+  "exclude": ["src/renderer", "node_modules", "dist", "release"]
+}

@@ -17,6 +17,7 @@ import { preferDateFns } from "./eslint-rules/prefer-date-fns";
 import { noFunctionOverloads } from "./eslint-rules/no-function-overloads";
 import { noParentImports } from "./eslint-rules/no-parent-imports";
 import { noTypeGuards } from "./eslint-rules/no-type-guards";
+import { electronBestPractices } from "./eslint-rules/electron-best-practices";
 import * as importPlugin from "eslint-plugin-import";
 import * as regexpPlugin from "eslint-plugin-regexp";
 import * as eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
@@ -52,6 +53,7 @@ const customRulesPlugin = {
     "no-function-overloads": noFunctionOverloads,
     "no-parent-imports": noParentImports,
     "no-type-guards": noTypeGuards,
+    "electron-best-practices": electronBestPractices,
   },
 };
 
@@ -121,6 +123,8 @@ export default tseslint.config(
             "./packages/data/tsconfig.json",
             "./packages/report/tsconfig.json",
             "./packages/frontend/tsconfig.json",
+            "./packages/lcu-spectator/tsconfig.json",
+            "./packages/lcu-spectator/tsconfig.main.json",
           ],
         },
         node: {
@@ -264,6 +268,7 @@ export default tseslint.config(
       "custom-rules/no-function-overloads": "error",
       "custom-rules/no-parent-imports": "error",
       "custom-rules/no-type-guards": "error",
+      "custom-rules/electron-best-practices": "error",
     },
   },
   // Dagger index.ts - Dagger module API can have many parameters for external interface
@@ -543,6 +548,83 @@ export default tseslint.config(
     files: ["eslint.config.ts"],
     rules: {
       "no-relative-import-paths/no-relative-import-paths": "off",
+    },
+  },
+  // Electron main process - requires Node.js APIs
+  {
+    files: ["packages/lcu-spectator/src/main/**/*.ts"],
+    plugins: {
+      "custom-rules": customRulesPlugin,
+    },
+    rules: {
+      "no-restricted-imports": "off", // Electron requires Node.js APIs
+      "custom-rules/electron-best-practices": "error",
+      // Ensure contextBridge is used in preload scripts
+      "@typescript-eslint/no-unsafe-assignment": "error",
+      "@typescript-eslint/no-unsafe-member-access": "error",
+      "@typescript-eslint/no-unsafe-call": "error",
+      // Prevent direct DOM access in main process
+      "no-restricted-globals": [
+        "error",
+        {
+          name: "window",
+          message: "Use BrowserWindow instead of global window in main process",
+        },
+        {
+          name: "document",
+          message: "Document is not available in main process",
+        },
+      ],
+    },
+  },
+  // Electron preload scripts - must use contextBridge
+  {
+    files: ["packages/lcu-spectator/src/main/preload.ts"],
+    plugins: {
+      "custom-rules": customRulesPlugin,
+    },
+    rules: {
+      "custom-rules/electron-best-practices": "error",
+      // Preload scripts should use contextBridge
+      "@typescript-eslint/no-unsafe-assignment": "error",
+      "@typescript-eslint/no-unsafe-member-access": "error",
+      "@typescript-eslint/no-unsafe-call": "error",
+      // Ensure contextBridge.exposeInMainWorld is used (enforced by custom rule)
+      // Note: We allow electron imports here as preload scripts need contextBridge and ipcRenderer
+    },
+  },
+  // Electron renderer process - should not have Node.js access
+  {
+    files: ["packages/lcu-spectator/src/renderer/**/*.{ts,tsx}"],
+    plugins: {
+      "custom-rules": customRulesPlugin,
+    },
+    rules: {
+      "custom-rules/electron-best-practices": "error",
+      // Prevent Node.js APIs in renderer (should use IPC instead)
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["node:*"],
+              message: "Renderer process cannot access Node.js APIs. Use IPC to communicate with main process.",
+            },
+            {
+              group: ["fs", "fs/promises", "path", "child_process", "crypto"],
+              message: "Renderer process cannot access Node.js APIs. Use IPC to communicate with main process.",
+            },
+          ],
+        },
+      ],
+      // Ensure window.electron is used instead of direct electron access
+      "no-restricted-globals": [
+        "error",
+        {
+          name: "require",
+          message: "Use window.electron API instead of require() in renderer",
+        },
+      ],
     },
   },
 );
