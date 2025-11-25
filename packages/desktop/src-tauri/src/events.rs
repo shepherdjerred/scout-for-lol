@@ -74,19 +74,21 @@ pub async fn start_event_monitoring(
 ) -> Result<(), String> {
     info!("Starting event monitoring...");
 
-    let lcu_conn = lcu.lock().await;
-    let lcu_conn = lcu_conn
-        .as_ref()
-        .ok_or_else(|| "LCU not connected".to_string())?
-        .clone();
-    drop(lcu_conn);
+    let lcu_conn = {
+        let guard = lcu.lock().await;
+        guard
+            .as_ref()
+            .ok_or_else(|| "LCU not connected".to_string())?
+            .clone()
+    };
 
-    let discord_client = discord.lock().await;
-    let discord_client = discord_client
-        .as_ref()
-        .ok_or_else(|| "Discord not configured".to_string())?
-        .clone();
-    drop(discord_client);
+    let discord_client = {
+        let guard = discord.lock().await;
+        guard
+            .as_ref()
+            .ok_or_else(|| "Discord not configured".to_string())?
+            .clone()
+    };
 
     // Spawn a background task for WebSocket monitoring
     tokio::spawn(async move {
@@ -109,18 +111,22 @@ async fn run_event_loop(lcu: LcuConnection, discord: DiscordClient) -> Result<()
         .into_client_request()
         .map_err(|e| format!("Failed to create WebSocket request: {}", e))?;
 
-    request
-        .headers_mut()
-        .insert("Authorization", auth_header.parse().unwrap());
+    request.headers_mut().insert(
+        "Authorization",
+        auth_header
+            .parse()
+            .map_err(|e| format!("Failed to parse auth header: {e}"))?,
+    );
 
     // Connect with TLS disabled (self-signed cert)
-    let connector = tokio_tungstenite::Connector::NativeTls(
+    let _connector = tokio_tungstenite::Connector::NativeTls(
         native_tls::TlsConnector::builder()
             .danger_accept_invalid_certs(true)
             .build()
             .map_err(|e| format!("Failed to create TLS connector: {}", e))?,
     );
 
+    // TODO: Use connector with connect_async to properly handle self-signed certs
     let (ws_stream, _) = connect_async(request)
         .await
         .map_err(|e| format!("WebSocket connection failed: {}", e))?;

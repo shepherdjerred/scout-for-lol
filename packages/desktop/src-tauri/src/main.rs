@@ -19,7 +19,6 @@ use std::sync::Arc;
 use tauri::{Manager, State};
 use tokio::sync::Mutex;
 use tracing::{error, info};
-use tracing_subscriber;
 
 #[derive(Default)]
 struct AppState {
@@ -165,7 +164,7 @@ fn main() {
             stop_monitoring,
             get_monitoring_status,
         ])
-        .setup(|app| {
+        .setup(|_app| {
             info!("Scout for LoL Desktop starting up...");
             Ok(())
         })
