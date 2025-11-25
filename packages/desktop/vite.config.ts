@@ -2,7 +2,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-const host = Bun.env["TAURI_DEV_HOST"] as string | undefined;
+const host: string | undefined = typeof Bun.env["TAURI_DEV_HOST"] === "string" ? Bun.env["TAURI_DEV_HOST"] : undefined;
 const isDebug = Boolean(Bun.env["TAURI_DEBUG"]);
 
 // https://vitejs.dev/config/
