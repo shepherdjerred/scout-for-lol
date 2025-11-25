@@ -1,0 +1,28 @@
+# mise configuration for desktop package
+
+[tools]
+rust = "stable"
+
+[tasks.fmt]
+description = "Format Rust code"
+run = "cd src-tauri && cargo fmt"
+
+[tasks.lint]
+description = "Lint Rust code with clippy"
+run = "cd src-tauri && cargo clippy --all-targets --all-features -- -D warnings"
+
+[tasks.test]
+description = "Run Rust tests"
+run = "cd src-tauri && cargo test"
+
+[tasks.check]
+description = "Run all checks (fmt, lint, test)"
+depends = ["fmt", "lint", "test"]
+
+[tasks.build]
+description = "Build desktop application"
+run = "bun run build"
+
+[tasks.dev]
+description = "Run development server"
+run = "bun run dev"

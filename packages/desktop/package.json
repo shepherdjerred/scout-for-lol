@@ -37,7 +37,10 @@
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.4.22",
     "bun-types": "latest",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3",
     "vite": "^6.0.0"
   },

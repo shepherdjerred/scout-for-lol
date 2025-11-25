@@ -1,9 +1,19 @@
+//! Scout for LoL Desktop Application
+//!
+//! A Tauri-based desktop client for monitoring League of Legends games
+//! and posting live updates to Discord channels.
+
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![warn(missing_docs, clippy::all, clippy::pedantic, clippy::nursery)]
+#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
 mod lcu;
 mod discord;
 mod events;
+
+#[cfg(test)]
+mod tests;
 
 use std::sync::Arc;
 use tauri::{Manager, State};
