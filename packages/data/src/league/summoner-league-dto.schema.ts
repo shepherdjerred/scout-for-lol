@@ -52,6 +52,7 @@ export const SummonerLeagueDtoSchema = z
     tier: TierNameSchema,
     rank: DivisionSchema,
     summonerId: z.string().optional(),
+    puuid: z.string().optional(), // Added: Riot API now returns puuid in league entries
     leaguePoints: z.number(),
     wins: z.number(),
     losses: z.number(),
