@@ -5,7 +5,7 @@
   "identifier": "com.shepherdjerred.scout-for-lol",
   "build": {
     "beforeDevCommand": "cd .. && bun run dev:frontend",
-    "beforeBuildCommand": "cd .. && bun run build:frontend",
+    "beforeBuildCommand": "bunx vite build",
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173"
   },

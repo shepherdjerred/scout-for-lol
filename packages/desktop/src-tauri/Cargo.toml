@@ -30,14 +30,14 @@ perf = "warn"
 style = "warn"
 
 [build-dependencies]
-tauri-build = { version = "2.1", features = [] }
+tauri-build = { version = "2.1.0", features = [] }
 
 [dependencies]
-tauri = { version = "2.4", features = ["devtools"] }
-tauri-plugin-shell = "2.2"
-tauri-plugin-updater = "2.2"
-tauri-plugin-dialog = "2.2"
-tauri-plugin-fs = "2.2"
+tauri = { version = "2.4.0", features = ["devtools"] }
+tauri-plugin-shell = "2.2.0"
+tauri-plugin-updater = "2.2.0"
+tauri-plugin-dialog = "2.2.0"
+tauri-plugin-fs = "2.2.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
@@ -51,7 +51,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-updater = "2.2"
+tauri-plugin-updater = "2.2.0"
 
 [dev-dependencies]
 mockito = "1.6"

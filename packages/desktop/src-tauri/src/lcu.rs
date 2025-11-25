@@ -66,7 +66,13 @@ impl LcuConnection {
         info!("Searching for League Client process...");
 
         let system = System::new_with_specifics(
+<<<<<<< HEAD
             RefreshKind::nothing().with_processes(ProcessRefreshKind::everything()),
+||||||| parent of 4c66e23 (fix: get working locally)
+            RefreshKind::new().with_processes(ProcessRefreshKind::everything()),
+=======
+            RefreshKind::everything(),
+>>>>>>> 4c66e23 (fix: get working locally)
         );
 
         // Look for LeagueClientUx process
