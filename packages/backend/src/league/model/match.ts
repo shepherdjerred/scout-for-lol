@@ -77,20 +77,21 @@ export function toMatch(
 }
 
 // Arena helpers
-const ArenaParticipantMinimalSchema = z
-  .object({
-    playerSubteamId: z.union([
-      z.literal(1),
-      z.literal(2),
-      z.literal(3),
-      z.literal(4),
-      z.literal(5),
-      z.literal(6),
-      z.literal(7),
-      z.literal(8),
-    ]),
-  })
-  .loose();
+// Validate playerSubteamId is a valid arena subteam ID (1-8)
+const ArenaSubteamIdSchema = z.union([
+  z.literal(1),
+  z.literal(2),
+  z.literal(3),
+  z.literal(4),
+  z.literal(5),
+  z.literal(6),
+  z.literal(7),
+  z.literal(8),
+]);
+
+function validateArenaSubteamId(participant: ParticipantDto): 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 {
+  return ArenaSubteamIdSchema.parse(participant.playerSubteamId);
+}
 
 const ArenaParticipantFieldsSchema = z.object({
   playerSubteamId: z.number().int().min(1).max(8),
@@ -103,8 +104,8 @@ type ArenaParticipantValidatedMin = ParticipantDto & {
 
 export function groupArenaTeams(participants: ParticipantDto[]) {
   const validated: ArenaParticipantValidatedMin[] = participants.map((p) => {
-    const parsed = ArenaParticipantMinimalSchema.parse(p);
-    return { ...p, playerSubteamId: parsed.playerSubteamId };
+    const playerSubteamId = validateArenaSubteamId(p);
+    return { ...p, playerSubteamId };
   });
   const bySubteam = groupBy(validated, (e) => e.playerSubteamId);
   const groups = pipe(
@@ -125,12 +126,12 @@ export function groupArenaTeams(participants: ParticipantDto[]) {
 }
 
 export function getArenaTeammate(participant: ParticipantDto, participants: ParticipantDto[]) {
-  const sub = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
+  const sub = validateArenaSubteamId(participant);
   for (const p of participants) {
     if (p === participant) {
       continue;
     }
-    const otherSub = ArenaParticipantMinimalSchema.parse(p).playerSubteamId;
+    const otherSub = validateArenaSubteamId(p);
     if (otherSub === sub) {
       return p;
     }
@@ -173,7 +174,7 @@ export async function toArenaMatch(players: Player[], matchDto: MatchDto): Promi
       if (participant === undefined) {
         throw new Error(`participant not found for player ${player.config.alias}`);
       }
-      const subteamId = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
+      const subteamId = validateArenaSubteamId(participant);
       const placement = getArenaPlacement(participant);
       const champion = await participantToArenaChampion(participant);
       const teammateDto = getArenaTeammate(participant, matchDto.info.participants);
