@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { pruneOrphanedPlayers } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.js";
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
-import type { CompetitionId } from "@scout-for-lol/data";
+import { CompetitionIdSchema, type CompetitionId } from "@scout-for-lol/data";
 
 // Mark these tests as serial since they create temporary databases
 // and have timing constraints. Running them concurrently would slow them down.
@@ -89,19 +89,27 @@ function setupTestDatabase(): { prisma: PrismaClient; testDir: string; testDbPat
   const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/prune-players-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
   const testDbPath = `${testDir}/test.db`;
 
+  // Create the test directory before running Prisma
+  Bun.spawnSync(["mkdir", "-p", testDir]);
+
   // Run Prisma migrations to set up the schema
-  const schemaPath = `import.meta.dir/../../../../prisma/schema.prisma`;
-  Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
+  const schemaPath = `${import.meta.dir}/../../../../prisma/schema.prisma`;
+  const pushResult = Bun.spawnSync(["bunx", "prisma", "db", "push", `--schema=${schemaPath}`], {
     env: {
       ...Bun.env,
       DATABASE_URL: `file:${testDbPath}`,
       PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
       PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
     },
-    stdout: "ignore",
-    stderr: "ignore",
+    stdout: "pipe",
+    stderr: "pipe",
     stdin: "ignore",
   });
+
+  if (pushResult.exitCode !== 0) {
+    const errorOutput = pushResult.stderr.toString();
+    throw new Error(`Failed to set up test database: ${errorOutput}`);
+  }
 
   // Create Prisma client
   const prisma = new PrismaClient({
@@ -187,7 +195,7 @@ describe.serial("pruneOrphanedPlayers", () => {
     await createPlayerWithCompetition({
       prisma,
       alias: "competing",
-      competitionId: competition.id,
+      competitionId: CompetitionIdSchema.parse(competition.id),
       status: "JOINED",
       now,
     });
@@ -212,13 +220,19 @@ describe.serial("pruneOrphanedPlayers", () => {
     const competition = await createTestCompetition(prisma, now);
 
     // Create a player who left the competition
-    await createPlayerWithCompetition({ prisma, alias: "left", competitionId: competition.id, status: "LEFT", now });
+    await createPlayerWithCompetition({
+      prisma,
+      alias: "left",
+      competitionId: CompetitionIdSchema.parse(competition.id),
+      status: "LEFT",
+      now,
+    });
 
     // Create a player who was only invited
     await createPlayerWithCompetition({
       prisma,
       alias: "invited",
-      competitionId: competition.id,
+      competitionId: CompetitionIdSchema.parse(competition.id),
       status: "INVITED",
       now,
     });
@@ -333,7 +347,7 @@ describe.serial("pruneOrphanedPlayers", () => {
         updatedTime: now,
         competitionParticipants: {
           create: {
-            competitionId: competition.id,
+            competitionId: CompetitionIdSchema.parse(competition.id),
             status: "JOINED",
             joinedAt: now,
           },
@@ -351,7 +365,7 @@ describe.serial("pruneOrphanedPlayers", () => {
         updatedTime: now,
         competitionParticipants: {
           create: {
-            competitionId: competition.id,
+            competitionId: CompetitionIdSchema.parse(competition.id),
             status: "LEFT",
             leftAt: now,
           },

@@ -16,7 +16,9 @@ if (typeof Bun !== "undefined") {
             new URL(`./assets/Rank=${tier.charAt(0).toUpperCase() + tier.slice(1)}.png`, import.meta.url),
           ).arrayBuffer();
           const bytes = new Uint8Array(image);
-          return [tier, btoa(String.fromCharCode(...bytes))];
+          // Use Buffer to avoid stack overflow with large arrays
+          // eslint-disable-next-line custom-rules/prefer-bun-apis -- Buffer is necessary for base64 encoding large binary data
+          return [tier, Buffer.from(bytes).toString("base64")];
         }),
       ),
     ),

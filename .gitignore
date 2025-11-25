@@ -17,3 +17,5 @@ junit.xml
 .test-cache/
 
 jscpd-report/
+
+/generated/prisma
