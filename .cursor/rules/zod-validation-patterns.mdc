@@ -272,12 +272,14 @@ if (typeof value === "string" && value.length > 0) {
 ```
 
 **Error messages:**
+
 - "Prefer Zod schema validation over typeof operator"
 - "Prefer Zod schema validation over Array.isArray()"
 - "Prefer Zod schema validation over instanceof operator"
 - "Prefer Zod schema validation over Number.isInteger()"
 
 **Exceptions:**
+
 - Simple primitive checks like `typeof x === "string"` are OK in basic if statements
 - `instanceof Error` is always allowed for error handling
 

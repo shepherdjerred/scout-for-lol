@@ -1,5 +1,7 @@
 ---
 description: Discord bot development patterns and best practices
+globs: "src/discord/**/*.ts,packages/backend/src/discord/**/*.ts"
+alwaysApply: false
 ---
 
 # Discord.js Integration Patterns
@@ -112,17 +114,12 @@ if (!isOwner && !isAdmin) {
 
 ## Error Handling in Commands
 
-### Use Common Utility
-
-**Always import from `utils/errors.js`:**
+Use `getErrorMessage` utility from `utils/errors.js`:
 
 ```typescript
 import { getErrorMessage } from "../utils/errors.js";
 
-try {
-  await operation();
-} catch (error) {
-  console.error(getErrorMessage(error));
+catch (error) {
   await interaction.reply({
     content: `Error: ${getErrorMessage(error)}`,
     flags: MessageFlags.Ephemeral,
@@ -130,7 +127,7 @@ try {
 }
 ```
 
-**Never** create local ErrorSchema definitions.
+**See:** `error-handling-patterns.mdc` for error handling patterns.
 
 ## Ephemeral Replies
 
@@ -216,84 +213,14 @@ export async function executeMyCommand(
 
 ## Testing Discord Commands
 
-### Integration Test Pattern
+**See:** `testing-patterns.mdc` for integration test database setup patterns.
 
-```typescript
-import { beforeEach, describe, expect, test } from "bun:test";
-import { PrismaClient } from "../../../../generated/prisma/client/index.js";
-import { execSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+## Common Mistakes
 
-// Create test database ONCE before all tests
-const testDir = mkdtempSync(join(tmpdir(), "command-test-"));
-const testDbPath = join(testDir, "test.db");
-const testDbUrl = `file:${testDbPath}`;
-
-// Use bun run db:push, NOT prisma migrate deploy
-execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`, {
-  cwd: join(import.meta.dir, "../../../.."),
-  env: { ...process.env, DATABASE_URL: testDbUrl },
-});
-
-const prisma = new PrismaClient({
-  datasources: { db: { url: testDbUrl } },
-});
-
-beforeEach(async () => {
-  // Clean up - delete in dependency order
-  await prisma.competitionSnapshot.deleteMany();
-  await prisma.competitionParticipant.deleteMany();
-  await prisma.competition.deleteMany();
-});
-
-describe("Command tests", () => {
-  test("command executes successfully", async () => {
-    // Test implementation
-  });
-});
-```
-
-**Key Points**:
-
-- ✅ Use `bun run db:push` not `prisma migrate deploy`
-- ✅ Create database ONCE before all tests (outside beforeEach)
-- ✅ Clean up in `beforeEach` (delete in dependency order)
-- ✅ Use `mkdtempSync` for isolated test database
-
-## Common Mistakes to Avoid
-
-### ❌ Don't use `instanceof` with Discord.js objects
-
-```typescript
-// WRONG - violates lint rules
-if (channel instanceof TextChannel) { }
-```
-
-### ❌ Don't use `typeof` for object checking
-
-```typescript
-// WRONG - violates lint rules
-if (typeof member === "object" && "permissions" in member) { }
-```
-
-### ❌ Don't create duplicate utility functions
-
-```typescript
-// WRONG - use import from utils/errors.js
-function getErrorMessage(error: unknown): string { }
-```
-
-### ❌ Don't use old Discord.js API patterns
-
-```typescript
-// WRONG
-interaction.reply({ content: "Hi", ephemeral: true });
-
-// CORRECT
-interaction.reply({ content: "Hi", flags: MessageFlags.Ephemeral });
-```
+- **Don't use `instanceof`** with Discord.js objects (violates lint rules)
+- **Don't use `typeof`** for object checking (use Zod validation)
+- **Don't create duplicate utilities** (use `getErrorMessage` from `utils/errors.js`)
+- **Don't use old Discord.js API** (use `flags: MessageFlags.Ephemeral`, not `ephemeral: true`)
 
 ## Checklist for Discord Commands
 

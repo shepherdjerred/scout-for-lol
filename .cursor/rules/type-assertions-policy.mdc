@@ -26,15 +26,6 @@ const unknownValue = someData as unknown;
 const config = { type: "production" as const };
 ```
 
-### 3. `as unknown as Type` (Two-Step Cast)
-
-When interfacing with untyped libraries, after Zod validation:
-
-```typescript
-const validated = ResponseSchema.parse(response);
-return response as unknown as ThirdPartyType;
-```
-
 ## Never Use
 
 ```typescript

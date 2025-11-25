@@ -60,8 +60,8 @@ const CriteriaEditSchema = z
 type DatesEditSchema = z.infer<typeof FixedDatesEditArgsSchema> | z.infer<typeof SeasonEditArgsSchema>;
 
 type EditCommandArgs = z.infer<typeof EditCommandArgsBaseSchema> & {
-  dates?: DatesEditSchema | undefined;
-  criteria?: z.infer<typeof CriteriaEditSchema> | undefined;
+  dates?: DatesEditSchema;
+  criteria?: z.infer<typeof CriteriaEditSchema>;
 };
 
 // ============================================================================

@@ -72,6 +72,7 @@ mise run lint
 ```
 
 **What gets checked:**
+
 - Type annotations on all variables and parameters
 - Null/undefined safety (`strictNullChecks`)
 - No implicit `any` types (`noImplicitAny`)
@@ -109,12 +110,14 @@ tsconfig.json (root)
 ```
 
 **Impact:**
+
 - Each package has its own type checking context
 - Can't import from packages not in workspace
 - Circular dependencies are caught immediately
 - Incremental builds are faster
 
 **Building:** When editing `tsconfig.json`, run:
+
 ```bash
 bun run generate  # Regenerate TypeScript references
 ```
@@ -201,6 +204,7 @@ import type { User } from "./types";  // Only used in types
 ```
 
 **For intentionally unused variables:**
+
 ```typescript
 function handleError(_error: unknown) {  // Prefix with _ to ignore
   logToSentry(); // Just log, don't use error
@@ -220,12 +224,14 @@ cd packages/backend && bun run lint
 ```
 
 **Type-aware rules enforce:**
+
 - Unsafe operations on complex types
 - Improper async/await usage
 - Null-unsafe operations
 - Redundant type checks
 
 **If linting is slow:**
+
 - Check your IDE's TypeScript version matches CLI
 - Try: `rm -rf node_modules/.cache && bun install`
 - See: `mise-and-dagger-usage.mdc` for performance tips
@@ -245,6 +251,7 @@ bun run format:write       # Then format
 ```
 
 The order matters because:
+
 1. TypeScript errors prevent type-aware linting
 2. ESLint can't analyze broken type context
 3. Prettier formatting works on any valid code
