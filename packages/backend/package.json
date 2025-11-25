@@ -24,7 +24,8 @@
     "db:push": "bunx prisma db push",
     "db:migrate": "bunx prisma migrate dev",
     "db:studio": "bunx prisma studio",
-    "test:review": "bun run src/league/review/test-reviews.ts"
+    "test:review": "bun run src/league/review/test-reviews.ts",
+    "lcu-spectator": "bun run src/lcu-spectator.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.890.0",
