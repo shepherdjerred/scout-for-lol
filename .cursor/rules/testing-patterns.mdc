@@ -5,44 +5,6 @@ globs: "*.test.ts,*.integration.test.ts,*.spec.ts,*.test.tsx,*.spec.tsx"
 
 # Testing Patterns
 
-## Error Testing Pattern
-
-When testing functions that should throw errors, use this pattern:
-
-```typescript
-// ✅ CORRECT:
-test("should throw error on invalid input", async () => {
-  let error: unknown = null;
-
-  try {
-    await functionThatShouldThrow(invalidInput);
-  } catch (e) {
-    error = e;
-  }
-
-  expect(error).not.toBeNull();
-
-  const ErrorSchema = z.object({ message: z.string() });
-  const errorResult = ErrorSchema.safeParse(error);
-  if (errorResult.success) {
-    expect(errorResult.data.message).toContain("expected error text");
-  }
-});
-
-// ❌ WRONG:
-test("should throw error on invalid input", async () => {
-  let error: Error | null = null;
-
-  try {
-    await functionThatShouldThrow(invalidInput);
-  } catch (e) {
-    error = e as Error;  // Type assertion!
-  }
-
-  expect(error?.message).toContain("expected error text");
-});
-```
-
 ## Import Types in Tests
 
 Use proper imports for test utilities vs runtime code:
@@ -131,23 +93,53 @@ test("handles error case 2", async () => {
 
 ## Database Test Setup
 
-Use beforeEach for test isolation:
+### Pattern for Integration Tests
+
+Create isolated test database once, clean between tests:
 
 ```typescript
-let prisma: PrismaClient;
+import { execSync } from "node:child_process";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, beforeEach } from "bun:test";
+import { PrismaClient } from "generated/prisma/client";
+
+// Create test database ONCE (outside beforeEach)
+const testDir = mkdtempSync(join(tmpdir(), "test-"));
+const testDbPath = join(testDir, "test.db");
+const testDbUrl = `file:${testDbPath}`;
+
+// ✅ CORRECT: Use bun run db:push (NOT prisma migrate)
+execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`, {
+  cwd: join(import.meta.dir, "../../.."),
+  env: { ...process.env, DATABASE_URL: testDbUrl },
+});
+
+const prisma = new PrismaClient({
+  datasources: { db: { url: testDbUrl } },
+});
 
 beforeEach(async () => {
-  // Clear relevant tables
+  // Clean up in dependency order (child tables first)
+  await prisma.competitionSnapshot.deleteMany();
+  await prisma.competitionParticipant.deleteMany();
   await prisma.competition.deleteMany();
-  await prisma.player.deleteMany();
-  // Reset in-memory state if needed
-  clearAllRateLimits();
 });
 
 afterEach(async () => {
-  // Cleanup if needed
+  await prisma.$disconnect();  // Required! Prevents connection leaks
 });
 ```
+
+**Why `db:push` not `migrate`?**
+
+- Faster (no migration history)
+- Works with temporary databases
+- Syncs schema directly from schema.prisma
+- Handles schema changes easily
+
+**See:** `prisma-patterns.mdc` for Prisma-specific patterns.
 
 ## Testing Async Functions
 

@@ -76,46 +76,7 @@ model CompetitionParticipant {
 
 ## Test Database Setup
 
-### Pattern for Integration Tests
-
-```typescript
-import { execSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-
-// Create test database ONCE (outside beforeEach)
-const testDir = mkdtempSync(join(tmpdir(), "test-"));
-const testDbPath = join(testDir, "test.db");
-const testDbUrl = `file:${testDbPath}`;
-
-// ✅ CORRECT: Use bun run db:push
-execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`, {
-  cwd: join(import.meta.dir, "../../.."),
-  env: { ...process.env, DATABASE_URL: testDbUrl },
-});
-
-// ❌ WRONG: Don't use prisma migrate deploy
-// execSync("bunx prisma migrate deploy", { ... });
-
-const prisma = new PrismaClient({
-  datasources: { db: { url: testDbUrl } },
-});
-
-beforeEach(async () => {
-  // Clean up in dependency order (child tables first)
-  await prisma.competitionSnapshot.deleteMany();
-  await prisma.competitionParticipant.deleteMany();
-  await prisma.competition.deleteMany();
-});
-```
-
-**Why `db:push` not `migrate`?**
-
-- ✅ Faster (no migration history)
-- ✅ Works with temporary databases
-- ✅ Syncs schema directly from schema.prisma
-- ✅ Handles schema changes in tests
+**See:** `testing-patterns.mdc` for complete test database setup patterns.
 
 ## Error Handling in Database Operations
 
@@ -333,13 +294,7 @@ const status = competition.startDate && now < competition.startDate
 
 ### ❌ Don't use `prisma migrate` in tests
 
-```typescript
-// WRONG
-execSync("bunx prisma migrate deploy");
-
-// CORRECT
-execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`);
-```
+**See:** `testing-patterns.mdc` for test database setup.
 
 ### ❌ Don't create unnecessary foreign key records
 
@@ -446,12 +401,14 @@ afterEach(async () => {
 ### Why This Matters
 
 Without disconnect:
+
 - ❌ Connections leak - exhausts connection pool
 - ❌ Tests hang or timeout after running many tests
 - ❌ CI environment fails with "too many connections"
 - ❌ Port 5432 (database) becomes unavailable
 
 With proper disconnect:
+
 - ✅ Clean resource cleanup
 - ✅ Multiple test files can run in sequence
 - ✅ CI passes reliably

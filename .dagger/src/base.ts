@@ -37,12 +37,15 @@ export function installWorkspaceDeps(workspaceSource: Directory, installOpenssl 
       .withFile("/workspace/tsconfig.json", workspaceSource.file("tsconfig.json"))
       .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
       .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
+      .withFile("/workspace/.jscpd.json", workspaceSource.file(".jscpd.json"))
       .withDirectory("/workspace/eslint-rules", workspaceSource.directory("eslint-rules"))
       // Dependency files (change occasionally - separate cache layer)
       .withFile("/workspace/package.json", workspaceSource.file("package.json"))
       .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
       // Patches directory (needed for bun patch to work)
       .withDirectory("/workspace/patches", workspaceSource.directory("patches"))
+      // Scripts directory (for utility scripts)
+      .withDirectory("/workspace/scripts", workspaceSource.directory("scripts"))
       // Package source code (changes frequently - mounted after deps)
       .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
       .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
@@ -57,11 +60,12 @@ export function installWorkspaceDeps(workspaceSource: Directory, installOpenssl 
 
 /**
  * Get a Bun container with Node.js support (cached)
+ * @param workspaceSource Optional workspace source directory to mount
  * @returns A Bun container with Node.js installed
  */
-export function getBunNodeContainer(): Container {
+export function getBunNodeContainer(workspaceSource?: Directory): Container {
   // Cache the apt packages to speed up Node.js installation
-  return dag
+  let container = dag
     .container()
     .from("oven/bun:latest")
     .withWorkdir("/workspace")
@@ -83,6 +87,29 @@ export function getBunNodeContainer(): Container {
     .withExec(["apt", "update"])
     .withExec(["apt", "install", "-y", "nodejs"])
     .withExec(["npm", "install", "-g", "npm"]);
+
+  // If workspace source is provided, mount it
+  if (workspaceSource) {
+    container = container
+      .withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-install-cache"))
+      .withFile("/workspace/tsconfig.json", workspaceSource.file("tsconfig.json"))
+      .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
+      .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
+      .withFile("/workspace/.jscpd.json", workspaceSource.file(".jscpd.json"))
+      .withDirectory("/workspace/eslint-rules", workspaceSource.directory("eslint-rules"))
+      .withFile("/workspace/package.json", workspaceSource.file("package.json"))
+      .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
+      .withDirectory("/workspace/patches", workspaceSource.directory("patches"))
+      .withDirectory("/workspace/scripts", workspaceSource.directory("scripts"))
+      .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
+      .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
+      .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
+      .withDirectory("/workspace/packages/report-ui", workspaceSource.directory("packages/report-ui"))
+      .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
+      .withDirectory("/workspace/packages/review-dev-tool", workspaceSource.directory("packages/review-dev-tool"));
+  }
+
+  return container;
 }
 
 /**

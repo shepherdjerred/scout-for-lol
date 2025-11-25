@@ -1,666 +1,332 @@
 ---
-description: Comprehensive guide comparing Mise and Dagger verification systems
+description: Mise (local) vs Dagger (CI) verification systems
 globs: "*.ts,*.tsx,*.mjs,*.json,*.toml"
 alwaysApply: true
 ---
 
 # Mise and Dagger Usage Guide
 
-This project uses two complementary systems for code verification:
-- **Mise** - Fast local checks for development
-- **Dagger** - CI environment checks for debugging
+Two complementary systems for code verification:
+
+- **Mise** - Fast local checks (95% of development)
+- **Dagger** - CI environment checks (debugging CI failures)
 
 ## Quick Reference
 
 | Aspect | Mise | Dagger |
 |--------|------|--------|
-| **Use** | 95% of development | Debugging CI failures |
+| **Use** | Daily development | CI debugging only |
 | **Speed** | 30-60 seconds | 2-5 minutes |
-| **Environment** | Local machine | Docker container (CI-like) |
-| **Best for** | Iteration, pre-commit | CI debugging, final verification |
+| **Environment** | Local machine | Docker (CI-like) |
 | **Command** | `mise check` | `dagger call check` |
 
-## Mise: Local Development (95% of the time)
+## Mise: Local Development
 
-### What Mise Does
+Fast parallel checks for daily development.
 
-Mise is a task runner that executes all code checks in parallel:
+### What It Runs
 
 ```
 mise check
-├── lint (ESLint + TypeScript ESLint rules)
-├── typecheck (TypeScript compiler)
-├── format (Prettier check, no auto-fix)
+├── lint (ESLint + custom rules)
+├── typecheck (TypeScript)
+├── format (Prettier check)
 ├── test (Bun test runner)
-├── Knip (unused code detection)
+├── Knip (unused code)
 └── JSCPD (copy-paste detection)
 ```
 
-All run in parallel and complete in ~30-60 seconds.
+All run in parallel, ~30-60 seconds total.
 
-### Installation & Setup
-
-Mise should already be installed in your environment. Verify:
+### Commands
 
 ```bash
-which mise
-mise --version
-```
-
-If not installed, follow: https://mise.jd.dev/getting-started.html
-
-### Running Checks
-
-```bash
-# Run all checks in parallel
+# Run all checks
 mise check
 
-# Run individual checks
+# Individual checks
 mise run typecheck
 mise run lint
 mise run format
 mise run test
 
-# List all available tasks
+# List available tasks
 mise tasks
-
-# Watch mode for tests
-bun test --watch
 ```
 
-### Understanding Mise Output
+### Output
 
-When `mise check` completes:
-
-#### ✅ All Green (0 errors, 0 warnings)
+**Success:**
 
 ```
-✓ Check all              completed successfully
+✓ Check all completed successfully
 ```
 
-You're ready to commit!
-
-#### ❌ Errors (Stops at first category)
+**Failure:**
 
 ```
-✗ Check all              failed
-
+✗ Check all failed
 Error: lint failed
 ```
 
-Look at the output above to see which check failed. See `code-quality-checklist.mdc` for how to fix each type of error.
+See `code-quality-checklist.mdc` for fixing errors.
 
-### Mise vs bun run
+## Dagger: CI Debugging
 
-Both work, but mise is preferred:
+Exact CI environment checks for debugging failures.
+
+### When to Use
+
+```
+mise check passes → CI fails → Run dagger call check
+```
+
+Only use when debugging CI-specific issues.
+
+### Commands
 
 ```bash
-# ✅ Preferred (uses mise.toml configuration)
-mise check
-mise run typecheck
-mise run lint
+# Main checks
+dagger call check                                    # Full verification
+dagger call build --version="1.0.0" --git-sha="..."  # Build packages
+dagger call ci --version="1.0.0" --git-sha="..."     # Full CI pipeline
 
-# ✅ Also works (direct bun/npm scripts)
-bun run typecheck:all
-bun run lint:all
-bun run format:all
-
-# Difference: mise runs tasks in parallel and can be configured per workspace
-```
-
-### Common Mise Tasks
-
-**Root level commands:**
-
-```bash
-# Install all dependencies
-mise run install:all
-
-# Type check all packages
-mise run typecheck
-
-# Lint all files
-mise run lint
-
-# Format code
-mise run format
-
-# Run all tests
-mise run test
-
-# Check everything (same as mise check)
-mise run check
-```
-
-**Per-package commands (cd into package first):**
-
-```bash
-cd packages/backend
-mise run dev        # Development with hot reload
-mise run build      # Build for production
-mise run typecheck  # Type check this package only
-mise run lint       # Lint this package only
-mise run test       # Test this package only
-```
-
-## Dagger: CI Environment Debugging
-
-### What Dagger Does
-
-Dagger runs the same checks in a Docker container that mimics the CI environment:
-
-```
-dagger call check
-├── lint (ESLint + TypeScript ESLint rules)
-├── typecheck (TypeScript compiler)
-├── format (Prettier check, no auto-fix)
-├── test (Bun test runner)
-└── (Other checks specific to CI)
-```
-
-Runs sequentially and takes ~2-5 minutes.
-
-### When to Use Dagger
-
-Use Dagger when:
-1. ✅ `mise check` passes locally
-2. ❌ CI (GitHub Actions) fails with an error
-3. ❓ You can't figure out why
-
-Then:
-```bash
-dagger call check
-
-# Look for differences between mise output and dagger output
-```
-
-### Installation & Setup
-
-Dagger should already be available. Verify:
-
-```bash
-which dagger
-dagger version
-```
-
-If not installed: https://docs.dagger.io/install
-
-### Running Checks
-
-```bash
-# Run the full CI check
-dagger call check
-
-# List available functions
-dagger functions
-
-# View specific function details
-dagger functions --help
-
-# Run specific target
-dagger call ci --version="1.0.0" --git-sha="abc123"
-```
-
-### Available Dagger Targets
-
-#### Main Verification
-
-```bash
-# Full code quality checks (lint, typecheck, test, format)
-dagger call check
-
-# Build all packages (no deployment)
-dagger call build --version="1.0.0" --git-sha="abc123"
-
-# Full CI pipeline (check + build)
-dagger call ci --version="1.0.0" --git-sha="abc123"
-
-# Deploy to environment
-dagger call deploy --version="1.0.0" --stage="beta"
-```
-
-#### Package-Specific
-
-```bash
-# Check backend only
+# Package-specific
 dagger call check-backend
-
-# Build backend Docker image
-dagger call build-backend-image --version="1.0.0" --git-sha="abc123"
-
-# Generate Prisma client
-dagger call generate-prisma
-
-# Check report package
 dagger call check-report
-
-# Build report for npm distribution
-dagger call build-report-for-npm --version="1.0.0"
-
-# Check data package
 dagger call check-data
+
+# List all functions
+dagger functions
 ```
-
-### Understanding Dagger Output
-
-#### ✅ All Green
-
-```
-... (long output)
-✓ Check completed successfully
-```
-
-Same checks as mise passed in the CI environment.
-
-#### ❌ Error (Shows full context)
-
-```
-Error: lint failed - custom-rules/no-type-assertions
-  Line 42: Type assertions are not allowed...
-```
-
-This shows the exact error that's failing in CI.
 
 ### Debugging Differences
 
-If `mise check` passes but `dagger call check` fails:
+If mise passes but Dagger fails, check:
 
-1. **Path differences** - Absolute vs relative paths
-2. **Environment variables** - Missing or different values
-3. **Permission issues** - File permissions in Docker
-4. **Build artifacts** - Generated files not committed
-5. **Node/Bun version** - Different runtimes
+1. **Environment variables** - Missing `DATABASE_URL`, `NODE_ENV`
+2. **Generated files** - Run `bun run db:generate`
+3. **File permissions** - Docker vs local
+4. **Path differences** - Absolute vs relative
+5. **Node/Bun versions** - Different runtimes
 
-**Common fixes:**
+**Common fix:**
 
 ```bash
-# Clean and rebuild (fresh state)
+# Clean and regenerate
 rm -rf node_modules
-mise run install:all
-
-# Regenerate Prisma
+bun install
 cd packages/backend && bun run db:generate
 
-# Check environment variables
-env | grep -E "NODE_ENV|ENVIRONMENT|VERSION"
-
-# Try dagger with verbose output
-dagger call check --help
+# Test both
+mise check
+dagger call check
 ```
 
-## Workflow Strategies
+## Development Workflow
 
-### Daily Development Workflow
-
-1. **Make changes** to code
-2. **Run `mise check`** to verify locally
-3. **Fix errors** shown by mise
-4. **Commit** when mise passes
+### Daily Loop
 
 ```bash
-# Your development loop
+# Edit code
 vim src/component.ts
-mise check          # Takes 30-60s
-# Fix errors
-mise check          # Verify fixes
+
+# Verify
+mise check
+
+# Fix errors, repeat
+
+# Commit when passing
 git add .
 git commit -m "..."
 ```
 
-### Pre-Commit Verification
-
-Before committing, ensure:
+### Pre-Commit
 
 ```bash
-# 1. Format code
-bun run format:write
-
-# 2. Run all checks
-mise check
-
-# 3. Commit only if all pass
-git add .
-git commit -m "Your message"
+bun run format:write  # Auto-fix formatting
+mise check            # Verify all
+git commit -m "..."   # Commit when green
 ```
 
-### Debugging CI Failures
-
-When GitHub Actions fails but mise passes:
-
-1. **Look at GitHub Actions error** - Note the exact error message
-2. **Run `dagger call check`** locally to reproduce
-3. **Compare environments:**
-   - Check Node/Bun versions
-   - Check environment variables
-   - Check for uncommitted files
-4. **Fix the issue** based on dagger output
-5. **Run `mise check` + `dagger call check`** to verify both pass
-6. **Push** when both pass
+### CI Debugging
 
 ```bash
-# Step-by-step debugging
-echo "1. Check mise locally"
-mise check
-
-echo "2. CI failed? Run dagger"
+# CI failed but mise passes?
 dagger call check
 
-echo "3. Compare the outputs"
-# Look for differences in the two outputs
+# Compare outputs, fix issue
 
-echo "4. Fix based on dagger output"
-# Edit code
-
-echo "5. Verify both pass"
+# Verify both pass
 mise check && dagger call check
 
-echo "6. Commit"
-git commit -m "..."
+# Push
+git push
 ```
 
-### Full Pre-Merge Verification
+## Key Principles
 
-Before requesting code review:
+**Principle 1: Mise is Primary**
 
 ```bash
-# Run complete checks
-mise check
-
-# If working with database changes
-cd packages/backend && bun run db:generate
-
-# Lint and format everything
-bun run lint:all
-bun run format:write
-
-# One more check to be sure
-mise check
-
-# Run dagger for CI-exact verification (optional but recommended)
-dagger call check
-
-# If all pass, you're ready for review
-git push  # Don't forget - ask user before pushing!
+mise check          # Use daily
+dagger call check   # Only for CI debugging
 ```
 
-## Environment Comparison
+**Principle 2: Both Must Pass**
 
-### Mise Environment
+Before pushing, both should pass (mise always, Dagger strongly recommended).
 
-- **OS:** Your local machine
-- **Node version:** Your installed version
-- **Package manager:** Bun
-- **Timezone:** Your timezone
-- **Credentials:** Your environment variables
-- **Paths:** Your absolute paths
+**Principle 3: Fix in Order**
 
-### Dagger Environment
+1. TypeScript errors first
+2. ESLint errors second
+3. Test failures third
+4. Code quality fourth
 
-- **OS:** Ubuntu Linux (latest)
-- **Node version:** Specified in Dockerfile
-- **Package manager:** Bun
-- **Timezone:** UTC
-- **Credentials:** Passed via secrets (limited)
-- **Paths:** Container paths (`/root`, `/workspace`)
+**Principle 4: Trust the Tools**
 
-### Why Differences Exist
-
-If Dagger fails when mise passes, check:
-
-1. **File encoding** - Windows (CRLF) vs Unix (LF)
-2. **Path separators** - Backslash vs forward slash
-3. **Environment variables** - Missing `DATABASE_URL`, `NODE_ENV`, etc.
-4. **File permissions** - Executable vs regular files
-5. **Git status** - Uncommitted changes
-6. **Node modules** - Out of date or missing
-
-**Fix most issues:**
-
-```bash
-# Ensure everything is clean and up to date
-rm -rf node_modules dist build
-bun install
-
-# Run both checks
-mise check
-dagger call check
-```
+If tools report errors, fix them. Don't suppress warnings.
 
 ## Speed Comparison
 
-### Mise (Local)
+### Mise (Parallel)
 
 | Check | Time |
 |-------|------|
 | Lint | ~5-10s |
 | Typecheck | ~10-15s |
-| Format check | ~2-5s |
+| Format | ~2-5s |
 | Test | ~20-40s |
 | Knip | ~5-10s |
 | JSCPD | ~2-5s |
-| **Total (parallel)** | **~30-60s** |
+| **Total** | **~30-60s** |
 
-### Dagger (Docker)
+### Dagger (Sequential)
 
 | Phase | Time |
 |-------|------|
 | Docker setup | ~30-60s |
-| Install dependencies | ~30-60s |
+| Install deps | ~30-60s |
 | Run checks | ~30-60s |
-| Cleanup | ~10-20s |
 | **Total** | **~2-5 minutes** |
 
-### Recommendation
+**Recommendation:** Use mise for inner loop, Dagger for CI debugging.
 
-- **Development (inner loop):** Use mise (fast)
-- **Pre-commit:** Use mise (fast enough)
-- **CI debugging:** Use dagger (matches CI exactly)
-- **Final verification:** Use both to be safe
+## Environment Comparison
 
-## Key Principles
+| Aspect | Mise | Dagger |
+|--------|------|--------|
+| OS | Your machine | Ubuntu (Docker) |
+| Paths | Absolute | Container paths |
+| Env vars | Your shell | Passed via secrets |
+| Timezone | Your timezone | UTC |
 
-### Principle 1: Mise is Your Primary Tool
+**Common differences:**
 
-```bash
-# Do this frequently
-mise check
-
-# Only do this when mise passes but CI fails
-dagger call check
-```
-
-### Principle 2: Both Must Pass Before Push
-
-```bash
-# Before pushing:
-mise check    # ✅ must pass
-dagger call check  # ✅ strongly recommended
-
-# Then push (with user approval)
-```
-
-### Principle 3: Fix Issues in Order
-
-1. TypeScript errors first
-2. ESLint errors second
-3. Test failures third
-4. Code quality issues fourth
-
-See `code-quality-checklist.mdc` for the complete order.
-
-### Principle 4: Trust the Tools
-
-If the tools say there's an error, there's an error. Don't skip checks or suppress warnings—fix the root cause.
-
-```bash
-# ❌ DON'T do this
-/* eslint-disable-next-line */ // Suppressing error without fixing
-
-# ✅ DO this
-// Fix the underlying issue, then the linter error goes away
-```
-
-## Quick Reference Sheet
-
-### Commands Cheat Sheet
-
-```bash
-# Development (use daily)
-mise check                 # All checks
-mise run typecheck        # TypeScript only
-mise run lint             # ESLint only
-mise run test             # Tests only
-
-# CI Debugging (use when mise passes but CI fails)
-dagger call check         # Full CI checks
-dagger functions          # List available dagger targets
-
-# Formatting (auto-fix)
-bun run format:write      # Fix formatting
-mise run format           # Check formatting (no-fix)
-
-# Database (backend changes)
-cd packages/backend
-bun run db:generate       # Generate Prisma client
-bun run db:push           # Push schema to dev database
-bun run db:studio         # Open Prisma Studio GUI
-```
-
-### When Things Go Wrong
-
-| Symptom | Diagnosis | Fix |
-|---------|-----------|-----|
-| `mise check` hangs | Stuck process | `Ctrl+C`, check for `node_modules` corruption |
-| Dagger timeout | Docker issue | Rebuild: `dagger engine restart` |
-| Test failures | State not cleared | Ensure `beforeEach`/`afterEach` cleanup |
-| ESLint errors persist | Cache issue | `bun run clean`, reinstall |
-| TypeScript errors | Type mismatch | Validate with Zod, add null checks |
-| Format conflicts | Line length | `bun run format:write` to auto-fix |
-
-### Asking for Help
-
-When asking for help with code quality issues:
-
-1. **Run `mise check`** and share the error
-2. **Run `dagger call check`** if mise passes but CI fails
-3. **Include the exact error message** (copy-paste from terminal)
-4. **Include the file name and line number**
-5. **Reference the rule name** if known (e.g., "no-type-assertions")
-
-See related rules:
-- **For specific rule help:** See `eslint-custom-rules.mdc`
-- **For overall quality checks:** See `code-quality-checklist.mdc`
-- **For TypeScript help:** See `typescript-standards.mdc`
-- **For Zod help:** See `zod-validation-patterns.mdc`
-
-## Mise Configuration
-
-Mise tasks are configured in:
-- `mise.toml` (root level)
-- Individual task definitions in `.mise/tasks/` directory
-
-View configuration:
-
-```bash
-# Show all tasks
-mise tasks
-
-# Show specific task details
-mise tasks --json | jq '.[0]'
-
-# Edit mise configuration
-cat mise.toml
-```
-
-## Dagger Configuration
-
-Dagger functions are defined in:
-- `.dagger/src/index.ts` - Main module
-
-View available functions:
-
-```bash
-# List all functions
-dagger functions
-
-# Get help for specific function
-dagger functions --help
-dagger call check --help
-
-# View source code
-cat .dagger/src/index.ts
-```
+- File encoding (CRLF vs LF)
+- Missing environment variables
+- Uncommitted generated files
+- File permissions
 
 ## Troubleshooting
 
-### Issue: `mise check` passes but `dagger call check` fails
-
-**Diagnosis:** Environment difference or missing generated files
-
-**Solution:**
+### Mise passes, Dagger fails
 
 ```bash
-# 1. Ensure all generated code is up to date
+# 1. Ensure generated code is current
 cd packages/backend && bun run db:generate
 
 # 2. Clean and reinstall
 rm -rf node_modules
 bun install
 
-# 3. Run checks again
-mise check
-dagger call check
+# 3. Test again
+mise check && dagger call check
 ```
 
-### Issue: Dagger is very slow
-
-**Diagnosis:** Docker needs to download or rebuild
-
-**Solution:**
+### Dagger is slow
 
 ```bash
-# Restart docker daemon
-dagger engine restart
-
-# Or try again (it will use cache on second run)
-dagger call check
+dagger engine restart  # Rebuild cache
+dagger call check      # Retry (uses cache)
 ```
 
-### Issue: Tests pass locally but fail in Dagger
-
-**Diagnosis:** Database setup issue or environment-specific state
-
-**Solution:**
+### Tests fail in Dagger
 
 ```bash
-# Ensure test database cleanup
-# Check afterEach in test file has await prisma.$disconnect()
+# Check database cleanup
+# Ensure afterEach has: await prisma.$disconnect()
 
-# Check DATABASE_URL environment variable
+# Check environment
 echo $DATABASE_URL
-
-# Run tests with specific environment
 NODE_ENV=test bun test
 ```
 
-### Issue: Type errors in Dagger but not in mise
-
-**Diagnosis:** TypeScript cache or type-aware linting context
-
-**Solution:**
+### Type errors in Dagger only
 
 ```bash
 # Clear TypeScript cache
 rm -rf node_modules/.cache
-
-# Regenerate
 bun install
 mise run typecheck
 ```
 
-## See Also
+## Commands Cheat Sheet
 
-- **Code Quality Checklist:** `code-quality-checklist.mdc`
-- **Custom ESLint Rules:** `eslint-custom-rules.mdc`
-- **TypeScript Standards:** `typescript-standards.mdc`
-- **Testing Patterns:** `testing-patterns.mdc`
+```bash
+# Development (daily use)
+mise check                 # All checks
+mise run typecheck        # TypeScript only
+mise run lint             # ESLint only
+mise run test             # Tests only
+
+# CI Debugging
+dagger call check         # Full CI checks
+dagger functions          # List targets
+
+# Formatting
+bun run format:write      # Fix formatting
+mise run format           # Check formatting
+
+# Database
+cd packages/backend
+bun run db:generate       # Generate Prisma client
+bun run db:push           # Push schema to dev DB
+bun run db:studio         # Open Prisma Studio
+```
+
+## Common Issues
+
+| Symptom | Fix |
+|---------|-----|
+| `mise check` hangs | `Ctrl+C`, check node_modules corruption |
+| Dagger timeout | `dagger engine restart` |
+| Test failures | Ensure `beforeEach`/`afterEach` cleanup |
+| ESLint persists | `bun run clean`, reinstall |
+| TypeScript errors | Validate with Zod, add null checks |
+| Format conflicts | `bun run format:write` |
+
+## Configuration
+
+**Mise:** `mise.toml` and `.mise/tasks/` directory
+
+```bash
+mise tasks              # Show all tasks
+cat mise.toml           # View config
+```
+
+**Dagger:** `.dagger/src/index.ts`
+
+```bash
+dagger functions        # Show all functions
+cat .dagger/src/index.ts  # View source
+```
+
+## Related Documentation
+
+- **Code Quality:** `code-quality-checklist.mdc` - Fix errors
+- **ESLint Rules:** `eslint-custom-rules.mdc` - Custom rules
+- **TypeScript:** `typescript-standards.mdc` - Type safety
+- **Testing:** `testing-patterns.mdc` - Test patterns
+- **Zod:** `zod-validation-patterns.mdc` - Validation

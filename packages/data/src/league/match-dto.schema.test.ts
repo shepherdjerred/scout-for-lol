@@ -8,9 +8,14 @@
 import { describe, expect, test } from "bun:test";
 import { MatchDtoSchema } from "@scout-for-lol/data/league/match-dto.schema.js";
 
+// Use Bun's path joining to find test data files relative to this test file
+// This works both locally and in CI containers
+// From packages/data/src/league/ we need to go up to packages/ then to backend/
+const baseTestDataPath = `${import.meta.dir}/../../../backend/src/league/model/__tests__/testdata`;
+
 const REAL_MATCH_FILES = [
-  "/workspaces/scout-for-lol/packages/backend/src/league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",
-  "/workspaces/scout-for-lol/packages/backend/src/league/model/__tests__/testdata/matches_2025_09_19_NA1_5370986469.json",
+  `${baseTestDataPath}/matches_2025_09_19_NA1_5370969615.json`,
+  `${baseTestDataPath}/matches_2025_09_19_NA1_5370986469.json`,
 ];
 
 describe("MatchDto Schema Validation", () => {

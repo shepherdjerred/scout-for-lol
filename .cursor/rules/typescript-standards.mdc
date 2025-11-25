@@ -8,26 +8,13 @@ globs: "*.ts,*.tsx"
 ## Strict Type Safety Rules
 
 - **NEVER use `any`** - Always define proper types
-- **Avoid type assertions (`as`)** - Use type guards instead
+- **Avoid type assertions** - Use Zod validation instead
 - **Use unknown for uncertain types** - Validate with Zod before processing
-- **Prefer `undefined` over `null`** - Use `undefined` for optional/missing values; only use `null` when required by external APIs or libraries
+- **Prefer `undefined` over `null`** - Use `undefined` for optional/missing; `null` only for external APIs
 - **Prefer advanced types** - Mapped types, conditional types, template literals
-- **Exhaustive pattern matching** - Use `ts-pattern` for complex branching
+- **Exhaustive matching** - Handle all union cases explicitly
 
-## Validation Patterns
-
-```typescript
-// Always validate unknown input with Zod
-const result = SomeSchema.safeParse(unknownData);
-if (!result.success) {
-  throw new Error(fromZodError(result.error).toString());
-}
-
-// Use type guards instead of casting
-function isString(value: unknown): value is string {
-  return typeof value === 'string';
-}
-```
+**See:** `type-assertions-policy.mdc`, `zod-validation-patterns.mdc`, `exhaustive-case-handling.mdc`
 
 ## Error Handling
 
@@ -45,59 +32,23 @@ function isString(value: unknown): value is string {
 
 ## Function Parameter Design
 
-### Avoid Optional Parameters with Defaults
+**Avoid optional parameters with defaults when they affect behavior.**
 
-- **Make parameters required when they affect behavior** - Don't hide important decisions behind defaults
-- **Use explicit values at call sites** - Makes intent clear and behavior obvious
-- **Defaults mask bugs** - TypeScript won't catch missing parameters when defaults exist
-
-**❌ BAD - Default masks intent:**
+**Why:** Defaults mask intent and hide bugs. Make behavior-affecting parameters required.
 
 ```typescript
-function fetchData(
-  id: string,
-  purpose: "read" | "write" = "read"  // Default hides important decision
-) {
-  // Behavior differs significantly based on purpose
-  if (purpose === "write") {
-    // Different logic path
-  }
-}
+// ❌ BAD - Default hides decision
+function fetchData(id: string, purpose: "read" | "write" = "read") { }
+fetchData(id);  // Reading or writing?
 
-// Call site unclear - what is the purpose?
-fetchData(id);  // Is this reading or writing?
+// ✅ GOOD - Explicit
+function fetchData(id: string, purpose: "read" | "write") { }
+fetchData(id, "read");  // Clear intent
 ```
 
-**✅ GOOD - Explicit parameter forces clarity:**
+**Defaults acceptable for:** UI options, pagination limits, feature flags defaulting to "off"
 
-```typescript
-function fetchData(
-  id: string,
-  purpose: "read" | "write"  // Required - no default
-) {
-  // Behavior differs significantly based on purpose
-  if (purpose === "write") {
-    // Different logic path
-  }
-}
-
-// Call site is explicit and clear
-fetchData(id, "read");   // Obviously reading
-fetchData(id, "write");  // Obviously writing
-```
-
-**When defaults ARE acceptable:**
-
-- UI/display options that don't affect core behavior
-- Pagination/limits where default is sensible
-- Feature flags that default to "off"
-
-**When defaults are FORBIDDEN:**
-
-- Parameters that change core behavior/logic paths
-- Parameters that affect data integrity/validation
-- Parameters that change what gets stored/fetched
-- Parameters that affect security/permissions
+**Defaults forbidden for:** Core behavior, data integrity, security/permissions
 
 ## Dependencies
 
@@ -313,12 +264,13 @@ const user = UserSchema.parse(JSON.parse(response));
 console.log(user.name);  // Guaranteed to exist
 ```
 
-## Related Topics
+## Related Documentation
 
-- **Type Assertions:** See `type-assertions-policy.mdc`
-- **Type Safety Strategy:** See `type-safety-strategy.mdc`
-- **Union Narrowing:** See `typescript-union-narrowing.mdc`
-- **Common Pitfalls:** See `typescript-common-pitfalls.mdc`
-- **ESLint Rules:** See `eslint-custom-rules.mdc`
-- **Code Quality Checks:** See `code-quality-checklist.mdc`
-- **Verification Systems:** See `mise-and-dagger-usage.mdc`
+- **Type Assertions:** `type-assertions-policy.mdc` - When to use `as`
+- **Type Safety:** `type-safety-strategy.mdc` - Overall strategy
+- **Zod Validation:** `zod-validation-patterns.mdc` - Schema patterns
+- **Exhaustive Cases:** `exhaustive-case-handling.mdc` - Union handling
+- **Union Narrowing:** `typescript-union-narrowing.mdc` - Narrowing strategies
+- **Common Pitfalls:** `typescript-common-pitfalls.mdc` - Avoid mistakes
+- **ESLint Rules:** `eslint-custom-rules.mdc` - Custom rules
+- **Code Quality:** `code-quality-checklist.mdc` - Verification guide

@@ -22,25 +22,18 @@ const user_data_schema = z.object({ id: z.string() });   // snake_case
 
 ## Validate All External Data
 
-**EVERY piece of data from outside your code must be validated with Zod:**
-
-- User input
-- API responses
-- Environment variables
-- Database queries (when structure is uncertain)
-- JSON.parse() results
-- Error objects in catch blocks
+Validate ALL external data with Zod: user input, API responses, environment variables, JSON.parse results, error objects.
 
 ```typescript
-// ✅ CORRECT:
+// ✅ CORRECT
 const input: unknown = JSON.parse(rawString);
-const DataSchema = z.object({ id: z.number() });
 const validated = DataSchema.parse(input);
 
-// ❌ WRONG:
-const input = JSON.parse(rawString);  // Type is 'any'
-const id = input.id;  // Unsafe!
+// ❌ WRONG
+const input = JSON.parse(rawString);  // Type is 'any', unsafe
 ```
+
+**See:** `type-safety-strategy.mdc` for overall validation workflow.
 
 ## Union vs Discriminated Union
 
@@ -116,29 +109,15 @@ const DateArgsSchema = z.object({
 
 ## Parse vs SafeParse
 
-### Use `.parse()` When
+**Use `.parse()`** when invalid data is exceptional (throws on failure).
 
-- You want to throw on validation failure
-- Error propagation is handled by caller
-- Invalid data is exceptional (shouldn't happen)
+**Use `.safeParse()`** when validation failure is expected (returns result object).
 
 ```typescript
-const validated = Schema.parse(input);  // Throws on failure
-```
+const validated = Schema.parse(input);  // Throws
 
-### Use `.safeParse()` When
-
-- You want to handle validation failure explicitly
-- Validation failure is expected/normal
-- You need the error details
-
-```typescript
-const result = Schema.safeParse(input);
-if (!result.success) {
-  console.error(result.error);
-  return;
-}
-// Use result.data
+const result = Schema.safeParse(input);  // Returns { success, data/error }
+if (result.success) { /* use result.data */ }
 ```
 
 ## Error Messages

@@ -1,544 +1,185 @@
 ---
-description: Detailed documentation for all 12 custom ESLint rules in this project
+description: Documentation for all 12 custom ESLint rules
 globs: "*.ts,*.tsx"
+alwaysApply: false
 ---
 
-# Custom ESLint Rules Documentation
+# Custom ESLint Rules
 
-This project includes 12 custom ESLint rules designed to enforce type safety, best practices, and maintainability standards. This guide documents each rule with examples and fixes.
+This project includes 12 custom ESLint rules enforcing type safety and best practices.
 
 ## Rule 1: `no-type-assertions`
 
-**Category:** Type Safety | **Severity:** Error | **Auto-Fix:** No
+**Severity:** Error | **Auto-Fix:** No
 
-### What It Enforces
+**Enforces:** Disallows type assertions except `as unknown` and `as const`.
 
-Disallows type assertions (casting with `as`) except for:
-- `as unknown` - Widening type for later narrowing
-- `as const` - Const assertions for literal types
+**Why:** Type assertions bypass TypeScript's type checking. Use Zod validation instead.
 
-### Why It Exists
-
-Type assertions bypass TypeScript's type checking. Instead of asserting, you should:
-1. Use Zod validation to validate and narrow types safely
-2. Use type guards (`if` statements) to narrow types naturally
-3. Use `as unknown` only as last resort when interfacing with untyped libraries
-
-### ✅ Valid Code
+**Valid:**
 
 ```typescript
-// as unknown - widening type
-const unknownData = someValue as unknown;
-
-// as const - literal type narrowing
-const config = { type: "production" } as const;
-
-// Zod validation first, then safe to use
-const UserSchema = z.object({ id: z.string() });
-const validated = UserSchema.parse(rawData);
-return validated; // No cast needed
+const unknown = value as unknown;
+const config = { type: "prod" } as const;
+const validated = UserSchema.parse(data);  // No cast needed
 ```
 
-### ❌ Invalid Code
+**Invalid:**
 
 ```typescript
-// ❌ Direct type assertion
-const user = rawData as User;
-
-// ❌ Chained assertions
-const value = (data as unknown) as SpecificType;
-
-// ❌ Assert to `any`
-const result = value as any;
-
-// ❌ Assert Error type
-const message = (error as Error).message;
+const user = rawData as User;  // ❌
+const message = (error as Error).message;  // ❌
 ```
 
-### How to Fix
-
-**Option 1: Use Zod Validation (Preferred)**
+**Fix:**
 
 ```typescript
-// ❌ BEFORE
-const user = userData as User;
-
-// ✅ AFTER
-const UserSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-});
-const user = UserSchema.parse(userData);
+// Use Zod validation
+const UserSchema = z.object({ id: z.string(), name: z.string() });
+const user = UserSchema.parse(rawData);
 ```
 
-**Option 2: Use Type Guards**
-
-```typescript
-// ❌ BEFORE
-function process(value: unknown) {
-  return (value as string).toUpperCase();
-}
-
-// ✅ AFTER
-function process(value: unknown): string {
-  if (typeof value !== "string") {
-    throw new Error("Expected string");
-  }
-  return value.toUpperCase();
-}
-```
-
-**Option 3: Error Handling with Zod**
-
-```typescript
-// ❌ BEFORE
-try {
-  await operation();
-} catch (error) {
-  console.log((error as Error).message);
-}
-
-// ✅ AFTER
-try {
-  await operation();
-} catch (error) {
-  const ErrorSchema = z.object({ message: z.string() });
-  const result = ErrorSchema.safeParse(error);
-  const message = result.success ? result.data.message : String(error);
-  console.log(message);
-}
-```
-
-### Related Rules
-
-- `prefer-zod-validation` - Use Zod instead of typeof/instanceof
-- `no-redundant-zod-parse` - Don't parse the same value twice
-- **See also:** `type-assertions-policy.mdc`, `zod-validation-patterns.mdc`
+**See:** `type-assertions-policy.mdc`
 
 ---
 
 ## Rule 2: `prefer-zod-validation`
 
-**Category:** Type Safety | **Severity:** Error | **Auto-Fix:** No
+**Severity:** Error | **Auto-Fix:** No
 
-### What It Enforces
+**Enforces:** Use Zod instead of `typeof`, `instanceof`, `Array.isArray`, etc.
 
-Disallows runtime type checking methods (`typeof`, `instanceof`, `Array.isArray`, etc.) in favor of Zod validation.
+**Exception:** Simple primitive checks in basic if statements are allowed. `instanceof Error` always allowed.
 
-**Exception:** Simple primitive checks like `typeof x === "string"` are allowed in basic conditionals.
-
-### Why It Exists
-
-Zod provides runtime validation that's:
-- Composable (can build complex validators)
-- Consistent (single source of truth for data shape)
-- Type-safe (infers TypeScript types automatically)
-
-### ✅ Valid Code
+**Valid:**
 
 ```typescript
-// Simple primitive check in conditional (allowed)
-if (typeof value === "string") {
-  processString(value);
-}
+// Simple check OK
+if (typeof value === "string") { process(value); }
 
 // Zod validation
-const StringSchema = z.string();
-const result = StringSchema.safeParse(value);
-if (result.success) {
-  processString(result.data);
-}
+const result = z.string().safeParse(value);
+if (result.success) { process(result.data); }
+```
 
-// Zod array check
+**Invalid:**
+
+```typescript
+if (typeof value === "string" && value.length > 0) { }  // ❌ Complex
+if (Array.isArray(items)) { }  // ❌
+if (Number.isInteger(value)) { }  // ❌
+```
+
+**Fix:**
+
+```typescript
 const ItemArraySchema = z.array(z.object({ id: z.string() }));
 const items = ItemArraySchema.parse(rawItems);
 ```
 
-### ❌ Invalid Code
-
-```typescript
-// ❌ typeof in complex expression
-if (typeof value === "string" && value.length > 0) {
-  // Ternary or logical expression = violation
-}
-
-// ❌ Array.isArray
-if (Array.isArray(value)) {
-  process(value);
-}
-
-// ❌ Number.isInteger
-if (Number.isInteger(value)) {
-  process(value);
-}
-
-// ❌ instanceof (except Error)
-if (value instanceof Date) {
-  process(value);
-}
-
-// ❌ instanceof Error - Exception (allowed)
-if (error instanceof Error) {
-  console.log(error.message); // This IS allowed
-}
-```
-
-### How to Fix
-
-**Option 1: Zod for Data Validation**
-
-```typescript
-// ❌ BEFORE
-if (Array.isArray(items)) {
-  return items.map(i => i.id);
-}
-
-// ✅ AFTER
-const ItemSchema = z.object({ id: z.string() });
-const ItemArraySchema = z.array(ItemSchema);
-const items = ItemArraySchema.parse(rawItems);
-return items.map(i => i.id);
-```
-
-**Option 2: Zod for Number Validation**
-
-```typescript
-// ❌ BEFORE
-if (Number.isInteger(value) && value > 0) {
-  process(value);
-}
-
-// ✅ AFTER
-const PositiveIntSchema = z.number().int().positive();
-const result = PositiveIntSchema.safeParse(value);
-if (result.success) {
-  process(result.data);
-}
-```
-
-**Option 3: Zod for Complex Type Checks**
-
-```typescript
-// ❌ BEFORE
-if (typeof value === "object" && value !== null && "type" in value) {
-  processData(value);
-}
-
-// ✅ AFTER
-const DataSchema = z.object({ type: z.string() });
-const result = DataSchema.safeParse(value);
-if (result.success) {
-  processData(result.data);
-}
-```
-
-### Related Rules
-
-- `no-type-assertions` - Don't use `as` instead of validation
-- `zod-schema-naming` - All schemas must be PascalCase
-- **See also:** `zod-validation-patterns.mdc`
+**See:** `zod-validation-patterns.mdc`
 
 ---
 
 ## Rule 3: `no-function-overloads`
 
-**Category:** Code Quality | **Severity:** Error | **Auto-Fix:** No
+**Severity:** Error | **Auto-Fix:** No
 
-### What It Enforces
+**Enforces:** Disallows function overloads. Use conditional types or unions.
 
-Disallows function overloads (multiple function signatures with the same name). Use conditional return types or union types instead.
+**Why:** Overloads add complexity. Modern TypeScript has better alternatives.
 
-### Why It Exists
-
-Function overloads add complexity and are harder to maintain. Modern TypeScript supports:
-- Conditional types that are more flexible
-- Union types that are more readable
-- Function parameters that handle multiple cases
-
-### ✅ Valid Code
+**Valid:**
 
 ```typescript
-// Conditional type
 function getValue<T extends "string" | "number">(
   type: T
 ): T extends "string" ? string : number {
   return type === "string" ? "hello" : (42 as never);
 }
-
-// Union return type
-function process(data: { type: "A"; fieldA: string } | { type: "B"; fieldB: number }) {
-  if (data.type === "A") {
-    return data.fieldA;
-  } else {
-    return data.fieldB;
-  }
-}
-
-// Generic with constraints
-function fetch<T extends string | number>(id: T): Promise<T extends string ? User : Post> {
-  // Implementation
-}
 ```
 
-### ❌ Invalid Code
+**Invalid:**
 
 ```typescript
-// ❌ Multiple function signatures (overloads)
-function getValue(id: string): string;
-function getValue(id: number): number;
-function getValue(id: string | number) {
-  return typeof id === "string" ? id : id.toString();
-}
+function getValue(id: string): string;  // ❌
+function getValue(id: number): number;  // ❌
+function getValue(id: string | number) { return String(id); }
 ```
 
-### How to Fix
-
-**Option 1: Conditional Return Type**
-
-```typescript
-// ❌ BEFORE
-function fetch(id: string): Promise<User>;
-function fetch(id: number): Promise<Post>;
-function fetch(id: string | number): Promise<User | Post> {
-  if (typeof id === "string") {
-    return fetchUser(id);
-  } else {
-    return fetchPost(id);
-  }
-}
-
-// ✅ AFTER
-function fetch<T extends string | number>(
-  id: T
-): Promise<T extends string ? User : Post> {
-  if (typeof id === "string") {
-    return fetchUser(id) as never;
-  }
-  return fetchPost(id as number) as never;
-}
-```
-
-**Option 2: Union Type Discriminator**
-
-```typescript
-// ❌ BEFORE
-function process(id: string): User[];
-function process(id: number): Post[];
-function process(id: string | number): User[] | Post[] {
-  if (typeof id === "string") {
-    return getUsers(id);
-  } else {
-    return getPosts(id);
-  }
-}
-
-// ✅ AFTER
-type ProcessParams = { type: "users"; id: string } | { type: "posts"; id: number };
-function process(params: ProcessParams): User[] | Post[] {
-  if (params.type === "users") {
-    return getUsers(params.id);
-  } else {
-    return getPosts(params.id);
-  }
-}
-```
-
-### Related Rules
-
-- **See also:** `typescript-common-pitfalls.mdc`, `typescript-union-narrowing.mdc`
+**Fix:** Use conditional return types or discriminated union parameters.
 
 ---
 
 ## Rule 4: `zod-schema-naming`
 
-**Category:** Naming Convention | **Severity:** Error | **Auto-Fix:** No
+**Severity:** Error | **Auto-Fix:** No
 
-### What It Enforces
+**Enforces:** All Zod schemas must be PascalCase ending with `Schema`.
 
-All Zod schema variables must be named with PascalCase and end with `Schema`.
-
-Valid: `UserSchema`, `CompetitionDataSchema`, `ResponseSchema`
-Invalid: `userSchema`, `user_schema`, `UserSchemaData` (wrong ending)
-
-### Why It Exists
-
-Consistent naming makes schemas:
-- Easy to identify (all end with `Schema`)
-- Consistent case (all PascalCase)
-- Searchable in code
-- Clear intent
-
-### ✅ Valid Code
+**Valid:**
 
 ```typescript
 const UserSchema = z.object({ id: z.string() });
-const CompetitionStatusSchema = z.enum(["pending", "active", "ended"]);
-const ResponseDataSchema = z.array(z.object({ name: z.string() }));
-
-// Using the schema
-const user = UserSchema.parse(rawData);
+const CompetitionDataSchema = z.object({ ... });
 ```
 
-### ❌ Invalid Code
+**Invalid:**
 
 ```typescript
-// ❌ camelCase
-const userSchema = z.object({ id: z.string() });
-
-// ❌ snake_case
-const user_schema = z.object({ id: z.string() });
-
-// ❌ Doesn't end with Schema
-const User = z.object({ id: z.string() });
-
-// ❌ Wrong ending
-const UserSchemaData = z.object({ id: z.string() });
+const userSchema = z.object({ });  // ❌ camelCase
+const user_schema = z.object({ });  // ❌ snake_case
+const User = z.object({ });  // ❌ Missing Schema suffix
 ```
 
-### How to Fix
+**Fix:** Rename to `UserDataSchema`, `CompetitionSchema`, etc.
 
-**Rename all Zod variables to PascalCase + Schema:**
-
-```typescript
-// ❌ BEFORE
-const user_data_schema = z.object({
-  id: z.string(),
-  name: z.string(),
-});
-
-// ✅ AFTER
-const UserDataSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-});
-```
-
-### Related Rules
-
-- `no-redundant-zod-parse` - Avoid parsing the same value twice
-- `prefer-zod-validation` - Use Zod for validation
-- **See also:** `zod-validation-patterns.mdc`
+**See:** `zod-validation-patterns.mdc`
 
 ---
 
 ## Rule 5: `no-redundant-zod-parse`
 
-**Category:** Code Quality | **Severity:** Error | **Auto-Fix:** No
+**Severity:** Error | **Auto-Fix:** No
 
-### What It Enforces
+**Enforces:** Don't parse the same schema multiple times on the same value.
 
-Prevents parsing the same Zod schema multiple times on the same value.
+**Why:** Redundant, inefficient, and confusing.
 
-Once validated, the value is safe to use without re-parsing.
-
-### Why It Exists
-
-Re-parsing is:
-- Inefficient (wasted computation)
-- Redundant (already validated)
-- Confusing (looks like you don't trust the first parse)
-
-### ✅ Valid Code
+**Valid:**
 
 ```typescript
-// Parse once
-const UserSchema = z.object({ id: z.string() });
 const user = UserSchema.parse(rawData);
-
-// Use the parsed value without re-parsing
-console.log(user.id);
-process(user);
-
-// Different schema or different data = OK
-const admin = AdminSchema.parse(rawData);
-const user2 = UserSchema.parse(differentData);
+console.log(user.id);  // Reuse, don't re-parse
 ```
 
-### ❌ Invalid Code
+**Invalid:**
 
 ```typescript
-// ❌ Parsing same schema twice
-const UserSchema = z.object({ id: z.string() });
 const user1 = UserSchema.parse(data);
-const user2 = UserSchema.parse(data); // Redundant!
-
-// ❌ Parse then re-validate
-const user = UserSchema.parse(data);
-const result = UserSchema.safeParse(user); // Redundant!
+const user2 = UserSchema.parse(data);  // ❌ Redundant
 ```
 
-### How to Fix
-
-**Option 1: Parse Once and Reuse**
-
-```typescript
-// ❌ BEFORE
-const UserSchema = z.object({ id: z.string() });
-const user1 = UserSchema.parse(rawData);
-const user2 = UserSchema.parse(rawData);
-
-// ✅ AFTER
-const user = UserSchema.parse(rawData);
-// Use user multiple times, don't re-parse
-```
-
-**Option 2: Parse vs SafeParse - Pick One**
-
-```typescript
-// ❌ BEFORE
-const data = UserSchema.parse(input);
-const result = UserSchema.safeParse(data); // Redundant!
-
-// ✅ AFTER - Use parse if you expect it to succeed
-const data = UserSchema.parse(input);
-// Use data directly
-
-// OR - Use safeParse if you need error handling
-const result = UserSchema.safeParse(input);
-if (result.success) {
-  const data = result.data;
-  // Use data
-}
-```
-
-### Related Rules
-
-- `zod-schema-naming` - Name schemas consistently
-- `prefer-zod-validation` - Use Zod for validation
-- **See also:** `zod-validation-patterns.mdc`
+**Fix:** Parse once and reuse the validated result.
 
 ---
 
 ## Rule 6: `satori-best-practices`
 
-**Category:** Report Generation | **Severity:** Error | **Auto-Fix:** No
+**Severity:** Error | **Auto-Fix:** No | **Applies to:** `packages/report/**/*.{ts,tsx}`
 
-**Applies to:** `packages/report/**/*.ts` and `packages/report/**/*.tsx`
+**Enforces:** React components for Satori follow static rendering requirements.
 
-### What It Enforces
+**Key Rules:**
 
-Ensures React components in the report package follow Satori best practices for static image generation.
+1. No `useEffect` - Satori renders synchronously
+2. No event handlers - No `onClick`, `onChange`, etc.
+3. Static props only - No `Date.now()`, `Math.random()`
+4. No DOM APIs - No `document`, `window`
 
-### Why It Exists
-
-Satori renders React to static images. It has limitations:
-- No DOM APIs (no document, window, etc.)
-- Limited CSS support
-- No dynamic layouts
-- No external resources by default
-
-### Key Rules
-
-1. **No useEffect** - Satori renders synchronously
-2. **No event handlers** - No onClick, onChange, etc.
-3. **Static props only** - No Date.now(), Math.random(), etc.
-4. **CSS limitations** - Only core CSS is supported
-5. **No imports of DOM-only libraries** - No browser APIs
-
-### ✅ Valid Code
+**Valid:**
 
 ```typescript
-// Pure functional component with props
 export function ReportCard(props: { title: string; content: string }) {
   return (
     <div style={{ padding: 20 }}>
@@ -547,546 +188,226 @@ export function ReportCard(props: { title: string; content: string }) {
     </div>
   );
 }
-
-// Computed values from props
-export function ScoreDisplay(props: { score: number; max: number }) {
-  const percentage = (props.score / props.max) * 100;
-  return <div>{percentage.toFixed(1)}%</div>;
-}
 ```
 
-### ❌ Invalid Code
+**Invalid:**
 
 ```typescript
-// ❌ useEffect not allowed
 export function ReportCard() {
-  const [data, setData] = useState(null);
-  useEffect(() => {
-    fetchData(); // Not allowed!
-  }, []);
-}
-
-// ❌ Event handlers not allowed
-export function Button(props: { onClick: () => void }) {
-  return <button onClick={props.onClick}>Click</button>;
-}
-
-// ❌ DOM APIs not allowed
-export function Report() {
-  const element = document.getElementById("app"); // Not allowed!
+  const [data, setData] = useState(null);  // ❌
+  useEffect(() => { fetchData(); }, []);  // ❌
+  return <button onClick={handler}>Click</button>;  // ❌
 }
 ```
 
-### How to Fix
-
-**Option 1: Use Props Instead of useEffect**
-
-```typescript
-// ❌ BEFORE
-export function Report() {
-  const [data, setData] = useState(null);
-  useEffect(() => {
-    setData(fetchData());
-  }, []);
-  return <div>{data}</div>;
-}
-
-// ✅ AFTER
-export function Report(props: { data: Data }) {
-  return <div>{props.data}</div>;
-}
-```
-
-**Option 2: Move Logic to Component Props**
-
-```typescript
-// ❌ BEFORE
-export function MatchStats() {
-  const now = Date.now(); // Depends on execution time
-  return <div>{now}</div>;
-}
-
-// ✅ AFTER
-export function MatchStats(props: { timestamp: number }) {
-  return <div>{props.timestamp}</div>;
-}
-```
-
-### Related Rules
-
-- **See also:** `eslint-rules/satori-best-practices.test.ts`
+**Fix:** Pass all data via props, use pure functional components.
 
 ---
 
 ## Rule 7: `prisma-client-disconnect`
 
-**Category:** Testing | **Severity:** Error | **Auto-Fix:** No
+**Severity:** Error | **Auto-Fix:** No | **Applies to:** `**/*.integration.test.ts`
 
-**Applies to:** `**/*.integration.test.ts`
+**Enforces:** Integration tests must call `prisma.$disconnect()` in `afterEach`.
 
-### What It Enforces
+**Why:** Prevents connection leaks that cause tests to hang or timeout.
 
-Integration tests must call `prisma.$disconnect()` after each test to clean up database connections.
-
-### Why It Exists
-
-Prisma client pools connections. Without disconnect:
-- Connections leak
-- Tests hang or timeout
-- Can't run many tests in sequence
-- Port conflicts
-
-### ✅ Valid Code
+**Valid:**
 
 ```typescript
-import { afterEach } from "bun:test";
-import { PrismaClient } from "generated/prisma/client";
-
 const prisma = new PrismaClient();
 
 afterEach(async () => {
-  await prisma.$disconnect();
-});
-
-// Tests...
-```
-
-### ❌ Invalid Code
-
-```typescript
-// ❌ Missing disconnect
-import { beforeEach } from "bun:test";
-import { PrismaClient } from "generated/prisma/client";
-
-const prisma = new PrismaClient();
-
-beforeEach(async () => {
-  await prisma.user.deleteMany();
-  // No disconnect!
-});
-```
-
-### How to Fix
-
-**Add afterEach with disconnect:**
-
-```typescript
-// ❌ BEFORE
-const prisma = new PrismaClient();
-
-beforeEach(async () => {
-  await prisma.user.deleteMany();
+  await prisma.$disconnect();  // Required
 });
 
 test("creates user", async () => {
-  // ...
-});
-
-// ✅ AFTER
-const prisma = new PrismaClient();
-
-beforeEach(async () => {
-  await prisma.user.deleteMany();
-});
-
-afterEach(async () => {
-  await prisma.$disconnect();
-});
-
-test("creates user", async () => {
-  // ...
+  await prisma.user.create({ data: { ... } });
 });
 ```
 
-### Related Rules
+**Invalid:**
 
-- **See also:** `prisma-patterns.mdc`, `testing-patterns.mdc`
+```typescript
+const prisma = new PrismaClient();
+// Missing afterEach with disconnect  ❌
+```
+
+**Fix:** Add `afterEach(async () => { await prisma.$disconnect(); });`
+
+**See:** `prisma-patterns.mdc`, `testing-patterns.mdc`
 
 ---
 
 ## Rule 8: `no-re-exports`
 
-**Category:** Code Organization | **Severity:** Error | **Auto-Fix:** No
+**Severity:** Error | **Auto-Fix:** No
 
-### What It Enforces
+**Enforces:** Disallows barrel exports (`export * from`). Use explicit imports/exports.
 
-Disallows re-exports (barrel exports). Instead of `export * from "module"`, use explicit imports and exports.
+**Why:** Makes dependencies clear, helps tree-shaking, improves IDE autocomplete.
 
-### Why It Exists
-
-Explicit exports:
-- Make dependencies clear
-- Make circular dependencies obvious
-- Help tree-shaking
-- Improve IDE autocomplete
-
-### ✅ Valid Code
+**Valid:**
 
 ```typescript
-// ✅ Explicit import and export
 import { User } from "./types";
 import { getUser } from "./queries";
-
-export { User };
-export { getUser };
-
-// ✅ Import directly where needed
-import { User } from "@scout-for-lol/data/types";
-import { getUser } from "@scout-for-lol/data/queries";
+export { User, getUser };
 ```
 
-### ❌ Invalid Code
+**Invalid:**
 
 ```typescript
-// ❌ Barrel export
-export * from "./types";
-export * from "./queries";
-export * as utils from "./utils";
-
-// ❌ Re-export all
-export * from "@scout-for-lol/data";
+export * from "./types";  // ❌
+export * from "./queries";  // ❌
 ```
 
-### How to Fix
-
-**Replace barrel exports with explicit imports/exports:**
-
-```typescript
-// ❌ BEFORE (index.ts)
-export * from "./user";
-export * from "./competition";
-export * from "./utils";
-
-// ✅ AFTER (index.ts)
-import { User, UserSchema } from "./user";
-import { Competition, createCompetition } from "./competition";
-import { formatDate, parseId } from "./utils";
-
-export { User, UserSchema };
-export { Competition, createCompetition };
-export { formatDate, parseId };
-```
-
-### Related Rules
-
-- `no-parent-imports` - Use packages instead of relative imports
-- **See also:** ESLint import rules in `code-quality-checklist.mdc`
+**Fix:** Import explicitly and re-export named exports.
 
 ---
 
 ## Rule 9: `no-use-effect`
 
-**Category:** React Best Practices | **Severity:** Warning | **Auto-Fix:** No
+**Severity:** Warning | **Auto-Fix:** No | **Applies to:** `**/*.{tsx,jsx}`
 
-**Applies to:** `**/*.tsx` and `**/*.jsx`
+**Enforces:** Discourages `useEffect` in favor of better patterns.
 
-### What It Enforces
+**Why:** `useEffect` often indicates race conditions, missing dependencies, or overly complex logic.
 
-Discourages useEffect in favor of better patterns.
+**Better alternatives:**
 
-### Why It Exists
+- Data fetching: Use SWR, React Query, or similar
+- Initial state: Use `useState(() => initialValue)`
+- Side effects: Move to event handlers or server
 
-useEffect is often a sign of:
-- Trying to make side effects where you should render instead
-- Race conditions
-- Missing dependencies
-- Overly complex logic
-
-Better alternatives:
-- Move logic to parent component
-- Use library-specific solutions (SWR, React Query, etc.)
-- Move state to server
-- Use proper event handlers
-
-### ✅ Better Alternatives
+**Valid:**
 
 ```typescript
-// Instead of useEffect for fetching:
 import useSWR from "swr";
 
 export function UserProfile(props: { userId: string }) {
-  const { data: user, error } = useSWR(`/api/users/${props.userId}`, fetch);
+  const { data, error } = useSWR(`/api/users/${props.userId}`, fetch);
   if (error) return <div>Failed</div>;
   if (!data) return <div>Loading...</div>;
-  return <div>{user.name}</div>;
-}
-
-// Instead of useEffect for initial state:
-export function Form() {
-  const [data, setData] = useState(() => loadInitialData());
-  // Computed in constructor, not in effect
+  return <div>{data.name}</div>;
 }
 ```
 
-### ❌ Problematic Patterns
+**Invalid:**
 
 ```typescript
-// ❌ useEffect for fetching
 export function UserProfile(props: { userId: string }) {
   const [user, setUser] = useState(null);
-  useEffect(() => {
+  useEffect(() => {  // ❌ Race condition possible
     fetch(`/api/users/${props.userId}`)
       .then(r => r.json())
       .then(setUser);
-  }, [props.userId]); // Race condition possible
-}
-
-// ❌ useEffect for side effects
-export function Button() {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    document.title = `Count: ${count}`;
-  }, [count]); // Just render this!
+  }, [props.userId]);
 }
 ```
-
-### Related Rules
-
-- **See also:** ESLint React hooks rules in `code-quality-checklist.mdc`
 
 ---
 
 ## Rule 10: `prefer-date-fns`
 
-**Category:** Best Practices | **Severity:** Off (disabled) | **Auto-Fix:** No
+**Severity:** Off (disabled) | **Auto-Fix:** No
 
-**Note:** Currently disabled with `"off"` in eslint.config.ts. Can be enabled in specific directories.
+**Enforces:** Prefer `date-fns` over direct Date methods.
 
-### What It Enforces
+**Why:** More readable, immutable, functional, better documented.
 
-Prefer `date-fns` library over direct Date methods for date manipulation.
-
-### Why It Exists
-
-`date-fns` is:
-- More readable (`addDays(date, 5)` vs `date.setDate(date.getDate() + 5)`)
-- Immutable (original date not modified)
-- Functional (easier to compose)
-- Better documented
-
-### ✅ Valid Code
-
-```typescript
-import { addDays, format, parseISO, isAfter } from "date-fns";
-
-const tomorrow = addDays(new Date(), 1);
-const formatted = format(new Date(), "yyyy-MM-dd");
-const parsed = parseISO("2024-01-15");
-const isPast = isAfter(new Date(), parsed);
-```
-
-### ❌ Problematic Patterns
-
-```typescript
-// ❌ Mutating date objects
-const date = new Date();
-date.setDate(date.getDate() + 5); // Mutates date!
-
-// ❌ Hard to read
-new Date(date.getTime() + 24 * 60 * 60 * 1000); // Next day?
-
-// ❌ Timezone issues
-new Date("2024-01-15"); // Timezone dependent
-```
-
-### How to Fix
-
-```typescript
-// ❌ BEFORE
-const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-const formatted = today.toString();
-
-// ✅ AFTER
-import { addDays, format } from "date-fns";
-
-const tomorrow = addDays(new Date(), 1);
-const formatted = format(today, "yyyy-MM-dd");
-```
-
-### Related Rules
-
-- **See also:** `code-quality-checklist.mdc`
+**Note:** Currently disabled. Can be enabled per-directory if needed.
 
 ---
 
 ## Rule 11: `prefer-bun-apis`
 
-**Category:** Performance | **Severity:** Error | **Auto-Fix:** No
+**Severity:** Error | **Auto-Fix:** No
 
-### What It Enforces
+**Enforces:** Use Bun APIs instead of Node.js APIs.
 
-Disallows Node.js APIs in favor of Bun equivalents. Bun APIs are faster and more modern.
-
-### Restricted Imports
+**Restricted:**
 
 - `fs` / `fs/promises` → `Bun.file()`, `Bun.write()`
 - `child_process` → `Bun.spawn()`
 - `crypto` → `Bun.password`, `Bun.hash()`, Web Crypto
-- `path` → `Bun` built-ins or `import.meta.dirname`
+- `path` → Bun built-ins or `import.meta.dirname`
 
-### ✅ Valid Code
+**Valid:**
 
 ```typescript
-// Reading files
 const content = await Bun.file("path/to/file").text();
-
-// Writing files
 await Bun.write("path/to/file", content);
-
-// Spawning processes
 const proc = Bun.spawn(["ls", "-la"]);
-const output = await proc.text();
-
-// Hashing
 const hash = Bun.hash("data");
-
-// Password hashing
-const hashed = await Bun.password.hash("password");
-const valid = await Bun.password.verify("password", hashed);
 ```
 
-### ❌ Invalid Code
+**Invalid:**
 
 ```typescript
-// ❌ Node.js file APIs
-import fs from "fs";
+import fs from "fs";  // ❌
 const content = fs.readFileSync("file.txt");
-fs.writeFileSync("file.txt", content);
-
-// ❌ Node.js process spawning
-import { execSync } from "child_process";
-const output = execSync("ls -la");
-
-// ❌ Node.js crypto
-import crypto from "crypto";
-const hash = crypto.createHash("sha256");
 ```
 
-### How to Fix
-
-```typescript
-// ❌ BEFORE
-import fs from "fs";
-const data = fs.readFileSync("data.json", "utf8");
-const parsed = JSON.parse(data);
-
-// ✅ AFTER
-const data = await Bun.file("data.json").text();
-const parsed = JSON.parse(data);
-```
-
-### Related Rules
-
-- **See also:** ESLint restricted imports in `code-quality-checklist.mdc`
+**Fix:** Replace with equivalent Bun API.
 
 ---
 
 ## Rule 12: `no-parent-imports`
 
-**Category:** Code Organization | **Severity:** Error | **Auto-Fix:** No
+**Severity:** Error | **Auto-Fix:** No
 
-### What It Enforces
+**Enforces:** Disallows parent directory imports (`../../../module`) between packages.
 
-Disallows parent directory imports (`../../../module`) between packages in the monorepo.
+**Why:** Breaks package boundaries, hides circular dependencies, makes refactoring harder.
 
-Use the workspace package (`@scout-for-lol/data`) instead.
-
-### Why It Exists
-
-Parent imports:
-- Break package boundaries
-- Make dependency graph unclear
-- Hide circular dependencies
-- Make refactoring harder
-
-### ✅ Valid Code
+**Valid:**
 
 ```typescript
-// ✅ Import from workspace package
-import { User } from "@scout-for-lol/data";
-import { UserSchema } from "@scout-for-lol/data";
-
-// ✅ Relative imports within same package are OK
-import { helper } from "./helper";
-import { utils } from "../utils";
+import { User } from "@scout-for-lol/data";  // Workspace package
+import { helper } from "./helper";  // Same package OK
+import { utils } from "../utils";  // Same package OK
 ```
 
-### ❌ Invalid Code
+**Invalid:**
 
 ```typescript
-// ❌ Parent directory imports across packages
-import { User } from "../../../data/src/types";
-import { helper } from "../../../packages/data/src/utils";
-
-// ❌ Escaping package boundary
-import { Component } from "../../../../packages/frontend/src/components";
+import { User } from "../../../data/src/types";  // ❌
 ```
 
-### How to Fix
-
-**Use workspace package alias instead:**
-
-```typescript
-// ❌ BEFORE
-import { User } from "../../../packages/data/src/types";
-import { UserSchema } from "../../../packages/data/src/schema";
-
-// ✅ AFTER
-import { User } from "@scout-for-lol/data";
-import { UserSchema } from "@scout-for-lol/data";
-```
-
-**Setup:**
-
-The workspace aliases are configured in:
-- `package.json` (workspace root)
-- Each package's `tsconfig.json`
-
-### Related Rules
-
-- `no-re-exports` - Don't use barrel exports
-- **See also:** ESLint import rules in `code-quality-checklist.mdc`
+**Fix:** Use workspace package alias (`@scout-for-lol/data`).
 
 ---
 
 ## Summary Table
 
-| Rule | Severity | Auto-Fix | Category | Type |
-|------|----------|----------|----------|------|
-| `no-type-assertions` | Error | No | Type Safety | Custom |
-| `prefer-zod-validation` | Error | No | Type Safety | Custom |
-| `no-function-overloads` | Error | No | Code Quality | Custom |
-| `zod-schema-naming` | Error | No | Naming | Custom |
-| `no-redundant-zod-parse` | Error | No | Code Quality | Custom |
-| `satori-best-practices` | Error | No | Report Patterns | Custom |
-| `prisma-client-disconnect` | Error | No | Testing | Custom |
-| `no-re-exports` | Error | No | Organization | Custom |
-| `no-use-effect` | Warning | No | React | Custom |
-| `prefer-date-fns` | Off | No | Best Practices | Custom |
-| `prefer-bun-apis` | Error | No | Performance | Custom |
-| `no-parent-imports` | Error | No | Organization | Custom |
+| Rule | Severity | Category | Auto-Fix |
+|------|----------|----------|----------|
+| `no-type-assertions` | Error | Type Safety | No |
+| `prefer-zod-validation` | Error | Type Safety | No |
+| `no-function-overloads` | Error | Code Quality | No |
+| `zod-schema-naming` | Error | Naming | No |
+| `no-redundant-zod-parse` | Error | Code Quality | No |
+| `satori-best-practices` | Error | Report Patterns | No |
+| `prisma-client-disconnect` | Error | Testing | No |
+| `no-re-exports` | Error | Organization | No |
+| `no-use-effect` | Warning | React | No |
+| `prefer-date-fns` | Off | Best Practices | No |
+| `prefer-bun-apis` | Error | Performance | No |
+| `no-parent-imports` | Error | Organization | No |
 
-## Cross-References
+## Related Documentation
 
-- **Type safety:** `type-safety-strategy.mdc`, `type-assertions-policy.mdc`
-- **Zod validation:** `zod-validation-patterns.mdc`
+- **Type Safety:** `type-assertions-policy.mdc`, `type-safety-strategy.mdc`
+- **Zod Validation:** `zod-validation-patterns.mdc`
 - **Testing:** `testing-patterns.mdc`, `prisma-patterns.mdc`
-- **React:** React Hooks ESLint rules in built-in configs
-- **All checks:** `code-quality-checklist.mdc`
+- **Code Quality:** `code-quality-checklist.mdc`
+- **TypeScript:** `typescript-standards.mdc`, `typescript-common-pitfalls.mdc`
 
-## Getting Help
-
-Run individual rule checks:
+## Running Checks
 
 ```bash
-# See all linting errors
-bun run lint
-
-# See specific rule
-bun run lint -- --rule no-type-assertions
-
-# See rule documentation
-# Search for the rule name in this file
+bun run lint        # All linting errors
+mise run lint       # Same via mise
+mise check          # All checks including lint
 ```
-
-Or use Cursor's quick reference: See `code-quality-checklist.mdc` for all rules at a glance.

@@ -31,7 +31,7 @@ let themeLoadPromise: Promise<void> | null = null;
 
 function loadThemeData() {
   themeLoadPromise ??= (async () => {
-    const WindowSchema = z.object({}).passthrough();
+    const WindowSchema = z.object({}).loose();
     const windowResult = WindowSchema.safeParse(globalThis.window);
     if (!windowResult.success) {
       themeState = { isDarkMode: true, isInitialized: true };
@@ -89,7 +89,7 @@ export function ThemeSelector() {
     });
 
     // Apply theme change immediately and save
-    const WindowSchema = z.object({}).passthrough();
+    const WindowSchema = z.object({}).loose();
     const windowResult = WindowSchema.safeParse(globalThis.window);
     if (windowResult.success) {
       if (newDarkMode) {

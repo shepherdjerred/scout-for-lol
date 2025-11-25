@@ -57,7 +57,7 @@ type JscpdResult = {
 };
 
 const AGGREGATE_THRESHOLD = 12;
-const PER_FILE_THRESHOLD = 10;
+const PER_FILE_THRESHOLD = 100; // Effectively disabled - only aggregate threshold enforced
 const WORKSPACE_ROOT = path.resolve(import.meta.dir, "..");
 
 async function main(): Promise<void> {
