@@ -1,9 +1,7 @@
 //! League Client Update (LCU) API integration module
 
-use base64::Engine;
 use serde::{Deserialize, Serialize};
-use sysinfo::{RefreshKind, System};
-use tracing::{debug, info};
+use tracing::info;
 
 /// Represents the connection status of the League Client
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -36,11 +34,14 @@ struct CurrentSummoner {
 }
 
 impl LcuConnection {
-    /// Attempts to find and connect to the League Client
+    /// Attempts to connect to the League Client on the standard port
     pub async fn new() -> Result<Self, String> {
-        let (port, token) = Self::find_league_client()?;
-
+        // LCU API runs on fixed port 2999 with self-signed HTTPS and no auth
+        let port = 2999;
+        let token = String::new(); // No auth needed
         let base_url = format!("https://127.0.0.1:{}", port);
+
+        info!("Connecting to LCU API at {}", base_url);
 
         // Create HTTP client that accepts self-signed certificates
         let client = reqwest::Client::builder()
@@ -61,81 +62,23 @@ impl LcuConnection {
         Ok(connection)
     }
 
-    /// Finds the League Client process and extracts connection details
-    fn find_league_client() -> Result<(u16, String), String> {
-        info!("Searching for League Client process...");
-
-        let system = System::new_with_specifics(RefreshKind::everything());
-
-        // Look for LeagueClientUx process
-        for (_, process) in system.processes() {
-            let process_name = process.name().to_string_lossy();
-
-            if process_name.contains("LeagueClientUx") || process_name.contains("LeagueClient") {
-                debug!("Found League Client process: {}", process_name);
-
-                // Extract command line arguments
-                let cmd_line = process.cmd();
-                debug!("Command line arguments: {:?}", cmd_line);
-
-                // Find port
-                let port = cmd_line
-                    .iter()
-                    .find_map(|arg| {
-                        let arg_str = arg.to_string_lossy();
-                        if arg_str.starts_with("--app-port=") {
-                            arg_str.strip_prefix("--app-port=")?.parse::<u16>().ok()
-                        } else {
-                            None
-                        }
-                    })
-                    .ok_or_else(|| "Could not find --app-port in process arguments".to_string())?;
-
-                // Find auth token
-                let token = cmd_line
-                    .iter()
-                    .find_map(|arg| {
-                        let arg_str = arg.to_string_lossy();
-                        if arg_str.starts_with("--remoting-auth-token=") {
-                            arg_str
-                                .strip_prefix("--remoting-auth-token=")
-                                .map(|s| s.to_string())
-                        } else {
-                            None
-                        }
-                    })
-                    .ok_or_else(|| {
-                        "Could not find --remoting-auth-token in process arguments".to_string()
-                    })?;
-
-                info!("Found League Client on port {}", port);
-                return Ok((port, token));
-            }
-        }
-
-        Err("League Client process not found. Make sure League of Legends is running.".to_string())
-    }
 
     /// Tests the connection to the LCU API
     async fn test_connection(&self) -> Result<(), String> {
         info!("Testing LCU connection...");
 
-        let url = format!("{}/lol-summoner/v1/current-summoner", self.base_url);
-        let auth = format!("riot:{}", self.token);
-        let auth_header = format!(
-            "Basic {}",
-            base64::engine::general_purpose::STANDARD.encode(auth.as_bytes())
-        );
+        // Try to get session info as a simple connectivity test
+        let url = format!("{}/lol-gameflow/v1/session", self.base_url);
 
         let response = self
             .client
             .get(&url)
-            .header("Authorization", auth_header)
             .send()
             .await
             .map_err(|e| format!("Failed to connect to LCU API: {}", e))?;
 
-        if response.status().is_success() {
+        if response.status().is_success() || response.status() == 404 {
+            // 404 is OK - means client is running but no active game session
             info!("LCU connection test successful");
             Ok(())
         } else {
@@ -143,18 +86,12 @@ impl LcuConnection {
         }
     }
 
-    /// Makes an authenticated GET request to the LCU API
+    /// Makes a GET request to the LCU API
     pub async fn get(&self, endpoint: &str) -> Result<reqwest::Response, String> {
         let url = format!("{}{}", self.base_url, endpoint);
-        let auth = format!("riot:{}", self.token);
-        let auth_header = format!(
-            "Basic {}",
-            base64::engine::general_purpose::STANDARD.encode(auth.as_bytes())
-        );
 
         self.client
             .get(&url)
-            .header("Authorization", auth_header)
             .send()
             .await
             .map_err(|e| format!("LCU API request failed: {}", e))
@@ -189,15 +126,6 @@ impl LcuConnection {
     /// Gets the WebSocket URL for the LCU
     pub fn get_websocket_url(&self) -> String {
         format!("wss://127.0.0.1:{}", self.port)
-    }
-
-    /// Gets the authentication header value
-    pub fn get_auth_header(&self) -> String {
-        let auth = format!("riot:{}", self.token);
-        format!(
-            "Basic {}",
-            base64::engine::general_purpose::STANDARD.encode(auth.as_bytes())
-        )
     }
 }
 
@@ -249,22 +177,10 @@ mod tests {
 
     #[test]
     fn test_lcu_connection_url_generation() {
-        // Create a mock connection (without actually connecting)
-        let _base_url = "https://127.0.0.1:12345".to_string();
-        let port: u16 = 12345;
-        let token = "test-token".to_string();
-
         // Test WebSocket URL generation
+        let port: u16 = 12345;
         let ws_url = format!("wss://127.0.0.1:{}", port);
         assert_eq!(ws_url, "wss://127.0.0.1:12345");
-
-        // Test auth header generation
-        let auth = format!("riot:{}", token);
-        let auth_header = format!(
-            "Basic {}",
-            base64::engine::general_purpose::STANDARD.encode(auth.as_bytes())
-        );
-        assert!(auth_header.starts_with("Basic "));
     }
 
     #[test]
@@ -272,18 +188,5 @@ mod tests {
         let port = 54321_u16;
         let url = format!("https://127.0.0.1:{}", port);
         assert_eq!(url, "https://127.0.0.1:54321");
-    }
-
-    #[test]
-    fn test_auth_encoding() {
-        let token = "my-test-token";
-        let auth = format!("riot:{}", token);
-        let encoded = base64::engine::general_purpose::STANDARD.encode(auth.as_bytes());
-
-        // Verify the encoded string is not empty and is base64
-        assert!(!encoded.is_empty());
-        assert!(encoded
-            .chars()
-            .all(|c| c.is_alphanumeric() || c == '+' || c == '/' || c == '='));
     }
 }
