@@ -16,6 +16,7 @@ import { noUseEffect } from "./eslint-rules/no-use-effect";
 import { preferDateFns } from "./eslint-rules/prefer-date-fns";
 import { noFunctionOverloads } from "./eslint-rules/no-function-overloads";
 import { noParentImports } from "./eslint-rules/no-parent-imports";
+import { noTypeGuards } from "./eslint-rules/no-type-guards";
 import * as importPlugin from "eslint-plugin-import";
 import * as regexpPlugin from "eslint-plugin-regexp";
 import * as eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
@@ -50,6 +51,7 @@ const customRulesPlugin = {
     "prefer-date-fns": preferDateFns,
     "no-function-overloads": noFunctionOverloads,
     "no-parent-imports": noParentImports,
+    "no-type-guards": noTypeGuards,
   },
 };
 
@@ -261,6 +263,7 @@ export default tseslint.config(
       "custom-rules/prefer-date-fns": "off",
       "custom-rules/no-function-overloads": "error",
       "custom-rules/no-parent-imports": "error",
+      "custom-rules/no-type-guards": "error",
     },
   },
   // Dagger index.ts - Dagger module API can have many parameters for external interface

@@ -1,4 +1,5 @@
 import { match as matchPattern } from "ts-pattern";
+import { z } from "zod";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
 import type {
   ChatCompletionCreateParams,
@@ -94,6 +95,102 @@ export function getOrdinalSuffix(num: number): string {
   }
 }
 
+/**
+ * Log debug information about match players before serialization
+ */
+function logMatchPlayersBeforeSerialization(match: CompletedMatch): void {
+  console.log(`[debug][buildPromptVariables] Match has ${match.players.length.toString()} player(s)`);
+  for (let i = 0; i < match.players.length; i++) {
+    const playerObj = match.players[i];
+    if (playerObj) {
+      console.log(
+        `[debug][buildPromptVariables] Match.players[${i.toString()}] keys before JSON.stringify:`,
+        Object.keys(playerObj),
+      );
+      if ("puuid" in playerObj) {
+        console.error(
+          `[debug][buildPromptVariables] ⚠️  ERROR: Match.players[${i.toString()}] has puuid field before JSON.stringify!`,
+          playerObj,
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Zod schema for player object (record with string keys)
+ */
+const PlayerRecordSchema = z.record(z.string(), z.unknown());
+
+/**
+ * Zod schema for parsed JSON structure that may contain players array
+ */
+const ParsedJsonWithPlayersSchema = z.union([
+  z.object({
+    players: z.array(PlayerRecordSchema),
+  }),
+  z.object({
+    processedMatch: z.object({
+      players: z.array(PlayerRecordSchema),
+    }),
+  }),
+  z.object({
+    players: z.array(PlayerRecordSchema),
+    processedMatch: z.object({
+      players: z.array(PlayerRecordSchema),
+    }),
+  }),
+  z.record(z.string(), z.unknown()), // Fallback for any other structure
+]);
+
+/**
+ * Check if parsed JSON has unexpected puuid fields in players array
+ */
+function checkParsedPlayersForPuuid(parsed: unknown): void {
+  const result = ParsedJsonWithPlayersSchema.safeParse(parsed);
+  if (!result.success) {
+    return;
+  }
+
+  const data = result.data;
+  const PlayersArraySchema = z.array(PlayerRecordSchema);
+  type PlayersArray = z.infer<typeof PlayersArraySchema>;
+  let players: PlayersArray | undefined = undefined;
+
+  // Check top-level players
+  if ("players" in data && Array.isArray(data.players)) {
+    const playersResult = PlayersArraySchema.safeParse(data.players);
+    if (playersResult.success) {
+      players = playersResult.data;
+    }
+  }
+  // Check processedMatch.players
+  else if ("processedMatch" in data && typeof data.processedMatch === "object" && data.processedMatch !== null) {
+    const processedMatchResult = z
+      .object({
+        players: PlayersArraySchema,
+      })
+      .safeParse(data.processedMatch);
+    if (processedMatchResult.success) {
+      players = processedMatchResult.data.players;
+    }
+  }
+
+  if (!players) {
+    return;
+  }
+
+  for (let i = 0; i < players.length; i++) {
+    const playerObj = players[i];
+    if (playerObj && "puuid" in playerObj) {
+      console.error(
+        `[debug][buildPromptVariables] ⚠️  ERROR: Parsed JSON has puuid in players[${i.toString()}]!`,
+        playerObj,
+      );
+    }
+  }
+}
+
 export function buildPromptVariables(params: {
   matchData: Record<string, string>;
   personality: Personality;
@@ -139,23 +236,7 @@ export function buildPromptVariables(params: {
   // Log match structure before serialization
   console.log(`[debug][buildPromptVariables] About to serialize match to JSON`);
   if (match.queueType !== "arena") {
-    const completedMatch = match as CompletedMatch;
-    console.log(`[debug][buildPromptVariables] Match has ${completedMatch.players.length.toString()} player(s)`);
-    for (let i = 0; i < completedMatch.players.length; i++) {
-      const playerObj = completedMatch.players[i];
-      if (playerObj) {
-        console.log(
-          `[debug][buildPromptVariables] Match.players[${i.toString()}] keys before JSON.stringify:`,
-          Object.keys(playerObj),
-        );
-        if ("puuid" in playerObj) {
-          console.error(
-            `[debug][buildPromptVariables] ⚠️  ERROR: Match.players[${i.toString()}] has puuid field before JSON.stringify!`,
-            playerObj,
-          );
-        }
-      }
-    }
+    logMatchPlayersBeforeSerialization(match);
   }
 
   const matchReport = curatedData
@@ -173,23 +254,8 @@ export function buildPromptVariables(params: {
   if (match.queueType !== "arena") {
     try {
       const parsed: unknown = JSON.parse(matchReport);
-      if (typeof parsed === "object" && parsed !== null) {
-        const parsedObj = parsed as Record<string, unknown>;
-        const players =
-          parsedObj["players"] ?? (parsedObj["processedMatch"] as Record<string, unknown> | undefined)?.["players"];
-        if (Array.isArray(players)) {
-          for (let i = 0; i < players.length; i++) {
-            const playerObj = players[i];
-            if (typeof playerObj === "object" && playerObj !== null && "puuid" in playerObj) {
-              console.error(
-                `[debug][buildPromptVariables] ⚠️  ERROR: Parsed JSON has puuid in players[${i.toString()}]!`,
-                playerObj,
-              );
-            }
-          }
-        }
-      }
-    } catch (e) {
+      checkParsedPlayersForPuuid(parsed);
+    } catch (_e) {
       // Ignore parse errors, just checking structure
     }
   }
