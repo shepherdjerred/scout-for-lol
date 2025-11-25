@@ -16,9 +16,10 @@ Two complementary systems for code verification:
 | Aspect | Mise | Dagger |
 |--------|------|--------|
 | **Use** | Daily development | CI debugging only |
-| **Speed** | 30-60 seconds | 2-5 minutes |
+| **Speed** | 60-90 seconds | 2-5 minutes |
 | **Environment** | Local machine | Docker (CI-like) |
 | **Command** | `mise check` | `dagger call check` |
+| **Checks** | 6 (parallel) | Same as CI |
 
 ## Mise: Local Development
 
@@ -28,20 +29,26 @@ Fast parallel checks for daily development.
 
 ```
 mise check
-├── lint (ESLint + custom rules)
-├── typecheck (TypeScript)
+├── typecheck (TypeScript compilation)
+├── lint (ESLint + 12 custom rules)
 ├── format (Prettier check)
 ├── test (Bun test runner)
-├── Knip (unused code)
-└── JSCPD (copy-paste detection)
+├── knip (unused code detection)
+└── duplication-check (JSCPD copy-paste detection)
 ```
 
-All run in parallel, ~30-60 seconds total.
+All run in parallel, ~60-90 seconds total.
 
 ### Commands
 
 ```bash
-# Run all checks
+# Development setup (install + generate + dagger)
+mise dev
+
+# Run full CI locally
+mise ci
+
+# Run all checks in parallel
 mise check
 
 # Individual checks
@@ -50,7 +57,7 @@ mise run lint
 mise run format
 mise run test
 
-# List available tasks
+# List all available tasks
 mise tasks
 ```
 
@@ -194,13 +201,13 @@ If tools report errors, fix them. Don't suppress warnings.
 
 | Check | Time |
 |-------|------|
-| Lint | ~5-10s |
 | Typecheck | ~10-15s |
+| Lint | ~5-10s |
 | Format | ~2-5s |
 | Test | ~20-40s |
-| Knip | ~5-10s |
-| JSCPD | ~2-5s |
-| **Total** | **~30-60s** |
+| Knip | ~10-20s |
+| JSCPD | ~5-10s |
+| **Total** | **~60-90s** |
 
 ### Dagger (Sequential)
 
@@ -276,20 +283,27 @@ mise run typecheck
 
 ```bash
 # Development (daily use)
-mise check                 # All checks
+mise check                 # All 6 checks (~60-90s)
 mise run typecheck        # TypeScript only
 mise run lint             # ESLint only
 mise run test             # Tests only
 
-# CI Debugging
-dagger call check         # Full CI checks
-dagger functions          # List targets
+# Setup
+mise dev                  # Install + generate + dagger
+
+# CI
+mise ci                   # Run full CI locally
+dagger call check         # Debug CI failures
+dagger functions          # List all Dagger targets
 
 # Formatting
-bun run format:write      # Fix formatting
-mise run format           # Check formatting
+bun run format:write      # Auto-fix formatting
 
-# Database
+# Code Quality
+bun run knip              # Find unused code
+bun run duplication-check # Find duplicate code
+
+# Database (backend package)
 cd packages/backend
 bun run db:generate       # Generate Prisma client
 bun run db:push           # Push schema to dev DB

@@ -14,6 +14,8 @@ run = [
     "bun run lint",
     "bun run format",
     "bun run test",
+    "bun run knip",
+    "bun run duplication-check",
 ]
 
 [tasks.typecheck]

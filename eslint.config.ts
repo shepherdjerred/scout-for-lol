@@ -119,7 +119,6 @@ export default tseslint.config(
             "./packages/data/tsconfig.json",
             "./packages/report/tsconfig.json",
             "./packages/frontend/tsconfig.json",
-            "./packages/review-dev-tool/tsconfig.json",
           ],
         },
         node: {

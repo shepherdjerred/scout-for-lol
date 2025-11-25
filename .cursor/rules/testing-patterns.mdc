@@ -304,26 +304,48 @@ test("complete flow", async () => {
 ### Basic Test Commands
 
 ```bash
-# Run all tests
+# Run all tests (includes eslint-rules tests)
 bun test
+bun run test              # Root: eslint-rules + all packages
 
-# Run specific test file
+# Package-specific
+cd packages/backend && bun test
+cd packages/data && bun test
+
+# Specific test file
 bun test src/database/competition.test.ts
 
-# Run with filter
-bun test --filter=pattern
-
-# Watch mode (re-run on file changes)
+# Watch mode (re-run on changes)
 bun test --watch
+
+# Coverage
+bun test --coverage
+bun test --coverage --bail  # With threshold check
+
+# CI mode
+bun test --bail --reporter=junit
+
+# Fast mode (bail after 3 failures)
+bun test --bail=3
+
+# Debug mode (randomize test order)
+bun test --randomize
 
 # Update snapshots
 bun test --update-snapshots
+```
 
-# Via mise
-mise run test
+### Test Scripts in Backend
 
-# Via ci environment
-dagger call check
+```bash
+cd packages/backend
+
+bun run test              # All tests
+bun run test:watch        # Watch mode
+bun run test:coverage     # With coverage report
+bun run test:ci           # CI mode (junit output)
+bun run test:fast         # Bail after 3 failures
+bun run test:debug        # Randomized test order
 ```
 
 ### Test Output
@@ -430,6 +452,7 @@ test("creates user", async () => {
 ```
 
 **Why:** Without disconnect:
+
 - Connections leak
 - Tests hang or timeout
 - Can't run many tests in sequence
@@ -526,6 +549,7 @@ mise check  # Includes tests
 **Cause:** Missing or incorrect database setup
 
 **Fix:**
+
 ```typescript
 // Ensure test database is created
 const testDir = mkdtempSync(join(tmpdir(), "test-"));
@@ -540,6 +564,7 @@ execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`);
 **Cause:** Prisma client not disconnected or slow operation
 
 **Fix:**
+
 ```typescript
 // Add disconnect in afterEach
 afterEach(async () => {
@@ -557,6 +582,7 @@ test("slow operation", async () => {
 **Cause:** Multiple tests running against same database
 
 **Fix:**
+
 ```typescript
 // Create unique database per test suite
 const testDbPath = join(tmpdir(), `test-${Date.now()}.db`);

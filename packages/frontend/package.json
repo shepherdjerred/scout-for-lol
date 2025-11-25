@@ -3,29 +3,37 @@
     "@astrojs/mdx": "^4.1.1",
     "@astrojs/react": "^4.3.1",
     "@astrojs/tailwind": "^6.0.0",
+    "@aws-sdk/client-s3": "^3.728.0",
+    "@scout-for-lol/data": "workspace:*",
+    "@scout-for-lol/report": "workspace:*",
     "@tailwindcss/postcss": "^4.1.11",
     "astro": "^5.0.9",
     "astro-icon": "^1.1.1",
     "@iconify-json/heroicons": "^1.2.1",
     "@iconify-json/simple-icons": "^1.2.7",
+    "date-fns": "^4.1.0",
+    "fuse.js": "^7.1.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "tailwindcss": "^4.0.0"
+    "tailwindcss": "^4.0.0",
+    "zod": "^4.0.0"
   },
   "name": "frontend",
   "scripts": {
     "astro": "astro",
     "build": "astro build",
     "dev": "astro dev",
+    "dev:report-ui": "cd dev/report-ui && vite",
+    "dev:review-tool": "cd dev/review-dev-tool && astro dev",
     "format": "prettier --check .",
-    "lint": "astro check && eslint src",
+    "lint": "astro check && eslint src dev/report-ui dev/review-dev-tool",
     "preview": "astro preview",
     "test": "echo 'Playwright tests disabled'",
     "test:ui": "echo 'Playwright tests disabled'",
     "test:headed": "echo 'Playwright tests disabled'",
     "test:report": "echo 'Playwright tests disabled'",
     "test:install": "echo 'Playwright tests disabled'",
-    "typecheck": "astro check"
+    "typecheck": "astro check && cd dev/report-ui && bunx tsc --noEmit && cd ../review-dev-tool && astro check && bunx tsc --noEmit"
   },
   "type": "module",
   "version": "0.0.1",
@@ -33,7 +41,10 @@
     "@astrojs/check": "^0.9.4",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
-    "typescript": "^5.9.3"
+    "@vitejs/plugin-react": "^5.0.0",
+    "bun-types": "latest",
+    "typescript": "^5.9.3",
+    "vite": "^7.0.0"
   },
   "description": "Web frontend for Scout for League of Legends",
   "keywords": [

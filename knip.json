@@ -62,24 +62,15 @@
       "project": ["src/**/*.ts", "src/**/*.tsx"],
       "ignoreDependencies": ["react", "yoga-wasm-web", "@types/react"]
     },
-    "packages/report-ui": {
-      "entry": ["src/main.tsx", "src/arena-example.ts"],
-      "project": ["src/**/*.ts", "src/**/*.tsx"]
-    },
     "packages/frontend": {
-      "entry": ["src/pages/**/*.astro"],
-      "project": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.astro", "astro.config.mjs"],
+      "entry": ["src/pages/**/*.astro", "dev/report-ui/src/main.tsx", "dev/report-ui/src/arena-example.ts", "dev/review-dev-tool/src/pages/**/*.astro"],
+      "project": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.astro", "dev/**/*.ts", "dev/**/*.tsx", "dev/**/*.astro", "astro.config.mjs"],
       "ignoreDependencies": [
         "@tailwindcss/postcss",
         "@astrojs/tailwind",
         "@iconify-json/heroicons",
         "@iconify-json/simple-icons"
       ]
-    },
-    "packages/review-dev-tool": {
-      "entry": ["src/main.tsx"],
-      "project": ["src/**/*.ts", "src/**/*.tsx"],
-      "ignoreDependencies": ["@tailwindcss/postcss"]
     }
   }
 }

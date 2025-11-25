@@ -8,20 +8,22 @@ alwaysApply: false
 
 Quick reference for pre-commit verification and error fixing.
 
-## Pre-Commit Workflow (30 seconds)
+## Pre-Commit Workflow
 
 ```bash
-# Run this ONE command before committing
-mise check
-
-# If it passes, commit. If it fails, see error fixing guide below.
+mise check  # Runs 6 checks in parallel (~60-90s)
 ```
 
-**When mise passes but CI fails:**
+**mise check includes:**
 
-```bash
-dagger call check  # Debug CI-specific issues
-```
+- TypeScript compilation
+- ESLint (with 12 custom rules)
+- Prettier formatting
+- Bun tests
+- Knip (unused code detection)
+- JSCPD (duplicate code detection)
+
+**When mise passes but CI fails:** `dagger call check`
 
 **See:** `mise-and-dagger-usage.mdc` for details.
 
@@ -34,10 +36,32 @@ bun run format:write
 # 2. Run all checks
 mise check
 
-# 3. Commit when all pass
+# 3. Commit (triggers lint-staged hooks automatically)
 git add .
 git commit -m "message"
 ```
+
+### Lint-Staged (Pre-Commit Hooks)
+
+Husky + lint-staged automatically run on `git commit`:
+
+**Per-file checks:**
+
+- Prettier auto-format
+- Markdown linting
+- Per-package typecheck + lint for changed files
+- Run relevant tests for changed files
+- Check for eslint-disable suppressions
+
+**Example:** Edit `packages/backend/src/user.ts` → commit triggers:
+
+```bash
+cd packages/backend && bun run typecheck
+cd packages/backend && bunx eslint --cache --fix
+bun ./scripts/run-relevant-tests.ts packages/backend
+```
+
+**See:** `package.json` lint-staged configuration for full details.
 
 ## Quick Error Fixing Guide
 
@@ -98,18 +122,24 @@ error: Line too long (127 characters)
 ### Unused Code (Knip)
 
 ```
-Unused export: oldFunction
+Unused export: oldFunction in src/utils.ts
 ```
 
-**Fix:** Delete unused code or use it.
+**Fix:** Delete unused code or ensure it's imported.
+
+**Config:** `knip.json` (threshold: warn, ignores test files)
 
 ### Duplicate Code (JSCPD)
 
 ```
-2 duplicates found in src/utils.ts and src/helpers.ts
+Found 2 clones (15% duplication)
+src/utils.ts [10:25]
+src/helpers.ts [45:60]
 ```
 
 **Fix:** Extract common code into shared utility.
+
+**Config:** `.jscpd.json` (threshold: 12%, minLines: 9, minTokens: 30)
 
 ## Order to Fix Issues
 
@@ -214,12 +244,14 @@ function create(params: { name: string; email: string; ... }) { }
 
 | Command | Duration | Purpose |
 |---------|----------|---------|
-| `mise check` | 30-60s | All checks (local) |
+| `mise check` | 60-90s | All 6 checks (local) |
 | `dagger call check` | 2-5m | All checks (CI-like) |
 | `bun run format:write` | 5-10s | Auto-fix formatting |
-| `bun run typecheck` | 10-20s | Check types only |
-| `bun run lint` | 10-20s | Check code quality only |
-| `bun test` | 20-60s | Run tests only |
+| `bun run typecheck` | 10-20s | TypeScript only |
+| `bun run lint` | 10-20s | ESLint only |
+| `bun test` | 20-60s | Tests only |
+| `bun run knip` | 10-20s | Unused code detection |
+| `bun run duplication-check` | 5-10s | Duplicate code detection |
 
 ## Related Documentation
 

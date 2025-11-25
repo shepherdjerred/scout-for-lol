@@ -74,6 +74,29 @@ model CompetitionParticipant {
 }
 ```
 
+## Prisma Commands
+
+```bash
+cd packages/backend
+
+# Generate Prisma client + brand types
+bun run db:generate       # Runs: prisma generate → brand-types → prettier
+
+# Development database
+bun run db:push           # Push schema without migration (for dev/test)
+bun run db:migrate        # Create and apply migration (for production)
+
+# Database UI
+bun run db:studio         # Open Prisma Studio on http://localhost:5555
+
+# Brand types (run automatically by db:generate)
+bun run brand-types       # Add branded types to generated Prisma client
+```
+
+**Use `db:push` for:** Development, testing, schema experimentation
+
+**Use `db:migrate` for:** Production, team collaboration, migration history
+
 ## Test Database Setup
 
 **See:** `testing-patterns.mdc` for complete test database setup patterns.

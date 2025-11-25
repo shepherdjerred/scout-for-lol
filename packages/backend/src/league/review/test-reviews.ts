@@ -5,7 +5,7 @@
  */
 
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
-import { getExampleMatch } from "@scout-for-lol/report-ui/src/example.js";
+import { getExampleMatch } from "@scout-for-lol/frontend/dev/report-ui/src/example.js";
 import type { ArenaMatch, CompletedMatch, PlayerConfigEntry, MatchDto } from "@scout-for-lol/data";
 import {
   MatchIdSchema,

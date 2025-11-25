@@ -9,15 +9,8 @@ import {
   getBackendTestReport,
 } from "@scout-for-lol/.dagger/src/backend";
 import { checkReport, getReportCoverage, getReportTestReport } from "@scout-for-lol/.dagger/src/report";
-import {
-  checkReportUi,
-  getReportUiCoverage,
-  getReportUiTestReport,
-  buildReportUi,
-} from "@scout-for-lol/.dagger/src/report-ui";
 import { checkData, getDataCoverage, getDataTestReport } from "@scout-for-lol/.dagger/src/data";
 import { checkFrontend, buildFrontend, deployFrontend } from "@scout-for-lol/.dagger/src/frontend";
-import { checkReviewDevTool } from "@scout-for-lol/.dagger/src/review-dev-tool";
 import { getGitHubContainer, getBunNodeContainer } from "@scout-for-lol/.dagger/src/base";
 
 // Helper function to log with timestamp
@@ -86,7 +79,7 @@ export class ScoutForLol {
     await withTiming("parallel package checks (lint, typecheck, tests)", async () => {
       logWithTimestamp("🔄 Running lint, typecheck, and tests in parallel for all packages...");
       logWithTimestamp(
-        "📦 Packages being checked: backend, report, report-ui, data, frontend, review-dev-tool, eslint-rules",
+        "📦 Packages being checked: backend, report, data, frontend, eslint-rules",
       );
 
       // Force execution of all containers in parallel
@@ -101,11 +94,6 @@ export class ScoutForLol {
           await container.sync();
           return container;
         }),
-        withTiming("report-ui check (lint + typecheck + tests)", async () => {
-          const container = checkReportUi(source);
-          await container.sync();
-          return container;
-        }),
         withTiming("data check (lint + typecheck)", async () => {
           const container = checkData(source);
           await container.sync();
@@ -113,11 +101,6 @@ export class ScoutForLol {
         }),
         withTiming("frontend check (lint + typecheck)", async () => {
           const container = checkFrontend(source);
-          await container.sync();
-          return container;
-        }),
-        withTiming("review-dev-tool check (lint + typecheck)", async () => {
-          const container = checkReviewDevTool(source);
           await container.sync();
           return container;
         }),
@@ -745,111 +728,6 @@ export class ScoutForLol {
 
     logWithTimestamp("✅ Frontend deployment completed successfully");
     return `✅ Frontend deployed to Cloudflare Pages (project: ${projectName}, branch: ${branch})\n\n${result}`;
-  }
-
-  /**
-   * Check the report-ui package
-   * @param source The workspace source directory
-   * @returns A message indicating completion
-   */
-  @func()
-  async checkReportUi(
-    @argument({
-      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
-      defaultPath: ".",
-    })
-    source: Directory,
-  ): Promise<string> {
-    logWithTimestamp("🔍 Starting report-ui package check");
-
-    await withTiming("report-ui package check", async () => {
-      const container = checkReportUi(source);
-      await container.sync();
-      return container;
-    });
-
-    logWithTimestamp("✅ Report-ui check completed successfully");
-    return "Report-ui check completed successfully";
-  }
-
-  /**
-   * Get report-ui test coverage
-   * @param source The workspace source directory
-   * @returns The coverage directory
-   */
-  @func()
-  reportUiCoverage(
-    @argument({
-      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
-      defaultPath: ".",
-    })
-    source: Directory,
-  ): Directory {
-    logWithTimestamp("📊 Exporting report-ui test coverage");
-    return getReportUiCoverage(source);
-  }
-
-  /**
-   * Get report-ui test report (junit.xml)
-   * @param source The workspace source directory
-   * @returns The directory containing junit.xml
-   */
-  @func()
-  reportUiTestReport(
-    @argument({
-      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
-      defaultPath: ".",
-    })
-    source: Directory,
-  ): Directory {
-    logWithTimestamp("📋 Exporting report-ui test report");
-    return getReportUiTestReport(source);
-  }
-
-  /**
-   * Build the report-ui package
-   * @param source The workspace source directory
-   * @returns The built dist directory
-   */
-  @func()
-  async buildReportUi(
-    @argument({
-      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
-      defaultPath: ".",
-    })
-    source: Directory,
-  ): Promise<Directory> {
-    logWithTimestamp("🏗️  Building report-ui package");
-
-    const result = await withTiming("report-ui build", () => Promise.resolve(buildReportUi(source)));
-
-    logWithTimestamp("✅ Report-ui build completed successfully");
-    return result;
-  }
-
-  /**
-   * Check the review-dev-tool package
-   * @param source The workspace source directory
-   * @returns A message indicating completion
-   */
-  @func()
-  async checkReviewDevTool(
-    @argument({
-      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
-      defaultPath: ".",
-    })
-    source: Directory,
-  ): Promise<string> {
-    logWithTimestamp("🔍 Starting review-dev-tool package check");
-
-    await withTiming("review-dev-tool package check", async () => {
-      const container = checkReviewDevTool(source);
-      await container.sync();
-      return container;
-    });
-
-    logWithTimestamp("✅ Review-dev-tool check completed successfully");
-    return "Review-dev-tool check completed successfully";
   }
 
   /**

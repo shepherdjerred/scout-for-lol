@@ -50,6 +50,23 @@ fetchData(id, "read");  // Clear intent
 
 **Defaults forbidden for:** Core behavior, data integrity, security/permissions
 
+## Naming Conventions (ESLint Enforced)
+
+ESLint enforces TypeScript naming standards via `@typescript-eslint/naming-convention`:
+
+| Type | Format | Examples |
+|------|--------|----------|
+| Functions | camelCase or PascalCase | `getUser`, `UserComponent` |
+| Variables | camelCase | `userName`, `itemCount` |
+| Constants | UPPER_CASE or camelCase | `MAX_ITEMS`, `defaultTimeout` |
+| Zod Schemas | PascalCase + `Schema` | `UserSchema` (custom rule) |
+| Types | PascalCase | `User`, `CompetitionStatus` |
+| Interfaces | PascalCase | `UserInterface` (prefer `type`) |
+| Enum members | PascalCase or UPPER_CASE | `Active`, `MAX_SIZE` |
+| Parameters | camelCase | `userId`, `options` |
+
+**Note:** `_` prefix allowed for unused variables (e.g., `_error`)
+
 ## Dependencies
 
 - Use `remeda` for functional data transformations

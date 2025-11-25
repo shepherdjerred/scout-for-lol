@@ -41,38 +41,67 @@ This is a monorepo using **Bun workspaces** with packages:
 ### Quick Code Verification
 
 ```bash
-mise check          # Fast local checks (30-60s)
+mise check          # All 6 checks in parallel (60-90s)
 dagger call check   # CI debugging only (2-5min)
 ```
+
+**mise check includes:** TypeScript, ESLint, Prettier, Tests, Knip, JSCPD
 
 **Strategy:** Use `mise check` for 95% of development. Use `dagger call check` only when debugging CI failures.
 
 **See:** `mise-and-dagger-usage.mdc` for complete guide.
 
+### Pre-Commit Hooks (Lint-Staged)
+
+Husky runs lint-staged on every commit, checking only changed files:
+
+**Runs automatically:**
+
+- Prettier auto-format on all files
+- Markdown linting on .md files
+- Per-package typecheck for changed TypeScript files
+- ESLint with auto-fix for changed files
+- Relevant tests for changed files
+- Suppression checks for eslint-disable comments
+
+**Example workflow:**
+
+```bash
+# Edit file
+vim packages/backend/src/user.ts
+
+# Stage and commit (hooks run automatically)
+git add packages/backend/src/user.ts
+git commit -m "update user logic"
+# → Prettier formats
+# → cd packages/backend && bun run typecheck
+# → cd packages/backend && bunx eslint --cache --fix
+# → bun ./scripts/run-relevant-tests.ts packages/backend
+```
+
+**See:** `package.json` lint-staged section for configuration.
+
 ### Root Level Commands
 
 ```bash
-# Install dependencies across all packages
-bun run install:all
+# Code quality (runs in all packages via --filter='*')
+bun run typecheck        # Type check all packages
+bun run lint             # Lint all packages
+bun run format           # Check formatting all packages
+bun run test             # eslint-rules tests + all packages tests
 
-# Type checking across all packages
-bun run typecheck:all
+# Code analysis
+bun run test:eslint-rules # Test custom ESLint rules only
+bun run knip             # Find unused code (Knip)
+bun run duplication-check # Find duplicate code (JSCPD)
 
-# Linting across all packages
-bun run lint:all
-
-# Formatting across all packages
-bun run format:all
-
-# Testing across all packages
-bun run test:all
-
-# Generate Prisma client and other generated code
-bun run generate
-
-# Clean all node_modules
-bun run clean
+# Generation & maintenance
+bun run generate         # Generate code in all packages
+bun run clean            # Remove all node_modules
+bun run prepare          # Husky setup (auto-runs on install)
 ```
+
+**Note:** Root scripts use `bun run --filter='*'` to run across all workspace packages.
 
 ### Package-Specific Commands
 

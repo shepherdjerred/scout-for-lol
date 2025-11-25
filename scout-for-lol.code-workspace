@@ -13,20 +13,12 @@
       "path": "packages/report",
     },
     {
-      "name": "report-ui",
-      "path": "packages/report-ui",
-    },
-    {
       "name": "data",
       "path": "packages/data",
     },
     {
       "name": "frontend",
       "path": "packages/frontend",
-    },
-    {
-      "name": "review-dev-tool",
-      "path": "packages/review-dev-tool",
     },
     {
       "name": "root",
