@@ -22,20 +22,14 @@ fn main() {
             // Copy to resources for embedding
             let dest = resources_dir.join("WebView2Loader.dll");
             if let Err(e) = fs::copy(&dll_path, &dest) {
-                eprintln!(
-                    "cargo:warning=Failed to copy WebView2Loader.dll to resources: {}",
-                    e
-                );
+                eprintln!("cargo:warning=Failed to copy WebView2Loader.dll to resources: {e}");
             } else {
                 println!("cargo:rerun-if-changed={}", dll_path.display());
             }
 
             // Also ensure DLL stays in release directory (it should already be there)
             // This ensures Windows can find it when loading the executable
-            println!(
-                "cargo:warning=WebView2Loader.dll should be in: {}",
-                dll_path.display()
-            );
+            println!("cargo:warning=WebView2Loader.dll should be in: {}", dll_path.display());
         }
     }
 }
