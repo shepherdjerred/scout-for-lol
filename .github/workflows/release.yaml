@@ -1,9 +1,12 @@
 name: Release Desktop
 
 on:
-  push:
-    tags:
-      - "desktop-v*.*.*"
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       version:
@@ -16,8 +19,11 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-24.04
+    # Only run if CI workflow succeeded (or manual dispatch)
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     outputs:
       release_id: ${{ steps.create-release.outputs.result }}
+      version: ${{ steps.get-version.outputs.version }}
 
     steps:
       - name: Checkout repository
@@ -29,12 +35,16 @@ jobs:
           node-version: 22
 
       - name: Get version
+        id: get-version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "PACKAGE_VERSION=${{ github.event.inputs.version }}" >> "$GITHUB_ENV"
+            VERSION="${{ github.event.inputs.version }}"
           else
-            echo "PACKAGE_VERSION=${GITHUB_REF#refs/tags/desktop-v}" >> "$GITHUB_ENV"
+            # Use the CI run number as version: 1.0.RUN_NUMBER
+            VERSION="1.0.${{ github.run_number }}"
           fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "PACKAGE_VERSION=${VERSION}" >> "$GITHUB_ENV"
 
       - name: Create release
         id: create-release
@@ -100,6 +110,15 @@ jobs:
 
       - name: Install frontend dependencies
         run: bun install --frozen-lockfile
+
+      - name: Update package version
+        run: |
+          cd packages/desktop
+          # Update version in package.json
+          bun x json -I -f package.json -e "this.version='${{ needs.create-release.outputs.version }}'"
+          # Update version in Cargo.toml
+          cd src-tauri
+          sed -i 's/^version = ".*"/version = "${{ needs.create-release.outputs.version }}"/' Cargo.toml
 
       - name: Build desktop app
         uses: tauri-apps/tauri-action@v0

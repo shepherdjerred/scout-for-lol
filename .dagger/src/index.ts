@@ -138,7 +138,7 @@ export class ScoutForLol {
   }
 
   /**
-   * Build all packages (backend image, report npm package)
+   * Build all packages (backend image, desktop app)
    * @param source The source directory
    * @param version The version to build
    * @param gitSha The git SHA
@@ -177,8 +177,16 @@ export class ScoutForLol {
       }
     });
 
-    logWithTimestamp("🎉 Backend image built successfully");
-    return "Backend image built successfully";
+    // Build desktop application
+    await withTiming("desktop application build", async () => {
+      logWithTimestamp("🔄 Building desktop application...");
+      const container = buildDesktopLinux(source, version);
+      await container.sync();
+      return container;
+    });
+
+    logWithTimestamp("🎉 All builds completed successfully");
+    return "All builds completed successfully";
   }
 
   /**
@@ -273,6 +281,19 @@ export class ScoutForLol {
       });
     } else {
       logWithTimestamp("⏭️ Phase 5: Skipping frontend deployment (no Cloudflare credentials or branch not provided)");
+    }
+
+    // Build and export desktop artifacts in prod
+    if (env === "prod") {
+      await withTiming("CI desktop artifacts phase", async () => {
+        logWithTimestamp("📦 Phase 6: Exporting desktop artifacts...");
+        const artifacts = getDesktopLinuxArtifacts(source, version);
+        // Export to a well-known location for GitHub Actions to upload
+        await artifacts.export("./desktop-artifacts");
+        logWithTimestamp("✅ Desktop artifacts exported to ./desktop-artifacts");
+      });
+    } else {
+      logWithTimestamp("⏭️ Phase 6: Skipping desktop artifacts export (not prod environment)");
     }
 
     logWithTimestamp("🎉 CI pipeline completed successfully");
