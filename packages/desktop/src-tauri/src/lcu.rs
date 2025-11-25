@@ -1,0 +1,187 @@
+use base64::Engine;
+use serde::{Deserialize, Serialize};
+use sysinfo::{ProcessRefreshKind, RefreshKind, System};
+use tracing::{debug, error, info};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LcuStatus {
+    pub connected: bool,
+    pub summoner_name: Option<String>,
+    pub in_game: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct LcuConnection {
+    pub port: u16,
+    pub token: String,
+    pub base_url: String,
+    client: reqwest::Client,
+}
+
+#[derive(Debug, Deserialize)]
+struct CurrentSummoner {
+    #[serde(rename = "displayName")]
+    display_name: String,
+}
+
+impl LcuConnection {
+    /// Attempts to find and connect to the League Client
+    pub async fn new() -> Result<Self, String> {
+        let (port, token) = Self::find_league_client()?;
+
+        let base_url = format!("https://127.0.0.1:{}", port);
+
+        // Create HTTP client that accepts self-signed certificates
+        let client = reqwest::Client::builder()
+            .danger_accept_invalid_certs(true)
+            .build()
+            .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+
+        let connection = Self {
+            port,
+            token,
+            base_url,
+            client,
+        };
+
+        // Test the connection
+        connection.test_connection().await?;
+
+        Ok(connection)
+    }
+
+    /// Finds the League Client process and extracts connection details
+    fn find_league_client() -> Result<(u16, String), String> {
+        info!("Searching for League Client process...");
+
+        let system = System::new_with_specifics(
+            RefreshKind::new().with_processes(ProcessRefreshKind::everything()),
+        );
+
+        // Look for LeagueClientUx process
+        for (_, process) in system.processes() {
+            let process_name = process.name().to_string_lossy();
+
+            if process_name.contains("LeagueClientUx") || process_name.contains("LeagueClient") {
+                debug!("Found League Client process: {}", process_name);
+
+                // Extract command line arguments
+                let cmd_line = process.cmd();
+
+                // Find port
+                let port = cmd_line
+                    .iter()
+                    .find_map(|arg| {
+                        let arg_str = arg.to_string_lossy();
+                        if arg_str.starts_with("--app-port=") {
+                            arg_str.strip_prefix("--app-port=")?.parse::<u16>().ok()
+                        } else {
+                            None
+                        }
+                    })
+                    .ok_or_else(|| "Could not find --app-port in process arguments".to_string())?;
+
+                // Find auth token
+                let token = cmd_line
+                    .iter()
+                    .find_map(|arg| {
+                        let arg_str = arg.to_string_lossy();
+                        if arg_str.starts_with("--remoting-auth-token=") {
+                            arg_str.strip_prefix("--remoting-auth-token=").map(|s| s.to_string())
+                        } else {
+                            None
+                        }
+                    })
+                    .ok_or_else(|| "Could not find --remoting-auth-token in process arguments".to_string())?;
+
+                info!("Found League Client on port {}", port);
+                return Ok((port, token));
+            }
+        }
+
+        Err("League Client process not found. Make sure League of Legends is running.".to_string())
+    }
+
+    /// Tests the connection to the LCU API
+    async fn test_connection(&self) -> Result<(), String> {
+        info!("Testing LCU connection...");
+
+        let url = format!("{}/lol-summoner/v1/current-summoner", self.base_url);
+        let auth = format!("riot:{}", self.token);
+        let auth_header = format!(
+            "Basic {}",
+            base64::engine::general_purpose::STANDARD.encode(auth.as_bytes())
+        );
+
+        let response = self.client
+            .get(&url)
+            .header("Authorization", auth_header)
+            .send()
+            .await
+            .map_err(|e| format!("Failed to connect to LCU API: {}", e))?;
+
+        if response.status().is_success() {
+            info!("LCU connection test successful");
+            Ok(())
+        } else {
+            Err(format!("LCU API returned error: {}", response.status()))
+        }
+    }
+
+    /// Makes an authenticated GET request to the LCU API
+    pub async fn get(&self, endpoint: &str) -> Result<reqwest::Response, String> {
+        let url = format!("{}{}", self.base_url, endpoint);
+        let auth = format!("riot:{}", self.token);
+        let auth_header = format!(
+            "Basic {}",
+            base64::engine::general_purpose::STANDARD.encode(auth.as_bytes())
+        );
+
+        self.client
+            .get(&url)
+            .header("Authorization", auth_header)
+            .send()
+            .await
+            .map_err(|e| format!("LCU API request failed: {}", e))
+    }
+
+    /// Gets the current summoner information
+    pub async fn get_current_summoner(&self) -> Result<String, String> {
+        let response = self.get("/lol-summoner/v1/current-summoner").await?;
+
+        if response.status().is_success() {
+            let summoner: CurrentSummoner = response
+                .json()
+                .await
+                .map_err(|e| format!("Failed to parse summoner data: {}", e))?;
+
+            Ok(summoner.display_name)
+        } else {
+            Err(format!("Failed to get summoner: {}", response.status()))
+        }
+    }
+
+    /// Gets the current LCU connection status
+    pub fn get_status(&self) -> LcuStatus {
+        LcuStatus {
+            connected: true,
+            summoner_name: None, // Will be populated when needed
+            in_game: false,      // TODO: Implement game detection
+        }
+    }
+
+    /// Gets the WebSocket URL for the LCU
+    pub fn get_websocket_url(&self) -> String {
+        format!("wss://127.0.0.1:{}", self.port)
+    }
+
+    /// Gets the authentication header value
+    pub fn get_auth_header(&self) -> String {
+        let auth = format!("riot:{}", self.token);
+        format!(
+            "Basic {}",
+            base64::engine::general_purpose::STANDARD.encode(auth.as_bytes())
+        )
+    }
+}

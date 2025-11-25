@@ -1,0 +1,62 @@
+{
+  "name": "@scout-for-lol/desktop",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bunx tauri dev",
+    "dev:frontend": "bunx vite",
+    "build": "bunx tauri build",
+    "build:frontend": "bunx vite build",
+    "preview": "bunx vite preview",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "test:ci": "bun test --bail --reporter=junit --reporter-outfile=./junit.xml",
+    "lint": "bunx eslint src",
+    "format": "bunx prettier --check src",
+    "format:write": "bunx prettier --write src",
+    "typecheck": "bunx tsc --noEmit"
+  },
+  "dependencies": {
+    "@scout-for-lol/data": "workspace:*",
+    "@tauri-apps/api": "^2.4.0",
+    "@tauri-apps/plugin-shell": "^2.2.2",
+    "@tauri-apps/plugin-updater": "^2.2.0",
+    "@tauri-apps/plugin-dialog": "^2.2.0",
+    "@tauri-apps/plugin-fs": "^2.2.0",
+    "discord.js": "^14.18.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "zod": "^4.0.0",
+    "date-fns": "^4.1.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.4.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.0",
+    "bun-types": "latest",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.0"
+  },
+  "description": "Desktop client for Scout for League of Legends live game updates",
+  "keywords": [
+    "tauri",
+    "desktop",
+    "league-of-legends",
+    "discord",
+    "typescript",
+    "react"
+  ],
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shepherdjerred/scout-for-lol.git"
+  },
+  "homepage": "https://github.com/shepherdjerred/scout-for-lol",
+  "bugs": {
+    "url": "https://github.com/shepherdjerred/scout-for-lol/issues"
+  }
+}
