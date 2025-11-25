@@ -1,49 +1,74 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { PrismaClient } from "../../../../generated/prisma/client/index.js";
-import { execSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { createCompetition } from "../../../database/competition/queries.js";
-import { addParticipant } from "../../../database/competition/participants.js";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { createCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
+import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
+import { type DiscordGuildId, type DiscordAccountId, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
+import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.js";
 
-import { testGuildId, testAccountId, testChannelId } from "../../../testing/test-ids.js";
 // Create a test database
-const testDir = mkdtempSync(join(tmpdir(), "add-all-members-test-"));
-const testDbPath = join(testDir, "test.db");
-const schemaPath = join(__dirname, "../../../..", "prisma/schema.prisma");
-execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
-  cwd: join(__dirname, "../../../.."),
-  env: {
-    ...process.env,
-    DATABASE_URL: `file:${testDbPath}`,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-  },
-  stdio: "ignore",
-});
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: `file:${testDbPath}`,
-    },
-  },
-});
+const { prisma } = createTestDatabase("add-all-members-test");
 
 beforeEach(async () => {
   // Clean up database before each test
-  await prisma.competitionSnapshot.deleteMany();
-  await prisma.competitionParticipant.deleteMany();
-  await prisma.competition.deleteMany();
-  await prisma.subscription.deleteMany();
-  await prisma.account.deleteMany();
-  await prisma.player.deleteMany();
+  await deleteIfExists(() => prisma.competitionSnapshot.deleteMany());
+  await deleteIfExists(() => prisma.competitionParticipant.deleteMany());
+  await deleteIfExists(() => prisma.competition.deleteMany());
+  await deleteIfExists(() => prisma.subscription.deleteMany());
+  await deleteIfExists(() => prisma.account.deleteMany());
+  await deleteIfExists(() => prisma.player.deleteMany());
 });
 afterAll(async () => {
   await prisma.$disconnect();
 });
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+async function createCompetitionWithPlayers(serverId: DiscordGuildId, ownerId: DiscordAccountId, playerCount: number) {
+  const now = new Date();
+  const startDate = new Date(now.getTime() + 1000 * 60 * 60); // 1 hour from now
+  const endDate = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 7); // 7 days from now
+
+  // Create a competition
+  const competition = await createCompetition(prisma, {
+    serverId,
+    ownerId,
+    channelId: testChannelId("123000000"),
+    title: "Test Competition",
+    description: "Test description",
+    visibility: "SERVER_WIDE",
+    maxParticipants: 100,
+    dates: {
+      type: "FIXED_DATES",
+      startDate,
+      endDate,
+    },
+    criteria: {
+      type: "MOST_GAMES_PLAYED",
+      queue: "SOLO",
+    },
+  });
+
+  // Create players
+  const players = await Promise.all(
+    Array.from({ length: playerCount }).map((_, idx) => {
+      const playerNum = idx + 1;
+      return prisma.player.create({
+        data: {
+          alias: `Player${playerNum.toString()}`,
+          discordId: testAccountId((playerNum * 100000000).toString()),
+          serverId: DiscordGuildIdSchema.parse(serverId),
+          creatorDiscordId: ownerId,
+          createdTime: new Date(),
+          updatedTime: new Date(),
+        },
+      });
+    }),
+  );
+
+  return { competition, players };
+}
 
 // ============================================================================
 // Integration Tests for Add All Members Functionality
@@ -53,88 +78,13 @@ describe("Add all members to competition", () => {
   test("successfully adds all server players to competition", async () => {
     const serverId = testGuildId("12300");
     const ownerId = testAccountId("0");
-
-    const now = new Date();
-    const startDate = new Date(now.getTime() + 1000 * 60 * 60); // 1 hour from now
-    const endDate = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 7); // 7 days from now
-
-    // Create a competition
-    const competition = await createCompetition(prisma, {
-      serverId,
-      ownerId,
-      channelId: testChannelId("123000000"),
-      title: "Server-wide Competition",
-      description: "Everyone is automatically joined!",
-      visibility: "SERVER_WIDE",
-      maxParticipants: 100,
-      dates: {
-        type: "FIXED_DATES",
-        startDate,
-        endDate,
-      },
-      criteria: {
-        type: "MOST_GAMES_PLAYED",
-        queue: "SOLO",
-      },
-    });
-
-    // Create 5 players in this server
-    const players = await Promise.all([
-      prisma.player.create({
-        data: {
-          alias: "Player1",
-          discordId: testAccountId("100000000"),
-          serverId: DiscordGuildIdSchema.parse(serverId),
-          creatorDiscordId: ownerId,
-          createdTime: new Date(),
-          updatedTime: new Date(),
-        },
-      }),
-      prisma.player.create({
-        data: {
-          alias: "Player2",
-          discordId: testAccountId("200000000"),
-          serverId: DiscordGuildIdSchema.parse(serverId),
-          creatorDiscordId: ownerId,
-          createdTime: new Date(),
-          updatedTime: new Date(),
-        },
-      }),
-      prisma.player.create({
-        data: {
-          alias: "Player3",
-          discordId: testAccountId("300000000"),
-          serverId: DiscordGuildIdSchema.parse(serverId),
-          creatorDiscordId: ownerId,
-          createdTime: new Date(),
-          updatedTime: new Date(),
-        },
-      }),
-      prisma.player.create({
-        data: {
-          alias: "Player4",
-          discordId: testAccountId("400000000"),
-          serverId: DiscordGuildIdSchema.parse(serverId),
-          creatorDiscordId: ownerId,
-          createdTime: new Date(),
-          updatedTime: new Date(),
-        },
-      }),
-      prisma.player.create({
-        data: {
-          alias: "Player5",
-          discordId: testAccountId("500000000"),
-          serverId: DiscordGuildIdSchema.parse(serverId),
-          creatorDiscordId: ownerId,
-          createdTime: new Date(),
-          updatedTime: new Date(),
-        },
-      }),
-    ]);
+    const { competition, players } = await createCompetitionWithPlayers(serverId, ownerId, 5);
 
     // Simulate the bulk add operation from the command
     const addResults = await Promise.allSettled(
-      players.map((player) => addParticipant(prisma, competition.id, player.id, "JOINED")),
+      players.map((player) =>
+        addParticipant({ prisma, competitionId: competition.id, playerId: player.id, status: "JOINED" }),
+      ),
     );
 
     // All should succeed
@@ -156,70 +106,16 @@ describe("Add all members to competition", () => {
   test("handles partial failures when some players already joined", async () => {
     const serverId = testGuildId("45600");
     const ownerId = testAccountId("0");
-
-    const now = new Date();
-    const startDate = new Date(now.getTime() + 1000 * 60 * 60); // 1 hour from now
-    const endDate = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 7); // 7 days from now
-
-    const competition = await createCompetition(prisma, {
-      serverId,
-      ownerId,
-      channelId: testChannelId("456000000"),
-      title: "Partial Join Test",
-      description: "Some players already joined",
-      visibility: "OPEN",
-      maxParticipants: 100,
-      dates: {
-        type: "FIXED_DATES",
-        startDate,
-        endDate,
-      },
-      criteria: {
-        type: "MOST_GAMES_PLAYED",
-        queue: "SOLO",
-      },
-    });
-
-    // Create 3 players
-    const players = await Promise.all([
-      prisma.player.create({
-        data: {
-          alias: "PlayerA",
-          discordId: testAccountId("00000000"),
-          serverId: DiscordGuildIdSchema.parse(serverId),
-          creatorDiscordId: ownerId,
-          createdTime: new Date(),
-          updatedTime: new Date(),
-        },
-      }),
-      prisma.player.create({
-        data: {
-          alias: "PlayerB",
-          discordId: testAccountId("00000000"),
-          serverId: DiscordGuildIdSchema.parse(serverId),
-          creatorDiscordId: ownerId,
-          createdTime: new Date(),
-          updatedTime: new Date(),
-        },
-      }),
-      prisma.player.create({
-        data: {
-          alias: "PlayerC",
-          discordId: testAccountId("00000000"),
-          serverId: DiscordGuildIdSchema.parse(serverId),
-          creatorDiscordId: ownerId,
-          createdTime: new Date(),
-          updatedTime: new Date(),
-        },
-      }),
-    ]);
+    const { competition, players } = await createCompetitionWithPlayers(serverId, ownerId, 3);
 
     // Player A already joined manually
-    await addParticipant(prisma, competition.id, players[0].id, "JOINED");
+    await addParticipant({ prisma, competitionId: competition.id, playerId: players[0]!.id, status: "JOINED" });
 
     // Try to add all players (should fail for Player A)
     const addResults = await Promise.allSettled(
-      players.map((player) => addParticipant(prisma, competition.id, player.id, "JOINED")),
+      players.map((player) =>
+        addParticipant({ prisma, competitionId: competition.id, playerId: player.id, status: "JOINED" }),
+      ),
     );
 
     // First should fail (already joined), others should succeed
@@ -244,91 +140,16 @@ describe("Add all members to competition", () => {
   test("adds all players when using Promise.allSettled (concurrent)", async () => {
     const serverId = testGuildId("78900");
     const ownerId = testAccountId("0");
-
-    const now = new Date();
-    const startDate = new Date(now.getTime() + 1000 * 60 * 60); // 1 hour from now
-    const endDate = new Date(now.getTime() + 1000 * 60 * 60 * 24 * 7); // 7 days from now
-
-    // Create competition with low max participants
-    const competition = await createCompetition(prisma, {
-      serverId,
-      ownerId,
-      channelId: testChannelId("789000000"),
-      title: "Limited Competition",
-      description: "Only 3 spots available",
-      visibility: "OPEN",
-      maxParticipants: 3,
-      dates: {
-        type: "FIXED_DATES",
-        startDate,
-        endDate,
-      },
-      criteria: {
-        type: "MOST_GAMES_PLAYED",
-        queue: "SOLO",
-      },
-    });
-
-    // Create 5 players (more than the limit)
-    const players = await Promise.all([
-      prisma.player.create({
-        data: {
-          alias: "Player1",
-          discordId: testAccountId("100000000"),
-          serverId: DiscordGuildIdSchema.parse(serverId),
-          creatorDiscordId: ownerId,
-          createdTime: new Date(),
-          updatedTime: new Date(),
-        },
-      }),
-      prisma.player.create({
-        data: {
-          alias: "Player2",
-          discordId: testAccountId("200000000"),
-          serverId: DiscordGuildIdSchema.parse(serverId),
-          creatorDiscordId: ownerId,
-          createdTime: new Date(),
-          updatedTime: new Date(),
-        },
-      }),
-      prisma.player.create({
-        data: {
-          alias: "Player3",
-          discordId: testAccountId("300000000"),
-          serverId: DiscordGuildIdSchema.parse(serverId),
-          creatorDiscordId: ownerId,
-          createdTime: new Date(),
-          updatedTime: new Date(),
-        },
-      }),
-      prisma.player.create({
-        data: {
-          alias: "Player4",
-          discordId: testAccountId("400000000"),
-          serverId: DiscordGuildIdSchema.parse(serverId),
-          creatorDiscordId: ownerId,
-          createdTime: new Date(),
-          updatedTime: new Date(),
-        },
-      }),
-      prisma.player.create({
-        data: {
-          alias: "Player5",
-          discordId: testAccountId("500000000"),
-          serverId: DiscordGuildIdSchema.parse(serverId),
-          creatorDiscordId: ownerId,
-          createdTime: new Date(),
-          updatedTime: new Date(),
-        },
-      }),
-    ]);
+    const { competition, players } = await createCompetitionWithPlayers(serverId, ownerId, 5);
 
     // Try to add all players concurrently
     // Note: Due to race condition, concurrent adds may exceed the limit
     // This is expected behavior - the limit is checked at read time, but by the time
     // all writes happen, multiple may have passed the check
     const addResults = await Promise.allSettled(
-      players.map((player) => addParticipant(prisma, competition.id, player.id, "JOINED")),
+      players.map((player) =>
+        addParticipant({ prisma, competitionId: competition.id, playerId: player.id, status: "JOINED" }),
+      ),
     );
 
     // With concurrent operations, all may succeed due to race condition
@@ -387,7 +208,9 @@ describe("Add all members to competition", () => {
 
     // Try to add all players (empty array)
     const addResults = await Promise.allSettled(
-      players.map((player) => addParticipant(prisma, competition.id, player.id, "JOINED")),
+      players.map((player) =>
+        addParticipant({ prisma, competitionId: competition.id, playerId: player.id, status: "JOINED" }),
+      ),
     );
 
     // No operations should have been attempted

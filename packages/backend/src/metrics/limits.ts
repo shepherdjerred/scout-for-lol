@@ -3,15 +3,15 @@
  * This persists state to Prometheus by querying current database state
  */
 
-import { prisma } from "../database/index.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
 import {
   serversAtSubscriptionLimit,
   serversApproachingSubscriptionLimit,
   serversAtAccountLimit,
   serversApproachingAccountLimit,
-} from "./index.js";
-import { getLimit } from "../configuration/flags.js";
-import { LIMIT_WARNING_THRESHOLD } from "../configuration/subscription-limits.js";
+} from "@scout-for-lol/backend/metrics/index.js";
+import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
+import { LIMIT_WARNING_THRESHOLD } from "@scout-for-lol/backend/configuration/subscription-limits.js";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 /**

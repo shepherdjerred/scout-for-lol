@@ -5,7 +5,9 @@ alwaysApply: true
 # Scout for LoL Project Standards & Development Guide
 
 ## Project Structure
+
 This is a monorepo using **Bun workspaces** with packages:
+
 - `packages/backend` - Discord bot backend service
 - `packages/data` - Shared data models and utilities
 - `packages/report` - Report generation components
@@ -14,18 +16,21 @@ This is a monorepo using **Bun workspaces** with packages:
 ## Core Tools & Technologies
 
 ### Runtime & Package Manager
+
 - **Bun** - Primary runtime and package manager
 - **TypeScript** - Strict typing with `noEmit` checks
 - **ESLint** - Code linting with TypeScript rules
 - **Prettier** - Code formatting
 
 ### Infrastructure & CI/CD
+
 - **Mise** - Primary task runner for local development (fast checks)
 - **Dagger** - CI/CD pipelines and containerization (CI debugging)
 - **Prisma** - Database ORM and migrations
 - **Docker** - Container deployment
 
 ### Application Stack
+
 - **Discord.js** - Discord bot framework
 - **Zod** - Runtime validation and type safety
 - **React** - UI components (for report generation)
@@ -35,57 +40,71 @@ This is a monorepo using **Bun workspaces** with packages:
 
 ### Quick Code Verification
 
-**Use `mise check` for fast local verification (recommended):**
-
 ```bash
-# Run comprehensive checks (lint, typecheck, format, test)
-# This is the FASTEST way to verify your code locally
-mise check
-
-# Individual mise tasks
-mise run typecheck
-mise run lint
-mise run format
-mise run test
+mise check          # All 6 checks in parallel (60-90s)
+dagger call check   # CI debugging only (2-5min)
 ```
 
-**Use `dagger call check` for CI-specific debugging:**
+**mise check includes:** TypeScript, ESLint, Prettier, Tests, Knip, JSCPD
+
+**Strategy:** Use `mise check` for 95% of development. Use `dagger call check` only when debugging CI failures.
+
+**See:** `mise-and-dagger-usage.mdc` for complete guide.
+
+### Pre-Commit Hooks (Lint-Staged)
+
+Husky runs lint-staged on every commit, checking only changed files:
+
+**Runs automatically:**
+
+- Prettier auto-format on all files
+- Markdown linting on .md files
+- Per-package typecheck for changed TypeScript files
+- ESLint with auto-fix for changed files
+- Relevant tests for changed files
+- Suppression checks for eslint-disable comments
+
+**Example workflow:**
 
 ```bash
-# When mise check passes but CI fails, use Dagger to debug CI-specific issues
-dagger call check
+# Edit file
+vim packages/backend/src/user.ts
+
+# Stage and commit (hooks run automatically)
+git add packages/backend/src/user.ts
+git commit -m "update user logic"
+# → Prettier formats
+# → cd packages/backend && bun run typecheck
+# → cd packages/backend && bunx eslint --cache --fix
+# → bun ./scripts/run-relevant-tests.ts packages/backend
 ```
 
-**Strategy:**
-- ✅ Use `mise check` for 95% of local development - it's fast and catches most issues
-- ✅ Use `dagger call check` only when debugging CI-specific failures
-- ✅ Both will pass before code can be merged, but mise is faster for iteration
+**See:** `package.json` lint-staged section for configuration.
 
 ### Root Level Commands
+
 ```bash
-# Install dependencies across all packages
-bun run install:all
+# Code quality (runs in all packages via --filter='*')
+bun run typecheck        # Type check all packages
+bun run lint             # Lint all packages
+bun run format           # Check formatting all packages
+bun run test             # eslint-rules tests + all packages tests
 
-# Type checking across all packages
-bun run typecheck:all
+# Code analysis
+bun run test:eslint-rules # Test custom ESLint rules only
+bun run knip             # Find unused code (Knip)
+bun run duplication-check # Find duplicate code (JSCPD)
 
-# Linting across all packages
-bun run lint:all
-
-# Formatting across all packages
-bun run format:all
-
-# Testing across all packages
-bun run test:all
-
-# Generate Prisma client and other generated code
-bun run generate
-
-# Clean all node_modules
-bun run clean
+# Generation & maintenance
+bun run generate         # Generate code in all packages
+bun run clean            # Remove all node_modules
+bun run prepare          # Husky setup (auto-runs on install)
 ```
 
+**Note:** Root scripts use `bun run --filter='*'` to run across all workspace packages.
+
 ### Package-Specific Commands
+
 ```bash
 # Backend development
 cd packages/backend
@@ -99,64 +118,29 @@ bun run db:studio       # Open Prisma Studio
 # Each package supports: dev, build, test, lint, format, typecheck
 ```
 
-## Mise Task Runner
+## Verification Systems
 
-**Mise is the primary development tool** - use it for fast local checks:
+**Mise** - Fast parallel checks (~30-60s):
 
 ```bash
-# Run all checks (lint, typecheck, format, test)
-mise check
-
-# Run individual checks
-mise run typecheck
-mise run lint
-mise run format
-mise run test
-
-# List all available tasks
-mise tasks
+mise check          # All checks
+mise run typecheck  # Type check only
+mise run lint       # Lint only
 ```
 
-## Dagger CI/CD Pipeline
+**Dagger** - CI environment checks (~2-5min):
 
-**Dagger mirrors production CI** - use it for debugging CI-specific issues:
-
-### Discovering Available Targets
 ```bash
-# List all available Dagger functions
-dagger functions
-
-# View specific function details
-dagger functions --help
+dagger call check   # When debugging CI failures
+dagger functions    # List available targets
 ```
 
-### Main Dagger Targets
-```bash
-# Run comprehensive checks (lint, typecheck, test)
-# Use this when debugging CI failures that don't reproduce with mise
-dagger call check
-
-# Build all packages
-dagger call build --version="1.0.0" --git-sha="abc123"
-
-# Run full CI pipeline (check + build + deploy)
-dagger call ci --version="1.0.0" --git-sha="abc123"
-
-# Deploy to specific stage
-dagger call deploy --version="1.0.0" --stage="beta"
-
-# Package-specific operations
-dagger call check-backend
-dagger call build-backend-image --version="1.0.0" --git-sha="abc123"
-dagger call generate-prisma
-dagger call check-report
-dagger call build-report-for-npm --version="1.0.0"
-dagger call check-data
-```
+**See:** `mise-and-dagger-usage.mdc` for detailed comparison and usage.
 
 ## Code Quality Standards
 
 ### TypeScript Standards
+
 - **NO `any` types** - Always use proper typing
 - **Avoid type casting** - Use type guards and proper validation instead
 - **Prefer advanced types** - Use mapped types, conditional types, template literals over workarounds
@@ -164,23 +148,27 @@ dagger call check-data
 - **Exhaustive pattern matching** - Use `ts-pattern` for complex branching
 
 ### Validation & Data Handling
+
 - **Zod for all unknown input** - Network requests, user input, environment variables
 - **Runtime validation** - Don't trust external data
 - **Proper error handling** - Use `zod-validation-error` for user-friendly messages
 
 ### Code Organization
+
 - **Functional approach** - Use `remeda` for data transformations
 - **Modular design** - Each package has clear responsibilities
 - **Proper dependency injection** - Avoid global state
 - **Consistent naming** - Use TypeScript naming conventions
 
 ## Database & Prisma
+
 - **Schema-first approach** - Define models in `schema.prisma`
 - **Migration strategy** - Use `prisma migrate` for production
 - **Type safety** - Generated client provides full type safety
 - **Connection management** - Proper connection pooling and cleanup
 
 ## Testing Strategy
+
 - **Unit tests** - Test individual functions and components
 - **Integration tests** - Test package interactions
 - **Snapshot testing** - For report generation output
@@ -189,6 +177,7 @@ dagger call check-data
 ## Development Best Practices
 
 ### Error Handling
+
 ```typescript
 // Use Result patterns or proper error boundaries
 // Validate with Zod before processing
@@ -199,6 +188,7 @@ if (!result.success) {
 ```
 
 ### Type Safety
+
 ```typescript
 // Instead of casting, use proper type guards
 function isString(value: unknown): value is string {
@@ -212,6 +202,7 @@ type DeepReadonly<T> = {
 ```
 
 ### Async Patterns
+
 ```typescript
 // Use proper async/await patterns
 // Handle errors at appropriate levels
@@ -219,32 +210,24 @@ type DeepReadonly<T> = {
 ```
 
 ## Environment & Configuration
+
 - **Environment variables** - Use `env-var` for type-safe config
 - **Secrets management** - Use Dagger secrets for sensitive data
 - **Configuration validation** - Validate all config with Zod schemas
 
 ## Performance Considerations
+
 - **Lazy loading** - Load heavy dependencies only when needed
 - **Proper caching** - Cache expensive operations appropriately
 - **Memory management** - Clean up resources and connections
 - **Bundle optimization** - Use proper bundling strategies
 
-## Recommended Development Workflow
+## Recommended Workflow
 
-### Daily Development
-1. **Make changes** to code
-2. **Run `mise check`** to verify (fast, catches 95% of issues)
-3. **Fix any errors** shown by mise
-4. **Commit** when mise check passes
+**Daily:** Edit → `mise check` → Fix → Commit
 
-### Debugging CI Failures
-1. **CI fails but mise passes?** Run `dagger call check`
-2. **Debug the difference** between mise and Dagger environments
-3. **Fix the issue** and verify with both mise and Dagger
-4. **Push again** when both pass
+**CI Debugging:** `mise check` passes but CI fails? → `dagger call check` → Compare → Fix
 
-### Key Principle
-- **Mise for speed** - Use in tight iteration loops
-- **Dagger for accuracy** - Use when you need to match CI exactly
+**See:** `mise-and-dagger-usage.mdc`, `code-quality-checklist.mdc` for detailed workflows.
 
 This project maintains high standards for code quality, type safety, and maintainability. Always prefer explicit, type-safe approaches over quick hacks or workarounds.

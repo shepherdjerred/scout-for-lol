@@ -1,6 +1,6 @@
-import { api } from "./api.js";
+import { api } from "@scout-for-lol/backend/league/api/api.js";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
-import { mapRegionToEnum } from "../model/region.js";
+import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.js";
 import type { PlayerConfigEntry, MatchId } from "@scout-for-lol/data";
 import { MatchIdSchema } from "@scout-for-lol/data";
 import { z } from "zod";

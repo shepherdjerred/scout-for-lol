@@ -1,7 +1,7 @@
-import { type ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from "discord.js";
+import { type ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index";
-import { truncateDiscordMessage } from "../../utils/message.js";
+import { prisma } from "@scout-for-lol/backend/database/index";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 
 export async function executeSubscriptionList(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId) {
@@ -28,7 +28,7 @@ export async function executeSubscriptionList(interaction: ChatInputCommandInter
   if (subscriptions.length === 0) {
     await interaction.reply({
       content: truncateDiscordMessage("📭 No subscriptions found for this server."),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -74,6 +74,6 @@ export async function executeSubscriptionList(interaction: ChatInputCommandInter
 
   await interaction.reply({
     embeds: [embed],
-    flags: MessageFlags.Ephemeral,
+    ephemeral: true,
   });
 }

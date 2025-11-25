@@ -1,4 +1,5 @@
 import {
+  type MatchDto,
   generateReviewText,
   generateReviewImage,
   type ArenaMatch,
@@ -8,20 +9,19 @@ import {
   curateMatchData,
   type CuratedMatchData,
 } from "@scout-for-lol/data";
-import { writeFileSync, mkdirSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import config from "../../configuration.js";
-import { saveAIReviewImageToS3 } from "../../storage/s3.js";
-import { loadPromptFile, selectRandomPersonality, loadPlayerMetadata, getLaneContext } from "./prompts.js";
+import config from "@scout-for-lol/backend/configuration.js";
+import { saveAIReviewImageToS3 } from "@scout-for-lol/backend/storage/s3.js";
+import {
+  loadPromptFile,
+  selectRandomPersonality,
+  loadPlayerMetadata,
+  getLaneContext,
+} from "@scout-for-lol/backend/league/review/prompts.js";
 
-const FILENAME = fileURLToPath(import.meta.url);
-const DIRNAME = dirname(FILENAME);
-const AI_IMAGES_DIR = join(DIRNAME, "ai-images");
+const AI_IMAGES_DIR = `${import.meta.dir}/ai-images`;
 
 /**
  * Initialize OpenAI client if API key is configured
@@ -46,15 +46,16 @@ function getGeminiClient(): GoogleGenerativeAI | undefined {
 /**
  * Generate an AI-powered image from review text using Gemini (backend wrapper)
  */
-async function generateReviewImageBackend(
-  reviewText: string,
-  match: CompletedMatch | ArenaMatch,
-  matchId: MatchId,
-  queueType: string,
-  style: string,
-  themes: string[],
-  curatedData?: CuratedMatchData,
-): Promise<Buffer | undefined> {
+async function generateReviewImageBackend(params: {
+  reviewText: string;
+  match: CompletedMatch | ArenaMatch;
+  matchId: MatchId;
+  queueType: string;
+  style: string;
+  themes: string[];
+  curatedData?: CuratedMatchData;
+}): Promise<Uint8Array | undefined> {
+  const { reviewText, match, matchId, queueType, style, themes, curatedData } = params;
   const client = getGeminiClient();
   if (!client) {
     console.log("[generateReviewImage] Gemini API key not configured, skipping image generation");
@@ -78,7 +79,7 @@ async function generateReviewImageBackend(
       reviewText,
       artStyle: style,
       artTheme: themes[0] ?? "League of Legends gameplay",
-      secondArtTheme: themes[1],
+      ...(themes[1] !== undefined ? { secondArtTheme: themes[1] } : {}),
       matchData: JSON.stringify(curatedData ? { processedMatch: match, detailedStats: curatedData } : match, null, 2),
       geminiClient: client,
       model: "gemini-3-pro-image-preview",
@@ -87,14 +88,18 @@ async function generateReviewImageBackend(
 
     console.log(`[generateReviewImage] Gemini API call completed in ${result.metadata.imageDurationMs.toString()}ms`);
 
-    const buffer = Buffer.from(result.imageData, "base64");
+    // Decode base64 to Uint8Array
+    const binaryString = atob(result.imageData);
+    const buffer = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      buffer[i] = binaryString.charCodeAt(i);
+    }
     console.log("[generateReviewImage] Successfully generated image");
 
     // Save to local filesystem for debugging
     try {
-      mkdirSync(AI_IMAGES_DIR, { recursive: true });
-      const filepath = join(AI_IMAGES_DIR, `ai-review-${new Date().toISOString().replace(/[:.]/g, "-")}.png`);
-      writeFileSync(filepath, buffer);
+      const filepath = `${AI_IMAGES_DIR}/ai-review-${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
+      await Bun.write(filepath, buffer);
       console.log(`[generateReviewImage] Saved image to: ${filepath}`);
     } catch (fsError: unknown) {
       console.error("[generateReviewImage] Failed to save image to filesystem:", fsError);
@@ -150,15 +155,15 @@ async function generateAIReview(
 
   try {
     // Get personality and base prompt template
-    const personality = selectRandomPersonality();
-    const basePromptTemplate = loadPromptFile("base.txt");
+    const personality = await selectRandomPersonality();
+    const basePromptTemplate = await loadPromptFile("base.txt");
 
     console.log(`[generateAIReview] Selected personality: ${personality.filename}`);
 
     // Get lane context
     const player = match.players[0];
     const lane = match.queueType === "arena" ? undefined : player && "lane" in player ? player.lane : undefined;
-    const laneContextInfo = getLaneContext(lane);
+    const laneContextInfo = await getLaneContext(lane);
     console.log(`[generateAIReview] Selected lane context: ${laneContextInfo.filename}`);
 
     // Get player metadata
@@ -167,7 +172,7 @@ async function generateAIReview(
       console.log("[generateAIReview] No player name found");
       return undefined;
     }
-    const playerMeta = loadPlayerMetadata(playerName);
+    const playerMeta = await loadPlayerMetadata(playerName);
 
     console.log("[generateAIReview] Calling OpenAI API...");
 
@@ -208,8 +213,8 @@ async function generateAIReview(
 export async function generateMatchReview(
   match: CompletedMatch | ArenaMatch,
   matchId: MatchId,
-  rawMatchData?: MatchV5DTOs.MatchDto,
-): Promise<{ text: string; image?: Buffer; metadata?: ReviewMetadata } | undefined> {
+  rawMatchData?: MatchDto,
+): Promise<{ text: string; image?: Uint8Array; metadata?: ReviewMetadata } | undefined> {
   // Curate the raw match data if provided
   const curatedData = rawMatchData ? await curateMatchData(rawMatchData) : undefined;
 
@@ -234,15 +239,15 @@ export async function generateMatchReview(
     themes,
   };
 
-  const reviewImage = await generateReviewImageBackend(
+  const reviewImage = await generateReviewImageBackend({
     reviewText,
     match,
     matchId,
     queueType,
     style,
     themes,
-    curatedData,
-  );
+    ...(curatedData !== undefined && { curatedData }),
+  });
 
   if (reviewImage) {
     return {

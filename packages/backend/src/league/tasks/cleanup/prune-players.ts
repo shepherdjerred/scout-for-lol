@@ -4,8 +4,8 @@ import type {
   Subscription,
   CompetitionParticipant,
   Account,
-} from "../../../../generated/prisma/client/index.js";
-import { prisma } from "../../../database/index.js";
+} from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
 import type { Client } from "discord.js";
 import { groupBy } from "remeda";
 
@@ -56,9 +56,15 @@ async function notifyServerOwner(
     const playerList = playerDetails
       .map((player) => {
         const reasons = [];
-        if (player.hadLeftCompetitions) reasons.push("left competition");
-        if (player.hadPendingInvites) reasons.push("pending invite");
-        if (reasons.length === 0) reasons.push("no subscriptions");
+        if (player.hadLeftCompetitions) {
+          reasons.push("left competition");
+        }
+        if (player.hadPendingInvites) {
+          reasons.push("pending invite");
+        }
+        if (reasons.length === 0) {
+          reasons.push("no subscriptions");
+        }
 
         const reasonStr = reasons.length > 0 ? ` (${reasons.join(", ")})` : "";
         return `• **${player.alias}** - ${player.accountCount.toString()} account(s)${reasonStr}`;

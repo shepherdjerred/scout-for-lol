@@ -1,13 +1,9 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { PrismaClient } from "../../../../generated/prisma/client/index.js";
-import { execSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { createCompetition, getCompetitionById } from "../../../database/competition/queries.js";
-import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
-import { addParticipant } from "../../../database/competition/participants.js";
-import { testGuildId, testAccountId, testChannelId } from "../../../testing/test-ids.js";
+import { match } from "ts-pattern";
+import { createCompetition, getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
+import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
+import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
+import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
 import {
   ChampionIdSchema,
   getCompetitionStatus,
@@ -18,41 +14,19 @@ import {
   type DiscordGuildId,
   type PlayerId,
 } from "@scout-for-lol/data";
+import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.js";
 
 // Create a test database for integration tests
-const testDir = mkdtempSync(join(tmpdir(), "competition-view-test-"));
-const testDbPath = join(testDir, "test.db");
-const testDbUrl = `file:${testDbPath}`;
-
-// Push schema to test database once before all tests
-const schemaPath = join(import.meta.dir, "../../../..", "prisma/schema.prisma");
-execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
-  cwd: join(import.meta.dir, "../../../.."),
-  env: {
-    ...process.env,
-    DATABASE_URL: testDbUrl,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-  },
-  stdio: "ignore",
-});
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: testDbUrl,
-    },
-  },
-});
+const { prisma } = createTestDatabase("competition-view-test");
 
 beforeEach(async () => {
   // Clean up database before each test
-  await prisma.competitionSnapshot.deleteMany();
-  await prisma.competitionParticipant.deleteMany();
-  await prisma.competition.deleteMany();
-  await prisma.subscription.deleteMany();
-  await prisma.account.deleteMany();
-  await prisma.player.deleteMany();
+  await deleteIfExists(() => prisma.competitionSnapshot.deleteMany());
+  await deleteIfExists(() => prisma.competitionParticipant.deleteMany());
+  await deleteIfExists(() => prisma.competition.deleteMany());
+  await deleteIfExists(() => prisma.subscription.deleteMany());
+  await deleteIfExists(() => prisma.account.deleteMany());
+  await deleteIfExists(() => prisma.player.deleteMany());
 });
 afterAll(async () => {
   await prisma.$disconnect();
@@ -103,15 +77,22 @@ async function createTestCompetition(
   const nextWeek = new Date(now);
   nextWeek.setDate(nextWeek.getDate() + 7);
 
-  let criteria: CreateCompetitionInput["criteria"];
-  if (options?.criteriaType === "HIGHEST_RANK") {
-    criteria = { type: "HIGHEST_RANK", queue: "SOLO" };
-  } else if (options?.criteriaType === "MOST_WINS_CHAMPION" && options.championId) {
-    criteria = { type: "MOST_WINS_CHAMPION", championId: options.championId, queue: "SOLO" };
-    // TODO: use ts-pattern for exhaustive match
-  } else {
-    criteria = { type: "MOST_GAMES_PLAYED", queue: "SOLO" };
-  }
+  const criteria: CreateCompetitionInput["criteria"] = options?.criteriaType
+    ? match(options.criteriaType)
+        .with("HIGHEST_RANK", () => ({ type: "HIGHEST_RANK" as const, queue: "SOLO" as const }))
+        .with("MOST_WINS_CHAMPION", () => {
+          if (!options.championId) {
+            throw new Error("championId required for MOST_WINS_CHAMPION");
+          }
+          return {
+            type: "MOST_WINS_CHAMPION" as const,
+            championId: options.championId,
+            queue: "SOLO" as const,
+          };
+        })
+        .with("MOST_GAMES_PLAYED", () => ({ type: "MOST_GAMES_PLAYED" as const, queue: "SOLO" as const }))
+        .exhaustive()
+    : { type: "MOST_GAMES_PLAYED" as const, queue: "SOLO" as const };
 
   const input: CreateCompetitionInput = {
     serverId,
@@ -178,9 +159,9 @@ describe("Competition View - DRAFT Status", () => {
     const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
     const { playerId: player3Id } = await createTestPlayer(serverId, testAccountId("300000000030"), "Player3");
 
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
-    await addParticipant(prisma, competitionId, player2Id, "JOINED");
-    await addParticipant(prisma, competitionId, player3Id, "JOINED");
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player2Id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player3Id, status: "JOINED" });
 
     const competition = await getCompetitionById(prisma, competitionId);
     expect(competition).not.toBeNull();
@@ -269,8 +250,8 @@ describe("Competition View - ACTIVE Status", () => {
     // Add participants
     const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
-    await addParticipant(prisma, competitionId, player2Id, "JOINED");
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player2Id, status: "JOINED" });
 
     const competition = await getCompetitionById(prisma, competitionId);
     expect(competition).not.toBeNull();
@@ -282,7 +263,26 @@ describe("Competition View - ACTIVE Status", () => {
     const status = getCompetitionStatus(competition);
     expect(status).toBe("ACTIVE");
 
-    // TODO: When Task 19 is implemented, test leaderboard calculation here
+    // Test leaderboard calculation
+    const { calculateLeaderboard } = await import("@scout-for-lol/backend/league/competition/leaderboard");
+    const leaderboard = await calculateLeaderboard(prisma, competition);
+
+    // Should have entries for both participants
+    expect(leaderboard).toHaveLength(2);
+
+    // Verify leaderboard structure
+    for (const entry of leaderboard) {
+      expect(entry).toHaveProperty("playerId");
+      expect(entry).toHaveProperty("playerName");
+      expect(entry).toHaveProperty("score");
+      expect(entry).toHaveProperty("rank");
+      expect(entry.rank).toBeNumber();
+      expect(entry.rank).toBeGreaterThan(0);
+    }
+
+    // Verify ranks are assigned correctly (should be 1 or 2)
+    const ranks = leaderboard.map((e) => e.rank);
+    expect(ranks).toContain(1);
   });
 });
 
@@ -336,8 +336,8 @@ describe("Competition View - ENDED Status", () => {
     // Add participants while competition is active
     const { playerId: player1Id } = await createTestPlayer(serverId, testAccountId("100000000010"), "Player1");
     const { playerId: player2Id } = await createTestPlayer(serverId, testAccountId("200000000020"), "Player2");
-    await addParticipant(prisma, competitionId, player1Id, "JOINED");
-    await addParticipant(prisma, competitionId, player2Id, "JOINED");
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player1Id, status: "JOINED" });
+    await addParticipant({ prisma, competitionId: competitionId, playerId: player2Id, status: "JOINED" });
 
     // Now update the competition to have ended
     const yesterday = new Date(now);
@@ -363,7 +363,27 @@ describe("Competition View - ENDED Status", () => {
     });
     expect(participants).toHaveLength(2);
 
-    // TODO: When Task 19 is implemented, test final leaderboard here
+    // Test final leaderboard for ended competition
+    const { calculateLeaderboard } = await import("@scout-for-lol/backend/league/competition/leaderboard");
+    const leaderboard = await calculateLeaderboard(prisma, competition);
+
+    // Should have entries for both participants
+    expect(leaderboard).toHaveLength(2);
+
+    // Verify final standings structure
+    for (const entry of leaderboard) {
+      expect(entry).toHaveProperty("playerId");
+      expect(entry).toHaveProperty("playerName");
+      expect(entry).toHaveProperty("score");
+      expect(entry).toHaveProperty("rank");
+      expect(entry.rank).toBeNumber();
+      expect(entry.rank).toBeGreaterThan(0);
+    }
+
+    // Verify final rankings are assigned (1st and 2nd place)
+    const ranks = leaderboard.map((e) => e.rank);
+    expect(ranks).toContain(1);
+    expect(Math.max(...ranks)).toBeLessThanOrEqual(2);
   });
 });
 

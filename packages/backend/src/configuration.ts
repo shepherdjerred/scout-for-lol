@@ -5,7 +5,7 @@ console.log("🔧 Loading application configuration");
 
 function getRequiredEnvVar(name: string): string {
   // don't require these when running tests
-  if (process.env.NODE_ENV === "test") {
+  if (Bun.env.NODE_ENV === "test") {
     return getOptionalEnvVar(name) ?? "TEST PLACEHOLDER";
   }
   try {

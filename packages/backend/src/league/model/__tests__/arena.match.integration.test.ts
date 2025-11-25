@@ -1,17 +1,17 @@
 import { describe, it, expect } from "bun:test";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { ArenaMatchSchema, ArenaTeamSchema, LeaguePuuidSchema, type Player } from "@scout-for-lol/data";
-import { participantToArenaChampion } from "../champion.js";
-import { toArenaMatch, toArenaSubteams } from "../match.js";
+import type { ChallengesDto, ParticipantDto, Player, MatchDto } from "@scout-for-lol/data";
+import { ArenaMatchSchema, ArenaTeamSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
+import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
+import { toArenaMatch, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.js";
 
 function makeParticipant(
-  overrides: Partial<MatchV5DTOs.ParticipantDto> & {
+  overrides: Partial<ParticipantDto> & {
     playerSubteamId: number;
     placement: number;
     puuid: string;
   },
-): MatchV5DTOs.ParticipantDto {
-  const base: Partial<MatchV5DTOs.ParticipantDto> = {
+): ParticipantDto {
+  const base: Partial<ParticipantDto> = {
     riotIdGameName: "P#NA1",
     summonerName: "P",
     championName: "Lux",
@@ -50,21 +50,23 @@ function makeParticipant(
     PlayerScore6: 0,
     PlayerScore7: 0,
     PlayerScore8: 0,
+    // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
     challenges: {
       damageTakenOnTeamPercentage: 0.2,
-    } satisfies Partial<MatchV5DTOs.ChallengesDto> as unknown as MatchV5DTOs.ChallengesDto,
+    } satisfies Partial<ChallengesDto> as unknown as ChallengesDto,
   };
+  // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
   return {
     totalHealsOnTeammates: 300,
     totalDamageShieldedOnTeammates: 500,
     ...base,
     ...overrides,
-  } satisfies Partial<MatchV5DTOs.ParticipantDto> as unknown as MatchV5DTOs.ParticipantDto;
+  } satisfies Partial<ParticipantDto> as unknown as ParticipantDto;
 }
 
-function makeArenaMatchDto(): MatchV5DTOs.MatchDto {
+function makeArenaMatchDto(): MatchDto {
   const longPuuid = (label: string) => (label + "-".repeat(80)).slice(0, 78);
-  const participants: MatchV5DTOs.ParticipantDto[] = [];
+  const participants: ParticipantDto[] = [];
   for (let sub = 1; sub <= 8; sub++) {
     participants.push(
       makeParticipant({
@@ -126,7 +128,9 @@ describe("arena match integration", () => {
   it("builds full ArenaMatch via toArenaMatch", async () => {
     const dto = makeArenaMatchDto();
     const first = dto.info.participants[0];
-    if (!first) throw new Error("participants should not be empty in test dto");
+    if (!first) {
+      throw new Error("participants should not be empty in test dto");
+    }
     const puuid = LeaguePuuidSchema.parse(first.puuid);
     const player: Player = {
       config: {
@@ -142,7 +146,9 @@ describe("arena match integration", () => {
     expect(parsed.teams.length).toBe(8);
     expect(parsed.players.length).toBe(1);
     const firstPlayer = parsed.players[0];
-    if (!firstPlayer) throw new Error("parsed players should not be empty");
+    if (!firstPlayer) {
+      throw new Error("parsed players should not be empty");
+    }
     expect(firstPlayer.placement).toBeGreaterThanOrEqual(1);
     expect(firstPlayer.placement).toBeLessThanOrEqual(8);
   });
@@ -151,7 +157,9 @@ describe("arena match integration", () => {
     const dto = makeArenaMatchDto();
     const first = dto.info.participants[0];
     const second = dto.info.participants[2]; // Different team
-    if (!first || !second) throw new Error("participants should not be empty in test dto");
+    if (!first || !second) {
+      throw new Error("participants should not be empty in test dto");
+    }
 
     const puuid1 = LeaguePuuidSchema.parse(first.puuid);
     const puuid2 = LeaguePuuidSchema.parse(second.puuid);

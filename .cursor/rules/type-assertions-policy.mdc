@@ -1,131 +1,94 @@
 ---
 description: When and how to use type assertions correctly
+globs: "*.ts,*.tsx"
+alwaysApply: false
 ---
 
 # Type Assertions Policy
 
-## General Rule: Validate, Don't Assert
+## Core Rule: Validate, Don't Assert
 
 **ALWAYS prefer Zod validation over type assertions.**
 
-## Acceptable Type Assertions
+## Acceptable Assertions
 
-Type assertions are ONLY acceptable in these specific forms:
+Only these forms are allowed:
 
-### 1. `as unknown as TargetType` (Two-Step Cast)
-
-When interfacing with third-party libraries that don't have perfect types:
+### 1. `as unknown` (Widening)
 
 ```typescript
-// Validate with Zod first, then cast if necessary
-const ResponseSchema = z.object({
-  gameId: z.number(),
-  gameMode: z.string(),
-});
-
-const validated = ResponseSchema.parse(response.response);
-// Now we know the structure is correct
-return response.response as unknown as ThirdPartyType;
+const unknownValue = someData as unknown;
 ```
 
 ### 2. `as const` (Literal Type)
 
-For const assertions (always acceptable):
-
 ```typescript
-const config = {
-  type: "FIXED_DATES" as const,
-  startDate: new Date(),
-};
+const config = { type: "production" as const };
 ```
 
-### 3. `as unknown` (Intermediate Cast)
-
-When you need to pass validated data through a type boundary:
+## Never Use
 
 ```typescript
-const validated = Schema.parse(input);
-return validated as unknown as ExpectedType;
-```
+// ❌ Direct cast
+const user = data as User;
 
-## ❌ NEVER Use These
+// ❌ Any cast
+const value = data as any;
 
-```typescript
-// Direct cast (bypasses type safety):
-error as Error
-
-// Any cast:
-value as any
-
-// Unchecked cast:
-data as SpecificType  // without Zod validation first
+// ❌ Error cast
+const message = (error as Error).message;
 ```
 
 ## The Zod-First Pattern
 
-Always follow this sequence:
-
-1. **Validate** with Zod schema
-2. **Use** TypeScript's natural narrowing
-3. **Assert** only when crossing library boundaries
-
 ```typescript
-// 1. Validate
-const DataSchema = z.object({
-  id: z.number(),
-  name: z.string()
-});
+// 1. Validate with Zod
+const DataSchema = z.object({ id: z.string(), name: z.string() });
 const validated = DataSchema.parse(unknownData);
 
-// 2. Use (TypeScript knows the type now)
+// 2. Use safely (TypeScript knows the type)
 console.log(validated.id, validated.name);
 
-// 3. Assert (only if needed for third-party library)
+// 3. Assert only if needed for third-party library
 return validated as unknown as ThirdPartyInterface;
 ```
-
-## Why This Matters
-
-1. **Runtime Safety**: Zod catches invalid data before it causes issues
-2. **Compile Safety**: TypeScript catches type errors
-3. **Linter Compliance**: Follows `no-restricted-syntax` rules
-4. **Maintainability**: Clear validation logic, not hidden assumptions
 
 ## Import Types
 
 Use `import type` for type-only imports:
 
 ```typescript
-// ✅ CORRECT:
-import { createCompetition, type CreateCompetitionInput } from "./queries.js";
-import type { Competition } from "./types.js";
+// ✅ CORRECT
+import { createUser, type CreateUserInput } from "./api.js";
+import type { User } from "./types.js";
 
-// ❌ WRONG:
-import type { createCompetition } from "./queries.js";  // Function used at runtime!
+// ❌ WRONG - function used at runtime
+import type { createUser } from "./api.js";
 ```
 
 ## Template Literals
 
-Never use values in template literals that could stringify poorly:
+Never use unknown values in template literals:
 
 ```typescript
-// ❌ WRONG:
-const msg = `Error: ${error}`;  // error is unknown
+// ❌ const msg = `Error: ${error}`;
 
-// ✅ CORRECT:
+// ✅
 const ErrorSchema = z.object({ message: z.string() });
 const result = ErrorSchema.safeParse(error);
 const msg = result.success ? `Error: ${result.data.message}` : "Unknown error";
 ```
 
-## Index Signatures
+## Why This Matters
 
-Use bracket notation for accessing index signature properties:
+1. **Runtime Safety** - Zod catches invalid data before errors
+2. **Compile Safety** - TypeScript catches type mismatches
+3. **Linter Compliance** - Follows `no-type-assertions` rule
+4. **Maintainability** - Clear validation logic
 
-```typescript
-// ❌ WRONG:
-const value = obj.dynamicKey;  // If dynamicKey is from index signature
+## Related Documentation
 
-// ✅ CORRECT:
-const value = obj["dynamicKey"];
-```
+- **ESLint Rule:** `eslint-custom-rules.mdc` (Rule 1: no-type-assertions)
+- **Type Safety:** `type-safety-strategy.mdc` - Overall strategy
+- **Zod Patterns:** `zod-validation-patterns.mdc` - Validation patterns
+- **Error Handling:** `error-handling-patterns.mdc` - Error validation

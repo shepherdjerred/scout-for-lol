@@ -1,4 +1,4 @@
-/* eslint-disable max-lines */
+/* eslint-disable max-lines -- Large test file with many test cases for competition criteria */
 import { describe, expect, test } from "bun:test";
 import {
   ChampionIdSchema,
@@ -26,9 +26,13 @@ import {
   parseCompetition,
   participantStatusToString,
   visibilityToString,
-} from "./competition.js";
-import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "./discord.js";
-import type { Competition } from "../../../backend/generated/prisma/client/index.js";
+} from "@scout-for-lol/data/model/competition.js";
+import {
+  DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data/model/discord.js";
+import type { Competition } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 
 describe("CompetitionId branded type", () => {
   test("accepts positive integers", () => {

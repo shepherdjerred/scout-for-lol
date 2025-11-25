@@ -1,15 +1,18 @@
 import { getCompetitionStatus, type CachedLeaderboard, type CompetitionWithCriteria } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
-import { getActiveCompetitions } from "../../../database/competition/queries.js";
-import { calculateLeaderboard } from "../../competition/leaderboard.js";
-import { generateLeaderboardEmbed } from "../../../discord/embeds/competition.js";
-import { send as sendChannelMessage, ChannelSendError } from "../../discord/channel.js";
-import { saveCachedLeaderboard } from "../../../storage/s3-leaderboard.js";
-import { createSnapshot, getSnapshot } from "../../competition/snapshots.js";
-import { getParticipants } from "../../../database/competition/participants.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { getActiveCompetitions } from "@scout-for-lol/backend/database/competition/queries.js";
+import {
+  calculateLeaderboard,
+  type RankedLeaderboardEntry,
+} from "@scout-for-lol/backend/league/competition/leaderboard.js";
+import { generateLeaderboardEmbed } from "@scout-for-lol/backend/discord/embeds/competition.js";
+import { send as sendChannelMessage, ChannelSendError } from "@scout-for-lol/backend/league/discord/channel.js";
+import { saveCachedLeaderboard } from "@scout-for-lol/backend/storage/s3-leaderboard.js";
+import { createSnapshot, getSnapshot } from "@scout-for-lol/backend/league/competition/snapshots.js";
+import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.js";
 import { EmbedBuilder } from "discord.js";
 import { z } from "zod";
-import { logNotification } from "../../../utils/notification-logger.js";
+import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.js";
 
 // ============================================================================
 // Error Handling
@@ -101,13 +104,12 @@ async function backfillStartSnapshots(competition: CompetitionWithCriteria): Pro
   for (const participant of participants) {
     try {
       // Check if START snapshot exists
-      const existingSnapshot = await getSnapshot(
-        prisma,
-        competition.id,
-        participant.playerId,
-        "START",
-        competition.criteria,
-      );
+      const existingSnapshot = await getSnapshot(prisma, {
+        competitionId: competition.id,
+        playerId: participant.playerId,
+        snapshotType: "START",
+        criteria: competition.criteria,
+      });
 
       // If snapshot exists, skip this participant
       if (existingSnapshot) {
@@ -121,7 +123,12 @@ async function backfillStartSnapshots(competition: CompetitionWithCriteria): Pro
         `[DailyLeaderboard] Attempting to create START snapshot for player ${participant.playerId.toString()} who was previously unranked`,
       );
 
-      await createSnapshot(prisma, competition.id, participant.playerId, "START", competition.criteria);
+      await createSnapshot(prisma, {
+        competitionId: competition.id,
+        playerId: participant.playerId,
+        snapshotType: "START",
+        criteria: competition.criteria,
+      });
 
       console.log(`[DailyLeaderboard] ✅ Created START snapshot for player ${participant.playerId.toString()}`);
     } catch (error) {
@@ -137,6 +144,36 @@ async function backfillStartSnapshots(competition: CompetitionWithCriteria): Pro
 // ============================================================================
 // Daily Leaderboard Update
 // ============================================================================
+
+/**
+ * Calculate leaderboard with error handling for missing snapshots
+ * Returns null if calculation fails due to missing snapshots
+ */
+async function calculateLeaderboardSafely(
+  competition: CompetitionWithCriteria,
+): Promise<RankedLeaderboardEntry[] | null> {
+  try {
+    return await calculateLeaderboard(prisma, competition);
+  } catch (error) {
+    const errorMessage = String(error);
+    const isMissingSnapshot =
+      errorMessage.includes("Missing START snapshot") ||
+      errorMessage.includes("Missing start rank data") ||
+      errorMessage.includes("Missing end rank data") ||
+      errorMessage.includes("Missing END snapshot");
+
+    if (isMissingSnapshot) {
+      console.error(
+        `[DailyLeaderboard] ❌ Missing snapshots for competition ${competition.id.toString()}:`,
+        errorMessage,
+      );
+      await postSnapshotErrorMessage(competition, errorMessage);
+      return null;
+    }
+
+    throw error;
+  }
+}
 
 /**
  * Post daily leaderboard updates for all active competitions
@@ -188,32 +225,10 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
         await backfillStartSnapshots(competition);
 
         // Calculate current leaderboard
-        // This may throw if snapshots are missing for rank-based criteria
-        let leaderboard;
-        try {
-          leaderboard = await calculateLeaderboard(prisma, competition);
-        } catch (error) {
-          const errorMessage = String(error);
-
-          // Check if this is a missing snapshot error
-          if (
-            errorMessage.includes("Missing START snapshot") ||
-            errorMessage.includes("Missing start rank data") ||
-            errorMessage.includes("Missing end rank data") ||
-            errorMessage.includes("Missing END snapshot")
-          ) {
-            console.error(
-              `[DailyLeaderboard] ❌ Missing snapshots for competition ${competition.id.toString()}:`,
-              errorMessage,
-            );
-            // Post error message to Discord channel
-            await postSnapshotErrorMessage(competition, errorMessage);
-            failureCount++;
-            continue; // Skip this competition and move to next
-          }
-
-          // Not a snapshot error - re-throw to be handled by outer catch
-          throw error;
+        const leaderboard = await calculateLeaderboardSafely(competition);
+        if (!leaderboard) {
+          failureCount++;
+          continue;
         }
 
         // Cache leaderboard to S3 (both current and historical snapshot)

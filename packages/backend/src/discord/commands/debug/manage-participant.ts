@@ -2,10 +2,14 @@ import type { ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { match } from "ts-pattern";
 import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
-import { getCompetitionById } from "../../../database/competition/queries.js";
-import { addParticipant, removeParticipant, getParticipantStatus } from "../../../database/competition/participants.js";
-import { getErrorMessage } from "../../../utils/errors.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
+import {
+  addParticipant,
+  removeParticipant,
+  getParticipantStatus,
+} from "@scout-for-lol/backend/database/competition/participants.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 
 /**
  * Execute /debug manage-participant command
@@ -140,13 +144,12 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
       // Add participant with JOINED status
       try {
         const validCompetitionId = CompetitionIdSchema.parse(competitionId);
-        await addParticipant(
+        await addParticipant({
           prisma,
-          validCompetitionId,
-          player.id,
-          "JOINED",
-          DiscordAccountIdSchema.parse(interaction.user.id),
-        );
+          competitionId: validCompetitionId,
+          playerId: player.id,
+          status: "JOINED",
+        });
         console.log(
           `[Debug Manage Participant] Added user ${targetUser.id} to competition ${competitionId.toString()}`,
         );

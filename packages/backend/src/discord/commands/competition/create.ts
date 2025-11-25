@@ -1,127 +1,45 @@
-import { type ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits } from "discord.js";
+import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
 import {
   ChampionIdSchema,
-  CompetitionQueueTypeSchema,
-  CompetitionVisibilitySchema,
   DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
-  SeasonIdSchema,
   hasSeasonEnded,
   type CompetitionCriteria,
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
-import { prisma } from "../../../database/index.js";
-import { canCreateCompetition } from "../../../database/competition/permissions.js";
-import { type CreateCompetitionInput, createCompetition } from "../../../database/competition/queries.js";
-import { recordCreation } from "../../../database/competition/rate-limit.js";
-import { validateOwnerLimit, validateServerLimit } from "../../../database/competition/validation.js";
-import { getErrorMessage } from "../../../utils/errors.js";
-import { getChampionId } from "../../../utils/champion.js";
-import { addParticipant } from "../../../database/competition/participants.js";
-import { formatCriteriaType, getStatusEmoji, formatDateInfo } from "./helpers.js";
-import { truncateDiscordMessage } from "../../utils/message.js";
+import { match, P } from "ts-pattern";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { canCreateCompetition } from "@scout-for-lol/backend/database/competition/permissions.js";
+import { type CreateCompetitionInput, createCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
+import { recordCreation } from "@scout-for-lol/backend/database/competition/rate-limit.js";
+import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/database/competition/validation.js";
+import { getChampionId } from "@scout-for-lol/backend/utils/champion.js";
+import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
+import {
+  formatCriteriaType,
+  getStatusEmoji,
+  formatDateInfo,
+} from "@scout-for-lol/backend/discord/commands/competition/helpers.js";
+import {
+  replyWithErrorFromException,
+  replyWithError,
+  replyWithSuccess,
+} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
+import {
+  CommonArgsSchema,
+  FixedDatesArgsSchema,
+  SeasonArgsSchema,
+  MostGamesPlayedArgsSchema,
+  HighestRankArgsSchema,
+  MostRankClimbArgsSchema,
+  MostWinsPlayerArgsSchema,
+  MostWinsChampionArgsSchema,
+  HighestWinRateArgsSchema,
+} from "@scout-for-lol/backend/discord/commands/competition/schemas.js";
 
 // ============================================================================
 // Input Parsing Schema - Discriminated Unions
 // ============================================================================
-
-/**
- * Common fields for all variants
- */
-const CommonArgsSchema = z.object({
-  title: z.string().min(1).max(100),
-  description: z.string().min(1).max(500),
-  channelId: DiscordChannelIdSchema,
-  guildId: DiscordGuildIdSchema,
-  userId: DiscordAccountIdSchema,
-  visibility: CompetitionVisibilitySchema.optional(),
-  maxParticipants: z.number().int().min(2).max(100).optional(),
-  addAllMembers: z.boolean().optional(),
-});
-
-/**
- * Fixed dates variant with date string validation
- * Supports ISO 8601 formats including timezone information:
- * - YYYY-MM-DD (defaults to midnight local time)
- * - YYYY-MM-DDTHH:mm:ss (local time)
- * - YYYY-MM-DDTHH:mm:ssZ (UTC)
- * - YYYY-MM-DDTHH:mm:ss+HH:mm (with timezone offset)
- */
-const FixedDatesArgsSchema = z
-  .object({
-    dateType: z.literal("FIXED"),
-    startDate: z.string(),
-    endDate: z.string(),
-  })
-  .refine(
-    (data) => {
-      const start = new Date(data.startDate);
-      const end = new Date(data.endDate);
-      return !isNaN(start.getTime()) && !isNaN(end.getTime());
-    },
-    {
-      message: "Invalid date format. Use ISO 8601 format (YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, or with timezone Z/+HH:mm)",
-      path: ["startDate"],
-    },
-  )
-  .refine(
-    (data) => {
-      const start = new Date(data.startDate);
-      const end = new Date(data.endDate);
-      return start < end;
-    },
-    {
-      message: "Start date must be before end date",
-      path: ["startDate"],
-    },
-  );
-
-/**
- * Season variant using predefined season IDs
- */
-const SeasonArgsSchema = z.object({
-  dateType: z.literal("SEASON"),
-  season: SeasonIdSchema,
-});
-
-/**
- * Criteria-specific args (using union of all possible combinations)
- */
-const MostGamesPlayedArgsSchema = z.object({
-  criteriaType: z.literal("MOST_GAMES_PLAYED"),
-  queue: CompetitionQueueTypeSchema,
-});
-
-const HighestRankArgsSchema = z.object({
-  criteriaType: z.literal("HIGHEST_RANK"),
-  queue: z.enum(["SOLO", "FLEX"]),
-});
-
-const MostRankClimbArgsSchema = z.object({
-  criteriaType: z.literal("MOST_RANK_CLIMB"),
-  queue: z.enum(["SOLO", "FLEX"]),
-});
-
-const MostWinsPlayerArgsSchema = z.object({
-  criteriaType: z.literal("MOST_WINS_PLAYER"),
-  queue: CompetitionQueueTypeSchema,
-});
-
-const MostWinsChampionArgsSchema = z.object({
-  criteriaType: z.literal("MOST_WINS_CHAMPION"),
-  // Champion can be provided as string (from autocomplete with ID) or name
-  // We'll convert it to championId during parsing
-  champion: z.string().min(1),
-  queue: CompetitionQueueTypeSchema.optional(),
-});
-
-const HighestWinRateArgsSchema = z.object({
-  criteriaType: z.literal("HIGHEST_WIN_RATE"),
-  queue: CompetitionQueueTypeSchema,
-  minGames: z.number().int().positive().optional(),
-});
 
 /**
  * Union of all possible argument combinations
@@ -151,27 +69,13 @@ type CreateCommandArgs = z.infer<typeof CreateCommandArgsSchema>;
 /**
  * Execute /competition create command
  */
-export async function executeCompetitionCreate(interaction: ChatInputCommandInteraction): Promise<void> {
-  const startTime = Date.now();
-  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
+async function parseCreateArgs(interaction: ChatInputCommandInteraction): Promise<CreateCommandArgs | null> {
   const username = interaction.user.username;
-  const guildId = interaction.guildId;
-
-  console.log(`🏆 Starting competition creation for user ${username} (${userId}) in guild ${guildId ?? "unknown"}`);
-
-  // ============================================================================
-  // Step 1: Parse and validate Discord command options
-  // ============================================================================
-
-  let args: CreateCommandArgs;
-
   try {
-    // Parse Discord options
     const startDateStr = interaction.options.getString("start-date");
     const endDateStr = interaction.options.getString("end-date");
     const seasonStr = interaction.options.getString("season");
 
-    // Determine date type
     const hasFixedDates = startDateStr !== null && endDateStr !== null;
     const hasSeason = seasonStr !== null;
 
@@ -184,13 +88,13 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
 
     const dateType = hasFixedDates ? ("FIXED" as const) : ("SEASON" as const);
 
-    args = CreateCommandArgsSchema.parse({
+    const args = CreateCommandArgsSchema.parse({
       title: interaction.options.getString("title"),
       description: interaction.options.getString("description"),
       criteriaType: interaction.options.getString("criteria-type"),
       channelId: interaction.options.getChannel("channel")?.id,
-      guildId,
-      userId,
+      guildId: interaction.guildId,
+      userId: DiscordAccountIdSchema.parse(interaction.user.id),
       dateType,
       startDate: startDateStr ?? undefined,
       endDate: endDateStr ?? undefined,
@@ -205,40 +109,35 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
 
     console.log(`✅ Command arguments validated successfully`);
     console.log(`📋 Title: "${args.title}", Criteria: ${args.criteriaType}, Channel: ${args.channelId}`);
+    return args;
   } catch (error) {
     console.error(`❌ Invalid command arguments from ${username}:`, error);
     const validationError = fromError(error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`**Invalid input:**\n${validationError.toString()}`),
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
+    await replyWithError(interaction, `**Invalid input:**\n${validationError.toString()}`);
+    return null;
   }
+}
 
-  // ============================================================================
-  // Step 2: Permission and rate limit checks
-  // ============================================================================
-
-  let isAdmin = false;
-
+async function checkPermissionsForCreate(
+  interaction: ChatInputCommandInteraction,
+  args: CreateCommandArgs,
+  username: string,
+): Promise<boolean> {
   try {
-    // Get member to check permissions
-    const member = await interaction.guild?.members.fetch(userId);
+    const member = await interaction.guild?.members.fetch(args.userId);
     if (!member) {
       throw new Error("Could not fetch member from guild");
     }
 
-    // Check if user is an admin
-    isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
+    const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
-    // If addAllMembers is true, require admin permission
     if (args.addAllMembers && !isAdmin) {
       console.warn(`⚠️  Non-admin ${username} attempted to use add-all-members option`);
       await interaction.reply({
         content: `**Permission denied:**\nThe \`add-all-members\` option requires Administrator permission.`,
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       });
-      return;
+      return false;
     }
 
     const permissionCheck = await canCreateCompetition(prisma, args.guildId, args.userId, member.permissions);
@@ -247,63 +146,89 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
       console.warn(`⚠️  Permission denied for ${username}: ${permissionCheck.reason ?? "unknown reason"}`);
       await interaction.reply({
         content: `**Permission denied:**\n${permissionCheck.reason ?? "No permission"}`,
-        flags: MessageFlags.Ephemeral,
+        ephemeral: true,
       });
-      return;
+      return false;
     }
 
     console.log(`✅ Permission check passed for ${username}`);
+    return true;
   } catch (error) {
     console.error(`❌ Permission check failed:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`**Error checking permissions:**\n${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithErrorFromException(interaction, error, "checking permissions");
+    return false;
+  }
+}
+
+export async function executeCompetitionCreate(interaction: ChatInputCommandInteraction): Promise<void> {
+  const startTime = Date.now();
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
+  const username = interaction.user.username;
+  const guildId = interaction.guildId;
+
+  console.log(`🏆 Starting competition creation for user ${username} (${userId}) in guild ${guildId ?? "unknown"}`);
+
+  // Step 1: Parse and validate Discord command options
+  const args = await parseCreateArgs(interaction);
+  if (!args) {
     return;
   }
 
-  // TypeScript narrows the union based on criteriaType!
-  let criteria: CompetitionCriteria;
-
-  // TODO: use pattern matching to remove else
-  if (args.criteriaType === "MOST_GAMES_PLAYED") {
-    criteria = { type: "MOST_GAMES_PLAYED", queue: args.queue };
-  } else if (args.criteriaType === "HIGHEST_RANK") {
-    criteria = { type: "HIGHEST_RANK", queue: args.queue };
-  } else if (args.criteriaType === "MOST_RANK_CLIMB") {
-    criteria = { type: "MOST_RANK_CLIMB", queue: args.queue };
-  } else if (args.criteriaType === "MOST_WINS_PLAYER") {
-    criteria = { type: "MOST_WINS_PLAYER", queue: args.queue };
-  } else if (args.criteriaType === "MOST_WINS_CHAMPION") {
-    // Convert champion string (ID from autocomplete) to number
-    // Try parsing as number first (from autocomplete), then try as name
-    let championId: number;
-    const championIdFromString = Number.parseInt(args.champion, 10);
-    if (!isNaN(championIdFromString)) {
-      championId = championIdFromString;
-    } else {
-      // Try looking up by name
-      const idFromName = getChampionId(args.champion);
-      if (!idFromName) {
-        throw new Error(`Invalid champion: "${args.champion}". Please select a champion from the autocomplete list.`);
-      }
-      championId = idFromName;
-    }
-
-    criteria = {
-      type: "MOST_WINS_CHAMPION",
-      championId: ChampionIdSchema.parse(championId),
-      queue: args.queue,
-    };
-    // TODO: use ts-pattern for exhaustive match
-  } else {
-    // Last case: HIGHEST_WIN_RATE
-    criteria = {
-      type: "HIGHEST_WIN_RATE",
-      minGames: args.minGames ?? 10,
-      queue: args.queue,
-    };
+  // Step 2: Permission and rate limit checks
+  const hasPermission = await checkPermissionsForCreate(interaction, args, username);
+  if (!hasPermission) {
+    return;
   }
+
+  // Match on full args object to properly narrow discriminated union types
+  const criteria: CompetitionCriteria = match(args)
+    .with({ criteriaType: "MOST_GAMES_PLAYED", queue: P.select() }, (queue) => ({
+      type: "MOST_GAMES_PLAYED" as const,
+      queue,
+    }))
+    .with({ criteriaType: "HIGHEST_RANK", queue: P.select() }, (queue) => ({
+      type: "HIGHEST_RANK" as const,
+      queue,
+    }))
+    .with({ criteriaType: "MOST_RANK_CLIMB", queue: P.select() }, (queue) => ({
+      type: "MOST_RANK_CLIMB" as const,
+      queue,
+    }))
+    .with({ criteriaType: "MOST_WINS_PLAYER", queue: P.select() }, (queue) => ({
+      type: "MOST_WINS_PLAYER" as const,
+      queue,
+    }))
+    .with({ criteriaType: "MOST_WINS_CHAMPION" }, (narrowedArgs) => {
+      // TypeScript now knows narrowedArgs has the champion field
+      // Convert champion string (ID from autocomplete) to number
+      // Try parsing as number first (from autocomplete), then try as name
+      let championId: number;
+      const championIdFromString = Number.parseInt(narrowedArgs.champion, 10);
+      if (!isNaN(championIdFromString)) {
+        championId = championIdFromString;
+      } else {
+        // Try looking up by name
+        const idFromName = getChampionId(narrowedArgs.champion);
+        if (!idFromName) {
+          throw new Error(
+            `Invalid champion: "${narrowedArgs.champion}". Please select a champion from the autocomplete list.`,
+          );
+        }
+        championId = idFromName;
+      }
+
+      return {
+        type: "MOST_WINS_CHAMPION" as const,
+        championId: ChampionIdSchema.parse(championId),
+        queue: narrowedArgs.queue,
+      };
+    })
+    .with({ criteriaType: "HIGHEST_WIN_RATE" }, (narrowedArgs) => ({
+      type: "HIGHEST_WIN_RATE" as const,
+      minGames: narrowedArgs.minGames ?? 10,
+      queue: narrowedArgs.queue,
+    }))
+    .exhaustive();
 
   console.log(`✅ Criteria built:`, criteria);
 
@@ -315,28 +240,26 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
 
   try {
     // Parse dates - schema already validated format and presence
-    let dates: CreateCompetitionInput["dates"];
-    if (args.dateType === "FIXED") {
-      if (!args.startDate || !args.endDate) {
-        throw new Error("startDate/endDate required for FIXED (validation error)");
-      }
-      dates = {
+    const dates: CreateCompetitionInput["dates"] = match(args)
+      .with({ dateType: "FIXED" }, (narrowedArgs) => ({
         type: "FIXED_DATES" as const,
-        startDate: new Date(args.startDate),
-        endDate: new Date(args.endDate),
-      };
-      // TODO: use ts-pattern for exhaustive match
-    } else {
-      // Validate season hasn't ended yet
-      if (hasSeasonEnded(args.season)) {
-        throw new Error(`Cannot create competition for season ${args.season} - this season has already ended`);
-      }
+        startDate: new Date(narrowedArgs.startDate),
+        endDate: new Date(narrowedArgs.endDate),
+      }))
+      .with({ dateType: "SEASON" }, (narrowedArgs) => {
+        // Validate season hasn't ended yet
+        if (hasSeasonEnded(narrowedArgs.season)) {
+          throw new Error(
+            `Cannot create competition for season ${narrowedArgs.season} - this season has already ended`,
+          );
+        }
 
-      dates = {
-        type: "SEASON" as const,
-        seasonId: args.season,
-      };
-    }
+        return {
+          type: "SEASON" as const,
+          seasonId: narrowedArgs.season,
+        };
+      })
+      .exhaustive();
 
     // args is already validated and has branded types from CommonArgsSchema
     competitionInput = {
@@ -354,10 +277,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     console.log(`✅ Competition input built (fully type-safe)`);
   } catch (error) {
     console.error(`❌ Failed to build competition input:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`**Invalid competition data:**\n${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithErrorFromException(interaction, error, "building competition data");
     return;
   }
 
@@ -380,10 +300,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     console.log(`✅ Business validation passed`);
   } catch (error) {
     console.error(`❌ Business validation failed:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`**Validation failed:**\n${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithErrorFromException(interaction, error, "validating competition");
     return;
   }
 
@@ -428,7 +345,14 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
 
         // Add each player as a participant
         const addResults = await Promise.allSettled(
-          players.map((player) => addParticipant(prisma, competition.id, player.id, "JOINED")),
+          players.map((player) =>
+            addParticipant({
+              prisma,
+              competitionId: competition.id,
+              playerId: player.id,
+              status: "JOINED",
+            }),
+          ),
         );
 
         // Count successful additions
@@ -479,15 +403,9 @@ ${competition.description}
 \`/competition join competition-id:${competition.id.toString()}\``;
     }
 
-    await interaction.reply({
-      content: truncateDiscordMessage(successMessage),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithSuccess(interaction, successMessage);
   } catch (error) {
     console.error(`❌ Database error during competition creation:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`**Error creating competition:**\n${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithErrorFromException(interaction, error, "creating competition");
   }
 }

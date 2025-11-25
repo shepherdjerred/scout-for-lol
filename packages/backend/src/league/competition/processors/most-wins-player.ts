@@ -1,56 +1,29 @@
-import type { MostWinsPlayerCriteria } from "@scout-for-lol/data";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import type { LeaderboardEntry, PlayerWithAccounts } from "./types.js";
-import { getPlayerParticipant, isWin, matchesQueue } from "./helpers.js";
+import type { MostWinsPlayerCriteria, MatchDto } from "@scout-for-lol/data";
+import type {
+  LeaderboardEntry,
+  PlayerWithAccounts,
+} from "@scout-for-lol/backend/league/competition/processors/types.js";
+import { createWinBasedProcessor } from "@scout-for-lol/backend/league/competition/processors/processor-helpers.js";
 
 /**
  * Process "Most Wins (Player)" criteria
  * Counts the total number of wins by each participant in the specified queue
  */
 export function processMostWinsPlayer(
-  matches: MatchV5DTOs.MatchDto[],
+  matches: MatchDto[],
   participants: PlayerWithAccounts[],
   criteria: MostWinsPlayerCriteria,
 ): LeaderboardEntry[] {
-  const winCounts: Record<number, number> = {};
-  const totalGames: Record<number, number> = {};
-
-  // Count wins for each player
-  for (const match of matches) {
-    // Filter by queue
-    if (!matchesQueue(match, criteria.queue)) continue;
-
-    for (const participant of participants) {
-      const participantData = getPlayerParticipant(participant, match);
-      if (participantData) {
-        const currentWins = winCounts[participant.id] ?? 0;
-        const currentGames = totalGames[participant.id] ?? 0;
-
-        if (isWin(participantData)) {
-          winCounts[participant.id] = currentWins + 1;
-        }
-        totalGames[participant.id] = currentGames + 1;
-      }
-    }
-  }
-
-  // Convert to leaderboard entries
-  const entries: LeaderboardEntry[] = [];
-  for (const participant of participants) {
-    const wins = winCounts[participant.id] ?? 0;
-    const games = totalGames[participant.id] ?? 0;
-
-    entries.push({
-      playerId: participant.id,
-      playerName: participant.alias,
-      score: wins,
-      metadata: {
-        wins,
-        games,
-        losses: games - wins,
-      },
-    });
-  }
-
-  return entries;
+  return createWinBasedProcessor({
+    matches,
+    participants,
+    queue: criteria.queue,
+    scoreFn: (wins) => wins, // Score is just wins
+    metadataFn: (wins, games) => ({
+      wins,
+      games,
+      losses: games - wins,
+    }),
+    criteria,
+  });
 }

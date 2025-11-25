@@ -4,20 +4,22 @@ import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-  LeaguePuuidSchema,
   RegionSchema,
   RiotIdSchema,
 } from "@scout-for-lol/data";
-import { riotApi } from "../../../league/api/api";
-import { mapRegionToEnum } from "../../../league/model/region";
-import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
-import { prisma } from "../../../database/index";
+import { prisma } from "@scout-for-lol/backend/database/index";
 import { fromError } from "zod-validation-error";
-import { getErrorMessage } from "../../../utils/errors.js";
-import { getLimit } from "../../../configuration/flags.js";
-import { DISCORD_SERVER_INVITE, LIMIT_WARNING_THRESHOLD } from "../../../configuration/subscription-limits.js";
-import { backfillLastMatchTime } from "../../../league/api/backfill-match-history.js";
-import { sendWelcomeMatch } from "./welcome-match.js";
+import {
+  checkSubscriptionLimit,
+  checkAccountLimit,
+  resolveRiotIdToPuuid,
+} from "@scout-for-lol/backend/discord/commands/subscription/add-helpers.js";
+import {
+  buildSubscriptionResponse,
+  createSubscriptionRecords,
+  handleWelcomeMatch,
+  validateSubscriptionArgs,
+} from "@scout-for-lol/backend/discord/commands/subscription/add-helpers-internal.js";
 
 export const ArgsSchema = z.object({
   channel: DiscordChannelIdSchema,
@@ -35,25 +37,9 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
 
   console.log(`🔔 Starting subscription process for user ${username} (${userId})`);
 
-  let args: z.infer<typeof ArgsSchema>;
-
-  try {
-    args = ArgsSchema.parse({
-      channel: interaction.options.getChannel("channel")?.id,
-      region: interaction.options.getString("region"),
-      riotId: interaction.options.getString("riot-id"),
-      user: interaction.options.getUser("user")?.id,
-      alias: interaction.options.getString("alias"),
-      guildId: interaction.guildId,
-    });
-
-    console.log(`✅ Command arguments validated successfully`);
-    console.log(
-      `📋 Args: channel=${args.channel}, region=${args.region}, riotId=${args.riotId.game_name}#${args.riotId.tag_line}, alias=${args.alias}`,
-    );
-  } catch (error) {
-    console.error(`❌ Invalid command arguments from ${username}:`, error);
-    const validationError = fromError(error);
+  const args = validateSubscriptionArgs(interaction, ArgsSchema);
+  if (!args) {
+    const validationError = fromError(new Error("Invalid command arguments"));
     await interaction.reply({
       content: validationError.toString(),
       ephemeral: true,
@@ -74,115 +60,20 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
   });
 
   // Check subscription limit (only if creating a new player)
-  if (!existingPlayer) {
-    const subscriptionLimit = getLimit("player_subscriptions", { server: guildId });
-    const isUnlimited = subscriptionLimit === "unlimited";
-
-    if (!isUnlimited) {
-      console.log(`🔍 Checking subscription limit for server ${guildId}: ${subscriptionLimit.toString()} players`);
-
-      // Count unique players with subscriptions in this server
-      const subscribedPlayerCount = await prisma.player.count({
-        where: {
-          serverId: guildId,
-          subscriptions: {
-            some: {},
-          },
-        },
-      });
-
-      console.log(`📊 Current subscribed players: ${subscribedPlayerCount.toString()}/${subscriptionLimit.toString()}`);
-
-      if (subscribedPlayerCount >= subscriptionLimit) {
-        console.log(
-          `❌ Subscription limit reached for server ${guildId} (${subscribedPlayerCount.toString()}/${subscriptionLimit.toString()})`,
-        );
-
-        await interaction.reply({
-          content: `❌ **Subscription limit reached**\n\nThis server can subscribe to a maximum of ${subscriptionLimit.toString()} players. You currently have ${subscribedPlayerCount.toString()} subscribed players.\n\nTo subscribe to a new player, please unsubscribe from an existing player first using \`/subscription delete\`.\n\nIf you need more subscriptions, please contact us: ${DISCORD_SERVER_INVITE}`,
-          ephemeral: true,
-        });
-        return;
-      }
-
-      // Warn if approaching limit (threshold or fewer slots remaining)
-      const remainingSlots = subscriptionLimit - subscribedPlayerCount - 1;
-      if (remainingSlots <= LIMIT_WARNING_THRESHOLD && remainingSlots > 0) {
-        await interaction.followUp({
-          content: `⚠️  **Approaching subscription limit**\n\nYou will have ${remainingSlots.toString()} subscription slot${remainingSlots === 1 ? "" : "s"} remaining after this addition.\n\nIf you need more subscriptions, please contact us: ${DISCORD_SERVER_INVITE}`,
-          ephemeral: true,
-        });
-      }
-    } else {
-      console.log(`♾️ Server ${guildId} has unlimited subscriptions`);
-    }
-  } else {
-    console.log(
-      `📌 Adding account to existing player "${alias}" (ID: ${existingPlayer.id.toString()}) - no limit check needed`,
-    );
+  const subscriptionLimitPassed = await checkSubscriptionLimit(interaction, guildId, existingPlayer);
+  if (!subscriptionLimitPassed) {
+    return;
   }
 
   // Check account limit (always check, even for existing players)
-  const accountLimit = getLimit("accounts", { server: guildId });
-  const isUnlimitedAccounts = accountLimit === "unlimited";
-
-  if (!isUnlimitedAccounts) {
-    console.log(`🔍 Checking account limit for server ${guildId}: ${accountLimit.toString()} accounts`);
-
-    // Count all accounts in this server
-    const accountCount = await prisma.account.count({
-      where: {
-        serverId: guildId,
-      },
-    });
-
-    console.log(`📊 Current accounts: ${accountCount.toString()}/${accountLimit.toString()}`);
-
-    if (accountCount >= accountLimit) {
-      console.log(
-        `❌ Account limit reached for server ${guildId} (${accountCount.toString()}/${accountLimit.toString()})`,
-      );
-
-      await interaction.reply({
-        content: `❌ **Account limit reached**\n\nThis server can have a maximum of ${accountLimit.toString()} accounts. You currently have ${accountCount.toString()} accounts.\n\nTo add a new account, please remove an existing account first.\n\nIf you need more accounts, please contact us: ${DISCORD_SERVER_INVITE}`,
-        ephemeral: true,
-      });
-      return;
-    }
-
-    // Warn if approaching limit (threshold or fewer slots remaining)
-    const remainingAccountSlots = accountLimit - accountCount - 1;
-    if (remainingAccountSlots <= LIMIT_WARNING_THRESHOLD && remainingAccountSlots > 0) {
-      await interaction.followUp({
-        content: `⚠️  **Approaching account limit**\n\nYou will have ${remainingAccountSlots.toString()} account slot${remainingAccountSlots === 1 ? "" : "s"} remaining after this addition.\n\nIf you need more accounts, please contact us: ${DISCORD_SERVER_INVITE}`,
-        ephemeral: true,
-      });
-    }
-  } else {
-    console.log(`♾️ Server ${guildId} has unlimited accounts`);
+  const accountLimitPassed = await checkAccountLimit(interaction, guildId);
+  if (!accountLimitPassed) {
+    return;
   }
 
-  console.log(`🔍 Looking up Riot ID: ${riotId.game_name}#${riotId.tag_line} in region ${region}`);
-
-  let puuid: string;
-  try {
-    const apiStartTime = Date.now();
-    const regionGroup = regionToRegionGroupForAccountAPI(mapRegionToEnum(region));
-
-    console.log(`🌐 Using region group: ${regionGroup}`);
-
-    const account = await riotApi.Account.getByRiotId(riotId.game_name, riotId.tag_line, regionGroup);
-
-    const apiTime = Date.now() - apiStartTime;
-    puuid = account.response.puuid;
-
-    console.log(`✅ Successfully resolved Riot ID to PUUID: ${puuid} (${apiTime.toString()}ms)`);
-  } catch (error) {
-    console.error(`❌ Failed to resolve Riot ID ${riotId.game_name}#${riotId.tag_line}:`, error);
-    await interaction.reply({
-      content: `Error looking up Riot ID: ${getErrorMessage(error)}`,
-      ephemeral: true,
-    });
+  // Resolve Riot ID to PUUID
+  const puuid = await resolveRiotIdToPuuid(interaction, riotId, region);
+  if (!puuid) {
     return;
   }
 
@@ -221,196 +112,85 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
   const now = new Date();
   console.log(`💾 Starting database operations for subscription`);
 
-  try {
-    const dbStartTime = Date.now();
+  const result = await createSubscriptionRecords({
+    args,
+    existingPlayer,
+    puuid,
+    userId,
+    now,
+  });
 
-    const isAddingToExistingPlayer = existingPlayer !== null;
-
-    // add a new account
-    console.log(`📝 Creating account record for ${alias}`);
-    const account = await prisma.account.create({
-      data: {
-        alias: alias,
-        puuid: LeaguePuuidSchema.parse(puuid),
-        region: region,
-        serverId: guildId,
-        creatorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
-        player: {
-          connectOrCreate: {
-            where: {
-              serverId_alias: {
-                serverId: guildId,
-                alias: alias,
-              },
-            },
-            create: {
-              alias: alias,
-              discordId: user ?? null,
-              createdTime: now,
-              updatedTime: now,
-              creatorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
-              serverId: guildId,
+  if (!result.success) {
+    if (
+      result.error === "SUBSCRIPTION_EXISTS" &&
+      result.playerAccount &&
+      result.isAddingToExistingPlayer !== undefined
+    ) {
+      // Handle existing subscription case
+      const playerAccount = await prisma.account.findUnique({
+        where: {
+          serverId_puuid: {
+            serverId: guildId,
+            puuid: puuid,
+          },
+        },
+        include: {
+          player: {
+            include: {
+              accounts: true,
+              subscriptions: true,
             },
           },
         },
-        createdTime: now,
-        updatedTime: now,
-      },
-    });
+      });
 
-    console.log(`✅ Account created with ID: ${account.id.toString()}`);
+      if (playerAccount) {
+        if (result.isAddingToExistingPlayer) {
+          const accountCount = playerAccount.player.accounts.length;
+          const accountList = playerAccount.player.accounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
 
-    // Backfill match history to initialize lastMatchTime
-    // This prevents newly added players from being stuck on 1-minute polling interval
-    const playerConfigEntry = {
-      alias: alias,
-      league: {
-        leagueAccount: {
-          puuid: LeaguePuuidSchema.parse(puuid),
-          region: region,
-        },
-      },
-      discordAccount: {
-        id: user ?? undefined,
-      },
-    };
-
-    await backfillLastMatchTime(playerConfigEntry, LeaguePuuidSchema.parse(puuid));
-
-    // get the player for the account
-    const playerAccount = await prisma.account.findUnique({
-      where: {
-        id: account.id,
-      },
-      include: {
-        player: {
-          include: {
-            accounts: true,
-          },
-        },
-      },
-    });
-
-    if (!playerAccount) {
-      console.error(`❌ Failed to find player for account ID: ${account.id.toString()}`);
+          await interaction.reply({
+            content: `✅ **Account added successfully**\n\nAdded **${riotId.game_name}#${riotId.tag_line}** to player "${playerAccount.player.alias}".\n\nThis player is already subscribed in <#${channel}> and now has ${accountCount.toString()} account${accountCount === 1 ? "" : "s"}:\n${accountList}\n\nMatch updates for all accounts will continue to be posted there.`,
+            ephemeral: true,
+          });
+        } else {
+          await interaction.reply({
+            content: `ℹ️ **Already subscribed**\n\nPlayer "${playerAccount.player.alias}" is already subscribed in <#${channel}>.\n\nMatch updates will continue to be posted there.`,
+            ephemeral: true,
+          });
+        }
+      }
+    } else {
       await interaction.reply({
-        content: "Error finding player for account",
+        content: `Error creating database records: ${result.error}`,
         ephemeral: true,
       });
-      return;
     }
-
-    console.log(`📝 Found player record: ${playerAccount.player.alias} (ID: ${playerAccount.player.id.toString()})`);
-
-    // Check if subscription already exists for this player in this channel
-    const existingSubscription = await prisma.subscription.findUnique({
-      where: {
-        serverId_playerId_channelId: {
-          serverId: guildId,
-          playerId: playerAccount.player.id,
-          channelId: channel,
-        },
-      },
-    });
-
-    if (existingSubscription) {
-      console.log(`⚠️  Subscription already exists for player ${playerAccount.player.alias} in channel ${channel}`);
-
-      // If we just added an account to an existing player, show success message
-      if (isAddingToExistingPlayer) {
-        const accountCount = playerAccount.player.accounts.length;
-        const accountList = playerAccount.player.accounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
-
-        await interaction.reply({
-          content: `✅ **Account added successfully**\n\nAdded **${riotId.game_name}#${riotId.tag_line}** to player "${playerAccount.player.alias}".\n\nThis player is already subscribed in <#${channel}> and now has ${accountCount.toString()} account${accountCount === 1 ? "" : "s"}:\n${accountList}\n\nMatch updates for all accounts will continue to be posted there.`,
-          ephemeral: true,
-        });
-      } else {
-        // This shouldn't happen in normal flow, but handle it just in case
-        await interaction.reply({
-          content: `ℹ️ **Already subscribed**\n\nPlayer "${playerAccount.player.alias}" is already subscribed in <#${channel}>.\n\nMatch updates will continue to be posted there.`,
-          ephemeral: true,
-        });
-      }
-      return;
-    }
-
-    // Check if this is the first subscription for the server
-    const existingSubscriptionCount = await prisma.subscription.count({
-      where: {
-        serverId: guildId,
-      },
-    });
-    const isFirstSubscription = existingSubscriptionCount === 0;
-
-    if (isFirstSubscription) {
-      console.log(`🎉 This is the first subscription for server ${guildId}`);
-    }
-
-    // create a new subscription
-    console.log(`📝 Creating subscription for channel ${channel}`);
-    const subscription = await prisma.subscription.create({
-      data: {
-        channelId: channel,
-        playerId: playerAccount.player.id,
-        createdTime: now,
-        updatedTime: now,
-        creatorDiscordId: DiscordAccountIdSchema.parse(interaction.user.id),
-        serverId: guildId,
-      },
-    });
-
-    const dbTime = Date.now() - dbStartTime;
-    console.log(`✅ Subscription created with ID: ${subscription.id.toString()} (${dbTime.toString()}ms)`);
-
-    const totalTime = Date.now() - startTime;
-    console.log(`🎉 Subscription completed successfully in ${totalTime.toString()}ms`);
-
-    // Build response message based on whether we added to existing player
-    let responseMessage = `Successfully subscribed to updates for ${riotId.game_name}#${riotId.tag_line}`;
-
-    if (isAddingToExistingPlayer) {
-      const accountCount = playerAccount.player.accounts.length;
-      const accountList = playerAccount.player.accounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
-      responseMessage += `\n\n✨ **Added to existing player "${alias}"**`;
-      responseMessage += `\nThis player now has ${accountCount.toString()} account${accountCount === 1 ? "" : "s"}:\n${accountList}`;
-    } else {
-      responseMessage += `\n\n✅ Created new player profile for "${alias}"`;
-    }
-
-    await interaction.reply({
-      content: responseMessage,
-      ephemeral: true,
-    });
-
-    // If this is the first subscription for the server, send a welcome match asynchronously
-    if (isFirstSubscription) {
-      console.log(`🎁 Triggering welcome match for ${riotId.game_name}#${riotId.tag_line}`);
-
-      const playerConfigEntry = {
-        alias: alias,
-        league: {
-          leagueAccount: {
-            puuid: LeaguePuuidSchema.parse(puuid),
-            region: region,
-          },
-        },
-        discordAccount: {
-          id: user ?? undefined,
-        },
-      };
-
-      // Fire off async task to send welcome match
-      void sendWelcomeMatch(interaction, playerConfigEntry).catch((error) => {
-        console.error(`❌ Error sending welcome match:`, error);
-        // Don't throw - this is a background task
-      });
-    }
-  } catch (error) {
-    console.error(`❌ Database error during subscription:`, error);
-    await interaction.reply({
-      content: `Error creating database records: ${getErrorMessage(error)}`,
-      ephemeral: true,
-    });
+    return;
   }
+
+  const totalTime = Date.now() - startTime;
+  console.log(`🎉 Subscription completed successfully in ${totalTime.toString()}ms`);
+
+  const responseMessage = buildSubscriptionResponse({
+    riotId,
+    alias,
+    isAddingToExistingPlayer: result.isAddingToExistingPlayer,
+    playerAccount: result.playerAccount,
+  });
+
+  await interaction.reply({
+    content: responseMessage,
+    ephemeral: true,
+  });
+
+  handleWelcomeMatch({
+    interaction,
+    isFirstSubscription: result.isFirstSubscription,
+    riotId,
+    alias,
+    puuid,
+    region,
+    user,
+  });
 }

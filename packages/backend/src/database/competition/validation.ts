@@ -1,4 +1,4 @@
-import { type PrismaClient } from "../../../generated/prisma/client/index.js";
+import { type PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import {
   CompetitionCriteriaSchema,
   CompetitionVisibilitySchema,
@@ -10,9 +10,9 @@ import {
   SeasonIdSchema,
 } from "@scout-for-lol/data";
 import { z } from "zod";
-import { fromZodError } from "zod-validation-error";
+import { differenceInCalendarDays } from "date-fns";
 
-import { getLimit } from "../../configuration/flags.js";
+import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
 
 // ============================================================================
 // Constants
@@ -42,14 +42,6 @@ export function isCompetitionActive(isCancelled: boolean, endDate: Date | null, 
   return endDate > now;
 }
 
-/**
- * Calculate duration in days between two dates
- */
-function getDurationInDays(startDate: Date, endDate: Date): number {
-  const durationMs = endDate.getTime() - startDate.getTime();
-  return durationMs / (1000 * 60 * 60 * 24);
-}
-
 // ============================================================================
 // Zod Schemas for Validation
 // ============================================================================
@@ -69,11 +61,11 @@ const FixedDateCompetitionSchema = z
     path: ["startDate"],
   })
   .superRefine((data, ctx) => {
-    const durationDays = getDurationInDays(data.startDate, data.endDate);
+    const durationDays = differenceInCalendarDays(data.endDate, data.startDate);
     if (durationDays > MAX_COMPETITION_DURATION_DAYS) {
       ctx.addIssue({
         code: "custom",
-        message: `Competition duration cannot exceed ${MAX_COMPETITION_DURATION_DAYS.toString()} days (got ${Math.ceil(durationDays).toString()} days)`,
+        message: `Competition duration cannot exceed ${MAX_COMPETITION_DURATION_DAYS.toString()} days (got ${durationDays.toString()} days)`,
         path: ["endDate"],
       });
     }
@@ -235,27 +227,4 @@ export async function validateServerLimit(
       `This server already has ${activeCompetitionCount.toString()} active competitions. Maximum allowed is ${limit.toString()}.`,
     );
   }
-}
-
-/**
- * Comprehensive validation for competition creation
- * Uses Zod schema for sync validations + async database checks
- */
-export async function validateCompetitionCreation(
-  prisma: PrismaClient,
-  input: CompetitionCreationInput,
-): Promise<CompetitionCreationInput> {
-  // First validate with Zod schema (throws ZodError if invalid)
-  const result = CompetitionCreationSchema.safeParse(input);
-  if (!result.success) {
-    throw fromZodError(result.error);
-  }
-
-  const validatedInput = result.data;
-
-  // Then run async database validations
-  await validateOwnerLimit(prisma, validatedInput.serverId, validatedInput.ownerId);
-  await validateServerLimit(prisma, validatedInput.serverId, validatedInput.ownerId);
-
-  return validatedInput;
 }

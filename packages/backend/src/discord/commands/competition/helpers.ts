@@ -40,9 +40,10 @@ export function getStatusEmoji(startDate: Date | null, endDate: Date | null): st
  */
 export function formatDateInfo(startDate: Date | null, endDate: Date | null, seasonId: string | null): string {
   if (startDate && endDate) {
-    const startTimestamp = Math.floor(startDate.getTime() / 1000).toString();
-    const endTimestamp = Math.floor(endDate.getTime() / 1000).toString();
+    const startTimestamp = String(Math.floor(startDate.getTime() / 1000));
+    const endTimestamp = String(Math.floor(endDate.getTime() / 1000));
     return `**Starts:** <t:${startTimestamp}:F>\n**Ends:** <t:${endTimestamp}:F>`;
   }
-  return `**Season:** ${seasonId ?? "Unknown"}`;
+  const seasonStr = seasonId ?? "Unknown";
+  return `**Season:** ${seasonStr}`;
 }

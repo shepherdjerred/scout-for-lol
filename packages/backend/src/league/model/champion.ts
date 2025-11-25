@@ -1,34 +1,9 @@
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { type Champion, type ArenaChampion, parseLane, type Augment } from "@scout-for-lol/data";
-import { mapAugmentIdsToUnion } from "../arena/augment";
-
-// Base champion conversion for traditional games
-export function participantToChampion(dto: MatchV5DTOs.ParticipantDto): Champion {
-  if (!dto.riotIdGameName) {
-    throw new Error("Missing riotIdGameName");
-  }
-
-  return {
-    riotIdGameName: dto.riotIdGameName,
-    championName: dto.championName,
-    kills: dto.kills,
-    deaths: dto.deaths,
-    assists: dto.assists,
-    items: [dto.item0, dto.item1, dto.item2, dto.item3, dto.item4, dto.item5, dto.item6],
-    spells: [dto.summoner1Id, dto.summoner2Id],
-    // TODO: parse runes
-    runes: [],
-    lane: parseLane(dto.teamPosition),
-    creepScore: dto.totalMinionsKilled + dto.neutralMinionsKilled,
-    visionScore: dto.visionScore,
-    damage: dto.totalDamageDealtToChampions,
-    gold: dto.goldEarned,
-    level: dto.champLevel,
-  };
-}
+import { type ArenaChampion, type Augment, type ParticipantDto } from "@scout-for-lol/data";
+import { participantToChampion } from "@scout-for-lol/data/model/match-helpers";
+import { mapAugmentIdsToUnion } from "@scout-for-lol/backend/league/arena/augment";
 
 // Arena champion conversion with arena-specific fields
-export async function participantToArenaChampion(dto: MatchV5DTOs.ParticipantDto): Promise<ArenaChampion> {
+export async function participantToArenaChampion(dto: ParticipantDto): Promise<ArenaChampion> {
   const baseChampion = participantToChampion(dto);
 
   const augments = await extractAugments(dto);
@@ -44,7 +19,7 @@ export async function participantToArenaChampion(dto: MatchV5DTOs.ParticipantDto
 }
 
 // Helpers for arena-specific fields
-export async function extractAugments(dto: MatchV5DTOs.ParticipantDto): Promise<Augment[]> {
+async function extractAugments(dto: ParticipantDto): Promise<Augment[]> {
   const ids: number[] = [];
   const augmentFields = [
     dto.playerAugment1,
@@ -59,7 +34,9 @@ export async function extractAugments(dto: MatchV5DTOs.ParticipantDto): Promise<
       ids.push(augment);
     }
   }
-  if (ids.length === 0) return [];
+  if (ids.length === 0) {
+    return [];
+  }
   try {
     const result = await mapAugmentIdsToUnion(ids);
     return result;
@@ -73,21 +50,21 @@ export async function extractAugments(dto: MatchV5DTOs.ParticipantDto): Promise<
   }
 }
 
-export function extractArenaMetrics(dto: MatchV5DTOs.ParticipantDto) {
+function extractArenaMetrics(dto: ParticipantDto) {
   return {
-    playerScore0: dto.PlayerScore0,
-    playerScore1: dto.PlayerScore1,
-    playerScore2: dto.PlayerScore2,
-    playerScore3: dto.PlayerScore3,
-    playerScore4: dto.PlayerScore4,
-    playerScore5: dto.PlayerScore5,
-    playerScore6: dto.PlayerScore6,
-    playerScore7: dto.PlayerScore7,
-    playerScore8: dto.PlayerScore8,
+    playerScore0: dto.playerScore0 ?? dto.PlayerScore0 ?? 0,
+    playerScore1: dto.playerScore1 ?? dto.PlayerScore1 ?? 0,
+    playerScore2: dto.playerScore2 ?? dto.PlayerScore2 ?? 0,
+    playerScore3: dto.playerScore3 ?? dto.PlayerScore3 ?? 0,
+    playerScore4: dto.playerScore4 ?? dto.PlayerScore4 ?? 0,
+    playerScore5: dto.playerScore5 ?? dto.PlayerScore5 ?? 0,
+    playerScore6: dto.playerScore6 ?? dto.PlayerScore6 ?? 0,
+    playerScore7: dto.playerScore7 ?? dto.PlayerScore7 ?? 0,
+    playerScore8: dto.playerScore8 ?? dto.PlayerScore8 ?? 0,
   };
 }
 
-export function extractTeamSupport(dto: MatchV5DTOs.ParticipantDto) {
+function extractTeamSupport(dto: ParticipantDto) {
   return {
     damageShieldedOnTeammate: dto.totalDamageShieldedOnTeammates,
     healsOnTeammate: dto.totalHealsOnTeammates,

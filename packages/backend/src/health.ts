@@ -1,6 +1,6 @@
 import { strict as assert } from "assert";
-import configuration from "./configuration.js";
-import { ErrorSchema } from "./utils/errors.js";
+import configuration from "@scout-for-lol/backend/configuration.js";
+import { ErrorSchema } from "@scout-for-lol/backend/utils/errors.js";
 
 console.log("🏥 Starting health check");
 console.log(`🔍 Health check URL: http://127.0.0.1:${configuration.port.toString()}/ping`);

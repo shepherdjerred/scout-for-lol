@@ -1,5 +1,5 @@
 import { LolApi, RiotApi } from "twisted";
-import configuration from "../../configuration.js";
+import configuration from "@scout-for-lol/backend/configuration.js";
 
 export const api = new LolApi({
   key: configuration.riotApiToken,

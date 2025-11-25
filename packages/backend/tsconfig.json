@@ -1,32 +1,12 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
     "module": "ES2022",
-    "lib": ["ES2022"],
-    "moduleResolution": "node",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "allowJs": true,
-    "types": ["bun-types", "node"],
-    "jsx": "react-jsx",
+    "checkJs": false,
     "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
-    "checkJs": true,
-    "exactOptionalPropertyTypes": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noUncheckedIndexedAccess": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "useUnknownInCatchVariables": true
+    "jsx": "react-jsx",
+    "types": ["bun-types", "node"]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "scripts/**/*", "test-*.ts"],
   "exclude": ["node_modules", "vendor"]
 }

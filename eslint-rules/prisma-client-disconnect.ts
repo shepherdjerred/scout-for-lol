@@ -75,7 +75,9 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
       // Check for afterAll with disconnect
       "CallExpression[callee.name='afterAll']"(node: TSESTree.CallExpression) {
         const callback = node.arguments[0];
-        if (callback === undefined) return;
+        if (callback === undefined) {
+          return;
+        }
 
         // Check if the callback body contains a $disconnect call
         if (
@@ -119,14 +121,15 @@ export const prismaClientDisconnect = createRule<Options, MessageIds>({
                       if (!hasAfterAllImport && bunTestImport !== undefined) {
                         // Find the closing brace of the import specifiers
                         const importText = sourceCode.getText(bunTestImport);
-                        const importRegex = /^import\s*\{\s*([^}]+)\s*\}\s*from/;
+                        // Use more specific regex without overlapping quantifiers
+                        const importRegex = /^import\s*\{([^}]+)\}\s*from/;
                         const importMatch = importRegex.exec(importText);
 
                         if (importMatch !== null) {
                           // Add afterAll to the import list
                           const newImportText = importText.replace(
-                            /^(import\s*\{\s*)([^}]+)(\s*\}\s*from)/,
-                            `$1afterAll, $2$3`,
+                            /^(import\s*\{)([^}]+)(\}\s*from)/,
+                            "$1afterAll, $2$3",
                           );
                           fixes.push(fixer.replaceText(bunTestImport, newImportText));
                         }

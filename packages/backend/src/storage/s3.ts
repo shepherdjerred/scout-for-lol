@@ -1,94 +1,39 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import configuration from "../configuration.js";
-import { getErrorMessage } from "../utils/errors.js";
-import type { MatchId } from "@scout-for-lol/data";
+import type { MatchId, MatchDto } from "@scout-for-lol/data";
 import { MatchIdSchema } from "@scout-for-lol/data";
-
-/**
- * Generate S3 key (path) for a match file
- */
-function generateMatchKey(matchId: MatchId): string {
-  const now = new Date();
-  const year = now.getUTCFullYear();
-  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(now.getUTCDate()).padStart(2, "0");
-
-  // Create hierarchical structure: matches/YYYY/MM/DD/matchId.json
-  return `matches/${year.toString()}/${month}/${day}/${matchId}.json`;
-}
-
-/**
- * Generate S3 key (path) for a match image
- */
-function generateImageKey(matchId: MatchId): string {
-  const now = new Date();
-  const year = now.getUTCFullYear();
-  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(now.getUTCDate()).padStart(2, "0");
-
-  // Create hierarchical structure: images/YYYY/MM/DD/matchId.png
-  return `images/${year.toString()}/${month}/${day}/${matchId}.png`;
-}
+import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.js";
 
 /**
  * Save a League of Legends match to S3 storage
  * @param match The match data to save
  * @returns Promise that resolves when the match is saved
  */
-export async function saveMatchToS3(match: MatchV5DTOs.MatchDto): Promise<void> {
+export async function saveMatchToS3(match: MatchDto): Promise<void> {
   const matchId = MatchIdSchema.parse(match.metadata.matchId);
-  const bucket = configuration.s3BucketName;
+  const body = JSON.stringify(match, null, 2);
 
-  if (!bucket) {
-    console.warn(`[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping save for match: ${matchId}`);
-    return;
-  }
-
-  console.log(`[S3Storage] 💾 Saving match to S3: ${matchId}`);
-
-  try {
-    const client = new S3Client();
-    const key = generateMatchKey(matchId);
-    const body = JSON.stringify(match, null, 2);
-
-    console.log(`[S3Storage] 📝 Upload details:`, {
-      bucket,
-      key,
-      sizeBytes: Buffer.byteLength(body, "utf8"),
+  await saveToS3({
+    matchId,
+    keyPrefix: "matches",
+    keyExtension: "json",
+    body,
+    contentType: "application/json",
+    metadata: {
+      matchId: matchId,
+      gameMode: match.info.gameMode,
+      queueId: match.info.queueId.toString(),
+      participantCount: match.info.participants.length.toString(),
+      gameDuration: match.info.gameDuration.toString(),
+    },
+    logEmoji: "💾",
+    logMessage: "Saving match to S3",
+    errorContext: "match",
+    returnUrl: false,
+    additionalLogDetails: {
       participants: match.info.participants.length,
       gameMode: match.info.gameMode,
       gameDuration: match.info.gameDuration,
-    });
-
-    const startTime = Date.now();
-
-    const command = new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: body,
-      ContentType: "application/json",
-      Metadata: {
-        matchId: matchId,
-        gameMode: match.info.gameMode,
-        queueId: match.info.queueId.toString(),
-        participantCount: match.info.participants.length.toString(),
-        gameDuration: match.info.gameDuration.toString(),
-        uploadedAt: new Date().toISOString(),
-      },
-    });
-
-    await client.send(command);
-
-    const uploadTime = Date.now() - startTime;
-    console.log(`[S3Storage] ✅ Successfully saved match ${matchId} to S3 in ${uploadTime.toString()}ms`);
-    console.log(`[S3Storage] 🔗 S3 location: s3://${bucket}/${key}`);
-  } catch (error) {
-    console.error(`[S3Storage] ❌ Failed to save match ${matchId} to S3:`, error);
-
-    // Re-throw the error so the caller can handle it appropriately
-    throw new Error(`Failed to save match ${matchId} to S3: ${getErrorMessage(error)}`);
-  }
+    },
+  });
 }
 
 /**
@@ -100,71 +45,28 @@ export async function saveMatchToS3(match: MatchV5DTOs.MatchDto): Promise<void> 
  */
 export async function saveImageToS3(
   matchId: MatchId,
-  imageBuffer: Buffer,
+  imageBuffer: Uint8Array,
   queueType: string,
 ): Promise<string | undefined> {
-  const bucket = configuration.s3BucketName;
-
-  if (!bucket) {
-    console.warn(`[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping PNG save for match: ${matchId}`);
-    return undefined;
-  }
-
-  console.log(`[S3Storage] 🖼️  Saving PNG to S3: ${matchId}`);
-
-  try {
-    const client = new S3Client();
-    const key = generateImageKey(matchId);
-
-    console.log(`[S3Storage] 📝 PNG upload details:`, {
-      bucket,
-      key,
-      sizeBytes: imageBuffer.length,
+  return saveToS3({
+    matchId,
+    keyPrefix: "images",
+    keyExtension: "png",
+    body: imageBuffer,
+    contentType: "image/png",
+    metadata: {
+      matchId: matchId,
+      queueType: queueType,
+      format: "png",
+    },
+    logEmoji: "🖼️",
+    logMessage: "Saving PNG to S3",
+    errorContext: "PNG",
+    returnUrl: true,
+    additionalLogDetails: {
       queueType,
-    });
-
-    const startTime = Date.now();
-
-    const command = new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: imageBuffer,
-      ContentType: "image/png",
-      Metadata: {
-        matchId: matchId,
-        queueType: queueType,
-        format: "png",
-        uploadedAt: new Date().toISOString(),
-      },
-    });
-
-    await client.send(command);
-
-    const uploadTime = Date.now() - startTime;
-    const s3Url = `s3://${bucket}/${key}`;
-    console.log(`[S3Storage] ✅ Successfully saved PNG ${matchId} to S3 in ${uploadTime.toString()}ms`);
-    console.log(`[S3Storage] 🔗 S3 location: ${s3Url}`);
-
-    return s3Url;
-  } catch (error) {
-    console.error(`[S3Storage] ❌ Failed to save PNG ${matchId} to S3:`, error);
-
-    // Re-throw the error so the caller can handle it appropriately
-    throw new Error(`Failed to save image ${matchId} to S3: ${getErrorMessage(error)}`);
-  }
-}
-
-/**
- * Generate S3 key (path) for a match SVG image
- */
-function generateSvgKey(matchId: MatchId): string {
-  const now = new Date();
-  const year = now.getUTCFullYear();
-  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(now.getUTCDate()).padStart(2, "0");
-
-  // Create hierarchical structure: images/YYYY/MM/DD/matchId.svg
-  return `images/${year.toString()}/${month}/${day}/${matchId}.svg`;
+    },
+  });
 }
 
 /**
@@ -179,69 +81,25 @@ export async function saveSvgToS3(
   svgContent: string,
   queueType: string,
 ): Promise<string | undefined> {
-  const bucket = configuration.s3BucketName;
-
-  if (!bucket) {
-    console.warn(`[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping SVG save for match: ${matchId}`);
-    return undefined;
-  }
-
-  console.log(`[S3Storage] 📄 Saving SVG to S3: ${matchId}`);
-
-  try {
-    const client = new S3Client();
-    const key = generateSvgKey(matchId);
-    const svgBuffer = Buffer.from(svgContent, "utf8");
-
-    console.log(`[S3Storage] 📝 SVG upload details:`, {
-      bucket,
-      key,
-      sizeBytes: svgBuffer.length,
+  return saveToS3({
+    matchId,
+    keyPrefix: "images",
+    keyExtension: "svg",
+    body: svgContent,
+    contentType: "image/svg+xml",
+    metadata: {
+      matchId: matchId,
+      queueType: queueType,
+      format: "svg",
+    },
+    logEmoji: "📄",
+    logMessage: "Saving SVG to S3",
+    errorContext: "SVG",
+    returnUrl: true,
+    additionalLogDetails: {
       queueType,
-    });
-
-    const startTime = Date.now();
-
-    const command = new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: svgBuffer,
-      ContentType: "image/svg+xml",
-      Metadata: {
-        matchId: matchId,
-        queueType: queueType,
-        format: "svg",
-        uploadedAt: new Date().toISOString(),
-      },
-    });
-
-    await client.send(command);
-
-    const uploadTime = Date.now() - startTime;
-    const s3Url = `s3://${bucket}/${key}`;
-    console.log(`[S3Storage] ✅ Successfully saved SVG ${matchId} to S3 in ${uploadTime.toString()}ms`);
-    console.log(`[S3Storage] 🔗 S3 location: ${s3Url}`);
-
-    return s3Url;
-  } catch (error) {
-    console.error(`[S3Storage] ❌ Failed to save SVG ${matchId} to S3:`, error);
-
-    // Re-throw the error so the caller can handle it appropriately
-    throw new Error(`Failed to save SVG ${matchId} to S3: ${getErrorMessage(error)}`);
-  }
-}
-
-/**
- * Generate S3 key (path) for an AI review image
- */
-function generateAIReviewImageKey(matchId: MatchId): string {
-  const now = new Date();
-  const year = now.getUTCFullYear();
-  const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(now.getUTCDate()).padStart(2, "0");
-
-  // Create hierarchical structure: ai-reviews/YYYY/MM/DD/matchId.png
-  return `ai-reviews/${year.toString()}/${month}/${day}/${matchId}.png`;
+    },
+  });
 }
 
 /**
@@ -253,57 +111,27 @@ function generateAIReviewImageKey(matchId: MatchId): string {
  */
 export async function saveAIReviewImageToS3(
   matchId: MatchId,
-  imageBuffer: Buffer,
+  imageBuffer: Uint8Array,
   queueType: string,
 ): Promise<string | undefined> {
-  const bucket = configuration.s3BucketName;
-
-  if (!bucket) {
-    console.warn(`[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping AI review image save for match: ${matchId}`);
-    return undefined;
-  }
-
-  console.log(`[S3Storage] ✨ Saving AI review image to S3: ${matchId}`);
-
-  try {
-    const client = new S3Client();
-    const key = generateAIReviewImageKey(matchId);
-
-    console.log(`[S3Storage] 📝 AI review image upload details:`, {
-      bucket,
-      key,
-      sizeBytes: imageBuffer.length,
+  return saveToS3({
+    matchId,
+    keyPrefix: "ai-reviews",
+    keyExtension: "png",
+    body: imageBuffer,
+    contentType: "image/png",
+    metadata: {
+      matchId: matchId,
+      queueType: queueType,
+      format: "png",
+      type: "ai-review",
+    },
+    logEmoji: "✨",
+    logMessage: "Saving AI review image to S3",
+    errorContext: "AI review image",
+    returnUrl: true,
+    additionalLogDetails: {
       queueType,
-    });
-
-    const startTime = Date.now();
-
-    const command = new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: imageBuffer,
-      ContentType: "image/png",
-      Metadata: {
-        matchId: matchId,
-        queueType: queueType,
-        format: "png",
-        type: "ai-review",
-        uploadedAt: new Date().toISOString(),
-      },
-    });
-
-    await client.send(command);
-
-    const uploadTime = Date.now() - startTime;
-    const s3Url = `s3://${bucket}/${key}`;
-    console.log(`[S3Storage] ✅ Successfully saved AI review image ${matchId} to S3 in ${uploadTime.toString()}ms`);
-    console.log(`[S3Storage] 🔗 S3 location: ${s3Url}`);
-
-    return s3Url;
-  } catch (error) {
-    console.error(`[S3Storage] ❌ Failed to save AI review image ${matchId} to S3:`, error);
-
-    // Re-throw the error so the caller can handle it appropriately
-    throw new Error(`Failed to save AI review image ${matchId} to S3: ${getErrorMessage(error)}`);
-  }
+    },
+  });
 }

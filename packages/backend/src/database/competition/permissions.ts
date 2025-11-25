@@ -1,8 +1,8 @@
 import { type DiscordAccountId, type DiscordGuildId, type PermissionType } from "@scout-for-lol/data";
 import type { PermissionsBitField } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
-import { type PrismaClient } from "../../../generated/prisma/client/index.js";
-import { checkRateLimit, getTimeRemaining } from "./rate-limit.js";
+import { type PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import { checkRateLimit, getTimeRemaining } from "@scout-for-lol/backend/database/competition/rate-limit.js";
 
 // ============================================================================
 // Permission Check Result
@@ -47,21 +47,17 @@ export async function hasPermission(
 
 /**
  * Grant permission to a user
- *
- * @param prisma - Prisma client instance
- * @param serverId - Discord server ID
- * @param userId - Discord user ID
- * @param permission - Permission type to grant
- * @param grantedBy - Discord user ID of admin granting permission
- * @returns Created or existing ServerPermission record
  */
 export async function grantPermission(
   prisma: PrismaClient,
-  serverId: DiscordGuildId,
-  userId: DiscordAccountId,
-  permission: PermissionType,
-  grantedBy: DiscordAccountId,
+  params: {
+    serverId: DiscordGuildId;
+    userId: DiscordAccountId;
+    permission: PermissionType;
+    grantedBy: DiscordAccountId;
+  },
 ): Promise<void> {
+  const { serverId, userId, permission, grantedBy } = params;
   // Upsert to make this idempotent
   await prisma.serverPermission.upsert({
     where: {

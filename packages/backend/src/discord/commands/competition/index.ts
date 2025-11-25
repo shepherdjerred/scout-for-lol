@@ -1,13 +1,4 @@
 import { InteractionContextType, SlashCommandBuilder } from "discord.js";
-import { executeCompetitionCreate } from "./create.js";
-import { executeCompetitionEdit } from "./edit.js";
-import { executeCompetitionCancel } from "./cancel.js";
-import { executeGrantPermission } from "./grant-permission.js";
-import { executeCompetitionJoin } from "./join.js";
-import { executeCompetitionInvite } from "./invite.js";
-import { executeCompetitionView } from "./view.js";
-import { executeCompetitionLeave } from "./leave.js";
-import { executeCompetitionList } from "./list.js";
 import { getSeasonChoices } from "@scout-for-lol/data";
 
 /**
@@ -312,15 +303,3 @@ export const competitionCommand = new SlashCommandBuilder()
       ),
   )
   .setContexts(InteractionContextType.Guild);
-
-export {
-  executeCompetitionCreate,
-  executeCompetitionEdit,
-  executeCompetitionCancel,
-  executeGrantPermission,
-  executeCompetitionJoin,
-  executeCompetitionInvite,
-  executeCompetitionLeave,
-  executeCompetitionView,
-  executeCompetitionList,
-};

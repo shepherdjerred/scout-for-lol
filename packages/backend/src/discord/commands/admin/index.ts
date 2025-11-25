@@ -1,13 +1,5 @@
 import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
-export { executePlayerEdit } from "./player-edit";
-export { executeAccountDelete } from "./account-delete";
-export { executeAccountAdd } from "./account-add";
-export { executePlayerMerge } from "./player-merge";
-export { executePlayerDelete } from "./player-delete";
-export { executeAccountTransfer } from "./account-transfer";
-export { executePlayerLinkDiscord } from "./player-link-discord";
-export { executePlayerUnlinkDiscord } from "./player-unlink-discord";
-export { executePlayerView } from "./player-view";
+import { REGION_CHOICES } from "@scout-for-lol/backend/discord/commands/admin/utils/region-choices.js";
 
 /**
  * Admin command for managing players and accounts
@@ -40,24 +32,7 @@ export const adminCommand = new SlashCommandBuilder()
           .setName("region")
           .setDescription("The region of the account")
           .setRequired(true)
-          .addChoices(
-            { name: "NA (North America)", value: "na1" },
-            { name: "EUW (Europe West)", value: "euw1" },
-            { name: "EUNE (Europe Nordic & East)", value: "eun1" },
-            { name: "KR (Korea)", value: "kr" },
-            { name: "BR (Brazil)", value: "br1" },
-            { name: "LAN (Latin America North)", value: "la1" },
-            { name: "LAS (Latin America South)", value: "la2" },
-            { name: "OCE (Oceania)", value: "oc1" },
-            { name: "RU (Russia)", value: "ru" },
-            { name: "TR (Turkey)", value: "tr1" },
-            { name: "JP (Japan)", value: "jp1" },
-            { name: "PH (Philippines)", value: "ph2" },
-            { name: "SG (Singapore)", value: "sg2" },
-            { name: "TH (Thailand)", value: "th2" },
-            { name: "TW (Taiwan)", value: "tw2" },
-            { name: "VN (Vietnam)", value: "vn2" },
-          ),
+          .addChoices(...REGION_CHOICES),
       ),
   )
   .addSubcommand((subcommand) =>
@@ -78,24 +53,7 @@ export const adminCommand = new SlashCommandBuilder()
           .setName("region")
           .setDescription("The region of the account")
           .setRequired(true)
-          .addChoices(
-            { name: "NA (North America)", value: "na1" },
-            { name: "EUW (Europe West)", value: "euw1" },
-            { name: "EUNE (Europe Nordic & East)", value: "eun1" },
-            { name: "KR (Korea)", value: "kr" },
-            { name: "BR (Brazil)", value: "br1" },
-            { name: "LAN (Latin America North)", value: "la1" },
-            { name: "LAS (Latin America South)", value: "la2" },
-            { name: "OCE (Oceania)", value: "oc1" },
-            { name: "RU (Russia)", value: "ru" },
-            { name: "TR (Turkey)", value: "tr1" },
-            { name: "JP (Japan)", value: "jp1" },
-            { name: "PH (Philippines)", value: "ph2" },
-            { name: "SG (Singapore)", value: "sg2" },
-            { name: "TH (Thailand)", value: "th2" },
-            { name: "TW (Taiwan)", value: "tw2" },
-            { name: "VN (Vietnam)", value: "vn2" },
-          ),
+          .addChoices(...REGION_CHOICES),
       ),
   )
   .addSubcommand((subcommand) =>

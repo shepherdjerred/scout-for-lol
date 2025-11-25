@@ -1,8 +1,8 @@
 import type { ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { prisma } from "../../../database/index.js";
-import { getCompetitionById } from "../../../database/competition/queries.js";
-import { createSnapshotsForAllParticipants } from "../../../league/competition/snapshots.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
+import { createSnapshotsForAllParticipants } from "@scout-for-lol/backend/league/competition/snapshots.js";
 
 export async function executeDebugForceSnapshot(interaction: ChatInputCommandInteraction) {
   console.log("🐛 Executing debug force-snapshot command");

@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
-import { notifyServerOwnerAboutPermissionError } from "./permissions";
-import type { Client } from "discord.js";
+import { notifyServerOwnerAboutPermissionError } from "@scout-for-lol/backend/discord/utils/permissions";
+import { mockClient } from "@scout-for-lol/backend/testing/discord-mocks";
 
 describe("notifyServerOwnerAboutPermissionError", () => {
   test("sends DM to server owner with permission error details", async () => {
     const sentMessages: { user: string; message: string }[] = [];
 
     // Mock Discord client - test double with minimal required methods
-    const mockClient = {
+    const client = mockClient({
       guilds: {
         fetch: async () => ({
           name: "Test Server",
@@ -19,10 +19,10 @@ describe("notifyServerOwnerAboutPermissionError", () => {
           }),
         }),
       },
-    } as unknown as Client;
+    });
 
     await notifyServerOwnerAboutPermissionError(
-      mockClient,
+      client,
       "server-123",
       "channel-456",
       "Missing Send Messages permission",
@@ -36,36 +36,32 @@ describe("notifyServerOwnerAboutPermissionError", () => {
   });
 
   test("handles case when guild is not found", async () => {
-    const mockClient = {
+    const client = mockClient({
       guilds: {
         fetch: async () => null,
       },
-    } as unknown as Client;
+    });
 
     // Should not throw
-    await expect(
-      notifyServerOwnerAboutPermissionError(mockClient, "server-123", "channel-456"),
-    ).resolves.toBeUndefined();
+    await expect(notifyServerOwnerAboutPermissionError(client, "server-123", "channel-456")).resolves.toBeUndefined();
   });
 
   test("handles case when owner fetch fails", async () => {
-    const mockClient = {
+    const client = mockClient({
       guilds: {
         fetch: async () => ({
           name: "Test Server",
           fetchOwner: async () => null,
         }),
       },
-    } as unknown as Client;
+    });
 
     // Should not throw
-    await expect(
-      notifyServerOwnerAboutPermissionError(mockClient, "server-123", "channel-456"),
-    ).resolves.toBeUndefined();
+    await expect(notifyServerOwnerAboutPermissionError(client, "server-123", "channel-456")).resolves.toBeUndefined();
   });
 
   test("handles case when DM send fails (user has DMs disabled)", async () => {
-    const mockClient = {
+    const client = mockClient({
       guilds: {
         fetch: async () => ({
           name: "Test Server",
@@ -77,16 +73,14 @@ describe("notifyServerOwnerAboutPermissionError", () => {
           }),
         }),
       },
-    } as unknown as Client;
+    });
 
     // Should not throw - gracefully handles DM failures
-    await expect(
-      notifyServerOwnerAboutPermissionError(mockClient, "server-123", "channel-456"),
-    ).resolves.toBeUndefined();
+    await expect(notifyServerOwnerAboutPermissionError(client, "server-123", "channel-456")).resolves.toBeUndefined();
   });
 
   test("handles generic error during DM send", async () => {
-    const mockClient = {
+    const client = mockClient({
       guilds: {
         fetch: async () => ({
           name: "Test Server",
@@ -98,18 +92,16 @@ describe("notifyServerOwnerAboutPermissionError", () => {
           }),
         }),
       },
-    } as unknown as Client;
+    });
 
     // Should not throw - gracefully handles all errors
-    await expect(
-      notifyServerOwnerAboutPermissionError(mockClient, "server-123", "channel-456"),
-    ).resolves.toBeUndefined();
+    await expect(notifyServerOwnerAboutPermissionError(client, "server-123", "channel-456")).resolves.toBeUndefined();
   });
 
   test("includes reason in message when provided", async () => {
     const sentMessages: { user: string; message: string }[] = [];
 
-    const mockClient = {
+    const client = mockClient({
       guilds: {
         fetch: async () => ({
           name: "Test Server",
@@ -121,9 +113,9 @@ describe("notifyServerOwnerAboutPermissionError", () => {
           }),
         }),
       },
-    } as unknown as Client;
+    });
 
-    await notifyServerOwnerAboutPermissionError(mockClient, "server-123", "channel-456", "Custom error reason");
+    await notifyServerOwnerAboutPermissionError(client, "server-123", "channel-456", "Custom error reason");
 
     expect(sentMessages[0]?.message).toContain("Custom error reason");
   });
@@ -131,7 +123,7 @@ describe("notifyServerOwnerAboutPermissionError", () => {
   test("works without reason parameter", async () => {
     const sentMessages: { user: string; message: string }[] = [];
 
-    const mockClient = {
+    const client = mockClient({
       guilds: {
         fetch: async () => ({
           name: "Test Server",
@@ -143,9 +135,9 @@ describe("notifyServerOwnerAboutPermissionError", () => {
           }),
         }),
       },
-    } as unknown as Client;
+    });
 
-    await notifyServerOwnerAboutPermissionError(mockClient, "server-123", "channel-456");
+    await notifyServerOwnerAboutPermissionError(client, "server-123", "channel-456");
 
     expect(sentMessages).toHaveLength(1);
     expect(sentMessages[0]?.message).toContain("Bot Permission Issue");

@@ -1,12 +1,15 @@
 import type { CompetitionWithCriteria } from "@scout-for-lol/data";
 import { parseCompetition } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
-import { createSnapshotsForAllParticipants } from "../../competition/snapshots.js";
-import { calculateLeaderboard, type RankedLeaderboardEntry } from "../../competition/leaderboard.js";
-import { send as sendChannelMessage, ChannelSendError } from "../../discord/channel.js";
-import type { PrismaClient } from "../../../../generated/prisma/client/index.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { createSnapshotsForAllParticipants } from "@scout-for-lol/backend/league/competition/snapshots.js";
+import {
+  calculateLeaderboard,
+  type RankedLeaderboardEntry,
+} from "@scout-for-lol/backend/league/competition/leaderboard.js";
+import { send as sendChannelMessage, ChannelSendError } from "@scout-for-lol/backend/league/discord/channel.js";
+import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { z } from "zod";
-import { logNotification } from "../../../utils/notification-logger.js";
+import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.js";
 
 // ============================================================================
 // Discord Notifications
@@ -61,12 +64,24 @@ function formatLeaderboardEntry(entry: RankedLeaderboardEntry): string {
     entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : entry.rank === 3 ? "🥉" : `${entry.rank.toString()}.`;
 
   let scoreDisplay: string;
-  // eslint-disable-next-line no-restricted-syntax -- this is okay because we're narrowing the type
-  if (typeof entry.score === "number") {
-    scoreDisplay = entry.score.toString();
+
+  const NumberScoreSchema = z.number();
+  const RankScoreSchema = z.object({ tier: z.string(), division: z.number(), lp: z.number() });
+  const ScoreSchema = z.union([NumberScoreSchema, RankScoreSchema]);
+
+  const scoreValidation = ScoreSchema.safeParse(entry.score);
+
+  if (!scoreValidation.success) {
+    throw new Error(`Invalid score type in leaderboard entry: ${JSON.stringify(entry.score)}`);
+  }
+
+  const numberScoreResult = NumberScoreSchema.safeParse(scoreValidation.data);
+  if (numberScoreResult.success) {
+    scoreDisplay = numberScoreResult.data.toString();
   } else {
     // It's a Rank object
-    scoreDisplay = `${entry.score.tier} ${String(entry.score.division)} ${entry.score.lp.toString()} LP`;
+    const rankScore = RankScoreSchema.parse(scoreValidation.data);
+    scoreDisplay = `${rankScore.tier} ${rankScore.division.toString()} ${rankScore.lp.toString()} LP`;
   }
 
   return `${rankEmoji} **${entry.playerName}** - ${scoreDisplay}`;

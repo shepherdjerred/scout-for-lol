@@ -1,12 +1,13 @@
 import { Registry, Counter, Gauge, Histogram } from "prom-client";
-import configuration from "../configuration.js";
+import configuration from "@scout-for-lol/backend/configuration.js";
 
 console.log("📊 Initializing Prometheus metrics");
 
 /**
  * Custom Prometheus registry for Scout for LoL metrics
+ * Internal - accessed via getMetrics() function
  */
-export const registry = new Registry();
+const registry = new Registry();
 
 /**
  * Add default labels to all metrics
@@ -139,127 +140,12 @@ export const guildDataCleanupTotal = new Counter({
 });
 
 /**
- * Total number of Discord channels deleted (event handler triggered)
- */
-export const discordChannelsDeletedTotal = new Counter({
-  name: "discord_channels_deleted_total",
-  help: "Total number of Discord channels deleted (event handler triggered)",
-  registers: [registry],
-});
-
-/**
  * Total number of subscriptions automatically cleaned up
  */
 export const discordSubscriptionsCleanedTotal = new Counter({
   name: "discord_subscriptions_cleaned_total",
   help: "Total number of subscriptions automatically cleaned up",
   labelNames: ["reason"] as const,
-  registers: [registry],
-});
-
-// =======================
-// League of Legends API Metrics
-// =======================
-
-/**
- * Total number of Riot API requests
- */
-export const riotApiRequestsTotal = new Counter({
-  name: "riot_api_requests_total",
-  help: "Total number of Riot API requests",
-  labelNames: ["endpoint", "status", "region"] as const,
-  registers: [registry],
-});
-
-/**
- * Distribution of player accounts across polling interval buckets
- * Shows how many accounts are in each refresh rate category
- */
-export const playerPollingIntervalDistribution = new Gauge({
-  name: "player_polling_interval_distribution",
-  help: "Number of player accounts in each polling interval bucket (by minutes)",
-  labelNames: ["interval_minutes"] as const,
-  registers: [registry],
-});
-
-/**
- * Number of players checked vs skipped in current cycle
- */
-export const playerPollingStats = new Gauge({
-  name: "player_polling_stats",
-  help: "Players checked or skipped in the current polling cycle",
-  labelNames: ["status"] as const,
-  registers: [registry],
-});
-
-/**
- * Duration of Riot API requests in seconds
- */
-export const riotApiRequestDuration = new Histogram({
-  name: "riot_api_request_duration_seconds",
-  help: "Duration of Riot API requests in seconds",
-  labelNames: ["endpoint", "region"] as const,
-  buckets: [0.1, 0.5, 1, 2, 5, 10],
-  registers: [registry],
-});
-
-/**
- * Number of Riot API rate limit errors
- */
-export const riotApiRateLimitErrors = new Counter({
-  name: "riot_api_rate_limit_errors_total",
-  help: "Total number of Riot API rate limit errors",
-  labelNames: ["region"] as const,
-  registers: [registry],
-});
-
-// =======================
-// Database Metrics
-// =======================
-
-/**
- * Total number of database queries
- */
-export const databaseQueriesTotal = new Counter({
-  name: "database_queries_total",
-  help: "Total number of database queries",
-  labelNames: ["operation", "status"] as const,
-  registers: [registry],
-});
-
-/**
- * Duration of database queries in seconds
- */
-export const databaseQueryDuration = new Histogram({
-  name: "database_query_duration_seconds",
-  help: "Duration of database queries in seconds",
-  labelNames: ["operation"] as const,
-  buckets: [0.001, 0.01, 0.1, 0.5, 1, 5],
-  registers: [registry],
-});
-
-// =======================
-// Report Generation Metrics
-// =======================
-
-/**
- * Total number of reports generated
- */
-export const reportsGeneratedTotal = new Counter({
-  name: "reports_generated_total",
-  help: "Total number of reports generated",
-  labelNames: ["report_type", "status"] as const,
-  registers: [registry],
-});
-
-/**
- * Duration of report generation in seconds
- */
-export const reportGenerationDuration = new Histogram({
-  name: "report_generation_duration_seconds",
-  help: "Duration of report generation in seconds",
-  labelNames: ["report_type"] as const,
-  buckets: [0.5, 1, 2, 5, 10, 30, 60],
   registers: [registry],
 });
 
@@ -436,8 +322,9 @@ export const avgAccountsPerPlayer = new Gauge({
 
 /**
  * Application uptime in seconds
+ * Internal - updated by updateUptimeMetric()
  */
-export const applicationUptime = new Gauge({
+const applicationUptime = new Gauge({
   name: "application_uptime_seconds",
   help: "Application uptime in seconds",
   registers: [registry],
@@ -458,8 +345,9 @@ const applicationStartTime = Date.now();
 
 /**
  * Update the application uptime metric
+ * Internal - called by getMetrics()
  */
-export function updateUptimeMetric(): void {
+function updateUptimeMetric(): void {
   const uptimeSeconds = (Date.now() - applicationStartTime) / 1000;
   applicationUptime.set(uptimeSeconds);
 }
@@ -473,14 +361,11 @@ console.log("✅ Prometheus metrics initialized successfully");
 
 // Import and initialize usage metrics collection
 // This must be after all metric definitions to avoid circular dependencies
-export { updateUsageMetrics } from "./usage.js";
-import "./usage.js";
-
-// Import limit metrics
-export { updateLimitMetrics } from "./limits.js";
+import "@scout-for-lol/backend/metrics/usage.js";
 
 /**
  * Get all metrics as Prometheus-formatted text
+ * Public API for exporting metrics to Prometheus
  */
 export async function getMetrics(): Promise<string> {
   // Dynamic import to avoid circular dependency issues

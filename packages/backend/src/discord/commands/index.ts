@@ -1,40 +1,42 @@
-import { type Client, MessageFlags, PermissionFlagsBits, PermissionsBitField } from "discord.js";
+import { type Client, PermissionFlagsBits, PermissionsBitField } from "discord.js";
+import { z } from "zod";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { getFlag } from "../../configuration/flags.js";
-import { executeSubscriptionAdd, executeSubscriptionDelete, executeSubscriptionList } from "./subscription/index.js";
-import { executeHelp } from "./help";
-import {
-  executeCompetitionCreate,
-  executeCompetitionEdit,
-  executeCompetitionCancel,
-  executeGrantPermission,
-  executeCompetitionJoin,
-  executeCompetitionInvite,
-  executeCompetitionLeave,
-  executeCompetitionView,
-  executeCompetitionList,
-} from "./competition/index.js";
-import {
-  executePlayerEdit,
-  executeAccountDelete,
-  executeAccountAdd,
-  executePlayerMerge,
-  executePlayerDelete,
-  executeAccountTransfer,
-  executePlayerLinkDiscord,
-  executePlayerUnlinkDiscord,
-  executePlayerView,
-} from "./admin/index.js";
+import { getFlag } from "@scout-for-lol/backend/configuration/flags.js";
+import { match } from "ts-pattern";
+
+import { executeHelp } from "@scout-for-lol/backend/discord/commands/help";
+import { executeCompetitionCreate } from "@scout-for-lol/backend/discord/commands/competition/create.js";
+import { executeCompetitionEdit } from "@scout-for-lol/backend/discord/commands/competition/edit.js";
+import { executeCompetitionCancel } from "@scout-for-lol/backend/discord/commands/competition/cancel.js";
+import { executeGrantPermission } from "@scout-for-lol/backend/discord/commands/competition/grant-permission.js";
+import { executeCompetitionJoin } from "@scout-for-lol/backend/discord/commands/competition/join.js";
+import { executeCompetitionInvite } from "@scout-for-lol/backend/discord/commands/competition/invite.js";
+import { executeCompetitionLeave } from "@scout-for-lol/backend/discord/commands/competition/leave.js";
+import { executeCompetitionView } from "@scout-for-lol/backend/discord/commands/competition/view.js";
+import { executeCompetitionList } from "@scout-for-lol/backend/discord/commands/competition/list.js";
+
 import {
   executeDebugDatabase,
   executeDebugPolling,
   executeDebugServerInfo,
-  executeDebugForceSnapshot,
-  executeDebugForceLeaderboardUpdate,
-  executeDebugManageParticipant,
-} from "./debug.js";
-import { discordCommandsTotal, discordCommandDuration } from "../../metrics/index.js";
-import { searchChampions } from "../../utils/champion.js";
+} from "@scout-for-lol/backend/discord/commands/debug.js";
+import { discordCommandsTotal, discordCommandDuration } from "@scout-for-lol/backend/metrics/index.js";
+import { searchChampions } from "@scout-for-lol/backend/utils/champion.js";
+import { executeAccountAdd } from "@scout-for-lol/backend/discord/commands/admin/account-add";
+import { executeAccountDelete } from "@scout-for-lol/backend/discord/commands/admin/account-delete";
+import { executeAccountTransfer } from "@scout-for-lol/backend/discord/commands/admin/account-transfer";
+import { executePlayerDelete } from "@scout-for-lol/backend/discord/commands/admin/player-delete";
+import { executePlayerEdit } from "@scout-for-lol/backend/discord/commands/admin/player-edit";
+import { executePlayerLinkDiscord } from "@scout-for-lol/backend/discord/commands/admin/player-link-discord";
+import { executePlayerMerge } from "@scout-for-lol/backend/discord/commands/admin/player-merge";
+import { executePlayerUnlinkDiscord } from "@scout-for-lol/backend/discord/commands/admin/player-unlink-discord";
+import { executePlayerView } from "@scout-for-lol/backend/discord/commands/admin/player-view";
+import { executeDebugForceLeaderboardUpdate } from "@scout-for-lol/backend/discord/commands/debug/force-leaderboard-update";
+import { executeDebugForceSnapshot } from "@scout-for-lol/backend/discord/commands/debug/force-snapshot";
+import { executeDebugManageParticipant } from "@scout-for-lol/backend/discord/commands/debug/manage-participant";
+import { executeSubscriptionAdd } from "@scout-for-lol/backend/discord/commands/subscription/add";
+import { executeSubscriptionDelete } from "@scout-for-lol/backend/discord/commands/subscription/delete";
+import { executeSubscriptionList } from "@scout-for-lol/backend/discord/commands/subscription/list";
 
 export function handleCommands(client: Client) {
   console.log("⚡ Setting up Discord command handlers");
@@ -98,64 +100,51 @@ export function handleCommands(client: Client) {
           const subcommandName = interaction.options.getSubcommand();
           console.log(`🔔 Executing subscription ${subcommandName} command`);
 
-          if (subcommandName === "add") {
-            await executeSubscriptionAdd(interaction);
-          } else if (subcommandName === "delete") {
-            await executeSubscriptionDelete(interaction);
-          } else if (subcommandName === "list") {
-            await executeSubscriptionList(interaction);
-            // TODO: use ts-pattern for exhaustive match
-          } else {
-            console.warn(`⚠️  Unknown subscription subcommand: ${subcommandName}`);
-            await interaction.reply({
-              content: "Unknown subscription subcommand",
-              flags: MessageFlags.Ephemeral,
+          await match(subcommandName)
+            .with("add", () => executeSubscriptionAdd(interaction))
+            .with("delete", () => executeSubscriptionDelete(interaction))
+            .with("list", () => executeSubscriptionList(interaction))
+            .otherwise(() => {
+              console.warn(`⚠️  Unknown subscription subcommand: ${subcommandName}`);
+              return interaction.reply({
+                content: "Unknown subscription subcommand",
+                ephemeral: true,
+              });
             });
-          }
         } else if (commandName === "competition") {
           const subcommandName = interaction.options.getSubcommand();
           console.log(`🏆 Executing competition ${subcommandName} command`);
 
-          if (subcommandName === "create") {
-            await executeCompetitionCreate(interaction);
-          } else if (subcommandName === "edit") {
-            await executeCompetitionEdit(interaction);
-          } else if (subcommandName === "cancel") {
-            await executeCompetitionCancel(interaction);
-          } else if (subcommandName === "grant-permission") {
-            await executeGrantPermission(interaction);
-          } else if (subcommandName === "join") {
-            await executeCompetitionJoin(interaction);
-          } else if (subcommandName === "invite") {
-            await executeCompetitionInvite(interaction);
-          } else if (subcommandName === "leave") {
-            await executeCompetitionLeave(interaction);
-          } else if (subcommandName === "view") {
-            await executeCompetitionView(interaction);
-          } else if (subcommandName === "list") {
-            await executeCompetitionList(interaction);
-            // TODO: use ts-pattern for exhaustive match
-          } else {
-            console.warn(`⚠️  Unknown competition subcommand: ${subcommandName}`);
-            await interaction.reply({
-              content: "Unknown competition subcommand",
-              flags: MessageFlags.Ephemeral,
+          await match(subcommandName)
+            .with("create", async () => executeCompetitionCreate(interaction))
+            .with("edit", async () => executeCompetitionEdit(interaction))
+            .with("cancel", async () => executeCompetitionCancel(interaction))
+            .with("grant-permission", async () => executeGrantPermission(interaction))
+            .with("join", async () => executeCompetitionJoin(interaction))
+            .with("invite", async () => executeCompetitionInvite(interaction))
+            .with("leave", async () => executeCompetitionLeave(interaction))
+            .with("view", async () => executeCompetitionView(interaction))
+            .with("list", async () => executeCompetitionList(interaction))
+            .otherwise(async () => {
+              console.warn(`⚠️  Unknown competition subcommand: ${subcommandName}`);
+              await interaction.reply({
+                content: "Unknown competition subcommand",
+                ephemeral: true,
+              });
             });
-          }
         } else if (commandName === "admin") {
           // Check if user has Administrator permissions (applies to all admin subcommands)
           const member = interaction.member;
+          const PermissionSchema = z.object({ permissions: z.instanceof(PermissionsBitField) }).loose();
+          const permissionResult = PermissionSchema.safeParse(member);
           const hasAdminPermission =
-            member &&
-            "permissions" in member &&
-            member.permissions instanceof PermissionsBitField &&
-            member.permissions.has(PermissionFlagsBits.Administrator);
+            permissionResult.success && permissionResult.data.permissions.has(PermissionFlagsBits.Administrator);
 
           if (!hasAdminPermission) {
             console.warn(`⚠️  Unauthorized admin command access attempt by ${username} (${userId})`);
             await interaction.reply({
               content: "❌ Admin commands require Administrator permissions in this server.",
-              flags: MessageFlags.Ephemeral,
+              ephemeral: true,
             });
             return;
           }
@@ -163,39 +152,30 @@ export function handleCommands(client: Client) {
           const subcommandName = interaction.options.getSubcommand();
           console.log(`🔧 Executing admin ${subcommandName} command (authorized: ${username})`);
 
-          if (subcommandName === "player-edit") {
-            await executePlayerEdit(interaction);
-          } else if (subcommandName === "account-delete") {
-            await executeAccountDelete(interaction);
-          } else if (subcommandName === "account-add") {
-            await executeAccountAdd(interaction);
-          } else if (subcommandName === "account-transfer") {
-            await executeAccountTransfer(interaction);
-          } else if (subcommandName === "player-merge") {
-            await executePlayerMerge(interaction);
-          } else if (subcommandName === "player-delete") {
-            await executePlayerDelete(interaction);
-          } else if (subcommandName === "player-link-discord") {
-            await executePlayerLinkDiscord(interaction);
-          } else if (subcommandName === "player-unlink-discord") {
-            await executePlayerUnlinkDiscord(interaction);
-          } else if (subcommandName === "player-view") {
-            await executePlayerView(interaction);
-            // TODO: use ts-pattern for exhaustive match
-          } else {
-            console.warn(`⚠️  Unknown admin subcommand: ${subcommandName}`);
-            await interaction.reply({
-              content: "Unknown admin subcommand",
-              flags: MessageFlags.Ephemeral,
+          await match(subcommandName)
+            .with("player-edit", () => executePlayerEdit(interaction))
+            .with("account-delete", () => executeAccountDelete(interaction))
+            .with("account-add", () => executeAccountAdd(interaction))
+            .with("account-transfer", () => executeAccountTransfer(interaction))
+            .with("player-merge", () => executePlayerMerge(interaction))
+            .with("player-delete", () => executePlayerDelete(interaction))
+            .with("player-link-discord", () => executePlayerLinkDiscord(interaction))
+            .with("player-unlink-discord", () => executePlayerUnlinkDiscord(interaction))
+            .with("player-view", () => executePlayerView(interaction))
+            .otherwise(() => {
+              console.warn(`⚠️  Unknown admin subcommand: ${subcommandName}`);
+              return interaction.reply({
+                content: "Unknown admin subcommand",
+                ephemeral: true,
+              });
             });
-          }
         } else if (commandName === "debug") {
           // Check if user has debug access (applies to all debug subcommands)
           if (!getFlag("debug", { user: userId })) {
             console.warn(`⚠️  Unauthorized debug command access attempt by ${username} (${userId})`);
             await interaction.reply({
               content: "❌ Debug commands are only available to authorized users.",
-              flags: MessageFlags.Ephemeral,
+              ephemeral: true,
             });
             return;
           }
@@ -203,30 +183,23 @@ export function handleCommands(client: Client) {
           const subcommandName = interaction.options.getSubcommand();
           console.log(`🐛 Executing debug ${subcommandName} command (authorized: ${username})`);
 
-          if (subcommandName === "database") {
-            await executeDebugDatabase(interaction);
-          } else if (subcommandName === "polling") {
-            await executeDebugPolling(interaction);
-          } else if (subcommandName === "server-info") {
-            await executeDebugServerInfo(interaction);
-          } else if (subcommandName === "force-snapshot") {
-            await executeDebugForceSnapshot(interaction);
-          } else if (subcommandName === "force-leaderboard-update") {
-            await executeDebugForceLeaderboardUpdate(interaction);
-          } else if (subcommandName === "manage-participant") {
-            await executeDebugManageParticipant(interaction);
-            // TODO: use ts-pattern for exhaustive match
-          } else {
-            console.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
-            await interaction.reply({
-              content: "Unknown debug subcommand",
-              flags: MessageFlags.Ephemeral,
+          await match(subcommandName)
+            .with("database", async () => executeDebugDatabase(interaction))
+            .with("polling", async () => executeDebugPolling(interaction))
+            .with("server-info", async () => executeDebugServerInfo(interaction))
+            .with("force-snapshot", async () => executeDebugForceSnapshot(interaction))
+            .with("force-leaderboard-update", async () => executeDebugForceLeaderboardUpdate(interaction))
+            .with("manage-participant", async () => executeDebugManageParticipant(interaction))
+            .otherwise(async () => {
+              console.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
+              await interaction.reply({
+                content: "Unknown debug subcommand",
+                ephemeral: true,
+              });
             });
-          }
         } else if (commandName === "help") {
           console.log("❓ Executing help command");
           await executeHelp(interaction);
-          // TODO: use ts-pattern for exhaustive match
         } else {
           console.warn(`⚠️  Unknown command received: ${commandName}`);
           await interaction.reply("Unknown command");
@@ -260,12 +233,12 @@ export function handleCommands(client: Client) {
         if (interaction.replied || interaction.deferred) {
           await interaction.followUp({
             content: errorMessage,
-            flags: MessageFlags.Ephemeral,
+            ephemeral: true,
           });
         } else {
           await interaction.reply({
             content: errorMessage,
-            flags: MessageFlags.Ephemeral,
+            ephemeral: true,
           });
         }
       }

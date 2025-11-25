@@ -11,8 +11,13 @@
  * This should be run after `prisma generate`
  */
 
-import { Project, SyntaxKind, type TypeAliasDeclaration, type InterfaceDeclaration } from "ts-morph";
-import { resolve } from "node:path";
+import {
+  Project,
+  SyntaxKind,
+  type TypeAliasDeclaration,
+  type InterfaceDeclaration,
+  type PropertySignature,
+} from "ts-morph";
 
 // Types that need to be imported
 const BRANDED_TYPES_TO_IMPORT = new Set<string>();
@@ -21,10 +26,11 @@ function main() {
   console.log("🔧 Branding Prisma types with AST transformation...");
 
   const project = new Project({
-    tsConfigFilePath: resolve(__dirname, "../tsconfig.json"),
+    tsConfigFilePath: `${import.meta.dir}/../tsconfig.json`,
+    skipAddingFilesFromTsConfig: true, // Avoid loading all files to prevent stack overflow
   });
 
-  const prismaTypesPath = resolve(__dirname, "../generated/prisma/client/index.d.ts");
+  const prismaTypesPath = `${import.meta.dir}/../generated/prisma/client/index.d.ts`;
   const sourceFile = project.addSourceFileAtPath(prismaTypesPath);
 
   console.log(`📄 Processing: ${prismaTypesPath}`);
@@ -106,6 +112,61 @@ function main() {
   console.log("🎉 Prisma types successfully branded!");
 }
 
+function transformFieldTypeInContent(
+  content: string,
+  fieldPattern: RegExp,
+  baseType: "number" | "string",
+  modelName: string,
+): { transformed: string; count: number } {
+  let transformedContent = content;
+  let count = 0;
+  let match = fieldPattern.exec(content);
+
+  while (match !== null) {
+    const fieldName = match[1];
+    if (!fieldName) {
+      match = fieldPattern.exec(content);
+      continue;
+    }
+
+    const isNullable = !!match[2];
+    const originalType = `${baseType}${match[2] ?? ""}`;
+
+    const brandedType = getBrandedType(fieldName, modelName);
+    if (brandedType) {
+      const newType = isNullable ? `${brandedType} | null` : brandedType;
+      const fieldReplacePattern = new RegExp(`${fieldName}:\\s*${baseType}(\\s*\\|\\s*null)?`);
+      transformedContent = transformedContent.replace(fieldReplacePattern, `${fieldName}: ${newType}`);
+
+      BRANDED_TYPES_TO_IMPORT.add(brandedType);
+      count++;
+
+      console.log(`    ✓ ${modelName}.${fieldName}: ${originalType} → ${newType}`);
+    }
+
+    match = fieldPattern.exec(content);
+  }
+
+  return { transformed: transformedContent, count };
+}
+
+function extractScalarsContent(prop: PropertySignature): string | null {
+  const scalarTypeNode = prop.getTypeNode();
+  if (!scalarTypeNode) {
+    return null;
+  }
+
+  const typeArgs = scalarTypeNode.getType().getAliasTypeArguments();
+  if (typeArgs.length === 0) {
+    return null;
+  }
+
+  const fullText = prop.getText();
+  const payloadPattern = /\$Extensions\.GetPayloadResult<\s*\{([^}]+)\}/;
+  const match = payloadPattern.exec(fullText);
+  return match?.[1] ?? null;
+}
+
 function transformPayloadType(typeAlias: TypeAliasDeclaration): number {
   const payloadName = typeAlias.getName(); // e.g., "$PlayerPayload"
   const modelName = payloadName.replace(/^\$/, "").replace(/Payload$/, ""); // e.g., "Player"
@@ -113,104 +174,57 @@ function transformPayloadType(typeAlias: TypeAliasDeclaration): number {
   console.log(`\n  Processing ${modelName}...`);
 
   const typeNode = typeAlias.getTypeNode();
-  if (!typeNode || typeNode.getKind() !== SyntaxKind.TypeLiteral) return 0;
+  if (!typeNode || typeNode.getKind() !== SyntaxKind.TypeLiteral) {
+    return 0;
+  }
 
   const typeLiteral = typeNode.asKindOrThrow(SyntaxKind.TypeLiteral);
-  let count = 0;
+  let totalCount = 0;
 
   // Find the 'scalars' property
   for (const member of typeLiteral.getMembers()) {
-    if (member.getKind() !== SyntaxKind.PropertySignature) continue;
+    if (member.getKind() !== SyntaxKind.PropertySignature) {
+      continue;
+    }
 
     const prop = member.asKindOrThrow(SyntaxKind.PropertySignature);
-    if (prop.getName() !== "scalars") continue;
+    if (prop.getName() !== "scalars") {
+      continue;
+    }
 
-    // The scalars property contains: $Extensions.GetPayloadResult<{...}, ...>
-    const scalarTypeNode = prop.getTypeNode();
-    if (!scalarTypeNode) continue;
+    const objectContent = extractScalarsContent(prop);
+    if (!objectContent) {
+      continue;
+    }
 
-    // Find the first type argument (the object literal with field definitions)
-    const typeArgs = scalarTypeNode.getType().getAliasTypeArguments();
-    if (typeArgs.length === 0) continue;
-
-    // We need to modify the source text directly since it's inside a generic
-    // Get the full text of the scalars property
     const fullText = prop.getText();
 
-    // Extract the object literal part: $Extensions.GetPayloadResult<{ ... }, ...>
-    const payloadPattern = /\$Extensions\.GetPayloadResult<\s*\{([^}]+)\}/;
-    const match = payloadPattern.exec(fullText);
-    if (!match?.[1]) continue;
+    // Transform number fields
+    const numberResult = transformFieldTypeInContent(
+      objectContent,
+      /(\w+):\s*number(\s*\|\s*null)?/g,
+      "number",
+      modelName,
+    );
 
-    const objectContent = match[1];
-    let transformedContent = objectContent;
+    // Transform string fields
+    const stringResult = transformFieldTypeInContent(
+      numberResult.transformed,
+      /(\w+):\s*string(\s*\|\s*null)?/g,
+      "string",
+      modelName,
+    );
 
-    // Transform number fields (PlayerId, CompetitionId, etc.)
-    const numberFieldPattern = /(\w+):\s*number(\s*\|\s*null)?/g;
-    let numberMatch = numberFieldPattern.exec(objectContent);
-
-    while (numberMatch !== null) {
-      const fieldName = numberMatch[1];
-      if (!fieldName) {
-        numberMatch = numberFieldPattern.exec(objectContent);
-        continue;
-      }
-
-      const isNullable = !!numberMatch[2];
-      const originalType = `number${numberMatch[2] ?? ""}`;
-
-      const brandedType = getBrandedType(fieldName, modelName);
-      if (brandedType) {
-        const newType = isNullable ? `${brandedType} | null` : brandedType;
-        const fieldReplacePattern = new RegExp(`${fieldName}:\\s*number(\\s*\\|\\s*null)?`);
-        transformedContent = transformedContent.replace(fieldReplacePattern, `${fieldName}: ${newType}`);
-
-        BRANDED_TYPES_TO_IMPORT.add(brandedType);
-        count++;
-
-        console.log(`    ✓ ${modelName}.${fieldName}: ${originalType} → ${newType}`);
-      }
-
-      numberMatch = numberFieldPattern.exec(objectContent);
-    }
-
-    // Transform string fields (DiscordGuildId, DiscordChannelId, etc.)
-    const stringFieldPattern = /(\w+):\s*string(\s*\|\s*null)?/g;
-    let stringMatch = stringFieldPattern.exec(objectContent);
-
-    while (stringMatch !== null) {
-      const fieldName = stringMatch[1];
-      if (!fieldName) {
-        stringMatch = stringFieldPattern.exec(objectContent);
-        continue;
-      }
-
-      const isNullable = !!stringMatch[2];
-      const originalType = `string${stringMatch[2] ?? ""}`;
-
-      const brandedType = getBrandedType(fieldName, modelName);
-      if (brandedType) {
-        const newType = isNullable ? `${brandedType} | null` : brandedType;
-        const fieldReplacePattern = new RegExp(`${fieldName}:\\s*string(\\s*\\|\\s*null)?`);
-        transformedContent = transformedContent.replace(fieldReplacePattern, `${fieldName}: ${newType}`);
-
-        BRANDED_TYPES_TO_IMPORT.add(brandedType);
-        count++;
-
-        console.log(`    ✓ ${modelName}.${fieldName}: ${originalType} → ${newType}`);
-      }
-
-      stringMatch = stringFieldPattern.exec(objectContent);
-    }
+    totalCount += numberResult.count + stringResult.count;
 
     // Replace the entire scalars property with the transformed version
-    if (count > 0) {
-      const newScalarsText = fullText.replace(objectContent, transformedContent);
+    if (totalCount > 0) {
+      const newScalarsText = fullText.replace(objectContent, stringResult.transformed);
       prop.replaceWithText(newScalarsText);
     }
   }
 
-  return count;
+  return totalCount;
 }
 
 function transformWhereType(typeAlias: TypeAliasDeclaration): number {
@@ -235,68 +249,91 @@ function transformInputType(typeAlias: TypeAliasDeclaration): number {
   return transformSimpleObjectType(typeAlias, modelName);
 }
 
+/**
+ * Transform a property signature if it has a branded type
+ * Returns true if transformation occurred, false otherwise
+ */
+function transformPropertyType(
+  prop: PropertySignature,
+  modelName: string,
+  transformFn: (fullText: string, brandedType: string, propName: string) => string | null,
+): boolean {
+  const propName = prop.getName();
+  const propTypeNode = prop.getTypeNode();
+
+  if (!propTypeNode) {
+    return false;
+  }
+
+  const brandedType = getBrandedType(propName, modelName);
+  if (!brandedType) {
+    return false;
+  }
+
+  const fullText = prop.getText();
+  const newText = transformFn(fullText, brandedType, propName);
+
+  if (newText) {
+    prop.replaceWithText(newText);
+    BRANDED_TYPES_TO_IMPORT.add(brandedType);
+    return true;
+  }
+
+  return false;
+}
+
 function transformSimpleObjectType(typeAlias: TypeAliasDeclaration, modelName: string): number {
   const typeNode = typeAlias.getTypeNode();
-  if (!typeNode || typeNode.getKind() !== SyntaxKind.TypeLiteral) return 0;
+  if (!typeNode || typeNode.getKind() !== SyntaxKind.TypeLiteral) {
+    return 0;
+  }
 
   const typeLiteral = typeNode.asKindOrThrow(SyntaxKind.TypeLiteral);
   let count = 0;
 
   for (const member of typeLiteral.getMembers()) {
-    if (member.getKind() !== SyntaxKind.PropertySignature) continue;
+    if (member.getKind() !== SyntaxKind.PropertySignature) {
+      continue;
+    }
 
     const prop = member.asKindOrThrow(SyntaxKind.PropertySignature);
-    const propName = prop.getName();
-    const propTypeNode = prop.getTypeNode();
-
-    if (!propTypeNode) continue;
-
-    const brandedType = getBrandedType(propName, modelName);
-    if (!brandedType) continue;
-
-    const fullText = prop.getText();
 
     // Match patterns like: id?: number | IntFieldUpdateOperationsInput
     // OR: serverId?: string | StringFilter
     // We want to brand the primitive type part while keeping other types
-    const simpleNumberPattern = new RegExp(`${propName}\\??:\\s*number\\b`);
-    const simpleStringPattern = new RegExp(`${propName}\\??:\\s*string\\b`);
+    const transformed = transformPropertyType(prop, modelName, (fullText, brandedType, propName) => {
+      const simpleNumberPattern = new RegExp(`${propName}\\??:\\s*number\\b`);
+      const simpleStringPattern = new RegExp(`${propName}\\??:\\s*string\\b`);
 
-    const numberMatch = simpleNumberPattern.exec(fullText);
-    const stringMatch = simpleStringPattern.exec(fullText);
+      const numberMatch = simpleNumberPattern.exec(fullText);
+      const stringMatch = simpleStringPattern.exec(fullText);
 
-    if (numberMatch) {
-      const newText = fullText.replace(/:\s*number\b/, `: ${brandedType}`);
-      prop.replaceWithText(newText);
-      BRANDED_TYPES_TO_IMPORT.add(brandedType);
-      count++;
-      continue;
-    }
-
-    if (stringMatch) {
-      const newText = fullText.replace(/:\s*string\b/, `: ${brandedType}`);
-      prop.replaceWithText(newText);
-      BRANDED_TYPES_TO_IMPORT.add(brandedType);
-      count++;
-      continue;
-    }
-
-    // Match union patterns: number | SomeOtherType OR string | SomeOtherType
-    const unionPattern = new RegExp(`${propName}\\??:\\s*([^\\n]+)`);
-    const unionMatch = unionPattern.exec(fullText);
-    if (unionMatch?.[1]) {
-      const typeExpression = unionMatch[1];
-      if (typeExpression.includes("number")) {
-        const newText = fullText.replace(/\bnumber\b/, brandedType);
-        prop.replaceWithText(newText);
-        BRANDED_TYPES_TO_IMPORT.add(brandedType);
-        count++;
-      } else if (typeExpression.includes("string")) {
-        const newText = fullText.replace(/\bstring\b/, brandedType);
-        prop.replaceWithText(newText);
-        BRANDED_TYPES_TO_IMPORT.add(brandedType);
-        count++;
+      if (numberMatch) {
+        return fullText.replace(/:\s*number\b/, `: ${brandedType}`);
       }
+
+      if (stringMatch) {
+        return fullText.replace(/:\s*string\b/, `: ${brandedType}`);
+      }
+
+      // Match union patterns: number | SomeOtherType OR string | SomeOtherType
+      const unionPattern = new RegExp(`${propName}\\??:\\s*([^\\n]+)`);
+      const unionMatch = unionPattern.exec(fullText);
+      if (unionMatch?.[1]) {
+        const typeExpression = unionMatch[1];
+        if (typeExpression.includes("number")) {
+          return fullText.replace(/\bnumber\b/, brandedType);
+        }
+        if (typeExpression.includes("string")) {
+          return fullText.replace(/\bstring\b/, brandedType);
+        }
+      }
+
+      return null;
+    });
+
+    if (transformed) {
+      count++;
     }
   }
 
@@ -320,33 +357,30 @@ function transformFieldRefsInterface(interfaceDecl: InterfaceDeclaration): numbe
   let count = 0;
 
   for (const member of interfaceDecl.getMembers()) {
-    if (member.getKind() !== SyntaxKind.PropertySignature) continue;
+    if (member.getKind() !== SyntaxKind.PropertySignature) {
+      continue;
+    }
 
     const prop = member.asKindOrThrow(SyntaxKind.PropertySignature);
-    const propName = prop.getName();
-    const propTypeNode = prop.getTypeNode();
-
-    if (!propTypeNode) continue;
-
-    const brandedType = getBrandedType(propName, modelName);
-    if (!brandedType) continue;
-
-    const fullText = prop.getText();
 
     // FieldRef pattern: readonly channelId: FieldRef<"Subscription", 'String'>
     // We need to replace the second type parameter with the branded type
     // Pattern: FieldRef<"Model", 'Int'> → FieldRef<"Model", BrandedType>
     // Pattern: FieldRef<"Model", 'String'> → FieldRef<"Model", BrandedType>
+    const transformed = transformPropertyType(prop, modelName, (fullText, brandedType, _propName) => {
+      // Match the FieldRef type parameter (Int, String, DateTime, etc.)
+      const fieldRefPattern = /FieldRef<"[^"]+",\s*'(Int|String|DateTime|Boolean|Float|Decimal|BigInt|Bytes|Json)'\s*>/;
+      const match = fieldRefPattern.exec(fullText);
 
-    // Match the FieldRef type parameter (Int, String, DateTime, etc.)
-    const fieldRefPattern = /FieldRef<"[^"]+",\s*'(Int|String|DateTime|Boolean|Float|Decimal|BigInt|Bytes|Json)'\s*>/;
-    const match = fieldRefPattern.exec(fullText);
+      if (match) {
+        // Replace the type parameter with the branded type (without quotes since it's a type, not a string literal)
+        return fullText.replace(fieldRefPattern, `FieldRef<"${modelName}", ${brandedType}>`);
+      }
 
-    if (match) {
-      // Replace the type parameter with the branded type (without quotes since it's a type, not a string literal)
-      const newText = fullText.replace(fieldRefPattern, `FieldRef<"${modelName}", ${brandedType}>`);
-      prop.replaceWithText(newText);
-      BRANDED_TYPES_TO_IMPORT.add(brandedType);
+      return null;
+    });
+
+    if (transformed) {
       count++;
     }
   }
@@ -354,70 +388,49 @@ function transformFieldRefsInterface(interfaceDecl: InterfaceDeclaration): numbe
   return count;
 }
 
+// Model-specific ID mappings
+const MODEL_ID_MAP: Record<string, string> = {
+  Player: "PlayerId",
+  Account: "AccountId",
+  Competition: "CompetitionId",
+  CompetitionParticipant: "ParticipantId",
+  CompetitionSnapshot: "SnapshotId",
+  Subscription: "SubscriptionId",
+  ServerPermission: "PermissionId",
+  GuildPermissionError: "PermissionErrorId",
+};
+
+// Field name to branded type mappings
+const FIELD_TYPE_MAP: Record<string, string> = {
+  playerId: "PlayerId",
+  competitionId: "CompetitionId",
+  accountId: "AccountId",
+  serverId: "DiscordGuildId",
+  channelId: "DiscordChannelId",
+  discordId: "DiscordAccountId",
+  ownerId: "DiscordAccountId",
+  creatorDiscordId: "DiscordAccountId",
+  invitedBy: "DiscordAccountId",
+  discordUserId: "DiscordAccountId",
+  grantedBy: "DiscordAccountId",
+  puuid: "LeaguePuuid",
+  region: "Region",
+  lastProcessedMatchId: "MatchId",
+  visibility: "CompetitionVisibility",
+  status: "ParticipantStatus",
+  snapshotType: "SnapshotType",
+  permission: "PermissionType",
+  seasonId: "SeasonId",
+};
+
 function getBrandedType(propName: string, parentTypeName: string): string | null {
   // Check if this is an 'id' field with model-specific branding
   if (propName === "id") {
-    // Handle each model explicitly
-    switch (parentTypeName) {
-      case "Player":
-        return "PlayerId";
-      case "Account":
-        return "AccountId";
-      case "Competition":
-        return "CompetitionId";
-      case "CompetitionParticipant":
-        return "ParticipantId";
-      case "CompetitionSnapshot":
-        return "SnapshotId";
-      case "Subscription":
-        return "SubscriptionId";
-      case "ServerPermission":
-        return "PermissionId";
-      case "GuildPermissionError":
-        return "PermissionErrorId";
-      default:
-        return null;
-    }
+    return MODEL_ID_MAP[parentTypeName] ?? null;
   }
 
   // Check other field mappings
-  switch (propName) {
-    case "playerId":
-      return "PlayerId";
-    case "competitionId":
-      return "CompetitionId";
-    case "accountId":
-      return "AccountId";
-    case "serverId":
-      return "DiscordGuildId";
-    case "channelId":
-      return "DiscordChannelId";
-    case "discordId":
-    case "ownerId":
-    case "creatorDiscordId":
-    case "invitedBy":
-    case "discordUserId":
-    case "grantedBy":
-      return "DiscordAccountId";
-    case "puuid":
-      return "LeaguePuuid";
-    case "region":
-      return "Region";
-    case "lastProcessedMatchId":
-      return "MatchId";
-    case "visibility":
-      return "CompetitionVisibility";
-    case "status":
-      return "ParticipantStatus";
-    case "snapshotType":
-      return "SnapshotType";
-    case "permission":
-      return "PermissionType";
-    case "seasonId":
-      return "SeasonId";
-    default:
-      return null;
-  }
+  return FIELD_TYPE_MAP[propName] ?? null;
 }
 
 // Run the script

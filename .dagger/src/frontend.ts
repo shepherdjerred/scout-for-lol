@@ -1,5 +1,6 @@
-import { Directory, Container, Secret, dag } from "@dagger.io/dagger";
-import { installWorkspaceDeps } from "./base";
+import type { Directory, Container, Secret } from "@dagger.io/dagger";
+import { dag } from "@dagger.io/dagger";
+import { installWorkspaceDeps } from "@scout-for-lol/.dagger/src/base";
 
 /**
  * Install dependencies for the frontend package
@@ -42,43 +43,42 @@ export function buildFrontend(workspaceSource: Directory): Directory {
   return container.directory("/workspace/packages/frontend/dist");
 }
 
+type DeployFrontendOptions = {
+  workspaceSource: Directory;
+  branch: string;
+  gitSha: string;
+  cloudflare: {
+    projectName: string;
+    accountId: Secret;
+    apiToken: Secret;
+  };
+};
+
 /**
  * Deploy the frontend to Cloudflare Pages
- * @param workspaceSource The full workspace source directory
- * @param branch The git branch name
- * @param gitSha The git commit SHA
- * @param projectName The Cloudflare Pages project name
- * @param accountId Cloudflare account ID
- * @param apiToken Cloudflare API token
+ * @param options Deployment options including workspace source, branch, git SHA, and Cloudflare credentials
  * @returns Deployment output
  */
-export async function deployFrontend(
-  workspaceSource: Directory,
-  branch: string,
-  gitSha: string,
-  projectName: string,
-  accountId: Secret,
-  apiToken: Secret,
-): Promise<string> {
-  const distDir = buildFrontend(workspaceSource);
+export async function deployFrontend(options: DeployFrontendOptions): Promise<string> {
+  const distDir = buildFrontend(options.workspaceSource);
 
   // Use Node.js container for wrangler (official tool from Cloudflare)
   const deployContainer = dag
     .container()
     .from("node:lts-slim")
     .withDirectory("/workspace/dist", distDir)
-    .withSecretVariable("CLOUDFLARE_ACCOUNT_ID", accountId)
-    .withSecretVariable("CLOUDFLARE_API_TOKEN", apiToken)
-    .withExec(["sh", "-c", `echo '🚀 [CI] Deploying frontend to Cloudflare Pages (branch: ${branch})...'`])
+    .withSecretVariable("CLOUDFLARE_ACCOUNT_ID", options.cloudflare.accountId)
+    .withSecretVariable("CLOUDFLARE_API_TOKEN", options.cloudflare.apiToken)
+    .withExec(["sh", "-c", `echo '🚀 [CI] Deploying frontend to Cloudflare Pages (branch: ${options.branch})...'`])
     .withExec([
       "npx",
       "wrangler@latest",
       "pages",
       "deploy",
       "/workspace/dist",
-      `--project-name=${projectName}`,
-      `--branch=${branch}`,
-      `--commit-hash=${gitSha}`,
+      `--project-name=${options.cloudflare.projectName}`,
+      `--branch=${options.branch}`,
+      `--commit-hash=${options.gitSha}`,
     ]);
 
   const output = await deployContainer.stdout();

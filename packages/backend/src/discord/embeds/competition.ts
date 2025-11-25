@@ -4,7 +4,8 @@ import { EmbedBuilder, Colors } from "discord.js";
 import { match } from "ts-pattern";
 import { z } from "zod";
 import { getChampionName } from "twisted/dist/constants/champions.js";
-import type { RankedLeaderboardEntry } from "../../league/competition/leaderboard.js";
+import type { RankedLeaderboardEntry } from "@scout-for-lol/backend/league/competition/leaderboard.js";
+import { differenceInCalendarDays, format } from "date-fns";
 
 // ============================================================================
 // Types
@@ -138,6 +139,7 @@ export function generateLeaderboardEmbed(
   // Add viewing user's position if they're outside top 10
   // Note: This feature is disabled for now as LeaderboardEntry doesn't include discordId
   // To enable this, we would need to modify the LeaderboardEntry type
+  // User position highlighting would be implemented here when LeaderboardEntry includes discordId
   if (viewingUserId) {
     // TODO: Implement user position highlighting when LeaderboardEntry includes discordId
   }
@@ -270,7 +272,7 @@ export function generateCompetitionDetailsEmbed(competition: CompetitionWithCrit
  * @param criteria Competition criteria object
  * @returns Human-readable string description
  */
-export function formatCriteriaDescription(criteria: CompetitionCriteria): string {
+function formatCriteriaDescription(criteria: CompetitionCriteria): string {
   return match(criteria)
     .with({ type: "MOST_GAMES_PLAYED" }, (c) => `Most games played in ${formatQueue(c.queue)}`)
     .with({ type: "HIGHEST_RANK" }, (c) => `Highest rank in ${formatQueue(c.queue)}`)
@@ -355,7 +357,9 @@ function formatWinsScore(wins: number, metadata?: Record<string, unknown>): stri
   const baseText = `${wins.toString()} win${wins === 1 ? "" : "s"}`;
 
   // If we have games in metadata, show win/loss record
-  if (!metadata) return baseText;
+  if (!metadata) {
+    return baseText;
+  }
 
   const MetadataSchema = z.object({
     games: z.number().positive(),
@@ -380,7 +384,9 @@ function formatWinRateScore(winRate: number, metadata?: Record<string, unknown>)
   const rateText = `${winRate.toFixed(1)}%`;
 
   // If we have wins and games in metadata, show record
-  if (!metadata) return rateText;
+  if (!metadata) {
+    return rateText;
+  }
 
   const MetadataSchema = z.object({
     wins: z.number(),
@@ -424,25 +430,21 @@ function getStatusText(status: CompetitionStatus, competition: CompetitionWithCr
   return match(status)
     .with("DRAFT", () => {
       if (competition.startDate) {
-        const daysUntilStart = Math.ceil((competition.startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const daysUntilStart = differenceInCalendarDays(competition.startDate, now);
         return `${emoji} Draft (starts in ${daysUntilStart.toString()} day${daysUntilStart === 1 ? "" : "s"})`;
       }
       return `${emoji} Draft`;
     })
     .with("ACTIVE", () => {
       if (competition.endDate) {
-        const daysRemaining = Math.ceil((competition.endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const daysRemaining = differenceInCalendarDays(competition.endDate, now);
         return `${emoji} Active (${daysRemaining.toString()} day${daysRemaining === 1 ? "" : "s"} remaining)`;
       }
       return `${emoji} Active`;
     })
     .with("ENDED", () => {
       if (competition.endDate) {
-        const endedDate = competition.endDate.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        });
+        const endedDate = format(competition.endDate, "MMM d, yyyy");
         return `${emoji} Ended (Completed ${endedDate})`;
       }
       return `${emoji} Ended`;
@@ -456,9 +458,15 @@ function getStatusText(status: CompetitionStatus, competition: CompetitionWithCr
  * Returns medal emoji for top 3, empty string with spacing for others
  */
 function getMedalEmoji(rank: number): string {
-  if (rank === 1) return MEDAL_EMOJIS[1];
-  if (rank === 2) return MEDAL_EMOJIS[2];
-  if (rank === 3) return MEDAL_EMOJIS[3];
+  if (rank === 1) {
+    return MEDAL_EMOJIS[1];
+  }
+  if (rank === 2) {
+    return MEDAL_EMOJIS[2];
+  }
+  if (rank === 3) {
+    return MEDAL_EMOJIS[3];
+  }
   return "  "; // Two spaces for alignment
 }
 

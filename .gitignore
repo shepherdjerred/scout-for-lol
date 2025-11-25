@@ -15,3 +15,7 @@ junit.xml
 
 # Test cache (e.g., fetch mocking)
 .test-cache/
+
+jscpd-report/
+
+/generated/prisma

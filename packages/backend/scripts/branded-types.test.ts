@@ -35,7 +35,8 @@ type Expect<T extends true> = T;
 /**
  * Inverts a false to true - used for negative assertions
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// @ts-expect-error - type is intentionally unused
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Type helper for compile-time assertions
 type Not<T extends false> = true;
 
 /**

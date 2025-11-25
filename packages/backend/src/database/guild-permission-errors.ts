@@ -1,5 +1,6 @@
 import { type DiscordChannelId, type DiscordGuildId } from "@scout-for-lol/data";
-import type { PrismaClient } from "../../generated/prisma/client/index.js";
+import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import { subDays } from "date-fns";
 
 /**
  * Record a permission error for a guild/channel
@@ -7,11 +8,14 @@ import type { PrismaClient } from "../../generated/prisma/client/index.js";
  */
 export async function recordPermissionError(
   prisma: PrismaClient,
-  serverId: DiscordGuildId,
-  channelId: DiscordChannelId,
-  errorType: string,
-  errorReason?: string,
+  params: {
+    serverId: DiscordGuildId;
+    channelId: DiscordChannelId;
+    errorType: string;
+    errorReason?: string;
+  },
 ): Promise<void> {
+  const { serverId, channelId, errorType, errorReason } = params;
   const now = new Date();
 
   // Try to find existing error record
@@ -116,8 +120,7 @@ export async function getAbandonedGuilds(
   prisma: PrismaClient,
   minDays = 7,
 ): Promise<{ serverId: DiscordGuildId; firstOccurrence: Date; lastOccurrence: Date; errorCount: number }[]> {
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - minDays);
+  const cutoffDate = subDays(new Date(), minDays);
 
   const errors = await prisma.guildPermissionError.findMany({
     where: {
@@ -216,8 +219,7 @@ export async function markGuildAsNotified(prisma: PrismaClient, serverId: Discor
  * Removes records that have been successfully resolved for more than 30 days
  */
 export async function cleanupOldErrorRecords(prisma: PrismaClient): Promise<number> {
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - 30);
+  const cutoffDate = subDays(new Date(), 30);
 
   const result = await prisma.guildPermissionError.deleteMany({
     where: {

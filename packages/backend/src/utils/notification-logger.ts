@@ -1,25 +1,21 @@
-import { appendFileSync, existsSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
-import { randomUUID } from "node:crypto";
-
 /**
  * Unique instance ID for this bot process
  * Helps identify if multiple instances are running
  */
-const INSTANCE_ID = randomUUID().slice(0, 8);
+const INSTANCE_ID = crypto.randomUUID().slice(0, 8);
 
 /**
  * Log directory for notification tracking
  */
-const LOG_DIR = process.env["LOG_DIR"] ?? "./logs";
-const LOG_FILE = join(LOG_DIR, "competition-notifications.log");
+const LOG_DIR = Bun.env["LOG_DIR"] ?? "./logs";
+const LOG_FILE = `${LOG_DIR}/competition-notifications.log`;
 
 /**
  * Initialize logging directory
  */
-function ensureLogDir(): void {
-  if (!existsSync(LOG_DIR)) {
-    mkdirSync(LOG_DIR, { recursive: true });
+async function ensureLogDir(): Promise<void> {
+  if (!(await Bun.file(LOG_DIR).exists())) {
+    await Bun.write(`${LOG_DIR}/.keep`, "");
   }
 }
 
@@ -92,13 +88,16 @@ export function logNotification(
 
   console.log(`${emoji} [NotificationLog] ${type}${competitionInfo} | Trigger: ${trigger} | Instance: ${INSTANCE_ID}`);
 
-  // File log
-  try {
-    ensureLogDir();
-    appendFileSync(LOG_FILE, formatLogEntry(entry) + "\n");
-  } catch (error) {
-    console.error("❌ Failed to write notification log:", error);
-  }
+  // File log (non-blocking)
+  void (async () => {
+    try {
+      await ensureLogDir();
+      const logLine = formatLogEntry(entry) + "\n";
+      await Bun.write(Bun.file(LOG_FILE), logLine);
+    } catch (error) {
+      console.error("❌ Failed to write notification log:", error);
+    }
+  })();
 }
 
 /**

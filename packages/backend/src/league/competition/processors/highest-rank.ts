@@ -1,6 +1,9 @@
 import type { HighestRankCriteria, Rank, Ranks } from "@scout-for-lol/data";
 import { rankToLeaguePoints } from "@scout-for-lol/data";
-import type { LeaderboardEntry, PlayerWithAccounts } from "./types.js";
+import type {
+  LeaderboardEntry,
+  PlayerWithAccounts,
+} from "@scout-for-lol/backend/league/competition/processors/types.js";
 
 /**
  * Process "Highest Rank" criteria

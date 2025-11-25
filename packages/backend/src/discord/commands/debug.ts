@@ -1,14 +1,9 @@
 import { type ChatInputCommandInteraction, SlashCommandBuilder, AttachmentBuilder, EmbedBuilder } from "discord.js";
-import { readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
 import { formatDistanceToNow } from "date-fns";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import configuration from "../../configuration";
-import { getAccountsWithState, prisma } from "../../database/index.js";
-import { calculatePollingInterval, shouldCheckPlayer } from "../../utils/polling-intervals.js";
-export { executeDebugForceSnapshot } from "./debug/force-snapshot.js";
-export { executeDebugForceLeaderboardUpdate } from "./debug/force-leaderboard-update.js";
-export { executeDebugManageParticipant } from "./debug/manage-participant.js";
+import configuration from "@scout-for-lol/backend/configuration";
+import { getAccountsWithState, prisma } from "@scout-for-lol/backend/database/index.js";
+import { calculatePollingInterval, shouldCheckPlayer } from "@scout-for-lol/backend/utils/polling-intervals.js";
 
 export const debugCommand = new SlashCommandBuilder()
   .setName("debug")
@@ -72,19 +67,12 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
   const databaseUrl = configuration.databaseUrl;
 
   // Handle file:// URLs and extract the path
-  let databasePath: string;
-  if (databaseUrl.startsWith("file:")) {
-    // Remove 'file:' prefix and handle URL encoding
-    databasePath = databaseUrl.replace(/^file:/, "");
-    // TODO: use ts-pattern for exhaustive match
-  } else {
-    databasePath = databaseUrl;
-  }
+  const databasePath = databaseUrl.startsWith("file:") ? databaseUrl.replace(/^file:/, "") : databaseUrl;
 
   console.log(`📁 Database path: ${databasePath}`);
 
   // Check if file exists
-  if (!existsSync(databasePath)) {
+  if (!(await Bun.file(databasePath).exists())) {
     console.error(`❌ Database file not found at ${databasePath}`);
     await interaction.reply({
       content: `❌ Database file not found at: \`${databasePath}\``,
@@ -98,14 +86,18 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
     await interaction.deferReply({ ephemeral: true });
 
     console.log(`📖 Reading database file from ${databasePath}`);
-    const fileBuffer = await readFile(databasePath);
-    console.log(`✅ Successfully read database file (${fileBuffer.length.toString()} bytes)`);
+    const file = Bun.file(databasePath);
+    const fileSize = file.size;
+    console.log(`✅ Successfully opened database file (${String(fileSize)} bytes)`);
 
-    // Create attachment
-    const attachment = new AttachmentBuilder(fileBuffer, { name: "database.sqlite" });
+    // Read file and convert to Buffer for Discord.js type compatibility
+    // Using Bun's Buffer (not Node.js) - Discord.js types require Buffer, not Uint8Array
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const attachment = new AttachmentBuilder(buffer, { name: "database.sqlite" });
 
     await interaction.editReply({
-      content: `✅ Database file uploaded successfully\n\nPath: \`${databasePath}\`\nSize: ${(fileBuffer.length / 1024).toFixed(2)} KB`,
+      content: `✅ Database file uploaded successfully\n\nPath: \`${databasePath}\`\nSize: ${(fileSize / 1024).toFixed(2)} KB`,
       files: [attachment],
     });
 

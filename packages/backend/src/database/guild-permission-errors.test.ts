@@ -1,42 +1,17 @@
 import { describe, expect, test, beforeEach } from "bun:test";
-import { PrismaClient } from "../../generated/prisma/client/index.js";
-import { execSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import {
   recordPermissionError,
   recordSuccessfulSend,
   getAbandonedGuilds,
   markGuildAsNotified,
   cleanupOldErrorRecords,
-} from "./guild-permission-errors.js";
+} from "@scout-for-lol/backend/database/guild-permission-errors.js";
 import { DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { testGuildId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
+import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.js";
 
-import { testGuildId, testChannelId } from "../testing/test-ids.js";
 // Create a test database
-const testDir = mkdtempSync(join(tmpdir(), "guild-errors-test-"));
-const testDbPath = join(testDir, "test.db");
-
-// Initialize test database
-const schemaPath = join(import.meta.dir, "../..", "prisma/schema.prisma");
-execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
-  env: {
-    ...process.env,
-    DATABASE_URL: `file:${testDbPath}`,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-  },
-  stdio: "pipe",
-});
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: `file:${testDbPath}`,
-    },
-  },
-});
+const { prisma } = createTestDatabase("guild-errors-test");
 
 beforeEach(async () => {
   // Clean up all records before each test
@@ -45,13 +20,12 @@ beforeEach(async () => {
 
 describe("recordPermissionError", () => {
   test("creates new error record on first occurrence", async () => {
-    await recordPermissionError(
-      prisma,
-      testGuildId("12300000000"),
-      testChannelId("456000000"),
-      "proactive_check",
-      "Missing Send Messages",
-    );
+    await recordPermissionError(prisma, {
+      serverId: testGuildId("12300000000"),
+      channelId: testChannelId("456000000"),
+      errorType: "proactive_check",
+      errorReason: "Missing Send Messages",
+    });
 
     const record = await prisma.guildPermissionError.findUnique({
       where: {
@@ -74,10 +48,18 @@ describe("recordPermissionError", () => {
 
   test("increments error count on subsequent occurrences", async () => {
     // First error
-    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("456000000"), "proactive_check");
+    await recordPermissionError(prisma, {
+      serverId: testGuildId("12300000000"),
+      channelId: testChannelId("456000000"),
+      errorType: "proactive_check",
+    });
 
     // Second error
-    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("456000000"), "api_error");
+    await recordPermissionError(prisma, {
+      serverId: testGuildId("12300000000"),
+      channelId: testChannelId("456000000"),
+      errorType: "api_error",
+    });
 
     const record = await prisma.guildPermissionError.findUnique({
       where: {
@@ -93,8 +75,16 @@ describe("recordPermissionError", () => {
   });
 
   test("tracks separate errors for different channels in same guild", async () => {
-    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("1000000001"), "proactive_check");
-    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("2000000002"), "proactive_check");
+    await recordPermissionError(prisma, {
+      serverId: testGuildId("12300000000"),
+      channelId: testChannelId("1000000001"),
+      errorType: "proactive_check",
+    });
+    await recordPermissionError(prisma, {
+      serverId: testGuildId("12300000000"),
+      channelId: testChannelId("2000000002"),
+      errorType: "proactive_check",
+    });
 
     const errors = await prisma.guildPermissionError.findMany({
       where: { serverId: testGuildId("12300000000") },
@@ -107,8 +97,16 @@ describe("recordPermissionError", () => {
 describe("recordSuccessfulSend", () => {
   test("resets error count when called", async () => {
     // Create some errors
-    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("456000000"), "proactive_check");
-    await recordPermissionError(prisma, testGuildId("12300000000"), testChannelId("456000000"), "api_error");
+    await recordPermissionError(prisma, {
+      serverId: testGuildId("12300000000"),
+      channelId: testChannelId("456000000"),
+      errorType: "proactive_check",
+    });
+    await recordPermissionError(prisma, {
+      serverId: testGuildId("12300000000"),
+      channelId: testChannelId("456000000"),
+      errorType: "api_error",
+    });
 
     // Record successful send
     await recordSuccessfulSend(prisma, testGuildId("12300000000"), testChannelId("456000000"));
@@ -485,25 +483,27 @@ describe("Permission Error Workflow", () => {
     const channelId = testChannelId("0");
 
     // 1. First error
-    await recordPermissionError(prisma, serverId, channelId, "proactive_check");
+    await recordPermissionError(prisma, {
+      serverId,
+      channelId,
+      errorType: "proactive_check",
+    });
     let record = await prisma.guildPermissionError.findUnique({
       where: { serverId_channelId: { serverId, channelId } },
     });
     expect(record?.consecutiveErrorCount).toBe(1);
 
     // 2. More errors accumulate
-    await recordPermissionError(
-      prisma,
-      DiscordGuildIdSchema.parse(serverId),
-      DiscordChannelIdSchema.parse(channelId),
-      "api_error",
-    );
-    await recordPermissionError(
-      prisma,
-      DiscordGuildIdSchema.parse(serverId),
-      DiscordChannelIdSchema.parse(channelId),
-      "api_error",
-    );
+    await recordPermissionError(prisma, {
+      serverId,
+      channelId,
+      errorType: "api_error",
+    });
+    await recordPermissionError(prisma, {
+      serverId,
+      channelId,
+      errorType: "api_error",
+    });
     record = await prisma.guildPermissionError.findUnique({
       where: { serverId_channelId: { serverId, channelId } },
     });

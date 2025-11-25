@@ -1,33 +1,20 @@
-import { palette } from "../../assets/colors.ts";
+import { palette } from "@scout-for-lol/report/assets/colors.ts";
+import { Damage as BaseDamage } from "@scout-for-lol/report/html/shared/damage.js";
 
-export function Damage({ value, percent, highlight }: { value: number; percent: number; highlight: boolean }) {
+export function Damage(props: { value: number; percent: number; highlight: boolean }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "2rem",
-        width: "40rem",
-      }}
-    >
-      <div style={{ display: "flex", gap: "2rem", fontWeight: 700 }}>{value.toLocaleString()} dmg</div>
-      <span
-        style={{
-          width: "20rem",
-          height: "1.5rem",
-          backgroundColor: palette.grey[1],
-        }}
-      >
-        <span
-          style={{
-            display: "flex",
-            width: `${percent.toString()}%`,
-            height: "100%",
-            backgroundColor: highlight ? palette.gold.bright : palette.white[1],
-          }}
-        />
-      </span>
-    </div>
+    <BaseDamage
+      {...props}
+      containerGap="2rem"
+      containerWidth="40rem"
+      textGap="2rem"
+      textFontWeight={700}
+      textLayout="simple"
+      barWidth="20rem"
+      barHeight="1.5rem"
+      barBackgroundColor={palette.grey[1]}
+      fillHighlightColor={palette.gold.bright}
+      fillDefaultColor={palette.white[1]}
+    />
   );
 }

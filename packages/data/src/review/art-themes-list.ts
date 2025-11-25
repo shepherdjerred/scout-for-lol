@@ -2,7 +2,7 @@
  * Art themes data
  */
 
-import type { ArtTheme } from "./art-categories.js";
+import type { ArtTheme } from "@scout-for-lol/data/review/art-categories.js";
 
 /**
  * Themes with category tags

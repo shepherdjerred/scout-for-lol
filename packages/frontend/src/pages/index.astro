@@ -3,6 +3,16 @@ import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
 import WhatsNewBanner from "../components/WhatsNewBanner.astro";
+import Hero from "../components/Hero.astro";
+import SectionHeader from "../components/SectionHeader.astro";
+import FeatureCard from "../components/FeatureCard.astro";
+import FeatureGrid from "../components/FeatureGrid.astro";
+import FeatureWithImage from "../components/FeatureWithImage.astro";
+import StatCard from "../components/StatCard.astro";
+import CTA from "../components/CTA.astro";
+import GalleryItem from "../components/GalleryItem.astro";
+import BenefitCard from "../components/BenefitCard.astro";
+import ProcessStep from "../components/ProcessStep.astro";
 ---
 
 <Layout>
@@ -10,290 +20,89 @@ import WhatsNewBanner from "../components/WhatsNewBanner.astro";
     <Navbar activePage="home" />
     <WhatsNewBanner />
 
-    <!-- Hero Section -->
-    <div class="relative isolate px-6 pt-14 lg:px-8 dark:bg-gray-900">
-      <div
-        class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
-        aria-hidden="true"
-      >
-        <div
-          class="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
-          style="clip-path: polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)"
-        >
-        </div>
-      </div>
-      <div class="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
-        <div class="hidden sm:mb-8 sm:flex sm:justify-center">
-          <div
-            class="relative rounded-full px-3 py-1 text-sm/6 text-gray-600 dark:text-gray-300 ring-1 ring-gray-900/10 dark:ring-gray-100/10 hover:ring-gray-900/20 dark:hover:ring-gray-100/20"
-          >
-            Track your friends' League matches! <a
-              href="#features"
-              class="font-semibold text-indigo-600 dark:text-indigo-400"
-              ><span class="absolute inset-0" aria-hidden="true"></span>Learn more <span aria-hidden="true">&rarr;</span
-              ></a
-            >
-          </div>
-        </div>
-        <div class="text-center">
-          <h1 class="text-balance text-5xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-7xl">
-            Scout for League of Legends
-          </h1>
-          <p class="mt-8 text-pretty text-lg font-medium text-gray-500 dark:text-gray-400 sm:text-xl/8">
-            Get notifications when your friends finish League matches and beautiful post-match reports with detailed
-            stats, all delivered directly to your Discord server.
-          </p>
-          <div class="mt-10 flex items-center justify-center gap-x-6">
-            <a
-              href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
-              class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              >Add to Discord</a
-            >
-            <a href="/docs" class="text-sm/6 font-semibold text-gray-900 dark:text-white"
-              >View Documentation <span aria-hidden="true">→</span></a
-            >
-          </div>
-        </div>
-      </div>
-    </div>
+    <Hero
+      title="Scout for League of Legends"
+      subtitle="Get notifications when your friends finish League matches and beautiful post-match reports with detailed stats, all delivered directly to your Discord server."
+      showGradient={true}
+      ctaButtons={[
+        { text: 'Add to Discord', href: 'https://discord.com/oauth2/authorize?client_id=1182800769188110366', variant: 'primary' },
+        { text: 'View Documentation', href: '/docs', variant: 'secondary' }
+      ]}
+    />
 
     <!-- Features Section -->
     <div id="features" class="py-24 sm:py-32">
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
-        <div class="mx-auto max-w-2xl lg:text-center">
-          <h2 class="text-base/7 font-semibold text-indigo-600 dark:text-indigo-400">Everything you need</h2>
-          <p
-            class="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-balance"
-          >
-            Never miss a League match again
-          </p>
-          <p class="mt-6 text-lg/8 text-gray-600 dark:text-gray-300">
-            Scout automatically tracks your friends' League of Legends matches and provides rich notifications and
-            detailed post-match analysis.
-          </p>
-        </div>
-        <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
-          <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
-            <div class="relative pl-16">
-              <dt class="text-base/7 font-semibold text-gray-900 dark:text-white">
-                <div class="absolute left-0 top-0 flex size-10 items-center justify-center rounded-lg bg-indigo-600">
-                  <svg
-                    class="size-6 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
-                    ></path>
-                  </svg>
-                </div>
-                Match Notifications
-              </dt>
-              <dd class="mt-2 text-base/7 text-gray-600 dark:text-gray-300">
-                Get notifications when subscribed players finish a League match.
-              </dd>
-            </div>
-            <div class="relative pl-16">
-              <dt class="text-base/7 font-semibold text-gray-900 dark:text-white">
-                <div class="absolute left-0 top-0 flex size-10 items-center justify-center rounded-lg bg-indigo-600">
-                  <svg
-                    class="size-6 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 12h3.75M9 15h3.75M9 18h3.75m3-18v18a2.25 2.25 0 0 1-2.25 2.25h-13.5A2.25 2.25 0 0 1 3 19.5V4.5A2.25 2.25 0 0 1 5.25 2.25h13.5A2.25 2.25 0 0 1 21 4.5Z"
-                    ></path>
-                  </svg>
-                </div>
-                Detailed Post-Match Reports
-              </dt>
-              <dd class="mt-2 text-base/7 text-gray-600 dark:text-gray-300">
-                Beautiful, automatically generated post-match reports with KDA, damage, gold, items, and performance
-                statistics. See a preview below!
-              </dd>
-            </div>
-            <div class="relative pl-16">
-              <dt class="text-base/7 font-semibold text-gray-900 dark:text-white">
-                <div class="absolute left-0 top-0 flex size-10 items-center justify-center rounded-lg bg-indigo-600">
-                  <svg
-                    class="size-6 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"
-                    ></path>
-                  </svg>
-                </div>
-                Multi-Region Support
-              </dt>
-              <dd class="mt-2 text-base/7 text-gray-600 dark:text-gray-300">
-                Track players across all League of Legends regions including NA, EUW, EUNE, KR, and more.
-              </dd>
-            </div>
-            <div class="relative pl-16">
-              <dt class="text-base/7 font-semibold text-gray-900 dark:text-white">
-                <div class="absolute left-0 top-0 flex size-10 items-center justify-center rounded-lg bg-indigo-600">
-                  <svg
-                    class="size-6 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0"
-                    ></path>
-                  </svg>
-                </div>
-                Competitions & Leaderboards
-              </dt>
-              <dd class="mt-2 text-base/7 text-gray-600 dark:text-gray-300">
-                Create custom competitions with configurable criteria, use League seasons or custom dates, and track
-                your server's performance on leaderboards.
-              </dd>
-            </div>
-            <div class="relative pl-16">
-              <dt class="text-base/7 font-semibold text-gray-900 dark:text-white">
-                <div class="absolute left-0 top-0 flex size-10 items-center justify-center rounded-lg bg-indigo-600">
-                  <svg
-                    class="size-6 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"></path>
-                  </svg>
-                </div>
-                Arena Mode Support
-              </dt>
-              <dd class="mt-2 text-base/7 text-gray-600 dark:text-gray-300">
-                Full support for League's Arena mode with detailed reports for all 16 players, augments, and placements.
-              </dd>
-            </div>
-          </dl>
-        </div>
+        <SectionHeader
+          badge="Everything you need"
+          title="Never miss a League match again"
+          subtitle="Scout automatically tracks your friends' League of Legends matches and provides rich notifications and detailed post-match analysis."
+        />
+        <FeatureGrid>
+          <FeatureCard
+            icon="heroicons:bell"
+            title="Match Notifications"
+            description="Get notifications when subscribed players finish a League match."
+          />
+          <FeatureCard
+            icon="heroicons:document-text"
+            title="Detailed Post-Match Reports"
+            description="Beautiful, automatically generated post-match reports with KDA, damage, gold, items, and performance statistics. See a preview below!"
+          />
+          <FeatureCard
+            icon="heroicons:users"
+            title="Multi-Region Support"
+            description="Track players across all League of Legends regions including NA, EUW, EUNE, KR, and more."
+          />
+          <FeatureCard
+            icon="heroicons:trophy"
+            title="Competitions & Leaderboards"
+            description="Create custom competitions with configurable criteria, use League seasons or custom dates, and track your server's performance on leaderboards."
+          />
+          <FeatureCard
+            icon="heroicons:bolt"
+            title="Arena Mode Support"
+            description="Full support for League's Arena mode with detailed reports for all 16 players, augments, and placements."
+          />
+        </FeatureGrid>
       </div>
     </div>
 
     <!-- Match Report Preview -->
     <div class="py-24 sm:py-32">
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
-        <div class="mx-auto max-w-2xl lg:text-center">
-          <h2 class="text-base/7 font-semibold text-indigo-600 dark:text-indigo-400">Report Preview</h2>
-          <p
-            class="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-balance"
-          >
-            See what your reports look like
-          </p>
-          <p class="mt-6 text-lg/8 text-gray-600 dark:text-gray-300">
-            Every match is automatically analyzed and formatted into a beautiful, easy-to-read report that shows all the
-            key statistics and performance data.
-          </p>
-        </div>
+        <SectionHeader
+          badge="Report Preview"
+          title="See what your reports look like"
+          subtitle="Every match is automatically analyzed and formatted into a beautiful, easy-to-read report that shows all the key statistics and performance data."
+        />
 
         <div class="mx-auto mt-16 max-w-5xl">
-          <div class="relative">
-            <img
-              src="/match.png"
-              alt="Example League of Legends match report showing team compositions, player statistics, KDA, damage dealt, gold earned, and items"
-              class="w-full rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
-              loading="lazy"
-            />
-            <div class="absolute inset-0 rounded-xl ring-1 ring-inset ring-gray-900/10 dark:ring-gray-100/10"></div>
-          </div>
+          <GalleryItem
+            imageSrc="/match.png"
+            imageAlt="Example League of Legends match report showing team compositions, player statistics, KDA, damage dealt, gold earned, and items"
+          />
 
           <div class="mx-auto mt-12 max-w-2xl lg:max-w-none">
             <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-              <div class="text-center">
-                <div
-                  class="mx-auto h-12 w-12 flex items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30"
-                >
-                  <svg
-                    class="h-6 w-6 text-green-600 dark:text-green-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
-                  </svg>
-                </div>
-                <h3 class="mt-4 text-lg font-semibold text-gray-900 dark:text-white">Complete Stats</h3>
-                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                  KDA, damage, gold, CS, items, and more - everything you need to analyze the match.
-                </p>
-              </div>
-
-              <div class="text-center">
-                <div
-                  class="mx-auto h-12 w-12 flex items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30"
-                >
-                  <svg
-                    class="h-6 w-6 text-blue-600 dark:text-blue-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"
-                    ></path>
-                  </svg>
-                </div>
-                <h3 class="mt-4 text-lg font-semibold text-gray-900 dark:text-white">Team Overview</h3>
-                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                  Clear team compositions with champion portraits and roles for easy identification.
-                </p>
-              </div>
-
-              <div class="text-center">
-                <div
-                  class="mx-auto h-12 w-12 flex items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30"
-                >
-                  <svg
-                    class="h-6 w-6 text-purple-600 dark:text-purple-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456Z"
-                    ></path>
-                  </svg>
-                </div>
-                <h3 class="mt-4 text-lg font-semibold text-gray-900 dark:text-white">Ranked Progress</h3>
-                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                  Track rank changes and LP gains/losses with beautiful rank emblems.
-                </p>
-              </div>
+              <BenefitCard
+                title="Complete Stats"
+                description="KDA, damage, gold, CS, items, and more - everything you need to analyze the match."
+                icon="heroicons:check-circle"
+                color="green"
+              />
+              <BenefitCard
+                title="Team Overview"
+                description="Clear team compositions with champion portraits and roles for easy identification."
+                icon="heroicons:users"
+                color="blue"
+              />
+              <BenefitCard
+                title="Ranked Progress"
+                description="Track rank changes and LP gains/losses with beautiful rank emblems."
+                icon="heroicons:sparkles"
+                color="purple"
+              />
             </div>
           </div>
         </div>
@@ -303,255 +112,61 @@ import WhatsNewBanner from "../components/WhatsNewBanner.astro";
     <!-- Features Gallery Section -->
     <div class="bg-white dark:bg-gray-900 py-24 sm:py-32">
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
-        <div class="mx-auto max-w-2xl lg:text-center mb-16">
-          <h2 class="text-base/7 font-semibold text-indigo-600 dark:text-indigo-400">Feature Showcase</h2>
-          <p
-            class="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-balance"
-          >
-            See Scout in Action
-          </p>
-          <p class="mt-6 text-lg/8 text-gray-600 dark:text-gray-300">
-            Beautiful reports, leaderboards, and notifications that keep your community engaged with League of Legends.
-          </p>
-        </div>
+        <SectionHeader
+          badge="Feature Showcase"
+          title="See Scout in Action"
+          subtitle="Beautiful reports, leaderboards, and notifications that keep your community engaged with League of Legends."
+        />
 
-        <div class="space-y-16">
+        <div class="space-y-16 mt-16">
           <!-- Arena Mode Reports -->
-          <div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 items-center">
-            <div class="order-2 lg:order-1">
-              <img
-                src="/arena-discord.png"
-                alt="Arena mode match notification in Discord showing detailed stats for all 16 players"
-                class="w-full rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
-                loading="lazy"
-              />
-            </div>
-            <div class="order-1 lg:order-2">
-              <div
-                class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 mb-4"
-              >
-                <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"></path>
-                </svg>
-                Arena Mode
-              </div>
-              <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Complete Arena Coverage</h3>
-              <p class="text-lg text-gray-600 dark:text-gray-300 mb-4">
-                Full support for League's 2v2v2v2 Arena mode with detailed stats for all 16 players, augments tracking,
-                and placement results. Scout automatically detects Arena matches and generates comprehensive reports.
-              </p>
-              <ul class="space-y-2 text-gray-600 dark:text-gray-300">
-                <li class="flex items-start">
-                  <svg
-                    class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
-                  </svg>
-                  <span>Track all 16 players in each Arena match</span>
-                </li>
-                <li class="flex items-start">
-                  <svg
-                    class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
-                  </svg>
-                  <span>See augment selections and synergies</span>
-                </li>
-                <li class="flex items-start">
-                  <svg
-                    class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
-                  </svg>
-                  <span>Beautiful placement and ranking display</span>
-                </li>
-              </ul>
-            </div>
-          </div>
+          <FeatureWithImage
+            title="Complete Arena Coverage"
+            description="Full support for League's Arena mode with detailed stats for all 16 players, augments tracking, and placement results. Scout automatically detects Arena matches and generates comprehensive reports."
+            imageSrc="/arena-discord.png"
+            imageAlt="Arena mode match notification in Discord showing detailed stats for all 16 players"
+            imagePosition="left"
+            badge={{ text: 'Arena Mode', icon: 'heroicons:bolt', color: 'purple' }}
+            checklist={[
+              'Track all 16 players in each Arena match',
+              'See augment selections and synergies',
+              'Beautiful placement and ranking display'
+            ]}
+          />
 
           <!-- Ranked Notifications -->
-          <div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 items-center">
-            <div>
-              <div
-                class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 mb-4"
-              >
-                <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"
-                  ></path>
-                </svg>
-                Ranked Tracking
-              </div>
-              <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Real-Time Match Notifications</h3>
-              <p class="text-lg text-gray-600 dark:text-gray-300 mb-4">
-                Get instant notifications when your friends finish their ranked games. See their performance, LP
-                gains/losses, and rank changes in beautiful, easy-to-read Discord messages.
-              </p>
-              <ul class="space-y-2 text-gray-600 dark:text-gray-300">
-                <li class="flex items-start">
-                  <svg
-                    class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
-                  </svg>
-                  <span>Instant notifications for Solo Queue and Flex</span>
-                </li>
-                <li class="flex items-start">
-                  <svg
-                    class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
-                  </svg>
-                  <span>LP tracking and rank change indicators</span>
-                </li>
-                <li class="flex items-start">
-                  <svg
-                    class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
-                  </svg>
-                  <span>Comprehensive stats and performance metrics</span>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <img
-                src="/solo-discord.png"
-                alt="Ranked match notification showing player stats, KDA, and LP gains in Discord"
-                class="w-full rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
-                loading="lazy"
-              />
-            </div>
-          </div>
+          <FeatureWithImage
+            title="Real-Time Match Notifications"
+            description="Get instant notifications when your friends finish their ranked games. See their performance, LP gains/losses, and rank changes in beautiful, easy-to-read Discord messages."
+            imageSrc="/solo-discord.png"
+            imageAlt="Ranked match notification showing player stats, KDA, and LP gains in Discord"
+            imagePosition="right"
+            badge={{ text: 'Ranked Tracking', icon: 'heroicons:bell', color: 'blue' }}
+            checklist={[
+              'Instant notifications for Solo Queue and Flex',
+              'LP tracking and rank change indicators',
+              'Comprehensive stats and performance metrics'
+            ]}
+          />
 
           <!-- Leaderboards -->
-          <div class="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12 items-center">
-            <div class="order-2 lg:order-1">
-              <img
-                src="/leaderboard-lp.png"
-                alt="Server leaderboard showing LP competition rankings"
-                class="w-full rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-gray-600"
-                loading="lazy"
-              />
-            </div>
-            <div class="order-1 lg:order-2">
-              <div
-                class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 mb-4"
-              >
-                <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0"
-                  ></path>
-                </svg>
-                Competitions
-              </div>
-              <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Custom Leaderboards</h3>
-              <p class="text-lg text-gray-600 dark:text-gray-300 mb-4">
-                Create custom competitions for your server with flexible criteria and time periods. Track LP gains, most
-                wins, champion mastery, and more. Perfect for friendly competition!
-              </p>
-              <ul class="space-y-2 text-gray-600 dark:text-gray-300">
-                <li class="flex items-start">
-                  <svg
-                    class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
-                  </svg>
-                  <span>Flexible competition criteria (LP, wins, games played)</span>
-                </li>
-                <li class="flex items-start">
-                  <svg
-                    class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
-                  </svg>
-                  <span>Support for all game modes including Arena</span>
-                </li>
-                <li class="flex items-start">
-                  <svg
-                    class="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-2 flex-shrink-0"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"></path>
-                  </svg>
-                  <span>Use League seasons or custom date ranges</span>
-                </li>
-              </ul>
-            </div>
-          </div>
+          <FeatureWithImage
+            title="Custom Leaderboards"
+            description="Create custom competitions for your server with flexible criteria and time periods. Track LP gains, most wins, champion mastery, and more. Perfect for friendly competition!"
+            imageSrc="/leaderboard-lp.png"
+            imageAlt="Server leaderboard showing LP competition rankings"
+            imagePosition="left"
+            badge={{ text: 'Competitions', icon: 'heroicons:trophy', color: 'yellow' }}
+            checklist={[
+              'Flexible competition criteria (LP, wins, games played)',
+              'Support for all game modes including Arena',
+              'Use League seasons or custom date ranges'
+            ]}
+          />
 
           <!-- All Queue Types -->
           <div
-            class="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-8 lg:p-12"
+            class="bg-linear-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-2xl p-8 lg:p-12"
           >
             <div class="text-center mb-12">
               <h3 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">Support for All Queue Types</h3>
@@ -560,80 +175,24 @@ import WhatsNewBanner from "../components/WhatsNewBanner.astro";
               </p>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div class="text-center">
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
-                  <div
-                    class="w-24 h-24 mx-auto mb-4 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-600 flex items-center justify-center"
-                  >
-                    <svg
-                      class="w-12 h-12 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke-width="1.5"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 0 1-.982-3.172M9.497 14.25a7.454 7.454 0 0 0 .981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 0 0 7.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 0 0 2.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 0 1 2.916.52 6.003 6.003 0 0 1-5.395 4.972m0 0a6.726 6.726 0 0 1-2.749 1.35m0 0a6.772 6.772 0 0 1-3.044 0"
-                      ></path>
-                    </svg>
-                  </div>
-                  <h4 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Ranked Queues</h4>
-                  <p class="text-gray-600 dark:text-gray-300">
-                    Solo/Duo and Flex Queue with full rank tracking and LP history
-                  </p>
-                </div>
-              </div>
-              <div class="text-center">
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
-                  <div
-                    class="w-24 h-24 mx-auto mb-4 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center"
-                  >
-                    <svg
-                      class="w-12 h-12 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke-width="1.5"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"></path>
-                    </svg>
-                  </div>
-                  <h4 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Arena Mode</h4>
-                  <p class="text-gray-600 dark:text-gray-300">
-                    Complete 2v2v2v2 Arena coverage with augments and placements
-                  </p>
-                </div>
-              </div>
-              <div class="text-center">
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
-                  <div
-                    class="w-24 h-24 mx-auto mb-4 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center"
-                  >
-                    <svg
-                      class="w-12 h-12 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke-width="1.5"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"
-                      ></path>
-                    </svg>
-                  </div>
-                  <h4 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Normal Games</h4>
-                  <p class="text-gray-600 dark:text-gray-300">
-                    Track normal draft and blind pick games with the same great reports
-                  </p>
-                </div>
-              </div>
+              <StatCard
+                title="Ranked Queues"
+                description="Solo/Duo and Flex Queue with full rank tracking and LP history"
+                gradient="yellow"
+                icon="heroicons:trophy"
+              />
+              <StatCard
+                title="Arena Mode"
+                description="Complete Arena coverage with augments and placements"
+                gradient="purple"
+                icon="heroicons:bolt"
+              />
+              <StatCard
+                title="Normal Games"
+                description="Track normal draft and blind pick games with the same great reports"
+                gradient="blue"
+                icon="heroicons:users"
+              />
             </div>
           </div>
         </div>
@@ -643,94 +202,46 @@ import WhatsNewBanner from "../components/WhatsNewBanner.astro";
     <!-- How it works -->
     <div class="bg-gray-50 dark:bg-gray-800 py-24 sm:py-32">
       <div class="mx-auto max-w-7xl px-6 lg:px-8">
-        <div class="mx-auto max-w-2xl lg:text-center">
-          <h2 class="text-base/7 font-semibold text-indigo-600 dark:text-indigo-400">Simple setup</h2>
-          <p
-            class="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-balance"
-          >
-            Get started in minutes
-          </p>
-        </div>
+        <SectionHeader
+          badge="Simple setup"
+          title="Get started in minutes"
+          centered={true}
+        />
         <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
           <dl class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
-            <div class="flex flex-col">
-              <dt class="flex items-center gap-x-3 text-base/7 font-semibold text-gray-900 dark:text-white">
-                <div
-                  class="h-10 w-10 flex items-center justify-center rounded-lg bg-indigo-600 text-white font-semibold"
-                >
-                  1
-                </div>
-                Add Scout to your server
-              </dt>
-              <dd class="mt-4 flex flex-auto flex-col text-base/7 text-gray-600 dark:text-gray-300">
-                <p class="flex-auto">
-                  Click "Add to Discord" and authorize Scout with the necessary permissions to send messages to your
-                  channels.
-                </p>
-              </dd>
-            </div>
-            <div class="flex flex-col">
-              <dt class="flex items-center gap-x-3 text-base/7 font-semibold text-gray-900 dark:text-white">
-                <div
-                  class="h-10 w-10 flex items-center justify-center rounded-lg bg-indigo-600 text-white font-semibold"
-                >
-                  2
-                </div>
-                Subscribe to players
-              </dt>
-              <dd class="mt-4 flex flex-auto flex-col text-base/7 text-gray-600 dark:text-gray-300">
-                <p class="flex-auto">
-                  Use <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded">/subscription add</code> to add League players
-                  you want to track. Specify their Riot ID, region, and a friendly alias.
-                </p>
-              </dd>
-            </div>
-            <div class="flex flex-col">
-              <dt class="flex items-center gap-x-3 text-base/7 font-semibold text-gray-900 dark:text-white">
-                <div
-                  class="h-10 w-10 flex items-center justify-center rounded-lg bg-indigo-600 text-white font-semibold"
-                >
-                  3
-                </div>
-                Enjoy automatic updates
-              </dt>
-              <dd class="mt-4 flex flex-auto flex-col text-base/7 text-gray-600 dark:text-gray-300">
-                <p class="flex-auto">
-                  Scout will automatically notify your channel when tracked players start matches and post detailed
-                  reports when games end.
-                </p>
-              </dd>
-            </div>
+            <ProcessStep
+              number={1}
+              title="Add Scout to your server"
+            >
+              <p class="text-gray-600 dark:text-gray-300">Click 'Add to Discord' and authorize Scout with the necessary permissions to send messages to your channels.</p>
+            </ProcessStep>
+            <ProcessStep
+              number={2}
+              title="Subscribe to players"
+            >
+              <p class="text-gray-600 dark:text-gray-300">Use /subscription add to add League players you want to track. Specify their Riot ID, region, and a friendly alias.</p>
+            </ProcessStep>
+            <ProcessStep
+              number={3}
+              title="Enjoy automatic updates"
+            >
+              <p class="text-gray-600 dark:text-gray-300">Scout will automatically notify your channel when tracked players start matches and post detailed reports when games end.</p>
+            </ProcessStep>
           </dl>
         </div>
       </div>
     </div>
 
     <!-- CTA Section -->
-    <div class="bg-indigo-600 dark:bg-indigo-700">
-      <div class="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
-        <div class="mx-auto max-w-2xl text-center">
-          <h2 class="text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-            Ready to track your friends' League matches?
-          </h2>
-          <p class="mx-auto mt-6 max-w-xl text-lg/8 text-indigo-200 dark:text-indigo-100">
-            Add Scout to your Discord server and never miss another epic play or hilarious fail from your League
-            friends.
-          </p>
-          <div class="mt-10 flex items-center justify-center gap-x-6">
-            <a
-              href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
-              class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-indigo-600 shadow-sm hover:bg-indigo-50 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              Add to Discord
-            </a>
-            <a href="/docs" class="text-sm/6 font-semibold text-white hover:text-indigo-100 dark:hover:text-indigo-200">
-              Read the docs <span aria-hidden="true">→</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
+    <CTA
+      variant="indigo"
+      title="Ready to track your friends' League matches?"
+      description="Add Scout to your Discord server and never miss another epic play or hilarious fail from your League friends."
+      buttons={[
+        { text: 'Add to Discord', href: 'https://discord.com/oauth2/authorize?client_id=1182800769188110366', variant: 'primary' },
+        { text: 'Read the docs', href: '/docs', variant: 'secondary' }
+      ]}
+    />
 
     <Footer variant="homepage" />
   </div>

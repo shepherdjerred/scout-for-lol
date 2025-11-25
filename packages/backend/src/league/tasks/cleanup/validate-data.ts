@@ -7,11 +7,11 @@
 
 import { type Client } from "discord.js";
 import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
-import { getCompetitionsByChannelId } from "../../../database/competition/queries.js";
-import { sendDM } from "../../../discord/utils/dm.js";
-import { discordSubscriptionsCleanedTotal, guildDataCleanupTotal } from "../../../metrics/index.js";
-import { getErrorMessage } from "../../../utils/errors.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { getCompetitionsByChannelId } from "@scout-for-lol/backend/database/competition/queries.js";
+import { sendDM } from "@scout-for-lol/backend/discord/utils/dm.js";
+import { discordSubscriptionsCleanedTotal, guildDataCleanupTotal } from "@scout-for-lol/backend/metrics/index.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 
 /**
  * Run data validation to clean up orphaned guilds and channels

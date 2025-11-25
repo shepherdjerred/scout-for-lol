@@ -1,5 +1,6 @@
 ---
-description: Exhaustive case handling patterns for discriminated unions and enums. Applies when writing if/else/elseif chains
+description: Exhaustive case handling for discriminated unions and enums
+globs: "*.ts,*.tsx"
 alwaysApply: false
 ---
 # Exhaustive Case Handling
@@ -143,25 +144,68 @@ if (value) {
 | `else if` + `never` | ✅ Safe | Complex logic that ts-pattern can't handle |
 | `ts-pattern` + `.exhaustive()` | ✅ Safe | Simple case handling (preferred) |
 
-## Real-World Example
+## Real-World Examples
+
+### Example 1: Discord Command
 
 ```typescript
-// Discord command: /debug manage-participant action:add|kick user:@user
+// Discord: /competition action:create|edit|delete
 
-// ❌ BEFORE (dangerous)
-if (action === "add") {
-  await addParticipant(user);
+// ❌ DANGEROUS
+if (action === "create") {
+  await createCompetition();
+} else if (action === "edit") {
+  await editCompetition();
 } else {
-  // If we later add "suspend" action, it accidentally kicks!
-  await kickParticipant(user);
+  await deleteCompetition();  // "archive" would be deleted!
 }
 
-// ✅ AFTER (safe)
+// ✅ SAFE
 await match(action)
-  .with("add", async () => await addParticipant(user))
-  .with("kick", async () => await kickParticipant(user))
-  // When we add .with("suspend", ...), we're forced to handle it
-  .exhaustive();
+  .with("create", async () => await createCompetition())
+  .with("edit", async () => await editCompetition())
+  .with("delete", async () => await deleteCompetition())
+  .exhaustive();  // Error if we add "archive"
+```
+
+### Example 2: API Response Status
+
+```typescript
+type ApiResponse =
+  | { status: "success"; data: Data }
+  | { status: "error"; error: Error }
+  | { status: "loading" };
+
+// ✅ SAFE with exhaustive check
+function handleResponse(response: ApiResponse): string {
+  if (response.status === "success") {
+    return response.data.toString();
+  } else if (response.status === "error") {
+    return response.error.message;
+  } else if (response.status === "loading") {
+    return "Loading...";
+  }
+
+  const _exhaustive: never = response;
+  throw new Error(`Unhandled status: ${String(_exhaustive)}`);
+}
+```
+
+### Example 3: Competition Lifecycle
+
+```typescript
+type CompetitionStatus = "draft" | "active" | "ended" | "cancelled";
+
+// ✅ SAFE
+function getStatusColor(status: CompetitionStatus): string {
+  if (status === "draft") return "gray";
+  if (status === "active") return "green";
+  if (status === "ended") return "blue";
+  if (status === "cancelled") return "red";
+
+  const _exhaustive: never = status;
+  throw new Error(`Unhandled status: ${String(_exhaustive)}`);
+}
 ```
 
 ## Code Review Checklist

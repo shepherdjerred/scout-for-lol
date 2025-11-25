@@ -104,11 +104,15 @@ export function searchChampions(query: string, limit = 25): { name: string; id: 
   matches.sort((a, b) => {
     const aExact = a.searchName === normalizedQuery ? 1 : 0;
     const bExact = b.searchName === normalizedQuery ? 1 : 0;
-    if (aExact !== bExact) return bExact - aExact;
+    if (aExact !== bExact) {
+      return bExact - aExact;
+    }
 
     const aStarts = a.searchName.startsWith(normalizedQuery) ? 1 : 0;
     const bStarts = b.searchName.startsWith(normalizedQuery) ? 1 : 0;
-    if (aStarts !== bStarts) return bStarts - aStarts;
+    if (aStarts !== bStarts) {
+      return bStarts - aStarts;
+    }
 
     // Alphabetical as tie-breaker
     return a.name.localeCompare(b.name);

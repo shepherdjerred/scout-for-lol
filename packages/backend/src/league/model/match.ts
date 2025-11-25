@@ -1,5 +1,4 @@
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { entries, filter, first, groupBy, map, pipe, sortBy } from "remeda";
+import { entries, groupBy, map, pipe, sortBy } from "remeda";
 import { z } from "zod";
 import {
   ArenaPlacementSchema,
@@ -13,25 +12,23 @@ import {
   type Player,
   type Rank,
   type ArenaMatch,
+  type MatchDto,
+  type ParticipantDto,
+  findParticipant,
+  getOutcome,
+  getTeams,
 } from "@scout-for-lol/data";
 import { strict as assert } from "assert";
-import { match } from "ts-pattern";
-import { participantToArenaChampion, participantToChampion } from "./champion.js";
-
-function getTeams(participants: MatchV5DTOs.ParticipantDto[]) {
-  return {
-    blue: pipe(participants.slice(0, 5), map(participantToChampion)),
-    red: pipe(participants.slice(5, 10), map(participantToChampion)),
-  };
-}
+import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
+import { participantToChampion } from "@scout-for-lol/data/model/match-helpers";
 
 export function toMatch(
   players: Player[],
-  matchDto: MatchV5DTOs.MatchDto,
+  matchDto: MatchDto,
   rankBeforeMatch: Rank | undefined,
   rankAfterMatch: Rank | undefined,
 ): CompletedMatch {
-  const teams = getTeams(matchDto.info.participants);
+  const teams = getTeams(matchDto.info.participants, participantToChampion);
   const queueType = parseQueueType(matchDto.info.queueId);
 
   if (queueType === "arena") {
@@ -40,12 +37,15 @@ export function toMatch(
 
   // Build CompletedMatch.players for all tracked players
   const matchPlayers = players.map((player) => {
-    const participant = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
-    if (participant === undefined) {
+    const participantRaw = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
+    if (participantRaw === undefined) {
       console.debug("Player PUUID:", player.config.league.leagueAccount.puuid);
       console.debug("Match Participants:", matchDto.info.participants);
       throw new Error(`participant not found for player ${player.config.alias}`);
     }
+
+    // TypeScript needs explicit narrowing after throw
+    const participant: ParticipantDto = participantRaw;
 
     const champion = participantToChampion(participant);
     const team = parseTeam(participant.teamId);
@@ -76,26 +76,6 @@ export function toMatch(
   };
 }
 
-export function getOutcome(participant: MatchV5DTOs.ParticipantDto) {
-  return match(participant)
-    .returnType<"Victory" | "Surrender" | "Defeat">()
-    .with({ win: true }, () => "Victory")
-    .with({ gameEndedInSurrender: true }, () => "Surrender")
-    .with({ win: false }, () => "Defeat")
-    .exhaustive();
-}
-
-function findParticipant(
-  puuid: string,
-  participants: MatchV5DTOs.ParticipantDto[],
-): MatchV5DTOs.ParticipantDto | undefined {
-  return pipe(
-    participants,
-    filter((participant) => participant.puuid === puuid),
-    first(),
-  );
-}
-
 // Arena helpers
 const ArenaParticipantMinimalSchema = z.object({
   playerSubteamId: z.union([
@@ -115,11 +95,11 @@ const ArenaParticipantFieldsSchema = z.object({
   placement: z.number().int().min(1).max(8),
 });
 
-type ArenaParticipantValidatedMin = MatchV5DTOs.ParticipantDto & {
+type ArenaParticipantValidatedMin = ParticipantDto & {
   playerSubteamId: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 };
 
-export function groupArenaTeams(participants: MatchV5DTOs.ParticipantDto[]) {
+export function groupArenaTeams(participants: ParticipantDto[]) {
   const validated: ArenaParticipantValidatedMin[] = participants.map((p) => {
     const parsed = ArenaParticipantMinimalSchema.parse(p);
     return { ...p, playerSubteamId: parsed.playerSubteamId };
@@ -142,17 +122,21 @@ export function groupArenaTeams(participants: MatchV5DTOs.ParticipantDto[]) {
   return groups;
 }
 
-export function getArenaTeammate(participant: MatchV5DTOs.ParticipantDto, participants: MatchV5DTOs.ParticipantDto[]) {
+export function getArenaTeammate(participant: ParticipantDto, participants: ParticipantDto[]) {
   const sub = ArenaParticipantMinimalSchema.parse(participant).playerSubteamId;
   for (const p of participants) {
-    if (p === participant) continue;
+    if (p === participant) {
+      continue;
+    }
     const otherSub = ArenaParticipantMinimalSchema.parse(p).playerSubteamId;
-    if (otherSub === sub) return p;
+    if (otherSub === sub) {
+      return p;
+    }
   }
   return undefined;
 }
 
-export async function toArenaSubteams(participants: MatchV5DTOs.ParticipantDto[]): Promise<ArenaTeam[]> {
+export async function toArenaSubteams(participants: ParticipantDto[]): Promise<ArenaTeam[]> {
   const grouped = groupArenaTeams(participants);
   const result: ArenaTeam[] = [];
   for (const { subteamId, players } of grouped) {
@@ -173,11 +157,11 @@ export async function toArenaSubteams(participants: MatchV5DTOs.ParticipantDto[]
   return result;
 }
 
-export function getArenaPlacement(participant: MatchV5DTOs.ParticipantDto) {
+export function getArenaPlacement(participant: ParticipantDto) {
   return ArenaParticipantFieldsSchema.parse(participant).placement;
 }
 
-export async function toArenaMatch(players: Player[], matchDto: MatchV5DTOs.MatchDto): Promise<ArenaMatch> {
+export async function toArenaMatch(players: Player[], matchDto: MatchDto): Promise<ArenaMatch> {
   const subteams = await toArenaSubteams(matchDto.info.participants);
 
   // Build ArenaMatch.players for all tracked players

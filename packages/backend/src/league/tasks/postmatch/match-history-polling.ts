@@ -1,5 +1,5 @@
-import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { getRecentMatchIds, filterNewMatches } from "../../api/match-history.js";
+import type { MatchDto, PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/data";
+import { getRecentMatchIds, filterNewMatches } from "@scout-for-lol/backend/league/api/match-history.js";
 import {
   getAccountsWithState,
   updateLastProcessedMatch,
@@ -7,12 +7,14 @@ import {
   getLastProcessedMatch,
   updateLastMatchTime,
   updateLastCheckedAt,
-} from "../../../database/index.js";
-import type { PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/data";
+} from "@scout-for-lol/backend/database/index.js";
 import { MatchIdSchema } from "@scout-for-lol/data";
-import { send } from "../../discord/channel.js";
-import { shouldCheckPlayer, calculatePollingInterval } from "../../../utils/polling-intervals.js";
-import { fetchMatchData, generateMatchReport } from "./match-report-generator.js";
+import { send } from "@scout-for-lol/backend/league/discord/channel.js";
+import { shouldCheckPlayer, calculatePollingInterval } from "@scout-for-lol/backend/utils/polling-intervals.js";
+import {
+  fetchMatchData,
+  generateMatchReport,
+} from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.js";
 
 type PlayerWithMatchIds = {
   player: PlayerConfigEntry;
@@ -20,9 +22,42 @@ type PlayerWithMatchIds = {
 };
 
 /**
+ * Process a single match for a player
+ * Extracted to reduce nesting depth
+ */
+async function processMatchForPlayer(
+  player: PlayerConfigEntry,
+  matchId: MatchId,
+  allPlayerConfigs: PlayerConfigEntry[],
+  processedMatchIds: Set<MatchId>,
+): Promise<void> {
+  try {
+    // Skip if we've already processed this match in this run
+    if (processedMatchIds.has(matchId)) {
+      console.log(`[${player.alias}] ⏭️  Match ${matchId} already processed in this run`);
+      return;
+    }
+
+    // Fetch match data
+    const matchData = await fetchMatchData(matchId, player.league.leagueAccount.region);
+
+    if (!matchData) {
+      console.log(`[${player.alias}] ⚠️  Could not fetch match data for ${matchId}, skipping`);
+      return;
+    }
+
+    // Process the match with all tracked players
+    await processMatchAndUpdatePlayers(matchData, allPlayerConfigs, processedMatchIds, matchId);
+  } catch (error) {
+    console.error(`[${player.alias}] ❌ Error processing match ${matchId}:`, error);
+    // Continue with next match even if this one fails
+  }
+}
+
+/**
  * Process a completed match and send Discord notifications
  */
-async function processMatch(matchData: MatchV5DTOs.MatchDto, trackedPlayers: PlayerConfigEntry[]): Promise<void> {
+async function processMatch(matchData: MatchDto, trackedPlayers: PlayerConfigEntry[]): Promise<void> {
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
   console.log(`[processMatch] 🎮 Processing match ${matchId}`);
 
@@ -60,6 +95,38 @@ async function processMatch(matchData: MatchV5DTOs.MatchDto, trackedPlayers: Pla
   } catch (error) {
     console.error(`[processMatch] ❌ Error processing match ${matchId}:`, error);
     throw error;
+  }
+}
+
+/**
+ * Process match and update all tracked players who participated
+ */
+async function processMatchAndUpdatePlayers(
+  matchData: MatchDto,
+  allPlayerConfigs: PlayerConfigEntry[],
+  processedMatchIds: Set<string>,
+  matchId: string,
+): Promise<void> {
+  // Get all tracked players in this match
+  const allTrackedPlayers = allPlayerConfigs.filter((p) =>
+    matchData.metadata.participants.includes(p.league.leagueAccount.puuid),
+  );
+
+  // Process the match
+  await processMatch(matchData, allTrackedPlayers);
+
+  // Mark as processed
+  processedMatchIds.add(matchId);
+
+  // Get match creation time for activity tracking
+  const matchCreationTime = new Date(matchData.info.gameCreation);
+
+  // Update lastProcessedMatchId and lastMatchTime for all players in this match
+  for (const trackedPlayer of allTrackedPlayers) {
+    const playerPuuid = trackedPlayer.league.leagueAccount.puuid;
+    const brandedMatchId = MatchIdSchema.parse(matchId);
+    await updateLastProcessedMatch(playerPuuid, brandedMatchId);
+    await updateLastMatchTime(playerPuuid, matchCreationTime);
   }
 }
 
@@ -171,48 +238,7 @@ export async function checkMatchHistory(): Promise<void> {
 
     for (const { player, matchIds } of playersWithMatches) {
       for (const matchId of matchIds) {
-        try {
-          // Skip if we've already processed this match in this run
-          if (processedMatchIds.has(matchId)) {
-            console.log(`[${player.alias}] ⏭️  Match ${matchId} already processed in this run`);
-            continue;
-          }
-
-          // Fetch match data
-          const matchData = await fetchMatchData(matchId, player.league.leagueAccount.region);
-
-          if (!matchData) {
-            console.log(`[${player.alias}] ⚠️  Could not fetch match data for ${matchId}, skipping`);
-            continue;
-          }
-
-          // Get all tracked players in this match
-          const allTrackedPlayers = allPlayerConfigs.filter((p) =>
-            matchData.metadata.participants.includes(p.league.leagueAccount.puuid),
-          );
-
-          // Process the match
-          await processMatch(matchData, allTrackedPlayers);
-
-          // Mark as processed
-          processedMatchIds.add(matchId);
-
-          // Get match creation time for activity tracking
-          const matchCreationTime = new Date(matchData.info.gameCreation);
-
-          // Update lastProcessedMatchId and lastMatchTime for all players in this match
-          for (const trackedPlayer of allTrackedPlayers) {
-            const playerPuuid = trackedPlayer.league.leagueAccount.puuid;
-            await updateLastProcessedMatch(playerPuuid, matchId);
-            await updateLastMatchTime(playerPuuid, matchCreationTime);
-            console.log(
-              `[${trackedPlayer.alias}] 📝 Updated lastProcessedMatchId to ${matchId}, lastMatchTime to ${matchCreationTime.toISOString()}`,
-            );
-          }
-        } catch (error) {
-          console.error(`[${player.alias}] ❌ Error processing match ${matchId}:`, error);
-          // Continue with next match even if this one fails
-        }
+        await processMatchForPlayer(player, matchId, allPlayerConfigs, processedMatchIds);
       }
     }
 

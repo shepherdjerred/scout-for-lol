@@ -1,5 +1,5 @@
 import { type ArenaMatch } from "@scout-for-lol/data";
-import { formatDuration } from "./utils.ts";
+import { formatDuration } from "@scout-for-lol/report/html/arena/utils.ts";
 
 export function MatchHeader({ match, highlightNames }: { match: ArenaMatch; highlightNames: string[] }) {
   const trackedTeams = match.teams.filter((team) =>
@@ -8,7 +8,9 @@ export function MatchHeader({ match, highlightNames }: { match: ArenaMatch; high
 
   if (trackedTeams.length === 1) {
     const trackedTeam = trackedTeams[0];
-    if (!trackedTeam) return null;
+    if (!trackedTeam) {
+      return null;
+    }
     const isVictory = trackedTeam.placement <= 4;
 
     return (

@@ -1,50 +1,115 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
-import { PrismaClient } from "../../../../generated/prisma/client/index.js";
-import { pruneOrphanedPlayers } from "./prune-players.js";
-import { execSync } from "node:child_process";
-import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../../testing/test-ids.js";
+import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import { pruneOrphanedPlayers } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
+import { CompetitionIdSchema, type CompetitionId } from "@scout-for-lol/data";
+import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.js";
 
 // Mark these tests as serial since they create temporary databases
 // and have timing constraints. Running them concurrently would slow them down.
+/**
+ * Create test competition
+ */
+async function createTestCompetition(prisma: PrismaClient, now: Date) {
+  return prisma.competition.create({
+    data: {
+      serverId: testGuildId("1000000001"),
+      ownerId: testAccountId("1000000000000"),
+      title: "Test Competition",
+      description: "Test",
+      channelId: testChannelId("1000000000"),
+      visibility: "OPEN",
+      criteriaType: "MOST_WINS",
+      criteriaConfig: "{}",
+      creatorDiscordId: testAccountId("1000000000000"),
+      createdTime: now,
+      updatedTime: now,
+    },
+  });
+}
+
+/**
+ * Create test player with subscription
+ */
+async function createPlayerWithSubscription(prisma: PrismaClient, alias: string, now: Date) {
+  return prisma.player.create({
+    data: {
+      alias,
+      serverId: testGuildId("1000000001"),
+      creatorDiscordId: testAccountId("1000000000000"),
+      createdTime: now,
+      updatedTime: now,
+      subscriptions: {
+        create: {
+          channelId: testChannelId("1000000000"),
+          serverId: testGuildId("1000000001"),
+          creatorDiscordId: testAccountId("1000000000000"),
+          createdTime: now,
+          updatedTime: now,
+        },
+      },
+    },
+  });
+}
+
+/**
+ * Create test player with competition participation
+ */
+async function createPlayerWithCompetition(options: {
+  prisma: PrismaClient;
+  alias: string;
+  competitionId: CompetitionId;
+  status: "JOINED" | "LEFT" | "INVITED";
+  now: Date;
+}) {
+  const { prisma, alias, competitionId, status, now } = options;
+  return prisma.player.create({
+    data: {
+      alias,
+      serverId: testGuildId("1000000001"),
+      creatorDiscordId: testAccountId("1000000000000"),
+      createdTime: now,
+      updatedTime: now,
+      competitionParticipants: {
+        create: {
+          competitionId,
+          status,
+          ...(status === "JOINED" ? { joinedAt: now } : {}),
+          ...(status === "LEFT" ? { leftAt: now } : {}),
+          ...(status === "INVITED" ? { invitedBy: testAccountId("2000000000000"), invitedAt: now } : {}),
+        },
+      },
+    },
+  });
+}
+
+/**
+ * Setup test database
+ */
+function setupTestDatabase(): { prisma: PrismaClient; testDir: string; testDbPath: string } {
+  // Use the test database utility
+  const { prisma, dbPath: testDbPath } = createTestDatabase(
+    `prune-players-test-${Date.now().toString()}-${Math.random().toString(36).slice(2)}`,
+  );
+  const testDir = testDbPath.replace("/test.db", "");
+
+  return { prisma, testDir, testDbPath };
+}
+
 describe.serial("pruneOrphanedPlayers", () => {
   let prisma: PrismaClient;
   let testDir: string;
-  let testDbPath: string;
 
   beforeEach(async () => {
-    // Create a temporary database for each test
-    testDir = mkdtempSync(join(tmpdir(), "prune-players-test-"));
-    testDbPath = join(testDir, "test.db");
-
-    // Run Prisma migrations to set up the schema
-    const schemaPath = join(import.meta.dir, "../../../..", "prisma/schema.prisma");
-    execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
-      env: {
-        ...process.env,
-        DATABASE_URL: `file:${testDbPath}`,
-        PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-        PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-      },
-      stdio: "ignore",
-    });
-
-    // Create Prisma client
-    prisma = new PrismaClient({
-      datasources: {
-        db: {
-          url: `file:${testDbPath}`,
-        },
-      },
-    });
+    const setup = setupTestDatabase();
+    prisma = setup.prisma;
+    testDir = setup.testDir;
   });
 
   afterEach(async () => {
     // Clean up
     await prisma.$disconnect();
-    rmSync(testDir, { recursive: true, force: true });
+    await Bun.spawn(["rm", "-rf", testDir]).exited;
   });
 
   it("should prune players with no subscriptions and no active competitions", async () => {
@@ -78,24 +143,7 @@ describe.serial("pruneOrphanedPlayers", () => {
     const now = new Date();
 
     // Create a player with a subscription
-    await prisma.player.create({
-      data: {
-        alias: "subscribed",
-        serverId: testGuildId("1000000001"),
-        creatorDiscordId: testAccountId("1000000000000"),
-        createdTime: now,
-        updatedTime: now,
-        subscriptions: {
-          create: {
-            channelId: testChannelId("1000000000"),
-            serverId: testGuildId("1000000001"),
-            creatorDiscordId: testAccountId("1000000000000"),
-            createdTime: now,
-            updatedTime: now,
-          },
-        },
-      },
-    });
+    await createPlayerWithSubscription(prisma, "subscribed", now);
 
     // Verify player exists
     const beforeCount = await prisma.player.count();
@@ -114,38 +162,15 @@ describe.serial("pruneOrphanedPlayers", () => {
     const now = new Date();
 
     // Create a competition
-    const competition = await prisma.competition.create({
-      data: {
-        serverId: testGuildId("1000000001"),
-        ownerId: testAccountId("1000000000000"),
-        title: "Test Competition",
-        description: "Test",
-        channelId: testChannelId("1000000000"),
-        visibility: "OPEN",
-        criteriaType: "MOST_WINS",
-        criteriaConfig: "{}",
-        creatorDiscordId: testAccountId("1000000000000"),
-        createdTime: now,
-        updatedTime: now,
-      },
-    });
+    const competition = await createTestCompetition(prisma, now);
 
     // Create a player with active competition participation
-    await prisma.player.create({
-      data: {
-        alias: "competing",
-        serverId: testGuildId("1000000001"),
-        creatorDiscordId: testAccountId("1000000000000"),
-        createdTime: now,
-        updatedTime: now,
-        competitionParticipants: {
-          create: {
-            competitionId: competition.id,
-            status: "JOINED",
-            joinedAt: now,
-          },
-        },
-      },
+    await createPlayerWithCompetition({
+      prisma,
+      alias: "competing",
+      competitionId: CompetitionIdSchema.parse(competition.id),
+      status: "JOINED",
+      now,
     });
 
     // Verify player exists
@@ -165,57 +190,24 @@ describe.serial("pruneOrphanedPlayers", () => {
     const now = new Date();
 
     // Create a competition
-    const competition = await prisma.competition.create({
-      data: {
-        serverId: testGuildId("1000000001"),
-        ownerId: testAccountId("1000000000000"),
-        title: "Test Competition",
-        description: "Test",
-        channelId: testChannelId("1000000000"),
-        visibility: "OPEN",
-        criteriaType: "MOST_WINS",
-        criteriaConfig: "{}",
-        creatorDiscordId: testAccountId("1000000000000"),
-        createdTime: now,
-        updatedTime: now,
-      },
-    });
+    const competition = await createTestCompetition(prisma, now);
 
     // Create a player who left the competition
-    await prisma.player.create({
-      data: {
-        alias: "left",
-        serverId: testGuildId("1000000001"),
-        creatorDiscordId: testAccountId("1000000000000"),
-        createdTime: now,
-        updatedTime: now,
-        competitionParticipants: {
-          create: {
-            competitionId: competition.id,
-            status: "LEFT",
-            leftAt: now,
-          },
-        },
-      },
+    await createPlayerWithCompetition({
+      prisma,
+      alias: "left",
+      competitionId: CompetitionIdSchema.parse(competition.id),
+      status: "LEFT",
+      now,
     });
 
     // Create a player who was only invited
-    await prisma.player.create({
-      data: {
-        alias: "invited",
-        serverId: testGuildId("1000000001"),
-        creatorDiscordId: testAccountId("1000000000000"),
-        createdTime: now,
-        updatedTime: now,
-        competitionParticipants: {
-          create: {
-            competitionId: competition.id,
-            status: "INVITED",
-            invitedBy: testAccountId("2000000000000"),
-            invitedAt: now,
-          },
-        },
-      },
+    await createPlayerWithCompetition({
+      prisma,
+      alias: "invited",
+      competitionId: CompetitionIdSchema.parse(competition.id),
+      status: "INVITED",
+      now,
     });
 
     // Verify players exist
@@ -285,21 +277,7 @@ describe.serial("pruneOrphanedPlayers", () => {
     const now = new Date();
 
     // Create a competition
-    const competition = await prisma.competition.create({
-      data: {
-        serverId: testGuildId("1000000001"),
-        ownerId: testAccountId("1000000000000"),
-        title: "Test Competition",
-        description: "Test",
-        channelId: testChannelId("1000000000"),
-        visibility: "OPEN",
-        criteriaType: "MOST_WINS",
-        criteriaConfig: "{}",
-        creatorDiscordId: testAccountId("1000000000000"),
-        createdTime: now,
-        updatedTime: now,
-      },
-    });
+    const competition = await createTestCompetition(prisma, now);
 
     // Create orphaned player (should be pruned)
     await prisma.player.create({
@@ -342,7 +320,7 @@ describe.serial("pruneOrphanedPlayers", () => {
         updatedTime: now,
         competitionParticipants: {
           create: {
-            competitionId: competition.id,
+            competitionId: CompetitionIdSchema.parse(competition.id),
             status: "JOINED",
             joinedAt: now,
           },
@@ -360,7 +338,7 @@ describe.serial("pruneOrphanedPlayers", () => {
         updatedTime: now,
         competitionParticipants: {
           create: {
-            competitionId: competition.id,
+            competitionId: CompetitionIdSchema.parse(competition.id),
             status: "LEFT",
             leftAt: now,
           },

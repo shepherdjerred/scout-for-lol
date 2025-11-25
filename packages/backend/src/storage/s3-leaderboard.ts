@@ -1,7 +1,7 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { CachedLeaderboardSchema, type CachedLeaderboard } from "@scout-for-lol/data";
-import configuration from "../configuration.js";
-import { getErrorMessage } from "../utils/errors.js";
+import configuration from "@scout-for-lol/backend/configuration.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 
 // ============================================================================
 // S3 Key Generation
@@ -64,7 +64,7 @@ export async function saveCachedLeaderboard(leaderboard: CachedLeaderboard): Pro
       bucket,
       currentKey,
       snapshotKey,
-      sizeBytes: Buffer.byteLength(body, "utf8"),
+      sizeBytes: new TextEncoder().encode(body).length,
       entryCount: leaderboard.entries.length,
       version: leaderboard.version,
       calculatedAt: leaderboard.calculatedAt,
@@ -205,85 +205,6 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
       `[S3Leaderboard] ❌ Error loading cached leaderboard for competition ${competitionId.toString()}:`,
       error,
     );
-    return null;
-  }
-}
-
-/**
- * Load historical leaderboard snapshot from S3
- *
- * @param competitionId Competition ID to load leaderboard for
- * @param date Date of the snapshot to load
- * @returns Cached leaderboard or null if not found or invalid
- */
-export async function loadSnapshotLeaderboard(competitionId: number, date: Date): Promise<CachedLeaderboard | null> {
-  const bucket = configuration.s3BucketName;
-
-  if (!bucket) {
-    console.warn(
-      `[S3Leaderboard] ⚠️  S3_BUCKET_NAME not configured, cannot load snapshot for competition: ${competitionId.toString()}`,
-    );
-    return null;
-  }
-
-  const key = generateSnapshotLeaderboardKey(competitionId, date);
-
-  console.log(
-    `[S3Leaderboard] 📥 Loading snapshot leaderboard for competition ${competitionId.toString()} at ${date.toISOString()}`,
-  );
-
-  try {
-    const client = new S3Client();
-    const command = new GetObjectCommand({
-      Bucket: bucket,
-      Key: key,
-    });
-
-    const response = await client.send(command);
-
-    if (!response.Body) {
-      console.warn(`[S3Leaderboard] No body in response for key: ${key}`);
-      return null;
-    }
-
-    // Read the stream to a string
-    const bodyString = await response.Body.transformToString();
-
-    // Parse JSON
-    let jsonData: unknown;
-    try {
-      jsonData = JSON.parse(bodyString);
-    } catch (error) {
-      console.error(`[S3Leaderboard] Failed to parse JSON from S3 key ${key}:`, error);
-      return null;
-    }
-
-    // Validate against schema
-    const result = CachedLeaderboardSchema.safeParse(jsonData);
-    if (!result.success) {
-      console.error(
-        `[S3Leaderboard] Snapshot leaderboard failed validation for competition ${competitionId.toString()}:`,
-        result.error,
-      );
-      return null;
-    }
-
-    console.log(
-      `[S3Leaderboard] ✅ Successfully loaded snapshot leaderboard for competition ${competitionId.toString()}`,
-    );
-
-    return result.data;
-  } catch (error) {
-    // Check if it's a NoSuchKey error (file doesn't exist)
-    const errorMessage = getErrorMessage(error);
-    if (errorMessage.includes("NoSuchKey") || errorMessage.includes("NotFound")) {
-      console.log(
-        `[S3Leaderboard] No snapshot found for competition ${competitionId.toString()} at ${date.toISOString()}`,
-      );
-      return null;
-    }
-
-    console.error(`[S3Leaderboard] ❌ Error loading snapshot for competition ${competitionId.toString()}:`, error);
     return null;
   }
 }

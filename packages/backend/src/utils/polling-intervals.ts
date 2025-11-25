@@ -26,7 +26,7 @@ export const POLLING_INTERVALS = {
 /**
  * Activity thresholds
  */
-export const ACTIVITY_THRESHOLDS = {
+const ACTIVITY_THRESHOLDS = {
   HOUR_1: 1, // hours
   HOUR_6: 6,
   HOUR_12: 12,

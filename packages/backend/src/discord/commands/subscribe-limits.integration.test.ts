@@ -1,51 +1,106 @@
 import { afterAll, describe, test, expect, beforeEach } from "bun:test";
-import fs from "node:fs";
-import path from "node:path";
-import { execSync } from "node:child_process";
 
-import { PrismaClient } from "../../../generated/prisma/client";
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../testing/test-ids.js";
-import { addLimitOverride, clearLimitOverrides } from "../../configuration/flags.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
+import { addLimitOverride, clearLimitOverrides } from "@scout-for-lol/backend/configuration/flags.js";
+import { type DiscordGuildId, type DiscordAccountId, type DiscordChannelId } from "@scout-for-lol/data";
+import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.js";
 
 // Constants for testing
 const DEFAULT_PLAYER_SUBSCRIPTION_LIMIT = 75;
 const DEFAULT_ACCOUNT_LIMIT = 50;
 
-// Create test database in temp directory
-const tempDir = fs.mkdtempSync(path.join("/tmp", "subscribe-limits-test-"));
-const testDbPath = path.join(tempDir, "test.db");
-const testDatabaseUrl = `file:${testDbPath}`;
-
-// Push schema to test database
-const schemaPath = path.join(import.meta.dir, "../../..", "prisma/schema.prisma");
-execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
-  env: {
-    ...process.env,
-    DATABASE_URL: testDatabaseUrl,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-  },
-  stdio: "inherit",
-});
-
-// Test Prisma client with isolated database
-const testPrisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: testDatabaseUrl,
-    },
-  },
-});
+// Create test database
+const { prisma: testPrisma } = createTestDatabase("subscribe-limits-test");
 
 beforeEach(async () => {
   // Clean up test data
-  await testPrisma.subscription.deleteMany();
-  await testPrisma.account.deleteMany();
-  await testPrisma.player.deleteMany();
+  await deleteIfExists(() => testPrisma.subscription.deleteMany());
+  await deleteIfExists(() => testPrisma.account.deleteMany());
+  await deleteIfExists(() => testPrisma.player.deleteMany());
 });
 afterAll(async () => {
   await testPrisma.$disconnect();
 });
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+type TestPlayerOptions = {
+  count: number;
+  serverId: DiscordGuildId;
+  channelId: DiscordChannelId;
+  discordUserId: DiscordAccountId;
+  now: Date;
+  prefix?: string;
+};
+
+async function createSubscribedPlayers(opts: TestPlayerOptions) {
+  const { count, serverId, channelId, discordUserId, now, prefix = "" } = opts;
+
+  for (let i = 0; i < count; i++) {
+    const idx = i.toString();
+    await testPrisma.subscription.create({
+      data: {
+        channelId,
+        serverId,
+        creatorDiscordId: discordUserId,
+        createdTime: now,
+        updatedTime: now,
+        player: {
+          create: {
+            alias: `${prefix}Player${idx}`,
+            discordId: null,
+            serverId,
+            creatorDiscordId: discordUserId,
+            createdTime: now,
+            updatedTime: now,
+            accounts: {
+              create: {
+                alias: `${prefix}Player${idx}`,
+                puuid: testPuuid(`${prefix.toLowerCase()}-${idx}`),
+                region: "AMERICA_NORTH",
+                serverId,
+                creatorDiscordId: discordUserId,
+                createdTime: now,
+                updatedTime: now,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+}
+
+async function createUnsubscribedPlayers(opts: TestPlayerOptions) {
+  const { count, serverId, discordUserId, now, prefix = "" } = opts;
+
+  for (let i = 0; i < count; i++) {
+    const idx = i.toString();
+    await testPrisma.player.create({
+      data: {
+        alias: `${prefix}Player${idx}`,
+        discordId: null,
+        serverId,
+        creatorDiscordId: discordUserId,
+        createdTime: now,
+        updatedTime: now,
+        accounts: {
+          create: {
+            alias: `${prefix}Player${idx}`,
+            puuid: testPuuid(`${prefix.toLowerCase()}-${idx}`),
+            region: "AMERICA_NORTH",
+            serverId,
+            creatorDiscordId: discordUserId,
+            createdTime: now,
+            updatedTime: now,
+          },
+        },
+      },
+    });
+  }
+}
 
 describe("Subscribe Command - Subscription Limits", () => {
   test("allows subscriptions up to the limit", async () => {
@@ -57,42 +112,7 @@ describe("Subscribe Command - Subscription Limits", () => {
     // Create a smaller subset for faster testing
     const testLimit = Math.min(5, DEFAULT_PLAYER_SUBSCRIPTION_LIMIT);
 
-    // Create testLimit players with subscriptions
-    for (let i = 0; i < testLimit; i++) {
-      const alias = `Player${i.toString()}`;
-      const puuid = testPuuid(i.toString());
-
-      await testPrisma.subscription.create({
-        data: {
-          channelId: channelId,
-          serverId: serverId,
-          creatorDiscordId: discordUserId,
-          createdTime: now,
-          updatedTime: now,
-          player: {
-            create: {
-              alias: alias,
-              discordId: null,
-              serverId: serverId,
-              creatorDiscordId: discordUserId,
-              createdTime: now,
-              updatedTime: now,
-              accounts: {
-                create: {
-                  alias: alias,
-                  puuid: puuid,
-                  region: "AMERICA_NORTH",
-                  serverId: serverId,
-                  creatorDiscordId: discordUserId,
-                  createdTime: now,
-                  updatedTime: now,
-                },
-              },
-            },
-          },
-        },
-      });
-    }
+    await createSubscribedPlayers({ count: testLimit, serverId, channelId, discordUserId, now });
 
     // Verify we created the correct number of subscribed players
     const subscribedPlayerCount = await testPrisma.player.count({
@@ -114,63 +134,17 @@ describe("Subscribe Command - Subscription Limits", () => {
     const discordUserId = testAccountId("0000001");
 
     // Create 5 players with subscriptions
-    for (let i = 0; i < 5; i++) {
-      await testPrisma.subscription.create({
-        data: {
-          channelId: channelId,
-          serverId: serverId,
-          creatorDiscordId: discordUserId,
-          createdTime: now,
-          updatedTime: now,
-          player: {
-            create: {
-              alias: `SubscribedPlayer${i.toString()}`,
-              discordId: null,
-              serverId: serverId,
-              creatorDiscordId: discordUserId,
-              createdTime: now,
-              updatedTime: now,
-              accounts: {
-                create: {
-                  alias: `SubscribedPlayer${i.toString()}`,
-                  puuid: testPuuid(`subscribed-${i.toString()}`),
-                  region: "AMERICA_NORTH",
-                  serverId: serverId,
-                  creatorDiscordId: discordUserId,
-                  createdTime: now,
-                  updatedTime: now,
-                },
-              },
-            },
-          },
-        },
-      });
-    }
+    await createSubscribedPlayers({
+      count: 5,
+      serverId,
+      channelId,
+      discordUserId,
+      now,
+      prefix: "Subscribed",
+    });
 
     // Create 3 players WITHOUT subscriptions
-    for (let i = 0; i < 3; i++) {
-      await testPrisma.player.create({
-        data: {
-          alias: `UnsubscribedPlayer${i.toString()}`,
-          discordId: null,
-          serverId: serverId,
-          creatorDiscordId: discordUserId,
-          createdTime: now,
-          updatedTime: now,
-          accounts: {
-            create: {
-              alias: `UnsubscribedPlayer${i.toString()}`,
-              puuid: testPuuid(`unsubscribed-${i.toString()}`),
-              region: "AMERICA_NORTH",
-              serverId: serverId,
-              creatorDiscordId: discordUserId,
-              createdTime: now,
-              updatedTime: now,
-            },
-          },
-        },
-      });
-    }
+    await createUnsubscribedPlayers({ count: 3, serverId, channelId, discordUserId, now, prefix: "Unsubscribed" });
 
     // Verify only players with subscriptions are counted
     const subscribedPlayerCount = await testPrisma.player.count({
@@ -201,38 +175,13 @@ describe("Subscribe Command - Subscription Limits", () => {
     const discordUserId = testAccountId("0000001");
 
     // Create limit number of players with subscriptions
-    for (let i = 0; i < DEFAULT_PLAYER_SUBSCRIPTION_LIMIT; i++) {
-      await testPrisma.subscription.create({
-        data: {
-          channelId: channelId,
-          serverId: serverId,
-          creatorDiscordId: discordUserId,
-          createdTime: now,
-          updatedTime: now,
-          player: {
-            create: {
-              alias: `Player${i.toString()}`,
-              discordId: null,
-              serverId: serverId,
-              creatorDiscordId: discordUserId,
-              createdTime: now,
-              updatedTime: now,
-              accounts: {
-                create: {
-                  alias: `Player${i.toString()}`,
-                  puuid: testPuuid(i.toString()),
-                  region: "AMERICA_NORTH",
-                  serverId: serverId,
-                  creatorDiscordId: discordUserId,
-                  createdTime: now,
-                  updatedTime: now,
-                },
-              },
-            },
-          },
-        },
-      });
-    }
+    await createSubscribedPlayers({
+      count: DEFAULT_PLAYER_SUBSCRIPTION_LIMIT,
+      serverId,
+      channelId,
+      discordUserId,
+      now,
+    });
 
     // Get one of the existing players
     const existingPlayer = await testPrisma.player.findFirst({
@@ -289,38 +238,14 @@ describe("Subscribe Command - Subscription Limits", () => {
     try {
       // Create more than the default limit
       const extraPlayers = 5;
-      for (let i = 0; i < DEFAULT_PLAYER_SUBSCRIPTION_LIMIT + extraPlayers; i++) {
-        await testPrisma.subscription.create({
-          data: {
-            channelId: channelId,
-            serverId: serverId,
-            creatorDiscordId: discordUserId,
-            createdTime: now,
-            updatedTime: now,
-            player: {
-              create: {
-                alias: `UnlimitedPlayer${i.toString()}`,
-                discordId: null,
-                serverId: serverId,
-                creatorDiscordId: discordUserId,
-                createdTime: now,
-                updatedTime: now,
-                accounts: {
-                  create: {
-                    alias: `UnlimitedPlayer${i.toString()}`,
-                    puuid: testPuuid(`unlimited-player-${i.toString()}`),
-                    region: "AMERICA_NORTH",
-                    serverId: serverId,
-                    creatorDiscordId: discordUserId,
-                    createdTime: now,
-                    updatedTime: now,
-                  },
-                },
-              },
-            },
-          },
-        });
-      }
+      await createSubscribedPlayers({
+        count: DEFAULT_PLAYER_SUBSCRIPTION_LIMIT + extraPlayers,
+        serverId,
+        channelId,
+        discordUserId,
+        now,
+        prefix: "Unlimited",
+      });
 
       // Verify we exceeded the limit
       const subscribedPlayerCount = await testPrisma.player.count({
@@ -347,72 +272,24 @@ describe("Subscribe Command - Subscription Limits", () => {
     const discordUserId = testAccountId("0000001");
 
     // Create limit number of players in server 1
-    for (let i = 0; i < DEFAULT_PLAYER_SUBSCRIPTION_LIMIT; i++) {
-      await testPrisma.subscription.create({
-        data: {
-          channelId: channelId,
-          serverId: server1Id,
-          creatorDiscordId: discordUserId,
-          createdTime: now,
-          updatedTime: now,
-          player: {
-            create: {
-              alias: `Server1Player${i.toString()}`,
-              discordId: null,
-              serverId: server1Id,
-              creatorDiscordId: discordUserId,
-              createdTime: now,
-              updatedTime: now,
-              accounts: {
-                create: {
-                  alias: `Server1Player${i.toString()}`,
-                  puuid: testPuuid(`s1-${i.toString()}`),
-                  region: "AMERICA_NORTH",
-                  serverId: server1Id,
-                  creatorDiscordId: discordUserId,
-                  createdTime: now,
-                  updatedTime: now,
-                },
-              },
-            },
-          },
-        },
-      });
-    }
+    await createSubscribedPlayers({
+      count: DEFAULT_PLAYER_SUBSCRIPTION_LIMIT,
+      serverId: server1Id,
+      channelId,
+      discordUserId,
+      now,
+      prefix: "Server1",
+    });
 
     // Create limit number of players in server 2
-    for (let i = 0; i < DEFAULT_PLAYER_SUBSCRIPTION_LIMIT; i++) {
-      await testPrisma.subscription.create({
-        data: {
-          channelId: channelId,
-          serverId: server2Id,
-          creatorDiscordId: discordUserId,
-          createdTime: now,
-          updatedTime: now,
-          player: {
-            create: {
-              alias: `Server2Player${i.toString()}`,
-              discordId: null,
-              serverId: server2Id,
-              creatorDiscordId: discordUserId,
-              createdTime: now,
-              updatedTime: now,
-              accounts: {
-                create: {
-                  alias: `Server2Player${i.toString()}`,
-                  puuid: testPuuid(`s2-${i.toString()}`),
-                  region: "AMERICA_NORTH",
-                  serverId: server2Id,
-                  creatorDiscordId: discordUserId,
-                  createdTime: now,
-                  updatedTime: now,
-                },
-              },
-            },
-          },
-        },
-      });
-    }
+    await createSubscribedPlayers({
+      count: DEFAULT_PLAYER_SUBSCRIPTION_LIMIT,
+      serverId: server2Id,
+      channelId,
+      discordUserId,
+      now,
+      prefix: "Server2",
+    });
 
     // Verify each server has the correct count
     const server1Count = await testPrisma.player.count({
@@ -436,42 +313,19 @@ describe("Subscribe Command - Subscription Limits", () => {
     expect(server1Count).toBe(DEFAULT_PLAYER_SUBSCRIPTION_LIMIT);
     expect(server2Count).toBe(DEFAULT_PLAYER_SUBSCRIPTION_LIMIT);
   });
+});
 
+describe("Subscribe Command - Account Limits", () => {
   test("allows accounts up to the account limit", async () => {
     const now = new Date();
     const serverId = testGuildId("007");
+    const channelId = testChannelId("00001");
     const discordUserId = testAccountId("0000001");
 
     // Create a smaller subset for faster testing
     const testAccountLimit = Math.min(5, DEFAULT_ACCOUNT_LIMIT);
 
-    // Create testAccountLimit accounts (doesn't matter if they have subscriptions)
-    for (let i = 0; i < testAccountLimit; i++) {
-      const alias = `Player${i.toString()}`;
-      const puuid = testPuuid(i.toString());
-
-      await testPrisma.player.create({
-        data: {
-          alias: alias,
-          discordId: null,
-          serverId: serverId,
-          creatorDiscordId: discordUserId,
-          createdTime: now,
-          updatedTime: now,
-          accounts: {
-            create: {
-              alias: alias,
-              puuid: puuid,
-              region: "AMERICA_NORTH",
-              serverId: serverId,
-              creatorDiscordId: discordUserId,
-              createdTime: now,
-              updatedTime: now,
-            },
-          },
-        },
-      });
-    }
+    await createUnsubscribedPlayers({ count: testAccountLimit, serverId, channelId, discordUserId, now });
 
     // Verify we created the correct number of accounts
     const accountCount = await testPrisma.account.count({
@@ -490,63 +344,17 @@ describe("Subscribe Command - Subscription Limits", () => {
     const discordUserId = testAccountId("0000001");
 
     // Create 5 accounts WITH subscriptions
-    for (let i = 0; i < 5; i++) {
-      await testPrisma.subscription.create({
-        data: {
-          channelId: channelId,
-          serverId: serverId,
-          creatorDiscordId: discordUserId,
-          createdTime: now,
-          updatedTime: now,
-          player: {
-            create: {
-              alias: `SubscribedPlayer${i.toString()}`,
-              discordId: null,
-              serverId: serverId,
-              creatorDiscordId: discordUserId,
-              createdTime: now,
-              updatedTime: now,
-              accounts: {
-                create: {
-                  alias: `SubscribedPlayer${i.toString()}`,
-                  puuid: testPuuid(`subscribed-${i.toString()}`),
-                  region: "AMERICA_NORTH",
-                  serverId: serverId,
-                  creatorDiscordId: discordUserId,
-                  createdTime: now,
-                  updatedTime: now,
-                },
-              },
-            },
-          },
-        },
-      });
-    }
+    await createSubscribedPlayers({
+      count: 5,
+      serverId,
+      channelId,
+      discordUserId,
+      now,
+      prefix: "Subscribed",
+    });
 
     // Create 3 accounts WITHOUT subscriptions
-    for (let i = 0; i < 3; i++) {
-      await testPrisma.player.create({
-        data: {
-          alias: `UnsubscribedPlayer${i.toString()}`,
-          discordId: null,
-          serverId: serverId,
-          creatorDiscordId: discordUserId,
-          createdTime: now,
-          updatedTime: now,
-          accounts: {
-            create: {
-              alias: `UnsubscribedPlayer${i.toString()}`,
-              puuid: testPuuid(`unsubscribed-${i.toString()}`),
-              region: "AMERICA_NORTH",
-              serverId: serverId,
-              creatorDiscordId: discordUserId,
-              createdTime: now,
-              updatedTime: now,
-            },
-          },
-        },
-      });
-    }
+    await createUnsubscribedPlayers({ count: 3, serverId, channelId, discordUserId, now, prefix: "Unsubscribed" });
 
     // Verify total account count is 8 (5 + 3)
     const accountCount = await testPrisma.account.count({
@@ -574,57 +382,28 @@ describe("Subscribe Command - Subscription Limits", () => {
     const now = new Date();
     const server1Id = testGuildId("009");
     const server2Id = testGuildId("010");
+    const channelId = testChannelId("00001");
     const discordUserId = testAccountId("0000001");
 
     // Create limit number of accounts in server 1
-    for (let i = 0; i < DEFAULT_ACCOUNT_LIMIT; i++) {
-      await testPrisma.player.create({
-        data: {
-          alias: `Server1Account${i.toString()}`,
-          discordId: null,
-          serverId: server1Id,
-          creatorDiscordId: discordUserId,
-          createdTime: now,
-          updatedTime: now,
-          accounts: {
-            create: {
-              alias: `Server1Account${i.toString()}`,
-              puuid: testPuuid(`s1-${i.toString()}`),
-              region: "AMERICA_NORTH",
-              serverId: server1Id,
-              creatorDiscordId: discordUserId,
-              createdTime: now,
-              updatedTime: now,
-            },
-          },
-        },
-      });
-    }
+    await createUnsubscribedPlayers({
+      count: DEFAULT_ACCOUNT_LIMIT,
+      serverId: server1Id,
+      channelId,
+      discordUserId,
+      now,
+      prefix: "Server1",
+    });
 
     // Create limit number of accounts in server 2
-    for (let i = 0; i < DEFAULT_ACCOUNT_LIMIT; i++) {
-      await testPrisma.player.create({
-        data: {
-          alias: `Server2Account${i.toString()}`,
-          discordId: null,
-          serverId: server2Id,
-          creatorDiscordId: discordUserId,
-          createdTime: now,
-          updatedTime: now,
-          accounts: {
-            create: {
-              alias: `Server2Account${i.toString()}`,
-              puuid: testPuuid(`s2-${i.toString()}`),
-              region: "AMERICA_NORTH",
-              serverId: server2Id,
-              creatorDiscordId: discordUserId,
-              createdTime: now,
-              updatedTime: now,
-            },
-          },
-        },
-      });
-    }
+    await createUnsubscribedPlayers({
+      count: DEFAULT_ACCOUNT_LIMIT,
+      serverId: server2Id,
+      channelId,
+      discordUserId,
+      now,
+      prefix: "Server2",
+    });
 
     // Verify each server has the correct count
     const server1Count = await testPrisma.account.count({
@@ -646,6 +425,7 @@ describe("Subscribe Command - Subscription Limits", () => {
   test("unlimited servers bypass account limit", async () => {
     const now = new Date();
     const serverId = testGuildId("011");
+    const channelId = testChannelId("00001");
     const discordUserId = testAccountId("0000001");
 
     // Add unlimited override for accounts
@@ -654,29 +434,14 @@ describe("Subscribe Command - Subscription Limits", () => {
     try {
       // Create more than the default account limit
       const extraAccounts = 5;
-      for (let i = 0; i < DEFAULT_ACCOUNT_LIMIT + extraAccounts; i++) {
-        await testPrisma.player.create({
-          data: {
-            alias: `UnlimitedAccount${i.toString()}`,
-            discordId: null,
-            serverId: serverId,
-            creatorDiscordId: discordUserId,
-            createdTime: now,
-            updatedTime: now,
-            accounts: {
-              create: {
-                alias: `UnlimitedAccount${i.toString()}`,
-                puuid: testPuuid(`unlimited-${i.toString()}`),
-                region: "AMERICA_NORTH",
-                serverId: serverId,
-                creatorDiscordId: discordUserId,
-                createdTime: now,
-                updatedTime: now,
-              },
-            },
-          },
-        });
-      }
+      await createUnsubscribedPlayers({
+        count: DEFAULT_ACCOUNT_LIMIT + extraAccounts,
+        serverId,
+        channelId,
+        discordUserId,
+        now,
+        prefix: "Unlimited",
+      });
 
       // Verify we exceeded the limit
       const accountCount = await testPrisma.account.count({

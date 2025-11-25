@@ -1,6 +1,6 @@
 import { match, P } from "ts-pattern";
-import { palette } from "../../assets/colors.ts";
-import { latestVersion } from "../../dataDragon/version.ts";
+import { palette } from "@scout-for-lol/report/assets/colors.ts";
+import { latestVersion } from "@scout-for-lol/report/dataDragon/version.ts";
 import { last, map, pipe, take } from "remeda";
 
 const dimension = "7.5rem";
@@ -16,7 +16,7 @@ function getItemIconUrl(itemId: number): string {
   return `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/item/${itemId.toString()}.png`;
 }
 
-export function renderItem(item: number) {
+function renderItem(item: number) {
   if (item !== 0) {
     const isPrismatic = isPrismaticItem(item);
     const iconUrl = getItemIconUrl(item);
@@ -33,6 +33,7 @@ export function renderItem(item: number) {
       >
         <img
           src={iconUrl}
+          alt=""
           style={{
             backgroundColor: palette.blue[5],
             border: isPrismatic ? `.15rem solid transparent` : `.01rem solid ${palette.gold.bright}`,

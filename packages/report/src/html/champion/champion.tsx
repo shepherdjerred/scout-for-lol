@@ -1,14 +1,14 @@
-import { renderItems } from "./item.tsx";
-import { palette } from "../../assets/colors.ts";
+import { renderItems } from "@scout-for-lol/report/html/champion/item.tsx";
+import { palette } from "@scout-for-lol/report/assets/colors.ts";
 import type { Champion } from "@scout-for-lol/data";
-import { summoner } from "../../dataDragon/summoner.ts";
-import { latestVersion } from "../../dataDragon/version.ts";
-import { CreepScore } from "./creep-score.tsx";
-import { Gold } from "./gold.tsx";
-import { Damage } from "./damage.tsx";
-import { Kda } from "./kda.tsx";
-import { Names } from "./names.tsx";
-import { Lane } from "../lane/index.tsx";
+import { summoner } from "@scout-for-lol/report/dataDragon/summoner.ts";
+import { latestVersion } from "@scout-for-lol/report/dataDragon/version.ts";
+import { CreepScore } from "@scout-for-lol/report/html/champion/creep-score.tsx";
+import { Gold } from "@scout-for-lol/report/html/champion/gold.tsx";
+import { Damage } from "@scout-for-lol/report/html/champion/damage.tsx";
+import { Kda } from "@scout-for-lol/report/html/champion/kda.tsx";
+import { Names } from "@scout-for-lol/report/html/champion/names.tsx";
+import { Lane } from "@scout-for-lol/report/html/lane/index.tsx";
 import { first, keys, map, pickBy, round } from "remeda";
 
 // highlight should be true if this champion's riotIdGameName is in the highlightNames array (player-based highlight)
@@ -30,6 +30,7 @@ export function renderChampion(champion: Champion, highlight: boolean, durationI
       <div style={{ width: size, height: size, display: "flex" }}>
         <img
           src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/spell/${name}.png`}
+          alt=""
           style={{
             backgroundColor: palette.blue[5],
             border: `.01rem solid ${palette.gold.bright}`,

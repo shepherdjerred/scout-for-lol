@@ -1,14 +1,216 @@
 import { type CompletedMatch, DiscordAccountIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
-import { matchToSvg, svgToPng } from "./index.js";
+import { matchToSvg, svgToPng } from "@scout-for-lol/report/html/index.js";
 import { test, expect } from "bun:test";
-import { writeFileSync } from "fs";
-import { createHash } from "crypto";
 
 function hashSvg(svg: string): string {
-  return createHash("sha256").update(svg).digest("hex");
+  const hasher = new Bun.CryptoHasher("sha256");
+  hasher.update(svg);
+  return hasher.digest("hex");
+}
+
+function createChampion(params: {
+  riotIdGameName: string;
+  championName: string;
+  kills: number;
+  deaths: number;
+  assists: number;
+  items: number[];
+  spells: number[];
+  lane?: "top" | "jungle" | "middle" | "adc" | "support";
+  creepScore: number;
+  visionScore: number;
+  damage: number;
+  gold: number;
+  level: number;
+}) {
+  return {
+    riotIdGameName: params.riotIdGameName,
+    championName: params.championName,
+    kills: params.kills,
+    deaths: params.deaths,
+    assists: params.assists,
+    items: params.items,
+    spells: params.spells,
+    runes: [],
+    lane: params.lane,
+    creepScore: params.creepScore,
+    visionScore: params.visionScore,
+    damage: params.damage,
+    gold: params.gold,
+    level: params.level,
+  };
+}
+
+function getBlueTeam() {
+  return [
+    createChampion({
+      riotIdGameName: "Mr Spaghetti",
+      championName: "Aatrox",
+      kills: 8,
+      deaths: 9,
+      assists: 4,
+      items: [1031, 0, 3047, 3814, 6691, 6694, 3364],
+      spells: [4, 12],
+      lane: "top",
+      creepScore: 180,
+      visionScore: 19,
+      damage: 18645,
+      gold: 12053,
+      level: 16,
+    }),
+    createChampion({
+      riotIdGameName: "zainji",
+      championName: "Nocturne",
+      kills: 9,
+      deaths: 8,
+      assists: 10,
+      items: [1031, 6631, 3133, 3156, 3047, 3071, 3363],
+      spells: [4, 11],
+      lane: "jungle",
+      creepScore: 188,
+      visionScore: 21,
+      damage: 22737,
+      gold: 13930,
+      level: 15,
+    }),
+    createChampion({
+      riotIdGameName: "Neeeeeeelson",
+      championName: "Akali",
+      kills: 8,
+      deaths: 2,
+      assists: 11,
+      items: [3089, 3111, 3152, 2055, 1082, 4645, 3364],
+      spells: [12, 4],
+      lane: "middle",
+      creepScore: 215,
+      visionScore: 27,
+      damage: 23266,
+      gold: 12686,
+      level: 16,
+    }),
+    createChampion({
+      riotIdGameName: "aaronchou",
+      championName: "Zeri",
+      kills: 7,
+      deaths: 10,
+      assists: 9,
+      items: [1055, 3006, 3095, 6675, 3046, 3035, 3363],
+      spells: [7, 4],
+      lane: "adc",
+      creepScore: 202,
+      visionScore: 16,
+      damage: 25720,
+      gold: 12583,
+      level: 14,
+    }),
+    createChampion({
+      riotIdGameName: "hellorandom",
+      championName: "Lulu",
+      kills: 1,
+      deaths: 4,
+      assists: 18,
+      items: [3853, 3222, 2055, 3158, 3012, 6620, 3364],
+      spells: [14, 4],
+      lane: "support",
+      creepScore: 23,
+      visionScore: 42,
+      damage: 8947,
+      gold: 7665,
+      level: 13,
+    }),
+  ];
+}
+
+function getRedTeam() {
+  return [
+    createChampion({
+      riotIdGameName: "how2smo",
+      championName: "Garen",
+      kills: 16,
+      deaths: 7,
+      assists: 1,
+      items: [3078, 3181, 3046, 3071, 3035, 3006, 3340],
+      spells: [14, 4],
+      lane: "top",
+      creepScore: 219,
+      visionScore: 25,
+      damage: 29663,
+      gold: 17426,
+      level: 18,
+    }),
+    createChampion({
+      riotIdGameName: "Oroulerd",
+      championName: "Zac",
+      kills: 0,
+      deaths: 7,
+      assists: 10,
+      items: [6665, 2055, 3047, 1033, 3068, 0, 3364],
+      spells: [11, 4],
+      lane: "jungle",
+      creepScore: 134,
+      visionScore: 32,
+      damage: 10916,
+      gold: 9051,
+      level: 14,
+    }),
+    createChampion({
+      riotIdGameName: "suggsyman",
+      championName: "Viktor",
+      kills: 4,
+      deaths: 7,
+      assists: 4,
+      items: [1056, 6653, 3020, 4645, 3135, 0, 3340],
+      spells: [12, 4],
+      lane: "middle",
+      creepScore: 193,
+      visionScore: 21,
+      damage: 15943,
+      gold: 11613,
+      level: 15,
+    }),
+    createChampion({
+      riotIdGameName: "zombie villager",
+      championName: "Yasuo",
+      kills: 9,
+      deaths: 7,
+      assists: 8,
+      items: [3026, 3031, 0, 6672, 6673, 3006, 3363],
+      spells: [3, 4],
+      lane: "adc",
+      creepScore: 247,
+      visionScore: 23,
+      damage: 24510,
+      gold: 15965,
+      level: 16,
+    }),
+    createChampion({
+      riotIdGameName: "sjerred",
+      championName: "Xerath",
+      kills: 4,
+      deaths: 5,
+      assists: 15,
+      items: [3853, 4645, 6653, 1052, 3020, 1058, 3364],
+      spells: [12, 4],
+      lane: "support",
+      creepScore: 38,
+      visionScore: 67,
+      damage: 24395,
+      gold: 10759,
+      level: 14,
+    }),
+  ];
 }
 
 function getMatch(): CompletedMatch {
+  const blueTeam = getBlueTeam();
+  const redTeam = getRedTeam();
+  const playerChampion = blueTeam[0];
+  const laneOpponent = redTeam[0];
+
+  if (!playerChampion || !laneOpponent) {
+    throw new Error("Teams must have at least one player");
+  }
+
   return {
     queueType: "solo",
     players: [
@@ -43,209 +245,17 @@ function getMatch(): CompletedMatch {
         },
         wins: 10,
         losses: 20,
-        champion: {
-          riotIdGameName: "zombie villager",
-          championName: "Aatrox",
-          kills: 8,
-          deaths: 9,
-          assists: 4,
-          items: [1031, 0, 3047, 3814, 6691, 6694, 3364],
-          spells: [4, 12],
-          runes: [],
-          lane: "top",
-          creepScore: 180,
-          visionScore: 19,
-          damage: 18645,
-          gold: 12053,
-          level: 16,
-        },
+        champion: playerChampion,
         outcome: "Defeat",
         team: "blue",
-        lane: "top",
-        laneOpponent: {
-          riotIdGameName: "CPHS WARRIOR",
-          championName: "Garen",
-          kills: 16,
-          deaths: 7,
-          assists: 1,
-          items: [3078, 3181, 3046, 3071, 3035, 3006, 3340],
-          spells: [14, 4],
-          runes: [],
-          lane: "top",
-          creepScore: 219,
-          visionScore: 25,
-          damage: 29663,
-          gold: 17426,
-          level: 18,
-        },
+        lane: "top" as const,
+        laneOpponent,
       },
     ],
     durationInSeconds: 1851,
     teams: {
-      blue: [
-        {
-          riotIdGameName: "Mr Spaghetti",
-          championName: "Aatrox",
-          kills: 8,
-          deaths: 9,
-          assists: 4,
-          items: [1031, 0, 3047, 3814, 6691, 6694, 3364],
-          spells: [4, 12],
-          runes: [],
-          lane: "top",
-          creepScore: 180,
-          visionScore: 19,
-          damage: 18645,
-          gold: 12053,
-          level: 16,
-        },
-        {
-          riotIdGameName: "zainji",
-          championName: "Nocturne",
-          kills: 9,
-          deaths: 8,
-          assists: 10,
-          items: [1031, 6631, 3133, 3156, 3047, 3071, 3363],
-          spells: [4, 11],
-          runes: [],
-          lane: "jungle",
-          creepScore: 188,
-          visionScore: 21,
-          damage: 22737,
-          gold: 13930,
-          level: 15,
-        },
-        {
-          riotIdGameName: "Neeeeeeelson",
-          championName: "Akali",
-          kills: 8,
-          deaths: 2,
-          assists: 11,
-          items: [3089, 3111, 3152, 2055, 1082, 4645, 3364],
-          spells: [12, 4],
-          runes: [],
-          lane: "middle",
-          creepScore: 215,
-          visionScore: 27,
-          damage: 23266,
-          gold: 12686,
-          level: 16,
-        },
-        {
-          riotIdGameName: "aaronchou",
-          championName: "Zeri",
-          kills: 7,
-          deaths: 10,
-          assists: 9,
-          items: [1055, 3006, 3095, 6675, 3046, 3035, 3363],
-          spells: [7, 4],
-          runes: [],
-          lane: "adc",
-          creepScore: 202,
-          visionScore: 16,
-          damage: 25720,
-          gold: 12583,
-          level: 14,
-        },
-        {
-          riotIdGameName: "hellorandom",
-          championName: "Lulu",
-          kills: 1,
-          deaths: 4,
-          assists: 18,
-          items: [3853, 3222, 2055, 3158, 3012, 6620, 3364],
-          spells: [14, 4],
-          runes: [],
-          lane: "support",
-          creepScore: 23,
-          visionScore: 42,
-          damage: 8947,
-          gold: 7665,
-          level: 13,
-        },
-      ],
-      red: [
-        {
-          riotIdGameName: "how2smo",
-          championName: "Garen",
-          kills: 16,
-          deaths: 7,
-          assists: 1,
-          items: [3078, 3181, 3046, 3071, 3035, 3006, 3340],
-          spells: [14, 4],
-          runes: [],
-          lane: "top",
-          creepScore: 219,
-          visionScore: 25,
-          damage: 29663,
-          gold: 17426,
-          level: 18,
-        },
-        {
-          riotIdGameName: "Oroulerd",
-          championName: "Zac",
-          kills: 0,
-          deaths: 7,
-          assists: 10,
-          items: [6665, 2055, 3047, 1033, 3068, 0, 3364],
-          spells: [11, 4],
-          runes: [],
-          lane: "jungle",
-          creepScore: 134,
-          visionScore: 32,
-          damage: 10916,
-          gold: 9051,
-          level: 14,
-        },
-        {
-          riotIdGameName: "suggsyman",
-          championName: "Viktor",
-          kills: 4,
-          deaths: 7,
-          assists: 4,
-          items: [1056, 6653, 3020, 4645, 3135, 0, 3340],
-          spells: [12, 4],
-          runes: [],
-          lane: "middle",
-          creepScore: 193,
-          visionScore: 21,
-          damage: 15943,
-          gold: 11613,
-          level: 15,
-        },
-        {
-          riotIdGameName: "zombie villager",
-          championName: "Yasuo",
-          kills: 9,
-          deaths: 7,
-          assists: 8,
-          items: [3026, 3031, 0, 6672, 6673, 3006, 3363],
-          spells: [3, 4],
-          runes: [],
-          lane: "adc",
-          creepScore: 247,
-          visionScore: 23,
-          damage: 24510,
-          gold: 15965,
-          level: 16,
-        },
-        {
-          riotIdGameName: "sjerred",
-          championName: "Xerath",
-          kills: 4,
-          deaths: 5,
-          assists: 15,
-          items: [3853, 4645, 6653, 1052, 3020, 1058, 3364],
-          spells: [12, 4],
-          runes: [],
-          lane: "support",
-          creepScore: 38,
-          visionScore: 67,
-          damage: 24395,
-          gold: 10759,
-          level: 14,
-        },
-      ],
+      blue: blueTeam,
+      red: redTeam,
     },
   };
 }
@@ -253,8 +263,8 @@ function getMatch(): CompletedMatch {
 test("sanity check", async () => {
   const svg = await matchToSvg(getMatch());
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match.png", import.meta.url), png);
-  writeFileSync(new URL("__snapshots__/match.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match.svg", import.meta.url), svg);
 
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -270,8 +280,8 @@ test("no items test", async () => {
 
   const svg = await matchToSvg(matchNoItems);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_no_items.png", import.meta.url), png);
-  writeFileSync(new URL("__snapshots__/match_no_items.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_no_items.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_no_items.svg", import.meta.url), svg);
 
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -333,8 +343,8 @@ test("all fields zeroed out test", async () => {
 
   const svg = await matchToSvg(matchZeroedOut);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_zeroed_out.png", import.meta.url), png);
-  writeFileSync(new URL("__snapshots__/match_zeroed_out.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_zeroed_out.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_zeroed_out.svg", import.meta.url), svg);
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -348,9 +358,9 @@ test("no rank test", async () => {
 
   const svg = await matchToSvg(matchNoRank);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_no_rank.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_no_rank.png", import.meta.url), png);
 
-  writeFileSync(new URL("__snapshots__/match_no_rank.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_no_rank.svg", import.meta.url), svg);
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -394,9 +404,9 @@ test("large values test", async () => {
 
   const svg = await matchToSvg(matchLargeValues);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_large_values.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_large_values.png", import.meta.url), png);
 
-  writeFileSync(new URL("__snapshots__/match_large_values.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_large_values.svg", import.meta.url), svg);
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -409,9 +419,9 @@ test("victory test", async () => {
 
   const svg = await matchToSvg(matchVictory);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_victory.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_victory.png", import.meta.url), png);
 
-  writeFileSync(new URL("__snapshots__/match_victory.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_victory.svg", import.meta.url), svg);
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -424,9 +434,9 @@ test("surrender test", async () => {
 
   const svg = await matchToSvg(matchSurrender);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_surrender.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_surrender.png", import.meta.url), png);
 
-  writeFileSync(new URL("__snapshots__/match_surrender.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_surrender.svg", import.meta.url), svg);
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -446,9 +456,9 @@ test("no rank before match test", async () => {
 
   const svg = await matchToSvg(matchNoRankBefore);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_no_rank_before.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_no_rank_before.png", import.meta.url), png);
 
-  writeFileSync(new URL("__snapshots__/match_no_rank_before.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_no_rank_before.svg", import.meta.url), svg);
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
 });
@@ -526,9 +536,9 @@ test("multiple highlighted players test", async () => {
 
   const svg = await matchToSvg(match);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_multiple_highlighted_players.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_multiple_highlighted_players.png", import.meta.url), png);
 
-  writeFileSync(new URL("__snapshots__/match_multiple_highlighted_players.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_multiple_highlighted_players.svg", import.meta.url), svg);
   // Hash the SVG for snapshot comparison instead of storing the full content
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -540,8 +550,8 @@ test("clash game test", async () => {
 
   const svg = await matchToSvg(matchClash);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_clash.png", import.meta.url), png);
-  writeFileSync(new URL("__snapshots__/match_clash.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_clash.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_clash.svg", import.meta.url), svg);
 
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -553,8 +563,8 @@ test("aram clash game test", async () => {
 
   const svg = await matchToSvg(matchAramClash);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_aram_clash.png", import.meta.url), png);
-  writeFileSync(new URL("__snapshots__/match_aram_clash.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_aram_clash.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_aram_clash.svg", import.meta.url), svg);
 
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();
@@ -714,8 +724,8 @@ test("multiple players with promotion and demotion test", async () => {
 
   const svg = await matchToSvg(match);
   const png = await svgToPng(svg);
-  writeFileSync(new URL("__snapshots__/match_promotion_demotion_mixed.png", import.meta.url), png);
-  writeFileSync(new URL("__snapshots__/match_promotion_demotion_mixed.svg", import.meta.url), svg);
+  await Bun.write(new URL("__snapshots__/match_promotion_demotion_mixed.png", import.meta.url), png);
+  await Bun.write(new URL("__snapshots__/match_promotion_demotion_mixed.svg", import.meta.url), svg);
 
   const svgHash = hashSvg(svg);
   expect(svgHash).toMatchSnapshot();

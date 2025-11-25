@@ -1,8 +1,9 @@
 import { describe, it, expect } from "bun:test";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { participantToArenaChampion } from "../../model/champion.js";
+import type { ParticipantDto } from "@scout-for-lol/data";
+import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
 
-const baseParticipant = (): MatchV5DTOs.ParticipantDto => {
+const baseParticipant = (): ParticipantDto => {
+  // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
   const participant = {
     riotIdGameName: "Player#NA1",
     summonerName: "Player",
@@ -44,12 +45,13 @@ const baseParticipant = (): MatchV5DTOs.ParticipantDto => {
     PlayerScore6: 7,
     PlayerScore7: 8,
     PlayerScore8: 9,
+    // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
     challenges: {
       damageTakenOnTeamPercentage: 0.2,
-    } as unknown as MatchV5DTOs.ChallengesDto,
+    } as unknown as ParticipantDto["challenges"],
     // unused fields for this test
     teamId: 100,
-  } as unknown as MatchV5DTOs.ParticipantDto;
+  } as unknown as ParticipantDto;
   return participant;
 };
 

@@ -1,21 +1,19 @@
 import { describe, it, expect } from "bun:test";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { ArenaMatchSchema, LeaguePuuidSchema, type Player } from "@scout-for-lol/data";
-import { toArenaMatch } from "../match.js";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
+import type { MatchDto, Player } from "@scout-for-lol/data";
+import { ArenaMatchSchema, LeaguePuuidSchema, MatchDtoSchema } from "@scout-for-lol/data";
+import { toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
 
-const currentDir = dirname(fileURLToPath(import.meta.url));
+const currentDir = new URL(".", import.meta.url).pathname;
 
 const RAW_FILE_PATHS = [
-  join(currentDir, "testdata/matches_2025_09_19_NA1_5370969615.json"),
-  join(currentDir, "testdata/matches_2025_09_19_NA1_5370986469.json"),
+  `${currentDir}/testdata/matches_2025_09_19_NA1_5370969615.json`,
+  `${currentDir}/testdata/matches_2025_09_19_NA1_5370986469.json`,
 ];
 
-async function loadMatch(path: string): Promise<MatchV5DTOs.MatchDto> {
+async function loadMatch(path: string): Promise<MatchDto> {
   const file = Bun.file(path);
   const json = (await file.json()) as unknown;
-  return json as MatchV5DTOs.MatchDto;
+  return MatchDtoSchema.parse(json);
 }
 
 describe("toArenaMatch with real arena JSON", () => {
@@ -28,7 +26,9 @@ describe("toArenaMatch with real arena JSON", () => {
       expect(matchDto.info.participants.length).toBe(16);
       // choose first participant as the tracked player
       const tracked = matchDto.info.participants[0];
-      if (!tracked) throw new Error("participants should not be empty in real data test");
+      if (!tracked) {
+        throw new Error("participants should not be empty in real data test");
+      }
 
       const player = {
         config: {

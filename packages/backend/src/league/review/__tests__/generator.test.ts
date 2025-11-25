@@ -1,31 +1,31 @@
 import { describe, expect, test, mock } from "bun:test";
-import type { ArenaMatch, CompletedMatch, MatchId } from "@scout-for-lol/data";
+import { MatchIdSchema, type ArenaMatch, type CompletedMatch } from "@scout-for-lol/data";
 
-import { testAccountId, testPuuid } from "../../../testing/test-ids.js";
+import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
 
 // Test match ID for all tests
-const TEST_MATCH_ID = "NA1_1234567890" as MatchId;
+const TEST_MATCH_ID = MatchIdSchema.parse("NA1_1234567890");
 
 // Mock the configuration module to prevent API calls
 // Use a factory function to read env vars at runtime so other tests can override
 void mock.module("../../../configuration.js", () => ({
   default: {
-    version: process.env["VERSION"] ?? "test",
-    gitSha: process.env["GIT_SHA"] ?? "test",
-    sentryDsn: process.env["SENTRY_DSN"],
-    environment: (process.env["ENVIRONMENT"] as "dev" | "beta" | "prod") ?? "dev",
-    discordToken: process.env["DISCORD_TOKEN"] ?? "test",
-    applicationId: process.env["APPLICATION_ID"] ?? "test",
-    riotApiToken: process.env["RIOT_API_TOKEN"] ?? "test",
-    databaseUrl: process.env["DATABASE_URL"] ?? "test.db",
-    port: Number.parseInt(process.env["PORT"] ?? "3000"),
-    s3BucketName: process.env["S3_BUCKET_NAME"],
+    version: Bun.env["VERSION"] ?? "test",
+    gitSha: Bun.env["GIT_SHA"] ?? "test",
+    sentryDsn: Bun.env["SENTRY_DSN"],
+    environment: Bun.env["ENVIRONMENT"] ?? "dev",
+    discordToken: Bun.env["DISCORD_TOKEN"] ?? "test",
+    applicationId: Bun.env["APPLICATION_ID"] ?? "test",
+    riotApiToken: Bun.env["RIOT_API_TOKEN"] ?? "test",
+    databaseUrl: Bun.env["DATABASE_URL"] ?? "test.db",
+    port: Number.parseInt(Bun.env["PORT"] ?? "3000"),
+    s3BucketName: Bun.env["S3_BUCKET_NAME"],
     openaiApiKey: undefined, // Always undefined for this test to prevent API calls
     geminiApiKey: undefined, // Always undefined for this test to prevent API calls
   },
 }));
 
-import { generateMatchReview } from "../generator.ts";
+import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.ts";
 describe("generateMatchReview", () => {
   describe("when API keys are not configured", () => {
     test("returns undefined for regular match", async () => {
@@ -37,42 +37,52 @@ describe("generateMatchReview", () => {
           {
             playerConfig: {
               alias: "TestPlayer",
-              discord: { discordUserId: testAccountId("12300000000000000") },
+              discordAccount: { id: testAccountId("12300000000000000") },
               league: {
                 leagueAccount: {
-                  puuid: testPuuid("test-puuid") as unknown,
+                  puuid: testPuuid("test-puuid"),
                   region: "AMERICA_NORTH",
-                  gameName: "TestPlayer",
-                  tagLine: "NA1",
                 },
               },
             },
-            rankBeforeMatch: { tier: "gold", division: 2, leaguePoints: 50 },
-            rankAfterMatch: { tier: "gold", division: 2, leaguePoints: 65 },
+            rankBeforeMatch: { tier: "gold", division: 2, lp: 50, wins: 25, losses: 23 },
+            rankAfterMatch: { tier: "gold", division: 2, lp: 65, wins: 26, losses: 23 },
             wins: 50,
             losses: 48,
             champion: {
+              riotIdGameName: "TestPlayer#NA1",
               championName: "Jinx",
               kills: 10,
               deaths: 3,
               assists: 8,
-              cs: 200,
-              lane: "adc",
+              level: 18,
               items: [],
-              summonerSpells: { spell1: 4, spell2: 7 },
+              spells: [4, 7],
+              gold: 12000,
+              runes: [],
+              creepScore: 200,
+              visionScore: 45,
+              damage: 35000,
+              lane: "adc",
             },
             outcome: "Victory",
             team: "blue",
             lane: "adc",
             laneOpponent: {
+              riotIdGameName: "Caitlyn#NA1",
               championName: "Caitlyn",
               kills: 3,
               deaths: 10,
               assists: 5,
-              cs: 180,
-              lane: "adc",
+              level: 17,
               items: [],
-              summonerSpells: { spell1: 4, spell2: 7 },
+              spells: [4, 7],
+              gold: 9000,
+              runes: [],
+              creepScore: 180,
+              visionScore: 30,
+              damage: 25000,
+              lane: "adc",
             },
           },
         ],
@@ -80,7 +90,7 @@ describe("generateMatchReview", () => {
           blue: [],
           red: [],
         },
-      } as unknown as CompletedMatch;
+      } satisfies CompletedMatch;
 
       const review = await generateMatchReview(match, TEST_MATCH_ID);
 
@@ -95,13 +105,11 @@ describe("generateMatchReview", () => {
           {
             playerConfig: {
               alias: "ArenaPlayer",
-              discord: { discordUserId: testAccountId("78900000000000000") },
+              discordAccount: { id: testAccountId("78900000000000000") },
               league: {
                 leagueAccount: {
-                  puuid: testPuuid("arena-puuid") as unknown,
+                  puuid: testPuuid("arena-puuid"),
                   region: "AMERICA_NORTH",
-                  gameName: "ArenaPlayer",
-                  tagLine: "NA1",
                 },
               },
             },
@@ -118,9 +126,24 @@ describe("generateMatchReview", () => {
               damage: 50000,
               augments: [],
               arenaMetrics: {
-                augmentChoices: [],
+                playerScore0: 0,
+                playerScore1: 0,
+                playerScore2: 0,
+                playerScore3: 0,
+                playerScore4: 0,
+                playerScore5: 0,
+                playerScore6: 0,
+                playerScore7: 0,
+                playerScore8: 0,
+                playerScore9: 0,
+                playerScore10: 0,
+                playerScore11: 0,
               },
-              teamSubteamId: 1,
+              teamSupport: {
+                damageShieldedOnTeammate: 0,
+                healsOnTeammate: 0,
+                damageTakenPercentage: 0,
+              },
             },
             teamId: 1,
             teammate: {
@@ -135,14 +158,29 @@ describe("generateMatchReview", () => {
               damage: 45000,
               augments: [],
               arenaMetrics: {
-                augmentChoices: [],
+                playerScore0: 0,
+                playerScore1: 0,
+                playerScore2: 0,
+                playerScore3: 0,
+                playerScore4: 0,
+                playerScore5: 0,
+                playerScore6: 0,
+                playerScore7: 0,
+                playerScore8: 0,
+                playerScore9: 0,
+                playerScore10: 0,
+                playerScore11: 0,
               },
-              teamSubteamId: 1,
+              teamSupport: {
+                damageShieldedOnTeammate: 0,
+                healsOnTeammate: 0,
+                damageTakenPercentage: 0,
+              },
             },
           },
         ],
         teams: [],
-      } as unknown as ArenaMatch;
+      } satisfies ArenaMatch;
 
       const review = await generateMatchReview(match, TEST_MATCH_ID);
 

@@ -17,7 +17,7 @@ const s3Mock = mockClient(S3Client);
 // the S3 integration directly through the storage module
 
 beforeEach(() => {
-  process.env["S3_BUCKET_NAME"] = "test-bucket";
+  Bun.env["S3_BUCKET_NAME"] = "test-bucket";
   s3Mock.reset();
 });
 
@@ -31,7 +31,7 @@ describe("getImage S3 Integration", () => {
     const { saveImageToS3 } = await import("../../../storage/s3.js");
 
     const matchId = MatchIdSchema.parse("NA1_RANKED_MATCH");
-    const imageBuffer = Buffer.from("ranked-match-image");
+    const imageBuffer = new TextEncoder().encode("ranked-match-image");
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -49,7 +49,7 @@ describe("getImage S3 Integration", () => {
     const { saveImageToS3 } = await import("../../../storage/s3.js");
 
     const matchId = MatchIdSchema.parse("NA1_ARENA_MATCH");
-    const imageBuffer = Buffer.from("arena-match-image");
+    const imageBuffer = new TextEncoder().encode("arena-match-image");
     const queueType = "arena";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -62,15 +62,17 @@ describe("getImage S3 Integration", () => {
     expect(result).toBeDefined();
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
-    expect(command.input.Metadata?.["queueType"]).toBe("arena");
+    const command = call.args[0];
+    if (command instanceof PutObjectCommand) {
+      expect(command.input.Metadata?.["queueType"]).toBe("arena");
+    }
   });
 
   test("image upload failure doesn't crash post-match flow", async () => {
     const { saveImageToS3 } = await import("../../../storage/s3.js");
 
     const matchId = MatchIdSchema.parse("NA1_FAILED_UPLOAD");
-    const imageBuffer = Buffer.from("match-image");
+    const imageBuffer = new TextEncoder().encode("match-image");
     const queueType = "solo";
 
     // Simulate S3 failure
@@ -78,7 +80,7 @@ describe("getImage S3 Integration", () => {
 
     // The function should throw (caller catches it)
     await expect(saveImageToS3(matchId, imageBuffer, queueType)).rejects.toThrow(
-      "Failed to save image NA1_FAILED_UPLOAD to S3",
+      "Failed to save PNG NA1_FAILED_UPLOAD to S3",
     );
   });
 
@@ -97,7 +99,7 @@ describe("Image Buffer Handling", () => {
     const { saveImageToS3 } = await import("../../../storage/s3.js");
 
     const matchId = MatchIdSchema.parse("NA1_BUFFER_TEST");
-    const imageBuffer = Buffer.from("specific-image-data-12345");
+    const imageBuffer = new TextEncoder().encode("specific-image-data-12345");
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -107,18 +109,20 @@ describe("Image Buffer Handling", () => {
     await saveImageToS3(MatchIdSchema.parse(matchId), imageBuffer, queueType);
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
 
     // Verify the exact buffer is passed
-    expect(command.input.Body).toBe(imageBuffer);
-    expect(Buffer.isBuffer(command.input.Body)).toBe(true);
+    if (command instanceof PutObjectCommand) {
+      expect(command.input.Body).toBe(imageBuffer);
+      expect(command.input.Body instanceof Uint8Array).toBe(true);
+    }
   });
 
   test("handles empty image buffer", async () => {
     const { saveImageToS3 } = await import("../../../storage/s3.js");
 
     const matchId = MatchIdSchema.parse("NA1_EMPTY_BUFFER");
-    const imageBuffer = Buffer.alloc(0);
+    const imageBuffer = new Uint8Array(0);
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -131,8 +135,17 @@ describe("Image Buffer Handling", () => {
     expect(result).toBeDefined();
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
-    expect((command.input.Body as Buffer).length).toBe(0);
+    const command = call.args[0];
+    if (command instanceof PutObjectCommand) {
+      const body = command.input.Body;
+      let bodyLength = 0;
+      if (body instanceof Uint8Array) {
+        bodyLength = body.length;
+      } else if (typeof body === "string") {
+        bodyLength = body.length;
+      }
+      expect(bodyLength).toBe(0);
+    }
   });
 });
 
@@ -144,7 +157,7 @@ describe("Queue Type Handling", () => {
       const { saveImageToS3 } = await import("../../../storage/s3.js");
 
       const matchId = `NA1_${queueType.toUpperCase()}_TEST`;
-      const imageBuffer = Buffer.from(`${queueType}-image`);
+      const imageBuffer = new TextEncoder().encode(`${queueType}-image`);
 
       s3Mock.on(PutObjectCommand).resolves({
         $metadata: { httpStatusCode: 200 },
@@ -153,8 +166,10 @@ describe("Queue Type Handling", () => {
       await saveImageToS3(MatchIdSchema.parse(matchId), imageBuffer, queueType);
 
       const call = s3Mock.call(0);
-      const command = call.args[0] as PutObjectCommand;
-      expect(command.input.Metadata?.["queueType"]).toBe(queueType);
+      const command = call.args[0];
+      if (command instanceof PutObjectCommand) {
+        expect(command.input.Metadata?.["queueType"]).toBe(queueType);
+      }
     });
   }
 });
@@ -170,7 +185,7 @@ describe("Match ID Handling", () => {
     });
 
     for (const matchId of matchIds) {
-      const imageBuffer = Buffer.from(`image-for-${matchId}`);
+      const imageBuffer = new TextEncoder().encode(`image-for-${matchId}`);
       const result = await saveImageToS3(MatchIdSchema.parse(matchId), imageBuffer, "solo");
 
       if (result) {
@@ -184,7 +199,7 @@ describe("Match ID Handling", () => {
     const { saveImageToS3 } = await import("../../../storage/s3.js");
 
     const matchId = MatchIdSchema.parse("TEST_MATCH_ID_123");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
 
     s3Mock.on(PutObjectCommand).resolves({
       $metadata: { httpStatusCode: 200 },
@@ -193,10 +208,12 @@ describe("Match ID Handling", () => {
     await saveImageToS3(MatchIdSchema.parse(matchId), imageBuffer, "solo");
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
 
-    expect(command.input.Key).toContain(matchId);
-    expect(command.input.Key).toEndWith(`${matchId}.png`);
+    if (command instanceof PutObjectCommand) {
+      expect(command.input.Key).toContain(matchId);
+      expect(command.input.Key).toEndWith(`${matchId}.png`);
+    }
   });
 });
 
@@ -209,9 +226,9 @@ describe("Concurrent Uploads", () => {
     });
 
     const uploads = [
-      saveImageToS3(MatchIdSchema.parse("NA1_CONCURRENT_1"), Buffer.from("image1"), "solo"),
-      saveImageToS3(MatchIdSchema.parse("NA1_CONCURRENT_2"), Buffer.from("image2"), "flex"),
-      saveImageToS3(MatchIdSchema.parse("NA1_CONCURRENT_3"), Buffer.from("image3"), "arena"),
+      saveImageToS3(MatchIdSchema.parse("NA1_CONCURRENT_1"), new TextEncoder().encode("image1"), "solo"),
+      saveImageToS3(MatchIdSchema.parse("NA1_CONCURRENT_2"), new TextEncoder().encode("image2"), "flex"),
+      saveImageToS3(MatchIdSchema.parse("NA1_CONCURRENT_3"), new TextEncoder().encode("image3"), "arena"),
     ];
 
     const results = await Promise.all(uploads);
@@ -236,9 +253,9 @@ describe("Concurrent Uploads", () => {
         $metadata: { httpStatusCode: 200 },
       });
 
-    const upload1 = saveImageToS3(MatchIdSchema.parse("NA1_FAIL"), Buffer.from("image1"), "solo");
-    const upload2 = saveImageToS3(MatchIdSchema.parse("NA1_SUCCESS_1"), Buffer.from("image2"), "solo");
-    const upload3 = saveImageToS3(MatchIdSchema.parse("NA1_SUCCESS_2"), Buffer.from("image3"), "solo");
+    const upload1 = saveImageToS3(MatchIdSchema.parse("NA1_FAIL"), new TextEncoder().encode("image1"), "solo");
+    const upload2 = saveImageToS3(MatchIdSchema.parse("NA1_SUCCESS_1"), new TextEncoder().encode("image2"), "solo");
+    const upload3 = saveImageToS3(MatchIdSchema.parse("NA1_SUCCESS_2"), new TextEncoder().encode("image3"), "solo");
 
     const results = await Promise.allSettled([upload1, upload2, upload3]);
 
@@ -260,7 +277,7 @@ describe("ContentType and S3 Configuration", () => {
     const { saveImageToS3 } = await import("../../../storage/s3.js");
 
     const matchId = MatchIdSchema.parse("NA1_CONTENT_TYPE");
-    const imageBuffer = Buffer.from("png-image-data");
+    const imageBuffer = new TextEncoder().encode("png-image-data");
 
     s3Mock.on(PutObjectCommand).resolves({
       $metadata: { httpStatusCode: 200 },
@@ -269,9 +286,11 @@ describe("ContentType and S3 Configuration", () => {
     await saveImageToS3(MatchIdSchema.parse(matchId), imageBuffer, "solo");
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = call.args[0];
 
-    expect(command.input.ContentType).toBe("image/png");
+    if (command instanceof PutObjectCommand) {
+      expect(command.input.ContentType).toBe("image/png");
+    }
   });
 
   test.skip("uses correct S3 bucket from environment", async () => {

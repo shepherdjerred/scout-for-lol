@@ -1,14 +1,32 @@
-import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
+/* eslint-disable max-lines -- can't really split this up */
+import { fileURLToPath } from "node:url";
+import { dirname } from "node:path";
+import * as eslint from "@eslint/js";
+import * as tseslint from "typescript-eslint";
 import unicorn from "eslint-plugin-unicorn";
-import { zodSchemaNaming } from "./eslint-rules/zod-schema-naming.ts";
-import { noRedundantZodParse } from "./eslint-rules/no-redundant-zod-parse.ts";
-import { satoriBestPractices } from "./eslint-rules/satori-best-practices.ts";
-import { prismaClientDisconnect } from "./eslint-rules/prisma-client-disconnect.ts";
-import importPlugin from "eslint-plugin-import";
-// TODO: Enable these plugins when ready
-// import noRelativeImportPaths from "eslint-plugin-no-relative-import-paths";
-// import * as regexpPlugin from "eslint-plugin-regexp";
+import { zodSchemaNaming } from "./eslint-rules/zod-schema-naming";
+import { noRedundantZodParse } from "./eslint-rules/no-redundant-zod-parse";
+import { satoriBestPractices } from "./eslint-rules/satori-best-practices";
+import { prismaClientDisconnect } from "./eslint-rules/prisma-client-disconnect";
+import { noTypeAssertions } from "./eslint-rules/no-type-assertions";
+import { preferZodValidation } from "./eslint-rules/prefer-zod-validation";
+import { preferBunApis } from "./eslint-rules/prefer-bun-apis";
+import { noReExports } from "./eslint-rules/no-re-exports";
+import { noUseEffect } from "./eslint-rules/no-use-effect";
+import { preferDateFns } from "./eslint-rules/prefer-date-fns";
+import { noFunctionOverloads } from "./eslint-rules/no-function-overloads";
+import { noParentImports } from "./eslint-rules/no-parent-imports";
+import * as importPlugin from "eslint-plugin-import";
+import * as regexpPlugin from "eslint-plugin-regexp";
+import * as eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
+import * as react from "eslint-plugin-react";
+import * as reactHooks from "eslint-plugin-react-hooks";
+import * as jsxA11y from "eslint-plugin-jsx-a11y";
+import * as astroPlugin from "eslint-plugin-astro";
+// MDX linting disabled - parser doesn't support type-aware rules
+// import mdx from "eslint-plugin-mdx";
+// Tailwind linting disabled - plugin incompatible with Tailwind CSS v4
+// import tailwindcss from "eslint-plugin-tailwindcss";
 
 /**
  * Bridge typescript-eslint rule to ESLint plugin system
@@ -24,14 +42,23 @@ const customRulesPlugin = {
     "no-redundant-zod-parse": noRedundantZodParse,
     "satori-best-practices": satoriBestPractices,
     "prisma-client-disconnect": prismaClientDisconnect,
+    "no-type-assertions": noTypeAssertions,
+    "prefer-zod-validation": preferZodValidation,
+    "prefer-bun-apis": preferBunApis,
+    "no-re-exports": noReExports,
+    "no-use-effect": noUseEffect,
+    "prefer-date-fns": preferDateFns,
+    "no-function-overloads": noFunctionOverloads,
+    "no-parent-imports": noParentImports,
   },
 };
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- we will fix this later
 export default tseslint.config(
   eslint.configs.recommended,
   tseslint.configs.strictTypeChecked,
   tseslint.configs.stylisticTypeChecked,
-  // regexpPlugin.configs["flat/recommended"],
+  regexpPlugin.configs["flat/recommended"],
   {
     ignores: [
       "**/generated/**/*",
@@ -40,43 +67,97 @@ export default tseslint.config(
       "**/.cache/**/*",
       "**/node_modules/**/*",
       "**/.astro/**/*",
+      ".dagger/sdk/**/*",
+      "**/*.md",
+      "**/*.mdx",
+      "**/*.astro",
+      "**/*.mjs",
+      "**/*.js",
+      "**/*.cjs",
     ],
   },
   {
     languageOptions: {
       parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
+        projectService: {
+          allowDefaultProject: ["eslint.config.ts", "eslint-rules/*.ts"],
+        },
+        tsconfigRootDir: dirname(fileURLToPath(import.meta.url)),
+        extraFileExtensions: [".astro"],
       },
+    },
+  },
+  // ESLint disable directive rules
+  {
+    plugins: {
+      // Type assertion needed due to ESLint plugin type incompatibility
+      "eslint-comments": eslintComments as unknown,
+    },
+    rules: {
+      // Require specific rule names when disabling ESLint (no blanket eslint-disable)
+      "eslint-comments/no-unlimited-disable": "error",
+      // Disallow unused eslint-disable comments
+      "eslint-comments/no-unused-disable": "error",
+      // Require descriptions for eslint-disable comments
+      "eslint-comments/require-description": "error",
+      // Disallow duplicate disable directives
+      "eslint-comments/no-duplicate-disable": "error",
     },
   },
   {
     files: ["**/*.{ts,tsx}"],
     extends: [importPlugin.flatConfigs.recommended, importPlugin.flatConfigs.typescript],
+    settings: {
+      "import/resolver": {
+        // Use the Bun-specific TypeScript resolver which properly handles Bun built-in modules
+        // (e.g., bun:test, bun:sqlite) without requiring ignore patterns or manual configuration.
+        // See: https://www.npmjs.com/package/eslint-import-resolver-typescript-bun
+        "typescript-bun": {
+          alwaysTryTypes: true,
+          project: [
+            "./packages/backend/tsconfig.json",
+            "./packages/data/tsconfig.json",
+            "./packages/report/tsconfig.json",
+            "./packages/frontend/tsconfig.json",
+          ],
+        },
+        node: {
+          extensions: [".js", ".jsx", ".ts", ".tsx"],
+        },
+      },
+    },
     rules: {
-      "import/no-unresolved": "off",
+      // Prevent relative imports between packages in monorepo
+      "import/no-relative-packages": "error",
     },
   },
-  // TODO
-  // {
-  //   plugins: {
-  //     "no-relative-import-paths": noRelativeImportPaths,
-  //   },
-  //   rules: {
-  //     "no-relative-import-paths/no-relative-import-paths": ["warn", { allowSameFolder: true }],
-  //   },
-  // },
   {
     rules: {
       // Code quality and complexity limits
-      "max-lines": ["error", { max: 1200, skipBlankLines: false, skipComments: false }],
-      // complexity: ["error", { max: 20 }],
-      // "max-depth": ["error", { max: 4 }],
-      // "max-params": ["error", { max: 4 }],
-      // curly: ["error", "all"],
+      "max-lines": ["error", { max: 500, skipBlankLines: false, skipComments: false }],
+      "max-lines-per-function": ["error", { max: 400, skipBlankLines: true, skipComments: true }],
+      complexity: ["error", { max: 20 }],
+      "max-depth": ["error", { max: 4 }],
+      "max-params": ["error", { max: 4 }],
+      curly: ["error", "all"],
+
+      // "no-warning-comments": [
+      //   "warn",
+      //   {
+      //     terms: ["todo", "fixme", "hack", "xxx", "to do"],
+      //     location: "anywhere",
+      //   },
+      // ],
 
       // TypeScript configuration
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        {
+          prefer: "type-imports",
+          disallowTypeAnnotations: true,
+        },
+      ],
       "@typescript-eslint/no-non-null-assertion": "error",
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -86,148 +167,118 @@ export default tseslint.config(
           caughtErrorsIgnorePattern: "^_",
         },
       ],
-      "@typescript-eslint/consistent-type-assertions": [
-        "error",
-        {
-          assertionStyle: "as",
-          objectLiteralTypeAssertions: "never",
-        },
-      ],
+      "@typescript-eslint/no-unnecessary-type-assertion": "error",
+      "@typescript-eslint/prefer-ts-expect-error": "error",
+      "@typescript-eslint/switch-exhaustiveness-check": "error",
+      "@typescript-eslint/no-redundant-type-constituents": "error",
+      "@typescript-eslint/no-duplicate-type-constituents": "error",
+      "@typescript-eslint/no-meaningless-void-operator": "error",
+      "@typescript-eslint/no-mixed-enums": "error",
+      "@typescript-eslint/prefer-return-this-type": "error",
 
-      // // Prefer Bun APIs over Node.js imports
-      // "no-restricted-imports": [
-      //   "error",
-      //   {
-      //     paths: [
-      //       {
-      //         name: "fs",
-      //         message:
-      //           "Use Bun.file() for reading and Bun.write() for writing instead of fs. See https://bun.sh/docs/api/file-io",
-      //       },
-      //       {
-      //         name: "node:fs",
-      //         message:
-      //           "Use Bun.file() for reading and Bun.write() for writing instead of node:fs. See https://bun.sh/docs/api/file-io",
-      //       },
-      //       {
-      //         name: "fs/promises",
-      //         message:
-      //           "Use Bun.file() for reading and Bun.write() for writing instead of fs/promises. See https://bun.sh/docs/api/file-io",
-      //       },
-      //       {
-      //         name: "node:fs/promises",
-      //         message:
-      //           "Use Bun.file() for reading and Bun.write() for writing instead of node:fs/promises. See https://bun.sh/docs/api/file-io",
-      //       },
-      //       {
-      //         name: "child_process",
-      //         message:
-      //           "Use Bun.spawn() instead of child_process for spawning processes. See https://bun.sh/docs/api/spawn",
-      //       },
-      //       {
-      //         name: "node:child_process",
-      //         message:
-      //           "Use Bun.spawn() instead of node:child_process for spawning processes. See https://bun.sh/docs/api/spawn",
-      //       },
-      //       {
-      //         name: "crypto",
-      //         message:
-      //           "Use Bun.password for password hashing, Bun.hash() for hashing, or Web Crypto API for cryptography instead of crypto. See https://bun.sh/docs/api/hashing",
-      //       },
-      //       {
-      //         name: "node:crypto",
-      //         message:
-      //           "Use Bun.password for password hashing, Bun.hash() for hashing, or Web Crypto API for cryptography instead of node:crypto. See https://bun.sh/docs/api/hashing",
-      //       },
-      //     ],
-      //     patterns: [
-      //       {
-      //         group: ["node:*"],
-      //         message: "Avoid node: imports. Bun provides faster, more modern alternatives. See https://bun.sh/docs",
-      //       },
-      //     ],
-      //   },
-      // ],
-      "no-restricted-syntax": [
+      // Prefer Bun APIs over Node.js imports
+      "no-restricted-imports": [
         "error",
-        // Zod validation over built-in type checks
         {
-          selector: "UnaryExpression[operator='typeof']:not([argument.name='Bun'])",
-          message: "Prefer Zod schema validation over typeof operator. Use z.string(), z.number(), etc. instead.",
+          paths: [
+            {
+              name: "fs",
+              message:
+                "Use Bun.file() for reading and Bun.write() for writing instead of fs. See https://bun.sh/docs/api/file-io",
+            },
+            {
+              name: "node:fs",
+              message:
+                "Use Bun.file() for reading and Bun.write() for writing instead of node:fs. See https://bun.sh/docs/api/file-io",
+            },
+            {
+              name: "fs/promises",
+              message:
+                "Use Bun.file() for reading and Bun.write() for writing instead of fs/promises. See https://bun.sh/docs/api/file-io",
+            },
+            {
+              name: "node:fs/promises",
+              message:
+                "Use Bun.file() for reading and Bun.write() for writing instead of node:fs/promises. See https://bun.sh/docs/api/file-io",
+            },
+            {
+              name: "child_process",
+              message:
+                "Use Bun.spawn() instead of child_process for spawning processes. See https://bun.sh/docs/api/spawn",
+            },
+            {
+              name: "node:child_process",
+              message:
+                "Use Bun.spawn() instead of node:child_process for spawning processes. See https://bun.sh/docs/api/spawn",
+            },
+            {
+              name: "crypto",
+              message:
+                "Use Bun.password for password hashing, Bun.hash() for hashing, or Web Crypto API for cryptography instead of crypto. See https://bun.sh/docs/api/hashing",
+            },
+            {
+              name: "node:crypto",
+              message:
+                "Use Bun.password for password hashing, Bun.hash() for hashing, or Web Crypto API for cryptography instead of node:crypto. See https://bun.sh/docs/api/hashing",
+            },
+            {
+              name: "path",
+              message:
+                "Use Bun's built-in path utilities or import.meta.dirname instead of path. See https://bun.sh/docs/api/file-io",
+            },
+            {
+              name: "node:path",
+              message:
+                "Use Bun's built-in path utilities or import.meta.dirname instead of node:path. See https://bun.sh/docs/api/file-io",
+            },
+          ],
+          patterns: [
+            {
+              group: ["node:*"],
+              message: "Avoid node: imports. Bun provides faster, more modern alternatives. See https://bun.sh/docs",
+            },
+            {
+              group: ["twisted/dist/models-dto*"],
+              message:
+                "Do not import DTO types from twisted. Use Zod schemas from @scout-for-lol/data instead (e.g., MatchDto, SummonerLeagueDto from @scout-for-lol/data).",
+            },
+          ],
         },
-        {
-          selector: "CallExpression[callee.object.name='Array'][callee.property.name='isArray']",
-          message: "Prefer Zod schema validation over Array.isArray(). Use z.array() instead.",
-        },
-        {
-          selector: "BinaryExpression[operator='instanceof']",
-          message:
-            "Prefer Zod schema validation over instanceof operator. Use appropriate z.instanceof() or custom Zod schemas instead.",
-        },
-        {
-          selector: "CallExpression[callee.object.name='Number'][callee.property.name='isInteger']",
-          message: "Prefer Zod schema validation over Number.isInteger(). Use z.number().int() instead.",
-        },
-        {
-          selector: "CallExpression[callee.object.name='Number'][callee.property.name='isNaN']",
-          message:
-            "Prefer Zod schema validation over Number.isNaN(). Use z.number() with proper error handling instead.",
-        },
-        {
-          selector: "CallExpression[callee.object.name='Number'][callee.property.name='isFinite']",
-          message: "Prefer Zod schema validation over Number.isFinite(). Use z.number().finite() instead.",
-        },
-        {
-          selector: "TSTypePredicate",
-          message:
-            "Prefer Zod schema validation over type guard functions. Use z.schema.safeParse() instead of custom type guards.",
-        },
-        // Type assertion restrictions
-        {
-          selector: "TSTypeAssertion:not([typeAnnotation.type='TSUnknownKeyword'])",
-          message:
-            "Type assertions are not allowed except for casting to 'unknown'. Use 'value as unknown' if you need to cast to unknown, otherwise use Zod schema validation.",
-        },
-        {
-          selector:
-            "TSAsExpression:not([typeAnnotation.type='TSUnknownKeyword']):not([typeAnnotation.type='TSTypeReference'][typeAnnotation.typeName.name='const'])",
-          message:
-            "Type assertions are not allowed except for casting to 'unknown' or 'as const'. Use 'value as unknown' to widen to unknown, 'value as const' for const assertions, or Zod schema validation to safely narrow types.",
-        },
-        //   // Bun-specific restrictions: prefer Bun APIs over Node.js globals
-        //   {
-        //     selector: "MemberExpression[object.name='process'][property.name='env']",
-        //     message:
-        //       "Use Bun.env instead of process.env to access environment variables. Bun.env is a more modern, typed alternative. See https://bun.sh/docs/runtime/env",
-        //   },
-        //   {
-        //     selector: "Identifier[name='__dirname']",
-        //     message:
-        //       "Use import.meta.dir instead of __dirname. import.meta.dir is the ESM-native way to get the directory path. See https://bun.sh/docs/api/import-meta",
-        //   },
-        //   {
-        //     selector: "Identifier[name='__filename']",
-        //     message:
-        //       "Use import.meta.path instead of __filename. import.meta.path is the ESM-native way to get the file path. See https://bun.sh/docs/api/import-meta",
-        //   },
-        //   {
-        //     selector: "CallExpression[callee.name='require']",
-        //     message:
-        //       "Use ESM import statements instead of require(). Bun fully supports ESM and it's the modern standard. Example: import { foo } from 'module'",
-        //   },
-        //   {
-        //     selector: "Identifier[name='Buffer']:not(VariableDeclarator > Identifier[name='Buffer'])",
-        //     message:
-        //       "Prefer Uint8Array or Bun's binary data APIs over Buffer. For file operations, use Bun.file() which handles binary data natively. See https://bun.sh/docs/api/binary-data",
-        //   },
       ],
+    },
+  },
+  // Custom rules for type safety and best practices
+  {
+    plugins: {
+      "custom-rules": customRulesPlugin,
+    },
+    rules: {
+      "custom-rules/no-type-assertions": "error",
+      "custom-rules/prefer-zod-validation": "error",
+      "custom-rules/prefer-bun-apis": "error",
+      "custom-rules/no-re-exports": "error",
+      // enable this one day
+      "custom-rules/prefer-date-fns": "off",
+      "custom-rules/no-function-overloads": "error",
+      "custom-rules/no-parent-imports": "error",
+    },
+  },
+  // Dagger index.ts - Dagger module API can have many parameters for external interface
+  {
+    files: [".dagger/src/index.ts"],
+    rules: {
+      "max-params": "off", // this is for the external interface of the Dagger module
     },
   },
   // Test files can be longer and use test-specific patterns
   {
     files: ["**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts"],
+    plugins: {
+      "custom-rules": customRulesPlugin,
+    },
     rules: {
       "max-lines": ["error", { max: 1500, skipBlankLines: false, skipComments: false }],
+      "max-lines-per-function": ["error", { max: 200, skipBlankLines: true, skipComments: true }],
       // Allow test mocks and doubles to use any and type assertions
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unsafe-assignment": "off",
@@ -240,7 +291,8 @@ export default tseslint.config(
       "@typescript-eslint/no-confusing-void-expression": "off",
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/no-unnecessary-condition": "off",
-      "no-restricted-syntax": "off", // Allow type assertions, typeof, instanceof in tests
+      "custom-rules/no-type-assertions": "error", // Still catch chained assertions in tests (e.g. 'as unknown as Type')
+      "custom-rules/prefer-zod-validation": "off", // Too many false positives in tests
     },
   },
   // Integration test specific rules - ensure Prisma clients are disconnected
@@ -257,75 +309,14 @@ export default tseslint.config(
   {
     files: ["**/discord/**/*.ts", "**/league/discord/**/*.ts", "**/league/tasks/competition/**/*.ts"],
     ignores: ["**/*.test.ts", "**/*.test.tsx", "**/*.integration.test.ts"],
+    plugins: {
+      "custom-rules": customRulesPlugin,
+    },
     rules: {
-      "no-restricted-syntax": [
-        "error",
-        // Zod validation over built-in type checks (but allow instanceof for Discord.js)
-        {
-          selector: "UnaryExpression[operator='typeof']:not([argument.name='Bun'])",
-          message: "Prefer Zod schema validation over typeof operator. Use z.string(), z.number(), etc. instead.",
-        },
-        {
-          selector: "CallExpression[callee.object.name='Array'][callee.property.name='isArray']",
-          message: "Prefer Zod schema validation over Array.isArray(). Use z.array() instead.",
-        },
-        {
-          selector: "CallExpression[callee.object.name='Number'][callee.property.name='isInteger']",
-          message: "Prefer Zod schema validation over Number.isInteger(). Use z.number().int() instead.",
-        },
-        {
-          selector: "CallExpression[callee.object.name='Number'][callee.property.name='isNaN']",
-          message:
-            "Prefer Zod schema validation over Number.isNaN(). Use z.number() with proper error handling instead.",
-        },
-        {
-          selector: "CallExpression[callee.object.name='Number'][callee.property.name='isFinite']",
-          message: "Prefer Zod schema validation over Number.isFinite(). Use z.number().finite() instead.",
-        },
-        {
-          selector: "TSTypePredicate",
-          message:
-            "Prefer Zod schema validation over type guard functions. Use z.schema.safeParse() instead of custom type guards.",
-        },
-        // Type assertion restrictions
-        {
-          selector: "TSTypeAssertion:not([typeAnnotation.type='TSUnknownKeyword'])",
-          message:
-            "Type assertions are not allowed except for casting to 'unknown'. Use 'value as unknown' if you need to cast to unknown, otherwise use Zod schema validation.",
-        },
-        {
-          selector:
-            "TSAsExpression:not([typeAnnotation.type='TSUnknownKeyword']):not([typeAnnotation.type='TSTypeReference'][typeAnnotation.typeName.name='const'])",
-          message:
-            "Type assertions are not allowed except for casting to 'unknown' or 'as const'. Use 'value as unknown' to widen to unknown, 'value as const' for const assertions, or Zod schema validation to safely narrow types.",
-        },
-        // Bun-specific restrictions: prefer Bun APIs over Node.js globals
-        // {
-        //   selector: "MemberExpression[object.name='process'][property.name='env']",
-        //   message:
-        //     "Use Bun.env instead of process.env to access environment variables. Bun.env is a more modern, typed alternative. See https://bun.sh/docs/runtime/env",
-        // },
-        // {
-        //   selector: "Identifier[name='__dirname']",
-        //   message:
-        //     "Use import.meta.dir instead of __dirname. import.meta.dir is the ESM-native way to get the directory path. See https://bun.sh/docs/api/import-meta",
-        // },
-        // {
-        //   selector: "Identifier[name='__filename']",
-        //   message:
-        //     "Use import.meta.path instead of __filename. import.meta.path is the ESM-native way to get the file path. See https://bun.sh/docs/api/import-meta",
-        // },
-        // {
-        //   selector: "CallExpression[callee.name='require']",
-        //   message:
-        //     "Use ESM import statements instead of require(). Bun fully supports ESM and it's the modern standard. Example: import { foo } from 'module'",
-        // },
-        // {
-        //   selector: "Identifier[name='Buffer']:not(VariableDeclarator > Identifier[name='Buffer'])",
-        //   message:
-        //     "Prefer Uint8Array or Bun's binary data APIs over Buffer. For file operations, use Bun.file() which handles binary data natively. See https://bun.sh/docs/api/binary-data",
-        // },
-      ],
+      "custom-rules/no-type-assertions": "error",
+      "custom-rules/prefer-zod-validation": "error",
+      "custom-rules/prefer-bun-apis": "error",
+      "custom-rules/no-re-exports": "error",
     },
   },
   // File naming conventions
@@ -362,6 +353,134 @@ export default tseslint.config(
       "custom-rules/satori-best-practices": "error",
     },
   },
+  // React and React Hooks rules for TSX files
+  {
+    files: ["**/*.tsx", "**/*.jsx"],
+    plugins: {
+      react,
+      "react-hooks": reactHooks,
+      "custom-rules": customRulesPlugin,
+    },
+    settings: {
+      react: {
+        version: "detect",
+      },
+    },
+    rules: {
+      // React best practices
+      "react/jsx-key": "error",
+      "react/jsx-no-target-blank": "error",
+      "react/jsx-pascal-case": "error",
+      "react/no-children-prop": "error",
+      "react/no-danger": "warn",
+      "react/no-danger-with-children": "error",
+      "react/no-deprecated": "error",
+      "react/no-direct-mutation-state": "error",
+      "react/no-find-dom-node": "error",
+      "react/no-is-mounted": "error",
+      "react/no-render-return-value": "error",
+      "react/no-string-refs": "error",
+      "react/no-unescaped-entities": "error",
+      "react/no-unknown-property": "error",
+      "react/no-unsafe": "error",
+      "react/require-render-return": "error",
+      "react/void-dom-elements-no-children": "error",
+
+      // Disable prop-types (using TypeScript instead)
+      "react/prop-types": "off",
+      "react/react-in-jsx-scope": "off", // Not needed in React 17+
+
+      // React Hooks rules - critical for correctness
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "error",
+
+      // Avoid useEffect - use better patterns
+      "custom-rules/no-use-effect": "warn",
+    },
+  },
+  // JSX Accessibility rules
+  {
+    files: ["**/*.tsx", "**/*.jsx", "**/*.astro"],
+    plugins: {
+      "jsx-a11y": jsxA11y,
+    },
+    rules: {
+      // Images must have alt text
+      "jsx-a11y/alt-text": "error",
+      // Enforce valid ARIA roles
+      "jsx-a11y/aria-role": "error",
+      // Enforce ARIA props are valid
+      "jsx-a11y/aria-props": "error",
+      // Enforce ARIA state and property values are valid
+      "jsx-a11y/aria-proptypes": "error",
+      // Enforce ARIA attributes are used correctly
+      "jsx-a11y/aria-unsupported-elements": "error",
+      // Enforce anchor elements are valid
+      "jsx-a11y/anchor-is-valid": "error",
+      // Enforce heading elements have content
+      "jsx-a11y/heading-has-content": "error",
+      // Enforce HTML elements have valid lang attribute
+      "jsx-a11y/html-has-lang": "error",
+      // Enforce iframe elements have title
+      "jsx-a11y/iframe-has-title": "error",
+      // Enforce img elements have alt attribute
+      "jsx-a11y/img-redundant-alt": "error",
+      // Enforce interactive elements are keyboard accessible
+      "jsx-a11y/interactive-supports-focus": "error",
+      // Enforce label elements have associated control
+      "jsx-a11y/label-has-associated-control": "error",
+      // Enforce media elements have captions
+      "jsx-a11y/media-has-caption": "warn",
+      // Enforce mouse events have keyboard equivalents
+      "jsx-a11y/mouse-events-have-key-events": "error",
+      // Enforce no access key attribute
+      "jsx-a11y/no-access-key": "error",
+      // Enforce no autofocus attribute
+      "jsx-a11y/no-autofocus": "warn",
+      // Enforce no distracting elements
+      "jsx-a11y/no-distracting-elements": "error",
+      // Enforce no interactive element to noninteractive role
+      "jsx-a11y/no-interactive-element-to-noninteractive-role": "error",
+      // Enforce no noninteractive element interactions
+      "jsx-a11y/no-noninteractive-element-interactions": "error",
+      // Enforce no noninteractive tabindex
+      "jsx-a11y/no-noninteractive-tabindex": "error",
+      // Enforce no redundant roles
+      "jsx-a11y/no-redundant-roles": "error",
+      // Enforce no static element interactions
+      "jsx-a11y/no-static-element-interactions": "error",
+      // Enforce tabindex value is not greater than zero
+      "jsx-a11y/tabindex-no-positive": "error",
+    },
+  },
+  // Astro-specific rules with type-aware linting enabled
+  {
+    files: ["**/*.astro"],
+    plugins: {
+      astro: astroPlugin,
+    },
+    // Extend astro's recommended flat config which includes the parser
+    extends: (astroPlugin.configs ?? {})["flat/base"],
+    languageOptions: {
+      parserOptions: {
+        parser: "@typescript-eslint/parser",
+        extraFileExtensions: [".astro"],
+        // projectService is already enabled globally, so we don't need to set project here
+      },
+    },
+    rules: {
+      // Astro best practices rules
+      "astro/no-conflict-set-directives": "error",
+      "astro/no-deprecated-astro-canonicalurl": "error",
+      "astro/no-deprecated-astro-fetchcontent": "error",
+      "astro/no-deprecated-astro-resolve": "error",
+      "astro/no-deprecated-getentrybyslug": "error",
+      "astro/no-unused-define-vars-in-style": "error",
+      "astro/valid-compile": "error",
+    },
+  },
+  // MDX linting disabled - parser doesn't support type-aware rules forwarding
+  // Tailwind linting disabled - plugin incompatible with Tailwind v4 (hardcoded resolveConfig import)
   // Variable and identifier naming conventions
   {
     rules: {
@@ -414,6 +533,13 @@ export default tseslint.config(
           format: ["PascalCase", "UPPER_CASE"],
         },
       ],
+    },
+  },
+  // Config file itself can use relative imports for local eslint rules
+  {
+    files: ["eslint.config.ts"],
+    rules: {
+      "no-relative-import-paths/no-relative-import-paths": "off",
     },
   },
 );

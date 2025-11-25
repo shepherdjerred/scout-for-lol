@@ -1,7 +1,9 @@
-import type { MostWinsChampionCriteria } from "@scout-for-lol/data";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import type { LeaderboardEntry, PlayerWithAccounts } from "./types.js";
-import { getPlayerParticipant, isWin, matchesQueue } from "./helpers.js";
+import type { MostWinsChampionCriteria, MatchDto } from "@scout-for-lol/data";
+import type {
+  LeaderboardEntry,
+  PlayerWithAccounts,
+} from "@scout-for-lol/backend/league/competition/processors/types.js";
+import { createWinBasedProcessor } from "@scout-for-lol/backend/league/competition/processors/processor-helpers.js";
 
 /**
  * Process "Most Wins (Champion)" criteria
@@ -9,51 +11,22 @@ import { getPlayerParticipant, isWin, matchesQueue } from "./helpers.js";
  * Optionally filters by queue type
  */
 export function processMostWinsChampion(
-  matches: MatchV5DTOs.MatchDto[],
+  matches: MatchDto[],
   participants: PlayerWithAccounts[],
   criteria: MostWinsChampionCriteria,
 ): LeaderboardEntry[] {
-  const winCounts: Record<number, number> = {};
-  const totalGames: Record<number, number> = {};
-
-  // Count wins with the specific champion for each player
-  for (const match of matches) {
-    // Filter by queue if specified
-    if (criteria.queue && !matchesQueue(match, criteria.queue)) continue;
-
-    for (const participant of participants) {
-      const participantData = getPlayerParticipant(participant, match);
-
-      if (participantData && participantData.championId === criteria.championId) {
-        const currentWins = winCounts[participant.id] ?? 0;
-        const currentGames = totalGames[participant.id] ?? 0;
-
-        if (isWin(participantData)) {
-          winCounts[participant.id] = currentWins + 1;
-        }
-        totalGames[participant.id] = currentGames + 1;
-      }
-    }
-  }
-
-  // Convert to leaderboard entries
-  const entries: LeaderboardEntry[] = [];
-  for (const participant of participants) {
-    const wins = winCounts[participant.id] ?? 0;
-    const games = totalGames[participant.id] ?? 0;
-
-    entries.push({
-      playerId: participant.id,
-      playerName: participant.alias,
-      score: wins,
-      metadata: {
-        championId: criteria.championId,
-        wins,
-        games,
-        losses: games - wins,
-      },
-    });
-  }
-
-  return entries;
+  return createWinBasedProcessor({
+    matches,
+    participants,
+    queue: criteria.queue ?? "ALL",
+    participantFilter: (participantData) => participantData.championId === criteria.championId,
+    scoreFn: (wins) => wins, // Score is just wins
+    metadataFn: (wins, games, criteria) => ({
+      championId: criteria.championId,
+      wins,
+      games,
+      losses: games - wins,
+    }),
+    criteria,
+  });
 }

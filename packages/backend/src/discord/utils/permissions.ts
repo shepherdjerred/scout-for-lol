@@ -1,8 +1,8 @@
 import type { Channel, PermissionsBitField, Client, User } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
-import { getErrorMessage } from "../../utils/errors";
-import { discordPermissionErrorsTotal, discordOwnerNotificationsTotal } from "../../metrics/index";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors";
+import { discordPermissionErrorsTotal, discordOwnerNotificationsTotal } from "@scout-for-lol/backend/metrics/index";
 
 /**
  * Schema for Discord API errors
@@ -81,7 +81,8 @@ export async function checkSendMessagePermission(
     if (!targetForPermissions && guildChannelResult.data.guild?.members.fetch && botUser.id) {
       try {
         const fetchFunction = guildChannelResult.data.guild.members.fetch as unknown;
-        // eslint-disable-next-line no-restricted-syntax -- Method existence validated by Zod schema check above
+
+        // eslint-disable-next-line custom-rules/no-type-assertions -- Type assertion is safe here because we checked the type above
         targetForPermissions = await (fetchFunction as (userId: string) => Promise<unknown>)(botUser.id);
       } catch (fetchError) {
         // If fetch fails, we'll still try with botUser below
@@ -96,7 +97,8 @@ export async function checkSendMessagePermission(
     // Call permissionsFor - we know it exists from schema validation
     // Type assertion needed: Zod schema confirms permissionsFor exists, but TypeScript can't track this
     const permissionsForFunction = guildChannelResult.data.permissionsFor as unknown;
-    // eslint-disable-next-line no-restricted-syntax -- Method existence validated by Zod schema check above
+
+    // eslint-disable-next-line custom-rules/no-type-assertions -- Type assertion is safe here because we checked the type above
     const permissions = (permissionsForFunction as (target: unknown) => PermissionsBitField | null)(
       targetForPermissions,
     );

@@ -1,11 +1,67 @@
-import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
-import { getCompetitionById } from "../../../database/competition/queries.js";
-import { addParticipant, getParticipantStatus } from "../../../database/competition/participants.js";
-import { getErrorMessage } from "../../../utils/errors.js";
-import { formatCriteriaType } from "./helpers.js";
-import { truncateDiscordMessage } from "../../utils/message.js";
+import { type ChatInputCommandInteraction } from "discord.js";
+import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { addParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.js";
+import { formatCriteriaType } from "@scout-for-lol/backend/discord/commands/competition/helpers.js";
+import {
+  replyWithError,
+  replyWithErrorFromException,
+  replyWithSuccess,
+} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
+import {
+  extractCompetitionId,
+  validateServerContext,
+  fetchCompetitionWithErrorHandling,
+  checkCompetitionCancelled,
+  checkCompetitionEnded,
+  checkParticipantLimit,
+} from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.js";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import type { CompetitionId } from "@scout-for-lol/data";
+
+/**
+ * Handle existing participant status
+ * Returns true if status was handled (and function should return), false otherwise
+ */
+async function handleExistingParticipantStatus(
+  interaction: ChatInputCommandInteraction,
+  participantStatus: "JOINED" | "INVITED" | "LEFT" | null,
+  username: string,
+  competitionId: CompetitionId,
+): Promise<boolean> {
+  if (participantStatus === "JOINED") {
+    await replyWithError(
+      interaction,
+      `❌ Already participating
+
+@${username} is already in this competition.`,
+    );
+    return true;
+  }
+
+  if (participantStatus === "INVITED") {
+    // Idempotent - already invited, just acknowledge
+    await replyWithSuccess(
+      interaction,
+      `@${username} has already been invited to this competition. They can join with:
+\`/competition join competition-id:${competitionId.toString()}\``,
+    );
+    return true;
+  }
+
+  if (participantStatus === "LEFT") {
+    await replyWithError(
+      interaction,
+      `❌ Cannot invite
+
+@${username} previously left this competition and cannot be re-invited.`,
+    );
+    return true;
+  }
+
+  return false;
+}
 
 /**
  * Execute /competition invite command
@@ -16,16 +72,11 @@ export async function executeCompetitionInvite(interaction: ChatInputCommandInte
   // Step 1: Extract and validate input
   // ============================================================================
 
-  const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
+  const competitionId = extractCompetitionId(interaction);
   const targetUser = interaction.options.getUser("user", true);
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
-  const serverId = interaction.guildId ? DiscordGuildIdSchema.parse(interaction.guildId) : null;
-
+  const serverId = await validateServerContext(interaction);
   if (!serverId) {
-    await interaction.reply({
-      content: truncateDiscordMessage("This command can only be used in a server"),
-      flags: MessageFlags.Ephemeral,
-    });
     return;
   }
 
@@ -33,23 +84,8 @@ export async function executeCompetitionInvite(interaction: ChatInputCommandInte
   // Step 2: Check if competition exists
   // ============================================================================
 
-  let competition;
-  try {
-    competition = await getCompetitionById(prisma, competitionId);
-  } catch (error) {
-    console.error(`[Competition Invite] Error fetching competition ${competitionId.toString()}:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`Error fetching competition: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
+  const competition = await fetchCompetitionWithErrorHandling(interaction, competitionId, "Competition Invite");
   if (!competition) {
-    await interaction.reply({
-      content: truncateDiscordMessage(`Competition with ID ${competitionId.toString()} not found`),
-      flags: MessageFlags.Ephemeral,
-    });
     return;
   }
 
@@ -58,12 +94,12 @@ export async function executeCompetitionInvite(interaction: ChatInputCommandInte
   // ============================================================================
 
   if (competition.ownerId !== userId) {
-    await interaction.reply({
-      content: truncateDiscordMessage(`❌ Permission denied
+    await replyWithError(
+      interaction,
+      `❌ Permission denied
 
-Only the competition owner can invite participants. The owner of this competition is <@${competition.ownerId}>.`),
-      flags: MessageFlags.Ephemeral,
-    });
+Only the competition owner can invite participants. The owner of this competition is <@${competition.ownerId}>.`,
+    );
     return;
   }
 
@@ -71,13 +107,7 @@ Only the competition owner can invite participants. The owner of this competitio
   // Step 4: Check if competition is cancelled
   // ============================================================================
 
-  if (competition.isCancelled) {
-    await interaction.reply({
-      content: truncateDiscordMessage(`❌ Competition cancelled
-
-This competition has been cancelled and is no longer accepting participants.`),
-      flags: MessageFlags.Ephemeral,
-    });
+  if (await checkCompetitionCancelled(interaction, competition)) {
     return;
   }
 
@@ -85,14 +115,7 @@ This competition has been cancelled and is no longer accepting participants.`),
   // Step 5: Check if competition has ended
   // ============================================================================
 
-  const now = new Date();
-  if (competition.endDate && competition.endDate < now) {
-    await interaction.reply({
-      content: truncateDiscordMessage(`❌ Competition ended
-
-This competition has already ended on ${competition.endDate.toLocaleDateString()}.`),
-      flags: MessageFlags.Ephemeral,
-    });
+  if (await checkCompetitionEnded(interaction, competition)) {
     return;
   }
 
@@ -110,20 +133,17 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
     });
   } catch (error) {
     console.error(`[Competition Invite] Error fetching player for user ${targetUser.id}:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`Error fetching player data: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithErrorFromException(interaction, error, "fetching player data");
     return;
   }
 
   if (!player) {
-    await interaction.reply({
-      content: truncateDiscordMessage(`❌ Cannot invite user
+    await replyWithError(
+      interaction,
+      `❌ Cannot invite user
 
-@${targetUser.username} doesn't have a linked League of Legends account. They need to use \`/subscription add\` first.`),
-      flags: MessageFlags.Ephemeral,
-    });
+@${targetUser.username} doesn't have a linked League of Legends account. They need to use \`/subscription add\` first.`,
+    );
     return;
   }
 
@@ -136,42 +156,18 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
     participantStatus = await getParticipantStatus(prisma, competitionId, player.id);
   } catch (error) {
     console.error(`[Competition Invite] Error checking participant status:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`Error checking participation status: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithErrorFromException(interaction, error, "checking participation status");
     return;
   }
 
   // Handle existing participant statuses
-  if (participantStatus === "JOINED") {
-    await interaction.reply({
-      content: truncateDiscordMessage(`❌ Already participating
-
-@${targetUser.username} is already in this competition.`),
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  if (participantStatus === "INVITED") {
-    // Idempotent - already invited, just acknowledge
-    await interaction.reply({
-      content:
-        truncateDiscordMessage(`@${targetUser.username} has already been invited to this competition. They can join with:
-\`/competition join competition-id:${competitionId.toString()}\``),
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  if (participantStatus === "LEFT") {
-    await interaction.reply({
-      content: truncateDiscordMessage(`❌ Cannot invite
-
-@${targetUser.username} previously left this competition and cannot be re-invited.`),
-      flags: MessageFlags.Ephemeral,
-    });
+  const statusHandled = await handleExistingParticipantStatus(
+    interaction,
+    participantStatus,
+    targetUser.username,
+    competitionId,
+  );
+  if (statusHandled) {
     return;
   }
 
@@ -179,30 +175,14 @@ This competition has already ended on ${competition.endDate.toLocaleDateString()
   // Step 8: Check participant limit
   // ============================================================================
 
-  let activeParticipantCount;
-  try {
-    activeParticipantCount = await prisma.competitionParticipant.count({
-      where: {
-        competitionId,
-        status: { not: "LEFT" },
-      },
-    });
-  } catch (error) {
-    console.error(`[Competition Invite] Error counting participants:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`Error checking participant limit: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  if (activeParticipantCount >= competition.maxParticipants) {
-    await interaction.reply({
-      content: truncateDiscordMessage(`❌ Competition full
-
-This competition has reached its maximum of ${competition.maxParticipants.toString()} participants. Cannot invite more users.`),
-      flags: MessageFlags.Ephemeral,
-    });
+  const activeParticipantCount = await checkParticipantLimit({
+    interaction,
+    competitionId,
+    maxParticipants: competition.maxParticipants,
+    logContext: "Competition Invite",
+    fullMessage: "Cannot invite more users.",
+  });
+  if (activeParticipantCount === null) {
     return;
   }
 
@@ -211,16 +191,19 @@ This competition has reached its maximum of ${competition.maxParticipants.toStri
   // ============================================================================
 
   try {
-    await addParticipant(prisma, competitionId, player.id, "INVITED", userId);
+    await addParticipant({
+      prisma,
+      competitionId,
+      playerId: player.id,
+      status: "INVITED",
+      invitedBy: userId,
+    });
     console.log(
       `[Competition Invite] User ${userId} invited ${targetUser.id} to competition ${competitionId.toString()}`,
     );
   } catch (error) {
     console.error(`[Competition Invite] Error adding participant:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`Error sending invitation: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithErrorFromException(interaction, error, "sending invitation");
     return;
   }
 
@@ -265,11 +248,11 @@ To join, use:
     ? "\n⚠️ Note: Could not send DM (user may have DMs disabled). Please notify them manually."
     : "";
 
-  await interaction.reply({
-    content: truncateDiscordMessage(`✅ Invitation sent
+  await replyWithSuccess(
+    interaction,
+    `✅ Invitation sent
 
 Invited @${targetUser.username} to **${competition.title}**.
-They can join with \`/competition join competition-id:${competitionId.toString()}\`${dmWarning}`),
-    flags: MessageFlags.Ephemeral,
-  });
+They can join with \`/competition join competition-id:${competitionId.toString()}\`${dmWarning}`,
+  );
 }

@@ -8,7 +8,7 @@ import {
   getSeasonChoices,
   getSeasonDates,
   hasSeasonEnded,
-} from "./seasons.js";
+} from "@scout-for-lol/data/seasons.js";
 
 describe("seasons", () => {
   describe("SEASONS constant", () => {
@@ -99,7 +99,7 @@ describe("seasons", () => {
   describe("getSeasonChoices", () => {
     test("should return Discord choices for non-ended seasons", () => {
       const choices = getSeasonChoices();
-      expect(Array.isArray(choices)).toBe(true);
+      expect(choices).toBeArray();
 
       for (const choice of choices) {
         expect(choice.name).toBeTruthy();

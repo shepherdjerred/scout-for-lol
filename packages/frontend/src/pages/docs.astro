@@ -2,6 +2,11 @@
 import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import InfoBox from "../components/InfoBox.astro";
+import CommandBox from "../components/CommandBox.astro";
+import FAQItem from "../components/FAQItem.astro";
+import Badge from "../components/Badge.astro";
 ---
 
 <Layout>
@@ -11,12 +16,11 @@ import Footer from "../components/Footer.astro";
     <!-- Main Content -->
     <div class="relative px-6 pt-14 lg:px-8">
       <div class="mx-auto max-w-4xl py-32 sm:py-48 lg:py-56">
-        <!-- Page Header -->
-        <div class="text-center mb-16">
-          <h1 class="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-6xl">Documentation</h1>
-          <p class="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-300">
-            Complete reference for all Scout commands, features, and configuration options.
-          </p>
+        <Header
+          variant="page"
+          title="Documentation"
+          subtitle="Complete reference for all Scout commands, features, and configuration options."
+        >
           <div class="mt-6">
             <a
               href="/getting-started"
@@ -24,7 +28,7 @@ import Footer from "../components/Footer.astro";
               >New to Scout? Check out the Getting Started guide →</a
             >
           </div>
-        </div>
+        </Header>
 
         <!-- Table of Contents -->
         <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-12">
@@ -79,11 +83,9 @@ import Footer from "../components/Footer.astro";
                 Subscribe to notifications for a League of Legends player.
               </p>
 
-              <div class="bg-gray-50 dark:bg-gray-800 rounded-md p-4 mb-4">
-                <code class="text-sm text-gray-900 dark:text-gray-100">
-                  /subscription add channel:[#channel] region:[region] riot-id:[name#tag] alias:[nickname] user:[@user]
-                </code>
-              </div>
+              <CommandBox
+                command="/subscription add channel:[#channel] region:[region] riot-id:[name#tag] alias:[nickname] user:[@user]"
+              />
 
               <h4 class="font-medium text-gray-900 dark:text-white mb-2">Required Parameters:</h4>
               <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 mb-4 space-y-1">
@@ -106,9 +108,7 @@ import Footer from "../components/Footer.astro";
               <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">/subscription delete</h3>
               <p class="text-gray-600 dark:text-gray-300 mb-4">Remove a player subscription from your server.</p>
 
-              <div class="bg-gray-50 dark:bg-gray-800 rounded-md p-4 mb-4">
-                <code class="text-sm text-gray-900 dark:text-gray-100"> /subscription delete alias:[nickname] </code>
-              </div>
+              <CommandBox command="/subscription delete alias:[nickname]" />
             </div>
 
             <!-- Subscription List Command -->
@@ -116,9 +116,7 @@ import Footer from "../components/Footer.astro";
               <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">/subscription list</h3>
               <p class="text-gray-600 dark:text-gray-300 mb-4">View all active player subscriptions in your server.</p>
 
-              <div class="bg-gray-50 dark:bg-gray-800 rounded-md p-4">
-                <code class="text-sm text-gray-900 dark:text-gray-100"> /subscription list </code>
-              </div>
+              <CommandBox command="/subscription list" />
             </div>
 
             <!-- Competition Commands -->
@@ -135,13 +133,11 @@ import Footer from "../components/Footer.astro";
                     Create a new competition with custom criteria, dates, and settings. You can use fixed dates or
                     select a League season.
                   </p>
-                  <div class="bg-white dark:bg-gray-800 rounded-md p-3 mb-2">
-                    <code class="text-xs text-gray-900 dark:text-gray-100">
-                      /competition create title:[name] description:[desc] criteria-type:[type] channel:[#channel]
-                      season:[season]
-                    </code>
-                  </div>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 italic">
+                  <CommandBox
+                    command="/competition create title:[name] description:[desc] criteria-type:[type] channel:[#channel] season:[season]"
+                    variant="light"
+                  />
+                  <p class="text-xs text-gray-500 dark:text-gray-400 italic mt-2">
                     Examples: Most Games Played, Highest Rank, Most Rank Climb, Most Wins (Player/Champion), Highest Win
                     Rate
                   </p>
@@ -149,37 +145,29 @@ import Footer from "../components/Footer.astro";
 
                 <div>
                   <h4 class="font-medium text-gray-900 dark:text-white mb-2">
-                    /competition edit <span
-                      class="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-900/30 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-400"
-                      >NEW</span
-                    >
+                    /competition edit <Badge text="NEW" color="blue" size="sm" />
                   </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
                     Edit an existing competition. You can always change title, description, and channel. Other settings
                     can only be changed before the competition starts.
                   </p>
-                  <div class="bg-white dark:bg-gray-800 rounded-md p-3">
-                    <code class="text-xs text-gray-900 dark:text-gray-100">
-                      /competition edit competition-id:[id] title:[new-title]
-                    </code>
-                  </div>
+                  <CommandBox
+                    command="/competition edit competition-id:[id] title:[new-title]"
+                    variant="light"
+                  />
                 </div>
 
                 <div>
                   <h4 class="font-medium text-gray-900 dark:text-white mb-2">
-                    /competition list <span
-                      class="inline-flex items-center rounded-md bg-blue-50 dark:bg-blue-900/30 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-400"
-                      >NEW</span
-                    >
+                    /competition list <Badge text="NEW" color="blue" size="sm" />
                   </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
                     View all competitions in your server, with optional filters.
                   </p>
-                  <div class="bg-white dark:bg-gray-800 rounded-md p-3">
-                    <code class="text-xs text-gray-900 dark:text-gray-100">
-                      /competition list active-only:[true] my-competitions:[true]
-                    </code>
-                  </div>
+                  <CommandBox
+                    command="/competition list active-only:[true] my-competitions:[true]"
+                    variant="light"
+                  />
                 </div>
 
                 <div>
@@ -227,35 +215,29 @@ import Footer from "../components/Footer.astro";
             <!-- Admin Commands -->
             <div class="border border-red-300 dark:border-red-700 rounded-lg p-6 bg-red-50 dark:bg-red-900/20">
               <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                /admin <span
-                  class="inline-flex items-center rounded-md bg-red-100 dark:bg-red-900/30 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400"
-                  >NEW</span
-                >
+                /admin <Badge text="NEW" color="red" size="sm" />
               </h3>
               <p class="text-gray-600 dark:text-gray-300 mb-4">
                 Advanced player and account management commands for server administrators.
               </p>
 
-              <div
-                class="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-md p-3 mb-4"
-              >
-                <p class="text-sm text-yellow-800 dark:text-yellow-300">
-                  <strong>⚠️ Administrator Only:</strong> These commands require Discord Administrator permissions and should
+              <InfoBox variant="warning" title="⚠️ Administrator Only">
+                <p>
+                  These commands require Discord Administrator permissions and should
                   be used carefully as some actions cannot be undone.
                 </p>
-              </div>
+              </InfoBox>
 
-              <div class="space-y-4">
+              <div class="space-y-4 mt-4">
                 <div>
                   <h4 class="font-medium text-gray-900 dark:text-white mb-2">/admin player-edit</h4>
                   <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
                     Change a player's display alias in your server.
                   </p>
-                  <div class="bg-white dark:bg-gray-800 rounded-md p-3">
-                    <code class="text-xs text-gray-900 dark:text-gray-100">
-                      /admin player-edit current-alias:[old] new-alias:[new]
-                    </code>
-                  </div>
+                  <CommandBox
+                    command="/admin player-edit current-alias:[old] new-alias:[new]"
+                    variant="light"
+                  />
                 </div>
 
                 <div>
@@ -264,11 +246,10 @@ import Footer from "../components/Footer.astro";
                     Remove a specific Riot account from a player. Useful when someone changes their main account or a
                     smurf is no longer used.
                   </p>
-                  <div class="bg-white dark:bg-gray-800 rounded-md p-3">
-                    <code class="text-xs text-gray-900 dark:text-gray-100">
-                      /admin account-delete riot-id:[name#tag] region:[region]
-                    </code>
-                  </div>
+                  <CommandBox
+                    command="/admin account-delete riot-id:[name#tag] region:[region]"
+                    variant="light"
+                  />
                 </div>
 
                 <div>
@@ -277,11 +258,10 @@ import Footer from "../components/Footer.astro";
                     Transfer an account from one player to another. Perfect for when an account was added to the wrong
                     player.
                   </p>
-                  <div class="bg-white dark:bg-gray-800 rounded-md p-3">
-                    <code class="text-xs text-gray-900 dark:text-gray-100">
-                      /admin account-transfer riot-id:[name#tag] region:[region] to-player-alias:[alias]
-                    </code>
-                  </div>
+                  <CommandBox
+                    command="/admin account-transfer riot-id:[name#tag] region:[region] to-player-alias:[alias]"
+                    variant="light"
+                  />
                 </div>
 
                 <div>
@@ -290,11 +270,10 @@ import Footer from "../components/Footer.astro";
                     Merge two players into one, combining all their accounts and subscriptions. Useful for consolidating
                     duplicate players.
                   </p>
-                  <div class="bg-white dark:bg-gray-800 rounded-md p-3">
-                    <code class="text-xs text-gray-900 dark:text-gray-100">
-                      /admin player-merge source-alias:[from] target-alias:[to]
-                    </code>
-                  </div>
+                  <CommandBox
+                    command="/admin player-merge source-alias:[from] target-alias:[to]"
+                    variant="light"
+                  />
                 </div>
 
                 <div>
@@ -303,21 +282,19 @@ import Footer from "../components/Footer.astro";
                     Permanently delete a player and all their accounts and subscriptions.
                     <strong class="text-red-600 dark:text-red-400">This action cannot be undone!</strong>
                   </p>
-                  <div class="bg-white dark:bg-gray-800 rounded-md p-3">
-                    <code class="text-xs text-gray-900 dark:text-gray-100">
-                      /admin player-delete alias:[alias] confirm:[true]
-                    </code>
-                  </div>
+                  <CommandBox
+                    command="/admin player-delete alias:[alias] confirm:[true]"
+                    variant="light"
+                  />
                 </div>
 
                 <div>
                   <h4 class="font-medium text-gray-900 dark:text-white mb-2">/admin player-link-discord</h4>
                   <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">Link a Discord user to a player profile.</p>
-                  <div class="bg-white dark:bg-gray-800 rounded-md p-3">
-                    <code class="text-xs text-gray-900 dark:text-gray-100">
-                      /admin player-link-discord player-alias:[alias] discord-user:[@user]
-                    </code>
-                  </div>
+                  <CommandBox
+                    command="/admin player-link-discord player-alias:[alias] discord-user:[@user]"
+                    variant="light"
+                  />
                 </div>
 
                 <div>
@@ -325,11 +302,10 @@ import Footer from "../components/Footer.astro";
                   <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
                     Unlink a Discord user from a player profile.
                   </p>
-                  <div class="bg-white dark:bg-gray-800 rounded-md p-3">
-                    <code class="text-xs text-gray-900 dark:text-gray-100">
-                      /admin player-unlink-discord player-alias:[alias]
-                    </code>
-                  </div>
+                  <CommandBox
+                    command="/admin player-unlink-discord player-alias:[alias]"
+                    variant="light"
+                  />
                 </div>
 
                 <div>
@@ -337,9 +313,7 @@ import Footer from "../components/Footer.astro";
                   <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
                     View detailed information about a player including accounts, subscriptions, and competitions.
                   </p>
-                  <div class="bg-white dark:bg-gray-800 rounded-md p-3">
-                    <code class="text-xs text-gray-900 dark:text-gray-100"> /admin player-view alias:[alias] </code>
-                  </div>
+                  <CommandBox command="/admin player-view alias:[alias]" variant="light" />
                 </div>
               </div>
             </div>
@@ -352,15 +326,15 @@ import Footer from "../components/Footer.astro";
             Understanding Players, Accounts & Subscriptions
           </h2>
 
-          <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-6 mb-8">
-            <p class="text-gray-700 dark:text-gray-300 mb-4">
+          <InfoBox variant="info">
+            <p>
               Scout organizes data around <strong>Players</strong>, <strong>Accounts</strong>, and <strong
                 >Subscriptions</strong
               >. Understanding how these work together will help you manage your server's setup effectively.
             </p>
-          </div>
+          </InfoBox>
 
-          <div class="space-y-8">
+          <div class="space-y-8 mt-8">
             <!-- Data Model Explanation -->
             <div>
               <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">How It Works</h3>
@@ -457,172 +431,9 @@ import Footer from "../components/Footer.astro";
               </div>
             </div>
 
-            <!-- Common Operations -->
-            <div>
-              <h3 class="text-2xl font-semibold text-gray-900 mb-4">Common Operations</h3>
-
-              <div class="space-y-6">
-                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-5">
-                  <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <span class="text-green-600 dark:text-green-400">✓</span>
-                    Adding a New Player with Their First Account
-                  </h4>
-                  <p class="text-gray-700 dark:text-gray-300 mb-3">
-                    Use <code
-                      class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm text-gray-900 dark:text-gray-100"
-                      >/subscription add</code
-                    > to create a new player and subscribe them to a channel:
-                  </p>
-                  <div class="bg-gray-50 dark:bg-gray-800 rounded-md p-3 mb-2">
-                    <code class="text-sm text-gray-900 dark:text-gray-100">
-                      /subscription add channel:#ranked riot-id:TopMain#NA1 region:na1 alias:ToxicTopLaner user:@JohnDoe
-                    </code>
-                  </div>
-                  <p class="text-gray-600 text-sm">
-                    This creates a new Player ("ToxicTopLaner"), adds their first account (TopMain#NA1), links their
-                    Discord account, and subscribes them to #ranked.
-                  </p>
-                </div>
-
-                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-5">
-                  <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <span class="text-green-600 dark:text-green-400">✓</span>
-                    Adding Another Account to an Existing Player
-                  </h4>
-                  <p class="text-gray-700 dark:text-gray-300 mb-3">
-                    Use <code
-                      class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm text-gray-900 dark:text-gray-100"
-                      >/subscription add</code
-                    > with the <strong>same alias</strong>:
-                  </p>
-                  <div class="bg-gray-50 dark:bg-gray-800 rounded-md p-3 mb-2">
-                    <code class="text-sm text-gray-900 dark:text-gray-100">
-                      /subscription add channel:#ranked riot-id:Smurf420#NA1 region:na1 alias:ToxicTopLaner
-                    </code>
-                  </div>
-                  <p class="text-gray-600 text-sm">
-                    Scout recognizes the existing alias and adds this account to the same Player. Now both accounts post
-                    to #ranked.
-                  </p>
-                </div>
-
-                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-5">
-                  <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <span class="text-blue-600 dark:text-blue-400">🔗</span>
-                    Linking a Discord Account to a Player
-                  </h4>
-                  <p class="text-gray-700 dark:text-gray-300 mb-3">
-                    Use <code
-                      class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm text-gray-900 dark:text-gray-100"
-                      >/admin player-link-discord</code
-                    >:
-                  </p>
-                  <div class="bg-gray-50 dark:bg-gray-800 rounded-md p-3 mb-2">
-                    <code class="text-sm text-gray-900 dark:text-gray-100">
-                      /admin player-link-discord player-alias:ToxicTopLaner discord-user:@JohnDoe
-                    </code>
-                  </div>
-                  <p class="text-gray-600 text-sm">
-                    This links @JohnDoe to the player, making it easy to identify who the player is in your server. You
-                    can also set this when first adding a player.
-                  </p>
-                </div>
-
-                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-5">
-                  <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <span class="text-blue-600 dark:text-blue-400">🔓</span>
-                    Unlinking a Discord Account from a Player
-                  </h4>
-                  <p class="text-gray-700 dark:text-gray-300 mb-3">
-                    Use <code
-                      class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm text-gray-900 dark:text-gray-100"
-                      >/admin player-unlink-discord</code
-                    >:
-                  </p>
-                  <div class="bg-gray-50 dark:bg-gray-800 rounded-md p-3 mb-2">
-                    <code class="text-sm text-gray-900 dark:text-gray-100">
-                      /admin player-unlink-discord player-alias:ToxicTopLaner
-                    </code>
-                  </div>
-                  <p class="text-gray-600 text-sm">
-                    This removes the Discord link. Reports will still show the alias but the Discord association will be
-                    removed.
-                  </p>
-                </div>
-
-                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-5">
-                  <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <span class="text-orange-600">🔄</span>
-                    Moving an Account to a Different Player
-                  </h4>
-                  <p class="text-gray-700 dark:text-gray-300 mb-3">
-                    Use <code
-                      class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm text-gray-900 dark:text-gray-100"
-                      >/admin account-transfer</code
-                    >:
-                  </p>
-                  <div class="bg-gray-50 dark:bg-gray-800 rounded-md p-3 mb-2">
-                    <code class="text-sm text-gray-900 dark:text-gray-100">
-                      /admin account-transfer riot-id:Smurf420#NA1 region:na1 to-player-alias:AnotherPlayer
-                    </code>
-                  </div>
-                  <p class="text-gray-600 text-sm">
-                    This moves Smurf420#NA1 from its current player to "AnotherPlayer". Future matches from this account
-                    will use the new player's alias.
-                  </p>
-                </div>
-
-                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-5">
-                  <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <span class="text-red-600">✗</span>
-                    Removing an Account from a Player
-                  </h4>
-                  <p class="text-gray-700 dark:text-gray-300 mb-3">
-                    Use <code
-                      class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm text-gray-900 dark:text-gray-100"
-                      >/admin account-delete</code
-                    >:
-                  </p>
-                  <div class="bg-gray-50 dark:bg-gray-800 rounded-md p-3 mb-2">
-                    <code class="text-sm text-gray-900 dark:text-gray-100">
-                      /admin account-delete riot-id:Smurf420#NA1 region:na1
-                    </code>
-                  </div>
-                  <p class="text-gray-600 text-sm">
-                    This permanently removes the account from Scout. The player still exists, but this account is no
-                    longer tracked.
-                  </p>
-                </div>
-
-                <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-5">
-                  <h4 class="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <span class="text-purple-600">👁️</span>
-                    Viewing a Player's Details
-                  </h4>
-                  <p class="text-gray-700 dark:text-gray-300 mb-3">
-                    Use <code
-                      class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm text-gray-900 dark:text-gray-100"
-                      >/admin player-view</code
-                    >:
-                  </p>
-                  <div class="bg-gray-50 dark:bg-gray-800 rounded-md p-3 mb-2">
-                    <code class="text-sm text-gray-900 dark:text-gray-100">
-                      /admin player-view alias:ToxicTopLaner
-                    </code>
-                  </div>
-                  <p class="text-gray-600 text-sm">
-                    This shows all accounts, subscriptions, Discord link, and competition participation for the player.
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <!-- Tips -->
-            <div
-              class="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-6"
-            >
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-3">💡 Tips & Best Practices</h3>
-              <ul class="space-y-2 text-gray-700 dark:text-gray-300">
+            <InfoBox variant="warning" title="💡 Tips & Best Practices">
+              <ul class="space-y-2">
                 <li class="flex items-start gap-2">
                   <span class="text-yellow-600 dark:text-yellow-400 font-bold">•</span>
                   <span
@@ -662,7 +473,7 @@ import Footer from "../components/Footer.astro";
                   >
                 </li>
               </ul>
-            </div>
+            </InfoBox>
           </div>
         </section>
 
@@ -708,14 +519,12 @@ import Footer from "../components/Footer.astro";
                   <li>Final placement (1st through 8th place)</li>
                 </ul>
 
-                <div
-                  class="bg-white dark:bg-gray-800 border border-purple-300 dark:border-purple-600 rounded-md p-4 text-sm"
-                >
-                  <p class="text-gray-600 dark:text-gray-300">
+                <InfoBox variant="note">
+                  <p>
                     <strong>Note:</strong> Arena matches are automatically detected when you subscribe to a player - no special
                     configuration needed!
                   </p>
-                </div>
+                </InfoBox>
               </div>
             </div>
 
@@ -781,53 +590,37 @@ import Footer from "../components/Footer.astro";
 
                 <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Quick Start Examples:</h4>
                 <div class="space-y-3 mb-6">
-                  <div class="bg-white dark:bg-gray-800 border border-amber-300 dark:border-amber-600 rounded-md p-3">
-                    <code class="text-sm text-gray-800 dark:text-gray-100">
-                      /competition create title:"Season Grind" description:"Climb the highest!"
-                      criteria-type:HIGHEST_RANK queue:SOLO season:2025-SPLIT-1 channel:#leaderboard
-                    </code>
-                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                      Create a ranked climb competition that lasts the entire split
-                    </p>
-                  </div>
+                  <CommandBox
+                    command='/competition create title:"Season Grind" description:"Climb the highest!" criteria-type:HIGHEST_RANK queue:SOLO season:2025-SPLIT-1 channel:#leaderboard'
+                    description="Create a ranked climb competition that lasts the entire split"
+                  />
 
-                  <div class="bg-white dark:bg-gray-800 border border-amber-300 dark:border-amber-600 rounded-md p-3">
-                    <code class="text-sm text-gray-800 dark:text-gray-100">
-                      /competition create title:"Arena Champions" criteria-type:MOST_WINS_PLAYER queue:ARENA
-                      start-date:2025-01-01 end-date:2025-01-31 channel:#arena
-                    </code>
-                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                      Track who wins the most Arena games in January
-                    </p>
-                  </div>
+                  <CommandBox
+                    command='/competition create title:"Arena Champions" criteria-type:MOST_WINS_PLAYER queue:ARENA start-date:2025-01-01 end-date:2025-01-31 channel:#arena'
+                    description="Track who wins the most Arena games in January"
+                  />
 
-                  <div class="bg-white dark:bg-gray-800 border border-amber-300 dark:border-amber-600 rounded-md p-3">
-                    <code class="text-sm text-gray-800 dark:text-gray-100"> /competition list active-only:true </code>
-                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">View all currently running competitions</p>
-                  </div>
+                  <CommandBox
+                    command="/competition list active-only:true"
+                    description="View all currently running competitions"
+                  />
 
-                  <div class="bg-white dark:bg-gray-800 border border-amber-300 dark:border-amber-600 rounded-md p-3">
-                    <code class="text-sm text-gray-800 dark:text-gray-100">
-                      /competition edit competition-id:5 title:"New Title" description:"Updated!"
-                    </code>
-                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                      Update competition details (works anytime)
-                    </p>
-                  </div>
+                  <CommandBox
+                    command='/competition edit competition-id:5 title:"New Title" description:"Updated!"'
+                    description="Update competition details (works anytime)"
+                  />
                 </div>
 
-                <div
-                  class="bg-white dark:bg-gray-800 border border-amber-300 dark:border-amber-600 rounded-md p-4 text-sm"
-                >
-                  <p class="text-gray-600 dark:text-gray-300 mb-2">
-                    <strong>💡 Pro Tip:</strong> Competitions automatically track matches for participants in your server.
+                <InfoBox variant="info" title="💡 Pro Tip">
+                  <p class="mb-2">
+                    Competitions automatically track matches for participants in your server.
                     Use seasons to avoid manually setting dates, and edit competitions if you need to make changes!
                   </p>
-                  <p class="text-gray-600 dark:text-gray-300">
+                  <p>
                     <strong>New in this update:</strong> You can now edit competitions, list all competitions with filters,
                     and use League seasons instead of fixed dates.
                   </p>
-                </div>
+                </InfoBox>
               </div>
             </div>
           </div>
@@ -838,26 +631,20 @@ import Footer from "../components/Footer.astro";
           <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Required Permissions</h2>
 
           <div class="prose max-w-none text-gray-700 dark:text-gray-300">
-            <p class="mb-6 text-gray-700 dark:text-gray-300">
+            <p class="mb-6">
               Scout requires the following Discord permissions to function properly:
             </p>
 
-            <div
-              class="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 mb-6"
-            >
-              <h4 class="font-medium text-yellow-800 dark:text-yellow-300 mb-2">⚠️ Important:</h4>
-              <p class="text-yellow-700 dark:text-yellow-300">
+            <InfoBox variant="warning" title="⚠️ Important">
+              <p>
                 Only users with Administrator permissions can use the <code
-                  class="bg-yellow-100 dark:bg-yellow-800/50 px-1 rounded text-gray-900 dark:text-gray-100"
-                  >/subscription add</code
-                > and <code class="bg-yellow-100 dark:bg-yellow-800/50 px-1 rounded text-gray-900 dark:text-gray-100"
-                  >/subscription delete</code
-                > commands.
+                  class="bg-yellow-100 dark:bg-yellow-800/50 px-1 rounded">/subscription add</code
+                > and <code class="bg-yellow-100 dark:bg-yellow-800/50 px-1 rounded">/subscription delete</code> commands.
               </p>
-            </div>
+            </InfoBox>
 
-            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Bot Permissions</h3>
-            <ul class="list-disc list-inside space-y-2 mb-6 text-gray-700 dark:text-gray-300">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 mt-6">Bot Permissions</h3>
+            <ul class="list-disc list-inside space-y-2 mb-6">
               <li>
                 <strong>Send Messages:</strong> Post match notifications and reports
               </li>
@@ -978,103 +765,79 @@ import Footer from "../components/Footer.astro";
           <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-6">Frequently Asked Questions</h2>
 
           <div class="space-y-6">
-            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-3">
-                How often does Scout check for new matches?
-              </h3>
-              <p class="text-gray-600 dark:text-gray-300 mb-3">
+            <FAQItem question="How often does Scout check for new matches?">
+              <p class="mb-3">
                 Scout uses intelligent dynamic polling that adjusts based on player activity:
               </p>
-              <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-1 mb-3">
+              <ul class="list-disc list-inside text-sm space-y-1 mb-3">
                 <li><strong>Active players</strong> (played within the last hour): Checked every 1 minute</li>
                 <li><strong>Recently active</strong> (6-12 hours): Checked every 5-10 minutes</li>
                 <li><strong>Inactive players</strong> (30+ days): Checked every 60 minutes</li>
               </ul>
-              <p class="text-gray-600 dark:text-gray-300">
+              <p>
                 This means you'll get notifications within 1-2 minutes for players who are actively gaming, while
                 reducing unnecessary API calls for inactive accounts.
               </p>
-            </div>
+            </FAQItem>
 
-            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-3">What types of matches are tracked?</h3>
-              <p class="text-gray-600 dark:text-gray-300">
+            <FAQItem question="What types of matches are tracked?">
+              <p>
                 Scout tracks all ranked and normal games on Summoner's Rift, ARAM, Arena, and other matchmade queues.
                 Custom games, practice tool, and tutorial matches are not tracked.
               </p>
-            </div>
+            </FAQItem>
 
-            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-3">How do competitions work?</h3>
-              <p class="text-gray-600 dark:text-gray-300">
+            <FAQItem question="How do competitions work?">
+              <p>
                 Competitions allow you to create time-limited challenges for your server members. You can set custom
                 criteria (wins, rank climb, win rate, etc.) and Scout will automatically track performance and update
                 leaderboards. You can use League seasons or custom dates, and even edit competitions before they start.
-                Use <code
-                  class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm text-gray-900 dark:text-gray-100"
-                  >/competition create</code
-                > to get started!
+                Use <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm">/competition create</code> to get started!
               </p>
-            </div>
+            </FAQItem>
 
-            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-3">
-                Can I edit a competition after creating it?
-              </h3>
-              <p class="text-gray-600 dark:text-gray-300">
+            <FAQItem question="Can I edit a competition after creating it?">
+              <p>
                 Yes! You can always edit the title, description, and channel using
-                <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm text-gray-900 dark:text-gray-100"
-                  >/competition edit</code
-                >. Before a competition starts, you can also change the criteria, dates, visibility settings, and other
+                <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm">/competition edit</code>. Before a competition starts, you can also change the criteria, dates, visibility settings, and other
                 parameters. Once a competition is active, core settings like criteria and dates are locked to ensure
                 fairness.
               </p>
-            </div>
+            </FAQItem>
 
-            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-3">What are the admin commands for?</h3>
-              <p class="text-gray-600 dark:text-gray-300">
-                The <code
-                  class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm text-gray-900 dark:text-gray-100"
-                  >/admin</code
-                >
+            <FAQItem question="What are the admin commands for?">
+              <p>
+                The <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm">/admin</code>
                 commands help server administrators manage players and accounts. You can rename players, remove accounts,
                 transfer accounts between players, merge duplicate players, and delete players entirely. These are advanced
                 commands that require Administrator permissions in Discord.
               </p>
-            </div>
+            </FAQItem>
 
-            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-3">
-                Can I track players from different regions in the same server?
-              </h3>
-              <p class="text-gray-600 dark:text-gray-300">
+            <FAQItem question="Can I track players from different regions in the same server?">
+              <p>
                 Yes! You can subscribe to players from any supported League of Legends region. Just make sure to specify
                 the correct region when subscribing.
               </p>
-            </div>
+            </FAQItem>
 
-            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-3">How many players can I track?</h3>
-              <p class="text-gray-600 dark:text-gray-300 mb-3">
+            <FAQItem question="How many players can I track?">
+              <p class="mb-3">
                 By default, each server can track up to <strong>75 players</strong> with a maximum of
                 <strong>50 League accounts</strong> total. This helps ensure reliable service for all users.
               </p>
-              <p class="text-gray-600 dark:text-gray-300">
+              <p>
                 If you need to track more players, you can remove existing subscriptions using
-                <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded text-sm text-gray-900 dark:text-gray-100"
-                  >/subscription delete</code
-                >. Contact us if your community requires a higher limit.
+                <code class="bg-gray-100 dark:bg-gray-700 px-1 rounded text-sm">/subscription delete</code>. Contact us if your community requires a higher limit.
               </p>
-            </div>
+            </FAQItem>
 
-            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Why am I not getting post-match reports?</h3>
-              <p class="text-gray-600 dark:text-gray-300 mb-3">
+            <FAQItem question="Why am I not getting post-match reports?">
+              <p class="mb-3">
                 Post-match reports are generated after games end. The timing depends on when Scout detects the match is
                 complete:
               </p>
-              <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-1 mb-3">
+              <ul class="list-disc list-inside text-sm space-y-1 mb-3">
                 <li>
                   For <strong>active players</strong> (recently played): Reports appear within 2-3 minutes after match completion
                 </li>
@@ -1083,20 +846,19 @@ import Footer from "../components/Footer.astro";
                 </li>
                 <li>Very short games (under 5 minutes) or remakes might not generate reports</li>
               </ul>
-              <p class="text-gray-600 dark:text-gray-300">
+              <p>
                 The dynamic polling system prioritizes active players, so if someone is playing regularly, their reports
                 will appear faster than someone who plays occasionally.
               </p>
-            </div>
+            </FAQItem>
 
-            <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-              <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Is my data safe?</h3>
-              <p class="text-gray-600 dark:text-gray-300">
+            <FAQItem question="Is my data safe?">
+              <p>
                 Scout only stores the minimum data necessary to provide notifications: Riot IDs, aliases, and Discord
                 channel information. We don't store personal information or match history beyond what's needed for
                 reports.
               </p>
-            </div>
+            </FAQItem>
           </div>
         </section>
 
@@ -1106,7 +868,7 @@ import Footer from "../components/Footer.astro";
           <p class="text-gray-600 dark:text-gray-300 mb-6">Can't find what you're looking for? We're here to help!</p>
           <a
             href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
-            class="inline-flex items-center rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            class="inline-flex items-center rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
             Add Scout to Discord
           </a>

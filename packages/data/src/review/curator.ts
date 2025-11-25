@@ -1,16 +1,13 @@
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { getItemInfo, summoner, getRuneInfo, getRuneTreeName, getChampionInfo } from "@scout-for-lol/report";
+import type { MatchDto as MatchDto, ParticipantDto as ParticipantDto } from "@scout-for-lol/data";
+import { getItemInfo, summoner, getRuneInfo, getRuneTreeName, getChampionInfo } from "@scout-for-lol/report/index";
 import { first, keys, pickBy } from "remeda";
-import type { CuratedParticipant, CuratedMatchData } from "./curator-types.js";
-
-export type { CuratedParticipant, CuratedMatchData };
+import type { CuratedParticipant, CuratedMatchData } from "@scout-for-lol/data/review/curator-types.js";
 
 function getSummonerSpellName(spellId: number): string | undefined {
   return first(keys(pickBy(summoner.data, (s) => s.key === spellId.toString())));
 }
 
-export async function curateParticipantData(participant: MatchV5DTOs.ParticipantDto): Promise<CuratedParticipant> {
-  // Translate items
+function curateItems(participant: ParticipantDto) {
   const itemIds = [
     participant.item0,
     participant.item1,
@@ -21,7 +18,7 @@ export async function curateParticipantData(participant: MatchV5DTOs.Participant
     participant.item6,
   ];
 
-  const items = itemIds
+  return itemIds
     .filter((id) => id !== 0)
     .map((id) => {
       const info = getItemInfo(id);
@@ -32,12 +29,13 @@ export async function curateParticipantData(participant: MatchV5DTOs.Participant
         plaintext: info?.plaintext,
       };
     });
+}
 
-  // Translate summoner spells
+function curateSummonerSpells(participant: ParticipantDto) {
   const spell1Name = getSummonerSpellName(participant.summoner1Id);
   const spell2Name = getSummonerSpellName(participant.summoner2Id);
 
-  const summonerSpells = [
+  return [
     {
       id: participant.summoner1Id,
       name: spell1Name ?? `Spell ${participant.summoner1Id.toString()}`,
@@ -51,8 +49,9 @@ export async function curateParticipantData(participant: MatchV5DTOs.Participant
       casts: participant.summoner2Casts,
     },
   ];
+}
 
-  // Translate runes
+function curatePerks(participant: ParticipantDto) {
   const primaryStyle = participant.perks.styles[0];
   const subStyle = participant.perks.styles[1];
 
@@ -82,7 +81,7 @@ export async function curateParticipantData(participant: MatchV5DTOs.Participant
       };
     }) ?? [];
 
-  const perks = {
+  return {
     primaryStyle: {
       id: primaryStyle?.style ?? 0,
       name: getRuneTreeName(primaryStyle?.style ?? 0) ?? "Unknown",
@@ -95,9 +94,72 @@ export async function curateParticipantData(participant: MatchV5DTOs.Participant
     subSelections,
     statPerks: participant.perks.statPerks,
   };
+}
 
-  // Get champion ability info
+function curateChallenges(participant: ParticipantDto) {
+  return {
+    killParticipation: participant.challenges.killParticipation,
+    soloKills: participant.challenges.soloKills,
+    damagePerMinute: participant.challenges.damagePerMinute,
+    goldPerMinute: participant.challenges.goldPerMinute,
+    visionScorePerMinute: participant.challenges.visionScorePerMinute,
+    skillshotsHit: participant.challenges.skillshotsHit,
+    skillshotsDodged: participant.challenges.skillshotsDodged,
+    enemyChampionImmobilizations: participant.challenges.enemyChampionImmobilizations,
+    teamDamagePercentage: participant.challenges.teamDamagePercentage,
+    damageTakenOnTeamPercentage: participant.challenges.damageTakenOnTeamPercentage,
+    controlWardsPlaced: participant.challenges.controlWardsPlaced,
+    controlWardTimeCoverageInRiverOrEnemyHalf: participant.challenges.controlWardTimeCoverageInRiverOrEnemyHalf,
+    visionScoreAdvantageLaneOpponent: participant.challenges.visionScoreAdvantageLaneOpponent,
+    turretPlatesTaken: participant.challenges.turretPlatesTaken,
+    riftHeraldTakedowns: participant.challenges.riftHeraldTakedowns,
+    baronTakedowns: participant.challenges.baronTakedowns,
+    dragonTakedowns: participant.challenges.dragonTakedowns,
+    buffsStolen: participant.challenges.buffsStolen,
+    alliedJungleMonsterKills: participant.challenges.alliedJungleMonsterKills,
+    enemyJungleMonsterKills: participant.challenges.enemyJungleMonsterKills,
+    scuttleCrabKills: participant.challenges.scuttleCrabKills,
+    jungleCsBefore10Minutes: participant.challenges.jungleCsBefore10Minutes,
+    initialBuffCount: participant.challenges.initialBuffCount,
+    initialCrabCount: participant.challenges.initialCrabCount,
+    laneMinionsFirst10Minutes: participant.challenges.laneMinionsFirst10Minutes,
+    maxCsAdvantageOnLaneOpponent: participant.challenges.maxCsAdvantageOnLaneOpponent,
+    maxLevelLeadLaneOpponent: participant.challenges.maxLevelLeadLaneOpponent,
+    earlyLaningPhaseGoldExpAdvantage: participant.challenges.earlyLaningPhaseGoldExpAdvantage,
+    laningPhaseGoldExpAdvantage: participant.challenges.laningPhaseGoldExpAdvantage,
+    multikills: participant.challenges.multikills,
+    multikillsAfterAggressiveFlash: participant.challenges.multikillsAfterAggressiveFlash,
+    killsNearEnemyTurret: participant.challenges.killsNearEnemyTurret,
+    killsUnderOwnTurret: participant.challenges.killsUnderOwnTurret,
+    outnumberedKills: participant.challenges.outnumberedKills,
+    killsWithHelpFromEpicMonster: participant.challenges.killsWithHelpFromEpicMonster,
+    immobilizeAndKillWithAlly: participant.challenges.immobilizeAndKillWithAlly,
+    pickKillWithAlly: participant.challenges.pickKillWithAlly,
+    knockEnemyIntoTeamAndKill: participant.challenges.knockEnemyIntoTeamAndKill,
+    saveAllyFromDeath: participant.challenges.saveAllyFromDeath,
+    survivedSingleDigitHpCount: participant.challenges.survivedSingleDigitHpCount,
+    survivedThreeImmobilizesInFight: participant.challenges.survivedThreeImmobilizesInFight,
+    tookLargeDamageSurvived: participant.challenges.tookLargeDamageSurvived,
+    quickCleanse: participant.challenges.quickCleanse,
+    quickFirstTurret: participant.challenges.quickFirstTurret,
+    quickSoloKills: participant.challenges.quickSoloKills,
+    effectiveHealAndShielding: participant.challenges.effectiveHealAndShielding,
+    perfectGame: participant.challenges.perfectGame,
+    flawlessAces: participant.challenges.flawlessAces,
+    perfectDragonSoulsTaken: participant.challenges.perfectDragonSoulsTaken,
+    soloBaronKills: participant.challenges.soloBaronKills,
+    takedownsFirstXMinutes: participant.challenges.takedownsFirstXMinutes,
+    bountyGold: participant.challenges.bountyGold,
+    completeSupportQuestInTime: participant.challenges.completeSupportQuestInTime,
+  };
+}
+
+export async function curateParticipantData(participant: ParticipantDto): Promise<CuratedParticipant> {
+  const items = curateItems(participant);
+  const summonerSpells = curateSummonerSpells(participant);
+  const perks = curatePerks(participant);
   const championAbilities = await getChampionInfo(participant.championName);
+  const challenges = curateChallenges(participant);
 
   return {
     // Identity
@@ -188,7 +250,7 @@ export async function curateParticipantData(participant: MatchV5DTOs.Participant
     // Communication
     allInPings: participant.allInPings,
     assistMePings: participant.assistMePings,
-    baitPings: participant.baitPings,
+    baitPings: participant.baitPings ?? 0,
     basicPings: participant.basicPings,
     commandPings: participant.commandPings,
     dangerPings: participant.dangerPings,
@@ -221,61 +283,7 @@ export async function curateParticipantData(participant: MatchV5DTOs.Participant
     longestTimeSpentLiving: participant.longestTimeSpentLiving,
 
     // Challenges
-    challenges: {
-      killParticipation: participant.challenges.killParticipation,
-      soloKills: participant.challenges.soloKills,
-      damagePerMinute: participant.challenges.damagePerMinute,
-      goldPerMinute: participant.challenges.goldPerMinute,
-      visionScorePerMinute: participant.challenges.visionScorePerMinute,
-      skillshotsHit: participant.challenges.skillshotsHit,
-      skillshotsDodged: participant.challenges.skillshotsDodged,
-      enemyChampionImmobilizations: participant.challenges.enemyChampionImmobilizations,
-      teamDamagePercentage: participant.challenges.teamDamagePercentage,
-      damageTakenOnTeamPercentage: participant.challenges.damageTakenOnTeamPercentage,
-      controlWardsPlaced: participant.challenges.controlWardsPlaced,
-      controlWardTimeCoverageInRiverOrEnemyHalf: participant.challenges.controlWardTimeCoverageInRiverOrEnemyHalf,
-      visionScoreAdvantageLaneOpponent: participant.challenges.visionScoreAdvantageLaneOpponent,
-      turretPlatesTaken: participant.challenges.turretPlatesTaken,
-      riftHeraldTakedowns: participant.challenges.riftHeraldTakedowns,
-      baronTakedowns: participant.challenges.baronTakedowns,
-      dragonTakedowns: participant.challenges.dragonTakedowns,
-      buffsStolen: participant.challenges.buffsStolen,
-      alliedJungleMonsterKills: participant.challenges.alliedJungleMonsterKills,
-      enemyJungleMonsterKills: participant.challenges.enemyJungleMonsterKills,
-      scuttleCrabKills: participant.challenges.scuttleCrabKills,
-      jungleCsBefore10Minutes: participant.challenges.jungleCsBefore10Minutes,
-      initialBuffCount: participant.challenges.initialBuffCount,
-      initialCrabCount: participant.challenges.initialCrabCount,
-      laneMinionsFirst10Minutes: participant.challenges.laneMinionsFirst10Minutes,
-      maxCsAdvantageOnLaneOpponent: participant.challenges.maxCsAdvantageOnLaneOpponent,
-      maxLevelLeadLaneOpponent: participant.challenges.maxLevelLeadLaneOpponent,
-      earlyLaningPhaseGoldExpAdvantage: participant.challenges.earlyLaningPhaseGoldExpAdvantage,
-      laningPhaseGoldExpAdvantage: participant.challenges.laningPhaseGoldExpAdvantage,
-      multikills: participant.challenges.multikills,
-      multikillsAfterAggressiveFlash: participant.challenges.multikillsAfterAggressiveFlash,
-      killsNearEnemyTurret: participant.challenges.killsNearEnemyTurret,
-      killsUnderOwnTurret: participant.challenges.killsUnderOwnTurret,
-      outnumberedKills: participant.challenges.outnumberedKills,
-      killsWithHelpFromEpicMonster: participant.challenges.killsWithHelpFromEpicMonster,
-      immobilizeAndKillWithAlly: participant.challenges.immobilizeAndKillWithAlly,
-      pickKillWithAlly: participant.challenges.pickKillWithAlly,
-      knockEnemyIntoTeamAndKill: participant.challenges.knockEnemyIntoTeamAndKill,
-      saveAllyFromDeath: participant.challenges.saveAllyFromDeath,
-      survivedSingleDigitHpCount: participant.challenges.survivedSingleDigitHpCount,
-      survivedThreeImmobilizesInFight: participant.challenges.survivedThreeImmobilizesInFight,
-      tookLargeDamageSurvived: participant.challenges.tookLargeDamageSurvived,
-      quickCleanse: participant.challenges.quickCleanse,
-      quickFirstTurret: participant.challenges.quickFirstTurret,
-      quickSoloKills: participant.challenges.quickSoloKills,
-      effectiveHealAndShielding: participant.challenges.effectiveHealAndShielding,
-      perfectGame: participant.challenges.perfectGame,
-      flawlessAces: participant.challenges.flawlessAces,
-      perfectDragonSoulsTaken: participant.challenges.perfectDragonSoulsTaken,
-      soloBaronKills: participant.challenges.soloBaronKills,
-      takedownsFirstXMinutes: participant.challenges.takedownsFirstXMinutes,
-      bountyGold: participant.challenges.bountyGold,
-      completeSupportQuestInTime: participant.challenges.completeSupportQuestInTime,
-    },
+    challenges,
 
     // Outcome
     win: participant.win,
@@ -284,7 +292,7 @@ export async function curateParticipantData(participant: MatchV5DTOs.Participant
   };
 }
 
-export async function curateMatchData(matchDto: MatchV5DTOs.MatchDto): Promise<CuratedMatchData> {
+export async function curateMatchData(matchDto: MatchDto): Promise<CuratedMatchData> {
   const participants = await Promise.all(matchDto.info.participants.map(curateParticipantData));
 
   return {

@@ -1,8 +1,7 @@
-import { PrismaClient } from "../../generated/prisma/client";
+import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client";
 import {
   type DiscordChannelId,
   type LeaguePuuid,
-  type PlayerConfig,
   type PlayerConfigEntry,
   MatchIdSchema,
   type MatchId,
@@ -63,44 +62,6 @@ export async function getChannelsSubscribedToPlayers(
     return result;
   } catch (error) {
     console.error("❌ Error fetching subscribed channels:", error);
-    throw error;
-  }
-}
-
-export async function getAccounts(): Promise<PlayerConfig> {
-  console.log("🔍 Fetching all player accounts");
-
-  try {
-    const startTime = Date.now();
-
-    const players = await prisma.player.findMany({
-      include: {
-        accounts: true,
-      },
-    });
-
-    const queryTime = Date.now() - startTime;
-    console.log(`📊 Found ${players.length.toString()} players in ${queryTime.toString()}ms`);
-
-    // transform
-    const result = players.flatMap((player): PlayerConfigEntry[] => {
-      return player.accounts.map((account): PlayerConfigEntry => {
-        return {
-          alias: player.alias,
-          league: {
-            leagueAccount: account,
-          },
-          discordAccount: {
-            id: player.discordId ?? undefined,
-          },
-        };
-      });
-    });
-
-    console.log(`📋 Returning ${result.length.toString()} player config entries`);
-    return result;
-  } catch (error) {
-    console.error("❌ Error fetching player accounts:", error);
     throw error;
   }
 }

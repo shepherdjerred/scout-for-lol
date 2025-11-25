@@ -1,6 +1,6 @@
 ---
 description: Prisma ORM patterns and nullable field handling
-globs: **/database/**/*.ts,**/prisma/**/*.ts
+globs: "**/database/**/*.ts,**/prisma/**/*.ts,*.integration.test.ts"
 ---
 
 # Prisma Patterns and Best Practices
@@ -74,48 +74,32 @@ model CompetitionParticipant {
 }
 ```
 
-## Test Database Setup
+## Prisma Commands
 
-### Pattern for Integration Tests
+```bash
+cd packages/backend
 
-```typescript
-import { execSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+# Generate Prisma client + brand types
+bun run db:generate       # Runs: prisma generate → brand-types → prettier
 
-// Create test database ONCE (outside beforeEach)
-const testDir = mkdtempSync(join(tmpdir(), "test-"));
-const testDbPath = join(testDir, "test.db");
-const testDbUrl = `file:${testDbPath}`;
+# Development database
+bun run db:push           # Push schema without migration (for dev/test)
+bun run db:migrate        # Create and apply migration (for production)
 
-// ✅ CORRECT: Use bun run db:push
-execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`, {
-  cwd: join(import.meta.dir, "../../.."),
-  env: { ...process.env, DATABASE_URL: testDbUrl },
-});
+# Database UI
+bun run db:studio         # Open Prisma Studio on http://localhost:5555
 
-// ❌ WRONG: Don't use prisma migrate deploy
-// execSync("bunx prisma migrate deploy", { ... });
-
-const prisma = new PrismaClient({
-  datasources: { db: { url: testDbUrl } },
-});
-
-beforeEach(async () => {
-  // Clean up in dependency order (child tables first)
-  await prisma.competitionSnapshot.deleteMany();
-  await prisma.competitionParticipant.deleteMany();
-  await prisma.competition.deleteMany();
-});
+# Brand types (run automatically by db:generate)
+bun run brand-types       # Add branded types to generated Prisma client
 ```
 
-**Why `db:push` not `migrate`?**
+**Use `db:push` for:** Development, testing, schema experimentation
 
-- ✅ Faster (no migration history)
-- ✅ Works with temporary databases
-- ✅ Syncs schema directly from schema.prisma
-- ✅ Handles schema changes in tests
+**Use `db:migrate` for:** Production, team collaboration, migration history
+
+## Test Database Setup
+
+**See:** `testing-patterns.mdc` for complete test database setup patterns.
 
 ## Error Handling in Database Operations
 
@@ -333,13 +317,7 @@ const status = competition.startDate && now < competition.startDate
 
 ### ❌ Don't use `prisma migrate` in tests
 
-```typescript
-// WRONG
-execSync("bunx prisma migrate deploy");
-
-// CORRECT
-execSync(`DATABASE_URL="${testDbUrl}" bun run db:push`);
-```
+**See:** `testing-patterns.mdc` for test database setup.
 
 ### ❌ Don't create unnecessary foreign key records
 
@@ -352,6 +330,119 @@ await prisma.competition.create({ data: { serverId } });
 await prisma.competition.create({ data: { serverId } });
 ```
 
+## ESLint Rule: `prisma-client-disconnect`
+
+Integration tests must properly disconnect Prisma clients to prevent connection leaks.
+
+### What It Enforces
+
+The `prisma-client-disconnect` ESLint rule (in `*.integration.test.ts` files) requires:
+
+1. Every Prisma client instantiation gets disconnected
+2. Disconnect happens in `afterEach` or test cleanup
+3. No orphaned connections after tests
+
+### Error
+
+```
+error: 'prisma-client-disconnect' - Prisma client must be disconnected after test
+```
+
+### ✅ Correct Pattern
+
+```typescript
+import { afterEach } from "bun:test";
+import { PrismaClient } from "generated/prisma/client";
+
+const prisma = new PrismaClient();
+
+afterEach(async () => {
+  await prisma.$disconnect();  // Required!
+});
+
+test("creates user", async () => {
+  await prisma.user.create({ data: { /* ... */ } });
+});
+```
+
+### ❌ Violations
+
+```typescript
+// ❌ Missing disconnect
+const prisma = new PrismaClient();
+
+test("creates user", async () => {
+  await prisma.user.create({ data: { /* ... */ } });
+  // No disconnect!
+});
+
+// ❌ Disconnect in test instead of afterEach
+test("creates user", async () => {
+  const prisma = new PrismaClient();
+  await prisma.user.create({ data: { /* ... */ } });
+  await prisma.$disconnect();  // Wrong place - should be afterEach
+});
+
+// ❌ Missing await
+afterEach(() => {
+  prisma.$disconnect();  // Forgot await!
+});
+```
+
+### How to Fix
+
+**Add `afterEach` with disconnect:**
+
+```typescript
+// ❌ BEFORE
+import { beforeEach } from "bun:test";
+import { PrismaClient } from "generated/prisma/client";
+
+const prisma = new PrismaClient();
+
+beforeEach(async () => {
+  await prisma.user.deleteMany();
+  await prisma.competition.deleteMany();
+});
+
+// ✅ AFTER
+import { beforeEach, afterEach } from "bun:test";
+import { PrismaClient } from "generated/prisma/client";
+
+const prisma = new PrismaClient();
+
+beforeEach(async () => {
+  await prisma.user.deleteMany();
+  await prisma.competition.deleteMany();
+});
+
+afterEach(async () => {
+  await prisma.$disconnect();  // Add this!
+});
+```
+
+### Why This Matters
+
+Without disconnect:
+
+- ❌ Connections leak - exhausts connection pool
+- ❌ Tests hang or timeout after running many tests
+- ❌ CI environment fails with "too many connections"
+- ❌ Port 5432 (database) becomes unavailable
+
+With proper disconnect:
+
+- ✅ Clean resource cleanup
+- ✅ Multiple test files can run in sequence
+- ✅ CI passes reliably
+- ✅ Connections reused efficiently
+
+### Related Documentation
+
+- **ESLint Rule Details:** See `eslint-custom-rules.mdc`
+- **Testing Patterns:** See `testing-patterns.mdc`
+- **Code Quality Checks:** See `code-quality-checklist.mdc`
+
 ## Checklist for Prisma Code
 
 - [ ] Null checks for optional fields (`field?: Type`)
@@ -363,3 +454,4 @@ await prisma.competition.create({ data: { serverId } });
 - [ ] Error handling uses `ErrorSchema` from utils
 - [ ] Queries leverage defined indexes
 - [ ] String IDs used directly (no FK setup in tests)
+- [ ] **Integration tests disconnect Prisma in `afterEach`** ← ESLint enforced

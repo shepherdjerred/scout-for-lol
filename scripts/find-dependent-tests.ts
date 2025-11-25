@@ -5,17 +5,16 @@
  */
 
 import ts from "typescript";
-import { existsSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join, resolve } from "path";
 
-const args = process.argv.slice(2);
+const args = Bun.argv.slice(2);
 if (args.length < 2) {
   console.error("Usage: find-dependent-tests.ts <package-dir> <changed-files...>");
-  process.exit(1);
+  throw new Error("Missing required arguments");
 }
 
 // Args are guaranteed to exist after length check
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- CLI args validated above
 const packageDir = args[0]!;
 const changedFiles = args.slice(1);
 
@@ -25,7 +24,7 @@ const absolutePackageDir = resolve(join(repoRoot, packageDir));
 
 // Find tsconfig.json
 const tsconfigPath = join(absolutePackageDir, "tsconfig.json");
-if (!existsSync(tsconfigPath)) {
+if (!(await Bun.file(tsconfigPath).exists())) {
   console.error(`No tsconfig.json found at ${tsconfigPath}`);
   process.exit(1);
 }
@@ -36,7 +35,7 @@ const configFile = ts.readConfigFile(tsconfigPath, readFile);
 if (configFile.error) {
   // TypeScript's DiagnosticMessageChain is a special type that can be a string or an object
   const messageText = configFile.error.messageText;
-  // eslint-disable-next-line no-restricted-syntax -- this is okay, we're narrowing down the type
+
   const errorMessage = typeof messageText === "string" ? messageText : messageText.messageText;
   console.error(`Error reading tsconfig.json: ${errorMessage}`);
   process.exit(1);
@@ -92,7 +91,7 @@ for (const sourceFile of sourceFiles) {
     // Handle import declarations
     if (ts.isImportDeclaration(node)) {
       const moduleSpecifier = node.moduleSpecifier;
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- TypeScript API can return undefined in edge cases
       if (moduleSpecifier && ts.isStringLiteral(moduleSpecifier)) {
         const importPath = moduleSpecifier.text;
         const resolved = resolveImport(filePath, importPath);
@@ -163,7 +162,9 @@ function resolveImport(fromFile: string, moduleName: string): string | null {
 const affectedFiles = new Set<string>(absoluteChangedFiles);
 
 function findDependents(file: string, visited = new Set<string>()) {
-  if (visited.has(file)) return;
+  if (visited.has(file)) {
+    return;
+  }
   visited.add(file);
 
   const dependents = reverseDeps.get(file);
@@ -197,11 +198,11 @@ for (const file of affectedFiles) {
   const unitTest = `${base}.test.ts`;
   const integrationTest = `${base}.integration.test.ts`;
 
-  if (existsSync(unitTest)) {
+  if (await Bun.file(unitTest).exists()) {
     testFiles.add(unitTest);
   }
 
-  if (existsSync(integrationTest)) {
+  if (await Bun.file(integrationTest).exists()) {
     testFiles.add(integrationTest);
   }
 }

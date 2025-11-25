@@ -8,9 +8,9 @@ import {
   type SnapshotType,
   type WinsSnapshotData,
 } from "@scout-for-lol/data";
-import { getParticipants } from "../../database/competition/participants.js";
-import { fetchSnapshotData } from "./leaderboard.js";
-import { PrismaClient } from "../../../generated/prisma/client/index.js";
+import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.js";
+import { fetchSnapshotData } from "@scout-for-lol/backend/league/competition/leaderboard.js";
+import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 
 // ============================================================================
 // Snapshot Creation
@@ -31,11 +31,14 @@ import { PrismaClient } from "../../../generated/prisma/client/index.js";
  */
 export async function createSnapshot(
   prisma: PrismaClient,
-  competitionId: CompetitionId,
-  playerId: PlayerId,
-  snapshotType: SnapshotType,
-  criteria: CompetitionCriteria,
+  params: {
+    competitionId: CompetitionId;
+    playerId: PlayerId;
+    snapshotType: SnapshotType;
+    criteria: CompetitionCriteria;
+  },
 ): Promise<void> {
+  const { competitionId, playerId, snapshotType, criteria } = params;
   console.log(
     `[Snapshots] Creating ${snapshotType} snapshot for competition ${competitionId.toString()}, player ${playerId.toString()}`,
   );
@@ -57,14 +60,14 @@ export async function createSnapshot(
   // Fetch snapshot data based on criteria - pass playerData directly
   // Prisma include returns branded types compatible with PlayerWithAccounts
   // Use 'create_snapshot' purpose to fetch current rank without validation
-  const snapshotDataContainer = await fetchSnapshotData(
+  const snapshotDataContainer = await fetchSnapshotData({
     prisma,
     competitionId,
     criteria,
-    [playerData],
-    "ACTIVE",
-    "create_snapshot",
-  );
+    participants: [playerData],
+    competitionStatus: "ACTIVE",
+    purpose: "create_snapshot",
+  });
 
   // Check if snapshots are needed for this criteria type
   // Some criteria (MOST_GAMES_PLAYED, MOST_WINS_*, etc.) don't use snapshots
@@ -146,11 +149,14 @@ export async function createSnapshot(
  */
 export async function getSnapshot(
   prisma: PrismaClient,
-  competitionId: number,
-  playerId: number,
-  snapshotType: SnapshotType,
-  criteria: CompetitionCriteria,
+  params: {
+    competitionId: CompetitionId;
+    playerId: PlayerId;
+    snapshotType: SnapshotType;
+    criteria: CompetitionCriteria;
+  },
 ): Promise<RankSnapshotData | GamesPlayedSnapshotData | WinsSnapshotData | null> {
+  const { competitionId, playerId, snapshotType, criteria } = params;
   const snapshot = await prisma.competitionSnapshot.findUnique({
     where: {
       competitionId_playerId_snapshotType: {
@@ -206,7 +212,12 @@ export async function createSnapshotsForAllParticipants(
   // Create snapshots in parallel
   const results = await Promise.allSettled(
     participants.map((participant) =>
-      createSnapshot(prisma, competitionId, participant.playerId, snapshotType, criteria),
+      createSnapshot(prisma, {
+        competitionId,
+        playerId: participant.playerId,
+        snapshotType,
+        criteria,
+      }),
     ),
   );
 

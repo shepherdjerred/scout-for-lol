@@ -1,5 +1,5 @@
-import { Directory, Container, Secret } from "@dagger.io/dagger";
-import { installWorkspaceDeps, getBunContainer } from "./base";
+import type { Directory, Container, Secret } from "@dagger.io/dagger";
+import { installWorkspaceDeps, getBunContainer } from "@scout-for-lol/.dagger/src/base";
 
 /**
  * Install dependencies for the backend
@@ -73,6 +73,8 @@ export function getBackendTestReport(workspaceSource: Directory): Directory {
  * @returns The built container
  */
 export function buildBackendImage(workspaceSource: Directory, version: string, gitSha: string): Container {
+  // Health check available via: bun run src/health.ts
+  // This should be configured in K8s manifests as a liveness/readiness probe
   return installBackendDeps(workspaceSource)
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
@@ -84,7 +86,11 @@ export function buildBackendImage(workspaceSource: Directory, version: string, g
     .withExec(["bun", "run", "generate"])
     .withEntrypoint(["sh", "-c", "bun run src/database/migrate.ts && bun run src/index.ts"])
     .withLabel("org.opencontainers.image.title", "scout-for-lol-backend")
-    .withLabel("org.opencontainers.image.description", "Scout for LoL Discord bot backend");
+    .withLabel("org.opencontainers.image.description", "Scout for LoL Discord bot backend")
+    .withLabel("healthcheck.command", "bun run src/health.ts")
+    .withLabel("healthcheck.interval", "30s")
+    .withLabel("healthcheck.timeout", "10s")
+    .withLabel("healthcheck.retries", "3");
 }
 
 /**
@@ -158,31 +164,31 @@ export async function smokeTestBackendImage(
   }
 }
 
+type PublishBackendImageOptions = {
+  workspaceSource: Directory;
+  version: string;
+  gitSha: string;
+  registryAuth?: {
+    username: string;
+    password: Secret;
+  };
+};
+
 /**
  * Publish the backend Docker image
- * @param workspaceSource The full workspace source directory
- * @param version The version tag
- * @param gitSha The git SHA
- * @param registryUsername Optional registry username for authentication
- * @param registryPassword Optional registry password for authentication
+ * @param options Publishing options including workspace source, version, git SHA, and optional registry auth
  * @returns The published image references
  */
-export async function publishBackendImage(
-  workspaceSource: Directory,
-  version: string,
-  gitSha: string,
-  registryUsername?: string,
-  registryPassword?: Secret,
-): Promise<string[]> {
-  let image = buildBackendImage(workspaceSource, version, gitSha);
+export async function publishBackendImage(options: PublishBackendImageOptions): Promise<string[]> {
+  let image = buildBackendImage(options.workspaceSource, options.version, options.gitSha);
 
   // Set up registry authentication if credentials provided
-  if (registryUsername && registryPassword) {
-    image = image.withRegistryAuth("ghcr.io", registryUsername, registryPassword);
+  if (options.registryAuth) {
+    image = image.withRegistryAuth("ghcr.io", options.registryAuth.username, options.registryAuth.password);
   }
 
-  const versionRef = await image.publish(`ghcr.io/shepherdjerred/scout-for-lol:${version}`);
-  const shaRef = await image.publish(`ghcr.io/shepherdjerred/scout-for-lol:${gitSha}`);
+  const versionRef = await image.publish(`ghcr.io/shepherdjerred/scout-for-lol:${options.version}`);
+  const shaRef = await image.publish(`ghcr.io/shepherdjerred/scout-for-lol:${options.gitSha}`);
 
   return [versionRef, shaRef];
 }

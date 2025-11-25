@@ -1,14 +1,15 @@
 import type { Client } from "discord.js";
-import { prisma } from "../../../database/index.js";
-import { getAbandonedGuilds, markGuildAsNotified } from "../../../database/guild-permission-errors.js";
-import { getErrorMessage } from "../../../utils/errors.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { getAbandonedGuilds, markGuildAsNotified } from "@scout-for-lol/backend/database/guild-permission-errors.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import {
   abandonedGuildsDetectedTotal,
   guildsLeftTotal,
   abandonmentNotificationsTotal,
   guildDataCleanupTotal,
-} from "../../../metrics/index.js";
+} from "@scout-for-lol/backend/metrics/index.js";
 import type { DiscordGuildId } from "@scout-for-lol/data";
+import { differenceInCalendarDays } from "date-fns";
 
 /**
  * Check for abandoned guilds and handle cleanup
@@ -77,7 +78,9 @@ async function handleAbandonedGuild(
   try {
     guild = await client.guilds.fetch(serverId);
   } catch (_error) {
-    console.warn(`[AbandonedGuilds] Could not fetch guild ${serverId} - may have already been removed`);
+    console.warn(
+      `[AbandonedGuilds] Could not fetch guild ${serverId} - may have already been removed. Error details: ${getErrorMessage(_error)}`,
+    );
     // Mark as notified so we don't keep trying
     await markGuildAsNotified(prisma, serverId);
     return;
@@ -122,7 +125,7 @@ async function notifyOwnerOfAbandonment(
   try {
     const owner = await guild.fetchOwner();
 
-    const daysSinceFirstError = Math.floor((Date.now() - firstErrorDate.getTime()) / (1000 * 60 * 60 * 24));
+    const daysSinceFirstError = differenceInCalendarDays(new Date(), firstErrorDate);
 
     const message = `👋 **Scout for LoL - Server Departure Notice**
 

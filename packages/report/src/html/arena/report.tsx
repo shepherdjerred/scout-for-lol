@@ -1,6 +1,6 @@
 import { type ArenaMatch } from "@scout-for-lol/data";
-import { MatchHeader } from "./match-header.tsx";
-import { TeamCard } from "./team-card.tsx";
+import { MatchHeader } from "@scout-for-lol/report/html/arena/match-header.tsx";
+import { TeamCard } from "@scout-for-lol/report/html/arena/team-card.tsx";
 
 export function ArenaReport(props: { match: ArenaMatch }) {
   const { match } = props;

@@ -1,11 +1,11 @@
 import { REST, Routes } from "discord.js";
 import { z } from "zod";
-import configuration from "../configuration";
-import { debugCommand } from "./commands/debug";
-import { competitionCommand } from "./commands/competition/index.js";
-import { adminCommand } from "./commands/admin/index.js";
-import { subscriptionCommand } from "./commands/subscription/index.js";
-import { helpCommand } from "./commands/help.js";
+import configuration from "@scout-for-lol/backend/configuration";
+import { debugCommand } from "@scout-for-lol/backend/discord/commands/debug";
+import { competitionCommand } from "@scout-for-lol/backend/discord/commands/competition/index.js";
+import { adminCommand } from "@scout-for-lol/backend/discord/commands/admin/index.js";
+import { subscriptionCommand } from "@scout-for-lol/backend/discord/commands/subscription/index.js";
+import { helpCommand } from "@scout-for-lol/backend/discord/commands/help.js";
 
 console.log("🔄 Preparing Discord slash commands for registration");
 

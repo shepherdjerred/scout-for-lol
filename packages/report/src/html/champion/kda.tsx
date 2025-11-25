@@ -1,5 +1,5 @@
-import { palette } from "../../assets/colors.ts";
 import { round } from "remeda";
+import { Stat } from "@scout-for-lol/report/html/champion/shared/stat.tsx";
 
 export function Kda({
   kills,
@@ -13,19 +13,7 @@ export function Kda({
   highlight: boolean;
 }) {
   const kdaRatio = deaths === 0 ? kills + assists : round((kills + assists) / deaths, 2);
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        width: "30rem",
-      }}
-    >
-      <span style={{ fontWeight: 700, color: highlight ? palette.gold[1] : "" }}>
-        {`${kills.toString()} / ${deaths.toString()} / ${assists.toString()}`}
-      </span>
-      <span>{kdaRatio} KDA</span>
-    </div>
-  );
+  const mainValue = `${kills.toString()} / ${deaths.toString()} / ${assists.toString()}`;
+
+  return <Stat mainValue={mainValue} rateValue={kdaRatio} rateLabel="KDA" highlight={highlight} ratePrecision={2} />;
 }

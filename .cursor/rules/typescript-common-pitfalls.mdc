@@ -1,5 +1,7 @@
 ---
 description: Common TypeScript pitfalls and how to avoid them
+globs: "*.ts,*.tsx"
+alwaysApply: false
 ---
 
 # TypeScript Common Pitfalls
@@ -158,31 +160,7 @@ async function fetchData(): Promise<Data> {
 
 ## Exhaustive Type Checking
 
-Use exhaustive checks for discriminated unions. **Avoid plain `else` blocks** that could silently handle new cases.
-
-```typescript
-type Status = "pending" | "success" | "error";
-
-// ✅ CORRECT - exhaustive with all explicit checks
-function handleStatus(status: Status): string {
-  if (status === "pending") return "Waiting...";
-  if (status === "success") return "Done!";
-  if (status === "error") return "Failed!";
-
-  // Exhaustive check - TypeScript will error if we add a new status
-  const _exhaustive: never = status;
-  throw new Error(`Unhandled status: ${String(_exhaustive)}`);
-}
-
-// ❌ DANGEROUS - plain else silently handles new cases
-function handleStatusBad(status: Status): string {
-  if (status === "pending") return "Waiting...";
-  if (status === "success") return "Done!";
-  else return "Failed!";  // If "cancelled" is added, this handles it!
-}
-```
-
-**Why this matters:** When you add a new variant to the union (e.g., `"cancelled"`), the exhaustive check will cause a TypeScript error, forcing you to handle the new case explicitly. A plain `else` would silently handle it with potentially incorrect logic.
+**See:** `exhaustive-case-handling.mdc` for discriminated union handling patterns.
 
 ## Null vs Undefined
 

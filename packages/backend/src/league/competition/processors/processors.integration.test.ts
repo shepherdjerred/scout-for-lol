@@ -1,26 +1,23 @@
 import { describe, expect, it } from "bun:test";
-import type { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
+import type { MatchDto, ParticipantDto, Rank, Ranks } from "@scout-for-lol/data";
 import {
   AccountIdSchema,
   ChampionIdSchema,
   LeaguePuuidSchema,
+  MatchDtoSchema,
   PlayerIdSchema,
-  type Rank,
-  type Ranks,
 } from "@scout-for-lol/data";
-import { processCriteria } from "./index.js";
-import type { PlayerWithAccounts } from "./types.js";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { processCriteria } from "@scout-for-lol/backend/league/competition/processors/index.js";
+import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";
 
-import { testAccountId, testPuuid } from "../../../testing/test-ids.js";
+import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
 // ============================================================================
 // Test Fixtures - Load Real Match Data
 // ============================================================================
 
-function loadMatch(path: string): MatchV5DTOs.MatchDto {
-  const content = readFileSync(path, "utf-8");
-  return JSON.parse(content) as MatchV5DTOs.MatchDto;
+async function loadMatch(path: string): Promise<MatchDto> {
+  const content = await Bun.file(path).text();
+  return MatchDtoSchema.parse(JSON.parse(content));
 }
 
 // ============================================================================
@@ -61,28 +58,79 @@ const testPlayers: PlayerWithAccounts[] = [
 // Integration Tests
 // ============================================================================
 
+/**
+ * Create test player from PUUID
+ */
+function createTestPlayerFromPuuid(puuid: string, index: number): PlayerWithAccounts {
+  return {
+    id: PlayerIdSchema.parse(index + 1),
+    alias: `Player${(index + 1).toString()}`,
+    discordId: testAccountId((index + 1).toString()),
+    accounts: [
+      {
+        id: AccountIdSchema.parse(index + 1),
+        alias: `Player${(index + 1).toString()}`,
+        puuid: LeaguePuuidSchema.parse(puuid),
+        region: "AMERICA_NORTH",
+      },
+    ],
+  };
+}
+
+/**
+ * Create test player from participant
+ */
+function createTestPlayerFromParticipant(participant: ParticipantDto): PlayerWithAccounts {
+  return {
+    id: PlayerIdSchema.parse(1),
+    alias: "TestPlayer",
+    discordId: testAccountId("100000000"),
+    accounts: [
+      {
+        id: AccountIdSchema.parse(1),
+        alias: "TestPlayer",
+        puuid: LeaguePuuidSchema.parse(participant.puuid),
+        region: "AMERICA_NORTH",
+      },
+    ],
+  };
+}
+
+/**
+ * Test empty match data handling
+ */
+function testEmptyMatchData() {
+  const emptyMatches: MatchDto[] = [];
+  const players = testPlayers;
+
+  // Test all criteria types with empty matches
+  const gamesResult = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "SOLO" }, emptyMatches, players);
+  expect(gamesResult).toBeDefined();
+  expect(gamesResult.every((entry) => entry.score === 0)).toBe(true);
+
+  const winsResult = processCriteria({ type: "MOST_WINS_PLAYER", queue: "SOLO" }, emptyMatches, players);
+  expect(winsResult).toBeDefined();
+  expect(winsResult.every((entry) => entry.score === 0)).toBe(true);
+
+  const championResult = processCriteria(
+    { type: "MOST_WINS_CHAMPION", championId: ChampionIdSchema.parse(157), queue: "SOLO" },
+    emptyMatches,
+    players,
+  );
+  expect(championResult).toBeDefined();
+  expect(championResult.every((entry) => entry.score === 0)).toBe(true);
+}
+
 describe("processCriteria integration tests", () => {
-  it("should process real match data without crashing", () => {
-    const matchPath = join(import.meta.dir, "../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json");
-    const match = loadMatch(matchPath);
+  it("should process real match data without crashing", async () => {
+    const matchPath = `${import.meta.dir}/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
+    const match = await loadMatch(matchPath);
 
     // Extract actual PUUIDs from the match
     const puuids = match.metadata.participants.slice(0, 2); // Take first 2 players
 
     // Create players with actual PUUIDs
-    const players: PlayerWithAccounts[] = puuids.map((puuid, index) => ({
-      id: PlayerIdSchema.parse(index + 1),
-      alias: `Player${(index + 1).toString()}`,
-      discordId: testAccountId((index + 1).toString()),
-      accounts: [
-        {
-          id: AccountIdSchema.parse(index + 1),
-          alias: `Player${(index + 1).toString()}`,
-          puuid: LeaguePuuidSchema.parse(puuid),
-          region: "AMERICA_NORTH",
-        },
-      ],
-    }));
+    const players: PlayerWithAccounts[] = puuids.map((puuid, index) => createTestPlayerFromPuuid(puuid, index));
 
     // Test MOST_GAMES_PLAYED
     const gamesResult = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "SOLO" }, [match], players);
@@ -96,30 +144,12 @@ describe("processCriteria integration tests", () => {
   });
 
   it("should handle empty match data gracefully", () => {
-    const emptyMatches: MatchV5DTOs.MatchDto[] = [];
-    const players = testPlayers;
-
-    // Test all criteria types with empty matches
-    const gamesResult = processCriteria({ type: "MOST_GAMES_PLAYED", queue: "SOLO" }, emptyMatches, players);
-    expect(gamesResult).toBeDefined();
-    expect(gamesResult.every((entry) => entry.score === 0)).toBe(true);
-
-    const winsResult = processCriteria({ type: "MOST_WINS_PLAYER", queue: "SOLO" }, emptyMatches, players);
-    expect(winsResult).toBeDefined();
-    expect(winsResult.every((entry) => entry.score === 0)).toBe(true);
-
-    const championResult = processCriteria(
-      { type: "MOST_WINS_CHAMPION", championId: ChampionIdSchema.parse(157), queue: "SOLO" },
-      emptyMatches,
-      players,
-    );
-    expect(championResult).toBeDefined();
-    expect(championResult.every((entry) => entry.score === 0)).toBe(true);
+    testEmptyMatchData();
   });
 
-  it("should correctly filter by queue type", () => {
-    const matchPath = join(import.meta.dir, "../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json");
-    const match = loadMatch(matchPath);
+  it("should correctly filter by queue type", async () => {
+    const matchPath = `${import.meta.dir}/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
+    const match = await loadMatch(matchPath);
     const queueId = match.info.queueId;
 
     // Extract actual PUUIDs from the match
@@ -128,19 +158,7 @@ describe("processCriteria integration tests", () => {
       throw new Error("No participants in match fixture");
     }
 
-    const player: PlayerWithAccounts = {
-      id: PlayerIdSchema.parse(1),
-      alias: "TestPlayer",
-      discordId: testAccountId("100000000"),
-      accounts: [
-        {
-          id: AccountIdSchema.parse(1),
-          alias: "TestPlayer",
-          puuid: LeaguePuuidSchema.parse(puuid),
-          region: "AMERICA_NORTH",
-        },
-      ],
-    };
+    const player = createTestPlayerFromPuuid(puuid, 0);
 
     // Test matching queue filter
     // queueId 1700 = ARENA, 420 = SOLO, 440 = FLEX
@@ -165,9 +183,9 @@ describe("processCriteria integration tests", () => {
     }
   });
 
-  it("should calculate wins and losses correctly from real data", () => {
-    const matchPath = join(import.meta.dir, "../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json");
-    const match = loadMatch(matchPath);
+  it("should calculate wins and losses correctly from real data", async () => {
+    const matchPath = `${import.meta.dir}/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
+    const match = await loadMatch(matchPath);
 
     // Get first participant and their win status
     const firstParticipant = match.info.participants[0];
@@ -175,19 +193,7 @@ describe("processCriteria integration tests", () => {
       throw new Error("No participants in match fixture");
     }
 
-    const player: PlayerWithAccounts = {
-      id: PlayerIdSchema.parse(1),
-      alias: "TestPlayer",
-      discordId: testAccountId("100000000"),
-      accounts: [
-        {
-          id: AccountIdSchema.parse(1),
-          alias: "TestPlayer",
-          puuid: LeaguePuuidSchema.parse(firstParticipant.puuid),
-          region: "AMERICA_NORTH",
-        },
-      ],
-    };
+    const player = createTestPlayerFromParticipant(firstParticipant);
 
     const result = processCriteria({ type: "MOST_WINS_PLAYER", queue: "ALL" }, [match], [player]);
 
@@ -209,12 +215,12 @@ describe("processCriteria integration tests", () => {
     }
   });
 
-  it("should handle multiple matches from same player", () => {
-    const match1Path = join(import.meta.dir, "../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json");
-    const match2Path = join(import.meta.dir, "../../model/__tests__/testdata/matches_2025_09_19_NA1_5370986469.json");
+  it("should handle multiple matches from same player", async () => {
+    const match1Path = `${import.meta.dir}/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
+    const match2Path = `${import.meta.dir}/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370986469.json`;
 
-    const match1 = loadMatch(match1Path);
-    const match2 = loadMatch(match2Path);
+    const match1 = await loadMatch(match1Path);
+    const match2 = await loadMatch(match2Path);
 
     // Find a common PUUID if exists, otherwise use first participant from first match
     const puuid = match1.metadata.participants[0];
@@ -285,9 +291,9 @@ describe("processCriteria integration tests", () => {
     expect(result[1]?.score).toEqual(goldRank);
   });
 
-  it("should correctly filter by champion ID", () => {
-    const matchPath = join(import.meta.dir, "../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json");
-    const match = loadMatch(matchPath);
+  it("should correctly filter by champion ID", async () => {
+    const matchPath = `${import.meta.dir}/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
+    const match = await loadMatch(matchPath);
 
     // Get first participant and their champion
     const firstParticipant = match.info.participants[0];
@@ -330,9 +336,9 @@ describe("processCriteria integration tests", () => {
     expect(nonMatchingResult[0]?.metadata?.["games"]).toBe(0);
   });
 
-  it("should handle win rate calculation with real data", () => {
-    const matchPath = join(import.meta.dir, "../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json");
-    const match = loadMatch(matchPath);
+  it("should handle win rate calculation with real data", async () => {
+    const matchPath = `${import.meta.dir}/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
+    const match = await loadMatch(matchPath);
 
     const firstParticipant = match.info.participants[0];
     if (!firstParticipant) {

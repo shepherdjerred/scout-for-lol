@@ -10,8 +10,8 @@
     "format:write": "bunx prettier --write src",
     "typecheck": "bunx tsc --noEmit"
   },
-  "dependencies": {
-    "typescript": "^5.5.4"
+  "devDependencies": {
+    "typescript": "^5.9.3"
   },
   "dagger": {
     "runtime": "bun"

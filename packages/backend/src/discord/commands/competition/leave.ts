@@ -1,10 +1,18 @@
-import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
-import { getCompetitionById } from "../../../database/competition/queries.js";
-import { removeParticipant, getParticipantStatus } from "../../../database/competition/participants.js";
-import { getErrorMessage } from "../../../utils/errors.js";
-import { truncateDiscordMessage } from "../../utils/message.js";
+import { type ChatInputCommandInteraction } from "discord.js";
+import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { removeParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.js";
+import {
+  replyWithErrorFromException,
+  replyWithError,
+  replyWithSuccess,
+} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
+import {
+  extractCompetitionId,
+  validateServerContext,
+  fetchCompetitionWithErrorHandling,
+  fetchLinkedPlayerForUser,
+} from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.js";
 
 /**
  * Execute /competition leave command
@@ -15,15 +23,10 @@ export async function executeCompetitionLeave(interaction: ChatInputCommandInter
   // Step 1: Extract and validate input
   // ============================================================================
 
-  const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
+  const competitionId = extractCompetitionId(interaction);
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
-  const serverId = interaction.guildId ? DiscordGuildIdSchema.parse(interaction.guildId) : null;
-
+  const serverId = await validateServerContext(interaction);
   if (!serverId) {
-    await interaction.reply({
-      content: truncateDiscordMessage("This command can only be used in a server"),
-      flags: MessageFlags.Ephemeral,
-    });
     return;
   }
 
@@ -31,31 +34,8 @@ export async function executeCompetitionLeave(interaction: ChatInputCommandInter
   // Step 2: Get user's linked Player account
   // ============================================================================
 
-  let player;
-  try {
-    player = await prisma.player.findFirst({
-      where: {
-        serverId,
-        discordId: userId,
-      },
-    });
-  } catch (error) {
-    console.error(`[Competition Leave] Error fetching player for user ${userId}:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`Error fetching player data: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
+  const player = await fetchLinkedPlayerForUser(interaction, serverId, userId, "Competition Leave");
   if (!player) {
-    await interaction.reply({
-      content: truncateDiscordMessage(`❌ No League account linked
-
-You need to link your League of Legends account first. Use:
-\`/subscription add region:NA1 riot-id:YourName#NA1 alias:YourName channel:#updates\``),
-      flags: MessageFlags.Ephemeral,
-    });
     return;
   }
 
@@ -63,25 +43,8 @@ You need to link your League of Legends account first. Use:
   // Step 3: Check if competition exists
   // ============================================================================
 
-  let competition;
-  try {
-    competition = await getCompetitionById(prisma, competitionId);
-  } catch (error) {
-    console.error(`[Competition Leave] Error fetching competition ${competitionId.toString()}:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`Error fetching competition: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
+  const competition = await fetchCompetitionWithErrorHandling(interaction, competitionId, "Competition Leave");
   if (!competition) {
-    await interaction.reply({
-      content: truncateDiscordMessage(`❌ Competition not found
-
-Competition with ID ${competitionId.toString()} does not exist.`),
-      flags: MessageFlags.Ephemeral,
-    });
     return;
   }
 
@@ -94,21 +57,18 @@ Competition with ID ${competitionId.toString()} does not exist.`),
     participantStatus = await getParticipantStatus(prisma, competitionId, player.id);
   } catch (error) {
     console.error(`[Competition Leave] Error checking participant status:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`Error checking participation status: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithErrorFromException(interaction, error, "checking participation status");
     return;
   }
 
   // Not a participant or already left
   if (!participantStatus || participantStatus === "LEFT") {
-    await interaction.reply({
-      content: truncateDiscordMessage(`❌ Not a participant
+    await replyWithError(
+      interaction,
+      `❌ Not a participant
 
-You're not in this competition. Use \`/competition list\` to see competitions you can join.`),
-      flags: MessageFlags.Ephemeral,
-    });
+You're not in this competition. Use \`/competition list\` to see competitions you can join.`,
+    );
     return;
   }
 
@@ -123,10 +83,7 @@ You're not in this competition. Use \`/competition list\` to see competitions yo
     );
   } catch (error) {
     console.error(`[Competition Leave] Error removing participant:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`Error leaving competition: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
+    await replyWithErrorFromException(interaction, error, "leaving competition");
     return;
   }
 
@@ -134,12 +91,12 @@ You're not in this competition. Use \`/competition list\` to see competitions yo
   // Step 6: Send success message
   // ============================================================================
 
-  await interaction.reply({
-    content: truncateDiscordMessage(`✅ You've left the competition
+  await replyWithSuccess(
+    interaction,
+    `✅ You've left the competition
 
 You're no longer participating in **${competition.title}**.
 
-Note: You cannot rejoin a competition after leaving.`),
-    flags: MessageFlags.Ephemeral,
-  });
+Note: You cannot rejoin a competition after leaving.`,
+  );
 }

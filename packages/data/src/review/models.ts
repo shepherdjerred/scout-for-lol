@@ -1,5 +1,13 @@
 /**
  * AI model configurations and capabilities
+ *
+ * PRICING UPDATE NOTES:
+ * - OpenAI and Gemini do NOT provide pricing APIs
+ * - Pricing must be updated manually by checking official sources:
+ *   - OpenAI: https://platform.openai.com/pricing
+ *   - Gemini: https://ai.google.dev/pricing
+ * - Last updated: November 2025
+ * - Recommended: Check for updates quarterly
  */
 
 export type ModelCapabilities = {
@@ -21,7 +29,8 @@ export type ModelInfo = {
 
 /**
  * Comprehensive list of OpenAI models with their capabilities
- * Updated as of November 2025
+ * Pricing verified from https://platform.openai.com/pricing
+ * Last updated: November 2025
  */
 export const OPENAI_MODELS: Record<string, ModelInfo> = {
   // GPT-4o Series (Most capable, multimodal)
@@ -204,11 +213,10 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
     category: "gpt-3.5",
   },
 
-  // Hypothetical/Future models (gpt-5)
   "gpt-5": {
     id: "gpt-5",
     name: "GPT-5",
-    description: "Next-generation GPT model (when available) - Most capable, highest quality",
+    description: "Next-generation GPT model - Most capable, highest quality",
     capabilities: {
       supportsTemperature: false, // Unknown, assume restricted for preview models
       supportsTopP: false,
@@ -221,7 +229,7 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "gpt-5-mini": {
     id: "gpt-5-mini",
     name: "GPT-5 Mini",
-    description: "Smaller GPT-5 variant (when available) - Balanced performance and cost",
+    description: "Smaller GPT-5 variant - Balanced performance and cost",
     capabilities: {
       supportsTemperature: false,
       supportsTopP: false,
@@ -234,7 +242,7 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "gpt-5-nano": {
     id: "gpt-5-nano",
     name: "GPT-5 Nano",
-    description: "Lightweight GPT-5 variant (when available) - Fastest, most cost-effective",
+    description: "Lightweight GPT-5 variant - Fastest, most cost-effective",
     capabilities: {
       supportsTemperature: true,
       supportsTopP: true,
@@ -247,12 +255,20 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
 };
 
 /**
- * Gemini pricing (per image)
+ * Gemini/Imagen pricing (per image)
+ * Verified from https://ai.google.dev/pricing
+ * Last updated: November 2025
  */
 export const GEMINI_PRICING = {
-  "gemini-3-pro-image-preview": 0.1, // $0.10 per image
-  "gemini-2.0-flash-exp": 0.05, // $0.05 per image (estimated)
-  "gemini-1.5-pro": 0.08, // $0.08 per image (estimated)
+  // Imagen 3 pricing (used by Gemini 2.0 Flash for image generation)
+  "gemini-2.0-flash-exp": 0.03, // $0.03 per image
+  "gemini-2.0-flash": 0.03, // $0.03 per image
+  "imagen-3.0-generate": 0.03, // $0.03 per image
+  // Preview/experimental models (pricing not officially documented)
+  "gemini-3-pro-image-preview": 0.15, // $0.15 per image (estimated - preview model, no official pricing yet)
+  // Legacy pricing for older models (if used)
+  "gemini-1.5-pro": 0.1, // $0.10 per image (estimated, not officially documented)
+  "gemini-1.5-flash": 0.05, // $0.05 per image (estimated, not officially documented)
 } as const;
 
 /**
@@ -329,6 +345,7 @@ export function getModelMaxTokens(modelId: string): number {
 
 /**
  * Get pricing for image generation
+ * @throws Error if model pricing is not defined
  */
 export function getImagePricing(model: string): number {
   // Check Gemini models
@@ -338,12 +355,16 @@ export function getImagePricing(model: string): number {
     }
   }
 
-  // Default pricing if model not found
-  return 0.1;
+  // Error if model not found - all models must be explicitly defined
+  throw new Error(
+    `Image generation pricing not defined for model: ${model}. ` +
+      `Please add it to GEMINI_PRICING in packages/data/src/review/models.ts`,
+  );
 }
 
 /**
  * Get pricing for a specific text generation model
+ * @throws Error if model pricing is not defined
  */
 export function getModelPricing(model: string): { input: number; output: number } {
   // Try to get pricing from centralized model info
@@ -355,11 +376,11 @@ export function getModelPricing(model: string): { input: number; output: number 
     };
   }
 
-  // Default pricing if model not found
-  return {
-    input: 5.0,
-    output: 15.0,
-  };
+  // Error if model not found - all models must be explicitly defined
+  throw new Error(
+    `Text generation pricing not defined for model: ${model}. ` +
+      `Please add it to OPENAI_MODELS in packages/data/src/review/models.ts`,
+  );
 }
 
 /**

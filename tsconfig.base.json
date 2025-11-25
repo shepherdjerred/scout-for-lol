@@ -9,8 +9,18 @@
     // Bundler mode
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "noEmit": true,
     "esModuleInterop": true,
+    "downlevelIteration": true,
+    // Workspace path mappings
+    "baseUrl": ".",
+    "paths": {
+      "@scout-for-lol/backend/*": ["./packages/backend/src/*", "./packages/backend/*"],
+      "@scout-for-lol/frontend/*": ["./packages/frontend/src/*"],
+      "@scout-for-lol/data/*": ["./packages/data/src/*"],
+      "@scout-for-lol/data": ["./packages/data/src/index.ts"],
+      "@scout-for-lol/report/*": ["./packages/report/src/*"],
+      "@scout-for-lol/report": ["./packages/report/src/index.ts"]
+    },
     // Best practices
     "strict": true,
     "skipLibCheck": true,
@@ -20,7 +30,7 @@
     // Maximum strictness for safety
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-    "exactOptionalPropertyTypes": false,
+    "exactOptionalPropertyTypes": true,
     "noImplicitReturns": true,
     "noPropertyAccessFromIndexSignature": true,
     "noUnusedLocals": true,
@@ -32,7 +42,8 @@
     "isolatedModules": true,
     "noErrorTruncation": true,
     // Performance - enable incremental compilation
-    "incremental": true
+    "incremental": true,
+    "noEmit": true
   },
   "exclude": ["node_modules", "dist", "**/node_modules", "**/dist"]
 }

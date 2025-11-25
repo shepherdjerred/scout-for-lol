@@ -1,24 +1,60 @@
-import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
 import { z } from "zod";
-import { api } from "../../api/api.js";
+import { api } from "@scout-for-lol/backend/league/api/api.js";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
-import { mapRegionToEnum } from "../../model/region.js";
-import type { PlayerConfigEntry, Region, MatchId, CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
-import { MatchIdSchema } from "@scout-for-lol/data";
-import { getPlayer } from "../../model/player.js";
-import { AttachmentBuilder, EmbedBuilder, MessageCreateOptions } from "discord.js";
+import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.js";
+import type {
+  PlayerConfigEntry,
+  Region,
+  MatchId,
+  CompletedMatch,
+  ArenaMatch,
+  QueueType,
+  MatchDto,
+} from "@scout-for-lol/data";
+import { MatchIdSchema, queueTypeToDisplayString, MatchDtoSchema } from "@scout-for-lol/data";
+import { getPlayer } from "@scout-for-lol/backend/league/model/player.js";
+import type { MessageCreateOptions } from "discord.js";
+import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
-import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "../../../storage/s3.js";
-import { toMatch, toArenaMatch } from "../../model/match.js";
-import { generateMatchReview } from "../../review/generator.js";
+import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "@scout-for-lol/backend/storage/s3.js";
+import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
+import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
+import { match } from "ts-pattern";
+
+/**
+ * Append review metadata as debug information
+ */
+function appendReviewMetadata(
+  reviewText: string,
+  metadata: { reviewerName: string; playerName: string; style?: string; themes?: string[] },
+): string {
+  const { reviewerName, playerName, style, themes } = metadata;
+  const debugInfo = [
+    "\n\n━━━━━━━━━━━━━━━━━━━━━━",
+    "📊 **Review Metadata**",
+    `👤 **Reviewer:** ${reviewerName}`,
+    `🎮 **Player:** ${playerName}`,
+  ];
+
+  if (style) {
+    debugInfo.push(`🎨 **Style:** ${style}`);
+  }
+
+  if (themes && themes.length > 0) {
+    const themeText =
+      themes.length === 1 && themes[0] ? `🎭 **Theme:** ${themes[0]}` : `🎭 **Themes:** ${themes.join(" × ")}`;
+    debugInfo.push(themeText);
+  }
+
+  return reviewText + "\n" + debugInfo.join("\n");
+}
 
 /**
  * Fetch match data from Riot API
+ *
+ * Validates the response against our schema to ensure type safety and catch API changes.
  */
-export async function fetchMatchData(
-  matchId: MatchId,
-  playerRegion: Region,
-): Promise<MatchV5DTOs.MatchDto | undefined> {
+export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Promise<MatchDto | undefined> {
   try {
     const region = mapRegionToEnum(playerRegion);
     const regionGroup = regionToRegionGroup(region);
@@ -26,7 +62,15 @@ export async function fetchMatchData(
     console.log(`[fetchMatchData] 📥 Fetching match data for ${matchId}`);
     const response = await api.MatchV5.get(matchId, regionGroup);
 
-    return response.response;
+    // Validate and parse the API response to ensure it matches our schema
+    try {
+      const validated = MatchDtoSchema.parse(response.response);
+      return validated;
+    } catch (parseError) {
+      console.error(`[fetchMatchData] ❌ Match data validation failed for ${matchId}:`, parseError);
+      console.error(`[fetchMatchData] This may indicate an API schema change or data corruption`);
+      return undefined;
+    }
   } catch (e) {
     const result = z.object({ status: z.number() }).safeParse(e);
     if (result.success) {
@@ -43,26 +87,93 @@ export async function fetchMatchData(
 }
 
 /**
+ * Format a natural language message about who finished the game
+ */
+function formatGameCompletionMessage(playerAliases: string[], queueType: QueueType): string {
+  const queueName = queueTypeToDisplayString(queueType);
+
+  if (playerAliases.length === 1) {
+    const player = playerAliases[0];
+    if (player === undefined) {
+      return `Game finished: ${queueName}`;
+    }
+    return `${player} finished a ${queueName} game`;
+  } else if (playerAliases.length === 2) {
+    const player1 = playerAliases[0];
+    const player2 = playerAliases[1];
+    if (player1 === undefined || player2 === undefined) {
+      return `Game finished: ${queueName}`;
+    }
+    return `${player1} and ${player2} finished a ${queueName} game`;
+  } else if (playerAliases.length >= 3) {
+    const allButLast = playerAliases.slice(0, -1).join(", ");
+    const last = playerAliases[playerAliases.length - 1];
+    if (last === undefined) {
+      return `Game finished: ${queueName}`;
+    }
+    return `${allButLast}, and ${last} finished a ${queueName} game`;
+  }
+
+  // Fallback (shouldn't happen)
+  return `Game finished: ${queueName}`;
+}
+
+/**
  * Create image attachments for Discord message
  */
-export async function createMatchImage(
+async function createMatchImage(
   match: CompletedMatch | ArenaMatch,
   matchId: MatchId,
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
-  const isArena = match.queueType === "arena";
-  const svg = isArena ? await arenaMatchToSvg(match) : await matchToSvg(match);
-  const image = await svgToPng(svg);
+  let svg: string;
+  try {
+    let svgData: string;
+    if (match.queueType === "arena") {
+      const arenaMatch: ArenaMatch = match;
+      svgData = await arenaMatchToSvg(arenaMatch);
+    } else {
+      const completedMatch: CompletedMatch = match;
+      svgData = await matchToSvg(completedMatch);
+    }
+    const SvgSchema = z.string();
+    svg = SvgSchema.parse(svgData);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(`[createMatchImage] Failed to generate SVG:`, error);
+      throw error;
+    }
+    const wrappedError = new Error(String(error));
+    console.error(`[createMatchImage] Failed to generate SVG:`, wrappedError);
+    throw wrappedError;
+  }
+
+  let image: Uint8Array;
+  try {
+    const imageData = await svgToPng(svg);
+    const ImageSchema = z.instanceof(Uint8Array);
+    image = ImageSchema.parse(imageData);
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(`[createMatchImage] Failed to convert SVG to PNG:`, error);
+      throw error;
+    }
+    const wrappedError = new Error(String(error));
+    console.error(`[createMatchImage] Failed to convert SVG to PNG:`, wrappedError);
+    throw wrappedError;
+  }
 
   // Save both PNG and SVG to S3
   try {
-    const queueTypeForStorage = isArena ? "arena" : (match.queueType ?? "unknown");
+    const queueTypeForStorage = match.queueType === "arena" ? "arena" : (match.queueType ?? "unknown");
     await saveImageToS3(matchId, image, queueTypeForStorage);
     await saveSvgToS3(matchId, svg, queueTypeForStorage);
   } catch (error) {
     console.error(`[createMatchImage] Failed to save images to S3:`, error);
   }
 
-  const attachment = new AttachmentBuilder(image).setName("match.png");
+  // Convert Uint8Array to Buffer for Discord.js type compatibility
+  const buffer = Buffer.from(image);
+  const attachment = new AttachmentBuilder(buffer).setName("match.png");
   if (!attachment.name) {
     throw new Error("[createMatchImage] Attachment name is null");
   }
@@ -84,7 +195,7 @@ export async function createMatchImage(
  * @returns MessageCreateOptions ready to send to Discord, or undefined if no tracked players found
  */
 export async function generateMatchReport(
-  matchData: MatchV5DTOs.MatchDto,
+  matchData: MatchDto,
   trackedPlayers: PlayerConfigEntry[],
 ): Promise<MessageCreateOptions | undefined> {
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
@@ -116,101 +227,95 @@ export async function generateMatchReport(
     // Get full player data with ranks
     const players = await Promise.all(playersInMatch.map((playerConfig) => getPlayer(playerConfig)));
 
-    // Check if it's an arena match
-    const isArena = matchData.info.queueId === 1700;
+    // Process match based on queue type
+    return await match<number, Promise<MessageCreateOptions>>(matchData.info.queueId)
+      .with(1700, async (): Promise<MessageCreateOptions> => {
+        console.log(`[generateMatchReport] 🎯 Processing as arena match`);
+        const arenaMatch = await toArenaMatch(players, matchData);
 
-    if (isArena) {
-      console.log(`[generateMatchReport] 🎯 Processing as arena match`);
-      const arenaMatch = await toArenaMatch(players, matchData);
+        // Create Discord message for arena
+        const [attachment, embed] = await createMatchImage(arenaMatch, matchId);
 
-      // Create Discord message for arena
-      const [attachment, embed] = await createMatchImage(arenaMatch, matchId);
+        // Generate completion message
+        const playerAliases = playersInMatch.map((p) => p.alias);
+        const completionMessage = formatGameCompletionMessage(playerAliases, arenaMatch.queueType);
 
-      return {
-        files: [attachment],
-        embeds: [embed],
-      };
-      // TODO: use ts-pattern for exhaustive match
-    } else {
-      console.log(`[generateMatchReport] ⚔️  Processing as standard match`);
-      // Process match for all tracked players
-      if (players.length === 0) {
-        throw new Error("No player data available");
-      }
-      const completedMatch = toMatch(players, matchData, undefined, undefined);
-
-      // Generate AI review (text and optional image) - only for ranked queues (solo/flex/clash)
-      const isRankedQueue =
-        completedMatch.queueType === "solo" ||
-        completedMatch.queueType === "flex" ||
-        completedMatch.queueType === "clash" ||
-        completedMatch.queueType === "aram clash";
-      let reviewText: string | undefined;
-      let reviewImage: Buffer | undefined;
-      if (isRankedQueue) {
-        try {
-          const review = await generateMatchReview(completedMatch, matchId, matchData);
-          if (review) {
-            reviewText = review.text;
-            reviewImage = review.image;
-
-            // Append debug metadata if available
-            if (review.metadata) {
-              const { reviewerName, playerName, style, themes } = review.metadata;
-              const debugInfo = [
-                "\n\n━━━━━━━━━━━━━━━━━━━━━━",
-                "📊 **Review Metadata**",
-                `👤 **Reviewer:** ${reviewerName}`,
-                `🎮 **Player:** ${playerName}`,
-              ];
-
-              if (style) {
-                debugInfo.push(`🎨 **Style:** ${style}`);
-              }
-
-              if (themes && themes.length > 0) {
-                if (themes.length === 1) {
-                  const theme = themes[0];
-                  if (theme) {
-                    debugInfo.push(`🎭 **Theme:** ${theme}`);
-                  }
-                } else {
-                  debugInfo.push(`🎭 **Themes:** ${themes.join(" × ")}`);
-                }
-              }
-
-              reviewText = reviewText + "\n" + debugInfo.join("\n");
-            }
-          }
-        } catch (error) {
-          console.error(`[generateMatchReport] Error generating AI review:`, error);
+        return {
+          content: completionMessage,
+          files: [attachment],
+          embeds: [embed],
+        };
+      })
+      .otherwise(async (): Promise<MessageCreateOptions> => {
+        console.log(`[generateMatchReport] ⚔️  Processing as standard match`);
+        // Process match for all tracked players
+        if (players.length === 0) {
+          throw new Error("No player data available");
         }
-      } else {
-        console.log(
-          `[generateMatchReport] Skipping AI review - not a ranked solo/flex queue match (queueType: ${completedMatch.queueType ?? "unknown"})`,
-        );
-      }
+        const completedMatch = toMatch(players, matchData, undefined, undefined);
 
-      // Create Discord message
-      const [matchReportAttachment, matchReportEmbed] = await createMatchImage(completedMatch, matchId);
+        // Generate AI review (text and optional image) - only for ranked queues (solo/flex/clash)
+        const isRankedQueue =
+          completedMatch.queueType === "solo" ||
+          completedMatch.queueType === "flex" ||
+          completedMatch.queueType === "clash" ||
+          completedMatch.queueType === "aram clash";
+        let reviewText: string | undefined;
+        let reviewImage: Uint8Array | undefined;
+        if (isRankedQueue) {
+          try {
+            const review = await generateMatchReview(completedMatch, matchId, matchData);
+            if (review) {
+              reviewText = review.text;
+              reviewImage = review.image;
 
-      // Build files array - start with match report image
-      const files = [matchReportAttachment];
+              // Append debug metadata if available
+              if (review.metadata) {
+                reviewText = appendReviewMetadata(reviewText, review.metadata);
+              }
+            }
+          } catch (error) {
+            console.error(`[generateMatchReport] Error generating AI review:`, error);
+          }
+        } else {
+          console.log(
+            `[generateMatchReport] Skipping AI review - not a ranked solo/flex queue match (queueType: ${completedMatch.queueType ?? "unknown"})`,
+          );
+        }
 
-      // Add AI-generated image if available
-      if (reviewImage) {
-        const aiImageAttachment = new AttachmentBuilder(reviewImage).setName("ai-review.png");
-        files.push(aiImageAttachment);
-        console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
-      }
+        // Create Discord message
+        const [matchReportAttachment, matchReportEmbed] = await createMatchImage(completedMatch, matchId);
 
-      return {
-        files: files,
-        embeds: [matchReportEmbed],
-        // Include review text if available (without image, text is shown as message content)
-        ...(reviewText && !reviewImage && { content: reviewText }),
-      };
-    }
+        // Build files array - start with match report image
+        const files = [matchReportAttachment];
+
+        // Add AI-generated image if available
+        if (reviewImage) {
+          // Convert Uint8Array to Buffer for Discord.js type compatibility
+          // Using Bun's Buffer (not Node.js) - Discord.js types require Buffer, not Uint8Array
+          const aiBuffer = Buffer.from(reviewImage);
+          const aiImageAttachment = new AttachmentBuilder(aiBuffer).setName("ai-review.png");
+          files.push(aiImageAttachment);
+          console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
+        }
+
+        // Generate completion message
+        const playerAliases = playersInMatch.map((p) => p.alias);
+        const queueType = completedMatch.queueType ?? "custom";
+        const completionMessage = formatGameCompletionMessage(playerAliases, queueType);
+
+        // Combine completion message with review text if available
+        let messageContent = completionMessage;
+        if (reviewText && !reviewImage) {
+          messageContent = `${completionMessage}\n\n${reviewText}`;
+        }
+
+        return {
+          files: files,
+          embeds: [matchReportEmbed],
+          content: messageContent,
+        };
+      });
   } catch (error) {
     console.error(`[generateMatchReport] ❌ Error generating match report for ${matchId}:`, error);
     throw error;

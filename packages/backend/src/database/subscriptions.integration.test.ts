@@ -1,59 +1,34 @@
 import { afterAll, test, expect, beforeEach, afterEach, describe } from "bun:test";
-import { PrismaClient } from "../../generated/prisma/client/index.js";
-import { execSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { getChannelsSubscribedToPlayers } from "./index.js";
+import { getChannelsSubscribedToPlayers } from "@scout-for-lol/backend/database/index.js";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-  LeaguePuuid,
   LeaguePuuidSchema,
   type DiscordAccountId,
   type DiscordChannelId,
   type DiscordGuildId,
+  type LeaguePuuid,
   type PlayerId,
 } from "@scout-for-lol/data";
 
+import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.js";
+
 // Create a temporary database for testing
-const testDbDir = mkdtempSync(join(tmpdir(), "subscriptions-test-"));
-const testDbPath = join(testDbDir, "test.db");
-const testDbUrl = `file:${testDbPath}`;
-
-// Push schema to test database
-const schemaPath = join(import.meta.dir, "../..", "prisma/schema.prisma");
-execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
-  env: {
-    ...process.env,
-    DATABASE_URL: testDbUrl,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-  },
-  stdio: "inherit",
-});
-
-const testPrisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: testDbUrl,
-    },
-  },
-});
+const { prisma: testPrisma } = createTestDatabase("subscriptions-test");
 
 beforeEach(async () => {
   // Clean up database before each test
-  await testPrisma.subscription.deleteMany();
-  await testPrisma.account.deleteMany();
-  await testPrisma.player.deleteMany();
+  await deleteIfExists(() => testPrisma.subscription.deleteMany());
+  await deleteIfExists(() => testPrisma.account.deleteMany());
+  await deleteIfExists(() => testPrisma.player.deleteMany());
 });
 
 afterEach(async () => {
   // Clean up after each test
-  await testPrisma.subscription.deleteMany();
-  await testPrisma.account.deleteMany();
-  await testPrisma.player.deleteMany();
+  await deleteIfExists(() => testPrisma.subscription.deleteMany());
+  await deleteIfExists(() => testPrisma.account.deleteMany());
+  await deleteIfExists(() => testPrisma.player.deleteMany());
 });
 afterAll(async () => {
   await testPrisma.$disconnect();

@@ -1,36 +1,18 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { PermissionsBitField, PermissionFlagsBits } from "discord.js";
-import { PrismaClient } from "../../../generated/prisma/client/index.js";
-import { execSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { canCreateCompetition, grantPermission, hasPermission, revokePermission } from "./permissions.js";
-import { clearAllRateLimits, recordCreation } from "./rate-limit.js";
+import {
+  canCreateCompetition,
+  grantPermission,
+  hasPermission,
+  revokePermission,
+} from "@scout-for-lol/backend/database/competition/permissions.js";
+import { clearAllRateLimits, recordCreation } from "@scout-for-lol/backend/database/competition/rate-limit.js";
 
-import { testGuildId, testAccountId } from "../../testing/test-ids.js";
+import { testGuildId, testAccountId } from "@scout-for-lol/backend/testing/test-ids.js";
+import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.js";
+
 // Create a test database
-const testDir = mkdtempSync(join(tmpdir(), "permissions-test-"));
-const testDbPath = join(testDir, "test.db");
-const schemaPath = join(__dirname, "../../..", "prisma/schema.prisma");
-execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
-  cwd: join(__dirname, "../../.."),
-  env: {
-    ...process.env,
-    DATABASE_URL: `file:${testDbPath}`,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-  },
-  stdio: "ignore",
-});
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: `file:${testDbPath}`,
-    },
-  },
-});
+const { prisma } = createTestDatabase("permissions-test");
 
 // Clean up before each test
 beforeEach(async () => {
@@ -50,7 +32,12 @@ describe("hasPermission", () => {
     const serverId = testGuildId("123456789012345678");
     const userId = testAccountId("987654321098765432");
 
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", testAccountId("12300000000"));
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: testAccountId("12300000000"),
+    });
 
     const result = await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION");
     expect(result).toBe(true);
@@ -70,13 +57,12 @@ describe("hasPermission", () => {
     const userId = testAccountId("987654321098765432");
 
     // Grant on server1
-    await grantPermission(
-      prisma,
-      testGuildId("111111111111111111"),
+    await grantPermission(prisma, {
+      serverId: testGuildId("111111111111111111"),
       userId,
-      "CREATE_COMPETITION",
-      testAccountId("12300000000"),
-    );
+      permission: "CREATE_COMPETITION",
+      grantedBy: testAccountId("12300000000"),
+    });
 
     // Has permission on server1
     expect(await hasPermission(prisma, testGuildId("111111111111111111"), userId, "CREATE_COMPETITION")).toBe(true);
@@ -96,7 +82,12 @@ describe("grantPermission", () => {
     const userId = testAccountId("987654321098765432");
     const adminId = testAccountId("111111111111111111");
 
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", adminId);
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: adminId,
+    });
 
     const record = await prisma.serverPermission.findUnique({
       where: {
@@ -119,9 +110,19 @@ describe("grantPermission", () => {
     const adminId = testAccountId("111111111111111111");
 
     // Grant twice
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", adminId);
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: adminId,
+    });
 
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", adminId);
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: adminId,
+    });
 
     // Should still only have one record
     const count = await prisma.serverPermission.count({
@@ -140,10 +141,20 @@ describe("grantPermission", () => {
     const userId = testAccountId("987654321098765432");
 
     // Grant by admin1
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", testAccountId("10000000100"));
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: testAccountId("10000000100"),
+    });
 
     // Re-grant by admin2
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", testAccountId("20000000200"));
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: testAccountId("20000000200"),
+    });
 
     const record = await prisma.serverPermission.findUnique({
       where: {
@@ -169,7 +180,12 @@ describe("revokePermission", () => {
     const userId = testAccountId("987654321098765432");
 
     // Grant permission
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", testAccountId("12300000000"));
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: testAccountId("12300000000"),
+    });
 
     expect(await hasPermission(prisma, serverId, userId, "CREATE_COMPETITION")).toBe(true);
 
@@ -251,7 +267,12 @@ describe("canCreateCompetition - granted permission", () => {
     const userId = testAccountId("987654321098765432");
 
     // Grant permission
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", testAccountId("12300000000"));
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: testAccountId("12300000000"),
+    });
 
     // Non-admin permissions
     const permissions = new PermissionsBitField(PermissionFlagsBits.SendMessages);
@@ -285,7 +306,12 @@ describe("canCreateCompetition - rate limit", () => {
     const userId = testAccountId("987654321098765432");
 
     // Grant permission
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", testAccountId("12300000000"));
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: testAccountId("12300000000"),
+    });
 
     // Record creation to trigger rate limit
     recordCreation(serverId, userId);
@@ -304,7 +330,12 @@ describe("canCreateCompetition - rate limit", () => {
     const serverId = testGuildId("123456789012345678");
     const userId = testAccountId("987654321098765432");
 
-    await grantPermission(prisma, serverId, userId, "CREATE_COMPETITION", testAccountId("12300000000"));
+    await grantPermission(prisma, {
+      serverId,
+      userId,
+      permission: "CREATE_COMPETITION",
+      grantedBy: testAccountId("12300000000"),
+    });
 
     recordCreation(serverId, userId);
 

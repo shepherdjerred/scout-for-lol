@@ -7,7 +7,7 @@
  */
 
 import { z } from "zod";
-import type { Lane } from "../model/lane.js";
+import type { Lane } from "@scout-for-lol/data/model/lane.js";
 
 /**
  * Personality metadata schema

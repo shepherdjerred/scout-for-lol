@@ -1,10 +1,14 @@
-import { type ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits } from "discord.js";
-import { CompetitionIdSchema, DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
-import { cancelCompetition, getCompetitionById } from "../../../database/competition/queries.js";
-import { getErrorMessage } from "../../../utils/errors.js";
-import { asTextChannel } from "../../utils/channel.js";
-import { truncateDiscordMessage } from "../../utils/message.js";
+import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
+import { DiscordAccountIdSchema } from "@scout-for-lol/data";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { cancelCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { asTextChannel } from "@scout-for-lol/backend/discord/utils/channel.js";
+import {
+  extractCompetitionId,
+  fetchCompetitionWithErrorHandling,
+} from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.js";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 
 /**
  * Execute /competition cancel command
@@ -15,30 +19,15 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   // Step 1: Extract and validate input
   // ============================================================================
 
-  const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
+  const competitionId = extractCompetitionId(interaction);
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
 
   // ============================================================================
   // Step 2: Check if competition exists
   // ============================================================================
 
-  let competition;
-  try {
-    competition = await getCompetitionById(prisma, competitionId);
-  } catch (error) {
-    console.error(`[Competition Cancel] Error fetching competition ${competitionId.toString()}:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`Error fetching competition: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
+  const competition = await fetchCompetitionWithErrorHandling(interaction, competitionId, "Competition Cancel");
   if (!competition) {
-    await interaction.reply({
-      content: truncateDiscordMessage(`Competition with ID ${competitionId.toString()} not found`),
-      flags: MessageFlags.Ephemeral,
-    });
     return;
   }
 
@@ -50,28 +39,13 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   const isOwner = competition.ownerId === userId;
 
   // Check if user is admin (only works in guild context)
-  // Note: We cannot use z.function() here because it loses the 'this' context
-  // when Zod validates by calling the function. Instead, we use a type guard.
-  let isAdmin = false;
-  if (
-    member &&
-    // eslint-disable-next-line no-restricted-syntax -- ok only for this function -- signed off by a human
-    typeof member === "object" &&
-    "permissions" in member &&
-    member.permissions &&
-    // eslint-disable-next-line no-restricted-syntax -- ok only for this function -- signed off by a human
-    typeof member.permissions === "object" &&
-    "has" in member.permissions &&
-    // eslint-disable-next-line no-restricted-syntax -- ok only for this function -- signed off by a human
-    typeof member.permissions.has === "function"
-  ) {
-    isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
-  }
+  const isAdmin =
+    member && typeof member.permissions !== "string" && member.permissions.has(PermissionFlagsBits.Administrator);
 
   if (!isOwner && !isAdmin) {
     await interaction.reply({
       content: truncateDiscordMessage("Only the competition owner or server administrators can cancel competitions"),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -87,7 +61,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
     console.error(`[Competition Cancel] Error cancelling competition ${competitionId.toString()}:`, error);
     await interaction.reply({
       content: truncateDiscordMessage(`Error cancelling competition: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -98,7 +72,7 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
 
   await interaction.reply({
     content: truncateDiscordMessage(`Competition "${competition.title}" has been cancelled`),
-    flags: MessageFlags.Ephemeral,
+    ephemeral: true,
   });
 
   // ============================================================================

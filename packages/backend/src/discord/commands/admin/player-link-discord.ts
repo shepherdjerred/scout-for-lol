@@ -1,9 +1,15 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
-import { fromError } from "zod-validation-error";
-import { getErrorMessage } from "../../../utils/errors.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/command-wrapper.js";
+import { findPlayerByAliasWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
+import { buildPlayerUpdateResponse } from "@scout-for-lol/backend/discord/commands/admin/utils/player-responses.js";
+import { updatePlayerDiscordId } from "@scout-for-lol/backend/discord/commands/admin/utils/player-updates.js";
+import {
+  validateDiscordLink,
+  executeDiscordLinkOperation,
+} from "@scout-for-lol/backend/discord/commands/admin/utils/discord-link-helpers.js";
 
 const ArgsSchema = z.object({
   playerAlias: z.string().min(1).max(100),
@@ -12,126 +18,63 @@ const ArgsSchema = z.object({
 });
 
 export async function executePlayerLinkDiscord(interaction: ChatInputCommandInteraction) {
-  const startTime = Date.now();
-  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
-  const username = interaction.user.username;
+  return executeCommand({
+    interaction,
+    schema: ArgsSchema,
+    argsBuilder: (i) => ({
+      playerAlias: i.options.getString("player-alias"),
+      discordUserId: i.options.getUser("discord-user")?.id,
+      guildId: i.guildId,
+    }),
+    commandName: "player-link-discord",
+    handler: async ({ data: args }) => {
+      const { playerAlias, discordUserId, guildId } = args;
 
-  console.log(`🔗 Starting Discord link for user ${username} (${userId})`);
+      // Find the player
+      const player = await findPlayerByAliasWithSubscriptions(prisma, guildId, playerAlias, interaction);
+      if (!player) {
+        return;
+      }
 
-  let args: z.infer<typeof ArgsSchema>;
+      // TypeScript narrowing: player is non-null here
+      const playerNonNull: NonNullable<typeof player> = player;
 
-  try {
-    args = ArgsSchema.parse({
-      playerAlias: interaction.options.getString("player-alias"),
-      discordUserId: interaction.options.getUser("discord-user")?.id,
-      guildId: interaction.guildId,
-    });
+      // Validate Discord link
+      const validation = await validateDiscordLink({
+        prisma,
+        guildId,
+        player: playerNonNull,
+        discordUserId,
+        playerAlias,
+      });
+      if (!validation.success) {
+        await interaction.reply(validation.errorResponse);
+        return;
+      }
 
-    console.log(`✅ Command arguments validated successfully`);
-    console.log(`📋 Args: playerAlias="${args.playerAlias}", discordUserId=${args.discordUserId}`);
-  } catch (error) {
-    console.error(`❌ Invalid command arguments from ${username}:`, error);
-    const validationError = fromError(error);
-    await interaction.reply({
-      content: validationError.toString(),
-      ephemeral: true,
-    });
-    return;
-  }
+      console.log(`💾 Linking Discord ID ${discordUserId} to player "${playerAlias}"`);
 
-  const { playerAlias, discordUserId, guildId } = args;
+      await executeDiscordLinkOperation(
+        interaction,
+        async () => {
+          const updatedPlayer = await updatePlayerDiscordId(prisma, playerNonNull.id, discordUserId);
+          // updatePlayerDiscordId always returns a player (update operation never returns null)
+          // Check that result is not null
+          if (!updatedPlayer) {
+            throw new Error("Failed to update player");
+          }
+          const updatedPlayerNonNull = updatedPlayer;
 
-  // Find the player
-  const player = await prisma.player.findUnique({
-    where: {
-      serverId_alias: {
-        serverId: guildId,
-        alias: playerAlias,
-      },
-    },
-    include: {
-      accounts: true,
-      subscriptions: true,
-    },
-  });
-
-  if (!player) {
-    console.log(`❌ Player not found: "${playerAlias}"`);
-    await interaction.reply({
-      content: `❌ **Player not found**\n\nNo player with alias "${playerAlias}" exists in this server.`,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  // Check if this Discord ID is already linked to a different player
-  const existingPlayer = await prisma.player.findFirst({
-    where: {
-      serverId: guildId,
-      discordId: discordUserId,
-      NOT: {
-        id: player.id,
-      },
+          await interaction.reply(
+            buildPlayerUpdateResponse(
+              updatedPlayerNonNull,
+              "✅ **Discord ID linked successfully**",
+              `Linked <@${discordUserId}> to player "${playerAlias}"`,
+            ),
+          );
+        },
+        "link",
+      );
     },
   });
-
-  if (existingPlayer) {
-    console.log(`❌ Discord ID already linked to player "${existingPlayer.alias}"`);
-    await interaction.reply({
-      content: `❌ **Discord ID already linked**\n\nDiscord user <@${discordUserId}> is already linked to player "${existingPlayer.alias}".\n\nTo change the link, first unlink it from "${existingPlayer.alias}" using \`/admin player-unlink-discord\`, then link it to "${playerAlias}".`,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  // Check if player already has a Discord ID
-  if (player.discordId) {
-    console.log(`⚠️  Player already has Discord ID: ${player.discordId}`);
-    await interaction.reply({
-      content: `⚠️ **Player already has Discord ID**\n\nPlayer "${playerAlias}" is already linked to <@${player.discordId}>.\n\n${player.discordId === discordUserId ? "This Discord user is already linked to this player." : `To change it to <@${discordUserId}>, first unlink the current Discord ID using \`/admin player-unlink-discord\`, then link the new one.`}`,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  console.log(`💾 Linking Discord ID ${discordUserId} to player "${playerAlias}"`);
-
-  try {
-    const now = new Date();
-
-    // Update the player with Discord ID
-    const updatedPlayer = await prisma.player.update({
-      where: {
-        id: player.id,
-      },
-      data: {
-        discordId: discordUserId,
-        updatedTime: now,
-      },
-      include: {
-        accounts: true,
-        subscriptions: true,
-      },
-    });
-
-    const executionTime = Date.now() - startTime;
-    console.log(`✅ Discord ID linked successfully in ${executionTime.toString()}ms`);
-
-    const accountsList = updatedPlayer.accounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
-    const subscriptionsList =
-      updatedPlayer.subscriptions.length > 0
-        ? updatedPlayer.subscriptions.map((sub) => `<#${sub.channelId}>`).join(", ")
-        : "No active subscriptions.";
-
-    await interaction.reply({
-      content: `✅ **Discord ID linked successfully**\n\nLinked <@${discordUserId}> to player "${playerAlias}"\n\n**Accounts (${updatedPlayer.accounts.length.toString()}):**\n${accountsList}\n\n**Subscribed channels:** ${subscriptionsList}`,
-      ephemeral: true,
-    });
-  } catch (error) {
-    console.error(`❌ Database error during Discord link:`, error);
-    await interaction.reply({
-      content: `❌ **Error linking Discord ID**\n\nFailed to link Discord ID: ${getErrorMessage(error)}`,
-      ephemeral: true,
-    });
-  }
 }

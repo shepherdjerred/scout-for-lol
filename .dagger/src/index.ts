@@ -1,5 +1,5 @@
-/* eslint-disable max-lines */
-import { func, argument, Directory, object, Secret, Container } from "@dagger.io/dagger";
+import type { Directory, Secret, Container } from "@dagger.io/dagger";
+import { func, argument, object } from "@dagger.io/dagger";
 import {
   checkBackend,
   buildBackendImage,
@@ -7,17 +7,33 @@ import {
   smokeTestBackendImage,
   getBackendCoverage,
   getBackendTestReport,
-} from "./backend";
-import { checkReport, getReportCoverage, getReportTestReport } from "./report";
-import { checkReportUi, getReportUiCoverage, getReportUiTestReport, buildReportUi } from "./report-ui";
-import { checkData, getDataCoverage, getDataTestReport } from "./data";
-import { checkFrontend, buildFrontend, deployFrontend } from "./frontend";
-import { checkReviewDevTool } from "./review-dev-tool";
-import { getGitHubContainer, getBunNodeContainer } from "./base";
+} from "@scout-for-lol/.dagger/src/backend";
+import { checkReport, getReportCoverage, getReportTestReport } from "@scout-for-lol/.dagger/src/report";
+import { checkData, getDataCoverage, getDataTestReport } from "@scout-for-lol/.dagger/src/data";
+import { checkFrontend, buildFrontend, deployFrontend } from "@scout-for-lol/.dagger/src/frontend";
+import { getGitHubContainer, getBunNodeContainer } from "@scout-for-lol/.dagger/src/base";
 
 // Helper function to log with timestamp
 function logWithTimestamp(message: string): void {
   console.log(`[${new Date().toISOString()}] ${message}`);
+}
+
+// Helper to extract message from unknown error value
+function getErrorMessage(error: unknown): string {
+  if (error === null || error === undefined) {
+    return String(error);
+  }
+  // Check if it's an Error object with message
+  if (error instanceof Error) {
+    return error.message;
+  }
+  // Try JSON stringify for other types
+  try {
+    return JSON.stringify(error);
+  } catch {
+    // Fallback if stringify fails - return generic message
+    return "Unknown error occurred";
+  }
 }
 
 // Helper function to measure execution time
@@ -31,9 +47,8 @@ async function withTiming<T>(operation: string, fn: () => Promise<T>): Promise<T
     return result;
   } catch (error) {
     const duration = Date.now() - start;
-    logWithTimestamp(
-      `❌ ${operation} failed after ${duration.toString()}ms: ${error instanceof Error ? error.message : String(error)}`,
-    );
+    const errorMessage = getErrorMessage(error);
+    logWithTimestamp(`❌ ${operation} failed after ${duration.toString()}ms: ${errorMessage}`);
     throw error;
   }
 }
@@ -54,14 +69,18 @@ export class ScoutForLol {
     source: Directory,
   ): Promise<string> {
     logWithTimestamp("🔍 Starting comprehensive check process");
-    logWithTimestamp("📋 This includes TypeScript type checking, ESLint, and tests for all packages");
+    logWithTimestamp(
+      "📋 This includes TypeScript type checking, ESLint, tests for all packages, and custom ESLint rules tests",
+    );
 
     logWithTimestamp("📁 Prepared source directories for all packages");
 
     // Run checks in parallel - force container execution with .sync()
     await withTiming("parallel package checks (lint, typecheck, tests)", async () => {
       logWithTimestamp("🔄 Running lint, typecheck, and tests in parallel for all packages...");
-      logWithTimestamp("📦 Packages being checked: backend, report, report-ui, data, frontend, review-dev-tool");
+      logWithTimestamp(
+        "📦 Packages being checked: backend, report, data, frontend, eslint-rules",
+      );
 
       // Force execution of all containers in parallel
       await Promise.all([
@@ -75,11 +94,6 @@ export class ScoutForLol {
           await container.sync();
           return container;
         }),
-        withTiming("report-ui check (lint + typecheck + tests)", async () => {
-          const container = checkReportUi(source);
-          await container.sync();
-          return container;
-        }),
         withTiming("data check (lint + typecheck)", async () => {
           const container = checkData(source);
           await container.sync();
@@ -90,8 +104,17 @@ export class ScoutForLol {
           await container.sync();
           return container;
         }),
-        withTiming("review-dev-tool check (lint + typecheck)", async () => {
-          const container = checkReviewDevTool(source);
+        withTiming("eslint-rules tests", async () => {
+          const container = getBunNodeContainer(source)
+            .withExec(["bun", "install", "--frozen-lockfile"])
+            .withExec(["bun", "test", "eslint-rules/"]);
+          await container.sync();
+          return container;
+        }),
+        withTiming("code duplication check", async () => {
+          const container = getBunNodeContainer(source)
+            .withExec(["bun", "install", "--frozen-lockfile"])
+            .withExec(["bun", "run", "scripts/check-duplication.ts"]);
           await container.sync();
           return container;
         }),
@@ -99,7 +122,9 @@ export class ScoutForLol {
     });
 
     logWithTimestamp("🎉 All checks completed successfully");
-    logWithTimestamp("✅ All packages passed: TypeScript type checking, ESLint linting, and tests");
+    logWithTimestamp(
+      "✅ All packages passed: TypeScript type checking, ESLint linting, tests, and custom ESLint rules tests",
+    );
     return "All checks completed successfully";
   }
 
@@ -203,7 +228,15 @@ export class ScoutForLol {
         logWithTimestamp("📦 Phase 3: Publishing Docker image to registry...");
 
         // Login to registry and publish
-        const publishedRefs = await publishBackendImage(source, version, gitSha, ghcrUsername, ghcrPassword);
+        const publishedRefs = await publishBackendImage({
+          workspaceSource: source,
+          version,
+          gitSha,
+          registryAuth: {
+            username: ghcrUsername,
+            password: ghcrPassword,
+          },
+        });
 
         logWithTimestamp(`✅ Images published: ${publishedRefs.join(", ")}`);
       });
@@ -224,7 +257,16 @@ export class ScoutForLol {
       await withTiming("CI frontend deploy phase", async () => {
         logWithTimestamp(`🚀 Phase 5: Deploying frontend to Cloudflare Pages (branch: ${branch})...`);
         const project = projectName ?? "scout-for-lol";
-        await this.deployFrontend(source, branch, gitSha, project, accountId, apiToken);
+        await this.deployFrontend({
+          workspaceSource: source,
+          branch,
+          gitSha,
+          cloudflare: {
+            projectName: project,
+            accountId,
+            apiToken,
+          },
+        });
         logWithTimestamp(
           `✅ Frontend deployed to https://${branch === "main" ? "" : `${branch}.`}${project}.pages.dev`,
         );
@@ -416,7 +458,13 @@ export class ScoutForLol {
     logWithTimestamp(`📦 Publishing backend Docker image for version ${version} (${gitSha})`);
 
     const result = await withTiming("backend Docker image publish", () =>
-      publishBackendImage(source, version, gitSha, registryUsername, registryPassword),
+      publishBackendImage({
+        workspaceSource: source,
+        version,
+        gitSha,
+        registryAuth:
+          registryUsername && registryPassword ? { username: registryUsername, password: registryPassword } : undefined,
+      }),
     );
 
     logWithTimestamp(`✅ Backend Docker image published successfully: ${result.join(", ")}`);
@@ -666,7 +714,16 @@ export class ScoutForLol {
     logWithTimestamp(`🚀 Deploying frontend to Cloudflare Pages (project: ${projectName}, branch: ${branch})`);
 
     const result = await withTiming("frontend deployment", () =>
-      deployFrontend(source, branch, gitSha, projectName, accountId, apiToken),
+      deployFrontend({
+        workspaceSource: source,
+        branch,
+        gitSha,
+        cloudflare: {
+          projectName,
+          accountId,
+          apiToken,
+        },
+      }),
     );
 
     logWithTimestamp("✅ Frontend deployment completed successfully");
@@ -674,107 +731,29 @@ export class ScoutForLol {
   }
 
   /**
-   * Check the report-ui package
+   * Check for code duplication across packages
    * @param source The workspace source directory
    * @returns A message indicating completion
    */
   @func()
-  async checkReportUi(
+  async duplicationCheck(
     @argument({
       ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
   ): Promise<string> {
-    logWithTimestamp("🔍 Starting report-ui package check");
+    logWithTimestamp("🔍 Starting code duplication check");
 
-    await withTiming("report-ui package check", async () => {
-      const container = checkReportUi(source);
+    await withTiming("code duplication check", async () => {
+      const container = getBunNodeContainer(source)
+        .withExec(["bun", "install", "--frozen-lockfile"])
+        .withExec(["bun", "run", "scripts/check-duplication.ts"]);
       await container.sync();
       return container;
     });
 
-    logWithTimestamp("✅ Report-ui check completed successfully");
-    return "Report-ui check completed successfully";
-  }
-
-  /**
-   * Get report-ui test coverage
-   * @param source The workspace source directory
-   * @returns The coverage directory
-   */
-  @func()
-  reportUiCoverage(
-    @argument({
-      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
-      defaultPath: ".",
-    })
-    source: Directory,
-  ): Directory {
-    logWithTimestamp("📊 Exporting report-ui test coverage");
-    return getReportUiCoverage(source);
-  }
-
-  /**
-   * Get report-ui test report (junit.xml)
-   * @param source The workspace source directory
-   * @returns The directory containing junit.xml
-   */
-  @func()
-  reportUiTestReport(
-    @argument({
-      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
-      defaultPath: ".",
-    })
-    source: Directory,
-  ): Directory {
-    logWithTimestamp("📋 Exporting report-ui test report");
-    return getReportUiTestReport(source);
-  }
-
-  /**
-   * Build the report-ui package
-   * @param source The workspace source directory
-   * @returns The built dist directory
-   */
-  @func()
-  async buildReportUi(
-    @argument({
-      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
-      defaultPath: ".",
-    })
-    source: Directory,
-  ): Promise<Directory> {
-    logWithTimestamp("🏗️  Building report-ui package");
-
-    const result = await withTiming("report-ui build", () => Promise.resolve(buildReportUi(source)));
-
-    logWithTimestamp("✅ Report-ui build completed successfully");
-    return result;
-  }
-
-  /**
-   * Check the review-dev-tool package
-   * @param source The workspace source directory
-   * @returns A message indicating completion
-   */
-  @func()
-  async checkReviewDevTool(
-    @argument({
-      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
-      defaultPath: ".",
-    })
-    source: Directory,
-  ): Promise<string> {
-    logWithTimestamp("🔍 Starting review-dev-tool package check");
-
-    await withTiming("review-dev-tool package check", async () => {
-      const container = checkReviewDevTool(source);
-      await container.sync();
-      return container;
-    });
-
-    logWithTimestamp("✅ Review-dev-tool check completed successfully");
-    return "Review-dev-tool check completed successfully";
+    logWithTimestamp("✅ Code duplication check completed successfully");
+    return "Code duplication check completed successfully";
   }
 }

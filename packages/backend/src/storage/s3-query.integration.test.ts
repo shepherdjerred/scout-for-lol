@@ -11,14 +11,14 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import type { GetObjectCommandOutput } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
-import { MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import { queryMatchesByDateRange } from "./s3-query.js";
+import type { MatchDto } from "@scout-for-lol/data";
+import { queryMatchesByDateRange } from "@scout-for-lol/backend/storage/s3-query.js";
 
 // Create S3 mock
 const s3Mock = mockClient(S3Client);
 
 // Helper to create a mock match
-function createMockMatch(matchId: string, participantPuuids: string[], gameCreationDate: Date): MatchV5DTOs.MatchDto {
+function createMockMatch(matchId: string, participantPuuids: string[], gameCreationDate: Date): MatchDto {
   return {
     metadata: {
       dataVersion: "2",
@@ -55,15 +55,41 @@ function generateMatchKey(matchId: string, date: Date): string {
 }
 
 // Helper to create a mock GetObjectCommandOutput
+// We need to mock the AWS SDK response for testing
+type MockBody = {
+  transformToString(): Promise<string>;
+  locked: boolean;
+  cancel(): Promise<void>;
+  getReader(): { read(): Promise<{ done: boolean; value?: unknown }> };
+  pipeThrough(): { readable: unknown; writable: unknown };
+  pipeTo(): Promise<void>;
+  [Symbol.asyncIterator](): AsyncIterator<unknown>;
+};
+
 function createMockGetObjectResponse(content: string): GetObjectCommandOutput {
-  const mockBody = {
+  const mockBody: MockBody = {
     transformToString: () => Promise.resolve(content),
+    locked: false,
+    cancel: () => Promise.resolve(),
+    getReader: () => ({
+      read: () => Promise.resolve({ done: true, value: undefined }),
+    }),
+    pipeThrough: () => ({ readable: undefined, writable: undefined }),
+    pipeTo: () => Promise.resolve(),
+    async *[Symbol.asyncIterator]() {
+      // Empty async generator
+      yield* [];
+    },
   };
 
+  // Create a response object that matches GetObjectCommandOutput structure
+  // The mock body implements transformToString() which is what's actually used
+  // TypeScript can't verify the full structural match, but the mock works at runtime
+  // eslint-disable-next-line custom-rules/no-type-assertions -- ok for now
   return {
-    Body: mockBody as any,
+    Body: mockBody,
     $metadata: {},
-  };
+  } as unknown as GetObjectCommandOutput;
 }
 
 beforeEach(() => {

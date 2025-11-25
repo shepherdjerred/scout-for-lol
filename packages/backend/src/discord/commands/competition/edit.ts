@@ -1,121 +1,42 @@
-import { type ChatInputCommandInteraction, MessageFlags } from "discord.js";
+import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import {
   ChampionIdSchema,
   CompetitionIdSchema,
-  CompetitionQueueTypeSchema,
-  CompetitionVisibilitySchema,
   DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  SeasonIdSchema,
   getCompetitionStatus,
   type CompetitionCriteria,
+  type CompetitionId,
+  type CompetitionWithCriteria,
+  type DiscordAccountId,
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
-import { prisma } from "../../../database/index.js";
+import { match, P } from "ts-pattern";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
 import {
   getCompetitionById,
   type UpdateCompetitionInput,
   updateCompetition,
-} from "../../../database/competition/queries.js";
-import { getErrorMessage } from "../../../utils/errors.js";
-import { getChampionId } from "../../../utils/champion.js";
-import { truncateDiscordMessage } from "../../utils/message.js";
+} from "@scout-for-lol/backend/database/competition/queries.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { getChampionId } from "@scout-for-lol/backend/utils/champion.js";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
+import {
+  EditableAlwaysArgsSchema,
+  EditableDraftOnlyArgsSchema,
+  FixedDatesEditArgsSchema,
+  SeasonEditArgsSchema,
+  MostGamesPlayedEditArgsSchema,
+  HighestRankEditArgsSchema,
+  MostRankClimbEditArgsSchema,
+  MostWinsPlayerEditArgsSchema,
+  MostWinsChampionEditArgsSchema,
+  HighestWinRateEditArgsSchema,
+} from "@scout-for-lol/backend/discord/commands/competition/schemas.js";
 
 // ============================================================================
 // Input Parsing Schema - Editable Fields
 // ============================================================================
-
-/**
- * Fields that can be edited at any time (even after competition starts)
- */
-const EditableAlwaysArgsSchema = z.object({
-  competitionId: z.number().int().positive(),
-  userId: DiscordAccountIdSchema,
-  title: z.string().min(1).max(100).optional(),
-  description: z.string().min(1).max(500).optional(),
-  channelId: DiscordChannelIdSchema.optional(),
-});
-
-/**
- * Fields that can ONLY be edited before competition starts (DRAFT status)
- */
-const EditableDraftOnlyArgsSchema = z.object({
-  visibility: CompetitionVisibilitySchema.optional(),
-  maxParticipants: z.number().int().min(2).max(100).optional(),
-});
-
-/**
- * Date-related fields that can ONLY be edited in DRAFT status
- */
-const FixedDatesEditArgsSchema = z
-  .object({
-    dateType: z.literal("FIXED"),
-    startDate: z.string(),
-    endDate: z.string(),
-  })
-  .refine(
-    (data) => {
-      const start = new Date(data.startDate);
-      const end = new Date(data.endDate);
-      return !isNaN(start.getTime()) && !isNaN(end.getTime());
-    },
-    {
-      message: "Invalid date format. Use ISO 8601 format (YYYY-MM-DD, YYYY-MM-DDTHH:mm:ss, or with timezone Z/+HH:mm)",
-      path: ["startDate"],
-    },
-  )
-  .refine(
-    (data) => {
-      const start = new Date(data.startDate);
-      const end = new Date(data.endDate);
-      return start < end;
-    },
-    {
-      message: "Start date must be before end date",
-      path: ["startDate"],
-    },
-  );
-
-const SeasonEditArgsSchema = z.object({
-  dateType: z.literal("SEASON"),
-  season: SeasonIdSchema,
-});
-
-/**
- * Criteria-specific edit schemas (same as create, but all optional at the args level)
- */
-const MostGamesPlayedEditArgsSchema = z.object({
-  criteriaType: z.literal("MOST_GAMES_PLAYED"),
-  queue: CompetitionQueueTypeSchema,
-});
-
-const HighestRankEditArgsSchema = z.object({
-  criteriaType: z.literal("HIGHEST_RANK"),
-  queue: z.enum(["SOLO", "FLEX"]),
-});
-
-const MostRankClimbEditArgsSchema = z.object({
-  criteriaType: z.literal("MOST_RANK_CLIMB"),
-  queue: z.enum(["SOLO", "FLEX"]),
-});
-
-const MostWinsPlayerEditArgsSchema = z.object({
-  criteriaType: z.literal("MOST_WINS_PLAYER"),
-  queue: CompetitionQueueTypeSchema,
-});
-
-const MostWinsChampionEditArgsSchema = z.object({
-  criteriaType: z.literal("MOST_WINS_CHAMPION"),
-  champion: z.string().min(1),
-  queue: CompetitionQueueTypeSchema.optional(),
-});
-
-const HighestWinRateEditArgsSchema = z.object({
-  criteriaType: z.literal("HIGHEST_WIN_RATE"),
-  queue: CompetitionQueueTypeSchema,
-  minGames: z.number().int().positive().optional(),
-});
 
 /**
  * Combined schema for all possible edit arguments
@@ -136,88 +57,30 @@ const CriteriaEditSchema = z
   .optional();
 
 // Union of date edit schemas
-const _DatesEditSchema = z.union([FixedDatesEditArgsSchema, SeasonEditArgsSchema]).optional();
+type DatesEditSchema = z.infer<typeof FixedDatesEditArgsSchema> | z.infer<typeof SeasonEditArgsSchema>;
 
 type EditCommandArgs = z.infer<typeof EditCommandArgsBaseSchema> & {
-  dates?: z.infer<typeof _DatesEditSchema>;
+  dates?: DatesEditSchema;
   criteria?: z.infer<typeof CriteriaEditSchema>;
 };
 
 // ============================================================================
-// Command Execution
+// Helper Functions
 // ============================================================================
 
 /**
- * Execute /competition edit command
+ * Parse edit arguments from interaction
  */
-export async function executeCompetitionEdit(interaction: ChatInputCommandInteraction): Promise<void> {
-  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
-  const username = interaction.user.username;
-
-  console.log(`📝 Starting competition edit for user ${username} (${userId})`);
-
-  // ============================================================================
-  // Step 1: Parse competition ID and fetch competition
-  // ============================================================================
-
-  const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
-
-  let competition;
-  try {
-    competition = await getCompetitionById(prisma, competitionId);
-  } catch (error) {
-    console.error(`❌ Error fetching competition ${competitionId.toString()}:`, error);
-    await interaction.reply({
-      content: truncateDiscordMessage(`**Error fetching competition:**\n${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  if (!competition) {
-    await interaction.reply({
-      content: `Competition with ID ${competitionId.toString()} not found`,
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  // ============================================================================
-  // Step 2: Check ownership
-  // ============================================================================
-
-  if (competition.ownerId !== userId) {
-    await interaction.reply({
-      content: "Only the competition owner can edit the competition",
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  // ============================================================================
-  // Step 3: Check competition status
-  // ============================================================================
-
-  const status = getCompetitionStatus(competition);
-
-  if (status === "CANCELLED") {
-    await interaction.reply({
-      content: "Cannot edit a cancelled competition",
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  const isDraft = status === "DRAFT";
-
-  console.log(`📊 Competition status: ${status} (isDraft: ${isDraft.toString()})`);
-
-  // ============================================================================
-  // Step 4: Parse and validate edit arguments
-  // ============================================================================
-
-  let args: EditCommandArgs;
-
+async function parseEditArguments(
+  interaction: ChatInputCommandInteraction,
+  options: {
+    competitionId: CompetitionId;
+    userId: DiscordAccountId;
+    isDraft: boolean;
+    username: string;
+  },
+): Promise<EditCommandArgs | null> {
+  const { competitionId, userId, isDraft, username } = options;
   try {
     // Parse Discord options
     const title = interaction.options.getString("title");
@@ -244,48 +107,33 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
       userId,
     };
 
-    if (title !== null) baseArgsInput["title"] = title;
-    if (description !== null) baseArgsInput["description"] = description;
-    if (channelId !== undefined) baseArgsInput["channelId"] = channelId;
-    if (visibility !== null) baseArgsInput["visibility"] = visibility;
-    if (maxParticipants !== null) baseArgsInput["maxParticipants"] = maxParticipants;
+    if (title !== null) {
+      baseArgsInput["title"] = title;
+    }
+    if (description !== null) {
+      baseArgsInput["description"] = description;
+    }
+    if (channelId !== undefined) {
+      baseArgsInput["channelId"] = channelId;
+    }
+    if (visibility !== null) {
+      baseArgsInput["visibility"] = visibility;
+    }
+    if (maxParticipants !== null) {
+      baseArgsInput["maxParticipants"] = maxParticipants;
+    }
 
     // Validate base args (always editable fields)
     const baseArgs = EditCommandArgsBaseSchema.parse(baseArgsInput);
 
-    args = { ...baseArgs };
-
     // Parse dates if provided
-    if (startDateStr !== null || endDateStr !== null || seasonStr !== null) {
-      if (!isDraft) {
-        throw new Error("Cannot change dates after competition has started");
-      }
-
-      const hasFixedDates = startDateStr !== null && endDateStr !== null;
-      const hasSeason = seasonStr !== null;
-
-      if (!hasFixedDates && !hasSeason) {
-        throw new Error("Must specify either (start-date AND end-date) OR season");
-      }
-      if (hasFixedDates && hasSeason) {
-        throw new Error("Cannot specify both fixed dates and season");
-      }
-
-      if (hasFixedDates) {
-        args.dates = FixedDatesEditArgsSchema.parse({
-          dateType: "FIXED",
-          startDate: startDateStr,
-          endDate: endDateStr,
-        });
-      } else {
-        args.dates = SeasonEditArgsSchema.parse({
-          dateType: "SEASON",
-          season: seasonStr,
-        });
-      }
+    const datesResult = parseDatesArgs(startDateStr, endDateStr, seasonStr, isDraft);
+    if (!datesResult.success) {
+      throw new Error(datesResult.error);
     }
 
     // Parse criteria if provided
+    let criteria: EditCommandArgs["criteria"] = undefined;
     if (criteriaType !== null) {
       if (!isDraft) {
         throw new Error("Cannot change criteria after competition has started");
@@ -295,12 +143,25 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
       const criteriaInput: Record<string, unknown> = {
         criteriaType,
       };
-      if (queue !== null) criteriaInput["queue"] = queue;
-      if (champion !== null) criteriaInput["champion"] = champion;
-      if (minGames !== null) criteriaInput["minGames"] = minGames;
+      if (queue !== null) {
+        criteriaInput["queue"] = queue;
+      }
+      if (champion !== null) {
+        criteriaInput["champion"] = champion;
+      }
+      if (minGames !== null) {
+        criteriaInput["minGames"] = minGames;
+      }
 
-      args.criteria = CriteriaEditSchema.parse(criteriaInput);
+      criteria = CriteriaEditSchema.parse(criteriaInput);
     }
+
+    // Build args object with dates and criteria if present
+    const args: EditCommandArgs = {
+      ...baseArgs,
+      ...(datesResult.dates !== undefined ? { dates: datesResult.dates } : {}),
+      ...(criteria !== undefined ? { criteria } : {}),
+    };
 
     // Check if DRAFT-only fields are provided when not in DRAFT
     if (!isDraft) {
@@ -313,20 +174,22 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
     }
 
     console.log(`✅ Edit arguments validated successfully`);
+    return args;
   } catch (error) {
     console.error(`❌ Invalid edit arguments from ${username}:`, error);
     const validationError = fromError(error);
     await interaction.reply({
       content: truncateDiscordMessage(`**Invalid input:**\n${validationError.toString()}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
-    return;
+    return null;
   }
+}
 
-  // ============================================================================
-  // Step 5: Build update input
-  // ============================================================================
-
+/**
+ * Build update input from edit arguments
+ */
+function buildUpdateInput(args: EditCommandArgs, isDraft: boolean): UpdateCompetitionInput {
   const updateInput: UpdateCompetitionInput = {};
 
   // Always-editable fields
@@ -351,73 +214,218 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
 
     // Dates
     if (args.dates !== undefined) {
-      if (args.dates.dateType === "FIXED") {
-        updateInput.dates = {
-          type: "FIXED_DATES",
-          startDate: new Date(args.dates.startDate),
-          endDate: new Date(args.dates.endDate),
-        };
-        // TODO: use ts-pattern for exhaustive match
-      } else {
-        updateInput.dates = {
-          type: "SEASON",
-          seasonId: args.dates.season,
-        };
-      }
+      updateInput.dates = match(args.dates)
+        .with({ dateType: "FIXED" }, (narrowedDates) => ({
+          type: "FIXED_DATES" as const,
+          startDate: new Date(narrowedDates.startDate),
+          endDate: new Date(narrowedDates.endDate),
+        }))
+        .with({ dateType: "SEASON" }, (narrowedDates) => ({
+          type: "SEASON" as const,
+          seasonId: narrowedDates.season,
+        }))
+        .exhaustive();
     }
 
     // Criteria
     if (args.criteria !== undefined) {
-      let criteria: CompetitionCriteria;
-
-      if (args.criteria.criteriaType === "MOST_GAMES_PLAYED") {
-        criteria = { type: "MOST_GAMES_PLAYED", queue: args.criteria.queue };
-      } else if (args.criteria.criteriaType === "HIGHEST_RANK") {
-        criteria = { type: "HIGHEST_RANK", queue: args.criteria.queue };
-      } else if (args.criteria.criteriaType === "MOST_RANK_CLIMB") {
-        criteria = { type: "MOST_RANK_CLIMB", queue: args.criteria.queue };
-      } else if (args.criteria.criteriaType === "MOST_WINS_PLAYER") {
-        criteria = { type: "MOST_WINS_PLAYER", queue: args.criteria.queue };
-      } else if (args.criteria.criteriaType === "MOST_WINS_CHAMPION") {
-        // Convert champion string to number
-        let championId: number;
-        const championIdFromString = Number.parseInt(args.criteria.champion, 10);
-        if (!isNaN(championIdFromString)) {
-          championId = championIdFromString;
-        } else {
-          const idFromName = getChampionId(args.criteria.champion);
-          if (!idFromName) {
-            throw new Error(
-              `Invalid champion: "${args.criteria.champion}". Please select a champion from the autocomplete list.`,
-            );
+      const criteria: CompetitionCriteria = match(args.criteria)
+        .with({ criteriaType: "MOST_GAMES_PLAYED", queue: P.select() }, (queue) => ({
+          type: "MOST_GAMES_PLAYED" as const,
+          queue,
+        }))
+        .with({ criteriaType: "HIGHEST_RANK", queue: P.select() }, (queue) => ({
+          type: "HIGHEST_RANK" as const,
+          queue,
+        }))
+        .with({ criteriaType: "MOST_RANK_CLIMB", queue: P.select() }, (queue) => ({
+          type: "MOST_RANK_CLIMB" as const,
+          queue,
+        }))
+        .with({ criteriaType: "MOST_WINS_PLAYER", queue: P.select() }, (queue) => ({
+          type: "MOST_WINS_PLAYER" as const,
+          queue,
+        }))
+        .with({ criteriaType: "MOST_WINS_CHAMPION" }, (narrowedCriteria) => {
+          // Convert champion string to number
+          let championId: number;
+          const championIdFromString = Number.parseInt(narrowedCriteria.champion, 10);
+          if (!isNaN(championIdFromString)) {
+            championId = championIdFromString;
+          } else {
+            const idFromName = getChampionId(narrowedCriteria.champion);
+            if (!idFromName) {
+              throw new Error(
+                `Invalid champion: "${narrowedCriteria.champion}". Please select a champion from the autocomplete list.`,
+              );
+            }
+            championId = idFromName;
           }
-          championId = idFromName;
-        }
 
-        criteria = {
-          type: "MOST_WINS_CHAMPION",
-          championId: ChampionIdSchema.parse(championId),
-          queue: args.criteria.queue,
-        };
-        // TODO: use ts-pattern for exhaustive match
-      } else {
-        // HIGHEST_WIN_RATE
-        criteria = {
-          type: "HIGHEST_WIN_RATE",
-          minGames: args.criteria.minGames ?? 10,
-          queue: args.criteria.queue,
-        };
-      }
+          return {
+            type: "MOST_WINS_CHAMPION" as const,
+            championId: ChampionIdSchema.parse(championId),
+            queue: narrowedCriteria.queue,
+          };
+        })
+        .with({ criteriaType: "HIGHEST_WIN_RATE" }, (narrowedCriteria) => ({
+          type: "HIGHEST_WIN_RATE" as const,
+          minGames: narrowedCriteria.minGames ?? 10,
+          queue: narrowedCriteria.queue,
+        }))
+        .exhaustive();
 
       updateInput.criteria = criteria;
     }
   }
 
+  return updateInput;
+}
+
+/**
+ * Parse dates from edit arguments
+ */
+function parseDatesArgs(
+  startDateStr: string | null,
+  endDateStr: string | null,
+  seasonStr: string | null,
+  isDraft: boolean,
+): { success: true; dates?: DatesEditSchema } | { success: false; error: string } {
+  if (startDateStr === null && endDateStr === null && seasonStr === null) {
+    return { success: true };
+  }
+
+  if (!isDraft) {
+    return { success: false, error: "Cannot change dates after competition has started" };
+  }
+
+  const hasFixedDates = startDateStr !== null && endDateStr !== null;
+  const hasSeason = seasonStr !== null;
+
+  if (!hasFixedDates && !hasSeason) {
+    return { success: false, error: "Must specify either (start-date AND end-date) OR season" };
+  }
+  if (hasFixedDates && hasSeason) {
+    return { success: false, error: "Cannot specify both fixed dates and season" };
+  }
+
+  if (hasFixedDates && startDateStr && endDateStr) {
+    return {
+      success: true,
+      dates: FixedDatesEditArgsSchema.parse({
+        dateType: "FIXED",
+        startDate: startDateStr,
+        endDate: endDateStr,
+      }),
+    };
+  }
+
+  if (hasSeason && seasonStr) {
+    return {
+      success: true,
+      dates: SeasonEditArgsSchema.parse({
+        dateType: "SEASON",
+        season: seasonStr,
+      }),
+    };
+  }
+
+  // Should never reach here given the guards above
+  return { success: false, error: "Invalid date configuration" };
+}
+
+// ============================================================================
+// Command Execution
+// ============================================================================
+
+/**
+ * Execute /competition edit command
+ */
+async function fetchAndValidateEditCompetition(
+  interaction: ChatInputCommandInteraction,
+  userId: DiscordAccountId,
+): Promise<{ competition: CompetitionWithCriteria; competitionId: CompetitionId; isDraft: boolean } | null> {
+  const competitionId = CompetitionIdSchema.parse(interaction.options.getInteger("competition-id", true));
+
+  try {
+    const competition = await getCompetitionById(prisma, competitionId);
+    if (!competition) {
+      await interaction.reply({
+        content: `Competition with ID ${competitionId.toString()} not found`,
+        ephemeral: true,
+      });
+      return null;
+    }
+
+    if (competition.ownerId !== userId) {
+      await interaction.reply({
+        content: "Only the competition owner can edit the competition",
+        ephemeral: true,
+      });
+      return null;
+    }
+
+    const status = getCompetitionStatus(competition);
+    if (status === "CANCELLED") {
+      await interaction.reply({
+        content: "Cannot edit a cancelled competition",
+        ephemeral: true,
+      });
+      return null;
+    }
+
+    const isDraft = status === "DRAFT";
+    console.log(`📊 Competition status: ${status} (isDraft: ${isDraft.toString()})`);
+
+    return { competition, competitionId, isDraft };
+  } catch (error) {
+    console.error(`❌ Error fetching competition:`, error);
+    await interaction.reply({
+      content: truncateDiscordMessage(`**Error fetching competition:**\n${getErrorMessage(error)}`),
+      ephemeral: true,
+    });
+    return null;
+  }
+}
+
+export async function executeCompetitionEdit(interaction: ChatInputCommandInteraction): Promise<void> {
+  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
+  const username = interaction.user.username;
+
+  console.log(`📝 Starting competition edit for user ${username} (${userId})`);
+
+  // Step 1-3: Fetch and validate competition
+  const result = await fetchAndValidateEditCompetition(interaction, userId);
+  if (!result) {
+    return;
+  }
+  const { competitionId, isDraft } = result;
+
+  // ============================================================================
+  // Step 4: Parse and validate edit arguments
+  // ============================================================================
+
+  const args = await parseEditArguments(interaction, {
+    competitionId,
+    userId,
+    isDraft,
+    username,
+  });
+  if (!args) {
+    return;
+  }
+
+  // ============================================================================
+  // Step 5: Build update input
+  // ============================================================================
+
+  const updateInput = buildUpdateInput(args, isDraft);
+
   // Check if any fields were actually provided
   if (Object.keys(updateInput).length === 0) {
     await interaction.reply({
       content: "No fields to update. Please provide at least one field to edit.",
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -435,13 +443,27 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
 
     // Build response message
     const updatedFields: string[] = [];
-    if (updateInput.title !== undefined) updatedFields.push("Title");
-    if (updateInput.description !== undefined) updatedFields.push("Description");
-    if (updateInput.channelId !== undefined) updatedFields.push("Channel");
-    if (updateInput.visibility !== undefined) updatedFields.push("Visibility");
-    if (updateInput.maxParticipants !== undefined) updatedFields.push("Max Participants");
-    if (updateInput.dates !== undefined) updatedFields.push("Dates");
-    if (updateInput.criteria !== undefined) updatedFields.push("Criteria");
+    if (updateInput.title !== undefined) {
+      updatedFields.push("Title");
+    }
+    if (updateInput.description !== undefined) {
+      updatedFields.push("Description");
+    }
+    if (updateInput.channelId !== undefined) {
+      updatedFields.push("Channel");
+    }
+    if (updateInput.visibility !== undefined) {
+      updatedFields.push("Visibility");
+    }
+    if (updateInput.maxParticipants !== undefined) {
+      updatedFields.push("Max Participants");
+    }
+    if (updateInput.dates !== undefined) {
+      updatedFields.push("Dates");
+    }
+    if (updateInput.criteria !== undefined) {
+      updatedFields.push("Criteria");
+    }
 
     await interaction.reply({
       content: truncateDiscordMessage(`✅ **Competition Updated!**
@@ -452,13 +474,13 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
 
 View the competition with:
 \`/competition view competition-id:${competitionId.toString()}\``),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
   } catch (error) {
     console.error(`❌ Database error during competition edit:`, error);
     await interaction.reply({
       content: truncateDiscordMessage(`**Error updating competition:**\n${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
   }
 }

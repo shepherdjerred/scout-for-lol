@@ -1,8 +1,11 @@
-import { MessageFlags, type ChatInputCommandInteraction } from "discord.js";
+import { type ChatInputCommandInteraction } from "discord.js";
 import type { PlayerConfigEntry } from "@scout-for-lol/data";
-import { getRecentMatchIds } from "../../../league/api/match-history.js";
-import { fetchMatchData, generateMatchReport } from "../../../league/tasks/postmatch/match-report-generator.js";
-import { getErrorMessage } from "../../../utils/errors.js";
+import { getRecentMatchIds } from "@scout-for-lol/backend/league/api/match-history.js";
+import {
+  fetchMatchData,
+  generateMatchReport,
+} from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 
 /**
  * Send a welcome message with the player's most recent match report
@@ -76,7 +79,7 @@ export async function sendWelcomeMatch(
       content: `Welcome to Scout! Here's the last match **${playerAlias}** was in. You'll see messages like this for future matches.`,
       files: message.files ?? [],
       embeds: message.embeds ?? [],
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
 
     console.log(`[WelcomeMatch] ✅ Successfully sent welcome match for ${playerAlias}`);

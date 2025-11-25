@@ -1,8 +1,8 @@
 import satori from "satori";
 import { type ArenaMatch } from "@scout-for-lol/data";
-import { ArenaReport } from "./report.tsx";
-import { bunBeaufortFonts, bunSpiegelFonts } from "../../assets/index.ts";
-import { svgToPng } from "../index.tsx";
+import { ArenaReport } from "@scout-for-lol/report/html/arena/report.tsx";
+import { bunBeaufortFonts, bunSpiegelFonts } from "@scout-for-lol/report/assets/index.ts";
+import { svgToPng } from "@scout-for-lol/report/html/index.tsx";
 
 export async function arenaMatchToSvg(match: ArenaMatch) {
   const fonts = [...(await bunBeaufortFonts()), ...(await bunSpiegelFonts())];

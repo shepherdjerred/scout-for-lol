@@ -1,45 +1,18 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { PrismaClient } from "../../../../generated/prisma/client/index.js";
-import { execSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { createCompetition, getCompetitionById } from "../../../database/competition/queries.js";
-import type { CreateCompetitionInput } from "../../../database/competition/queries.js";
-
-import { testGuildId, testAccountId, testChannelId } from "../../../testing/test-ids.js";
-// Create a test database for integration tests
-const testDir = mkdtempSync(join(tmpdir(), "competition-cancel-test-"));
-const testDbPath = join(testDir, "test.db");
-const testDbUrl = `file:${testDbPath}`;
-
-// Push schema to test database once before all tests
-const schemaPath = join(import.meta.dir, "../../../..", "prisma/schema.prisma");
-execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
-  cwd: join(import.meta.dir, "../../../.."),
-  env: {
-    ...process.env,
-    DATABASE_URL: testDbUrl,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-  },
-  stdio: "ignore",
-});
+import { createCompetition, getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
+import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
+import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
 import { type DiscordAccountId, type DiscordGuildId } from "@scout-for-lol/data";
+import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.js";
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: testDbUrl,
-    },
-  },
-});
+// Create a test database for integration tests
+const { prisma } = createTestDatabase("competition-cancel-test");
 
 beforeEach(async () => {
   // Clean up database before each test
-  await prisma.competitionSnapshot.deleteMany();
-  await prisma.competitionParticipant.deleteMany();
-  await prisma.competition.deleteMany();
+  await deleteIfExists(() => prisma.competitionSnapshot.deleteMany());
+  await deleteIfExists(() => prisma.competitionParticipant.deleteMany());
+  await deleteIfExists(() => prisma.competition.deleteMany());
 });
 afterAll(async () => {
   await prisma.$disconnect();

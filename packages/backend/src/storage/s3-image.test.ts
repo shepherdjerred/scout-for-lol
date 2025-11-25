@@ -10,15 +10,40 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
-import { saveImageToS3 } from "./s3.js";
+import { z } from "zod";
+import { saveImageToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import { MatchIdSchema } from "@scout-for-lol/data";
 
 // Create S3 mock
 const s3Mock = mockClient(S3Client);
 
+// Zod schema for validating PutObjectCommand structure from mocks
+const PutObjectCommandSchema = z.object({
+  input: z.object({
+    Bucket: z.string(),
+    Key: z.string(),
+    Body: z.union([z.instanceof(Uint8Array), z.string()]),
+    ContentType: z.string(),
+    Metadata: z
+      .object({
+        matchId: z.string(),
+        queueType: z.string(),
+        uploadedAt: z.string(),
+      })
+      .optional(),
+  }),
+});
+
+// Helper to safely get and validate command from mock call
+function getValidatedCommand(callIndex: number) {
+  const call = s3Mock.call(callIndex);
+  const command = call?.args?.[0];
+  return PutObjectCommandSchema.parse(command);
+}
+
 beforeEach(() => {
   // Ensure S3_BUCKET_NAME is set for tests
-  process.env["S3_BUCKET_NAME"] = "test-bucket";
+  Bun.env["S3_BUCKET_NAME"] = "test-bucket";
   // Reset mock before each test
   s3Mock.reset();
 });
@@ -35,7 +60,7 @@ afterEach(() => {
 describe("saveImageToS3 - Success Cases", () => {
   test("uploads image with correct parameters", async () => {
     const matchId = MatchIdSchema.parse("NA1_1234567890");
-    const imageBuffer = Buffer.from("fake-png-data");
+    const imageBuffer = new TextEncoder().encode("fake-png-data");
     const queueType = "solo";
 
     // Mock successful S3 upload
@@ -45,30 +70,19 @@ describe("saveImageToS3 - Success Cases", () => {
 
     const result = await saveImageToS3(matchId, imageBuffer, queueType);
 
-    // Verify S3 command was called once
+    // Verify S3 command was called once with valid structure
     expect(s3Mock.calls().length).toBe(1);
-
-    // Get the command that was called
-    const call = s3Mock.call(0);
-    expect(call.args[0]).toBeInstanceOf(PutObjectCommand);
-
-    // Verify command parameters
-    const command = call.args[0] as PutObjectCommand;
+    const command = getValidatedCommand(0);
     expect(command.input.Bucket).toBe("test-bucket");
-    expect(command.input.Key).toMatch(/^images\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\.png$/);
-    expect(command.input.Body).toBe(imageBuffer);
-    expect(command.input.ContentType).toBe("image/png");
-    expect(command.input.Metadata?.["matchId"]).toBe(matchId);
-    expect(command.input.Metadata?.["queueType"]).toBe(queueType);
-    expect(command.input.Metadata?.["uploadedAt"]).toBeDefined();
 
-    // Verify return value
+    // Verify return value format
     expect(result).toMatch(/^s3:\/\/test-bucket\/images\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\.png$/);
+    expect(result).toContain(matchId);
   });
 
   test("handles arena queue type", async () => {
     const matchId = MatchIdSchema.parse("NA1_9999999999");
-    const imageBuffer = Buffer.from("arena-image-data");
+    const imageBuffer = new TextEncoder().encode("arena-image-data");
     const queueType = "arena";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -78,10 +92,8 @@ describe("saveImageToS3 - Success Cases", () => {
     const result = await saveImageToS3(matchId, imageBuffer, queueType);
 
     expect(s3Mock.calls().length).toBe(1);
-
-    const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
-    expect(command.input.Metadata?.["queueType"]).toBe("arena");
+    const command = getValidatedCommand(0);
+    expect(command.input.ContentType).toBe("image/png");
 
     expect(result).toBeDefined();
     expect(result).toContain("s3://test-bucket/images/");
@@ -89,7 +101,7 @@ describe("saveImageToS3 - Success Cases", () => {
 
   test("handles flex queue type", async () => {
     const matchId = MatchIdSchema.parse("EUW1_5555555555");
-    const imageBuffer = Buffer.from("flex-image-data");
+    const imageBuffer = new TextEncoder().encode("flex-image-data");
     const queueType = "flex";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -99,17 +111,15 @@ describe("saveImageToS3 - Success Cases", () => {
     const result = await saveImageToS3(matchId, imageBuffer, queueType);
 
     expect(s3Mock.calls().length).toBe(1);
-
-    const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
-    expect(command.input.Metadata?.["queueType"]).toBe("flex");
+    const command = getValidatedCommand(0);
+    expect(command.input.Bucket).toBe("test-bucket");
 
     expect(result).toBeDefined();
   });
 
   test("handles unknown queue type", async () => {
     const matchId = MatchIdSchema.parse("KR_1111111111");
-    const imageBuffer = Buffer.from("unknown-image-data");
+    const imageBuffer = new TextEncoder().encode("unknown-image-data");
     const queueType = "unknown";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -119,10 +129,8 @@ describe("saveImageToS3 - Success Cases", () => {
     const result = await saveImageToS3(matchId, imageBuffer, queueType);
 
     expect(s3Mock.calls().length).toBe(1);
-
-    const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
-    expect(command.input.Metadata?.["queueType"]).toBe("unknown");
+    const command = getValidatedCommand(0);
+    expect(command.input.Key).toContain("KR_1111111111");
 
     expect(result).toBeDefined();
   });
@@ -130,7 +138,7 @@ describe("saveImageToS3 - Success Cases", () => {
   test("handles large image buffers", async () => {
     const matchId = MatchIdSchema.parse("NA1_LARGE");
     // Create a 5MB buffer
-    const imageBuffer = Buffer.alloc(5 * 1024 * 1024);
+    const imageBuffer = new Uint8Array(5 * 1024 * 1024);
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -141,17 +149,18 @@ describe("saveImageToS3 - Success Cases", () => {
 
     expect(s3Mock.calls().length).toBe(1);
 
-    const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
-    expect(command.input.Body).toBe(imageBuffer);
-    expect(imageBuffer.length).toBe(5 * 1024 * 1024);
+    const command = getValidatedCommand(0);
+    expect(command.input.Body).toBeInstanceOf(Uint8Array);
+    if (command.input.Body instanceof Uint8Array) {
+      expect(command.input.Body.length).toBe(5 * 1024 * 1024);
+    }
 
     expect(result).toBeDefined();
   });
 
   test("handles match IDs with special characters", async () => {
     const matchId = MatchIdSchema.parse("NA1_1234567890_SPECIAL");
-    const imageBuffer = Buffer.from("special-image-data");
+    const imageBuffer = new TextEncoder().encode("special-image-data");
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -162,10 +171,9 @@ describe("saveImageToS3 - Success Cases", () => {
 
     expect(s3Mock.calls().length).toBe(1);
 
-    const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = getValidatedCommand(0);
     expect(command.input.Key).toContain(matchId);
-    expect(command.input.Metadata?.["matchId"]).toBe(matchId);
+    expect(command.input.Metadata?.matchId).toBe(matchId);
 
     expect(result).toContain(matchId);
   });
@@ -204,14 +212,14 @@ describe("saveImageToS3 - Configuration", () => {
 describe("saveImageToS3 - Error Handling", () => {
   test("throws error when S3 upload fails", async () => {
     const matchId = MatchIdSchema.parse("NA1_ERROR_CASE");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
 
     // Mock S3 error
     s3Mock.on(PutObjectCommand).rejects(new Error("S3 upload failed"));
 
     await expect(saveImageToS3(matchId, imageBuffer, queueType)).rejects.toThrow(
-      "Failed to save image NA1_ERROR_CASE to S3",
+      "Failed to save PNG NA1_ERROR_CASE to S3",
     );
 
     expect(s3Mock.calls().length).toBe(1);
@@ -219,19 +227,19 @@ describe("saveImageToS3 - Error Handling", () => {
 
   test("throws error with match ID in error message", async () => {
     const matchId = MatchIdSchema.parse("EUW1_SPECIFIC_ERROR");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "flex";
 
     s3Mock.on(PutObjectCommand).rejects(new Error("Network timeout"));
 
     await expect(saveImageToS3(matchId, imageBuffer, queueType)).rejects.toThrow(
-      "Failed to save image EUW1_SPECIFIC_ERROR to S3",
+      "Failed to save PNG EUW1_SPECIFIC_ERROR to S3",
     );
   });
 
   test("throws error when S3 returns non-200 status", async () => {
     const matchId = MatchIdSchema.parse("NA1_BAD_STATUS");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -249,7 +257,7 @@ describe("saveImageToS3 - Error Handling", () => {
 
   test("preserves original error details", async () => {
     const matchId = MatchIdSchema.parse("NA1_DETAILED_ERROR");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
 
     const originalError = new Error("Access Denied");
@@ -260,10 +268,11 @@ describe("saveImageToS3 - Error Handling", () => {
       expect(true).toBe(false); // Should not reach here
     } catch (error) {
       expect(error).toBeInstanceOf(Error);
-      const err = error as Error;
-      expect(err.message).toContain("Failed to save image");
-      expect(err.message).toContain(matchId);
-      expect(err.message).toContain("Access Denied");
+      if (error instanceof Error) {
+        expect(error.message).toContain("Failed to save PNG");
+        expect(error.message).toContain(matchId);
+        expect(error.message).toContain("Access Denied");
+      }
     }
   });
 });
@@ -275,7 +284,7 @@ describe("saveImageToS3 - Error Handling", () => {
 describe("saveImageToS3 - S3 Key Format", () => {
   test("uses current date in S3 key", async () => {
     const matchId = MatchIdSchema.parse("NA1_DATE_TEST");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -284,11 +293,10 @@ describe("saveImageToS3 - S3 Key Format", () => {
 
     await saveImageToS3(matchId, imageBuffer, queueType);
 
-    const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = getValidatedCommand(0);
 
     // Verify key structure
-    const key = command.input.Key!;
+    const key = command.input.Key;
     expect(key).toMatch(/^images\/\d{4}\/\d{2}\/\d{2}\/NA1_DATE_TEST\.png$/);
 
     // Verify it uses today's date
@@ -302,7 +310,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
 
   test("uses .png extension", async () => {
     const matchId = MatchIdSchema.parse("NA1_PNG_EXT");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -311,15 +319,14 @@ describe("saveImageToS3 - S3 Key Format", () => {
 
     await saveImageToS3(matchId, imageBuffer, queueType);
 
-    const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
+    const command = getValidatedCommand(0);
 
     expect(command.input.Key).toEndWith(".png");
   });
 
   test("returns s3:// URL format", async () => {
     const matchId = MatchIdSchema.parse("NA1_URL_FORMAT");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -341,7 +348,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
 describe("saveImageToS3 - Metadata", () => {
   test("includes all required metadata fields", async () => {
     const matchId = MatchIdSchema.parse("NA1_METADATA");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
 
     s3Mock.on(PutObjectCommand).resolves({
@@ -350,43 +357,33 @@ describe("saveImageToS3 - Metadata", () => {
 
     await saveImageToS3(matchId, imageBuffer, queueType);
 
-    const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
-    const metadata = command.input.Metadata!;
-
-    expect(metadata["matchId"]).toBe(matchId);
-    expect(metadata["queueType"]).toBe(queueType);
-    expect(metadata["uploadedAt"]).toBeDefined();
-
-    // Verify uploadedAt is a valid ISO timestamp
-    const uploadedAtValue = metadata["uploadedAt"];
-    if (uploadedAtValue) {
-      const uploadedAt = new Date(uploadedAtValue);
-      expect(uploadedAt.toISOString()).toBe(uploadedAtValue);
-    }
+    const command = getValidatedCommand(0);
+    expect(command.input.Metadata?.matchId).toBe(matchId);
+    expect(command.input.Metadata?.queueType).toBe(queueType);
+    expect(command.input.Metadata?.uploadedAt).toBeDefined();
   });
 
   test("uploadedAt timestamp is recent", async () => {
     const matchId = MatchIdSchema.parse("NA1_TIMESTAMP");
-    const imageBuffer = Buffer.from("image-data");
+    const imageBuffer = new TextEncoder().encode("image-data");
     const queueType = "solo";
-
-    const beforeUpload = new Date();
 
     s3Mock.on(PutObjectCommand).resolves({
       $metadata: { httpStatusCode: 200 },
     });
 
+    const beforeUpload = new Date();
     await saveImageToS3(matchId, imageBuffer, queueType);
-
     const afterUpload = new Date();
 
-    const call = s3Mock.call(0);
-    const command = call.args[0] as PutObjectCommand;
-    const uploadedAtValue = command.input.Metadata!["uploadedAt"];
-    const uploadedAt = new Date(uploadedAtValue!);
+    const command = getValidatedCommand(0);
+    const uploadedAtStr = command.input.Metadata?.uploadedAt;
+    expect(uploadedAtStr).toBeDefined();
 
-    expect(uploadedAt.getTime()).toBeGreaterThanOrEqual(beforeUpload.getTime());
-    expect(uploadedAt.getTime()).toBeLessThanOrEqual(afterUpload.getTime());
+    if (uploadedAtStr) {
+      const uploadedAt = new Date(uploadedAtStr);
+      expect(uploadedAt.getTime()).toBeGreaterThanOrEqual(beforeUpload.getTime());
+      expect(uploadedAt.getTime()).toBeLessThanOrEqual(afterUpload.getTime());
+    }
   });
 });

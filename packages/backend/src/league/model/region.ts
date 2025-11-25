@@ -1,15 +1,6 @@
-import { RegionGroups, Regions } from "twisted/dist/constants/index.js";
+import { Regions } from "twisted/dist/constants/index.js";
 import { match } from "ts-pattern";
-import type { Region, RegionGroup } from "@scout-for-lol/data";
-
-export function mapRegionGroupToEnum(regionGroup: RegionGroup): RegionGroups {
-  return match(regionGroup)
-    .with("AMERICAS", () => RegionGroups.AMERICAS)
-    .with("ASIA", () => RegionGroups.ASIA)
-    .with("EUROPE", () => RegionGroups.EUROPE)
-    .with("SEA", () => RegionGroups.SEA)
-    .exhaustive();
-}
+import type { Region } from "@scout-for-lol/data";
 
 export function mapRegionToEnum(region: Region): Regions {
   return match(region)

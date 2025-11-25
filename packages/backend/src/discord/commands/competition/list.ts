@@ -1,7 +1,6 @@
 import {
   type ChatInputCommandInteraction,
   EmbedBuilder,
-  MessageFlags,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
@@ -15,10 +14,10 @@ import {
   getCompetitionStatus,
 } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
-import { prisma } from "../../../database/index.js";
-import { getCompetitionsByServer } from "../../../database/competition/queries.js";
-import { getErrorMessage } from "../../../utils/errors.js";
-import { truncateDiscordMessage } from "../../utils/message.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { getCompetitionsByServer } from "@scout-for-lol/backend/database/competition/queries.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 
 const ITEMS_PER_PAGE = 5;
 
@@ -34,7 +33,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
   if (!interaction.guildId) {
     await interaction.reply({
       content: truncateDiscordMessage("❌ This command can only be used in a server."),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -65,7 +64,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
     console.error("[Competition List] Error fetching competitions:", error);
     await interaction.reply({
       content: truncateDiscordMessage(`Error fetching competitions: ${getErrorMessage(error)}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -83,7 +82,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
 
     await interaction.reply({
       content: truncateDiscordMessage(`📋 ${message}`),
-      flags: MessageFlags.Ephemeral,
+      ephemeral: true,
     });
     return;
   }
@@ -95,13 +94,13 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
   const totalPages = Math.ceil(competitions.length / ITEMS_PER_PAGE);
   const currentPage = 0;
 
-  const embed = buildListEmbed(competitions, currentPage, totalPages, showActiveOnly, showOwnOnly);
+  const embed = buildListEmbed({ competitions, currentPage, totalPages, showActiveOnly, showOwnOnly });
   const components = totalPages > 1 ? [buildPaginationButtons(currentPage, totalPages)] : [];
 
   await interaction.reply({
     embeds: [embed],
     components,
-    flags: MessageFlags.Ephemeral,
+    ephemeral: true,
   });
 
   // ============================================================================
@@ -126,7 +125,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
         if (buttonInteraction.user.id !== interaction.user.id) {
           await buttonInteraction.reply({
             content: truncateDiscordMessage("These buttons aren't for you!"),
-            flags: MessageFlags.Ephemeral,
+            ephemeral: true,
           });
           return;
         }
@@ -143,7 +142,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
         }
 
         // Update the message
-        const newEmbed = buildListEmbed(competitions, page, totalPages, showActiveOnly, showOwnOnly);
+        const newEmbed = buildListEmbed({ competitions, currentPage: page, totalPages, showActiveOnly, showOwnOnly });
         const newComponents = [buildPaginationButtons(page, totalPages)];
 
         await buttonInteraction.update({
@@ -165,13 +164,14 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
 /**
  * Build embed for competition list page
  */
-function buildListEmbed(
-  competitions: Awaited<ReturnType<typeof getCompetitionsByServer>>,
-  currentPage: number,
-  totalPages: number,
-  showActiveOnly: boolean,
-  showOwnOnly: boolean,
-): EmbedBuilder {
+function buildListEmbed(params: {
+  competitions: Awaited<ReturnType<typeof getCompetitionsByServer>>;
+  currentPage: number;
+  totalPages: number;
+  showActiveOnly: boolean;
+  showOwnOnly: boolean;
+}): EmbedBuilder {
+  const { competitions, currentPage, totalPages, showActiveOnly, showOwnOnly } = params;
   const embed = new EmbedBuilder().setColor(0x5865f2); // Blue
 
   // Build title

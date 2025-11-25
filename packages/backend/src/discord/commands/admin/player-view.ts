@@ -1,81 +1,27 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "../../../database/index.js";
-import { fromError } from "zod-validation-error";
-import { getLimit } from "../../../configuration/flags.js";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import type { DiscordGuildId } from "@scout-for-lol/data";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import {
+  validateCommandArgs,
+  executeWithTiming,
+} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
+import { findPlayerByAliasWithCompetitions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
+import type { PlayerWithCompetitions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
+import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
 
 const ArgsSchema = z.object({
   alias: z.string().min(1).max(100),
   guildId: DiscordGuildIdSchema,
 });
 
-export async function executePlayerView(interaction: ChatInputCommandInteraction) {
-  const startTime = Date.now();
-  const userId = DiscordAccountIdSchema.parse(interaction.user.id);
-  const username = interaction.user.username;
-
-  console.log(`ℹ️  Starting player info lookup for user ${username} (${userId})`);
-
-  let args: z.infer<typeof ArgsSchema>;
-
-  try {
-    args = ArgsSchema.parse({
-      alias: interaction.options.getString("alias"),
-      guildId: interaction.guildId,
-    });
-
-    console.log(`✅ Command arguments validated successfully`);
-    console.log(`📋 Args: alias="${args.alias}"`);
-  } catch (error) {
-    console.error(`❌ Invalid command arguments from ${username}:`, error);
-    const validationError = fromError(error);
-    await interaction.reply({
-      content: validationError.toString(),
-      ephemeral: true,
-    });
-    return;
-  }
-
-  const { alias, guildId } = args;
-
-  // Fetch player with all related data
-  const player = await prisma.player.findUnique({
-    where: {
-      serverId_alias: {
-        serverId: guildId,
-        alias: alias,
-      },
-    },
-    include: {
-      accounts: true,
-      subscriptions: true,
-      competitionParticipants: {
-        include: {
-          competition: true,
-        },
-      },
-    },
-  });
-
-  if (!player) {
-    console.log(`❌ Player not found: "${alias}"`);
-    await interaction.reply({
-      content: `❌ **Player not found**\n\nNo player with alias "${alias}" exists in this server.`,
-      ephemeral: true,
-    });
-    return;
-  }
-
-  console.log(`✅ Player found: ${player.alias} (ID: ${player.id.toString()})`);
-
-  // Get rate limiting info for the server
+async function getRateLimitInfo(guildId: DiscordGuildId) {
   const accountLimitRaw = getLimit("accounts", { server: guildId });
   const accountLimit = accountLimitRaw === "unlimited" ? null : accountLimitRaw;
   const subscriptionLimitRaw = getLimit("player_subscriptions", { server: guildId });
   const subscriptionLimit = subscriptionLimitRaw === "unlimited" ? null : subscriptionLimitRaw;
 
-  // Count total accounts and subscriptions in server for rate limit context
   const totalServerAccounts = await prisma.account.count({
     where: { serverId: guildId },
   });
@@ -89,8 +35,15 @@ export async function executePlayerView(interaction: ChatInputCommandInteraction
     },
   });
 
-  // Build the response
+  return { accountLimit, subscriptionLimit, totalServerAccounts, totalServerPlayers };
+}
+
+function buildPlayerInfoSections(
+  player: NonNullable<PlayerWithCompetitions>,
+  rateLimits: Awaited<ReturnType<typeof getRateLimitInfo>>,
+): string[] {
   const sections: string[] = [];
+  const { accountLimit, subscriptionLimit, totalServerAccounts, totalServerPlayers } = rateLimits;
 
   // Player Info Section
   sections.push(`# 👤 Player Info: ${player.alias}`);
@@ -179,9 +132,10 @@ export async function executePlayerView(interaction: ChatInputCommandInteraction
   sections.push(`**Updated:** <t:${Math.floor(player.updatedTime.getTime() / 1000).toString()}:F>`);
   sections.push(`**Creator Discord ID:** ${player.creatorDiscordId}`);
 
-  const executionTime = Date.now() - startTime;
-  console.log(`✅ Player info retrieved successfully in ${executionTime.toString()}ms`);
+  return sections;
+}
 
+async function sendPlayerInfo(interaction: ChatInputCommandInteraction, sections: string[]): Promise<void> {
   const content = sections.join("\n");
 
   // Discord has a 2000 character limit for message content
@@ -232,4 +186,36 @@ export async function executePlayerView(interaction: ChatInputCommandInteraction
       ephemeral: true,
     });
   }
+}
+
+export async function executePlayerView(interaction: ChatInputCommandInteraction) {
+  const validation = await validateCommandArgs(
+    interaction,
+    ArgsSchema,
+    (i) => ({
+      alias: i.options.getString("alias"),
+      guildId: i.guildId,
+    }),
+    "player-view",
+  );
+
+  if (!validation.success) {
+    return;
+  }
+
+  const { data: args, username } = validation;
+  const { alias, guildId } = args;
+
+  await executeWithTiming("player-view", username, async () => {
+    const player = await findPlayerByAliasWithCompetitions(prisma, guildId, alias, interaction);
+    if (!player) {
+      return;
+    }
+
+    console.log(`✅ Player found: ${player.alias} (ID: ${player.id.toString()})`);
+
+    const rateLimits = await getRateLimitInfo(guildId);
+    const sections = buildPlayerInfoSections(player, rateLimits);
+    await sendPlayerInfo(interaction, sections);
+  });
 }

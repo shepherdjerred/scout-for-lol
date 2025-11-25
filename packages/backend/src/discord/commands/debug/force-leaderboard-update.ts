@@ -1,10 +1,10 @@
 import type { ChatInputCommandInteraction } from "discord.js";
-import { prisma } from "../../../database/index.js";
-import { getCompetitionById } from "../../../database/competition/queries.js";
-import { runDailyLeaderboardUpdate } from "../../../league/tasks/competition/daily-update.js";
-import { calculateLeaderboard } from "../../../league/competition/leaderboard.js";
-import { generateLeaderboardEmbed } from "../../embeds/competition.js";
-import { send as sendChannelMessage } from "../../../league/discord/channel.js";
+import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
+import { runDailyLeaderboardUpdate } from "@scout-for-lol/backend/league/tasks/competition/daily-update.js";
+import { calculateLeaderboard } from "@scout-for-lol/backend/league/competition/leaderboard.js";
+import { generateLeaderboardEmbed } from "@scout-for-lol/backend/discord/embeds/competition.js";
+import { send as sendChannelMessage } from "@scout-for-lol/backend/league/discord/channel.js";
 
 export async function executeDebugForceLeaderboardUpdate(interaction: ChatInputCommandInteraction) {
   console.log("🐛 Executing debug force-leaderboard-update command");

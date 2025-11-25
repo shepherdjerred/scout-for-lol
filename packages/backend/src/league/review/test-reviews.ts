@@ -4,14 +4,23 @@
  * Usage: bun run src/league/review/test-reviews.ts [options]
  */
 
-import { generateMatchReview } from "./generator.js";
-import { getExampleMatch } from "@scout-for-lol/report-ui/src/example.js";
-import type { ArenaMatch, CompletedMatch, PlayerConfigEntry } from "@scout-for-lol/data";
-import { MatchIdSchema, LeaguePuuidSchema, parseQueueType } from "@scout-for-lol/data";
+import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
+import {
+  getExampleMatch,
+  MatchIdSchema,
+  LeaguePuuidSchema,
+  parseQueueType,
+  MatchDtoSchema,
+  getOrdinalSuffix,
+  type ArenaMatch,
+  type CompletedMatch,
+  type PlayerConfigEntry,
+  type MatchDto,
+} from "@scout-for-lol/data";
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
-import { type MatchV5DTOs } from "twisted/dist/models-dto/index.js";
-import configuration from "../../configuration.js";
-import { toMatch, toArenaMatch } from "../model/match.js";
+import configuration from "@scout-for-lol/backend/configuration.js";
+import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
+import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
 
 const MATCH_TYPES = ["ranked", "unranked", "aram", "arena"] as const;
 type MatchType = (typeof MATCH_TYPES)[number];
@@ -36,7 +45,9 @@ function parseArgs(): TestOptions {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (!arg) continue;
+    if (!arg) {
+      continue;
+    }
 
     switch (arg) {
       case "--type":
@@ -124,32 +135,16 @@ Environment:
 function getMatchSummary(match: CompletedMatch | ArenaMatch): string {
   if (match.queueType === "arena") {
     const arenaPlayer = match.players[0];
-    if (!arenaPlayer) return "Unknown";
+    if (!arenaPlayer) {
+      return "Unknown";
+    }
     return `${arenaPlayer.playerConfig.alias} | ${arenaPlayer.champion.championName} | ${String(arenaPlayer.placement)}${getOrdinalSuffix(arenaPlayer.placement)} place | ${String(arenaPlayer.champion.kills)}/${String(arenaPlayer.champion.deaths)}/${String(arenaPlayer.champion.assists)} KDA`;
   } else {
     const player = match.players[0];
-    if (!player) return "Unknown";
+    if (!player) {
+      return "Unknown";
+    }
     return `${player.playerConfig.alias} | ${player.champion.championName} | ${player.lane ?? "unknown"} | ${player.outcome} | ${String(player.champion.kills)}/${String(player.champion.deaths)}/${String(player.champion.assists)} KDA`;
-  }
-}
-
-function getOrdinalSuffix(num: number): string {
-  const lastDigit = num % 10;
-  const lastTwoDigits = num % 100;
-
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 13) {
-    return "th";
-  }
-
-  switch (lastDigit) {
-    case 1:
-      return "st";
-    case 2:
-      return "nd";
-    case 3:
-      return "rd";
-    default:
-      return "th";
   }
 }
 
@@ -157,24 +152,17 @@ function getOrdinalSuffix(num: number): string {
  * Generate date prefixes for S3 listing between start and end dates (inclusive)
  */
 function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
-  const prefixes: string[] = [];
-  const current = new Date(startDate);
+  const days = eachDayOfInterval({
+    start: startOfDay(startDate),
+    end: endOfDay(endDate),
+  });
 
-  current.setUTCHours(0, 0, 0, 0);
-  const end = new Date(endDate);
-  end.setUTCHours(23, 59, 59, 999);
-
-  while (current <= end) {
-    const year = current.getUTCFullYear();
-    const month = String(current.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(current.getUTCDate()).padStart(2, "0");
-
-    prefixes.push(`matches/${year.toString()}/${month}/${day}/`);
-
-    current.setUTCDate(current.getUTCDate() + 1);
-  }
-
-  return prefixes;
+  return days.map((day) => {
+    const year = format(day, "yyyy");
+    const month = format(day, "MM");
+    const dayStr = format(day, "dd");
+    return `matches/${year}/${month}/${dayStr}/`;
+  });
 }
 
 /**
@@ -224,7 +212,7 @@ async function fetchMatchKeysFromS3(daysBack: number): Promise<string[]> {
 /**
  * Fetch and parse a match from S3
  */
-async function fetchMatchFromS3(key: string): Promise<MatchV5DTOs.MatchDto | null> {
+async function fetchMatchFromS3(key: string): Promise<MatchDto | null> {
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
@@ -246,8 +234,9 @@ async function fetchMatchFromS3(key: string): Promise<MatchV5DTOs.MatchDto | nul
     }
 
     const bodyString = await response.Body.transformToString();
-    // eslint-disable-next-line no-restricted-syntax -- Trusted S3 data
-    return JSON.parse(bodyString) as MatchV5DTOs.MatchDto;
+    // Parse and validate the match data with Zod schema
+    const matchData = JSON.parse(bodyString);
+    return MatchDtoSchema.parse(matchData);
   } catch (error) {
     console.warn(`Failed to fetch match ${key}:`, error);
     return null;
@@ -272,7 +261,7 @@ function createMinimalPlayerConfig(puuid: string, name: string): PlayerConfigEnt
 /**
  * Convert a Riot API match to our internal format
  */
-async function convertMatchDtoToInternalFormat(matchDto: MatchV5DTOs.MatchDto): Promise<CompletedMatch | ArenaMatch> {
+async function convertMatchDtoToInternalFormat(matchDto: MatchDto): Promise<CompletedMatch | ArenaMatch> {
   const queueType = parseQueueType(matchDto.info.queueId);
 
   // Pick the first participant as our "tracked player"
@@ -315,7 +304,9 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
 
   for (const key of shuffled) {
     const matchDto = await fetchMatchFromS3(key);
-    if (!matchDto) continue;
+    if (!matchDto) {
+      continue;
+    }
 
     const queueType = parseQueueType(matchDto.info.queueId);
 

@@ -1,35 +1,9 @@
 import { afterAll, describe, test, expect, beforeEach } from "bun:test";
-import fs from "node:fs";
-import path from "node:path";
-import { execSync } from "node:child_process";
-import { PrismaClient } from "../../../generated/prisma/client";
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "../../testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
+import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.js";
 
-// Create test database in temp directory
-const tempDir = fs.mkdtempSync(path.join("/tmp", "subscribe-test-"));
-const testDbPath = path.join(tempDir, "test.db");
-const testDatabaseUrl = `file:${testDbPath}`;
-
-// Push schema to test database
-const schemaPath = path.join(import.meta.dir, "../../..", "prisma/schema.prisma");
-execSync(`bunx prisma db push --skip-generate --schema=${schemaPath}`, {
-  env: {
-    ...process.env,
-    DATABASE_URL: testDatabaseUrl,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-  },
-  stdio: "inherit",
-});
-
-// Test Prisma client with isolated database
-const testPrisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: testDatabaseUrl,
-    },
-  },
-});
+// Create test database
+const { prisma: testPrisma } = createTestDatabase("subscribe-test");
 
 beforeEach(async () => {
   // Clean up test data
@@ -92,7 +66,9 @@ describe("Subscribe Command - Multi-Account Support", () => {
     expect(account.puuid).toBe(testPuuid("1"));
     expect(account.region).toBe("AMERICA_NORTH");
   });
+});
 
+describe("Subscribe Command - Account Creation", () => {
   test("adds second account to existing player with same alias", async () => {
     const now = new Date();
     const serverId = testGuildId("000002");
@@ -260,14 +236,16 @@ describe("Subscribe Command - Multi-Account Support", () => {
           updatedTime: now,
         },
       });
-    } catch (_error) {
+    } catch {
       errorThrown = true;
     }
 
     // Should fail due to @@unique([serverId, puuid])
     expect(errorThrown).toBe(true);
   });
+});
 
+describe("Subscribe Command - Multi-Server Accounts", () => {
   test("allows same PUUID in different servers", async () => {
     const now = new Date();
     const alias = "CrossServerPlayer";
@@ -341,7 +319,9 @@ describe("Subscribe Command - Multi-Account Support", () => {
     expect(account2.puuid).toBe(puuid);
     expect(account1.serverId).not.toBe(account2.serverId);
   });
+});
 
+describe("Subscribe Command - Subscription Linking", () => {
   test("subscription links to correct player when multiple accounts exist", async () => {
     const now = new Date();
     const serverId = testGuildId("40000");
@@ -536,7 +516,9 @@ describe("Subscribe Command - Multi-Account Support", () => {
     expect(foundAccount?.player.alias).toBe(alias);
     expect(foundAccount?.id).toBe(existingAccount.id);
   });
+});
 
+describe("Subscribe Command - Subscription Detection", () => {
   test("detects when subscription already exists for player in channel", async () => {
     const now = new Date();
     const serverId = testGuildId("70000");

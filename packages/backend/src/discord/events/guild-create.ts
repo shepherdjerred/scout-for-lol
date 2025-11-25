@@ -5,8 +5,8 @@
  */
 
 import { type Guild, ChannelType, type TextChannel } from "discord.js";
-import { truncateDiscordMessage } from "../utils/message.js";
-import { getErrorMessage } from "../../utils/errors.js";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 
 /**
  * Find the best channel to send a welcome message to
@@ -30,13 +30,17 @@ async function findWelcomeChannel(guild: Guild): Promise<TextChannel | null> {
   // Find first text channel we can send to
   const channels = await guild.channels.fetch();
   for (const [, channel] of channels) {
-    if (!channel) continue;
-    if (channel.type !== ChannelType.GuildText) continue;
+    if (!channel) {
+      continue;
+    }
+    if (channel.type !== ChannelType.GuildText) {
+      continue;
+    }
 
     const permissions = channel.permissionsFor(guild.members.me ?? guild.client.user);
     if (permissions?.has(["ViewChannel", "SendMessages"])) {
       // Type assertion is safe here: we checked channel.type === GuildText above
-      // eslint-disable-next-line no-restricted-syntax -- Checked type above, safe assertion
+      // eslint-disable-next-line custom-rules/no-type-assertions -- Type assertion is safe here because we checked the type above
       return channel as unknown as TextChannel;
     }
   }

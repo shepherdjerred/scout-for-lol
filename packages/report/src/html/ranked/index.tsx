@@ -1,6 +1,6 @@
 import { divisionToString, TierSchema, wasDemoted, wasPromoted } from "@scout-for-lol/data";
 import type { Rank, Tier } from "@scout-for-lol/data";
-import { palette } from "../../assets/colors.ts";
+import { palette } from "@scout-for-lol/report/assets/colors.ts";
 import { z } from "zod";
 import { match } from "ts-pattern";
 
@@ -15,7 +15,9 @@ if (typeof Bun !== "undefined") {
           const image = await Bun.file(
             new URL(`./assets/Rank=${tier.charAt(0).toUpperCase() + tier.slice(1)}.png`, import.meta.url),
           ).arrayBuffer();
-          return [tier, Buffer.from(image).toString("base64")];
+          const bytes = new Uint8Array(image);
+          // Use Buffer to avoid stack overflow with large arrays
+          return [tier, Buffer.from(bytes).toString("base64")];
         }),
       ),
     ),
@@ -104,7 +106,7 @@ export function RankedBadge({
             }}
           >
             <div style={{ width: `${iconSize.toString()}rem`, height: `${iconSize.toString()}rem`, display: "flex" }}>
-              <img src={badge} style={{ width: "100%", height: "100%", display: "block" }} />
+              <img src={badge} alt="" style={{ width: "100%", height: "100%", display: "block" }} />
             </div>
             <span
               style={{

@@ -1,4 +1,6 @@
 ---
+description: Overall type safety strategy - validate at boundaries with Zod
+globs: "*.ts,*.tsx"
 alwaysApply: true
 ---
 
@@ -19,38 +21,25 @@ alwaysApply: true
 
 ## The Type Safety Workflow
 
-### 1. Define the Schema (Zod)
+1. **Define Schema** - Create Zod schema
+2. **Extract Type** - Use `z.infer<typeof Schema>`
+3. **Validate at Boundary** - Parse unknown data
+4. **Use Safely** - TypeScript knows the type everywhere else
 
 ```typescript
-const UserInputSchema = z.object({
-  name: z.string().min(1).max(100),
-  email: z.string().email(),
-  age: z.number().int().positive(),
-});
-```
+const UserSchema = z.object({ name: z.string(), email: z.string().email() });
+type User = z.infer<typeof UserSchema>;
 
-### 2. Extract the Type
+function handleInput(rawInput: unknown): User {
+  return UserSchema.parse(rawInput);  // Validate at boundary
+}
 
-```typescript
-type UserInput = z.infer<typeof UserInputSchema>;
-```
-
-### 3. Validate at Boundary
-
-```typescript
-function handleUserInput(rawInput: unknown): UserInput {
-  return UserInputSchema.parse(rawInput);
+function processUser(user: User): void {
+  console.log(user.name);  // Safe - already validated
 }
 ```
 
-### 4. Use Safely Everywhere Else
-
-```typescript
-function processUser(user: UserInput): void {
-  console.log(user.name);  // TypeScript knows this is safe
-  saveToDatabase(user);    // All fields are validated
-}
-```
+**See:** `zod-validation-patterns.mdc` for detailed Zod patterns.
 
 ## When TypeScript Fights You, Step Back
 
@@ -125,58 +114,30 @@ Is the data from outside your code?
 
 ## Common Scenarios
 
-### Scenario: API Response
+### API Response
 
 ```typescript
-const response = await fetch(url);
-const json: unknown = await response.json();  // Always unknown!
-const validated = ResponseSchema.parse(json); // Validate
-// Now use validated safely
+const json: unknown = await response.json();
+const validated = ResponseSchema.parse(json);
 ```
 
-### Scenario: Database Query
+### Database JSON Field
 
 ```typescript
-// Known structure (Prisma types are good):
-const user = await prisma.user.findUnique({ where: { id } });
-// TypeScript knows the type
-
-// Unknown structure (JSON field):
 const config: unknown = JSON.parse(user.configJson);
-const validated = ConfigSchema.parse(config);  // Validate!
+const validated = ConfigSchema.parse(config);
 ```
 
-### Scenario: Error Handling
+### Error Handling
 
 ```typescript
-try {
-  await operation();
-} catch (error) {
-  // error is unknown - validate to use
-  const ErrorSchema = z.object({ message: z.string() });
+catch (error) {
   const result = ErrorSchema.safeParse(error);
   const message = result.success ? result.data.message : String(error);
 }
 ```
 
-### Scenario: Complex Union
-
-```typescript
-// Define union with Zod:
-const InputSchema = z.union([
-  z.object({ type: z.literal("A"), fieldA: z.string() }),
-  z.object({ type: z.literal("B"), fieldB: z.number() }),
-]);
-
-const input = InputSchema.parse(rawInput);
-
-// TypeScript narrows automatically:
-if (input.type === "A") {
-  console.log(input.fieldA);  // Works!
-} else {
-  console.log(input.fieldB);  // Works!
-}
-```
+**See:** `error-handling-patterns.mdc`, `zod-validation-patterns.mdc` for details.
 
 ## Avoid These Anti-Patterns
 
