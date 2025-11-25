@@ -76,6 +76,7 @@ impl LcuConnection {
 
                 // Extract command line arguments
                 let cmd_line = process.cmd();
+                debug!("Command line arguments: {:?}", cmd_line);
 
                 // Find port
                 let port = cmd_line
