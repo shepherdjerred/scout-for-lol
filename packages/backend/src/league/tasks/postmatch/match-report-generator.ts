@@ -65,6 +65,17 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
     // Validate and parse the API response to ensure it matches our schema
     try {
       const validated = MatchDtoSchema.parse(response.response);
+
+      // Debug: Check if participants have puuid (they should)
+      const firstParticipant = validated.info.participants[0];
+      if (firstParticipant) {
+        const hasPuuid = "puuid" in firstParticipant;
+        console.log(`[debug][fetchMatchData] First participant has puuid:`, hasPuuid);
+        if (hasPuuid) {
+          console.log(`[debug][fetchMatchData] First participant puuid:`, firstParticipant.puuid);
+        }
+      }
+
       return validated;
     } catch (parseError) {
       console.error(`[fetchMatchData] ❌ Match data validation failed for ${matchId}:`, parseError);
@@ -226,6 +237,22 @@ export async function generateMatchReport(
 
     // Get full player data with ranks
     console.log(`[debug][generateMatchReport] Getting player data for ${playersInMatch.length.toString()} player(s)`);
+
+    // Debug: Check playerConfigs before calling getPlayer
+    for (let i = 0; i < playersInMatch.length; i++) {
+      const playerConfig = playersInMatch[i];
+      if (playerConfig) {
+        console.log(`[debug][generateMatchReport] playersInMatch[${i.toString()}] keys:`, Object.keys(playerConfig));
+        console.log(`[debug][generateMatchReport] playersInMatch[${i.toString()}] has puuid:`, "puuid" in playerConfig);
+        if ("puuid" in playerConfig) {
+          console.error(
+            `[debug][generateMatchReport] ⚠️  ERROR: playersInMatch[${i.toString()}] has puuid at top level!`,
+            JSON.stringify(playerConfig, null, 2),
+          );
+        }
+      }
+    }
+
     const players = await Promise.all(playersInMatch.map((playerConfig) => getPlayer(playerConfig)));
     console.log(`[debug][generateMatchReport] Got ${players.length.toString()} player(s)`);
     for (let i = 0; i < players.length; i++) {
