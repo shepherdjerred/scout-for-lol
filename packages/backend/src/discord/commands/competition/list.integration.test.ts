@@ -1,46 +1,21 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { type DiscordAccountId, type DiscordChannelId, type DiscordGuildId } from "@scout-for-lol/data";
 import { createCompetition, getCompetitionsByServer } from "@scout-for-lol/backend/database/competition/queries.js";
 import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
-
 import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
+import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.js";
+
 // Create a test database for integration tests
-const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/competition-list-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
-const testDbPath = `${testDir}/test.db`;
-const testDbUrl = `file:${testDbPath}`;
-
-// Push schema to test database once before all tests
-const schemaPath = `import.meta.dir/../../../../prisma/schema.prisma`;
-Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
-  cwd: `${import.meta.dir}/../../../..`,
-  env: {
-    ...Bun.env,
-    DATABASE_URL: testDbUrl,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-  },
-  stdout: "ignore",
-  stderr: "ignore",
-  stdin: "ignore",
-});
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: testDbUrl,
-    },
-  },
-});
+const { prisma } = createTestDatabase("competition-list-test");
 
 beforeEach(async () => {
   // Clean up database before each test
-  await prisma.competitionSnapshot.deleteMany();
-  await prisma.competitionParticipant.deleteMany();
-  await prisma.competition.deleteMany();
-  await prisma.subscription.deleteMany();
-  await prisma.account.deleteMany();
-  await prisma.player.deleteMany();
+  await deleteIfExists(() => prisma.competitionSnapshot.deleteMany());
+  await deleteIfExists(() => prisma.competitionParticipant.deleteMany());
+  await deleteIfExists(() => prisma.competition.deleteMany());
+  await deleteIfExists(() => prisma.subscription.deleteMany());
+  await deleteIfExists(() => prisma.account.deleteMany());
+  await deleteIfExists(() => prisma.player.deleteMany());
 });
 afterAll(async () => {
   await prisma.$disconnect();

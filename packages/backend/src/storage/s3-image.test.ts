@@ -219,7 +219,7 @@ describe("saveImageToS3 - Error Handling", () => {
     s3Mock.on(PutObjectCommand).rejects(new Error("S3 upload failed"));
 
     await expect(saveImageToS3(matchId, imageBuffer, queueType)).rejects.toThrow(
-      "Failed to save image NA1_ERROR_CASE to S3",
+      "Failed to save PNG NA1_ERROR_CASE to S3",
     );
 
     expect(s3Mock.calls().length).toBe(1);
@@ -233,7 +233,7 @@ describe("saveImageToS3 - Error Handling", () => {
     s3Mock.on(PutObjectCommand).rejects(new Error("Network timeout"));
 
     await expect(saveImageToS3(matchId, imageBuffer, queueType)).rejects.toThrow(
-      "Failed to save image EUW1_SPECIFIC_ERROR to S3",
+      "Failed to save PNG EUW1_SPECIFIC_ERROR to S3",
     );
   });
 
@@ -269,7 +269,7 @@ describe("saveImageToS3 - Error Handling", () => {
     } catch (error) {
       expect(error).toBeInstanceOf(Error);
       if (error instanceof Error) {
-        expect(error.message).toContain("Failed to save image");
+        expect(error.message).toContain("Failed to save PNG");
         expect(error.message).toContain(matchId);
         expect(error.message).toContain("Access Denied");
       }

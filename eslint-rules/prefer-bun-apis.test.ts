@@ -74,14 +74,5 @@ ruleTester.run("prefer-bun-apis", preferBunApis, {
         },
       ],
     },
-    {
-      name: "disallows Buffer",
-      code: `const buf = Buffer.from("test");`,
-      errors: [
-        {
-          messageId: "preferUint8Array",
-        },
-      ],
-    },
   ],
 });

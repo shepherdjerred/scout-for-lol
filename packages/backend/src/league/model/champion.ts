@@ -52,15 +52,15 @@ async function extractAugments(dto: ParticipantDto): Promise<Augment[]> {
 
 function extractArenaMetrics(dto: ParticipantDto) {
   return {
-    playerScore0: dto.playerScore0 ?? 0,
-    playerScore1: dto.playerScore1 ?? 0,
-    playerScore2: dto.playerScore2 ?? 0,
-    playerScore3: dto.playerScore3 ?? 0,
-    playerScore4: dto.playerScore4 ?? 0,
-    playerScore5: dto.playerScore5 ?? 0,
-    playerScore6: dto.playerScore6 ?? 0,
-    playerScore7: dto.playerScore7 ?? 0,
-    playerScore8: dto.playerScore8 ?? 0,
+    playerScore0: dto.playerScore0 ?? dto.PlayerScore0 ?? 0,
+    playerScore1: dto.playerScore1 ?? dto.PlayerScore1 ?? 0,
+    playerScore2: dto.playerScore2 ?? dto.PlayerScore2 ?? 0,
+    playerScore3: dto.playerScore3 ?? dto.PlayerScore3 ?? 0,
+    playerScore4: dto.playerScore4 ?? dto.PlayerScore4 ?? 0,
+    playerScore5: dto.playerScore5 ?? dto.PlayerScore5 ?? 0,
+    playerScore6: dto.playerScore6 ?? dto.PlayerScore6 ?? 0,
+    playerScore7: dto.playerScore7 ?? dto.PlayerScore7 ?? 0,
+    playerScore8: dto.playerScore8 ?? dto.PlayerScore8 ?? 0,
   };
 }
 

@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
-import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { pruneOrphanedPlayers } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.js";
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
 import { CompetitionIdSchema, type CompetitionId } from "@scout-for-lol/data";
+import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.js";
 
 // Mark these tests as serial since they create temporary databases
 // and have timing constraints. Running them concurrently would slow them down.
@@ -86,39 +87,11 @@ async function createPlayerWithCompetition(options: {
  * Setup test database
  */
 function setupTestDatabase(): { prisma: PrismaClient; testDir: string; testDbPath: string } {
-  const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/prune-players-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
-  const testDbPath = `${testDir}/test.db`;
-
-  // Create the test directory before running Prisma
-  Bun.spawnSync(["mkdir", "-p", testDir]);
-
-  // Run Prisma migrations to set up the schema
-  const schemaPath = `${import.meta.dir}/../../../../prisma/schema.prisma`;
-  const pushResult = Bun.spawnSync(["bunx", "prisma", "db", "push", `--schema=${schemaPath}`], {
-    env: {
-      ...Bun.env,
-      DATABASE_URL: `file:${testDbPath}`,
-      PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-      PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-    },
-    stdout: "pipe",
-    stderr: "pipe",
-    stdin: "ignore",
-  });
-
-  if (pushResult.exitCode !== 0) {
-    const errorOutput = pushResult.stderr.toString();
-    throw new Error(`Failed to set up test database: ${errorOutput}`);
-  }
-
-  // Create Prisma client
-  const prisma = new PrismaClient({
-    datasources: {
-      db: {
-        url: `file:${testDbPath}`,
-      },
-    },
-  });
+  // Use the test database utility
+  const { prisma, dbPath: testDbPath } = createTestDatabase(
+    `prune-players-test-${Date.now().toString()}-${Math.random().toString(36).slice(2)}`,
+  );
+  const testDir = testDbPath.replace("/test.db", "");
 
   return { prisma, testDir, testDbPath };
 }

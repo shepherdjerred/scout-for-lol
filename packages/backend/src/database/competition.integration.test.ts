@@ -1,6 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { PermissionsBitField, PermissionFlagsBits } from "discord.js";
-import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
 import { addParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.js";
 import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/database/competition/validation.js";
@@ -9,44 +8,23 @@ import { clearAllRateLimits } from "@scout-for-lol/backend/database/competition/
 import type { CompetitionId, DiscordAccountId, DiscordGuildId, PlayerId } from "@scout-for-lol/data";
 
 import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
+import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.js";
+
 // ============================================================================
 // Test Database Setup
 // ============================================================================
 
-const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/competition-business-logic-test-${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
-await Bun.write(`${testDir}/.keep`, "");
-const testDbPath = `${testDir}/test.db`;
-const testDbUrl = `file:${testDbPath}`;
-
-// Push schema to test database
-const schemaPath = `${import.meta.dir}/../../prisma/schema.prisma`;
-await Bun.spawn(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
-  env: {
-    ...Bun.env,
-    DATABASE_URL: testDbUrl,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-  },
-  stdio: ["inherit", "inherit", "inherit"],
-}).exited;
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: testDbUrl,
-    },
-  },
-});
+const { prisma } = createTestDatabase("competition-business-logic-test");
 
 beforeEach(async () => {
   // Clean up database before each test
-  await prisma.competitionSnapshot.deleteMany();
-  await prisma.competitionParticipant.deleteMany();
-  await prisma.competition.deleteMany();
-  await prisma.serverPermission.deleteMany();
-  await prisma.subscription.deleteMany();
-  await prisma.account.deleteMany();
-  await prisma.player.deleteMany();
+  await deleteIfExists(() => prisma.competitionSnapshot.deleteMany());
+  await deleteIfExists(() => prisma.competitionParticipant.deleteMany());
+  await deleteIfExists(() => prisma.competition.deleteMany());
+  await deleteIfExists(() => prisma.serverPermission.deleteMany());
+  await deleteIfExists(() => prisma.subscription.deleteMany());
+  await deleteIfExists(() => prisma.account.deleteMany());
+  await deleteIfExists(() => prisma.player.deleteMany());
   clearAllRateLimits();
 });
 afterAll(async () => {

@@ -7,7 +7,18 @@ import {
   type PlayerMetadata,
 } from "@scout-for-lol/data";
 
-const PROMPTS_DIR = `${import.meta.dir}/prompts`;
+// Resolve the prompts directory from the data package
+// import.meta.resolve returns a file:// URL, so we extract the pathname
+function getPromptsDir(): string {
+  // In a Bun workspace, we can resolve the data package and navigate to prompts
+  // This will be resolved at runtime when the function is called
+  const dataPackageUrl = import.meta.resolve("@scout-for-lol/data");
+  const url = new URL(dataPackageUrl);
+  // Navigate from data/src/index.ts to data/src/review/prompts
+  return url.pathname.replace(/\/src\/index\.ts$/, "/src/review/prompts");
+}
+
+const PROMPTS_DIR = getPromptsDir();
 
 /**
  * Load a prompt file from the prompts directory
@@ -47,13 +58,24 @@ async function loadPersonality(basename: string): Promise<Personality> {
  */
 async function getPersonalityFiles(): Promise<string[]> {
   const personalitiesDir = `${PROMPTS_DIR}/personalities`;
+
+  // Check if directory exists before scanning by trying to access it
+  // We'll catch the error during glob.scan if it doesn't exist
+
   const glob = new Bun.Glob("*.json");
   const files: string[] = [];
 
-  for await (const file of glob.scan({ cwd: personalitiesDir })) {
-    if (!EXCLUDED_PERSONALITY_FILES.has(file)) {
-      files.push(file);
+  try {
+    for await (const file of glob.scan({ cwd: personalitiesDir })) {
+      if (!EXCLUDED_PERSONALITY_FILES.has(file)) {
+        files.push(file);
+      }
     }
+  } catch (error) {
+    // Handle case where directory might not be accessible during scan
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.warn(`[getPersonalityFiles] Error scanning personalities directory: ${errorMessage}`);
+    return [];
   }
 
   return files;
@@ -65,7 +87,11 @@ async function getPersonalityFiles(): Promise<string[]> {
 export async function selectRandomPersonality(): Promise<Personality> {
   const personalityFiles = await getPersonalityFiles();
   if (personalityFiles.length === 0) {
-    throw new Error("No personality files found");
+    const personalitiesDir = `${PROMPTS_DIR}/personalities`;
+    throw new Error(
+      `No personality files found in ${personalitiesDir}. ` +
+        "Ensure the personalities directory exists and contains .json files.",
+    );
   }
   const randomIndex = Math.floor(Math.random() * personalityFiles.length);
   const selectedFile = personalityFiles[randomIndex];

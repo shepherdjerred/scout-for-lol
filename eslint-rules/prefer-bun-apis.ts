@@ -20,8 +20,6 @@ export const preferBunApis = createRule({
         "Use import.meta.path instead of __filename. import.meta.path is the ESM-native way to get the file path. See https://bun.sh/docs/api/import-meta",
       preferEsmImport:
         "Use ESM import statements instead of require(). Bun fully supports ESM and it's the modern standard. Example: import { foo } from 'module'",
-      preferUint8Array:
-        "Prefer Uint8Array or Bun's binary data APIs over Buffer. For file operations, use Bun.file() which handles binary data natively. See https://bun.sh/docs/api/binary-data",
     },
     schema: [],
   },
@@ -43,7 +41,7 @@ export const preferBunApis = createRule({
         }
       },
 
-      // Check for __dirname, __filename, and Buffer
+      // Check for __dirname and __filename
       Identifier(node) {
         // Skip if this identifier is being declared (e.g., in a variable declaration)
         if (node.parent.type === AST_NODE_TYPES.VariableDeclarator && node.parent.id === node) {
@@ -59,11 +57,6 @@ export const preferBunApis = createRule({
           context.report({
             node,
             messageId: "preferImportMetaPath",
-          });
-        } else if (node.name === "Buffer") {
-          context.report({
-            node,
-            messageId: "preferUint8Array",
           });
         }
       },

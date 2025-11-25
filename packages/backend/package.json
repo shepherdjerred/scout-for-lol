@@ -29,6 +29,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.890.0",
     "@prisma/client": "^6.0.0",
+    "@prisma/client-runtime-utils": "^7.0.0",
     "@resvg/resvg-js": "^2.6.2",
     "@scout-for-lol/data": "workspace:*",
     "@scout-for-lol/report": "workspace:*",

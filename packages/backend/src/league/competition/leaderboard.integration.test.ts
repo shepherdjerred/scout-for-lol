@@ -1,6 +1,5 @@
-import { describe, expect, test, beforeAll, afterAll, beforeEach } from "bun:test";
+import { describe, expect, test, afterAll, beforeEach } from "bun:test";
 import { z } from "zod";
-import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { calculateLeaderboard } from "@scout-for-lol/backend/league/competition/leaderboard.js";
 import { createCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
 import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
@@ -9,6 +8,8 @@ import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/clien
 import { mockClient } from "aws-sdk-client-mock";
 
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
+import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.js";
+
 // ============================================================================
 // S3 Mock Setup
 // ============================================================================
@@ -20,32 +21,7 @@ const s3Mock = mockClient(S3Client);
 // ============================================================================
 
 // Create a temporary database for testing
-const testDbPath = `${Bun.env["TMPDIR"] ?? "/tmp"}/leaderboard-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}/test.db`;
-const testDbUrl = `file:${testDbPath}`;
-
-// Push schema to test database before tests run
-const schemaPath = `import.meta.dir/../../../prisma/schema.prisma`;
-Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
-  env: {
-    ...Bun.env,
-    DATABASE_URL: testDbUrl,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-  },
-  stdio: ["ignore", "pipe", "pipe"],
-});
-
-let prisma: PrismaClient;
-
-beforeAll(() => {
-  prisma = new PrismaClient({
-    datasources: {
-      db: {
-        url: testDbUrl,
-      },
-    },
-  });
-});
+const { prisma } = createTestDatabase("leaderboard-test");
 
 afterAll(async () => {
   await prisma.$disconnect();

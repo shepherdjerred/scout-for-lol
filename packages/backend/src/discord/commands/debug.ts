@@ -93,7 +93,6 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
     // Read file and convert to Buffer for Discord.js type compatibility
     // Using Bun's Buffer (not Node.js) - Discord.js types require Buffer, not Uint8Array
     const arrayBuffer = await file.arrayBuffer();
-    // eslint-disable-next-line custom-rules/prefer-bun-apis -- Discord.js types require Buffer for type safety
     const buffer = Buffer.from(arrayBuffer);
     const attachment = new AttachmentBuilder(buffer, { name: "database.sqlite" });
 

@@ -12,7 +12,6 @@ if (typeof Bun !== "undefined") {
           const image = await Bun.file(new URL(`./assets/${lane}.svg`, import.meta.url)).arrayBuffer();
           const bytes = new Uint8Array(image);
           // Use Buffer to avoid stack overflow with large arrays
-          // eslint-disable-next-line custom-rules/prefer-bun-apis -- Buffer is necessary for base64 encoding large binary data
           return [lane, Buffer.from(bytes).toString("base64")];
         }),
       ),

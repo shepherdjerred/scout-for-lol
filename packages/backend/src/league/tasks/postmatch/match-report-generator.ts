@@ -172,8 +172,6 @@ async function createMatchImage(
   }
 
   // Convert Uint8Array to Buffer for Discord.js type compatibility
-  // Using Bun's Buffer (not Node.js) - Discord.js types require Buffer, not Uint8Array
-  // eslint-disable-next-line custom-rules/prefer-bun-apis -- Discord.js types require Buffer for type safety
   const buffer = Buffer.from(image);
   const attachment = new AttachmentBuilder(buffer).setName("match.png");
   if (!attachment.name) {
@@ -295,7 +293,6 @@ export async function generateMatchReport(
         if (reviewImage) {
           // Convert Uint8Array to Buffer for Discord.js type compatibility
           // Using Bun's Buffer (not Node.js) - Discord.js types require Buffer, not Uint8Array
-          // eslint-disable-next-line custom-rules/prefer-bun-apis -- Discord.js types require Buffer for type safety
           const aiBuffer = Buffer.from(reviewImage);
           const aiImageAttachment = new AttachmentBuilder(aiBuffer).setName("ai-review.png");
           files.push(aiImageAttachment);

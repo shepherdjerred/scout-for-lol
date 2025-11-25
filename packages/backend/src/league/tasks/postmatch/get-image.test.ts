@@ -80,7 +80,7 @@ describe("getImage S3 Integration", () => {
 
     // The function should throw (caller catches it)
     await expect(saveImageToS3(matchId, imageBuffer, queueType)).rejects.toThrow(
-      "Failed to save image NA1_FAILED_UPLOAD to S3",
+      "Failed to save PNG NA1_FAILED_UPLOAD to S3",
     );
   });
 

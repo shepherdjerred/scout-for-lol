@@ -1,6 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { PermissionsBitField, PermissionFlagsBits } from "discord.js";
-import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import {
   canCreateCompetition,
   grantPermission,
@@ -10,30 +9,10 @@ import {
 import { clearAllRateLimits, recordCreation } from "@scout-for-lol/backend/database/competition/rate-limit.js";
 
 import { testGuildId, testAccountId } from "@scout-for-lol/backend/testing/test-ids.js";
-// Create a test database
-const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/permissions-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
-const testDbPath = `${testDir}/test.db`;
-const schemaPath = `import.meta.dir/../../../prisma/schema.prisma`;
-Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
-  cwd: `${import.meta.dir}/../../..`,
-  env: {
-    ...Bun.env,
-    DATABASE_URL: `file:${testDbPath}`,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-  },
-  stdout: "ignore",
-  stderr: "ignore",
-  stdin: "ignore",
-});
+import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.js";
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: `file:${testDbPath}`,
-    },
-  },
-});
+// Create a test database
+const { prisma } = createTestDatabase("permissions-test");
 
 // Clean up before each test
 beforeEach(async () => {

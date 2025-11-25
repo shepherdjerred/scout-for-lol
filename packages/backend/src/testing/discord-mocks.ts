@@ -314,7 +314,7 @@ export function mockClient(overrides: Record<string, unknown> = {}): Client {
       fetch: () => Promise.resolve(mockUser()),
     },
     application: {
-      id: testAccountId("app-1"),
+      id: testAccountId("100"),
     },
     isReady: () => true,
     rest: {

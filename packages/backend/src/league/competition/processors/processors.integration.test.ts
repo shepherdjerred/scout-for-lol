@@ -123,7 +123,7 @@ function testEmptyMatchData() {
 
 describe("processCriteria integration tests", () => {
   it("should process real match data without crashing", async () => {
-    const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
+    const matchPath = `${import.meta.dir}/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match = await loadMatch(matchPath);
 
     // Extract actual PUUIDs from the match
@@ -148,7 +148,7 @@ describe("processCriteria integration tests", () => {
   });
 
   it("should correctly filter by queue type", async () => {
-    const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
+    const matchPath = `${import.meta.dir}/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match = await loadMatch(matchPath);
     const queueId = match.info.queueId;
 
@@ -184,7 +184,7 @@ describe("processCriteria integration tests", () => {
   });
 
   it("should calculate wins and losses correctly from real data", async () => {
-    const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
+    const matchPath = `${import.meta.dir}/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match = await loadMatch(matchPath);
 
     // Get first participant and their win status
@@ -216,8 +216,8 @@ describe("processCriteria integration tests", () => {
   });
 
   it("should handle multiple matches from same player", async () => {
-    const match1Path = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
-    const match2Path = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370986469.json`;
+    const match1Path = `${import.meta.dir}/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
+    const match2Path = `${import.meta.dir}/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370986469.json`;
 
     const match1 = await loadMatch(match1Path);
     const match2 = await loadMatch(match2Path);
@@ -292,7 +292,7 @@ describe("processCriteria integration tests", () => {
   });
 
   it("should correctly filter by champion ID", async () => {
-    const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
+    const matchPath = `${import.meta.dir}/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match = await loadMatch(matchPath);
 
     // Get first participant and their champion
@@ -337,7 +337,7 @@ describe("processCriteria integration tests", () => {
   });
 
   it("should handle win rate calculation with real data", async () => {
-    const matchPath = `import.meta.dir/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
+    const matchPath = `${import.meta.dir}/../../model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json`;
     const match = await loadMatch(matchPath);
 
     const firstParticipant = match.info.participants[0];

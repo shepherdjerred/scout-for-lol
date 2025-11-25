@@ -1,33 +1,11 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
 import type { CompetitionCriteria, CompetitionId, LeaguePuuid, PlayerId, Region } from "@scout-for-lol/data";
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
+import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.js";
 
 // Create a test database
-const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/lifecycle-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
-const testDbPath = `${testDir}/test.db`;
-const schemaPath = `import.meta.dir/../../../../prisma/schema.prisma`;
-Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
-  cwd: `${import.meta.dir}/../../../..`,
-  env: {
-    ...Bun.env,
-    DATABASE_URL: `file:${testDbPath}`,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-  },
-  stdout: "ignore",
-  stderr: "ignore",
-  stdin: "ignore",
-});
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: `file:${testDbPath}`,
-    },
-  },
-});
+const { prisma } = createTestDatabase("lifecycle-test");
 
 // Test helpers
 async function createTestCompetition(

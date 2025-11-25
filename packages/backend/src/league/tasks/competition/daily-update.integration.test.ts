@@ -1,5 +1,4 @@
 import { afterAll, beforeEach, describe, expect, test, mock } from "bun:test";
-import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
 import type {
   CompetitionCriteria,
@@ -13,6 +12,7 @@ import type {
 import { z } from "zod";
 
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
+import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.js";
 // Schema for Discord message content validation
 const MessageContentSchema = z.object({
   content: z.string(),
@@ -61,29 +61,7 @@ void mock.module("../../../storage/s3-leaderboard.js", () => ({
 }));
 
 // Create a test database
-const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/daily-update-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
-const testDbPath = `${testDir}/test.db`;
-const schemaPath = `import.meta.dir/../../../../prisma/schema.prisma`;
-Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
-  cwd: `${import.meta.dir}/../../../..`,
-  env: {
-    ...Bun.env,
-    DATABASE_URL: `file:${testDbPath}`,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-  },
-  stdout: "ignore",
-  stderr: "ignore",
-  stdin: "ignore",
-});
-
-const testPrisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: `file:${testDbPath}`,
-    },
-  },
-});
+const { prisma: testPrisma } = createTestDatabase("daily-update-test");
 
 // Mock the prisma instance used by daily-update
 void mock.module("../../../database/index.js", () => ({

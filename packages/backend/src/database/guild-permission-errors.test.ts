@@ -1,5 +1,4 @@
 import { describe, expect, test, beforeEach } from "bun:test";
-import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import {
   recordPermissionError,
   recordSuccessfulSend,
@@ -8,31 +7,11 @@ import {
   cleanupOldErrorRecords,
 } from "@scout-for-lol/backend/database/guild-permission-errors.js";
 import { DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-
 import { testGuildId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
+import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.js";
+
 // Create a test database
-const testDir = `${Bun.env["TMPDIR"] ?? "/tmp"}/guild-errors-test--${Date.now().toString()}-${Math.random().toString(36).slice(2)}`;
-const testDbPath = `${testDir}/test.db`;
-
-// Initialize test database
-const schemaPath = `import.meta.dir/../../prisma/schema.prisma`;
-Bun.spawnSync(["bunx", "prisma", "db", "push", "--skip-generate", `--schema=${schemaPath}`], {
-  env: {
-    ...Bun.env,
-    DATABASE_URL: `file:${testDbPath}`,
-    PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-    PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-  },
-  stdio: ["pipe", "pipe", "pipe"],
-});
-
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: `file:${testDbPath}`,
-    },
-  },
-});
+const { prisma } = createTestDatabase("guild-errors-test");
 
 beforeEach(async () => {
   // Clean up all records before each test

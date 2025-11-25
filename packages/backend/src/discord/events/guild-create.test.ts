@@ -29,10 +29,10 @@ describe("handleGuildCreate", () => {
         fetch: mock(() => Promise.resolve(new Map())),
       },
       members: {
-        me: { id: testAccountId("bot") },
+        me: { id: testAccountId("999") },
       },
       client: {
-        user: { id: testAccountId("bot") },
+        user: { id: testAccountId("999") },
       },
     });
 
@@ -81,10 +81,10 @@ describe("handleGuildCreate", () => {
         }),
       },
       members: {
-        me: { id: testAccountId("bot") },
+        me: { id: testAccountId("999") },
       },
       client: {
-        user: { id: testAccountId("bot") },
+        user: { id: testAccountId("999") },
       },
     });
 
@@ -127,10 +127,10 @@ describe("handleGuildCreate", () => {
         }),
       },
       members: {
-        me: { id: testAccountId("bot") },
+        me: { id: testAccountId("999") },
       },
       client: {
-        user: { id: testAccountId("bot") },
+        user: { id: testAccountId("999") },
       },
     });
 
@@ -157,10 +157,10 @@ describe("handleGuildCreate", () => {
         fetch: mock(() => Promise.resolve(new Map())),
       },
       members: {
-        me: { id: testAccountId("bot") },
+        me: { id: testAccountId("999") },
       },
       client: {
-        user: { id: testAccountId("bot") },
+        user: { id: testAccountId("999") },
       },
     });
 

@@ -1,25 +1,25 @@
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
-exports[`sanity check 1`] = `"b92f5e887b3e32204d8feb9a6a16ac5a30952ab80934eafc90674eba49ed44b6"`;
+exports[`sanity check 1`] = `"8949991805205542016bd7bfa7350645ddd404de64b34075df66ba438d2ee9a1"`;
 
-exports[`no items test 1`] = `"a818e18674220903ae311abc7f1d3eda5b362d2960fda4111d94da1d53f1004f"`;
+exports[`no items test 1`] = `"37560e116f4a4dc0f2d033c6c89523449ebb8b7a6073760342e92d7231d1e377"`;
 
-exports[`all fields zeroed out test 1`] = `"bb6b196bcdb7868ca63003d5289df5b17634330944cf19f61d2f40936ef23642"`;
+exports[`all fields zeroed out test 1`] = `"f22db210b3cca09fe07129915edafe71367690c04a8a3ac3650074f508345f74"`;
 
-exports[`no rank test 1`] = `"f48768e2484b1306d5a301f8438c6f0fc9ca0608664b693c97f88d8755d331b8"`;
+exports[`no rank test 1`] = `"3baed0dd5a959a525090e631a218078e02f4fda911d636613f1c3c61da14cbdf"`;
 
-exports[`large values test 1`] = `"56e8dfa14ea891ed2ccd070db95fb8ff04bf215b98807ca56e2ed7bb137dbe7c"`;
+exports[`large values test 1`] = `"5e122883286e0664e7f57cf8b5f7fb56415120f4537ca8ea3397a4dcac8fbe22"`;
 
-exports[`victory test 1`] = `"de5aa3e3e093b948da91f138ab4dafefd987b9b6de9777886eb6d690e91f0fd5"`;
+exports[`victory test 1`] = `"b3a8f8e2d627ccb3fea6771a7d59ba99308373bedaf7d388110f3463e1adb643"`;
 
-exports[`surrender test 1`] = `"72ed79ca5cbee332aecfa128359139fbc1d4ebab00014fb29be07fe156d52963"`;
+exports[`surrender test 1`] = `"97d8b805a9f83e1a7f3fd5790e163b786d77b01c0444916f25b84da66ced5920"`;
 
-exports[`no rank before match test 1`] = `"043d4c88ff0bc28bdd15e0fb963ae052d7159b704818285756197d88cf6abfc5"`;
+exports[`no rank before match test 1`] = `"4b35a9e2d17430900ac3fc8bc5c2c54f133b7efd737317e8b7f7ac8d5d1de0ed"`;
 
-exports[`multiple highlighted players test 1`] = `"b3ebf770d0ece026734dd6c64072556fc60ab95d376462c088d9dfff414adcec"`;
+exports[`multiple highlighted players test 1`] = `"cacde0b0bc54f13ef7672b54962dfc2cddd1f2882c6ee71bfc52095338343f9b"`;
 
-exports[`clash game test 1`] = `"55bc092f0f4432f025690f31b9695e986154660cfe8ffe01c2c348e82241797c"`;
+exports[`clash game test 1`] = `"b9c1219e9dbc02b4bbd96f827449104d4171aa92cb1c3aa722eeabecd043dd49"`;
 
-exports[`aram clash game test 1`] = `"cd6bf11da4ee09fd1fa39f1ce699b29b11268f5bc0c4260ef3a5630f6d54ee58"`;
+exports[`aram clash game test 1`] = `"381fc8408f3d9b0f1981559bf08e553b4e2bc205ec6b3908970339272debb77c"`;
 
-exports[`multiple players with promotion and demotion test 1`] = `"1d2e82ac2ea5feda3efc3797687fdb1211d44f4f7e2dfb563cd04d24d7914110"`;
+exports[`multiple players with promotion and demotion test 1`] = `"6838f92e42486047e13d1585dfd38f5e4fa7ada4bdf09435059be91155d15629"`;

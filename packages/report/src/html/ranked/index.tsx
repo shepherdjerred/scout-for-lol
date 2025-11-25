@@ -17,7 +17,6 @@ if (typeof Bun !== "undefined") {
           ).arrayBuffer();
           const bytes = new Uint8Array(image);
           // Use Buffer to avoid stack overflow with large arrays
-          // eslint-disable-next-line custom-rules/prefer-bun-apis -- Buffer is necessary for base64 encoding large binary data
           return [tier, Buffer.from(bytes).toString("base64")];
         }),
       ),

@@ -10,7 +10,7 @@ import { mockUser, mockTextChannel } from "@scout-for-lol/backend/testing/discor
 import { testAccountId } from "@scout-for-lol/backend/testing/test-ids";
 
 // Mock bot user for tests
-const mockBotUser = mockUser({ id: testAccountId("bot"), username: "TestBot" });
+const mockBotUser = mockUser({ id: testAccountId("999"), username: "TestBot" });
 
 describe("isPermissionError", () => {
   test("returns true for Discord missing permissions error (50013)", () => {
@@ -182,7 +182,7 @@ describe("checkSendMessagePermission", () => {
           me: null,
           fetch: async (userId: string) => {
             fetchCalled = true;
-            expect(userId).toBe(testAccountId("bot"));
+            expect(userId).toBe(testAccountId("999"));
             return mockMember;
           },
         },
