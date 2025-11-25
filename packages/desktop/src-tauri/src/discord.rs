@@ -1,13 +1,19 @@
+//! Discord integration module for posting game events to Discord channels
+
 use serde::{Deserialize, Serialize};
 use tracing::{error, info};
 
+/// Represents the connection status of the Discord client
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DiscordStatus {
+    /// Whether the Discord client is connected
     pub connected: bool,
+    /// The name of the Discord channel (if connected)
     pub channel_name: Option<String>,
 }
 
+/// Discord client for posting game events to a Discord channel
 #[derive(Debug, Clone)]
 pub struct DiscordClient {
     token: String,

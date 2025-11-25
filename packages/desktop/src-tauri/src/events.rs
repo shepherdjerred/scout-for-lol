@@ -1,3 +1,5 @@
+//! Game event monitoring and processing module
+
 use crate::discord::DiscordClient;
 use crate::lcu::LcuConnection;
 use futures_util::{SinkExt, StreamExt};
@@ -10,30 +12,49 @@ use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::Message;
 use tracing::{debug, error, info, warn};
 
+/// Represents a game event that occurred in a League of Legends match
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "eventType")]
 pub enum GameEvent {
+    /// A new game has started
     GameStart {
+        /// The game mode (e.g., "Ranked Solo/Duo")
         game_mode: String,
+        /// The map name (e.g., "Summoner's Rift")
         map: String,
     },
+    /// A game has ended
     GameEnd {
+        /// The winning team
         winning_team: String,
+        /// The game duration
         duration: String,
     },
+    /// A champion kill occurred
     ChampionKill {
+        /// The player who got the kill
         killer: String,
+        /// The player who was killed
         victim: String,
+        /// The in-game time when the kill occurred
         game_time: String,
     },
+    /// A multi-kill occurred (double, triple, quadra, penta)
     MultiKill {
+        /// The player who got the multi-kill
         killer: String,
+        /// The type of multi-kill (e.g., "DOUBLE_KILL")
         multikill_type: String,
+        /// The in-game time when the multi-kill occurred
         game_time: String,
     },
+    /// An objective was taken (dragon, baron, tower, etc.)
     Objective {
+        /// The team that took the objective
         team: String,
+        /// The objective type
         objective: String,
+        /// The in-game time when the objective was taken
         game_time: String,
     },
 }

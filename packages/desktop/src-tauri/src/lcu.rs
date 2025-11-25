@@ -1,20 +1,30 @@
+//! League Client Update (LCU) API integration module
+
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
 use tracing::{debug, error, info};
 
+/// Represents the connection status of the League Client
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LcuStatus {
+    /// Whether the LCU connection is active
     pub connected: bool,
+    /// The current summoner's display name (if connected)
     pub summoner_name: Option<String>,
+    /// Whether the player is currently in a game
     pub in_game: bool,
 }
 
+/// Connection to the League Client Update (LCU) API
 #[derive(Debug, Clone)]
 pub struct LcuConnection {
+    /// The port number the LCU is running on
     pub port: u16,
+    /// The authentication token for LCU API requests
     pub token: String,
+    /// The base URL for LCU API requests
     pub base_url: String,
     client: reqwest::Client,
 }
