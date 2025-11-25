@@ -23,7 +23,16 @@ export function createTestDatabase(testName: string): {
 
   // Push schema to test database
   const pushResult = Bun.spawnSync(
-    ["bunx", "prisma", "db", "push", `--schema=${schemaPath}`, "--force-reset", "--accept-data-loss"],
+    [
+      "bunx",
+      "prisma",
+      "db",
+      "push",
+      `--schema=${schemaPath}`,
+      "--force-reset",
+      "--accept-data-loss",
+      "--skip-generate",
+    ],
     {
       cwd: `${import.meta.dir}/../..`,
       env: {
