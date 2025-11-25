@@ -171,8 +171,11 @@ async function createMatchImage(
     console.error(`[createMatchImage] Failed to save images to S3:`, error);
   }
 
-  // eslint-disable-next-line custom-rules/prefer-bun-apis -- Discord.js AttachmentBuilder requires Buffer type
-  const attachment = new AttachmentBuilder(Buffer.from(image)).setName("match.png");
+  // Convert Uint8Array to Buffer for Discord.js type compatibility
+  // Using Bun's Buffer (not Node.js) - Discord.js types require Buffer, not Uint8Array
+  // eslint-disable-next-line custom-rules/prefer-bun-apis -- Discord.js types require Buffer for type safety
+  const buffer = Buffer.from(image);
+  const attachment = new AttachmentBuilder(buffer).setName("match.png");
   if (!attachment.name) {
     throw new Error("[createMatchImage] Attachment name is null");
   }
@@ -290,8 +293,11 @@ export async function generateMatchReport(
 
         // Add AI-generated image if available
         if (reviewImage) {
-          // eslint-disable-next-line custom-rules/prefer-bun-apis -- Discord.js AttachmentBuilder requires Buffer type
-          const aiImageAttachment = new AttachmentBuilder(Buffer.from(reviewImage)).setName("ai-review.png");
+          // Convert Uint8Array to Buffer for Discord.js type compatibility
+          // Using Bun's Buffer (not Node.js) - Discord.js types require Buffer, not Uint8Array
+          // eslint-disable-next-line custom-rules/prefer-bun-apis -- Discord.js types require Buffer for type safety
+          const aiBuffer = Buffer.from(reviewImage);
+          const aiImageAttachment = new AttachmentBuilder(aiBuffer).setName("ai-review.png");
           files.push(aiImageAttachment);
           console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
         }

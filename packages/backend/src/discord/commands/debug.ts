@@ -87,15 +87,18 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
 
     console.log(`📖 Reading database file from ${databasePath}`);
     const file = Bun.file(databasePath);
-    const buffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(buffer);
-    console.log(`✅ Successfully read database file (${String(uint8Array.length)} bytes)`);
+    const fileSize = file.size;
+    console.log(`✅ Successfully opened database file (${String(fileSize)} bytes)`);
 
-    const bufferForAttachment = Buffer.from(uint8Array);
-    const attachment = new AttachmentBuilder(bufferForAttachment, { name: "database.sqlite" });
+    // Read file and convert to Buffer for Discord.js type compatibility
+    // Using Bun's Buffer (not Node.js) - Discord.js types require Buffer, not Uint8Array
+    const arrayBuffer = await file.arrayBuffer();
+    // eslint-disable-next-line custom-rules/prefer-bun-apis -- Discord.js types require Buffer for type safety
+    const buffer = Buffer.from(arrayBuffer);
+    const attachment = new AttachmentBuilder(buffer, { name: "database.sqlite" });
 
     await interaction.editReply({
-      content: `✅ Database file uploaded successfully\n\nPath: \`${databasePath}\`\nSize: ${(uint8Array.length / 1024).toFixed(2)} KB`,
+      content: `✅ Database file uploaded successfully\n\nPath: \`${databasePath}\`\nSize: ${(fileSize / 1024).toFixed(2)} KB`,
       files: [attachment],
     });
 

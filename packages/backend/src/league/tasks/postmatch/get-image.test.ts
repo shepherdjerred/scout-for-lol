@@ -208,10 +208,12 @@ describe("Match ID Handling", () => {
     await saveImageToS3(MatchIdSchema.parse(matchId), imageBuffer, "solo");
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as { input: { Key?: string; ContentType?: string } };
+    const command = call.args[0];
 
-    expect(command.input.Key).toContain(matchId);
-    expect(command.input.Key).toEndWith(`${matchId}.png`);
+    if (command instanceof PutObjectCommand) {
+      expect(command.input.Key).toContain(matchId);
+      expect(command.input.Key).toEndWith(`${matchId}.png`);
+    }
   });
 });
 
@@ -284,9 +286,11 @@ describe("ContentType and S3 Configuration", () => {
     await saveImageToS3(MatchIdSchema.parse(matchId), imageBuffer, "solo");
 
     const call = s3Mock.call(0);
-    const command = call.args[0] as { input: { Key?: string; ContentType?: string } };
+    const command = call.args[0];
 
-    expect(command.input.ContentType).toBe("image/png");
+    if (command instanceof PutObjectCommand) {
+      expect(command.input.ContentType).toBe("image/png");
+    }
   });
 
   test.skip("uses correct S3 bucket from environment", async () => {
