@@ -59,23 +59,30 @@ export function installDesktopDeps(workspaceSource: Directory): Container {
   // Mount Bun install cache
   container = container.withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-install-cache"));
 
-  // Set up workspace structure
+  // Set up workspace structure - include all required files like base.ts does
   return (
     container
       .withWorkdir("/workspace")
-      // Root workspace files
-      .withFile("/workspace/package.json", workspaceSource.file("package.json"))
-      .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
+      // Config files (rarely change - good cache layer)
       .withFile("/workspace/tsconfig.json", workspaceSource.file("tsconfig.json"))
       .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
       .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
+      .withFile("/workspace/.jscpd.json", workspaceSource.file(".jscpd.json"))
       .withDirectory("/workspace/eslint-rules", workspaceSource.directory("eslint-rules"))
+      // Dependency files (change occasionally - separate cache layer)
+      .withFile("/workspace/package.json", workspaceSource.file("package.json"))
+      .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
+      // Patches directory (needed for bun patch to work)
       .withDirectory("/workspace/patches", workspaceSource.directory("patches"))
-      // Desktop package
-      .withDirectory("/workspace/packages/desktop", workspaceSource.directory("packages/desktop"))
-      // Data package (dependency)
+      // Scripts directory (for utility scripts like check-suppressions)
+      .withDirectory("/workspace/scripts", workspaceSource.directory("scripts"))
+      // Package source code (changes frequently - mounted after deps)
+      .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
       .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
-      // Install dependencies
+      .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
+      .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
+      .withDirectory("/workspace/packages/desktop", workspaceSource.directory("packages/desktop"))
+      // Install dependencies (will use cache if lockfile unchanged)
       .withExec(["bun", "install", "--frozen-lockfile"])
   );
 }
