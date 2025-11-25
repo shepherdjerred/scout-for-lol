@@ -13,7 +13,7 @@ import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 import config from "@scout-for-lol/backend/configuration.js";
-import { saveAIReviewImageToS3 } from "@scout-for-lol/backend/storage/s3.js";
+import { saveAIReviewImageToS3, saveAIReviewTextToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import {
   loadPromptFile,
   selectRandomPersonality,
@@ -135,7 +135,8 @@ async function generateReviewImageBackend(params: {
 
     // Upload to S3
     try {
-      await saveAIReviewImageToS3(matchId, buffer, queueType);
+      const trackedPlayerAliases = match.players.map((p) => p.playerConfig.alias);
+      await saveAIReviewImageToS3(matchId, buffer, queueType, trackedPlayerAliases);
     } catch (s3Error: unknown) {
       console.error("[generateReviewImage] Failed to save image to S3:", s3Error);
       // Continue even if S3 upload fails
@@ -277,8 +278,17 @@ export async function generateMatchReview(
 
   const { review: reviewText, metadata } = aiReviewResult;
 
-  // Generate AI image from the review text (only if we have a real AI review)
+  // Save review text to S3
   const queueType = match.queueType === "arena" ? "arena" : (match.queueType ?? "unknown");
+  try {
+    const trackedPlayerAliases = match.players.map((p) => p.playerConfig.alias);
+    await saveAIReviewTextToS3(matchId, reviewText, queueType, trackedPlayerAliases);
+  } catch (error) {
+    console.error("[generateMatchReview] Failed to save review text to S3:", error);
+    // Continue even if S3 upload fails
+  }
+
+  // Generate AI image from the review text (only if we have a real AI review)
   const { style, themes } = selectRandomStyleAndTheme();
 
   // Add style and theme to metadata

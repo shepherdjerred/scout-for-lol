@@ -65,7 +65,7 @@ describe("saveSvgToS3 - Success Cases", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    const result = await saveSvgToS3(matchId, svgContent, queueType);
+    const result = await saveSvgToS3(matchId, svgContent, queueType, []);
 
     // Verify S3 command was called once
     expect(s3Mock.calls().length).toBe(1);
@@ -88,7 +88,7 @@ describe("saveSvgToS3 - Success Cases", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    const result = await saveSvgToS3(matchId, svgContent, queueType);
+    const result = await saveSvgToS3(matchId, svgContent, queueType, []);
 
     expect(s3Mock.calls().length).toBe(1);
 
@@ -108,7 +108,7 @@ describe("saveSvgToS3 - Success Cases", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    const result = await saveSvgToS3(matchId, largeSvgContent, queueType);
+    const result = await saveSvgToS3(matchId, largeSvgContent, queueType, []);
 
     expect(s3Mock.calls().length).toBe(1);
 
@@ -130,7 +130,7 @@ describe("saveSvgToS3 - Success Cases", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    const result = await saveSvgToS3(matchId, svgContent, queueType);
+    const result = await saveSvgToS3(matchId, svgContent, queueType, []);
 
     expect(s3Mock.calls().length).toBe(1);
     expect(result).toBeDefined();
@@ -166,7 +166,7 @@ describe("saveSvgToS3 - Error Handling", () => {
     // Mock S3 error
     s3Mock.on(PutObjectCommand).rejects(new Error("S3 upload failed"));
 
-    await expect(saveSvgToS3(matchId, svgContent, queueType)).rejects.toThrow("Failed to save SVG NA1_ERROR to S3");
+    await expect(saveSvgToS3(matchId, svgContent, queueType, [])).rejects.toThrow("Failed to save SVG NA1_ERROR to S3");
 
     expect(s3Mock.calls().length).toBe(1);
   });
@@ -178,7 +178,7 @@ describe("saveSvgToS3 - Error Handling", () => {
 
     s3Mock.on(PutObjectCommand).rejects(new Error("Network timeout"));
 
-    await expect(saveSvgToS3(matchId, svgContent, queueType)).rejects.toThrow(
+    await expect(saveSvgToS3(matchId, svgContent, queueType, [])).rejects.toThrow(
       "Failed to save SVG EUW1_NETWORK_ERROR to S3",
     );
   });
@@ -198,7 +198,7 @@ describe("saveSvgToS3 - S3 Key Format", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    await saveSvgToS3(matchId, svgContent, queueType);
+    await saveSvgToS3(matchId, svgContent, queueType, []);
 
     const command = getValidatedCommand(0);
 
@@ -224,7 +224,7 @@ describe("saveSvgToS3 - S3 Key Format", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    await saveSvgToS3(matchId, svgContent, queueType);
+    await saveSvgToS3(matchId, svgContent, queueType, []);
 
     const command = getValidatedCommand(0);
 
@@ -240,7 +240,7 @@ describe("saveSvgToS3 - S3 Key Format", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    const result = await saveSvgToS3(matchId, svgContent, queueType);
+    const result = await saveSvgToS3(matchId, svgContent, queueType, []);
 
     expect(result).toStartWith("s3://test-bucket/");
     expect(result).toContain("images/");
@@ -262,7 +262,7 @@ describe("saveSvgToS3 - Content Type and Metadata", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    await saveSvgToS3(matchId, svgContent, queueType);
+    await saveSvgToS3(matchId, svgContent, queueType, []);
 
     const command = getValidatedCommand(0);
 
@@ -278,7 +278,7 @@ describe("saveSvgToS3 - Content Type and Metadata", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    await saveSvgToS3(matchId, svgContent, queueType);
+    await saveSvgToS3(matchId, svgContent, queueType, []);
 
     const command = getValidatedCommand(0);
     expect(command.input.Metadata?.matchId).toBe(matchId);
@@ -295,7 +295,7 @@ describe("saveSvgToS3 - Content Type and Metadata", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    await saveSvgToS3(matchId, svgContent, queueType);
+    await saveSvgToS3(matchId, svgContent, queueType, []);
 
     const command = getValidatedCommand(0);
     expect(command.input.Body).toBeDefined();
@@ -315,9 +315,9 @@ describe("saveSvgToS3 - Concurrent Operations", () => {
     });
 
     const uploads = [
-      saveSvgToS3(MatchIdSchema.parse("NA1_CONCURRENT_1"), "<svg>1</svg>", "solo"),
-      saveSvgToS3(MatchIdSchema.parse("NA1_CONCURRENT_2"), "<svg>2</svg>", "flex"),
-      saveSvgToS3(MatchIdSchema.parse("NA1_CONCURRENT_3"), "<svg>3</svg>", "arena"),
+      saveSvgToS3(MatchIdSchema.parse("NA1_CONCURRENT_1"), "<svg>1</svg>", "solo", []),
+      saveSvgToS3(MatchIdSchema.parse("NA1_CONCURRENT_2"), "<svg>2</svg>", "flex", []),
+      saveSvgToS3(MatchIdSchema.parse("NA1_CONCURRENT_3"), "<svg>3</svg>", "arena", []),
     ];
 
     const results = await Promise.all(uploads);

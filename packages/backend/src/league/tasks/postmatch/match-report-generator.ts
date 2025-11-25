@@ -176,8 +176,9 @@ async function createMatchImage(
   // Save both PNG and SVG to S3
   try {
     const queueTypeForStorage = match.queueType === "arena" ? "arena" : (match.queueType ?? "unknown");
-    await saveImageToS3(matchId, image, queueTypeForStorage);
-    await saveSvgToS3(matchId, svg, queueTypeForStorage);
+    const trackedPlayerAliases = match.players.map((p) => p.playerConfig.alias);
+    await saveImageToS3(matchId, image, queueTypeForStorage, trackedPlayerAliases);
+    await saveSvgToS3(matchId, svg, queueTypeForStorage, trackedPlayerAliases);
   } catch (error) {
     console.error(`[createMatchImage] Failed to save images to S3:`, error);
   }
@@ -213,18 +214,19 @@ export async function generateMatchReport(
   console.log(`[generateMatchReport] 🎮 Generating report for match ${matchId}`);
 
   try {
-    // Save match data to S3
-    try {
-      await saveMatchToS3(matchData);
-    } catch (error) {
-      console.error(`[generateMatchReport] Error saving match ${matchId} to S3:`, error);
-      // Continue processing even if S3 storage fails
-    }
-
     // Determine which tracked players are in this match
     const playersInMatch = trackedPlayers.filter((player) =>
       matchData.metadata.participants.includes(player.league.leagueAccount.puuid),
     );
+
+    // Save match data to S3 (with tracked player aliases if any)
+    try {
+      const trackedPlayerAliases = playersInMatch.map((p) => p.alias);
+      await saveMatchToS3(matchData, trackedPlayerAliases);
+    } catch (error) {
+      console.error(`[generateMatchReport] Error saving match ${matchId} to S3:`, error);
+      // Continue processing even if S3 storage fails
+    }
 
     if (playersInMatch.length === 0) {
       console.log(`[generateMatchReport] ⚠️  No tracked players found in match ${matchId}`);

@@ -68,7 +68,7 @@ describe("saveImageToS3 - Success Cases", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    const result = await saveImageToS3(matchId, imageBuffer, queueType);
+    const result = await saveImageToS3(matchId, imageBuffer, queueType, []);
 
     // Verify S3 command was called once with valid structure
     expect(s3Mock.calls().length).toBe(1);
@@ -89,7 +89,7 @@ describe("saveImageToS3 - Success Cases", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    const result = await saveImageToS3(matchId, imageBuffer, queueType);
+    const result = await saveImageToS3(matchId, imageBuffer, queueType, []);
 
     expect(s3Mock.calls().length).toBe(1);
     const command = getValidatedCommand(0);
@@ -108,7 +108,7 @@ describe("saveImageToS3 - Success Cases", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    const result = await saveImageToS3(matchId, imageBuffer, queueType);
+    const result = await saveImageToS3(matchId, imageBuffer, queueType, []);
 
     expect(s3Mock.calls().length).toBe(1);
     const command = getValidatedCommand(0);
@@ -126,7 +126,7 @@ describe("saveImageToS3 - Success Cases", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    const result = await saveImageToS3(matchId, imageBuffer, queueType);
+    const result = await saveImageToS3(matchId, imageBuffer, queueType, []);
 
     expect(s3Mock.calls().length).toBe(1);
     const command = getValidatedCommand(0);
@@ -145,7 +145,7 @@ describe("saveImageToS3 - Success Cases", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    const result = await saveImageToS3(matchId, imageBuffer, queueType);
+    const result = await saveImageToS3(matchId, imageBuffer, queueType, []);
 
     expect(s3Mock.calls().length).toBe(1);
 
@@ -167,7 +167,7 @@ describe("saveImageToS3 - Success Cases", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    const result = await saveImageToS3(matchId, imageBuffer, queueType);
+    const result = await saveImageToS3(matchId, imageBuffer, queueType, []);
 
     expect(s3Mock.calls().length).toBe(1);
 
@@ -218,7 +218,7 @@ describe("saveImageToS3 - Error Handling", () => {
     // Mock S3 error
     s3Mock.on(PutObjectCommand).rejects(new Error("S3 upload failed"));
 
-    await expect(saveImageToS3(matchId, imageBuffer, queueType)).rejects.toThrow(
+    await expect(saveImageToS3(matchId, imageBuffer, queueType, [])).rejects.toThrow(
       "Failed to save PNG NA1_ERROR_CASE to S3",
     );
 
@@ -232,7 +232,7 @@ describe("saveImageToS3 - Error Handling", () => {
 
     s3Mock.on(PutObjectCommand).rejects(new Error("Network timeout"));
 
-    await expect(saveImageToS3(matchId, imageBuffer, queueType)).rejects.toThrow(
+    await expect(saveImageToS3(matchId, imageBuffer, queueType, [])).rejects.toThrow(
       "Failed to save PNG EUW1_SPECIFIC_ERROR to S3",
     );
   });
@@ -248,7 +248,7 @@ describe("saveImageToS3 - Error Handling", () => {
 
     // Note: AWS SDK typically throws for non-200, but if it doesn't,
     // our code should still handle it. This test documents expected behavior.
-    const result = await saveImageToS3(matchId, imageBuffer, queueType);
+    const result = await saveImageToS3(matchId, imageBuffer, queueType, []);
 
     // Current implementation returns the URL even if status is not 200
     // This is acceptable since AWS SDK will throw on actual errors
@@ -264,7 +264,7 @@ describe("saveImageToS3 - Error Handling", () => {
     s3Mock.on(PutObjectCommand).rejects(originalError);
 
     try {
-      await saveImageToS3(matchId, imageBuffer, queueType);
+      await saveImageToS3(matchId, imageBuffer, queueType, []);
       expect(true).toBe(false); // Should not reach here
     } catch (error) {
       expect(error).toBeInstanceOf(Error);
@@ -291,7 +291,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    await saveImageToS3(matchId, imageBuffer, queueType);
+    await saveImageToS3(matchId, imageBuffer, queueType, []);
 
     const command = getValidatedCommand(0);
 
@@ -317,7 +317,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    await saveImageToS3(matchId, imageBuffer, queueType);
+    await saveImageToS3(matchId, imageBuffer, queueType, []);
 
     const command = getValidatedCommand(0);
 
@@ -333,7 +333,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    const result = await saveImageToS3(matchId, imageBuffer, queueType);
+    const result = await saveImageToS3(matchId, imageBuffer, queueType, []);
 
     expect(result).toStartWith("s3://test-bucket/");
     expect(result).toContain("images/");
@@ -355,7 +355,7 @@ describe("saveImageToS3 - Metadata", () => {
       $metadata: { httpStatusCode: 200 },
     });
 
-    await saveImageToS3(matchId, imageBuffer, queueType);
+    await saveImageToS3(matchId, imageBuffer, queueType, []);
 
     const command = getValidatedCommand(0);
     expect(command.input.Metadata?.matchId).toBe(matchId);
@@ -373,7 +373,7 @@ describe("saveImageToS3 - Metadata", () => {
     });
 
     const beforeUpload = new Date();
-    await saveImageToS3(matchId, imageBuffer, queueType);
+    await saveImageToS3(matchId, imageBuffer, queueType, []);
     const afterUpload = new Date();
 
     const command = getValidatedCommand(0);
