@@ -16,7 +16,7 @@ import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-id
 // ============================================================================
 
 async function loadMatch(path: string): Promise<MatchDto> {
-  const content = await Bun.file(path, "utf-8").text();
+  const content = await Bun.file(path).text();
   return MatchDtoSchema.parse(JSON.parse(content));
 }
 

@@ -1,4 +1,5 @@
 import { AST_NODE_TYPES, ESLintUtils } from "@typescript-eslint/utils";
+import type { TSESTree } from "@typescript-eslint/utils";
 
 const createRule = ESLintUtils.RuleCreator(
   (name) => `https://github.com/shepherdjerred/homelab/blob/main/eslint-rules/${name}.ts`,
@@ -10,24 +11,27 @@ export const preferZodValidation = createRule({
     type: "suggestion",
     docs: {
       description:
-        "Flag repeated type checking on nested properties. Use Zod to validate the entire structure once instead of checking multiple levels with typeof/instanceof chains.",
+        "Flag complex type checking chains. Use Zod to validate the entire structure once instead of checking multiple levels with typeof/instanceof/'in' chains.",
     },
     messages: {
       repeatedTypeChecking:
         "Repeated type checking on nested properties should use Zod validation instead. Validate the entire structure once with a Zod schema.",
+      complexTypeChecking:
+        "Complex type checking chain detected ({{count}} checks). Use Zod validation to validate the entire structure once with a schema.",
     },
     schema: [],
   },
   defaultOptions: [],
   create(context) {
-    // Track typeof/instanceof checks on member expressions
-    const typeCheckMap = new Map<string, typeof node[]>();
+    // Track typeof/instanceof checks on member expressions (for repeated checks on same path)
+    const typeCheckMap = new Map<string, TSESTree.Node[]>();
 
-    function getMemberPath(node: typeof node): string | null {
+    function getMemberPath(node: TSESTree.Node): string | null {
       if (node.type === AST_NODE_TYPES.MemberExpression) {
         const parts: string[] = [];
-        let current: typeof node | undefined = node;
+        let current: TSESTree.Node | undefined = node;
 
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- current can be undefined after assignment
         while (current?.type === AST_NODE_TYPES.MemberExpression) {
           if (current.property.type === AST_NODE_TYPES.Identifier) {
             parts.unshift(current.property.name);
@@ -39,6 +43,7 @@ export const preferZodValidation = createRule({
           current = current.object;
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- current can be undefined after loop
         if (current?.type === AST_NODE_TYPES.Identifier) {
           parts.unshift(current.name);
           return parts.join(".");
@@ -48,13 +53,66 @@ export const preferZodValidation = createRule({
       return null;
     }
 
+    // Check if a node is a type-checking operation
+    function isTypeCheck(node: TSESTree.Node): boolean {
+      // typeof checks
+      if (node.type === AST_NODE_TYPES.UnaryExpression && node.operator === "typeof") {
+        return true;
+      }
+
+      // instanceof checks
+      if (node.type === AST_NODE_TYPES.BinaryExpression && node.operator === "instanceof") {
+        return true;
+      }
+
+      // 'in' operator checks
+      if (node.type === AST_NODE_TYPES.BinaryExpression && node.operator === "in") {
+        return true;
+      }
+
+      // typeof comparisons (typeof x === "string")
+      if (node.type === AST_NODE_TYPES.BinaryExpression) {
+        if (
+          (node.operator === "===" || node.operator === "!==") &&
+          node.left.type === AST_NODE_TYPES.UnaryExpression &&
+          node.left.operator === "typeof"
+        ) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    // Count type checks in a logical expression chain
+    function countTypeChecks(node: TSESTree.Node): number {
+      if (node.type === AST_NODE_TYPES.LogicalExpression) {
+        const leftCount = countTypeChecks(node.left);
+        const rightCount = countTypeChecks(node.right);
+        return leftCount + rightCount;
+      }
+
+      if (isTypeCheck(node)) {
+        return 1;
+      }
+
+      // For binary expressions that contain typeof
+      if (node.type === AST_NODE_TYPES.BinaryExpression) {
+        if (node.left.type === AST_NODE_TYPES.UnaryExpression && node.left.operator === "typeof") {
+          return 1;
+        }
+      }
+
+      return 0;
+    }
+
     return {
-      // Track typeof checks on member expressions
+      // Track typeof checks on member expressions (for repeated checks)
       UnaryExpression(node) {
         if (node.operator === "typeof" && node.argument.type === AST_NODE_TYPES.MemberExpression) {
           const path = getMemberPath(node.argument);
           if (path) {
-            const checks = typeCheckMap.get(path) || [];
+            const checks = typeCheckMap.get(path) ?? [];
             checks.push(node);
             typeCheckMap.set(path, checks);
 
@@ -69,12 +127,12 @@ export const preferZodValidation = createRule({
         }
       },
 
-      // Track instanceof checks on member expressions
+      // Track instanceof checks on member expressions (for repeated checks)
       BinaryExpression(node) {
         if (node.operator === "instanceof" && node.left.type === AST_NODE_TYPES.MemberExpression) {
           const path = getMemberPath(node.left);
           if (path) {
-            const checks = typeCheckMap.get(path) || [];
+            const checks = typeCheckMap.get(path) ?? [];
             checks.push(node);
             typeCheckMap.set(path, checks);
 
@@ -86,6 +144,30 @@ export const preferZodValidation = createRule({
               });
             }
           }
+        }
+      },
+
+      // Detect complex type checking chains in logical expressions
+      LogicalExpression(node) {
+        // Only check at the top level of a logical expression chain
+        // (avoid reporting on every sub-expression)
+        const parent = node.parent;
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- parent type is not narrowed by TypeScript
+        if (parent?.type === AST_NODE_TYPES.LogicalExpression) {
+          return; // Let the parent handle it
+        }
+
+        const typeCheckCount = countTypeChecks(node);
+
+        // Flag if there are 3 or more type checks chained together
+        if (typeCheckCount >= 3) {
+          context.report({
+            node,
+            messageId: "complexTypeChecking",
+            data: {
+              count: typeCheckCount.toString(),
+            },
+          });
         }
       },
     };

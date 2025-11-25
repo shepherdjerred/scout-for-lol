@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { pruneOrphanedPlayers } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.js";
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
+import type { CompetitionId } from "@scout-for-lol/data";
 
 // Mark these tests as serial since they create temporary databases
 // and have timing constraints. Running them concurrently would slow them down.
@@ -56,7 +57,7 @@ async function createPlayerWithSubscription(prisma: PrismaClient, alias: string,
 async function createPlayerWithCompetition(options: {
   prisma: PrismaClient;
   alias: string;
-  competitionId: bigint;
+  competitionId: CompetitionId;
   status: "JOINED" | "LEFT" | "INVITED";
   now: Date;
 }) {

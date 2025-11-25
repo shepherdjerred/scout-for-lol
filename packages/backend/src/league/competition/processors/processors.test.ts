@@ -350,7 +350,20 @@ function createMatch(
         wardsPlaced: 15,
         // Add missing fields from ParticipantDto
         lane: "MIDDLE",
-        missions: {},
+        missions: {
+          playerScore0: 0,
+          playerScore1: 0,
+          playerScore2: 0,
+          playerScore3: 0,
+          playerScore4: 0,
+          playerScore5: 0,
+          playerScore6: 0,
+          playerScore7: 0,
+          playerScore8: 0,
+          playerScore9: 0,
+          playerScore10: 0,
+          playerScore11: 0,
+        },
         perks: {
           statPerks: {
             defense: 0,

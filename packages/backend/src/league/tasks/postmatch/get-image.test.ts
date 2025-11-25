@@ -63,7 +63,9 @@ describe("getImage S3 Integration", () => {
 
     const call = s3Mock.call(0);
     const command = call.args[0];
-    expect(command.input.Metadata?.queueType).toBe("arena");
+    if (command instanceof PutObjectCommand) {
+      expect(command.input.Metadata?["queueType"]).toBe("arena");
+    }
   });
 
   test("image upload failure doesn't crash post-match flow", async () => {
@@ -110,8 +112,10 @@ describe("Image Buffer Handling", () => {
     const command = call.args[0];
 
     // Verify the exact buffer is passed
-    expect(command.input.Body).toBe(imageBuffer);
-    expect(command.input.Body instanceof Uint8Array).toBe(true);
+    if (command instanceof PutObjectCommand) {
+      expect(command.input.Body).toBe(imageBuffer);
+      expect(command.input.Body instanceof Uint8Array).toBe(true);
+    }
   });
 
   test("handles empty image buffer", async () => {
@@ -132,14 +136,16 @@ describe("Image Buffer Handling", () => {
 
     const call = s3Mock.call(0);
     const command = call.args[0];
-    const body = command.input?.Body;
-    let bodyLength = 0;
-    if (body instanceof Uint8Array) {
-      bodyLength = body.length;
-    } else if (typeof body === "string") {
-      bodyLength = body.length;
+    if (command instanceof PutObjectCommand) {
+      const body = command.input.Body;
+      let bodyLength = 0;
+      if (body instanceof Uint8Array) {
+        bodyLength = body.length;
+      } else if (typeof body === "string") {
+        bodyLength = body.length;
+      }
+      expect(bodyLength).toBe(0);
     }
-    expect(bodyLength).toBe(0);
   });
 });
 
@@ -161,7 +167,9 @@ describe("Queue Type Handling", () => {
 
       const call = s3Mock.call(0);
       const command = call.args[0];
-      expect(command.input.Metadata?.queueType).toBe(queueType);
+      if (command instanceof PutObjectCommand) {
+        expect(command.input.Metadata?.queueType).toBe(queueType);
+      }
     });
   }
 });

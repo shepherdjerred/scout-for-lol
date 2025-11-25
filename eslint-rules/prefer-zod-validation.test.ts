@@ -37,7 +37,7 @@ ruleTester.run("prefer-zod-validation", preferZodValidation, {
       code: `if (obj.value instanceof MyClass) { console.log(obj.value); }`,
     },
     {
-      name: "allows typeof check on different properties",
+      name: "allows typeof check on different properties (2 checks)",
       code: `if (typeof obj.a === "string" && typeof obj.b === "number") { }`,
     },
     {
@@ -47,6 +47,14 @@ ruleTester.run("prefer-zod-validation", preferZodValidation, {
     {
       name: "allows property access after validation",
       code: `const user = schema.parse(data); console.log(user.name.first);`,
+    },
+    {
+      name: "allows simple truthiness check with single type check",
+      code: `if (obj && typeof obj.field === "string") { }`,
+    },
+    {
+      name: "allows two type checks chained",
+      code: `if (obj && typeof obj.field === "string") { }`,
     },
   ],
   invalid: [
@@ -74,6 +82,42 @@ ruleTester.run("prefer-zod-validation", preferZodValidation, {
       errors: [
         {
           messageId: "repeatedTypeChecking",
+        },
+      ],
+    },
+    {
+      name: "disallows complex type checking chain with typeof",
+      code: `const isValid = obj && typeof obj === "object" && "field" in obj && typeof obj.field === "string";`,
+      errors: [
+        {
+          messageId: "complexTypeChecking",
+        },
+      ],
+    },
+    {
+      name: "disallows complex permission checking pattern",
+      code: `const isAdmin = member && typeof member === "object" && "permissions" in member && member.permissions && typeof member.permissions.has === "function";`,
+      errors: [
+        {
+          messageId: "complexTypeChecking",
+        },
+      ],
+    },
+    {
+      name: "disallows multiple typeof checks in chain",
+      code: `if (typeof a === "string" && typeof b === "number" && typeof c === "boolean") { }`,
+      errors: [
+        {
+          messageId: "complexTypeChecking",
+        },
+      ],
+    },
+    {
+      name: "disallows mixed type checks (typeof + in + instanceof)",
+      code: `const valid = typeof obj === "object" && "prop" in obj && obj.prop instanceof Error;`,
+      errors: [
+        {
+          messageId: "complexTypeChecking",
         },
       ],
     },
