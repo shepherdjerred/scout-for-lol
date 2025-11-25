@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
   LeagueClientSection,
