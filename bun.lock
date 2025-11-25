@@ -1,5 +1,6 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "scout-for-lol",
@@ -57,7 +58,6 @@
         "@prisma/client-runtime-utils": "^7.0.0",
         "@resvg/resvg-js": "^2.6.2",
         "@scout-for-lol/data": "workspace:*",
-        "@scout-for-lol/frontend": "workspace:*",
         "@scout-for-lol/report": "workspace:*",
         "@sentry/node": "^10.0.0",
         "cron": "^4.1.4",

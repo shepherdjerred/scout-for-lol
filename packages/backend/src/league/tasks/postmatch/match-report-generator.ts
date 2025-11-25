@@ -86,6 +86,10 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
     } catch (parseError) {
       console.error(`[fetchMatchData] ❌ Match data validation failed for ${matchId}:`, parseError);
       console.error(`[fetchMatchData] This may indicate an API schema change or data corruption`);
+
+      // Log the raw response for debugging API schema mismatches
+      console.error(`[fetchMatchData] 🔍 Raw API response:`, JSON.stringify(response.response, null, 2));
+
       return undefined;
     }
   } catch (e) {
