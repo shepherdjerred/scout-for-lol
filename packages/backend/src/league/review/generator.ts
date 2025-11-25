@@ -77,21 +77,21 @@ async function generateReviewImageBackend(params: {
     // Log match structure before serialization for Gemini
     console.log(`[debug][generateReviewImage] About to serialize match for Gemini API`);
     if (match.queueType !== "arena") {
-      const completedMatch = match as CompletedMatch;
-      console.log(`[debug][generateReviewImage] Match has ${completedMatch.players.length.toString()} player(s)`);
-      for (let i = 0; i < completedMatch.players.length; i++) {
-        const playerObj = completedMatch.players[i];
-        if (playerObj) {
-          console.log(
-            `[debug][generateReviewImage] Match.players[${i.toString()}] keys before JSON.stringify:`,
-            Object.keys(playerObj),
+      console.log(`[debug][generateReviewImage] Match has ${match.players.length.toString()} player(s)`);
+      for (let i = 0; i < match.players.length; i++) {
+        const playerObj = match.players[i];
+        if (!playerObj) {
+          continue;
+        }
+        console.log(
+          `[debug][generateReviewImage] Match.players[${i.toString()}] keys before JSON.stringify:`,
+          Object.keys(playerObj),
+        );
+        if ("puuid" in playerObj) {
+          console.error(
+            `[debug][generateReviewImage] ⚠️  ERROR: Match.players[${i.toString()}] has puuid field before JSON.stringify!`,
+            playerObj,
           );
-          if ("puuid" in playerObj) {
-            console.error(
-              `[debug][generateReviewImage] ⚠️  ERROR: Match.players[${i.toString()}] has puuid field before JSON.stringify!`,
-              playerObj,
-            );
-          }
         }
       }
     }
@@ -248,18 +248,18 @@ export async function generateMatchReview(
     `[debug][generateMatchReview] Match type: ${match.queueType === "arena" ? "ArenaMatch" : "CompletedMatch"}`,
   );
   if (match.queueType !== "arena") {
-    const completedMatch = match as CompletedMatch;
-    console.log(`[debug][generateMatchReview] Match has ${completedMatch.players.length.toString()} player(s)`);
-    for (let i = 0; i < completedMatch.players.length; i++) {
-      const playerObj = completedMatch.players[i];
-      if (playerObj) {
-        console.log(`[debug][generateMatchReview] Match.players[${i.toString()}] keys:`, Object.keys(playerObj));
-        if ("puuid" in playerObj) {
-          console.error(
-            `[debug][generateMatchReview] ⚠️  ERROR: Match.players[${i.toString()}] has puuid field!`,
-            playerObj,
-          );
-        }
+    console.log(`[debug][generateMatchReview] Match has ${match.players.length.toString()} player(s)`);
+    for (let i = 0; i < match.players.length; i++) {
+      const playerObj = match.players[i];
+      if (!playerObj) {
+        continue;
+      }
+      console.log(`[debug][generateMatchReview] Match.players[${i.toString()}] keys:`, Object.keys(playerObj));
+      if ("puuid" in playerObj) {
+        console.error(
+          `[debug][generateMatchReview] ⚠️  ERROR: Match.players[${i.toString()}] has puuid field!`,
+          playerObj,
+        );
       }
     }
   }

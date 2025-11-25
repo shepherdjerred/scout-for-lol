@@ -235,7 +235,7 @@ export async function generateMatchReport(
         if ("puuid" in player) {
           console.error(`[debug][generateMatchReport] ⚠️  WARNING: Player ${i.toString()} has puuid field!`, player);
         }
-        if (player.config && "puuid" in player.config) {
+        if ("puuid" in player.config) {
           console.error(
             `[debug][generateMatchReport] ⚠️  WARNING: Player ${i.toString()}.config has puuid field!`,
             player.config,
