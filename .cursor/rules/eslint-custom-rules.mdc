@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Custom ESLint Rules
 
-This project includes 12 custom ESLint rules enforcing type safety and best practices.
+This project includes 13 custom ESLint rules enforcing type safety and best practices.
 
 ## Rule 1: `no-type-assertions`
 
@@ -353,7 +353,58 @@ const content = fs.readFileSync("file.txt");
 
 ---
 
-## Rule 12: `no-parent-imports`
+## Rule 12: `no-type-guards`
+
+**Severity:** Error | **Auto-Fix:** No
+
+**Enforces:** Disallows type guard functions (functions with `value is Type` return type predicates).
+
+**Why:** Type guard functions are not safe - they bypass runtime validation. Use Zod schema validation instead for proper type safety.
+
+**Valid:**
+
+```typescript
+// Use Zod schema validation
+const PackageNameSchema = z.enum(["backend", "frontend", "report", "data"]);
+const packageName = PackageNameSchema.parse(value);
+
+// Or use safeParse for optional validation
+const result = PackageNameSchema.safeParse(value);
+if (result.success) {
+  // TypeScript knows result.data is PackageName
+  console.log(result.data);
+}
+```
+
+**Invalid:**
+
+```typescript
+function isPackageName(value: string): value is PackageName {  // ❌
+  return value in DEPENDENCY_RULES;
+}
+
+const isString = (value: unknown): value is string => typeof value === "string";  // ❌
+```
+
+**Fix:**
+
+```typescript
+// Replace type guard with Zod schema
+const PackageNameSchema = z.enum(["backend", "frontend", "report", "data"]);
+type PackageName = z.infer<typeof PackageNameSchema>;
+
+// Validate at boundary
+function getPackageName(value: string): PackageName | null {
+  const result = PackageNameSchema.safeParse(value);
+  return result.success ? result.data : null;
+}
+```
+
+**See:** `type-safety-strategy.mdc`, `zod-validation-patterns.mdc`
+
+---
+
+## Rule 13: `no-parent-imports`
 
 **Severity:** Error | **Auto-Fix:** No
 
@@ -395,6 +446,7 @@ import { User } from "../../../data/src/types";  // ❌
 | `prefer-date-fns` | Off | Best Practices | No |
 | `prefer-bun-apis` | Error | Performance | No |
 | `no-parent-imports` | Error | Organization | No |
+| `no-type-guards` | Error | Type Safety | No |
 
 ## Related Documentation
 

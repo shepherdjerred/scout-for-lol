@@ -57,6 +57,7 @@
         "@prisma/client-runtime-utils": "^7.0.0",
         "@resvg/resvg-js": "^2.6.2",
         "@scout-for-lol/data": "workspace:*",
+        "@scout-for-lol/frontend": "workspace:*",
         "@scout-for-lol/report": "workspace:*",
         "@sentry/node": "^10.0.0",
         "cron": "^4.1.4",
@@ -102,7 +103,7 @@
       },
     },
     "packages/frontend": {
-      "name": "frontend",
+      "name": "@scout-for-lol/frontend",
       "version": "0.0.1",
       "dependencies": {
         "@astrojs/mdx": "^4.1.1",
@@ -769,6 +770,8 @@
     "@scout-for-lol/backend": ["@scout-for-lol/backend@workspace:packages/backend"],
 
     "@scout-for-lol/data": ["@scout-for-lol/data@workspace:packages/data"],
+
+    "@scout-for-lol/frontend": ["@scout-for-lol/frontend@workspace:packages/frontend"],
 
     "@scout-for-lol/report": ["@scout-for-lol/report@workspace:packages/report"],
 
@@ -1609,8 +1612,6 @@
     "forwarded-parse": ["forwarded-parse@2.1.2", "", {}, "sha512-alTFZZQDKMporBH77856pXgzhEzaUVmLCDk+egLgIgHst3Tpndzz8MnKe+GzRJRfvVdn69HhpW7cmXzvtLvJAw=="],
 
     "fraction.js": ["fraction.js@5.3.4", "", {}, "sha512-1X1NTtiJphryn/uLQz3whtY6jK3fTqoE3ohKs0tT+Ujr1W59oopxmoEh7Lu5p6vBaPbgoM0bzveAW4Qi5RyWDQ=="],
-
-    "frontend": ["frontend@workspace:packages/frontend"],
 
     "fs-extra": ["fs-extra@11.3.2", "", { "dependencies": { "graceful-fs": "^4.2.0", "jsonfile": "^6.0.1", "universalify": "^2.0.0" } }, "sha512-Xr9F6z6up6Ws+NjzMCZc6WXg2YFRlrLP9NQDO3VQrWrfiojdhS56TzueT88ze0uBdCTwEIhQ3ptnmKeWGFAe0A=="],
 

@@ -5,14 +5,17 @@
  */
 
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
-import { getExampleMatch } from "@scout-for-lol/frontend/dev/report-ui/src/example.js";
-import type { ArenaMatch, CompletedMatch, PlayerConfigEntry, MatchDto } from "@scout-for-lol/data";
 import {
+  getExampleMatch,
   MatchIdSchema,
   LeaguePuuidSchema,
   parseQueueType,
   MatchDtoSchema,
   getOrdinalSuffix,
+  type ArenaMatch,
+  type CompletedMatch,
+  type PlayerConfigEntry,
+  type MatchDto,
 } from "@scout-for-lol/data";
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 import configuration from "@scout-for-lol/backend/configuration.js";

@@ -13,7 +13,7 @@ import {
 } from "@scout-for-lol/frontend/lib/review-tool/generator";
 import { CostDisplay } from "./cost-display";
 import { HistoryPanel } from "./history-panel";
-import { getExampleMatch } from "@scout-for-lol/frontend/lib/report-ui/example";
+import { getExampleMatch } from "@scout-for-lol/data";
 import {
   createPendingEntry,
   saveCompletedEntry,

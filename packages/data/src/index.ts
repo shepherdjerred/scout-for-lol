@@ -19,3 +19,4 @@ export { extractMatchData, getOrdinalSuffix } from "./review/generator-helpers.j
 export { curateMatchData, curateParticipantData } from "./review/curator.js";
 export * from "./league/match-dto.schema.js";
 export * from "./league/summoner-league-dto.schema.js";
+export { getExampleMatch, type AnyMatch } from "./example/example.js";

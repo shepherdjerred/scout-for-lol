@@ -14,7 +14,7 @@ import {
   type ArenaMatch,
   type CompletedMatch,
 } from "@scout-for-lol/data";
-import { getExampleMatch } from "@scout-for-lol/frontend/lib/report-ui/example";
+import { getExampleMatch } from "@scout-for-lol/data";
 import { getCachedDataAsync, setCachedData } from "./cache";
 import { z } from "zod";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
