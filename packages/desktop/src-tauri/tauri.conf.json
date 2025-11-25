@@ -45,7 +45,7 @@
         "fullscreen": false,
         "decorations": true,
         "alwaysOnTop": false,
-        "fileDropEnabled": false
+        "dragDropEnabled": false
       }
     ],
     "security": {
