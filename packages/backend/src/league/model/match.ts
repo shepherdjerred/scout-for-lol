@@ -345,7 +345,12 @@ export function getArenaPlacement(participant: ParticipantDto) {
 }
 
 export async function toArenaMatch(players: Player[], matchDto: MatchDto): Promise<ArenaMatch> {
+  console.log(
+    `[debug][toArenaMatch] Entry - ${players.length.toString()} player(s), ${matchDto.info.participants.length.toString()} participants`,
+  );
+  console.log(`[debug][toArenaMatch] Building subteams...`);
   const subteams = await toArenaSubteams(matchDto.info.participants);
+  console.log(`[debug][toArenaMatch] Built ${subteams.length.toString()} subteams`);
 
   // Build ArenaMatch.players for all tracked players
   const arenaPlayers = await Promise.all(
