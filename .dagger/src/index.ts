@@ -12,6 +12,11 @@ import {
 import { checkReport, getReportCoverage, getReportTestReport } from "@scout-for-lol/.dagger/src/report";
 import { checkData, getDataCoverage, getDataTestReport } from "@scout-for-lol/.dagger/src/data";
 import { checkFrontend, buildFrontend, deployFrontend } from "@scout-for-lol/.dagger/src/frontend";
+import {
+  checkDesktop,
+  buildDesktopLinux,
+  getDesktopLinuxArtifacts,
+} from "@scout-for-lol/.dagger/src/desktop";
 import { getGitHubContainer, getBunNodeContainer } from "@scout-for-lol/.dagger/src/base";
 
 // Helper function to log with timestamp
@@ -57,7 +62,7 @@ async function withTiming<T>(operation: string, fn: () => Promise<T>): Promise<T
 @object()
 export class ScoutForLol {
   /**
-   * Run all checks (backend, report, data, frontend)
+   * Run all checks (backend, report, data, frontend, desktop)
    * @param source The source directory
    * @returns A message indicating completion
    */
@@ -71,7 +76,7 @@ export class ScoutForLol {
   ): Promise<string> {
     logWithTimestamp("🔍 Starting comprehensive check process");
     logWithTimestamp(
-      "📋 This includes TypeScript type checking, ESLint, tests for all packages, and custom ESLint rules tests",
+      "📋 This includes TypeScript type checking, ESLint, tests for all packages, Rust checks for desktop, and custom ESLint rules tests",
     );
 
     logWithTimestamp("📁 Prepared source directories for all packages");
@@ -79,7 +84,7 @@ export class ScoutForLol {
     // Run checks in parallel - force container execution with .sync()
     await withTiming("parallel package checks (lint, typecheck, tests)", async () => {
       logWithTimestamp("🔄 Running lint, typecheck, and tests in parallel for all packages...");
-      logWithTimestamp("📦 Packages being checked: backend, report, data, frontend, eslint-rules");
+      logWithTimestamp("📦 Packages being checked: backend, report, data, frontend, desktop, eslint-rules");
 
       // Force execution of all containers in parallel
       await Promise.all([
@@ -103,6 +108,11 @@ export class ScoutForLol {
           await container.sync();
           return container;
         }),
+        withTiming("desktop check (lint + typecheck + Rust fmt + clippy + tests)", async () => {
+          const container = checkDesktop(source);
+          await container.sync();
+          return container;
+        }),
         withTiming("eslint-rules tests", async () => {
           const container = getBunNodeContainer(source)
             .withExec(["bun", "install", "--frozen-lockfile"])
@@ -122,7 +132,7 @@ export class ScoutForLol {
 
     logWithTimestamp("🎉 All checks completed successfully");
     logWithTimestamp(
-      "✅ All packages passed: TypeScript type checking, ESLint linting, tests, and custom ESLint rules tests",
+      "✅ All packages passed: TypeScript type checking, ESLint linting, tests, Rust checks, and custom ESLint rules tests",
     );
     return "All checks completed successfully";
   }
@@ -747,5 +757,82 @@ export class ScoutForLol {
 
     logWithTimestamp("✅ Code duplication check completed successfully");
     return "Code duplication check completed successfully";
+  }
+
+  /**
+   * Check the desktop package
+   * @param source The workspace source directory
+   * @returns A message indicating completion
+   */
+  @func()
+  async checkDesktop(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Promise<string> {
+    logWithTimestamp("🔍 Starting desktop package check");
+
+    await withTiming("desktop package check", async () => {
+      const container = checkDesktop(source);
+      await container.sync();
+      return container;
+    });
+
+    logWithTimestamp("✅ Desktop check completed successfully");
+    return "Desktop check completed successfully";
+  }
+
+  /**
+   * Build the desktop application for Linux
+   * @param source The workspace source directory
+   * @param version The version to build
+   * @returns A message indicating completion
+   */
+  @func()
+  async buildDesktop(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+  ): Promise<string> {
+    logWithTimestamp(`🏗️  Building desktop application for version ${version}`);
+
+    await withTiming("desktop build", async () => {
+      const container = buildDesktopLinux(source, version);
+      await container.sync();
+      return container;
+    });
+
+    logWithTimestamp("✅ Desktop build completed successfully");
+    return `Desktop build completed successfully for version ${version}`;
+  }
+
+  /**
+   * Export desktop Linux build artifacts
+   * @param source The workspace source directory
+   * @param version The version to build
+   * @returns The directory containing built artifacts
+   */
+  @func()
+  async desktopArtifacts(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+  ): Promise<Directory> {
+    logWithTimestamp(`📦 Exporting desktop artifacts for version ${version}`);
+
+    const result = await withTiming("desktop artifacts export", () =>
+      Promise.resolve(getDesktopLinuxArtifacts(source, version)),
+    );
+
+    logWithTimestamp("✅ Desktop artifacts exported successfully");
+    return result;
   }
 }

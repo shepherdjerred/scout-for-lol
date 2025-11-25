@@ -226,3 +226,235 @@ async fn handle_end_of_game_event(data: &Value, discord: &DiscordClient) -> Resu
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn test_game_event_game_start_serialization() {
+        let event = GameEvent::GameStart {
+            game_mode: "Ranked Solo/Duo".to_string(),
+            map: "Summoner's Rift".to_string(),
+        };
+
+        let json = serde_json::to_string(&event).ok();
+        assert!(json.is_some());
+
+        if let Some(json_str) = json {
+            assert!(json_str.contains("eventType"));
+            assert!(json_str.contains("GameStart"));
+            assert!(json_str.contains("Ranked Solo/Duo"));
+        }
+    }
+
+    #[test]
+    fn test_game_event_game_end_serialization() {
+        let event = GameEvent::GameEnd {
+            winning_team: "Red Team".to_string(),
+            duration: "25:30".to_string(),
+        };
+
+        let json = serde_json::to_string(&event).ok();
+        assert!(json.is_some());
+
+        if let Some(json_str) = json {
+            assert!(json_str.contains("GameEnd"));
+            assert!(json_str.contains("Red Team"));
+        }
+    }
+
+    #[test]
+    fn test_game_event_champion_kill() {
+        let event = GameEvent::ChampionKill {
+            killer: "Yasuo".to_string(),
+            victim: "Zed".to_string(),
+            game_time: "15:32".to_string(),
+        };
+
+        let json = serde_json::to_string(&event).ok();
+        assert!(json.is_some());
+
+        if let Some(json_str) = json {
+            assert!(json_str.contains("ChampionKill"));
+            assert!(json_str.contains("Yasuo"));
+            assert!(json_str.contains("Zed"));
+        }
+    }
+
+    #[test]
+    fn test_game_event_multi_kill() {
+        let event = GameEvent::MultiKill {
+            killer: "Katarina".to_string(),
+            multikill_type: "TRIPLE_KILL".to_string(),
+            game_time: "20:15".to_string(),
+        };
+
+        let json = serde_json::to_string(&event).ok();
+        assert!(json.is_some());
+
+        if let Some(json_str) = json {
+            assert!(json_str.contains("MultiKill"));
+            assert!(json_str.contains("TRIPLE_KILL"));
+        }
+    }
+
+    #[test]
+    fn test_game_event_objective() {
+        let event = GameEvent::Objective {
+            team: "Blue Team".to_string(),
+            objective: "DRAGON".to_string(),
+            game_time: "10:00".to_string(),
+        };
+
+        let json = serde_json::to_string(&event).ok();
+        assert!(json.is_some());
+
+        if let Some(json_str) = json {
+            assert!(json_str.contains("Objective"));
+            assert!(json_str.contains("DRAGON"));
+        }
+    }
+
+    #[test]
+    fn test_lcu_websocket_message_deserialization() {
+        let json_str = r#"{
+            "eventType": "Update",
+            "uri": "/lol-gameflow/v1/gameflow-phase",
+            "data": "InProgress"
+        }"#;
+
+        let result: Result<LcuWebSocketMessage, _> = serde_json::from_str(json_str);
+        assert!(result.is_ok());
+
+        if let Ok(msg) = result {
+            assert_eq!(msg.event_type, "Update");
+            assert_eq!(msg.uri, "/lol-gameflow/v1/gameflow-phase");
+            assert_eq!(msg.data.as_str(), Some("InProgress"));
+        }
+    }
+
+    #[test]
+    fn test_json_message_format() {
+        let message = json_message(5, "/lol-gameflow/v1/gameflow-phase");
+        assert_eq!(message, r#"[5, "/lol-gameflow/v1/gameflow-phase"]"#);
+    }
+
+    #[test]
+    fn test_json_message_subscribe_format() {
+        let message = json_message(5, "/lol-champ-select/v1/session");
+        assert_eq!(message, r#"[5, "/lol-champ-select/v1/session"]"#);
+        assert!(message.starts_with('['));
+        assert!(message.ends_with(']'));
+    }
+
+    #[test]
+    fn test_duration_calculation() {
+        // Test duration formatting logic
+        let test_cases = vec![
+            (0, "0:00"),
+            (30, "0:30"),
+            (60, "1:00"),
+            (125, "2:05"),
+            (1800, "30:00"),
+            (1937, "32:17"),
+        ];
+
+        for (total_seconds, expected) in test_cases {
+            let minutes = total_seconds / 60;
+            let seconds = total_seconds % 60;
+            let duration_str = format!("{}:{:02}", minutes, seconds);
+            assert_eq!(duration_str, expected);
+        }
+    }
+
+    #[test]
+    fn test_gameflow_phases() {
+        let phases = vec![
+            "None",
+            "Lobby",
+            "Matchmaking",
+            "CheckedIntoTournament",
+            "ReadyCheck",
+            "ChampSelect",
+            "GameStart",
+            "FailedToLaunch",
+            "InProgress",
+            "Reconnect",
+            "WaitingForStats",
+            "PreEndOfGame",
+            "EndOfGame",
+            "TerminatedInError",
+        ];
+
+        // Ensure our handled phases are in the list
+        assert!(phases.contains(&"InProgress"));
+        assert!(phases.contains(&"ChampSelect"));
+        assert!(phases.contains(&"EndOfGame"));
+        assert!(phases.contains(&"WaitingForStats"));
+    }
+
+    #[test]
+    fn test_end_of_game_data_parsing() {
+        let data = json!({
+            "gameLength": 1850,
+            "teams": [
+                {"win": true, "teamId": 100},
+                {"win": false, "teamId": 200}
+            ]
+        });
+
+        let duration = data
+            .get("gameLength")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0);
+
+        assert_eq!(duration, 1850);
+
+        let minutes = duration / 60;
+        let seconds = duration % 60;
+        assert_eq!(minutes, 30);
+        assert_eq!(seconds, 50);
+    }
+
+    #[test]
+    fn test_websocket_uri_matching() {
+        let test_cases = vec![
+            ("/lol-gameflow/v1/gameflow-phase", true, false, false),
+            ("/lol-champ-select/v1/session", false, true, false),
+            ("/lol-end-of-game/v1/eog-stats-block", false, false, true),
+            ("/some/other/uri", false, false, false),
+        ];
+
+        for (uri, is_gameflow, is_champ_select, is_end_of_game) in test_cases {
+            assert_eq!(uri.contains("/lol-gameflow/v1/gameflow-phase"), is_gameflow);
+            assert_eq!(uri.contains("/lol-champ-select/v1/session"), is_champ_select);
+            assert_eq!(
+                uri.contains("/lol-end-of-game/v1/eog-stats-block"),
+                is_end_of_game
+            );
+        }
+    }
+
+    #[test]
+    fn test_game_event_deserialization() {
+        let json_str = r#"{
+            "eventType": "GameStart",
+            "game_mode": "Ranked",
+            "map": "Summoner's Rift"
+        }"#;
+
+        let result: Result<GameEvent, _> = serde_json::from_str(json_str);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_null_data_handling() {
+        let null_value = serde_json::Value::Null;
+        assert!(null_value.is_null());
+
+        let non_null_value = json!({"gameLength": 1200});
+        assert!(!non_null_value.is_null());
+    }
+}

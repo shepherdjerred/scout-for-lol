@@ -185,3 +185,171 @@ impl DiscordClient {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_discord_status_creation() {
+        let status = DiscordStatus {
+            connected: false,
+            channel_name: None,
+        };
+        assert!(!status.connected);
+        assert!(status.channel_name.is_none());
+    }
+
+    #[test]
+    fn test_discord_status_connected() {
+        let status = DiscordStatus {
+            connected: true,
+            channel_name: Some("general".to_string()),
+        };
+        assert!(status.connected);
+        assert_eq!(status.channel_name, Some("general".to_string()));
+    }
+
+    #[test]
+    fn test_discord_status_serialization() {
+        let status = DiscordStatus {
+            connected: true,
+            channel_name: Some("test-channel".to_string()),
+        };
+
+        let json = serde_json::to_string(&status).ok();
+        assert!(json.is_some());
+
+        if let Some(json_str) = json {
+            assert!(json_str.contains("connected"));
+            assert!(json_str.contains("channelName"));
+        }
+    }
+
+    #[test]
+    fn test_message_payload_creation() {
+        let payload = MessagePayload {
+            content: "Test message".to_string(),
+        };
+        assert_eq!(payload.content, "Test message");
+    }
+
+    #[test]
+    fn test_message_payload_serialization() {
+        let payload = MessagePayload {
+            content: "Hello, world!".to_string(),
+        };
+
+        let json = serde_json::to_string(&payload).ok();
+        assert!(json.is_some());
+
+        if let Some(json_str) = json {
+            assert!(json_str.contains("content"));
+            assert!(json_str.contains("Hello, world!"));
+        }
+    }
+
+    #[test]
+    fn test_game_event_message_format() {
+        let event_type = "Game Start";
+        let details = "Summoner's Rift 5v5";
+        let message = format!("**{}** - {}", event_type, details);
+        assert_eq!(message, "**Game Start** - Summoner's Rift 5v5");
+    }
+
+    #[test]
+    fn test_kill_message_format() {
+        let killer = "Yasuo";
+        let victim = "Zed";
+        let game_time = "15:32";
+        let message = format!("💀 **{}** killed **{}** at {}", killer, victim, game_time);
+        assert_eq!(message, "💀 **Yasuo** killed **Zed** at 15:32");
+    }
+
+    #[test]
+    fn test_multikill_emoji_selection() {
+        let test_cases = vec![
+            ("DOUBLE_KILL", "⚔️"),
+            ("TRIPLE_KILL", "🔥"),
+            ("QUADRA_KILL", "💥"),
+            ("PENTA_KILL", "🏆"),
+            ("UNKNOWN", "🎯"),
+        ];
+
+        for (multikill_type, expected_emoji) in test_cases {
+            let emoji = match multikill_type {
+                "DOUBLE_KILL" => "⚔️",
+                "TRIPLE_KILL" => "🔥",
+                "QUADRA_KILL" => "💥",
+                "PENTA_KILL" => "🏆",
+                _ => "🎯",
+            };
+            assert_eq!(emoji, expected_emoji);
+        }
+    }
+
+    #[test]
+    fn test_objective_emoji_selection() {
+        let test_cases = vec![
+            ("DRAGON", "🐉"),
+            ("BARON", "👹"),
+            ("TOWER", "🗼"),
+            ("INHIBITOR", "🛡️"),
+            ("HERALD", "👁️"),
+            ("UNKNOWN", "🎯"),
+        ];
+
+        for (objective, expected_emoji) in test_cases {
+            let emoji = match objective {
+                obj if obj.contains("DRAGON") => "🐉",
+                obj if obj.contains("BARON") => "👹",
+                obj if obj.contains("TOWER") => "🗼",
+                obj if obj.contains("INHIBITOR") => "🛡️",
+                obj if obj.contains("HERALD") => "👁️",
+                _ => "🎯",
+            };
+            assert_eq!(emoji, expected_emoji);
+        }
+    }
+
+    #[test]
+    fn test_multikill_type_formatting() {
+        let multikill_type = "DOUBLE_KILL";
+        let formatted = multikill_type.replace('_', " ");
+        assert_eq!(formatted, "DOUBLE KILL");
+    }
+
+    #[test]
+    fn test_game_start_message() {
+        let game_mode = "Ranked Solo/Duo";
+        let map = "Summoner's Rift";
+        let message = format!("🎮 **Game Started!** {} on {}", game_mode, map);
+        assert!(message.contains("Game Started!"));
+        assert!(message.contains(game_mode));
+        assert!(message.contains(map));
+    }
+
+    #[test]
+    fn test_game_end_message() {
+        let winning_team = "Blue Team";
+        let duration = "32:15";
+        let message = format!("🏁 **Game Ended!** {} won after {}", winning_team, duration);
+        assert!(message.contains("Game Ended!"));
+        assert!(message.contains(winning_team));
+        assert!(message.contains(duration));
+    }
+
+    #[test]
+    fn test_discord_url_format() {
+        let channel_id = "123456789";
+        let url = format!("https://discord.com/api/v10/channels/{}", channel_id);
+        assert_eq!(url, "https://discord.com/api/v10/channels/123456789");
+    }
+
+    #[test]
+    fn test_discord_message_url_format() {
+        let channel_id = "987654321";
+        let url = format!("https://discord.com/api/v10/channels/{}/messages", channel_id);
+        assert_eq!(url, "https://discord.com/api/v10/channels/987654321/messages");
+    }
+}

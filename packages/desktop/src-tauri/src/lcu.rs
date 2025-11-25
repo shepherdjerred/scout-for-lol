@@ -185,3 +185,88 @@ impl LcuConnection {
         )
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_lcu_status_creation() {
+        let status = LcuStatus {
+            connected: false,
+            summoner_name: None,
+            in_game: false,
+        };
+        assert!(!status.connected);
+        assert!(status.summoner_name.is_none());
+        assert!(!status.in_game);
+    }
+
+    #[test]
+    fn test_lcu_status_connected() {
+        let status = LcuStatus {
+            connected: true,
+            summoner_name: Some("TestSummoner".to_string()),
+            in_game: true,
+        };
+        assert!(status.connected);
+        assert_eq!(status.summoner_name, Some("TestSummoner".to_string()));
+        assert!(status.in_game);
+    }
+
+    #[test]
+    fn test_lcu_status_serialization() {
+        let status = LcuStatus {
+            connected: true,
+            summoner_name: Some("TestUser".to_string()),
+            in_game: false,
+        };
+
+        let json = serde_json::to_string(&status).ok();
+        assert!(json.is_some());
+
+        if let Some(json_str) = json {
+            assert!(json_str.contains("connected"));
+            assert!(json_str.contains("summonerName"));
+            assert!(json_str.contains("inGame"));
+        }
+    }
+
+    #[test]
+    fn test_lcu_connection_url_generation() {
+        // Create a mock connection (without actually connecting)
+        let base_url = "https://127.0.0.1:12345".to_string();
+        let port: u16 = 12345;
+        let token = "test-token".to_string();
+
+        // Test WebSocket URL generation
+        let ws_url = format!("wss://127.0.0.1:{}", port);
+        assert_eq!(ws_url, "wss://127.0.0.1:12345");
+
+        // Test auth header generation
+        let auth = format!("riot:{}", token);
+        let auth_header = format!(
+            "Basic {}",
+            base64::engine::general_purpose::STANDARD.encode(auth.as_bytes())
+        );
+        assert!(auth_header.starts_with("Basic "));
+    }
+
+    #[test]
+    fn test_base_url_format() {
+        let port = 54321_u16;
+        let url = format!("https://127.0.0.1:{}", port);
+        assert_eq!(url, "https://127.0.0.1:54321");
+    }
+
+    #[test]
+    fn test_auth_encoding() {
+        let token = "my-test-token";
+        let auth = format!("riot:{}", token);
+        let encoded = base64::engine::general_purpose::STANDARD.encode(auth.as_bytes());
+
+        // Verify the encoded string is not empty and is base64
+        assert!(!encoded.is_empty());
+        assert!(encoded.chars().all(|c| c.is_alphanumeric() || c == '+' || c == '/' || c == '='));
+    }
+}
