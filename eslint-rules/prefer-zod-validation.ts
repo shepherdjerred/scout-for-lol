@@ -31,8 +31,7 @@ export const preferZodValidation = createRule({
         const parts: string[] = [];
         let current: TSESTree.Node | undefined = node;
 
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- current can be undefined after assignment
-        while (current?.type === AST_NODE_TYPES.MemberExpression) {
+        while (current.type === AST_NODE_TYPES.MemberExpression) {
           if (current.property.type === AST_NODE_TYPES.Identifier) {
             parts.unshift(current.property.name);
           } else if (current.property.type === AST_NODE_TYPES.Literal && typeof current.property.value === "string") {
@@ -43,8 +42,7 @@ export const preferZodValidation = createRule({
           current = current.object;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- current can be undefined after loop
-        if (current?.type === AST_NODE_TYPES.Identifier) {
+        if (current.type === AST_NODE_TYPES.Identifier) {
           parts.unshift(current.name);
           return parts.join(".");
         }
@@ -152,8 +150,7 @@ export const preferZodValidation = createRule({
         // Only check at the top level of a logical expression chain
         // (avoid reporting on every sub-expression)
         const parent = node.parent;
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- parent type is not narrowed by TypeScript
-        if (parent?.type === AST_NODE_TYPES.LogicalExpression) {
+        if (parent.type === AST_NODE_TYPES.LogicalExpression) {
           return; // Let the parent handle it
         }
 

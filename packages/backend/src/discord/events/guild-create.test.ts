@@ -40,7 +40,8 @@ describe("handleGuildCreate", () => {
 
     expect(sendMock).toHaveBeenCalledTimes(1);
     // Verify the welcome message contains expected content
-    const calls = sendMock.mock.calls as unknown[][];
+    // eslint-disable-next-line custom-rules/no-type-assertions -- ok for now
+    const calls = sendMock.mock.calls as unknown as unknown[][];
     const firstCall = calls[0]?.[0];
     const MessageSchema = z.object({ content: z.string() });
     const result = MessageSchema.safeParse(firstCall);

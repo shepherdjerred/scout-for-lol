@@ -64,7 +64,7 @@ describe("getImage S3 Integration", () => {
     const call = s3Mock.call(0);
     const command = call.args[0];
     if (command instanceof PutObjectCommand) {
-      expect(command.input.Metadata?["queueType"]).toBe("arena");
+      expect(command.input.Metadata?.["queueType"]).toBe("arena");
     }
   });
 
@@ -168,7 +168,7 @@ describe("Queue Type Handling", () => {
       const call = s3Mock.call(0);
       const command = call.args[0];
       if (command instanceof PutObjectCommand) {
-        expect(command.input.Metadata?.queueType).toBe(queueType);
+        expect(command.input.Metadata?.["queueType"]).toBe(queueType);
       }
     });
   }

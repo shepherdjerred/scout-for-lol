@@ -85,10 +85,11 @@ function createMockGetObjectResponse(content: string): GetObjectCommandOutput {
   // Create a response object that matches GetObjectCommandOutput structure
   // The mock body implements transformToString() which is what's actually used
   // TypeScript can't verify the full structural match, but the mock works at runtime
+  // eslint-disable-next-line custom-rules/no-type-assertions -- ok for now
   return {
-    Body: mockBody as any,
+    Body: mockBody,
     $metadata: {},
-  };
+  } as unknown as GetObjectCommandOutput;
 }
 
 beforeEach(() => {

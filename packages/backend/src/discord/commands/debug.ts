@@ -91,7 +91,6 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
     const uint8Array = new Uint8Array(buffer);
     console.log(`✅ Successfully read database file (${String(uint8Array.length)} bytes)`);
 
-    // Create attachment - Discord.js AttachmentBuilder requires Buffer
     const bufferForAttachment = Buffer.from(uint8Array);
     const attachment = new AttachmentBuilder(bufferForAttachment, { name: "database.sqlite" });
 

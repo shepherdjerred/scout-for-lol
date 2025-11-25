@@ -39,7 +39,8 @@ export async function executeCompetitionCancel(interaction: ChatInputCommandInte
   const isOwner = competition.ownerId === userId;
 
   // Check if user is admin (only works in guild context)
-  const isAdmin = member?.permissions.has(PermissionFlagsBits.Administrator);
+  const isAdmin =
+    member && typeof member.permissions !== "string" && member.permissions.has(PermissionFlagsBits.Administrator);
 
   if (!isOwner && !isAdmin) {
     await interaction.reply({
