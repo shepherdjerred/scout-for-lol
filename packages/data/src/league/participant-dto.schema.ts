@@ -28,6 +28,7 @@ export const ParticipantDtoSchema = z
     visionClearedPings: z.number(),
     consumablesPurchased: z.number(),
     damageDealtToBuildings: z.number(),
+    damageDealtToEpicMonsters: z.number().optional(),
     damageDealtToObjectives: z.number(),
     damageDealtToTurrets: z.number(),
     damageSelfMitigated: z.number(),
