@@ -13,9 +13,10 @@ const dirname = fileURLToPath(new URL(".", import.meta.url));
 export default defineConfig({
   integrations: [mdx(), react(), icon()],
   vite: {
+    assetsInclude: ["**/*.txt"],
     optimizeDeps: {
       // Don't pre-bundle these native modules - they're only used server-side
-      exclude: ["@resvg/resvg-js"],
+      exclude: ["@resvg/resvg-js", "satori"],
     },
     resolve: {
       alias: {
