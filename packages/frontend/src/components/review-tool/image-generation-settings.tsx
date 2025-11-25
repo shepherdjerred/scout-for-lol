@@ -1,11 +1,11 @@
 /**
  * Image generation settings controls
  */
-import type { TabConfig } from "../../lib/review-tool/config/schema";
+import type { TabConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { getImagePricing } from "@scout-for-lol/data";
 import { ArtStyleSelector } from "./art-style-selector";
 import { ArtThemeSelector } from "./art-theme-selector";
-import type { CustomArtStyle, CustomArtTheme } from "../../lib/review-tool/art-style-storage";
+import type { CustomArtStyle, CustomArtTheme } from "@scout-for-lol/frontend/lib/review-tool/art-style-storage";
 
 type ImageGenerationSettingsProps = {
   config: TabConfig;

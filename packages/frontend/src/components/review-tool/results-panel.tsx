@@ -3,23 +3,23 @@
  */
 import { useState, useSyncExternalStore, useMemo } from "react";
 import { z } from "zod";
-import type { ReviewConfig, GenerationResult } from "../../lib/review-tool/config/schema";
+import type { ReviewConfig, GenerationResult } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
-import type { CostTracker } from "../../lib/review-tool/costs";
-import { calculateCost } from "../../lib/review-tool/costs";
+import type { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
+import { calculateCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import {
   generateMatchReview,
   type GenerationProgress as GenerationProgressType,
-} from "../../lib/review-tool/generator";
+} from "@scout-for-lol/frontend/lib/review-tool/generator";
 import { CostDisplay } from "./cost-display";
 import { HistoryPanel } from "./history-panel";
-import { getExampleMatch } from "../../lib/report-ui/example";
+import { getExampleMatch } from "@scout-for-lol/frontend/lib/report-ui/example";
 import {
   createPendingEntry,
   saveCompletedEntry,
   updateHistoryRating,
   type HistoryEntry,
-} from "../../lib/review-tool/history-manager";
+} from "@scout-for-lol/frontend/lib/review-tool/history-manager";
 import { ActiveGenerationsPanel } from "./active-generations-panel";
 import { GenerationProgress } from "./generation-progress";
 import { GenerationConfigDisplay } from "./generation-config-display";

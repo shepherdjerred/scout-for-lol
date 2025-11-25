@@ -2,7 +2,7 @@
  * Cache management button with dropdown
  */
 import { useState, useRef } from "react";
-import { clearAllCache, getCacheStats } from "../../lib/review-tool/cache";
+import { clearAllCache, getCacheStats } from "@scout-for-lol/frontend/lib/review-tool/cache";
 
 export function CacheButton() {
   const [isOpen, setIsOpen] = useState(false);

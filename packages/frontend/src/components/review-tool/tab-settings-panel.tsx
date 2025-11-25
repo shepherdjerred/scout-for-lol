@@ -3,11 +3,11 @@
  */
 import { useState, useSyncExternalStore } from "react";
 import { z } from "zod";
-import type { TabConfig, Personality } from "../../lib/review-tool/config/schema";
-import { createDefaultTabConfig } from "../../lib/review-tool/config/schema";
-import { BUILTIN_PERSONALITIES } from "../../lib/review-tool/prompts";
+import type { TabConfig, Personality } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import { createDefaultTabConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import { BUILTIN_PERSONALITIES } from "@scout-for-lol/frontend/lib/review-tool/prompts";
 import { ConfigImportModal } from "./config-import-modal";
-import { downloadConfigBundle } from "../../lib/review-tool/config-export";
+import { downloadConfigBundle } from "@scout-for-lol/frontend/lib/review-tool/config-export";
 import { ART_STYLES, ART_THEMES } from "@scout-for-lol/data";
 import { TextGenerationSettings } from "./text-generation-settings";
 import { ImageGenerationSettings } from "./image-generation-settings";
@@ -21,8 +21,8 @@ import {
   updateCustomPersonality,
   deleteCustomPersonality,
   generatePersonalityId,
-} from "../../lib/review-tool/personality-storage";
-import type { CustomArtStyle, CustomArtTheme } from "../../lib/review-tool/art-style-storage";
+} from "@scout-for-lol/frontend/lib/review-tool/personality-storage";
+import type { CustomArtStyle, CustomArtTheme } from "@scout-for-lol/frontend/lib/review-tool/art-style-storage";
 import {
   loadCustomArtStyles,
   addCustomArtStyle,
@@ -34,7 +34,7 @@ import {
   updateCustomArtTheme,
   deleteCustomArtTheme,
   generateArtThemeId,
-} from "../../lib/review-tool/art-style-storage";
+} from "@scout-for-lol/frontend/lib/review-tool/art-style-storage";
 
 type TabSettingsPanelProps = {
   config: TabConfig;

@@ -1,8 +1,8 @@
 /**
  * Result metadata display (metadata, prompts, cost breakdown)
  */
-import type { GenerationResult, CostBreakdown } from "../../lib/review-tool/config/schema";
-import { formatCost } from "../../lib/review-tool/costs";
+import type { GenerationResult, CostBreakdown } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import { formatCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
 
 type ResultMetadataProps = {
   result: GenerationResult;

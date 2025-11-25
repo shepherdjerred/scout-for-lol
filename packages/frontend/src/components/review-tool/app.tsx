@@ -2,21 +2,21 @@
  * Main application component
  */
 import { useState, useSyncExternalStore } from "react";
-import type { GenerationResult, GlobalConfig, TabConfig } from "../../lib/review-tool/config/schema";
+import type { GenerationResult, GlobalConfig, TabConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import {
   createDefaultGlobalConfig,
   createDefaultTabConfig,
   mergeConfigs,
   splitConfig,
-} from "../../lib/review-tool/config/schema";
+} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import {
   loadCurrentConfig,
   saveCurrentConfig,
   loadGlobalConfig,
   saveGlobalConfig,
-} from "../../lib/review-tool/config-manager";
-import { CostTracker } from "../../lib/review-tool/costs";
-import { migrateFromLocalStorage } from "../../lib/review-tool/storage";
+} from "@scout-for-lol/frontend/lib/review-tool/config-manager";
+import { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
+import { migrateFromLocalStorage } from "@scout-for-lol/frontend/lib/review-tool/storage";
 import { TabBar } from "./tab-bar";
 import { ConfigModal } from "./config-modal";
 import { TabSettingsPanel } from "./tab-settings-panel";

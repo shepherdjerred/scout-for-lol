@@ -2,7 +2,7 @@
  * Generic art selector component (for styles and themes)
  */
 import { ArtStyleEditor } from "./art-style-editor";
-import type { CustomArtStyle, CustomArtTheme } from "../../lib/review-tool/art-style-storage";
+import type { CustomArtStyle, CustomArtTheme } from "@scout-for-lol/frontend/lib/review-tool/art-style-storage";
 
 type GenericArtSelectorProps<T extends CustomArtStyle | CustomArtTheme> = {
   items: T[];

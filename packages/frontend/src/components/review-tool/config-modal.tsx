@@ -3,9 +3,9 @@
  */
 import { useState, useRef } from "react";
 import { z } from "zod";
-import type { GlobalConfig } from "../../lib/review-tool/config/schema";
+import type { GlobalConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { ApiSettingsPanel } from "./api-settings-panel";
-import { resetToDefaults, getResetPreview } from "../../lib/review-tool/reset-defaults";
+import { resetToDefaults, getResetPreview } from "@scout-for-lol/frontend/lib/review-tool/reset-defaults";
 
 const ErrorSchema = z.object({ message: z.string() });
 

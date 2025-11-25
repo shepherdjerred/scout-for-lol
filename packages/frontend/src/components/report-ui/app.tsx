@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { z } from "zod";
-import { getExampleMatch } from "../../lib/report-ui/example";
-import type { AnyMatch } from "../../lib/report-ui/example";
+import { getExampleMatch } from "@scout-for-lol/frontend/lib/report-ui/example";
+import type { AnyMatch } from "@scout-for-lol/frontend/lib/report-ui/example";
 // Import from browser-safe entry point to avoid satori/resvg dependencies
 import { Report } from "@scout-for-lol/report/browser";
 import { ArenaReport } from "@scout-for-lol/report/html/arena/report";

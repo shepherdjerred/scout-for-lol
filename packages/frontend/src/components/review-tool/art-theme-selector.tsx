@@ -2,7 +2,7 @@
  * Art theme selector component
  */
 import { GenericArtSelector } from "./generic-art-selector";
-import type { CustomArtTheme } from "../../lib/review-tool/art-style-storage";
+import type { CustomArtTheme } from "@scout-for-lol/frontend/lib/review-tool/art-style-storage";
 
 type ArtThemeSelectorProps = {
   themes: { id: string; description: string }[];

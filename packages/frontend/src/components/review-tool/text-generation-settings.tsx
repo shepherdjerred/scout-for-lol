@@ -1,7 +1,7 @@
 /**
  * Text generation settings controls
  */
-import type { TabConfig } from "../../lib/review-tool/config/schema";
+import type { TabConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { getModelPricing, modelSupportsParameter } from "@scout-for-lol/data";
 
 type TextGenerationSettingsProps = {

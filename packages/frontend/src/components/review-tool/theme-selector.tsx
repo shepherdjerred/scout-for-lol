@@ -3,7 +3,7 @@
  */
 import { useSyncExternalStore } from "react";
 import { z } from "zod";
-import { STORES, getItem, setItem } from "../../lib/review-tool/storage";
+import { STORES, getItem, setItem } from "@scout-for-lol/frontend/lib/review-tool/storage";
 
 const BooleanSchema = z.boolean();
 

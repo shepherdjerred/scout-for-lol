@@ -3,8 +3,8 @@
  */
 import { useState } from "react";
 import { z } from "zod";
-import type { Personality, PersonalityMetadata } from "../../lib/review-tool/config/schema";
-import { PersonalitySchema } from "../../lib/review-tool/config/schema";
+import type { Personality, PersonalityMetadata } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import { PersonalitySchema } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 
 const ErrorSchema = z.object({ message: z.string() });
 

@@ -2,8 +2,8 @@
  * Panel showing history of generated reviews
  */
 import { useState, useSyncExternalStore, useRef } from "react";
-import type { HistoryEntry } from "../../lib/review-tool/history-manager";
-import { loadHistory, deleteHistoryEntry, clearHistory } from "../../lib/review-tool/history-manager";
+import type { HistoryEntry } from "@scout-for-lol/frontend/lib/review-tool/history-manager";
+import { loadHistory, deleteHistoryEntry, clearHistory } from "@scout-for-lol/frontend/lib/review-tool/history-manager";
 import { StarRating } from "./star-rating";
 import { differenceInMinutes, differenceInHours, differenceInDays, format } from "date-fns";
 

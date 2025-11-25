@@ -1,8 +1,8 @@
 /**
  * Prompt settings section (base prompt and personality selector)
  */
-import { getBasePrompt } from "../../lib/review-tool/prompts";
-import type { TabConfig, Personality } from "../../lib/review-tool/config/schema";
+import { getBasePrompt } from "@scout-for-lol/frontend/lib/review-tool/prompts";
+import type { TabConfig, Personality } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { PersonalitySelector } from "./personality-selector";
 
 type PromptSettingsProps = {
