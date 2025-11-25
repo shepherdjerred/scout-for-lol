@@ -74,13 +74,41 @@ async function generateReviewImageBackend(params: {
     }
     console.log("[generateReviewImage] Calling Gemini API to generate image...");
 
+    // Log match structure before serialization for Gemini
+    console.log(`[debug][generateReviewImage] About to serialize match for Gemini API`);
+    if (match.queueType !== "arena") {
+      const completedMatch = match as CompletedMatch;
+      console.log(`[debug][generateReviewImage] Match has ${completedMatch.players.length.toString()} player(s)`);
+      for (let i = 0; i < completedMatch.players.length; i++) {
+        const playerObj = completedMatch.players[i];
+        if (playerObj) {
+          console.log(
+            `[debug][generateReviewImage] Match.players[${i.toString()}] keys before JSON.stringify:`,
+            Object.keys(playerObj),
+          );
+          if ("puuid" in playerObj) {
+            console.error(
+              `[debug][generateReviewImage] ⚠️  ERROR: Match.players[${i.toString()}] has puuid field before JSON.stringify!`,
+              playerObj,
+            );
+          }
+        }
+      }
+    }
+
+    const matchDataJson = JSON.stringify(
+      curatedData ? { processedMatch: match, detailedStats: curatedData } : match,
+      null,
+      2,
+    );
+
     // Call shared image generation function
     const result = await generateReviewImage({
       reviewText,
       artStyle: style,
       artTheme: themes[0] ?? "League of Legends gameplay",
       ...(themes[1] !== undefined ? { secondArtTheme: themes[1] } : {}),
-      matchData: JSON.stringify(curatedData ? { processedMatch: match, detailedStats: curatedData } : match, null, 2),
+      matchData: matchDataJson,
       geminiClient: client,
       model: "gemini-3-pro-image-preview",
       timeoutMs: 60_000,
@@ -215,6 +243,27 @@ export async function generateMatchReview(
   matchId: MatchId,
   rawMatchData?: MatchDto,
 ): Promise<{ text: string; image?: Uint8Array; metadata?: ReviewMetadata } | undefined> {
+  console.log(`[debug][generateMatchReview] Received match for ${matchId}`);
+  console.log(
+    `[debug][generateMatchReview] Match type: ${match.queueType === "arena" ? "ArenaMatch" : "CompletedMatch"}`,
+  );
+  if (match.queueType !== "arena") {
+    const completedMatch = match as CompletedMatch;
+    console.log(`[debug][generateMatchReview] Match has ${completedMatch.players.length.toString()} player(s)`);
+    for (let i = 0; i < completedMatch.players.length; i++) {
+      const playerObj = completedMatch.players[i];
+      if (playerObj) {
+        console.log(`[debug][generateMatchReview] Match.players[${i.toString()}] keys:`, Object.keys(playerObj));
+        if ("puuid" in playerObj) {
+          console.error(
+            `[debug][generateMatchReview] ⚠️  ERROR: Match.players[${i.toString()}] has puuid field!`,
+            playerObj,
+          );
+        }
+      }
+    }
+  }
+
   // Curate the raw match data if provided
   const curatedData = rawMatchData ? await curateMatchData(rawMatchData) : undefined;
 

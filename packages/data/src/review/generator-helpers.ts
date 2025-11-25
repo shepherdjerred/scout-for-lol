@@ -135,6 +135,29 @@ export function buildPromptVariables(params: {
   const playerLane = matchData["lane"] ?? "unknown lane";
   const opponentChampion = matchData["laneOpponent"] ?? "an unknown opponent";
   const laneDescription = laneContext;
+
+  // Log match structure before serialization
+  console.log(`[debug][buildPromptVariables] About to serialize match to JSON`);
+  if (match.queueType !== "arena") {
+    const completedMatch = match as CompletedMatch;
+    console.log(`[debug][buildPromptVariables] Match has ${completedMatch.players.length.toString()} player(s)`);
+    for (let i = 0; i < completedMatch.players.length; i++) {
+      const playerObj = completedMatch.players[i];
+      if (playerObj) {
+        console.log(
+          `[debug][buildPromptVariables] Match.players[${i.toString()}] keys before JSON.stringify:`,
+          Object.keys(playerObj),
+        );
+        if ("puuid" in playerObj) {
+          console.error(
+            `[debug][buildPromptVariables] ⚠️  ERROR: Match.players[${i.toString()}] has puuid field before JSON.stringify!`,
+            playerObj,
+          );
+        }
+      }
+    }
+  }
+
   const matchReport = curatedData
     ? JSON.stringify(
         {
@@ -145,6 +168,31 @@ export function buildPromptVariables(params: {
         2,
       )
     : JSON.stringify(match, null, 2);
+
+  // Check if JSON.stringify added any unexpected fields (it shouldn't, but let's verify)
+  if (match.queueType !== "arena") {
+    try {
+      const parsed: unknown = JSON.parse(matchReport);
+      if (typeof parsed === "object" && parsed !== null) {
+        const parsedObj = parsed as Record<string, unknown>;
+        const players =
+          parsedObj["players"] ?? (parsedObj["processedMatch"] as Record<string, unknown> | undefined)?.["players"];
+        if (Array.isArray(players)) {
+          for (let i = 0; i < players.length; i++) {
+            const playerObj = players[i];
+            if (typeof playerObj === "object" && playerObj !== null && "puuid" in playerObj) {
+              console.error(
+                `[debug][buildPromptVariables] ⚠️  ERROR: Parsed JSON has puuid in players[${i.toString()}]!`,
+                playerObj,
+              );
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore parse errors, just checking structure
+    }
+  }
 
   return {
     reviewerName,

@@ -225,7 +225,24 @@ export async function generateMatchReport(
     );
 
     // Get full player data with ranks
+    console.log(`[debug][generateMatchReport] Getting player data for ${playersInMatch.length.toString()} player(s)`);
     const players = await Promise.all(playersInMatch.map((playerConfig) => getPlayer(playerConfig)));
+    console.log(`[debug][generateMatchReport] Got ${players.length.toString()} player(s)`);
+    for (let i = 0; i < players.length; i++) {
+      const player = players[i];
+      if (player) {
+        console.log(`[debug][generateMatchReport] Player ${i.toString()} keys:`, Object.keys(player));
+        if ("puuid" in player) {
+          console.error(`[debug][generateMatchReport] ⚠️  WARNING: Player ${i.toString()} has puuid field!`, player);
+        }
+        if (player.config && "puuid" in player.config) {
+          console.error(
+            `[debug][generateMatchReport] ⚠️  WARNING: Player ${i.toString()}.config has puuid field!`,
+            player.config,
+          );
+        }
+      }
+    }
 
     // Process match based on queue type
     return await match<number, Promise<MessageCreateOptions>>(matchData.info.queueId)
@@ -252,7 +269,26 @@ export async function generateMatchReport(
         if (players.length === 0) {
           throw new Error("No player data available");
         }
+        console.log(`[debug][generateMatchReport] Calling toMatch with ${players.length.toString()} player(s)`);
         const completedMatch = toMatch(players, matchData, undefined, undefined);
+        console.log(
+          `[debug][generateMatchReport] toMatch returned match with ${completedMatch.players.length.toString()} player(s)`,
+        );
+        for (let i = 0; i < completedMatch.players.length; i++) {
+          const playerObj = completedMatch.players[i];
+          if (playerObj) {
+            console.log(
+              `[debug][generateMatchReport] CompletedMatch.players[${i.toString()}] keys:`,
+              Object.keys(playerObj),
+            );
+            if ("puuid" in playerObj) {
+              console.error(
+                `[debug][generateMatchReport] ⚠️  ERROR: CompletedMatch.players[${i.toString()}] has puuid field!`,
+                playerObj,
+              );
+            }
+          }
+        }
 
         // Generate AI review (text and optional image) - only for ranked queues (solo/flex/clash)
         const isRankedQueue =

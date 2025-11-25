@@ -5,6 +5,7 @@ import {
   type ArenaTeam,
   ArenaTeamIdSchema,
   type CompletedMatch,
+  CompletedMatchSchema,
   getLaneOpponent,
   invertTeam,
   parseQueueType,
@@ -36,7 +37,18 @@ export function toMatch(
   }
 
   // Build CompletedMatch.players for all tracked players
-  const matchPlayers = players.map((player) => {
+  const matchPlayers = players.map((player, index) => {
+    console.log(`[debug][toMatch] Processing player ${index.toString()}: ${player.config.alias}`);
+    console.log(`[debug][toMatch] Player.config keys:`, Object.keys(player.config));
+    console.log(`[debug][toMatch] Player.config has puuid at top level:`, "puuid" in player.config);
+    if ("puuid" in player.config) {
+      console.error(`[debug][toMatch] ⚠️  WARNING: player.config has unexpected puuid field!`, player.config);
+    }
+    console.log(`[debug][toMatch] Player object keys:`, Object.keys(player));
+    if ("puuid" in player) {
+      console.error(`[debug][toMatch] ⚠️  WARNING: player object has unexpected puuid field!`, player);
+    }
+
     const participantRaw = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
     if (participantRaw === undefined) {
       console.debug("Player PUUID:", player.config.league.leagueAccount.puuid);
@@ -54,7 +66,7 @@ export function toMatch(
 
     const enemyTeam = invertTeam(team);
 
-    return {
+    const playerObject = {
       playerConfig: player.config,
       rankBeforeMatch,
       rankAfterMatch,
@@ -66,14 +78,64 @@ export function toMatch(
       lane: champion.lane,
       laneOpponent: getLaneOpponent(champion, teams[enemyTeam]),
     };
+
+    console.log(`[debug][toMatch] Built player object ${index.toString()} keys:`, Object.keys(playerObject));
+    if ("puuid" in playerObject) {
+      console.error(`[debug][toMatch] ⚠️  WARNING: playerObject has unexpected puuid field!`, playerObject);
+    }
+    console.log(`[debug][toMatch] playerObject.playerConfig keys:`, Object.keys(playerObject.playerConfig));
+    if ("puuid" in playerObject.playerConfig) {
+      console.error(
+        `[debug][toMatch] ⚠️  WARNING: playerObject.playerConfig has unexpected puuid field!`,
+        playerObject.playerConfig,
+      );
+    }
+
+    return playerObject;
   });
 
-  return {
+  console.log(`[debug][toMatch] Built ${matchPlayers.length.toString()} player objects`);
+  console.log(`[debug][toMatch] Checking all player objects for puuid field...`);
+  for (let i = 0; i < matchPlayers.length; i++) {
+    const playerObj = matchPlayers[i];
+    if (playerObj && "puuid" in playerObj) {
+      console.error(
+        `[debug][toMatch] ⚠️  ERROR: Player object ${i.toString()} has puuid field at top level!`,
+        playerObj,
+      );
+    }
+    if (playerObj?.playerConfig && "puuid" in playerObj.playerConfig) {
+      console.error(
+        `[debug][toMatch] ⚠️  ERROR: Player object ${i.toString()}.playerConfig has puuid field!`,
+        playerObj.playerConfig,
+      );
+    }
+  }
+
+  const result: CompletedMatch = {
     queueType,
     players: matchPlayers,
     durationInSeconds: matchDto.info.gameDuration,
     teams,
   };
+
+  // Validate the result to catch any extra fields (like puuid) that shouldn't be there
+  try {
+    const validated = CompletedMatchSchema.parse(result);
+    console.log(`[debug][toMatch] ✅ Validation passed - match object is valid`);
+    return validated;
+  } catch (error) {
+    console.error("[debug][toMatch] ❌ Validation error - match object has unexpected fields:", error);
+    console.error("[debug][toMatch] First player object keys:", Object.keys(matchPlayers[0] ?? {}));
+    if (matchPlayers[0]) {
+      console.error("[debug][toMatch] First player object:", JSON.stringify(matchPlayers[0], null, 2));
+    }
+    if (matchPlayers.length > 1 && matchPlayers[1]) {
+      console.error("[debug][toMatch] Second player object keys:", Object.keys(matchPlayers[1]));
+      console.error("[debug][toMatch] Second player object:", JSON.stringify(matchPlayers[1], null, 2));
+    }
+    throw error;
+  }
 }
 
 // Arena helpers
