@@ -11,7 +11,11 @@ import type { GoogleGenerativeAI } from "@google/generative-ai";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
 import { generateImagePrompt } from "@scout-for-lol/data/review/image-prompt.js";
 import { replaceTemplateVariables } from "@scout-for-lol/data/review/prompts.js";
-import { buildPromptVariables, createCompletionParams, extractMatchData } from "@scout-for-lol/data/review/generator-helpers.js";
+import {
+  buildPromptVariables,
+  createCompletionParams,
+  extractMatchData,
+} from "@scout-for-lol/data/review/generator-helpers.js";
 
 /**
  * Core review text generation function

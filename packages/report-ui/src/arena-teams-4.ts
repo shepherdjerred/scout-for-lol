@@ -65,4 +65,3 @@ export function getTeam4(): ArenaTeam {
     ],
   };
 }
-

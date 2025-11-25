@@ -569,15 +569,12 @@ describe("createSnapshot - Different criteria types", () => {
         criteria,
       });
 
-      const snapshot = await getSnapshot(
-        prisma,
-        {
-          competitionId: CompetitionIdSchema.parse(competitionId),
-          playerId: PlayerIdSchema.parse(playerId),
-          snapshotType: "START",
-          criteria,
-        },
-      );
+      const snapshot = await getSnapshot(prisma, {
+        competitionId: CompetitionIdSchema.parse(competitionId),
+        playerId: PlayerIdSchema.parse(playerId),
+        snapshotType: "START",
+        criteria,
+      });
       if (snapshot) {
         // Should have wins structure
         expect(snapshot).toHaveProperty("wins");
