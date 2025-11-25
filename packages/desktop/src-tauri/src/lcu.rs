@@ -88,12 +88,16 @@ impl LcuConnection {
                     .find_map(|arg| {
                         let arg_str = arg.to_string_lossy();
                         if arg_str.starts_with("--remoting-auth-token=") {
-                            arg_str.strip_prefix("--remoting-auth-token=").map(|s| s.to_string())
+                            arg_str
+                                .strip_prefix("--remoting-auth-token=")
+                                .map(|s| s.to_string())
                         } else {
                             None
                         }
                     })
-                    .ok_or_else(|| "Could not find --remoting-auth-token in process arguments".to_string())?;
+                    .ok_or_else(|| {
+                        "Could not find --remoting-auth-token in process arguments".to_string()
+                    })?;
 
                 info!("Found League Client on port {}", port);
                 return Ok((port, token));
@@ -114,7 +118,8 @@ impl LcuConnection {
             base64::engine::general_purpose::STANDARD.encode(auth.as_bytes())
         );
 
-        let response = self.client
+        let response = self
+            .client
             .get(&url)
             .header("Authorization", auth_header)
             .send()
@@ -267,6 +272,8 @@ mod tests {
 
         // Verify the encoded string is not empty and is base64
         assert!(!encoded.is_empty());
-        assert!(encoded.chars().all(|c| c.is_alphanumeric() || c == '+' || c == '/' || c == '='));
+        assert!(encoded
+            .chars()
+            .all(|c| c.is_alphanumeric() || c == '+' || c == '/' || c == '='));
     }
 }

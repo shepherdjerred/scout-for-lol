@@ -77,10 +77,7 @@ pub async fn start_event_monitoring(
     Ok(())
 }
 
-async fn run_event_loop(
-    lcu: LcuConnection,
-    discord: DiscordClient,
-) -> Result<(), String> {
+async fn run_event_loop(lcu: LcuConnection, discord: DiscordClient) -> Result<(), String> {
     info!("Connecting to LCU WebSocket...");
 
     let ws_url = lcu.get_websocket_url();
@@ -210,10 +207,7 @@ async fn handle_champ_select_event(_data: &Value, _discord: &DiscordClient) -> R
 async fn handle_end_of_game_event(data: &Value, discord: &DiscordClient) -> Result<(), String> {
     if !data.is_null() {
         // Extract game duration and winning team
-        let duration = data
-            .get("gameLength")
-            .and_then(|v| v.as_u64())
-            .unwrap_or(0);
+        let duration = data.get("gameLength").and_then(|v| v.as_u64()).unwrap_or(0);
 
         let minutes = duration / 60;
         let seconds = duration % 60;
@@ -405,10 +399,7 @@ mod tests {
             ]
         });
 
-        let duration = data
-            .get("gameLength")
-            .and_then(|v| v.as_u64())
-            .unwrap_or(0);
+        let duration = data.get("gameLength").and_then(|v| v.as_u64()).unwrap_or(0);
 
         assert_eq!(duration, 1850);
 
@@ -429,7 +420,10 @@ mod tests {
 
         for (uri, is_gameflow, is_champ_select, is_end_of_game) in test_cases {
             assert_eq!(uri.contains("/lol-gameflow/v1/gameflow-phase"), is_gameflow);
-            assert_eq!(uri.contains("/lol-champ-select/v1/session"), is_champ_select);
+            assert_eq!(
+                uri.contains("/lol-champ-select/v1/session"),
+                is_champ_select
+            );
             assert_eq!(
                 uri.contains("/lol-end-of-game/v1/eog-stats-block"),
                 is_end_of_game

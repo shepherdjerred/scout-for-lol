@@ -23,3 +23,5 @@ exports[`clash game test 1`] = `"b9c1219e9dbc02b4bbd96f827449104d4171aa92cb1c3aa
 exports[`aram clash game test 1`] = `"381fc8408f3d9b0f1981559bf08e553b4e2bc205ec6b3908970339272debb77c"`;
 
 exports[`multiple players with promotion and demotion test 1`] = `"6838f92e42486047e13d1585dfd38f5e4fa7ada4bdf09435059be91155d15629"`;
+
+exports[`no rank test 2`] = `"3baed0dd5a959a525090e631a218078e02f4fda911d636613f1c3c61da14cbdf"`;

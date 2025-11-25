@@ -8,9 +8,9 @@
 #![warn(missing_docs, clippy::all, clippy::pedantic, clippy::nursery)]
 #![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
-mod lcu;
 mod discord;
 mod events;
+mod lcu;
 
 #[cfg(test)]
 mod tests;
@@ -18,7 +18,7 @@ mod tests;
 use std::sync::Arc;
 use tauri::{Manager, State};
 use tokio::sync::Mutex;
-use tracing::{info, error};
+use tracing::{error, info};
 use tracing_subscriber;
 
 #[derive(Default)]
@@ -111,10 +111,8 @@ async fn start_monitoring(state: State<'_, AppState>) -> Result<(), String> {
     }
 
     // Start the event monitoring
-    events::start_event_monitoring(
-        state.lcu_connection.clone(),
-        state.discord_client.clone(),
-    ).await?;
+    events::start_event_monitoring(state.lcu_connection.clone(), state.discord_client.clone())
+        .await?;
 
     *is_monitoring = true;
     info!("Game monitoring started");
@@ -147,7 +145,7 @@ fn main() {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"))
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
         )
         .init();
 

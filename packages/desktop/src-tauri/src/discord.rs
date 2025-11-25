@@ -47,7 +47,8 @@ impl DiscordClient {
 
         let url = format!("https://discord.com/api/v10/channels/{}", self.channel_id);
 
-        let response = self.client
+        let response = self
+            .client
             .get(&url)
             .header("Authorization", format!("Bot {}", self.token))
             .header("User-Agent", "Scout-for-LoL-Desktop/0.1.0")
@@ -60,7 +61,10 @@ impl DiscordClient {
             Ok(())
         } else {
             let status = response.status();
-            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
             error!("Discord API error: {} - {}", status, error_text);
             Err(format!("Discord API error: {} - {}", status, error_text))
         }
@@ -75,7 +79,8 @@ impl DiscordClient {
 
         let payload = MessagePayload { content };
 
-        let response = self.client
+        let response = self
+            .client
             .post(&url)
             .header("Authorization", format!("Bot {}", self.token))
             .header("Content-Type", "application/json")
@@ -90,9 +95,18 @@ impl DiscordClient {
             Ok(())
         } else {
             let status = response.status();
-            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
-            error!("Failed to post Discord message: {} - {}", status, error_text);
-            Err(format!("Failed to post message: {} - {}", status, error_text))
+            let error_text = response
+                .text()
+                .await
+                .unwrap_or_else(|_| "Unknown error".to_string());
+            error!(
+                "Failed to post Discord message: {} - {}",
+                status, error_text
+            );
+            Err(format!(
+                "Failed to post message: {} - {}",
+                status, error_text
+            ))
         }
     }
 
@@ -349,7 +363,13 @@ mod tests {
     #[test]
     fn test_discord_message_url_format() {
         let channel_id = "987654321";
-        let url = format!("https://discord.com/api/v10/channels/{}/messages", channel_id);
-        assert_eq!(url, "https://discord.com/api/v10/channels/987654321/messages");
+        let url = format!(
+            "https://discord.com/api/v10/channels/{}/messages",
+            channel_id
+        );
+        assert_eq!(
+            url,
+            "https://discord.com/api/v10/channels/987654321/messages"
+        );
     }
 }
