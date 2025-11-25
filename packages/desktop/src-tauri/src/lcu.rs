@@ -3,7 +3,7 @@
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
-use tracing::{debug, error, info};
+use tracing::{debug, info};
 
 /// Represents the connection status of the League Client
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -66,7 +66,7 @@ impl LcuConnection {
         info!("Searching for League Client process...");
 
         let system = System::new_with_specifics(
-            RefreshKind::new().with_processes(ProcessRefreshKind::everything()),
+            RefreshKind::nothing().with_processes(ProcessRefreshKind::everything()),
         );
 
         // Look for LeagueClientUx process
@@ -250,7 +250,7 @@ mod tests {
     #[test]
     fn test_lcu_connection_url_generation() {
         // Create a mock connection (without actually connecting)
-        let base_url = "https://127.0.0.1:12345".to_string();
+        let _base_url = "https://127.0.0.1:12345".to_string();
         let port: u16 = 12345;
         let token = "test-token".to_string();
 

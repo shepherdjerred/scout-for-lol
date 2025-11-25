@@ -164,6 +164,8 @@ export function checkDesktop(workspaceSource: Directory): Container {
     .withExec(["sh", "-c", "echo '📋 TypeScript checks...'"])
     .withExec(["bun", "run", "typecheck"])
     .withExec(["bun", "run", "lint"])
+    .withExec(["sh", "-c", "echo '🏗️  Building frontend for Rust compilation...'"])
+    .withExec(["bun", "run", "build:frontend"])
     .withExec(["sh", "-c", "echo '📋 Rust checks...'"])
     .withWorkdir("/workspace/packages/desktop/src-tauri")
     .withExec(["cargo", "fmt", "--", "--check"])

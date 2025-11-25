@@ -144,7 +144,7 @@ async fn run_event_loop(lcu: LcuConnection, discord: DiscordClient) -> Result<()
 
     for sub in subscriptions {
         write
-            .send(Message::Text(sub))
+            .send(Message::Text(sub.into()))
             .await
             .map_err(|e| format!("Failed to subscribe: {}", e))?;
     }

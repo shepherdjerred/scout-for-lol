@@ -16,7 +16,7 @@ mod lcu;
 mod tests;
 
 use std::sync::Arc;
-use tauri::{Manager, State};
+use tauri::State;
 use tokio::sync::Mutex;
 use tracing::{error, info};
 
