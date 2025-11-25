@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment -- Vite config requires dynamic typing */
+/* eslint-disable custom-rules/prefer-bun-apis -- Vite config runs in Node context, not Bun */
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 

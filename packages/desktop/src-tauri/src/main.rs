@@ -8,6 +8,7 @@
 #![warn(missing_docs, clippy::all, clippy::pedantic, clippy::nursery)]
 #![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
 
+mod config;
 mod discord;
 mod events;
 mod lcu;
@@ -22,11 +23,11 @@ use tauri::State;
 use tokio::sync::Mutex;
 use tracing::{error, info};
 
-#[derive(Default)]
 struct AppState {
     lcu_connection: Arc<Mutex<Option<lcu::LcuConnection>>>,
     discord_client: Arc<Mutex<Option<discord::DiscordClient>>>,
     is_monitoring: Arc<Mutex<bool>>,
+    config_path: PathBuf,
 }
 
 #[tauri::command]
@@ -76,11 +77,19 @@ async fn configure_discord(
 ) -> Result<(), String> {
     info!("Configuring Discord client...");
 
-    match discord::DiscordClient::new(bot_token, channel_id).await {
+    match discord::DiscordClient::new(bot_token.clone(), channel_id.clone()).await {
         Ok(client) => {
             info!("Successfully configured Discord client");
             let mut discord = state.discord_client.lock().await;
             *discord = Some(client);
+
+            // Save config to disk
+            let config = config::Config {
+                bot_token: Some(bot_token),
+                channel_id: Some(channel_id),
+            };
+            config.save(&state.config_path)?;
+
             Ok(())
         }
         Err(e) => {
@@ -139,6 +148,12 @@ async fn stop_monitoring(state: State<'_, AppState>) -> Result<(), String> {
 async fn get_monitoring_status(state: State<'_, AppState>) -> Result<bool, String> {
     let is_monitoring = state.is_monitoring.lock().await;
     Ok(*is_monitoring)
+}
+
+#[tauri::command]
+async fn load_config(state: State<'_, AppState>) -> Result<config::Config, String> {
+    info!("Loading config from {:?}", state.config_path);
+    Ok(config::Config::load(&state.config_path))
 }
 
 #[cfg(target_os = "windows")]
@@ -201,7 +216,6 @@ fn main() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
             get_lcu_status,
             connect_lcu,
@@ -211,9 +225,30 @@ fn main() {
             start_monitoring,
             stop_monitoring,
             get_monitoring_status,
+            load_config,
         ])
-        .setup(|_app| {
+        .setup(|app| {
             info!("Scout for LoL Desktop starting up...");
+
+            // Get app config directory
+            let config_dir = app
+                .path()
+                .app_config_dir()
+                .expect("Failed to get app config directory");
+            let config_path = config_dir.join("config.json");
+
+            info!("Config path: {:?}", config_path);
+
+            // Initialize app state
+            let app_state = AppState {
+                lcu_connection: Arc::new(Mutex::new(None)),
+                discord_client: Arc::new(Mutex::new(None)),
+                is_monitoring: Arc::new(Mutex::new(false)),
+                config_path,
+            };
+
+            app.manage(app_state);
+
             Ok(())
         })
         .run(tauri::generate_context!())

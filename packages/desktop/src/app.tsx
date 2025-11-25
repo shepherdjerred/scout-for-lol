@@ -28,6 +28,11 @@ type DiscordStatus = {
   channelName: string | null;
 };
 
+type Config = {
+  botToken: string | null;
+  channelId: string | null;
+};
+
 type LogEntry = {
   timestamp: string;
   level: "info" | "error" | "warning";
@@ -69,6 +74,28 @@ export default function App() {
     } catch (err) {
       console.error("Failed to load status:", err);
     }
+  }, []);
+
+  // Load config on mount
+  useEffect(() => {
+    const loadConfig = async () => {
+      try {
+        const config = await invoke<Config>("load_config");
+        if (config.botToken || config.channelId) {
+          if (config.botToken) {
+            setBotToken(config.botToken);
+          }
+          if (config.channelId) {
+            setChannelId(config.channelId);
+          }
+          addLog("info", "Loaded saved Discord configuration");
+        }
+      } catch (err) {
+        console.error("Failed to load config:", err);
+      }
+    };
+
+    void loadConfig();
   }, []);
 
   // Load status on mount and setup polling
