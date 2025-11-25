@@ -234,7 +234,7 @@ async fn handle_gameflow_event(
                 debug!("Unhandled game phase: {} (event type: {})", phase, event_type);
             }
         }
-            } else if let Some(obj) = data.as_object() {
+            } else if let Some(_obj) = data.as_object() {
         // Handle structured game event data
         // Attempt to parse and post kill, multikill, and objective events
         if let Err(e) = parse_and_post_game_events(data, discord).await {

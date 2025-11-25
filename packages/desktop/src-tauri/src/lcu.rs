@@ -1,5 +1,7 @@
 //! League Client Update (LCU) API integration module
 
+use base64::engine::general_purpose;
+use base64::Engine;
 use serde::{Deserialize, Serialize};
 use tracing::info;
 
@@ -126,6 +128,19 @@ impl LcuConnection {
     /// Gets the WebSocket URL for the LCU
     pub fn get_websocket_url(&self) -> String {
         format!("wss://127.0.0.1:{}", self.port)
+    }
+
+    /// Gets the Basic authentication header for LCU API requests
+    /// Format: Basic <base64("riot:<token>")>
+    pub fn get_auth_header(&self) -> String {
+        if self.token.is_empty() {
+            // If no token, return empty Basic auth (may work for some endpoints)
+            "Basic ".to_string()
+        } else {
+            let credentials = format!("riot:{}", self.token);
+            let encoded = general_purpose::STANDARD.encode(credentials.as_bytes());
+            format!("Basic {}", encoded)
+        }
     }
 }
 
