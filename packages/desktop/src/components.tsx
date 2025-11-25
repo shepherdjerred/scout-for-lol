@@ -183,6 +183,7 @@ type MonitoringSectionProps = {
   loading: string | null;
   onStart: () => void;
   onStop: () => void;
+  onTest?: () => void;
 };
 
 export function MonitoringSection({
@@ -190,6 +191,7 @@ export function MonitoringSection({
   loading,
   onStart,
   onStop,
+  onTest,
 }: MonitoringSectionProps) {
   return (
     <section>
@@ -212,7 +214,7 @@ export function MonitoringSection({
           </span>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6 space-y-3">
           {!isMonitoring ? (
             <button
               onClick={onStart}
@@ -222,13 +224,24 @@ export function MonitoringSection({
               Start Monitoring
             </button>
           ) : (
-            <button
-              onClick={onStop}
-              disabled={loading !== null}
-              className="w-full rounded-lg bg-discord-red px-4 py-3 font-medium text-black transition-colors hover:bg-discord-red/90 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Stop Monitoring
-            </button>
+            <>
+              <button
+                onClick={onStop}
+                disabled={loading !== null}
+                className="w-full rounded-lg bg-discord-red px-4 py-3 font-medium text-black transition-colors hover:bg-discord-red/90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Stop Monitoring
+              </button>
+              {onTest && (
+                <button
+                  onClick={onTest}
+                  disabled={loading !== null}
+                  className="w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Test Event Detection
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
