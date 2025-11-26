@@ -5,6 +5,7 @@ import { getRuneInfo, getRuneIconUrl, getRuneTreeForRune } from "@scout-for-lol/
 const keystoneSize = "3.75rem";
 const secondarySize = "2rem";
 
+// TODO(https://github.com/shepherdjerred/scout-for-lol/issues/184): Consider displaying all primary/secondary runes or stat shards for more detail
 export function Runes({ runes }: { runes: Rune[] }) {
   if (runes.length === 0) {
     return null;

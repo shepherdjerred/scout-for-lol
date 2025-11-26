@@ -1,6 +1,7 @@
 import { palette } from "@scout-for-lol/report/assets/colors.ts";
 import { Damage as BaseDamage } from "@scout-for-lol/report/html/shared/damage.js";
 
+// TODO(https://github.com/shepherdjerred/scout-for-lol/issues/183): Add damage icon for better visual hierarchy
 export function Damage(props: { value: number; percent: number; highlight: boolean }) {
   return (
     <BaseDamage

@@ -10,6 +10,9 @@
  * const guild = mockGuild({ name: "Test Server" });
  * const channel = mockTextChannel({ name: "general" });
  * ```
+ *
+ * TODO(https://github.com/shepherdjerred/scout-for-lol/issues/177): Consider using a proper mocking library instead of type assertions
+ * TODO(https://github.com/shepherdjerred/scout-for-lol/issues/191): Remove type assertion suppressions (Priority 1)
  */
 
 import type {

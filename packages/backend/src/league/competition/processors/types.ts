@@ -18,6 +18,7 @@ export type PlayerWithAccounts = {
 
 /**
  * Leaderboard entry returned by processors
+ * TODO(https://github.com/shepherdjerred/scout-for-lol/issues/190): Add discordId field to enable user position highlighting in embeds
  */
 export type LeaderboardEntry = {
   playerId: PlayerId;
