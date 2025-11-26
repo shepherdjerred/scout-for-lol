@@ -19,6 +19,9 @@
     },
     {
       "path": "./packages/review-dev-tool/tsconfig.json"
+    },
+    {
+      "path": "./packages/desktop/tsconfig.json"
     }
   ]
 }

@@ -82,7 +82,11 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ["eslint.config.ts", "eslint-rules/*.ts"],
+          allowDefaultProject: [
+            "eslint.config.ts",
+            "eslint-rules/*.ts",
+            "packages/*/tailwind.config.ts",
+          ],
         },
         tsconfigRootDir: dirname(fileURLToPath(import.meta.url)),
         extraFileExtensions: [".astro"],

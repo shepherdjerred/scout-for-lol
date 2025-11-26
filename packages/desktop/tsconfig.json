@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": ["vite/client", "@tauri-apps/api", "bun-types"],
+    "paths": {
+      "@scout-for-lol/desktop/*": ["./src/*"],
+      "@scout-for-lol/data/*": ["../data/src/*"],
+      "@scout-for-lol/data": ["../data/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*", "vite.config.ts"],
+  "exclude": ["node_modules", "dist", "src-tauri/target"]
+}
