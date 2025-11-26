@@ -1,14 +1,24 @@
 import { z } from "zod";
 import { first } from "remeda";
 
-const versions = z
-  .array(z.string())
-  .parse(await (await fetch("https://ddragon.leagueoflegends.com/api/versions.json")).json());
+// Allow pinning the version via environment variable for deterministic tests
+const pinnedVersion = Bun.env["DATA_DRAGON_VERSION"];
 
-const firstVersion = first(versions);
+let resolvedVersion: string;
 
-if (firstVersion === undefined) {
-  throw new Error("latest version is undefined");
+if (pinnedVersion) {
+  resolvedVersion = pinnedVersion;
+} else {
+  const versions = z
+    .array(z.string())
+    .parse(await (await fetch("https://ddragon.leagueoflegends.com/api/versions.json")).json());
+
+  const firstVersion = first(versions);
+
+  if (firstVersion === undefined) {
+    throw new Error("latest version is undefined");
+  }
+  resolvedVersion = firstVersion;
 }
 
-export const latestVersion = firstVersion;
+export const latestVersion = resolvedVersion;
