@@ -19,6 +19,7 @@ import {
   saveAIReviewImageToS3,
   saveAIReviewTextToS3,
   saveAIReviewRequestToS3,
+  saveTimelineSummaryToS3,
 } from "@scout-for-lol/backend/storage/s3.js";
 import {
   loadPromptFile,
@@ -69,8 +70,9 @@ Raw timeline JSON:
  *
  * Sends the raw timeline JSON directly to OpenAI for summarization.
  * The AI extracts key events and creates a narrative summary.
+ * Saves both the request and response to S3 for debugging/analysis.
  */
-async function summarizeTimeline(timelineDto: TimelineDto): Promise<string | undefined> {
+async function summarizeTimeline(timelineDto: TimelineDto, matchId: MatchId): Promise<string | undefined> {
   const client = getOpenAIClient();
   if (!client) {
     console.log("[summarizeTimeline] OpenAI API key not configured, skipping timeline summary");
@@ -80,6 +82,7 @@ async function summarizeTimeline(timelineDto: TimelineDto): Promise<string | und
   try {
     // Send the raw timeline JSON directly
     const timelineJson = JSON.stringify(timelineDto, null, 2);
+    const fullPrompt = TIMELINE_SUMMARY_PROMPT + timelineJson;
 
     console.log("[summarizeTimeline] Calling OpenAI to summarize timeline...");
     console.log(`[summarizeTimeline] Timeline JSON size: ${timelineJson.length.toString()} chars`);
@@ -90,7 +93,7 @@ async function summarizeTimeline(timelineDto: TimelineDto): Promise<string | und
       messages: [
         {
           role: "user",
-          content: TIMELINE_SUMMARY_PROMPT + timelineJson,
+          content: fullPrompt,
         },
       ],
       max_completion_tokens: 500,
@@ -106,8 +109,24 @@ async function summarizeTimeline(timelineDto: TimelineDto): Promise<string | und
       return undefined;
     }
 
-    console.log(`[summarizeTimeline] Generated summary (${content.length.toString()} chars)`);
-    return content.trim();
+    const summary = content.trim();
+    console.log(`[summarizeTimeline] Generated summary (${summary.length.toString()} chars)`);
+
+    // Save request and response to S3
+    try {
+      await saveTimelineSummaryToS3({
+        matchId,
+        timelineDto,
+        prompt: TIMELINE_SUMMARY_PROMPT,
+        summary,
+        durationMs: duration,
+      });
+    } catch (s3Error) {
+      console.error("[summarizeTimeline] Failed to save to S3:", s3Error);
+      // Continue even if S3 save fails
+    }
+
+    return summary;
   } catch (error) {
     console.error("[summarizeTimeline] Error summarizing timeline:", error);
     return undefined;
@@ -361,7 +380,7 @@ export async function generateMatchReview(
 
   // Generate timeline summary if we have timeline data
   if (timelineData && curatedData) {
-    const timelineSummary = await summarizeTimeline(timelineData);
+    const timelineSummary = await summarizeTimeline(timelineData, matchId);
     if (timelineSummary) {
       console.log(`[debug][generateMatchReview] Generated timeline summary`);
       curatedData = { ...curatedData, timelineSummary };
