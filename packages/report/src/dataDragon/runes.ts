@@ -70,7 +70,9 @@ export function getRuneTreeInfo(treeId: number):
     }
   | undefined {
   const tree = runes.find((t) => t.id === treeId);
-  if (!tree) return undefined;
+  if (!tree) {
+    return undefined;
+  }
   return {
     name: tree.name,
     icon: tree.icon,
