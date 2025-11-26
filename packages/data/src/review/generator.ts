@@ -55,6 +55,7 @@ export async function generateReviewText(params: {
   topP?: number | undefined;
   curatedData?: CuratedMatchData | undefined;
   systemPromptPrefix?: string | undefined;
+  playerIndex?: number | undefined;
 }): Promise<{ text: string; metadata: ReviewTextMetadata }> {
   const {
     match,
@@ -69,9 +70,10 @@ export async function generateReviewText(params: {
     topP,
     curatedData,
     systemPromptPrefix = "",
+    playerIndex = 0,
   } = params;
 
-  const { matchData } = extractMatchData(match);
+  const { matchData } = extractMatchData(match, playerIndex);
   const promptVariables = buildPromptVariables({
     matchData,
     personality,

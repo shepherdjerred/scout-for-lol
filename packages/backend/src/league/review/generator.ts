@@ -189,8 +189,14 @@ async function generateAIReview(
 
     console.log(`[generateAIReview] Selected personality: ${personality.filename}`);
 
+    // Select a random player from the match (for multi-player tracked games)
+    const playerIndex = Math.floor(Math.random() * match.players.length);
+    const player = match.players[playerIndex];
+    console.log(
+      `[generateAIReview] Selected player ${(playerIndex + 1).toString()}/${match.players.length.toString()}: ${player?.playerConfig.alias ?? "unknown"}`,
+    );
+
     // Get lane context
-    const player = match.players[0];
     const lane = match.queueType === "arena" ? undefined : player && "lane" in player ? player.lane : undefined;
     const laneContextInfo = await getLaneContext(lane);
     console.log(`[generateAIReview] Selected lane context: ${laneContextInfo.filename}`);
@@ -216,6 +222,7 @@ async function generateAIReview(
       model: "gpt-5",
       maxTokens: 25000,
       curatedData,
+      playerIndex,
     });
 
     console.log("[generateAIReview] Successfully generated AI review");

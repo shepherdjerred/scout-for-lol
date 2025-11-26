@@ -11,14 +11,19 @@ import type {
 /**
  * Extract match data from a match object
  * Handles both arena and regular matches
+ * @param match - The completed match data
+ * @param playerIndex - Optional index of the player to extract data for (defaults to 0)
  */
-export function extractMatchData(match: CompletedMatch | ArenaMatch): {
+export function extractMatchData(
+  match: CompletedMatch | ArenaMatch,
+  playerIndex = 0,
+): {
   matchData: Record<string, string>;
   lane: string | undefined;
 } {
   return matchPattern(match)
     .with({ queueType: "arena" }, (arenaMatch: ArenaMatch) => {
-      const player = arenaMatch.players[0];
+      const player = arenaMatch.players[playerIndex] ?? arenaMatch.players[0];
       if (!player) {
         throw new Error("No player data found");
       }
@@ -42,7 +47,7 @@ export function extractMatchData(match: CompletedMatch | ArenaMatch): {
       };
     })
     .otherwise((regularMatch: CompletedMatch) => {
-      const player = regularMatch.players[0];
+      const player = regularMatch.players[playerIndex] ?? regularMatch.players[0];
       if (!player) {
         throw new Error("No player data found");
       }

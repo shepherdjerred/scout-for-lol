@@ -311,9 +311,9 @@ async function processStandardMatch(
   const queueType = completedMatch.queueType ?? "custom";
   const completionMessage = formatGameCompletionMessage(playerAliases, queueType);
 
-  // Combine completion message with review text if available
+  // Combine completion message with review text if available (always include text, even with image)
   let messageContent = completionMessage;
-  if (reviewText && !reviewImage) {
+  if (reviewText) {
     messageContent = `${completionMessage}\n\n${reviewText}`;
   }
 
