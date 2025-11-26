@@ -138,7 +138,9 @@ function createFrameSnapshot(
   for (const [idStr, participantFrame] of Object.entries(frame.participantFrames)) {
     const participantId = parseInt(idStr, 10);
     const info = participantMapping.get(participantId);
-    if (!info) {continue;}
+    if (!info) {
+      continue;
+    }
 
     participantSnapshots.push({
       participantId,
@@ -199,18 +201,28 @@ export function curateTimelineData(timelineDto: TimelineDto, matchDto: MatchDto)
 
       if (event.type === "ELITE_MONSTER_KILL") {
         const result = processEliteMonsterKill(event);
-        if (!result) {continue;}
+        if (!result) {
+          continue;
+        }
 
         keyEvents.push(result.keyEvent);
-        if (result.dragonKill) {dragonsKilled.push(result.dragonKill);}
-        if (result.baronKill) {baronsKilled.push(result.baronKill);}
-        if (result.riftHeraldKill) {riftHeraldsKilled.push(result.riftHeraldKill);}
+        if (result.dragonKill) {
+          dragonsKilled.push(result.dragonKill);
+        }
+        if (result.baronKill) {
+          baronsKilled.push(result.baronKill);
+        }
+        if (result.riftHeraldKill) {
+          riftHeraldsKilled.push(result.riftHeraldKill);
+        }
         continue;
       }
 
       if (event.type === "BUILDING_KILL") {
         const isTower = event.buildingType === "TOWER_BUILDING";
-        if (isTower) {firstTowerTime ??= event.timestamp;}
+        if (isTower) {
+          firstTowerTime ??= event.timestamp;
+        }
         keyEvents.push(processBuildingKill(event));
       }
     }
@@ -223,7 +235,9 @@ export function curateTimelineData(timelineDto: TimelineDto, matchDto: MatchDto)
   for (const minute of snapshotIntervals) {
     const frameIndex = Math.min(minute, timelineDto.info.frames.length - 1);
     const frame = timelineDto.info.frames[frameIndex];
-    if (!frame) {continue;}
+    if (!frame) {
+      continue;
+    }
 
     const snapshot = createFrameSnapshot(frame, minute, participantMapping);
     if (snapshot) {

@@ -385,10 +385,14 @@ async function fetchTimelineIfStandardMatch(
   playersInMatch: PlayerConfigEntry[],
 ): Promise<TimelineDto | undefined> {
   // Don't fetch timeline for arena matches
-  if (matchData.info.queueId === 1700) {return undefined;}
+  if (matchData.info.queueId === 1700) {
+    return undefined;
+  }
 
   const firstPlayer = playersInMatch[0];
-  if (!firstPlayer) {return undefined;}
+  if (!firstPlayer) {
+    return undefined;
+  }
 
   const playerRegion = firstPlayer.league.leagueAccount.region;
   try {

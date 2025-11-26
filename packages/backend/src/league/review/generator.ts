@@ -9,6 +9,7 @@ import {
   selectRandomStyleAndTheme,
   curateMatchData,
   type CuratedMatchData,
+  type ReviewTextMetadata,
 } from "@scout-for-lol/data";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -17,6 +18,7 @@ import config from "@scout-for-lol/backend/configuration.js";
 import {
   saveAIReviewImageToS3,
   saveAIReviewTextToS3,
+  saveAIReviewRequestToS3,
   saveTimelineSummaryToS3,
 } from "@scout-for-lol/backend/storage/s3.js";
 import {
@@ -263,7 +265,7 @@ export type ReviewMetadata = {
 async function generateAIReview(
   match: CompletedMatch | ArenaMatch,
   curatedData?: CuratedMatchData,
-): Promise<{ review: string; metadata: ReviewMetadata } | undefined> {
+): Promise<{ review: string; metadata: ReviewMetadata; textMetadata: ReviewTextMetadata } | undefined> {
   const client = getOpenAIClient();
   if (!client) {
     console.log("[generateAIReview] OpenAI API key not configured, skipping AI review");
@@ -320,6 +322,7 @@ async function generateAIReview(
         reviewerName: result.metadata.reviewerName,
         playerName: result.metadata.playerName,
       },
+      textMetadata: result.metadata,
     };
   } catch (error) {
     console.error("[generateAIReview] Error generating AI review:", error);
@@ -392,15 +395,24 @@ export async function generateMatchReview(
     return undefined;
   }
 
-  const { review: reviewText, metadata } = aiReviewResult;
+  const { review: reviewText, metadata, textMetadata } = aiReviewResult;
 
-  // Save review text to S3
+  // Save review text and request data to S3
   const queueType = match.queueType === "arena" ? "arena" : (match.queueType ?? "unknown");
+  const trackedPlayerAliases = match.players.map((p) => p.playerConfig.alias);
+
   try {
-    const trackedPlayerAliases = match.players.map((p) => p.playerConfig.alias);
     await saveAIReviewTextToS3(matchId, reviewText, queueType, trackedPlayerAliases);
   } catch (error) {
     console.error("[generateMatchReview] Failed to save review text to S3:", error);
+    // Continue even if S3 upload fails
+  }
+
+  // Save the AI request data (prompts and parameters) to S3
+  try {
+    await saveAIReviewRequestToS3(matchId, textMetadata, queueType, trackedPlayerAliases);
+  } catch (error) {
+    console.error("[generateMatchReview] Failed to save AI request to S3:", error);
     // Continue even if S3 upload fails
   }
 
