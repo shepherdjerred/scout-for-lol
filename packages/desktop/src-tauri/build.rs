@@ -36,7 +36,7 @@ fn main() {
                             && path
                                 .file_name()
                                 .and_then(|n| n.to_str())
-                                .map_or(false, |n| n.contains("webview2-com-sys"))
+                                .is_some_and(|n| n.contains("webview2-com-sys"))
                         {
                             // Check x64 directory (most common)
                             let x64_dll = path.join("out").join("x64").join("WebView2Loader.dll");
