@@ -10,7 +10,6 @@ import {
   curateMatchData,
   type CuratedMatchData,
   type ReviewTextMetadata,
-  curateTimelineData,
 } from "@scout-for-lol/data";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -50,7 +49,9 @@ function getGeminiClient(): GoogleGenerativeAI | undefined {
   return new GoogleGenerativeAI(config.geminiApiKey);
 }
 
-const TIMELINE_SUMMARY_PROMPT = `You are a League of Legends analyst. Analyze this match timeline data and provide a concise summary of how the game unfolded.
+const TIMELINE_SUMMARY_PROMPT = `You are a League of Legends analyst. Analyze this raw match timeline data from the Riot API and provide a concise summary of how the game unfolded.
+
+The timeline contains frames with events like CHAMPION_KILL, ELITE_MONSTER_KILL (dragons, baron, herald), BUILDING_KILL (towers, inhibitors), and participantFrames showing gold/level progression.
 
 Focus on:
 - Early game: First blood, early kills, lane advantages
@@ -60,16 +61,16 @@ Focus on:
 
 Keep the summary factual and under 300 words. Use champion names when describing kills/events.
 
-Timeline data:
+Raw timeline JSON:
 `;
 
 /**
  * Summarize raw timeline data using OpenAI
  *
- * Takes the curated timeline events and asks OpenAI to create a narrative summary
- * that can be included in the review context for better game progression understanding.
+ * Sends the raw timeline JSON directly to OpenAI for summarization.
+ * The AI extracts key events and creates a narrative summary.
  */
-async function summarizeTimeline(timelineDto: TimelineDto, matchDto: MatchDto): Promise<string | undefined> {
+async function summarizeTimeline(timelineDto: TimelineDto): Promise<string | undefined> {
   const client = getOpenAIClient();
   if (!client) {
     console.log("[summarizeTimeline] OpenAI API key not configured, skipping timeline summary");
@@ -77,24 +78,11 @@ async function summarizeTimeline(timelineDto: TimelineDto, matchDto: MatchDto): 
   }
 
   try {
-    // Use the curated timeline data for a more readable format
-    const curatedTimeline = curateTimelineData(timelineDto, matchDto);
-
-    // Build a concise representation of the timeline for the AI
-    const timelineContext = JSON.stringify(
-      {
-        summary: curatedTimeline.summary,
-        keyEvents: curatedTimeline.keyEvents.slice(0, 50), // Limit events to avoid token overflow
-        goldSnapshots: curatedTimeline.snapshots.map((s) => ({
-          minute: s.minute,
-          goldDiff: s.goldDifference,
-        })),
-      },
-      null,
-      2,
-    );
+    // Send the raw timeline JSON directly
+    const timelineJson = JSON.stringify(timelineDto, null, 2);
 
     console.log("[summarizeTimeline] Calling OpenAI to summarize timeline...");
+    console.log(`[summarizeTimeline] Timeline JSON size: ${timelineJson.length.toString()} chars`);
     const startTime = Date.now();
 
     const response = await client.chat.completions.create({
@@ -102,7 +90,7 @@ async function summarizeTimeline(timelineDto: TimelineDto, matchDto: MatchDto): 
       messages: [
         {
           role: "user",
-          content: TIMELINE_SUMMARY_PROMPT + timelineContext,
+          content: TIMELINE_SUMMARY_PROMPT + timelineJson,
         },
       ],
       max_completion_tokens: 500,
@@ -372,8 +360,8 @@ export async function generateMatchReview(
   }
 
   // Generate timeline summary if we have timeline data
-  if (timelineData && rawMatchData && curatedData) {
-    const timelineSummary = await summarizeTimeline(timelineData, rawMatchData);
+  if (timelineData && curatedData) {
+    const timelineSummary = await summarizeTimeline(timelineData);
     if (timelineSummary) {
       console.log(`[debug][generateMatchReview] Generated timeline summary`);
       curatedData = { ...curatedData, timelineSummary };
