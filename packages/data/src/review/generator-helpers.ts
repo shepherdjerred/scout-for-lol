@@ -132,6 +132,9 @@ export function buildFriendsContext(match: CompletedMatch | ArenaMatch, playerIn
   }
 
   const lastFriend = friendDescriptions.pop();
+  if (!lastFriend) {
+    return "";
+  }
   return `Their friends ${friendDescriptions.join(", ")} and ${lastFriend} were also in this match.`;
 }
 
