@@ -2,7 +2,6 @@
 import type { Directory, Secret, Container } from "@dagger.io/dagger";
 import { func, argument, object } from "@dagger.io/dagger";
 import {
-  checkBackend,
   buildBackendImage,
   publishBackendImage,
   smokeTestBackendImage,
@@ -91,87 +90,11 @@ function parsePreviewUrl(wranglerOutput: string): string | undefined {
 @object()
 export class ScoutForLol {
   /**
-   * Run all checks (backend, report, data, frontend, desktop)
-   * @param source The source directory
-   * @returns A message indicating completion
-   */
-  @func()
-  async check(
-    @argument({
-      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
-      defaultPath: ".",
-    })
-    source: Directory,
-  ): Promise<string> {
-    logWithTimestamp("🔍 Starting comprehensive check process");
-    logWithTimestamp(
-      "📋 This includes TypeScript type checking, ESLint, tests for all packages, Rust checks for desktop, and custom ESLint rules tests",
-    );
-
-    logWithTimestamp("📁 Prepared source directories for all packages");
-
-    // Run checks in parallel - force container execution with .sync()
-    await withTiming("parallel package checks (lint, typecheck, tests)", async () => {
-      logWithTimestamp("🔄 Running lint, typecheck, and tests in parallel for all packages...");
-      logWithTimestamp("📦 Packages being checked: backend, report, data, frontend, desktop, eslint-rules");
-
-      // Force execution of all containers in parallel
-      await Promise.all([
-        withTiming("backend check (lint + typecheck + tests)", async () => {
-          const container = checkBackend(source);
-          await container.sync();
-          return container;
-        }),
-        withTiming("report check (lint + typecheck + tests)", async () => {
-          const container = checkReport(source);
-          await container.sync();
-          return container;
-        }),
-        withTiming("data check (lint + typecheck)", async () => {
-          const container = checkData(source);
-          await container.sync();
-          return container;
-        }),
-        withTiming("frontend check (lint + typecheck)", async () => {
-          const container = checkFrontend(source);
-          await container.sync();
-          return container;
-        }),
-        withTiming("desktop check (lint + typecheck + Rust fmt + clippy + tests)", async () => {
-          const container = checkDesktop(source);
-          await container.sync();
-          return container;
-        }),
-        withTiming("eslint-rules tests", async () => {
-          const container = getBunNodeContainer(source)
-            .withExec(["bun", "install", "--frozen-lockfile"])
-            .withExec(["bun", "test", "eslint-rules/"]);
-          await container.sync();
-          return container;
-        }),
-        withTiming("code duplication check", async () => {
-          const container = getBunNodeContainer(source)
-            .withExec(["bun", "install", "--frozen-lockfile"])
-            .withExec(["bun", "run", "scripts/check-duplication.ts"]);
-          await container.sync();
-          return container;
-        }),
-      ]);
-    });
-
-    logWithTimestamp("🎉 All checks completed successfully");
-    logWithTimestamp(
-      "✅ All packages passed: TypeScript type checking, ESLint linting, tests, Rust checks, and custom ESLint rules tests",
-    );
-    return "All checks completed successfully";
-  }
-
-  /**
    * Run all checks and output GitHub Actions annotations for failures.
    *
-   * This function runs the same checks as `check()` but captures output
-   * and emits GitHub Actions annotations (::error, ::warning) that appear
-   * inline in PR diffs.
+   * This function runs all checks (backend, report, data, frontend, desktop,
+   * eslint-rules, duplication) and captures output to emit GitHub Actions
+   * annotations (::error, ::warning) that appear inline in PR diffs.
    *
    * @param source The source directory
    * @returns A message indicating completion with annotation output
