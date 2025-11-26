@@ -12,6 +12,9 @@ export function Runes({ runes }: { runes: Rune[] }) {
 
   // First rune is the keystone (from primary tree)
   const keystone = runes[0];
+  if (!keystone) {
+    return null;
+  }
   const keystoneInfo = getRuneInfo(keystone.id);
 
   // Fifth rune (index 4) is the first from secondary tree, use it to get secondary tree icon
