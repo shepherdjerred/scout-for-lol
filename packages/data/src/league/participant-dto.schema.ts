@@ -15,7 +15,7 @@ export const ParticipantDtoSchema = z
     baronKills: z.number(),
     basicPings: z.number(),
     bountyLevel: z.number().optional(),
-    challenges: ChallengesDtoSchema,
+    challenges: ChallengesDtoSchema.optional(),
     champExperience: z.number(),
     champLevel: z.number(),
     championId: z.number(),
