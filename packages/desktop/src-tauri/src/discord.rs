@@ -33,7 +33,7 @@ impl DiscordClient {
 
         let client = reqwest::Client::builder()
             .build()
-            .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+            .map_err(|e| format!("Failed to create HTTP client: {e}"))?;
 
         let discord_client = Self {
             token,
@@ -60,7 +60,7 @@ impl DiscordClient {
             .header("User-Agent", "Scout-for-LoL-Desktop/0.1.0")
             .send()
             .await
-            .map_err(|e| format!("Failed to connect to Discord API: {}", e))?;
+            .map_err(|e| format!("Failed to connect to Discord API: {e}"))?;
 
         if response.status().is_success() {
             info!("Discord connection test successful");
@@ -72,7 +72,7 @@ impl DiscordClient {
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
             error!("Discord API error: {} - {}", status, error_text);
-            Err(format!("Discord API error: {} - {}", status, error_text))
+            Err(format!("Discord API error: {status} - {error_text}"))
         }
     }
 
@@ -98,7 +98,7 @@ impl DiscordClient {
             .await
             .map_err(|e| {
                 error!("Failed to send Discord message request: {}", e);
-                format!("Failed to send Discord message: {}", e)
+                format!("Failed to send Discord message: {e}")
             })?;
 
         if response.status().is_success() {
@@ -119,16 +119,13 @@ impl DiscordClient {
                 "Failed to post Discord message (status {}): {} - Message was: {}",
                 status, error_text, message_preview
             );
-            Err(format!(
-                "Failed to post message: {} - {}",
-                status, error_text
-            ))
+            Err(format!("Failed to post message: {status} - {error_text}"))
         }
     }
 
     /// Posts a game event to Discord
     pub async fn post_game_event(&self, event_type: &str, details: &str) -> Result<(), String> {
-        let message = format!("**{}** - {}", event_type, details);
+        let message = format!("**{event_type}** - {details}");
         self.post_message(message).await
     }
 
@@ -140,9 +137,9 @@ impl DiscordClient {
         game_time: &str,
     ) -> Result<(), String> {
         let message = if killer == "Unknown" {
-            format!("💀 **{}** died at {}", victim, game_time)
+            format!("💀 **{victim}** died at {game_time}")
         } else {
-            format!("💀 **{}** killed **{}** at {}", killer, victim, game_time)
+            format!("💀 **{killer}** killed **{victim}** at {game_time}")
         };
         self.post_message(message).await
     }
@@ -188,13 +185,13 @@ impl DiscordClient {
             _ => "🎯",
         };
 
-        let message = format!("{} **{}** took {} at {}", emoji, team, objective, game_time);
+        let message = format!("{emoji} **{team}** took {objective} at {game_time}");
         self.post_message(message).await
     }
 
     /// Posts a game start event
     pub async fn post_game_start(&self, game_mode: &str, map: &str) -> Result<(), String> {
-        let message = format!("🎮 **Game Started!** {} on {}", game_mode, map);
+        let message = format!("🎮 **Game Started!** {game_mode} on {map}");
         self.post_message(message).await
     }
 
@@ -204,10 +201,7 @@ impl DiscordClient {
         winning_team: &str,
         game_duration: &str,
     ) -> Result<(), String> {
-        let message = format!(
-            "🏁 **Game Ended!** {} won after {}",
-            winning_team, game_duration
-        );
+        let message = format!("🏁 **Game Ended!** {winning_team} won after {game_duration}");
         self.post_message(message).await
     }
 
@@ -218,24 +212,19 @@ impl DiscordClient {
         victim: &str,
         game_time: &str,
     ) -> Result<(), String> {
-        let message = format!(
-            "🩸 **FIRST BLOOD!** **{}** killed **{}** at {}",
-            killer, victim, game_time
-        );
+        let message = format!("🩸 **FIRST BLOOD!** **{killer}** killed **{victim}** at {game_time}");
         self.post_message(message).await
     }
 
     /// Posts an ace event
     pub async fn post_ace(&self, team: &str, game_time: &str) -> Result<(), String> {
-        let message = format!(
-            "💀 **ACE!** **{}** wiped the enemy team at {}",
-            team, game_time
-        );
+        let message = format!("💀 **ACE!** **{team}** wiped the enemy team at {game_time}");
         self.post_message(message).await
     }
 
     /// Gets the current Discord connection status
-    pub fn get_status(&self) -> DiscordStatus {
+    #[must_use]
+    pub const fn get_status(&self) -> DiscordStatus {
         DiscordStatus {
             connected: true,
             channel_name: None, // TODO: Fetch actual channel name
@@ -310,7 +299,7 @@ mod tests {
     fn test_game_event_message_format() {
         let event_type = "Game Start";
         let details = "Summoner's Rift 5v5";
-        let message = format!("**{}** - {}", event_type, details);
+        let message = format!("**{event_type}** - {details}");
         assert_eq!(message, "**Game Start** - Summoner's Rift 5v5");
     }
 
@@ -319,7 +308,7 @@ mod tests {
         let killer = "Yasuo";
         let victim = "Zed";
         let game_time = "15:32";
-        let message = format!("💀 **{}** killed **{}** at {}", killer, victim, game_time);
+        let message = format!("💀 **{killer}** killed **{victim}** at {game_time}");
         assert_eq!(message, "💀 **Yasuo** killed **Zed** at 15:32");
     }
 
@@ -380,7 +369,7 @@ mod tests {
     fn test_game_start_message() {
         let game_mode = "Ranked Solo/Duo";
         let map = "Summoner's Rift";
-        let message = format!("🎮 **Game Started!** {} on {}", game_mode, map);
+        let message = format!("🎮 **Game Started!** {game_mode} on {map}");
         assert!(message.contains("Game Started!"));
         assert!(message.contains(game_mode));
         assert!(message.contains(map));

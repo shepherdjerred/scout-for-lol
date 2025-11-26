@@ -1,4 +1,4 @@
-//! Scout for LoL Desktop Application
+//! Scout for `LoL` Desktop Application
 //!
 //! A Tauri-based desktop client for monitoring League of Legends games
 //! and posting live updates to Discord channels.
@@ -16,12 +16,14 @@ mod lcu;
 #[cfg(test)]
 mod tests;
 
-use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::{Emitter, Manager, State};
 use tokio::sync::Mutex;
 use tracing::{error, info};
+
+#[cfg(target_os = "windows")]
+use std::fs;
 
 struct AppState {
     lcu_connection: Arc<Mutex<Option<lcu::LcuConnection>>>,
@@ -187,6 +189,7 @@ struct EventTestResult {
 }
 
 #[derive(serde::Serialize)]
+#[allow(dead_code)]
 struct PollingStatusResult {
     is_polling: bool,
     last_poll_attempted: bool,
@@ -301,20 +304,20 @@ async fn test_event_detection(state: State<'_, AppState>) -> Result<EventTestRes
                         error_message: None,
                         raw_data_keys: Some(keys),
                     });
-                } else {
-                    let keys: Vec<String> = data
-                        .as_object()
-                        .map(|o| o.keys().map(|k| k.to_string()).collect())
-                        .unwrap_or_default();
-
-                    return Ok(EventTestResult {
-                        success: false,
-                        event_count: 0,
-                        events_found: vec![],
-                        error_message: Some("No events array found in response".to_string()),
-                        raw_data_keys: Some(keys),
-                    });
                 }
+
+                let keys: Vec<String> = data
+                    .as_object()
+                    .map(|o| o.keys().map(|k| k.to_string()).collect())
+                    .unwrap_or_default();
+
+                return Ok(EventTestResult {
+                    success: false,
+                    event_count: 0,
+                    events_found: vec![],
+                    error_message: Some("No events array found in response".to_string()),
+                    raw_data_keys: Some(keys),
+                });
             }
             Ok(EventTestResult {
                 success: false,
@@ -372,6 +375,7 @@ fn extract_embedded_dll() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(not(target_os = "windows"))]
+#[allow(dead_code)]
 fn extract_embedded_dll() -> Result<(), Box<dyn std::error::Error>> {
     // No-op on non-Windows platforms
     Ok(())

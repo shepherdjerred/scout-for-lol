@@ -91,6 +91,7 @@ struct GameState {
     /// Set of player names on the enemy team (for ace detection)
     enemy_players: HashSet<String>,
     /// Map of enemy players killed recently (for ace detection) - maps victim name to kill timestamp
+    #[allow(dead_code)]
     recent_kills: HashMap<String, f64>,
     /// Highest EventID we've processed (to only process new events)
     highest_processed_event_id: Option<i64>,

@@ -41,13 +41,13 @@ impl Config {
         // Ensure parent directory exists
         if let Some(parent) = config_path.parent() {
             fs::create_dir_all(parent)
-                .map_err(|e| format!("Failed to create config directory: {}", e))?;
+                .map_err(|e| format!("Failed to create config directory: {e}"))?;
         }
 
         let json = serde_json::to_string_pretty(self)
-            .map_err(|e| format!("Failed to serialize config: {}", e))?;
+            .map_err(|e| format!("Failed to serialize config: {e}"))?;
 
-        fs::write(config_path, json).map_err(|e| format!("Failed to write config file: {}", e))?;
+        fs::write(config_path, json).map_err(|e| format!("Failed to write config file: {e}"))?;
 
         info!("Saved config to {:?}", config_path);
         Ok(())
@@ -66,7 +66,7 @@ mod tests {
             channel_id: Some("123456".to_string()),
         };
 
-        let json = serde_json::to_string(&config).unwrap();
+        let json = serde_json::to_string(&config).expect("test should serialize");
         assert!(json.contains("botToken"));
         assert!(json.contains("channelId"));
         assert!(json.contains("test-token"));
@@ -76,7 +76,7 @@ mod tests {
     #[test]
     fn test_config_deserialization() {
         let json = r#"{"botToken":"token123","channelId":"channel456"}"#;
-        let config: Config = serde_json::from_str(json).unwrap();
+        let config: Config = serde_json::from_str(json).expect("test should deserialize");
 
         assert_eq!(config.bot_token, Some("token123".to_string()));
         assert_eq!(config.channel_id, Some("channel456".to_string()));
@@ -103,7 +103,7 @@ mod tests {
         };
 
         // Save
-        config.save(&config_path).unwrap();
+        config.save(&config_path).expect("test should save");
 
         // Load
         let loaded = Config::load(&config_path);
