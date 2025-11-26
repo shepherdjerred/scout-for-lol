@@ -85,7 +85,6 @@ export default tseslint.config(
           allowDefaultProject: [
             "eslint.config.ts",
             "eslint-rules/*.ts",
-            "packages/*/vite.config.ts",
             "packages/*/tailwind.config.ts",
           ],
         },

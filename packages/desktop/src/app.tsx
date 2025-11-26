@@ -117,7 +117,9 @@ export default function App() {
     });
 
     return () => {
-      void unlisten.then((fn) => fn());
+      void unlisten.then((fn) => {
+        fn();
+      });
     };
   }, []);
 
@@ -201,7 +203,7 @@ export default function App() {
 
           addLog("info", `Gameflow phase: ${diagnostics.gameflow_phase}`);
           if (diagnostics.live_client_data_available) {
-            addLog("info", `Live Client Data API: Available (status: ${diagnostics.live_client_data_status})`);
+            addLog("info", `Live Client Data API: Available (status: ${String(diagnostics.live_client_data_status)})`);
           } else {
             addLog("error", `Live Client Data API: NOT AVAILABLE`);
             addLog("error", `To enable: League Client → Settings → Game → Enable Live Client Data API`);
@@ -255,7 +257,7 @@ export default function App() {
       }>("test_event_detection");
 
       if (result.success) {
-        addLog("info", `Found ${result.event_count} events`);
+        addLog("info", `Found ${String(result.event_count)} events`);
         if (result.events_found.length > 0) {
           addLog("info", `Event types: ${result.events_found.join(", ")}`);
           const killEvents = result.events_found.filter((e) => e.includes("Kill"));
@@ -269,7 +271,7 @@ export default function App() {
           addLog("info", `Available data keys: ${result.raw_data_keys.join(", ")}`);
         }
       } else {
-        addLog("error", `Event detection failed: ${result.error_message || "Unknown error"}`);
+        addLog("error", `Event detection failed: ${result.error_message ?? "Unknown error"}`);
         if (result.raw_data_keys) {
           addLog("info", `Available data keys: ${result.raw_data_keys.join(", ")}`);
         }
