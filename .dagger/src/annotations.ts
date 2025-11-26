@@ -258,6 +258,143 @@ export function parseBunTestOutput(output: string, workspacePrefix = "/workspace
 }
 
 /**
+ * Parse Rust compiler/clippy output and convert to annotations
+ *
+ * Rust compiler output format:
+ * warning: unused variable: `x`
+ *   --> src/main.rs:10:5
+ *
+ * error[E0308]: mismatched types
+ *   --> src/main.rs:15:9
+ */
+export function parseRustOutput(output: string, workspacePrefix = "/workspace/"): Annotation[] {
+  const annotations: Annotation[] = [];
+  const lines = output.split("\n");
+
+  let currentLevel: "error" | "warning" | null = null;
+  let currentMessage = "";
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i] ?? "";
+
+    // Check for error/warning line
+    // eslint-disable-next-line regexp/no-super-linear-backtracking -- Input is bounded by line length, no risk
+    const errorMatch = /^error(?:\[E\d+\])?:\s+(.+)$/.exec(line);
+    // eslint-disable-next-line regexp/no-super-linear-backtracking -- Input is bounded by line length, no risk
+    const warningMatch = /^warning(?:\[W\d+\])?:\s+(.+)$/.exec(line);
+
+    if (errorMatch !== null) {
+      currentLevel = "error";
+      currentMessage = errorMatch[1] ?? "";
+    } else if (warningMatch !== null) {
+      currentLevel = "warning";
+      currentMessage = warningMatch[1] ?? "";
+    }
+
+    // Check for location line (follows error/warning)
+    const locationMatch = /^\s+-->\s+([^:]+):(\d+):(\d+)$/.exec(line);
+    if (locationMatch !== null && currentLevel !== null) {
+      const [, fileMatch, lineMatch, colMatch] = locationMatch;
+      if (fileMatch !== undefined && lineMatch !== undefined && colMatch !== undefined) {
+        let filePath = fileMatch;
+        if (filePath.startsWith(workspacePrefix)) {
+          filePath = filePath.slice(workspacePrefix.length);
+        }
+
+        annotations.push({
+          level: currentLevel,
+          file: filePath,
+          line: parseInt(lineMatch, 10),
+          col: parseInt(colMatch, 10),
+          message: currentMessage,
+          title: currentLevel === "error" ? "rustc" : "clippy",
+        });
+      }
+      currentLevel = null;
+      currentMessage = "";
+    }
+  }
+
+  return annotations;
+}
+
+/**
+ * Parse cargo fmt diff output to find files needing formatting
+ *
+ * cargo fmt --check outputs diffs like:
+ * Diff in /path/to/file.rs at line 10:
+ */
+export function parseCargoFmtOutput(output: string, workspacePrefix = "/workspace/"): Annotation[] {
+  const annotations: Annotation[] = [];
+  const lines = output.split("\n");
+
+  for (const line of lines) {
+    // Check for "Diff in" lines from cargo fmt --check
+    const diffMatch = /^Diff in ([^\s]+) at line (\d+):?/.exec(line);
+    if (diffMatch !== null) {
+      const [, fileMatch, lineMatch] = diffMatch;
+      if (fileMatch !== undefined && lineMatch !== undefined) {
+        let filePath = fileMatch;
+        if (filePath.startsWith(workspacePrefix)) {
+          filePath = filePath.slice(workspacePrefix.length);
+        }
+
+        annotations.push({
+          level: "warning",
+          file: filePath,
+          line: parseInt(lineMatch, 10),
+          message: "File needs formatting",
+          title: "cargo fmt",
+        });
+      }
+    }
+  }
+
+  return annotations;
+}
+
+/**
+ * Parse cargo test output for test failures
+ *
+ * cargo test output format:
+ * ---- tests::test_name stdout ----
+ * thread 'tests::test_name' panicked at src/lib.rs:10:5:
+ */
+export function parseCargoTestOutput(output: string, workspacePrefix = "/workspace/"): Annotation[] {
+  const annotations: Annotation[] = [];
+  const lines = output.split("\n");
+
+  for (const line of lines) {
+    // Check for panic location
+    const panicMatch = /panicked at ([^:]+):(\d+):(\d+)/.exec(line);
+    if (panicMatch !== null) {
+      const [, fileMatch, lineMatch, colMatch] = panicMatch;
+      if (fileMatch !== undefined && lineMatch !== undefined && colMatch !== undefined) {
+        let filePath = fileMatch;
+        if (filePath.startsWith(workspacePrefix)) {
+          filePath = filePath.slice(workspacePrefix.length);
+        }
+
+        // Avoid duplicates
+        const existing = annotations.find((a) => a.file === filePath && a.line === parseInt(lineMatch, 10));
+        if (existing === undefined) {
+          annotations.push({
+            level: "error",
+            file: filePath,
+            line: parseInt(lineMatch, 10),
+            col: parseInt(colMatch, 10),
+            message: "Test panicked at this location",
+            title: "cargo test",
+          });
+        }
+      }
+    }
+  }
+
+  return annotations;
+}
+
+/**
  * Aggregate check result with annotations
  */
 export type CheckResult = {

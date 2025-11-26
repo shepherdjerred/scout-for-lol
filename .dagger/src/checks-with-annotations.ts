@@ -8,11 +8,15 @@
 /* eslint-disable import/no-unresolved -- Dagger modules and internal paths are resolved at runtime by Dagger */
 import type { Directory, Container } from "@dagger.io/dagger";
 import { installWorkspaceDeps, getBunNodeContainer } from "@scout-for-lol/.dagger/src/base";
+import { installDesktopDeps } from "@scout-for-lol/.dagger/src/desktop";
 import {
   type CheckResult,
   parseESLintOutput,
   parseTypeScriptOutput,
   parseBunTestOutput,
+  parseRustOutput,
+  parseCargoFmtOutput,
+  parseCargoTestOutput,
   formatAllAnnotations,
   createCheckSummary,
 } from "@scout-for-lol/.dagger/src/annotations";
@@ -207,6 +211,121 @@ async function checkESLintRulesWithAnnotations(workspaceSource: Directory): Prom
 }
 
 /**
+ * Run desktop TypeScript checks (typecheck + lint)
+ */
+async function checkDesktopTypeScriptWithAnnotations(workspaceSource: Directory): Promise<CheckResult[]> {
+  const results: CheckResult[] = [];
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Dagger types not available at lint time
+  const container: Container = installDesktopDeps(workspaceSource);
+
+  // Run typecheck
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- Dagger types not available at lint time
+  const typeResult = await runAndCapture(container.withWorkdir("/workspace/packages/desktop"), ["bun", "run", "typecheck"]);
+  results.push({
+    name: "desktop/typecheck",
+    passed: typeResult.exitCode === 0,
+    output: typeResult.stdout + typeResult.stderr,
+    annotations: parseTypeScriptOutput(typeResult.stdout + typeResult.stderr),
+  });
+
+  // Run lint
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- Dagger types not available at lint time
+  const lintResult = await runAndCapture(container.withWorkdir("/workspace/packages/desktop"), ["bun", "run", "lint"]);
+
+  // Try to get JSON output for better annotations
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- Dagger types not available at lint time
+  const jsonResult = await runAndCapture(container.withWorkdir("/workspace/packages/desktop"), [
+    "bunx",
+    "eslint",
+    "src",
+    "--format",
+    "json",
+  ]);
+
+  let lintAnnotations = parseESLintOutput(jsonResult.stdout);
+  if (lintAnnotations.length === 0) {
+    lintAnnotations = parseTypeScriptOutput(lintResult.stdout + lintResult.stderr);
+  }
+
+  results.push({
+    name: "desktop/lint",
+    passed: lintResult.exitCode === 0,
+    output: lintResult.stdout + lintResult.stderr,
+    annotations: lintAnnotations,
+  });
+
+  return results;
+}
+
+/**
+ * Run desktop Rust checks (fmt, clippy, tests)
+ */
+async function checkDesktopRustWithAnnotations(workspaceSource: Directory): Promise<CheckResult[]> {
+  const results: CheckResult[] = [];
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Dagger types not available at lint time
+  const container: Container = installDesktopDeps(workspaceSource);
+
+  // First build the frontend (required for Rust checks)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- Dagger types not available at lint time
+  const containerWithFrontend = container
+    .withWorkdir("/workspace/packages/desktop")
+    .withExec(["bun", "run", "build:frontend"]);
+
+  const rustWorkdir = "/workspace/packages/desktop/src-tauri";
+
+  // Run cargo fmt --check
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- Dagger types not available at lint time
+  const fmtResult = await runAndCapture(containerWithFrontend.withWorkdir(rustWorkdir), [
+    "cargo",
+    "fmt",
+    "--",
+    "--check",
+  ]);
+  results.push({
+    name: "desktop/rust-fmt",
+    passed: fmtResult.exitCode === 0,
+    output: fmtResult.stdout + fmtResult.stderr,
+    annotations: parseCargoFmtOutput(fmtResult.stdout + fmtResult.stderr),
+  });
+
+  // Run cargo clippy
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- Dagger types not available at lint time
+  const clippyResult = await runAndCapture(containerWithFrontend.withWorkdir(rustWorkdir), [
+    "cargo",
+    "clippy",
+    "--all-targets",
+    "--all-features",
+    "--",
+    "-D",
+    "warnings",
+  ]);
+  results.push({
+    name: "desktop/clippy",
+    passed: clippyResult.exitCode === 0,
+    output: clippyResult.stdout + clippyResult.stderr,
+    annotations: parseRustOutput(clippyResult.stdout + clippyResult.stderr),
+  });
+
+  // Run cargo test
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- Dagger types not available at lint time
+  const testResult = await runAndCapture(containerWithFrontend.withWorkdir(rustWorkdir), [
+    "cargo",
+    "test",
+    "--verbose",
+  ]);
+  results.push({
+    name: "desktop/rust-test",
+    passed: testResult.exitCode === 0,
+    output: testResult.stdout + testResult.stderr,
+    annotations: parseCargoTestOutput(testResult.stdout + testResult.stderr),
+  });
+
+  return results;
+}
+
+/**
  * Run code duplication check
  */
 async function checkDuplicationWithAnnotations(workspaceSource: Directory): Promise<CheckResult> {
@@ -251,6 +370,14 @@ export async function runAllChecksWithAnnotations(workspaceSource: Directory): P
   for (const results of packageResults) {
     allResults.push(...results);
   }
+
+  // Run desktop checks (uses different container - Rust/Tauri)
+  const [desktopTypeScriptResults, desktopRustResults] = await Promise.all([
+    checkDesktopTypeScriptWithAnnotations(workspaceSource),
+    checkDesktopRustWithAnnotations(workspaceSource),
+  ]);
+  allResults.push(...desktopTypeScriptResults);
+  allResults.push(...desktopRustResults);
 
   // Run additional checks in parallel
   const [eslintRulesResult, duplicationResult] = await Promise.all([

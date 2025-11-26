@@ -167,7 +167,6 @@ export class ScoutForLol {
   }
 
   /**
-<<<<<<< HEAD
    * Run all checks and output GitHub Actions annotations for failures.
    *
    * This function runs the same checks as `check()` but captures output
