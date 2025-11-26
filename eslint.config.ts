@@ -85,8 +85,8 @@ export default tseslint.config(
           allowDefaultProject: [
             "eslint.config.ts",
             "eslint-rules/*.ts",
-            "**/vite.config.ts",
-            "**/tailwind.config.ts",
+            "packages/*/vite.config.ts",
+            "packages/*/tailwind.config.ts",
           ],
         },
         tsconfigRootDir: dirname(fileURLToPath(import.meta.url)),
