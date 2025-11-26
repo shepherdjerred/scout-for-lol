@@ -1,7 +1,8 @@
-import type { MatchDto as MatchDto, ParticipantDto as ParticipantDto } from "@scout-for-lol/data";
+import type { MatchDto as MatchDto, ParticipantDto as ParticipantDto, TimelineDto } from "@scout-for-lol/data";
 import { getItemInfo, summoner, getRuneInfo, getRuneTreeName, getChampionInfo } from "@scout-for-lol/report/index";
 import { first, keys, pickBy } from "remeda";
 import type { CuratedParticipant, CuratedMatchData } from "@scout-for-lol/data/review/curator-types.js";
+import { curateTimelineData } from "@scout-for-lol/data/review/timeline-curator.js";
 
 function getSummonerSpellName(spellId: number): string | undefined {
   return first(keys(pickBy(summoner.data, (s) => s.key === spellId.toString())));
@@ -295,8 +296,11 @@ export async function curateParticipantData(participant: ParticipantDto): Promis
   };
 }
 
-export async function curateMatchData(matchDto: MatchDto): Promise<CuratedMatchData> {
+export async function curateMatchData(matchDto: MatchDto, timelineDto?: TimelineDto): Promise<CuratedMatchData> {
   const participants = await Promise.all(matchDto.info.participants.map(curateParticipantData));
+
+  // Curate timeline data if provided
+  const timeline = timelineDto ? curateTimelineData(timelineDto, matchDto) : undefined;
 
   return {
     gameInfo: {
@@ -305,5 +309,6 @@ export async function curateMatchData(matchDto: MatchDto): Promise<CuratedMatchD
       queueId: matchDto.info.queueId,
     },
     participants,
+    timeline,
   };
 }

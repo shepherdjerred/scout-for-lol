@@ -1,5 +1,6 @@
 import {
   type MatchDto,
+  type TimelineDto,
   generateReviewText,
   generateReviewImage,
   type ArenaMatch,
@@ -244,17 +245,24 @@ async function generateAIReview(
  * @param match - The completed match data (regular or arena)
  * @param matchId - The match ID for S3 storage
  * @param rawMatchData - Optional raw match data from Riot API for detailed stats
+ * @param timelineData - Optional timeline data from Riot API for game progression context
  * @returns A promise that resolves to an object with review text, optional image, and metadata, or undefined if API keys are not configured
  */
 export async function generateMatchReview(
   match: CompletedMatch | ArenaMatch,
   matchId: MatchId,
   rawMatchData?: MatchDto,
+  timelineData?: TimelineDto,
 ): Promise<{ text: string; image?: Uint8Array; metadata?: ReviewMetadata } | undefined> {
   console.log(`[debug][generateMatchReview] Received match for ${matchId}`);
   console.log(
     `[debug][generateMatchReview] Match type: ${match.queueType === "arena" ? "ArenaMatch" : "CompletedMatch"}`,
   );
+  if (timelineData) {
+    console.log(
+      `[debug][generateMatchReview] Timeline data available with ${timelineData.info.frames.length.toString()} frames`,
+    );
+  }
   if (match.queueType !== "arena") {
     console.log(`[debug][generateMatchReview] Match has ${match.players.length.toString()} player(s)`);
     for (let i = 0; i < match.players.length; i++) {
@@ -272,8 +280,13 @@ export async function generateMatchReview(
     }
   }
 
-  // Curate the raw match data if provided
-  const curatedData = rawMatchData ? await curateMatchData(rawMatchData) : undefined;
+  // Curate the raw match data if provided (including timeline if available)
+  const curatedData = rawMatchData ? await curateMatchData(rawMatchData, timelineData) : undefined;
+  if (curatedData?.timeline) {
+    console.log(
+      `[debug][generateMatchReview] Curated timeline with ${curatedData.timeline.keyEvents.length.toString()} key events`,
+    );
+  }
 
   // Try to generate AI review
   const aiReviewResult = await generateAIReview(match, curatedData);
