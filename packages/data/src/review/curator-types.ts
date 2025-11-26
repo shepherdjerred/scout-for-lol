@@ -307,4 +307,6 @@ export type CuratedMatchData = {
   };
   participants: CuratedParticipant[];
   timeline?: CuratedTimeline | undefined;
+  /** AI-generated narrative summary of how the game unfolded */
+  timelineSummary?: string | undefined;
 };

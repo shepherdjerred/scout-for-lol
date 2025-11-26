@@ -10,6 +10,7 @@ import {
   curateMatchData,
   type CuratedMatchData,
   type ReviewTextMetadata,
+  curateTimelineData,
 } from "@scout-for-lol/data";
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -47,6 +48,82 @@ function getGeminiClient(): GoogleGenerativeAI | undefined {
     return undefined;
   }
   return new GoogleGenerativeAI(config.geminiApiKey);
+}
+
+const TIMELINE_SUMMARY_PROMPT = `You are a League of Legends analyst. Analyze this match timeline data and provide a concise summary of how the game unfolded.
+
+Focus on:
+- Early game: First blood, early kills, lane advantages
+- Mid game: Dragon/Herald takes, tower pushes, gold leads
+- Late game: Baron takes, team fights, game-ending plays
+- Notable momentum swings or comeback moments
+
+Keep the summary factual and under 300 words. Use champion names when describing kills/events.
+
+Timeline data:
+`;
+
+/**
+ * Summarize raw timeline data using OpenAI
+ *
+ * Takes the curated timeline events and asks OpenAI to create a narrative summary
+ * that can be included in the review context for better game progression understanding.
+ */
+async function summarizeTimeline(timelineDto: TimelineDto, matchDto: MatchDto): Promise<string | undefined> {
+  const client = getOpenAIClient();
+  if (!client) {
+    console.log("[summarizeTimeline] OpenAI API key not configured, skipping timeline summary");
+    return undefined;
+  }
+
+  try {
+    // Use the curated timeline data for a more readable format
+    const curatedTimeline = curateTimelineData(timelineDto, matchDto);
+
+    // Build a concise representation of the timeline for the AI
+    const timelineContext = JSON.stringify(
+      {
+        summary: curatedTimeline.summary,
+        keyEvents: curatedTimeline.keyEvents.slice(0, 50), // Limit events to avoid token overflow
+        goldSnapshots: curatedTimeline.snapshots.map((s) => ({
+          minute: s.minute,
+          goldDiff: s.goldDifference,
+        })),
+      },
+      null,
+      2,
+    );
+
+    console.log("[summarizeTimeline] Calling OpenAI to summarize timeline...");
+    const startTime = Date.now();
+
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini", // Use a faster/cheaper model for summarization
+      messages: [
+        {
+          role: "user",
+          content: TIMELINE_SUMMARY_PROMPT + timelineContext,
+        },
+      ],
+      max_completion_tokens: 500,
+      temperature: 0.3, // Lower temperature for more factual output
+    });
+
+    const duration = Date.now() - startTime;
+    console.log(`[summarizeTimeline] OpenAI response received in ${duration.toString()}ms`);
+
+    const content = response.choices[0]?.message.content;
+    if (!content) {
+      console.log("[summarizeTimeline] No content in OpenAI response");
+      return undefined;
+    }
+
+    console.log(`[summarizeTimeline] Generated summary (${content.length.toString()} chars)`);
+    return content.trim();
+  } catch (error) {
+    console.error("[summarizeTimeline] Error summarizing timeline:", error);
+    return undefined;
+  }
 }
 
 /**
@@ -287,11 +364,20 @@ export async function generateMatchReview(
   }
 
   // Curate the raw match data if provided (including timeline if available)
-  const curatedData = rawMatchData ? await curateMatchData(rawMatchData, timelineData) : undefined;
+  let curatedData = rawMatchData ? await curateMatchData(rawMatchData, timelineData) : undefined;
   if (curatedData?.timeline) {
     console.log(
       `[debug][generateMatchReview] Curated timeline with ${curatedData.timeline.keyEvents.length.toString()} key events`,
     );
+  }
+
+  // Generate timeline summary if we have timeline data
+  if (timelineData && rawMatchData && curatedData) {
+    const timelineSummary = await summarizeTimeline(timelineData, rawMatchData);
+    if (timelineSummary) {
+      console.log(`[debug][generateMatchReview] Generated timeline summary`);
+      curatedData = { ...curatedData, timelineSummary };
+    }
   }
 
   // Try to generate AI review
