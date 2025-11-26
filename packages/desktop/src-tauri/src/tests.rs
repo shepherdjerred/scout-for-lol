@@ -59,16 +59,15 @@ mod error_handling_tests {
     #[test]
     fn test_error_message_formatting() {
         let error = "Test error message";
-        let formatted = format!("Error: {}", error);
+        let formatted = format!("Error: {error}");
         assert_eq!(formatted, "Error: Test error message");
     }
 
     #[test]
+    #[allow(clippy::expect_used)]
     fn test_result_unwrap_alternative() {
         let result: Result<i32, String> = Ok(42);
-        match result {
-            Ok(value) => assert_eq!(value, 42),
-            Err(_) => panic!("Expected Ok value"),
-        }
+        let value = result.expect("Expected Ok value");
+        assert_eq!(value, 42);
     }
 }

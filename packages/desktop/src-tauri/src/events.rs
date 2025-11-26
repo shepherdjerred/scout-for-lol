@@ -1029,11 +1029,11 @@ async fn handle_end_of_game_event(
 ) -> Result<(), String> {
     if !data.is_null() {
         // Extract game duration and winning team
-        let duration = data.get("gameLength").and_then(|v| v.as_u64()).unwrap_or(0);
+        let duration = data.get("gameLength").and_then(serde_json::Value::as_u64).unwrap_or(0);
 
         let minutes = duration / 60;
         let seconds = duration % 60;
-        let duration_str = format!("{}:{:02}", minutes, seconds);
+        let duration_str = format!("{minutes}:{seconds:02}");
 
         // Try to determine winning team
         let winning_team = if let Some(teams) = data.get("teams").and_then(|v| v.as_array()) {
@@ -1268,7 +1268,7 @@ mod tests {
         for (total_seconds, expected) in test_cases {
             let minutes = total_seconds / 60;
             let seconds = total_seconds % 60;
-            let duration_str = format!("{}:{:02}", minutes, seconds);
+            let duration_str = format!("{minutes}:{seconds:02}");
             assert_eq!(duration_str, expected);
         }
     }
@@ -1309,7 +1309,7 @@ mod tests {
             ]
         });
 
-        let duration = data.get("gameLength").and_then(|v| v.as_u64()).unwrap_or(0);
+        let duration = data.get("gameLength").and_then(serde_json::Value::as_u64).unwrap_or(0);
 
         assert_eq!(duration, 1850);
 

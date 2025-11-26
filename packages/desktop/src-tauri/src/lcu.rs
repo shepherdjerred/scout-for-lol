@@ -193,14 +193,14 @@ mod tests {
     fn test_lcu_connection_url_generation() {
         // Test WebSocket URL generation
         let port: u16 = 12345;
-        let ws_url = format!("wss://127.0.0.1:{}", port);
+        let ws_url = format!("wss://127.0.0.1:{port}");
         assert_eq!(ws_url, "wss://127.0.0.1:12345");
     }
 
     #[test]
     fn test_base_url_format() {
         let port = 54321_u16;
-        let url = format!("https://127.0.0.1:{}", port);
+        let url = format!("https://127.0.0.1:{port}");
         assert_eq!(url, "https://127.0.0.1:54321");
     }
 }

@@ -58,7 +58,7 @@ async fn connect_lcu(state: State<'_, AppState>) -> Result<(), String> {
         }
         Err(e) => {
             error!("Failed to connect to League Client: {}", e);
-            Err(format!("Failed to connect to League Client: {}", e))
+            Err(format!("Failed to connect to League Client: {e}"))
         }
     }
 }
@@ -85,6 +85,7 @@ async fn configure_discord(
 
             let mut discord = state.discord_client.lock().await;
             *discord = Some(client);
+            drop(discord);
 
             // Save config to disk
             let config = config::Config {
@@ -97,7 +98,7 @@ async fn configure_discord(
         }
         Err(e) => {
             error!("Failed to configure Discord client: {}", e);
-            Err(format!("Failed to configure Discord: {}", e))
+            Err(format!("Failed to configure Discord: {e}"))
         }
     }
 }
@@ -105,13 +106,13 @@ async fn configure_discord(
 #[tauri::command]
 async fn get_discord_status(state: State<'_, AppState>) -> Result<discord::DiscordStatus, String> {
     let client = state.discord_client.lock().await;
-    match client.as_ref() {
-        Some(c) => Ok(c.get_status()),
-        None => Ok(discord::DiscordStatus {
+    Ok(client.as_ref().map_or(
+        discord::DiscordStatus {
             connected: false,
             channel_name: None,
-        }),
-    }
+        },
+        |c| c.get_status(),
+    ))
 }
 
 #[tauri::command]
@@ -140,6 +141,7 @@ async fn start_monitoring(
     .await?;
 
     *is_monitoring = true;
+    drop(is_monitoring);
     info!("Game monitoring started");
     Ok(())
 }
@@ -154,6 +156,7 @@ async fn stop_monitoring(state: State<'_, AppState>) -> Result<(), String> {
     }
 
     *is_monitoring = false;
+    drop(is_monitoring);
     // TODO: Implement graceful shutdown of WebSocket connection
     info!("Game monitoring stopped");
     Ok(())
@@ -199,6 +202,7 @@ struct PollingStatusResult {
 }
 
 #[tauri::command]
+#[allow(clippy::significant_drop_tightening)]
 async fn get_diagnostics(state: State<'_, AppState>) -> Result<DiagnosticInfo, String> {
     let lcu_guard = state.lcu_connection.lock().await;
     let lcu = lcu_guard.as_ref().ok_or("LCU not connected")?;
@@ -224,7 +228,7 @@ async fn get_diagnostics(state: State<'_, AppState>) -> Result<DiagnosticInfo, S
                 gameflow_phase,
                 live_client_data_available: false,
                 live_client_data_status: None,
-                error_message: Some(format!("Failed to reach endpoint: {}", e)),
+                error_message: Some(format!("Failed to reach endpoint: {e}")),
             });
         }
     };
@@ -238,6 +242,7 @@ async fn get_diagnostics(state: State<'_, AppState>) -> Result<DiagnosticInfo, S
 }
 
 #[tauri::command]
+#[allow(clippy::significant_drop_tightening)]
 async fn test_event_detection(state: State<'_, AppState>) -> Result<EventTestResult, String> {
     let lcu_guard = state.lcu_connection.lock().await;
     let lcu = lcu_guard.as_ref().ok_or("LCU not connected")?;
@@ -253,8 +258,8 @@ async fn test_event_detection(state: State<'_, AppState>) -> Result<EventTestRes
                         .iter()
                         .filter_map(|e| {
                             e.get("EventName")
-                                .and_then(|v| v.as_str())
-                                .map(|s| s.to_string())
+                                .and_then(serde_json::Value::as_str)
+                                .map(str::to_string)
                         })
                         .collect();
 
@@ -277,24 +282,24 @@ async fn test_event_detection(state: State<'_, AppState>) -> Result<EventTestRes
             if let Ok(data) = resp.json::<serde_json::Value>().await {
                 let events_array = data
                     .get("events")
-                    .and_then(|v| v.as_object())
+                    .and_then(serde_json::Value::as_object)
                     .and_then(|obj| obj.get("Events"))
-                    .and_then(|v| v.as_array())
-                    .or_else(|| data.get("Events").and_then(|v| v.as_array()));
+                    .and_then(serde_json::Value::as_array)
+                    .or_else(|| data.get("Events").and_then(serde_json::Value::as_array));
 
                 if let Some(events_array) = events_array {
                     let events_found: Vec<String> = events_array
                         .iter()
                         .filter_map(|e| {
                             e.get("EventName")
-                                .and_then(|v| v.as_str())
-                                .map(|s| s.to_string())
+                                .and_then(serde_json::Value::as_str)
+                                .map(str::to_string)
                         })
                         .collect();
 
                     let keys: Vec<String> = data
                         .as_object()
-                        .map(|o| o.keys().map(|k| k.to_string()).collect())
+                        .map(|o| o.keys().map(String::clone).collect())
                         .unwrap_or_default();
 
                     return Ok(EventTestResult {
@@ -308,7 +313,7 @@ async fn test_event_detection(state: State<'_, AppState>) -> Result<EventTestRes
 
                 let keys: Vec<String> = data
                     .as_object()
-                    .map(|o| o.keys().map(|k| k.to_string()).collect())
+                    .map(|o| o.keys().map(String::clone).collect())
                     .unwrap_or_default();
 
                 return Ok(EventTestResult {
@@ -338,7 +343,7 @@ async fn test_event_detection(state: State<'_, AppState>) -> Result<EventTestRes
             success: false,
             event_count: 0,
             events_found: vec![],
-            error_message: Some(format!("Failed to reach API: {}", e)),
+            error_message: Some(format!("Failed to reach API: {e}")),
             raw_data_keys: None,
         }),
     }
@@ -375,12 +380,13 @@ fn extract_embedded_dll() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(not(target_os = "windows"))]
-#[allow(dead_code)]
+#[allow(dead_code, clippy::unnecessary_wraps)]
 fn extract_embedded_dll() -> Result<(), Box<dyn std::error::Error>> {
     // No-op on non-Windows platforms
     Ok(())
 }
 
+#[allow(clippy::expect_used, clippy::large_stack_frames)]
 fn main() {
     // Extract embedded DLL FIRST on Windows - before anything else
     // This must happen before Tauri/WinRT tries to load WebView2Loader.dll
