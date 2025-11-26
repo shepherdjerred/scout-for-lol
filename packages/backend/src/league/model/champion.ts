@@ -68,6 +68,6 @@ function extractTeamSupport(dto: ParticipantDto) {
   return {
     damageShieldedOnTeammate: dto.totalDamageShieldedOnTeammates,
     healsOnTeammate: dto.totalHealsOnTeammates,
-    damageTakenPercentage: dto.challenges.damageTakenOnTeamPercentage,
+    damageTakenPercentage: dto.challenges?.damageTakenOnTeamPercentage ?? 0,
   };
 }

@@ -87,6 +87,9 @@ describe("MatchDto Schema Validation", () => {
         throw new Error("No participants found");
       }
       const challenges = firstParticipant.challenges;
+      if (!challenges) {
+        throw new Error("Challenges data is missing");
+      }
 
       // Fields that ARE present in real API
       expect(challenges.abilityUses).toBeNumber();

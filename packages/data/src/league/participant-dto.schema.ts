@@ -7,6 +7,7 @@ import { PerksDtoSchema } from "./perks-dto.schema.js";
 /**
  * Participant DTO - Contains all data for a single participant in a match
  * Many fields are optional as they may not be present in all game modes (e.g., Arena vs Classic)
+ * TODO(https://github.com/shepherdjerred/scout-for-lol/issues/176): Rename to RawParticipant following raw* naming convention
  */
 export const ParticipantDtoSchema = z
   .object({
@@ -15,7 +16,7 @@ export const ParticipantDtoSchema = z
     baronKills: z.number(),
     basicPings: z.number(),
     bountyLevel: z.number().optional(),
-    challenges: ChallengesDtoSchema,
+    challenges: ChallengesDtoSchema.optional(),
     champExperience: z.number(),
     champLevel: z.number(),
     championId: z.number(),

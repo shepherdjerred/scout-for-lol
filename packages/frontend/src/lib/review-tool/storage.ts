@@ -77,7 +77,7 @@ export async function getItem<T>(storeName: string, key: string): Promise<T | nu
     if (result === undefined || result === null) {
       return null;
     }
-    // eslint-disable-next-line custom-rules/no-type-assertions -- TODO fix this
+    // eslint-disable-next-line custom-rules/no-type-assertions -- TODO(https://github.com/shepherdjerred/scout-for-lol/issues/187): fix this
     return result as T;
   } catch (error) {
     console.warn(`Failed to get item from ${storeName}:`, error);

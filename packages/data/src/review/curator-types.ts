@@ -141,92 +141,162 @@ export type CuratedParticipant = {
   totalTimeSpentDead: number;
   longestTimeSpentLiving: number;
 
-  // Challenges (comprehensive set)
-  challenges: {
-    // Core performance
-    killParticipation?: number | undefined;
-    soloKills?: number | undefined;
-    damagePerMinute?: number | undefined;
-    goldPerMinute?: number | undefined;
-    visionScorePerMinute?: number | undefined;
+  // Challenges (comprehensive set) - optional as some game modes don't include this data
+  challenges?:
+    | {
+        // Core performance
+        killParticipation?: number | undefined;
+        soloKills?: number | undefined;
+        damagePerMinute?: number | undefined;
+        goldPerMinute?: number | undefined;
+        visionScorePerMinute?: number | undefined;
 
-    // Mechanics
-    skillshotsHit?: number | undefined;
-    skillshotsDodged?: number | undefined;
-    enemyChampionImmobilizations?: number | undefined;
+        // Mechanics
+        skillshotsHit?: number | undefined;
+        skillshotsDodged?: number | undefined;
+        enemyChampionImmobilizations?: number | undefined;
 
-    // Damage metrics
-    teamDamagePercentage?: number | undefined;
-    damageTakenOnTeamPercentage?: number | undefined;
+        // Damage metrics
+        teamDamagePercentage?: number | undefined;
+        damageTakenOnTeamPercentage?: number | undefined;
 
-    // Vision
-    controlWardsPlaced?: number | undefined;
-    controlWardTimeCoverageInRiverOrEnemyHalf?: number | undefined;
-    visionScoreAdvantageLaneOpponent?: number | undefined;
+        // Vision
+        controlWardsPlaced?: number | undefined;
+        controlWardTimeCoverageInRiverOrEnemyHalf?: number | undefined;
+        visionScoreAdvantageLaneOpponent?: number | undefined;
 
-    // Objectives
-    turretPlatesTaken?: number | undefined;
-    riftHeraldTakedowns?: number | undefined;
-    baronTakedowns?: number | undefined;
-    dragonTakedowns?: number | undefined;
+        // Objectives
+        turretPlatesTaken?: number | undefined;
+        riftHeraldTakedowns?: number | undefined;
+        baronTakedowns?: number | undefined;
+        dragonTakedowns?: number | undefined;
 
-    // Jungle stats
-    buffsStolen?: number | undefined;
-    alliedJungleMonsterKills?: number | undefined;
-    enemyJungleMonsterKills?: number | undefined;
-    scuttleCrabKills?: number | undefined;
-    jungleCsBefore10Minutes?: number | undefined;
-    initialBuffCount?: number | undefined;
-    initialCrabCount?: number | undefined;
+        // Jungle stats
+        buffsStolen?: number | undefined;
+        alliedJungleMonsterKills?: number | undefined;
+        enemyJungleMonsterKills?: number | undefined;
+        scuttleCrabKills?: number | undefined;
+        jungleCsBefore10Minutes?: number | undefined;
+        initialBuffCount?: number | undefined;
+        initialCrabCount?: number | undefined;
 
-    // Laning phase
-    laneMinionsFirst10Minutes?: number | undefined;
-    maxCsAdvantageOnLaneOpponent?: number | undefined;
-    maxLevelLeadLaneOpponent?: number | undefined;
-    earlyLaningPhaseGoldExpAdvantage?: number | undefined;
-    laningPhaseGoldExpAdvantage?: number | undefined;
+        // Laning phase
+        laneMinionsFirst10Minutes?: number | undefined;
+        maxCsAdvantageOnLaneOpponent?: number | undefined;
+        maxLevelLeadLaneOpponent?: number | undefined;
+        earlyLaningPhaseGoldExpAdvantage?: number | undefined;
+        laningPhaseGoldExpAdvantage?: number | undefined;
 
-    // Combat achievements
-    multikills?: number | undefined;
-    multikillsAfterAggressiveFlash?: number | undefined;
-    killsNearEnemyTurret?: number | undefined;
-    killsUnderOwnTurret?: number | undefined;
-    outnumberedKills?: number | undefined;
-    killsWithHelpFromEpicMonster?: number | undefined;
+        // Combat achievements
+        multikills?: number | undefined;
+        multikillsAfterAggressiveFlash?: number | undefined;
+        killsNearEnemyTurret?: number | undefined;
+        killsUnderOwnTurret?: number | undefined;
+        outnumberedKills?: number | undefined;
+        killsWithHelpFromEpicMonster?: number | undefined;
 
-    // Teamwork
-    immobilizeAndKillWithAlly?: number | undefined;
-    pickKillWithAlly?: number | undefined;
-    knockEnemyIntoTeamAndKill?: number | undefined;
-    saveAllyFromDeath?: number | undefined;
+        // Teamwork
+        immobilizeAndKillWithAlly?: number | undefined;
+        pickKillWithAlly?: number | undefined;
+        knockEnemyIntoTeamAndKill?: number | undefined;
+        saveAllyFromDeath?: number | undefined;
 
-    // Survival & Clutch
-    survivedSingleDigitHpCount?: number | undefined;
-    survivedThreeImmobilizesInFight?: number | undefined;
-    tookLargeDamageSurvived?: number | undefined;
+        // Survival & Clutch
+        survivedSingleDigitHpCount?: number | undefined;
+        survivedThreeImmobilizesInFight?: number | undefined;
+        tookLargeDamageSurvived?: number | undefined;
 
-    // Efficiency & Timing
-    quickCleanse?: number | undefined;
-    quickFirstTurret?: number | undefined;
-    quickSoloKills?: number | undefined;
-    effectiveHealAndShielding?: number | undefined;
+        // Efficiency & Timing
+        quickCleanse?: number | undefined;
+        quickFirstTurret?: number | undefined;
+        quickSoloKills?: number | undefined;
+        effectiveHealAndShielding?: number | undefined;
 
-    // Rare achievements
-    perfectGame?: number | undefined;
-    flawlessAces?: number | undefined;
-    perfectDragonSoulsTaken?: number | undefined;
-    soloBaronKills?: number | undefined;
+        // Rare achievements
+        perfectGame?: number | undefined;
+        flawlessAces?: number | undefined;
+        perfectDragonSoulsTaken?: number | undefined;
+        soloBaronKills?: number | undefined;
 
-    // Other notable
-    takedownsFirstXMinutes?: number | undefined;
-    bountyGold?: number | undefined;
-    completeSupportQuestInTime?: number | undefined;
-  };
+        // Other notable
+        takedownsFirstXMinutes?: number | undefined;
+        bountyGold?: number | undefined;
+        completeSupportQuestInTime?: number | undefined;
+      }
+    | undefined;
 
   // Outcome
   win: boolean;
   gameEndedInSurrender: boolean;
   gameEndedInEarlySurrender: boolean;
+};
+
+/**
+ * Curated timeline event - simplified and enriched event data
+ */
+export type CuratedTimelineEvent = {
+  timestamp: number; // Milliseconds into the game
+  minuteMark: number; // Approximate minute (timestamp / 60000)
+  type: string;
+
+  // Kill event details
+  killer?: string | undefined; // Champion name of killer
+  victim?: string | undefined; // Champion name of victim
+  assists?: string[] | undefined; // Champion names of assisters
+  position?: { x: number; y: number } | undefined;
+
+  // Objective events
+  monsterType?: string | undefined; // DRAGON, BARON_NASHOR, RIFTHERALD, etc.
+  monsterSubType?: string | undefined; // FIRE_DRAGON, WATER_DRAGON, etc.
+
+  // Building events
+  buildingType?: string | undefined; // TOWER_BUILDING, INHIBITOR_BUILDING
+  towerType?: string | undefined; // OUTER_TURRET, INNER_TURRET, etc.
+  laneType?: string | undefined; // TOP_LANE, MID_LANE, BOT_LANE
+
+  // Team info
+  team?: "Blue" | "Red" | undefined;
+};
+
+/**
+ * Curated participant snapshot at a specific game minute
+ */
+export type CuratedParticipantSnapshot = {
+  participantId: number;
+  championName: string; // Resolved from participant mapping
+  team: "Blue" | "Red";
+  minute: number;
+  totalGold: number;
+  level: number;
+  minionsKilled: number;
+  jungleMinionsKilled: number;
+  // Cumulative damage at this point
+  totalDamageToChampions?: number | undefined;
+};
+
+/**
+ * Curated timeline data - key events and snapshots for AI analysis
+ */
+export type CuratedTimeline = {
+  // Key game events (kills, objectives, towers)
+  keyEvents: CuratedTimelineEvent[];
+
+  // Gold/level snapshots at key intervals (e.g., every 5 minutes)
+  snapshots: {
+    minute: number;
+    participants: CuratedParticipantSnapshot[];
+    goldDifference: number; // Blue team total gold - Red team total gold
+  }[];
+
+  // Summary statistics
+  summary: {
+    totalKills: number;
+    firstBloodTime?: number | undefined;
+    firstTowerTime?: number | undefined;
+    dragonsKilled: { team: "Blue" | "Red"; type: string; time: number }[];
+    baronsKilled: { team: "Blue" | "Red"; time: number }[];
+    riftHeraldsKilled: { team: "Blue" | "Red"; time: number }[];
+  };
 };
 
 export type CuratedMatchData = {
@@ -236,4 +306,7 @@ export type CuratedMatchData = {
     queueId: number;
   };
   participants: CuratedParticipant[];
+  timeline?: CuratedTimeline | undefined;
+  /** AI-generated narrative summary of how the game unfolded */
+  timelineSummary?: string | undefined;
 };

@@ -141,7 +141,7 @@ export function generateLeaderboardEmbed(
   // To enable this, we would need to modify the LeaderboardEntry type
   // User position highlighting would be implemented here when LeaderboardEntry includes discordId
   if (viewingUserId) {
-    // TODO: Implement user position highlighting when LeaderboardEntry includes discordId
+    // TODO(https://github.com/shepherdjerred/scout-for-lol/issues/190): Implement user position highlighting when LeaderboardEntry includes discordId
   }
 
   // Add footer with criteria description and timestamp

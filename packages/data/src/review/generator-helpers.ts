@@ -11,14 +11,19 @@ import type {
 /**
  * Extract match data from a match object
  * Handles both arena and regular matches
+ * @param match - The completed match data
+ * @param playerIndex - Optional index of the player to extract data for (defaults to 0)
  */
-export function extractMatchData(match: CompletedMatch | ArenaMatch): {
+export function extractMatchData(
+  match: CompletedMatch | ArenaMatch,
+  playerIndex = 0,
+): {
   matchData: Record<string, string>;
   lane: string | undefined;
 } {
   return matchPattern(match)
     .with({ queueType: "arena" }, (arenaMatch: ArenaMatch) => {
-      const player = arenaMatch.players[0];
+      const player = arenaMatch.players[playerIndex] ?? arenaMatch.players[0];
       if (!player) {
         throw new Error("No player data found");
       }
@@ -42,7 +47,7 @@ export function extractMatchData(match: CompletedMatch | ArenaMatch): {
       };
     })
     .otherwise((regularMatch: CompletedMatch) => {
-      const player = regularMatch.players[0];
+      const player = regularMatch.players[playerIndex] ?? regularMatch.players[0];
       if (!player) {
         throw new Error("No player data found");
       }
@@ -93,6 +98,44 @@ export function getOrdinalSuffix(num: number): string {
     default:
       return "th";
   }
+}
+
+/**
+ * Build context about other tracked players (friends) in the match
+ * @param match - The completed match data
+ * @param playerIndex - Index of the player being reviewed (to exclude from friends list)
+ * @returns A formatted string describing friends in the match, or empty string if none
+ */
+export function buildFriendsContext(match: CompletedMatch | ArenaMatch, playerIndex: number): string {
+  const allPlayers = match.players;
+  const friends = allPlayers.filter((_, index) => index !== playerIndex);
+
+  if (friends.length === 0) {
+    return "";
+  }
+
+  const friendDescriptions = friends.map((friend) => {
+    const alias = friend.playerConfig.alias;
+    const champion = friend.champion.championName;
+
+    if (match.queueType === "arena") {
+      return `${alias} (playing ${champion})`;
+    }
+
+    // For regular matches, include lane if available
+    const lane = "lane" in friend && friend.lane ? ` in ${friend.lane}` : "";
+    return `${alias} (playing ${champion}${lane})`;
+  });
+
+  if (friends.length === 1 && friendDescriptions[0]) {
+    return `Their friend ${friendDescriptions[0]} was also in this match.`;
+  }
+
+  const lastFriend = friendDescriptions.pop();
+  if (!lastFriend) {
+    return "";
+  }
+  return `Their friends ${friendDescriptions.join(", ")} and ${lastFriend} were also in this match.`;
 }
 
 /**
@@ -198,6 +241,7 @@ export function buildPromptVariables(params: {
   laneContext: string;
   match: CompletedMatch | ArenaMatch;
   curatedData?: CuratedMatchData;
+  playerIndex?: number;
 }): {
   reviewerName: string;
   reviewerPersonality: string;
@@ -212,8 +256,10 @@ export function buildPromptVariables(params: {
   opponentChampion: string;
   laneDescription: string;
   matchReport: string;
+  friendsContext: string;
+  d20Roll: string;
 } {
-  const { matchData, personality, playerMetadata, laneContext, match, curatedData } = params;
+  const { matchData, personality, playerMetadata, laneContext, match, curatedData, playerIndex = 0 } = params;
   const playerName = matchData["playerName"];
   if (!playerName) {
     throw new Error("No player name found");
@@ -260,6 +306,11 @@ export function buildPromptVariables(params: {
     }
   }
 
+  const friendsContext = buildFriendsContext(match, playerIndex);
+
+  // Generate random D20 roll (1-20)
+  const d20Roll = (Math.floor(Math.random() * 20) + 1).toString();
+
   return {
     reviewerName,
     reviewerPersonality,
@@ -274,6 +325,8 @@ export function buildPromptVariables(params: {
     opponentChampion,
     laneDescription,
     matchReport,
+    friendsContext,
+    d20Roll,
   };
 }
 

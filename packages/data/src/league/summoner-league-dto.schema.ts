@@ -6,6 +6,7 @@ import { z } from "zod";
  *
  * This schema validates the structure of league/rank data received from Riot API.
  * Represents a summoner's ranked queue entry (Solo/Duo or Flex).
+ * TODO(https://github.com/shepherdjerred/scout-for-lol/issues/176): Rename to RawSummonerLeague following raw* naming convention
  */
 
 /**
@@ -52,6 +53,7 @@ export const SummonerLeagueDtoSchema = z
     tier: TierNameSchema,
     rank: DivisionSchema,
     summonerId: z.string().optional(),
+    puuid: z.string().optional(), // Added: Riot API now returns puuid in league entries
     leaguePoints: z.number(),
     wins: z.number(),
     losses: z.number(),

@@ -1,5 +1,6 @@
 import { palette } from "@scout-for-lol/report/assets/colors.ts";
 
+// TODO(https://github.com/shepherdjerred/scout-for-lol/issues/182): Add champion icon to improve visual identification
 export function Names({
   summonerName,
   championName,

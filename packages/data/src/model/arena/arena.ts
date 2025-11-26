@@ -36,7 +36,7 @@ export const ArenaChampionSchema = ChampionSchema.omit({
   runes: true,
 }).extend({
   augments: z.array(AugmentSchema).max(6),
-  // TODO: perhaps these are in normal games, too
+  // TODO(https://github.com/shepherdjerred/scout-for-lol/issues/188): perhaps these are in normal games, too
   arenaMetrics: PlayerMetricsSchema,
   teamSupport: TeamSupportMetricsSchema,
 });
@@ -66,7 +66,7 @@ export const ArenaPlacementSchema = z.union([
   z.literal(8),
 ]);
 
-// TODO: map ints -> name (e.g. minion, krug, etc.)
+// TODO(https://github.com/shepherdjerred/scout-for-lol/issues/189): map ints -> name (e.g. minion, krug, etc.)
 export type ArenaTeam = z.infer<typeof ArenaTeamSchema>;
 export const ArenaTeamSchema = z.strictObject({
   teamId: ArenaTeamIdSchema,

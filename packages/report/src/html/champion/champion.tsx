@@ -9,6 +9,7 @@ import { Damage } from "@scout-for-lol/report/html/champion/damage.tsx";
 import { Kda } from "@scout-for-lol/report/html/champion/kda.tsx";
 import { Names } from "@scout-for-lol/report/html/champion/names.tsx";
 import { Lane } from "@scout-for-lol/report/html/lane/index.tsx";
+import { Runes } from "@scout-for-lol/report/html/champion/runes.tsx";
 import { first, keys, map, pickBy, round } from "remeda";
 
 // highlight should be true if this champion's riotIdGameName is in the highlightNames array (player-based highlight)
@@ -71,6 +72,7 @@ export function renderChampion(champion: Champion, highlight: boolean, durationI
 
       <div style={{ display: "flex", gap: "3rem" }}>
         <div style={{ display: "flex", flexDirection: "column" }}>{summs}</div>
+        <Runes runes={champion.runes} />
         <div style={{ display: "flex", flexDirection: "row" }}>{items}</div>
       </div>
 
