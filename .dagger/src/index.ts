@@ -54,6 +54,31 @@ async function withTiming<T>(operation: string, fn: () => Promise<T>): Promise<T
   }
 }
 
+// Helper function to post a comment to a GitHub PR
+async function postPrComment(
+  prNumber: string,
+  comment: string,
+  ghToken: Secret,
+  repo = "shepherdjerred/scout-for-lol",
+): Promise<void> {
+  logWithTimestamp(`📝 Posting comment to PR #${prNumber}...`);
+
+  await getGitHubContainer()
+    .withSecretVariable("GH_TOKEN", ghToken)
+    .withExec(["gh", "pr", "comment", prNumber, "--repo", repo, "--body", comment])
+    .sync();
+
+  logWithTimestamp(`✅ Comment posted to PR #${prNumber}`);
+}
+
+// Helper function to parse preview URL from wrangler output
+function parsePreviewUrl(wranglerOutput: string): string | undefined {
+  // Wrangler outputs lines like: "Deployment complete! Take a peek over at https://..."
+  // Or: "✨ Deployment complete! Take a peek at: https://..."
+  const urlMatch = wranglerOutput.match(/https:\/\/[^\s]+\.pages\.dev/);
+  return urlMatch?.[0];
+}
+
 @object()
 export class ScoutForLol {
   /**
@@ -184,6 +209,7 @@ export class ScoutForLol {
    * @param accountId Cloudflare account ID (optional, for frontend deployment)
    * @param apiToken Cloudflare API token (optional, for frontend deployment)
    * @param projectName Cloudflare Pages project name (optional, defaults to "scout-for-lol")
+   * @param prNumber The PR number for posting deploy preview comments (optional)
    * @returns A message indicating completion
    */
   @func()
@@ -203,6 +229,7 @@ export class ScoutForLol {
     accountId?: Secret,
     apiToken?: Secret,
     projectName?: string,
+    prNumber?: string,
   ): Promise<string> {
     logWithTimestamp(`🚀 Starting CI pipeline for version ${version} (${gitSha}) in ${env ?? "dev"} environment`);
     logWithTimestamp("⚠️  CI will FAIL if lint or typecheck errors are found");
@@ -243,12 +270,15 @@ export class ScoutForLol {
       logWithTimestamp("⏭️ Phase 3: Skipping image publishing (no credentials or not prod environment)");
     }
 
-    // Deploy backend to homelab
-    const deployStage = env === "prod" ? "beta" : "dev";
-    await withTiming("CI backend deploy phase", () => {
-      logWithTimestamp(`🚀 Phase 4: Deploying backend to ${deployStage}...`);
-      return this.deploy(source, version, deployStage, ghToken);
-    });
+    // Deploy backend to homelab (only for prod)
+    if (env === "prod") {
+      await withTiming("CI backend deploy phase", () => {
+        logWithTimestamp("🚀 Phase 4: Deploying backend to beta...");
+        return this.deploy(source, version, "beta", ghToken);
+      });
+    } else {
+      logWithTimestamp("⏭️ Phase 4: Skipping backend deployment (not prod environment)");
+    }
 
     // Deploy frontend to Cloudflare Pages if credentials provided
     const shouldDeployFrontend = accountId && apiToken && branch;
@@ -256,10 +286,19 @@ export class ScoutForLol {
       await withTiming("CI frontend deploy phase", async () => {
         logWithTimestamp(`🚀 Phase 5: Deploying frontend to Cloudflare Pages (branch: ${branch})...`);
         const project = projectName ?? "scout-for-lol";
-        await this.deployFrontend(source, branch, gitSha, project, accountId, apiToken);
-        logWithTimestamp(
-          `✅ Frontend deployed to https://${branch === "main" ? "" : `${branch}.`}${project}.pages.dev`,
-        );
+        const deployOutput = await this.deployFrontend(source, branch, gitSha, project, accountId, apiToken);
+
+        // Parse the preview URL from wrangler output
+        const previewUrl = parsePreviewUrl(deployOutput);
+        const displayUrl = previewUrl ?? `https://${branch === "main" ? "" : `${branch}.`}${project}.pages.dev`;
+
+        logWithTimestamp(`✅ Frontend deployed to ${displayUrl}`);
+
+        // Post a comment to the PR with the preview URL (only for PRs, not main branch)
+        if (prNumber && ghToken && branch !== "main") {
+          const comment = `## 🚀 Deploy Preview Ready!\n\nA preview of this PR has been deployed to Cloudflare Pages:\n\n**Preview URL:** ${displayUrl}\n\n---\n*Deployed from commit ${gitSha.substring(0, 7)}*`;
+          await postPrComment(prNumber, comment, ghToken);
+        }
       });
     } else {
       logWithTimestamp("⏭️ Phase 5: Skipping frontend deployment (no Cloudflare credentials or branch not provided)");
