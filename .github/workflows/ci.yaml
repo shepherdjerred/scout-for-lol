@@ -90,7 +90,7 @@ jobs:
           DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
           _EXPERIMENTAL_DAGGER_RUNNER_HOST: kube-pod://${{ env.DAGGER_ENGINE_POD_NAME }}?namespace=dagger
         run: |
-          dagger call check \
+          dagger call check-with-annotations \
             --source=.
 
 permissions:
