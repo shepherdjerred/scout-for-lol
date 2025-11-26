@@ -19,6 +19,8 @@ node_modules/
 # Database
 *.db
 *.db-journal
+# Exception: test template database (pre-generated for fast test setup)
+!src/testing/template.db
 
 # Logs
 *.log
