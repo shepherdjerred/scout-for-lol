@@ -231,6 +231,74 @@ export type CuratedParticipant = {
   gameEndedInEarlySurrender: boolean;
 };
 
+/**
+ * Curated timeline event - simplified and enriched event data
+ */
+export type CuratedTimelineEvent = {
+  timestamp: number; // Milliseconds into the game
+  minuteMark: number; // Approximate minute (timestamp / 60000)
+  type: string;
+
+  // Kill event details
+  killer?: string | undefined; // Champion name of killer
+  victim?: string | undefined; // Champion name of victim
+  assists?: string[] | undefined; // Champion names of assisters
+  position?: { x: number; y: number } | undefined;
+
+  // Objective events
+  monsterType?: string | undefined; // DRAGON, BARON_NASHOR, RIFTHERALD, etc.
+  monsterSubType?: string | undefined; // FIRE_DRAGON, WATER_DRAGON, etc.
+
+  // Building events
+  buildingType?: string | undefined; // TOWER_BUILDING, INHIBITOR_BUILDING
+  towerType?: string | undefined; // OUTER_TURRET, INNER_TURRET, etc.
+  laneType?: string | undefined; // TOP_LANE, MID_LANE, BOT_LANE
+
+  // Team info
+  team?: "Blue" | "Red" | undefined;
+};
+
+/**
+ * Curated participant snapshot at a specific game minute
+ */
+export type CuratedParticipantSnapshot = {
+  participantId: number;
+  championName: string; // Resolved from participant mapping
+  team: "Blue" | "Red";
+  minute: number;
+  totalGold: number;
+  level: number;
+  minionsKilled: number;
+  jungleMinionsKilled: number;
+  // Cumulative damage at this point
+  totalDamageToChampions?: number | undefined;
+};
+
+/**
+ * Curated timeline data - key events and snapshots for AI analysis
+ */
+export type CuratedTimeline = {
+  // Key game events (kills, objectives, towers)
+  keyEvents: CuratedTimelineEvent[];
+
+  // Gold/level snapshots at key intervals (e.g., every 5 minutes)
+  snapshots: {
+    minute: number;
+    participants: CuratedParticipantSnapshot[];
+    goldDifference: number; // Blue team total gold - Red team total gold
+  }[];
+
+  // Summary statistics
+  summary: {
+    totalKills: number;
+    firstBloodTime?: number | undefined;
+    firstTowerTime?: number | undefined;
+    dragonsKilled: { team: "Blue" | "Red"; type: string; time: number }[];
+    baronsKilled: { team: "Blue" | "Red"; time: number }[];
+    riftHeraldsKilled: { team: "Blue" | "Red"; time: number }[];
+  };
+};
+
 export type CuratedMatchData = {
   gameInfo: {
     gameDuration: number;
@@ -238,4 +306,7 @@ export type CuratedMatchData = {
     queueId: number;
   };
   participants: CuratedParticipant[];
+  timeline?: CuratedTimeline | undefined;
+  /** AI-generated narrative summary of how the game unfolded */
+  timelineSummary?: string | undefined;
 };

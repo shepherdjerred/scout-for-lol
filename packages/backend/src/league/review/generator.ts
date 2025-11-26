@@ -1,5 +1,6 @@
 import {
   type MatchDto,
+  type TimelineDto,
   generateReviewText,
   generateReviewImage,
   type ArenaMatch,
@@ -13,7 +14,11 @@ import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 import config from "@scout-for-lol/backend/configuration.js";
-import { saveAIReviewImageToS3, saveAIReviewTextToS3 } from "@scout-for-lol/backend/storage/s3.js";
+import {
+  saveAIReviewImageToS3,
+  saveAIReviewTextToS3,
+  saveTimelineSummaryToS3,
+} from "@scout-for-lol/backend/storage/s3.js";
 import {
   loadPromptFile,
   selectRandomPersonality,
@@ -41,6 +46,89 @@ function getGeminiClient(): GoogleGenerativeAI | undefined {
     return undefined;
   }
   return new GoogleGenerativeAI(config.geminiApiKey);
+}
+
+const TIMELINE_SUMMARY_PROMPT = `You are a League of Legends analyst. Analyze this raw match timeline data from the Riot API and provide a concise summary of how the game unfolded.
+
+The timeline contains frames with events like CHAMPION_KILL, ELITE_MONSTER_KILL (dragons, baron, herald), BUILDING_KILL (towers, inhibitors), and participantFrames showing gold/level progression.
+
+Focus on:
+- Early game: First blood, early kills, lane advantages
+- Mid game: Dragon/Herald takes, tower pushes, gold leads
+- Late game: Baron takes, team fights, game-ending plays
+- Notable momentum swings or comeback moments
+
+Keep the summary factual and under 300 words. Use champion names when describing kills/events.
+
+Raw timeline JSON:
+`;
+
+/**
+ * Summarize raw timeline data using OpenAI
+ *
+ * Sends the raw timeline JSON directly to OpenAI for summarization.
+ * The AI extracts key events and creates a narrative summary.
+ * Saves both the request and response to S3 for debugging/analysis.
+ */
+async function summarizeTimeline(timelineDto: TimelineDto, matchId: MatchId): Promise<string | undefined> {
+  const client = getOpenAIClient();
+  if (!client) {
+    console.log("[summarizeTimeline] OpenAI API key not configured, skipping timeline summary");
+    return undefined;
+  }
+
+  try {
+    // Send the raw timeline JSON directly
+    const timelineJson = JSON.stringify(timelineDto, null, 2);
+    const fullPrompt = TIMELINE_SUMMARY_PROMPT + timelineJson;
+
+    console.log("[summarizeTimeline] Calling OpenAI to summarize timeline...");
+    console.log(`[summarizeTimeline] Timeline JSON size: ${timelineJson.length.toString()} chars`);
+    const startTime = Date.now();
+
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini", // Use a faster/cheaper model for summarization
+      messages: [
+        {
+          role: "user",
+          content: fullPrompt,
+        },
+      ],
+      max_completion_tokens: 2000,
+      temperature: 0.3, // Lower temperature for more factual output
+    });
+
+    const duration = Date.now() - startTime;
+    console.log(`[summarizeTimeline] OpenAI response received in ${duration.toString()}ms`);
+
+    const content = response.choices[0]?.message.content;
+    if (!content) {
+      console.log("[summarizeTimeline] No content in OpenAI response");
+      return undefined;
+    }
+
+    const summary = content.trim();
+    console.log(`[summarizeTimeline] Generated summary (${summary.length.toString()} chars)`);
+
+    // Save request and response to S3
+    try {
+      await saveTimelineSummaryToS3({
+        matchId,
+        timelineDto,
+        prompt: TIMELINE_SUMMARY_PROMPT,
+        summary,
+        durationMs: duration,
+      });
+    } catch (s3Error) {
+      console.error("[summarizeTimeline] Failed to save to S3:", s3Error);
+      // Continue even if S3 save fails
+    }
+
+    return summary;
+  } catch (error) {
+    console.error("[summarizeTimeline] Error summarizing timeline:", error);
+    return undefined;
+  }
 }
 
 /**
@@ -244,17 +332,24 @@ async function generateAIReview(
  * @param match - The completed match data (regular or arena)
  * @param matchId - The match ID for S3 storage
  * @param rawMatchData - Optional raw match data from Riot API for detailed stats
+ * @param timelineData - Optional timeline data from Riot API for game progression context
  * @returns A promise that resolves to an object with review text, optional image, and metadata, or undefined if API keys are not configured
  */
 export async function generateMatchReview(
   match: CompletedMatch | ArenaMatch,
   matchId: MatchId,
   rawMatchData?: MatchDto,
+  timelineData?: TimelineDto,
 ): Promise<{ text: string; image?: Uint8Array; metadata?: ReviewMetadata } | undefined> {
   console.log(`[debug][generateMatchReview] Received match for ${matchId}`);
   console.log(
     `[debug][generateMatchReview] Match type: ${match.queueType === "arena" ? "ArenaMatch" : "CompletedMatch"}`,
   );
+  if (timelineData) {
+    console.log(
+      `[debug][generateMatchReview] Timeline data available with ${timelineData.info.frames.length.toString()} frames`,
+    );
+  }
   if (match.queueType !== "arena") {
     console.log(`[debug][generateMatchReview] Match has ${match.players.length.toString()} player(s)`);
     for (let i = 0; i < match.players.length; i++) {
@@ -272,8 +367,22 @@ export async function generateMatchReview(
     }
   }
 
-  // Curate the raw match data if provided
-  const curatedData = rawMatchData ? await curateMatchData(rawMatchData) : undefined;
+  // Curate the raw match data if provided (including timeline if available)
+  let curatedData = rawMatchData ? await curateMatchData(rawMatchData, timelineData) : undefined;
+  if (curatedData?.timeline) {
+    console.log(
+      `[debug][generateMatchReview] Curated timeline with ${curatedData.timeline.keyEvents.length.toString()} key events`,
+    );
+  }
+
+  // Generate timeline summary if we have timeline data
+  if (timelineData && curatedData) {
+    const timelineSummary = await summarizeTimeline(timelineData, matchId);
+    if (timelineSummary) {
+      console.log(`[debug][generateMatchReview] Generated timeline summary`);
+      curatedData = { ...curatedData, timelineSummary };
+    }
+  }
 
   // Try to generate AI review
   const aiReviewResult = await generateAIReview(match, curatedData);
