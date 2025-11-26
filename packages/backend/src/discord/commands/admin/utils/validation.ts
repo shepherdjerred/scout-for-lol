@@ -2,6 +2,7 @@ import { type ChatInputCommandInteraction } from "discord.js";
 import type { z } from "zod";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
+import * as Sentry from "@sentry/node";
 
 export type ValidationSuccess<T> = {
   success: true;
@@ -38,6 +39,13 @@ export async function validateCommandArgs<T>(
     return { success: true, data, userId, username };
   } catch (error) {
     console.error(`❌ Invalid command arguments from ${username}:`, error);
+    Sentry.captureException(error, {
+      tags: {
+        source: "discord-command-validation",
+        command: commandName,
+        userId,
+      },
+    });
     const validationError = fromError(error);
     await interaction.reply({
       content: validationError.toString(),

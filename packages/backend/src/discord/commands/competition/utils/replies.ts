@@ -1,6 +1,7 @@
 import type { ChatInputCommandInteraction, InteractionReplyOptions } from "discord.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import * as Sentry from "@sentry/node";
 
 /**
  * Build an ephemeral error reply for competition commands
@@ -58,5 +59,13 @@ export async function replyWithErrorFromException(
   error: unknown,
   context: string,
 ): Promise<void> {
+  Sentry.captureException(error, {
+    tags: {
+      source: "discord-command",
+      context,
+      userId: interaction.user.id,
+      command: interaction.commandName,
+    },
+  });
   await interaction.reply(buildErrorReply(`Error ${context}: ${getErrorMessage(error)}`));
 }

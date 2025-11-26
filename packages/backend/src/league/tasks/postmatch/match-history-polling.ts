@@ -15,6 +15,7 @@ import {
   fetchMatchData,
   generateMatchReport,
 } from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.js";
+import * as Sentry from "@sentry/node";
 
 type PlayerWithMatchIds = {
   player: PlayerConfigEntry;
@@ -50,6 +51,13 @@ async function processMatchForPlayer(
     await processMatchAndUpdatePlayers(matchData, allPlayerConfigs, processedMatchIds, matchId);
   } catch (error) {
     console.error(`[${player.alias}] ❌ Error processing match ${matchId}:`, error);
+    Sentry.captureException(error, {
+      tags: {
+        source: "match-processing",
+        matchId,
+        playerAlias: player.alias,
+      },
+    });
     // Continue with next match even if this one fails
   }
 }
@@ -88,12 +96,25 @@ async function processMatch(matchData: MatchDto, trackedPlayers: PlayerConfigEnt
         console.log(`[processMatch] ✅ Sent notification to channel ${channel}`);
       } catch (error) {
         console.error(`[processMatch] ❌ Failed to send notification to channel ${channel}:`, error);
+        Sentry.captureException(error, {
+          tags: {
+            source: "discord-notification",
+            matchId,
+            channel,
+          },
+        });
       }
     }
 
     console.log(`[processMatch] ✅ Successfully processed match ${matchId}`);
   } catch (error) {
     console.error(`[processMatch] ❌ Error processing match ${matchId}:`, error);
+    Sentry.captureException(error, {
+      tags: {
+        source: "process-match",
+        matchId,
+      },
+    });
     throw error;
   }
 }
@@ -214,6 +235,13 @@ export async function checkMatchHistory(): Promise<void> {
         playersWithMatches.push({ player, matchIds: newMatchIds });
       } catch (error) {
         console.error(`[${player.alias}] ❌ Error checking match history:`, error);
+        Sentry.captureException(error, {
+          tags: {
+            source: "match-history-check",
+            playerAlias: player.alias,
+            puuid,
+          },
+        });
         // Continue with next player even if this one fails
       }
     }
