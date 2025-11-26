@@ -94,7 +94,7 @@ async function summarizeTimeline(timelineDto: TimelineDto, matchId: MatchId): Pr
           content: fullPrompt,
         },
       ],
-      max_completion_tokens: 500,
+      max_completion_tokens: 2000,
       temperature: 0.3, // Lower temperature for more factual output
     });
 
