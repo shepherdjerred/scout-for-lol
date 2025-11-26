@@ -30,15 +30,22 @@ import { ResultRating } from "./result-rating";
 const ErrorSchema = z.object({ message: z.string() });
 
 // External store for cost update events - must be outside component for stable references
+// Track the actual update count, NOT Date.now() which changes every call and breaks useSyncExternalStore
+let costUpdateCount = 0;
+
 function subscribeToCostUpdates(callback: () => void) {
-  window.addEventListener("cost-update", callback);
+  const handler = () => {
+    costUpdateCount += 1;
+    callback();
+  };
+  window.addEventListener("cost-update", handler);
   return () => {
-    window.removeEventListener("cost-update", callback);
+    window.removeEventListener("cost-update", handler);
   };
 }
 
 function getCostUpdateSnapshot() {
-  return Date.now();
+  return costUpdateCount;
 }
 
 type ResultsPanelProps = {

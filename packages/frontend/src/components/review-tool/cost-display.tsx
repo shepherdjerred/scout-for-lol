@@ -11,15 +11,22 @@ type CostDisplayProps = {
 };
 
 // External store for cost update events
+// Track the actual update count, NOT Date.now() which changes every call and breaks useSyncExternalStore
+let costUpdateCount = 0;
+
 function subscribeToCostUpdates(callback: () => void) {
-  window.addEventListener("cost-update", callback);
+  const handler = () => {
+    costUpdateCount += 1;
+    callback();
+  };
+  window.addEventListener("cost-update", handler);
   return () => {
-    window.removeEventListener("cost-update", callback);
+    window.removeEventListener("cost-update", handler);
   };
 }
 
 function getCostUpdateSnapshot() {
-  return Date.now();
+  return costUpdateCount;
 }
 
 // Store for async cost total data
@@ -74,11 +81,7 @@ export function CostDisplay({ costTracker }: CostDisplayProps) {
   );
 
   // Subscribe to cost total updates
-  const total = useSyncExternalStore(
-    subscribeToCostTotalCallback,
-    getCostTotalSnapshot,
-    getCostTotalSnapshot,
-  );
+  const total = useSyncExternalStore(subscribeToCostTotalCallback, getCostTotalSnapshot, getCostTotalSnapshot);
 
   if (!total) {
     return (
