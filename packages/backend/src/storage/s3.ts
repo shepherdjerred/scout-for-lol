@@ -1,4 +1,4 @@
-import type { MatchId, MatchDto } from "@scout-for-lol/data";
+import type { MatchId, MatchDto, TimelineDto } from "@scout-for-lol/data";
 import { MatchIdSchema } from "@scout-for-lol/data";
 import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.js";
 
@@ -185,6 +185,85 @@ export async function saveAIReviewImageToS3(
     returnUrl: true,
     additionalLogDetails: {
       queueType,
+    },
+  });
+}
+
+type TimelineSummaryS3Params = {
+  matchId: MatchId;
+  timelineDto: TimelineDto;
+  prompt: string;
+  summary: string;
+  durationMs: number;
+};
+
+/**
+ * Save timeline summary request and response to S3 storage
+ * @param params The parameters for saving
+ * @returns Promise that resolves when both files are saved
+ */
+export async function saveTimelineSummaryToS3(params: TimelineSummaryS3Params): Promise<void> {
+  const { matchId, timelineDto, prompt, summary, durationMs } = params;
+  // Save the request (timeline + prompt)
+  const requestBody = JSON.stringify(
+    {
+      prompt,
+      timeline: timelineDto,
+    },
+    null,
+    2,
+  );
+
+  await saveToS3({
+    matchId,
+    keyPrefix: "timeline-summaries",
+    keyExtension: "request.json",
+    body: requestBody,
+    contentType: "application/json",
+    metadata: {
+      matchId: matchId,
+      type: "timeline-summary-request",
+      frameCount: timelineDto.info.frames.length.toString(),
+    },
+    logEmoji: "📊",
+    logMessage: "Saving timeline summary request to S3",
+    errorContext: "timeline summary request",
+    returnUrl: false,
+    additionalLogDetails: {
+      frameCount: timelineDto.info.frames.length,
+    },
+  });
+
+  // Save the response (summary)
+  const responseBody = JSON.stringify(
+    {
+      summary,
+      durationMs,
+      generatedAt: new Date().toISOString(),
+    },
+    null,
+    2,
+  );
+
+  await saveToS3({
+    matchId,
+    keyPrefix: "timeline-summaries",
+    keyExtension: "response.json",
+    body: responseBody,
+    contentType: "application/json",
+    metadata: {
+      matchId: matchId,
+      type: "timeline-summary-response",
+      durationMs: durationMs.toString(),
+      summaryLength: summary.length.toString(),
+    },
+    logEmoji: "📝",
+    logMessage: "Saving timeline summary response to S3",
+    errorContext: "timeline summary response",
+    returnUrl: false,
+    additionalLogDetails: {
+      durationMs,
+      summaryLength: summary.length,
     },
   });
 }
