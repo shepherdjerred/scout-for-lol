@@ -83,6 +83,8 @@ impl DiscordClient {
             self.channel_id
         );
 
+        let content_clone = content.clone();
+        info!("Attempting to post Discord message: {}", content_clone);
         let payload = MessagePayload { content };
 
         let response = self
@@ -94,10 +96,13 @@ impl DiscordClient {
             .json(&payload)
             .send()
             .await
-            .map_err(|e| format!("Failed to send Discord message: {}", e))?;
+            .map_err(|e| {
+                error!("Failed to send Discord message request: {}", e);
+                format!("Failed to send Discord message: {}", e)
+            })?;
 
         if response.status().is_success() {
-            info!("Successfully posted message to Discord");
+            info!("Successfully posted message to Discord: {}", content_clone);
             Ok(())
         } else {
             let status = response.status();
@@ -105,9 +110,14 @@ impl DiscordClient {
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
+            let message_preview = if content_clone.len() > 50 {
+                format!("{}...", &content_clone[..50])
+            } else {
+                content_clone
+            };
             error!(
-                "Failed to post Discord message: {} - {}",
-                status, error_text
+                "Failed to post Discord message (status {}): {} - Message was: {}",
+                status, error_text, message_preview
             );
             Err(format!(
                 "Failed to post message: {} - {}",
@@ -129,7 +139,11 @@ impl DiscordClient {
         victim: &str,
         game_time: &str,
     ) -> Result<(), String> {
-        let message = format!("💀 **{}** killed **{}** at {}", killer, victim, game_time);
+        let message = if killer == "Unknown" {
+            format!("💀 **{}** died at {}", victim, game_time)
+        } else {
+            format!("💀 **{}** killed **{}** at {}", killer, victim, game_time)
+        };
         self.post_message(message).await
     }
 
@@ -194,6 +208,26 @@ impl DiscordClient {
             "🏁 **Game Ended!** {} won after {}",
             winning_team, game_duration
         );
+        self.post_message(message).await
+    }
+
+    /// Posts a first blood event
+    pub async fn post_first_blood(
+        &self,
+        killer: &str,
+        victim: &str,
+        game_time: &str,
+    ) -> Result<(), String> {
+        let message = format!(
+            "🩸 **FIRST BLOOD!** **{}** killed **{}** at {}",
+            killer, victim, game_time
+        );
+        self.post_message(message).await
+    }
+
+    /// Posts an ace event
+    pub async fn post_ace(&self, team: &str, game_time: &str) -> Result<(), String> {
+        let message = format!("💀 **ACE!** **{}** wiped the enemy team at {}", team, game_time);
         self.post_message(message).await
     }
 

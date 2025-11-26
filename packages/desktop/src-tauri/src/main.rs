@@ -19,7 +19,7 @@ mod tests;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tauri::State;
+use tauri::{Emitter, Manager, State};
 use tokio::sync::Mutex;
 use tracing::{error, info};
 
@@ -80,6 +80,7 @@ async fn configure_discord(
     match discord::DiscordClient::new(bot_token.clone(), channel_id.clone()).await {
         Ok(client) => {
             info!("Successfully configured Discord client");
+
             let mut discord = state.discord_client.lock().await;
             *discord = Some(client);
 
@@ -112,7 +113,7 @@ async fn get_discord_status(state: State<'_, AppState>) -> Result<discord::Disco
 }
 
 #[tauri::command]
-async fn start_monitoring(state: State<'_, AppState>) -> Result<(), String> {
+async fn start_monitoring(state: State<'_, AppState>, app_handle: tauri::AppHandle) -> Result<(), String> {
     info!("Starting game monitoring...");
 
     let mut is_monitoring = state.is_monitoring.lock().await;
@@ -120,8 +121,13 @@ async fn start_monitoring(state: State<'_, AppState>) -> Result<(), String> {
         return Err("Monitoring is already active".to_string());
     }
 
+    // Test event emission
+    if let Err(e) = app_handle.emit("backend-log", "🚀 Monitoring command received!") {
+        error!("Failed to emit test event: {}", e);
+    }
+
     // Start the event monitoring
-    events::start_event_monitoring(state.lcu_connection.clone(), state.discord_client.clone())
+    events::start_event_monitoring(state.lcu_connection.clone(), state.discord_client.clone(), app_handle)
         .await?;
 
     *is_monitoring = true;
@@ -154,6 +160,170 @@ async fn get_monitoring_status(state: State<'_, AppState>) -> Result<bool, Strin
 async fn load_config(state: State<'_, AppState>) -> Result<config::Config, String> {
     info!("Loading config from {:?}", state.config_path);
     Ok(config::Config::load(&state.config_path))
+}
+
+#[derive(serde::Serialize)]
+struct DiagnosticInfo {
+    gameflow_phase: String,
+    live_client_data_available: bool,
+    live_client_data_status: Option<u16>,
+    error_message: Option<String>,
+}
+
+#[derive(serde::Serialize)]
+struct EventTestResult {
+    success: bool,
+    event_count: usize,
+    events_found: Vec<String>,
+    error_message: Option<String>,
+    raw_data_keys: Option<Vec<String>>,
+}
+
+#[derive(serde::Serialize)]
+struct PollingStatusResult {
+    is_polling: bool,
+    last_poll_attempted: bool,
+    events_in_queue: usize,
+    highest_event_id_seen: Option<i64>,
+    message: String,
+}
+
+#[tauri::command]
+async fn get_diagnostics(state: State<'_, AppState>) -> Result<DiagnosticInfo, String> {
+    let lcu_guard = state.lcu_connection.lock().await;
+    let lcu = lcu_guard.as_ref().ok_or("LCU not connected")?;
+
+    // Check gameflow phase
+    let phase_response = lcu.get("/lol-gameflow/v1/gameflow-phase").await;
+    let gameflow_phase = match phase_response {
+        Ok(resp) if resp.status().is_success() => {
+            resp.text().await.unwrap_or_else(|_| "unknown".to_string())
+                .trim_matches('"').to_string()
+        }
+        _ => "unknown".to_string(),
+    };
+
+    // Check Live Client Data API
+    let live_client_response = lcu.get("/liveclientdata/allgamedata").await;
+    let (live_client_data_available, live_client_data_status) = match live_client_response {
+        Ok(resp) => (resp.status().is_success(), Some(resp.status().as_u16())),
+        Err(e) => {
+            return Ok(DiagnosticInfo {
+                gameflow_phase,
+                live_client_data_available: false,
+                live_client_data_status: None,
+                error_message: Some(format!("Failed to reach endpoint: {}", e)),
+            });
+        }
+    };
+
+    Ok(DiagnosticInfo {
+        gameflow_phase,
+        live_client_data_available,
+        live_client_data_status,
+        error_message: None,
+    })
+}
+
+#[tauri::command]
+async fn test_event_detection(state: State<'_, AppState>) -> Result<EventTestResult, String> {
+    let lcu_guard = state.lcu_connection.lock().await;
+    let lcu = lcu_guard.as_ref().ok_or("LCU not connected")?;
+
+    // Try the dedicated events endpoint first
+    let events_response = lcu.get("/liveclientdata/eventdata").await;
+
+    if let Ok(resp) = events_response {
+        if resp.status().is_success() {
+            if let Ok(data) = resp.json::<serde_json::Value>().await {
+                if let Some(events_array) = data.get("Events").and_then(|v| v.as_array()) {
+                    let events_found: Vec<String> = events_array
+                        .iter()
+                        .filter_map(|e| e.get("EventName").and_then(|v| v.as_str()).map(|s| s.to_string()))
+                        .collect();
+
+                    return Ok(EventTestResult {
+                        success: true,
+                        event_count: events_array.len(),
+                        events_found,
+                        error_message: None,
+                        raw_data_keys: None,
+                    });
+                }
+            }
+        }
+    }
+
+    // Fallback to allgamedata endpoint
+    let all_data_response = lcu.get("/liveclientdata/allgamedata").await;
+    match all_data_response {
+        Ok(resp) if resp.status().is_success() => {
+            if let Ok(data) = resp.json::<serde_json::Value>().await {
+                let events_array = data
+                    .get("events")
+                    .and_then(|v| v.as_object())
+                    .and_then(|obj| obj.get("Events"))
+                    .and_then(|v| v.as_array())
+                    .or_else(|| data.get("Events").and_then(|v| v.as_array()));
+
+                if let Some(events_array) = events_array {
+                    let events_found: Vec<String> = events_array
+                        .iter()
+                        .filter_map(|e| e.get("EventName").and_then(|v| v.as_str()).map(|s| s.to_string()))
+                        .collect();
+
+                    let keys: Vec<String> = data.as_object()
+                        .map(|o| o.keys().map(|k| k.to_string()).collect())
+                        .unwrap_or_default();
+
+                    return Ok(EventTestResult {
+                        success: true,
+                        event_count: events_array.len(),
+                        events_found,
+                        error_message: None,
+                        raw_data_keys: Some(keys),
+                    });
+                } else {
+                    let keys: Vec<String> = data.as_object()
+                        .map(|o| o.keys().map(|k| k.to_string()).collect())
+                        .unwrap_or_default();
+
+                    return Ok(EventTestResult {
+                        success: false,
+                        event_count: 0,
+                        events_found: vec![],
+                        error_message: Some("No events array found in response".to_string()),
+                        raw_data_keys: Some(keys),
+                    });
+                }
+            }
+            Ok(EventTestResult {
+                success: false,
+                event_count: 0,
+                events_found: vec![],
+                error_message: Some("Failed to parse JSON response".to_string()),
+                raw_data_keys: None,
+            })
+        }
+        Ok(resp) => {
+            Ok(EventTestResult {
+                success: false,
+                event_count: 0,
+                events_found: vec![],
+                error_message: Some(format!("API returned status: {}", resp.status())),
+                raw_data_keys: None,
+            })
+        }
+        Err(e) => {
+            Ok(EventTestResult {
+                success: false,
+                event_count: 0,
+                events_found: vec![],
+                error_message: Some(format!("Failed to reach API: {}", e)),
+                raw_data_keys: None,
+            })
+        }
+    }
 }
 
 #[cfg(target_os = "windows")]
@@ -226,6 +396,8 @@ fn main() {
             stop_monitoring,
             get_monitoring_status,
             load_config,
+            get_diagnostics,
+            test_event_detection,
         ])
         .setup(|app| {
             info!("Scout for LoL Desktop starting up...");

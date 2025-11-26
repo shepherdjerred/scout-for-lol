@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import {
   LeagueClientSection,
   DiscordConfigSection,
@@ -109,6 +110,17 @@ export default function App() {
     };
   }, [loadStatus]);
 
+  // Listen for backend logs
+  useEffect(() => {
+    const unlisten = listen<string>("backend-log", (event) => {
+      addLog("info", event.payload);
+    });
+
+    return () => {
+      void unlisten.then((fn) => fn());
+    };
+  }, []);
+
   const handleConnectLcu = async () => {
     setError(null);
     setLoading("Connecting to League Client...");
@@ -177,6 +189,30 @@ export default function App() {
       await invoke("start_monitoring");
       setIsMonitoring(true);
       addLog("info", "Game monitoring started successfully");
+
+      // Check diagnostics after starting
+      try {
+        const diagnostics = await invoke<{
+          gameflow_phase: string;
+          live_client_data_available: boolean;
+          live_client_data_status: number | null;
+          error_message: string | null;
+        }>("get_diagnostics");
+
+          addLog("info", `Gameflow phase: ${diagnostics.gameflow_phase}`);
+          if (diagnostics.live_client_data_available) {
+            addLog("info", `Live Client Data API: Available (status: ${diagnostics.live_client_data_status})`);
+          } else {
+            addLog("error", `Live Client Data API: NOT AVAILABLE`);
+            addLog("error", `To enable: League Client → Settings → Game → Enable Live Client Data API`);
+            addLog("error", `Then restart League Client and reconnect.`);
+            if (diagnostics.error_message) {
+              addLog("error", `Error: ${diagnostics.error_message}`);
+            }
+          }
+      } catch (diagErr) {
+        addLog("warning", `Could not get diagnostics: ${getErrorMessage(diagErr)}`);
+      }
     } catch (err) {
       const errorMsg = getErrorMessage(err);
       setError(errorMsg);
@@ -204,6 +240,49 @@ export default function App() {
     }
   };
 
+  const handleTestEvents = async () => {
+    setError(null);
+    setLoading("Testing event detection...");
+    addLog("info", "Testing event detection...");
+
+    try {
+      const result = await invoke<{
+        success: boolean;
+        event_count: number;
+        events_found: string[];
+        error_message: string | null;
+        raw_data_keys: string[] | null;
+      }>("test_event_detection");
+
+      if (result.success) {
+        addLog("info", `Found ${result.event_count} events`);
+        if (result.events_found.length > 0) {
+          addLog("info", `Event types: ${result.events_found.join(", ")}`);
+          const killEvents = result.events_found.filter((e) => e.includes("Kill"));
+          if (killEvents.length > 0) {
+            addLog("info", `Kill events found: ${killEvents.join(", ")}`);
+          } else {
+            addLog("warning", "No kill events found in current events");
+          }
+        }
+        if (result.raw_data_keys) {
+          addLog("info", `Available data keys: ${result.raw_data_keys.join(", ")}`);
+        }
+      } else {
+        addLog("error", `Event detection failed: ${result.error_message || "Unknown error"}`);
+        if (result.raw_data_keys) {
+          addLog("info", `Available data keys: ${result.raw_data_keys.join(", ")}`);
+        }
+      }
+    } catch (err) {
+      const errorMsg = getErrorMessage(err);
+      setError(errorMsg);
+      addLog("error", `Failed to test events: ${errorMsg}`);
+    } finally {
+      setLoading(null);
+    }
+  };
+
   const handleClearLogs = () => {
     setLogs([]);
   };
@@ -212,7 +291,7 @@ export default function App() {
     <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white px-8 py-6 text-center dark:border-gray-800 dark:bg-gray-800">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-black">
           Scout for LoL
         </h1>
         <p className="mt-2 text-gray-600 dark:text-gray-400">
@@ -280,6 +359,9 @@ export default function App() {
               }}
               onStop={() => {
                 void handleStopMonitoring();
+              }}
+              onTest={() => {
+                void handleTestEvents();
               }}
             />
           )}
