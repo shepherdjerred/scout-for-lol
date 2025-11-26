@@ -125,6 +125,7 @@ pub async fn start_event_monitoring(
     // Spawn background tasks for WebSocket monitoring and live game data polling
     let lcu_for_polling = lcu_conn.clone();
     let discord_for_polling = discord_client.clone();
+    let app_handle_for_polling = app_handle.clone();
 
     tokio::spawn(async move {
         if let Err(e) = run_event_loop(lcu_conn, discord_client).await {
@@ -136,8 +137,8 @@ pub async fn start_event_monitoring(
     tokio::spawn(async move {
         info!("Live game data polling task spawned");
         debug_log("=== POLLING TASK SPAWNED ===");
-        let _ = app_handle.emit("backend-log", "Polling task started");
-        if let Err(e) = poll_live_game_data(lcu_for_polling, discord_for_polling, app_handle).await {
+        let _ = app_handle_for_polling.emit("backend-log", "Polling task started");
+        if let Err(e) = poll_live_game_data(lcu_for_polling, discord_for_polling, app_handle_for_polling).await {
             error!("Live game data polling failed: {}", e);
             debug_log(&format!("POLLING FAILED: {}", e));
         }
@@ -252,78 +253,77 @@ async fn poll_live_game_data(
         debug!("Polling cycle started...");
         debug_log("Poll cycle...");
 
-        // Check if game is in progress by checking gameflow phase
-        let phase_response = lcu.get("/lol-gameflow/v1/gameflow-phase").await;
-        if let Ok(response) = phase_response {
-            if response.status().is_success() {
-                if let Ok(phase) = response.text().await {
-                    let phase_trimmed = phase.trim_matches('"');
-                    info!("Gameflow phase: {}", phase_trimmed);
-                    // Try to poll live game data if API is available, regardless of phase
-                    // The Live Client Data API only works during active games anyway
-                    if phase_trimmed == "InProgress" {
-                        // Game is in progress, poll live game data
-                        info!("Game is in progress, polling for kill events...");
-                    } else {
-                        debug!("Gameflow phase is '{}', but will still check Live Client Data API", phase_trimmed);
-                    }
-
-                    // Always try to poll if we can - the API will return empty/error if not in game
-                    match process_live_game_data(&lcu, &discord, &game_state, &app_handle).await {
-                        Ok(()) => {
-                            // Successfully processed, keep state for next poll
-                        }
-                        Err(e) => {
-                            // Throttle warnings to once per minute
-                            let mut state = game_state.lock().await;
-                            let should_warn = state.last_api_warning
-                                .map(|t| t.elapsed().as_secs() > 60)
-                                .unwrap_or(true);
-
-                            if should_warn {
-                                warn!("Failed to process live game data: {}. Make sure Live Client Data API is enabled in League Client settings.", e);
-                                state.last_api_warning = Some(std::time::Instant::now());
-                            }
-
-                            // Reset state on error - likely not in game anymore
-                            if phase_trimmed != "InProgress" && phase_trimmed != "unknown" {
-                                state.first_blood_occurred = false;
-                                state.enemy_players.clear();
-                                state.recent_kills.clear();
-                                state.highest_processed_event_id = None;
-                                state.last_api_warning = None;
-                            }
-                        }
-                    }
-                } else {
-                    debug!("Failed to parse gameflow phase response");
-                }
-            } else {
-                debug!("Gameflow phase check failed with status: {}", response.status());
+        // Try to process live game data (port 2999 - only available during active game)
+        debug_log("Calling process_live_game_data...");
+        match process_live_game_data(&lcu, &discord, &game_state, &app_handle).await {
+            Ok(()) => {
+                debug_log("Process succeeded");
             }
-        } else {
-            debug!("Failed to get gameflow phase: {:?}", phase_response.err());
+            Err(e) => {
+                debug_log(&format!("Live Client Data API error: {}", e));
+
+                // Throttle warnings to once per minute
+                let mut state = game_state.lock().await;
+                let should_warn = state.last_api_warning
+                    .map(|t| t.elapsed().as_secs() > 60)
+                    .unwrap_or(true);
+
+                if should_warn {
+                    debug_log(&format!("No active game - Live Client Data API not available: {}", e));
+                    state.last_api_warning = Some(std::time::Instant::now());
+                }
+            }
         }
     }
 }
 
 /// Processes live game data to detect kills, first blood, and ace
 async fn process_live_game_data(
-    lcu: &LcuConnection,
+    _lcu: &LcuConnection,
     discord: &DiscordClient,
     game_state: &Arc<Mutex<GameState>>,
     app_handle: &tauri::AppHandle,
 ) -> Result<(), String> {
-    // Try the dedicated events endpoint first - it might return only new events
-    let response = match lcu.get("/liveclientdata/eventdata").await {
+    debug_log("process_live_game_data called");
+
+    // Create HTTP client that ignores SSL errors (Live Client Data API uses self-signed cert)
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+
+    // Live Client Data API is always on port 2999
+    let base_url = "https://127.0.0.1:2999";
+
+    // Try the dedicated events endpoint first
+    debug_log("Trying /liveclientdata/eventdata...");
+    let response = match client.get(format!("{}/liveclientdata/eventdata", base_url)).send().await {
         Ok(resp) if resp.status().is_success() => {
             info!("Using /liveclientdata/eventdata endpoint");
+            debug_log("eventdata endpoint succeeded");
             resp
         }
-        _ => {
+        Err(e) => {
             // Fallback to allgamedata
-            info!("Falling back to /liveclientdata/allgamedata endpoint");
-            lcu.get("/liveclientdata/allgamedata").await?
+            debug_log(&format!("eventdata failed: {}, trying allgamedata", e));
+            match client.get(format!("{}/liveclientdata/allgamedata", base_url)).send().await {
+                Ok(r) => r,
+                Err(e2) => {
+                    debug_log(&format!("allgamedata ALSO failed: {}", e2));
+                    return Err(format!("Live Client Data API not available (game not active?)"));
+                }
+            }
+        }
+        Ok(resp) => {
+            // Not successful, try allgamedata
+            debug_log(&format!("eventdata status: {}, trying allgamedata", resp.status()));
+            match client.get(format!("{}/liveclientdata/allgamedata", base_url)).send().await {
+                Ok(r) => r,
+                Err(e) => {
+                    debug_log(&format!("allgamedata failed: {}", e));
+                    return Err(format!("Live Client Data API not available"));
+                }
+            }
         }
     };
 

@@ -19,7 +19,7 @@ mod tests;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tauri::{Manager, State};
+use tauri::{Emitter, Manager, State};
 use tokio::sync::Mutex;
 use tracing::{error, info};
 
@@ -81,13 +81,6 @@ async fn configure_discord(
         Ok(client) => {
             info!("Successfully configured Discord client");
 
-            // Post a test message to verify Discord is working
-            let test_message = "✅ Scout for LoL is now monitoring your game! Kill events will be posted here.";
-            if let Err(e) = client.post_message(test_message.to_string()).await {
-                error!("Failed to post test message to Discord: {}", e);
-                // Don't fail the configuration, just log the error
-            }
-
             let mut discord = state.discord_client.lock().await;
             *discord = Some(client);
 
@@ -126,6 +119,11 @@ async fn start_monitoring(state: State<'_, AppState>, app_handle: tauri::AppHand
     let mut is_monitoring = state.is_monitoring.lock().await;
     if *is_monitoring {
         return Err("Monitoring is already active".to_string());
+    }
+
+    // Test event emission
+    if let Err(e) = app_handle.emit("backend-log", "🚀 Monitoring command received!") {
+        error!("Failed to emit test event: {}", e);
     }
 
     // Start the event monitoring
