@@ -18,6 +18,8 @@ Here's some information about <PLAYER NAME>: <PLAYER PERSONALITY>
 
 In this match <PLAYER NAME> was playing as <PLAYER CHAMPION>. <PLAYER NAME> was in the <PLAYER LANE> lane. Their lane opponent was <OPPONENT CHAMPION>.
 
+<FRIENDS CONTEXT>
+
 Here's a summary about the objective of the <PLAYER LANE> lane: <LANE DESCRIPTION>
 
 Guidelines for an Entertaining Review:
