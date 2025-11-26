@@ -270,12 +270,15 @@ export class ScoutForLol {
       logWithTimestamp("⏭️ Phase 3: Skipping image publishing (no credentials or not prod environment)");
     }
 
-    // Deploy backend to homelab
-    const deployStage = env === "prod" ? "beta" : "dev";
-    await withTiming("CI backend deploy phase", () => {
-      logWithTimestamp(`🚀 Phase 4: Deploying backend to ${deployStage}...`);
-      return this.deploy(source, version, deployStage, ghToken);
-    });
+    // Deploy backend to homelab (only for prod)
+    if (env === "prod") {
+      await withTiming("CI backend deploy phase", () => {
+        logWithTimestamp("🚀 Phase 4: Deploying backend to beta...");
+        return this.deploy(source, version, "beta", ghToken);
+      });
+    } else {
+      logWithTimestamp("⏭️ Phase 4: Skipping backend deployment (not prod environment)");
+    }
 
     // Deploy frontend to Cloudflare Pages if credentials provided
     const shouldDeployFrontend = accountId && apiToken && branch;
