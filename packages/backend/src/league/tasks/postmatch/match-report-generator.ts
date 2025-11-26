@@ -226,7 +226,10 @@ async function processArenaMatch(
   playersInMatch: PlayerConfigEntry[],
 ): Promise<MessageCreateOptions> {
   console.log(`[generateMatchReport] 🎯 Processing as arena match`);
+  console.log(`[debug][processArenaMatch] Players array length: ${players.length.toString()}`);
+  console.log(`[debug][processArenaMatch] Calling toArenaMatch...`);
   const arenaMatch = await toArenaMatch(players, matchData);
+  console.log(`[debug][processArenaMatch] toArenaMatch completed successfully`);
 
   // Create Discord message for arena
   const [attachment, embed] = await createMatchImage(arenaMatch, matchId);
