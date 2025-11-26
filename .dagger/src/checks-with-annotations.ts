@@ -81,19 +81,29 @@ const PACKAGE_CONFIGS: PackageCheckConfig[] = [
 ];
 
 /**
- * Run ESLint with JSON output for a package
+ * Run lint check for a package using bun run lint (matching original behavior)
+ * Then run eslint with JSON format separately for annotations
  */
-async function runESLintCheck(container: Container, packagePath: string, packageName: string): Promise<CheckResult> {
+async function runLintCheck(container: Container, packagePath: string, packageName: string): Promise<CheckResult> {
   const workdir = `/workspace/${packagePath}`;
 
-  // Run ESLint with JSON format for parsing
+  // Run the actual lint command (bun run lint) - this matches the original check behavior
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- Dagger types not available at lint time
-  const result = await runAndCapture(container.withWorkdir(workdir), ["bunx", "eslint", "src", "--format", "json"]);
+  const result = await runAndCapture(container.withWorkdir(workdir), ["bun", "run", "lint"]);
 
-  const annotations = parseESLintOutput(result.stdout);
+  // Try to get JSON output for better annotations (if eslint is available)
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- Dagger types not available at lint time
+  const jsonResult = await runAndCapture(container.withWorkdir(workdir), ["bunx", "eslint", "src", "--format", "json"]);
+
+  // Parse JSON output for annotations if available, otherwise try to parse text output
+  let annotations = parseESLintOutput(jsonResult.stdout);
+  if (annotations.length === 0) {
+    // Fallback: parse TypeScript-style errors from the combined output
+    annotations = parseTypeScriptOutput(result.stdout + result.stderr);
+  }
 
   return {
-    name: `${packageName}/eslint`,
+    name: `${packageName}/lint`,
     passed: result.exitCode === 0,
     output: result.stdout + result.stderr,
     annotations,
@@ -101,14 +111,14 @@ async function runESLintCheck(container: Container, packagePath: string, package
 }
 
 /**
- * Run TypeScript type check for a package
+ * Run TypeScript type check for a package using bun run typecheck (matching original behavior)
  */
 async function runTypeCheck(container: Container, packagePath: string, packageName: string): Promise<CheckResult> {
   const workdir = `/workspace/${packagePath}`;
 
-  // Run tsc with pretty=false for parseable output
+  // Run the actual typecheck command (bun run typecheck) - this matches the original check behavior
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- Dagger types not available at lint time
-  const result = await runAndCapture(container.withWorkdir(workdir), ["bunx", "tsc", "--noEmit", "--pretty", "false"]);
+  const result = await runAndCapture(container.withWorkdir(workdir), ["bun", "run", "typecheck"]);
 
   const annotations = parseTypeScriptOutput(result.stdout + result.stderr);
 
@@ -121,13 +131,14 @@ async function runTypeCheck(container: Container, packagePath: string, packageNa
 }
 
 /**
- * Run tests for a package
+ * Run tests for a package using bun run test:ci (matching original behavior)
  */
 async function runTestCheck(container: Container, packagePath: string, packageName: string): Promise<CheckResult> {
   const workdir = `/workspace/${packagePath}`;
 
+  // Use test:ci if available (has junit reporter), otherwise fall back to test
   // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- Dagger types not available at lint time
-  const result = await runAndCapture(container.withWorkdir(workdir), ["bun", "test", "--bail"]);
+  const result = await runAndCapture(container.withWorkdir(workdir), ["bun", "run", "test:ci"]);
 
   const annotations = parseBunTestOutput(result.stdout + result.stderr);
 
@@ -158,13 +169,15 @@ async function checkPackageWithAnnotations(
     container = container.withWorkdir(`/workspace/${config.packagePath}`).withExec(["bun", "run", "generate"]);
   }
 
-  // Run checks sequentially to avoid resource contention
-  const eslintResult = await runESLintCheck(container, config.packagePath, config.name);
-  results.push(eslintResult);
-
+  // Run typecheck first (matching original order in check functions)
   const typeResult = await runTypeCheck(container, config.packagePath, config.name);
   results.push(typeResult);
 
+  // Run lint
+  const lintResult = await runLintCheck(container, config.packagePath, config.name);
+  results.push(lintResult);
+
+  // Run tests if applicable
   if (config.hasTests) {
     const testResult = await runTestCheck(container, config.packagePath, config.name);
     results.push(testResult);
