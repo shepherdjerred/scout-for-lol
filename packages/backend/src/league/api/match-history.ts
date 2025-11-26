@@ -4,6 +4,7 @@ import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.js";
 import type { PlayerConfigEntry, MatchId } from "@scout-for-lol/data";
 import { MatchIdSchema } from "@scout-for-lol/data";
 import { z } from "zod";
+import * as Sentry from "@sentry/node";
 
 /**
  * Fetch recent match IDs for a player
@@ -30,6 +31,9 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
 
     if (!matchIdsResult.success) {
       console.error(`❌ Failed to parse match IDs for ${playerAlias}:`, matchIdsResult.error);
+      Sentry.captureException(matchIdsResult.error, {
+        tags: { source: "match-id-parsing", playerAlias },
+      });
       return undefined;
     }
 
@@ -47,8 +51,14 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
         return undefined;
       }
       console.error(`❌ HTTP Error ${result.data.status.toString()} for ${playerAlias}`);
+      Sentry.captureException(e, {
+        tags: { source: "match-history-api", playerAlias, httpStatus: result.data.status.toString() },
+      });
     } else {
       console.error(`❌ Error fetching match history for ${playerAlias}:`, e);
+      Sentry.captureException(e, {
+        tags: { source: "match-history-api", playerAlias },
+      });
     }
     return undefined;
   }

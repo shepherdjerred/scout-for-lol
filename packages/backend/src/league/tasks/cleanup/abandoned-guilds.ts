@@ -2,6 +2,7 @@ import type { Client } from "discord.js";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { getAbandonedGuilds, markGuildAsNotified } from "@scout-for-lol/backend/database/guild-permission-errors.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import * as Sentry from "@sentry/node";
 import {
   abandonedGuildsDetectedTotal,
   guildsLeftTotal,
@@ -49,6 +50,7 @@ export async function checkAbandonedGuilds(client: Client): Promise<void> {
           `[AbandonedGuilds] Error handling abandoned guild ${guildInfo.serverId}:`,
           getErrorMessage(error),
         );
+        Sentry.captureException(error, { tags: { source: "handle-abandoned-guild", serverId: guildInfo.serverId } });
         // Continue with other guilds even if one fails
       }
     }
@@ -56,6 +58,7 @@ export async function checkAbandonedGuilds(client: Client): Promise<void> {
     console.log("[AbandonedGuilds] Abandoned guild check complete");
   } catch (error) {
     console.error("[AbandonedGuilds] Error during abandoned guild check:", getErrorMessage(error));
+    Sentry.captureException(error, { tags: { source: "check-abandoned-guilds" } });
     throw error;
   }
 }

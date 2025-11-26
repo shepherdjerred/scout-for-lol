@@ -10,6 +10,7 @@ import { send as sendChannelMessage, ChannelSendError } from "@scout-for-lol/bac
 import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { z } from "zod";
 import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.js";
+import * as Sentry from "@sentry/node";
 
 // ============================================================================
 // Discord Notifications
@@ -51,6 +52,9 @@ Good luck! 🍀`;
       console.warn(
         `[CompetitionLifecycle] ⚠️  Failed to post start notification for competition ${competition.id.toString()}: ${String(error)}`,
       );
+      Sentry.captureException(error, {
+        tags: { source: "lifecycle-start-notification", competitionId: competition.id.toString() },
+      });
     }
     // Don't throw - notification failure shouldn't stop the lifecycle transition
   }
@@ -136,6 +140,9 @@ async function postFinalLeaderboard(
       console.warn(
         `[CompetitionLifecycle] ⚠️  Failed to post final leaderboard for competition ${competition.id.toString()}: ${String(error)}`,
       );
+      Sentry.captureException(error, {
+        tags: { source: "lifecycle-end-notification", competitionId: competition.id.toString() },
+      });
     }
     // Don't throw - notification failure shouldn't stop the lifecycle transition
   }
@@ -199,6 +206,9 @@ async function handleCompetitionStarts(prismaClient: PrismaClient, now: Date): P
       console.log(`[CompetitionLifecycle] ✅ Competition ${competition.id.toString()} started successfully`);
     } catch (error) {
       console.error(`[CompetitionLifecycle] ❌ Error starting competition ${competition.id.toString()}:`, error);
+      Sentry.captureException(error, {
+        tags: { source: "lifecycle-start-competition", competitionId: competition.id.toString() },
+      });
       // Continue with other competitions
     }
   }
@@ -259,6 +269,9 @@ async function handleCompetitionEnds(prismaClient: PrismaClient, now: Date): Pro
       console.log(`[CompetitionLifecycle] ✅ Competition ${competition.id.toString()} ended successfully`);
     } catch (error) {
       console.error(`[CompetitionLifecycle] ❌ Error ending competition ${competition.id.toString()}:`, error);
+      Sentry.captureException(error, {
+        tags: { source: "lifecycle-end-competition", competitionId: competition.id.toString() },
+      });
       // Continue with other competitions
     }
   }
