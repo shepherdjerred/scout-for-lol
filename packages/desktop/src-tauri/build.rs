@@ -23,13 +23,21 @@ fn main() {
             Some(dll_path.clone())
         } else {
             // Look for DLL in webview2-com-sys build output
-            let build_dir = PathBuf::from("target").join(&target).join("release").join("build");
+            let build_dir = PathBuf::from("target")
+                .join(&target)
+                .join("release")
+                .join("build");
             if build_dir.exists() {
                 // Search for webview2-com-sys output directories
                 if let Ok(entries) = fs::read_dir(&build_dir) {
                     for entry in entries.flatten() {
                         let path = entry.path();
-                        if path.is_dir() && path.file_name().and_then(|n| n.to_str()).map_or(false, |n| n.contains("webview2-com-sys")) {
+                        if path.is_dir()
+                            && path
+                                .file_name()
+                                .and_then(|n| n.to_str())
+                                .map_or(false, |n| n.contains("webview2-com-sys"))
+                        {
                             // Check x64 directory (most common)
                             let x64_dll = path.join("out").join("x64").join("WebView2Loader.dll");
                             if x64_dll.exists() {
@@ -61,7 +69,10 @@ fn main() {
         } else {
             // Warn if DLL is missing from release directory
             // This ensures Windows can find it when loading the executable
-            eprintln!("cargo:warning=WebView2Loader.dll should be in: {}", dll_path.display());
+            eprintln!(
+                "cargo:warning=WebView2Loader.dll should be in: {}",
+                dll_path.display()
+            );
         }
     }
 }

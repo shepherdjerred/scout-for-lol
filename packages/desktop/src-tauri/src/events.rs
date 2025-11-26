@@ -138,7 +138,9 @@ pub async fn start_event_monitoring(
         info!("Live game data polling task spawned");
         debug_log("=== POLLING TASK SPAWNED ===");
         let _ = app_handle_for_polling.emit("backend-log", "Polling task started");
-        if let Err(e) = poll_live_game_data(lcu_for_polling, discord_for_polling, app_handle_for_polling).await {
+        if let Err(e) =
+            poll_live_game_data(lcu_for_polling, discord_for_polling, app_handle_for_polling).await
+        {
             error!("Live game data polling failed: {}", e);
             debug_log(&format!("POLLING FAILED: {}", e));
         }
@@ -264,12 +266,16 @@ async fn poll_live_game_data(
 
                 // Throttle warnings to once per minute
                 let mut state = game_state.lock().await;
-                let should_warn = state.last_api_warning
+                let should_warn = state
+                    .last_api_warning
                     .map(|t| t.elapsed().as_secs() > 60)
                     .unwrap_or(true);
 
                 if should_warn {
-                    debug_log(&format!("No active game - Live Client Data API not available: {}", e));
+                    debug_log(&format!(
+                        "No active game - Live Client Data API not available: {}",
+                        e
+                    ));
                     state.last_api_warning = Some(std::time::Instant::now());
                 }
             }
@@ -297,7 +303,11 @@ async fn process_live_game_data(
 
     // Try the dedicated events endpoint first
     debug_log("Trying /liveclientdata/eventdata...");
-    let response = match client.get(format!("{}/liveclientdata/eventdata", base_url)).send().await {
+    let response = match client
+        .get(format!("{}/liveclientdata/eventdata", base_url))
+        .send()
+        .await
+    {
         Ok(resp) if resp.status().is_success() => {
             info!("Using /liveclientdata/eventdata endpoint");
             debug_log("eventdata endpoint succeeded");
@@ -306,18 +316,31 @@ async fn process_live_game_data(
         Err(e) => {
             // Fallback to allgamedata
             debug_log(&format!("eventdata failed: {}, trying allgamedata", e));
-            match client.get(format!("{}/liveclientdata/allgamedata", base_url)).send().await {
+            match client
+                .get(format!("{}/liveclientdata/allgamedata", base_url))
+                .send()
+                .await
+            {
                 Ok(r) => r,
                 Err(e2) => {
                     debug_log(&format!("allgamedata ALSO failed: {}", e2));
-                    return Err(format!("Live Client Data API not available (game not active?)"));
+                    return Err(format!(
+                        "Live Client Data API not available (game not active?)"
+                    ));
                 }
             }
         }
         Ok(resp) => {
             // Not successful, try allgamedata
-            debug_log(&format!("eventdata status: {}, trying allgamedata", resp.status()));
-            match client.get(format!("{}/liveclientdata/allgamedata", base_url)).send().await {
+            debug_log(&format!(
+                "eventdata status: {}, trying allgamedata",
+                resp.status()
+            ));
+            match client
+                .get(format!("{}/liveclientdata/allgamedata", base_url))
+                .send()
+                .await
+            {
                 Ok(r) => r,
                 Err(e) => {
                     debug_log(&format!("allgamedata failed: {}", e));
@@ -333,9 +356,10 @@ async fn process_live_game_data(
         return Ok(());
     }
 
-    let data: Value = response.json().await.map_err(|e| {
-        format!("Failed to parse live game data: {}", e)
-    })?;
+    let data: Value = response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse live game data: {}", e))?;
 
     info!("Fetched live game data, checking for events...");
 
@@ -345,11 +369,16 @@ async fn process_live_game_data(
         if let Some(events_array) = events_obj.get("Events").and_then(|v| v.as_array()) {
             info!("Found {} events in Events array", events_array.len());
         } else {
-            warn!("Events.Events is not an array. Events structure: {:?}", events_obj);
+            warn!(
+                "Events.Events is not an array. Events structure: {:?}",
+                events_obj
+            );
         }
     } else {
-        warn!("No 'events' key found in live game data. Available keys: {:?}",
-              data.as_object().map(|o| o.keys().collect::<Vec<_>>()));
+        warn!(
+            "No 'events' key found in live game data. Available keys: {:?}",
+            data.as_object().map(|o| o.keys().collect::<Vec<_>>())
+        );
         // Try alternative structure - maybe events are at root level?
         if let Some(events_array) = data.get("Events").and_then(|v| v.as_array()) {
             info!("Found {} events at root level 'Events'", events_array.len());
@@ -401,9 +430,23 @@ async fn process_live_game_data(
             state.highest_processed_event_id
         };
 
-        info!("Checking events. Highest processed so far: {:?}", highest_processed);
-        debug_log(&format!("Checking {} events. Highest processed: {:?}", events_array.len(), highest_processed));
-        let _ = app_handle.emit("backend-log", format!("Checking {} events (highest: {:?})", events_array.len(), highest_processed));
+        info!(
+            "Checking events. Highest processed so far: {:?}",
+            highest_processed
+        );
+        debug_log(&format!(
+            "Checking {} events. Highest processed: {:?}",
+            events_array.len(),
+            highest_processed
+        ));
+        let _ = app_handle.emit(
+            "backend-log",
+            format!(
+                "Checking {} events (highest: {:?})",
+                events_array.len(),
+                highest_processed
+            ),
+        );
 
         let mut kill_count = 0;
         let mut new_highest_id = highest_processed;
@@ -415,7 +458,10 @@ async fn process_live_game_data(
             if let Some(id) = event_id {
                 if let Some(highest) = highest_processed {
                     if id <= highest {
-                        debug!("Skipping event ID {} (already processed, highest was {})", id, highest);
+                        debug!(
+                            "Skipping event ID {} (already processed, highest was {})",
+                            id, highest
+                        );
                         continue;
                     }
                 }
@@ -431,21 +477,33 @@ async fn process_live_game_data(
             }
 
             if let Some(event_type) = event.get("EventName").and_then(|v| v.as_str()) {
-                info!("Processing NEW event type: {} (ID: {:?})", event_type, event_id);
+                info!(
+                    "Processing NEW event type: {} (ID: {:?})",
+                    event_type, event_id
+                );
                 match event_type {
                     "ChampionKill" => {
                         kill_count += 1;
-                        info!("Found ChampionKill event #{}. Posting to Discord...", kill_count);
+                        info!(
+                            "Found ChampionKill event #{}. Posting to Discord...",
+                            kill_count
+                        );
                         debug_log(&format!("Posting ChampionKill to Discord..."));
-                        let _ = app_handle.emit("backend-log", format!("💀 Posting ChampionKill to Discord..."));
-                        if let Err(e) = handle_champion_kill_event(event, discord, game_state).await {
+                        let _ = app_handle.emit(
+                            "backend-log",
+                            format!("💀 Posting ChampionKill to Discord..."),
+                        );
+                        if let Err(e) = handle_champion_kill_event(event, discord, game_state).await
+                        {
                             error!("Failed to post kill event to Discord: {}", e);
                             debug_log(&format!("Discord post FAILED: {}", e));
-                            let _ = app_handle.emit("backend-log", format!("❌ Discord post failed: {}", e));
+                            let _ = app_handle
+                                .emit("backend-log", format!("❌ Discord post failed: {}", e));
                         } else {
                             info!("✅ Successfully posted kill event to Discord");
                             debug_log("✅ Discord post SUCCESS");
-                            let _ = app_handle.emit("backend-log", "✅ Kill posted to Discord".to_string());
+                            let _ = app_handle
+                                .emit("backend-log", "✅ Kill posted to Discord".to_string());
                         }
                     }
                     "FirstBlood" => {
@@ -474,7 +532,10 @@ async fn process_live_game_data(
                     }
                     "TurretKilled" | "FirstBrick" => {
                         kill_count += 1;
-                        info!("Found {} event #{}. Posting to Discord...", event_type, kill_count);
+                        info!(
+                            "Found {} event #{}. Posting to Discord...",
+                            event_type, kill_count
+                        );
                         if let Err(e) = handle_turret_kill_event(event, discord).await {
                             error!("Failed to post turret event to Discord: {}", e);
                         } else {
@@ -527,19 +588,28 @@ async fn process_live_game_data(
             let mut state = game_state.lock().await;
             state.highest_processed_event_id = Some(new_highest);
             info!("Updated highest processed event ID to: {}", new_highest);
-            debug_log(&format!("Updated highest event ID to: {} ({} new events processed)", new_highest, new_events_found));
+            debug_log(&format!(
+                "Updated highest event ID to: {} ({} new events processed)",
+                new_highest, new_events_found
+            ));
         }
 
         if new_events_found == 0 {
             debug!("No new events found in this poll");
         } else {
-            debug_log(&format!("Processed {} new events this poll", new_events_found));
+            debug_log(&format!(
+                "Processed {} new events this poll",
+                new_events_found
+            ));
         }
     } else {
         warn!("No events array found in live game data. Checked: events.Events and Events");
         // Log a sample of the data structure to help debug
         if let Some(obj) = data.as_object() {
-            debug!("Available top-level keys: {:?}", obj.keys().collect::<Vec<_>>());
+            debug!(
+                "Available top-level keys: {:?}",
+                obj.keys().collect::<Vec<_>>()
+            );
         }
     }
 
@@ -574,7 +644,10 @@ async fn handle_champion_kill_event(
     let seconds = (timestamp % 60.0) as u64;
     let timestamp_str = format!("{}:{:02}", minutes, seconds);
 
-    info!("Posting kill event: {} killed {} at {}", killer, victim, timestamp_str);
+    info!(
+        "Posting kill event: {} killed {} at {}",
+        killer, victim, timestamp_str
+    );
     discord.post_kill(killer, victim, &timestamp_str).await?;
 
     Ok(())
@@ -610,17 +683,19 @@ async fn handle_first_blood_event(
     state.first_blood_occurred = true;
     drop(state);
 
-    info!("Posting first blood: {} killed {} at {}", killer, victim, timestamp_str);
-    discord.post_first_blood(killer, victim, &timestamp_str).await?;
+    info!(
+        "Posting first blood: {} killed {} at {}",
+        killer, victim, timestamp_str
+    );
+    discord
+        .post_first_blood(killer, victim, &timestamp_str)
+        .await?;
 
     Ok(())
 }
 
 /// Handles a multikill event
-async fn handle_multikill_event(
-    event: &Value,
-    discord: &DiscordClient,
-) -> Result<(), String> {
+async fn handle_multikill_event(event: &Value, discord: &DiscordClient) -> Result<(), String> {
     let killer = event
         .get("KillerName")
         .and_then(|v| v.as_str())
@@ -648,17 +723,19 @@ async fn handle_multikill_event(
         _ => "MULTIKILL",
     };
 
-    info!("Posting multikill: {} got {} at {}", killer, multikill_type, timestamp_str);
-    discord.post_multikill(killer, multikill_type, &timestamp_str).await?;
+    info!(
+        "Posting multikill: {} got {} at {}",
+        killer, multikill_type, timestamp_str
+    );
+    discord
+        .post_multikill(killer, multikill_type, &timestamp_str)
+        .await?;
 
     Ok(())
 }
 
 /// Handles an ace event
-async fn handle_ace_event(
-    event: &Value,
-    discord: &DiscordClient,
-) -> Result<(), String> {
+async fn handle_ace_event(event: &Value, discord: &DiscordClient) -> Result<(), String> {
     let acer = event
         .get("Acer")
         .and_then(|v| v.as_str())
@@ -678,17 +755,17 @@ async fn handle_ace_event(
     let seconds = (timestamp % 60.0) as u64;
     let timestamp_str = format!("{}:{:02}", minutes, seconds);
 
-    info!("Posting ace: {} (team {}) at {}", acer, acing_team, timestamp_str);
+    info!(
+        "Posting ace: {} (team {}) at {}",
+        acer, acing_team, timestamp_str
+    );
     discord.post_ace(acing_team, &timestamp_str).await?;
 
     Ok(())
 }
 
 /// Handles a dragon kill event
-async fn handle_dragon_kill_event(
-    event: &Value,
-    discord: &DiscordClient,
-) -> Result<(), String> {
+async fn handle_dragon_kill_event(event: &Value, discord: &DiscordClient) -> Result<(), String> {
     let killer = event
         .get("KillerName")
         .and_then(|v| v.as_str())
@@ -719,17 +796,19 @@ async fn handle_dragon_kill_event(
         format!("{} DRAGON", dragon_type)
     };
 
-    info!("Posting dragon kill: {} killed {} at {}", killer, objective_name, timestamp_str);
-    discord.post_objective(killer, &objective_name, &timestamp_str).await?;
+    info!(
+        "Posting dragon kill: {} killed {} at {}",
+        killer, objective_name, timestamp_str
+    );
+    discord
+        .post_objective(killer, &objective_name, &timestamp_str)
+        .await?;
 
     Ok(())
 }
 
 /// Handles a baron kill event
-async fn handle_baron_kill_event(
-    event: &Value,
-    discord: &DiscordClient,
-) -> Result<(), String> {
+async fn handle_baron_kill_event(event: &Value, discord: &DiscordClient) -> Result<(), String> {
     let killer = event
         .get("KillerName")
         .and_then(|v| v.as_str())
@@ -755,17 +834,19 @@ async fn handle_baron_kill_event(
         "BARON"
     };
 
-    info!("Posting baron kill: {} killed {} at {}", killer, objective_name, timestamp_str);
-    discord.post_objective(killer, objective_name, &timestamp_str).await?;
+    info!(
+        "Posting baron kill: {} killed {} at {}",
+        killer, objective_name, timestamp_str
+    );
+    discord
+        .post_objective(killer, objective_name, &timestamp_str)
+        .await?;
 
     Ok(())
 }
 
 /// Handles a herald kill event
-async fn handle_herald_kill_event(
-    event: &Value,
-    discord: &DiscordClient,
-) -> Result<(), String> {
+async fn handle_herald_kill_event(event: &Value, discord: &DiscordClient) -> Result<(), String> {
     let killer = event
         .get("KillerName")
         .and_then(|v| v.as_str())
@@ -791,17 +872,19 @@ async fn handle_herald_kill_event(
         "RIFT HERALD"
     };
 
-    info!("Posting herald kill: {} killed {} at {}", killer, objective_name, timestamp_str);
-    discord.post_objective(killer, objective_name, &timestamp_str).await?;
+    info!(
+        "Posting herald kill: {} killed {} at {}",
+        killer, objective_name, timestamp_str
+    );
+    discord
+        .post_objective(killer, objective_name, &timestamp_str)
+        .await?;
 
     Ok(())
 }
 
 /// Handles an inhibitor kill event
-async fn handle_inhib_kill_event(
-    event: &Value,
-    discord: &DiscordClient,
-) -> Result<(), String> {
+async fn handle_inhib_kill_event(event: &Value, discord: &DiscordClient) -> Result<(), String> {
     let killer = event
         .get("KillerName")
         .and_then(|v| v.as_str())
@@ -816,17 +899,19 @@ async fn handle_inhib_kill_event(
     let seconds = (timestamp % 60.0) as u64;
     let timestamp_str = format!("{}:{:02}", minutes, seconds);
 
-    info!("Posting inhibitor kill: {} destroyed inhibitor at {}", killer, timestamp_str);
-    discord.post_objective(killer, "INHIBITOR", &timestamp_str).await?;
+    info!(
+        "Posting inhibitor kill: {} destroyed inhibitor at {}",
+        killer, timestamp_str
+    );
+    discord
+        .post_objective(killer, "INHIBITOR", &timestamp_str)
+        .await?;
 
     Ok(())
 }
 
 /// Handles a turret kill event
-async fn handle_turret_kill_event(
-    event: &Value,
-    discord: &DiscordClient,
-) -> Result<(), String> {
+async fn handle_turret_kill_event(event: &Value, discord: &DiscordClient) -> Result<(), String> {
     let killer = event
         .get("KillerName")
         .and_then(|v| v.as_str())
@@ -843,10 +928,15 @@ async fn handle_turret_kill_event(
     let seconds = (timestamp % 60.0) as u64;
     let timestamp_str = format!("{}:{:02}", minutes, seconds);
 
-    info!("Processing turret kill: {} destroyed turret at {}", killer, timestamp_str);
+    info!(
+        "Processing turret kill: {} destroyed turret at {}",
+        killer, timestamp_str
+    );
 
     // Post turret kill event
-    discord.post_objective(killer, "TOWER", &timestamp_str).await?;
+    discord
+        .post_objective(killer, "TOWER", &timestamp_str)
+        .await?;
     info!("Turret kill event posted successfully");
 
     Ok(())
@@ -899,10 +989,13 @@ async fn handle_gameflow_event(
                     .await?;
             }
             _ => {
-                debug!("Unhandled game phase: {} (event type: {})", phase, event_type);
+                debug!(
+                    "Unhandled game phase: {} (event type: {})",
+                    phase, event_type
+                );
             }
         }
-            } else if let Some(_obj) = data.as_object() {
+    } else if let Some(_obj) = data.as_object() {
         // Handle structured game event data
         // Attempt to parse and post kill, multikill, and objective events
         if let Err(e) = parse_and_post_game_events(data, discord).await {
@@ -947,9 +1040,13 @@ async fn handle_end_of_game_event(
                 .iter()
                 .find_map(|team| {
                     if team.get("win").and_then(|v| v.as_bool()) == Some(true) {
-                        team.get("teamId")
-                            .and_then(|v| v.as_u64())
-                            .map(|id| if id == 100 { "Blue Side" } else { "Red Side" })
+                        team.get("teamId").and_then(|v| v.as_u64()).map(|id| {
+                            if id == 100 {
+                                "Blue Side"
+                            } else {
+                                "Red Side"
+                            }
+                        })
                     } else {
                         None
                     }

@@ -47,8 +47,7 @@ impl Config {
         let json = serde_json::to_string_pretty(self)
             .map_err(|e| format!("Failed to serialize config: {}", e))?;
 
-        fs::write(config_path, json)
-            .map_err(|e| format!("Failed to write config file: {}", e))?;
+        fs::write(config_path, json).map_err(|e| format!("Failed to write config file: {}", e))?;
 
         info!("Saved config to {:?}", config_path);
         Ok(())

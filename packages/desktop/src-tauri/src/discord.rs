@@ -227,7 +227,10 @@ impl DiscordClient {
 
     /// Posts an ace event
     pub async fn post_ace(&self, team: &str, game_time: &str) -> Result<(), String> {
-        let message = format!("💀 **ACE!** **{}** wiped the enemy team at {}", team, game_time);
+        let message = format!(
+            "💀 **ACE!** **{}** wiped the enemy team at {}",
+            team, game_time
+        );
         self.post_message(message).await
     }
 

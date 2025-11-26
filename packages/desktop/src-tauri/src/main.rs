@@ -113,7 +113,10 @@ async fn get_discord_status(state: State<'_, AppState>) -> Result<discord::Disco
 }
 
 #[tauri::command]
-async fn start_monitoring(state: State<'_, AppState>, app_handle: tauri::AppHandle) -> Result<(), String> {
+async fn start_monitoring(
+    state: State<'_, AppState>,
+    app_handle: tauri::AppHandle,
+) -> Result<(), String> {
     info!("Starting game monitoring...");
 
     let mut is_monitoring = state.is_monitoring.lock().await;
@@ -127,8 +130,12 @@ async fn start_monitoring(state: State<'_, AppState>, app_handle: tauri::AppHand
     }
 
     // Start the event monitoring
-    events::start_event_monitoring(state.lcu_connection.clone(), state.discord_client.clone(), app_handle)
-        .await?;
+    events::start_event_monitoring(
+        state.lcu_connection.clone(),
+        state.discord_client.clone(),
+        app_handle,
+    )
+    .await?;
 
     *is_monitoring = true;
     info!("Game monitoring started");
@@ -196,10 +203,12 @@ async fn get_diagnostics(state: State<'_, AppState>) -> Result<DiagnosticInfo, S
     // Check gameflow phase
     let phase_response = lcu.get("/lol-gameflow/v1/gameflow-phase").await;
     let gameflow_phase = match phase_response {
-        Ok(resp) if resp.status().is_success() => {
-            resp.text().await.unwrap_or_else(|_| "unknown".to_string())
-                .trim_matches('"').to_string()
-        }
+        Ok(resp) if resp.status().is_success() => resp
+            .text()
+            .await
+            .unwrap_or_else(|_| "unknown".to_string())
+            .trim_matches('"')
+            .to_string(),
         _ => "unknown".to_string(),
     };
 
@@ -239,7 +248,11 @@ async fn test_event_detection(state: State<'_, AppState>) -> Result<EventTestRes
                 if let Some(events_array) = data.get("Events").and_then(|v| v.as_array()) {
                     let events_found: Vec<String> = events_array
                         .iter()
-                        .filter_map(|e| e.get("EventName").and_then(|v| v.as_str()).map(|s| s.to_string()))
+                        .filter_map(|e| {
+                            e.get("EventName")
+                                .and_then(|v| v.as_str())
+                                .map(|s| s.to_string())
+                        })
                         .collect();
 
                     return Ok(EventTestResult {
@@ -269,10 +282,15 @@ async fn test_event_detection(state: State<'_, AppState>) -> Result<EventTestRes
                 if let Some(events_array) = events_array {
                     let events_found: Vec<String> = events_array
                         .iter()
-                        .filter_map(|e| e.get("EventName").and_then(|v| v.as_str()).map(|s| s.to_string()))
+                        .filter_map(|e| {
+                            e.get("EventName")
+                                .and_then(|v| v.as_str())
+                                .map(|s| s.to_string())
+                        })
                         .collect();
 
-                    let keys: Vec<String> = data.as_object()
+                    let keys: Vec<String> = data
+                        .as_object()
                         .map(|o| o.keys().map(|k| k.to_string()).collect())
                         .unwrap_or_default();
 
@@ -284,7 +302,8 @@ async fn test_event_detection(state: State<'_, AppState>) -> Result<EventTestRes
                         raw_data_keys: Some(keys),
                     });
                 } else {
-                    let keys: Vec<String> = data.as_object()
+                    let keys: Vec<String> = data
+                        .as_object()
                         .map(|o| o.keys().map(|k| k.to_string()).collect())
                         .unwrap_or_default();
 
@@ -305,24 +324,20 @@ async fn test_event_detection(state: State<'_, AppState>) -> Result<EventTestRes
                 raw_data_keys: None,
             })
         }
-        Ok(resp) => {
-            Ok(EventTestResult {
-                success: false,
-                event_count: 0,
-                events_found: vec![],
-                error_message: Some(format!("API returned status: {}", resp.status())),
-                raw_data_keys: None,
-            })
-        }
-        Err(e) => {
-            Ok(EventTestResult {
-                success: false,
-                event_count: 0,
-                events_found: vec![],
-                error_message: Some(format!("Failed to reach API: {}", e)),
-                raw_data_keys: None,
-            })
-        }
+        Ok(resp) => Ok(EventTestResult {
+            success: false,
+            event_count: 0,
+            events_found: vec![],
+            error_message: Some(format!("API returned status: {}", resp.status())),
+            raw_data_keys: None,
+        }),
+        Err(e) => Ok(EventTestResult {
+            success: false,
+            event_count: 0,
+            events_found: vec![],
+            error_message: Some(format!("Failed to reach API: {}", e)),
+            raw_data_keys: None,
+        }),
     }
 }
 

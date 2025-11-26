@@ -64,7 +64,6 @@ impl LcuConnection {
         Ok(connection)
     }
 
-
     /// Tests the connection to the LCU API
     async fn test_connection(&self) -> Result<(), String> {
         info!("Testing LCU connection...");
