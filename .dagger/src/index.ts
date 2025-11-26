@@ -13,6 +13,10 @@ import { checkReport, getReportCoverage, getReportTestReport } from "@scout-for-
 import { checkData, getDataCoverage, getDataTestReport } from "@scout-for-lol/.dagger/src/data";
 import { checkFrontend, buildFrontend, deployFrontend } from "@scout-for-lol/.dagger/src/frontend";
 import { getGitHubContainer, getBunNodeContainer } from "@scout-for-lol/.dagger/src/base";
+import {
+  runAllChecksWithAnnotations,
+  outputAnnotations,
+} from "@scout-for-lol/.dagger/src/checks-with-annotations";
 
 // Helper function to log with timestamp
 function logWithTimestamp(message: string): void {
@@ -125,6 +129,51 @@ export class ScoutForLol {
       "✅ All packages passed: TypeScript type checking, ESLint linting, tests, and custom ESLint rules tests",
     );
     return "All checks completed successfully";
+  }
+
+  /**
+   * Run all checks and output GitHub Actions annotations for failures.
+   *
+   * This function runs the same checks as `check()` but captures output
+   * and emits GitHub Actions annotations (::error, ::warning) that appear
+   * inline in PR diffs.
+   *
+   * @param source The source directory
+   * @returns A message indicating completion with annotation output
+   */
+  @func()
+  async checkWithAnnotations(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Promise<string> {
+    logWithTimestamp("🔍 Starting comprehensive check process with GitHub Actions annotations");
+    logWithTimestamp("📋 Annotations will appear inline in PR diffs for any failures");
+
+    const { passed, results, summary } = await withTiming(
+      "all checks with annotations",
+      async () => runAllChecksWithAnnotations(source),
+    );
+
+    // Output annotations to stdout for GitHub Actions
+    outputAnnotations(results);
+
+    // Log summary
+    logWithTimestamp("📊 Check Summary:");
+    console.log(summary);
+
+    if (!passed) {
+      const failedChecks = results.filter((r) => !r.passed).map((r) => r.name);
+      const totalAnnotations = results.reduce((sum, r) => sum + r.annotations.length, 0);
+      logWithTimestamp(`❌ ${failedChecks.length.toString()} checks failed with ${totalAnnotations.toString()} annotations`);
+      logWithTimestamp(`Failed: ${failedChecks.join(", ")}`);
+      throw new Error(`Checks failed: ${failedChecks.join(", ")}`);
+    }
+
+    logWithTimestamp("🎉 All checks passed");
+    return "All checks completed successfully with annotations";
   }
 
   /**
