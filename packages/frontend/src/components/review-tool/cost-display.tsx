@@ -1,7 +1,7 @@
 /**
  * Cost tracking display component
  */
-import { useSyncExternalStore, useRef } from "react";
+import { useSyncExternalStore, useRef, useCallback } from "react";
 import type { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import type { CostBreakdown } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { formatCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
@@ -67,9 +67,15 @@ export function CostDisplay({ costTracker }: CostDisplayProps) {
     })();
   }
 
+  // Memoize subscribe function to ensure stable reference for useSyncExternalStore
+  const subscribeToCostTotalCallback = useCallback(
+    (callback: () => void) => subscribeToCostTotal(callback, costTrackerRef.current),
+    [], // costTrackerRef is a ref, stable across renders
+  );
+
   // Subscribe to cost total updates
   const total = useSyncExternalStore(
-    (callback) => subscribeToCostTotal(callback, costTrackerRef.current),
+    subscribeToCostTotalCallback,
     getCostTotalSnapshot,
     getCostTotalSnapshot,
   );

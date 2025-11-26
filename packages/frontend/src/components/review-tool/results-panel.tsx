@@ -29,6 +29,18 @@ import { ResultRating } from "./result-rating";
 
 const ErrorSchema = z.object({ message: z.string() });
 
+// External store for cost update events - must be outside component for stable references
+function subscribeToCostUpdates(callback: () => void) {
+  window.addEventListener("cost-update", callback);
+  return () => {
+    window.removeEventListener("cost-update", callback);
+  };
+}
+
+function getCostUpdateSnapshot() {
+  return Date.now();
+}
+
 type ResultsPanelProps = {
   config: ReviewConfig;
   match?: CompletedMatch | ArenaMatch | undefined;
@@ -50,18 +62,8 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
   const [viewingHistory, setViewingHistory] = useState(false);
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | undefined>();
   const [notes, setNotes] = useState("");
-  // Subscribe to cost update events using useSyncExternalStore
-  function subscribeToCostUpdates(callback: () => void) {
-    window.addEventListener("cost-update", callback);
-    return () => {
-      window.removeEventListener("cost-update", callback);
-    };
-  }
 
-  function getCostUpdateSnapshot() {
-    return Date.now();
-  }
-
+  // Subscribe to cost update events
   useSyncExternalStore(subscribeToCostUpdates, getCostUpdateSnapshot, getCostUpdateSnapshot);
 
   // Calculate elapsed times during render - recalculates on every render
