@@ -12,4 +12,4 @@ export const PositionSchema = z.enum(["", "Invalid", "TOP", "JUNGLE", "MIDDLE", 
 // depending on game mode and API version
 export const RoleSchema = z.enum(["SOLO", "NONE", "CARRY", "SUPPORT", "DUO_CARRY", "DUO_SUPPORT", "DUO"]);
 
-export const LaneSchema = z.enum(["TOP", "JUNGLE", "MIDDLE", "BOTTOM"]);
+export const LaneSchema = z.enum(["TOP", "JUNGLE", "MIDDLE", "BOTTOM", "NONE"]);

@@ -97,6 +97,9 @@ function curatePerks(participant: ParticipantDto) {
 }
 
 function curateChallenges(participant: ParticipantDto) {
+  if (!participant.challenges) {
+    return undefined;
+  }
   return {
     killParticipation: participant.challenges.killParticipation,
     soloKills: participant.challenges.soloKills,
