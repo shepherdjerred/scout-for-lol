@@ -212,7 +212,8 @@ impl DiscordClient {
         victim: &str,
         game_time: &str,
     ) -> Result<(), String> {
-        let message = format!("🩸 **FIRST BLOOD!** **{killer}** killed **{victim}** at {game_time}");
+        let message =
+            format!("🩸 **FIRST BLOOD!** **{killer}** killed **{victim}** at {game_time}");
         self.post_message(message).await
     }
 
