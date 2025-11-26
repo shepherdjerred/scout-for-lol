@@ -1,7 +1,7 @@
 /**
  * Cost tracking display component
  */
-import { useSyncExternalStore, useRef, useCallback } from "react";
+import { useSyncExternalStore, useRef, useCallback, useEffect } from "react";
 import type { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import type { CostBreakdown } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { formatCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
@@ -34,18 +34,23 @@ let costTotalData: CostBreakdown | null = null;
 let costTotalPromise: Promise<void> | null = null;
 const costTotalListeners = new Set<() => void>();
 
-function subscribeToCostTotal(callback: () => void, costTracker: CostTracker) {
-  costTotalListeners.add(callback);
-  // Load data if not already loading
-  if (costTotalPromise === null && costTotalData === null) {
-    costTotalPromise = (async () => {
-      costTotalData = await costTracker.getTotal();
-      costTotalListeners.forEach((listener) => {
-        listener();
-      });
-      costTotalPromise = null;
-    })();
+// Helper to load cost total - pure function, no side effects
+function loadCostTotal(costTracker: CostTracker): void {
+  if (costTotalPromise !== null) {
+    return; // Already loading
   }
+  costTotalPromise = (async () => {
+    costTotalData = await costTracker.getTotal();
+    costTotalListeners.forEach((listener) => {
+      listener();
+    });
+    costTotalPromise = null;
+  })();
+}
+
+// Subscribe function - must be pure, no side effects during subscribe
+function subscribeToCostTotal(callback: () => void) {
+  costTotalListeners.add(callback);
   return () => {
     costTotalListeners.delete(callback);
   };
@@ -63,22 +68,20 @@ export function CostDisplay({ costTracker }: CostDisplayProps) {
   // Subscribe to cost update events - triggers reload of total
   const updateTrigger = useSyncExternalStore(subscribeToCostUpdates, getCostUpdateSnapshot, getCostUpdateSnapshot);
 
-  // Reload when cost update events fire
-  if (updateTrigger > 0 && costTotalPromise === null) {
-    costTotalPromise = (async () => {
-      costTotalData = await costTrackerRef.current.getTotal();
-      costTotalListeners.forEach((listener) => {
-        listener();
-      });
-      costTotalPromise = null;
-    })();
-  }
+  // Track the last processed trigger to avoid infinite loops
+  const lastProcessedTrigger = useRef(-1);
+
+  // Load initial data and reload on cost update events - in useEffect to avoid side effects during render
+  useEffect(() => {
+    // Initial load or reload when updateTrigger changes
+    if (lastProcessedTrigger.current !== updateTrigger) {
+      lastProcessedTrigger.current = updateTrigger;
+      loadCostTotal(costTrackerRef.current);
+    }
+  }, [updateTrigger]);
 
   // Memoize subscribe function to ensure stable reference for useSyncExternalStore
-  const subscribeToCostTotalCallback = useCallback(
-    (callback: () => void) => subscribeToCostTotal(callback, costTrackerRef.current),
-    [], // costTrackerRef is a ref, stable across renders
-  );
+  const subscribeToCostTotalCallback = useCallback(subscribeToCostTotal, []);
 
   // Subscribe to cost total updates
   const total = useSyncExternalStore(subscribeToCostTotalCallback, getCostTotalSnapshot, getCostTotalSnapshot);
