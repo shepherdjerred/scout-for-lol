@@ -8,6 +8,7 @@ import {
   discordLatency,
 } from "@scout-for-lol/backend/metrics/index.js";
 import { handleGuildCreate } from "@scout-for-lol/backend/discord/events/guild-create.js";
+import * as Sentry from "@sentry/node";
 
 console.log("🔌 Initializing Discord client");
 
@@ -18,6 +19,11 @@ const client = new Client({
 // Add event listeners for connection status
 client.on("error", (error) => {
   console.error("❌ Discord client error:", error);
+  Sentry.captureException(error, {
+    tags: {
+      source: "discord-client",
+    },
+  });
   discordConnectionStatus.set(0);
 });
 
@@ -48,6 +54,11 @@ try {
   console.log("✅ Successfully logged into Discord");
 } catch (error) {
   console.error("❌ Failed to login to Discord:", error);
+  Sentry.captureException(error, {
+    tags: {
+      source: "discord-login",
+    },
+  });
   throw error;
 }
 

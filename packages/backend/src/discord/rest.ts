@@ -1,5 +1,6 @@
 import { REST, Routes } from "discord.js";
 import { z } from "zod";
+import * as Sentry from "@sentry/node";
 import configuration from "@scout-for-lol/backend/configuration";
 import { debugCommand } from "@scout-for-lol/backend/discord/commands/debug";
 import { competitionCommand } from "@scout-for-lol/backend/discord/commands/competition/index.js";
@@ -51,6 +52,9 @@ void (async () => {
     console.log("🎉 Discord command registration completed successfully");
   } catch (error) {
     console.error("❌ Failed to register Discord commands:", error);
+    Sentry.captureException(error, {
+      tags: { source: "discord-command-registration" },
+    });
 
     // Log additional error context
     const ErrorDetailsSchema = z.object({ name: z.string(), message: z.string(), stack: z.string().optional() });

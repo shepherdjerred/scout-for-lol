@@ -12,6 +12,7 @@ import { getCompetitionsByChannelId } from "@scout-for-lol/backend/database/comp
 import { sendDM } from "@scout-for-lol/backend/discord/utils/dm.js";
 import { discordSubscriptionsCleanedTotal, guildDataCleanupTotal } from "@scout-for-lol/backend/metrics/index.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import * as Sentry from "@sentry/node";
 
 /**
  * Run data validation to clean up orphaned guilds and channels
@@ -37,6 +38,7 @@ export async function runDataValidation(client: Client): Promise<void> {
     console.log(`[DataValidation] ✅ Validation complete in ${duration.toString()}ms`);
   } catch (error) {
     console.error("[DataValidation] Error during validation:", getErrorMessage(error));
+    Sentry.captureException(error, { tags: { source: "data-validation" } });
     throw error;
   }
 }
@@ -77,11 +79,13 @@ async function validateGuilds(client: Client): Promise<void> {
         await cleanupOrphanedGuild(guildId);
       } catch (error) {
         console.error(`[DataValidation] Error cleaning up guild ${guildId}:`, getErrorMessage(error));
+        Sentry.captureException(error, { tags: { source: "guild-cleanup", guildId } });
         // Continue with other guilds
       }
     }
   } catch (error) {
     console.error("[DataValidation] Error validating guilds:", getErrorMessage(error));
+    Sentry.captureException(error, { tags: { source: "validate-guilds" } });
     throw error;
   }
 }
@@ -128,6 +132,7 @@ async function cleanupOrphanedGuild(serverId: string): Promise<void> {
     console.log(`[DataValidation] ✅ Cleaned up guild ${serverId}`);
   } catch (error) {
     console.error(`[DataValidation] Error cleaning up guild ${serverId}:`, getErrorMessage(error));
+    Sentry.captureException(error, { tags: { source: "cleanup-orphaned-guild", serverId } });
     guildDataCleanupTotal.inc({ data_type: "all", status: "failed" });
   }
 }
@@ -180,6 +185,7 @@ async function validateChannels(client: Client): Promise<void> {
     console.log(`[DataValidation] ✅ Cleaned up ${orphanedChannels.length.toString()} orphaned channel(s)`);
   } catch (error) {
     console.error("[DataValidation] Error validating channels:", getErrorMessage(error));
+    Sentry.captureException(error, { tags: { source: "validate-channels" } });
     throw error;
   }
 }
@@ -257,9 +263,11 @@ If you have any questions, feel free to reach out for support.`;
         }
       } catch (error) {
         console.error(`[DataValidation]   Failed to notify owner ${ownerId}:`, getErrorMessage(error));
+        Sentry.captureException(error, { tags: { source: "notify-owner-channel-cleanup", ownerId } });
       }
     }
   } catch (error) {
     console.error(`[DataValidation] Error cleaning up orphaned channels:`, getErrorMessage(error));
+    Sentry.captureException(error, { tags: { source: "cleanup-orphaned-channels" } });
   }
 }

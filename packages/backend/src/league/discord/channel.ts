@@ -1,5 +1,6 @@
 import type { MessageCreateOptions, MessagePayload, Message } from "discord.js";
 import { z } from "zod";
+import * as Sentry from "@sentry/node";
 import { client } from "@scout-for-lol/backend/discord/client";
 import { asTextChannel } from "@scout-for-lol/backend/discord/utils/channel";
 import {
@@ -59,6 +60,7 @@ export async function send(
     if (!fetchedChannel) {
       const error = new ChannelSendError("Channel not found or bot cannot access it", channelId, false);
       console.error(`[ChannelSend] ${error.message} - channel: ${channelId}`);
+      Sentry.captureException(error, { tags: { source: "channel-send", channelId, reason: "not-found" } });
       throw error;
     }
 
@@ -67,6 +69,7 @@ export async function send(
     if (!channel) {
       const error = new ChannelSendError("Channel is not text-based", channelId, false);
       console.error(`[ChannelSend] ${error.message} - channel: ${channelId}`);
+      Sentry.captureException(error, { tags: { source: "channel-send", channelId, reason: "not-text-based" } });
       throw error;
     }
 
@@ -85,6 +88,7 @@ export async function send(
     if (serverId) {
       void recordSuccessfulSend(prisma, serverId, channelId).catch((dbError) => {
         console.error(`[ChannelSend] Failed to record successful send in DB:`, dbError);
+        Sentry.captureException(dbError, { tags: { source: "channel-send-db-record", channelId } });
       });
     }
 
@@ -136,6 +140,7 @@ export async function send(
           ...(permissionReason ? { errorReason: permissionReason } : {}),
         }).catch((dbError) => {
           console.error(`[ChannelSend] Failed to record permission error in DB:`, dbError);
+          Sentry.captureException(dbError, { tags: { source: "channel-permission-db-record", channelId } });
         });
 
         // Notify server owner (this will also track metrics)
@@ -143,6 +148,7 @@ export async function send(
       }
     } else {
       console.error(`[ChannelSend] ${errorMessage}`);
+      Sentry.captureException(error, { tags: { source: "channel-send", channelId, isPermissionError: "false" } });
     }
 
     // Wrap in ChannelSendError

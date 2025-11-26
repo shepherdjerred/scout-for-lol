@@ -12,6 +12,7 @@ import { createSnapshot, getSnapshot } from "@scout-for-lol/backend/league/compe
 import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.js";
 import { EmbedBuilder } from "discord.js";
 import { z } from "zod";
+import * as Sentry from "@sentry/node";
 import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.js";
 
 // ============================================================================
@@ -71,6 +72,9 @@ async function postSnapshotErrorMessage(competition: CompetitionWithCriteria, er
       `[DailyLeaderboard] ⚠️  Failed to post snapshot error message for competition ${competition.id.toString()}:`,
       error,
     );
+    Sentry.captureException(error, {
+      tags: { source: "post-snapshot-error-message", competitionId: competition.id.toString() },
+    });
     // Don't throw - notification failure shouldn't stop processing
   }
 }
@@ -247,6 +251,9 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
             `[DailyLeaderboard] ⚠️  Failed to cache leaderboard to S3 for competition ${competition.id.toString()}:`,
             error,
           );
+          Sentry.captureException(error, {
+            tags: { source: "cache-leaderboard-s3", competitionId: competition.id.toString() },
+          });
           // Continue - caching failure shouldn't stop the Discord update
         }
 
@@ -285,6 +292,9 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
           );
         } else {
           console.error(`[DailyLeaderboard] ❌ Error updating competition ${competition.id.toString()}:`, error);
+          Sentry.captureException(error, {
+            tags: { source: "daily-leaderboard-update", competitionId: competition.id.toString() },
+          });
         }
         failureCount++;
         // Continue with other competitions - don't let one failure stop all updates
@@ -296,6 +306,7 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
     );
   } catch (error) {
     console.error("[DailyLeaderboard] ❌ Fatal error during daily update:", error);
+    Sentry.captureException(error, { tags: { source: "daily-leaderboard-fatal" } });
     throw error; // Re-throw so cron job can track failures
   }
 }

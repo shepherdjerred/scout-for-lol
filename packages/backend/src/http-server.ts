@@ -1,5 +1,6 @@
 import configuration from "@scout-for-lol/backend/configuration.js";
 import { getMetrics } from "@scout-for-lol/backend/metrics/index.js";
+import * as Sentry from "@sentry/node";
 
 console.log("🌐 Initializing HTTP server");
 
@@ -34,6 +35,7 @@ const server = Bun.serve({
         });
       } catch (error) {
         console.error("❌ Error generating metrics:", error);
+        Sentry.captureException(error, { tags: { source: "http-server-metrics" } });
         return new Response("Internal Server Error", {
           status: 500,
           headers: {
@@ -53,6 +55,7 @@ const server = Bun.serve({
   },
   error(error) {
     console.error("❌ HTTP server error:", error);
+    Sentry.captureException(error, { tags: { source: "http-server" } });
     return new Response("Internal Server Error", {
       status: 500,
       headers: {
