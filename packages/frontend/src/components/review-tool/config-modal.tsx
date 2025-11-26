@@ -1,7 +1,7 @@
 /**
  * Modal for API configuration settings
  */
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import type { GlobalConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { ApiSettingsPanel } from "./api-settings-panel";
@@ -25,21 +25,16 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
     customArtStyles: 0,
     customArtThemes: 0,
   });
-  const previewLoadedRef = useRef(false);
 
-  // Load preview lazily when modal opens (only once per open session)
-  if (isOpen && !previewLoadedRef.current) {
-    previewLoadedRef.current = true;
-    void (async () => {
-      const previewData = await getResetPreview();
-      setPreview(previewData);
-    })();
-  }
-
-  // Reset preview loaded flag when modal closes
-  if (!isOpen && previewLoadedRef.current) {
-    previewLoadedRef.current = false;
-  }
+  // Load preview when modal opens - in useEffect to avoid side effects during render
+  useEffect(() => {
+    if (isOpen) {
+      void (async () => {
+        const previewData = await getResetPreview();
+        setPreview(previewData);
+      })();
+    }
+  }, [isOpen]);
 
   if (!isOpen) {
     return null;
