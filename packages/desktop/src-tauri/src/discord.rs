@@ -51,7 +51,8 @@ impl DiscordClient {
     async fn test_connection(&self) -> Result<(), String> {
         info!("Testing Discord connection...");
 
-        let url = format!("https://discord.com/api/v10/channels/{}", self.channel_id);
+        let channel_id = &self.channel_id;
+        let url = format!("https://discord.com/api/v10/channels/{channel_id}");
 
         let response = self
             .client

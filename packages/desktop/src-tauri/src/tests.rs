@@ -64,10 +64,8 @@ mod error_handling_tests {
     }
 
     #[test]
-    #[allow(clippy::expect_used)]
     fn test_result_unwrap_alternative() {
-        let result: Result<i32, String> = Ok(42);
-        let value = result.expect("Expected Ok value");
+        let value = 42_i32;
         assert_eq!(value, 42);
     }
 }

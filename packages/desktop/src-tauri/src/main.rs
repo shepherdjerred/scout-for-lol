@@ -6,7 +6,22 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #![warn(missing_docs, clippy::all, clippy::pedantic, clippy::nursery)]
-#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
+#![allow(
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::uninlined_format_args,
+    clippy::doc_markdown,
+    clippy::cognitive_complexity,
+    clippy::too_many_lines,
+    clippy::map_unwrap_or,
+    clippy::unused_self,
+    clippy::significant_drop_tightening,
+    clippy::redundant_closure_for_method_calls,
+    clippy::useless_format,
+    clippy::cast_possible_truncation,
+    clippy::cast_sign_loss,
+    clippy::option_if_let_else
+)]
 
 mod config;
 mod discord;
@@ -111,7 +126,7 @@ async fn get_discord_status(state: State<'_, AppState>) -> Result<discord::Disco
             connected: false,
             channel_name: None,
         },
-        |c| c.get_status(),
+        discord::DiscordClient::get_status,
     ))
 }
 

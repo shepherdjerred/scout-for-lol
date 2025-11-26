@@ -1,6 +1,6 @@
 {
   "permissions": {
-    "allow": ["Bash(mise ci:*)"],
+    "allow": ["Bash(mise ci:*)", "Bash(cargo fmt:*)", "Bash(cargo clippy:*)"],
     "deny": [],
     "ask": []
   }
