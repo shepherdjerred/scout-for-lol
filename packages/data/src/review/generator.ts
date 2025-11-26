@@ -80,6 +80,7 @@ export async function generateReviewText(params: {
     playerMetadata,
     laneContext,
     match,
+    playerIndex,
     ...(curatedData !== undefined && { curatedData }),
   });
   const userPrompt = replaceTemplateVariables(basePromptTemplate, promptVariables);
