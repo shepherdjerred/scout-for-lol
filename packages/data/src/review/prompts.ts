@@ -77,6 +77,7 @@ export function replaceTemplateVariables(
     laneDescription: string;
     matchReport: string;
     friendsContext: string;
+    d20Roll: string;
   },
 ): string {
   return template
@@ -93,5 +94,6 @@ export function replaceTemplateVariables(
     .replaceAll("<OPPONENT CHAMPION>", variables.opponentChampion)
     .replaceAll("<LANE DESCRIPTION>", variables.laneDescription)
     .replaceAll("<MATCH REPORT>", variables.matchReport)
-    .replaceAll("<FRIENDS CONTEXT>", variables.friendsContext);
+    .replaceAll("<FRIENDS CONTEXT>", variables.friendsContext)
+    .replaceAll("<D20 ROLL>", variables.d20Roll);
 }

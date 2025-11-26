@@ -257,6 +257,7 @@ export function buildPromptVariables(params: {
   laneDescription: string;
   matchReport: string;
   friendsContext: string;
+  d20Roll: string;
 } {
   const { matchData, personality, playerMetadata, laneContext, match, curatedData, playerIndex = 0 } = params;
   const playerName = matchData["playerName"];
@@ -307,6 +308,9 @@ export function buildPromptVariables(params: {
 
   const friendsContext = buildFriendsContext(match, playerIndex);
 
+  // Generate random D20 roll (1-20)
+  const d20Roll = (Math.floor(Math.random() * 20) + 1).toString();
+
   return {
     reviewerName,
     reviewerPersonality,
@@ -322,6 +326,7 @@ export function buildPromptVariables(params: {
     laneDescription,
     matchReport,
     friendsContext,
+    d20Roll,
   };
 }
 
