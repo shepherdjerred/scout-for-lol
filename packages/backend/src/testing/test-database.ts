@@ -21,39 +21,67 @@ export function createTestDatabase(testName: string): {
   // This works from any test file location
   const schemaPath = `${import.meta.dir}/../../prisma/schema.prisma`;
 
-  // Push schema to test database
-  const pushResult = Bun.spawnSync(
-    [
-      "bunx",
-      "prisma",
-      "db",
-      "push",
-      `--schema=${schemaPath}`,
-      "--force-reset",
-      "--accept-data-loss",
-      "--skip-generate",
-    ],
-    {
-      cwd: `${import.meta.dir}/../..`,
-      env: {
-        ...Bun.env,
-        DATABASE_URL: testDbUrl,
-        PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
-        PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
-        // Consent for Prisma's AI detection (safe for test databases in /tmp)
-        PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION: "yes",
-      },
-      stdout: "pipe",
-      stderr: "pipe",
-      stdin: "ignore",
-    },
-  );
+  // Push schema to test database with retry logic
+  // Bun can sometimes crash with a segfault when running prisma db push
+  // Adding retry logic makes tests more resilient to this transient failure
+  const maxRetries = 3;
+  let lastError: Error | null = null;
 
-  if (pushResult.exitCode !== 0) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const pushResult = Bun.spawnSync(
+      [
+        "bunx",
+        "prisma",
+        "db",
+        "push",
+        `--schema=${schemaPath}`,
+        "--force-reset",
+        "--accept-data-loss",
+        "--skip-generate",
+      ],
+      {
+        cwd: `${import.meta.dir}/../..`,
+        env: {
+          ...Bun.env,
+          DATABASE_URL: testDbUrl,
+          PRISMA_GENERATE_SKIP_AUTOINSTALL: "true",
+          PRISMA_SKIP_POSTINSTALL_GENERATE: "true",
+          // Consent for Prisma's AI detection (safe for test databases in /tmp)
+          PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION: "yes",
+        },
+        stdout: "pipe",
+        stderr: "pipe",
+        stdin: "ignore",
+      },
+    );
+
+    if (pushResult.exitCode === 0) {
+      // Success, break out of retry loop
+      lastError = null;
+      break;
+    }
+
+    const stderr = pushResult.stderr.toString();
+    // When Bun crashes with a segfault, stderr contains these messages
+    const isBunCrash = stderr.includes("Bun has crashed") || stderr.includes("Segmentation fault");
+
+    if (isBunCrash && attempt < maxRetries) {
+      // Bun crash detected, retry with exponential backoff
+      const delayMs = Math.pow(2, attempt) * 100; // 200ms, 400ms, 800ms
+      console.warn(`db push attempt ${String(attempt)} failed due to Bun crash, retrying in ${String(delayMs)}ms...`);
+      Bun.sleepSync(delayMs);
+      continue;
+    }
+
+    // Non-retryable error or final attempt failed
     console.error("db push failed with exit code:", pushResult.exitCode);
     console.error("stdout:", pushResult.stdout.toString());
-    console.error("stderr:", pushResult.stderr.toString());
-    throw new Error(`Prisma db push failed for ${testDbPath}`);
+    console.error("stderr:", stderr);
+    lastError = new Error(`Prisma db push failed for ${testDbPath}`);
+  }
+
+  if (lastError) {
+    throw lastError;
   }
 
   const prisma = new PrismaClient({
