@@ -14,6 +14,7 @@ import {
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
+import * as Sentry from "@sentry/node";
 import config from "@scout-for-lol/backend/configuration.js";
 import {
   saveAIReviewImageToS3,
@@ -129,6 +130,12 @@ async function summarizeTimeline(timelineDto: TimelineDto, matchId: MatchId): Pr
     return summary;
   } catch (error) {
     console.error("[summarizeTimeline] Error summarizing timeline:", error);
+    Sentry.captureException(error, {
+      tags: {
+        source: "timeline-summarization",
+        matchId,
+      },
+    });
     return undefined;
   }
 }
@@ -245,6 +252,15 @@ async function generateReviewImageBackend(params: {
     } else {
       console.error("[generateReviewImage] Error generating image:", error);
     }
+    Sentry.captureException(error, {
+      tags: {
+        source: "gemini-image-generation",
+        matchId,
+        queueType,
+        style,
+        isTimeout: result.success && result.data.message.includes("timed out") ? "true" : "false",
+      },
+    });
     return undefined;
   }
 }
@@ -326,6 +342,12 @@ async function generateAIReview(
     };
   } catch (error) {
     console.error("[generateAIReview] Error generating AI review:", error);
+    Sentry.captureException(error, {
+      tags: {
+        source: "openai-review-generation",
+        queueType: match.queueType ?? "unknown",
+      },
+    });
     return undefined;
   }
 }

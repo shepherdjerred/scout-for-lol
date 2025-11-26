@@ -85,8 +85,11 @@ jobs:
             --api-token=env://CLOUDFLARE_API_TOKEN
 
       - name: Run Dagger CI pipeline (dev)
-        if: github.event_name == 'pull_request' || github.ref != 'refs/heads/main'
+        if: github.event_name == 'pull_request'
         env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
           _EXPERIMENTAL_DAGGER_RUNNER_HOST: kube-pod://${{ env.DAGGER_ENGINE_POD_NAME }}?namespace=dagger
         run: |
@@ -94,7 +97,12 @@ jobs:
             --source=. \
             --version="dev-${{ github.run_number }}" \
             --git-sha="${{ github.sha }}" \
-            --env="dev"
+            --branch="${{ github.head_ref || github.ref_name }}" \
+            --env="dev" \
+            --gh-token=env://GITHUB_TOKEN \
+            --account-id=env://CLOUDFLARE_ACCOUNT_ID \
+            --api-token=env://CLOUDFLARE_API_TOKEN \
+            --pr-number="${{ github.event.pull_request.number }}"
 
 permissions:
   contents: read

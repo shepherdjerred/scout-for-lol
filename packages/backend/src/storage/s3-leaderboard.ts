@@ -2,6 +2,7 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3
 import { CachedLeaderboardSchema, type CachedLeaderboard } from "@scout-for-lol/data";
 import configuration from "@scout-for-lol/backend/configuration.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import * as Sentry from "@sentry/node";
 
 // ============================================================================
 // S3 Key Generation
@@ -172,6 +173,9 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
       jsonData = JSON.parse(bodyString);
     } catch (error) {
       console.error(`[S3Leaderboard] Failed to parse JSON from S3 key ${key}:`, error);
+      Sentry.captureException(error, {
+        tags: { source: "s3-leaderboard-json-parse", competitionId: competitionId.toString() },
+      });
       return null;
     }
 
@@ -182,6 +186,9 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
         `[S3Leaderboard] Cached leaderboard failed validation for competition ${competitionId.toString()}:`,
         result.error,
       );
+      Sentry.captureException(result.error, {
+        tags: { source: "s3-leaderboard-validation", competitionId: competitionId.toString() },
+      });
       return null;
     }
 
@@ -205,6 +212,9 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
       `[S3Leaderboard] ❌ Error loading cached leaderboard for competition ${competitionId.toString()}:`,
       error,
     );
+    Sentry.captureException(error, {
+      tags: { source: "s3-leaderboard-load", competitionId: competitionId.toString() },
+    });
     return null;
   }
 }

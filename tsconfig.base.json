@@ -19,7 +19,8 @@
       "@scout-for-lol/data/*": ["./packages/data/src/*"],
       "@scout-for-lol/data": ["./packages/data/src/index.ts"],
       "@scout-for-lol/report/*": ["./packages/report/src/*"],
-      "@scout-for-lol/report": ["./packages/report/src/index.ts"]
+      "@scout-for-lol/report": ["./packages/report/src/index.ts"],
+      "@scout-for-lol/desktop/*": ["./packages/desktop/src/*"]
     },
     // Best practices
     "strict": true,

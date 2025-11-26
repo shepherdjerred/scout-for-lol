@@ -5,7 +5,8 @@
     "packages/backend",
     "packages/data",
     "packages/report",
-    "packages/frontend"
+    "packages/frontend",
+    "packages/desktop"
   ],
   "trustedDependencies": [
     "husky"
@@ -79,6 +80,11 @@
       "bash -c 'cd packages/report && bun run typecheck'",
       "bash -c 'cd packages/report && bunx eslint --cache --fix'",
       "bun ./scripts/run-relevant-tests.ts packages/report"
+    ],
+    "packages/desktop/**/*.{ts,tsx}": [
+      "bash -c 'cd packages/desktop && bun run typecheck'",
+      "bash -c 'cd packages/desktop && bunx eslint --cache --fix'",
+      "bun ./scripts/run-relevant-tests.ts packages/desktop"
     ],
     "*.{ts,tsx,js,jsx}": "bun run scripts/check-suppressions.ts"
   },

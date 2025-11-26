@@ -1,4 +1,5 @@
 import { z } from "zod";
+import * as Sentry from "@sentry/node";
 import { api } from "@scout-for-lol/backend/league/api/api.js";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.js";
@@ -27,6 +28,11 @@ import {
   logCompletedMatchPlayersDebugInfo,
   logErrorDetails,
 } from "./match-report-debug.js";
+
+/** Helper to capture exceptions with source and match context */
+function captureError(error: unknown, source: string, matchId?: string, extra?: Record<string, string>): void {
+  Sentry.captureException(error, { tags: { source, ...(matchId && { matchId }), ...extra } });
+}
 
 /**
  * Append review metadata as debug information
@@ -87,10 +93,8 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
     } catch (parseError) {
       console.error(`[fetchMatchData] ❌ Match data validation failed for ${matchId}:`, parseError);
       console.error(`[fetchMatchData] This may indicate an API schema change or data corruption`);
-
-      // Log the raw response for debugging API schema mismatches
+      captureError(parseError, "match-data-validation", matchId);
       console.error(`[fetchMatchData] 🔍 Raw API response:`, JSON.stringify(response.response, null, 2));
-
       return undefined;
     }
   } catch (e) {
@@ -101,8 +105,10 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
         return undefined;
       }
       console.error(`[fetchMatchData] ❌ HTTP Error ${result.data.status.toString()} for match ${matchId}`);
+      captureError(e, "match-data-fetch", matchId, { httpStatus: result.data.status.toString() });
     } else {
       console.error(`[fetchMatchData] ❌ Error fetching match ${matchId}:`, e);
+      captureError(e, "match-data-fetch", matchId);
     }
     return undefined;
   }
@@ -136,7 +142,7 @@ export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region)
     } catch (parseError) {
       console.error(`[fetchMatchTimeline] ❌ Timeline data validation failed for ${matchId}:`, parseError);
       console.error(`[fetchMatchTimeline] This may indicate an API schema change or data corruption`);
-      // Don't log raw response for timeline as it's very large
+      captureError(parseError, "timeline-data-validation", matchId);
       return undefined;
     }
   } catch (e) {
@@ -147,8 +153,10 @@ export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region)
         return undefined;
       }
       console.error(`[fetchMatchTimeline] ❌ HTTP Error ${result.data.status.toString()} for timeline ${matchId}`);
+      captureError(e, "timeline-data-fetch", matchId, { httpStatus: result.data.status.toString() });
     } else {
       console.error(`[fetchMatchTimeline] ❌ Error fetching timeline ${matchId}:`, e);
+      captureError(e, "timeline-data-fetch", matchId);
     }
     return undefined;
   }
@@ -334,6 +342,7 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
       }
     } catch (error) {
       console.error(`[generateMatchReport] Error generating AI review:`, error);
+      captureError(error, "ai-review-generation", matchId, { queueType: completedMatch.queueType ?? "unknown" });
     }
   } else {
     console.log(
@@ -406,6 +415,7 @@ async function fetchTimelineIfStandardMatch(
     return timelineData;
   } catch (error) {
     console.error(`[generateMatchReport] ⚠️  Failed to fetch timeline, continuing without it:`, error);
+    captureError(error, "timeline-fetch-wrapper", matchId);
     return undefined;
   }
 }

@@ -49,9 +49,8 @@ export async function checkSubscriptionLimit(
         `❌ Subscription limit reached for server ${guildId} (${subscribedPlayerCount.toString()}/${subscriptionLimit.toString()})`,
       );
 
-      await interaction.reply({
+      await interaction.editReply({
         content: `❌ **Subscription limit reached**\n\nThis server can subscribe to a maximum of ${subscriptionLimit.toString()} players. You currently have ${subscribedPlayerCount.toString()} subscribed players.\n\nTo subscribe to a new player, please unsubscribe from an existing player first using \`/subscription delete\`.\n\nIf you need more subscriptions, please contact us: ${DISCORD_SERVER_INVITE}`,
-        ephemeral: true,
       });
       return false;
     }
@@ -99,9 +98,8 @@ export async function checkAccountLimit(
         `❌ Account limit reached for server ${guildId} (${accountCount.toString()}/${accountLimit.toString()})`,
       );
 
-      await interaction.reply({
+      await interaction.editReply({
         content: `❌ **Account limit reached**\n\nThis server can have a maximum of ${accountLimit.toString()} accounts. You currently have ${accountCount.toString()} accounts.\n\nTo add a new account, please remove an existing account first.\n\nIf you need more accounts, please contact us: ${DISCORD_SERVER_INVITE}`,
-        ephemeral: true,
       });
       return false;
     }
@@ -147,9 +145,8 @@ export async function resolveRiotIdToPuuid(
     return puuid;
   } catch (error) {
     console.error(`❌ Failed to resolve Riot ID ${riotId.game_name}#${riotId.tag_line}:`, error);
-    await interaction.reply({
+    await interaction.editReply({
       content: `Error looking up Riot ID: ${getErrorMessage(error)}`,
-      ephemeral: true,
     });
     return null;
   }

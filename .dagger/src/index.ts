@@ -12,6 +12,11 @@ import {
 import { checkReport, getReportCoverage, getReportTestReport } from "@scout-for-lol/.dagger/src/report";
 import { checkData, getDataCoverage, getDataTestReport } from "@scout-for-lol/.dagger/src/data";
 import { checkFrontend, buildFrontend, deployFrontend } from "@scout-for-lol/.dagger/src/frontend";
+import {
+  checkDesktop,
+  buildDesktopLinux,
+  getDesktopLinuxArtifacts,
+} from "@scout-for-lol/.dagger/src/desktop";
 import { getGitHubContainer, getBunNodeContainer } from "@scout-for-lol/.dagger/src/base";
 import {
   runAllChecksWithAnnotations,
@@ -58,10 +63,35 @@ async function withTiming<T>(operation: string, fn: () => Promise<T>): Promise<T
   }
 }
 
+// Helper function to post a comment to a GitHub PR
+async function postPrComment(
+  prNumber: string,
+  comment: string,
+  ghToken: Secret,
+  repo = "shepherdjerred/scout-for-lol",
+): Promise<void> {
+  logWithTimestamp(`📝 Posting comment to PR #${prNumber}...`);
+
+  await getGitHubContainer()
+    .withSecretVariable("GH_TOKEN", ghToken)
+    .withExec(["gh", "pr", "comment", prNumber, "--repo", repo, "--body", comment])
+    .sync();
+
+  logWithTimestamp(`✅ Comment posted to PR #${prNumber}`);
+}
+
+// Helper function to parse preview URL from wrangler output
+function parsePreviewUrl(wranglerOutput: string): string | undefined {
+  // Wrangler outputs lines like: "Deployment complete! Take a peek over at https://..."
+  // Or: "✨ Deployment complete! Take a peek at: https://..."
+  const urlMatch = wranglerOutput.match(/https:\/\/[^\s]+\.pages\.dev/);
+  return urlMatch?.[0];
+}
+
 @object()
 export class ScoutForLol {
   /**
-   * Run all checks (backend, report, data, frontend)
+   * Run all checks (backend, report, data, frontend, desktop)
    * @param source The source directory
    * @returns A message indicating completion
    */
@@ -75,7 +105,7 @@ export class ScoutForLol {
   ): Promise<string> {
     logWithTimestamp("🔍 Starting comprehensive check process");
     logWithTimestamp(
-      "📋 This includes TypeScript type checking, ESLint, tests for all packages, and custom ESLint rules tests",
+      "📋 This includes TypeScript type checking, ESLint, tests for all packages, Rust checks for desktop, and custom ESLint rules tests",
     );
 
     logWithTimestamp("📁 Prepared source directories for all packages");
@@ -83,7 +113,7 @@ export class ScoutForLol {
     // Run checks in parallel - force container execution with .sync()
     await withTiming("parallel package checks (lint, typecheck, tests)", async () => {
       logWithTimestamp("🔄 Running lint, typecheck, and tests in parallel for all packages...");
-      logWithTimestamp("📦 Packages being checked: backend, report, data, frontend, eslint-rules");
+      logWithTimestamp("📦 Packages being checked: backend, report, data, frontend, desktop, eslint-rules");
 
       // Force execution of all containers in parallel
       await Promise.all([
@@ -107,6 +137,11 @@ export class ScoutForLol {
           await container.sync();
           return container;
         }),
+        withTiming("desktop check (lint + typecheck + Rust fmt + clippy + tests)", async () => {
+          const container = checkDesktop(source);
+          await container.sync();
+          return container;
+        }),
         withTiming("eslint-rules tests", async () => {
           const container = getBunNodeContainer(source)
             .withExec(["bun", "install", "--frozen-lockfile"])
@@ -126,12 +161,13 @@ export class ScoutForLol {
 
     logWithTimestamp("🎉 All checks completed successfully");
     logWithTimestamp(
-      "✅ All packages passed: TypeScript type checking, ESLint linting, tests, and custom ESLint rules tests",
+      "✅ All packages passed: TypeScript type checking, ESLint linting, tests, Rust checks, and custom ESLint rules tests",
     );
     return "All checks completed successfully";
   }
 
   /**
+<<<<<<< HEAD
    * Run all checks and output GitHub Actions annotations for failures.
    *
    * This function runs the same checks as `check()` but captures output
@@ -177,7 +213,7 @@ export class ScoutForLol {
   }
 
   /**
-   * Build all packages (backend image, report npm package)
+   * Build all packages (backend image, desktop app)
    * @param source The source directory
    * @param version The version to build
    * @param gitSha The git SHA
@@ -216,8 +252,16 @@ export class ScoutForLol {
       }
     });
 
-    logWithTimestamp("🎉 Backend image built successfully");
-    return "Backend image built successfully";
+    // Build desktop application
+    await withTiming("desktop application build", async () => {
+      logWithTimestamp("🔄 Building desktop application...");
+      const container = buildDesktopLinux(source, version);
+      await container.sync();
+      return container;
+    });
+
+    logWithTimestamp("🎉 All builds completed successfully");
+    return "All builds completed successfully";
   }
 
   /**
@@ -233,6 +277,7 @@ export class ScoutForLol {
    * @param accountId Cloudflare account ID (optional, for frontend deployment)
    * @param apiToken Cloudflare API token (optional, for frontend deployment)
    * @param projectName Cloudflare Pages project name (optional, defaults to "scout-for-lol")
+   * @param prNumber The PR number for posting deploy preview comments (optional)
    * @returns A message indicating completion
    */
   @func()
@@ -252,6 +297,7 @@ export class ScoutForLol {
     accountId?: Secret,
     apiToken?: Secret,
     projectName?: string,
+    prNumber?: string,
   ): Promise<string> {
     logWithTimestamp(`🚀 Starting CI pipeline for version ${version} (${gitSha}) in ${env ?? "dev"} environment`);
     logWithTimestamp("⚠️  CI will FAIL if lint or typecheck errors are found");
@@ -293,12 +339,15 @@ export class ScoutForLol {
       logWithTimestamp("⏭️ Phase 3: Skipping image publishing (no credentials or not prod environment)");
     }
 
-    // Deploy backend to homelab
-    const deployStage = env === "prod" ? "beta" : "dev";
-    await withTiming("CI backend deploy phase", () => {
-      logWithTimestamp(`🚀 Phase 4: Deploying backend to ${deployStage}...`);
-      return this.deploy(source, version, deployStage, ghToken);
-    });
+    // Deploy backend to homelab (only for prod)
+    if (env === "prod") {
+      await withTiming("CI backend deploy phase", () => {
+        logWithTimestamp("🚀 Phase 4: Deploying backend to beta...");
+        return this.deploy(source, version, "beta", ghToken);
+      });
+    } else {
+      logWithTimestamp("⏭️ Phase 4: Skipping backend deployment (not prod environment)");
+    }
 
     // Deploy frontend to Cloudflare Pages if credentials provided
     const shouldDeployFrontend = accountId && apiToken && branch;
@@ -306,13 +355,35 @@ export class ScoutForLol {
       await withTiming("CI frontend deploy phase", async () => {
         logWithTimestamp(`🚀 Phase 5: Deploying frontend to Cloudflare Pages (branch: ${branch})...`);
         const project = projectName ?? "scout-for-lol";
-        await this.deployFrontend(source, branch, gitSha, project, accountId, apiToken);
-        logWithTimestamp(
-          `✅ Frontend deployed to https://${branch === "main" ? "" : `${branch}.`}${project}.pages.dev`,
-        );
+        const deployOutput = await this.deployFrontend(source, branch, gitSha, project, accountId, apiToken);
+
+        // Parse the preview URL from wrangler output
+        const previewUrl = parsePreviewUrl(deployOutput);
+        const displayUrl = previewUrl ?? `https://${branch === "main" ? "" : `${branch}.`}${project}.pages.dev`;
+
+        logWithTimestamp(`✅ Frontend deployed to ${displayUrl}`);
+
+        // Post a comment to the PR with the preview URL (only for PRs, not main branch)
+        if (prNumber && ghToken && branch !== "main") {
+          const comment = `## 🚀 Deploy Preview Ready!\n\nA preview of this PR has been deployed to Cloudflare Pages:\n\n**Preview URL:** ${displayUrl}\n\n---\n*Deployed from commit ${gitSha.substring(0, 7)}*`;
+          await postPrComment(prNumber, comment, ghToken);
+        }
       });
     } else {
       logWithTimestamp("⏭️ Phase 5: Skipping frontend deployment (no Cloudflare credentials or branch not provided)");
+    }
+
+    // Build and export desktop artifacts in prod
+    if (env === "prod") {
+      await withTiming("CI desktop artifacts phase", async () => {
+        logWithTimestamp("📦 Phase 6: Exporting desktop artifacts...");
+        const artifacts = getDesktopLinuxArtifacts(source, version);
+        // Export to a well-known location for GitHub Actions to upload
+        await artifacts.export("./desktop-artifacts");
+        logWithTimestamp("✅ Desktop artifacts exported to ./desktop-artifacts");
+      });
+    } else {
+      logWithTimestamp("⏭️ Phase 6: Skipping desktop artifacts export (not prod environment)");
     }
 
     logWithTimestamp("🎉 CI pipeline completed successfully");
@@ -797,5 +868,82 @@ export class ScoutForLol {
 
     logWithTimestamp("✅ Code duplication check completed successfully");
     return "Code duplication check completed successfully";
+  }
+
+  /**
+   * Check the desktop package
+   * @param source The workspace source directory
+   * @returns A message indicating completion
+   */
+  @func()
+  async checkDesktop(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Promise<string> {
+    logWithTimestamp("🔍 Starting desktop package check");
+
+    await withTiming("desktop package check", async () => {
+      const container = checkDesktop(source);
+      await container.sync();
+      return container;
+    });
+
+    logWithTimestamp("✅ Desktop check completed successfully");
+    return "Desktop check completed successfully";
+  }
+
+  /**
+   * Build the desktop application for Linux
+   * @param source The workspace source directory
+   * @param version The version to build
+   * @returns A message indicating completion
+   */
+  @func()
+  async buildDesktop(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+  ): Promise<string> {
+    logWithTimestamp(`🏗️  Building desktop application for version ${version}`);
+
+    await withTiming("desktop build", async () => {
+      const container = buildDesktopLinux(source, version);
+      await container.sync();
+      return container;
+    });
+
+    logWithTimestamp("✅ Desktop build completed successfully");
+    return `Desktop build completed successfully for version ${version}`;
+  }
+
+  /**
+   * Export desktop Linux build artifacts
+   * @param source The workspace source directory
+   * @param version The version to build
+   * @returns The directory containing built artifacts
+   */
+  @func()
+  async desktopArtifacts(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+  ): Promise<Directory> {
+    logWithTimestamp(`📦 Exporting desktop artifacts for version ${version}`);
+
+    const result = await withTiming("desktop artifacts export", () =>
+      Promise.resolve(getDesktopLinuxArtifacts(source, version)),
+    );
+
+    logWithTimestamp("✅ Desktop artifacts exported successfully");
+    return result;
   }
 }

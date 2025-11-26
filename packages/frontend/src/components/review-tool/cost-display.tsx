@@ -1,7 +1,7 @@
 /**
  * Cost tracking display component
  */
-import { useSyncExternalStore, useRef } from "react";
+import { useSyncExternalStore, useRef, useCallback } from "react";
 import type { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import type { CostBreakdown } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { formatCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
@@ -11,15 +11,22 @@ type CostDisplayProps = {
 };
 
 // External store for cost update events
+// Track the actual update count, NOT Date.now() which changes every call and breaks useSyncExternalStore
+let costUpdateCount = 0;
+
 function subscribeToCostUpdates(callback: () => void) {
-  window.addEventListener("cost-update", callback);
+  const handler = () => {
+    costUpdateCount += 1;
+    callback();
+  };
+  window.addEventListener("cost-update", handler);
   return () => {
-    window.removeEventListener("cost-update", callback);
+    window.removeEventListener("cost-update", handler);
   };
 }
 
 function getCostUpdateSnapshot() {
-  return Date.now();
+  return costUpdateCount;
 }
 
 // Store for async cost total data
@@ -67,12 +74,14 @@ export function CostDisplay({ costTracker }: CostDisplayProps) {
     })();
   }
 
-  // Subscribe to cost total updates
-  const total = useSyncExternalStore(
-    (callback) => subscribeToCostTotal(callback, costTrackerRef.current),
-    getCostTotalSnapshot,
-    getCostTotalSnapshot,
+  // Memoize subscribe function to ensure stable reference for useSyncExternalStore
+  const subscribeToCostTotalCallback = useCallback(
+    (callback: () => void) => subscribeToCostTotal(callback, costTrackerRef.current),
+    [], // costTrackerRef is a ref, stable across renders
   );
+
+  // Subscribe to cost total updates
+  const total = useSyncExternalStore(subscribeToCostTotalCallback, getCostTotalSnapshot, getCostTotalSnapshot);
 
   if (!total) {
     return (

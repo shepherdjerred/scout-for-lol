@@ -8,6 +8,7 @@ import {
   LeagueAccountSchema,
 } from "@scout-for-lol/data";
 import { uniqueBy } from "remeda";
+import * as Sentry from "@sentry/node";
 
 console.log("🗄️  Initializing Prisma database client");
 export const prisma = new PrismaClient();
@@ -63,6 +64,7 @@ export async function getChannelsSubscribedToPlayers(
     return result;
   } catch (error) {
     console.error("❌ Error fetching subscribed channels:", error);
+    Sentry.captureException(error, { tags: { source: "db-get-subscribed-channels" } });
     throw error;
   }
 }
@@ -156,6 +158,7 @@ export async function getAccountsWithState(prismaClient: PrismaClient = prisma):
     return result;
   } catch (error) {
     console.error("❌ Error fetching player accounts with state:", error);
+    Sentry.captureException(error, { tags: { source: "db-get-accounts-with-state" } });
     throw error;
   }
 }
@@ -191,6 +194,7 @@ export async function updateLastProcessedMatch(
     console.log(`✅ Updated lastProcessedMatchId in ${queryTime.toString()}ms`);
   } catch (error) {
     console.error("❌ Error updating lastProcessedMatchId:", error);
+    Sentry.captureException(error, { tags: { source: "db-update-last-processed-match", puuid } });
     throw error;
   }
 }
@@ -219,6 +223,7 @@ export async function getLastProcessedMatch(
     return account?.lastProcessedMatchId ? MatchIdSchema.parse(account.lastProcessedMatchId) : null;
   } catch (error) {
     console.error("❌ Error getting lastProcessedMatchId:", error);
+    Sentry.captureException(error, { tags: { source: "db-get-last-processed-match", puuid } });
     throw error;
   }
 }
@@ -249,6 +254,7 @@ export async function updateLastMatchTime(
     });
   } catch (error) {
     console.error("❌ Error updating lastMatchTime:", error);
+    Sentry.captureException(error, { tags: { source: "db-update-last-match-time", puuid } });
     throw error;
   }
 }
@@ -279,6 +285,7 @@ export async function updateLastCheckedAt(
     });
   } catch (error) {
     console.error("❌ Error updating lastCheckedAt:", error);
+    Sentry.captureException(error, { tags: { source: "db-update-last-checked-at", puuid } });
     throw error;
   }
 }
