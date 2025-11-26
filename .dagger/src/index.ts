@@ -256,11 +256,12 @@ export class ScoutForLol {
     logWithTimestamp(`🚀 Starting CI pipeline for version ${version} (${gitSha}) in ${env ?? "dev"} environment`);
     logWithTimestamp("⚠️  CI will FAIL if lint or typecheck errors are found");
 
-    // First run checks
+    // First run checks with annotations
     await withTiming("CI checks phase", () => {
       logWithTimestamp("📋 Phase 1: Running checks (lint, typecheck, tests)...");
       logWithTimestamp("❌ Pipeline will FAIL if any check fails");
-      return this.check(source);
+      logWithTimestamp("📋 Annotations will appear inline in PR diffs for any failures");
+      return this.checkWithAnnotations(source);
     });
 
     // Then build
