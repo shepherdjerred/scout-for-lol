@@ -10,8 +10,9 @@ import type {
   ArenaMatch,
   QueueType,
   MatchDto,
+  TimelineDto,
 } from "@scout-for-lol/data";
-import { MatchIdSchema, queueTypeToDisplayString, MatchDtoSchema } from "@scout-for-lol/data";
+import { MatchIdSchema, queueTypeToDisplayString, MatchDtoSchema, TimelineDtoSchema } from "@scout-for-lol/data";
 import { getPlayer } from "@scout-for-lol/backend/league/model/player.js";
 import type { MessageCreateOptions } from "discord.js";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
@@ -102,6 +103,52 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
       console.error(`[fetchMatchData] ❌ HTTP Error ${result.data.status.toString()} for match ${matchId}`);
     } else {
       console.error(`[fetchMatchData] ❌ Error fetching match ${matchId}:`, e);
+    }
+    return undefined;
+  }
+}
+
+/**
+ * Fetch match timeline data from Riot API
+ *
+ * The timeline provides frame-by-frame game data including:
+ * - Participant stats evolution (gold, XP, position)
+ * - Game events (kills, item purchases, objectives, etc.)
+ *
+ * Validates the response against our schema to ensure type safety and catch API changes.
+ */
+export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region): Promise<TimelineDto | undefined> {
+  try {
+    const region = mapRegionToEnum(playerRegion);
+    const regionGroup = regionToRegionGroup(region);
+
+    console.log(`[fetchMatchTimeline] 📥 Fetching timeline data for ${matchId}`);
+
+    // Use the timeline endpoint from the twisted library
+    // The twisted library provides api.MatchV5.timeline() for Match V5 Timeline API
+    const response = await api.MatchV5.timeline(matchId, regionGroup);
+
+    // Validate and parse the API response to ensure it matches our schema
+    try {
+      const validated = TimelineDtoSchema.parse(response.response);
+      console.log(`[fetchMatchTimeline] ✅ Timeline validated with ${validated.info.frames.length.toString()} frames`);
+      return validated;
+    } catch (parseError) {
+      console.error(`[fetchMatchTimeline] ❌ Timeline data validation failed for ${matchId}:`, parseError);
+      console.error(`[fetchMatchTimeline] This may indicate an API schema change or data corruption`);
+      // Don't log raw response for timeline as it's very large
+      return undefined;
+    }
+  } catch (e) {
+    const result = z.object({ status: z.number() }).safeParse(e);
+    if (result.success) {
+      if (result.data.status === 404) {
+        console.log(`[fetchMatchTimeline] ℹ️  Timeline ${matchId} not found (404) - may still be processing`);
+        return undefined;
+      }
+      console.error(`[fetchMatchTimeline] ❌ HTTP Error ${result.data.status.toString()} for timeline ${matchId}`);
+    } else {
+      console.error(`[fetchMatchTimeline] ❌ Error fetching timeline ${matchId}:`, e);
     }
     return undefined;
   }
@@ -245,15 +292,19 @@ async function processArenaMatch(
   };
 }
 
+type StandardMatchContext = {
+  players: Awaited<ReturnType<typeof getPlayer>>[];
+  matchData: MatchDto;
+  matchId: MatchId;
+  playersInMatch: PlayerConfigEntry[];
+  timelineData: TimelineDto | undefined;
+};
+
 /**
  * Process standard match and generate Discord message
  */
-async function processStandardMatch(
-  players: Awaited<ReturnType<typeof getPlayer>>[],
-  matchData: MatchDto,
-  matchId: MatchId,
-  playersInMatch: PlayerConfigEntry[],
-): Promise<MessageCreateOptions> {
+async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageCreateOptions> {
+  const { players, matchData, matchId, playersInMatch, timelineData } = ctx;
   console.log(`[generateMatchReport] ⚔️  Processing as standard match`);
   // Process match for all tracked players
   if (players.length === 0) {
@@ -271,7 +322,7 @@ async function processStandardMatch(
   let reviewImage: Uint8Array | undefined;
   if (isRankedQueue(completedMatch.queueType)) {
     try {
-      const review = await generateMatchReview(completedMatch, matchId, matchData);
+      const review = await generateMatchReview(completedMatch, matchId, matchData, timelineData);
       if (review) {
         reviewText = review.text;
         reviewImage = review.image;
@@ -325,6 +376,41 @@ async function processStandardMatch(
 }
 
 /**
+ * Fetch timeline data for standard (non-arena) matches
+ * Returns undefined for arena matches or if timeline fetch fails
+ */
+async function fetchTimelineIfStandardMatch(
+  matchData: MatchDto,
+  matchId: MatchId,
+  playersInMatch: PlayerConfigEntry[],
+): Promise<TimelineDto | undefined> {
+  // Don't fetch timeline for arena matches
+  if (matchData.info.queueId === 1700) {
+    return undefined;
+  }
+
+  const firstPlayer = playersInMatch[0];
+  if (!firstPlayer) {
+    return undefined;
+  }
+
+  const playerRegion = firstPlayer.league.leagueAccount.region;
+  try {
+    console.log(`[generateMatchReport] 📊 Fetching timeline data for match ${matchId}`);
+    const timelineData = await fetchMatchTimeline(matchId, playerRegion);
+    if (timelineData) {
+      console.log(
+        `[generateMatchReport] ✅ Timeline fetched with ${timelineData.info.frames.length.toString()} frames`,
+      );
+    }
+    return timelineData;
+  } catch (error) {
+    console.error(`[generateMatchReport] ⚠️  Failed to fetch timeline, continuing without it:`, error);
+    return undefined;
+  }
+}
+
+/**
  * Generate a match report message for Discord
  *
  * @param matchData - The match data from Riot API
@@ -370,10 +456,13 @@ export async function generateMatchReport(
     console.log(`[debug][generateMatchReport] Got ${players.length.toString()} player(s)`);
     logPlayerDebugInfo(players);
 
+    // Fetch timeline data for standard matches (to provide game progression context for AI reviews)
+    const timelineData = await fetchTimelineIfStandardMatch(matchData, matchId, playersInMatch);
+
     // Process match based on queue type
     return await match<number, Promise<MessageCreateOptions>>(matchData.info.queueId)
       .with(1700, () => processArenaMatch(players, matchData, matchId, playersInMatch))
-      .otherwise(() => processStandardMatch(players, matchData, matchId, playersInMatch));
+      .otherwise(() => processStandardMatch({ players, matchData, matchId, playersInMatch, timelineData }));
   } catch (error) {
     logErrorDetails(error, matchId, matchData, trackedPlayers);
     throw error;
