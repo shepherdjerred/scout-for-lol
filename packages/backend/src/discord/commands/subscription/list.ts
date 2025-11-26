@@ -14,6 +14,9 @@ export async function executeSubscriptionList(interaction: ChatInputCommandInter
 
   const guildId = DiscordGuildIdSchema.parse(interaction.guildId);
 
+  // Defer reply immediately to avoid Discord's 3-second timeout
+  await interaction.deferReply({ ephemeral: true });
+
   const subscriptions = await prisma.subscription.findMany({
     where: { serverId: guildId },
     include: {
@@ -26,9 +29,8 @@ export async function executeSubscriptionList(interaction: ChatInputCommandInter
   });
 
   if (subscriptions.length === 0) {
-    await interaction.reply({
+    await interaction.editReply({
       content: truncateDiscordMessage("📭 No subscriptions found for this server."),
-      ephemeral: true,
     });
     return;
   }
@@ -72,8 +74,7 @@ export async function executeSubscriptionList(interaction: ChatInputCommandInter
     text: "Use /subscription add to add more subscriptions",
   });
 
-  await interaction.reply({
+  await interaction.editReply({
     embeds: [embed],
-    ephemeral: true,
   });
 }

@@ -37,6 +37,9 @@ export async function executeSubscriptionDelete(interaction: ChatInputCommandInt
 
   const { alias, channel, guildId } = args;
 
+  // Defer reply immediately to avoid Discord's 3-second timeout
+  await interaction.deferReply({ ephemeral: true });
+
   try {
     // Find the player by alias in this server
     const player = await prisma.player.findUnique({
@@ -54,9 +57,8 @@ export async function executeSubscriptionDelete(interaction: ChatInputCommandInt
 
     if (!player) {
       console.log(`⚠️  Player not found: ${alias}`);
-      await interaction.reply({
+      await interaction.editReply({
         content: `❌ **Player not found**\n\nNo player found with alias "${alias}" in this server.`,
-        ephemeral: true,
       });
       return;
     }
@@ -82,14 +84,12 @@ export async function executeSubscriptionDelete(interaction: ChatInputCommandInt
 
       if (otherSubscriptions.length > 0) {
         const channelList = otherSubscriptions.map((sub) => `<#${sub.channelId}>`).join(", ");
-        await interaction.reply({
+        await interaction.editReply({
           content: `ℹ️ **No subscription found**\n\nPlayer "${alias}" is not subscribed in <#${channel}>.\n\nThey are currently subscribed in: ${channelList}`,
-          ephemeral: true,
         });
       } else {
-        await interaction.reply({
+        await interaction.editReply({
           content: `ℹ️ **No subscription found**\n\nPlayer "${alias}" is not subscribed in <#${channel}>.`,
-          ephemeral: true,
         });
       }
       return;
@@ -120,17 +120,15 @@ export async function executeSubscriptionDelete(interaction: ChatInputCommandInt
       responseMessage += `\n\n**Accounts:**\n${accountList}`;
     }
 
-    await interaction.reply({
+    await interaction.editReply({
       content: responseMessage,
-      ephemeral: true,
     });
 
     console.log(`🎉 Subscription deletion completed successfully`);
   } catch (error) {
     console.error(`❌ Error during subscription deletion:`, error);
-    await interaction.reply({
+    await interaction.editReply({
       content: `❌ **Error deleting subscription**\n\n${getErrorMessage(error)}`,
-      ephemeral: true,
     });
   }
 }
