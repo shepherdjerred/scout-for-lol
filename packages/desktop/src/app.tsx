@@ -27,11 +27,21 @@ type LcuStatus = {
 type DiscordStatus = {
   connected: boolean;
   channelName: string | null;
+  voiceConnected: boolean;
+  voiceChannelName: string | null;
 };
 
 type Config = {
   botToken: string | null;
   channelId: string | null;
+  voiceChannelId: string | null;
+  soundPack: string | null;
+};
+
+type SoundPackSummary = {
+  name: string;
+  description: string;
+  events: string[];
 };
 
 type LogEntry = {
@@ -50,10 +60,15 @@ export default function App() {
   const [discordStatus, setDiscordStatus] = useState<DiscordStatus>({
     connected: false,
     channelName: null,
+    voiceConnected: false,
+    voiceChannelName: null,
   });
 
   const [botToken, setBotToken] = useState("");
   const [channelId, setChannelId] = useState("");
+  const [voiceChannelId, setVoiceChannelId] = useState("");
+  const [soundPack, setSoundPack] = useState("base");
+  const [soundPacks, setSoundPacks] = useState<SoundPackSummary[]>([]);
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
@@ -89,6 +104,12 @@ export default function App() {
           if (config.channelId) {
             setChannelId(config.channelId);
           }
+          if (config.voiceChannelId) {
+            setVoiceChannelId(config.voiceChannelId);
+          }
+          if (config.soundPack) {
+            setSoundPack(config.soundPack);
+          }
           addLog("info", "Loaded saved Discord configuration");
         }
       } catch (err) {
@@ -109,6 +130,23 @@ export default function App() {
       clearInterval(interval);
     };
   }, [loadStatus]);
+
+  // Load available sound packs on startup
+  useEffect(() => {
+    const fetchSoundPacks = async () => {
+      try {
+        const packs = await invoke<SoundPackSummary[]>("list_sound_packs");
+        setSoundPacks(packs);
+        if (packs.length > 0 && !soundPack) {
+          setSoundPack(packs[0].name);
+        }
+      } catch (err) {
+        console.error("Failed to load sound packs:", err);
+      }
+    };
+
+    void fetchSoundPacks();
+  }, []);
 
   // Listen for backend logs
   useEffect(() => {
@@ -170,7 +208,12 @@ export default function App() {
     addLog("info", `Configuring Discord for channel ${channelId}...`);
 
     try {
-      await invoke("configure_discord", { botToken, channelId });
+      await invoke("configure_discord", {
+        botToken,
+        channelId,
+        voiceChannelId: voiceChannelId || null,
+        soundPack,
+      });
       await loadStatus();
       addLog("info", "Discord configured successfully");
     } catch (err) {
@@ -347,6 +390,11 @@ export default function App() {
             channelId={channelId}
             onBotTokenChange={setBotToken}
             onChannelIdChange={setChannelId}
+            voiceChannelId={voiceChannelId}
+            onVoiceChannelIdChange={setVoiceChannelId}
+            soundPack={soundPack}
+            soundPacks={soundPacks}
+            onSoundPackChange={setSoundPack}
             onConfigure={() => {
               void handleConfigureDiscord();
             }}

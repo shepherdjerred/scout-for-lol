@@ -7,6 +7,8 @@ type LcuStatus = {
 type DiscordStatus = {
   connected: boolean;
   channelName: string | null;
+  voiceConnected: boolean;
+  voiceChannelName: string | null;
 };
 
 type LogEntry = {
@@ -91,6 +93,11 @@ type DiscordConfigSectionProps = {
   channelId: string;
   onBotTokenChange: (value: string) => void;
   onChannelIdChange: (value: string) => void;
+  voiceChannelId: string;
+  onVoiceChannelIdChange: (value: string) => void;
+  soundPack: string;
+  soundPacks: { name: string; description: string; events: string[] }[];
+  onSoundPackChange: (value: string) => void;
   onConfigure: () => void;
 };
 
@@ -101,6 +108,11 @@ export function DiscordConfigSection({
   channelId,
   onBotTokenChange,
   onChannelIdChange,
+  voiceChannelId,
+  onVoiceChannelIdChange,
+  soundPack,
+  soundPacks,
+  onSoundPackChange,
   onConfigure,
 }: DiscordConfigSectionProps) {
   return (
@@ -121,6 +133,23 @@ export function DiscordConfigSection({
             }
           >
             {discordStatus.connected ? "Configured" : "Not Configured"}
+          </span>
+        </div>
+
+        <div className="mb-4 flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            Voice:
+          </span>
+          <span
+            className={
+              discordStatus.voiceConnected
+                ? "rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                : "rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+            }
+          >
+            {discordStatus.voiceConnected
+              ? discordStatus.voiceChannelName ?? "Voice connected"
+              : "Not in voice"}
           </span>
         </div>
 
@@ -162,6 +191,53 @@ export function DiscordConfigSection({
                 placeholder="Discord channel ID"
                 className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-discord-blurple focus:outline-none focus:ring-2 focus:ring-discord-blurple/20 dark:border-gray-700 dark:bg-gray-900 dark:text-black dark:placeholder-gray-400"
               />
+            </div>
+
+            <div>
+              <label
+                htmlFor="voice-channel-id"
+                className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Voice Channel ID
+              </label>
+              <input
+                id="voice-channel-id"
+                type="text"
+                value={voiceChannelId}
+                onChange={(e) => {
+                  onVoiceChannelIdChange(e.target.value);
+                }}
+                placeholder="Discord voice channel ID"
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder-gray-500 focus:border-discord-blurple focus:outline-none focus:ring-2 focus:ring-discord-blurple/20 dark:border-gray-700 dark:bg-gray-900 dark:text-black dark:placeholder-gray-400"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="sound-pack"
+                className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Sound Pack
+              </label>
+              <select
+                id="sound-pack"
+                value={soundPack}
+                onChange={(e) => {
+                  onSoundPackChange(e.target.value);
+                }}
+                className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 focus:border-discord-blurple focus:outline-none focus:ring-2 focus:ring-discord-blurple/20 dark:border-gray-700 dark:bg-gray-900 dark:text-black"
+              >
+                {soundPacks.map((pack) => (
+                  <option key={pack.name} value={pack.name}>
+                    {pack.name} - {pack.description}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                {soundPacks
+                  .find((pack) => pack.name === soundPack)
+                  ?.events.join(", ") || "Events covered"}
+              </p>
             </div>
 
             <button
@@ -310,6 +386,22 @@ export function DebugPanel({
                 }
               >
                 {discordStatus.connected ? "Yes" : "No"}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">
+                Voice Connected:
+              </span>
+              <span
+                className={
+                  discordStatus.voiceConnected
+                    ? "font-medium text-green-600 dark:text-green-400"
+                    : "font-medium text-gray-600 dark:text-gray-400"
+                }
+              >
+                {discordStatus.voiceConnected
+                  ? discordStatus.voiceChannelName ?? "Yes"
+                  : "No"}
               </span>
             </div>
             <div className="flex justify-between text-sm">

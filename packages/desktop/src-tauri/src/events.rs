@@ -650,6 +650,7 @@ async fn handle_champion_kill_event(
         killer, victim, timestamp_str
     );
     discord.post_kill(killer, victim, &timestamp_str).await?;
+    discord.play_event_sound("ChampionKill").await;
 
     Ok(())
 }
@@ -691,6 +692,7 @@ async fn handle_first_blood_event(
     discord
         .post_first_blood(killer, victim, &timestamp_str)
         .await?;
+    discord.play_event_sound("FirstBlood").await;
 
     Ok(())
 }
@@ -731,6 +733,7 @@ async fn handle_multikill_event(event: &Value, discord: &DiscordClient) -> Resul
     discord
         .post_multikill(killer, multikill_type, &timestamp_str)
         .await?;
+    discord.play_event_sound("Multikill").await;
 
     Ok(())
 }
@@ -761,6 +764,7 @@ async fn handle_ace_event(event: &Value, discord: &DiscordClient) -> Result<(), 
         acer, acing_team, timestamp_str
     );
     discord.post_ace(acing_team, &timestamp_str).await?;
+    discord.play_event_sound("Multikill").await;
 
     Ok(())
 }
@@ -804,6 +808,7 @@ async fn handle_dragon_kill_event(event: &Value, discord: &DiscordClient) -> Res
     discord
         .post_objective(killer, &objective_name, &timestamp_str)
         .await?;
+    discord.play_event_sound("Objective").await;
 
     Ok(())
 }
@@ -842,6 +847,7 @@ async fn handle_baron_kill_event(event: &Value, discord: &DiscordClient) -> Resu
     discord
         .post_objective(killer, objective_name, &timestamp_str)
         .await?;
+    discord.play_event_sound("Objective").await;
 
     Ok(())
 }
@@ -880,6 +886,7 @@ async fn handle_herald_kill_event(event: &Value, discord: &DiscordClient) -> Res
     discord
         .post_objective(killer, objective_name, &timestamp_str)
         .await?;
+    discord.play_event_sound("Objective").await;
 
     Ok(())
 }
@@ -907,6 +914,7 @@ async fn handle_inhib_kill_event(event: &Value, discord: &DiscordClient) -> Resu
     discord
         .post_objective(killer, "INHIBITOR", &timestamp_str)
         .await?;
+    discord.play_event_sound("Objective").await;
 
     Ok(())
 }
@@ -939,6 +947,7 @@ async fn handle_turret_kill_event(event: &Value, discord: &DiscordClient) -> Res
         .post_objective(killer, "TOWER", &timestamp_str)
         .await?;
     info!("Turret kill event posted successfully");
+    discord.play_event_sound("Objective").await;
 
     Ok(())
 }
@@ -973,6 +982,7 @@ async fn handle_gameflow_event(
                 discord
                     .post_game_start("Summoner's Rift", "Normal Game")
                     .await?;
+                discord.play_event_sound("GameStart").await;
             }
             "WaitingForStats" | "PreEndOfGame" => {
                 info!("Game ending");
@@ -982,6 +992,7 @@ async fn handle_gameflow_event(
             }
             "EndOfGame" => {
                 info!("Game ended");
+                discord.play_event_sound("GameEnd").await;
             }
             "ChampSelect" => {
                 info!("Champion select started");

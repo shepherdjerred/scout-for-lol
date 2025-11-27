@@ -13,6 +13,10 @@ pub struct Config {
     pub bot_token: Option<String>,
     /// Discord channel ID
     pub channel_id: Option<String>,
+    /// Voice channel the bot should join
+    pub voice_channel_id: Option<String>,
+    /// Selected sound pack name
+    pub sound_pack: Option<String>,
 }
 
 impl Config {
@@ -65,6 +69,8 @@ mod tests {
         let config = Config {
             bot_token: Some("test-token".to_string()),
             channel_id: Some("123456".to_string()),
+            voice_channel_id: Some("987".to_string()),
+            sound_pack: Some("base".to_string()),
         };
 
         let json = serde_json::to_string(&config).expect("test should serialize");
@@ -81,6 +87,8 @@ mod tests {
 
         assert_eq!(config.bot_token, Some("token123".to_string()));
         assert_eq!(config.channel_id, Some("channel456".to_string()));
+        assert_eq!(config.voice_channel_id, None);
+        assert_eq!(config.sound_pack, None);
     }
 
     #[test]
@@ -88,6 +96,8 @@ mod tests {
         let config = Config::default();
         assert!(config.bot_token.is_none());
         assert!(config.channel_id.is_none());
+        assert!(config.voice_channel_id.is_none());
+        assert!(config.sound_pack.is_none());
     }
 
     #[test]
@@ -101,6 +111,8 @@ mod tests {
         let config = Config {
             bot_token: Some("save-test-token".to_string()),
             channel_id: Some("save-test-channel".to_string()),
+            voice_channel_id: Some("voice-channel".to_string()),
+            sound_pack: Some("base".to_string()),
         };
 
         // Save
@@ -110,6 +122,8 @@ mod tests {
         let loaded = Config::load(&config_path);
         assert_eq!(loaded.bot_token, config.bot_token);
         assert_eq!(loaded.channel_id, config.channel_id);
+        assert_eq!(loaded.voice_channel_id, config.voice_channel_id);
+        assert_eq!(loaded.sound_pack, config.sound_pack);
 
         // Clean up
         let _ = fs::remove_file(&config_path);
@@ -123,5 +137,7 @@ mod tests {
         // Should return default config when file doesn't exist
         assert!(config.bot_token.is_none());
         assert!(config.channel_id.is_none());
+        assert!(config.voice_channel_id.is_none());
+        assert!(config.sound_pack.is_none());
     }
 }

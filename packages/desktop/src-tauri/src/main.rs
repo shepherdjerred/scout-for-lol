@@ -27,6 +27,7 @@ mod config;
 mod discord;
 mod events;
 mod lcu;
+mod sound;
 
 #[cfg(test)]
 mod tests;
@@ -45,6 +46,7 @@ struct AppState {
     discord_client: Arc<Mutex<Option<discord::DiscordClient>>>,
     is_monitoring: Arc<Mutex<bool>>,
     config_path: PathBuf,
+    sound_registry: sound::SoundPackRegistry,
 }
 
 #[tauri::command]
@@ -90,11 +92,23 @@ async fn disconnect_lcu(state: State<'_, AppState>) -> Result<(), String> {
 async fn configure_discord(
     bot_token: String,
     channel_id: String,
+    voice_channel_id: Option<String>,
+    sound_pack: Option<String>,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     info!("Configuring Discord client...");
 
-    match discord::DiscordClient::new(bot_token.clone(), channel_id.clone()).await {
+    let registry = state.sound_registry.clone();
+    let selected_pack = sound::select_sound_pack(&registry, sound_pack.as_deref());
+
+    match discord::DiscordClient::new(
+        bot_token.clone(),
+        channel_id.clone(),
+        voice_channel_id.clone(),
+        selected_pack,
+    )
+    .await
+    {
         Ok(client) => {
             info!("Successfully configured Discord client");
 
@@ -106,6 +120,8 @@ async fn configure_discord(
             let config = config::Config {
                 bot_token: Some(bot_token),
                 channel_id: Some(channel_id),
+                voice_channel_id,
+                sound_pack,
             };
             config.save(&state.config_path)?;
 
@@ -125,6 +141,8 @@ async fn get_discord_status(state: State<'_, AppState>) -> Result<discord::Disco
         discord::DiscordStatus {
             connected: false,
             channel_name: None,
+            voice_connected: false,
+            voice_channel_name: None,
         },
         discord::DiscordClient::get_status,
     ))
@@ -187,6 +205,19 @@ async fn get_monitoring_status(state: State<'_, AppState>) -> Result<bool, Strin
 async fn load_config(state: State<'_, AppState>) -> Result<config::Config, String> {
     info!("Loading config from {:?}", state.config_path);
     Ok(config::Config::load(&state.config_path))
+}
+
+#[tauri::command]
+async fn list_sound_packs(
+    state: State<'_, AppState>,
+) -> Result<Vec<sound::SoundPackSummary>, String> {
+    let summaries = state
+        .sound_registry
+        .all()
+        .iter()
+        .map(sound::SoundPackSummary::from)
+        .collect();
+    Ok(summaries)
 }
 
 #[derive(serde::Serialize)]
@@ -438,6 +469,7 @@ fn main() {
             load_config,
             get_diagnostics,
             test_event_detection,
+            list_sound_packs,
         ])
         .setup(|app| {
             info!("Scout for LoL Desktop starting up...");
@@ -449,6 +481,9 @@ fn main() {
                 .expect("Failed to get app config directory");
             let config_path = config_dir.join("config.json");
 
+            let resource_dir = sound::resolve_resource_dir(app);
+            let sound_registry = sound::SoundPackRegistry::with_defaults(&resource_dir);
+
             info!("Config path: {:?}", config_path);
 
             // Initialize app state
@@ -457,6 +492,7 @@ fn main() {
                 discord_client: Arc::new(Mutex::new(None)),
                 is_monitoring: Arc::new(Mutex::new(false)),
                 config_path,
+                sound_registry,
             };
 
             app.manage(app_state);

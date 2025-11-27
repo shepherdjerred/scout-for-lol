@@ -1,7 +1,13 @@
 //! Discord integration module for posting game events to Discord channels
 
+use crate::sound::SoundPack;
 use serde::{Deserialize, Serialize};
-use tracing::{error, info};
+use serenity::all::{ChannelId, GuildId};
+use serenity::async_trait;
+use serenity::client::Client as SerenityClient;
+use serenity::prelude::{EventHandler, GatewayIntents};
+use songbird::SerenityInit;
+use tracing::{error, info, warn};
 
 /// Represents the connection status of the Discord client
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -11,6 +17,10 @@ pub struct DiscordStatus {
     pub connected: bool,
     /// The name of the Discord channel (if connected)
     pub channel_name: Option<String>,
+    /// Whether the voice bridge is connected
+    pub voice_connected: bool,
+    /// The voice channel name (if connected)
+    pub voice_channel_name: Option<String>,
 }
 
 /// Discord client for posting game events to a Discord channel
@@ -19,6 +29,8 @@ pub struct DiscordClient {
     token: String,
     channel_id: String,
     client: reqwest::Client,
+    voice: Option<VoiceBridge>,
+    sound_pack: SoundPack,
 }
 
 #[derive(Serialize)]
@@ -26,55 +38,193 @@ struct MessagePayload {
     content: String,
 }
 
+async fn fetch_channel_details(
+    client: &reqwest::Client,
+    token: &str,
+    channel_id: &str,
+) -> Result<ChannelInfo, String> {
+    let url = format!("https://discord.com/api/v10/channels/{channel_id}");
+    let response = client
+        .get(&url)
+        .header("Authorization", format!("Bot {}", token))
+        .header("User-Agent", "Scout-for-LoL-Desktop/0.1.0")
+        .send()
+        .await
+        .map_err(|e| format!("Failed to connect to Discord API: {e}"))?;
+
+    if response.status().is_success() {
+        response
+            .json::<ChannelInfo>()
+            .await
+            .map_err(|e| format!("Failed to parse channel details: {e}"))
+    } else {
+        let status = response.status();
+        let error_text = response
+            .text()
+            .await
+            .unwrap_or_else(|_| "Unknown error".to_string());
+        Err(format!("Discord API error: {status} - {error_text}"))
+    }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ChannelInfo {
+    id: String,
+    #[serde(rename = "type")]
+    kind: u8,
+    guild_id: Option<String>,
+    name: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+struct VoiceBridge {
+    manager: std::sync::Arc<songbird::Songbird>,
+    guild_id: GuildId,
+    voice_channel: ChannelId,
+    channel_name: Option<String>,
+}
+
+#[derive(Clone, Copy)]
+struct VoiceHandler;
+
+#[async_trait]
+impl EventHandler for VoiceHandler {}
+
+impl VoiceBridge {
+    async fn new(
+        token: &str,
+        guild_id: GuildId,
+        voice_channel: ChannelId,
+        channel_name: Option<String>,
+    ) -> Result<Self, String> {
+        let intents = GatewayIntents::GUILDS | GatewayIntents::GUILD_VOICE_STATES;
+        let mut serenity_client = SerenityClient::builder(token, intents)
+            .event_handler(VoiceHandler {})
+            .register_songbird()
+            .await
+            .map_err(|e| format!("Failed to start Discord gateway: {e}"))?;
+
+        let manager = songbird::get(&serenity_client)
+            .await
+            .ok_or_else(|| "Songbird voice manager missing".to_string())?
+            .clone();
+
+        // Run the gateway in the background
+        tokio::spawn(async move {
+            if let Err(e) = serenity_client.start().await {
+                error!("Discord gateway stopped: {}", e);
+            }
+        });
+
+        let bridge = Self {
+            manager,
+            guild_id,
+            voice_channel,
+            channel_name,
+        };
+
+        bridge.join().await?;
+        Ok(bridge)
+    }
+
+    async fn join(&self) -> Result<(), String> {
+        self.manager
+            .join(self.guild_id, self.voice_channel)
+            .await
+            .map_err(|e| format!("Failed to join voice channel: {e}"))?;
+        Ok(())
+    }
+
+    async fn ensure_call(
+        &self,
+    ) -> Result<std::sync::Arc<tokio::sync::Mutex<songbird::Call>>, String> {
+        if let Some(call) = self.manager.get(self.guild_id) {
+            return Ok(call);
+        }
+
+        self.join().await?;
+        self.manager
+            .get(self.guild_id)
+            .ok_or_else(|| "Voice connection missing after join".to_string())
+    }
+
+    async fn play_clip(&self, clip: &crate::sound::SoundClip) -> Result<(), String> {
+        let call = self.ensure_call().await?;
+        let mut handler = call.lock().await;
+        let source = songbird::input::File::new(clip.path.clone())
+            .await
+            .map_err(|e| format!("Failed to read sound file: {e}"))?;
+        handler.play_source(source);
+        Ok(())
+    }
+}
+
 impl DiscordClient {
     /// Creates a new Discord client and validates the connection
-    pub async fn new(token: String, channel_id: String) -> Result<Self, String> {
+    pub async fn new(
+        token: String,
+        channel_id: String,
+        voice_channel_id: Option<String>,
+        sound_pack: SoundPack,
+    ) -> Result<Self, String> {
         info!("Initializing Discord client...");
 
         let client = reqwest::Client::builder()
             .build()
             .map_err(|e| format!("Failed to create HTTP client: {e}"))?;
 
+        let text_channel = fetch_channel_details(&client, &token, &channel_id).await?;
+        info!("Validated text channel access");
+
+        let voice = if let Some(voice_id) = voice_channel_id.clone() {
+            let voice_channel = if voice_id == channel_id {
+                text_channel.clone()
+            } else {
+                fetch_channel_details(&client, &token, &voice_id).await?
+            };
+
+            if voice_channel.kind != 2 && voice_channel.kind != 13 {
+                warn!(
+                    "Channel {} is not a standard voice/stage channel (type {})",
+                    voice_id, voice_channel.kind
+                );
+            }
+
+            let guild_id = voice_channel
+                .guild_id
+                .as_ref()
+                .ok_or_else(|| "Voice channel must belong to a guild".to_string())?
+                .parse::<u64>()
+                .map_err(|e| format!("Invalid guild id: {e}"))?;
+
+            let voice_channel_num = voice_channel
+                .id
+                .parse::<u64>()
+                .map_err(|e| format!("Invalid voice channel id: {e}"))?;
+
+            Some(
+                VoiceBridge::new(
+                    &token,
+                    GuildId::new(guild_id),
+                    ChannelId::new(voice_channel_num),
+                    voice_channel.name.clone(),
+                )
+                .await?,
+            )
+        } else {
+            None
+        };
+
         let discord_client = Self {
             token,
             channel_id,
             client,
+            voice,
+            sound_pack,
         };
 
-        // Test the connection
-        discord_client.test_connection().await?;
-
         Ok(discord_client)
-    }
-
-    /// Tests the Discord API connection
-    async fn test_connection(&self) -> Result<(), String> {
-        info!("Testing Discord connection...");
-
-        let channel_id = &self.channel_id;
-        let url = format!("https://discord.com/api/v10/channels/{channel_id}");
-
-        let response = self
-            .client
-            .get(&url)
-            .header("Authorization", format!("Bot {}", self.token))
-            .header("User-Agent", "Scout-for-LoL-Desktop/0.1.0")
-            .send()
-            .await
-            .map_err(|e| format!("Failed to connect to Discord API: {e}"))?;
-
-        if response.status().is_success() {
-            info!("Discord connection test successful");
-            Ok(())
-        } else {
-            let status = response.status();
-            let error_text = response
-                .text()
-                .await
-                .unwrap_or_else(|_| "Unknown error".to_string());
-            error!("Discord API error: {} - {}", status, error_text);
-            Err(format!("Discord API error: {status} - {error_text}"))
-        }
     }
 
     /// Posts a message to the configured Discord channel
@@ -226,10 +376,25 @@ impl DiscordClient {
 
     /// Gets the current Discord connection status
     #[must_use]
-    pub const fn get_status(&self) -> DiscordStatus {
+    pub fn get_status(&self) -> DiscordStatus {
         DiscordStatus {
             connected: true,
             channel_name: None, // TODO: Fetch actual channel name
+            voice_connected: self.voice.is_some(),
+            voice_channel_name: self.voice.as_ref().and_then(|v| v.channel_name.clone()),
+        }
+    }
+
+    /// Plays the configured sound for the event, if available.
+    pub async fn play_event_sound(&self, event_key: &str) {
+        let Some(voice) = &self.voice else {
+            return;
+        };
+
+        if let Some(clip) = self.sound_pack.clip_for_event(event_key) {
+            if let Err(e) = voice.play_clip(&clip).await {
+                warn!("Failed to play sound for {}: {}", event_key, e);
+            }
         }
     }
 }
@@ -243,9 +408,12 @@ mod tests {
         let status = DiscordStatus {
             connected: false,
             channel_name: None,
+            voice_connected: false,
+            voice_channel_name: None,
         };
         assert!(!status.connected);
         assert!(status.channel_name.is_none());
+        assert!(!status.voice_connected);
     }
 
     #[test]
@@ -253,9 +421,12 @@ mod tests {
         let status = DiscordStatus {
             connected: true,
             channel_name: Some("general".to_string()),
+            voice_connected: true,
+            voice_channel_name: Some("Voice".to_string()),
         };
         assert!(status.connected);
         assert_eq!(status.channel_name, Some("general".to_string()));
+        assert!(status.voice_connected);
     }
 
     #[test]
@@ -263,6 +434,8 @@ mod tests {
         let status = DiscordStatus {
             connected: true,
             channel_name: Some("test-channel".to_string()),
+            voice_connected: false,
+            voice_channel_name: None,
         };
 
         let json = serde_json::to_string(&status).ok();
