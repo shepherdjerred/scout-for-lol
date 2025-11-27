@@ -1,7 +1,7 @@
 /**
  * S3 match browser for selecting real match data
  */
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { z } from "zod";
 import Fuse, { type FuseResult } from "fuse.js";
 import type { ApiSettings } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
@@ -253,14 +253,6 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
 
     return result;
   }, [matches, filterQueueType, filterLane, filterPlayer, filterChampion, filterOutcome]);
-
-  // Reset to page 1 when filters change - calculate derived state during render
-  const filterKey = `${filterQueueType}-${filterLane}-${filterPlayer}-${filterChampion}-${filterOutcome}`;
-  const previousFilterKeyRef = useRef(filterKey);
-  if (previousFilterKeyRef.current !== filterKey && currentPage !== 1) {
-    setCurrentPage(1);
-    previousFilterKeyRef.current = filterKey;
-  }
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredMatches.length / pageSize);

@@ -1,11 +1,12 @@
 /**
  * Modal for API configuration settings
  */
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { z } from "zod";
 import type { GlobalConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { ApiSettingsPanel } from "./api-settings-panel";
-import { resetToDefaults, getResetPreview } from "@scout-for-lol/frontend/lib/review-tool/reset-defaults";
+import type { getResetPreview } from "@scout-for-lol/frontend/lib/review-tool/reset-defaults";
+import { resetToDefaults } from "@scout-for-lol/frontend/lib/review-tool/reset-defaults";
 
 const ErrorSchema = z.object({ message: z.string() });
 
@@ -18,28 +19,13 @@ type ConfigModalProps = {
 
 export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: ConfigModalProps) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [preview, setPreview] = useState<Awaited<ReturnType<typeof getResetPreview>>>({
+  const [preview] = useState<Awaited<ReturnType<typeof getResetPreview>>>({
     configs: 0,
     historyEntries: 0,
     customPersonalities: 0,
     customArtStyles: 0,
     customArtThemes: 0,
   });
-  const previewLoadedRef = useRef(false);
-
-  // Load preview lazily when modal opens (only once per open session)
-  if (isOpen && !previewLoadedRef.current) {
-    previewLoadedRef.current = true;
-    void (async () => {
-      const previewData = await getResetPreview();
-      setPreview(previewData);
-    })();
-  }
-
-  // Reset preview loaded flag when modal closes
-  if (!isOpen && previewLoadedRef.current) {
-    previewLoadedRef.current = false;
-  }
 
   if (!isOpen) {
     return null;
