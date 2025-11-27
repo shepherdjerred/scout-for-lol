@@ -70,6 +70,7 @@ export default tseslint.config(
       "**/node_modules/**/*",
       "**/.astro/**/*",
       ".dagger/sdk/**/*",
+      "**/src-tauri/target/**/*",
       "**/*.md",
       "**/*.mdx",
       "**/*.astro",

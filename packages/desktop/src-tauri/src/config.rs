@@ -1,10 +1,10 @@
 //! Configuration management module for persisting app settings
 
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
-use tracing::{error, info};
 
 /// Application configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -28,7 +28,7 @@ impl Config {
         match fs::read_to_string(config_path) {
             Ok(contents) => match serde_json::from_str(&contents) {
                 Ok(config) => {
-                    info!("Loaded config from {:?}", config_path);
+                    info!("Loaded config from {}", config_path.display());
                     config
                 }
                 Err(e) => {
@@ -56,7 +56,7 @@ impl Config {
 
         fs::write(config_path, json).map_err(|e| format!("Failed to write config file: {e}"))?;
 
-        info!("Saved config to {:?}", config_path);
+        info!("Saved config to {}", config_path.display());
         Ok(())
     }
 }
@@ -76,7 +76,7 @@ mod tests {
             sound_pack: Some("base".to_string()),
             event_sounds: Some(HashMap::from([(
                 "kill".to_string(),
-                "sharp-beep".to_string()
+                "sharp-beep".to_string(),
             )])),
         };
 
@@ -125,7 +125,7 @@ mod tests {
             sound_pack: Some("base".to_string()),
             event_sounds: Some(HashMap::from([(
                 "kill".to_string(),
-                "sharp-beep".to_string()
+                "sharp-beep".to_string(),
             )])),
         };
 

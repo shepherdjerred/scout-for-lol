@@ -2,8 +2,8 @@
 
 use base64::engine::general_purpose;
 use base64::Engine;
+use log::info;
 use serde::{Deserialize, Serialize};
-use tracing::info;
 
 /// Represents the connection status of the League Client
 #[derive(Debug, Clone, Serialize, Deserialize)]

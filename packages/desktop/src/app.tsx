@@ -51,6 +51,11 @@ type LogEntry = {
   message: string;
 };
 
+type LogPaths = {
+  app_log_dir: string;
+  working_dir_log: string;
+};
+
 export default function App() {
   const [lcuStatus, setLcuStatus] = useState<LcuStatus>({
     connected: false,
@@ -76,6 +81,7 @@ export default function App() {
   const [loading, setLoading] = useState<string | null>(null);
   const [showDebug, setShowDebug] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [logPaths, setLogPaths] = useState<LogPaths | null>(null);
 
   const addLog = (level: LogEntry["level"], message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -95,6 +101,7 @@ export default function App() {
   }, []);
 
   // Load config on mount
+  // eslint-disable-next-line custom-rules/no-use-effect -- ok for now
   useEffect(() => {
     const loadConfig = async () => {
       try {
@@ -120,6 +127,15 @@ export default function App() {
         if (config.botToken || config.channelId || config.voiceChannelId) {
           addLog("info", "Loaded saved Discord configuration");
         }
+
+        // Fetch log paths for easier debugging
+        try {
+          const paths = await invoke<LogPaths>("get_log_paths");
+          setLogPaths(paths);
+          addLog("info", `Log files: ${paths.working_dir_log} (working dir), ${paths.app_log_dir} (app logs)`);
+        } catch (pathErr) {
+          console.error("Failed to load log paths:", pathErr);
+        }
       } catch (err) {
         console.error("Failed to load config:", err);
       }
@@ -129,6 +145,7 @@ export default function App() {
   }, []);
 
   // Load status on mount and setup polling
+  // eslint-disable-next-line custom-rules/no-use-effect -- ok for now
   useEffect(() => {
     void loadStatus();
     const interval = setInterval(() => {
@@ -140,6 +157,7 @@ export default function App() {
   }, [loadStatus]);
 
   // Listen for backend logs
+  // eslint-disable-next-line custom-rules/no-use-effect -- ok for now
   useEffect(() => {
     const unlisten = listen<string>("backend-log", (event) => {
       addLog("info", event.payload);
@@ -459,6 +477,7 @@ export default function App() {
             discordStatus={discordStatus}
             isMonitoring={isMonitoring}
             logs={logs}
+            logPaths={logPaths}
             onClearLogs={handleClearLogs}
           />
         )}

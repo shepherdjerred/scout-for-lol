@@ -1,21 +1,46 @@
 //! Discord integration module for posting game events and playing sounds in voice chat
 
+use log::{error, info};
 use serde::{Deserialize, Serialize};
 use serenity::all::{ChannelId, GatewayIntents, GuildId, Ready};
 use serenity::async_trait;
 use serenity::client::{Client as SerenityClient, EventHandler};
+use songbird::events::{Event, EventContext, EventHandler as VoiceEventHandler, TrackEvent};
 use songbird::input::{File as AudioFile, Input};
 use songbird::{SerenityInit, Songbird, SongbirdKey};
 use std::collections::HashMap;
+use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::io::Write;
-use tokio::time::{timeout, Duration};
 use tauri::Emitter;
-use tracing::{error, info};
+use tokio::time::{timeout, Duration};
 
 // Bundled base beep sound (packed at compile time)
 const BASE_BEEP_BYTES: &[u8] = include_bytes!("../resources/sounds/base-beep.wav");
+
+struct TrackLogger;
+
+#[derive(Serialize)]
+struct MessagePayload {
+    content: String,
+}
+
+#[async_trait]
+impl VoiceEventHandler for TrackLogger {
+    async fn act(&self, ctx: &EventContext<'_>) -> Option<Event> {
+        if let EventContext::Track(track_list) = ctx {
+            for (state, handle) in track_list.iter().copied() {
+                write_sound_log(&format!(
+                    "[sound-track] uuid={:?} playing={:?} vol={:?}",
+                    handle.uuid(),
+                    state.playing,
+                    state.volume
+                ));
+            }
+        }
+        None
+    }
+}
 
 fn ensure_base_beep_file() -> PathBuf {
     let temp_path = std::env::temp_dir().join("scout-base-beep.wav");
@@ -23,7 +48,7 @@ fn ensure_base_beep_file() -> PathBuf {
         if let Err(err) = std::fs::write(&temp_path, BASE_BEEP_BYTES) {
             error!("Failed to write base beep to temp: {}", err);
         } else {
-            info!("Wrote base beep to {:?}", temp_path);
+            info!("Wrote base beep to {}", temp_path.display());
         }
     }
     temp_path
@@ -82,7 +107,7 @@ pub enum SoundEvent {
 impl SoundEvent {
     /// Returns the canonical key used for config and UI
     #[must_use]
-    pub const fn key(&self) -> &'static str {
+    pub const fn key(self) -> &'static str {
         match self {
             Self::GameStart => "gameStart",
             Self::FirstBlood => "firstBlood",
@@ -100,6 +125,8 @@ impl SoundEvent {
 pub enum SoundCue {
     /// Load audio from a file path
     File(PathBuf),
+    /// Stream audio from a URL (e.g., YouTube)
+    Url(String),
 }
 
 /// A collection of sounds that can be swapped in as a pack
@@ -121,13 +148,34 @@ impl SoundPack {
     pub fn base() -> Self {
         let base_beep = ensure_base_beep_file();
         let cues = HashMap::from([
-            (SoundEvent::GameStart.key().to_string(), SoundCue::File(base_beep.clone())),
-            (SoundEvent::Kill.key().to_string(), SoundCue::File(base_beep.clone())),
-            (SoundEvent::MultiKill.key().to_string(), SoundCue::File(base_beep.clone())),
-            (SoundEvent::Objective.key().to_string(), SoundCue::File(base_beep.clone())),
-            (SoundEvent::FirstBlood.key().to_string(), SoundCue::File(base_beep.clone())),
-            (SoundEvent::Ace.key().to_string(), SoundCue::File(base_beep.clone())),
-            (SoundEvent::GameEnd.key().to_string(), SoundCue::File(base_beep)),
+            (
+                SoundEvent::GameStart.key().to_string(),
+                SoundCue::File(base_beep.clone()),
+            ),
+            (
+                SoundEvent::Kill.key().to_string(),
+                SoundCue::File(base_beep.clone()),
+            ),
+            (
+                SoundEvent::MultiKill.key().to_string(),
+                SoundCue::File(base_beep.clone()),
+            ),
+            (
+                SoundEvent::Objective.key().to_string(),
+                SoundCue::File(base_beep.clone()),
+            ),
+            (
+                SoundEvent::FirstBlood.key().to_string(),
+                SoundCue::File(base_beep.clone()),
+            ),
+            (
+                SoundEvent::Ace.key().to_string(),
+                SoundCue::File(base_beep.clone()),
+            ),
+            (
+                SoundEvent::GameEnd.key().to_string(),
+                SoundCue::File(base_beep),
+            ),
         ]);
 
         Self {
@@ -161,7 +209,7 @@ struct ChannelLookupResponse {
     #[serde(rename = "guild_id")]
     guild_id: Option<String>,
     #[serde(rename = "type")]
-    _kind: Option<u8>,
+    kind: Option<u8>,
 }
 
 /// Discord client for posting game events to a Discord channel and playing voice cues
@@ -216,13 +264,17 @@ impl DiscordClient {
 
         let mut client = discord_client;
         client.apply_event_overrides(event_overrides);
-        client.songbird =
-            timeout(Duration::from_secs(8), client.build_voice_client(token.clone()))
-                .await
-                .map_err(|_| "Voice client setup timed out".to_string())?;
+        client.songbird = timeout(
+            Duration::from_secs(8),
+            client.build_voice_client(token.clone()),
+        )
+        .await
+        .map_err(|_| "Voice client setup timed out".to_string())?;
 
         if client.songbird.is_none() {
-            error!("Voice client not initialized; voice playback will be disabled until reconfigured");
+            error!(
+                "Voice client not initialized; voice playback will be disabled until reconfigured"
+            );
         }
 
         Ok(client)
@@ -263,6 +315,8 @@ impl DiscordClient {
             for (event, value) in map {
                 let cue = if let Some(base_cue) = self.sound_pack.cue_for(&value) {
                     base_cue
+                } else if value.starts_with("http://") || value.starts_with("https://") {
+                    SoundCue::Url(value)
                 } else {
                     SoundCue::File(PathBuf::from(value))
                 };
@@ -310,11 +364,6 @@ impl DiscordClient {
         );
 
         info!("Attempting to post Discord message");
-
-        #[derive(Serialize)]
-        struct MessagePayload {
-            content: String,
-        }
 
         let payload = MessagePayload { content };
 
@@ -461,14 +510,11 @@ impl DiscordClient {
             return Err(msg);
         };
 
-        let voice_channel_id = self
-            .voice_channel_id
-            .clone()
-            .ok_or_else(|| {
-                let msg = "Voice channel not configured".to_string();
-                log_sound_error(event, &msg);
-                msg
-            })?;
+        let voice_channel_id = self.voice_channel_id.clone().ok_or_else(|| {
+            let msg = "Voice channel not configured".to_string();
+            log_sound_error(event, &msg);
+            msg
+        })?;
 
         info!(
             "Attempting to play sound for event {:?} in voice {}",
@@ -487,24 +533,37 @@ impl DiscordClient {
                 ),
             );
         }
-        let (guild_id, channel_id, _channel_name) = self
-            .resolve_voice_channel(&voice_channel_id)
-            .await
-            .map_err(|e| {
-                log_sound_error(event, &e);
-                e
-            })?;
+        let (guild_id, channel_id, channel_name, channel_kind) =
+            match self.resolve_voice_channel(&voice_channel_id).await {
+                Ok(v) => v,
+                Err(e) => {
+                    log_sound_error(event, &e);
+                    return Err(e);
+                }
+            };
+        write_sound_log(&format!(
+            "[sound] Channel lookup: name={:?}, kind={:?}",
+            channel_name, channel_kind
+        ));
 
-        let handler_lock = manager
-            .join(guild_id, channel_id)
-            .await
-            .map_err(|e| {
+        let handler_lock = match manager.join(guild_id, channel_id).await {
+            Ok(lock) => lock,
+            Err(e) => {
                 let msg = format!("Failed to join voice: {e}");
                 log_sound_error(event, &msg);
-                msg
-            })?;
+                return Err(msg);
+            }
+        };
 
         let mut handler = handler_lock.lock().await;
+        handler.add_global_event(TrackEvent::Error.into(), TrackLogger);
+        let _ = handler.mute(false).await;
+        let _ = handler.deafen(false).await;
+        write_sound_log(&format!(
+            "[sound] Handler connected={}, channel_id={:?}",
+            handler.current_channel().is_some(),
+            handler.current_channel()
+        ));
         let cue_key = event.key().to_string();
         let cue = self
             .event_overrides
@@ -517,13 +576,21 @@ impl DiscordClient {
                 msg
             })?;
 
-        let (input, resolved_path) = Self::cue_to_input(cue).map_err(|e| {
-            log_sound_error(event, &e);
-            e
-        })?;
-        let handle = handler.enqueue_input(input).await;
+        let (input, resolved_path) = match Self::cue_to_input(cue) {
+            Ok(v) => v,
+            Err(e) => {
+                log_sound_error(event, &e);
+                return Err(e);
+            }
+        };
+        write_sound_log(&format!("[sound] Sending input {}", resolved_path));
+        let handle = handler.play_only_input(input);
         let _ = handle.set_volume(1.0);
-        let _ = handle.play();
+        if let Err(e) = handle.play() {
+            let msg = format!("Failed to start track: {}", e);
+            log_sound_error(event, &msg);
+        }
+        write_sound_log("[sound] play_only_input + play() invoked");
         info!("Queued audio for event {:?} using {}", event, resolved_path);
         write_sound_log(&format!(
             "[sound] Queued {:?} using {}",
@@ -549,14 +616,9 @@ impl DiscordClient {
                         .ok()
                         .and_then(|p| p.parent().map(std::path::Path::to_path_buf));
                     if let Some(dir) = exe_dir {
-                        let candidate = dir.join(&path);
-                        if candidate.exists() {
-                            candidate
-                        } else {
-                            path.clone()
-                        }
+                        dir.join(&path)
                     } else {
-                        path.clone()
+                        path
                     }
                 };
 
@@ -570,13 +632,18 @@ impl DiscordClient {
                 let file = AudioFile::new(resolved_path.clone());
                 Ok((Input::from(file), resolved_path.display().to_string()))
             }
+            SoundCue::Url(url) => {
+                // For URLs, let Songbird/yt-dlp handle streaming
+                let yt = songbird::input::YoutubeDl::new(reqwest::Client::new(), url.clone());
+                Ok((Input::from(yt), url))
+            }
         }
     }
 
     async fn resolve_voice_channel(
         &self,
         voice_channel_id: &str,
-    ) -> Result<(GuildId, ChannelId, Option<String>), String> {
+    ) -> Result<(GuildId, ChannelId, Option<String>, Option<u8>), String> {
         let channel = self.fetch_channel_info(voice_channel_id).await?;
         let guild_id = channel
             .guild_id
@@ -589,7 +656,12 @@ impl DiscordClient {
             .parse::<u64>()
             .map_err(|e| format!("Invalid voice channel id: {e}"))?;
 
-        Ok((GuildId::new(guild_id), ChannelId::new(channel_id), channel.name))
+        Ok((
+            GuildId::new(guild_id),
+            ChannelId::new(channel_id),
+            channel.name,
+            channel.kind,
+        ))
     }
 
     async fn fetch_channel_info(&self, channel_id: &str) -> Result<ChannelLookupResponse, String> {
@@ -627,7 +699,8 @@ impl DiscordClient {
             .clone()
             .ok_or_else(|| "Voice channel not configured".to_string())?;
 
-        let (guild_id, channel_id, _name) = self.resolve_voice_channel(&voice_channel_id).await?;
+        let (guild_id, channel_id, _name, _kind) =
+            self.resolve_voice_channel(&voice_channel_id).await?;
         let _handler = manager
             .join(guild_id, channel_id)
             .await

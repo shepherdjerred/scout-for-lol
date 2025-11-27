@@ -7,6 +7,9 @@ type LcuStatus = {
 type DiscordStatus = {
   connected: boolean;
   channelName: string | null;
+  voiceConnected: boolean;
+  voiceChannelName: string | null;
+  activeSoundPack: string | null;
 };
 
 type LogEntry = {
@@ -189,7 +192,10 @@ export function DiscordConfigSection({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="voice-channel-id" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label
+                htmlFor="voice-channel-id"
+                className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
                 Voice Channel ID
               </label>
               <input
@@ -233,11 +239,11 @@ export function DiscordConfigSection({
             </div>
             <div className="grid gap-3 md:grid-cols-2">
               {Object.entries(SOUND_EVENT_LABELS).map(([key, label]) => (
-                <label key={key} className="space-y-1 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
-                  <div className="flex items-center justify-between">
+                <div key={key} className="space-y-1 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                  <label htmlFor={`event-sound-${key}`} className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{label}</span>
                     <span className="text-[10px] uppercase tracking-wide text-gray-500 dark:text-gray-400">{key}</span>
-                  </div>
+                  </label>
                   <input
                     type="text"
                     value={eventSounds[key] ?? ""}
@@ -247,7 +253,7 @@ export function DiscordConfigSection({
                     placeholder="e.g. gameStart or /path/to/sound.ogg"
                     className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-discord-blurple focus:outline-none focus:ring-2 focus:ring-discord-blurple/20 dark:border-gray-700 dark:bg-gray-900 dark:text-black"
                   />
-                </label>
+                </div>
               ))}
             </div>
           </div>
@@ -347,6 +353,10 @@ type DebugPanelProps = {
   discordStatus: DiscordStatus;
   isMonitoring: boolean;
   logs: LogEntry[];
+  logPaths?: {
+    app_log_dir: string;
+    working_dir_log: string;
+  } | null;
   onClearLogs: () => void;
 };
 
@@ -360,7 +370,7 @@ function getLogColorClass(level: LogEntry["level"]): string {
   return "text-gray-700 dark:text-gray-300";
 }
 
-export function DebugPanel({ lcuStatus, discordStatus, isMonitoring, logs, onClearLogs }: DebugPanelProps) {
+export function DebugPanel({ lcuStatus, discordStatus, isMonitoring, logs, logPaths, onClearLogs }: DebugPanelProps) {
   return (
     <aside className="lg:w-96">
       <div className="sticky top-8 rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-800">
@@ -429,6 +439,12 @@ export function DebugPanel({ lcuStatus, discordStatus, isMonitoring, logs, onCle
                 Clear
               </button>
             </div>
+            {logPaths && (
+              <div className="mb-2 space-y-1 text-[11px] text-gray-500 dark:text-gray-400">
+                <div className="break-words">Working dir log: {logPaths.working_dir_log}</div>
+                <div className="break-words">App log dir: {logPaths.app_log_dir}</div>
+              </div>
+            )}
             <div className="max-h-96 space-y-1 overflow-y-auto rounded-md bg-gray-50 p-3 font-mono text-xs dark:bg-gray-900">
               {logs.length === 0 ? (
                 <p className="text-gray-500 dark:text-gray-400">No logs yet</p>

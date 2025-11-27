@@ -31,16 +31,30 @@ mod lcu;
 #[cfg(test)]
 mod tests;
 
+use log::{error, info};
 use std::collections::HashMap;
+use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::{Emitter, Manager, State};
 use tokio::sync::Mutex;
 use tokio::time::{timeout, Duration};
-use tracing::{error, info};
 
 #[cfg(target_os = "windows")]
 use std::fs;
+
+fn append_startup_log(message: &str) {
+    if let Ok(cwd) = std::env::current_dir() {
+        let path = cwd.join("startup-log.txt");
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&path)
+        {
+            let _ = writeln!(file, "{}", message);
+        }
+    }
+}
 
 struct AppState {
     lcu_connection: Arc<Mutex<Option<lcu::LcuConnection>>>,
@@ -175,12 +189,37 @@ async fn join_discord_voice(
 }
 
 #[tauri::command]
-async fn play_test_sound(state: State<'_, AppState>, app_handle: tauri::AppHandle) -> Result<(), String> {
+async fn play_test_sound(
+    state: State<'_, AppState>,
+    app_handle: tauri::AppHandle,
+) -> Result<(), String> {
     let guard = state.discord_client.lock().await;
     let client = guard.as_ref().ok_or("Discord not configured")?;
     client
         .play_sound_for_event(discord::SoundEvent::GameStart, Some(&app_handle))
         .await
+}
+
+#[derive(serde::Serialize)]
+struct LogPaths {
+    app_log_dir: String,
+    working_dir_log: String,
+}
+
+#[tauri::command]
+async fn get_log_paths(app_handle: tauri::AppHandle) -> Result<LogPaths, String> {
+    let app_log_dir = app_handle
+        .path()
+        .app_log_dir()
+        .map_err(|e| format!("Failed to get app log dir: {e}"))?;
+
+    let working_dir = std::env::current_dir().map_err(|e| format!("Failed to get cwd: {e}"))?;
+    let working_dir_log = working_dir.join("scout-debug.log");
+
+    Ok(LogPaths {
+        app_log_dir: app_log_dir.to_string_lossy().to_string(),
+        working_dir_log: working_dir_log.to_string_lossy().to_string(),
+    })
 }
 
 #[tauri::command]
@@ -238,7 +277,7 @@ async fn get_monitoring_status(state: State<'_, AppState>) -> Result<bool, Strin
 
 #[tauri::command]
 async fn load_config(state: State<'_, AppState>) -> Result<config::Config, String> {
-    info!("Loading config from {:?}", state.config_path);
+    info!("Loading config from {}", state.config_path.display());
     Ok(config::Config::load(&state.config_path))
 }
 
@@ -417,68 +456,32 @@ async fn test_event_detection(state: State<'_, AppState>) -> Result<EventTestRes
     }
 }
 
-#[cfg(target_os = "windows")]
-fn extract_embedded_dll() -> Result<(), Box<dyn std::error::Error>> {
-    // Embed the DLL at compile time from resources directory
-    const DLL_BYTES: &[u8] = include_bytes!("../resources/WebView2Loader.dll");
-
-    // Get the executable's directory
-    let exe_path = std::env::current_exe()
-        .or_else(|_| std::env::var("CARGO_MANIFEST_DIR").map(PathBuf::from))
-        .map_err(|_| "Failed to get executable path")?;
-
-    let exe_dir = exe_path
-        .parent()
-        .ok_or("Failed to get executable directory")?;
-    let dll_path = exe_dir.join("WebView2Loader.dll");
-
-    // Extract DLL if it doesn't exist or is different
-    let needs_extraction = match fs::read(&dll_path) {
-        Ok(existing) => existing != DLL_BYTES,
-        Err(_) => true, // File doesn't exist
-    };
-
-    if needs_extraction {
-        fs::write(&dll_path, DLL_BYTES)
-            .map_err(|e| format!("Failed to write DLL to {:?}: {}", dll_path, e))?;
-        eprintln!("Extracted WebView2Loader.dll to {:?}", dll_path);
-    }
-
-    Ok(())
-}
-
-#[cfg(not(target_os = "windows"))]
-#[allow(dead_code, clippy::unnecessary_wraps)]
-fn extract_embedded_dll() -> Result<(), Box<dyn std::error::Error>> {
-    // No-op on non-Windows platforms
-    Ok(())
-}
-
 #[allow(clippy::expect_used, clippy::large_stack_frames)]
 fn main() {
-    // Extract embedded DLL FIRST on Windows - before anything else
-    // This must happen before Tauri/WinRT tries to load WebView2Loader.dll
-    #[cfg(target_os = "windows")]
-    {
-        if let Err(e) = extract_embedded_dll() {
-            eprintln!("Failed to extract WebView2Loader.dll: {}", e);
-            // Continue anyway - might work if DLL is already present
-        }
-    }
+    append_startup_log("starting main()");
+    std::panic::set_hook(Box::new(|info| {
+        append_startup_log(&format!("panic: {info}"));
+    }));
 
-    // Initialize tracing
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
-        )
-        .init();
+    append_startup_log("tracing skipped (using log plugin)");
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .targets([
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir {
+                        file_name: None,
+                    }),
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Webview),
+                ])
+                .level(log::LevelFilter::Debug)
+                .build(),
+        )
         .invoke_handler(tauri::generate_handler![
             get_lcu_status,
             connect_lcu,
@@ -493,8 +496,11 @@ fn main() {
             test_event_detection,
             join_discord_voice,
             play_test_sound,
+            get_log_paths,
         ])
         .setup(|app| {
+            append_startup_log("tauri setup()");
+
             info!("Scout for LoL Desktop starting up...");
 
             // Get app config directory
@@ -503,8 +509,9 @@ fn main() {
                 .app_config_dir()
                 .expect("Failed to get app config directory");
             let config_path = config_dir.join("config.json");
+            append_startup_log(&format!("config path: {}", config_path.display()));
 
-            info!("Config path: {:?}", config_path);
+            info!("Config path: {}", config_path.display());
 
             // Initialize app state
             let app_state = AppState {

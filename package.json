@@ -87,7 +87,7 @@
       "bun ./scripts/run-relevant-tests.ts packages/desktop"
     ],
     "packages/desktop/src-tauri/**/*.rs": [
-      "bash -c 'cd packages/desktop/src-tauri && cargo fmt --check'",
+      "bash -c 'cd packages/desktop/src-tauri && cargo fmt'",
       "bash -c 'cd packages/desktop/src-tauri && cargo clippy -- -D warnings'"
     ],
     "*.{ts,tsx,js,jsx}": "bun run scripts/check-suppressions.ts"

@@ -3,6 +3,7 @@
 use crate::discord::{DiscordClient, SoundEvent};
 use crate::lcu::LcuConnection;
 use futures_util::{SinkExt, StreamExt};
+use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -15,7 +16,6 @@ use tokio::time::{sleep, Duration};
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::Message;
-use tracing::{debug, error, info, warn};
 
 fn debug_log(msg: &str) {
     eprintln!("[SCOUT] {}", msg);
@@ -107,10 +107,7 @@ async fn play_sound(discord: &DiscordClient, event: SoundEvent, app_handle: &tau
             format!("🔇 Sound error for {:?}: {}", event, err),
         );
     } else {
-        let _ = app_handle.emit(
-            "backend-log",
-            format!("🔊 Queued sound for {:?}", event),
-        );
+        let _ = app_handle.emit("backend-log", format!("🔊 Queued sound for {:?}", event));
     }
 }
 
@@ -230,10 +227,10 @@ async fn run_event_loop(
                 debug!("Received WebSocket message: {}", text);
 
                 if let Ok(ws_msg) = serde_json::from_str::<LcuWebSocketMessage>(&text) {
-                        if let Err(e) = handle_event(&ws_msg, &discord, &app_handle).await {
-                            warn!("Failed to handle event: {}", e);
-                        }
+                    if let Err(e) = handle_event(&ws_msg, &discord, &app_handle).await {
+                        warn!("Failed to handle event: {}", e);
                     }
+                }
             }
             Ok(Message::Close(_)) => {
                 info!("WebSocket closed");
@@ -515,8 +512,7 @@ async fn process_live_game_data(
                             format!("💀 Posting ChampionKill to Discord..."),
                         );
                         if let Err(e) =
-                            handle_champion_kill_event(event, discord, game_state, app_handle)
-                                .await
+                            handle_champion_kill_event(event, discord, game_state, app_handle).await
                         {
                             error!("Failed to post kill event to Discord: {}", e);
                             debug_log(&format!("Discord post FAILED: {}", e));
