@@ -150,8 +150,19 @@ export async function generateReviewImage(params: {
   geminiClient: GoogleGenerativeAI;
   model: string;
   timeoutMs: number;
+  promptOverride?: string;
 }): Promise<{ imageData: string; metadata: ReviewImageMetadata }> {
-  const { reviewText, artStyle, artTheme, secondArtTheme, matchData, geminiClient, model, timeoutMs } = params;
+  const {
+    reviewText,
+    artStyle,
+    artTheme,
+    secondArtTheme,
+    matchData,
+    geminiClient,
+    model,
+    timeoutMs,
+    promptOverride,
+  } = params;
 
   const geminiModel = geminiClient.getGenerativeModel({ model });
 
@@ -164,13 +175,15 @@ export async function generateReviewImage(params: {
     }, timeoutMs);
   });
 
-  const prompt = generateImagePrompt({
-    artStyle,
-    artTheme,
-    secondArtTheme,
-    reviewText,
-    matchData,
-  });
+  const prompt =
+    promptOverride ??
+    generateImagePrompt({
+      artStyle,
+      artTheme,
+      secondArtTheme,
+      reviewText,
+      matchData,
+    });
 
   const resultRaw = await Promise.race([geminiModel.generateContent(prompt), timeoutPromise]);
 

@@ -1,4 +1,4 @@
-import type { MatchId, MatchDto, ReviewTextMetadata, TimelineDto } from "@scout-for-lol/data";
+import type { CuratedMatchData, MatchId, MatchDto, ReviewTextMetadata, TimelineDto } from "@scout-for-lol/data";
 import { MatchIdSchema } from "@scout-for-lol/data";
 import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.js";
 
@@ -258,6 +258,26 @@ type TimelineSummaryS3Params = {
   durationMs: number;
 };
 
+type MatchAnalysisS3Params = {
+  matchId: MatchId;
+  lane?: string;
+  curatedData: CuratedMatchData;
+  prompt: string;
+  analysis: string;
+  durationMs: number;
+  timelineSummary?: string | undefined;
+};
+
+type ArtPromptS3Params = {
+  matchId: MatchId;
+  prompt: string;
+  style: string;
+  themes: string[];
+  reviewText: string;
+  artPrompt: string;
+  durationMs: number;
+};
+
 /**
  * Save timeline summary request and response to S3 storage
  * @param params The parameters for saving
@@ -325,6 +345,146 @@ export async function saveTimelineSummaryToS3(params: TimelineSummaryS3Params): 
     additionalLogDetails: {
       durationMs,
       summaryLength: summary.length,
+    },
+  });
+}
+
+export async function saveMatchAnalysisToS3(params: MatchAnalysisS3Params): Promise<void> {
+  const { matchId, lane, curatedData, prompt, analysis, durationMs, timelineSummary } = params;
+
+  const requestBody = JSON.stringify(
+    {
+      prompt,
+      lane,
+      timelineSummary,
+      curatedData,
+    },
+    null,
+    2,
+  );
+
+  await saveToS3({
+    matchId,
+    keyPrefix: "match-analyses",
+    keyExtension: "request.json",
+    body: requestBody,
+    contentType: "application/json",
+    metadata: {
+      matchId: matchId,
+      type: "match-analysis-request",
+      lane: lane ?? "unknown",
+      hasTimelineSummary: String(Boolean(timelineSummary)),
+    },
+    logEmoji: "🧠",
+    logMessage: "Saving match analysis request to S3",
+    errorContext: "match analysis request",
+    returnUrl: false,
+    additionalLogDetails: {
+      lane,
+      hasTimelineSummary: Boolean(timelineSummary),
+    },
+  });
+
+  const responseBody = JSON.stringify(
+    {
+      analysis,
+      durationMs,
+      generatedAt: new Date().toISOString(),
+    },
+    null,
+    2,
+  );
+
+  await saveToS3({
+    matchId,
+    keyPrefix: "match-analyses",
+    keyExtension: "response.json",
+    body: responseBody,
+    contentType: "application/json",
+    metadata: {
+      matchId: matchId,
+      type: "match-analysis-response",
+      durationMs: durationMs.toString(),
+      lane: lane ?? "unknown",
+      analysisLength: analysis.length.toString(),
+    },
+    logEmoji: "📑",
+    logMessage: "Saving match analysis response to S3",
+    errorContext: "match analysis response",
+    returnUrl: false,
+    additionalLogDetails: {
+      durationMs,
+      lane,
+      analysisLength: analysis.length,
+    },
+  });
+}
+
+export async function saveArtPromptToS3(params: ArtPromptS3Params): Promise<void> {
+  const { matchId, prompt, style, themes, reviewText, artPrompt, durationMs } = params;
+
+  const requestBody = JSON.stringify(
+    {
+      prompt,
+      style,
+      themes,
+      reviewText,
+    },
+    null,
+    2,
+  );
+
+  await saveToS3({
+    matchId,
+    keyPrefix: "art-prompts",
+    keyExtension: "request.json",
+    body: requestBody,
+    contentType: "application/json",
+    metadata: {
+      matchId: matchId,
+      type: "art-prompt-request",
+      style,
+      themeCount: themes.length.toString(),
+    },
+    logEmoji: "🎨",
+    logMessage: "Saving art prompt request to S3",
+    errorContext: "art prompt request",
+    returnUrl: false,
+    additionalLogDetails: {
+      style,
+      themes,
+    },
+  });
+
+  const responseBody = JSON.stringify(
+    {
+      artPrompt,
+      durationMs,
+      generatedAt: new Date().toISOString(),
+    },
+    null,
+    2,
+  );
+
+  await saveToS3({
+    matchId,
+    keyPrefix: "art-prompts",
+    keyExtension: "response.json",
+    body: responseBody,
+    contentType: "application/json",
+    metadata: {
+      matchId: matchId,
+      type: "art-prompt-response",
+      durationMs: durationMs.toString(),
+      promptLength: artPrompt.length.toString(),
+    },
+    logEmoji: "🖌️",
+    logMessage: "Saving art prompt response to S3",
+    errorContext: "art prompt response",
+    returnUrl: false,
+    additionalLogDetails: {
+      durationMs,
+      promptLength: artPrompt.length,
     },
   });
 }

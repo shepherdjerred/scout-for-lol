@@ -309,4 +309,6 @@ export type CuratedMatchData = {
   timeline?: CuratedTimeline | undefined;
   /** AI-generated narrative summary of how the game unfolded */
   timelineSummary?: string | undefined;
+  /** AI-generated lane-aware analysis using full match data */
+  matchAnalysis?: string | undefined;
 };

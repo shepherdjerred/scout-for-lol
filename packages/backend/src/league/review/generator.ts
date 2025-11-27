@@ -21,6 +21,8 @@ import {
   saveAIReviewTextToS3,
   saveAIReviewRequestToS3,
   saveTimelineSummaryToS3,
+  saveMatchAnalysisToS3,
+  saveArtPromptToS3,
 } from "@scout-for-lol/backend/storage/s3.js";
 import {
   loadPromptFile,
@@ -65,6 +67,16 @@ Keep the summary factual and under 300 words. Use champion names when describing
 
 Raw timeline JSON:
 `;
+
+const MATCH_ANALYSIS_PROMPT = `You are a high-elo League of Legends coach. Analyze the full match data with the provided lane focus
+and timeline summary. Highlight lane-specific decision making, itemization, macro calls, and momentum
+swings. Keep the output concise (under 350 words) and focus on practical insights and mistakes to
+address.`;
+
+const ART_PROMPT_TEMPLATE = `You are an imaginative art director. Given a styled League of Legends performance review, craft a
+vivid art direction for an illustration. Respect the requested art style and theme(s). Describe the scene
+in 120 words or fewer, focusing on composition, mood, and key visual elements. Avoid story prose and keep
+it as a descriptive art brief.`;
 
 /**
  * Summarize raw timeline data using OpenAI
@@ -140,6 +152,82 @@ async function summarizeTimeline(timelineDto: TimelineDto, matchId: MatchId): Pr
   }
 }
 
+async function analyzeMatchData(
+  curatedData: CuratedMatchData,
+  matchId: MatchId,
+  params: { lane?: string | undefined },
+): Promise<string | undefined> {
+  const client = getOpenAIClient();
+  if (!client) {
+    console.log("[analyzeMatchData] OpenAI API key not configured, skipping match analysis");
+    return undefined;
+  }
+
+  try {
+    const curatedJson = JSON.stringify(curatedData, null, 2);
+    const promptSections = [
+      MATCH_ANALYSIS_PROMPT,
+      `Lane focus: ${params.lane ?? "unknown"}`,
+      curatedData.timelineSummary ? `Timeline summary:\n${curatedData.timelineSummary}` : undefined,
+      `Curated match data (JSON):\n${curatedJson}`,
+    ].filter((section): section is string => Boolean(section));
+
+    const fullPrompt = promptSections.join("\n\n");
+
+    console.log("[analyzeMatchData] Calling OpenAI to analyze curated match data...");
+    const startTime = Date.now();
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: fullPrompt,
+        },
+      ],
+      max_completion_tokens: 3000,
+      temperature: 0.4,
+    });
+
+    const duration = Date.now() - startTime;
+    console.log(`[analyzeMatchData] OpenAI response received in ${duration.toString()}ms`);
+
+    const content = response.choices[0]?.message.content;
+    if (!content) {
+      console.log("[analyzeMatchData] No content returned from OpenAI");
+      return undefined;
+    }
+
+    const analysis = content.trim();
+    console.log(`[analyzeMatchData] Generated match analysis (${analysis.length.toString()} chars)`);
+
+    try {
+      await saveMatchAnalysisToS3({
+        matchId,
+        lane: params.lane,
+        curatedData,
+        prompt: MATCH_ANALYSIS_PROMPT,
+        analysis,
+        durationMs: duration,
+        timelineSummary: curatedData.timelineSummary,
+      });
+    } catch (error) {
+      console.error("[analyzeMatchData] Failed to save match analysis to S3:", error);
+    }
+
+    return analysis;
+  } catch (error) {
+    console.error("[analyzeMatchData] Error generating match analysis:", error);
+    Sentry.captureException(error, {
+      tags: {
+        source: "openai-match-analysis",
+        matchId,
+        lane: params.lane ?? "unknown",
+      },
+    });
+    return undefined;
+  }
+}
+
 /**
  * Generate an AI-powered image from review text using Gemini (backend wrapper)
  */
@@ -151,8 +239,9 @@ async function generateReviewImageBackend(params: {
   style: string;
   themes: string[];
   curatedData?: CuratedMatchData;
+  artPrompt?: string;
 }): Promise<Uint8Array | undefined> {
-  const { reviewText, match, matchId, queueType, style, themes, curatedData } = params;
+  const { reviewText, match, matchId, queueType, style, themes, curatedData, artPrompt } = params;
   const client = getGeminiClient();
   if (!client) {
     console.log("[generateReviewImage] Gemini API key not configured, skipping image generation");
@@ -209,6 +298,7 @@ async function generateReviewImageBackend(params: {
       geminiClient: client,
       model: "gemini-3-pro-image-preview",
       timeoutMs: 60_000,
+      ...(artPrompt ? { promptOverride: artPrompt } : {}),
     });
 
     console.log(`[generateReviewImage] Gemini API call completed in ${result.metadata.imageDurationMs.toString()}ms`);
@@ -275,12 +365,60 @@ export type ReviewMetadata = {
   themes?: string[];
 };
 
+type ReviewerContext = {
+  personality: Awaited<ReturnType<typeof selectRandomPersonality>>;
+  basePromptTemplate: string;
+  laneContext: Awaited<ReturnType<typeof getLaneContext>>;
+  lane?: string;
+  playerIndex: number;
+  playerName: string;
+  playerMetadata: Awaited<ReturnType<typeof loadPlayerMetadata>>;
+};
+
+async function buildReviewerContext(match: CompletedMatch | ArenaMatch): Promise<ReviewerContext | undefined> {
+  const personality = await selectRandomPersonality();
+  const basePromptTemplate = await loadPromptFile("base.txt");
+
+  console.log(`[generateAIReview] Selected personality: ${personality.filename}`);
+
+  const playerIndex = Math.floor(Math.random() * match.players.length);
+  const player = match.players[playerIndex];
+  console.log(
+    `[generateAIReview] Selected player ${(playerIndex + 1).toString()}/${match.players.length.toString()}: ${
+      player?.playerConfig.alias ?? "unknown"
+    }`,
+  );
+
+  const lane = match.queueType === "arena" ? undefined : player && "lane" in player ? player.lane : undefined;
+  const laneContextInfo = await getLaneContext(lane);
+  console.log(`[generateAIReview] Selected lane context: ${laneContextInfo.filename}`);
+
+  const playerName = player?.playerConfig.alias;
+  if (!playerName) {
+    console.log("[generateAIReview] No player name found");
+    return undefined;
+  }
+  const playerMeta = await loadPlayerMetadata(playerName);
+
+  return {
+    personality,
+    basePromptTemplate,
+    laneContext: laneContextInfo,
+    lane,
+    playerIndex,
+    playerName,
+    playerMetadata: playerMeta,
+  };
+}
+
 /**
  * Generate an AI-powered review using OpenAI (backend wrapper)
  */
 async function generateAIReview(
   match: CompletedMatch | ArenaMatch,
-  curatedData?: CuratedMatchData,
+  curatedData: CuratedMatchData | undefined,
+  reviewerContext: ReviewerContext,
+  matchAnalysis?: string,
 ): Promise<{ review: string; metadata: ReviewMetadata; textMetadata: ReviewTextMetadata } | undefined> {
   const client = getOpenAIClient();
   if (!client) {
@@ -289,46 +427,25 @@ async function generateAIReview(
   }
 
   try {
-    // Get personality and base prompt template
-    const personality = await selectRandomPersonality();
-    const basePromptTemplate = await loadPromptFile("base.txt");
-
-    console.log(`[generateAIReview] Selected personality: ${personality.filename}`);
-
-    // Select a random player from the match (for multi-player tracked games)
-    const playerIndex = Math.floor(Math.random() * match.players.length);
-    const player = match.players[playerIndex];
-    console.log(
-      `[generateAIReview] Selected player ${(playerIndex + 1).toString()}/${match.players.length.toString()}: ${player?.playerConfig.alias ?? "unknown"}`,
-    );
-
-    // Get lane context
-    const lane = match.queueType === "arena" ? undefined : player && "lane" in player ? player.lane : undefined;
-    const laneContextInfo = await getLaneContext(lane);
-    console.log(`[generateAIReview] Selected lane context: ${laneContextInfo.filename}`);
-
-    // Get player metadata
-    const playerName = player?.playerConfig.alias;
-    if (!playerName) {
-      console.log("[generateAIReview] No player name found");
-      return undefined;
-    }
-    const playerMeta = await loadPlayerMetadata(playerName);
-
     console.log("[generateAIReview] Calling OpenAI API...");
+
+    const systemPrefix = matchAnalysis
+      ? `GAME ANALYSIS (use for context, don't repeat verbatim):\n${matchAnalysis}\n\n`
+      : "";
 
     // Call shared review text generation function
     const result = await generateReviewText({
       match,
-      personality,
-      basePromptTemplate,
-      laneContext: laneContextInfo.content,
-      playerMetadata: playerMeta,
+      personality: reviewerContext.personality,
+      basePromptTemplate: reviewerContext.basePromptTemplate,
+      laneContext: reviewerContext.laneContext.content,
+      playerMetadata: reviewerContext.playerMetadata,
       openaiClient: client,
       model: "gpt-5",
       maxTokens: 25000,
       curatedData,
-      playerIndex,
+      playerIndex: reviewerContext.playerIndex,
+      systemPromptPrefix: systemPrefix,
     });
 
     console.log("[generateAIReview] Successfully generated AI review");
@@ -346,6 +463,85 @@ async function generateAIReview(
       tags: {
         source: "openai-review-generation",
         queueType: match.queueType ?? "unknown",
+      },
+    });
+    return undefined;
+  }
+}
+
+async function generateArtPrompt(params: {
+  reviewText: string;
+  style: string;
+  themes: string[];
+  matchId: MatchId;
+}): Promise<string | undefined> {
+  const client = getOpenAIClient();
+  if (!client) {
+    console.log("[generateArtPrompt] OpenAI API key not configured, skipping art prompt generation");
+    return undefined;
+  }
+
+  try {
+    const themeLine = params.themes.length > 1
+      ? `Themes: ${params.themes.join(" + ")}`
+      : `Theme: ${params.themes[0] ?? "League of Legends"}`;
+
+    const prompt = `${ART_PROMPT_TEMPLATE}
+
+Art style: ${params.style}
+${themeLine}
+
+Review text:
+${params.reviewText}`;
+
+    console.log("[generateArtPrompt] Calling OpenAI to draft art prompt...");
+    const startTime = Date.now();
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      max_completion_tokens: 800,
+      temperature: 0.7,
+    });
+
+    const duration = Date.now() - startTime;
+    console.log(`[generateArtPrompt] OpenAI response received in ${duration.toString()}ms`);
+
+    const content = response.choices[0]?.message.content;
+    if (!content) {
+      console.log("[generateArtPrompt] No content returned from OpenAI");
+      return undefined;
+    }
+
+    const artPrompt = content.trim();
+    console.log(`[generateArtPrompt] Generated art prompt (${artPrompt.length.toString()} chars)`);
+
+    try {
+      await saveArtPromptToS3({
+        matchId: params.matchId,
+        prompt: ART_PROMPT_TEMPLATE,
+        style: params.style,
+        themes: params.themes,
+        reviewText: params.reviewText,
+        artPrompt,
+        durationMs: duration,
+      });
+    } catch (error) {
+      console.error("[generateArtPrompt] Failed to save art prompt to S3:", error);
+    }
+
+    return artPrompt;
+  } catch (error) {
+    console.error("[generateArtPrompt] Error generating art prompt:", error);
+    Sentry.captureException(error, {
+      tags: {
+        source: "openai-art-direction",
+        matchId: params.matchId,
+        style: params.style,
       },
     });
     return undefined;
@@ -392,6 +588,12 @@ export async function generateMatchReview(
     }
   }
 
+  const reviewerContext = await buildReviewerContext(match);
+  if (!reviewerContext) {
+    console.log("[generateMatchReview] Missing reviewer context, skipping review generation");
+    return undefined;
+  }
+
   // Curate the raw match data if provided (including timeline if available)
   let curatedData = rawMatchData ? await curateMatchData(rawMatchData, timelineData) : undefined;
   if (curatedData?.timeline) {
@@ -409,8 +611,16 @@ export async function generateMatchReview(
     }
   }
 
+  let matchAnalysis: string | undefined;
+  if (curatedData) {
+    matchAnalysis = await analyzeMatchData(curatedData, matchId, { lane: reviewerContext.lane });
+    if (matchAnalysis) {
+      curatedData = { ...curatedData, matchAnalysis };
+    }
+  }
+
   // Try to generate AI review
-  const aiReviewResult = await generateAIReview(match, curatedData);
+  const aiReviewResult = await generateAIReview(match, curatedData, reviewerContext, matchAnalysis);
 
   if (!aiReviewResult) {
     console.log("[generateMatchReview] OpenAI API key not configured, skipping review generation");
@@ -441,6 +651,13 @@ export async function generateMatchReview(
   // Generate AI image from the review text (only if we have a real AI review)
   const { style, themes } = selectRandomStyleAndTheme();
 
+  const artPrompt = await generateArtPrompt({
+    reviewText,
+    style,
+    themes,
+    matchId,
+  });
+
   // Add style and theme to metadata
   const fullMetadata: ReviewMetadata = {
     ...metadata,
@@ -456,6 +673,7 @@ export async function generateMatchReview(
     style,
     themes,
     ...(curatedData !== undefined && { curatedData }),
+    ...(artPrompt ? { artPrompt } : {}),
   });
 
   if (reviewImage) {
