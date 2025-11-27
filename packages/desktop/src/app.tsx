@@ -131,19 +131,20 @@ export default function App() {
     };
   }, [loadStatus]);
 
-  // Load available sound packs on startup
-  useEffect(() => {
-    const fetchSoundPacks = async () => {
-      try {
-        const packs = await invoke<SoundPackSummary[]>("list_sound_packs");
-        setSoundPacks(packs);
-        if (packs.length > 0 && !soundPack) {
-          setSoundPack(packs[0].name);
+    // Load available sound packs on startup
+    useEffect(() => {
+      const fetchSoundPacks = async () => {
+        try {
+          const packs = await invoke<SoundPackSummary[]>("list_sound_packs");
+          setSoundPacks(packs);
+          const firstPack = packs[0];
+          if (firstPack && !soundPack) {
+            setSoundPack(firstPack.name);
+          }
+        } catch (err) {
+          console.error("Failed to load sound packs:", err);
         }
-      } catch (err) {
-        console.error("Failed to load sound packs:", err);
-      }
-    };
+      };
 
     void fetchSoundPacks();
   }, []);
