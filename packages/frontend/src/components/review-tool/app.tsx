@@ -74,9 +74,11 @@ let appInitPromise: Promise<void> | null = null;
 
 function initializeAppData() {
   appInitPromise ??= (async () => {
+    console.log("[Init] Starting initialization...");
     try {
       // First, migrate any localStorage data to IndexedDB
       await migrateFromLocalStorage();
+      console.log("[Init] Migration complete");
 
       // Then load from IndexedDB
       let globalConfig = await loadGlobalConfig();
@@ -117,12 +119,18 @@ function initializeAppData() {
       appInitState.globalConfig = globalConfig;
       appInitState.tabs = tabs;
       appInitState.isInitialized = true;
+      console.log("[Init] State updated, notifying", appInitListeners.size, "listeners");
       appInitListeners.forEach((listener) => {
         listener();
       });
-    } finally {
-      // Clear the promise so Suspense knows we're done
-      appInitPromise = null;
+    } catch (error) {
+      console.error("[Init] Initialization failed:", error);
+      // Still update state even on error so component can render
+      appInitState.isInitialized = true;
+      appInitListeners.forEach((listener) => {
+        listener();
+      });
+      throw error;
     }
   })();
   return appInitPromise;
@@ -132,12 +140,6 @@ function initializeAppData() {
 void initializeAppData();
 
 export default function App() {
-  // For React 19 Suspense: throw the promise if initialization isn't complete
-  if (appInitPromise !== null) {
-    // eslint-disable-next-line @typescript-eslint/only-throw-error -- Throwing promises is the correct Suspense pattern in React 19
-    throw appInitPromise;
-  }
-
   // Subscribe to app initialization state
   const initState = useSyncExternalStore(subscribeToAppInit, getAppInitSnapshot, getAppInitSnapshot);
   const { globalConfig, tabs, isInitialized } = initState;
@@ -146,6 +148,13 @@ export default function App() {
   const [costTracker] = useState(() => new CostTracker());
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
+
+  console.log("[App] Rendering, isInitialized:", isInitialized);
+
+  // Show loading state while initializing
+  if (!isInitialized) {
+    return <div className="p-4 text-gray-900 dark:text-white">Loading configuration...</div>;
+  }
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
 
@@ -156,10 +165,8 @@ export default function App() {
     appInitListeners.forEach((listener) => {
       listener();
     });
-    // Save config when it changes (after initialization)
-    if (isInitialized) {
-      void saveGlobalConfig(config);
-    }
+    // Save config when it changes
+    void saveGlobalConfig(config);
   };
 
   const addTab = () => {
@@ -238,13 +245,11 @@ export default function App() {
     appInitListeners.forEach((listener) => {
       listener();
     });
-    // Save config when it changes (after initialization)
-    if (isInitialized) {
-      const updatedTab = newTabs.find((t) => t.id === id);
-      if (updatedTab) {
-        const merged = mergeConfigs(globalConfig, updatedTab.config);
-        void saveCurrentConfig(merged);
-      }
+    // Save config when it changes
+    const updatedTab = newTabs.find((t) => t.id === id);
+    if (updatedTab) {
+      const merged = mergeConfigs(globalConfig, updatedTab.config);
+      void saveCurrentConfig(merged);
     }
   };
 
