@@ -16,6 +16,8 @@ import {
   checkDesktop,
   buildDesktopLinux,
   getDesktopLinuxArtifacts,
+  buildDesktopWindowsGnu,
+  getDesktopWindowsArtifacts,
 } from "@scout-for-lol/.dagger/src/desktop";
 import { getGitHubContainer, getBunNodeContainer } from "@scout-for-lol/.dagger/src/base";
 
@@ -326,10 +328,14 @@ export class ScoutForLol {
     if (env === "prod") {
       await withTiming("CI desktop artifacts phase", async () => {
         logWithTimestamp("📦 Phase 6: Exporting desktop artifacts...");
-        const artifacts = getDesktopLinuxArtifacts(source, version);
+        const linuxArtifacts = getDesktopLinuxArtifacts(source, version);
+        const windowsArtifacts = getDesktopWindowsArtifacts(source, version);
         // Export to a well-known location for GitHub Actions to upload
-        await artifacts.export("./desktop-artifacts");
-        logWithTimestamp("✅ Desktop artifacts exported to ./desktop-artifacts");
+        await linuxArtifacts.export("./desktop-artifacts/linux");
+        await windowsArtifacts.export("./desktop-artifacts/windows-x86_64-pc-windows-gnu");
+        logWithTimestamp(
+          "✅ Desktop artifacts exported to ./desktop-artifacts (linux + windows-x86_64-pc-windows-gnu)",
+        );
       });
     } else {
       logWithTimestamp("⏭️ Phase 6: Skipping desktop artifacts export (not prod environment)");
@@ -872,6 +878,33 @@ export class ScoutForLol {
   }
 
   /**
+   * Build the desktop application for Windows (x86_64-pc-windows-gnu)
+   * @param source The workspace source directory
+   * @param version The version to build
+   * @returns A message indicating completion
+   */
+  @func()
+  async buildDesktopWindows(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+  ): Promise<string> {
+    logWithTimestamp(`🏗️  Building desktop application for Windows (GNU) version ${version}`);
+
+    await withTiming("desktop build (windows gnu)", async () => {
+      const container = buildDesktopWindowsGnu(source, version);
+      await container.sync();
+      return container;
+    });
+
+    logWithTimestamp("✅ Desktop Windows build completed successfully");
+    return `Desktop Windows (GNU) build completed successfully for version ${version}`;
+  }
+
+  /**
    * Export desktop Linux build artifacts
    * @param source The workspace source directory
    * @param version The version to build
@@ -893,6 +926,31 @@ export class ScoutForLol {
     );
 
     logWithTimestamp("✅ Desktop artifacts exported successfully");
+    return result;
+  }
+
+  /**
+   * Export desktop Windows (x86_64-pc-windows-gnu) build artifacts
+   * @param source The workspace source directory
+   * @param version The version to build
+   * @returns The directory containing built artifacts
+   */
+  @func()
+  async desktopWindowsArtifacts(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+  ): Promise<Directory> {
+    logWithTimestamp(`📦 Exporting desktop Windows artifacts for version ${version}`);
+
+    const result = await withTiming("desktop windows artifacts export", () =>
+      Promise.resolve(getDesktopWindowsArtifacts(source, version)),
+    );
+
+    logWithTimestamp("✅ Desktop Windows artifacts exported successfully");
     return result;
   }
 }

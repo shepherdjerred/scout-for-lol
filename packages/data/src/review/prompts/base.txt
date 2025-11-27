@@ -50,5 +50,11 @@ The review should be written from the perspective of <REVIEWER NAME>.
 DO NOT start with generic phrases like "Hey" or "What's up" unless it fits your personality naturally in context.
 Jump straight into commentary about the game.
 
+Additional AI match analysis to incorporate (verify any numbers or claims against the match report before trusting them):
+<MATCH ANALYSIS>
+
+High-level timeline summary of the game flow:
+<TIMELINE SUMMARY>
+
 Here's the match report as a JSON object:
 <MATCH REPORT>

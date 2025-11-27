@@ -8,6 +8,7 @@
  */
 
 import type { GoogleGenerativeAI } from "@google/generative-ai";
+import type { CuratedTimeline } from "./curator-types.js";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
 import { generateImagePrompt } from "@scout-for-lol/data/review/image-prompt.js";
 import { replaceTemplateVariables } from "@scout-for-lol/data/review/prompts.js";
@@ -56,6 +57,8 @@ export async function generateReviewText(params: {
   curatedData?: CuratedMatchData | undefined;
   systemPromptPrefix?: string | undefined;
   playerIndex?: number | undefined;
+  matchAnalysis?: string | undefined;
+  timelineSummary?: string | undefined;
 }): Promise<{ text: string; metadata: ReviewTextMetadata }> {
   const {
     match,
@@ -71,6 +74,8 @@ export async function generateReviewText(params: {
     curatedData,
     systemPromptPrefix = "",
     playerIndex = 0,
+    matchAnalysis,
+    timelineSummary,
   } = params;
 
   const { matchData } = extractMatchData(match, playerIndex);
@@ -82,6 +87,8 @@ export async function generateReviewText(params: {
     match,
     playerIndex,
     ...(curatedData !== undefined && { curatedData }),
+    ...(matchAnalysis !== undefined && { matchAnalysis }),
+    ...(timelineSummary !== undefined && { timelineSummary }),
   });
   const userPrompt = replaceTemplateVariables(basePromptTemplate, promptVariables);
   const systemPrompt = `${systemPromptPrefix}${personality.instructions}\n\n${laneContext}`;
@@ -302,6 +309,8 @@ export type CuratedMatchData = {
     queueId: number;
   };
   participants: unknown[]; // Full type in curator module
+  timeline?: CuratedTimeline | undefined;
+  timelineSummary?: string | undefined;
 };
 
 /**

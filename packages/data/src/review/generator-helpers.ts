@@ -242,6 +242,8 @@ export function buildPromptVariables(params: {
   match: CompletedMatch | ArenaMatch;
   curatedData?: CuratedMatchData;
   playerIndex?: number;
+  matchAnalysis?: string;
+  timelineSummary?: string;
 }): {
   reviewerName: string;
   reviewerPersonality: string;
@@ -258,8 +260,20 @@ export function buildPromptVariables(params: {
   matchReport: string;
   friendsContext: string;
   d20Roll: string;
+  matchAnalysis: string;
+  timelineSummary: string;
 } {
-  const { matchData, personality, playerMetadata, laneContext, match, curatedData, playerIndex = 0 } = params;
+  const {
+    matchData,
+    personality,
+    playerMetadata,
+    laneContext,
+    match,
+    curatedData,
+    playerIndex = 0,
+    matchAnalysis,
+    timelineSummary,
+  } = params;
   const playerName = matchData["playerName"];
   if (!playerName) {
     throw new Error("No player name found");
@@ -310,6 +324,16 @@ export function buildPromptVariables(params: {
 
   // Generate random D20 roll (1-20)
   const d20Roll = (Math.floor(Math.random() * 20) + 1).toString();
+  const matchAnalysisText =
+    matchAnalysis && matchAnalysis.trim().length > 0
+      ? matchAnalysis.trim()
+      : "No AI match analysis was generated for this match.";
+  const timelineSummaryText =
+    timelineSummary && timelineSummary.trim().length > 0
+      ? timelineSummary.trim()
+      : curatedData?.timelineSummary && curatedData.timelineSummary.trim().length > 0
+        ? curatedData.timelineSummary.trim()
+        : "No timeline summary available for this match.";
 
   return {
     reviewerName,
@@ -327,6 +351,8 @@ export function buildPromptVariables(params: {
     matchReport,
     friendsContext,
     d20Roll,
+    matchAnalysis: matchAnalysisText,
+    timelineSummary: timelineSummaryText,
   };
 }
 
