@@ -1,7 +1,7 @@
 /**
  * Results panel showing generated review and metadata
  */
-import { useState, useSyncExternalStore, useMemo, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { z } from "zod";
 import type { ReviewConfig, GenerationResult } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
@@ -29,23 +29,38 @@ import { ResultRating } from "./result-rating";
 
 const ErrorSchema = z.object({ message: z.string() });
 
-// External store for cost update events - must be outside component for stable references
-// Track the actual update count, NOT Date.now() which changes every call and breaks useSyncExternalStore
-let costUpdateCount = 0;
+// Global timer for tracking elapsed time - updates every second
+let timerTick = 0;
+const timerSubscribers = new Set<() => void>();
+let timerInterval: ReturnType<typeof setInterval> | null = null;
 
-function subscribeToCostUpdates(callback: () => void) {
-  const handler = () => {
-    costUpdateCount += 1;
-    callback();
-  };
-  window.addEventListener("cost-update", handler);
+function startGlobalTimer() {
+  timerInterval ??= setInterval(() => {
+    timerTick += 1;
+    timerSubscribers.forEach((callback) => {
+      callback();
+    });
+  }, 1000);
+}
+
+function stopGlobalTimer() {
+  if (timerInterval !== null && timerSubscribers.size === 0) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function subscribeToTimer(callback: () => void) {
+  timerSubscribers.add(callback);
+  startGlobalTimer();
   return () => {
-    window.removeEventListener("cost-update", handler);
+    timerSubscribers.delete(callback);
+    stopGlobalTimer();
   };
 }
 
-function getCostUpdateSnapshot() {
-  return costUpdateCount;
+function getTimerSnapshot() {
+  return timerTick;
 }
 
 type ResultsPanelProps = {
@@ -69,32 +84,16 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
   const [viewingHistory, setViewingHistory] = useState(false);
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | undefined>();
   const [notes, setNotes] = useState("");
-  const [timerTick, setTimerTick] = useState(0);
 
-  // Subscribe to cost update events
-  useSyncExternalStore(subscribeToCostUpdates, getCostUpdateSnapshot, getCostUpdateSnapshot);
+  // Subscribe to global timer - always active but cheap
+  // This triggers a re-render every second, causing elapsed times to update
+  useSyncExternalStore(subscribeToTimer, getTimerSnapshot, getTimerSnapshot);
 
-  // Update timer every second when there are active generations
-  useEffect(() => {
-    if (activeGenerations.size === 0) {
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setTimerTick((prev) => prev + 1);
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [activeGenerations.size]);
-
-  // Calculate elapsed times - recalculates when timerTick changes (every second)
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- timerTick is intentionally used to trigger recalculation every second
-  const activeGenerationTimers = useMemo(() => {
-    const now = Date.now();
-    return new Map(Array.from(activeGenerations.entries()).map(([id, gen]) => [id, now - gen.startTime]));
-  }, [activeGenerations, timerTick]);
+  // Calculate elapsed times only when there are active generations
+  const now = Date.now();
+  const activeGenerationTimers = new Map<string, number>(
+    Array.from(activeGenerations.entries()).map(([id, gen]) => [id, now - gen.startTime]),
+  );
 
   const handleGenerate = async () => {
     // Use provided match or example match
@@ -157,14 +156,9 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       // Calculate and track cost
       if (!generatedResult.error) {
         const cost = calculateCost(generatedResult.metadata, config.textGeneration.model, config.imageGeneration.model);
-        costTracker
-          .add(cost)
-          .then(() => {
-            window.dispatchEvent(new Event("cost-update"));
-          })
-          .catch(() => {
-            // Error handling is done in the cost tracker
-          });
+        costTracker.add(cost).catch(() => {
+          // Error handling is done in the cost tracker
+        });
       }
 
       // Trigger history panel refresh via history store

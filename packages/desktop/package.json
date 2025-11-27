@@ -15,7 +15,7 @@
     "build:windows:arm": "bunx @tauri-apps/cli build --target aarch64-pc-windows-msvc",
     "build:frontend": "bunx vite build",
     "preview": "bunx vite preview",
-    "test": "bun test",
+    "test": "echo 'Desktop tests not yet implemented'",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
     "test:ci": "bun test --bail --reporter=junit --reporter-outfile=./junit.xml",

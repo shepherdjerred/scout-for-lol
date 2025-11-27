@@ -24,8 +24,7 @@ export function createTestDatabase(testName: string): {
   const checkResult = Bun.spawnSync(["test", "-f", TEMPLATE_DB_PATH]);
   if (checkResult.exitCode !== 0) {
     throw new Error(
-      `Test template database not found at ${TEMPLATE_DB_PATH}. ` +
-        `Run 'bun run generate' to create it.`,
+      `Test template database not found at ${TEMPLATE_DB_PATH}. ` + `Run 'bun run generate' to create it.`,
     );
   }
 

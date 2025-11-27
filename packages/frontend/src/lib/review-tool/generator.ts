@@ -13,12 +13,7 @@ import {
   type ReviewImageMetadata,
   type MatchDto,
 } from "@scout-for-lol/data";
-import type {
-  ReviewConfig,
-  GenerationResult,
-  GenerationMetadata,
-  Personality,
-} from "./config/schema";
+import type { ReviewConfig, GenerationResult, GenerationMetadata, Personality } from "./config/schema";
 import {
   getBasePrompt,
   selectRandomPersonality,

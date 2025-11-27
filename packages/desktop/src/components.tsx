@@ -22,22 +22,13 @@ type LeagueClientSectionProps = {
   onDisconnect: () => void;
 };
 
-export function LeagueClientSection({
-  lcuStatus,
-  loading,
-  onConnect,
-  onDisconnect,
-}: LeagueClientSectionProps) {
+export function LeagueClientSection({ lcuStatus, loading, onConnect, onDisconnect }: LeagueClientSectionProps) {
   return (
     <section>
-      <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-black">
-        League Client
-      </h2>
+      <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-black">League Client</h2>
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-800">
         <div className="mb-4 flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            Status:
-          </span>
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Status:</span>
           <span
             className={
               lcuStatus.connected
@@ -51,12 +42,8 @@ export function LeagueClientSection({
 
         {lcuStatus.summonerName && (
           <div className="mb-4 flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-              Summoner:
-            </span>
-            <span className="text-sm text-gray-900 dark:text-black">
-              {lcuStatus.summonerName}
-            </span>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Summoner:</span>
+            <span className="text-sm text-gray-900 dark:text-black">{lcuStatus.summonerName}</span>
           </div>
         )}
 
@@ -105,14 +92,10 @@ export function DiscordConfigSection({
 }: DiscordConfigSectionProps) {
   return (
     <section>
-      <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-black">
-        Discord Configuration
-      </h2>
+      <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-black">Discord Configuration</h2>
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-800">
         <div className="mb-4 flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            Status:
-          </span>
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Status:</span>
           <span
             className={
               discordStatus.connected
@@ -127,10 +110,7 @@ export function DiscordConfigSection({
         {!discordStatus.connected && (
           <div className="mt-6 space-y-4">
             <div>
-              <label
-                htmlFor="bot-token"
-                className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
+              <label htmlFor="bot-token" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Bot Token
               </label>
               <input
@@ -146,10 +126,7 @@ export function DiscordConfigSection({
             </div>
 
             <div>
-              <label
-                htmlFor="channel-id"
-                className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
+              <label htmlFor="channel-id" className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Channel ID
               </label>
               <input
@@ -186,23 +163,13 @@ type MonitoringSectionProps = {
   onTest?: () => void;
 };
 
-export function MonitoringSection({
-  isMonitoring,
-  loading,
-  onStart,
-  onStop,
-  onTest,
-}: MonitoringSectionProps) {
+export function MonitoringSection({ isMonitoring, loading, onStart, onStop, onTest }: MonitoringSectionProps) {
   return (
     <section>
-      <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-black">
-        Monitoring
-      </h2>
+      <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-black">Monitoring</h2>
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-800">
         <div className="mb-4 flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            Status:
-          </span>
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Status:</span>
           <span
             className={
               isMonitoring
@@ -267,27 +234,17 @@ function getLogColorClass(level: LogEntry["level"]): string {
   return "text-gray-700 dark:text-gray-300";
 }
 
-export function DebugPanel({
-  lcuStatus,
-  discordStatus,
-  isMonitoring,
-  logs,
-  onClearLogs,
-}: DebugPanelProps) {
+export function DebugPanel({ lcuStatus, discordStatus, isMonitoring, logs, onClearLogs }: DebugPanelProps) {
   return (
     <aside className="lg:w-96">
       <div className="sticky top-8 rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-800">
         <div className="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-black">
-            Debug Panel
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-black">Debug Panel</h3>
         </div>
         <div className="p-6">
           <div className="mb-4 space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">
-                LCU Connected:
-              </span>
+              <span className="text-gray-600 dark:text-gray-400">LCU Connected:</span>
               <span
                 className={
                   lcuStatus.connected
@@ -299,9 +256,7 @@ export function DebugPanel({
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">
-                Discord Configured:
-              </span>
+              <span className="text-gray-600 dark:text-gray-400">Discord Configured:</span>
               <span
                 className={
                   discordStatus.connected
@@ -313,9 +268,7 @@ export function DebugPanel({
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">
-                Monitoring:
-              </span>
+              <span className="text-gray-600 dark:text-gray-400">Monitoring:</span>
               <span
                 className={
                   isMonitoring
@@ -330,9 +283,7 @@ export function DebugPanel({
 
           <div className="mt-6">
             <div className="mb-2 flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-black">
-                Logs
-              </h4>
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-black">Logs</h4>
               <button
                 onClick={onClearLogs}
                 className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -346,10 +297,7 @@ export function DebugPanel({
               ) : (
                 logs.map((log, index) => (
                   <div key={index} className={getLogColorClass(log.level)}>
-                    <span className="text-gray-500 dark:text-gray-500">
-                      [{log.timestamp}]
-                    </span>{" "}
-                    {log.message}
+                    <span className="text-gray-500 dark:text-gray-500">[{log.timestamp}]</span> {log.message}
                   </div>
                 ))
               )}

@@ -1,12 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import {
-  LeagueClientSection,
-  DiscordConfigSection,
-  MonitoringSection,
-  DebugPanel,
-} from "./components";
+import { LeagueClientSection, DiscordConfigSection, MonitoringSection, DebugPanel } from "./components";
 
 function getErrorMessage(error: unknown): string {
   if (typeof error === "string") {
@@ -201,17 +196,17 @@ export default function App() {
           error_message: string | null;
         }>("get_diagnostics");
 
-          addLog("info", `Gameflow phase: ${diagnostics.gameflow_phase}`);
-          if (diagnostics.live_client_data_available) {
-            addLog("info", `Live Client Data API: Available (status: ${String(diagnostics.live_client_data_status)})`);
-          } else {
-            addLog("error", `Live Client Data API: NOT AVAILABLE`);
-            addLog("error", `To enable: League Client → Settings → Game → Enable Live Client Data API`);
-            addLog("error", `Then restart League Client and reconnect.`);
-            if (diagnostics.error_message) {
-              addLog("error", `Error: ${diagnostics.error_message}`);
-            }
+        addLog("info", `Gameflow phase: ${diagnostics.gameflow_phase}`);
+        if (diagnostics.live_client_data_available) {
+          addLog("info", `Live Client Data API: Available (status: ${String(diagnostics.live_client_data_status)})`);
+        } else {
+          addLog("error", `Live Client Data API: NOT AVAILABLE`);
+          addLog("error", `To enable: League Client → Settings → Game → Enable Live Client Data API`);
+          addLog("error", `Then restart League Client and reconnect.`);
+          if (diagnostics.error_message) {
+            addLog("error", `Error: ${diagnostics.error_message}`);
           }
+        }
       } catch (diagErr) {
         addLog("warning", `Could not get diagnostics: ${getErrorMessage(diagErr)}`);
       }
@@ -293,12 +288,8 @@ export default function App() {
     <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header className="border-b border-gray-200 bg-white px-8 py-6 text-center dark:border-gray-800 dark:bg-gray-800">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-black">
-          Scout for LoL
-        </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Live Game Updates for Discord
-        </p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-black">Scout for LoL</h1>
+        <p className="mt-2 text-gray-600 dark:text-gray-400">Live Game Updates for Discord</p>
         <button
           onClick={() => {
             setShowDebug(!showDebug);
@@ -323,9 +314,7 @@ export default function App() {
 
           {loading && (
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                {loading}
-              </p>
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">{loading}</p>
             </div>
           )}
 

@@ -1,56 +1,23 @@
 /**
  * Cost tracking display component
  */
-import { useSyncExternalStore, useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import type { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
-import type { CostBreakdown } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { formatCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
 
 type CostDisplayProps = {
   costTracker: CostTracker;
 };
 
-// External store for cost update events
-let costUpdateCount = 0;
-
-function subscribeToCostUpdates(callback: () => void) {
-  const handler = () => {
-    costUpdateCount += 1;
-    callback();
-  };
-  window.addEventListener("cost-update", handler);
-  return () => {
-    window.removeEventListener("cost-update", handler);
-  };
-}
-
-function getCostUpdateSnapshot() {
-  return costUpdateCount;
-}
-
 export function CostDisplay({ costTracker }: CostDisplayProps) {
-  const count = costTracker.getCount();
-  const [total, setTotal] = useState<CostBreakdown | null>(null);
+  // Subscribe directly to the cost tracker - no useEffect needed!
+  const snapshot = useSyncExternalStore(
+    (callback) => costTracker.subscribe(callback),
+    () => costTracker.getSnapshot(),
+    () => costTracker.getSnapshot(),
+  );
 
-  // Subscribe to cost update events - triggers reload
-  const updateTrigger = useSyncExternalStore(subscribeToCostUpdates, getCostUpdateSnapshot, getCostUpdateSnapshot);
-
-  // Load cost data on mount and when update event fires
-  useEffect(() => {
-    void (async () => {
-      const data = await costTracker.getTotal();
-      setTotal(data);
-    })();
-  }, [costTracker, updateTrigger]); // Reload when update event fires
-
-  if (!total) {
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Session Costs</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400">Loading...</p>
-      </div>
-    );
-  }
+  const { total, count } = snapshot;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
@@ -107,9 +74,7 @@ export function CostDisplay({ costTracker }: CostDisplayProps) {
           <button
             onClick={() => {
               if (confirm("Clear cost history?")) {
-                void costTracker.clear().then(() => {
-                  window.dispatchEvent(new Event("cost-update"));
-                });
+                void costTracker.clear();
               }
             }}
             className="flex-1 px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"

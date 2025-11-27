@@ -1,16 +1,7 @@
 {
-  "exclude": [
-    "dist"
-  ],
-  "extends": [
-    "astro/tsconfigs/strictest",
-    "../../tsconfig.base.json"
-  ],
-  "include": [
-    ".astro/types.d.ts",
-    "**/*",
-    "postcss.config.ts"
-  ],
+  "exclude": ["dist"],
+  "extends": ["astro/tsconfigs/strictest", "../../tsconfig.base.json"],
+  "include": [".astro/types.d.ts", "**/*", "postcss.config.ts"],
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "react",
