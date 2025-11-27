@@ -44,7 +44,7 @@ type AppInitState = {
   isInitialized: boolean;
 };
 
-const appInitState: AppInitState = {
+let appInitState: AppInitState = {
   globalConfig: createDefaultGlobalConfig(),
   tabs: [
     {
@@ -113,10 +113,12 @@ function initializeAppData() {
         ];
       }
 
-      // Mutate in place to keep same object reference for useSyncExternalStore
-      appInitState.globalConfig = globalConfig;
-      appInitState.tabs = tabs;
-      appInitState.isInitialized = true;
+      // Create new object reference to trigger useSyncExternalStore update
+      appInitState = {
+        globalConfig,
+        tabs,
+        isInitialized: true,
+      };
       appInitListeners.forEach((listener) => {
         listener();
       });
@@ -155,8 +157,7 @@ export default function App() {
 
   // Wrapper to save global config when it changes
   const updateGlobalConfig = (config: GlobalConfig) => {
-    // Mutate in place to keep same object reference
-    appInitState.globalConfig = config;
+    appInitState = { ...appInitState, globalConfig: config };
     appInitListeners.forEach((listener) => {
       listener();
     });
@@ -176,8 +177,7 @@ export default function App() {
       config: createDefaultTabConfig(),
     };
 
-    // Mutate in place to keep same object reference
-    appInitState.tabs = [...tabs, newTab];
+    appInitState = { ...appInitState, tabs: [...tabs, newTab] };
     appInitListeners.forEach((listener) => {
       listener();
     });
@@ -202,8 +202,7 @@ export default function App() {
       // Don't copy result or match - start fresh
     };
 
-    // Mutate in place to keep same object reference
-    appInitState.tabs = [...tabs, newTab];
+    appInitState = { ...appInitState, tabs: [...tabs, newTab] };
     appInitListeners.forEach((listener) => {
       listener();
     });
@@ -218,8 +217,7 @@ export default function App() {
 
     const index = tabs.findIndex((t) => t.id === id);
     const newTabs = tabs.filter((t) => t.id !== id);
-    // Mutate in place to keep same object reference
-    appInitState.tabs = newTabs;
+    appInitState = { ...appInitState, tabs: newTabs };
     appInitListeners.forEach((listener) => {
       listener();
     });
@@ -235,8 +233,7 @@ export default function App() {
 
   const updateTabConfig = (id: string, config: TabConfig) => {
     const newTabs = tabs.map((t) => (t.id === id ? { ...t, config } : t));
-    // Mutate in place to keep same object reference
-    appInitState.tabs = newTabs;
+    appInitState = { ...appInitState, tabs: newTabs };
     appInitListeners.forEach((listener) => {
       listener();
     });
@@ -250,8 +247,7 @@ export default function App() {
 
   const updateTabResult = (id: string, result: GenerationResult) => {
     const newTabs = tabs.map((t) => (t.id === id ? { ...t, result } : t));
-    // Mutate in place to keep same object reference
-    appInitState.tabs = newTabs;
+    appInitState = { ...appInitState, tabs: newTabs };
     appInitListeners.forEach((listener) => {
       listener();
     });
@@ -259,8 +255,7 @@ export default function App() {
 
   const updateTabMatch = (id: string, match: CompletedMatch | ArenaMatch) => {
     const newTabs = tabs.map((t) => (t.id === id ? { ...t, match } : t));
-    // Mutate in place to keep same object reference
-    appInitState.tabs = newTabs;
+    appInitState = { ...appInitState, tabs: newTabs };
     appInitListeners.forEach((listener) => {
       listener();
     });
@@ -268,8 +263,7 @@ export default function App() {
 
   const updateTabName = (id: string, name: string) => {
     const newTabs = tabs.map((t) => (t.id === id ? { ...t, name } : t));
-    // Mutate in place to keep same object reference
-    appInitState.tabs = newTabs;
+    appInitState = { ...appInitState, tabs: newTabs };
     appInitListeners.forEach((listener) => {
       listener();
     });
