@@ -31,10 +31,12 @@ mod lcu;
 #[cfg(test)]
 mod tests;
 
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::{Emitter, Manager, State};
 use tokio::sync::Mutex;
+use tokio::time::{timeout, Duration};
 use tracing::{error, info};
 
 #[cfg(target_os = "windows")]
@@ -90,25 +92,44 @@ async fn disconnect_lcu(state: State<'_, AppState>) -> Result<(), String> {
 async fn configure_discord(
     bot_token: String,
     channel_id: String,
+    voice_channel_id: Option<String>,
+    sound_pack: Option<String>,
+    event_sounds: Option<HashMap<String, String>>,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     info!("Configuring Discord client...");
 
-    match discord::DiscordClient::new(bot_token.clone(), channel_id.clone()).await {
+    // Save the provided settings locally right away so new fields persist even if setup fails
+    {
+        let cfg = config::Config {
+            bot_token: Some(bot_token.clone()),
+            channel_id: Some(channel_id.clone()),
+            voice_channel_id: voice_channel_id.clone(),
+            sound_pack: sound_pack.clone(),
+            event_sounds: event_sounds.clone(),
+        };
+        cfg.save(&state.config_path)?;
+    }
+
+    match timeout(
+        Duration::from_secs(12),
+        discord::DiscordClient::new(
+            bot_token.clone(),
+            channel_id.clone(),
+            voice_channel_id.clone(),
+            sound_pack.clone(),
+            event_sounds.clone(),
+        ),
+    )
+    .await
+    .map_err(|_| "Discord setup timed out".to_string())?
+    {
         Ok(client) => {
             info!("Successfully configured Discord client");
 
             let mut discord = state.discord_client.lock().await;
             *discord = Some(client);
             drop(discord);
-
-            // Save config to disk
-            let config = config::Config {
-                bot_token: Some(bot_token),
-                channel_id: Some(channel_id),
-            };
-            config.save(&state.config_path)?;
-
             Ok(())
         }
         Err(e) => {
@@ -125,9 +146,41 @@ async fn get_discord_status(state: State<'_, AppState>) -> Result<discord::Disco
         discord::DiscordStatus {
             connected: false,
             channel_name: None,
+            voice_connected: false,
+            voice_channel_name: None,
+            active_sound_pack: None,
         },
         discord::DiscordClient::get_status,
     ))
+}
+
+#[tauri::command]
+async fn join_discord_voice(
+    voice_channel_id: Option<String>,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let mut guard = state.discord_client.lock().await;
+    let client = guard.as_mut().ok_or("Discord not configured")?;
+
+    if voice_channel_id.is_some() {
+        client.set_voice_channel_id(voice_channel_id);
+    }
+
+    client.ensure_voice_connected().await?;
+    // Play a short test sound so the user can verify audio path
+    client
+        .play_sound_for_event(discord::SoundEvent::GameStart, None)
+        .await?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn play_test_sound(state: State<'_, AppState>, app_handle: tauri::AppHandle) -> Result<(), String> {
+    let guard = state.discord_client.lock().await;
+    let client = guard.as_ref().ok_or("Discord not configured")?;
+    client
+        .play_sound_for_event(discord::SoundEvent::GameStart, Some(&app_handle))
+        .await
 }
 
 #[tauri::command]
@@ -438,6 +491,8 @@ fn main() {
             load_config,
             get_diagnostics,
             test_event_detection,
+            join_discord_voice,
+            play_test_sound,
         ])
         .setup(|app| {
             info!("Scout for LoL Desktop starting up...");

@@ -22,11 +22,27 @@ type LcuStatus = {
 type DiscordStatus = {
   connected: boolean;
   channelName: string | null;
+  voiceConnected: boolean;
+  voiceChannelName: string | null;
+  activeSoundPack: string | null;
 };
 
 type Config = {
   botToken: string | null;
   channelId: string | null;
+  voiceChannelId: string | null;
+  soundPack: string | null;
+  eventSounds: Record<string, string> | null;
+};
+
+const DEFAULT_EVENT_SOUNDS: Record<string, string> = {
+  gameStart: "gameStart",
+  firstBlood: "firstBlood",
+  kill: "kill",
+  multiKill: "multiKill",
+  objective: "objective",
+  ace: "ace",
+  gameEnd: "gameEnd",
 };
 
 type LogEntry = {
@@ -45,10 +61,16 @@ export default function App() {
   const [discordStatus, setDiscordStatus] = useState<DiscordStatus>({
     connected: false,
     channelName: null,
+    voiceConnected: false,
+    voiceChannelName: null,
+    activeSoundPack: null,
   });
 
   const [botToken, setBotToken] = useState("");
   const [channelId, setChannelId] = useState("");
+  const [voiceChannelId, setVoiceChannelId] = useState("");
+  const [soundPack, setSoundPack] = useState("base");
+  const [eventSounds, setEventSounds] = useState<Record<string, string>>(DEFAULT_EVENT_SOUNDS);
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
@@ -77,13 +99,25 @@ export default function App() {
     const loadConfig = async () => {
       try {
         const config = await invoke<Config>("load_config");
-        if (config.botToken || config.channelId) {
-          if (config.botToken) {
-            setBotToken(config.botToken);
-          }
-          if (config.channelId) {
-            setChannelId(config.channelId);
-          }
+        if (config.botToken) {
+          setBotToken(config.botToken);
+        }
+        if (config.channelId) {
+          setChannelId(config.channelId);
+        }
+        if (config.voiceChannelId) {
+          setVoiceChannelId(config.voiceChannelId);
+        }
+        if (config.soundPack) {
+          setSoundPack(config.soundPack);
+        }
+        if (config.eventSounds) {
+          setEventSounds((prev) => ({
+            ...prev,
+            ...config.eventSounds,
+          }));
+        }
+        if (config.botToken || config.channelId || config.voiceChannelId) {
           addLog("info", "Loaded saved Discord configuration");
         }
       } catch (err) {
@@ -165,7 +199,13 @@ export default function App() {
     addLog("info", `Configuring Discord for channel ${channelId}...`);
 
     try {
-      await invoke("configure_discord", { botToken, channelId });
+      await invoke("configure_discord", {
+        botToken,
+        channelId,
+        voiceChannelId: voiceChannelId || null,
+        soundPack,
+        eventSounds,
+      });
       await loadStatus();
       addLog("info", "Discord configured successfully");
     } catch (err) {
@@ -175,6 +215,48 @@ export default function App() {
     } finally {
       setLoading(null);
     }
+  };
+
+  const handleJoinVoice = async () => {
+    setError(null);
+    setLoading("Joining voice channel...");
+    addLog("info", "Requesting voice connection...");
+
+    try {
+      await invoke("join_discord_voice", { voiceChannelId: voiceChannelId || null });
+      await loadStatus();
+      addLog("info", "Voice join request sent");
+    } catch (err) {
+      const errorMsg = getErrorMessage(err);
+      setError(errorMsg);
+      addLog("error", `Failed to join voice: ${errorMsg}`);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleTestSound = async () => {
+    setError(null);
+    setLoading("Playing test sound...");
+    addLog("info", "Playing test sound...");
+
+    try {
+      await invoke("play_test_sound");
+      addLog("info", "Test sound requested");
+    } catch (err) {
+      const errorMsg = getErrorMessage(err);
+      setError(errorMsg);
+      addLog("error", `Failed to play test sound: ${errorMsg}`);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleEventSoundChange = (key: string, value: string) => {
+    setEventSounds((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   };
 
   const handleStartMonitoring = async () => {
@@ -334,10 +416,22 @@ export default function App() {
             loading={loading}
             botToken={botToken}
             channelId={channelId}
+            voiceChannelId={voiceChannelId}
+            soundPack={soundPack}
+            eventSounds={eventSounds}
             onBotTokenChange={setBotToken}
             onChannelIdChange={setChannelId}
+            onVoiceChannelIdChange={setVoiceChannelId}
+            onSoundPackChange={setSoundPack}
+            onEventSoundChange={handleEventSoundChange}
             onConfigure={() => {
               void handleConfigureDiscord();
+            }}
+            onJoinVoice={() => {
+              void handleJoinVoice();
+            }}
+            onTestSound={() => {
+              void handleTestSound();
             }}
           />
 

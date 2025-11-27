@@ -1,7 +1,47 @@
-//! Discord integration module for posting game events to Discord channels
+//! Discord integration module for posting game events and playing sounds in voice chat
 
 use serde::{Deserialize, Serialize};
+use serenity::all::{ChannelId, GatewayIntents, GuildId, Ready};
+use serenity::async_trait;
+use serenity::client::{Client as SerenityClient, EventHandler};
+use songbird::input::{File as AudioFile, Input};
+use songbird::{SerenityInit, Songbird, SongbirdKey};
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::Arc;
+use std::io::Write;
+use tokio::time::{timeout, Duration};
+use tauri::Emitter;
 use tracing::{error, info};
+
+// Bundled base beep sound (packed at compile time)
+const BASE_BEEP_BYTES: &[u8] = include_bytes!("../resources/sounds/base-beep.wav");
+
+fn ensure_base_beep_file() -> PathBuf {
+    let temp_path = std::env::temp_dir().join("scout-base-beep.wav");
+    if !temp_path.exists() {
+        if let Err(err) = std::fs::write(&temp_path, BASE_BEEP_BYTES) {
+            error!("Failed to write base beep to temp: {}", err);
+        } else {
+            info!("Wrote base beep to {:?}", temp_path);
+        }
+    }
+    temp_path
+}
+
+fn write_sound_log(message: &str) {
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open("scout-debug.log")
+    {
+        let _ = writeln!(file, "{}", message);
+    }
+}
+
+fn log_sound_error(event: SoundEvent, msg: &str) {
+    write_sound_log(&format!("[sound-error] {:?}: {}", event, msg));
+}
 
 /// Represents the connection status of the Discord client
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -9,45 +49,186 @@ use tracing::{error, info};
 pub struct DiscordStatus {
     /// Whether the Discord client is connected
     pub connected: bool,
-    /// The name of the Discord channel (if connected)
+    /// The name of the Discord text channel (if connected)
     pub channel_name: Option<String>,
+    /// Whether we are currently connected to a voice channel
+    pub voice_connected: bool,
+    /// The voice channel name (if connected)
+    pub voice_channel_name: Option<String>,
+    /// Active sound pack identifier
+    pub active_sound_pack: Option<String>,
 }
 
-/// Discord client for posting game events to a Discord channel
+/// Events that can trigger audio cues
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[serde(rename_all = "camelCase")]
+pub enum SoundEvent {
+    /// Game started
+    GameStart,
+    /// First blood occurred
+    FirstBlood,
+    /// Standard champion kill
+    Kill,
+    /// Multi-kill event
+    MultiKill,
+    /// Objective capture (dragon/baron/tower/etc)
+    Objective,
+    /// Ace occurred
+    Ace,
+    /// Game ended
+    GameEnd,
+}
+
+impl SoundEvent {
+    /// Returns the canonical key used for config and UI
+    #[must_use]
+    pub const fn key(&self) -> &'static str {
+        match self {
+            Self::GameStart => "gameStart",
+            Self::FirstBlood => "firstBlood",
+            Self::Kill => "kill",
+            Self::MultiKill => "multiKill",
+            Self::Objective => "objective",
+            Self::Ace => "ace",
+            Self::GameEnd => "gameEnd",
+        }
+    }
+}
+
+/// A sound cue can be loaded from disk
+#[derive(Debug, Clone)]
+pub enum SoundCue {
+    /// Load audio from a file path
+    File(PathBuf),
+}
+
+/// A collection of sounds that can be swapped in as a pack
+#[derive(Debug, Clone)]
+pub struct SoundPack {
+    /// Identifier used for config
+    pub id: String,
+    /// Friendly name for display
+    pub _name: String,
+    /// Human-readable description
+    pub _description: String,
+    /// Mapping of event key -> cue
+    pub cues: HashMap<String, SoundCue>,
+}
+
+impl SoundPack {
+    /// Base pack with bundled beep audio
+    #[must_use]
+    pub fn base() -> Self {
+        let base_beep = ensure_base_beep_file();
+        let cues = HashMap::from([
+            (SoundEvent::GameStart.key().to_string(), SoundCue::File(base_beep.clone())),
+            (SoundEvent::Kill.key().to_string(), SoundCue::File(base_beep.clone())),
+            (SoundEvent::MultiKill.key().to_string(), SoundCue::File(base_beep.clone())),
+            (SoundEvent::Objective.key().to_string(), SoundCue::File(base_beep.clone())),
+            (SoundEvent::FirstBlood.key().to_string(), SoundCue::File(base_beep.clone())),
+            (SoundEvent::Ace.key().to_string(), SoundCue::File(base_beep.clone())),
+            (SoundEvent::GameEnd.key().to_string(), SoundCue::File(base_beep)),
+        ]);
+
+        Self {
+            id: "base".to_string(),
+            _name: "Base Pack".to_string(),
+            _description: "Lightweight synthesized tones for quick callouts".to_string(),
+            cues,
+        }
+    }
+
+    /// Returns the cue for a given key if present
+    pub fn cue_for(&self, key: &str) -> Option<SoundCue> {
+        self.cues.get(key).cloned()
+    }
+}
+
+/// Minimal event handler to keep the gateway session alive
+struct VoiceHandler;
+
+#[async_trait]
+impl EventHandler for VoiceHandler {
+    async fn ready(&self, _ctx: serenity::prelude::Context, ready: Ready) {
+        info!("Discord voice gateway connected as {}", ready.user.name);
+    }
+}
+
+#[derive(Debug, Deserialize)]
+struct ChannelLookupResponse {
+    id: String,
+    name: Option<String>,
+    #[serde(rename = "guild_id")]
+    guild_id: Option<String>,
+    #[serde(rename = "type")]
+    _kind: Option<u8>,
+}
+
+/// Discord client for posting game events to a Discord channel and playing voice cues
 #[derive(Debug, Clone)]
 pub struct DiscordClient {
     token: String,
     channel_id: String,
+    voice_channel_id: Option<String>,
     client: reqwest::Client,
-}
-
-#[derive(Serialize)]
-struct MessagePayload {
-    content: String,
+    songbird: Option<Arc<Songbird>>,
+    sound_pack: SoundPack,
+    event_overrides: HashMap<String, SoundCue>,
 }
 
 impl DiscordClient {
     /// Creates a new Discord client and validates the connection
-    pub async fn new(token: String, channel_id: String) -> Result<Self, String> {
+    #[allow(clippy::too_many_arguments)]
+    pub async fn new(
+        token: String,
+        channel_id: String,
+        voice_channel_id: Option<String>,
+        sound_pack: Option<String>,
+        event_overrides: Option<HashMap<String, String>>,
+    ) -> Result<Self, String> {
         info!("Initializing Discord client...");
 
         let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(8))
             .build()
             .map_err(|e| format!("Failed to create HTTP client: {e}"))?;
 
         let discord_client = Self {
-            token,
-            channel_id,
+            token: token.clone(),
+            channel_id: channel_id.clone(),
+            voice_channel_id,
             client,
+            songbird: None,
+            sound_pack: match sound_pack.as_deref() {
+                Some("base") | None => SoundPack::base(),
+                Some(other) => {
+                    info!("Unknown sound pack `{other}`, falling back to base");
+                    SoundPack::base()
+                }
+            },
+            event_overrides: HashMap::new(),
         };
 
-        // Test the connection
-        discord_client.test_connection().await?;
+        // Test the text connection up front with a timeout so the UI doesn't hang
+        timeout(Duration::from_secs(8), discord_client.test_connection())
+            .await
+            .map_err(|_| "Discord API connection timed out".to_string())??;
 
-        Ok(discord_client)
+        let mut client = discord_client;
+        client.apply_event_overrides(event_overrides);
+        client.songbird =
+            timeout(Duration::from_secs(8), client.build_voice_client(token.clone()))
+                .await
+                .map_err(|_| "Voice client setup timed out".to_string())?;
+
+        if client.songbird.is_none() {
+            error!("Voice client not initialized; voice playback will be disabled until reconfigured");
+        }
+
+        Ok(client)
     }
 
-    /// Tests the Discord API connection
+    /// Tests the Discord API connection for the configured text channel
     async fn test_connection(&self) -> Result<(), String> {
         info!("Testing Discord connection...");
 
@@ -77,6 +258,50 @@ impl DiscordClient {
         }
     }
 
+    fn apply_event_overrides(&mut self, overrides: Option<HashMap<String, String>>) {
+        if let Some(map) = overrides {
+            for (event, value) in map {
+                let cue = if let Some(base_cue) = self.sound_pack.cue_for(&value) {
+                    base_cue
+                } else {
+                    SoundCue::File(PathBuf::from(value))
+                };
+                self.event_overrides.insert(event, cue);
+            }
+        }
+    }
+
+    async fn build_voice_client(&self, token: String) -> Option<Arc<Songbird>> {
+        let intents = GatewayIntents::GUILDS | GatewayIntents::GUILD_VOICE_STATES;
+
+        match SerenityClient::builder(&token, intents)
+            .event_handler(VoiceHandler)
+            .register_songbird()
+            .await
+        {
+            Ok(mut client) => {
+                // Get songbird instance before spawning
+                let data = client.data.clone();
+                let songbird = {
+                    let data_read = data.read().await;
+                    data_read.get::<SongbirdKey>().cloned()
+                };
+
+                tokio::spawn(async move {
+                    if let Err(err) = client.start_autosharded().await {
+                        error!("Discord voice gateway error: {err}");
+                    }
+                });
+
+                songbird
+            }
+            Err(err) => {
+                error!("Failed to initialize Discord voice client: {err}");
+                None
+            }
+        }
+    }
+
     /// Posts a message to the configured Discord channel
     pub async fn post_message(&self, content: String) -> Result<(), String> {
         let url = format!(
@@ -84,8 +309,13 @@ impl DiscordClient {
             self.channel_id
         );
 
-        let content_clone = content.clone();
-        info!("Attempting to post Discord message: {}", content_clone);
+        info!("Attempting to post Discord message");
+
+        #[derive(Serialize)]
+        struct MessagePayload {
+            content: String,
+        }
+
         let payload = MessagePayload { content };
 
         let response = self
@@ -103,7 +333,7 @@ impl DiscordClient {
             })?;
 
         if response.status().is_success() {
-            info!("Successfully posted message to Discord: {}", content_clone);
+            info!("Successfully posted message to Discord");
             Ok(())
         } else {
             let status = response.status();
@@ -111,14 +341,9 @@ impl DiscordClient {
                 .text()
                 .await
                 .unwrap_or_else(|_| "Unknown error".to_string());
-            let message_preview = if content_clone.len() > 50 {
-                format!("{}...", &content_clone[..50])
-            } else {
-                content_clone
-            };
             error!(
-                "Failed to post Discord message (status {}): {} - Message was: {}",
-                status, error_text, message_preview
+                "Failed to post Discord message (status {}): {}",
+                status, error_text
             );
             Err(format!("Failed to post message: {status} - {error_text}"))
         }
@@ -224,12 +449,207 @@ impl DiscordClient {
         self.post_message(message).await
     }
 
+    /// Plays a configured sound for the specified event
+    pub async fn play_sound_for_event(
+        &self,
+        event: SoundEvent,
+        app_handle: Option<&tauri::AppHandle>,
+    ) -> Result<(), String> {
+        let Some(manager) = &self.songbird else {
+            let msg = "Voice manager not initialized".to_string();
+            log_sound_error(event, &msg);
+            return Err(msg);
+        };
+
+        let voice_channel_id = self
+            .voice_channel_id
+            .clone()
+            .ok_or_else(|| {
+                let msg = "Voice channel not configured".to_string();
+                log_sound_error(event, &msg);
+                msg
+            })?;
+
+        info!(
+            "Attempting to play sound for event {:?} in voice {}",
+            event, voice_channel_id
+        );
+        write_sound_log(&format!(
+            "[sound] Attempting {:?} in voice {}",
+            event, voice_channel_id
+        ));
+        if let Some(app) = app_handle {
+            let _ = app.emit(
+                "backend-log",
+                format!(
+                    "🔊 Attempting sound for {:?} in voice channel {}",
+                    event, voice_channel_id
+                ),
+            );
+        }
+        let (guild_id, channel_id, _channel_name) = self
+            .resolve_voice_channel(&voice_channel_id)
+            .await
+            .map_err(|e| {
+                log_sound_error(event, &e);
+                e
+            })?;
+
+        let handler_lock = manager
+            .join(guild_id, channel_id)
+            .await
+            .map_err(|e| {
+                let msg = format!("Failed to join voice: {e}");
+                log_sound_error(event, &msg);
+                msg
+            })?;
+
+        let mut handler = handler_lock.lock().await;
+        let cue_key = event.key().to_string();
+        let cue = self
+            .event_overrides
+            .get(&cue_key)
+            .cloned()
+            .or_else(|| self.sound_pack.cue_for(&cue_key))
+            .ok_or_else(|| {
+                let msg = format!("No sound mapped for event {}", cue_key);
+                log_sound_error(event, &msg);
+                msg
+            })?;
+
+        let (input, resolved_path) = Self::cue_to_input(cue).map_err(|e| {
+            log_sound_error(event, &e);
+            e
+        })?;
+        let handle = handler.enqueue_input(input).await;
+        let _ = handle.set_volume(1.0);
+        let _ = handle.play();
+        info!("Queued audio for event {:?} using {}", event, resolved_path);
+        write_sound_log(&format!(
+            "[sound] Queued {:?} using {}",
+            event, resolved_path
+        ));
+        if let Some(app) = app_handle {
+            let _ = app.emit(
+                "backend-log",
+                format!("🔊 Queued sound for {:?} ({})", event, resolved_path),
+            );
+        }
+        Ok(())
+    }
+
+    fn cue_to_input(cue: SoundCue) -> Result<(Input, String), String> {
+        match cue {
+            SoundCue::File(path) => {
+                // Prefer absolute path next to executable to survive packaging
+                let resolved_path = if path.is_absolute() {
+                    path
+                } else {
+                    let exe_dir = std::env::current_exe()
+                        .ok()
+                        .and_then(|p| p.parent().map(std::path::Path::to_path_buf));
+                    if let Some(dir) = exe_dir {
+                        let candidate = dir.join(&path);
+                        if candidate.exists() {
+                            candidate
+                        } else {
+                            path.clone()
+                        }
+                    } else {
+                        path.clone()
+                    }
+                };
+
+                if !resolved_path.exists() {
+                    return Err(format!(
+                        "Sound file not found at {:?}",
+                        resolved_path.display()
+                    ));
+                }
+
+                let file = AudioFile::new(resolved_path.clone());
+                Ok((Input::from(file), resolved_path.display().to_string()))
+            }
+        }
+    }
+
+    async fn resolve_voice_channel(
+        &self,
+        voice_channel_id: &str,
+    ) -> Result<(GuildId, ChannelId, Option<String>), String> {
+        let channel = self.fetch_channel_info(voice_channel_id).await?;
+        let guild_id = channel
+            .guild_id
+            .ok_or_else(|| "Voice channel is missing guild id".to_string())?
+            .parse::<u64>()
+            .map_err(|e| format!("Invalid guild id: {e}"))?;
+
+        let channel_id = channel
+            .id
+            .parse::<u64>()
+            .map_err(|e| format!("Invalid voice channel id: {e}"))?;
+
+        Ok((GuildId::new(guild_id), ChannelId::new(channel_id), channel.name))
+    }
+
+    async fn fetch_channel_info(&self, channel_id: &str) -> Result<ChannelLookupResponse, String> {
+        let url = format!("https://discord.com/api/v10/channels/{channel_id}");
+        let response = self
+            .client
+            .get(url)
+            .header("Authorization", format!("Bot {}", self.token))
+            .header("User-Agent", "Scout-for-LoL-Desktop/0.1.0")
+            .send()
+            .await
+            .map_err(|e| format!("Failed to look up channel: {e}"))?;
+
+        if !response.status().is_success() {
+            return Err(format!(
+                "Channel lookup failed with status {}",
+                response.status()
+            ));
+        }
+
+        response
+            .json::<ChannelLookupResponse>()
+            .await
+            .map_err(|e| format!("Failed to parse channel info: {e}"))
+    }
+
+    /// Ensures a voice connection exists using the configured channel
+    pub async fn ensure_voice_connected(&self) -> Result<(), String> {
+        let Some(manager) = &self.songbird else {
+            return Err("Voice manager not initialized".to_string());
+        };
+
+        let voice_channel_id = self
+            .voice_channel_id
+            .clone()
+            .ok_or_else(|| "Voice channel not configured".to_string())?;
+
+        let (guild_id, channel_id, _name) = self.resolve_voice_channel(&voice_channel_id).await?;
+        let _handler = manager
+            .join(guild_id, channel_id)
+            .await
+            .map_err(|e| format!("Failed to join voice: {e}"))?;
+
+        Ok(())
+    }
+
+    /// Updates the configured voice channel ID
+    pub fn set_voice_channel_id(&mut self, voice_channel_id: Option<String>) {
+        self.voice_channel_id = voice_channel_id;
+    }
+
     /// Gets the current Discord connection status
     #[must_use]
-    pub const fn get_status(&self) -> DiscordStatus {
+    pub fn get_status(&self) -> DiscordStatus {
         DiscordStatus {
             connected: true,
-            channel_name: None, // TODO: Fetch actual channel name
+            channel_name: Some(self.channel_id.clone()),
+            voice_connected: self.voice_channel_id.is_some() && self.songbird.is_some(),
+            voice_channel_name: self.voice_channel_id.clone(),
+            active_sound_pack: Some(self.sound_pack.id.clone()),
         }
     }
 }
@@ -239,171 +659,25 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_discord_status_creation() {
-        let status = DiscordStatus {
-            connected: false,
-            channel_name: None,
-        };
-        assert!(!status.connected);
-        assert!(status.channel_name.is_none());
+    fn test_sound_event_keys() {
+        assert_eq!(SoundEvent::Kill.key(), "kill");
+        assert_eq!(SoundEvent::GameStart.key(), "gameStart");
+        assert_eq!(SoundEvent::GameEnd.key(), "gameEnd");
     }
 
     #[test]
-    fn test_discord_status_connected() {
-        let status = DiscordStatus {
-            connected: true,
-            channel_name: Some("general".to_string()),
-        };
-        assert!(status.connected);
-        assert_eq!(status.channel_name, Some("general".to_string()));
-    }
-
-    #[test]
-    fn test_discord_status_serialization() {
-        let status = DiscordStatus {
-            connected: true,
-            channel_name: Some("test-channel".to_string()),
-        };
-
-        let json = serde_json::to_string(&status).ok();
-        assert!(json.is_some());
-
-        if let Some(json_str) = json {
-            assert!(json_str.contains("connected"));
-            assert!(json_str.contains("channelName"));
+    fn test_base_pack_contains_keys() {
+        let pack = SoundPack::base();
+        for key in [
+            "gameStart",
+            "firstBlood",
+            "kill",
+            "multiKill",
+            "objective",
+            "ace",
+            "gameEnd",
+        ] {
+            assert!(pack.cue_for(key).is_some());
         }
-    }
-
-    #[test]
-    fn test_message_payload_creation() {
-        let payload = MessagePayload {
-            content: "Test message".to_string(),
-        };
-        assert_eq!(payload.content, "Test message");
-    }
-
-    #[test]
-    fn test_message_payload_serialization() {
-        let payload = MessagePayload {
-            content: "Hello, world!".to_string(),
-        };
-
-        let json = serde_json::to_string(&payload).ok();
-        assert!(json.is_some());
-
-        if let Some(json_str) = json {
-            assert!(json_str.contains("content"));
-            assert!(json_str.contains("Hello, world!"));
-        }
-    }
-
-    #[test]
-    fn test_game_event_message_format() {
-        let event_type = "Game Start";
-        let details = "Summoner's Rift 5v5";
-        let message = format!("**{event_type}** - {details}");
-        assert_eq!(message, "**Game Start** - Summoner's Rift 5v5");
-    }
-
-    #[test]
-    fn test_kill_message_format() {
-        let killer = "Yasuo";
-        let victim = "Zed";
-        let game_time = "15:32";
-        let message = format!("💀 **{killer}** killed **{victim}** at {game_time}");
-        assert_eq!(message, "💀 **Yasuo** killed **Zed** at 15:32");
-    }
-
-    #[test]
-    fn test_multikill_emoji_selection() {
-        let test_cases = vec![
-            ("DOUBLE_KILL", "⚔️"),
-            ("TRIPLE_KILL", "🔥"),
-            ("QUADRA_KILL", "💥"),
-            ("PENTA_KILL", "🏆"),
-            ("UNKNOWN", "🎯"),
-        ];
-
-        for (multikill_type, expected_emoji) in test_cases {
-            let emoji = match multikill_type {
-                "DOUBLE_KILL" => "⚔️",
-                "TRIPLE_KILL" => "🔥",
-                "QUADRA_KILL" => "💥",
-                "PENTA_KILL" => "🏆",
-                _ => "🎯",
-            };
-            assert_eq!(emoji, expected_emoji);
-        }
-    }
-
-    #[test]
-    fn test_objective_emoji_selection() {
-        let test_cases = vec![
-            ("DRAGON", "🐉"),
-            ("BARON", "👹"),
-            ("TOWER", "🗼"),
-            ("INHIBITOR", "🛡️"),
-            ("HERALD", "👁️"),
-            ("UNKNOWN", "🎯"),
-        ];
-
-        for (objective, expected_emoji) in test_cases {
-            let emoji = match objective {
-                obj if obj.contains("DRAGON") => "🐉",
-                obj if obj.contains("BARON") => "👹",
-                obj if obj.contains("TOWER") => "🗼",
-                obj if obj.contains("INHIBITOR") => "🛡️",
-                obj if obj.contains("HERALD") => "👁️",
-                _ => "🎯",
-            };
-            assert_eq!(emoji, expected_emoji);
-        }
-    }
-
-    #[test]
-    fn test_multikill_type_formatting() {
-        let multikill_type = "DOUBLE_KILL";
-        let formatted = multikill_type.replace('_', " ");
-        assert_eq!(formatted, "DOUBLE KILL");
-    }
-
-    #[test]
-    fn test_game_start_message() {
-        let game_mode = "Ranked Solo/Duo";
-        let map = "Summoner's Rift";
-        let message = format!("🎮 **Game Started!** {game_mode} on {map}");
-        assert!(message.contains("Game Started!"));
-        assert!(message.contains(game_mode));
-        assert!(message.contains(map));
-    }
-
-    #[test]
-    fn test_game_end_message() {
-        let winning_team = "Blue Team";
-        let duration = "32:15";
-        let message = format!("🏁 **Game Ended!** {} won after {}", winning_team, duration);
-        assert!(message.contains("Game Ended!"));
-        assert!(message.contains(winning_team));
-        assert!(message.contains(duration));
-    }
-
-    #[test]
-    fn test_discord_url_format() {
-        let channel_id = "123456789";
-        let url = format!("https://discord.com/api/v10/channels/{}", channel_id);
-        assert_eq!(url, "https://discord.com/api/v10/channels/123456789");
-    }
-
-    #[test]
-    fn test_discord_message_url_format() {
-        let channel_id = "987654321";
-        let url = format!(
-            "https://discord.com/api/v10/channels/{}/messages",
-            channel_id
-        );
-        assert_eq!(
-            url,
-            "https://discord.com/api/v10/channels/987654321/messages"
-        );
     }
 }
