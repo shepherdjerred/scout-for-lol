@@ -74,11 +74,9 @@ let appInitPromise: Promise<void> | null = null;
 
 function initializeAppData() {
   appInitPromise ??= (async () => {
-    console.log("[Init] Starting initialization...");
     try {
       // First, migrate any localStorage data to IndexedDB
       await migrateFromLocalStorage();
-      console.log("[Init] Migration complete");
 
       // Then load from IndexedDB
       let globalConfig = await loadGlobalConfig();
@@ -119,12 +117,11 @@ function initializeAppData() {
       appInitState.globalConfig = globalConfig;
       appInitState.tabs = tabs;
       appInitState.isInitialized = true;
-      console.log("[Init] State updated, notifying", appInitListeners.size, "listeners");
       appInitListeners.forEach((listener) => {
         listener();
       });
     } catch (error) {
-      console.error("[Init] Initialization failed:", error);
+      console.error("Failed to initialize app:", error);
       // Still update state even on error so component can render
       appInitState.isInitialized = true;
       appInitListeners.forEach((listener) => {
@@ -148,8 +145,6 @@ export default function App() {
   const [costTracker] = useState(() => new CostTracker());
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
-
-  console.log("[App] Rendering, isInitialized:", isInitialized);
 
   // Show loading state while initializing
   if (!isInitialized) {
