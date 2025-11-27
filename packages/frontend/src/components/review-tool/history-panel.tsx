@@ -1,7 +1,7 @@
 /**
  * Panel showing history of generated reviews
  */
-import { useState, useSyncExternalStore, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import type { HistoryEntry } from "@scout-for-lol/frontend/lib/review-tool/history-manager";
 import { loadHistory, deleteHistoryEntry, clearHistory } from "@scout-for-lol/frontend/lib/review-tool/history-manager";
 import { StarRating } from "./star-rating";
@@ -45,17 +45,15 @@ function loadHistoryData() {
 // Start loading immediately
 void loadHistoryData();
 
-export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, refreshTrigger }: HistoryPanelProps) {
+export function HistoryPanel({
+  onSelectEntry,
+  selectedEntryId,
+  onCancelPending,
+  refreshTrigger: _refreshTrigger,
+}: HistoryPanelProps) {
   // Subscribe to history data store
   const history = useSyncExternalStore(subscribeToHistory, getHistorySnapshot, getHistorySnapshot);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
-
-  // Refresh history when refreshTrigger changes - in useEffect to avoid side effects during render
-  useEffect(() => {
-    if (refreshTrigger !== undefined && refreshTrigger > 0) {
-      void loadHistoryData();
-    }
-  }, [refreshTrigger]);
 
   const refreshHistory = async () => {
     console.log("[History] Refreshing history");
