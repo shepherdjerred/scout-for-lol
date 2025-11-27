@@ -324,22 +324,8 @@ export class ScoutForLol {
       logWithTimestamp("⏭️ Phase 5: Skipping frontend deployment (no Cloudflare credentials or branch not provided)");
     }
 
-    // Build and export desktop artifacts in prod
-    if (env === "prod") {
-      await withTiming("CI desktop artifacts phase", async () => {
-        logWithTimestamp("📦 Phase 6: Exporting desktop artifacts...");
-        const linuxArtifacts = getDesktopLinuxArtifacts(source, version);
-        const windowsArtifacts = getDesktopWindowsArtifacts(source, version);
-        // Export to a well-known location for GitHub Actions to upload
-        await linuxArtifacts.export("./desktop-artifacts/linux");
-        await windowsArtifacts.export("./desktop-artifacts/windows-x86_64-pc-windows-gnu");
-        logWithTimestamp(
-          "✅ Desktop artifacts exported to ./desktop-artifacts (linux + windows-x86_64-pc-windows-gnu)",
-        );
-      });
-    } else {
-      logWithTimestamp("⏭️ Phase 6: Skipping desktop artifacts export (not prod environment)");
-    }
+    // Desktop artifact upload disabled
+    logWithTimestamp("⏭️ Phase 6: Desktop artifacts export disabled");
 
     logWithTimestamp("🎉 CI pipeline completed successfully");
     return "CI pipeline completed successfully";
