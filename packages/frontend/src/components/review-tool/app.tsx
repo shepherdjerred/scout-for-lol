@@ -44,7 +44,7 @@ type AppInitState = {
   isInitialized: boolean;
 };
 
-let appInitState: AppInitState = {
+const appInitState: AppInitState = {
   globalConfig: createDefaultGlobalConfig(),
   tabs: [
     {
@@ -74,51 +74,56 @@ let appInitPromise: Promise<void> | null = null;
 
 function initializeAppData() {
   appInitPromise ??= (async () => {
-    // First, migrate any localStorage data to IndexedDB
-    await migrateFromLocalStorage();
+    try {
+      // First, migrate any localStorage data to IndexedDB
+      await migrateFromLocalStorage();
 
-    // Then load from IndexedDB
-    let globalConfig = await loadGlobalConfig();
-    if (!globalConfig) {
-      // Try migrating from old merged config
+      // Then load from IndexedDB
+      let globalConfig = await loadGlobalConfig();
+      if (!globalConfig) {
+        // Try migrating from old merged config
+        const oldConfig = await loadCurrentConfig();
+        if (oldConfig) {
+          const { global } = splitConfig(oldConfig);
+          globalConfig = global;
+        } else {
+          globalConfig = createDefaultGlobalConfig();
+        }
+      }
+
+      // Load tab config
+      let tabs: TabData[];
       const oldConfig = await loadCurrentConfig();
       if (oldConfig) {
-        const { global } = splitConfig(oldConfig);
-        globalConfig = global;
+        const { tab } = splitConfig(oldConfig);
+        tabs = [
+          {
+            id: "tab-1",
+            name: "Config 1",
+            config: tab,
+          },
+        ];
       } else {
-        globalConfig = createDefaultGlobalConfig();
+        tabs = [
+          {
+            id: "tab-1",
+            name: "Config 1",
+            config: createDefaultTabConfig(),
+          },
+        ];
       }
-    }
 
-    // Load tab config
-    let tabs: TabData[];
-    const oldConfig = await loadCurrentConfig();
-    if (oldConfig) {
-      const { tab } = splitConfig(oldConfig);
-      tabs = [
-        {
-          id: "tab-1",
-          name: "Config 1",
-          config: tab,
-        },
-      ];
-    } else {
-      tabs = [
-        {
-          id: "tab-1",
-          name: "Config 1",
-          config: createDefaultTabConfig(),
-        },
-      ];
+      // Mutate in place to keep same object reference for useSyncExternalStore
+      appInitState.globalConfig = globalConfig;
+      appInitState.tabs = tabs;
+      appInitState.isInitialized = true;
+      appInitListeners.forEach((listener) => {
+        listener();
+      });
+    } finally {
+      // Clear the promise so Suspense knows we're done
+      appInitPromise = null;
     }
-
-    // Mutate in place to keep same object reference for useSyncExternalStore
-    appInitState.globalConfig = globalConfig;
-    appInitState.tabs = tabs;
-    appInitState.isInitialized = true;
-    appInitListeners.forEach((listener) => {
-      listener();
-    });
   })();
   return appInitPromise;
 }
