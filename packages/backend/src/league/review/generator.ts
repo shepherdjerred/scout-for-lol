@@ -33,6 +33,13 @@ import {
 
 const AI_IMAGES_DIR = `${import.meta.dir}/ai-images`;
 
+type EnrichedCuratedMatchData = CuratedMatchData & {
+  /** AI-generated narrative summary of how the game unfolded */
+  timelineSummary?: string | undefined;
+  /** AI-generated lane-aware analysis using full match data */
+  matchAnalysis?: string | undefined;
+};
+
 /**
  * Initialize OpenAI client if API key is configured
  */
@@ -153,7 +160,7 @@ async function summarizeTimeline(timelineDto: TimelineDto, matchId: MatchId): Pr
 }
 
 async function analyzeMatchData(
-  curatedData: CuratedMatchData,
+  curatedData: EnrichedCuratedMatchData,
   matchId: MatchId,
   params: { lane?: string | undefined },
 ): Promise<string | undefined> {
@@ -238,7 +245,7 @@ async function generateReviewImageBackend(params: {
   queueType: string;
   style: string;
   themes: string[];
-  curatedData?: CuratedMatchData;
+  curatedData?: EnrichedCuratedMatchData;
   artPrompt?: string;
 }): Promise<Uint8Array | undefined> {
   const { reviewText, match, matchId, queueType, style, themes, curatedData, artPrompt } = params;
@@ -416,7 +423,7 @@ async function buildReviewerContext(match: CompletedMatch | ArenaMatch): Promise
  */
 async function generateAIReview(
   match: CompletedMatch | ArenaMatch,
-  curatedData: CuratedMatchData | undefined,
+  curatedData: EnrichedCuratedMatchData | undefined,
   reviewerContext: ReviewerContext,
   matchAnalysis?: string,
 ): Promise<{ review: string; metadata: ReviewMetadata; textMetadata: ReviewTextMetadata } | undefined> {
@@ -595,7 +602,9 @@ export async function generateMatchReview(
   }
 
   // Curate the raw match data if provided (including timeline if available)
-  let curatedData = rawMatchData ? await curateMatchData(rawMatchData, timelineData) : undefined;
+  let curatedData: EnrichedCuratedMatchData | undefined = rawMatchData
+    ? await curateMatchData(rawMatchData, timelineData)
+    : undefined;
   if (curatedData?.timeline) {
     console.log(
       `[debug][generateMatchReview] Curated timeline with ${curatedData.timeline.keyEvents.length.toString()} key events`,
