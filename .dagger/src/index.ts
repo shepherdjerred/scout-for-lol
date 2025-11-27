@@ -14,8 +14,8 @@ import { checkData, getDataCoverage, getDataTestReport } from "@scout-for-lol/.d
 import { checkFrontend, buildFrontend, deployFrontend } from "@scout-for-lol/.dagger/src/frontend";
 import {
   checkDesktop,
-  buildDesktopLinux,
-  getDesktopLinuxArtifacts,
+  buildDesktop,
+  getDesktopArtifacts,
 } from "@scout-for-lol/.dagger/src/desktop";
 import { getGitHubContainer, getBunNodeContainer } from "@scout-for-lol/.dagger/src/base";
 
@@ -204,8 +204,8 @@ export class ScoutForLol {
 
     // Build desktop application
     await withTiming("desktop application build", async () => {
-      logWithTimestamp("🔄 Building desktop application...");
-      const container = buildDesktopLinux(source, version);
+      logWithTimestamp("🔄 Building desktop application for Windows (x86_64-pc-windows-gnu)...");
+      const container = buildDesktop(source, version, "windows");
       await container.sync();
       return container;
     });
@@ -326,7 +326,7 @@ export class ScoutForLol {
     if (env === "prod") {
       await withTiming("CI desktop artifacts phase", async () => {
         logWithTimestamp("📦 Phase 6: Exporting desktop artifacts...");
-        const artifacts = getDesktopLinuxArtifacts(source, version);
+        const artifacts = getDesktopArtifacts(source, version, "windows");
         // Export to a well-known location for GitHub Actions to upload
         await artifacts.export("./desktop-artifacts");
         logWithTimestamp("✅ Desktop artifacts exported to ./desktop-artifacts");
@@ -845,7 +845,7 @@ export class ScoutForLol {
   }
 
   /**
-   * Build the desktop application for Linux
+   * Build the desktop application for Windows (x86_64-pc-windows-gnu)
    * @param source The workspace source directory
    * @param version The version to build
    * @returns A message indicating completion
@@ -862,7 +862,7 @@ export class ScoutForLol {
     logWithTimestamp(`🏗️  Building desktop application for version ${version}`);
 
     await withTiming("desktop build", async () => {
-      const container = buildDesktopLinux(source, version);
+      const container = buildDesktop(source, version, "windows");
       await container.sync();
       return container;
     });
@@ -872,7 +872,7 @@ export class ScoutForLol {
   }
 
   /**
-   * Export desktop Linux build artifacts
+   * Export desktop Windows build artifacts
    * @param source The workspace source directory
    * @param version The version to build
    * @returns The directory containing built artifacts
@@ -889,7 +889,7 @@ export class ScoutForLol {
     logWithTimestamp(`📦 Exporting desktop artifacts for version ${version}`);
 
     const result = await withTiming("desktop artifacts export", () =>
-      Promise.resolve(getDesktopLinuxArtifacts(source, version)),
+      Promise.resolve(getDesktopArtifacts(source, version, "windows")),
     );
 
     logWithTimestamp("✅ Desktop artifacts exported successfully");

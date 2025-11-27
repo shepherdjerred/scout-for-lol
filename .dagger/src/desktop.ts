@@ -1,6 +1,8 @@
 import type { Directory, Container } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 
+type DesktopTarget = "linux" | "windows";
+
 /**
  * Get a Rust container with Tauri dependencies
  * @returns A Rust container with system dependencies for Tauri
@@ -175,28 +177,43 @@ export function checkDesktop(workspaceSource: Directory): Container {
 }
 
 /**
- * Build the desktop application for Linux
+ * Build the desktop application for the specified target
  * @param workspaceSource The full workspace source directory
  * @param version The version tag
+ * @param target Platform target to build
  * @returns The container with built artifacts
  */
-export function buildDesktopLinux(workspaceSource: Directory, version: string): Container {
+export function buildDesktop(
+  workspaceSource: Directory,
+  version: string,
+  target: DesktopTarget = "linux",
+): Container {
+  const buildScript = target === "windows" ? "build:windows" : "build:linux";
+  const targetLabel = target === "windows" ? "Windows (x86_64-pc-windows-gnu)" : "Linux";
+
   return installDesktopDeps(workspaceSource)
     .withEnvVariable("VERSION", version)
     .withWorkdir("/workspace/packages/desktop")
-    .withExec(["sh", "-c", "echo '🏗️  [CI] Building desktop application for Linux...'"])
-    .withExec(["bun", "run", "build"])
+    .withExec(["sh", "-c", `echo '🏗️  [CI] Building desktop application for ${targetLabel}...'`])
+    .withExec(["bun", "run", buildScript])
     .withExec(["sh", "-c", "echo '✅ [CI] Desktop build completed!'"]);
 }
 
 /**
- * Export desktop Linux build artifacts
+ * Export desktop build artifacts for the specified target
  * @param workspaceSource The full workspace source directory
  * @param version The version tag
  * @returns The directory containing built artifacts
  */
-export function getDesktopLinuxArtifacts(workspaceSource: Directory, version: string): Directory {
-  return buildDesktopLinux(workspaceSource, version).directory(
-    "/workspace/packages/desktop/src-tauri/target/release/bundle",
-  );
+export function getDesktopArtifacts(
+  workspaceSource: Directory,
+  version: string,
+  target: DesktopTarget = "linux",
+): Directory {
+  const bundlePath =
+    target === "windows"
+      ? "/workspace/packages/desktop/src-tauri/target/x86_64-pc-windows-gnu/release/bundle"
+      : "/workspace/packages/desktop/src-tauri/target/release/bundle";
+
+  return buildDesktop(workspaceSource, version, target).directory(bundlePath);
 }
