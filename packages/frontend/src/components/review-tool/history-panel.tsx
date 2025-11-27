@@ -20,8 +20,14 @@ const historyListeners = new Set<() => void>();
 
 function subscribeToHistory(callback: () => void) {
   historyListeners.add(callback);
+  // Also listen for history-update events
+  const handleHistoryUpdate = () => {
+    void loadHistoryData();
+  };
+  window.addEventListener("history-update", handleHistoryUpdate);
   return () => {
     historyListeners.delete(callback);
+    window.removeEventListener("history-update", handleHistoryUpdate);
   };
 }
 

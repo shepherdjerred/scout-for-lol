@@ -236,6 +236,9 @@ export async function saveCompletedEntry(
 
     // Trim old entries if we exceed max
     await db.trimToMaxEntries(MAX_HISTORY_ENTRIES);
+
+    // Trigger history panel to reload
+    window.dispatchEvent(new Event("history-update"));
   } catch (error) {
     console.error("Failed to save to history:", error);
   }
@@ -247,6 +250,8 @@ export async function saveCompletedEntry(
 export async function deleteHistoryEntry(id: string): Promise<void> {
   try {
     await db.deleteEntry(id);
+    // Trigger history panel to reload
+    window.dispatchEvent(new Event("history-update"));
   } catch (error) {
     console.error("Failed to delete history entry:", error);
   }
@@ -260,6 +265,8 @@ export async function clearHistory(): Promise<void> {
     await db.clearAllEntries();
     // Also clear old localStorage data if it exists
     localStorage.removeItem(STORAGE_KEY);
+    // Trigger history panel to reload
+    window.dispatchEvent(new Event("history-update"));
   } catch (error) {
     console.error("Failed to clear history:", error);
   }
@@ -282,6 +289,8 @@ export async function updateHistoryRating(id: string, rating: 1 | 2 | 3 | 4, not
     }
 
     await db.saveEntry(entry);
+    // Trigger history panel to reload
+    window.dispatchEvent(new Event("history-update"));
   } catch (error) {
     console.error("Failed to update rating:", error);
   }
