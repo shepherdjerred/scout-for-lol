@@ -1,7 +1,7 @@
 /**
  * Results panel showing generated review and metadata
  */
-import { useState, useSyncExternalStore, useMemo } from "react";
+import { useState, useSyncExternalStore, useMemo, useEffect } from "react";
 import { z } from "zod";
 import type { ReviewConfig, GenerationResult } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
@@ -69,16 +69,32 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
   const [viewingHistory, setViewingHistory] = useState(false);
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | undefined>();
   const [notes, setNotes] = useState("");
+  const [timerTick, setTimerTick] = useState(0);
 
   // Subscribe to cost update events
   useSyncExternalStore(subscribeToCostUpdates, getCostUpdateSnapshot, getCostUpdateSnapshot);
 
-  // Calculate elapsed times during render - recalculates on every render
-  // This is fine since renders happen frequently enough for smooth animation
+  // Update timer every second when there are active generations
+  useEffect(() => {
+    if (activeGenerations.size === 0) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setTimerTick((prev) => prev + 1);
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [activeGenerations.size]);
+
+  // Calculate elapsed times - recalculates when timerTick changes (every second)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- timerTick is intentionally used to trigger recalculation every second
   const activeGenerationTimers = useMemo(() => {
     const now = Date.now();
     return new Map(Array.from(activeGenerations.entries()).map(([id, gen]) => [id, now - gen.startTime]));
-  }, [activeGenerations]);
+  }, [activeGenerations, timerTick]);
 
   const handleGenerate = async () => {
     // Use provided match or example match
