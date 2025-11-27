@@ -12,12 +12,12 @@ export {
   generateReviewImage,
   type ReviewTextMetadata,
   type ReviewImageMetadata,
-  type CuratedMatchData,
   type ChatCompletionCreateParams,
 } from "./review/generator.js";
 export { extractMatchData, getOrdinalSuffix } from "./review/generator-helpers.js";
 export { curateMatchData, curateParticipantData } from "./review/curator.js";
 export { curateTimelineData } from "./review/timeline-curator.js";
+export type { CuratedMatchData } from "./review/curator-types.js";
 export type { CuratedTimeline, CuratedTimelineEvent, CuratedParticipantSnapshot } from "./review/curator-types.js";
 export * from "./league/match-dto.schema.js";
 export * from "./league/timeline-dto.schema.js";

@@ -9,6 +9,7 @@
 
 import type { GoogleGenerativeAI } from "@google/generative-ai";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
+import type { CuratedMatchData } from "@scout-for-lol/data/review/curator-types.js";
 import { generateImagePrompt } from "@scout-for-lol/data/review/image-prompt.js";
 import { replaceTemplateVariables } from "@scout-for-lol/data/review/prompts.js";
 import {
@@ -303,18 +304,6 @@ export type PlayerMetadata = {
   description: string;
   favoriteChampions: string[];
   favoriteLanes: string[];
-};
-
-/**
- * Curated match data type (from curator module)
- */
-export type CuratedMatchData = {
-  gameInfo: {
-    gameDuration: number;
-    gameMode: string;
-    queueId: number;
-  };
-  participants: unknown[]; // Full type in curator module
 };
 
 /**

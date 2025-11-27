@@ -260,7 +260,7 @@ type TimelineSummaryS3Params = {
 
 type MatchAnalysisS3Params = {
   matchId: MatchId;
-  lane?: string;
+  lane?: string | undefined;
   curatedData: CuratedMatchData;
   prompt: string;
   analysis: string;

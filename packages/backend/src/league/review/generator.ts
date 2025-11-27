@@ -369,7 +369,7 @@ type ReviewerContext = {
   personality: Awaited<ReturnType<typeof selectRandomPersonality>>;
   basePromptTemplate: string;
   laneContext: Awaited<ReturnType<typeof getLaneContext>>;
-  lane?: string;
+  lane?: string | undefined;
   playerIndex: number;
   playerName: string;
   playerMetadata: Awaited<ReturnType<typeof loadPlayerMetadata>>;
