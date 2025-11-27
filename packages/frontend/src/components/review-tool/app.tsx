@@ -112,11 +112,10 @@ function initializeAppData() {
       ];
     }
 
-    appInitState = {
-      globalConfig,
-      tabs,
-      isInitialized: true,
-    };
+    // Mutate in place to keep same object reference for useSyncExternalStore
+    appInitState.globalConfig = globalConfig;
+    appInitState.tabs = tabs;
+    appInitState.isInitialized = true;
     appInitListeners.forEach((listener) => {
       listener();
     });
@@ -128,6 +127,12 @@ function initializeAppData() {
 void initializeAppData();
 
 export default function App() {
+  // For React 19 Suspense: throw the promise if initialization isn't complete
+  if (appInitPromise !== null) {
+    // eslint-disable-next-line @typescript-eslint/only-throw-error -- Throwing promises is the correct Suspense pattern in React 19
+    throw appInitPromise;
+  }
+
   // Subscribe to app initialization state
   const initState = useSyncExternalStore(subscribeToAppInit, getAppInitSnapshot, getAppInitSnapshot);
   const { globalConfig, tabs, isInitialized } = initState;
@@ -141,7 +146,8 @@ export default function App() {
 
   // Wrapper to save global config when it changes
   const updateGlobalConfig = (config: GlobalConfig) => {
-    appInitState = { ...appInitState, globalConfig: config };
+    // Mutate in place to keep same object reference
+    appInitState.globalConfig = config;
     appInitListeners.forEach((listener) => {
       listener();
     });
@@ -163,7 +169,8 @@ export default function App() {
       config: createDefaultTabConfig(),
     };
 
-    appInitState = { ...appInitState, tabs: [...tabs, newTab] };
+    // Mutate in place to keep same object reference
+    appInitState.tabs = [...tabs, newTab];
     appInitListeners.forEach((listener) => {
       listener();
     });
@@ -188,7 +195,8 @@ export default function App() {
       // Don't copy result or match - start fresh
     };
 
-    appInitState = { ...appInitState, tabs: [...tabs, newTab] };
+    // Mutate in place to keep same object reference
+    appInitState.tabs = [...tabs, newTab];
     appInitListeners.forEach((listener) => {
       listener();
     });
@@ -203,7 +211,8 @@ export default function App() {
 
     const index = tabs.findIndex((t) => t.id === id);
     const newTabs = tabs.filter((t) => t.id !== id);
-    appInitState = { ...appInitState, tabs: newTabs };
+    // Mutate in place to keep same object reference
+    appInitState.tabs = newTabs;
     appInitListeners.forEach((listener) => {
       listener();
     });
@@ -219,7 +228,8 @@ export default function App() {
 
   const updateTabConfig = (id: string, config: TabConfig) => {
     const newTabs = tabs.map((t) => (t.id === id ? { ...t, config } : t));
-    appInitState = { ...appInitState, tabs: newTabs };
+    // Mutate in place to keep same object reference
+    appInitState.tabs = newTabs;
     appInitListeners.forEach((listener) => {
       listener();
     });
@@ -235,7 +245,8 @@ export default function App() {
 
   const updateTabResult = (id: string, result: GenerationResult) => {
     const newTabs = tabs.map((t) => (t.id === id ? { ...t, result } : t));
-    appInitState = { ...appInitState, tabs: newTabs };
+    // Mutate in place to keep same object reference
+    appInitState.tabs = newTabs;
     appInitListeners.forEach((listener) => {
       listener();
     });
@@ -243,7 +254,8 @@ export default function App() {
 
   const updateTabMatch = (id: string, match: CompletedMatch | ArenaMatch) => {
     const newTabs = tabs.map((t) => (t.id === id ? { ...t, match } : t));
-    appInitState = { ...appInitState, tabs: newTabs };
+    // Mutate in place to keep same object reference
+    appInitState.tabs = newTabs;
     appInitListeners.forEach((listener) => {
       listener();
     });
@@ -251,7 +263,8 @@ export default function App() {
 
   const updateTabName = (id: string, name: string) => {
     const newTabs = tabs.map((t) => (t.id === id ? { ...t, name } : t));
-    appInitState = { ...appInitState, tabs: newTabs };
+    // Mutate in place to keep same object reference
+    appInitState.tabs = newTabs;
     appInitListeners.forEach((listener) => {
       listener();
     });
