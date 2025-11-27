@@ -10,8 +10,14 @@ const historyListeners = new Set<() => void>();
 
 function subscribeToHistory(callback: () => void) {
   historyListeners.add(callback);
+  // Also listen for history-update events
+  const handleHistoryUpdate = () => {
+    void loadHistoryData();
+  };
+  window.addEventListener("history-update", handleHistoryUpdate);
   return () => {
     historyListeners.delete(callback);
+    window.removeEventListener("history-update", handleHistoryUpdate);
   };
 }
 
@@ -23,7 +29,8 @@ function getHistorySnapshot() {
 let historyLoadPromise: Promise<void> | null = null;
 
 function loadHistoryData() {
-  historyLoadPromise ??= (async () => {
+  // Always reload (don't cache the promise) so updates are reflected
+  historyLoadPromise = (async () => {
     historyData = await loadHistory();
     historyListeners.forEach((listener) => {
       listener();
