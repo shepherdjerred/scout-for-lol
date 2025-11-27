@@ -1,7 +1,7 @@
 /**
  * Cost tracking display component
  */
-import { useSyncExternalStore, useRef, useCallback } from "react";
+import { useSyncExternalStore, useState, useEffect } from "react";
 import type { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import type { CostBreakdown } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { formatCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
@@ -10,32 +10,38 @@ type CostDisplayProps = {
   costTracker: CostTracker;
 };
 
-// Store for async cost total data
-const costTotalData: CostBreakdown | null = null;
-const costTotalListeners = new Set<() => void>();
+// External store for cost update events
+let costUpdateCount = 0;
 
-// Subscribe function - must be pure, no side effects during subscribe
-function subscribeToCostTotal(callback: () => void) {
-  costTotalListeners.add(callback);
+function subscribeToCostUpdates(callback: () => void) {
+  const handler = () => {
+    costUpdateCount += 1;
+    callback();
+  };
+  window.addEventListener("cost-update", handler);
   return () => {
-    costTotalListeners.delete(callback);
+    window.removeEventListener("cost-update", handler);
   };
 }
 
-function getCostTotalSnapshot() {
-  return costTotalData;
+function getCostUpdateSnapshot() {
+  return costUpdateCount;
 }
 
 export function CostDisplay({ costTracker }: CostDisplayProps) {
   const count = costTracker.getCount();
-  const costTrackerRef = useRef(costTracker);
-  costTrackerRef.current = costTracker;
+  const [total, setTotal] = useState<CostBreakdown | null>(null);
 
-  // Memoize subscribe function to ensure stable reference for useSyncExternalStore
-  const subscribeToCostTotalCallback = useCallback(subscribeToCostTotal, []);
+  // Subscribe to cost update events - triggers reload
+  const updateTrigger = useSyncExternalStore(subscribeToCostUpdates, getCostUpdateSnapshot, getCostUpdateSnapshot);
 
-  // Subscribe to cost total updates
-  const total = useSyncExternalStore(subscribeToCostTotalCallback, getCostTotalSnapshot, getCostTotalSnapshot);
+  // Load cost data on mount and when update event fires
+  useEffect(() => {
+    void (async () => {
+      const data = await costTracker.getTotal();
+      setTotal(data);
+    })();
+  }, [costTracker, updateTrigger]); // Reload when update event fires
 
   if (!total) {
     return (
