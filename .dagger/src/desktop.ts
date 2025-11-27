@@ -26,6 +26,7 @@ export function getRustTauriContainer(): Container {
         "libayatana-appindicator3-dev",
         "librsvg2-dev",
         "patchelf",
+        "mingw-w64",
         "curl",
         "ca-certificates",
         "gnupg",
@@ -191,7 +192,13 @@ export function buildDesktop(
   const buildScript = target === "windows" ? "build:windows" : "build:linux";
   const targetLabel = target === "windows" ? "Windows (x86_64-pc-windows-gnu)" : "Linux";
 
-  return installDesktopDeps(workspaceSource)
+  let container = installDesktopDeps(workspaceSource);
+
+  if (target === "windows") {
+    container = container.withExec(["rustup", "target", "add", "x86_64-pc-windows-gnu"]);
+  }
+
+  return container
     .withEnvVariable("VERSION", version)
     .withWorkdir("/workspace/packages/desktop")
     .withExec(["sh", "-c", `echo '🏗️  [CI] Building desktop application for ${targetLabel}...'`])
