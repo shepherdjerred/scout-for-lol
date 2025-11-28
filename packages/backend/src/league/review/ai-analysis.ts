@@ -68,7 +68,7 @@ Keep it under 220 words and avoid generic platitudes.`;
 
   try {
     const response = await openaiClient.chat.completions.create({
-      model: "gpt-5.1-mini",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: MATCH_ANALYSIS_SYSTEM_PROMPT },
         {
@@ -109,7 +109,7 @@ Keep it under 220 words and avoid generic platitudes.`;
         response: {
           analysis,
           durationMs: duration,
-          model: "gpt-5.1-mini",
+          model: "gpt-4o-mini",
         },
       });
     } catch (s3Error) {

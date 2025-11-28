@@ -144,7 +144,7 @@ async function generateAIReview(params: {
       laneContext,
       playerMetadata,
       openaiClient,
-      model: "gpt-5",
+      model: "gpt-5.1",
       maxTokens: 1000,
       curatedData,
       playerIndex,
