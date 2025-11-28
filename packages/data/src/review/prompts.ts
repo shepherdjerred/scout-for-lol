@@ -127,6 +127,7 @@ export function replaceTemplateVariables(
     randomBehavior: string;
     matchAnalysis: string;
     timelineSummary: string;
+    queueContext: string;
   },
 ): string {
   return template
@@ -146,5 +147,6 @@ export function replaceTemplateVariables(
     .replaceAll("<FRIENDS CONTEXT>", variables.friendsContext)
     .replaceAll("<RANDOM BEHAVIOR>", variables.randomBehavior)
     .replaceAll("<MATCH ANALYSIS>", variables.matchAnalysis)
-    .replaceAll("<TIMELINE SUMMARY>", variables.timelineSummary);
+    .replaceAll("<TIMELINE SUMMARY>", variables.timelineSummary)
+    .replaceAll("<QUEUE CONTEXT>", variables.queueContext);
 }

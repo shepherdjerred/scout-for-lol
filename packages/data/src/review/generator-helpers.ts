@@ -138,6 +138,20 @@ export function buildFriendsContext(match: CompletedMatch | ArenaMatch, playerIn
   return `Their friends ${friendDescriptions.join(", ")} and ${lastFriend} were also in this match.`;
 }
 
+/**
+ * Build queue context text based on the queue type
+ * Provides additional context for competitive game modes like Clash
+ */
+export function buildQueueContext(queueType: string | undefined): string {
+  if (queueType === "clash") {
+    return "This is a CLASH game - a competitive tournament mode where teams sign up in advance and play bracket-style matches. Clash games are typically more serious and strategic than regular games, with coordinated team compositions and communication. The stakes feel higher and players often try harder.";
+  }
+  if (queueType === "aram clash") {
+    return "This is an ARAM CLASH game - a competitive ARAM tournament where teams play All Random All Mid in bracket-style matches. Like regular Clash, these games are more competitive and coordinated than normal ARAM games, with players taking the random champion assignments more seriously.";
+  }
+  return "";
+}
+
 export function buildPromptVariables(params: {
   matchData: Record<string, string>;
   personality: Personality;
@@ -166,6 +180,7 @@ export function buildPromptVariables(params: {
   randomBehavior: string;
   matchAnalysis: string;
   timelineSummary: string;
+  queueContext: string;
 } {
   const {
     matchData,
@@ -221,6 +236,8 @@ export function buildPromptVariables(params: {
         ? curatedData.timelineSummary.trim()
         : "No timeline summary available for this match.";
 
+  const queueContext = buildQueueContext(match.queueType);
+
   return {
     reviewerName,
     reviewerPersonality,
@@ -239,6 +256,7 @@ export function buildPromptVariables(params: {
     randomBehavior,
     matchAnalysis: matchAnalysisText,
     timelineSummary: timelineSummaryText,
+    queueContext,
   };
 }
 
