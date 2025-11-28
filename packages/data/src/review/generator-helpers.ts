@@ -108,7 +108,25 @@ export function getOrdinalSuffix(num: number): string {
  */
 export function buildFriendsContext(match: CompletedMatch | ArenaMatch, playerIndex: number): string {
   const allPlayers = match.players;
+  const totalTrackedPlayers = allPlayers.length;
   const friends = allPlayers.filter((_, index) => index !== playerIndex);
+  const queueType = match.queueType;
+
+  // Handle special flex queue cases
+  if (queueType === "flex") {
+    return buildFlexQueueContext(friends, totalTrackedPlayers);
+  }
+
+  // Handle solo/duo queue case
+  if (queueType === "solo" && totalTrackedPlayers === 2 && friends.length === 1) {
+    const duoPartner = friends[0];
+    if (duoPartner) {
+      const alias = duoPartner.playerConfig.alias;
+      const champion = duoPartner.champion.championName;
+      const lane = "lane" in duoPartner && duoPartner.lane ? ` in ${duoPartner.lane}` : "";
+      return `This is a duo queue game. Their duo partner is ${alias} (playing ${champion}${lane}).`;
+    }
+  }
 
   if (friends.length === 0) {
     return "";
@@ -136,6 +154,79 @@ export function buildFriendsContext(match: CompletedMatch | ArenaMatch, playerIn
     return "";
   }
   return `Their friends ${friendDescriptions.join(", ")} and ${lastFriend} were also in this match.`;
+}
+
+/**
+ * Build context for flex queue matches with special messaging based on party size
+ */
+function buildFlexQueueContext(
+  friends: { playerConfig: { alias: string }; champion: { championName: string }; lane?: string | undefined }[],
+  totalTrackedPlayers: number,
+): string {
+  const friendDescriptions = friends.map((friend) => {
+    const alias = friend.playerConfig.alias;
+    const champion = friend.champion.championName;
+    const lane = "lane" in friend && friend.lane ? ` in ${friend.lane}` : "";
+    return `${alias} (playing ${champion}${lane})`;
+  });
+
+  // Solo queuing for flex (unusual behavior)
+  if (totalTrackedPlayers === 1) {
+    return "This player queued for flex queue alone, which is unusual. Most people queue flex with friends.";
+  }
+
+  // Full premade team (5 players)
+  if (totalTrackedPlayers === 5) {
+    const lastFriend = friendDescriptions.pop();
+    if (!lastFriend) {
+      return "";
+    }
+    if (friendDescriptions.length === 0) {
+      return `This is a full 5-player premade team. Their teammate is ${lastFriend}.`;
+    }
+    return `This is a full 5-player premade team. Their teammates are ${friendDescriptions.join(", ")} and ${lastFriend}.`;
+  }
+
+  // 4 friends (likely 4-stack with 1 random)
+  if (totalTrackedPlayers === 4) {
+    const lastFriend = friendDescriptions.pop();
+    if (!lastFriend) {
+      return "";
+    }
+    if (friendDescriptions.length === 0) {
+      return `This is a 4-player premade group with one random matchmade player. Their teammates are ${lastFriend}.`;
+    }
+    return `This is a 4-player premade group with one random matchmade player. Their teammates are ${friendDescriptions.join(", ")} and ${lastFriend}.`;
+  }
+
+  // Other flex cases (2-3 players)
+  if (friends.length === 0) {
+    return "";
+  }
+
+  if (friends.length === 1 && friendDescriptions[0]) {
+    return `Their friend ${friendDescriptions[0]} was also in this flex queue match.`;
+  }
+
+  const lastFriend = friendDescriptions.pop();
+  if (!lastFriend) {
+    return "";
+  }
+  return `Their friends ${friendDescriptions.join(", ")} and ${lastFriend} were also in this flex queue match.`;
+}
+
+/**
+ * Build queue context text based on the queue type
+ * Provides additional context for competitive game modes like Clash
+ */
+export function buildQueueContext(queueType: string | undefined): string {
+  if (queueType === "clash") {
+    return "This is a CLASH game - a competitive tournament mode where teams sign up in advance and play bracket-style matches. Clash games are typically more serious and strategic than regular games, with coordinated team compositions and communication. The stakes feel higher and players often try harder.";
+  }
+  if (queueType === "aram clash") {
+    return "This is an ARAM CLASH game - a competitive ARAM tournament where teams play All Random All Mid in bracket-style matches. Like regular Clash, these games are more competitive and coordinated than normal ARAM games, with players taking the random champion assignments more seriously.";
+  }
+  return "";
 }
 
 export function buildPromptVariables(params: {
@@ -166,6 +257,7 @@ export function buildPromptVariables(params: {
   randomBehavior: string;
   matchAnalysis: string;
   timelineSummary: string;
+  queueContext: string;
 } {
   const {
     matchData,
@@ -221,6 +313,8 @@ export function buildPromptVariables(params: {
         ? curatedData.timelineSummary.trim()
         : "No timeline summary available for this match.";
 
+  const queueContext = buildQueueContext(match.queueType);
+
   return {
     reviewerName,
     reviewerPersonality,
@@ -239,6 +333,7 @@ export function buildPromptVariables(params: {
     randomBehavior,
     matchAnalysis: matchAnalysisText,
     timelineSummary: timelineSummaryText,
+    queueContext,
   };
 }
 

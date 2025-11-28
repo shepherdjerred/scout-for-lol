@@ -6,6 +6,7 @@ import {
   type CompletedMatch,
   type MatchId,
   selectRandomStyleAndTheme,
+  selectRandomImagePrompts,
   curateMatchData,
   type CuratedMatchData,
   type ReviewTextMetadata,
@@ -76,6 +77,7 @@ type ArtGenerationParams = {
   openaiClient: OpenAI;
   match: CompletedMatch | ArenaMatch;
   curatedData?: CuratedMatchData;
+  personalityImageHints?: string[];
 };
 
 type ArtGenerationResult = {
@@ -84,8 +86,18 @@ type ArtGenerationResult = {
 };
 
 async function generateArtAndImage(params: ArtGenerationParams): Promise<ArtGenerationResult> {
-  const { reviewText, style, themes, matchId, queueType, trackedPlayerAliases, openaiClient, match, curatedData } =
-    params;
+  const {
+    reviewText,
+    style,
+    themes,
+    matchId,
+    queueType,
+    trackedPlayerAliases,
+    openaiClient,
+    match,
+    curatedData,
+    personalityImageHints,
+  } = params;
 
   const artPrompt = await generateArtPromptFromReview({
     reviewText,
@@ -95,6 +107,7 @@ async function generateArtAndImage(params: ArtGenerationParams): Promise<ArtGene
     queueType,
     trackedPlayerAliases,
     openaiClient,
+    ...(personalityImageHints !== undefined && { personalityImageHints }),
   });
 
   const reviewImage = await generateReviewImageBackend({
@@ -421,6 +434,8 @@ export async function generateMatchReview(
   await saveReviewDataToS3({ matchId, reviewText, textMetadata, queueType, trackedPlayerAliases });
 
   const { style, themes } = selectRandomStyleAndTheme();
+  const personalityImageHints = selectRandomImagePrompts(personality.metadata.image);
+
   const fullMetadata: ReviewMetadata = {
     ...metadata,
     style,
@@ -435,6 +450,7 @@ export async function generateMatchReview(
     queueType,
     trackedPlayerAliases,
     openaiClient,
+    personalityImageHints,
     match,
     ...(curatedData !== undefined && { curatedData }),
   });
