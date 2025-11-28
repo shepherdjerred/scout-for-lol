@@ -1,11 +1,11 @@
-import type { CompetitionQueueType, QueueType, MatchDto, ParticipantDto } from "@scout-for-lol/data";
+import type { CompetitionQueueType, QueueType, RawMatch, RawParticipant } from "@scout-for-lol/data";
 import { parseQueueType } from "@scout-for-lol/data";
 import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";
 
 /**
  * Check if a player participated in a match based on their account PUUIDs
  */
-export function isPlayerInMatch(player: PlayerWithAccounts, match: MatchDto): boolean {
+export function isPlayerInMatch(player: PlayerWithAccounts, match: RawMatch): boolean {
   const playerPuuids = player.accounts.map((account) => account.puuid);
   return match.metadata.participants.some((puuid) => playerPuuids.includes(puuid));
 }
@@ -13,7 +13,7 @@ export function isPlayerInMatch(player: PlayerWithAccounts, match: MatchDto): bo
 /**
  * Check if a match belongs to the specified queue type
  */
-export function matchesQueue(match: MatchDto, queueFilter: CompetitionQueueType): boolean {
+export function matchesQueue(match: RawMatch, queueFilter: CompetitionQueueType): boolean {
   const queueType = parseQueueType(match.info.queueId);
 
   // Handle special queue filters
@@ -49,7 +49,7 @@ export function matchesQueue(match: MatchDto, queueFilter: CompetitionQueueType)
  * Get the participant data for a player in a match
  * Returns undefined if player not found
  */
-export function getPlayerParticipant(player: PlayerWithAccounts, match: MatchDto): ParticipantDto | undefined {
+export function getPlayerParticipant(player: PlayerWithAccounts, match: RawMatch): RawParticipant | undefined {
   const playerPuuids = player.accounts.map((account) => account.puuid);
   return match.info.participants.find((participant) => playerPuuids.includes(participant.puuid));
 }
@@ -57,6 +57,6 @@ export function getPlayerParticipant(player: PlayerWithAccounts, match: MatchDto
 /**
  * Check if a participant won the match
  */
-export function isWin(participant: ParticipantDto): boolean {
+export function isWin(participant: RawParticipant): boolean {
   return participant.win;
 }

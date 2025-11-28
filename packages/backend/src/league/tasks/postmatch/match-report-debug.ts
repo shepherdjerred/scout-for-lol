@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { PlayerConfigEntry, MatchId, MatchDto } from "@scout-for-lol/data";
+import type { PlayerConfigEntry, MatchId, RawMatch } from "@scout-for-lol/data";
 
 /**
  * Log detailed error information for debugging
@@ -7,7 +7,7 @@ import type { PlayerConfigEntry, MatchId, MatchDto } from "@scout-for-lol/data";
 export function logErrorDetails(
   error: unknown,
   matchId: MatchId,
-  matchData: MatchDto,
+  matchData: RawMatch,
   trackedPlayers: PlayerConfigEntry[],
 ): void {
   // Extract error details using Zod validation

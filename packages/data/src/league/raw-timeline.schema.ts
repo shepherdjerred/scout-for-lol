@@ -9,9 +9,9 @@ import { z } from "zod";
  */
 
 /**
- * Position DTO - X/Y coordinates on the map
+ * Raw Timeline Position - X/Y coordinates on the map
  */
-export const TimelinePositionDtoSchema = z.object({
+export const RawTimelinePositionSchema = z.object({
   x: z.number(),
   y: z.number(),
 });
@@ -19,7 +19,7 @@ export const TimelinePositionDtoSchema = z.object({
 /**
  * Champion stats at a specific frame - subset of relevant stats
  */
-export const TimelineChampionStatsSchema = z
+export const RawTimelineChampionStatsSchema = z
   .object({
     abilityHaste: z.number().optional(),
     abilityPower: z.number().optional(),
@@ -52,7 +52,7 @@ export const TimelineChampionStatsSchema = z
 /**
  * Damage stats for a participant at a specific frame
  */
-export const TimelineDamageStatsSchema = z
+export const RawTimelineDamageStatsSchema = z
   .object({
     magicDamageDone: z.number().optional(),
     magicDamageDoneToChampions: z.number().optional(),
@@ -70,19 +70,19 @@ export const TimelineDamageStatsSchema = z
   .loose();
 
 /**
- * Participant frame DTO - state of a participant at a specific frame
+ * Raw Timeline Participant Frame - state of a participant at a specific frame
  */
-export const TimelineParticipantFrameDtoSchema = z
+export const RawTimelineParticipantFrameSchema = z
   .object({
-    championStats: TimelineChampionStatsSchema.optional(),
+    championStats: RawTimelineChampionStatsSchema.optional(),
     currentGold: z.number(),
-    damageStats: TimelineDamageStatsSchema.optional(),
+    damageStats: RawTimelineDamageStatsSchema.optional(),
     goldPerSecond: z.number(),
     jungleMinionsKilled: z.number(),
     level: z.number(),
     minionsKilled: z.number(),
     participantId: z.number(),
-    position: TimelinePositionDtoSchema,
+    position: RawTimelinePositionSchema,
     timeEnemySpentControlled: z.number(),
     totalGold: z.number(),
     xp: z.number(),
@@ -92,7 +92,7 @@ export const TimelineParticipantFrameDtoSchema = z
 /**
  * Victim damage entry for kill events
  */
-export const TimelineVictimDamageSchema = z
+export const RawTimelineVictimDamageSchema = z
   .object({
     basic: z.boolean(),
     magicDamage: z.number(),
@@ -107,10 +107,10 @@ export const TimelineVictimDamageSchema = z
   .loose();
 
 /**
- * Event DTO - represents an event that occurred during the match
+ * Raw Timeline Event - represents an event that occurred during the match
  * Events have varying structures depending on their type
  */
-export const TimelineEventDtoSchema = z
+export const RawTimelineEventSchema = z
   .object({
     // Common fields
     timestamp: z.number(),
@@ -120,12 +120,12 @@ export const TimelineEventDtoSchema = z
     killerId: z.number().optional(),
     victimId: z.number().optional(),
     assistingParticipantIds: z.array(z.number()).optional(),
-    position: TimelinePositionDtoSchema.optional(),
+    position: RawTimelinePositionSchema.optional(),
     bounty: z.number().optional(),
     killStreakLength: z.number().optional(),
     shutdownBounty: z.number().optional(),
-    victimDamageDealt: z.array(TimelineVictimDamageSchema).optional(),
-    victimDamageReceived: z.array(TimelineVictimDamageSchema).optional(),
+    victimDamageDealt: z.array(RawTimelineVictimDamageSchema).optional(),
+    victimDamageReceived: z.array(RawTimelineVictimDamageSchema).optional(),
 
     // Item event fields
     participantId: z.number().optional(),
@@ -168,18 +168,18 @@ export const TimelineEventDtoSchema = z
   .loose();
 
 /**
- * Frame DTO - game state at a specific timestamp
+ * Raw Timeline Frame - game state at a specific timestamp
  */
-export const TimelineFrameDtoSchema = z.object({
-  events: z.array(TimelineEventDtoSchema),
-  participantFrames: z.record(z.string(), TimelineParticipantFrameDtoSchema),
+export const RawTimelineFrameSchema = z.object({
+  events: z.array(RawTimelineEventSchema),
+  participantFrames: z.record(z.string(), RawTimelineParticipantFrameSchema),
   timestamp: z.number(),
 });
 
 /**
  * Timeline participant info
  */
-export const TimelineParticipantInfoSchema = z
+export const RawTimelineParticipantInfoSchema = z
   .object({
     participantId: z.number(),
     puuid: z.string(),
@@ -187,40 +187,40 @@ export const TimelineParticipantInfoSchema = z
   .loose();
 
 /**
- * Timeline Info DTO - main timeline information
+ * Raw Timeline Info - main timeline information
  */
-export const TimelineInfoDtoSchema = z
+export const RawTimelineInfoSchema = z
   .object({
     endOfGameResult: z.string().optional(),
     frameInterval: z.number(),
-    frames: z.array(TimelineFrameDtoSchema),
+    frames: z.array(RawTimelineFrameSchema),
     gameId: z.number(),
-    participants: z.array(TimelineParticipantInfoSchema),
+    participants: z.array(RawTimelineParticipantInfoSchema),
   })
   .loose();
 
 /**
- * Timeline Metadata DTO
+ * Raw Timeline Metadata
  */
-export const TimelineMetadataDtoSchema = z.object({
+export const RawTimelineMetadataSchema = z.object({
   dataVersion: z.string(),
   matchId: z.string(),
   participants: z.array(z.string()),
 });
 
 /**
- * Main TimelineDto schema - represents a match timeline from Riot Games Match V5 API
+ * Main RawTimeline schema - represents a match timeline from Riot Games Match V5 API
  */
-export const TimelineDtoSchema = z.object({
-  metadata: TimelineMetadataDtoSchema,
-  info: TimelineInfoDtoSchema,
+export const RawTimelineSchema = z.object({
+  metadata: RawTimelineMetadataSchema,
+  info: RawTimelineInfoSchema,
 });
 
 // Export types
-export type TimelineDto = z.infer<typeof TimelineDtoSchema>;
-export type TimelineInfoDto = z.infer<typeof TimelineInfoDtoSchema>;
-export type TimelineMetadataDto = z.infer<typeof TimelineMetadataDtoSchema>;
-export type TimelineFrameDto = z.infer<typeof TimelineFrameDtoSchema>;
-export type TimelineEventDto = z.infer<typeof TimelineEventDtoSchema>;
-export type TimelineParticipantFrameDto = z.infer<typeof TimelineParticipantFrameDtoSchema>;
-export type TimelinePositionDto = z.infer<typeof TimelinePositionDtoSchema>;
+export type RawTimeline = z.infer<typeof RawTimelineSchema>;
+export type RawTimelineInfo = z.infer<typeof RawTimelineInfoSchema>;
+export type RawTimelineMetadata = z.infer<typeof RawTimelineMetadataSchema>;
+export type RawTimelineFrame = z.infer<typeof RawTimelineFrameSchema>;
+export type RawTimelineEvent = z.infer<typeof RawTimelineEventSchema>;
+export type RawTimelineParticipantFrame = z.infer<typeof RawTimelineParticipantFrameSchema>;
+export type RawTimelinePosition = z.infer<typeof RawTimelinePositionSchema>;

@@ -73,7 +73,7 @@ export async function summarizeTimeline(
     try {
       await saveTimelineSummaryToS3({
         matchId,
-        timelineDto: curatedTimeline,
+        rawTimeline: curatedTimeline,
         prompt: TIMELINE_SUMMARY_PROMPT,
         summary,
         durationMs: duration,

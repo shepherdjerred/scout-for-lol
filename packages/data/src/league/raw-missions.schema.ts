@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 /**
- * Missions DTO - Arena games only
+ * Raw Missions - Arena games only, from Riot API
  * Values are only set in arena games
  */
-export const MissionsDtoSchema = z
+export const RawMissionsSchema = z
   .object({
     playerScore0: z.number(),
     playerScore1: z.number(),
@@ -21,4 +21,4 @@ export const MissionsDtoSchema = z
   })
   .strict();
 
-export type MissionsDto = z.infer<typeof MissionsDtoSchema>;
+export type RawMissions = z.infer<typeof RawMissionsSchema>;

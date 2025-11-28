@@ -1,5 +1,5 @@
-import type { Ranks, PlayerConfigEntry, Rank, SummonerLeagueDto } from "@scout-for-lol/data";
-import { parseDivision, TierSchema, SummonerLeagueDtoSchema } from "@scout-for-lol/data";
+import type { Ranks, PlayerConfigEntry, Rank, RawSummonerLeague } from "@scout-for-lol/data";
+import { parseDivision, TierSchema, RawSummonerLeagueSchema } from "@scout-for-lol/data";
 import { api } from "@scout-for-lol/backend/league/api/api";
 import { filter, first, pipe } from "remeda";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region";
@@ -9,16 +9,16 @@ const solo = "RANKED_SOLO_5x5";
 const flex = "RANKED_FLEX_SR";
 export type RankedQueueTypes = typeof solo | typeof flex;
 
-function getDto(dto: SummonerLeagueDto[], queue: RankedQueueTypes): SummonerLeagueDto | undefined {
+function getRawEntry(entries: RawSummonerLeague[], queue: RankedQueueTypes): RawSummonerLeague | undefined {
   return pipe(
-    dto,
-    filter((entry: SummonerLeagueDto) => entry.queueType === queue),
+    entries,
+    filter((entry: RawSummonerLeague) => entry.queueType === queue),
     first(),
   );
 }
 
-export function getRank(dto: SummonerLeagueDto[], queue: RankedQueueTypes): Rank | undefined {
-  const entry = getDto(dto, queue);
+export function getRank(entries: RawSummonerLeague[], queue: RankedQueueTypes): Rank | undefined {
+  const entry = getRawEntry(entries, queue);
   if (entry == undefined) {
     return undefined;
   }
@@ -43,7 +43,7 @@ export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
     mapRegionToEnum(player.league.leagueAccount.region),
   );
 
-  const parseResult = z.array(SummonerLeagueDtoSchema).safeParse(response.response);
+  const parseResult = z.array(RawSummonerLeagueSchema).safeParse(response.response);
   if (!parseResult.success) {
     throw parseResult.error;
   }

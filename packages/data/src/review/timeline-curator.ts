@@ -1,4 +1,4 @@
-import type { MatchDto, TimelineDto, TimelineEventDto, TimelineFrameDto } from "@scout-for-lol/data";
+import type { RawMatch, RawTimeline, RawTimelineEvent, RawTimelineFrame } from "@scout-for-lol/data";
 import type {
   CuratedTimeline,
   CuratedTimelineEvent,
@@ -11,11 +11,11 @@ type ParticipantMapping = Map<number, ParticipantInfo>;
 /**
  * Build a mapping from participant ID to champion name and team
  */
-function buildParticipantMapping(matchDto: MatchDto): ParticipantMapping {
+function buildParticipantMapping(rawMatch: RawMatch): ParticipantMapping {
   const mapping = new Map<number, ParticipantInfo>();
 
-  for (const participant of matchDto.info.participants) {
-    const participantId = matchDto.info.participants.findIndex((p) => p.puuid === participant.puuid) + 1;
+  for (const participant of rawMatch.info.participants) {
+    const participantId = rawMatch.info.participants.findIndex((p) => p.puuid === participant.puuid) + 1;
     mapping.set(participantId, {
       championName: participant.championName,
       team: participant.teamId === 100 ? "Blue" : "Red",
@@ -28,7 +28,7 @@ function buildParticipantMapping(matchDto: MatchDto): ParticipantMapping {
 /**
  * Process a champion kill event
  */
-function processChampionKill(event: TimelineEventDto, participantMapping: ParticipantMapping): CuratedTimelineEvent {
+function processChampionKill(event: RawTimelineEvent, participantMapping: ParticipantMapping): CuratedTimelineEvent {
   const minuteMark = Math.floor(event.timestamp / 60000);
   const killerInfo = event.killerId ? participantMapping.get(event.killerId) : undefined;
   const victimInfo = event.victimId ? participantMapping.get(event.victimId) : undefined;
@@ -52,7 +52,7 @@ function processChampionKill(event: TimelineEventDto, participantMapping: Partic
 /**
  * Process an elite monster kill event (dragon, baron, herald)
  */
-function processEliteMonsterKill(event: TimelineEventDto): {
+function processEliteMonsterKill(event: RawTimelineEvent): {
   keyEvent: CuratedTimelineEvent;
   dragonKill?: { team: "Blue" | "Red"; type: string; time: number };
   baronKill?: { team: "Blue" | "Red"; time: number };
@@ -107,7 +107,7 @@ function processEliteMonsterKill(event: TimelineEventDto): {
 /**
  * Process a building kill event (towers, inhibitors)
  */
-function processBuildingKill(event: TimelineEventDto): CuratedTimelineEvent {
+function processBuildingKill(event: RawTimelineEvent): CuratedTimelineEvent {
   const minuteMark = Math.floor(event.timestamp / 60000);
   // teamId is the team that LOST the building
   const team: "Blue" | "Red" = event.teamId === 100 ? "Red" : "Blue";
@@ -127,7 +127,7 @@ function processBuildingKill(event: TimelineEventDto): CuratedTimelineEvent {
  * Create a snapshot of participant stats at a specific frame
  */
 function createFrameSnapshot(
-  frame: TimelineFrameDto,
+  frame: RawTimelineFrame,
   minute: number,
   participantMapping: ParticipantMapping,
 ): { participants: CuratedParticipantSnapshot[]; goldDifference: number } | null {
@@ -180,8 +180,8 @@ function createFrameSnapshot(
  * Extracts key events (kills, objectives, towers) and creates snapshots
  * at regular intervals for tracking gold leads and game progression.
  */
-export function curateTimelineData(timelineDto: TimelineDto, matchDto: MatchDto): CuratedTimeline {
-  const participantMapping = buildParticipantMapping(matchDto);
+export function curateTimelineData(rawTimeline: RawTimeline, rawMatch: RawMatch): CuratedTimeline {
+  const participantMapping = buildParticipantMapping(rawMatch);
   const keyEvents: CuratedTimelineEvent[] = [];
   const dragonsKilled: { team: "Blue" | "Red"; type: string; time: number }[] = [];
   const baronsKilled: { team: "Blue" | "Red"; time: number }[] = [];
@@ -191,7 +191,7 @@ export function curateTimelineData(timelineDto: TimelineDto, matchDto: MatchDto)
   let totalKills = 0;
 
   // Process all frames for events
-  for (const frame of timelineDto.info.frames) {
+  for (const frame of rawTimeline.info.frames) {
     for (const event of frame.events) {
       if (event.type === "CHAMPION_KILL") {
         totalKills++;
@@ -233,8 +233,8 @@ export function curateTimelineData(timelineDto: TimelineDto, matchDto: MatchDto)
   const snapshots: CuratedTimeline["snapshots"] = [];
 
   for (const minute of snapshotIntervals) {
-    const frameIndex = Math.min(minute, timelineDto.info.frames.length - 1);
-    const frame = timelineDto.info.frames[frameIndex];
+    const frameIndex = Math.min(minute, rawTimeline.info.frames.length - 1);
+    const frame = rawTimeline.info.frames[frameIndex];
     if (!frame) {
       continue;
     }

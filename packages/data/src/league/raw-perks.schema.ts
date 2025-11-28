@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DescriptionSchema } from "./enums.js";
 
-export const PerkStyleSelectionDtoSchema = z
+export const RawPerkStyleSelectionSchema = z
   .object({
     perk: z.number(),
     var1: z.number(),
@@ -10,15 +10,15 @@ export const PerkStyleSelectionDtoSchema = z
   })
   .strict();
 
-export const PerkStyleDtoSchema = z
+export const RawPerkStyleSchema = z
   .object({
     description: DescriptionSchema,
-    selections: z.array(PerkStyleSelectionDtoSchema),
+    selections: z.array(RawPerkStyleSelectionSchema),
     style: z.number(),
   })
   .strict();
 
-export const PerkStatsDtoSchema = z
+export const RawPerkStatsSchema = z
   .object({
     defense: z.number(),
     flex: z.number(),
@@ -26,11 +26,11 @@ export const PerkStatsDtoSchema = z
   })
   .strict();
 
-export const PerksDtoSchema = z
+export const RawPerksSchema = z
   .object({
-    statPerks: PerkStatsDtoSchema,
-    styles: z.array(PerkStyleDtoSchema),
+    statPerks: RawPerkStatsSchema,
+    styles: z.array(RawPerkStyleSchema),
   })
   .strict();
 
-export type PerksDto = z.infer<typeof PerksDtoSchema>;
+export type RawPerks = z.infer<typeof RawPerksSchema>;
