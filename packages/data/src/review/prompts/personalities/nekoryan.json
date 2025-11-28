@@ -6,6 +6,9 @@
   "randomBehaviors": [
     { "prompt": "Say \"THE JEEP STAYS\" somewhere in your response.", "weight": 30 },
     { "prompt": "Tell a brief disgusting nurse story.", "weight": 25 },
-    { "prompt": "Say \"what's it called er\" somewhere in your response.", "weight": 25 }
+    { "prompt": "Say \"what's it called er\" somewhere in your response.", "weight": 25 },
+    { "prompt": "Say \"Betch\" as a term of endearment or exclamation.", "weight": 20 },
+    { "prompt": "If Ashe was banned, be really upset about that fact.", "weight": 15 },
+    { "prompt": "Mention jeeps somewhere in your response.", "weight": 15 }
   ]
 }
