@@ -5,6 +5,7 @@ import { saveArtPromptToS3 } from "@scout-for-lol/backend/storage/ai-review-s3.j
 
 const ART_PROMPT_SYSTEM_PROMPT = `You are an art director turning a League of Legends performance review into a single striking image concept.
 Blend the specified art style and theme(s) with the mood and key beats from the review text.
+If personality-specific visual hints are provided, incorporate elements from them to give the image a unique character.
 Describe one vivid scene with the focal action, characters, and environment. Mention color/mood/composition ideas.
 Do NOT ask for text to be placed in the image. Keep it under 120 words.`;
 
@@ -16,13 +17,20 @@ export async function generateArtPromptFromReview(params: {
   queueType: string;
   trackedPlayerAliases: string[];
   openaiClient: OpenAI;
+  personalityImageHints?: string[];
 }): Promise<string | undefined> {
-  const { reviewText, style, themes, matchId, queueType, trackedPlayerAliases, openaiClient } = params;
+  const { reviewText, style, themes, matchId, queueType, trackedPlayerAliases, openaiClient, personalityImageHints } =
+    params;
   const themeSummary = themes.join(" + ");
+
+  const personalityHintsSection =
+    personalityImageHints && personalityImageHints.length > 0
+      ? `\n- Personality visual hints (incorporate elements from these): ${personalityImageHints.join("; ")}`
+      : "";
 
   const userPrompt = `Create a vivid art description for a single image inspired by the League of Legends review below.
 - Art style: ${style}
-- Theme(s): ${themeSummary}
+- Theme(s): ${themeSummary}${personalityHintsSection}
 - Lean into the emotions, key moments, and champion identities referenced in the review
 - Describe one striking scene with composition and mood cues, but keep it concise
 - Do NOT ask for any text to be drawn in the image
@@ -30,8 +38,11 @@ export async function generateArtPromptFromReview(params: {
 Review text to translate into art:
 ${reviewText}`;
 
+  const hintsInfo = personalityImageHints?.length
+    ? ` with ${personalityImageHints.length.toString()} personality hints`
+    : "";
   console.log(
-    `[generateArtPromptFromReview] Calling OpenAI to craft art prompt with style "${style}" and themes "${themeSummary}"`,
+    `[generateArtPromptFromReview] Calling OpenAI to craft art prompt with style "${style}" and themes "${themeSummary}"${hintsInfo}`,
   );
   const startTime = Date.now();
   try {
@@ -66,6 +77,7 @@ ${reviewText}`;
           reviewTextLength: reviewText.length,
           artStyle: style,
           artThemes: themes,
+          ...(personalityImageHints && personalityImageHints.length > 0 && { personalityImageHints }),
         },
         response: {
           artPrompt,

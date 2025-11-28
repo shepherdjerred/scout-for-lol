@@ -1,6 +1,6 @@
 //! Discord integration module for posting game events and playing sounds in voice chat
 
-use log::{error, info};
+use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use serenity::all::{ChannelId, GatewayIntents, GuildId, Ready};
 use serenity::async_trait;
@@ -11,8 +11,11 @@ use songbird::{SerenityInit, Songbird, SongbirdKey};
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::PathBuf;
+use std::process::Stdio;
 use std::sync::Arc;
 use tauri::Emitter;
+use tokio::process::Command as AsyncCommand;
+use tokio::sync::RwLock;
 use tokio::time::{timeout, Duration};
 
 // Bundled base beep sound (packed at compile time)
@@ -52,6 +55,151 @@ fn ensure_base_beep_file() -> PathBuf {
         }
     }
     temp_path
+}
+
+/// Returns the cache directory for YouTube audio files
+fn get_youtube_cache_dir() -> PathBuf {
+    let cache_dir = dirs::cache_dir()
+        .unwrap_or_else(std::env::temp_dir)
+        .join("scout-for-lol")
+        .join("youtube-audio");
+
+    if !cache_dir.exists() {
+        if let Err(err) = std::fs::create_dir_all(&cache_dir) {
+            error!("Failed to create YouTube cache directory: {}", err);
+        } else {
+            info!("Created YouTube cache directory at {}", cache_dir.display());
+        }
+    }
+
+    cache_dir
+}
+
+/// Generates a unique filename for a YouTube URL by hashing it
+fn youtube_url_to_cache_filename(url: &str) -> String {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+
+    let mut hasher = DefaultHasher::new();
+    url.hash(&mut hasher);
+    let hash = hasher.finish();
+
+    format!("{hash:016x}.opus")
+}
+
+/// Returns the full cache path for a YouTube URL
+fn get_youtube_cache_path(url: &str) -> PathBuf {
+    get_youtube_cache_dir().join(youtube_url_to_cache_filename(url))
+}
+
+/// Checks if a YouTube URL is already cached
+fn is_youtube_cached(url: &str) -> bool {
+    let cache_path = get_youtube_cache_path(url);
+    cache_path.exists() && cache_path.metadata().is_ok_and(|m| m.len() > 0)
+}
+
+/// Downloads a YouTube URL to the cache using yt-dlp
+/// Returns the path to the cached file on success
+async fn download_youtube_to_cache(url: &str) -> Result<PathBuf, String> {
+    let cache_path = get_youtube_cache_path(url);
+
+    // Check if already cached
+    if is_youtube_cached(url) {
+        info!("YouTube audio already cached: {}", cache_path.display());
+        return Ok(cache_path);
+    }
+
+    info!(
+        "Downloading YouTube audio to cache: {} -> {}",
+        url,
+        cache_path.display()
+    );
+
+    // Use yt-dlp to download audio only in opus format
+    // The -x flag extracts audio, --audio-format opus converts to opus
+    // We use a temp file first to avoid partial downloads
+    let temp_path = cache_path.with_extension("opus.tmp");
+
+    let output = AsyncCommand::new("yt-dlp")
+        .arg("-x")
+        .arg("--audio-format")
+        .arg("opus")
+        .arg("--audio-quality")
+        .arg("0") // Best quality
+        .arg("-o")
+        .arg(&temp_path)
+        .arg("--no-playlist")
+        .arg("--no-warnings")
+        .arg(url)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .output()
+        .await
+        .map_err(|e| format!("Failed to run yt-dlp: {e}"))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        error!("yt-dlp failed: {}", stderr);
+        // Clean up temp file if it exists
+        let _ = std::fs::remove_file(&temp_path);
+        return Err(format!("yt-dlp failed: {stderr}"));
+    }
+
+    // Move temp file to final location
+    if let Err(err) = std::fs::rename(&temp_path, &cache_path) {
+        error!("Failed to move cached file: {}", err);
+        let _ = std::fs::remove_file(&temp_path);
+        return Err(format!("Failed to finalize cached file: {err}"));
+    }
+
+    info!(
+        "Successfully cached YouTube audio: {}",
+        cache_path.display()
+    );
+    Ok(cache_path)
+}
+
+/// Shared cache state for tracking ongoing downloads
+#[derive(Debug, Default)]
+pub struct YouTubeCacheState {
+    /// URLs currently being downloaded (to avoid duplicate downloads)
+    downloading: HashMap<String, ()>,
+    /// URLs that have been successfully cached (URL -> file path)
+    cached: HashMap<String, PathBuf>,
+}
+
+impl YouTubeCacheState {
+    /// Creates a new cache state
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Checks if a URL is currently being downloaded
+    pub fn is_downloading(&self, url: &str) -> bool {
+        self.downloading.contains_key(url)
+    }
+
+    /// Marks a URL as being downloaded
+    pub fn start_download(&mut self, url: &str) {
+        self.downloading.insert(url.to_string(), ());
+    }
+
+    /// Marks a download as complete
+    pub fn finish_download(&mut self, url: &str, path: PathBuf) {
+        self.downloading.remove(url);
+        self.cached.insert(url.to_string(), path);
+    }
+
+    /// Marks a download as failed
+    pub fn fail_download(&mut self, url: &str) {
+        self.downloading.remove(url);
+    }
+
+    /// Gets the cached path for a URL if available
+    pub fn get_cached_path(&self, url: &str) -> Option<&PathBuf> {
+        self.cached.get(url)
+    }
 }
 
 fn write_sound_log(message: &str) {
@@ -222,6 +370,8 @@ pub struct DiscordClient {
     songbird: Option<Arc<Songbird>>,
     sound_pack: SoundPack,
     event_overrides: HashMap<String, SoundCue>,
+    /// Shared cache state for YouTube audio downloads
+    youtube_cache: Arc<RwLock<YouTubeCacheState>>,
 }
 
 impl DiscordClient {
@@ -241,6 +391,8 @@ impl DiscordClient {
             .build()
             .map_err(|e| format!("Failed to create HTTP client: {e}"))?;
 
+        let youtube_cache = Arc::new(RwLock::new(YouTubeCacheState::new()));
+
         let discord_client = Self {
             token: token.clone(),
             channel_id: channel_id.clone(),
@@ -255,6 +407,7 @@ impl DiscordClient {
                 }
             },
             event_overrides: HashMap::new(),
+            youtube_cache,
         };
 
         // Test the text connection up front with a timeout so the UI doesn't hang
@@ -263,7 +416,7 @@ impl DiscordClient {
             .map_err(|_| "Discord API connection timed out".to_string())??;
 
         let mut client = discord_client;
-        client.apply_event_overrides(event_overrides);
+        client.apply_event_overrides(event_overrides).await;
         client.songbird = timeout(
             Duration::from_secs(8),
             client.build_voice_client(token.clone()),
@@ -310,17 +463,71 @@ impl DiscordClient {
         }
     }
 
-    fn apply_event_overrides(&mut self, overrides: Option<HashMap<String, String>>) {
+    async fn apply_event_overrides(&mut self, overrides: Option<HashMap<String, String>>) {
         if let Some(map) = overrides {
+            let mut youtube_urls: Vec<String> = Vec::new();
+
             for (event, value) in map {
                 let cue = if let Some(base_cue) = self.sound_pack.cue_for(&value) {
                     base_cue
                 } else if value.starts_with("http://") || value.starts_with("https://") {
+                    // Track YouTube URLs for eager downloading
+                    if value.contains("youtube.com") || value.contains("youtu.be") {
+                        youtube_urls.push(value.clone());
+                    }
                     SoundCue::Url(value)
                 } else {
                     SoundCue::File(PathBuf::from(value))
                 };
                 self.event_overrides.insert(event, cue);
+            }
+
+            // Eagerly download all YouTube URLs in the background
+            for url in youtube_urls {
+                let cache = Arc::clone(&self.youtube_cache);
+                tokio::spawn(async move {
+                    // Check if already downloading or cached
+                    {
+                        let state = cache.read().await;
+                        if state.is_downloading(&url) || state.get_cached_path(&url).is_some() {
+                            return;
+                        }
+                    }
+
+                    // Check if already cached on disk
+                    if is_youtube_cached(&url) {
+                        let cached_path = get_youtube_cache_path(&url);
+                        info!("YouTube URL already cached on disk: {}", url);
+                        let mut state = cache.write().await;
+                        state.finish_download(&url, cached_path);
+                        return;
+                    }
+
+                    // Mark as downloading
+                    {
+                        let mut state = cache.write().await;
+                        state.start_download(&url);
+                    }
+
+                    // Download
+                    info!("Eagerly downloading YouTube audio: {}", url);
+                    match download_youtube_to_cache(&url).await {
+                        Ok(path) => {
+                            info!(
+                                "Successfully cached YouTube audio: {} -> {}",
+                                url,
+                                path.display()
+                            );
+                            let mut state = cache.write().await;
+                            state.finish_download(&url, path);
+                        }
+                        Err(err) => {
+                            warn!("Failed to cache YouTube audio {}: {}", url, err);
+                            let mut state = cache.write().await;
+                            state.fail_download(&url);
+                        }
+                    }
+                });
             }
         }
     }
@@ -576,7 +783,7 @@ impl DiscordClient {
                 msg
             })?;
 
-        let (input, resolved_path) = match Self::cue_to_input(cue) {
+        let (input, resolved_path) = match self.cue_to_input(cue).await {
             Ok(v) => v,
             Err(e) => {
                 log_sound_error(event, &e);
@@ -605,7 +812,7 @@ impl DiscordClient {
         Ok(())
     }
 
-    fn cue_to_input(cue: SoundCue) -> Result<(Input, String), String> {
+    async fn cue_to_input(&self, cue: SoundCue) -> Result<(Input, String), String> {
         match cue {
             SoundCue::File(path) => {
                 // Prefer absolute path next to executable to survive packaging
@@ -633,7 +840,79 @@ impl DiscordClient {
                 Ok((Input::from(file), resolved_path.display().to_string()))
             }
             SoundCue::Url(url) => {
-                // For URLs, let Songbird/yt-dlp handle streaming
+                // Check if this is a YouTube URL that might be cached
+                if url.contains("youtube.com") || url.contains("youtu.be") {
+                    // First check in-memory cache state
+                    {
+                        let state = self.youtube_cache.read().await;
+                        if let Some(cached_path) = state.get_cached_path(&url) {
+                            if cached_path.exists() {
+                                info!(
+                                    "Using cached YouTube audio from memory state: {}",
+                                    cached_path.display()
+                                );
+                                let file = AudioFile::new(cached_path.clone());
+                                return Ok((Input::from(file), cached_path.display().to_string()));
+                            }
+                        }
+                    }
+
+                    // Check if cached on disk (may have been downloaded in a previous session)
+                    if is_youtube_cached(&url) {
+                        let cached_path = get_youtube_cache_path(&url);
+                        info!(
+                            "Using cached YouTube audio from disk: {}",
+                            cached_path.display()
+                        );
+
+                        // Update in-memory state
+                        {
+                            let mut state = self.youtube_cache.write().await;
+                            state.finish_download(&url, cached_path.clone());
+                        }
+
+                        let file = AudioFile::new(cached_path.clone());
+                        return Ok((Input::from(file), cached_path.display().to_string()));
+                    }
+
+                    // Not cached - download synchronously (blocking but ensures first play works)
+                    // This path should rarely be hit if eager downloading worked
+                    warn!(
+                        "YouTube audio not cached, downloading synchronously: {}",
+                        url
+                    );
+                    match download_youtube_to_cache(&url).await {
+                        Ok(cached_path) => {
+                            info!(
+                                "Downloaded and cached YouTube audio: {}",
+                                cached_path.display()
+                            );
+
+                            // Update in-memory state
+                            {
+                                let mut state = self.youtube_cache.write().await;
+                                state.finish_download(&url, cached_path.clone());
+                            }
+
+                            let file = AudioFile::new(cached_path.clone());
+                            return Ok((Input::from(file), cached_path.display().to_string()));
+                        }
+                        Err(err) => {
+                            // Fall back to streaming via Songbird's YoutubeDl
+                            warn!(
+                                "Failed to cache YouTube audio, falling back to streaming: {}",
+                                err
+                            );
+                            let yt = songbird::input::YoutubeDl::new(
+                                reqwest::Client::new(),
+                                url.clone(),
+                            );
+                            return Ok((Input::from(yt), url));
+                        }
+                    }
+                }
+
+                // For non-YouTube URLs, use Songbird's streaming
                 let yt = songbird::input::YoutubeDl::new(reqwest::Client::new(), url.clone());
                 Ok((Input::from(yt), url))
             }
