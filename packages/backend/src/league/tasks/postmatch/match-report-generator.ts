@@ -29,33 +29,6 @@ function captureError(error: unknown, source: string, matchId?: string, extra?: 
   Sentry.captureException(error, { tags: { source, ...(matchId && { matchId }), ...extra } });
 }
 
-/**
- * Append review metadata as debug information
- */
-function appendReviewMetadata(
-  reviewText: string,
-  metadata: { reviewerName: string; playerName: string; style?: string; themes?: string[] },
-): string {
-  const { reviewerName, playerName, style, themes } = metadata;
-  const debugInfo = [
-    "\n\n━━━━━━━━━━━━━━━━━━━━━━",
-    "📊 **Review Metadata**",
-    `👤 **Reviewer:** ${reviewerName}`,
-    `🎮 **Player:** ${playerName}`,
-  ];
-
-  if (style) {
-    debugInfo.push(`🎨 **Style:** ${style}`);
-  }
-
-  if (themes && themes.length > 0) {
-    const themeText =
-      themes.length === 1 && themes[0] ? `🎭 **Theme:** ${themes[0]}` : `🎭 **Themes:** ${themes.join(" × ")}`;
-    debugInfo.push(themeText);
-  }
-
-  return reviewText + "\n" + debugInfo.join("\n");
-}
 
 /**
  * Fetch match data from Riot API
@@ -234,14 +207,15 @@ async function createMatchImage(
 
   // Convert Uint8Array to Buffer for Discord.js type compatibility
   const buffer = Buffer.from(image);
-  const attachment = new AttachmentBuilder(buffer).setName("match.png");
+  const attachmentName = `${matchId}.png`;
+  const attachment = new AttachmentBuilder(buffer).setName(attachmentName);
   if (!attachment.name) {
     throw new Error("[createMatchImage] Attachment name is null");
   }
 
   const embed = {
     image: {
-      url: `attachment://${attachment.name}`,
+      url: `attachment://${attachmentName}`,
     },
   };
 
@@ -311,10 +285,6 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
         reviewText = review.text;
         reviewImage = review.image;
 
-        // Append debug metadata if available
-        if (review.metadata) {
-          reviewText = appendReviewMetadata(reviewText, review.metadata);
-        }
       }
     } catch (error) {
       console.error(`[generateMatchReport] Error generating AI review:`, error);

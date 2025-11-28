@@ -259,6 +259,62 @@ type TimelineSummaryS3Params = {
 };
 
 /**
+ * Comprehensive debug data for a match review
+ * Contains all AI requests/responses, prompts, and intermediate processing
+ */
+export type ComprehensiveDebugData = {
+  matchId: MatchId;
+  generatedAt: string;
+  queueType: string;
+  trackedPlayerAliases: string[];
+  personality: {
+    filename: string;
+    name: string;
+    description: string;
+    favoriteChampions: string[];
+    favoriteLanes: string[];
+  };
+  selectedPlayer: {
+    playerIndex: number;
+    playerName: string;
+    champion?: string;
+    lane?: string;
+    laneContext: string;
+    playerMetadata: unknown;
+  };
+  curatedData?: unknown;
+  timelineSummary?: {
+    summary: string;
+    durationMs?: number;
+  };
+  matchAnalysis?: {
+    analysis: string;
+    durationMs?: number;
+    model?: string;
+  };
+  reviewTextGeneration: {
+    systemPrompt: string;
+    userPrompt: string;
+    model?: string;
+    maxTokens?: number;
+    temperature?: number;
+    response: string;
+    tokensPrompt?: number;
+    tokensCompletion?: number;
+    durationMs: number;
+  };
+  artGeneration?: {
+    style: string;
+    themes: string[];
+    artPrompt?: string;
+    artPromptDurationMs?: number;
+    imageGenerated: boolean;
+    imageDurationMs?: number;
+    geminiModel?: string;
+  };
+};
+
+/**
  * Save timeline summary request and response to S3 storage
  * @param params The parameters for saving
  * @returns Promise that resolves when both files are saved
@@ -329,6 +385,41 @@ export async function saveTimelineSummaryToS3(params: TimelineSummaryS3Params): 
     additionalLogDetails: {
       durationMs,
       summaryLength: summary.length,
+    },
+  });
+}
+
+/**
+ * Save comprehensive debug data as a single JSON file to S3
+ * Contains all AI requests/responses, prompts, and intermediate processing for a match review
+ * @param debugData The comprehensive debug data to save
+ * @returns Promise that resolves to the S3 URL when saved, or undefined if S3 is not configured
+ */
+export async function saveComprehensiveDebugToS3(debugData: ComprehensiveDebugData): Promise<string | undefined> {
+  const body = JSON.stringify(debugData, null, 2);
+
+  return saveToS3({
+    matchId: debugData.matchId,
+    assetType: "debug",
+    extension: "json",
+    body,
+    contentType: "application/json",
+    metadata: {
+      matchId: debugData.matchId,
+      type: "comprehensive-debug",
+      queueType: debugData.queueType,
+      personality: debugData.personality.filename,
+      playerName: debugData.selectedPlayer.playerName,
+      trackedPlayers: debugData.trackedPlayerAliases.join(", "),
+    },
+    logEmoji: "🔍",
+    logMessage: "Saving comprehensive debug data to S3",
+    errorContext: "comprehensive debug data",
+    returnUrl: true,
+    additionalLogDetails: {
+      queueType: debugData.queueType,
+      personality: debugData.personality.filename,
+      playerName: debugData.selectedPlayer.playerName,
     },
   });
 }
