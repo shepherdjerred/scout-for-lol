@@ -62,7 +62,7 @@ async function prepareCuratedData(
   }
 
   if (timelineData) {
-    const timelineSummary = await summarizeTimeline(timelineData, matchId, openaiClient);
+    const timelineSummary = await summarizeTimeline(timelineData, rawMatchData, matchId, openaiClient);
     if (timelineSummary) {
       console.log(`[debug][generateMatchReview] Generated timeline summary`);
       return { ...curatedData, timelineSummary };
@@ -165,7 +165,7 @@ async function generateAIReview(params: {
       playerMetadata,
       openaiClient,
       model: "gpt-5",
-      maxTokens: 25000,
+      maxTokens: 1000,
       curatedData,
       playerIndex,
       ...(matchAnalysis !== undefined && { matchAnalysis }),

@@ -41,14 +41,11 @@ export async function analyzeMatchData(params: {
     lane = player.lane;
   }
 
-  const matchDataForPrompt = JSON.stringify(
-    {
-      processedMatch: match,
-      detailedStats: curatedData,
-    },
-    null,
-    2,
-  );
+  // Minify JSON to save tokens
+  const matchDataForPrompt = JSON.stringify({
+    processedMatch: match,
+    detailedStats: curatedData,
+  });
   const timelineSummary = curatedData.timelineSummary ?? "No timeline summary available.";
 
   const userPrompt = `Analyze ${playerName} playing ${playerChampion} in the ${lane} context. Use the lane primer and timeline summary to stay grounded in role expectations and how the game flowed.
@@ -71,7 +68,7 @@ Keep it under 220 words and avoid generic platitudes.`;
 
   try {
     const response = await openaiClient.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-5.1-mini",
       messages: [
         { role: "system", content: MATCH_ANALYSIS_SYSTEM_PROMPT },
         {
@@ -79,7 +76,7 @@ Keep it under 220 words and avoid generic platitudes.`;
           content: `${userPrompt}\n\nMatch data JSON:\n${matchDataForPrompt}`,
         },
       ],
-      max_completion_tokens: 1800,
+      max_completion_tokens: 3000,
       temperature: 0.4,
     });
 
@@ -112,7 +109,7 @@ Keep it under 220 words and avoid generic platitudes.`;
         response: {
           analysis,
           durationMs: duration,
-          model: "gpt-4o-mini",
+          model: "gpt-5.1-mini",
         },
       });
     } catch (s3Error) {
