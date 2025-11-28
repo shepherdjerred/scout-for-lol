@@ -416,7 +416,7 @@ impl DiscordClient {
             .map_err(|_| "Discord API connection timed out".to_string())??;
 
         let mut client = discord_client;
-        client.apply_event_overrides(event_overrides).await;
+        client.apply_event_overrides(event_overrides);
         client.songbird = timeout(
             Duration::from_secs(8),
             client.build_voice_client(token.clone()),
@@ -463,7 +463,7 @@ impl DiscordClient {
         }
     }
 
-    async fn apply_event_overrides(&mut self, overrides: Option<HashMap<String, String>>) {
+    fn apply_event_overrides(&mut self, overrides: Option<HashMap<String, String>>) {
         if let Some(map) = overrides {
             let mut youtube_urls: Vec<String> = Vec::new();
 
