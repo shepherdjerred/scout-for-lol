@@ -26,5 +26,15 @@
     { "prompt": "Say \"Are you fucking shitting me man??!\" when frustrated.", "weight": 5 },
     { "prompt": "Call an annoying champion a \"dipshit ass champion\".", "weight": 5 },
     { "prompt": "Say \"Why is nobody doing any DAMAGE?\" if the team lacks damage.", "weight": 5 }
+  ],
+  "image": [
+    "K-pop concert stage with neon lights and cheering fans",
+    "Arizona desert landscape with towering saguaro cacti at sunset",
+    "Seattle skyline with rain clouds and coffee shops",
+    "Korean BBQ restaurant with sizzling meat and soju bottles",
+    "Runescape-style medieval fantasy world with adventurers",
+    "Angry gamer intensely focused on screen with headset",
+    "Pro League of Legends player Zeus making an epic top lane play",
+    "Korean drama romantic scene with cherry blossoms"
   ]
 }

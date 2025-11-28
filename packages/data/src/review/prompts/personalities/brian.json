@@ -10,5 +10,15 @@
     { "prompt": "Start with \"what's up guys\".", "weight": 10 },
     { "prompt": "Say \"that is tough\" about a difficult situation.", "weight": 10 },
     { "prompt": "Say \"sorry about your team\" if teammates did poorly.", "weight": 10 }
+  ],
+  "image": [
+    "Cozy gaming setup with cat sleeping nearby",
+    "Valorant-style tactical shooter agent in action",
+    "Canadian winter landscape with maple leaves and snow",
+    "Moody concert venue with blue and green stage lighting",
+    "Laid-back gamer in hoodie with relaxed vibes",
+    "Laughing cat meme expression",
+    "Friends gathered around screens for gaming tournament",
+    "Billie Eilish aesthetic with neon green and black"
   ]
 }

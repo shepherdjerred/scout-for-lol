@@ -6,6 +6,7 @@ import {
   type CompletedMatch,
   type MatchId,
   selectRandomStyleAndTheme,
+  selectRandomImagePrompts,
   curateMatchData,
   type CuratedMatchData,
   type ReviewTextMetadata,
@@ -258,6 +259,8 @@ export async function generateMatchReview(
   }
 
   const { style, themes } = selectRandomStyleAndTheme();
+  const personalityImageHints = selectRandomImagePrompts(personality.metadata.image);
+
   const fullMetadata: ReviewMetadata = {
     ...metadata,
     style,
@@ -272,6 +275,7 @@ export async function generateMatchReview(
     queueType,
     trackedPlayerAliases,
     openaiClient,
+    personalityImageHints,
   });
 
   const reviewImage = await generateReviewImageBackend({
