@@ -22,12 +22,7 @@ import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "@scout-for-lol/backen
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
 import { match } from "ts-pattern";
-import {
-  logPlayerConfigDebugInfo,
-  logPlayerDebugInfo,
-  logCompletedMatchPlayersDebugInfo,
-  logErrorDetails,
-} from "./match-report-debug.js";
+import { logErrorDetails } from "./match-report-debug.js";
 
 /** Helper to capture exceptions with source and match context */
 function captureError(error: unknown, source: string, matchId?: string, extra?: Record<string, string>): void {
@@ -78,17 +73,6 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
     // Validate and parse the API response to ensure it matches our schema
     try {
       const validated = MatchDtoSchema.parse(response.response);
-
-      // Debug: Check if participants have puuid (they should)
-      const firstParticipant = validated.info.participants[0];
-      if (firstParticipant) {
-        const hasPuuid = "puuid" in firstParticipant;
-        console.log(`[debug][fetchMatchData] First participant has puuid:`, hasPuuid);
-        if (hasPuuid) {
-          console.log(`[debug][fetchMatchData] First participant puuid:`, firstParticipant.puuid);
-        }
-      }
-
       return validated;
     } catch (parseError) {
       console.error(`[fetchMatchData] ❌ Match data validation failed for ${matchId}:`, parseError);
@@ -281,10 +265,7 @@ async function processArenaMatch(
   playersInMatch: PlayerConfigEntry[],
 ): Promise<MessageCreateOptions> {
   console.log(`[generateMatchReport] 🎯 Processing as arena match`);
-  console.log(`[debug][processArenaMatch] Players array length: ${players.length.toString()}`);
-  console.log(`[debug][processArenaMatch] Calling toArenaMatch...`);
   const arenaMatch = await toArenaMatch(players, matchData);
-  console.log(`[debug][processArenaMatch] toArenaMatch completed successfully`);
 
   // Create Discord message for arena
   const [attachment, embed] = await createMatchImage(arenaMatch, matchId);
@@ -318,12 +299,7 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
   if (players.length === 0) {
     throw new Error("No player data available");
   }
-  console.log(`[debug][generateMatchReport] Calling toMatch with ${players.length.toString()} player(s)`);
   const completedMatch = toMatch(players, matchData, undefined, undefined);
-  console.log(
-    `[debug][generateMatchReport] toMatch returned match with ${completedMatch.players.length.toString()} player(s)`,
-  );
-  logCompletedMatchPlayersDebugInfo(completedMatch);
 
   // Generate AI review (text and optional image) - only for ranked queues (solo/flex/clash)
   let reviewText: string | undefined;
@@ -459,12 +435,7 @@ export async function generateMatchReport(
     );
 
     // Get full player data with ranks
-    console.log(`[debug][generateMatchReport] Getting player data for ${playersInMatch.length.toString()} player(s)`);
-    logPlayerConfigDebugInfo(playersInMatch);
-
     const players = await Promise.all(playersInMatch.map((playerConfig) => getPlayer(playerConfig)));
-    console.log(`[debug][generateMatchReport] Got ${players.length.toString()} player(s)`);
-    logPlayerDebugInfo(players);
 
     // Fetch timeline data for standard matches (to provide game progression context for AI reviews)
     const timelineData = await fetchTimelineIfStandardMatch(matchData, matchId, playersInMatch);

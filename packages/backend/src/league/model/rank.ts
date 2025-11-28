@@ -38,34 +38,15 @@ export function getRank(dto: SummonerLeagueDto[], queue: RankedQueueTypes): Rank
 }
 
 export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
-  console.log(`[debug][getRanks] Fetching ranks for ${player.alias}`);
   const response = await api.League.byPUUID(
     player.league.leagueAccount.puuid,
     mapRegionToEnum(player.league.leagueAccount.region),
   );
 
-  console.log(
-    `[debug][getRanks] Got response with ${Array.isArray(response.response) ? String(response.response.length) : "non-array"} entries`,
-  );
-
-  // Log the raw response structure to debug what fields Riot is sending
-  if (Array.isArray(response.response) && response.response.length > 0) {
-    const firstEntry = response.response[0];
-    if (firstEntry) {
-      console.log(`[debug][getRanks] First entry keys:`, Object.keys(firstEntry));
-      console.log(`[debug][getRanks] First entry sample:`, JSON.stringify(firstEntry, null, 2));
-    }
-  }
-
-  // Validate the response with Zod schema
-  console.log(`[debug][getRanks] Parsing response with SummonerLeagueDtoSchema...`);
   const parseResult = z.array(SummonerLeagueDtoSchema).safeParse(response.response);
   if (!parseResult.success) {
-    console.error(`[debug][getRanks] ❌ Schema validation failed:`, parseResult.error.message);
-    console.error(`[debug][getRanks] ❌ Full error:`, JSON.stringify(parseResult.error, null, 2));
     throw parseResult.error;
   }
-  console.log(`[debug][getRanks] ✅ Schema validation passed`);
   const validatedResponse = parseResult.data;
 
   return {

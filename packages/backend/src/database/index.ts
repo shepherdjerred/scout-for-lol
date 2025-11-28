@@ -111,29 +111,6 @@ export async function getAccountsWithState(prismaClient: PrismaClient = prisma):
           },
         };
 
-        // Debug: Check for puuid at top level of config
-        console.log(`[debug][getAccountsWithState] Created config for ${player.alias}`);
-        console.log(`[debug][getAccountsWithState] Config keys:`, Object.keys(config));
-        if ("puuid" in config) {
-          console.error(
-            `[debug][getAccountsWithState] ⚠️  ERROR: Config has puuid at top level!`,
-            JSON.stringify(config, null, 2),
-          );
-        }
-        console.log(`[debug][getAccountsWithState] Config.league keys:`, Object.keys(config.league));
-        console.log(
-          `[debug][getAccountsWithState] Config.league.leagueAccount keys:`,
-          Object.keys(config.league.leagueAccount),
-        );
-        if ("puuid" in config.league.leagueAccount) {
-          console.log(
-            `[debug][getAccountsWithState] ✅ leagueAccount has puuid (expected):`,
-            config.league.leagueAccount.puuid,
-          );
-        } else {
-          console.error(`[debug][getAccountsWithState] ⚠️  ERROR: leagueAccount missing puuid!`);
-        }
-
         return {
           config,
           lastMatchTime: account.lastMatchTime ?? undefined,
@@ -143,17 +120,6 @@ export async function getAccountsWithState(prismaClient: PrismaClient = prisma):
     });
 
     console.log(`📋 Returning ${result.length.toString()} player account entries with state`);
-
-    // Debug: Validate all configs before returning
-    for (let i = 0; i < result.length; i++) {
-      const entry = result[i];
-      if (entry && "puuid" in entry.config) {
-        console.error(
-          `[debug][getAccountsWithState] ⚠️  ERROR: Entry ${i.toString()} config has puuid at top level!`,
-          JSON.stringify(entry.config, null, 2),
-        );
-      }
-    }
 
     return result;
   } catch (error) {

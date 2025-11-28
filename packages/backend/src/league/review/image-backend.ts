@@ -12,30 +12,6 @@ import { getGeminiClient } from "./ai-clients.js";
 
 const AI_IMAGES_DIR = `${import.meta.dir}/ai-images`;
 
-function logMatchStructure(match: CompletedMatch | ArenaMatch): void {
-  if (match.queueType === "arena") {
-    return;
-  }
-
-  console.log(`[debug][generateReviewImage] Match has ${match.players.length.toString()} player(s)`);
-  for (let i = 0; i < match.players.length; i++) {
-    const playerObj = match.players[i];
-    if (!playerObj) {
-      continue;
-    }
-    console.log(
-      `[debug][generateReviewImage] Match.players[${i.toString()}] keys before JSON.stringify:`,
-      Object.keys(playerObj),
-    );
-    if ("puuid" in playerObj) {
-      console.error(
-        `[debug][generateReviewImage] ⚠️  ERROR: Match.players[${i.toString()}] has puuid field before JSON.stringify!`,
-        playerObj,
-      );
-    }
-  }
-}
-
 function decodeImageBase64(imageData: string): Uint8Array {
   const binaryString = atob(imageData);
   const buffer = new Uint8Array(binaryString.length);
@@ -105,9 +81,6 @@ export async function generateReviewImageBackend(params: {
       console.log(`[generateReviewImage] Using AI-crafted art prompt (${artPrompt.length.toString()} chars)`);
     }
     console.log("[generateReviewImage] Calling Gemini API to generate image...");
-
-    console.log(`[debug][generateReviewImage] About to serialize match for Gemini API`);
-    logMatchStructure(match);
 
     const matchDataJson = buildMatchDataJson(match, curatedData);
     const promptForGemini = artPrompt ?? reviewText;

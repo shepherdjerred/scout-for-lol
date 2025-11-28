@@ -56,14 +56,9 @@ async function prepareCuratedData(
 
   const curatedData = await curateMatchData(rawMatchData, timelineData);
   if (curatedData.timeline) {
-    console.log(
-      `[debug][generateMatchReview] Curated timeline with ${curatedData.timeline.keyEvents.length.toString()} key events`,
-    );
-
     // Use curated timeline for summarization (already has champion names, Blue/Red teams, etc.)
     const timelineSummary = await summarizeTimeline(curatedData.timeline, matchId, openaiClient);
     if (timelineSummary) {
-      console.log(`[debug][generateMatchReview] Generated timeline summary`);
       return { ...curatedData, timelineSummary };
     }
   }
@@ -103,20 +98,6 @@ async function selectPlayerContext(match: CompletedMatch | ArenaMatch): Promise<
     laneContext: laneContextInfo.content,
     playerMeta,
   };
-}
-
-function logMatchBasics(match: CompletedMatch | ArenaMatch, timelineData?: TimelineDto): void {
-  console.log(
-    `[debug][generateMatchReview] Match type: ${match.queueType === "arena" ? "ArenaMatch" : "CompletedMatch"}`,
-  );
-  if (timelineData) {
-    console.log(
-      `[debug][generateMatchReview] Timeline data available with ${timelineData.info.frames.length.toString()} frames`,
-    );
-  }
-  if (match.queueType !== "arena") {
-    console.log(`[debug][generateMatchReview] Match has ${match.players.length.toString()} player(s)`);
-  }
 }
 
 /**
@@ -206,9 +187,6 @@ export async function generateMatchReview(
   rawMatchData?: MatchDto,
   timelineData?: TimelineDto,
 ): Promise<{ text: string; image?: Uint8Array; metadata?: ReviewMetadata } | undefined> {
-  console.log(`[debug][generateMatchReview] Received match for ${matchId}`);
-  logMatchBasics(match, timelineData);
-
   const openaiClient = getOpenAIClient();
   if (!openaiClient) {
     console.log("[generateMatchReview] OpenAI API key not configured, skipping review generation");
