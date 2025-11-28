@@ -1,6 +1,6 @@
 import {
-  type MatchDto,
-  type TimelineDto,
+  type RawMatch,
+  type RawTimeline,
   generateReviewText,
   type ArenaMatch,
   type CompletedMatch,
@@ -45,8 +45,8 @@ type PlayerContext = {
 };
 
 async function prepareCuratedData(
-  rawMatchData: MatchDto | undefined,
-  timelineData: TimelineDto | undefined,
+  rawMatchData: RawMatch | undefined,
+  timelineData: RawTimeline | undefined,
   matchId: MatchId,
   openaiClient: OpenAI,
 ): Promise<CuratedMatchData | undefined> {
@@ -184,8 +184,8 @@ async function generateAIReview(params: {
 export async function generateMatchReview(
   match: CompletedMatch | ArenaMatch,
   matchId: MatchId,
-  rawMatchData?: MatchDto,
-  timelineData?: TimelineDto,
+  rawMatchData?: RawMatch,
+  timelineData?: RawTimeline,
 ): Promise<{ text: string; image?: Uint8Array; metadata?: ReviewMetadata } | undefined> {
   const openaiClient = getOpenAIClient();
   if (!openaiClient) {

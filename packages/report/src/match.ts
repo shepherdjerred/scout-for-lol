@@ -1,4 +1,4 @@
-import type { MatchDto, CompletedMatch, Player, Rank } from "@scout-for-lol/data";
+import type { RawMatch, CompletedMatch, Player, Rank } from "@scout-for-lol/data";
 import {
   getLaneOpponent,
   invertTeam,
@@ -13,25 +13,25 @@ import { strict as assert } from "assert";
 
 export function toMatch(
   player: Player,
-  matchDto: MatchDto,
+  rawMatch: RawMatch,
   rankBeforeMatch: Rank | undefined,
   rankAfterMatch: Rank | undefined,
 ): CompletedMatch {
-  const participant = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
+  const participant = findParticipant(player.config.league.leagueAccount.puuid, rawMatch.info.participants);
   if (participant === undefined) {
     console.debug("Player PUUID:", player.config.league.leagueAccount.puuid);
-    console.debug("Match Participants:", matchDto.info.participants);
+    console.debug("Match Participants:", rawMatch.info.participants);
     throw new Error("participant not found");
   }
 
   const champion = participantToChampion(participant);
   const team = parseTeam(participant.teamId);
-  const teams = getTeams(matchDto.info.participants, participantToChampion);
+  const teams = getTeams(rawMatch.info.participants, participantToChampion);
 
   assert(team !== undefined);
 
   const enemyTeam = invertTeam(team);
-  const queueType = parseQueueType(matchDto.info.queueId);
+  const queueType = parseQueueType(rawMatch.info.queueId);
 
   if (queueType === "arena") {
     throw new Error("arena matches are not supported");
@@ -54,7 +54,7 @@ export function toMatch(
         laneOpponent: getLaneOpponent(champion, teams[enemyTeam]),
       },
     ],
-    durationInSeconds: matchDto.info.gameDuration,
+    durationInSeconds: rawMatch.info.gameDuration,
     teams,
   };
 }

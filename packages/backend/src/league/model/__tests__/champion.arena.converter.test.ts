@@ -1,8 +1,8 @@
 import { describe, it, expect } from "bun:test";
-import type { ParticipantDto } from "@scout-for-lol/data";
+import type { RawParticipant } from "@scout-for-lol/data";
 import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
 
-const baseParticipant = (): ParticipantDto => {
+const baseParticipant = (): RawParticipant => {
   // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
   const participant = {
     riotIdGameName: "Player#NA1",
@@ -48,10 +48,10 @@ const baseParticipant = (): ParticipantDto => {
     // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
     challenges: {
       damageTakenOnTeamPercentage: 0.2,
-    } as unknown as ParticipantDto["challenges"],
+    } as unknown as RawParticipant["challenges"],
     // unused fields for this test
     teamId: 100,
-  } as unknown as ParticipantDto;
+  } as unknown as RawParticipant;
   return participant;
 };
 

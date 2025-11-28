@@ -1,7 +1,7 @@
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import configuration from "@scout-for-lol/backend/configuration.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import { MatchDtoSchema, type MatchDto } from "@scout-for-lol/data";
+import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
 
 /**
@@ -25,7 +25,7 @@ function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
 /**
  * Check if a match includes any of the specified participant PUUIDs
  */
-function matchIncludesParticipant(match: MatchDto, puuids: string[]): boolean {
+function matchIncludesParticipant(match: RawMatch, puuids: string[]): boolean {
   return match.metadata.participants.some((puuid) => puuids.includes(puuid));
 }
 
@@ -33,10 +33,10 @@ function matchIncludesParticipant(match: MatchDto, puuids: string[]): boolean {
  * Process match download results and filter by participant PUUIDs
  */
 function processMatchResults(
-  results: PromiseSettledResult<{ key: string; match: MatchDto | null }>[],
+  results: PromiseSettledResult<{ key: string; match: RawMatch | null }>[],
   puuids: string[],
-): MatchDto[] {
-  const matches: MatchDto[] = [];
+): RawMatch[] {
+  const matches: RawMatch[] = [];
   for (const result of results) {
     if (result.status !== "fulfilled" || !result.value.match) {
       continue;
@@ -55,7 +55,7 @@ function processMatchResults(
 /**
  * Fetch and parse a match from S3
  */
-async function getMatchFromS3(client: S3Client, bucket: string, key: string): Promise<MatchDto | null> {
+async function getMatchFromS3(client: S3Client, bucket: string, key: string): Promise<RawMatch | null> {
   try {
     const command = new GetObjectCommand({
       Bucket: bucket,
@@ -73,7 +73,7 @@ async function getMatchFromS3(client: S3Client, bucket: string, key: string): Pr
     const bodyString = await response.Body.transformToString();
     // Parse and validate the match data with Zod schema for runtime type safety
     const matchData = JSON.parse(bodyString);
-    const match = MatchDtoSchema.parse(matchData);
+    const match = RawMatchSchema.parse(matchData);
 
     return match;
   } catch (error) {
@@ -90,7 +90,7 @@ async function getMatchFromS3(client: S3Client, bucket: string, key: string): Pr
  * @param puuids Array of participant PUUIDs to filter by
  * @returns Array of matches that occurred in the date range and include any of the specified participants
  */
-export async function queryMatchesByDateRange(startDate: Date, endDate: Date, puuids: string[]): Promise<MatchDto[]> {
+export async function queryMatchesByDateRange(startDate: Date, endDate: Date, puuids: string[]): Promise<RawMatch[]> {
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
@@ -108,7 +108,7 @@ export async function queryMatchesByDateRange(startDate: Date, endDate: Date, pu
 
   const client = new S3Client();
   const dayPrefixes = generateDatePrefixes(startDate, endDate);
-  const matches: MatchDto[] = [];
+  const matches: RawMatch[] = [];
   let totalObjects = 0;
   let matchedObjects = 0;
 

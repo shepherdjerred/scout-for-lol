@@ -205,6 +205,32 @@ try {
 - Cache API responses appropriately
 - Handle API errors and rate limits gracefully
 
+### External Data Type Naming Convention
+
+Types representing external/unvalidated data (from Riot API, user input, etc.) must use the **`Raw*` prefix**:
+
+```typescript
+// Correct: Raw* prefix for external data types
+type RawMatch = z.infer<typeof RawMatchSchema>;
+type RawParticipant = z.infer<typeof RawParticipantSchema>;
+type RawTimeline = z.infer<typeof RawTimelineSchema>;
+type RawSummonerLeague = z.infer<typeof RawSummonerLeagueSchema>;
+
+// Incorrect: *Dto suffix (legacy pattern - do not use)
+type MatchDto = ...;        // ❌ Use RawMatch instead
+type ParticipantDto = ...;  // ❌ Use RawParticipant instead
+```
+
+**File naming**: Schema files should use `raw-*.schema.ts` pattern:
+- `raw-match.schema.ts`
+- `raw-participant.schema.ts`
+- `raw-timeline.schema.ts`
+
+**Why this convention?**
+- Clearly distinguishes between unvalidated external data (`Raw*`) and validated internal types
+- Enforced by ESLint rule `custom-rules/no-dto-naming`
+- Never import DTO types directly from `twisted` - use `@scout-for-lol/data` schemas instead
+
 ---
 
 ## Report Generation

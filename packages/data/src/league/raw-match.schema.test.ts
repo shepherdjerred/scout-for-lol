@@ -1,12 +1,12 @@
 /**
- * Unit tests for MatchDto schema validation against real API data
+ * Unit tests for RawMatch schema validation against real API data
  *
  * These tests verify that our schema correctly validates actual Riot API responses.
  * Test data files contain real match data from the Riot Games API.
  */
 
 import { describe, expect, test } from "bun:test";
-import { MatchDtoSchema } from "@scout-for-lol/data/league/match-dto.schema.js";
+import { RawMatchSchema } from "@scout-for-lol/data/league/raw-match.schema.js";
 
 // Use Bun's path joining to find test data files relative to this test file
 // This works both locally and in CI containers
@@ -18,11 +18,11 @@ const REAL_MATCH_FILES = [
   `${baseTestDataPath}/matches_2025_09_19_NA1_5370986469.json`,
 ];
 
-describe("MatchDto Schema Validation", () => {
+describe("RawMatch Schema Validation", () => {
   test("validates real Arena match data from Riot API", async () => {
     for (const filePath of REAL_MATCH_FILES) {
       const data = JSON.parse(await Bun.file(filePath).text());
-      const result = MatchDtoSchema.safeParse(data);
+      const result = RawMatchSchema.safeParse(data);
 
       expect(result.success).toBe(true);
 
@@ -48,7 +48,7 @@ describe("MatchDto Schema Validation", () => {
       throw new Error("No test file path");
     }
     const data = JSON.parse(await Bun.file(filePath).text());
-    const result = MatchDtoSchema.safeParse(data);
+    const result = RawMatchSchema.safeParse(data);
 
     expect(result.success).toBe(true);
 
@@ -77,7 +77,7 @@ describe("MatchDto Schema Validation", () => {
       throw new Error("No test file path");
     }
     const data = JSON.parse(await Bun.file(filePath).text());
-    const result = MatchDtoSchema.safeParse(data);
+    const result = RawMatchSchema.safeParse(data);
 
     expect(result.success).toBe(true);
 

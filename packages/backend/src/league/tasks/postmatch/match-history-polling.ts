@@ -1,4 +1,4 @@
-import type { MatchDto, PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/data";
+import type { RawMatch, PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/data";
 import { getRecentMatchIds, filterNewMatches } from "@scout-for-lol/backend/league/api/match-history.js";
 import {
   getAccountsWithState,
@@ -65,7 +65,7 @@ async function processMatchForPlayer(
 /**
  * Process a completed match and send Discord notifications
  */
-async function processMatch(matchData: MatchDto, trackedPlayers: PlayerConfigEntry[]): Promise<void> {
+async function processMatch(matchData: RawMatch, trackedPlayers: PlayerConfigEntry[]): Promise<void> {
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
   console.log(`[processMatch] 🎮 Processing match ${matchId}`);
 
@@ -123,7 +123,7 @@ async function processMatch(matchData: MatchDto, trackedPlayers: PlayerConfigEnt
  * Process match and update all tracked players who participated
  */
 async function processMatchAndUpdatePlayers(
-  matchData: MatchDto,
+  matchData: RawMatch,
   allPlayerConfigs: PlayerConfigEntry[],
   processedMatchIds: Set<string>,
   matchId: string,

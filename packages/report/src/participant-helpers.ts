@@ -1,11 +1,11 @@
-import type { ParticipantDto, Champion, Rune } from "@scout-for-lol/data";
+import type { RawParticipant, Champion, Rune } from "@scout-for-lol/data";
 import { participantToChampion as participantToChampionBase } from "@scout-for-lol/data/model/match-helpers.js";
 import { getRuneInfo } from "@scout-for-lol/report/dataDragon/runes.js";
 
 /**
  * Helper to extract runes from a single rune style
  */
-function extractRunesFromStyle(style: ParticipantDto["perks"]["styles"][number] | undefined): Rune[] {
+function extractRunesFromStyle(style: RawParticipant["perks"]["styles"][number] | undefined): Rune[] {
   const runes: Rune[] = [];
   if (!style) {
     return runes;
@@ -26,7 +26,7 @@ function extractRunesFromStyle(style: ParticipantDto["perks"]["styles"][number] 
 /**
  * Helper to extract rune details from participant perks
  */
-export function extractRunes(participant: ParticipantDto): Rune[] {
+export function extractRunes(participant: RawParticipant): Rune[] {
   const runes: Rune[] = [];
 
   // Extract primary rune selections
@@ -41,10 +41,10 @@ export function extractRunes(participant: ParticipantDto): Rune[] {
 }
 
 /**
- * Converts a participant DTO to a Champion object with full details including runes.
+ * Converts a raw participant to a Champion object with full details including runes.
  * This extends the base implementation from @scout-for-lol/data by adding rune extraction.
  */
-export function participantToChampion(participant: ParticipantDto): Champion {
+export function participantToChampion(participant: RawParticipant): Champion {
   const baseChampion = participantToChampionBase(participant);
   return {
     ...baseChampion,
