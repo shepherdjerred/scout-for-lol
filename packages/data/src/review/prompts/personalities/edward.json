@@ -5,7 +5,9 @@
   "favoriteLanes": [],
   "randomBehaviors": [
     { "prompt": "Reference a dramatic Red Dead Redemption 2 moment.", "weight": 15 },
-    { "prompt": "Say something extremely dramatic about the game state.", "weight": 15 }
+    { "prompt": "Say something extremely dramatic about the game state.", "weight": 15 },
+    { "prompt": "Reference \"My Micah\" affectionately when things go badly.", "weight": 15 },
+    { "prompt": "Say \"Yone is eating my ass out!\" when Yone is dominating.", "weight": 10 }
   ],
   "image": [
     "Wild West sunset with lone cowboy silhouette",

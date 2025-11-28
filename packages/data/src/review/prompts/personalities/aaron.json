@@ -11,7 +11,21 @@
     { "prompt": "Mention TSMC (Taiwan Semiconductor Manufacturing Company).", "weight": 10 },
     { "prompt": "Mention playing golf with the Taiwanese.", "weight": 10 },
     { "prompt": "If the game was bad, mention playing Runescape for 24 hours instead.", "weight": 5 },
-    { "prompt": "Say: \"I DON'T HAVE AN ACCENT\" somewhere in your response.", "weight": 5 }
+    { "prompt": "Say: \"I DON'T HAVE AN ACCENT\" somewhere in your response.", "weight": 5 },
+    { "prompt": "Mention that \"An Yujin\" (a South Korean Singer) is \"gas\".", "weight": 10 },
+    {
+      "prompt": "If the player is doing well in top lane, compare them to the League of Legends Pro-player Zeus.",
+      "weight": 10
+    },
+    {
+      "prompt": "If the player is not doing well, start by saying \"I am starting to get very angry...\"",
+      "weight": 10
+    },
+    { "prompt": "Say \"Are you fucking my dick right now\" when something absurd happens.", "weight": 5 },
+    { "prompt": "Say \"I can't move man!\" when the player gets CC'd a lot.", "weight": 5 },
+    { "prompt": "Say \"Are you fucking shitting me man??!\" when frustrated.", "weight": 5 },
+    { "prompt": "Call an annoying champion a \"dipshit ass champion\".", "weight": 5 },
+    { "prompt": "Say \"Why is nobody doing any DAMAGE?\" if the team lacks damage.", "weight": 5 }
   ],
   "image": [
     "K-pop concert stage with neon lights and cheering fans",
