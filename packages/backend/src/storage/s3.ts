@@ -1,4 +1,4 @@
-import type { MatchId, MatchDto, ReviewTextMetadata, TimelineDto, CuratedTimeline } from "@scout-for-lol/data";
+import type { MatchId, RawMatch, ReviewTextMetadata, RawTimeline, CuratedTimeline } from "@scout-for-lol/data";
 import { MatchIdSchema } from "@scout-for-lol/data";
 import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.js";
 
@@ -8,7 +8,7 @@ import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.js";
  * @param trackedPlayerAliases Array of tracked player aliases in this match (empty array if none)
  * @returns Promise that resolves when the match is saved
  */
-export async function saveMatchToS3(match: MatchDto, trackedPlayerAliases: string[]): Promise<void> {
+export async function saveMatchToS3(match: RawMatch, trackedPlayerAliases: string[]): Promise<void> {
   const matchId = MatchIdSchema.parse(match.metadata.matchId);
   const body = JSON.stringify(match, null, 2);
 
@@ -252,7 +252,7 @@ export async function saveAIReviewRequestToS3(
 
 type TimelineSummaryS3Params = {
   matchId: MatchId;
-  timelineDto: TimelineDto | CuratedTimeline;
+  rawTimeline: RawTimeline | CuratedTimeline;
   prompt: string;
   summary: string;
   durationMs: number;
@@ -264,20 +264,20 @@ type TimelineSummaryS3Params = {
  * @returns Promise that resolves when both files are saved
  */
 export async function saveTimelineSummaryToS3(params: TimelineSummaryS3Params): Promise<void> {
-  const { matchId, timelineDto, prompt, summary, durationMs } = params;
+  const { matchId, rawTimeline, prompt, summary, durationMs } = params;
   // Save the request (timeline + prompt)
   const requestBody = JSON.stringify(
     {
       prompt,
-      timeline: timelineDto,
+      timeline: rawTimeline,
     },
     null,
     2,
   );
 
-  // Handle both TimelineDto (raw) and CuratedTimeline formats
-  const isCuratedTimeline = "keyEvents" in timelineDto;
-  const eventCount = isCuratedTimeline ? timelineDto.keyEvents.length : timelineDto.info.frames.length;
+  // Handle both RawTimeline and CuratedTimeline formats
+  const isCuratedTimeline = "keyEvents" in rawTimeline;
+  const eventCount = isCuratedTimeline ? rawTimeline.keyEvents.length : rawTimeline.info.frames.length;
 
   await saveToS3({
     matchId,

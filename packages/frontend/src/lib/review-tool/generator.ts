@@ -11,7 +11,7 @@ import {
   type CompletedMatch,
   type CuratedMatchData,
   type ReviewImageMetadata,
-  type MatchDto,
+  type RawMatch,
 } from "@scout-for-lol/data";
 import type { ReviewConfig, GenerationResult, GenerationMetadata, Personality } from "./config/schema";
 import {
@@ -139,13 +139,13 @@ export async function generateMatchReview(
   match: CompletedMatch | ArenaMatch,
   config: ReviewConfig,
   onProgress?: (progress: GenerationProgress) => void,
-  rawMatchData?: MatchDto,
+  rawMatch?: RawMatch,
 ): Promise<GenerationResult> {
   try {
     // Curate match data if provided (like backend does)
     let curatedData: CuratedMatchData | undefined;
-    if (rawMatchData) {
-      curatedData = await curateMatchData(rawMatchData);
+    if (rawMatch) {
+      curatedData = await curateMatchData(rawMatch);
     }
 
     // Generate text review
@@ -197,11 +197,7 @@ export async function generateMatchReview(
           artStyle,
           artTheme,
           ...(secondArtTheme ? { secondArtTheme } : {}),
-          matchData: JSON.stringify(
-            curatedData ? { processedMatch: match, detailedStats: curatedData } : match,
-            null,
-            2,
-          ),
+          matchData: JSON.stringify(curatedData ? { processedMatch: match, detailedStats: curatedData } : match),
           geminiClient,
           model: config.imageGeneration.model,
           timeoutMs: config.imageGeneration.timeoutMs,

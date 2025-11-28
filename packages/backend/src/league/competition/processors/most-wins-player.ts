@@ -1,4 +1,4 @@
-import type { MostWinsPlayerCriteria, MatchDto } from "@scout-for-lol/data";
+import type { MostWinsPlayerCriteria, RawMatch } from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
@@ -10,7 +10,7 @@ import { createWinBasedProcessor } from "@scout-for-lol/backend/league/competiti
  * Counts the total number of wins by each participant in the specified queue
  */
 export function processMostWinsPlayer(
-  matches: MatchDto[],
+  matches: RawMatch[],
   participants: PlayerWithAccounts[],
   criteria: MostWinsPlayerCriteria,
 ): LeaderboardEntry[] {

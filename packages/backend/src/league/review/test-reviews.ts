@@ -10,12 +10,12 @@ import {
   MatchIdSchema,
   LeaguePuuidSchema,
   parseQueueType,
-  MatchDtoSchema,
+  RawMatchSchema,
   getOrdinalSuffix,
   type ArenaMatch,
   type CompletedMatch,
   type PlayerConfigEntry,
-  type MatchDto,
+  type RawMatch,
 } from "@scout-for-lol/data";
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 import configuration from "@scout-for-lol/backend/configuration.js";
@@ -212,7 +212,7 @@ async function fetchMatchKeysFromS3(daysBack: number): Promise<string[]> {
 /**
  * Fetch and parse a match from S3
  */
-async function fetchMatchFromS3(key: string): Promise<MatchDto | null> {
+async function fetchMatchFromS3(key: string): Promise<RawMatch | null> {
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
@@ -236,7 +236,7 @@ async function fetchMatchFromS3(key: string): Promise<MatchDto | null> {
     const bodyString = await response.Body.transformToString();
     // Parse and validate the match data with Zod schema
     const matchData = JSON.parse(bodyString);
-    return MatchDtoSchema.parse(matchData);
+    return RawMatchSchema.parse(matchData);
   } catch (error) {
     console.warn(`Failed to fetch match ${key}:`, error);
     return null;
@@ -259,13 +259,13 @@ function createMinimalPlayerConfig(puuid: string, name: string): PlayerConfigEnt
 }
 
 /**
- * Convert a Riot API match to our internal format
+ * Convert a raw Riot API match to our internal format
  */
-async function convertMatchDtoToInternalFormat(matchDto: MatchDto): Promise<CompletedMatch | ArenaMatch> {
-  const queueType = parseQueueType(matchDto.info.queueId);
+async function convertRawMatchToInternalFormat(rawMatch: RawMatch): Promise<CompletedMatch | ArenaMatch> {
+  const queueType = parseQueueType(rawMatch.info.queueId);
 
   // Pick the first participant as our "tracked player"
-  const firstParticipant = matchDto.info.participants[0];
+  const firstParticipant = rawMatch.info.participants[0];
   if (!firstParticipant) {
     throw new Error("No participants in match");
   }
@@ -283,9 +283,9 @@ async function convertMatchDtoToInternalFormat(matchDto: MatchDto): Promise<Comp
   };
 
   if (queueType === "arena") {
-    return await toArenaMatch([player], matchDto);
+    return await toArenaMatch([player], rawMatch);
   } else {
-    return toMatch([player], matchDto, undefined, undefined);
+    return toMatch([player], rawMatch, undefined, undefined);
   }
 }
 
@@ -303,12 +303,12 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
   const shuffled = keys.sort(() => Math.random() - 0.5);
 
   for (const key of shuffled) {
-    const matchDto = await fetchMatchFromS3(key);
-    if (!matchDto) {
+    const rawMatch = await fetchMatchFromS3(key);
+    if (!rawMatch) {
       continue;
     }
 
-    const queueType = parseQueueType(matchDto.info.queueId);
+    const queueType = parseQueueType(rawMatch.info.queueId);
 
     // Check if this match type matches what we're looking for
     const isMatchingType =
@@ -319,7 +319,7 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
 
     if (isMatchingType) {
       console.log(`📦 Using match from S3: ${key}`);
-      return await convertMatchDtoToInternalFormat(matchDto);
+      return await convertRawMatchToInternalFormat(rawMatch);
     }
   }
 
@@ -408,7 +408,11 @@ async function main(): Promise<void> {
   console.log(`${"=".repeat(80)}\n`);
 }
 
-main().catch((error) => {
-  console.error("Error generating review:", error);
-  process.exit(1);
-});
+void (async () => {
+  try {
+    await main();
+  } catch (error) {
+    console.error("Error generating review:", error);
+    process.exit(1);
+  }
+})();

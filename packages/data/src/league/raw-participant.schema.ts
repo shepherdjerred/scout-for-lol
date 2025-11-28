@@ -1,22 +1,21 @@
 import { z } from "zod";
 import { PositionSchema, RoleSchema, LaneSchema } from "./enums.js";
-import { ChallengesDtoSchema } from "./challenges-dto.schema.js";
-import { MissionsDtoSchema } from "./missions-dto.schema.js";
-import { PerksDtoSchema } from "./perks-dto.schema.js";
+import { RawChallengesSchema } from "./raw-challenges.schema.js";
+import { RawMissionsSchema } from "./raw-missions.schema.js";
+import { RawPerksSchema } from "./raw-perks.schema.js";
 
 /**
- * Participant DTO - Contains all data for a single participant in a match
+ * Raw Participant - Contains all data for a single participant in a match from Riot API
  * Many fields are optional as they may not be present in all game modes (e.g., Arena vs Classic)
- * TODO(https://github.com/shepherdjerred/scout-for-lol/issues/176): Rename to RawParticipant following raw* naming convention
  */
-export const ParticipantDtoSchema = z
+export const RawParticipantSchema = z
   .object({
     assists: z.number(),
     baitPings: z.number().optional(),
     baronKills: z.number(),
     basicPings: z.number(),
     bountyLevel: z.number().optional(),
-    challenges: ChallengesDtoSchema.optional(),
+    challenges: RawChallengesSchema.optional(),
     champExperience: z.number(),
     champLevel: z.number(),
     championId: z.number(),
@@ -73,7 +72,7 @@ export const ParticipantDtoSchema = z
     magicDamageDealt: z.number(),
     magicDamageDealtToChampions: z.number(),
     magicDamageTaken: z.number(),
-    missions: MissionsDtoSchema,
+    missions: RawMissionsSchema,
     needVisionPings: z.number(),
     neutralMinionsKilled: z.number(),
     nexusKills: z.number(),
@@ -84,7 +83,7 @@ export const ParticipantDtoSchema = z
     onMyWayPings: z.number(),
     participantId: z.number(),
     pentaKills: z.number(),
-    perks: PerksDtoSchema,
+    perks: RawPerksSchema,
     physicalDamageDealt: z.number(),
     physicalDamageDealtToChampions: z.number(),
     physicalDamageTaken: z.number(),
@@ -176,4 +175,4 @@ export const ParticipantDtoSchema = z
   })
   .strict();
 
-export type ParticipantDto = z.infer<typeof ParticipantDtoSchema>;
+export type RawParticipant = z.infer<typeof RawParticipantSchema>;

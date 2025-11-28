@@ -164,9 +164,10 @@ export default function App() {
     });
 
     return () => {
-      void unlisten.then((fn) => {
+      void (async () => {
+        const fn = await unlisten;
         fn();
-      });
+      })();
     };
   }, []);
 

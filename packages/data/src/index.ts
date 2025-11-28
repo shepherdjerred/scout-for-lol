@@ -19,7 +19,7 @@ export { extractMatchData, getOrdinalSuffix } from "./review/generator-helpers.j
 export { curateMatchData, curateParticipantData } from "./review/curator.js";
 export { curateTimelineData } from "./review/timeline-curator.js";
 export type { CuratedTimeline, CuratedTimelineEvent, CuratedParticipantSnapshot } from "./review/curator-types.js";
-export * from "./league/match-dto.schema.js";
-export * from "./league/timeline-dto.schema.js";
-export * from "./league/summoner-league-dto.schema.js";
+export * from "./league/raw-match.schema.js";
+export * from "./league/raw-timeline.schema.js";
+export * from "./league/raw-summoner-league.schema.js";
 export { getExampleMatch, type AnyMatch } from "./example/example.js";

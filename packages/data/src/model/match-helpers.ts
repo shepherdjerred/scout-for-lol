@@ -1,13 +1,13 @@
 import { filter, first, map, pipe } from "remeda";
 import { match } from "ts-pattern";
-import type { ParticipantDto } from "@scout-for-lol/data/league/match-dto.schema.js";
+import type { RawParticipant } from "@scout-for-lol/data/league/raw-match.schema.js";
 import type { Champion } from "@scout-for-lol/data/model/champion.js";
 import { parseLane } from "@scout-for-lol/data/model/lane.js";
 
 /**
  * Finds a participant in a match by their PUUID
  */
-export function findParticipant(puuid: string, participants: ParticipantDto[]): ParticipantDto | undefined {
+export function findParticipant(puuid: string, participants: RawParticipant[]): RawParticipant | undefined {
   return pipe(
     participants,
     filter((participant) => participant.puuid === puuid),
@@ -18,7 +18,7 @@ export function findParticipant(puuid: string, participants: ParticipantDto[]): 
 /**
  * Determines the outcome of a match for a participant
  */
-export function getOutcome(participant: ParticipantDto): "Victory" | "Surrender" | "Defeat" {
+export function getOutcome(participant: RawParticipant): "Victory" | "Surrender" | "Defeat" {
   return match(participant)
     .returnType<"Victory" | "Surrender" | "Defeat">()
     .with({ win: true }, () => "Victory")
@@ -28,10 +28,10 @@ export function getOutcome(participant: ParticipantDto): "Victory" | "Surrender"
 }
 
 /**
- * Converts a participant DTO to a Champion object.
+ * Converts a raw participant to a Champion object.
  * Note: This is a minimal conversion. For rune extraction, see extractRunes.
  */
-export function participantToChampion(participant: ParticipantDto): Champion {
+export function participantToChampion(participant: RawParticipant): Champion {
   return {
     riotIdGameName:
       participant.riotIdGameName && participant.riotIdGameName.length > 0 ? participant.riotIdGameName : "Unknown",
@@ -62,7 +62,7 @@ export function participantToChampion(participant: ParticipantDto): Champion {
 /**
  * Splits participants into blue and red teams
  */
-export function getTeams(participants: ParticipantDto[], championConverter: (p: ParticipantDto) => Champion) {
+export function getTeams(participants: RawParticipant[], championConverter: (p: RawParticipant) => Champion) {
   return {
     blue: pipe(participants.slice(0, 5), map(championConverter)),
     red: pipe(participants.slice(5, 10), map(championConverter)),

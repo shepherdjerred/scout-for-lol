@@ -1,5 +1,5 @@
 import type { Directory, Container } from "@dagger.io/dagger";
-import { installWorkspaceDeps } from "@scout-for-lol/.dagger/src/base";
+import { installWorkspaceDeps, getPreparedWorkspace } from "@scout-for-lol/.dagger/src/base";
 
 /**
  * Install dependencies for the report package
@@ -13,20 +13,16 @@ export function installReportDeps(workspaceSource: Directory): Container {
 /**
  * Run type checking, linting, and tests for the report package
  * @param workspaceSource The full workspace source directory
+ * @param preparedWorkspace Optional pre-prepared container (with deps already installed)
  * @returns The test results
  */
-export function checkReport(workspaceSource: Directory): Container {
-  return installReportDeps(workspaceSource)
+export function checkReport(workspaceSource: Directory, preparedWorkspace?: Container): Container {
+  const base = preparedWorkspace ?? getPreparedWorkspace(workspaceSource);
+  return base
     .withWorkdir("/workspace/packages/report")
-    .withExec(["sh", "-c", "echo '🔍 [CI] Running TypeScript type checking for report...'"])
     .withExec(["bun", "run", "typecheck"])
-    .withExec(["sh", "-c", "echo '✅ [CI] TypeScript type checking passed!'"])
-    .withExec(["sh", "-c", "echo '🔍 [CI] Running ESLint for report...'"])
     .withExec(["bun", "run", "lint"])
-    .withExec(["sh", "-c", "echo '✅ [CI] ESLint passed!'"])
-    .withExec(["sh", "-c", "echo '🧪 [CI] Running tests with coverage for report...'"])
-    .withExec(["bun", "run", "test:ci"])
-    .withExec(["sh", "-c", "echo '✅ [CI] All report checks completed successfully!'"]);
+    .withExec(["bun", "run", "test:ci"]);
 }
 
 /**

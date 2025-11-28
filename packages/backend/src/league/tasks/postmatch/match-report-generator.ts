@@ -10,10 +10,10 @@ import type {
   CompletedMatch,
   ArenaMatch,
   QueueType,
-  MatchDto,
-  TimelineDto,
+  RawMatch,
+  RawTimeline,
 } from "@scout-for-lol/data";
-import { MatchIdSchema, queueTypeToDisplayString, MatchDtoSchema, TimelineDtoSchema } from "@scout-for-lol/data";
+import { MatchIdSchema, queueTypeToDisplayString, RawMatchSchema, RawTimelineSchema } from "@scout-for-lol/data";
 import { getPlayer } from "@scout-for-lol/backend/league/model/player.js";
 import type { MessageCreateOptions } from "discord.js";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
@@ -62,7 +62,7 @@ function appendReviewMetadata(
  *
  * Validates the response against our schema to ensure type safety and catch API changes.
  */
-export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Promise<MatchDto | undefined> {
+export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Promise<RawMatch | undefined> {
   try {
     const region = mapRegionToEnum(playerRegion);
     const regionGroup = regionToRegionGroup(region);
@@ -72,7 +72,7 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
 
     // Validate and parse the API response to ensure it matches our schema
     try {
-      const validated = MatchDtoSchema.parse(response.response);
+      const validated = RawMatchSchema.parse(response.response);
       return validated;
     } catch (parseError) {
       console.error(`[fetchMatchData] ❌ Match data validation failed for ${matchId}:`, parseError);
@@ -107,7 +107,7 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
  *
  * Validates the response against our schema to ensure type safety and catch API changes.
  */
-export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region): Promise<TimelineDto | undefined> {
+export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region): Promise<RawTimeline | undefined> {
   try {
     const region = mapRegionToEnum(playerRegion);
     const regionGroup = regionToRegionGroup(region);
@@ -120,7 +120,7 @@ export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region)
 
     // Validate and parse the API response to ensure it matches our schema
     try {
-      const validated = TimelineDtoSchema.parse(response.response);
+      const validated = RawTimelineSchema.parse(response.response);
       console.log(`[fetchMatchTimeline] ✅ Timeline validated with ${validated.info.frames.length.toString()} frames`);
       return validated;
     } catch (parseError) {
@@ -260,7 +260,7 @@ function isRankedQueue(queueType: QueueType | undefined): boolean {
  */
 async function processArenaMatch(
   players: Awaited<ReturnType<typeof getPlayer>>[],
-  matchData: MatchDto,
+  matchData: RawMatch,
   matchId: MatchId,
   playersInMatch: PlayerConfigEntry[],
 ): Promise<MessageCreateOptions> {
@@ -283,10 +283,10 @@ async function processArenaMatch(
 
 type StandardMatchContext = {
   players: Awaited<ReturnType<typeof getPlayer>>[];
-  matchData: MatchDto;
+  matchData: RawMatch;
   matchId: MatchId;
   playersInMatch: PlayerConfigEntry[];
-  timelineData: TimelineDto | undefined;
+  timelineData: RawTimeline | undefined;
 };
 
 /**
@@ -365,10 +365,10 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
  * Returns undefined for arena matches or if timeline fetch fails
  */
 async function fetchTimelineIfStandardMatch(
-  matchData: MatchDto,
+  matchData: RawMatch,
   matchId: MatchId,
   playersInMatch: PlayerConfigEntry[],
-): Promise<TimelineDto | undefined> {
+): Promise<RawTimeline | undefined> {
   // Don't fetch timeline for arena matches
   if (matchData.info.queueId === 1700) {
     return undefined;
@@ -404,7 +404,7 @@ async function fetchTimelineIfStandardMatch(
  * @returns MessageCreateOptions ready to send to Discord, or undefined if no tracked players found
  */
 export async function generateMatchReport(
-  matchData: MatchDto,
+  matchData: RawMatch,
   trackedPlayers: PlayerConfigEntry[],
 ): Promise<MessageCreateOptions | undefined> {
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);

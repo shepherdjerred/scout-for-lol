@@ -86,10 +86,14 @@ export async function send(
 
     // Record successful send if serverId is provided
     if (serverId) {
-      void recordSuccessfulSend(prisma, serverId, channelId).catch((dbError) => {
-        console.error(`[ChannelSend] Failed to record successful send in DB:`, dbError);
-        Sentry.captureException(dbError, { tags: { source: "channel-send-db-record", channelId } });
-      });
+      void (async () => {
+        try {
+          await recordSuccessfulSend(prisma, serverId, channelId);
+        } catch (dbError) {
+          console.error(`[ChannelSend] Failed to record successful send in DB:`, dbError);
+          Sentry.captureException(dbError, { tags: { source: "channel-send-db-record", channelId } });
+        }
+      })();
     }
 
     return sentMessage;
@@ -133,15 +137,19 @@ export async function send(
 
       // Record permission error in database and notify owner if serverId is provided
       if (serverId) {
-        void recordPermissionError(prisma, {
-          serverId,
-          channelId,
-          errorType: "api_error",
-          ...(permissionReason ? { errorReason: permissionReason } : {}),
-        }).catch((dbError) => {
-          console.error(`[ChannelSend] Failed to record permission error in DB:`, dbError);
-          Sentry.captureException(dbError, { tags: { source: "channel-permission-db-record", channelId } });
-        });
+        void (async () => {
+          try {
+            await recordPermissionError(prisma, {
+              serverId,
+              channelId,
+              errorType: "api_error",
+              ...(permissionReason ? { errorReason: permissionReason } : {}),
+            });
+          } catch (dbError) {
+            console.error(`[ChannelSend] Failed to record permission error in DB:`, dbError);
+            Sentry.captureException(dbError, { tags: { source: "channel-permission-db-record", channelId } });
+          }
+        })();
 
         // Notify server owner (this will also track metrics)
         void notifyServerOwnerAboutPermissionError(client, serverId, channelId, permissionReason);

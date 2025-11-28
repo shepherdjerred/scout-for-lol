@@ -17,6 +17,8 @@ import { preferDateFns } from "./eslint-rules/prefer-date-fns";
 import { noFunctionOverloads } from "./eslint-rules/no-function-overloads";
 import { noParentImports } from "./eslint-rules/no-parent-imports";
 import { noTypeGuards } from "./eslint-rules/no-type-guards";
+import { preferAsyncAwait } from "./eslint-rules/prefer-async-await";
+import { noDtoNaming } from "./eslint-rules/no-dto-naming";
 import * as importPlugin from "eslint-plugin-import";
 import * as regexpPlugin from "eslint-plugin-regexp";
 import * as eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
@@ -52,6 +54,8 @@ const customRulesPlugin = {
     "no-function-overloads": noFunctionOverloads,
     "no-parent-imports": noParentImports,
     "no-type-guards": noTypeGuards,
+    "prefer-async-await": preferAsyncAwait,
+    "no-dto-naming": noDtoNaming,
   },
 };
 
@@ -83,11 +87,7 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: [
-            "eslint.config.ts",
-            "eslint-rules/*.ts",
-            "packages/*/tailwind.config.ts",
-          ],
+          allowDefaultProject: ["eslint.config.ts", "eslint-rules/*.ts", "packages/*/tailwind.config.ts"],
         },
         tsconfigRootDir: dirname(fileURLToPath(import.meta.url)),
         extraFileExtensions: [".astro"],
@@ -247,7 +247,7 @@ export default tseslint.config(
             {
               group: ["twisted/dist/models-dto*"],
               message:
-                "Do not import DTO types from twisted. Use Zod schemas from @scout-for-lol/data instead (e.g., MatchDto, SummonerLeagueDto from @scout-for-lol/data).",
+                "Do not import DTO types from twisted. Use Raw* Zod schemas from @scout-for-lol/data instead (e.g., RawMatch, RawSummonerLeague).",
             },
           ],
         },
@@ -269,6 +269,8 @@ export default tseslint.config(
       "custom-rules/no-function-overloads": "error",
       "custom-rules/no-parent-imports": "error",
       "custom-rules/no-type-guards": "error",
+      "custom-rules/prefer-async-await": "error",
+      "custom-rules/no-dto-naming": "error",
     },
   },
   // Dagger index.ts - Dagger module API can have many parameters for external interface

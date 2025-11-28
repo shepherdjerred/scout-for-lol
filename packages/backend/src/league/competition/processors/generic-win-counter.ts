@@ -1,4 +1,4 @@
-import type { MatchDto, CompetitionQueueType, ParticipantDto } from "@scout-for-lol/data";
+import type { RawMatch, CompetitionQueueType, RawParticipant } from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
@@ -26,10 +26,10 @@ export type WinGameCounts = {
  * @returns Object with win and game counts per player ID
  */
 export function countWinsAndGames(
-  matches: MatchDto[],
+  matches: RawMatch[],
   participants: PlayerWithAccounts[],
   queueFilter: CompetitionQueueType,
-  participantFilter?: (participantData: ParticipantDto) => boolean,
+  participantFilter?: (participantData: RawParticipant) => boolean,
 ): WinGameCounts {
   const winCounts: Record<number, number> = {};
   const totalGames: Record<number, number> = {};
@@ -97,6 +97,7 @@ export function buildWinBasedLeaderboard(params: {
       playerName: participant.alias,
       score: scoreFn(wins, games),
       metadata: metadataFn(wins, games),
+      discordId: participant.discordId,
     });
   }
 

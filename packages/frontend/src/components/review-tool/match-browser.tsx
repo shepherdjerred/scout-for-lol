@@ -9,8 +9,8 @@ import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 import {
   listMatchesFromS3,
   fetchMatchFromS3,
-  convertMatchDtoToInternalFormat,
-  extractMatchMetadataFromDto,
+  convertRawMatchToInternalFormat,
+  extractMatchMetadataFromRawMatch,
   type S3Config,
   type MatchMetadata,
 } from "@scout-for-lol/frontend/lib/review-tool/s3";
@@ -133,9 +133,9 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
           // Fetch batch in parallel
           const batchResults = await Promise.allSettled(
             batch.map(async (matchKey) => {
-              const matchDto = await fetchMatchFromS3(s3Config, matchKey.key);
-              if (matchDto) {
-                return extractMatchMetadataFromDto(matchDto, matchKey.key);
+              const rawMatch = await fetchMatchFromS3(s3Config, matchKey.key);
+              if (rawMatch) {
+                return extractMatchMetadataFromRawMatch(rawMatch, matchKey.key);
               }
               return null;
             }),
@@ -187,9 +187,9 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     setLoading(true);
     setSelectedMetadata(metadata);
     try {
-      const matchDto = await fetchMatchFromS3(s3Config, metadata.key);
-      if (matchDto) {
-        const match = convertMatchDtoToInternalFormat(matchDto, metadata.playerName);
+      const rawMatch = await fetchMatchFromS3(s3Config, metadata.key);
+      if (rawMatch) {
+        const match = convertRawMatchToInternalFormat(rawMatch, metadata.playerName);
         onMatchSelected(match);
       }
     } catch (err) {
