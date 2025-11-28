@@ -60,7 +60,10 @@ export function CacheButton() {
           setIsOpen(newIsOpen);
           // Load stats when opening dropdown
           if (newIsOpen) {
-            void getCacheStats().then(setStats);
+            void (async () => {
+              const stats = await getCacheStats();
+              setStats(stats);
+            })();
           }
         }}
         className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"

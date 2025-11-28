@@ -156,9 +156,13 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       // Calculate and track cost
       if (!generatedResult.error) {
         const cost = calculateCost(generatedResult.metadata, config.textGeneration.model, config.imageGeneration.model);
-        costTracker.add(cost).catch(() => {
-          // Error handling is done in the cost tracker
-        });
+        void (async () => {
+          try {
+            await costTracker.add(cost);
+          } catch {
+            // Error handling is done in the cost tracker
+          }
+        })();
       }
 
       // Trigger history panel refresh via history store
@@ -265,9 +269,13 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
           </div>
           <button
             onClick={() => {
-              handleGenerate().catch(() => {
-                // Error handling is done in handleGenerate
-              });
+              void (async () => {
+                try {
+                  await handleGenerate();
+                } catch {
+                  // Error handling is done in handleGenerate
+                }
+              })();
             }}
             className="px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
           >
