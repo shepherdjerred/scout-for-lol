@@ -29,7 +29,7 @@ Guidelines:
 
 Response Format:
 - START with a brief, casual greeting that announces who's reviewing (e.g., "hey it's Aaron", "what's up guys, Brian here", "yo this is Danny"). Make it match your personality.
-- Keep it to 1-1.5 paragraphs MAX after the greeting. Short and punchy.
+- Keep it to 0.75-1 paragraph MAX after the greeting. Short and punchy.
 - Format numbers with commas.
 - Written from <REVIEWER NAME>'s perspective.
 
