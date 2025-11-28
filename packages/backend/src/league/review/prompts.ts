@@ -2,7 +2,6 @@ import {
   PersonalityMetadataSchema,
   PlayerMetadataSchema,
   LANE_CONTEXT_MAP,
-  EXCLUDED_PERSONALITY_FILES,
   type Personality,
   type PlayerMetadata,
 } from "@scout-for-lol/data";
@@ -54,53 +53,12 @@ async function loadPersonality(basename: string): Promise<Personality> {
 }
 
 /**
- * Get list of personality files from the filesystem
- */
-async function getPersonalityFiles(): Promise<string[]> {
-  const personalitiesDir = `${PROMPTS_DIR}/personalities`;
-
-  // Check if directory exists before scanning by trying to access it
-  // We'll catch the error during glob.scan if it doesn't exist
-
-  const glob = new Bun.Glob("*.json");
-  const files: string[] = [];
-
-  try {
-    for await (const file of glob.scan({ cwd: personalitiesDir })) {
-      if (!EXCLUDED_PERSONALITY_FILES.has(file)) {
-        files.push(file);
-      }
-    }
-  } catch (error) {
-    // Handle case where directory might not be accessible during scan
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.warn(`[getPersonalityFiles] Error scanning personalities directory: ${errorMessage}`);
-    return [];
-  }
-
-  return files;
-}
-
-/**
  * Select a random personality prompt
+ * Note: Currently hardcoded to always return "aaron" personality
  */
 export async function selectRandomPersonality(): Promise<Personality> {
-  const personalityFiles = await getPersonalityFiles();
-  if (personalityFiles.length === 0) {
-    const personalitiesDir = `${PROMPTS_DIR}/personalities`;
-    throw new Error(
-      `No personality files found in ${personalitiesDir}. ` +
-        "Ensure the personalities directory exists and contains .json files.",
-    );
-  }
-  const randomIndex = Math.floor(Math.random() * personalityFiles.length);
-  const selectedFile = personalityFiles[randomIndex];
-  if (!selectedFile) {
-    throw new Error("Failed to select personality file");
-  }
-  // Remove .json extension to get basename
-  const basename = selectedFile.replace(".json", "");
-  return loadPersonality(basename);
+  // Temporarily hardcoded to only use aaron personality
+  return loadPersonality("aaron");
 }
 
 /**
