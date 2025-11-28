@@ -197,11 +197,7 @@ export async function generateMatchReview(
           artStyle,
           artTheme,
           ...(secondArtTheme ? { secondArtTheme } : {}),
-          matchData: JSON.stringify(
-            curatedData ? { processedMatch: match, detailedStats: curatedData } : match,
-            null,
-            2,
-          ),
+          matchData: JSON.stringify(curatedData ? { processedMatch: match, detailedStats: curatedData } : match),
           geminiClient,
           model: config.imageGeneration.model,
           timeoutMs: config.imageGeneration.timeoutMs,
