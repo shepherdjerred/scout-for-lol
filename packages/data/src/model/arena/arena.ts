@@ -66,7 +66,28 @@ export const ArenaPlacementSchema = z.union([
   z.literal(8),
 ]);
 
-// TODO(https://github.com/shepherdjerred/scout-for-lol/issues/189): map ints -> name (e.g. minion, krug, etc.)
+/**
+ * Mapping of Arena team IDs to their display names.
+ * Teams are named after League of Legends jungle monsters.
+ */
+export const ARENA_TEAM_NAMES: Record<ArenaTeamId, string> = {
+  1: "Minion",
+  2: "Krug",
+  3: "Raptor",
+  4: "Wolf",
+  5: "Gromp",
+  6: "Scuttle",
+  7: "Herald",
+  8: "Baron",
+} as const;
+
+/**
+ * Get the display name for an Arena team ID.
+ */
+export function getArenaTeamName(teamId: ArenaTeamId): string {
+  return ARENA_TEAM_NAMES[teamId];
+}
+
 export type ArenaTeam = z.infer<typeof ArenaTeamSchema>;
 export const ArenaTeamSchema = z.strictObject({
   teamId: ArenaTeamIdSchema,
