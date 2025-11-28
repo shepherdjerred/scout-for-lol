@@ -15,7 +15,12 @@ import {
 } from "@scout-for-lol/data";
 import type OpenAI from "openai";
 import * as Sentry from "@sentry/node";
-import { saveAIReviewTextToS3, saveAIReviewRequestToS3 } from "@scout-for-lol/backend/storage/s3.js";
+import {
+  saveAIReviewTextToS3,
+  saveAIReviewRequestToS3,
+  saveComprehensiveDebugToS3,
+  type ComprehensiveDebugData,
+} from "@scout-for-lol/backend/storage/s3.js";
 import {
   loadPromptFile,
   selectRandomPersonality,
@@ -45,6 +50,188 @@ type PlayerContext = {
   playerMeta: PlayerMetadata;
 };
 
+type DebugDataParams = {
+  matchId: MatchId;
+  queueType: string;
+  trackedPlayerAliases: string[];
+  personality: Personality;
+  playerContext: PlayerContext;
+  match: CompletedMatch | ArenaMatch;
+  curatedData?: CuratedMatchData;
+  matchAnalysis?: string;
+  textMetadata: ReviewTextMetadata;
+  reviewText: string;
+  style: string;
+  themes: string[];
+  artPrompt?: string;
+  reviewImage?: Uint8Array;
+};
+
+type ArtGenerationParams = {
+  reviewText: string;
+  style: string;
+  themes: string[];
+  matchId: MatchId;
+  queueType: string;
+  trackedPlayerAliases: string[];
+  openaiClient: OpenAI;
+  match: CompletedMatch | ArenaMatch;
+  curatedData?: CuratedMatchData;
+  personalityImageHints?: string[];
+};
+
+type ArtGenerationResult = {
+  artPrompt?: string;
+  reviewImage?: Uint8Array;
+};
+
+async function generateArtAndImage(params: ArtGenerationParams): Promise<ArtGenerationResult> {
+  const {
+    reviewText,
+    style,
+    themes,
+    matchId,
+    queueType,
+    trackedPlayerAliases,
+    openaiClient,
+    match,
+    curatedData,
+    personalityImageHints,
+  } = params;
+
+  const artPrompt = await generateArtPromptFromReview({
+    reviewText,
+    style,
+    themes,
+    matchId,
+    queueType,
+    trackedPlayerAliases,
+    openaiClient,
+    ...(personalityImageHints !== undefined && { personalityImageHints }),
+  });
+
+  const reviewImage = await generateReviewImageBackend({
+    reviewText,
+    artPrompt: artPrompt ?? reviewText,
+    match,
+    matchId,
+    queueType,
+    style,
+    themes,
+    ...(curatedData !== undefined && { curatedData }),
+  });
+
+  return {
+    ...(artPrompt !== undefined && { artPrompt }),
+    ...(reviewImage !== undefined && { reviewImage }),
+  };
+}
+
+type SaveReviewDataParams = {
+  matchId: MatchId;
+  reviewText: string;
+  textMetadata: ReviewTextMetadata;
+  queueType: string;
+  trackedPlayerAliases: string[];
+};
+
+async function saveReviewDataToS3(params: SaveReviewDataParams): Promise<void> {
+  const { matchId, reviewText, textMetadata, queueType, trackedPlayerAliases } = params;
+  try {
+    await saveAIReviewTextToS3(matchId, reviewText, queueType, trackedPlayerAliases);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error("[generateMatchReview] Failed to save review text to S3:", err);
+  }
+
+  try {
+    await saveAIReviewRequestToS3(matchId, textMetadata, queueType, trackedPlayerAliases);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error("[generateMatchReview] Failed to save AI request to S3:", err);
+  }
+}
+
+function buildComprehensiveDebugData(params: DebugDataParams): ComprehensiveDebugData {
+  const {
+    matchId,
+    queueType,
+    trackedPlayerAliases,
+    personality,
+    playerContext,
+    match,
+    curatedData,
+    matchAnalysis,
+    textMetadata,
+    reviewText,
+    style,
+    themes,
+    artPrompt,
+    reviewImage,
+  } = params;
+
+  const player = match.players[playerContext.playerIndex];
+
+  return {
+    matchId,
+    generatedAt: new Date().toISOString(),
+    queueType,
+    trackedPlayerAliases,
+    personality: {
+      filename: personality.filename ?? "unknown",
+      name: personality.metadata.name,
+      description: personality.metadata.description,
+      favoriteChampions: personality.metadata.favoriteChampions,
+      favoriteLanes: personality.metadata.favoriteLanes,
+    },
+    selectedPlayer: {
+      playerIndex: playerContext.playerIndex,
+      playerName: playerContext.playerName,
+      ...(player?.champion.championName !== undefined && { champion: player.champion.championName }),
+      ...(match.queueType !== "arena" &&
+        player &&
+        "lane" in player &&
+        typeof player.lane === "string" && { lane: player.lane }),
+      laneContext: playerContext.laneContext,
+      playerMetadata: playerContext.playerMeta,
+    },
+    curatedData: curatedData,
+    ...(curatedData?.timelineSummary !== undefined && {
+      timelineSummary: {
+        summary: curatedData.timelineSummary,
+      },
+    }),
+    ...(matchAnalysis !== undefined && {
+      matchAnalysis: {
+        analysis: matchAnalysis,
+        model: "gpt-4o-mini",
+      },
+    }),
+    reviewTextGeneration: {
+      systemPrompt: textMetadata.systemPrompt,
+      userPrompt: textMetadata.userPrompt,
+      ...(textMetadata.openaiRequestParams?.model !== undefined && { model: textMetadata.openaiRequestParams.model }),
+      ...(textMetadata.openaiRequestParams?.max_completion_tokens !== undefined && {
+        maxTokens: textMetadata.openaiRequestParams.max_completion_tokens,
+      }),
+      ...(textMetadata.openaiRequestParams?.temperature !== undefined && {
+        temperature: textMetadata.openaiRequestParams.temperature,
+      }),
+      response: reviewText,
+      ...(textMetadata.textTokensPrompt !== undefined && { tokensPrompt: textMetadata.textTokensPrompt }),
+      ...(textMetadata.textTokensCompletion !== undefined && { tokensCompletion: textMetadata.textTokensCompletion }),
+      durationMs: textMetadata.textDurationMs,
+    },
+    artGeneration: {
+      style,
+      themes,
+      ...(artPrompt !== undefined && { artPrompt }),
+      imageGenerated: reviewImage !== undefined,
+      geminiModel: "gemini-3-pro-image-preview",
+    },
+  };
+}
+
 async function prepareCuratedData(
   rawMatchData: RawMatch | undefined,
   timelineData: RawTimeline | undefined,
@@ -68,7 +255,9 @@ async function prepareCuratedData(
 }
 
 async function selectPlayerContext(match: CompletedMatch | ArenaMatch): Promise<PlayerContext | undefined> {
-  const playerIndex = Math.floor(Math.random() * match.players.length);
+  // Prefer "Jerred" if they're in the match, otherwise select randomly
+  const jerredIndex = match.players.findIndex((p) => p.playerConfig.alias.toLowerCase() === "jerred");
+  const playerIndex = jerredIndex !== -1 ? jerredIndex : Math.floor(Math.random() * match.players.length);
   const selectedPlayer = match.players[playerIndex];
   if (!selectedPlayer) {
     console.log("[generateMatchReview] No player found at selected index, skipping review generation");
@@ -244,19 +433,7 @@ export async function generateMatchReview(
 
   const { review: reviewText, metadata, textMetadata } = aiReviewResult;
 
-  try {
-    await saveAIReviewTextToS3(matchId, reviewText, queueType, trackedPlayerAliases);
-  } catch (error: unknown) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    console.error("[generateMatchReview] Failed to save review text to S3:", err);
-  }
-
-  try {
-    await saveAIReviewRequestToS3(matchId, textMetadata, queueType, trackedPlayerAliases);
-  } catch (error: unknown) {
-    const err = error instanceof Error ? error : new Error(String(error));
-    console.error("[generateMatchReview] Failed to save AI request to S3:", err);
-  }
+  await saveReviewDataToS3({ matchId, reviewText, textMetadata, queueType, trackedPlayerAliases });
 
   const { style, themes } = selectRandomStyleAndTheme();
   const personalityImageHints = selectRandomImagePrompts(personality.metadata.image);
@@ -267,7 +444,7 @@ export async function generateMatchReview(
     themes,
   };
 
-  const artPrompt = await generateArtPromptFromReview({
+  const { artPrompt, reviewImage } = await generateArtAndImage({
     reviewText,
     style,
     themes,
@@ -276,18 +453,34 @@ export async function generateMatchReview(
     trackedPlayerAliases,
     openaiClient,
     personalityImageHints,
-  });
-
-  const reviewImage = await generateReviewImageBackend({
-    reviewText,
-    artPrompt: artPrompt ?? reviewText,
     match,
-    matchId,
-    queueType,
-    style,
-    themes,
     ...(curatedData !== undefined && { curatedData }),
   });
+
+  // Save comprehensive debug data to S3
+  try {
+    const comprehensiveDebugData = buildComprehensiveDebugData({
+      matchId,
+      queueType,
+      trackedPlayerAliases,
+      personality,
+      playerContext,
+      match,
+      ...(curatedData !== undefined && { curatedData }),
+      ...(matchAnalysis !== undefined && { matchAnalysis }),
+      textMetadata,
+      reviewText,
+      style,
+      themes,
+      ...(artPrompt !== undefined && { artPrompt }),
+      ...(reviewImage !== undefined && { reviewImage }),
+    });
+
+    await saveComprehensiveDebugToS3(comprehensiveDebugData);
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error("[generateMatchReview] Failed to save comprehensive debug data to S3:", err);
+  }
 
   return {
     text: reviewText,

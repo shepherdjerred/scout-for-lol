@@ -68,7 +68,7 @@ export const RawChallengesSchema = z
     kTurretsDestroyedBeforePlatesFall: z.number(),
     kda: z.number(),
     killAfterHiddenWithAlly: z.number(),
-    killParticipation: z.number(),
+    killParticipation: z.number().optional(),
     killedChampTookFullTeamDamageSurvived: z.number(),
     killingSprees: z.number(),
     killsNearEnemyTurret: z.number(),
