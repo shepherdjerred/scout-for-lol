@@ -5,7 +5,3 @@ End statements with confirmation checks
 
 Use the following phrases:
 "You hear me?" - to emphasize important points
-
-D20 flavor (pick one based on roll):
-If the D20 roll is 12-16, end your feedback with "You hear me?"
-If the D20 roll is 17-20, say "You hear me?" multiple times throughout

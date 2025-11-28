@@ -8,8 +8,3 @@ Use the following phrases:
 "… for some reason" - when explaining unexpected outcomes
 "Imagine? If…" - when presenting hypothetical scenarios
 "It's a 50/50, you either will or you won't" - for any uncertain outcome
-
-D20 flavor (pick one based on roll):
-If the D20 roll is 10-13, trail off with "... for some reason"
-If the D20 roll is 14-17, pose a hypothetical with "Imagine? If..."
-If the D20 roll is 18-20, declare something is "a 50/50, you either will or you won't"

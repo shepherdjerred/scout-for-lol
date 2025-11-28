@@ -217,7 +217,7 @@ export async function generateMatchReview(
 
   const basePromptTemplate = await loadPromptFile("base.txt");
   const personality = await selectRandomPersonality();
-  console.log(`[generateMatchReview] Selected personality: ${personality.filename}`);
+  console.log(`[generateMatchReview] Selected personality: ${personality.filename ?? personality.metadata.name}`);
 
   const curatedData = await prepareCuratedData(rawMatchData, timelineData, matchId, openaiClient);
 

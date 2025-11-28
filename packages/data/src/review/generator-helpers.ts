@@ -7,6 +7,7 @@ import type {
   Personality,
   PlayerMetadata,
 } from "@scout-for-lol/data/review/generator.js";
+import { selectRandomBehavior } from "@scout-for-lol/data/review/prompts.js";
 
 /**
  * Extract match data from a match object
@@ -259,7 +260,7 @@ export function buildPromptVariables(params: {
   laneDescription: string;
   matchReport: string;
   friendsContext: string;
-  d20Roll: string;
+  randomBehavior: string;
   matchAnalysis: string;
   timelineSummary: string;
 } {
@@ -319,8 +320,9 @@ export function buildPromptVariables(params: {
 
   const friendsContext = buildFriendsContext(match, playerIndex);
 
-  // Generate random D20 roll (1-20)
-  const d20Roll = (Math.floor(Math.random() * 20) + 1).toString();
+  // Select a random behavior based on personality weights
+  const selectedBehavior = selectRandomBehavior(personality.metadata.randomBehaviors);
+  const randomBehavior = selectedBehavior ?? "";
   const matchAnalysisText =
     matchAnalysis && matchAnalysis.trim().length > 0
       ? matchAnalysis.trim()
@@ -347,7 +349,7 @@ export function buildPromptVariables(params: {
     laneDescription,
     matchReport,
     friendsContext,
-    d20Roll,
+    randomBehavior,
     matchAnalysis: matchAnalysisText,
     timelineSummary: timelineSummaryText,
   };

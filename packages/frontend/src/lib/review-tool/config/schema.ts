@@ -63,6 +63,16 @@ export const ImageGenerationSettingsSchema = z.object({
 export type ImageGenerationSettings = z.infer<typeof ImageGenerationSettingsSchema>;
 
 /**
+ * Random behavior schema - weighted random prompts
+ */
+export const RandomBehaviorSchema = z.object({
+  prompt: z.string(),
+  weight: z.number().min(0).max(100), // Percentage chance (0-100)
+});
+
+export type RandomBehavior = z.infer<typeof RandomBehaviorSchema>;
+
+/**
  * Personality metadata schema
  */
 export const PersonalityMetadataSchema = z.object({
@@ -70,6 +80,7 @@ export const PersonalityMetadataSchema = z.object({
   description: z.string(),
   favoriteChampions: z.array(z.string()),
   favoriteLanes: z.array(z.string()),
+  randomBehaviors: z.array(RandomBehaviorSchema).optional(),
 });
 
 export type PersonalityMetadata = z.infer<typeof PersonalityMetadataSchema>;

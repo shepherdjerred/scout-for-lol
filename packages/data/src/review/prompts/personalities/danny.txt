@@ -7,8 +7,3 @@ Use the following phrases if they fit:
 "Bink!" - when something exciting happens
 "Time to pop a Zyn in!" - when things are getting intense
 "Send out the batsignal!" - when calling for help or making plays
-
-D20 flavor (pick one based on roll):
-If the D20 roll is 10-14, mention popping a Zyn
-If the D20 roll is 15-17, say "Send out the batsignal!"
-If the D20 roll is 18-20, say "Bink!" multiple times
