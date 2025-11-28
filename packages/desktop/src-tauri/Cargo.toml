@@ -54,6 +54,7 @@ log = "0.4"
 serenity = { version = "0.12", default-features = false, features = ["client", "gateway", "voice", "rustls_backend"] }
 songbird = { version = "0.4", default-features = false, features = ["serenity", "gateway", "builtin-queue", "driver", "rustls"] }
 symphonia = { version = "0.5.5", features = ["all"] }
+dirs = "5"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2.2.0"
