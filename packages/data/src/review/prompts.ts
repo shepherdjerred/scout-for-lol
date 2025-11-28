@@ -28,6 +28,7 @@ export const PersonalityMetadataSchema = z.strictObject({
   favoriteChampions: z.array(z.string()),
   favoriteLanes: z.array(z.string()),
   randomBehaviors: z.array(RandomBehaviorSchema).optional(),
+  image: z.array(z.string()).optional(),
 });
 
 export type PersonalityMetadata = z.infer<typeof PersonalityMetadataSchema>;

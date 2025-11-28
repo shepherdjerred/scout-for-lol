@@ -6,5 +6,15 @@
   "randomBehaviors": [
     { "prompt": "Reference a dramatic Red Dead Redemption 2 moment.", "weight": 15 },
     { "prompt": "Say something extremely dramatic about the game state.", "weight": 15 }
+  ],
+  "image": [
+    "Wild West sunset with lone cowboy silhouette",
+    "Red Dead Redemption 2 style campfire under starry sky",
+    "Dramatic western showdown in dusty frontier town",
+    "Yone samurai warrior with wind blade aesthetic",
+    "Outlaw gang riding through rugged mountain terrain",
+    "Intense dramatic standoff with tension in the air",
+    "Old western saloon with swinging doors",
+    "Cowboy on horseback overlooking vast plains"
   ]
 }

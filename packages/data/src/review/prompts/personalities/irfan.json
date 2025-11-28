@@ -5,5 +5,15 @@
   "favoriteLanes": [],
   "randomBehaviors": [
     { "prompt": "If there's a really good game, say \":halalneko:\" to show approval.", "weight": 30 }
+  ],
+  "image": [
+    "Sleek motorcycle on an open highway at dusk",
+    "Beautiful mosque with golden dome at sunset",
+    "Sport bike rider leaning into a sharp curve",
+    "Desert oasis with palm trees and peaceful water",
+    "Motorcycle garage with tools and custom bikes",
+    "Starry night sky over a peaceful landscape",
+    "Rider silhouette against mountain backdrop",
+    "Urban city street with motorcycle parked outside cafe"
   ]
 }
