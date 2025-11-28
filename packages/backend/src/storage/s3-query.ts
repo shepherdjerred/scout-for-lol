@@ -6,7 +6,7 @@ import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
 
 /**
  * Generate date prefixes for S3 listing between start and end dates (inclusive)
- * Returns paths in format: matches/YYYY/MM/DD/
+ * Returns paths in format: games/YYYY/MM/DD/
  */
 function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
   const days = eachDayOfInterval({
@@ -18,7 +18,7 @@ function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
     const year = format(day, "yyyy");
     const month = format(day, "MM");
     const dayStr = format(day, "dd");
-    return `matches/${year}/${month}/${dayStr}/`;
+    return `games/${year}/${month}/${dayStr}/`;
   });
 }
 
@@ -139,10 +139,17 @@ export async function queryMatchesByDateRange(startDate: Date, endDate: Date, pu
         }
 
         console.log(`[S3Query] Found ${response.Contents.length.toString()} object(s) in ${prefix}`);
-        totalObjects += response.Contents.length;
+
+        // Filter for only match.json files (games/{date}/{matchId}/match.json)
+        const matchJsonKeys = response.Contents.flatMap((obj) =>
+          obj.Key?.endsWith("/match.json") ? [obj.Key] : [],
+        ).slice(0, 1000); // Limit to prevent memory issues
+
+        console.log(`[S3Query] Found ${matchJsonKeys.length.toString()} match.json file(s) in ${prefix}`);
+        totalObjects += matchJsonKeys.length;
 
         // Get all keys for this day
-        const keys = response.Contents.flatMap((obj) => (obj.Key ? [obj.Key] : [])).slice(0, 1000); // Limit to prevent memory issues
+        const keys = matchJsonKeys;
 
         if (keys.length === 0) {
           console.log(`[S3Query] No valid keys found for ${prefix}`);

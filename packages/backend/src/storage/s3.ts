@@ -14,8 +14,8 @@ export async function saveMatchToS3(match: MatchDto, trackedPlayerAliases: strin
 
   await saveToS3({
     matchId,
-    keyPrefix: "matches",
-    keyExtension: "json",
+    assetType: "match",
+    extension: "json",
     body,
     contentType: "application/json",
     metadata: {
@@ -59,8 +59,8 @@ export async function saveImageToS3(
 ): Promise<string | undefined> {
   return saveToS3({
     matchId,
-    keyPrefix: "images",
-    keyExtension: "png",
+    assetType: "report",
+    extension: "png",
     body: imageBuffer,
     contentType: "image/png",
     metadata: {
@@ -95,8 +95,8 @@ export async function saveSvgToS3(
 ): Promise<string | undefined> {
   return saveToS3({
     matchId,
-    keyPrefix: "images",
-    keyExtension: "svg",
+    assetType: "report",
+    extension: "svg",
     body: svgContent,
     contentType: "image/svg+xml",
     metadata: {
@@ -131,8 +131,8 @@ export async function saveAIReviewTextToS3(
 ): Promise<string | undefined> {
   return saveToS3({
     matchId,
-    keyPrefix: "ai-reviews",
-    keyExtension: "txt",
+    assetType: "ai-review",
+    extension: "txt",
     body: reviewText,
     contentType: "text/plain",
     metadata: {
@@ -168,8 +168,8 @@ export async function saveAIReviewImageToS3(
 ): Promise<string | undefined> {
   return saveToS3({
     matchId,
-    keyPrefix: "ai-reviews",
-    keyExtension: "png",
+    assetType: "ai-review-image",
+    extension: "png",
     body: imageBuffer,
     contentType: "image/png",
     metadata: {
@@ -222,8 +222,8 @@ export async function saveAIReviewRequestToS3(
 
   return saveToS3({
     matchId,
-    keyPrefix: "ai-requests",
-    keyExtension: "json",
+    assetType: "ai-request",
+    extension: "json",
     body,
     contentType: "application/json",
     metadata: {
@@ -277,8 +277,8 @@ export async function saveTimelineSummaryToS3(params: TimelineSummaryS3Params): 
 
   await saveToS3({
     matchId,
-    keyPrefix: "timeline-summaries",
-    keyExtension: "request.json",
+    assetType: "timeline-summary",
+    extension: "request.json",
     body: requestBody,
     contentType: "application/json",
     metadata: {
@@ -308,8 +308,8 @@ export async function saveTimelineSummaryToS3(params: TimelineSummaryS3Params): 
 
   await saveToS3({
     matchId,
-    keyPrefix: "timeline-summaries",
-    keyExtension: "response.json",
+    assetType: "timeline-summary",
+    extension: "response.json",
     body: responseBody,
     contentType: "application/json",
     metadata: {

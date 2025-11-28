@@ -28,8 +28,8 @@ export async function saveMatchAnalysisToS3(params: MatchAnalysisS3Params): Prom
 
   await saveToS3({
     matchId,
-    keyPrefix: "ai-match-analyses",
-    keyExtension: "request.json",
+    assetType: "ai-match-analysis",
+    extension: "request.json",
     body: requestBody,
     contentType: "application/json",
     metadata: {
@@ -62,8 +62,8 @@ export async function saveMatchAnalysisToS3(params: MatchAnalysisS3Params): Prom
 
   await saveToS3({
     matchId,
-    keyPrefix: "ai-match-analyses",
-    keyExtension: "response.json",
+    assetType: "ai-match-analysis",
+    extension: "response.json",
     body: responseBody,
     contentType: "application/json",
     metadata: {
@@ -113,8 +113,8 @@ export async function saveArtPromptToS3(params: ArtPromptS3Params): Promise<void
 
   await saveToS3({
     matchId,
-    keyPrefix: "ai-art-prompts",
-    keyExtension: "request.json",
+    assetType: "ai-art-prompt",
+    extension: "request.json",
     body: requestBody,
     contentType: "application/json",
     metadata: {
@@ -148,8 +148,8 @@ export async function saveArtPromptToS3(params: ArtPromptS3Params): Promise<void
 
   await saveToS3({
     matchId,
-    keyPrefix: "ai-art-prompts",
-    keyExtension: "response.json",
+    assetType: "ai-art-prompt",
+    extension: "response.json",
     body: responseBody,
     contentType: "application/json",
     metadata: {

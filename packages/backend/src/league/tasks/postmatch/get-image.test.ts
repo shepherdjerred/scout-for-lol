@@ -190,7 +190,7 @@ describe("Match ID Handling", () => {
 
       if (result) {
         expect(result).toContain(matchId);
-        expect(result).toMatch(/^s3:\/\/test-bucket\/images\/\d{4}\/\d{2}\/\d{2}\/.*\.png$/);
+        expect(result).toMatch(/^s3:\/\/test-bucket\/games\/\d{4}\/\d{2}\/\d{2}\/.*\/report\.png$/);
       }
     }
   });
@@ -212,7 +212,7 @@ describe("Match ID Handling", () => {
 
     if (command instanceof PutObjectCommand) {
       expect(command.input.Key).toContain(matchId);
-      expect(command.input.Key).toEndWith(`${matchId}.png`);
+      expect(command.input.Key).toEndWith(`${matchId}/report.png`);
     }
   });
 });
