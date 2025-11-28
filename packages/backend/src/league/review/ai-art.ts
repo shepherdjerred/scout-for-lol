@@ -36,7 +36,7 @@ ${reviewText}`;
   const startTime = Date.now();
   try {
     const response = await openaiClient.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-5-1",
       messages: [
         { role: "system", content: ART_PROMPT_SYSTEM_PROMPT },
         {
@@ -70,7 +70,7 @@ ${reviewText}`;
         response: {
           artPrompt,
           durationMs: duration,
-          model: "gpt-4o-mini",
+          model: "gpt-5-1",
         },
       });
     } catch (s3Error) {
