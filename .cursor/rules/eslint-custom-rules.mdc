@@ -6,7 +6,7 @@ alwaysApply: false
 
 # Custom ESLint Rules
 
-This project includes 13 custom ESLint rules enforcing type safety and best practices.
+This project includes 14 custom ESLint rules enforcing type safety and best practices.
 
 ## Rule 1: `no-type-assertions`
 
@@ -430,6 +430,92 @@ import { User } from "../../../data/src/types";  // ❌
 
 ---
 
+## Rule 14: `prefer-async-await`
+
+**Severity:** Error | **Auto-Fix:** No
+
+**Enforces:** Prefer async/await syntax over Promise.then() and Promise.catch() chains.
+
+**Why:** Async/await provides cleaner, more readable code with better error handling, easier debugging, and clearer control flow. Promise chains can become difficult to read and maintain.
+
+**Valid:**
+
+```typescript
+// Async/await for promise handling
+async function fetchData() {
+  const response = await fetch('/api');
+  const data = await response.json();
+  return data;
+}
+
+// Try/catch for error handling
+async function fetchWithError() {
+  try {
+    const result = await fetch('/api');
+    return result;
+  } catch (error) {
+    console.error('Failed:', error);
+    throw error;
+  }
+}
+
+// Await with .catch() for default values (allowed)
+async function fetchOrDefault() {
+  const result = await fetch('/api').catch(() => null);
+  return result;
+}
+
+// Promise.resolve/reject inline (allowed)
+Promise.resolve(42).then(x => console.log(x));
+```
+
+**Invalid:**
+
+```typescript
+fetch('/api').then(response => response.json());  // ❌
+fetch('/api').catch(error => console.error(error));  // ❌
+fetch('/api').finally(() => cleanup());  // ❌
+fetch('/api').then(r => r.json()).catch(e => handle(e));  // ❌
+```
+
+**Fix:**
+
+```typescript
+// Convert .then() chains to async/await
+async function fetchData() {
+  const response = await fetch('/api');
+  const data = await response.json();
+  return data;
+}
+
+// Convert .catch() to try/catch
+async function fetchData() {
+  try {
+    const response = await fetch('/api');
+    return response;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+// Convert .finally() to try/finally
+async function fetchData() {
+  try {
+    const response = await fetch('/api');
+    return response;
+  } finally {
+    cleanup();
+  }
+}
+```
+
+**Note:** Auto-fix is not implemented due to the complexity of safely converting promise chains to async/await, which requires restructuring function signatures and control flow.
+
+**See:** `async-await-patterns.mdc` (if exists)
+
+---
+
 ## Summary Table
 
 | Rule | Severity | Category | Auto-Fix |
@@ -447,6 +533,7 @@ import { User } from "../../../data/src/types";  // ❌
 | `prefer-bun-apis` | Error | Performance | No |
 | `no-parent-imports` | Error | Organization | No |
 | `no-type-guards` | Error | Type Safety | No |
+| `prefer-async-await` | Error | Code Quality | No |
 
 ## Related Documentation
 

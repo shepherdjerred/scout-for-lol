@@ -230,9 +230,13 @@ export function ImageGenerationSettings({
             onCreateNew={onCreateNewStyle}
             onEdit={onEditStyle}
             onDelete={(id) => {
-              onDeleteStyle(id).catch(() => {
-                // Error handling is done in the parent component
-              });
+              void (async () => {
+                try {
+                  await onDeleteStyle(id);
+                } catch {
+                  // Error handling is done in the parent component
+                }
+              })();
             }}
             onSave={onSaveStyle}
             onCancelEdit={onCancelStyleEdit}
@@ -252,9 +256,13 @@ export function ImageGenerationSettings({
             onCreateNew={onCreateNewTheme}
             onEdit={onEditTheme}
             onDelete={(id) => {
-              onDeleteTheme(id).catch(() => {
-                // Error handling is done in the parent component
-              });
+              void (async () => {
+                try {
+                  await onDeleteTheme(id);
+                } catch {
+                  // Error handling is done in the parent component
+                }
+              })();
             }}
             onSave={onSaveTheme}
             onCancelEdit={onCancelThemeEdit}

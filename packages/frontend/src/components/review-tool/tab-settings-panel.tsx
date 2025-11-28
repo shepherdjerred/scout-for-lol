@@ -285,10 +285,14 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   };
 
   const handleExportConfig = () => {
-    void downloadConfigBundle(config).catch((error) => {
-      const errorResult = ErrorSchema.safeParse(error);
-      alert(`Failed to export config: ${errorResult.success ? errorResult.data.message : String(error)}`);
-    });
+    void (async () => {
+      try {
+        await downloadConfigBundle(config);
+      } catch (error) {
+        const errorResult = ErrorSchema.safeParse(error);
+        alert(`Failed to export config: ${errorResult.success ? errorResult.data.message : String(error)}`);
+      }
+    })();
   };
 
   const handleImportConfig = () => {
