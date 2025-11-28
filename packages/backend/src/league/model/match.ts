@@ -24,50 +24,6 @@ import { strict as assert } from "assert";
 import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
 import { participantToChampion } from "@scout-for-lol/data/model/match-helpers";
 
-/**
- * Debug helper: Check for unexpected puuid fields in a player object
- */
-function checkPlayerObjectForPuuid(playerObj: unknown, index: number): void {
-  const PlayerObjectSchema = z
-    .object({
-      puuid: z.unknown().optional(),
-      playerConfig: z
-        .object({
-          puuid: z.unknown().optional(),
-        })
-        .loose()
-        .optional(),
-    })
-    .loose();
-
-  const result = PlayerObjectSchema.safeParse(playerObj);
-  if (!result.success) {
-    return;
-  }
-
-  const playerObjStr = JSON.stringify(playerObj);
-  const puuidMatches = playerObjStr.match(/"puuid"/g);
-  if (puuidMatches) {
-    console.log(
-      `[debug][toMatch] Player ${index.toString()} JSON has ${puuidMatches.length.toString()} puuid field(s)`,
-    );
-    // Check if puuid is at top level of playerObj
-    if ("puuid" in result.data) {
-      console.error(
-        `[debug][toMatch] ⚠️  ERROR: Player ${index.toString()} has puuid at top level!`,
-        JSON.stringify(playerObj, null, 2),
-      );
-    }
-    // Check if puuid is at top level of playerConfig
-    if (result.data.playerConfig && "puuid" in result.data.playerConfig) {
-      console.error(
-        `[debug][toMatch] ⚠️  ERROR: Player ${index.toString()}.playerConfig has puuid at top level!`,
-        JSON.stringify(result.data.playerConfig, null, 2),
-      );
-    }
-  }
-}
-
 export function toMatch(
   players: Player[],
   matchDto: MatchDto,
@@ -82,34 +38,15 @@ export function toMatch(
   }
 
   // Build CompletedMatch.players for all tracked players
-  const matchPlayers = players.map((player, index) => {
-    console.log(`[debug][toMatch] Processing player ${index.toString()}: ${player.config.alias}`);
-    console.log(`[debug][toMatch] Player.config keys:`, Object.keys(player.config));
-    console.log(`[debug][toMatch] Player.config full structure:`, JSON.stringify(player.config, null, 2));
-    console.log(`[debug][toMatch] Player.config has puuid at top level:`, "puuid" in player.config);
-    if ("puuid" in player.config) {
-      console.error(
-        `[debug][toMatch] ⚠️  ERROR: player.config has unexpected puuid field!`,
-        JSON.stringify(player.config, null, 2),
-      );
+  const matchPlayers = players.map((player) => {
+    // CRITICAL: Validate player.config doesn't have puuid at top level
+    // This ensures no participant data leaks into player config
+    const configValidation = PlayerConfigEntrySchema.safeParse(player.config);
+    if (!configValidation.success) {
+      throw new Error(`Invalid player config for ${player.config.alias}: config has unexpected fields`);
     }
-    console.log(`[debug][toMatch] Player object keys:`, Object.keys(player));
-    if ("puuid" in player) {
-      console.error(
-        `[debug][toMatch] ⚠️  ERROR: player object has unexpected puuid field!`,
-        JSON.stringify(player, null, 2),
-      );
-    }
-
-    // Deep check for puuid in config structure
-    const configStr = JSON.stringify(player.config);
-    const configPuuidMatches = configStr.match(/"puuid"/g);
-    if (configPuuidMatches && configPuuidMatches.length > 1) {
-      console.error(
-        `[debug][toMatch] ⚠️  ERROR: Found ${configPuuidMatches.length.toString()} puuid fields in config!`,
-        configStr,
-      );
-    }
+    // Use validated config to ensure no extra fields
+    const validatedConfig = configValidation.data;
 
     const participantRaw = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
     if (participantRaw === undefined) {
@@ -128,20 +65,6 @@ export function toMatch(
 
     const enemyTeam = invertTeam(team);
 
-    // CRITICAL: Validate player.config doesn't have puuid at top level
-    // This ensures no participant data leaks into player config
-    const configValidation = PlayerConfigEntrySchema.safeParse(player.config);
-    if (!configValidation.success) {
-      console.error(
-        `[debug][toMatch] ⚠️  ERROR: player.config validation failed for ${player.config.alias}:`,
-        configValidation.error,
-      );
-      console.error(`[debug][toMatch] player.config structure:`, JSON.stringify(player.config, null, 2));
-      throw new Error(`Invalid player config for ${player.config.alias}: config has unexpected fields`);
-    }
-    // Use validated config to ensure no extra fields
-    const validatedConfig = configValidation.data;
-
     const playerObject = {
       playerConfig: validatedConfig,
       rankBeforeMatch,
@@ -155,58 +78,8 @@ export function toMatch(
       laneOpponent: getLaneOpponent(champion, teams[enemyTeam]),
     };
 
-    console.log(`[debug][toMatch] Built player object ${index.toString()} keys:`, Object.keys(playerObject));
-    console.log(`[debug][toMatch] playerObject full structure:`, JSON.stringify(playerObject, null, 2));
-    if ("puuid" in playerObject) {
-      console.error(
-        `[debug][toMatch] ⚠️  ERROR: playerObject has unexpected puuid field!`,
-        JSON.stringify(playerObject, null, 2),
-      );
-    }
-    console.log(`[debug][toMatch] playerObject.playerConfig keys:`, Object.keys(playerObject.playerConfig));
-    if ("puuid" in playerObject.playerConfig) {
-      console.error(
-        `[debug][toMatch] ⚠️  ERROR: playerObject.playerConfig has unexpected puuid field!`,
-        JSON.stringify(playerObject.playerConfig, null, 2),
-      );
-    }
-
-    // Deep check for puuid in playerObject
-    const playerObjectStr = JSON.stringify(playerObject);
-    const objectPuuidMatches = playerObjectStr.match(/"puuid"/g);
-    if (objectPuuidMatches) {
-      // Count how many times puuid appears - should only be once in leagueAccount
-      const expectedPuuidPath = '"leagueAccount":{"puuid"';
-      if (!playerObjectStr.includes(expectedPuuidPath) || objectPuuidMatches.length > 1) {
-        console.error(
-          `[debug][toMatch] ⚠️  ERROR: Found ${objectPuuidMatches.length.toString()} puuid field(s) in playerObject!`,
-          playerObjectStr,
-        );
-      } else {
-        console.log(`[debug][toMatch] ✅ playerObject has puuid only in expected location (leagueAccount)`);
-      }
-    }
-
     return playerObject;
   });
-
-  console.log(`[debug][toMatch] Built ${matchPlayers.length.toString()} player objects`);
-  console.log(`[debug][toMatch] Checking all player objects for puuid field...`);
-  for (let i = 0; i < matchPlayers.length; i++) {
-    const playerObj = matchPlayers[i];
-    if (playerObj && "puuid" in playerObj) {
-      console.error(
-        `[debug][toMatch] ⚠️  ERROR: Player object ${i.toString()} has puuid field at top level!`,
-        playerObj,
-      );
-    }
-    if (playerObj?.playerConfig && "puuid" in playerObj.playerConfig) {
-      console.error(
-        `[debug][toMatch] ⚠️  ERROR: Player object ${i.toString()}.playerConfig has puuid field!`,
-        playerObj.playerConfig,
-      );
-    }
-  }
 
   const result: CompletedMatch = {
     queueType,
@@ -215,45 +88,8 @@ export function toMatch(
     teams,
   };
 
-  // Validate the result to catch any extra fields (like puuid) that shouldn't be there
-  console.log(`[debug][toMatch] About to validate CompletedMatch with ${matchPlayers.length.toString()} player(s)`);
-  console.log(`[debug][toMatch] Full result structure before validation:`, JSON.stringify(result, null, 2));
-
-  // Pre-validation check: look for puuid in players array
-  for (let i = 0; i < matchPlayers.length; i++) {
-    checkPlayerObjectForPuuid(matchPlayers[i], i);
-  }
-
-  try {
-    const validated = CompletedMatchSchema.parse(result);
-    console.log(`[debug][toMatch] ✅ Validation passed - match object is valid`);
-    return validated;
-  } catch (error) {
-    console.error("[debug][toMatch] ❌ Validation error - match object has unexpected fields");
-    if (error instanceof Error) {
-      console.error("[debug][toMatch] Error message:", error.message);
-    }
-    console.error("[debug][toMatch] Error details:", error);
-    console.error("[debug][toMatch] First player object keys:", Object.keys(matchPlayers[0] ?? {}));
-    if (matchPlayers[0]) {
-      console.error("[debug][toMatch] First player object:", JSON.stringify(matchPlayers[0], null, 2));
-    }
-    if (matchPlayers.length > 1 && matchPlayers[1]) {
-      console.error("[debug][toMatch] Second player object keys:", Object.keys(matchPlayers[1]));
-      console.error("[debug][toMatch] Second player object:", JSON.stringify(matchPlayers[1], null, 2));
-    }
-
-    // Additional debug: check what Zod is complaining about
-    const ZodErrorSchema = z.object({
-      issues: z.unknown(),
-    });
-    const zodErrorResult = ZodErrorSchema.safeParse(error);
-    if (zodErrorResult.success) {
-      console.error("[debug][toMatch] Zod validation issues:", JSON.stringify(zodErrorResult.data.issues, null, 2));
-    }
-
-    throw error;
-  }
+  const validated = CompletedMatchSchema.parse(result);
+  return validated;
 }
 
 // Arena helpers
@@ -345,28 +181,15 @@ export function getArenaPlacement(participant: ParticipantDto) {
 }
 
 export async function toArenaMatch(players: Player[], matchDto: MatchDto): Promise<ArenaMatch> {
-  console.log(
-    `[debug][toArenaMatch] Entry - ${players.length.toString()} player(s), ${matchDto.info.participants.length.toString()} participants`,
-  );
-  console.log(`[debug][toArenaMatch] Building subteams...`);
   const subteams = await toArenaSubteams(matchDto.info.participants);
-  console.log(`[debug][toArenaMatch] Built ${subteams.length.toString()} subteams`);
 
   // Build ArenaMatch.players for all tracked players
   const arenaPlayers = await Promise.all(
-    players.map(async (player, index) => {
-      console.log(`[debug][toArenaMatch] Processing player ${index.toString()}: ${player.config.alias}`);
-      console.log(`[debug][toArenaMatch] Player.config keys:`, Object.keys(player.config));
-
+    players.map(async (player) => {
       // CRITICAL: Validate player.config doesn't have puuid at top level
       // This ensures no participant data leaks into player config
       const configValidation = PlayerConfigEntrySchema.safeParse(player.config);
       if (!configValidation.success) {
-        console.error(
-          `[debug][toArenaMatch] ⚠️  ERROR: player.config validation failed for ${player.config.alias}:`,
-          configValidation.error,
-        );
-        console.error(`[debug][toArenaMatch] player.config structure:`, JSON.stringify(player.config, null, 2));
         throw new Error(`Invalid player config for ${player.config.alias}: config has unexpected fields`);
       }
       // Use validated config to ensure no extra fields
