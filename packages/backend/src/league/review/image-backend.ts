@@ -47,7 +47,7 @@ async function uploadImageToS3(params: {
 }
 
 function buildMatchDataJson(match: CompletedMatch | ArenaMatch, curatedData?: CuratedMatchData): string {
-  return JSON.stringify(curatedData ? { processedMatch: match, detailedStats: curatedData } : match, null, 2);
+  return JSON.stringify(curatedData ? { processedMatch: match, detailedStats: curatedData } : match);
 }
 
 export async function generateReviewImageBackend(params: {
