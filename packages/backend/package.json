@@ -25,10 +25,14 @@
     "db:push": "bunx prisma db push",
     "db:migrate": "bunx prisma migrate dev",
     "db:studio": "bunx prisma studio",
-    "test:review": "bun run src/league/review/test-reviews.ts"
+    "test:review": "bun run src/league/review/test-reviews.ts",
+    "debug:workflow": "bun run src/mastra/debug-workflow.ts"
   },
   "dependencies": {
+    "@ai-sdk/google": "^2.0.44",
+    "@ai-sdk/openai": "^2.0.74",
     "@aws-sdk/client-s3": "^3.890.0",
+    "@mastra/core": "^0.24.6",
     "@prisma/client": "^6.0.0",
     "@prisma/client-runtime-utils": "^7.0.0",
     "@resvg/resvg-js": "^2.6.2",

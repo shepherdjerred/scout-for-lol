@@ -20,7 +20,7 @@ import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
 import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
-import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
+import { generateMatchReview } from "@scout-for-lol/backend/mastra/index.js";
 import { match } from "ts-pattern";
 import { logErrorDetails } from "./match-report-debug.js";
 
