@@ -121,7 +121,17 @@ export async function generateReviewText(params: {
   }
   const messageContent = firstChoice.message.content;
   if (!messageContent || messageContent.trim().length === 0) {
-    throw new Error("No review content returned from OpenAI");
+    const refusal = firstChoice.message.refusal;
+    const finishReason = firstChoice.finish_reason;
+    const details: string[] = [];
+    if (refusal) {
+      details.push(`refusal: ${refusal}`);
+    }
+    if (finishReason) {
+      details.push(`finish_reason: ${finishReason}`);
+    }
+    const detailStr = details.length > 0 ? ` (${details.join(", ")})` : "";
+    throw new Error(`No review content returned from OpenAI${detailStr}`);
   }
 
   const review = messageContent.trim();
@@ -241,7 +251,9 @@ export type ChatCompletionCreateParams = {
 export const OpenAIChatCompletionChoiceSchema = z.object({
   message: z.object({
     content: z.string().nullable(),
+    refusal: z.string().nullable().optional(),
   }),
+  finish_reason: z.string().nullable().optional(),
 });
 
 export const OpenAIChatCompletionUsageSchema = z
