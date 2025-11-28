@@ -1,6 +1,12 @@
 {
   "permissions": {
-    "allow": ["Bash(mise ci:*)", "Bash(cargo fmt:*)", "Bash(cargo clippy:*)"],
+    "allow": [
+      "Bash(mise ci:*)",
+      "Bash(cargo fmt:*)",
+      "Bash(cargo clippy:*)",
+      "WebSearch",
+      "WebFetch(domain:mastra.ai)"
+    ],
     "deny": [],
     "ask": []
   }
