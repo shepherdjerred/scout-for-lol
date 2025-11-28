@@ -299,16 +299,13 @@ export function buildPromptVariables(params: {
     logMatchPlayersBeforeSerialization(match);
   }
 
+  // Minify JSON to save tokens
   const matchReport = curatedData
-    ? JSON.stringify(
-        {
-          processedMatch: match,
-          detailedStats: curatedData,
-        },
-        null,
-        2,
-      )
-    : JSON.stringify(match, null, 2);
+    ? JSON.stringify({
+        processedMatch: match,
+        detailedStats: curatedData,
+      })
+    : JSON.stringify(match);
 
   // Check if JSON.stringify added any unexpected fields (it shouldn't, but let's verify)
   if (match.queueType !== "arena") {

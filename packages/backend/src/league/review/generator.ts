@@ -59,10 +59,9 @@ async function prepareCuratedData(
     console.log(
       `[debug][generateMatchReview] Curated timeline with ${curatedData.timeline.keyEvents.length.toString()} key events`,
     );
-  }
 
-  if (timelineData) {
-    const timelineSummary = await summarizeTimeline(timelineData, matchId, openaiClient);
+    // Use curated timeline for summarization (already has champion names, Blue/Red teams, etc.)
+    const timelineSummary = await summarizeTimeline(curatedData.timeline, matchId, openaiClient);
     if (timelineSummary) {
       console.log(`[debug][generateMatchReview] Generated timeline summary`);
       return { ...curatedData, timelineSummary };
@@ -165,7 +164,7 @@ async function generateAIReview(params: {
       playerMetadata,
       openaiClient,
       model: "gpt-5",
-      maxTokens: 25000,
+      maxTokens: 1000,
       curatedData,
       playerIndex,
       ...(matchAnalysis !== undefined && { matchAnalysis }),

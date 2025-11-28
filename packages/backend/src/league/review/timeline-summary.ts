@@ -1,12 +1,12 @@
-import { type MatchId, type TimelineDto } from "@scout-for-lol/data";
+import { type MatchId, type CuratedTimeline } from "@scout-for-lol/data";
 import type OpenAI from "openai";
 import * as Sentry from "@sentry/node";
 import { saveTimelineSummaryToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import { getOpenAIClient } from "./ai-clients.js";
 
-const TIMELINE_SUMMARY_PROMPT = `You are a League of Legends analyst. Analyze this raw match timeline data from the Riot API and provide a concise summary of how the game unfolded.
+const TIMELINE_SUMMARY_PROMPT = `You are a League of Legends analyst. Analyze this match timeline data and provide a concise summary of how the game unfolded.
 
-The timeline contains frames with events like CHAMPION_KILL, ELITE_MONSTER_KILL (dragons, baron, herald), BUILDING_KILL (towers, inhibitors), and participantFrames showing gold/level progression.
+The timeline contains key events (kills, objectives, towers) and gold snapshots at intervals. Teams are "Blue" and "Red". Players are identified by champion name.
 
 Focus on:
 - Early game: First blood, early kills, lane advantages
@@ -14,20 +14,20 @@ Focus on:
 - Late game: Baron takes, team fights, game-ending plays
 - Notable momentum swings or comeback moments
 
-Keep the summary factual and under 300 words. Use champion names when describing kills/events.
+Keep the summary factual and under 300 words. Reference players by their champion name.
 
-Raw timeline JSON:
+Timeline data:
 `;
 
 /**
- * Summarize raw timeline data using OpenAI
+ * Summarize curated timeline data using OpenAI
  *
- * Sends the raw timeline JSON directly to OpenAI for summarization.
- * The AI extracts key events and creates a narrative summary.
+ * Takes already-curated timeline data (with champion names, Blue/Red teams, etc.)
+ * and generates a narrative summary of the game flow.
  * Saves both the request and response to S3 for debugging/analysis.
  */
 export async function summarizeTimeline(
-  timelineDto: TimelineDto,
+  curatedTimeline: CuratedTimeline,
   matchId: MatchId,
   client?: OpenAI,
 ): Promise<string | undefined> {
@@ -38,7 +38,8 @@ export async function summarizeTimeline(
   }
 
   try {
-    const timelineJson = JSON.stringify(timelineDto, null, 2);
+    // Minify JSON to save tokens
+    const timelineJson = JSON.stringify(curatedTimeline);
     const fullPrompt = TIMELINE_SUMMARY_PROMPT + timelineJson;
 
     console.log("[summarizeTimeline] Calling OpenAI to summarize timeline...");
@@ -46,14 +47,14 @@ export async function summarizeTimeline(
     const startTime = Date.now();
 
     const response = await openaiClient.chat.completions.create({
-      model: "gpt-4o-mini", // Use a faster/cheaper model for summarization
+      model: "gpt-5.1-mini",
       messages: [
         {
           role: "user",
           content: fullPrompt,
         },
       ],
-      max_completion_tokens: 2000,
+      max_completion_tokens: 3000,
       temperature: 0.3, // Lower temperature for more factual output
     });
 
@@ -72,7 +73,7 @@ export async function summarizeTimeline(
     try {
       await saveTimelineSummaryToS3({
         matchId,
-        timelineDto,
+        timelineDto: curatedTimeline,
         prompt: TIMELINE_SUMMARY_PROMPT,
         summary,
         durationMs: duration,
