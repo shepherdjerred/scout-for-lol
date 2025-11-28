@@ -334,6 +334,7 @@ function assignRanks(entries: LeaderboardEntry[]): RankedLeaderboardEntry[] {
       playerName: entry.playerName,
       score: entry.score,
       ...(entry.metadata !== undefined && { metadata: entry.metadata }),
+      ...(entry.discordId !== undefined && { discordId: entry.discordId }),
       rank: currentRank,
     });
   }

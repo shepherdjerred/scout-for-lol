@@ -39,6 +39,7 @@ export function processMostGamesPlayed(
       playerId: participant.id,
       playerName: participant.alias,
       score: count,
+      discordId: participant.discordId,
     });
   }
 

@@ -97,6 +97,7 @@ export function buildWinBasedLeaderboard(params: {
       playerName: participant.alias,
       score: scoreFn(wins, games),
       metadata: metadataFn(wins, games),
+      discordId: participant.discordId,
     });
   }
 
