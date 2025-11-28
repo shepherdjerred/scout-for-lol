@@ -218,7 +218,7 @@ export function createDefaultGlobalConfig(): GlobalConfig {
 export function createDefaultTabConfig(): TabConfig {
   return TabConfigSchema.parse({
     textGeneration: {
-      model: "gpt-5",
+      model: "gpt-4o",
       maxTokens: 25000,
       temperature: 1.0,
       topP: 1.0,

@@ -47,7 +47,7 @@ ${reviewText}`;
   const startTime = Date.now();
   try {
     const response = await openaiClient.chat.completions.create({
-      model: "gpt-5.1",
+      model: "gpt-4o",
       messages: [
         { role: "system", content: ART_PROMPT_SYSTEM_PROMPT },
         {
@@ -82,7 +82,7 @@ ${reviewText}`;
         response: {
           artPrompt,
           durationMs: duration,
-          model: "gpt-5.1",
+          model: "gpt-4o",
         },
       });
     } catch (s3Error) {
