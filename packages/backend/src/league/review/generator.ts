@@ -59,10 +59,9 @@ async function prepareCuratedData(
     console.log(
       `[debug][generateMatchReview] Curated timeline with ${curatedData.timeline.keyEvents.length.toString()} key events`,
     );
-  }
 
-  if (timelineData) {
-    const timelineSummary = await summarizeTimeline(timelineData, rawMatchData, matchId, openaiClient);
+    // Use curated timeline for summarization (already has champion names, Blue/Red teams, etc.)
+    const timelineSummary = await summarizeTimeline(curatedData.timeline, matchId, openaiClient);
     if (timelineSummary) {
       console.log(`[debug][generateMatchReview] Generated timeline summary`);
       return { ...curatedData, timelineSummary };
