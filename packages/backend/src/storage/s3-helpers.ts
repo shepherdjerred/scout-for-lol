@@ -6,19 +6,21 @@ import type { MatchId } from "@scout-for-lol/data";
 import { format } from "date-fns";
 
 /**
- * Generate S3 key (path) for a file with date-based hierarchy
+ * Generate S3 key (path) for a file with game-centric hierarchy
+ * All assets for a game are grouped under games/{date}/{matchId}/
+ * This makes it easy to find all assets related to a single game.
  */
-function generateS3Key(matchId: MatchId, prefix: string, extension: string): string {
+function generateS3Key(matchId: MatchId, assetType: string, extension: string): string {
   const now = new Date();
   const dateStr = format(now, "yyyy/MM/dd");
 
-  return `${prefix}/${dateStr}/${matchId}.${extension}`;
+  return `games/${dateStr}/${matchId}/${assetType}.${extension}`;
 }
 
 type SaveToS3Config = {
   matchId: MatchId;
-  keyPrefix: string;
-  keyExtension: string;
+  assetType: string;
+  extension: string;
   body: string | Uint8Array;
   contentType: string;
   metadata: Record<string, string>;
@@ -35,8 +37,8 @@ type SaveToS3Config = {
 export async function saveToS3(config: SaveToS3Config): Promise<string | undefined> {
   const {
     matchId,
-    keyPrefix,
-    keyExtension,
+    assetType,
+    extension,
     body,
     contentType,
     metadata,
@@ -57,7 +59,7 @@ export async function saveToS3(config: SaveToS3Config): Promise<string | undefin
 
   try {
     const client = new S3Client();
-    const key = generateS3Key(matchId, keyPrefix, keyExtension);
+    const key = generateS3Key(matchId, assetType, extension);
     const StringSchema = z.string();
     const BytesSchema = z.instanceof(Uint8Array);
 

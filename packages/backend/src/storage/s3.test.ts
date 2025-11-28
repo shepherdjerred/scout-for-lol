@@ -5,15 +5,15 @@ import { describe, expect, test } from "bun:test";
 // ============================================================================
 
 describe("S3 Key Generation Logic for Matches", () => {
-  test("match key follows hierarchical date structure", () => {
+  test("match key follows game-centric hierarchical date structure", () => {
     const matchId = "NA1_1234567890";
     const date = new Date("2025-10-16T14:30:45Z");
     const year = date.getUTCFullYear();
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
 
-    const expectedKey = `matches/${year.toString()}/${month}/${day}/${matchId}.json`;
-    expect(expectedKey).toBe("matches/2025/10/16/NA1_1234567890.json");
+    const expectedKey = `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
+    expect(expectedKey).toBe("games/2025/10/16/NA1_1234567890/match.json");
   });
 
   test("match key pads single digit months and days", () => {
@@ -23,8 +23,8 @@ describe("S3 Key Generation Logic for Matches", () => {
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
 
-    const key = `matches/${year.toString()}/${month}/${day}/${matchId}.json`;
-    expect(key).toBe("matches/2025/01/05/EUW1_9876543210.json");
+    const key = `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
+    expect(key).toBe("games/2025/01/05/EUW1_9876543210/match.json");
   });
 
   test("match key uses .json extension", () => {
@@ -34,21 +34,21 @@ describe("S3 Key Generation Logic for Matches", () => {
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
 
-    const key = `matches/${year.toString()}/${month}/${day}/${matchId}.json`;
+    const key = `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
     expect(key).toEndWith(".json");
   });
 });
 
 describe("S3 Key Generation Logic for Images", () => {
-  test("image key follows hierarchical date structure", () => {
+  test("image key follows game-centric hierarchical date structure", () => {
     const matchId = "NA1_1234567890";
     const date = new Date("2025-10-16T14:30:45Z");
     const year = date.getUTCFullYear();
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
 
-    const expectedKey = `images/${year.toString()}/${month}/${day}/${matchId}.png`;
-    expect(expectedKey).toBe("images/2025/10/16/NA1_1234567890.png");
+    const expectedKey = `games/${year.toString()}/${month}/${day}/${matchId}/report.png`;
+    expect(expectedKey).toBe("games/2025/10/16/NA1_1234567890/report.png");
   });
 
   test("image key pads single digit months and days", () => {
@@ -58,8 +58,8 @@ describe("S3 Key Generation Logic for Images", () => {
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
 
-    const key = `images/${year.toString()}/${month}/${day}/${matchId}.png`;
-    expect(key).toBe("images/2025/01/05/EUW1_9876543210.png");
+    const key = `games/${year.toString()}/${month}/${day}/${matchId}/report.png`;
+    expect(key).toBe("games/2025/01/05/EUW1_9876543210/report.png");
   });
 
   test("image key uses .png extension", () => {
@@ -69,36 +69,38 @@ describe("S3 Key Generation Logic for Images", () => {
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
 
-    const key = `images/${year.toString()}/${month}/${day}/${matchId}.png`;
+    const key = `games/${year.toString()}/${month}/${day}/${matchId}/report.png`;
     expect(key).toEndWith(".png");
   });
 
-  test("image key is in separate directory from match data", () => {
+  test("image and match keys share same game directory", () => {
     const matchId = "NA1_1234567890";
     const date = new Date("2025-10-16T14:30:45Z");
     const year = date.getUTCFullYear();
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
 
-    const matchKey = `matches/${year.toString()}/${month}/${day}/${matchId}.json`;
-    const imageKey = `images/${year.toString()}/${month}/${day}/${matchId}.png`;
+    const matchKey = `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
+    const imageKey = `games/${year.toString()}/${month}/${day}/${matchId}/report.png`;
 
-    expect(matchKey).toStartWith("matches/");
-    expect(imageKey).toStartWith("images/");
+    // Both should share the same game directory
+    const gameDir = `games/${year.toString()}/${month}/${day}/${matchId}/`;
+    expect(matchKey).toStartWith(gameDir);
+    expect(imageKey).toStartWith(gameDir);
     expect(matchKey).not.toBe(imageKey);
   });
 });
 
 describe("S3 Key Generation Logic for SVG Images", () => {
-  test("SVG key follows hierarchical date structure", () => {
+  test("SVG key follows game-centric hierarchical date structure", () => {
     const matchId = "NA1_1234567890";
     const date = new Date("2025-10-16T14:30:45Z");
     const year = date.getUTCFullYear();
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
 
-    const expectedKey = `images/${year.toString()}/${month}/${day}/${matchId}.svg`;
-    expect(expectedKey).toBe("images/2025/10/16/NA1_1234567890.svg");
+    const expectedKey = `games/${year.toString()}/${month}/${day}/${matchId}/report.svg`;
+    expect(expectedKey).toBe("games/2025/10/16/NA1_1234567890/report.svg");
   });
 
   test("SVG key pads single digit months and days", () => {
@@ -108,8 +110,8 @@ describe("S3 Key Generation Logic for SVG Images", () => {
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
 
-    const key = `images/${year.toString()}/${month}/${day}/${matchId}.svg`;
-    expect(key).toBe("images/2025/01/05/EUW1_9876543210.svg");
+    const key = `games/${year.toString()}/${month}/${day}/${matchId}/report.svg`;
+    expect(key).toBe("games/2025/01/05/EUW1_9876543210/report.svg");
   });
 
   test("SVG key uses .svg extension", () => {
@@ -119,23 +121,24 @@ describe("S3 Key Generation Logic for SVG Images", () => {
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
 
-    const key = `images/${year.toString()}/${month}/${day}/${matchId}.svg`;
+    const key = `games/${year.toString()}/${month}/${day}/${matchId}/report.svg`;
     expect(key).toEndWith(".svg");
   });
 
-  test("PNG and SVG keys share directory structure", () => {
+  test("PNG and SVG keys share game directory structure", () => {
     const matchId = "NA1_1234567890";
     const date = new Date("2025-10-16T14:30:45Z");
     const year = date.getUTCFullYear();
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
 
-    const pngKey = `images/${year.toString()}/${month}/${day}/${matchId}.png`;
-    const svgKey = `images/${year.toString()}/${month}/${day}/${matchId}.svg`;
+    const pngKey = `games/${year.toString()}/${month}/${day}/${matchId}/report.png`;
+    const svgKey = `games/${year.toString()}/${month}/${day}/${matchId}/report.svg`;
 
-    // Both should use the same directory path
-    expect(pngKey).toContain(`images/${year.toString()}/${month}/${day}/`);
-    expect(svgKey).toContain(`images/${year.toString()}/${month}/${day}/`);
+    // Both should use the same game directory path
+    const gameDir = `games/${year.toString()}/${month}/${day}/${matchId}/`;
+    expect(pngKey).toStartWith(gameDir);
+    expect(svgKey).toStartWith(gameDir);
 
     // Only extension should differ
     expect(pngKey.replace(".png", ".svg")).toBe(svgKey);
@@ -217,9 +220,9 @@ describe("Edge Cases for S3 Storage", () => {
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
 
-    const key = `matches/${year.toString()}/${month}/${day}/${matchId}.json`;
+    const key = `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
     expect(key).toContain(matchId);
-    expect(key).toBe("matches/2025/10/16/NA1_1234567890_SPECIAL.json");
+    expect(key).toBe("games/2025/10/16/NA1_1234567890_SPECIAL/match.json");
   });
 
   test("image key handles special characters in match IDs", () => {
@@ -229,9 +232,9 @@ describe("Edge Cases for S3 Storage", () => {
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
 
-    const key = `images/${year.toString()}/${month}/${day}/${matchId}.png`;
+    const key = `games/${year.toString()}/${month}/${day}/${matchId}/report.png`;
     expect(key).toContain(matchId);
-    expect(key).toBe("images/2025/10/16/EUW1_9876543210_TEST.png");
+    expect(key).toBe("games/2025/10/16/EUW1_9876543210_TEST/report.png");
   });
 
   test("keys use consistent date formatting across months", () => {
@@ -247,7 +250,7 @@ describe("Edge Cases for S3 Storage", () => {
       const month = String(date.getUTCMonth() + 1).padStart(2, "0");
       const day = String(date.getUTCDate()).padStart(2, "0");
 
-      const key = `matches/${year.toString()}/${month}/${day}/${matchId}.json`;
+      const key = `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
 
       // Verify all date parts are 2 digits (except year which is 4)
       const parts = key.split("/");
@@ -257,37 +260,38 @@ describe("Edge Cases for S3 Storage", () => {
     }
   });
 
-  test("match and image keys for same match share date structure", () => {
+  test("match and image keys for same match share game directory", () => {
     const matchId = "NA1_1234567890";
     const date = new Date("2025-10-16T14:30:45Z");
     const year = date.getUTCFullYear();
     const month = String(date.getUTCMonth() + 1).padStart(2, "0");
     const day = String(date.getUTCDate()).padStart(2, "0");
 
-    const matchKey = `matches/${year.toString()}/${month}/${day}/${matchId}.json`;
-    const imageKey = `images/${year.toString()}/${month}/${day}/${matchId}.png`;
+    const matchKey = `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
+    const imageKey = `games/${year.toString()}/${month}/${day}/${matchId}/report.png`;
 
-    // Both should use the same date path
-    expect(matchKey).toContain(`${year.toString()}/${month}/${day}`);
-    expect(imageKey).toContain(`${year.toString()}/${month}/${day}`);
+    // Both should use the same game directory
+    const gameDir = `games/${year.toString()}/${month}/${day}/${matchId}/`;
+    expect(matchKey).toStartWith(gameDir);
+    expect(imageKey).toStartWith(gameDir);
   });
 });
 
 describe("S3 URL Format", () => {
   test("saveImageToS3 returns s3:// URL format", () => {
     const bucket = "my-bucket";
-    const key = "images/2025/10/16/NA1_1234567890.png";
+    const key = "games/2025/10/16/NA1_1234567890/report.png";
     const expectedUrl = `s3://${bucket}/${key}`;
 
-    expect(expectedUrl).toBe("s3://my-bucket/images/2025/10/16/NA1_1234567890.png");
+    expect(expectedUrl).toBe("s3://my-bucket/games/2025/10/16/NA1_1234567890/report.png");
   });
 
   test("s3 URL format is parseable", () => {
-    const url = "s3://my-bucket/images/2025/10/16/NA1_1234567890.png";
+    const url = "s3://my-bucket/games/2025/10/16/NA1_1234567890/report.png";
 
     expect(url).toStartWith("s3://");
     const parts = url.replace("s3://", "").split("/");
     expect(parts[0]).toBe("my-bucket");
-    expect(parts[parts.length - 1]).toBe("NA1_1234567890.png");
+    expect(parts[parts.length - 1]).toBe("report.png");
   });
 });
