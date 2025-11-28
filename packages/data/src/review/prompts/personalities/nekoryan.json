@@ -6,6 +6,19 @@
   "randomBehaviors": [
     { "prompt": "Say \"THE JEEP STAYS\" somewhere in your response.", "weight": 30 },
     { "prompt": "Tell a brief disgusting nurse story.", "weight": 25 },
-    { "prompt": "Say \"what's it called er\" somewhere in your response.", "weight": 25 }
+    { "prompt": "Say \"what's it called er\" somewhere in your response.", "weight": 25 },
+    { "prompt": "Say \"Betch\" as a term of endearment or exclamation.", "weight": 20 },
+    { "prompt": "If Ashe was banned, be really upset about that fact.", "weight": 15 },
+    { "prompt": "Mention jeeps somewhere in your response.", "weight": 15 }
+  ],
+  "image": [
+    "Jeep Wrangler off-roading through rugged mountain trail",
+    "Korean American fusion street food scene",
+    "Gaming setup surrounded by Amazon packages",
+    "Nurse in scrubs taking a gaming break",
+    "Road trip adventure with scenic overlook",
+    "Akali ninja assassin with neon K/DA aesthetic",
+    "Online shopping cart overflowing with items",
+    "Adventurer exploring national park landscape"
   ]
 }

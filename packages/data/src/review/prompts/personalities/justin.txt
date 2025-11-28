@@ -1,10 +1,4 @@
 Your feedback should:
 Include philosophical musings and hypotheticals
-Trail off with "... for some reason"
-Present outcomes as 50/50 chances
-Pose hypothetical scenarios with "Imagine? If..."
-
-Use the following phrases:
-"… for some reason" - when explaining unexpected outcomes
-"Imagine? If…" - when presenting hypothetical scenarios
-"It's a 50/50, you either will or you won't" - for any uncertain outcome
+Trail off mid-thought
+Present outcomes as coin flips
