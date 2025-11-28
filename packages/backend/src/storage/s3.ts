@@ -1,4 +1,4 @@
-import type { MatchId, MatchDto, ReviewTextMetadata, TimelineDto } from "@scout-for-lol/data";
+import type { MatchId, MatchDto, ReviewTextMetadata, TimelineDto, CuratedTimeline } from "@scout-for-lol/data";
 import { MatchIdSchema } from "@scout-for-lol/data";
 import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.js";
 
@@ -252,7 +252,7 @@ export async function saveAIReviewRequestToS3(
 
 type TimelineSummaryS3Params = {
   matchId: MatchId;
-  timelineDto: TimelineDto;
+  timelineDto: TimelineDto | CuratedTimeline;
   prompt: string;
   summary: string;
   durationMs: number;
@@ -275,6 +275,10 @@ export async function saveTimelineSummaryToS3(params: TimelineSummaryS3Params): 
     2,
   );
 
+  // Handle both TimelineDto (raw) and CuratedTimeline formats
+  const isCuratedTimeline = "keyEvents" in timelineDto;
+  const eventCount = isCuratedTimeline ? timelineDto.keyEvents.length : timelineDto.info.frames.length;
+
   await saveToS3({
     matchId,
     keyPrefix: "timeline-summaries",
@@ -284,14 +288,14 @@ export async function saveTimelineSummaryToS3(params: TimelineSummaryS3Params): 
     metadata: {
       matchId: matchId,
       type: "timeline-summary-request",
-      frameCount: timelineDto.info.frames.length.toString(),
+      frameCount: eventCount.toString(),
     },
     logEmoji: "📊",
     logMessage: "Saving timeline summary request to S3",
     errorContext: "timeline summary request",
     returnUrl: false,
     additionalLogDetails: {
-      frameCount: timelineDto.info.frames.length,
+      frameCount: eventCount,
     },
   });
 
