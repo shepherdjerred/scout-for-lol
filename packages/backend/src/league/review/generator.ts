@@ -68,7 +68,9 @@ async function prepareCuratedData(
 }
 
 async function selectPlayerContext(match: CompletedMatch | ArenaMatch): Promise<PlayerContext | undefined> {
-  const playerIndex = Math.floor(Math.random() * match.players.length);
+  // Prefer "Jerred" if they're in the match, otherwise select randomly
+  const jerredIndex = match.players.findIndex((p) => p.playerConfig.alias.toLowerCase() === "jerred");
+  const playerIndex = jerredIndex !== -1 ? jerredIndex : Math.floor(Math.random() * match.players.length);
   const selectedPlayer = match.players[playerIndex];
   if (!selectedPlayer) {
     console.log("[generateMatchReview] No player found at selected index, skipping review generation");

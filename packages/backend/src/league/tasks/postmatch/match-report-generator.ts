@@ -256,6 +256,13 @@ function isRankedQueue(queueType: QueueType | undefined): boolean {
 }
 
 /**
+ * Check if Jerred is in the match
+ */
+function hasJerred(playersInMatch: PlayerConfigEntry[]): boolean {
+  return playersInMatch.some((p) => p.alias.toLowerCase() === "jerred");
+}
+
+/**
  * Process arena match and generate Discord message
  */
 async function processArenaMatch(
@@ -301,10 +308,11 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
   }
   const completedMatch = toMatch(players, matchData, undefined, undefined);
 
-  // Generate AI review (text and optional image) - only for ranked queues (solo/flex/clash)
+  // Generate AI review (text and optional image) - for ranked queues or matches with Jerred
   let reviewText: string | undefined;
   let reviewImage: Uint8Array | undefined;
-  if (isRankedQueue(completedMatch.queueType)) {
+  const shouldGenerateReview = isRankedQueue(completedMatch.queueType) || hasJerred(playersInMatch);
+  if (shouldGenerateReview) {
     try {
       const review = await generateMatchReview(completedMatch, matchId, matchData, timelineData);
       if (review) {
@@ -322,7 +330,7 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
     }
   } else {
     console.log(
-      `[generateMatchReport] Skipping AI review - not a ranked solo/flex queue match (queueType: ${completedMatch.queueType ?? "unknown"})`,
+      `[generateMatchReport] Skipping AI review - not a ranked queue and Jerred not in match (queueType: ${completedMatch.queueType ?? "unknown"})`,
     );
   }
 
