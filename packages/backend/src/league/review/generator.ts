@@ -66,6 +66,54 @@ type DebugDataParams = {
   reviewImage?: Uint8Array;
 };
 
+type ArtGenerationParams = {
+  reviewText: string;
+  style: string;
+  themes: string[];
+  matchId: MatchId;
+  queueType: string;
+  trackedPlayerAliases: string[];
+  openaiClient: OpenAI;
+  match: CompletedMatch | ArenaMatch;
+  curatedData?: CuratedMatchData;
+};
+
+type ArtGenerationResult = {
+  artPrompt?: string;
+  reviewImage?: Uint8Array;
+};
+
+async function generateArtAndImage(params: ArtGenerationParams): Promise<ArtGenerationResult> {
+  const { reviewText, style, themes, matchId, queueType, trackedPlayerAliases, openaiClient, match, curatedData } =
+    params;
+
+  const artPrompt = await generateArtPromptFromReview({
+    reviewText,
+    style,
+    themes,
+    matchId,
+    queueType,
+    trackedPlayerAliases,
+    openaiClient,
+  });
+
+  const reviewImage = await generateReviewImageBackend({
+    reviewText,
+    artPrompt: artPrompt ?? reviewText,
+    match,
+    matchId,
+    queueType,
+    style,
+    themes,
+    ...(curatedData !== undefined && { curatedData }),
+  });
+
+  return {
+    ...(artPrompt !== undefined && { artPrompt }),
+    ...(reviewImage !== undefined && { reviewImage }),
+  };
+}
+
 type SaveReviewDataParams = {
   matchId: MatchId;
   reviewText: string;
@@ -379,7 +427,7 @@ export async function generateMatchReview(
     themes,
   };
 
-  const artPrompt = await generateArtPromptFromReview({
+  const { artPrompt, reviewImage } = await generateArtAndImage({
     reviewText,
     style,
     themes,
@@ -387,16 +435,7 @@ export async function generateMatchReview(
     queueType,
     trackedPlayerAliases,
     openaiClient,
-  });
-
-  const reviewImage = await generateReviewImageBackend({
-    reviewText,
-    artPrompt: artPrompt ?? reviewText,
     match,
-    matchId,
-    queueType,
-    style,
-    themes,
     ...(curatedData !== undefined && { curatedData }),
   });
 
