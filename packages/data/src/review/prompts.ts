@@ -106,6 +106,26 @@ export function selectRandomBehavior(behaviors: RandomBehavior[] | undefined): s
 }
 
 /**
+ * Select 2-3 random image prompts from a personality's image array.
+ * These prompts are used to influence AI-generated image concepts.
+ *
+ * @param imagePrompts - Array of image prompt strings from personality metadata
+ * @returns Array of 2-3 randomly selected prompts, or empty array if no prompts available
+ */
+export function selectRandomImagePrompts(imagePrompts: string[] | undefined): string[] {
+  if (!imagePrompts || imagePrompts.length === 0) {
+    return [];
+  }
+
+  // Determine how many prompts to select (2-3)
+  const count = Math.min(imagePrompts.length, Math.random() < 0.5 ? 2 : 3);
+
+  // Shuffle and take the first `count` items
+  const shuffled = [...imagePrompts].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
+/**
  * Replace template variables in the base prompt
  */
 export function replaceTemplateVariables(
