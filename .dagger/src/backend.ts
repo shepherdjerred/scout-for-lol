@@ -1,5 +1,5 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
-import { installWorkspaceDeps, getBunContainer } from "@scout-for-lol/.dagger/src/base";
+import { installWorkspaceDeps, getBunContainer, getPreparedWorkspace } from "@scout-for-lol/.dagger/src/base";
 
 /**
  * Install dependencies for the backend
@@ -9,6 +9,17 @@ import { installWorkspaceDeps, getBunContainer } from "@scout-for-lol/.dagger/sr
 export function installBackendDeps(workspaceSource: Directory): Container {
   // Backend needs OpenSSL for Prisma
   return installWorkspaceDeps(workspaceSource, true);
+}
+
+/**
+ * Get a prepared container for backend with deps and Prisma generated
+ * @param workspaceSource The full workspace source directory
+ * @param preparedWorkspace Optional pre-prepared container to reuse (avoids re-installing deps)
+ * @returns Container ready for backend operations
+ */
+export function getBackendPrepared(workspaceSource: Directory, preparedWorkspace?: Container): Container {
+  const base = preparedWorkspace ?? getPreparedWorkspace(workspaceSource);
+  return base.withWorkdir("/workspace/packages/backend");
 }
 
 /**
@@ -27,24 +38,14 @@ export function updateLockfile(source: Directory): Directory {
 /**
  * Run type checking, linting, and tests for the backend
  * @param workspaceSource The full workspace source directory
+ * @param preparedWorkspace Optional pre-prepared container (with deps+Prisma already done)
  * @returns The test results
  */
-export function checkBackend(workspaceSource: Directory): Container {
-  return (
-    installBackendDeps(workspaceSource)
-      .withWorkdir("/workspace/packages/backend")
-      .withExec(["bun", "run", "generate"])
-      // .terminal()
-      .withExec(["sh", "-c", "echo '🔍 [CI] Running TypeScript type checking for backend...'"])
-      .withExec(["bun", "run", "typecheck"])
-      .withExec(["sh", "-c", "echo '✅ [CI] TypeScript type checking passed!'"])
-      .withExec(["sh", "-c", "echo '🔍 [CI] Running ESLint for backend...'"])
-      .withExec(["bun", "run", "lint"])
-      .withExec(["sh", "-c", "echo '✅ [CI] ESLint passed!'"])
-      .withExec(["sh", "-c", "echo '🧪 [CI] Running tests with coverage for backend...'"])
-      .withExec(["bun", "run", "test:ci"])
-      .withExec(["sh", "-c", "echo '✅ [CI] All backend checks completed successfully!'"])
-  );
+export function checkBackend(workspaceSource: Directory, preparedWorkspace?: Container): Container {
+  return getBackendPrepared(workspaceSource, preparedWorkspace)
+    .withExec(["bun", "run", "typecheck"])
+    .withExec(["bun", "run", "lint"])
+    .withExec(["bun", "run", "test:ci"]);
 }
 
 /**
@@ -70,20 +71,20 @@ export function getBackendTestReport(workspaceSource: Directory): Directory {
  * @param workspaceSource The full workspace source directory
  * @param version The version tag
  * @param gitSha The git SHA
+ * @param preparedWorkspace Optional pre-prepared container (with deps+Prisma already done)
  * @returns The built container
  */
-export function buildBackendImage(workspaceSource: Directory, version: string, gitSha: string): Container {
+export function buildBackendImage(
+  workspaceSource: Directory,
+  version: string,
+  gitSha: string,
+  preparedWorkspace?: Container,
+): Container {
   // Health check available via: bun run src/health.ts
   // This should be configured in K8s manifests as a liveness/readiness probe
-  return installBackendDeps(workspaceSource)
+  return getBackendPrepared(workspaceSource, preparedWorkspace)
     .withEnvVariable("VERSION", version)
     .withEnvVariable("GIT_SHA", gitSha)
-    .withDirectory(
-      "/workspace/packages/backend/prisma",
-      workspaceSource.directory("packages/backend").directory("prisma"),
-    )
-    .withWorkdir("/workspace/packages/backend")
-    .withExec(["bun", "run", "generate"])
     .withEntrypoint(["sh", "-c", "bun run src/database/migrate.ts && bun run src/index.ts"])
     .withLabel("org.opencontainers.image.title", "scout-for-lol-backend")
     .withLabel("org.opencontainers.image.description", "Scout for LoL Discord bot backend")
@@ -106,7 +107,19 @@ export async function smokeTestBackendImage(
   gitSha: string,
 ): Promise<string> {
   const image = buildBackendImage(workspaceSource, version, gitSha);
+  return smokeTestBackendImageWithContainer(image, workspaceSource);
+}
 
+/**
+ * Smoke test a pre-built backend Docker image (avoids rebuilding)
+ * @param image The pre-built container image
+ * @param workspaceSource The full workspace source directory (for example.env)
+ * @returns Test result with logs
+ */
+export async function smokeTestBackendImageWithContainer(
+  image: Container,
+  workspaceSource: Directory,
+): Promise<string> {
   // Use a unique database name for this test run to avoid caching issues
   const testDbName = `test-${Date.now().toString()}.sqlite`;
 
@@ -174,13 +187,40 @@ type PublishBackendImageOptions = {
   };
 };
 
+type PublishBackendImageWithContainerOptions = {
+  image: Container;
+  version: string;
+  gitSha: string;
+  registryAuth?: {
+    username: string;
+    password: Secret;
+  };
+};
+
 /**
  * Publish the backend Docker image
  * @param options Publishing options including workspace source, version, git SHA, and optional registry auth
  * @returns The published image references
  */
 export async function publishBackendImage(options: PublishBackendImageOptions): Promise<string[]> {
-  let image = buildBackendImage(options.workspaceSource, options.version, options.gitSha);
+  const image = buildBackendImage(options.workspaceSource, options.version, options.gitSha);
+  return publishBackendImageWithContainer({
+    image,
+    version: options.version,
+    gitSha: options.gitSha,
+    registryAuth: options.registryAuth,
+  });
+}
+
+/**
+ * Publish a pre-built backend Docker image (avoids rebuilding)
+ * @param options Publishing options including pre-built image, version, git SHA, and optional registry auth
+ * @returns The published image references
+ */
+export async function publishBackendImageWithContainer(
+  options: PublishBackendImageWithContainerOptions,
+): Promise<string[]> {
+  let image = options.image;
 
   // Set up registry authentication if credentials provided
   if (options.registryAuth) {

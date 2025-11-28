@@ -10,6 +10,19 @@ export function getBunContainer(): Container {
 }
 
 /**
+ * Get a fully prepared workspace container with all dependencies installed and Prisma generated.
+ * This is the optimized base container for running CI checks - call it once and share across all checks.
+ * @param workspaceSource The full workspace source directory
+ * @returns Container with deps installed and Prisma client generated
+ */
+export function getPreparedWorkspace(workspaceSource: Directory): Container {
+  return installWorkspaceDeps(workspaceSource, true)
+    .withWorkdir("/workspace/packages/backend")
+    .withExec(["bun", "run", "generate"])
+    .withWorkdir("/workspace");
+}
+
+/**
  * Install workspace dependencies with optimal caching
  * This function is shared across all packages to maximize cache reuse
  * @param workspaceSource The full workspace source directory
