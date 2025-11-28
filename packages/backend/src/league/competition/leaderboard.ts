@@ -5,14 +5,14 @@ import type {
   LeaguePuuid,
   Rank,
   Ranks,
-  MatchDto,
+  RawMatch,
 } from "@scout-for-lol/data";
 import {
   getCompetitionStatus,
   rankToLeaguePoints,
   RankSchema,
   LeaguePuuidSchema,
-  SummonerLeagueDtoSchema,
+  RawSummonerLeagueSchema,
 } from "@scout-for-lol/data";
 import { sortBy } from "remeda";
 import { match } from "ts-pattern";
@@ -99,7 +99,7 @@ export async function fetchSnapshotData(options: {
             const response = await api.League.byPUUID(account.puuid, mapRegionToEnum(region));
 
             // Validate response with Zod schema to ensure proper types
-            const validatedResponse = z.array(SummonerLeagueDtoSchema).parse(response.response);
+            const validatedResponse = z.array(RawSummonerLeagueSchema).parse(response.response);
 
             const solo = getRank(validatedResponse, "RANKED_SOLO_5x5");
             const flex = getRank(validatedResponse, "RANKED_FLEX_SR");
@@ -334,6 +334,7 @@ function assignRanks(entries: LeaderboardEntry[]): RankedLeaderboardEntry[] {
       playerName: entry.playerName,
       score: entry.score,
       ...(entry.metadata !== undefined && { metadata: entry.metadata }),
+      ...(entry.discordId !== undefined && { discordId: entry.discordId }),
       rank: currentRank,
     });
   }
@@ -423,7 +424,7 @@ export async function calculateLeaderboard(
     .with({ type: "HIGHEST_WIN_RATE" }, () => true)
     .exhaustive();
 
-  let matches: MatchDto[] = [];
+  let matches: RawMatch[] = [];
 
   if (needsMatchData) {
     console.log(`[Leaderboard] Querying matches for ${puuids.length.toString()} accounts`);

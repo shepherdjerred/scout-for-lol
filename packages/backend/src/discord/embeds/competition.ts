@@ -116,7 +116,10 @@ export function generateLeaderboardEmbed(
       .map((entry) => {
         const medal = getMedalEmoji(entry.rank);
         const score = formatScore(entry.score, competition.criteria, entry.metadata);
-        return `${medal} **${entry.rank.toString()}.** ${entry.playerName} - ${score}`;
+        const isViewingUser = viewingUserId && entry.discordId === viewingUserId;
+        const baseText = `${medal} **${entry.rank.toString()}.** ${entry.playerName} - ${score}`;
+        // Highlight viewing user's entry with an indicator
+        return isViewingUser ? `${baseText} 👤` : baseText;
       })
       .join("\n");
 
@@ -137,11 +140,16 @@ export function generateLeaderboardEmbed(
   }
 
   // Add viewing user's position if they're outside top 10
-  // Note: This feature is disabled for now as LeaderboardEntry doesn't include discordId
-  // To enable this, we would need to modify the LeaderboardEntry type
-  // User position highlighting would be implemented here when LeaderboardEntry includes discordId
   if (viewingUserId) {
-    // TODO(https://github.com/shepherdjerred/scout-for-lol/issues/190): Implement user position highlighting when LeaderboardEntry includes discordId
+    const userEntry = leaderboard.find((entry) => entry.discordId === viewingUserId);
+    if (userEntry && userEntry.rank > 10) {
+      const score = formatScore(userEntry.score, competition.criteria, userEntry.metadata);
+      embed.addFields({
+        name: "Your Position",
+        value: `**${userEntry.rank.toString()}.** ${userEntry.playerName} - ${score} 👤`,
+        inline: false,
+      });
+    }
   }
 
   // Add footer with criteria description and timestamp
@@ -257,10 +265,6 @@ export function generateCompetitionDetailsEmbed(competition: CompetitionWithCrit
   return embed;
 }
 
-// ============================================================================
-// Helper Functions - Criteria Formatting
-// ============================================================================
-
 /**
  * Convert competition criteria to human-readable description
  *
@@ -289,10 +293,6 @@ function formatCriteriaDescription(criteria: CompetitionCriteria): string {
     )
     .exhaustive();
 }
-
-// ============================================================================
-// Helper Functions - Score Formatting
-// ============================================================================
 
 /**
  * Format a score value based on the competition criteria type

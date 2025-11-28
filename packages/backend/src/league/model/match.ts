@@ -13,8 +13,8 @@ import {
   type Player,
   type Rank,
   type ArenaMatch,
-  type MatchDto,
-  type ParticipantDto,
+  type RawMatch,
+  type RawParticipant,
   findParticipant,
   getOutcome,
   getTeams,
@@ -26,12 +26,12 @@ import { participantToChampion } from "@scout-for-lol/data/model/match-helpers";
 
 export function toMatch(
   players: Player[],
-  matchDto: MatchDto,
+  rawMatch: RawMatch,
   rankBeforeMatch: Rank | undefined,
   rankAfterMatch: Rank | undefined,
 ): CompletedMatch {
-  const teams = getTeams(matchDto.info.participants, participantToChampion);
-  const queueType = parseQueueType(matchDto.info.queueId);
+  const teams = getTeams(rawMatch.info.participants, participantToChampion);
+  const queueType = parseQueueType(rawMatch.info.queueId);
 
   if (queueType === "arena") {
     throw new Error("arena matches are not supported");
@@ -48,15 +48,15 @@ export function toMatch(
     // Use validated config to ensure no extra fields
     const validatedConfig = configValidation.data;
 
-    const participantRaw = findParticipant(player.config.league.leagueAccount.puuid, matchDto.info.participants);
+    const participantRaw = findParticipant(player.config.league.leagueAccount.puuid, rawMatch.info.participants);
     if (participantRaw === undefined) {
       console.debug("Player PUUID:", player.config.league.leagueAccount.puuid);
-      console.debug("Match Participants:", matchDto.info.participants);
+      console.debug("Match Participants:", rawMatch.info.participants);
       throw new Error(`participant not found for player ${player.config.alias}`);
     }
 
     // TypeScript needs explicit narrowing after throw
-    const participant: ParticipantDto = participantRaw;
+    const participant: RawParticipant = participantRaw;
 
     const champion = participantToChampion(participant);
     const team = parseTeam(participant.teamId);
@@ -84,7 +84,7 @@ export function toMatch(
   const result: CompletedMatch = {
     queueType,
     players: matchPlayers,
-    durationInSeconds: matchDto.info.gameDuration,
+    durationInSeconds: rawMatch.info.gameDuration,
     teams,
   };
 
@@ -105,7 +105,7 @@ const ArenaSubteamIdSchema = z.union([
   z.literal(8),
 ]);
 
-function validateArenaSubteamId(participant: ParticipantDto): 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 {
+function validateArenaSubteamId(participant: RawParticipant): 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 {
   return ArenaSubteamIdSchema.parse(participant.playerSubteamId);
 }
 
@@ -114,11 +114,11 @@ const ArenaParticipantFieldsSchema = z.object({
   placement: z.number().int().min(1).max(8),
 });
 
-type ArenaParticipantValidatedMin = ParticipantDto & {
+type ArenaParticipantValidatedMin = RawParticipant & {
   playerSubteamId: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 };
 
-export function groupArenaTeams(participants: ParticipantDto[]) {
+export function groupArenaTeams(participants: RawParticipant[]) {
   const validated: ArenaParticipantValidatedMin[] = participants.map((p) => {
     const playerSubteamId = validateArenaSubteamId(p);
     return { ...p, playerSubteamId };
@@ -141,7 +141,7 @@ export function groupArenaTeams(participants: ParticipantDto[]) {
   return groups;
 }
 
-export function getArenaTeammate(participant: ParticipantDto, participants: ParticipantDto[]) {
+export function getArenaTeammate(participant: RawParticipant, participants: RawParticipant[]) {
   const sub = validateArenaSubteamId(participant);
   for (const p of participants) {
     if (p === participant) {
@@ -155,7 +155,7 @@ export function getArenaTeammate(participant: ParticipantDto, participants: Part
   return undefined;
 }
 
-export async function toArenaSubteams(participants: ParticipantDto[]): Promise<ArenaTeam[]> {
+export async function toArenaSubteams(participants: RawParticipant[]): Promise<ArenaTeam[]> {
   const grouped = groupArenaTeams(participants);
   const result: ArenaTeam[] = [];
   for (const { subteamId, players } of grouped) {
@@ -176,12 +176,12 @@ export async function toArenaSubteams(participants: ParticipantDto[]): Promise<A
   return result;
 }
 
-export function getArenaPlacement(participant: ParticipantDto) {
+export function getArenaPlacement(participant: RawParticipant) {
   return ArenaParticipantFieldsSchema.parse(participant).placement;
 }
 
-export async function toArenaMatch(players: Player[], matchDto: MatchDto): Promise<ArenaMatch> {
-  const subteams = await toArenaSubteams(matchDto.info.participants);
+export async function toArenaMatch(players: Player[], rawMatch: RawMatch): Promise<ArenaMatch> {
+  const subteams = await toArenaSubteams(rawMatch.info.participants);
 
   // Build ArenaMatch.players for all tracked players
   const arenaPlayers = await Promise.all(
@@ -195,18 +195,18 @@ export async function toArenaMatch(players: Player[], matchDto: MatchDto): Promi
       // Use validated config to ensure no extra fields
       const validatedConfig = configValidation.data;
 
-      const participant = findParticipant(validatedConfig.league.leagueAccount.puuid, matchDto.info.participants);
+      const participant = findParticipant(validatedConfig.league.leagueAccount.puuid, rawMatch.info.participants);
       if (participant === undefined) {
         throw new Error(`participant not found for player ${validatedConfig.alias}`);
       }
       const subteamId = validateArenaSubteamId(participant);
       const placement = getArenaPlacement(participant);
       const champion = await participantToArenaChampion(participant);
-      const teammateDto = getArenaTeammate(participant, matchDto.info.participants);
-      if (!teammateDto) {
+      const teammateRaw = getArenaTeammate(participant, rawMatch.info.participants);
+      if (!teammateRaw) {
         throw new Error(`arena teammate not found for player ${validatedConfig.alias}`);
       }
-      const arenaTeammate = await participantToArenaChampion(teammateDto);
+      const arenaTeammate = await participantToArenaChampion(teammateRaw);
 
       return {
         playerConfig: validatedConfig,
@@ -219,7 +219,7 @@ export async function toArenaMatch(players: Player[], matchDto: MatchDto): Promi
   );
 
   return {
-    durationInSeconds: matchDto.info.gameDuration,
+    durationInSeconds: rawMatch.info.gameDuration,
     queueType: "arena",
     players: arenaPlayers,
     teams: subteams,

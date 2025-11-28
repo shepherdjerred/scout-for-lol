@@ -1,4 +1,4 @@
-import type { MatchDto as MatchDto, ParticipantDto as ParticipantDto, TimelineDto } from "@scout-for-lol/data";
+import type { RawMatch, RawParticipant, RawTimeline } from "@scout-for-lol/data";
 import { getItemInfo, summoner, getRuneInfo, getRuneTreeName, getChampionInfo } from "@scout-for-lol/report/index";
 import { first, keys, pickBy } from "remeda";
 import type { CuratedParticipant, CuratedMatchData } from "@scout-for-lol/data/review/curator-types.js";
@@ -8,7 +8,7 @@ function getSummonerSpellName(spellId: number): string | undefined {
   return first(keys(pickBy(summoner.data, (s) => s.key === spellId.toString())));
 }
 
-function curateItems(participant: ParticipantDto) {
+function curateItems(participant: RawParticipant) {
   const itemIds = [
     participant.item0,
     participant.item1,
@@ -32,7 +32,7 @@ function curateItems(participant: ParticipantDto) {
     });
 }
 
-function curateSummonerSpells(participant: ParticipantDto) {
+function curateSummonerSpells(participant: RawParticipant) {
   const spell1Name = getSummonerSpellName(participant.summoner1Id);
   const spell2Name = getSummonerSpellName(participant.summoner2Id);
 
@@ -52,7 +52,7 @@ function curateSummonerSpells(participant: ParticipantDto) {
   ];
 }
 
-function curatePerks(participant: ParticipantDto) {
+function curatePerks(participant: RawParticipant) {
   const primaryStyle = participant.perks.styles[0];
   const subStyle = participant.perks.styles[1];
 
@@ -97,7 +97,7 @@ function curatePerks(participant: ParticipantDto) {
   };
 }
 
-function curateChallenges(participant: ParticipantDto) {
+function curateChallenges(participant: RawParticipant) {
   if (!participant.challenges) {
     return undefined;
   }
@@ -158,7 +158,7 @@ function curateChallenges(participant: ParticipantDto) {
   };
 }
 
-export async function curateParticipantData(participant: ParticipantDto): Promise<CuratedParticipant> {
+export async function curateParticipantData(participant: RawParticipant): Promise<CuratedParticipant> {
   const items = curateItems(participant);
   const summonerSpells = curateSummonerSpells(participant);
   const perks = curatePerks(participant);
@@ -296,17 +296,17 @@ export async function curateParticipantData(participant: ParticipantDto): Promis
   };
 }
 
-export async function curateMatchData(matchDto: MatchDto, timelineDto?: TimelineDto): Promise<CuratedMatchData> {
-  const participants = await Promise.all(matchDto.info.participants.map(curateParticipantData));
+export async function curateMatchData(rawMatch: RawMatch, rawTimeline?: RawTimeline): Promise<CuratedMatchData> {
+  const participants = await Promise.all(rawMatch.info.participants.map(curateParticipantData));
 
   // Curate timeline data if provided
-  const timeline = timelineDto ? curateTimelineData(timelineDto, matchDto) : undefined;
+  const timeline = rawTimeline ? curateTimelineData(rawTimeline, rawMatch) : undefined;
 
   return {
     gameInfo: {
-      gameDuration: matchDto.info.gameDuration,
-      gameMode: matchDto.info.gameMode,
-      queueId: matchDto.info.queueId,
+      gameDuration: rawMatch.info.gameDuration,
+      gameMode: rawMatch.info.gameMode,
+      queueId: rawMatch.info.queueId,
     },
     participants,
     timeline,

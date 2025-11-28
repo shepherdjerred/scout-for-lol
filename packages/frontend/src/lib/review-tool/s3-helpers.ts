@@ -1,7 +1,7 @@
 /**
  * Helper functions for S3 match conversion
  */
-import type { ParticipantDto, Rune, Champion } from "@scout-for-lol/data";
+import type { RawParticipant, Rune, Champion } from "@scout-for-lol/data";
 import { parseLane } from "@scout-for-lol/data";
 import { getRuneInfo } from "@scout-for-lol/report";
 
@@ -9,7 +9,7 @@ import { getRuneInfo } from "@scout-for-lol/report";
  * Get match outcome from participant data
  * Mirrors backend implementation from packages/backend/src/league/model/match.ts
  */
-export function getOutcome(participant: ParticipantDto): "Victory" | "Defeat" | "Surrender" {
+export function getOutcome(participant: RawParticipant): "Victory" | "Defeat" | "Surrender" {
   if (participant.win) {
     return "Victory";
   }
@@ -22,7 +22,7 @@ export function getOutcome(participant: ParticipantDto): "Victory" | "Defeat" | 
 /**
  * Extract rune details from participant perks
  */
-export function extractRunes(p: ParticipantDto): Rune[] {
+export function extractRunes(p: RawParticipant): Rune[] {
   const runes: Rune[] = [];
 
   // Extract primary rune selections
@@ -55,9 +55,9 @@ export function extractRunes(p: ParticipantDto): Rune[] {
 }
 
 /**
- * Convert participant to champion (like backend does)
+ * Convert raw participant to champion (like backend does)
  */
-export function participantToChampion(p: ParticipantDto): Champion {
+export function participantToChampion(p: RawParticipant): Champion {
   const riotIdGameName = p.riotIdGameName && p.riotIdTagline ? p.riotIdGameName : "Unknown";
 
   return {

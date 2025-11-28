@@ -1,12 +1,11 @@
 import { z } from "zod";
 
 /**
- * Zod schema for SummonerLeagueDto from the twisted library
+ * Zod schema for RawSummonerLeague from the twisted library
  * Based on Riot Games League V4 API
  *
  * This schema validates the structure of league/rank data received from Riot API.
  * Represents a summoner's ranked queue entry (Solo/Duo or Flex).
- * TODO(https://github.com/shepherdjerred/scout-for-lol/issues/176): Rename to RawSummonerLeague following raw* naming convention
  */
 
 /**
@@ -44,9 +43,9 @@ const TierNameSchema = z.enum([
 const DivisionSchema = z.enum(["I", "II", "III", "IV"]);
 
 /**
- * SummonerLeagueDto - Represents a single ranked queue entry for a summoner
+ * RawSummonerLeague - Represents a single ranked queue entry for a summoner from Riot API
  */
-export const SummonerLeagueDtoSchema = z
+export const RawSummonerLeagueSchema = z
   .object({
     leagueId: z.string().optional(),
     queueType: QueueTypeSchema,
@@ -74,4 +73,4 @@ export const SummonerLeagueDtoSchema = z
   .strict();
 
 // Type inference from the Zod schema
-export type SummonerLeagueDto = z.infer<typeof SummonerLeagueDtoSchema>;
+export type RawSummonerLeague = z.infer<typeof RawSummonerLeagueSchema>;

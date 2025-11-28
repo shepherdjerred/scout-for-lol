@@ -31,6 +31,7 @@ export function processHighestRank(
         metadata: {
           leaguePoints: rankToLeaguePoints(rank),
         },
+        discordId: participant.discordId,
       });
     } else {
       // Player has no rank - they're unranked (Iron IV, 0 LP)
@@ -48,6 +49,7 @@ export function processHighestRank(
         metadata: {
           leaguePoints: 0,
         },
+        discordId: participant.discordId,
       });
     }
   }

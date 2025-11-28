@@ -75,6 +75,7 @@ export function processMostRankClimb(
         startLP,
         endLP,
       },
+      discordId: participant.discordId,
     });
   }
 

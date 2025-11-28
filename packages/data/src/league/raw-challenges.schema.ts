@@ -1,10 +1,10 @@
 import { z } from "zod";
 
 /**
- * Challenges DTO - Contains detailed match statistics and challenges
+ * Raw Challenges - Contains detailed match statistics and challenges from Riot API
  * Most fields are required. Some fields are optional based on the twisted library types.
  */
-export const ChallengesDtoSchema = z
+export const RawChallengesSchema = z
   .object({
     "12AssistStreakCount": z.number(),
     HealFromMapSources: z.number(),
@@ -153,4 +153,4 @@ export const ChallengesDtoSchema = z
   })
   .strict();
 
-export type ChallengesDto = z.infer<typeof ChallengesDtoSchema>;
+export type RawChallenges = z.infer<typeof RawChallengesSchema>;

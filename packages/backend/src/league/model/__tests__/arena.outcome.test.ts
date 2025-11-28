@@ -1,8 +1,8 @@
 import { describe, it, expect } from "bun:test";
-import type { ParticipantDto } from "@scout-for-lol/data";
+import type { RawParticipant } from "@scout-for-lol/data";
 import { getArenaPlacement } from "@scout-for-lol/backend/league/model/match.js";
 
-function makeParticipant(extra: Record<string, unknown> = {}): ParticipantDto {
+function makeParticipant(extra: Record<string, unknown> = {}): RawParticipant {
   // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
   return {
     puuid: crypto.randomUUID(),
@@ -45,7 +45,7 @@ function makeParticipant(extra: Record<string, unknown> = {}): ParticipantDto {
     PlayerScore7: 0,
     PlayerScore8: 0,
     ...extra,
-  } satisfies Partial<ParticipantDto> as unknown as ParticipantDto;
+  } satisfies Partial<RawParticipant> as unknown as RawParticipant;
 }
 
 describe("arena placement extraction", () => {

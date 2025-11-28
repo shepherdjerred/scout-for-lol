@@ -1,4 +1,4 @@
-import type { MostGamesPlayedCriteria, MatchDto } from "@scout-for-lol/data";
+import type { MostGamesPlayedCriteria, RawMatch } from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
@@ -10,7 +10,7 @@ import { isPlayerInMatch, matchesQueue } from "@scout-for-lol/backend/league/com
  * Counts the number of games played by each participant in the specified queue
  */
 export function processMostGamesPlayed(
-  matches: MatchDto[],
+  matches: RawMatch[],
   participants: PlayerWithAccounts[],
   criteria: MostGamesPlayedCriteria,
 ): LeaderboardEntry[] {
@@ -39,6 +39,7 @@ export function processMostGamesPlayed(
       playerId: participant.id,
       playerName: participant.alias,
       score: count,
+      discordId: participant.discordId,
     });
   }
 

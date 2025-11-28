@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import type { ChampionId, LeaguePuuid, MatchDto, PerksDto, Rank, Ranks } from "@scout-for-lol/data";
+import type { ChampionId, LeaguePuuid, RawMatch, RawPerks, Rank, Ranks } from "@scout-for-lol/data";
 import { AccountIdSchema, ChampionIdSchema, PlayerIdSchema, rankToLeaguePoints } from "@scout-for-lol/data";
 import { processCriteria } from "@scout-for-lol/backend/league/competition/processors/index.js";
 import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";
@@ -346,7 +346,7 @@ function createParticipant(puuid: LeaguePuuid, championId: ChampionId, win: bool
         offense: 0,
       },
       styles: [],
-    } satisfies PerksDto,
+    } satisfies RawPerks,
     retreatPings: 0,
     totalDamageDealtToBuildings: 0,
     totalDamageTakenFromAllSources: 0,
@@ -365,7 +365,7 @@ function createMatch(
     championId: ChampionId;
     win: boolean;
   }[],
-): MatchDto {
+): RawMatch {
   return {
     metadata: {
       dataVersion: "2",
@@ -967,7 +967,7 @@ describe("processHighestWinRate", () => {
 
 describe("processCriteria dispatcher", () => {
   it("should handle all criteria types without errors", () => {
-    const emptyMatches: MatchDto[] = [];
+    const emptyMatches: RawMatch[] = [];
     const emptyParticipants: PlayerWithAccounts[] = [];
     const emptySnapshots = {
       currentRanks: {},
