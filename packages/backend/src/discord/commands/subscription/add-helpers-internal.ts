@@ -265,8 +265,12 @@ export function handleWelcomeMatch(params: {
   };
 
   // Fire off async task to send welcome match
-  void sendWelcomeMatch(interaction, playerConfigEntry).catch((error) => {
-    console.error(`❌ Error sending welcome match:`, error);
-    // Don't throw - this is a background task
-  });
+  void (async () => {
+    try {
+      await sendWelcomeMatch(interaction, playerConfigEntry);
+    } catch (error) {
+      console.error(`❌ Error sending welcome match:`, error);
+      // Don't throw - this is a background task
+    }
+  })();
 }

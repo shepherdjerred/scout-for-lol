@@ -50,16 +50,18 @@ console.log("✅ Backend application startup complete");
 // Handle graceful shutdown
 process.on("SIGTERM", () => {
   console.log("🛑 Received SIGTERM, shutting down gracefully");
-  void shutdownHttpServer().then(() => {
+  void (async () => {
+    await shutdownHttpServer();
     process.exit(0);
-  });
+  })();
 });
 
 process.on("SIGINT", () => {
   console.log("🛑 Received SIGINT, shutting down gracefully");
-  void shutdownHttpServer().then(() => {
+  void (async () => {
+    await shutdownHttpServer();
     process.exit(0);
-  });
+  })();
 });
 
 // Handle unhandled promise rejections
@@ -69,13 +71,14 @@ process.on("unhandledRejection", (reason, promise) => {
   Sentry.captureException(reason);
 
   // Track unhandled errors in metrics
-  import("./metrics/index.js")
-    .then((metrics) => {
+  void (async () => {
+    try {
+      const metrics = await import("./metrics/index.js");
       metrics.unhandledErrorsTotal.inc({ error_type: "unhandled_rejection" });
-    })
-    .catch(() => {
+    } catch {
       // Ignore if metrics module fails to import
-    });
+    }
+  })();
 });
 
 // Handle uncaught exceptions
@@ -84,13 +87,14 @@ process.on("uncaughtException", (error) => {
   Sentry.captureException(error);
 
   // Track unhandled errors in metrics
-  import("./metrics/index.js")
-    .then((metrics) => {
+  void (async () => {
+    try {
+      const metrics = await import("./metrics/index.js");
       metrics.unhandledErrorsTotal.inc({ error_type: "uncaught_exception" });
-    })
-    .catch(() => {
+    } catch {
       // Ignore if metrics module fails to import
-    });
+    }
+  })();
 
   process.exit(1);
 });
