@@ -47,7 +47,7 @@ export async function summarizeTimeline(
     const startTime = Date.now();
 
     const response = await openaiClient.chat.completions.create({
-      model: "gpt-5.1-mini",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "user",
