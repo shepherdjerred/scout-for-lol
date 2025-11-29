@@ -15,7 +15,7 @@ export _EXPERIMENTAL_DAGGER_RUNNER_HOST="kube-pod://$(kubectl get pod --selector
 cd /workspaces/scout-for-lol
 
 # Verify everything works
-dagger call check  # Should pass ✅
+dagger call check-with-annotations  # Should pass ✅
 ```
 
 ## Quick Reference
@@ -112,10 +112,10 @@ export _EXPERIMENTAL_DAGGER_RUNNER_HOST="kube-pod://dagger-dagger-helm-engine-rs
 
 # Now Dagger commands work:
 dagger functions                           # List all available functions
-dagger call check                          # Run all checks (✅ PASSES!)
-dagger call check-backend                  # Check backend only
-dagger call check-data                     # Check data only
-dagger call check-report                   # Check report only
+dagger call check-with-annotations                          # Run all checks (✅ PASSES!)
+dagger call check-with-annotations-backend                  # Check backend only
+dagger call check-with-annotations-data                     # Check data only
+dagger call check-with-annotations-report                   # Check report only
 dagger call build --version="..." --git-sha="..."
 dagger call generate-prisma                # Generate Prisma client
 ```
@@ -195,12 +195,12 @@ NODE_ENV=test bun run dev
 ```bash
 # This is what CI actually runs - and it PASSES ✅
 export _EXPERIMENTAL_DAGGER_RUNNER_HOST="kube-pod://dagger-dagger-helm-engine-rsxrk?namespace=dagger"
-dagger call check  # ✅ ALL CHECKS PASS
+dagger call check-with-annotations  # ✅ ALL CHECKS PASS
 ```
 
 **Strategy**:
 
-- Use `dagger call check` to verify code before pushing
+- Use `dagger call check-with-annotations` to verify code before pushing
 - Or check individual packages: `cd packages/backend && bun run typecheck`
 - Ignore errors from root-level `bun run *:all` commands
 
@@ -251,7 +251,7 @@ export _EXPERIMENTAL_DAGGER_RUNNER_HOST="kube-pod://$(kubectl get pod --selector
 cd /workspaces/scout-for-lol
 
 # Verify everything works
-dagger call check
+dagger call check-with-annotations
 
 # After schema changes
 cd packages/backend && bun run db:generate && cd ../..
@@ -263,7 +263,7 @@ cd packages/backend && bun run typecheck
 NODE_ENV=test bun test packages/backend/src/database/competition/*.test.ts
 
 # Run all tests via CI (recommended)
-dagger call check
+dagger call check-with-annotations
 
 # Format before committing
 bun run format:write

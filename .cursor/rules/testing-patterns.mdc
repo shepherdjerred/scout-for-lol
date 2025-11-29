@@ -526,8 +526,8 @@ bun test src/database/competition.integration.test.ts
 ### CI Environment Testing
 
 ```bash
-# Run exact CI environment checks
-dagger call check
+# Run exact CI environment checks with annotations
+dagger call check-with-annotations
 
 # Or full CI pipeline
 dagger call ci --version="1.0.0" --git-sha="abc123"

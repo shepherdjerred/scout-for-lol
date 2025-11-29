@@ -73,7 +73,7 @@ dagger functions --help       # View specific function details
 ### Main Targets
 
 ```bash
-dagger call check                                       # Run lint, typecheck, test
+dagger call check-with-annotations                      # Run lint, typecheck, test with GitHub annotations
 dagger call build --version="1.0.0" --git-sha="abc123" # Build all packages
 dagger call ci --version="1.0.0" --git-sha="abc123"    # Full CI pipeline
 dagger call deploy --version="1.0.0" --stage="beta"    # Deploy to stage
@@ -82,9 +82,10 @@ dagger call deploy --version="1.0.0" --stage="beta"    # Deploy to stage
 ### Package-Specific
 
 ```bash
-dagger call check-backend
 dagger call check-report
 dagger call check-data
+dagger call check-frontend
+dagger call check-desktop
 dagger call generate-prisma
 dagger call build-backend-image --version="1.0.0" --git-sha="abc123"
 dagger call build-report-for-npm --version="1.0.0"

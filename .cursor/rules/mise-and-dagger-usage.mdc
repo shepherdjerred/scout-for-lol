@@ -18,7 +18,7 @@ Two complementary systems for code verification:
 | **Use** | Daily development | CI debugging only |
 | **Speed** | 60-90 seconds | 2-5 minutes |
 | **Environment** | Local machine | Docker (CI-like) |
-| **Command** | `mise check` | `dagger call check` |
+| **Command** | `mise check` | `dagger call check-with-annotations-with-annotations` |
 | **Checks** | 6 (parallel) | Same as CI |
 
 ## Mise: Local Development
@@ -85,7 +85,7 @@ Exact CI environment checks for debugging failures.
 ### When to Use
 
 ```
-mise check passes → CI fails → Run dagger call check
+mise check passes → CI fails → Run dagger call check-with-annotations-with-annotations
 ```
 
 Only use when debugging CI-specific issues.
@@ -94,14 +94,14 @@ Only use when debugging CI-specific issues.
 
 ```bash
 # Main checks
-dagger call check                                    # Full verification
+dagger call check-with-annotations                                    # Full verification
 dagger call build --version="1.0.0" --git-sha="..."  # Build packages
 dagger call ci --version="1.0.0" --git-sha="..."     # Full CI pipeline
 
 # Package-specific
-dagger call check-backend
-dagger call check-report
-dagger call check-data
+dagger call check-with-annotations-backend
+dagger call check-with-annotations-report
+dagger call check-with-annotations-data
 
 # List all functions
 dagger functions
@@ -127,7 +127,7 @@ cd packages/backend && bun run db:generate
 
 # Test both
 mise check
-dagger call check
+dagger call check-with-annotations
 ```
 
 ## Development Workflow
@@ -160,12 +160,12 @@ git commit -m "..."   # Commit when green
 
 ```bash
 # CI failed but mise passes?
-dagger call check
+dagger call check-with-annotations
 
 # Compare outputs, fix issue
 
 # Verify both pass
-mise check && dagger call check
+mise check && dagger call check-with-annotations
 
 # Push
 git push
@@ -177,7 +177,7 @@ git push
 
 ```bash
 mise check          # Use daily
-dagger call check   # Only for CI debugging
+dagger call check-with-annotations   # Only for CI debugging
 ```
 
 **Principle 2: Both Must Pass**
@@ -249,14 +249,14 @@ rm -rf node_modules
 bun install
 
 # 3. Test again
-mise check && dagger call check
+mise check && dagger call check-with-annotations
 ```
 
 ### Dagger is slow
 
 ```bash
 dagger engine restart  # Rebuild cache
-dagger call check      # Retry (uses cache)
+dagger call check-with-annotations      # Retry (uses cache)
 ```
 
 ### Tests fail in Dagger
@@ -293,7 +293,7 @@ mise dev                  # Install + generate + dagger
 
 # CI
 mise ci                   # Run full CI locally
-dagger call check         # Debug CI failures
+dagger call check-with-annotations         # Debug CI failures
 dagger functions          # List all Dagger targets
 
 # Formatting

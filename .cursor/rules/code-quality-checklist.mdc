@@ -23,7 +23,7 @@ mise check  # Runs 6 checks in parallel (~60-90s)
 - Knip (unused code detection)
 - JSCPD (duplicate code detection)
 
-**When mise passes but CI fails:** `dagger call check`
+**When mise passes but CI fails:** `dagger call check-with-annotations`
 
 **See:** `mise-and-dagger-usage.mdc` for details.
 
@@ -245,7 +245,7 @@ function create(params: { name: string; email: string; ... }) { }
 | Command | Duration | Purpose |
 |---------|----------|---------|
 | `mise check` | 60-90s | All 6 checks (local) |
-| `dagger call check` | 2-5m | All checks (CI-like) |
+| `dagger call check-with-annotations` | 2-5m | All checks (CI-like) |
 | `bun run format:write` | 5-10s | Auto-fix formatting |
 | `bun run typecheck` | 10-20s | TypeScript only |
 | `bun run lint` | 10-20s | ESLint only |

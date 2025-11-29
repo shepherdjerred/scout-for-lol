@@ -2,7 +2,6 @@
 import type { Directory, Secret, Container } from "@dagger.io/dagger";
 import { func, argument, object } from "@dagger.io/dagger";
 import {
-  checkBackend,
   buildBackendImage,
   publishBackendImage,
   publishBackendImageWithContainer,
@@ -22,6 +21,10 @@ import {
   getDesktopWindowsArtifacts,
 } from "@scout-for-lol/.dagger/src/desktop";
 import { getGitHubContainer, getBunNodeContainer, getPreparedWorkspace } from "@scout-for-lol/.dagger/src/base";
+import {
+  runAllChecksWithAnnotations,
+  outputAnnotations,
+} from "@scout-for-lol/.dagger/src/checks-with-annotations";
 
 // Helper function to log with timestamp
 function logWithTimestamp(message: string): void {
@@ -91,46 +94,48 @@ function parsePreviewUrl(wranglerOutput: string): string | undefined {
 @object()
 export class ScoutForLol {
   /**
-   * Run all checks (backend, report, data, frontend, desktop)
+   * Run all checks and output GitHub Actions annotations for failures.
+   *
+   * This function runs all checks (backend, report, data, frontend, desktop,
+   * eslint-rules, duplication) and captures output to emit GitHub Actions
+   * annotations (::error, ::warning) that appear inline in PR diffs.
+   *
    * @param source The source directory
-   * @returns A message indicating completion
+   * @returns A message indicating completion with annotation output
    */
   @func()
-  async check(
+  async checkWithAnnotations(
     @argument({
       ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
   ): Promise<string> {
-    logWithTimestamp("🔍 Starting comprehensive check process");
+    logWithTimestamp("🔍 Starting comprehensive check process with GitHub Actions annotations");
+    logWithTimestamp("📋 Annotations will appear inline in PR diffs for any failures");
 
-    // OPTIMIZATION: Prepare workspace - don't sync(), let Dagger optimize
-    const preparedWorkspace = getPreparedWorkspace(source);
+    const { passed, results, summary } = await withTiming(
+      "all checks with annotations",
+      async () => runAllChecksWithAnnotations(source),
+    );
 
-    // Run all checks in parallel for maximum speed
-    await withTiming("all checks", async () => {
-      await Promise.all([
-        withTiming("typecheck all", async () => {
-          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "typecheck"]).sync();
-        }),
-        withTiming("lint all", async () => {
-          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "lint"]).sync();
-        }),
-        withTiming("test all", async () => {
-          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "test"]).sync();
-        }),
-        withTiming("duplication check", async () => {
-          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "duplication-check"]).sync();
-        }),
-        withTiming("desktop check", async () => {
-          await checkDesktop(source).sync();
-        }),
-      ]);
-    });
+    // Output annotations to stdout for GitHub Actions
+    outputAnnotations(results);
 
-    logWithTimestamp("🎉 All checks completed successfully");
-    return "All checks completed successfully";
+    // Log summary
+    logWithTimestamp("📊 Check Summary:");
+    console.log(summary);
+
+    if (!passed) {
+      const failedChecks = results.filter((r) => !r.passed).map((r) => r.name);
+      const totalAnnotations = results.reduce((sum, r) => sum + r.annotations.length, 0);
+      logWithTimestamp(`❌ ${failedChecks.length.toString()} checks failed with ${totalAnnotations.toString()} annotations`);
+      logWithTimestamp(`Failed: ${failedChecks.join(", ")}`);
+      throw new Error(`Checks failed: ${failedChecks.join(", ")}`);
+    }
+
+    logWithTimestamp("🎉 All checks passed");
+    return "All checks completed successfully with annotations";
   }
 
   /**
@@ -215,81 +220,32 @@ export class ScoutForLol {
     projectName?: string,
     prNumber?: string,
   ): Promise<string> {
-    const isProd = env === "prod";
     logWithTimestamp(`🚀 Starting CI pipeline for version ${version} (${gitSha}) in ${env ?? "dev"} environment`);
+    logWithTimestamp("⚠️  CI will FAIL if lint or typecheck errors are found");
 
-    // OPTIMIZATION: Create a prepared workspace - DON'T sync() here, let Dagger optimize the dependency graph
-    // All operations that use preparedWorkspace will naturally wait for it when needed
-    const preparedWorkspace = getPreparedWorkspace(source);
-
-    logWithTimestamp("📋 Phase 1: Running checks AND builds in parallel...");
-
-    // Build the backend image in parallel with checks
-    const backendImagePromise = withTiming("backend Docker image build", async () => {
-      const image = buildBackendImage(source, version, gitSha, preparedWorkspace);
-      await image.id();
-      return image;
+    // First run checks with annotations
+    await withTiming("CI checks phase", () => {
+      logWithTimestamp("📋 Phase 1: Running checks (lint, typecheck, tests)...");
+      logWithTimestamp("❌ Pipeline will FAIL if any check fails");
+      logWithTimestamp("📋 Annotations will appear inline in PR diffs for any failures");
+      return this.checkWithAnnotations(source);
     });
 
-    // Run typecheck, lint, and tests in PARALLEL for maximum speed
-    const checksPromise = withTiming("all checks (lint, typecheck, tests)", async () => {
-      await Promise.all([
-        withTiming("typecheck all", async () => {
-          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "typecheck"]).sync();
-        }),
-        withTiming("lint all", async () => {
-          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "lint"]).sync();
-        }),
-        withTiming("test all", async () => {
-          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "test"]).sync();
-        }),
-        withTiming("duplication check", async () => {
-          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "duplication-check"]).sync();
-        }),
-      ]);
-    });
-
-    // Desktop checks run in all environments to catch Rust issues early
-    const desktopChecksPromise = withTiming("desktop check", async () => {
-      await checkDesktop(source).sync();
-    });
-
-    // Desktop build runs in all environments (started early to run in parallel)
-    const desktopBuildPromise = withTiming("desktop application build", async () => {
-      logWithTimestamp("🔄 Building desktop application...");
-      await buildDesktopLinux(source, version).sync();
-    });
-
-    // Wait for checks, backend image build, desktop checks, and desktop build to complete
-    const [, backendImage] = await Promise.all([
-      checksPromise,
-      backendImagePromise,
-      desktopChecksPromise,
-      desktopBuildPromise,
-    ]);
-
-    logWithTimestamp("✅ Phase 1 complete: All checks passed and builds finished");
-
-    // Smoke test the backend image (reuse the already-built image)
-    await withTiming("backend image smoke test", async () => {
-      logWithTimestamp("🧪 Running smoke test on backend image...");
-      const smokeTestResult = await smokeTestBackendImageWithContainer(backendImage, source);
-      logWithTimestamp(`Smoke test result: ${smokeTestResult}`);
-
-      if (smokeTestResult.startsWith("❌")) {
-        throw new Error(`Backend image smoke test failed: ${smokeTestResult}`);
-      }
+    // Then build
+    await withTiming("CI build phase", () => {
+      logWithTimestamp("🔨 Phase 2: Building packages...");
+      return this.build(source, version, gitSha);
     });
 
     // Publish images if credentials provided and environment is prod
-    const shouldPublish = ghcrUsername && ghcrPassword && isProd;
+    const shouldPublish = ghcrUsername && ghcrPassword && env === "prod";
     if (shouldPublish) {
       await withTiming("CI publish phase", async () => {
-        logWithTimestamp("📦 Phase 2: Publishing Docker image to registry...");
+        logWithTimestamp("📦 Phase 3: Publishing Docker image to registry...");
 
-        // Reuse the already-built image for publishing
-        const publishedRefs = await publishBackendImageWithContainer({
-          image: backendImage,
+        // Login to registry and publish
+        const publishedRefs = await publishBackendImage({
+          workspaceSource: source,
           version,
           gitSha,
           registryAuth: {
@@ -301,24 +257,24 @@ export class ScoutForLol {
         logWithTimestamp(`✅ Images published: ${publishedRefs.join(", ")}`);
       });
     } else {
-      logWithTimestamp("⏭️ Phase 2: Skipping image publishing (no credentials or not prod environment)");
+      logWithTimestamp("⏭️ Phase 3: Skipping image publishing (no credentials or not prod environment)");
     }
 
     // Deploy backend to homelab (only for prod)
-    if (isProd) {
+    if (env === "prod") {
       await withTiming("CI backend deploy phase", () => {
-        logWithTimestamp("🚀 Phase 3: Deploying backend to beta...");
+        logWithTimestamp("🚀 Phase 4: Deploying backend to beta...");
         return this.deploy(source, version, "beta", ghToken);
       });
     } else {
-      logWithTimestamp("⏭️ Phase 3: Skipping backend deployment (not prod environment)");
+      logWithTimestamp("⏭️ Phase 4: Skipping backend deployment (not prod environment)");
     }
 
     // Deploy frontend to Cloudflare Pages if credentials provided
     const shouldDeployFrontend = accountId && apiToken && branch;
     if (shouldDeployFrontend) {
       await withTiming("CI frontend deploy phase", async () => {
-        logWithTimestamp(`🚀 Phase 4: Deploying frontend to Cloudflare Pages (branch: ${branch})...`);
+        logWithTimestamp(`🚀 Phase 5: Deploying frontend to Cloudflare Pages (branch: ${branch})...`);
         const project = projectName ?? "scout-for-lol";
         const deployOutput = await this.deployFrontend(source, branch, gitSha, project, accountId, apiToken);
 
@@ -335,7 +291,20 @@ export class ScoutForLol {
         }
       });
     } else {
-      logWithTimestamp("⏭️ Phase 4: Skipping frontend deployment (no Cloudflare credentials or branch not provided)");
+      logWithTimestamp("⏭️ Phase 5: Skipping frontend deployment (no Cloudflare credentials or branch not provided)");
+    }
+
+    // Build and export desktop artifacts in prod
+    if (env === "prod") {
+      await withTiming("CI desktop artifacts phase", async () => {
+        logWithTimestamp("📦 Phase 6: Exporting desktop artifacts...");
+        const artifacts = getDesktopLinuxArtifacts(source, version);
+        // Export to a well-known location for GitHub Actions to upload
+        await artifacts.export("./desktop-artifacts");
+        logWithTimestamp("✅ Desktop artifacts exported to ./desktop-artifacts");
+      });
+    } else {
+      logWithTimestamp("⏭️ Phase 6: Skipping desktop artifacts export (not prod environment)");
     }
 
     logWithTimestamp("🎉 CI pipeline completed successfully");

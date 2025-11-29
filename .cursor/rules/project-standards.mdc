@@ -42,12 +42,12 @@ This is a monorepo using **Bun workspaces** with packages:
 
 ```bash
 mise check          # All 6 checks in parallel (60-90s)
-dagger call check   # CI debugging only (2-5min)
+dagger call check-with-annotations   # CI debugging only (2-5min)
 ```
 
 **mise check includes:** TypeScript, ESLint, Prettier, Tests, Knip, JSCPD
 
-**Strategy:** Use `mise check` for 95% of development. Use `dagger call check` only when debugging CI failures.
+**Strategy:** Use `mise check` for 95% of development. Use `dagger call check-with-annotations` only when debugging CI failures.
 
 **See:** `mise-and-dagger-usage.mdc` for complete guide.
 
@@ -131,7 +131,7 @@ mise run lint       # Lint only
 **Dagger** - CI environment checks (~2-5min):
 
 ```bash
-dagger call check   # When debugging CI failures
+dagger call check-with-annotations   # When debugging CI failures
 dagger functions    # List available targets
 ```
 
@@ -226,7 +226,7 @@ type DeepReadonly<T> = {
 
 **Daily:** Edit → `mise check` → Fix → Commit
 
-**CI Debugging:** `mise check` passes but CI fails? → `dagger call check` → Compare → Fix
+**CI Debugging:** `mise check` passes but CI fails? → `dagger call check-with-annotations` → Compare → Fix
 
 **See:** `mise-and-dagger-usage.mdc`, `code-quality-checklist.mdc` for detailed workflows.
 

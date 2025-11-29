@@ -139,7 +139,7 @@ packages/
 **Development:**
 
 - Fast local checks with `mise check`
-- Full CI validation with `dagger call check`
+- Full CI validation with `dagger call check-with-annotations`
 - Type-safe with strict TypeScript
 - Comprehensive test coverage
 - Automated linting and formatting

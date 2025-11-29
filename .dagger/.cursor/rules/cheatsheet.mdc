@@ -168,7 +168,7 @@ NODE_ENV=test bun run dev
 
 ```bash
 # Verify everything works
-dagger call check
+dagger call check-with-annotations
 
 # After schema changes
 cd packages/backend && bun run db:generate && cd ../..
@@ -180,7 +180,7 @@ cd packages/backend && bun run typecheck
 NODE_ENV=test bun test packages/backend/src/database/competition/*.test.ts
 
 # Run all tests via CI (recommended)
-dagger call check
+dagger call check-with-annotations
 
 # Format before committing
 bun run format:write
