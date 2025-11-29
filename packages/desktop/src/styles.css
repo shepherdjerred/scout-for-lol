@@ -31,7 +31,10 @@
 
   /* Focus visible styles for accessibility */
   :focus-visible {
-    @apply outline-none ring-2 ring-discord-blurple ring-offset-2 ring-offset-gray-900;
+    outline: none;
+    box-shadow:
+      0 0 0 2px #0f172a,
+      0 0 0 4px #5865f2;
   }
 
   /* Remove default focus outline for mouse users */

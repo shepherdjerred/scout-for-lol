@@ -197,11 +197,13 @@ impl YouTubeCacheState {
     }
 
     /// Checks if a URL is currently being downloaded
+    #[allow(dead_code)]
     pub fn is_downloading(&self, url: &str) -> bool {
         self.downloading.contains(url)
     }
 
     /// Marks a URL as being downloaded
+    #[allow(dead_code)]
     pub fn start_download(&mut self, url: &str) {
         self.downloading.insert(url.to_string());
     }

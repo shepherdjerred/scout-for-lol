@@ -35,7 +35,6 @@ mod tests;
 use log::{error, info};
 use std::collections::HashMap;
 use std::io::Write;
-use std::path::PathBuf;
 use std::sync::Arc;
 use tauri::{Emitter, Manager, State};
 use tokio::sync::Mutex;
@@ -522,7 +521,7 @@ fn main() {
                 .path()
                 .app_data_dir()
                 .expect("Failed to get app data directory");
-            paths::init(app_data_dir.clone());
+            paths::init(&app_data_dir);
 
             append_startup_log(&format!("app data dir: {}", app_data_dir.display()));
 
