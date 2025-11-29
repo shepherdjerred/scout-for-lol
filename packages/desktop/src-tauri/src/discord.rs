@@ -226,10 +226,10 @@ impl YouTubeCacheState {
     /// Returns true if the download should proceed (was not already downloading or cached).
     /// Returns false if already downloading or cached (download should be skipped).
     pub fn try_start_download(&mut self, url: &str) -> bool {
-        if self.downloading.contains_key(url) || self.cached.contains_key(url) {
+        if self.downloading.contains(url) || self.cached.contains_key(url) {
             return false;
         }
-        self.downloading.insert(url.to_string(), ());
+        self.downloading.insert(url.to_string());
         true
     }
 }
