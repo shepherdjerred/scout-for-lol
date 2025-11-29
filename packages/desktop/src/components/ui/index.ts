@@ -1,27 +1,40 @@
-import { Button as ButtonComponent } from "./button";
-import { Input as InputComponent, Select as SelectComponent } from "./input";
 import {
-  Card as CardComponent,
-  CardHeader as CardHeaderComponent,
-  CardTitle as CardTitleComponent,
-  CardDescription as CardDescriptionComponent,
-  CardContent as CardContentComponent,
-  CardFooter as CardFooterComponent,
+  Button as ButtonImport,
+  buttonVariants as buttonVariantsImport,
+  type ButtonProps as ButtonPropsImport,
+} from "./button";
+import { Input as InputImport, Select as SelectImport, Label as LabelImport } from "./input";
+import {
+  Card as CardImport,
+  CardHeader as CardHeaderImport,
+  CardTitle as CardTitleImport,
+  CardDescription as CardDescriptionImport,
+  CardContent as CardContentImport,
+  CardFooter as CardFooterImport,
 } from "./card";
-import { Badge as BadgeComponent, StatusIndicator as StatusIndicatorComponent } from "./badge";
-import { Collapsible as CollapsibleComponent } from "./collapsible";
-import { Alert as AlertComponent } from "./alert";
+import {
+  Badge as BadgeImport,
+  badgeVariants as badgeVariantsImport,
+  StatusIndicator as StatusIndicatorImport,
+} from "./badge";
+import { Collapsible as CollapsibleImport } from "./collapsible";
+import { Alert as AlertImport, alertVariants as alertVariantsImport } from "./alert";
 
-export const Button = ButtonComponent;
-export const Input = InputComponent;
-export const Select = SelectComponent;
-export const Card = CardComponent;
-export const CardHeader = CardHeaderComponent;
-export const CardTitle = CardTitleComponent;
-export const CardDescription = CardDescriptionComponent;
-export const CardContent = CardContentComponent;
-export const CardFooter = CardFooterComponent;
-export const Badge = BadgeComponent;
-export const StatusIndicator = StatusIndicatorComponent;
-export const Collapsible = CollapsibleComponent;
-export const Alert = AlertComponent;
+export const Button = ButtonImport;
+export const buttonVariants = buttonVariantsImport;
+export type ButtonProps = ButtonPropsImport;
+export const Input = InputImport;
+export const Select = SelectImport;
+export const Label = LabelImport;
+export const Card = CardImport;
+export const CardHeader = CardHeaderImport;
+export const CardTitle = CardTitleImport;
+export const CardDescription = CardDescriptionImport;
+export const CardContent = CardContentImport;
+export const CardFooter = CardFooterImport;
+export const Badge = BadgeImport;
+export const badgeVariants = badgeVariantsImport;
+export const StatusIndicator = StatusIndicatorImport;
+export const Collapsible = CollapsibleImport;
+export const Alert = AlertImport;
+export const alertVariants = alertVariantsImport;

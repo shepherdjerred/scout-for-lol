@@ -1,24 +1,32 @@
-import type { ReactNode } from "react";
+import type { HTMLAttributes } from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@scout-for-lol/desktop/lib/utils";
 
-type BadgeVariant = "default" | "success" | "warning" | "error" | "info";
+const badgeVariants = cva(
+  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
+  {
+    variants: {
+      variant: {
+        default: "bg-gray-700/80 text-gray-300 border-gray-600",
+        success: "bg-discord-green/20 text-discord-green border-discord-green/30",
+        warning: "bg-discord-yellow/20 text-discord-yellow border-discord-yellow/30",
+        error: "bg-discord-red/20 text-discord-red border-discord-red/30",
+        info: "bg-discord-blurple/20 text-discord-blurple border-discord-blurple/30",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+);
 
-type BadgeProps = {
-  children: ReactNode;
-  variant?: BadgeVariant;
-  className?: string;
-  dot?: boolean;
-  pulse?: boolean;
-};
+type BadgeProps = HTMLAttributes<HTMLSpanElement> &
+  VariantProps<typeof badgeVariants> & {
+    dot?: boolean;
+    pulse?: boolean;
+  };
 
-const variantStyles: Record<BadgeVariant, string> = {
-  default: "bg-gray-700/80 text-gray-300 border-gray-600",
-  success: "bg-discord-green/20 text-discord-green border-discord-green/30",
-  warning: "bg-discord-yellow/20 text-discord-yellow border-discord-yellow/30",
-  error: "bg-discord-red/20 text-discord-red border-discord-red/30",
-  info: "bg-discord-blurple/20 text-discord-blurple border-discord-blurple/30",
-};
-
-const dotStyles: Record<BadgeVariant, string> = {
+const dotColors = {
   default: "bg-gray-400",
   success: "bg-discord-green",
   warning: "bg-discord-yellow",
@@ -26,24 +34,20 @@ const dotStyles: Record<BadgeVariant, string> = {
   info: "bg-discord-blurple",
 };
 
-export function Badge({ children, variant = "default", className = "", dot, pulse }: BadgeProps) {
+function Badge({ className, variant = "default", dot, pulse, children, ...props }: BadgeProps) {
   return (
-    <span
-      className={`
-        inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5
-        text-xs font-medium
-        ${variantStyles[variant]}
-        ${className}
-      `}
-    >
+    <span className={cn(badgeVariants({ variant }), className)} {...props}>
       {dot && (
         <span className="relative flex h-2 w-2">
           {pulse && (
             <span
-              className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${dotStyles[variant]}`}
+              className={cn(
+                "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
+                dotColors[variant ?? "default"]
+              )}
             />
           )}
-          <span className={`relative inline-flex h-2 w-2 rounded-full ${dotStyles[variant]}`} />
+          <span className={cn("relative inline-flex h-2 w-2 rounded-full", dotColors[variant ?? "default"])} />
         </span>
       )}
       {children}
@@ -51,13 +55,15 @@ export function Badge({ children, variant = "default", className = "", dot, puls
   );
 }
 
-type StatusIndicatorProps = {
+type StatusIndicatorProps = HTMLAttributes<HTMLSpanElement> & {
   status: "connected" | "disconnected" | "connecting" | "idle" | "active" | "error";
   label?: string;
-  className?: string;
 };
 
-const statusConfig: Record<StatusIndicatorProps["status"], { variant: BadgeVariant; text: string; pulse: boolean }> = {
+const statusConfig: Record<
+  StatusIndicatorProps["status"],
+  { variant: NonNullable<BadgeProps["variant"]>; text: string; pulse: boolean }
+> = {
   connected: { variant: "success", text: "Connected", pulse: false },
   disconnected: { variant: "error", text: "Disconnected", pulse: false },
   connecting: { variant: "info", text: "Connecting...", pulse: true },
@@ -66,12 +72,14 @@ const statusConfig: Record<StatusIndicatorProps["status"], { variant: BadgeVaria
   error: { variant: "error", text: "Error", pulse: false },
 };
 
-export function StatusIndicator({ status, label, className = "" }: StatusIndicatorProps) {
+function StatusIndicator({ status, label, className, ...props }: StatusIndicatorProps) {
   const config = statusConfig[status];
 
   return (
-    <Badge variant={config.variant} dot pulse={config.pulse} className={className}>
+    <Badge variant={config.variant} dot pulse={config.pulse} className={className} {...props}>
       {label ?? config.text}
     </Badge>
   );
 }
+
+export { Badge, badgeVariants, StatusIndicator };

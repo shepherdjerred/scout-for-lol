@@ -1,77 +1,86 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
+import { cn } from "@scout-for-lol/desktop/lib/utils";
 
-type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger" | "success";
-type ButtonSize = "sm" | "md" | "lg";
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default:
+          "bg-discord-blurple text-white hover:bg-discord-blurple/90 focus-visible:ring-discord-blurple",
+        destructive:
+          "bg-discord-red text-white hover:bg-discord-red/90 focus-visible:ring-discord-red",
+        success:
+          "bg-discord-green text-white hover:bg-discord-green/90 focus-visible:ring-discord-green",
+        outline:
+          "border border-gray-600 bg-transparent text-gray-200 hover:bg-gray-800 hover:text-white focus-visible:ring-gray-500",
+        secondary:
+          "bg-gray-700 text-gray-100 hover:bg-gray-600 focus-visible:ring-gray-500",
+        ghost:
+          "text-gray-300 hover:bg-gray-800 hover:text-white focus-visible:ring-gray-500",
+        link: "text-discord-blurple underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-8 px-3 text-xs",
+        lg: "h-12 px-6 text-base",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+);
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: ButtonVariant | undefined;
-  size?: ButtonSize | undefined;
-  loading?: boolean | undefined;
-  icon?: ReactNode | undefined;
-  iconPosition?: "left" | "right" | undefined;
-};
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean | undefined;
+    loading?: boolean | undefined;
+    icon?: ReactNode | undefined;
+  };
 
-const variantStyles: Record<ButtonVariant, string> = {
-  primary:
-    "bg-discord-blurple text-white hover:bg-discord-blurple/90 focus:ring-discord-blurple/30 shadow-lg shadow-discord-blurple/20",
-  secondary: "bg-gray-700 text-gray-100 hover:bg-gray-600 focus:ring-gray-500/30 border border-gray-600",
-  outline:
-    "bg-transparent border border-gray-600 text-gray-200 hover:bg-gray-800 hover:border-gray-500 focus:ring-gray-500/30",
-  ghost: "bg-transparent text-gray-300 hover:bg-gray-800 hover:text-gray-100 focus:ring-gray-500/30",
-  danger: "bg-discord-red text-white hover:bg-discord-red/90 focus:ring-discord-red/30 shadow-lg shadow-discord-red/20",
-  success:
-    "bg-discord-green text-white hover:bg-discord-green/90 focus:ring-discord-green/30 shadow-lg shadow-discord-green/20",
-};
-
-const sizeStyles: Record<ButtonSize, string> = {
-  sm: "px-3 py-1.5 text-sm gap-1.5",
-  md: "px-4 py-2.5 text-sm gap-2",
-  lg: "px-6 py-3 text-base gap-2",
-};
-
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
-      variant = "primary",
-      size = "md",
+      className,
+      variant,
+      size,
+      asChild = false,
       loading = false,
       icon,
-      iconPosition = "left",
       disabled,
-      className = "",
       children,
       ...props
     },
-    ref,
+    ref
   ) => {
+    // eslint-disable-next-line @typescript-eslint/naming-convention -- JSX component must be uppercase
+    const Component = asChild ? Slot : "button";
     const isDisabled = disabled ?? loading;
 
     return (
-      <button
+      <Component
+        className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={isDisabled}
-        className={`
-          inline-flex items-center justify-center font-medium rounded-lg
-          transition-all duration-200 ease-out
-          focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900
-          disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none
-          ${variantStyles[variant]}
-          ${sizeStyles[size]}
-          ${className}
-        `}
         {...props}
       >
         {loading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <Loader2 className="animate-spin" />
         ) : (
-          icon && iconPosition === "left" && <span className="shrink-0">{icon}</span>
+          icon && <span className="shrink-0">{icon}</span>
         )}
         {children}
-        {!loading && icon && iconPosition === "right" && <span className="shrink-0">{icon}</span>}
-      </button>
+      </Component>
     );
-  },
+  }
 );
-
 Button.displayName = "Button";
+
+export { Button, buttonVariants };
+export type { ButtonProps };

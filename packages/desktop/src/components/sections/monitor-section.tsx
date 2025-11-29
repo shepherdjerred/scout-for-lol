@@ -1,9 +1,10 @@
-import { Activity, Play, Square, Zap, Radio, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Play, Square, AlertTriangle, CheckCircle2 } from "lucide-react";
 import {
   Button,
   Card,
   CardHeader,
   CardTitle,
+  CardDescription,
   CardContent,
   StatusIndicator,
   Badge,
@@ -72,11 +73,11 @@ export function MonitorSection({
   const statusProps = getStatusIndicatorProps(monitoringState);
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <div>
+      <div className="space-y-2">
         <h2 className="text-2xl font-bold text-gray-100">Game Monitoring</h2>
-        <p className="mt-1 text-gray-400">Track in-game events and send real-time updates to Discord</p>
+        <p className="text-gray-400">Track in-game events and send real-time updates to Discord</p>
       </div>
 
       {/* Prerequisites Check */}
@@ -88,10 +89,10 @@ export function MonitorSection({
             </div>
             <div>
               <h3 className="font-medium text-discord-yellow">Complete Setup Required</h3>
-              <p className="mt-1 text-sm text-gray-400">
+              <p className="mt-2 text-sm text-gray-400">
                 Connect to both League Client and Discord before starting monitoring.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-3">
                 <PrerequisiteBadge label="League Client" fulfilled={lcuConnected} />
                 <PrerequisiteBadge label="Discord Bot" fulfilled={discordConnected} />
               </div>
@@ -103,34 +104,16 @@ export function MonitorSection({
       {/* Main Monitoring Card */}
       <Card variant="glass">
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <div
-              className={`flex h-12 w-12 items-center justify-center rounded-xl ${
-                isMonitoring ? "bg-discord-green/20 text-discord-green" : "bg-gray-700/50 text-gray-400"
-              }`}
-            >
-              <Radio className={`h-6 w-6 ${isMonitoring ? "animate-pulse" : ""}`} />
-            </div>
-            <div>
-              <CardTitle>Monitoring Status</CardTitle>
-              <div className="mt-1">
-                <StatusIndicator status={statusProps.status} label={statusProps.label} />
-              </div>
-            </div>
-          </div>
+          <CardTitle>Monitoring Status</CardTitle>
+          <CardDescription>
+            <StatusIndicator status={statusProps.status} label={statusProps.label} />
+          </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">
           {/* Game Status */}
           {canMonitor && (
-            <div className="flex items-center gap-4 rounded-lg bg-gray-900/50 p-4">
-              <div
-                className={`flex h-12 w-12 items-center justify-center rounded-lg ${
-                  inGame ? "bg-discord-green/20 text-discord-green" : "bg-gray-700/50 text-gray-400"
-                }`}
-              >
-                <Activity className="h-6 w-6" />
-              </div>
+            <div className="flex items-center gap-4 rounded-lg bg-gray-900/50 p-5">
               <div className="flex-1">
                 <p className="text-sm text-gray-400">Game Status</p>
                 <p className="text-lg font-semibold text-gray-100">{inGame ? "In Game" : "Not in Game"}</p>
@@ -145,18 +128,15 @@ export function MonitorSection({
 
           {/* What Gets Tracked */}
           {isMonitoring && (
-            <div className="rounded-lg border border-gray-700/50 bg-gray-900/30 p-4">
-              <h4 className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-200">
-                <Zap className="h-4 w-4 text-discord-yellow" />
-                Events Being Tracked
-              </h4>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="rounded-lg border border-gray-700/50 bg-gray-900/30 p-5">
+              <h4 className="mb-4 text-sm font-medium text-gray-200">Events Being Tracked</h4>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {TRACKED_EVENTS.map((event) => (
                   <div
                     key={event}
-                    className="flex items-center gap-2 rounded-md bg-gray-800/50 px-3 py-2 text-sm text-gray-300"
+                    className="flex items-center gap-2 rounded-lg bg-gray-800/50 px-4 py-2.5 text-sm text-gray-300"
                   >
-                    <span className="h-1.5 w-1.5 rounded-full bg-discord-green" />
+                    <span className="h-2 w-2 rounded-full bg-discord-green" />
                     {event}
                   </div>
                 ))}
@@ -181,7 +161,7 @@ export function MonitorSection({
             ) : (
               <>
                 <Button
-                  variant="danger"
+                  variant="destructive"
                   size="lg"
                   className="flex-1"
                   onClick={onStop}
@@ -196,7 +176,6 @@ export function MonitorSection({
                     size="lg"
                     onClick={onTest}
                     loading={isTesting}
-                    icon={<Zap className="h-5 w-5" />}
                   >
                     Test Events
                   </Button>
@@ -213,14 +192,14 @@ export function MonitorSection({
 function PrerequisiteBadge({ label, fulfilled }: { label: string; fulfilled: boolean }) {
   return (
     <div
-      className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm ${
+      className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium ${
         fulfilled ? "bg-discord-green/20 text-discord-green" : "bg-gray-700/50 text-gray-400"
       }`}
     >
       {fulfilled ? (
-        <CheckCircle2 className="h-3.5 w-3.5" />
+        <CheckCircle2 className="h-4 w-4" />
       ) : (
-        <div className="h-3.5 w-3.5 rounded-full border-2 border-current" />
+        <div className="h-4 w-4 rounded-full border-2 border-current" />
       )}
       {label}
     </div>

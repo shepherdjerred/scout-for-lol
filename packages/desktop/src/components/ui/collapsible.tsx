@@ -1,41 +1,50 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode, HTMLAttributes } from "react";
+import * as CollapsiblePrimitive from "@radix-ui/react-collapsible";
 import { ChevronDown } from "lucide-react";
+import { cn } from "@scout-for-lol/desktop/lib/utils";
 
-type CollapsibleProps = {
+type CollapsibleProps = HTMLAttributes<HTMLDivElement> & {
   title: string;
   children: ReactNode;
   defaultOpen?: boolean;
-  className?: string;
   badge?: ReactNode;
 };
 
-export function Collapsible({ title, children, defaultOpen = false, className = "", badge }: CollapsibleProps) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
+function Collapsible({
+  title,
+  children,
+  defaultOpen = false,
+  className,
+  badge,
+  ...props
+}: CollapsibleProps) {
   return (
-    <div className={`rounded-lg border border-gray-700/50 bg-gray-800/30 ${className}`}>
-      <button
-        type="button"
-        onClick={() => {
-          setIsOpen(!isOpen);
-        }}
-        className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-gray-700/30"
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-200">{title}</span>
-          {badge}
-        </div>
-        <ChevronDown
-          className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-        />
-      </button>
+    <CollapsiblePrimitive.Root defaultOpen={defaultOpen}>
       <div
-        className={`overflow-hidden transition-all duration-200 ${
-          isOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
-        }`}
+        className={cn(
+          "rounded-xl border border-gray-700/50 bg-gray-800/30",
+          className
+        )}
+        {...props}
       >
-        <div className="border-t border-gray-700/50 px-4 py-4">{children}</div>
+        <CollapsiblePrimitive.Trigger asChild>
+          <button
+            type="button"
+            className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-gray-700/30 rounded-t-xl group"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-200">{title}</span>
+              {badge}
+            </div>
+            <ChevronDown className="h-4 w-4 text-gray-400 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+          </button>
+        </CollapsiblePrimitive.Trigger>
+        <CollapsiblePrimitive.Content className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+          <div className="border-t border-gray-700/50 px-5 py-5">{children}</div>
+        </CollapsiblePrimitive.Content>
       </div>
-    </div>
+    </CollapsiblePrimitive.Root>
   );
 }
+
+export { Collapsible };

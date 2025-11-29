@@ -411,7 +411,7 @@ export default function App() {
       <main className="flex flex-1 flex-col overflow-hidden">
         {/* Error/Loading Alerts */}
         {(error !== null || loading !== null) && (
-          <div className="border-b border-gray-800 px-6 py-3 space-y-2">
+          <div className="border-b border-gray-800 px-8 py-4 space-y-3">
             {error && (
               <Alert
                 variant="error"
@@ -427,7 +427,7 @@ export default function App() {
         )}
 
         {/* Section Content */}
-        <div className="flex-1 overflow-y-auto p-6">{renderSection()}</div>
+        <div className="flex-1 overflow-y-auto px-8 py-6">{renderSection()}</div>
       </main>
 
       {/* Debug Panel */}
