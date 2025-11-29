@@ -8,7 +8,7 @@ use serenity::client::{Client as SerenityClient, EventHandler};
 use songbird::events::{Event, EventContext, EventHandler as VoiceEventHandler, TrackEvent};
 use songbird::input::{File as AudioFile, Input};
 use songbird::{SerenityInit, Songbird, SongbirdKey};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::Stdio;
@@ -176,7 +176,7 @@ async fn download_youtube_to_cache(url: &str) -> Result<PathBuf, String> {
 #[derive(Debug, Default)]
 pub struct YouTubeCacheState {
     /// URLs currently being downloaded (to avoid duplicate downloads)
-    downloading: HashMap<String, ()>,
+    downloading: HashSet<String>,
     /// URLs that have been successfully cached (URL -> file path)
     cached: HashMap<String, PathBuf>,
 }
@@ -190,12 +190,12 @@ impl YouTubeCacheState {
 
     /// Checks if a URL is currently being downloaded
     pub fn is_downloading(&self, url: &str) -> bool {
-        self.downloading.contains_key(url)
+        self.downloading.contains(url)
     }
 
     /// Marks a URL as being downloaded
     pub fn start_download(&mut self, url: &str) {
-        self.downloading.insert(url.to_string(), ());
+        self.downloading.insert(url.to_string());
     }
 
     /// Marks a download as complete
