@@ -5,6 +5,9 @@ import {
   type Personality,
   type PlayerMetadata,
 } from "@scout-for-lol/data";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("review-prompts");
 
 // Resolve the prompts directory from the data package
 // import.meta.resolve returns a file:// URL, so we extract the pathname
@@ -131,7 +134,7 @@ async function listValidPersonalities(): Promise<Personality[]> {
   }
 
   if (discarded.length > 0) {
-    console.warn(`[ai-review] Discarded personalities due to incomplete data: ${discarded.join("; ")}`);
+    logger.warn(`[ai-review] Discarded personalities due to incomplete data: ${discarded.join("; ")}`);
   }
 
   if (valid.length === 0) {
