@@ -126,6 +126,7 @@ export default tseslint.config(
             "./packages/data/tsconfig.json",
             "./packages/report/tsconfig.json",
             "./packages/frontend/tsconfig.json",
+            "./packages/desktop/tsconfig.json",
           ],
         },
         node: {
@@ -504,6 +505,18 @@ export default tseslint.config(
           trailingUnderscore: "allow",
         },
         // Constants: UPPER_SNAKE_CASE or camelCase (excluding *Schema variables - handled by custom rule)
+        // Also allow PascalCase for React components created with forwardRef
+        {
+          selector: "variable",
+          modifiers: ["const", "exported"],
+          filter: {
+            regex: "Schema$",
+            match: false,
+          },
+          format: ["camelCase", "UPPER_CASE", "PascalCase"],
+          leadingUnderscore: "allow",
+          trailingUnderscore: "allow",
+        },
         {
           selector: "variable",
           modifiers: ["const"],

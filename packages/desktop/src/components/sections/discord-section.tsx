@@ -1,0 +1,248 @@
+import { MessageSquare, Volume2, Music, Save, Mic, Play, Settings2 } from "lucide-react";
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+  Input,
+  Select,
+  StatusIndicator,
+  Collapsible,
+  Badge,
+} from "@scout-for-lol/desktop/components/ui";
+
+type DiscordStatus = {
+  connected: boolean;
+  channelName: string | null;
+  voiceConnected: boolean;
+  voiceChannelName: string | null;
+  activeSoundPack: string | null;
+};
+
+type DiscordSectionProps = {
+  discordStatus: DiscordStatus;
+  loading: string | null;
+  botToken: string;
+  channelId: string;
+  voiceChannelId: string;
+  soundPack: string;
+  eventSounds: Record<string, string>;
+  onBotTokenChange: (value: string) => void;
+  onChannelIdChange: (value: string) => void;
+  onVoiceChannelIdChange: (value: string) => void;
+  onSoundPackChange: (value: string) => void;
+  onEventSoundChange: (key: string, value: string) => void;
+  onConfigure: () => void;
+  onJoinVoice: () => void;
+  onTestSound: () => void;
+};
+
+const SOUND_EVENT_LABELS: Record<string, { label: string; description: string }> = {
+  gameStart: { label: "Game Start", description: "When the game begins" },
+  firstBlood: { label: "First Blood", description: "First kill of the game" },
+  kill: { label: "Kill", description: "When you get a kill" },
+  multiKill: { label: "Multi-kill", description: "Double, triple, quadra, penta" },
+  objective: { label: "Objective", description: "Dragon, Baron, towers" },
+  ace: { label: "Ace", description: "Team ace" },
+  gameEnd: { label: "Game End", description: "Victory or defeat" },
+};
+
+export function DiscordSection({
+  discordStatus,
+  loading,
+  botToken,
+  channelId,
+  voiceChannelId,
+  soundPack,
+  eventSounds,
+  onBotTokenChange,
+  onChannelIdChange,
+  onVoiceChannelIdChange,
+  onSoundPackChange,
+  onEventSoundChange,
+  onConfigure,
+  onJoinVoice,
+  onTestSound,
+}: DiscordSectionProps) {
+  const isConfiguring = loading?.includes("Discord") ?? loading?.includes("Configuring");
+  const isJoiningVoice = loading?.includes("voice") ?? loading?.includes("Voice");
+  const isTestingSound = loading?.includes("sound") ?? loading?.includes("Sound");
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-bold text-gray-100">Discord Configuration</h2>
+        <p className="mt-1 text-gray-400">Set up your Discord bot to receive game updates and voice notifications</p>
+      </div>
+
+      {/* Status Overview */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <StatusCard
+          label="Text Channel"
+          value={discordStatus.channelName ?? "Not configured"}
+          connected={discordStatus.connected}
+          icon={<MessageSquare className="h-4 w-4" />}
+        />
+        <StatusCard
+          label="Voice Channel"
+          value={discordStatus.voiceChannelName ?? "Not joined"}
+          connected={discordStatus.voiceConnected}
+          icon={<Mic className="h-4 w-4" />}
+        />
+        <StatusCard
+          label="Sound Pack"
+          value={discordStatus.activeSoundPack ?? soundPack}
+          connected={true}
+          icon={<Music className="h-4 w-4" />}
+        />
+      </div>
+
+      {/* Bot Configuration */}
+      <Card variant="glass">
+        <CardHeader>
+          <CardTitle icon={<Settings2 className="h-5 w-5" />}>Bot Settings</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="grid gap-5 md:grid-cols-2">
+            <Input
+              label="Bot Token"
+              type="password"
+              value={botToken}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                onBotTokenChange(e.target.value);
+              }}
+              placeholder="Your Discord bot token"
+              helperText="Get this from Discord Developer Portal"
+            />
+            <Input
+              label="Text Channel ID"
+              value={channelId}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                onChannelIdChange(e.target.value);
+              }}
+              placeholder="e.g. 1234567890123456789"
+              helperText="Right-click channel → Copy Channel ID"
+            />
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2">
+            <Input
+              label="Voice Channel ID"
+              value={voiceChannelId}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                onVoiceChannelIdChange(e.target.value);
+              }}
+              placeholder="e.g. 1234567890123456789"
+              helperText="Optional: For voice announcements"
+            />
+            <Select
+              label="Sound Pack"
+              value={soundPack}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                onSoundPackChange(e.target.value);
+              }}
+              helperText="Audio theme for notifications"
+            >
+              <option value="base">Base Pack (Synth tones)</option>
+            </Select>
+          </div>
+        </CardContent>
+        <CardFooter className="flex-wrap gap-3">
+          <Button variant="primary" onClick={onConfigure} loading={isConfiguring} icon={<Save className="h-4 w-4" />}>
+            Save Settings
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={onJoinVoice}
+            loading={isJoiningVoice}
+            disabled={!voiceChannelId || !discordStatus.connected}
+            icon={<Mic className="h-4 w-4" />}
+          >
+            Join Voice
+          </Button>
+          <Button
+            variant="outline"
+            onClick={onTestSound}
+            loading={isTestingSound}
+            disabled={!discordStatus.voiceConnected}
+            icon={<Play className="h-4 w-4" />}
+          >
+            Test Sound
+          </Button>
+        </CardFooter>
+      </Card>
+
+      {/* Advanced: Sound Event Mapping */}
+      <Collapsible
+        title="Advanced: Event Sound Mapping"
+        badge={
+          <Badge variant="default" className="text-[10px]">
+            {Object.keys(eventSounds).filter((k) => eventSounds[k]).length}/{Object.keys(SOUND_EVENT_LABELS).length}
+          </Badge>
+        }
+      >
+        <p className="mb-4 text-sm text-gray-400">
+          Customize sounds for specific game events. Use a sound pack key or a custom file path.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2">
+          {Object.entries(SOUND_EVENT_LABELS).map(([key, { label, description }]) => (
+            <div key={key} className="rounded-lg border border-gray-700/50 bg-gray-900/30 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-sm font-medium text-gray-200">{label}</span>
+                  <p className="text-xs text-gray-500">{description}</p>
+                </div>
+                <Volume2 className="h-4 w-4 text-gray-500" />
+              </div>
+              <input
+                type="text"
+                value={eventSounds[key] ?? ""}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  onEventSoundChange(key, e.target.value);
+                }}
+                placeholder={`e.g. ${key} or /path/to/sound.ogg`}
+                className="w-full rounded-md border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 transition-colors hover:border-gray-600 focus:border-discord-blurple focus:outline-none focus:ring-2 focus:ring-discord-blurple/30"
+              />
+            </div>
+          ))}
+        </div>
+      </Collapsible>
+    </div>
+  );
+}
+
+function StatusCard({
+  label,
+  value,
+  connected,
+  icon,
+}: {
+  label: string;
+  value: string;
+  connected: boolean;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-lg border border-gray-700/50 bg-gray-800/30 px-4 py-3">
+      <div
+        className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+          connected ? "bg-discord-green/20 text-discord-green" : "bg-gray-700/50 text-gray-400"
+        }`}
+      >
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-gray-500">{label}</p>
+        <p className="truncate text-sm font-medium text-gray-200">{value}</p>
+      </div>
+      <StatusIndicator
+        status={connected ? "connected" : "disconnected"}
+        label={connected ? "●" : "○"}
+        className="!px-1.5 !py-0 text-[10px]"
+      />
+    </div>
+  );
+}
