@@ -18,6 +18,9 @@ import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { getCompetitionsByServer } from "@scout-for-lol/backend/database/competition/queries.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("competition-list");
 
 const ITEMS_PER_PAGE = 5;
 
@@ -61,7 +64,7 @@ export async function executeCompetitionList(interaction: ChatInputCommandIntera
     }
     competitions = await getCompetitionsByServer(prisma, serverId, options);
   } catch (error) {
-    console.error("[Competition List] Error fetching competitions:", error);
+    logger.error("[Competition List] Error fetching competitions:", error);
     await interaction.reply({
       content: truncateDiscordMessage(`Error fetching competitions: ${getErrorMessage(error)}`),
       ephemeral: true,

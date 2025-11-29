@@ -7,6 +7,9 @@
 import { type Guild, ChannelType, type TextChannel } from "discord.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("guild-create");
 
 /**
  * Find the best channel to send a welcome message to
@@ -52,14 +55,14 @@ async function findWelcomeChannel(guild: Guild): Promise<TextChannel | null> {
  * Handle guildCreate event - send welcome message when bot joins a server
  */
 export async function handleGuildCreate(guild: Guild): Promise<void> {
-  console.log(`[Guild Create] Bot added to server: ${guild.name} (${guild.id})`);
-  console.log(`[Guild Create] Server has ${guild.memberCount.toString()} members`);
+  logger.info(`[Guild Create] Bot added to server: ${guild.name} (${guild.id})`);
+  logger.info(`[Guild Create] Server has ${guild.memberCount.toString()} members`);
 
   try {
     const channel = await findWelcomeChannel(guild);
 
     if (!channel) {
-      console.warn(`[Guild Create] Could not find a channel to send welcome message in ${guild.name} (${guild.id})`);
+      logger.warn(`[Guild Create] Could not find a channel to send welcome message in ${guild.name} (${guild.id})`);
       return;
     }
 
@@ -77,9 +80,9 @@ Scout tracks your friends' League of Legends matches and delivers beautiful post
 Need help? Join our Discord support server or open a GitHub issue!`);
 
     await channel.send({ content: welcomeMessage });
-    console.log(`[Guild Create] Welcome message sent to ${guild.name} in #${channel.name}`);
+    logger.info(`[Guild Create] Welcome message sent to ${guild.name} in #${channel.name}`);
   } catch (error) {
-    console.error(
+    logger.error(
       `[Guild Create] Failed to send welcome message to ${guild.name} (${guild.id}):`,
       getErrorMessage(error),
     );

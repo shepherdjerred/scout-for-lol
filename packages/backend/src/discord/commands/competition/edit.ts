@@ -21,6 +21,9 @@ import {
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import { getChampionId } from "@scout-for-lol/backend/utils/champion.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("competition-edit");
 import {
   EditableAlwaysArgsSchema,
   EditableDraftOnlyArgsSchema,
@@ -173,10 +176,10 @@ async function parseEditArguments(
       }
     }
 
-    console.log(`✅ Edit arguments validated successfully`);
+    logger.info(`✅ Edit arguments validated successfully`);
     return args;
   } catch (error) {
-    console.error(`❌ Invalid edit arguments from ${username}:`, error);
+    logger.error(`❌ Invalid edit arguments from ${username}:`, error);
     const validationError = fromError(error);
     await interaction.reply({
       content: truncateDiscordMessage(`**Invalid input:**\n${validationError.toString()}`),
@@ -375,11 +378,11 @@ async function fetchAndValidateEditCompetition(
     }
 
     const isDraft = status === "DRAFT";
-    console.log(`📊 Competition status: ${status} (isDraft: ${isDraft.toString()})`);
+    logger.info(`📊 Competition status: ${status} (isDraft: ${isDraft.toString()})`);
 
     return { competition, competitionId, isDraft };
   } catch (error) {
-    console.error(`❌ Error fetching competition:`, error);
+    logger.error(`❌ Error fetching competition:`, error);
     await interaction.reply({
       content: truncateDiscordMessage(`**Error fetching competition:**\n${getErrorMessage(error)}`),
       ephemeral: true,
@@ -392,7 +395,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
-  console.log(`📝 Starting competition edit for user ${username} (${userId})`);
+  logger.info(`📝 Starting competition edit for user ${username} (${userId})`);
 
   // Step 1-3: Fetch and validate competition
   const result = await fetchAndValidateEditCompetition(interaction, userId);
@@ -430,7 +433,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
     return;
   }
 
-  console.log(`✅ Update input built:`, updateInput);
+  logger.info(`✅ Update input built:`, updateInput);
 
   // ============================================================================
   // Step 6: Update competition in database
@@ -439,7 +442,7 @@ export async function executeCompetitionEdit(interaction: ChatInputCommandIntera
   try {
     const updatedCompetition = await updateCompetition(prisma, competitionId, updateInput);
 
-    console.log(`✅ Competition ${competitionId.toString()} updated successfully`);
+    logger.info(`✅ Competition ${competitionId.toString()} updated successfully`);
 
     // Build response message
     const updatedFields: string[] = [];
@@ -477,7 +480,7 @@ View the competition with:
       ephemeral: true,
     });
   } catch (error) {
-    console.error(`❌ Database error during competition edit:`, error);
+    logger.error(`❌ Database error during competition edit:`, error);
     await interaction.reply({
       content: truncateDiscordMessage(`**Error updating competition:**\n${getErrorMessage(error)}`),
       ephemeral: true,

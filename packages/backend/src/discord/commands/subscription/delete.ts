@@ -4,6 +4,9 @@ import { DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/dat
 import { prisma } from "@scout-for-lol/backend/database/index";
 import { fromError } from "zod-validation-error";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("subscription-delete");
 
 const ArgsSchema = z.object({
   alias: z.string(),
@@ -12,7 +15,7 @@ const ArgsSchema = z.object({
 });
 
 export async function executeSubscriptionDelete(interaction: ChatInputCommandInteraction) {
-  console.log("🔕 Starting subscription deletion process");
+  logger.info("🔕 Starting subscription deletion process");
 
   let args: z.infer<typeof ArgsSchema>;
 
@@ -23,10 +26,10 @@ export async function executeSubscriptionDelete(interaction: ChatInputCommandInt
       guildId: interaction.guildId,
     });
 
-    console.log(`✅ Command arguments validated successfully`);
-    console.log(`📋 Args: alias=${args.alias}, channel=${args.channel}, guildId=${args.guildId}`);
+    logger.info(`✅ Command arguments validated successfully`);
+    logger.info(`📋 Args: alias=${args.alias}, channel=${args.channel}, guildId=${args.guildId}`);
   } catch (error) {
-    console.error(`❌ Invalid command arguments:`, error);
+    logger.error(`❌ Invalid command arguments:`, error);
     const validationError = fromError(error);
     await interaction.reply({
       content: validationError.toString(),
@@ -56,14 +59,14 @@ export async function executeSubscriptionDelete(interaction: ChatInputCommandInt
     });
 
     if (!player) {
-      console.log(`⚠️  Player not found: ${alias}`);
+      logger.info(`⚠️  Player not found: ${alias}`);
       await interaction.editReply({
         content: `❌ **Player not found**\n\nNo player found with alias "${alias}" in this server.`,
       });
       return;
     }
 
-    console.log(`📝 Found player: ${player.alias} (ID: ${player.id.toString()})`);
+    logger.info(`📝 Found player: ${player.alias} (ID: ${player.id.toString()})`);
 
     // Find the subscription for this player in this channel
     const subscription = await prisma.subscription.findUnique({
@@ -77,7 +80,7 @@ export async function executeSubscriptionDelete(interaction: ChatInputCommandInt
     });
 
     if (!subscription) {
-      console.log(`⚠️  Subscription not found for player ${alias} in channel ${channel}`);
+      logger.info(`⚠️  Subscription not found for player ${alias} in channel ${channel}`);
 
       // Check if player has subscriptions in other channels
       const otherSubscriptions = player.subscriptions.filter((sub) => sub.channelId !== channel);
@@ -96,14 +99,14 @@ export async function executeSubscriptionDelete(interaction: ChatInputCommandInt
     }
 
     // Delete the subscription
-    console.log(`🗑️  Deleting subscription ID: ${subscription.id.toString()}`);
+    logger.info(`🗑️  Deleting subscription ID: ${subscription.id.toString()}`);
     await prisma.subscription.delete({
       where: {
         id: subscription.id,
       },
     });
 
-    console.log(`✅ Subscription deleted successfully`);
+    logger.info(`✅ Subscription deleted successfully`);
 
     // Check if player has any remaining subscriptions
     const remainingSubscriptions = player.subscriptions.filter((sub) => sub.id !== subscription.id);
@@ -124,9 +127,9 @@ export async function executeSubscriptionDelete(interaction: ChatInputCommandInt
       content: responseMessage,
     });
 
-    console.log(`🎉 Subscription deletion completed successfully`);
+    logger.info(`🎉 Subscription deletion completed successfully`);
   } catch (error) {
-    console.error(`❌ Error during subscription deletion:`, error);
+    logger.error(`❌ Error during subscription deletion:`, error);
     await interaction.editReply({
       content: `❌ **Error deleting subscription**\n\n${getErrorMessage(error)}`,
     });

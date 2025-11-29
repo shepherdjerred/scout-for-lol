@@ -9,6 +9,9 @@ import {
 } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index";
 import { fromError } from "zod-validation-error";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("subscription-add");
 import {
   checkSubscriptionLimit,
   checkAccountLimit,
@@ -35,7 +38,7 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
-  console.log(`🔔 Starting subscription process for user ${username} (${userId})`);
+  logger.info(`🔔 Starting subscription process for user ${username} (${userId})`);
 
   const args = validateSubscriptionArgs(interaction, ArgsSchema);
   if (!args) {
@@ -99,7 +102,7 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
   });
 
   if (existingAccount) {
-    console.log(
+    logger.info(
       `⚠️  Account already exists: ${riotId.game_name}#${riotId.tag_line} (PUUID: ${puuid}) for player "${existingAccount.player.alias}"`,
     );
 
@@ -113,7 +116,7 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
   }
 
   const now = new Date();
-  console.log(`💾 Starting database operations for subscription`);
+  logger.info(`💾 Starting database operations for subscription`);
 
   const result = await createSubscriptionRecords({
     args,
@@ -170,7 +173,7 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
   }
 
   const totalTime = Date.now() - startTime;
-  console.log(`🎉 Subscription completed successfully in ${totalTime.toString()}ms`);
+  logger.info(`🎉 Subscription completed successfully in ${totalTime.toString()}ms`);
 
   const responseMessage = buildSubscriptionResponse({
     riotId,

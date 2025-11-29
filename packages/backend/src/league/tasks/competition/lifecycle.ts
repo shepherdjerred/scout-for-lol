@@ -11,6 +11,9 @@ import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/clien
 import { z } from "zod";
 import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.js";
 import * as Sentry from "@sentry/node";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("competition-lifecycle");
 
 // ============================================================================
 // Discord Notifications
@@ -40,16 +43,16 @@ Good luck! 🍀`;
       serverId: competition.serverId,
     });
     await sendChannelMessage(message, competition.channelId, competition.serverId);
-    console.log(`[CompetitionLifecycle] ✅ Posted start notification for competition ${competition.id.toString()}`);
+    logger.info(`[CompetitionLifecycle] ✅ Posted start notification for competition ${competition.id.toString()}`);
   } catch (error) {
     // Handle permission errors gracefully - they're expected in some cases
     const channelSendError = z.instanceof(ChannelSendError).safeParse(error);
     if (channelSendError.success && channelSendError.data.isPermissionError) {
-      console.warn(
+      logger.warn(
         `[CompetitionLifecycle] ⚠️  Cannot post start notification for competition ${competition.id.toString()} - missing permissions in channel ${competition.channelId}. Server owner has been notified.`,
       );
     } else {
-      console.warn(
+      logger.warn(
         `[CompetitionLifecycle] ⚠️  Failed to post start notification for competition ${competition.id.toString()}: ${String(error)}`,
       );
       Sentry.captureException(error, {
@@ -128,16 +131,16 @@ async function postFinalLeaderboard(
       serverId: competition.serverId,
     });
     await sendChannelMessage(message, competition.channelId, competition.serverId);
-    console.log(`[CompetitionLifecycle] ✅ Posted final leaderboard for competition ${competition.id.toString()}`);
+    logger.info(`[CompetitionLifecycle] ✅ Posted final leaderboard for competition ${competition.id.toString()}`);
   } catch (error) {
     // Handle permission errors gracefully - they're expected in some cases
     const channelSendError = z.instanceof(ChannelSendError).safeParse(error);
     if (channelSendError.success && channelSendError.data.isPermissionError) {
-      console.warn(
+      logger.warn(
         `[CompetitionLifecycle] ⚠️  Cannot post final leaderboard for competition ${competition.id.toString()} - missing permissions in channel ${competition.channelId}. Server owner has been notified.`,
       );
     } else {
-      console.warn(
+      logger.warn(
         `[CompetitionLifecycle] ⚠️  Failed to post final leaderboard for competition ${competition.id.toString()}: ${String(error)}`,
       );
       Sentry.captureException(error, {
@@ -161,7 +164,7 @@ async function postFinalLeaderboard(
  * populates dates from seasonId
  */
 async function handleCompetitionStarts(prismaClient: PrismaClient, now: Date): Promise<void> {
-  console.log("[CompetitionLifecycle] Checking for competitions to start...");
+  logger.info("[CompetitionLifecycle] Checking for competitions to start...");
 
   // Query all competitions that haven't been started yet
   // We can't filter by startDate in the DB query because season-based
@@ -179,16 +182,16 @@ async function handleCompetitionStarts(prismaClient: PrismaClient, now: Date): P
     .filter((comp) => comp.startDate !== null && comp.startDate <= now);
 
   if (competitionsToStart.length === 0) {
-    console.log("[CompetitionLifecycle] No competitions to start");
+    logger.info("[CompetitionLifecycle] No competitions to start");
     return;
   }
 
-  console.log(`[CompetitionLifecycle] Found ${competitionsToStart.length.toString()} competition(s) to start`);
+  logger.info(`[CompetitionLifecycle] Found ${competitionsToStart.length.toString()} competition(s) to start`);
 
   // Process each competition (already parsed with dates populated)
   for (const competition of competitionsToStart) {
     try {
-      console.log(`[CompetitionLifecycle] Starting competition ${competition.id.toString()}: ${competition.title}`);
+      logger.info(`[CompetitionLifecycle] Starting competition ${competition.id.toString()}: ${competition.title}`);
 
       // Mark as processed immediately to prevent re-processing
       // This happens before snapshot creation so failures don't cause repeated notifications
@@ -203,9 +206,9 @@ async function handleCompetitionStarts(prismaClient: PrismaClient, now: Date): P
       // Post start notification to channel
       await postCompetitionStarted(competition);
 
-      console.log(`[CompetitionLifecycle] ✅ Competition ${competition.id.toString()} started successfully`);
+      logger.info(`[CompetitionLifecycle] ✅ Competition ${competition.id.toString()} started successfully`);
     } catch (error) {
-      console.error(`[CompetitionLifecycle] ❌ Error starting competition ${competition.id.toString()}:`, error);
+      logger.error(`[CompetitionLifecycle] ❌ Error starting competition ${competition.id.toString()}:`, error);
       Sentry.captureException(error, {
         tags: { source: "lifecycle-start-competition", competitionId: competition.id.toString() },
       });
@@ -223,7 +226,7 @@ async function handleCompetitionStarts(prismaClient: PrismaClient, now: Date): P
  * populates dates from seasonId
  */
 async function handleCompetitionEnds(prismaClient: PrismaClient, now: Date): Promise<void> {
-  console.log("[CompetitionLifecycle] Checking for competitions to end...");
+  logger.info("[CompetitionLifecycle] Checking for competitions to end...");
 
   // Query all competitions that have been started but not ended yet
   // We can't filter by endDate in the DB query because season-based
@@ -242,16 +245,16 @@ async function handleCompetitionEnds(prismaClient: PrismaClient, now: Date): Pro
     .filter((comp) => comp.endDate !== null && comp.endDate <= now);
 
   if (competitionsToEnd.length === 0) {
-    console.log("[CompetitionLifecycle] No competitions to end");
+    logger.info("[CompetitionLifecycle] No competitions to end");
     return;
   }
 
-  console.log(`[CompetitionLifecycle] Found ${competitionsToEnd.length.toString()} competition(s) to end`);
+  logger.info(`[CompetitionLifecycle] Found ${competitionsToEnd.length.toString()} competition(s) to end`);
 
   // Process each competition (already parsed with dates populated)
   for (const competition of competitionsToEnd) {
     try {
-      console.log(`[CompetitionLifecycle] Ending competition ${competition.id.toString()}: ${competition.title}`);
+      logger.info(`[CompetitionLifecycle] Ending competition ${competition.id.toString()}: ${competition.title}`);
 
       // Mark as processed immediately to prevent re-processing
       await prismaClient.competition.update({
@@ -266,9 +269,9 @@ async function handleCompetitionEnds(prismaClient: PrismaClient, now: Date): Pro
       const leaderboard = await calculateLeaderboard(prismaClient, competition);
       await postFinalLeaderboard(competition, leaderboard);
 
-      console.log(`[CompetitionLifecycle] ✅ Competition ${competition.id.toString()} ended successfully`);
+      logger.info(`[CompetitionLifecycle] ✅ Competition ${competition.id.toString()} ended successfully`);
     } catch (error) {
-      console.error(`[CompetitionLifecycle] ❌ Error ending competition ${competition.id.toString()}:`, error);
+      logger.error(`[CompetitionLifecycle] ❌ Error ending competition ${competition.id.toString()}:`, error);
       Sentry.captureException(error, {
         tags: { source: "lifecycle-end-competition", competitionId: competition.id.toString() },
       });
@@ -286,7 +289,7 @@ async function handleCompetitionEnds(prismaClient: PrismaClient, now: Date): Pro
  * This function is called by the cron job
  */
 export async function runLifecycleCheck(): Promise<void> {
-  console.log("[CompetitionLifecycle] Running lifecycle check");
+  logger.info("[CompetitionLifecycle] Running lifecycle check");
 
   const now = new Date();
 
@@ -297,9 +300,9 @@ export async function runLifecycleCheck(): Promise<void> {
     // Handle competitions that need to end
     await handleCompetitionEnds(prisma, now);
 
-    console.log("[CompetitionLifecycle] ✅ Lifecycle check complete");
+    logger.info("[CompetitionLifecycle] ✅ Lifecycle check complete");
   } catch (error) {
-    console.error("[CompetitionLifecycle] ❌ Lifecycle check failed:", error);
+    logger.error("[CompetitionLifecycle] ❌ Lifecycle check failed:", error);
     throw error; // Re-throw so cron job can track failures
   }
 }

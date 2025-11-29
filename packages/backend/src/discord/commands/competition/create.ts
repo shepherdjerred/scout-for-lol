@@ -15,6 +15,9 @@ import { recordCreation } from "@scout-for-lol/backend/database/competition/rate
 import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/database/competition/validation.js";
 import { getChampionId } from "@scout-for-lol/backend/utils/champion.js";
 import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("competition-create");
 import {
   formatCriteriaType,
   getStatusEmoji,
@@ -107,11 +110,11 @@ async function parseCreateArgs(interaction: ChatInputCommandInteraction): Promis
       addAllMembers: interaction.options.getBoolean("add-all-members") ?? undefined,
     });
 
-    console.log(`✅ Command arguments validated successfully`);
-    console.log(`📋 Title: "${args.title}", Criteria: ${args.criteriaType}, Channel: ${args.channelId}`);
+    logger.info(`✅ Command arguments validated successfully`);
+    logger.info(`📋 Title: "${args.title}", Criteria: ${args.criteriaType}, Channel: ${args.channelId}`);
     return args;
   } catch (error) {
-    console.error(`❌ Invalid command arguments from ${username}:`, error);
+    logger.error(`❌ Invalid command arguments from ${username}:`, error);
     const validationError = fromError(error);
     await replyWithError(interaction, `**Invalid input:**\n${validationError.toString()}`);
     return null;
@@ -132,7 +135,7 @@ async function checkPermissionsForCreate(
     const isAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
 
     if (args.addAllMembers && !isAdmin) {
-      console.warn(`⚠️  Non-admin ${username} attempted to use add-all-members option`);
+      logger.warn(`⚠️  Non-admin ${username} attempted to use add-all-members option`);
       await interaction.reply({
         content: `**Permission denied:**\nThe \`add-all-members\` option requires Administrator permission.`,
         ephemeral: true,
@@ -143,7 +146,7 @@ async function checkPermissionsForCreate(
     const permissionCheck = await canCreateCompetition(prisma, args.guildId, args.userId, member.permissions);
 
     if (!permissionCheck.allowed) {
-      console.warn(`⚠️  Permission denied for ${username}: ${permissionCheck.reason ?? "unknown reason"}`);
+      logger.warn(`⚠️  Permission denied for ${username}: ${permissionCheck.reason ?? "unknown reason"}`);
       await interaction.reply({
         content: `**Permission denied:**\n${permissionCheck.reason ?? "No permission"}`,
         ephemeral: true,
@@ -151,10 +154,10 @@ async function checkPermissionsForCreate(
       return false;
     }
 
-    console.log(`✅ Permission check passed for ${username}`);
+    logger.info(`✅ Permission check passed for ${username}`);
     return true;
   } catch (error) {
-    console.error(`❌ Permission check failed:`, error);
+    logger.error(`❌ Permission check failed:`, error);
     await replyWithErrorFromException(interaction, error, "checking permissions");
     return false;
   }
@@ -166,7 +169,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
   const username = interaction.user.username;
   const guildId = interaction.guildId;
 
-  console.log(`🏆 Starting competition creation for user ${username} (${userId}) in guild ${guildId ?? "unknown"}`);
+  logger.info(`🏆 Starting competition creation for user ${username} (${userId}) in guild ${guildId ?? "unknown"}`);
 
   // Step 1: Parse and validate Discord command options
   const args = await parseCreateArgs(interaction);
@@ -230,7 +233,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     }))
     .exhaustive();
 
-  console.log(`✅ Criteria built:`, criteria);
+  logger.info(`✅ Criteria built:`, criteria);
 
   // ============================================================================
   // Step 4: Build competition creation input
@@ -274,9 +277,9 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
       criteria,
     };
 
-    console.log(`✅ Competition input built (fully type-safe)`);
+    logger.info(`✅ Competition input built (fully type-safe)`);
   } catch (error) {
-    console.error(`❌ Failed to build competition input:`, error);
+    logger.error(`❌ Failed to build competition input:`, error);
     await replyWithErrorFromException(interaction, error, "building competition data");
     return;
   }
@@ -297,9 +300,9 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     // Bot owner bypass is handled automatically via flags system initialized at startup
     await validateServerLimit(prisma, serverId, args.userId);
 
-    console.log(`✅ Business validation passed`);
+    logger.info(`✅ Business validation passed`);
   } catch (error) {
-    console.error(`❌ Business validation failed:`, error);
+    logger.error(`❌ Business validation failed:`, error);
     await replyWithErrorFromException(interaction, error, "validating competition");
     return;
   }
@@ -314,7 +317,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
     const competition = await createCompetition(prisma, competitionInput);
 
     const dbTime = Date.now() - dbStartTime;
-    console.log(`✅ Competition created with ID: ${competition.id.toString()} (${dbTime.toString()}ms)`);
+    logger.info(`✅ Competition created with ID: ${competition.id.toString()} (${dbTime.toString()}ms)`);
 
     // Record creation for rate limiting
     recordCreation(args.guildId, userId);
@@ -325,7 +328,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
 
     let addedMembersCount = 0;
     if (args.addAllMembers) {
-      console.log(`🔄 Adding all server members to competition ${competition.id.toString()}...`);
+      logger.info(`🔄 Adding all server members to competition ${competition.id.toString()}...`);
       const addMembersStartTime = Date.now();
 
       try {
@@ -341,7 +344,7 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
           },
         });
 
-        console.log(`📊 Found ${players.length.toString()} players in server ${args.guildId}`);
+        logger.info(`📊 Found ${players.length.toString()} players in server ${args.guildId}`);
 
         // Add each player as a participant
         const addResults = await Promise.allSettled(
@@ -361,18 +364,18 @@ export async function executeCompetitionCreate(interaction: ChatInputCommandInte
         const failedCount = addResults.filter((result) => result.status === "rejected").length;
 
         const addMembersTime = Date.now() - addMembersStartTime;
-        console.log(
+        logger.info(
           `✅ Added ${addedMembersCount.toString()}/${players.length.toString()} players to competition (${failedCount.toString()} failed) in ${addMembersTime.toString()}ms`,
         );
       } catch (error) {
-        console.error(`❌ Error adding all members to competition:`, error);
+        logger.error(`❌ Error adding all members to competition:`, error);
         // Don't fail the entire operation - competition was created successfully
         // We'll just mention the error in the response
       }
     }
 
     const totalTime = Date.now() - startTime;
-    console.log(`🎉 Competition creation completed successfully in ${totalTime.toString()}ms`);
+    logger.info(`🎉 Competition creation completed successfully in ${totalTime.toString()}ms`);
 
     // ============================================================================
     // Step 8: Send success response
@@ -405,7 +408,7 @@ ${competition.description}
 
     await replyWithSuccess(interaction, successMessage);
   } catch (error) {
-    console.error(`❌ Database error during competition creation:`, error);
+    logger.error(`❌ Database error during competition creation:`, error);
     await replyWithErrorFromException(interaction, error, "creating competition");
   }
 }

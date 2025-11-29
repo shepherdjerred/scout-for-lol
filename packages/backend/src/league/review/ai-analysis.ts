@@ -2,6 +2,9 @@ import type { MatchId, ArenaMatch, CompletedMatch, CuratedMatchData } from "@sco
 import type OpenAI from "openai";
 import * as Sentry from "@sentry/node";
 import { saveMatchAnalysisToS3 } from "@scout-for-lol/backend/storage/ai-review-s3.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("review-ai-analysis");
 
 const MATCH_ANALYSIS_SYSTEM_PROMPT = `You are a League of Legends analyst who writes lane-aware breakdowns for a single player's performance.
 Use the provided match context and curated stats (including timeline details) to explain:
@@ -25,12 +28,12 @@ export async function analyzeMatchData(params: {
     params;
   const player = match.players[playerIndex] ?? match.players[0];
   if (!player) {
-    console.log("[analyzeMatchData] No player found for analysis");
+    logger.info("[analyzeMatchData] No player found for analysis");
     return undefined;
   }
   const playerName = player.playerConfig.alias;
   if (!playerName) {
-    console.log("[analyzeMatchData] Player alias missing, skipping analysis");
+    logger.info("[analyzeMatchData] Player alias missing, skipping analysis");
     return undefined;
   }
   const playerChampion = player.champion.championName;
@@ -63,7 +66,7 @@ Provide three sections:
 
 Keep it under 220 words and avoid generic platitudes.`;
 
-  console.log(`[analyzeMatchData] Calling OpenAI for ${playerName} (${playerChampion}) in ${lane} using curated data`);
+  logger.info(`[analyzeMatchData] Calling OpenAI for ${playerName} (${playerChampion}) in ${lane} using curated data`);
   const startTime = Date.now();
 
   try {
@@ -83,11 +86,11 @@ Keep it under 220 words and avoid generic platitudes.`;
     const duration = Date.now() - startTime;
     const analysis = response.choices[0]?.message.content?.trim();
     if (!analysis) {
-      console.log("[analyzeMatchData] No analysis content returned from OpenAI");
+      logger.info("[analyzeMatchData] No analysis content returned from OpenAI");
       return undefined;
     }
 
-    console.log(`[analyzeMatchData] Generated analysis (${analysis.length.toString()} chars)`);
+    logger.info(`[analyzeMatchData] Generated analysis (${analysis.length.toString()} chars)`);
 
     try {
       await saveMatchAnalysisToS3({
@@ -113,13 +116,13 @@ Keep it under 220 words and avoid generic platitudes.`;
         },
       });
     } catch (s3Error) {
-      console.error("[analyzeMatchData] Failed to save analysis to S3:", s3Error);
+      logger.error("[analyzeMatchData] Failed to save analysis to S3:", s3Error);
     }
 
     return analysis;
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
-    console.error("[analyzeMatchData] Error generating match analysis:", err);
+    logger.error("[analyzeMatchData] Error generating match analysis:", err);
     Sentry.captureException(err, {
       tags: {
         source: "openai-match-analysis",

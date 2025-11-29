@@ -9,11 +9,14 @@ import {
 } from "@scout-for-lol/data";
 import { uniqueBy } from "remeda";
 import * as Sentry from "@sentry/node";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
 
-console.log("🗄️  Initializing Prisma database client");
+const logger = createLogger("database");
+
+logger.info("🗄️  Initializing Prisma database client");
 export const prisma = new PrismaClient();
 
-console.log("✅ Database client initialized");
+logger.info("✅ Database client initialized");
 
 export type PlayerAccountWithState = {
   config: PlayerConfigEntry;
@@ -25,8 +28,8 @@ export async function getChannelsSubscribedToPlayers(
   puuids: LeaguePuuid[],
   prismaClient: PrismaClient = prisma,
 ): Promise<{ channel: DiscordChannelId; serverId: string }[]> {
-  console.log(`🔍 Fetching channels subscribed to ${puuids.length.toString()} players`);
-  console.log(`📋 PUUIDs: ${puuids.join(", ")}`);
+  logger.info(`🔍 Fetching channels subscribed to ${puuids.length.toString()} players`);
+  logger.info(`📋 PUUIDs: ${puuids.join(", ")}`);
 
   try {
     const startTime = Date.now();
@@ -48,7 +51,7 @@ export async function getChannelsSubscribedToPlayers(
     });
 
     const queryTime = Date.now() - startTime;
-    console.log(`📊 Found ${accounts.length.toString()} accounts in ${queryTime.toString()}ms`);
+    logger.info(`📊 Found ${accounts.length.toString()} accounts in ${queryTime.toString()}ms`);
 
     const result = uniqueBy(
       accounts.flatMap((account) =>
@@ -60,10 +63,10 @@ export async function getChannelsSubscribedToPlayers(
       (server) => server.channel,
     );
 
-    console.log(`📺 Returning ${result.length.toString()} unique channels`);
+    logger.info(`📺 Returning ${result.length.toString()} unique channels`);
     return result;
   } catch (error) {
-    console.error("❌ Error fetching subscribed channels:", error);
+    logger.error("❌ Error fetching subscribed channels:", error);
     Sentry.captureException(error, { tags: { source: "db-get-subscribed-channels" } });
     throw error;
   }
@@ -77,7 +80,7 @@ export async function getChannelsSubscribedToPlayers(
  * @returns Array of player accounts with their polling state
  */
 export async function getAccountsWithState(prismaClient: PrismaClient = prisma): Promise<PlayerAccountWithState[]> {
-  console.log("🔍 Fetching all player accounts with state");
+  logger.info("🔍 Fetching all player accounts with state");
 
   try {
     const startTime = Date.now();
@@ -89,7 +92,7 @@ export async function getAccountsWithState(prismaClient: PrismaClient = prisma):
     });
 
     const queryTime = Date.now() - startTime;
-    console.log(`📊 Found ${players.length.toString()} players in ${queryTime.toString()}ms`);
+    logger.info(`📊 Found ${players.length.toString()} players in ${queryTime.toString()}ms`);
 
     // transform
     const result = players.flatMap((player): PlayerAccountWithState[] => {
@@ -119,11 +122,11 @@ export async function getAccountsWithState(prismaClient: PrismaClient = prisma):
       });
     });
 
-    console.log(`📋 Returning ${result.length.toString()} player account entries with state`);
+    logger.info(`📋 Returning ${result.length.toString()} player account entries with state`);
 
     return result;
   } catch (error) {
-    console.error("❌ Error fetching player accounts with state:", error);
+    logger.error("❌ Error fetching player accounts with state:", error);
     Sentry.captureException(error, { tags: { source: "db-get-accounts-with-state" } });
     throw error;
   }
@@ -142,7 +145,7 @@ export async function updateLastProcessedMatch(
   matchId: MatchId,
   prismaClient: PrismaClient = prisma,
 ): Promise<void> {
-  console.log(`📝 Updating lastProcessedMatchId for ${puuid} to ${matchId}`);
+  logger.info(`📝 Updating lastProcessedMatchId for ${puuid} to ${matchId}`);
 
   try {
     const startTime = Date.now();
@@ -157,9 +160,9 @@ export async function updateLastProcessedMatch(
     });
 
     const queryTime = Date.now() - startTime;
-    console.log(`✅ Updated lastProcessedMatchId in ${queryTime.toString()}ms`);
+    logger.info(`✅ Updated lastProcessedMatchId in ${queryTime.toString()}ms`);
   } catch (error) {
-    console.error("❌ Error updating lastProcessedMatchId:", error);
+    logger.error("❌ Error updating lastProcessedMatchId:", error);
     Sentry.captureException(error, { tags: { source: "db-update-last-processed-match", puuid } });
     throw error;
   }
@@ -188,7 +191,7 @@ export async function getLastProcessedMatch(
 
     return account?.lastProcessedMatchId ? MatchIdSchema.parse(account.lastProcessedMatchId) : null;
   } catch (error) {
-    console.error("❌ Error getting lastProcessedMatchId:", error);
+    logger.error("❌ Error getting lastProcessedMatchId:", error);
     Sentry.captureException(error, { tags: { source: "db-get-last-processed-match", puuid } });
     throw error;
   }
@@ -207,7 +210,7 @@ export async function updateLastMatchTime(
   matchTime: Date,
   prismaClient: PrismaClient = prisma,
 ): Promise<void> {
-  console.log(`📝 Updating lastMatchTime for ${puuid} to ${matchTime.toISOString()}`);
+  logger.info(`📝 Updating lastMatchTime for ${puuid} to ${matchTime.toISOString()}`);
 
   try {
     await prismaClient.account.updateMany({
@@ -219,7 +222,7 @@ export async function updateLastMatchTime(
       },
     });
   } catch (error) {
-    console.error("❌ Error updating lastMatchTime:", error);
+    logger.error("❌ Error updating lastMatchTime:", error);
     Sentry.captureException(error, { tags: { source: "db-update-last-match-time", puuid } });
     throw error;
   }
@@ -238,7 +241,7 @@ export async function updateLastCheckedAt(
   checkedAt: Date,
   prismaClient: PrismaClient = prisma,
 ): Promise<void> {
-  console.log(`📝 Updating lastCheckedAt for ${puuid} to ${checkedAt.toISOString()}`);
+  logger.info(`📝 Updating lastCheckedAt for ${puuid} to ${checkedAt.toISOString()}`);
 
   try {
     await prismaClient.account.updateMany({
@@ -250,7 +253,7 @@ export async function updateLastCheckedAt(
       },
     });
   } catch (error) {
-    console.error("❌ Error updating lastCheckedAt:", error);
+    logger.error("❌ Error updating lastCheckedAt:", error);
     Sentry.captureException(error, { tags: { source: "db-update-last-checked-at", puuid } });
     throw error;
   }

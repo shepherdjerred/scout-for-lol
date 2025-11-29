@@ -46,6 +46,7 @@
     "remeda": "^2.21.2",
     "satori": "^0.18.0",
     "ts-pattern": "^5.7.0",
+    "tslog": "^4.10.2",
     "twisted": "^1.63.3",
     "uuid": "^13.0.0",
     "yoga-wasm-web": "^0.3.3",
