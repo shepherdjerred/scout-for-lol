@@ -1,62 +1,17 @@
 import { useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { LeagueClientSection, DiscordConfigSection, MonitoringSection, DebugPanel } from "./components";
-
-function getErrorMessage(error: unknown): string {
-  if (typeof error === "string") {
-    return error;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return "An unknown error occurred";
-}
-
-type LcuStatus = {
-  connected: boolean;
-  summonerName: string | null;
-  inGame: boolean;
-};
-
-type DiscordStatus = {
-  connected: boolean;
-  channelName: string | null;
-  voiceConnected: boolean;
-  voiceChannelName: string | null;
-  activeSoundPack: string | null;
-};
-
-type Config = {
-  botToken: string | null;
-  channelId: string | null;
-  voiceChannelId: string | null;
-  soundPack: string | null;
-  eventSounds: Record<string, string> | null;
-};
-
-const DEFAULT_EVENT_SOUNDS: Record<string, string> = {
-  gameStart: "gameStart",
-  firstBlood: "firstBlood",
-  kill: "kill",
-  multiKill: "multiKill",
-  objective: "objective",
-  ace: "ace",
-  gameEnd: "gameEnd",
-};
-
-type LogEntry = {
-  timestamp: string;
-  level: "info" | "error" | "warning";
-  message: string;
-};
-
-type LogPaths = {
-  app_log_dir: string;
-  working_dir_log: string;
-};
+import { Sidebar } from "./components/layout";
+import { LeagueSection, DiscordSection, MonitorSection, DebugPanel } from "./components/sections";
+import { Alert } from "./components/ui";
+import type { LcuStatus, DiscordStatus, Config, LogEntry, LogPaths, Section } from "./types";
+import { DEFAULT_EVENT_SOUNDS, getErrorMessage } from "./types";
 
 export default function App() {
+  // Navigation state
+  const [activeSection, setActiveSection] = useState<Section>("league");
+
+  // Connection states
   const [lcuStatus, setLcuStatus] = useState<LcuStatus>({
     connected: false,
     summonerName: null,
@@ -71,11 +26,14 @@ export default function App() {
     activeSoundPack: null,
   });
 
+  // Form states
   const [botToken, setBotToken] = useState("");
   const [channelId, setChannelId] = useState("");
   const [voiceChannelId, setVoiceChannelId] = useState("");
   const [soundPack, setSoundPack] = useState("base");
   const [eventSounds, setEventSounds] = useState<Record<string, string>>(DEFAULT_EVENT_SOUNDS);
+
+  // App states
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
@@ -385,52 +343,21 @@ export default function App() {
     setLogs([]);
   };
 
-  return (
-    <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-white px-8 py-6 text-center dark:border-gray-800 dark:bg-gray-800">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-black">Scout for LoL</h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">Live Game Updates for Discord</p>
-        <button
-          onClick={() => {
-            setShowDebug(!showDebug);
-          }}
-          className="mt-4 rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
-        >
-          {showDebug ? "Hide" : "Show"} Debug Panel
-        </button>
-      </header>
-
-      <main className="flex flex-1 flex-col gap-6 p-8 lg:flex-row">
-        {/* Main Content */}
-        <div className="flex-1 space-y-6">
-          {/* Alerts */}
-          {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
-              <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                <strong>Error:</strong> {error}
-              </p>
-            </div>
-          )}
-
-          {loading && (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">{loading}</p>
-            </div>
-          )}
-
-          <LeagueClientSection
+  // Render active section content
+  const renderSection = () => {
+    switch (activeSection) {
+      case "league":
+        return (
+          <LeagueSection
             lcuStatus={lcuStatus}
             loading={loading}
-            onConnect={() => {
-              void handleConnectLcu();
-            }}
-            onDisconnect={() => {
-              void handleDisconnectLcu();
-            }}
+            onConnect={() => void handleConnectLcu()}
+            onDisconnect={() => void handleDisconnectLcu()}
           />
-
-          <DiscordConfigSection
+        );
+      case "discord":
+        return (
+          <DiscordSection
             discordStatus={discordStatus}
             loading={loading}
             botToken={botToken}
@@ -443,46 +370,80 @@ export default function App() {
             onVoiceChannelIdChange={setVoiceChannelId}
             onSoundPackChange={setSoundPack}
             onEventSoundChange={handleEventSoundChange}
-            onConfigure={() => {
-              void handleConfigureDiscord();
-            }}
-            onJoinVoice={() => {
-              void handleJoinVoice();
-            }}
-            onTestSound={() => {
-              void handleTestSound();
-            }}
+            onConfigure={() => void handleConfigureDiscord()}
+            onJoinVoice={() => void handleJoinVoice()}
+            onTestSound={() => void handleTestSound()}
           />
-
-          {lcuStatus.connected && discordStatus.connected && (
-            <MonitoringSection
-              isMonitoring={isMonitoring}
-              loading={loading}
-              onStart={() => {
-                void handleStartMonitoring();
-              }}
-              onStop={() => {
-                void handleStopMonitoring();
-              }}
-              onTest={() => {
-                void handleTestEvents();
-              }}
-            />
-          )}
-        </div>
-
-        {/* Debug Panel */}
-        {showDebug && (
-          <DebugPanel
-            lcuStatus={lcuStatus}
-            discordStatus={discordStatus}
+        );
+      case "monitor":
+        return (
+          <MonitorSection
             isMonitoring={isMonitoring}
-            logs={logs}
-            logPaths={logPaths}
-            onClearLogs={handleClearLogs}
+            loading={loading}
+            lcuConnected={lcuStatus.connected}
+            discordConnected={discordStatus.connected}
+            inGame={lcuStatus.inGame}
+            onStart={() => void handleStartMonitoring()}
+            onStop={() => void handleStopMonitoring()}
+            onTest={() => void handleTestEvents()}
           />
+        );
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-900">
+      {/* Sidebar */}
+      <Sidebar
+        lcuConnected={lcuStatus.connected}
+        discordConnected={discordStatus.connected}
+        voiceConnected={discordStatus.voiceConnected}
+        isMonitoring={isMonitoring}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        showDebug={showDebug}
+        onToggleDebug={() => {
+          setShowDebug(!showDebug);
+        }}
+      />
+
+      {/* Main Content */}
+      <main className="flex flex-1 flex-col overflow-hidden">
+        {/* Error/Loading Alerts */}
+        {(error !== null || loading !== null) && (
+          <div className="border-b border-gray-800 px-6 py-3 space-y-2">
+            {error && (
+              <Alert
+                variant="error"
+                onDismiss={() => {
+                  setError(null);
+                }}
+              >
+                {error}
+              </Alert>
+            )}
+            {loading && <Alert variant="loading">{loading}</Alert>}
+          </div>
         )}
+
+        {/* Section Content */}
+        <div className="flex-1 overflow-y-auto p-6">{renderSection()}</div>
       </main>
+
+      {/* Debug Panel */}
+      {showDebug && (
+        <DebugPanel
+          lcuStatus={lcuStatus}
+          discordStatus={discordStatus}
+          isMonitoring={isMonitoring}
+          logs={logs}
+          logPaths={logPaths}
+          onClearLogs={handleClearLogs}
+          onClose={() => {
+            setShowDebug(false);
+          }}
+        />
+      )}
     </div>
   );
 }
