@@ -95,7 +95,8 @@ export async function generateReviewText(params: {
     ...(timelineSummary !== undefined && { timelineSummary }),
   });
   const userPrompt = replaceTemplateVariables(basePromptTemplate, promptVariables);
-  const systemPrompt = `${systemPromptPrefix}${personality.instructions}\n\n${laneContext}`;
+  const styleCardSection = `\n\nReviewer style card (from Discord chat analysis; keep the tone aligned):\n${personality.styleCard}`;
+  const systemPrompt = `${systemPromptPrefix}${personality.instructions}${styleCardSection}\n\n${laneContext}`;
   const completionParams = createCompletionParams({
     systemPrompt,
     userPrompt,

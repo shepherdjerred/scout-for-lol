@@ -39,6 +39,10 @@ export type PersonalityMetadata = z.infer<typeof PersonalityMetadataSchema>;
 export type Personality = {
   metadata: PersonalityMetadata;
   instructions: string;
+  /**
+   * Style card loaded from analysis/llm-out to help match voice
+   */
+  styleCard: string;
   filename?: string;
 };
 

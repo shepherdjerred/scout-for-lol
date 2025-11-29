@@ -147,6 +147,11 @@ export async function generateMatchReview(
 
     // Get personality from config
     const personality = resolvePersonality(config);
+    if (!personality.styleCard || personality.styleCard.trim().length === 0) {
+      throw new Error(
+        `Style card missing for personality "${personality.id}". Add a corresponding file under packages/analysis/llm-out/<name>_style.json and wire it into the personality loader.`,
+      );
+    }
 
     // Get prompt context
     const { basePromptTemplate, laneContextInfo, playerMeta } = getPromptContext(config, match);

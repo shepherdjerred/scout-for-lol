@@ -92,6 +92,7 @@ export const PersonalitySchema = z.object({
   id: z.string(),
   metadata: PersonalityMetadataSchema,
   instructions: z.string(),
+  styleCard: z.string(),
 });
 
 export type Personality = z.infer<typeof PersonalitySchema>;
