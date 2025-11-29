@@ -5,6 +5,15 @@ import {
   type Personality,
   type PlayerMetadata,
 } from "@scout-for-lol/data";
+import { readdir } from "node:fs/promises";
+import path from "node:path";
+
+/**
+ * In-memory state tracking for balanced reviewer selection.
+ * Tracks how many times each reviewer has been selected to ensure
+ * fair distribution across all available reviewers.
+ */
+const reviewerUsageCount: Map<string, number> = new Map();
 
 // Resolve the prompts directory from the data package
 // import.meta.resolve returns a file:// URL, so we extract the pathname
@@ -53,12 +62,93 @@ async function loadPersonality(basename: string): Promise<Personality> {
 }
 
 /**
- * Select a random personality prompt
- * Note: Currently hardcoded to always return "aaron" personality
+ * Discover all available personality basenames in the personalities directory.
+ * A personality is available if it has both a .json and .txt file.
+ * Excludes "generic" from the list as it's not meant for random selection.
+ */
+async function discoverAvailablePersonalities(): Promise<string[]> {
+  const personalitiesDir = `${PROMPTS_DIR}/personalities`;
+  const files = await readdir(personalitiesDir);
+
+  // Group files by basename (without extension)
+  const filesByBasename = new Map<string, Set<string>>();
+  for (const file of files) {
+    const ext = path.extname(file);
+    if (ext === ".json" || ext === ".txt") {
+      const basename = path.basename(file, ext);
+      const existing = filesByBasename.get(basename) ?? new Set();
+      existing.add(ext);
+      filesByBasename.set(basename, existing);
+    }
+  }
+
+  // Filter to only include personalities with both .json and .txt files
+  // Exclude "generic" as it's not meant for random selection
+  const availablePersonalities: string[] = [];
+  for (const [basename, extensions] of filesByBasename) {
+    if (basename !== "generic" && extensions.has(".json") && extensions.has(".txt")) {
+      availablePersonalities.push(basename);
+    }
+  }
+
+  return availablePersonalities.sort();
+}
+
+/**
+ * Select a personality using a balanced pseudo-random algorithm.
+ * Prioritizes reviewers who have been selected fewer times to ensure
+ * fair distribution across all available reviewers.
+ */
+function selectBalancedReviewer(availablePersonalities: string[]): string {
+  if (availablePersonalities.length === 0) {
+    throw new Error("No personalities available for selection");
+  }
+
+  // Initialize usage counts for new personalities
+  for (const personality of availablePersonalities) {
+    if (!reviewerUsageCount.has(personality)) {
+      reviewerUsageCount.set(personality, 0);
+    }
+  }
+
+  // Find the minimum usage count among available personalities
+  const usageCounts = availablePersonalities.map((p) => reviewerUsageCount.get(p) ?? 0);
+  const minUsage = Math.min(...usageCounts);
+
+  // Get all personalities that have the minimum usage count
+  const leastUsedPersonalities = availablePersonalities.filter(
+    (p) => (reviewerUsageCount.get(p) ?? 0) === minUsage
+  );
+
+  // Randomly select from the least used personalities
+  const randomIndex = Math.floor(Math.random() * leastUsedPersonalities.length);
+  const selected = leastUsedPersonalities[randomIndex];
+
+  if (!selected) {
+    throw new Error("Failed to select personality from least used pool");
+  }
+
+  // Increment the usage count for the selected personality
+  reviewerUsageCount.set(selected, (reviewerUsageCount.get(selected) ?? 0) + 1);
+
+  return selected;
+}
+
+/**
+ * Select a random personality prompt using balanced pseudo-random selection.
+ * All reviewers with both .json and .txt files are included in the pool.
+ * The algorithm ensures no reviewer is selected too often or too seldom.
  */
 export async function selectRandomPersonality(): Promise<Personality> {
-  // Temporarily hardcoded to only use aaron personality
-  return loadPersonality("aaron");
+  const availablePersonalities = await discoverAvailablePersonalities();
+  const selectedBasename = selectBalancedReviewer(availablePersonalities);
+
+  console.log(
+    `[selectRandomPersonality] Selected: ${selectedBasename}, ` +
+      `usage counts: ${JSON.stringify(Object.fromEntries(reviewerUsageCount))}`
+  );
+
+  return loadPersonality(selectedBasename);
 }
 
 /**
