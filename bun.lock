@@ -87,6 +87,7 @@
         "bun-types": "latest",
         "glob": "^11.0.3",
         "ts-morph": "^27.0.2",
+        "tsx": "^4.20.6",
         "typescript": "^5.9.3",
       },
     },
@@ -3040,6 +3041,8 @@
     "tsconfig-paths": ["tsconfig-paths@3.15.0", "", { "dependencies": { "@types/json5": "^0.0.29", "json5": "^1.0.2", "minimist": "^1.2.6", "strip-bom": "^3.0.0" } }, "sha512-2Ac2RgzDe/cn48GvOe3M+o82pEFewD3UPbyoUHHdKasHwJKjds4fLXWf/Ux5kATBKN20oaFGu+jbElp1pos0mg=="],
 
     "tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
+
+    "tsx": ["tsx@4.20.6", "", { "dependencies": { "esbuild": "~0.25.0", "get-tsconfig": "^4.7.5" }, "optionalDependencies": { "fsevents": "~2.3.3" }, "bin": { "tsx": "dist/cli.mjs" } }, "sha512-ytQKuwgmrrkDTFP4LjR0ToE2nqgy886GpvRSpU0JAnrdBYppuY5rLkRUYPU1yCryb24SsKBTL/hlDQAEFVwtZg=="],
 
     "twisted": ["twisted@1.72.2", "", { "dependencies": { "axios": "^1.6.2", "dotenv": "^16.3.1", "http-status-codes": "^2.3.0", "lodash": "^4.17.21", "promise-queue": "^2.2.5", "uuid": "^9.0.1" } }, "sha512-JXB+NHchuzeQEJotQ2t1yNfHoJeNPo3iFLdc7GxIg1Jwhh5D7BcINFv/FdMlXzDYfgR94vCuQ5GXwkdB0bvCPg=="],
 

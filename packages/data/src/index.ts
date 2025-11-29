@@ -19,6 +19,21 @@ export { extractMatchData, getOrdinalSuffix } from "./review/generator-helpers.j
 export { curateMatchData, curateParticipantData } from "./review/curator.js";
 export { curateTimelineData } from "./review/timeline-curator.js";
 export type { CuratedTimeline, CuratedTimelineEvent, CuratedParticipantSnapshot } from "./review/curator-types.js";
+// Shared AI analysis functions
+export {
+  summarizeTimeline,
+  analyzeMatchData,
+  generateArtPrompt,
+  TIMELINE_SUMMARY_PROMPT,
+  MATCH_ANALYSIS_SYSTEM_PROMPT,
+  ART_PROMPT_SYSTEM_PROMPT,
+  type OpenAIClientInterface,
+  type TimelineSummaryResult,
+  type MatchAnalysisResult,
+  type ArtPromptResult,
+  type AnalyzeMatchDataParams,
+  type GenerateArtPromptParams,
+} from "./review/ai-analysis.js";
 export * from "./league/raw-match.schema.js";
 export * from "./league/raw-timeline.schema.js";
 export * from "./league/raw-summoner-league.schema.js";

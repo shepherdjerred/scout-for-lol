@@ -40,9 +40,6 @@ use tauri::{Emitter, Manager, State};
 use tokio::sync::Mutex;
 use tokio::time::{timeout, Duration};
 
-#[cfg(target_os = "windows")]
-use std::fs;
-
 fn append_startup_log(message: &str) {
     if let Ok(cwd) = std::env::current_dir() {
         let path = cwd.join("startup-log.txt");

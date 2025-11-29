@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bunx mastra dev:*)",
+      "Bash(bunx mastra:*)",
+      "Bash(cat:*)",
+      "Bash(bun add:*)",
+      "Bash(NODE_OPTIONS=\"--import tsx\" bunx mastra dev:*)",
+      "Bash(bun build:*)",
+      "Bash(NODE_OPTIONS='--import tsx' bunx mastra dev:*)",
+      "Bash(bun run typecheck:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

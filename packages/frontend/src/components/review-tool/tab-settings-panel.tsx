@@ -12,6 +12,7 @@ import { ART_STYLES, ART_THEMES } from "@scout-for-lol/data";
 import { TextGenerationSettings } from "./text-generation-settings";
 import { ImageGenerationSettings } from "./image-generation-settings";
 import { PromptSettings } from "./prompt-settings";
+import { AdvancedAISettings } from "./advanced-ai-settings";
 import { TabConfigActions } from "./tab-config-actions";
 
 const ErrorSchema = z.object({ message: z.string() });
@@ -372,6 +373,8 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
             setEditingPersonality(null);
           }}
         />
+
+        <AdvancedAISettings config={config} onChange={onChange} />
       </div>
 
       <TabConfigActions onExport={handleExportConfig} onImport={handleImportConfig} onReset={handleResetToDefaults} />

@@ -16,4 +16,4 @@
   "dagger": {
     "runtime": "bun"
   }
-}
+,"dependencies":{"typescript":"5.9.3"}}

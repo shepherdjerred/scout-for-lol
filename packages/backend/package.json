@@ -63,6 +63,7 @@
     "bun-types": "latest",
     "glob": "^11.0.3",
     "ts-morph": "^27.0.2",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   },
   "description": "Backend service for Scout for League of Legends Discord bot",

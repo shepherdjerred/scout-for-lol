@@ -1,16 +1,23 @@
-import type { MatchId, ArenaMatch, CompletedMatch, CuratedMatchData } from "@scout-for-lol/data";
+import {
+  type MatchId,
+  type ArenaMatch,
+  type CompletedMatch,
+  type CuratedMatchData,
+  analyzeMatchData as analyzeMatchDataCore,
+  MATCH_ANALYSIS_SYSTEM_PROMPT,
+} from "@scout-for-lol/data";
 import type OpenAI from "openai";
 import * as Sentry from "@sentry/node";
 import { saveMatchAnalysisToS3 } from "@scout-for-lol/backend/storage/ai-review-s3.js";
 
-const MATCH_ANALYSIS_SYSTEM_PROMPT = `You are a League of Legends analyst who writes lane-aware breakdowns for a single player's performance.
-Use the provided match context and curated stats (including timeline details) to explain:
-- How the game flowed for that player
-- Where they excelled or struggled in their specific lane context
-- The biggest momentum swings that mattered for them
-- Concrete improvement ideas
-Keep the writing concise, grounded in the numbers provided, and avoid generic advice.`;
-
+/**
+ * Analyze match data using OpenAI
+ *
+ * This is a backend wrapper around the shared analyzeMatchData function.
+ * It adds:
+ * - S3 persistence for debugging
+ * - Sentry error tracking
+ */
 export async function analyzeMatchData(params: {
   match: CompletedMatch | ArenaMatch;
   curatedData: CuratedMatchData;
@@ -23,6 +30,7 @@ export async function analyzeMatchData(params: {
 }): Promise<string | undefined> {
   const { match, curatedData, laneContext, matchId, queueType, trackedPlayerAliases, playerIndex, openaiClient } =
     params;
+
   const player = match.players[playerIndex] ?? match.players[0];
   if (!player) {
     console.log("[analyzeMatchData] No player found for analysis");
@@ -41,54 +49,28 @@ export async function analyzeMatchData(params: {
     lane = player.lane;
   }
 
-  // Minify JSON to save tokens
-  const matchDataForPrompt = JSON.stringify({
-    processedMatch: match,
-    detailedStats: curatedData,
-  });
-  const timelineSummary = curatedData.timelineSummary ?? "No timeline summary available.";
-
-  const userPrompt = `Analyze ${playerName} playing ${playerChampion} in the ${lane} context. Use the lane primer and timeline summary to stay grounded in role expectations and how the game flowed.
-
-Lane primer:
-${laneContext}
-
-Timeline summary:
-${timelineSummary}
-
-Provide three sections:
-1) Summary (2-3 sentences about their game flow)
-2) Lane Highlights (3-5 bullets referencing concrete numbers from the data: KDA, CS/min, damage, objective participation, gold swings, etc.)
-3) Improvement Ideas (2 bullets of actionable, lane-aware advice)
-
-Keep it under 220 words and avoid generic platitudes.`;
-
   console.log(`[analyzeMatchData] Calling OpenAI for ${playerName} (${playerChampion}) in ${lane} using curated data`);
-  const startTime = Date.now();
 
   try {
-    const response = await openaiClient.chat.completions.create({
+    // Use shared function from @scout-for-lol/data
+    const result = await analyzeMatchDataCore({
+      match,
+      curatedData,
+      laneContext,
+      playerIndex,
+      openaiClient,
       model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: MATCH_ANALYSIS_SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: `${userPrompt}\n\nMatch data JSON:\n${matchDataForPrompt}`,
-        },
-      ],
-      max_completion_tokens: 3000,
-      temperature: 0.4,
+      timelineSummary: curatedData.timelineSummary,
     });
 
-    const duration = Date.now() - startTime;
-    const analysis = response.choices[0]?.message.content?.trim();
-    if (!analysis) {
+    if (!result) {
       console.log("[analyzeMatchData] No analysis content returned from OpenAI");
       return undefined;
     }
 
-    console.log(`[analyzeMatchData] Generated analysis (${analysis.length.toString()} chars)`);
+    console.log(`[analyzeMatchData] Generated analysis (${result.analysis.length.toString()} chars)`);
 
+    // Save to S3 for debugging/analysis
     try {
       await saveMatchAnalysisToS3({
         matchId,
@@ -101,14 +83,14 @@ Keep it under 220 words and avoid generic platitudes.`;
             detailedStats: curatedData,
           },
           laneContext,
-          timelineSummary: timelineSummary,
+          timelineSummary: curatedData.timelineSummary ?? "No timeline summary available.",
           playerIndex,
           playerName,
           playerChampion,
         },
         response: {
-          analysis,
-          durationMs: duration,
+          analysis: result.analysis,
+          durationMs: result.durationMs,
           model: "gpt-4o-mini",
         },
       });
@@ -116,7 +98,7 @@ Keep it under 220 words and avoid generic platitudes.`;
       console.error("[analyzeMatchData] Failed to save analysis to S3:", s3Error);
     }
 
-    return analysis;
+    return result.analysis;
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
     console.error("[analyzeMatchData] Error generating match analysis:", err);

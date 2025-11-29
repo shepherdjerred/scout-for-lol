@@ -108,6 +108,30 @@ export const PlayerMetadataSchema = z.object({
 export type PlayerMetadata = z.infer<typeof PlayerMetadataSchema>;
 
 /**
+ * Advanced AI settings schema (Mastra workflow features)
+ * All AI features are always enabled to match the Mastra backend.
+ * Only model selection is configurable.
+ */
+export const AdvancedAISettingsSchema = z.object({
+  // Timeline summarization model (summarizes game flow before review)
+  timelineSummaryModel: z.string().default("gpt-4o-mini"),
+  // Match analysis model (lane-aware player performance analysis)
+  matchAnalysisModel: z.string().default("gpt-4o-mini"),
+  // Art prompt generation model
+  artPromptModel: z.string().default("gpt-5.1"),
+  // Player selection
+  playerSelection: z
+    .union([
+      z.literal("random"), // Random player from match (like Mastra)
+      z.literal("first"), // Always first player (legacy behavior)
+      z.number().int().min(0), // Specific player index
+    ])
+    .default("random"),
+});
+
+export type AdvancedAISettings = z.infer<typeof AdvancedAISettingsSchema>;
+
+/**
  * Prompt settings schema
  */
 export const PromptSettingsSchema = z.object({
@@ -142,6 +166,7 @@ export const TabConfigSchema = z.object({
   textGeneration: TextGenerationSettingsSchema,
   imageGeneration: ImageGenerationSettingsSchema,
   prompts: PromptSettingsSchema,
+  advancedAI: AdvancedAISettingsSchema,
 });
 
 export type TabConfig = z.infer<typeof TabConfigSchema>;
@@ -154,6 +179,7 @@ export type ReviewConfig = {
   textGeneration: TextGenerationSettings;
   imageGeneration: ImageGenerationSettings;
   prompts: PromptSettings;
+  advancedAI: AdvancedAISettings;
 };
 
 /**
@@ -169,12 +195,22 @@ export const GenerationMetadataSchema = z.object({
   reviewerName: z.string().optional(),
   selectedArtStyle: z.string().optional(),
   selectedArtTheme: z.string().optional(),
+  selectedArtThemes: z.array(z.string()).optional(), // New: themes array (Mastra style)
   selectedSecondArtTheme: z.string().optional(),
   systemPrompt: z.string().optional(),
   userPrompt: z.string().optional(),
   openaiRequestParams: z.unknown().optional(),
   geminiPrompt: z.string().optional(),
   geminiModel: z.string().optional(),
+  // New: Mastra workflow metadata
+  playerIndex: z.number().optional(),
+  playerName: z.string().optional(),
+  timelineSummary: z.string().optional(),
+  timelineSummaryDurationMs: z.number().optional(),
+  matchAnalysis: z.string().optional(),
+  matchAnalysisDurationMs: z.number().optional(),
+  artPrompt: z.string().optional(),
+  artPromptDurationMs: z.number().optional(),
 });
 
 export type GenerationMetadata = z.infer<typeof GenerationMetadataSchema>;
@@ -218,8 +254,8 @@ export function createDefaultGlobalConfig(): GlobalConfig {
 export function createDefaultTabConfig(): TabConfig {
   return TabConfigSchema.parse({
     textGeneration: {
-      model: "gpt-5",
-      maxTokens: 25000,
+      model: "gpt-5.1", // Match Mastra workflow default
+      maxTokens: 1000, // Match Mastra workflow default
       temperature: 1.0,
       topP: 1.0,
     },
@@ -230,13 +266,19 @@ export function createDefaultTabConfig(): TabConfig {
       artStyle: "random",
       artTheme: "random",
       useMatchingPairs: true,
-      matchingPairProbability: 0.7,
+      matchingPairProbability: 0.65, // Match Mastra workflow default
       mashupMode: false,
       secondArtTheme: "random",
     },
     prompts: {
       basePrompt: "", // Will be loaded from file
       personalityId: "random",
+    },
+    advancedAI: {
+      timelineSummaryModel: "gpt-4o-mini",
+      matchAnalysisModel: "gpt-4o-mini",
+      artPromptModel: "gpt-5.1",
+      playerSelection: "random", // Match Mastra workflow default
     },
   });
 }
@@ -250,6 +292,7 @@ export function mergeConfigs(global: GlobalConfig, tab: TabConfig): ReviewConfig
     textGeneration: tab.textGeneration,
     imageGeneration: tab.imageGeneration,
     prompts: tab.prompts,
+    advancedAI: tab.advancedAI,
   };
 }
 
@@ -265,6 +308,7 @@ export function splitConfig(config: ReviewConfig): { global: GlobalConfig; tab: 
       textGeneration: config.textGeneration,
       imageGeneration: config.imageGeneration,
       prompts: config.prompts,
+      advancedAI: config.advancedAI,
     },
   };
 }

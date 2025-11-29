@@ -9,6 +9,7 @@ import {
   TextGenerationSettingsSchema,
   ImageGenerationSettingsSchema,
   PromptSettingsSchema,
+  AdvancedAISettingsSchema,
 } from "./config/schema";
 import { STORES, getItem, setItem } from "./storage";
 
@@ -18,6 +19,7 @@ const ReviewConfigSchema = z.object({
   textGeneration: TextGenerationSettingsSchema,
   imageGeneration: ImageGenerationSettingsSchema,
   prompts: PromptSettingsSchema,
+  advancedAI: AdvancedAISettingsSchema,
 });
 
 /**

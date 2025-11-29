@@ -1,30 +1,22 @@
-import { type MatchId, type CuratedTimeline } from "@scout-for-lol/data";
+import {
+  type MatchId,
+  type CuratedTimeline,
+  summarizeTimeline as summarizeTimelineCore,
+  TIMELINE_SUMMARY_PROMPT,
+} from "@scout-for-lol/data";
 import type OpenAI from "openai";
 import * as Sentry from "@sentry/node";
 import { saveTimelineSummaryToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import { getOpenAIClient } from "./ai-clients.js";
 
-const TIMELINE_SUMMARY_PROMPT = `You are a League of Legends analyst. Analyze this match timeline data and provide a concise summary of how the game unfolded.
-
-The timeline contains key events (kills, objectives, towers) and gold snapshots at intervals. Teams are "Blue" and "Red". Players are identified by champion name.
-
-Focus on:
-- Early game: First blood, early kills, lane advantages
-- Mid game: Dragon/Herald takes, tower pushes, gold leads
-- Late game: Baron takes, team fights, game-ending plays
-- Notable momentum swings or comeback moments
-
-Keep the summary factual and under 300 words. Reference players by their champion name.
-
-Timeline data:
-`;
-
 /**
  * Summarize curated timeline data using OpenAI
  *
- * Takes already-curated timeline data (with champion names, Blue/Red teams, etc.)
- * and generates a narrative summary of the game flow.
- * Saves both the request and response to S3 for debugging/analysis.
+ * This is a backend wrapper around the shared summarizeTimeline function.
+ * It adds:
+ * - OpenAI client management (getOpenAIClient)
+ * - S3 persistence for debugging
+ * - Sentry error tracking
  */
 export async function summarizeTimeline(
   curatedTimeline: CuratedTimeline,
@@ -38,51 +30,34 @@ export async function summarizeTimeline(
   }
 
   try {
-    // Minify JSON to save tokens
-    const timelineJson = JSON.stringify(curatedTimeline);
-    const fullPrompt = TIMELINE_SUMMARY_PROMPT + timelineJson;
-
     console.log("[summarizeTimeline] Calling OpenAI to summarize timeline...");
-    console.log(`[summarizeTimeline] Timeline JSON size: ${timelineJson.length.toString()} chars`);
-    const startTime = Date.now();
+    console.log(`[summarizeTimeline] Timeline JSON size: ${JSON.stringify(curatedTimeline).length.toString()} chars`);
 
-    const response = await openaiClient.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "user",
-          content: fullPrompt,
-        },
-      ],
-      max_completion_tokens: 3000,
-      temperature: 0.3, // Lower temperature for more factual output
-    });
+    // Use shared function from @scout-for-lol/data
+    const result = await summarizeTimelineCore(curatedTimeline, openaiClient);
 
-    const duration = Date.now() - startTime;
-    console.log(`[summarizeTimeline] OpenAI response received in ${duration.toString()}ms`);
-
-    const content = response.choices[0]?.message.content;
-    if (!content) {
-      console.log("[summarizeTimeline] No content in OpenAI response");
+    if (!result) {
+      console.log("[summarizeTimeline] No summary generated");
       return undefined;
     }
 
-    const summary = content.trim();
-    console.log(`[summarizeTimeline] Generated summary (${summary.length.toString()} chars)`);
+    console.log(`[summarizeTimeline] OpenAI response received in ${result.durationMs.toString()}ms`);
+    console.log(`[summarizeTimeline] Generated summary (${result.summary.length.toString()} chars)`);
 
+    // Save to S3 for debugging/analysis
     try {
       await saveTimelineSummaryToS3({
         matchId,
         rawTimeline: curatedTimeline,
         prompt: TIMELINE_SUMMARY_PROMPT,
-        summary,
-        durationMs: duration,
+        summary: result.summary,
+        durationMs: result.durationMs,
       });
     } catch (s3Error) {
       console.error("[summarizeTimeline] Failed to save to S3:", s3Error);
     }
 
-    return summary;
+    return result.summary;
   } catch (error) {
     console.error("[summarizeTimeline] Error summarizing timeline:", error);
     Sentry.captureException(error, {

@@ -59,6 +59,50 @@ export function ResultMetadata({ result, cost }: ResultMetadataProps) {
               </span>
             </div>
           )}
+          {result.metadata.selectedArtThemes && result.metadata.selectedArtThemes.length > 1 && (
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Art Themes:</span>
+              <span className="font-mono text-xs text-gray-900 dark:text-gray-100">
+                {result.metadata.selectedArtThemes.length} themes (mashup)
+              </span>
+            </div>
+          )}
+          {result.metadata.playerIndex !== undefined && (
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Player Index:</span>
+              <span className="font-mono text-gray-900 dark:text-gray-100">{result.metadata.playerIndex}</span>
+            </div>
+          )}
+          {result.metadata.playerName && (
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Player Name:</span>
+              <span className="font-mono text-gray-900 dark:text-gray-100">{result.metadata.playerName}</span>
+            </div>
+          )}
+          {result.metadata.timelineSummaryDurationMs !== undefined && (
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Timeline Summary:</span>
+              <span className="font-mono text-gray-900 dark:text-gray-100">
+                {result.metadata.timelineSummaryDurationMs}ms
+              </span>
+            </div>
+          )}
+          {result.metadata.matchAnalysisDurationMs !== undefined && (
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Match Analysis:</span>
+              <span className="font-mono text-gray-900 dark:text-gray-100">
+                {result.metadata.matchAnalysisDurationMs}ms
+              </span>
+            </div>
+          )}
+          {result.metadata.artPromptDurationMs !== undefined && (
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">Art Prompt Gen:</span>
+              <span className="font-mono text-gray-900 dark:text-gray-100">
+                {result.metadata.artPromptDurationMs}ms
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -131,6 +175,75 @@ export function ResultMetadata({ result, cost }: ResultMetadataProps) {
               {JSON.stringify(result.metadata.openaiRequestParams, null, 2)}
             </div>
           </details>
+        </div>
+      )}
+
+      {/* Mastra Workflow Data */}
+      {(result.metadata.timelineSummary ?? result.metadata.matchAnalysis ?? result.metadata.artPrompt) && (
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Mastra Workflow Data</h3>
+          <div className="space-y-3">
+            {result.metadata.timelineSummary && (
+              <details className="group">
+                <summary className="cursor-pointer text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 list-none">
+                  <span className="inline-flex items-center gap-1">
+                    <svg
+                      className="w-4 h-4 transition-transform group-open:rotate-90"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                    Timeline Summary ({result.metadata.timelineSummary.length} chars)
+                  </span>
+                </summary>
+                <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-700 text-xs text-gray-900 dark:text-gray-100 whitespace-pre-wrap max-h-60 overflow-y-auto">
+                  {result.metadata.timelineSummary}
+                </div>
+              </details>
+            )}
+            {result.metadata.matchAnalysis && (
+              <details className="group">
+                <summary className="cursor-pointer text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 list-none">
+                  <span className="inline-flex items-center gap-1">
+                    <svg
+                      className="w-4 h-4 transition-transform group-open:rotate-90"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                    Match Analysis ({result.metadata.matchAnalysis.length} chars)
+                  </span>
+                </summary>
+                <div className="mt-2 p-3 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-700 text-xs text-gray-900 dark:text-gray-100 whitespace-pre-wrap max-h-60 overflow-y-auto">
+                  {result.metadata.matchAnalysis}
+                </div>
+              </details>
+            )}
+            {result.metadata.artPrompt && (
+              <details className="group">
+                <summary className="cursor-pointer text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 list-none">
+                  <span className="inline-flex items-center gap-1">
+                    <svg
+                      className="w-4 h-4 transition-transform group-open:rotate-90"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                    AI Art Prompt ({result.metadata.artPrompt.length} chars)
+                  </span>
+                </summary>
+                <div className="mt-2 p-3 bg-purple-50 dark:bg-purple-900/20 rounded border border-purple-200 dark:border-purple-700 text-xs text-gray-900 dark:text-gray-100 whitespace-pre-wrap max-h-60 overflow-y-auto">
+                  {result.metadata.artPrompt}
+                </div>
+              </details>
+            )}
+          </div>
         </div>
       )}
 
