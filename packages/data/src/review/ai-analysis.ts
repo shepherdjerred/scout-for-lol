@@ -128,7 +128,7 @@ export async function summarizeTimeline(
     const durationMs = Date.now() - startTime;
 
     const content = response.choices[0]?.message.content;
-    if (!content) return undefined;
+    if (!content) {return undefined;}
 
     return { summary: content.trim(), durationMs };
   } catch (error) {
@@ -209,7 +209,7 @@ export async function analyzeMatchData(
   } = params;
 
   const player = match.players[playerIndex] ?? match.players[0];
-  if (!player) return undefined;
+  if (!player) {return undefined;}
 
   const playerName = player.playerConfig.alias;
   const playerChampion = player.champion.championName;
@@ -249,7 +249,7 @@ export async function analyzeMatchData(
     const durationMs = Date.now() - startTime;
 
     const analysis = response.choices[0]?.message.content?.trim();
-    if (!analysis) return undefined;
+    if (!analysis) {return undefined;}
 
     return { analysis, durationMs };
   } catch (error) {
@@ -330,7 +330,7 @@ ${reviewText}`;
     const durationMs = Date.now() - startTime;
 
     const artPrompt = response.choices[0]?.message.content?.trim();
-    if (!artPrompt) return undefined;
+    if (!artPrompt) {return undefined;}
 
     return { artPrompt, durationMs };
   } catch (error) {

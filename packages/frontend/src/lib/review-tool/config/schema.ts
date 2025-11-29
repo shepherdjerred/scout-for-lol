@@ -2,6 +2,7 @@
  * Configuration schemas for review generation settings
  */
 import { z } from "zod";
+import type { WorkflowResult } from "@scout-for-lol/data";
 
 /**
  * API settings schema
@@ -223,6 +224,8 @@ export type GenerationResult = {
   image?: string; // base64 encoded
   metadata: GenerationMetadata;
   error?: string;
+  // Full workflow result for debugging - contains all step request/response data
+  workflowResult?: WorkflowResult | undefined;
 };
 
 /**

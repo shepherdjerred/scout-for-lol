@@ -1,34 +1,24 @@
 /**
- * Review generation logic - UI wrapper over shared data package functions
+ * Review generation logic - UI wrapper over the shared workflow orchestrator
  *
- * Implements the same workflow as the Mastra backend:
- * 1. Setup - Load personality, prompts, select player
- * 2. Curate match data - Transform raw Riot API data
- * 3. Summarize timeline (optional) - AI summary of game flow
- * 4. Analyze match (optional) - AI analysis of player performance
- * 5. Generate review text - Main AI review
- * 6. Generate art prompt (optional) - AI art direction
- * 7. Generate image - Gemini image generation
+ * Uses the new 5-step workflow:
+ * 1a. Match Result Summary
+ * 1b. Timeline Summary
+ * 2.  Personality Review (with both summaries + randomBehaviors)
+ * 3.  Image Description (from review text ONLY)
+ * 4.  Image Generation (from description ONLY)
  *
- * All AI analysis functions (timeline summary, match analysis, art prompt)
- * are imported from @scout-for-lol/data to ensure consistency with the backend.
+ * All steps capture full request/response for debugging in the UI.
  */
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import {
-  generateReviewText,
-  generateReviewImage,
-  curateMatchData,
-  // Shared AI analysis functions
-  summarizeTimeline,
-  analyzeMatchData,
-  generateArtPrompt,
+  executeWorkflow,
   type ArenaMatch,
   type CompletedMatch,
-  type CuratedMatchData,
-  type ReviewImageMetadata,
   type RawMatch,
   type RawTimeline,
+  type WorkflowResult,
 } from "@scout-for-lol/data";
 import type { ReviewConfig, GenerationResult, GenerationMetadata, Personality } from "./config/schema";
 import {
@@ -42,12 +32,11 @@ import { selectRandomStyleAndTheme } from "./art-styles";
 
 export type GenerationStep =
   | "setup"
-  | "curate"
-  | "timeline"
-  | "analysis"
-  | "text"
-  | "art-prompt"
-  | "image"
+  | "step1a"
+  | "step1b"
+  | "step2"
+  | "step3"
+  | "step4"
   | "complete";
 
 export type GenerationProgress = {
@@ -72,17 +61,15 @@ function resolvePersonality(config: ReviewConfig): Personality {
   return found;
 }
 
-
 /**
  * Select art styles and themes for image generation
- * Returns themes as an array (matching Mastra workflow format)
+ * Returns themes as an array (matching workflow format)
  */
 function selectArtThemes(config: ReviewConfig): {
   artStyle: string;
   artThemes: string[];
 } {
   // Use the shared selectRandomStyleAndTheme from @scout-for-lol/data
-  // which uses category-based matching and returns { style, themes[] }
   if (config.imageGeneration.artStyle === "random" || config.imageGeneration.artTheme === "random") {
     const selected = selectRandomStyleAndTheme({
       mashupMode: config.imageGeneration.mashupMode,
@@ -90,17 +77,14 @@ function selectArtThemes(config: ReviewConfig): {
       matchingPairProbability: config.imageGeneration.matchingPairProbability,
     });
 
-    // If style is specified (not random), use it; otherwise use selected
     const artStyle =
       config.imageGeneration.artStyle === "random" ? selected.style : config.imageGeneration.artStyle;
 
-    // If theme is specified (not random), use it; otherwise use selected themes
     let artThemes: string[];
     if (config.imageGeneration.artTheme === "random") {
       artThemes = selected.themes;
     } else {
       artThemes = [config.imageGeneration.artTheme];
-      // Add second theme for mashup if configured
       if (config.imageGeneration.mashupMode) {
         if (config.imageGeneration.secondArtTheme === "random") {
           const secondSelected = selectRandomStyleAndTheme({
@@ -146,71 +130,68 @@ function resolvePlayerIndex(config: ReviewConfig, match: CompletedMatch | ArenaM
 }
 
 /**
- * Extended metadata for Mastra workflow features
+ * Build generation metadata from workflow result
  */
-type ExtendedMetadata = {
-  playerIndex?: number | undefined;
-  playerName?: string | undefined;
-  artThemes?: string[] | undefined;
-  timelineSummary?: string | undefined;
-  timelineSummaryDurationMs?: number | undefined;
-  matchAnalysis?: string | undefined;
-  matchAnalysisDurationMs?: number | undefined;
-  artPrompt?: string | undefined;
-  artPromptDurationMs?: number | undefined;
-};
+function buildGenerationMetadata(workflowResult: WorkflowResult): GenerationMetadata {
+  const step1a = workflowResult.steps.matchResultSummary;
+  const step1b = workflowResult.steps.timelineSummary;
+  const step2 = workflowResult.steps.personalityReview;
+  const step3 = workflowResult.steps.imageDescription;
+  const step4 = workflowResult.steps.imageGeneration;
 
-/**
- * Build generation metadata from results
- */
-function buildGenerationMetadata(
-  textResult: Awaited<ReturnType<typeof generateReviewText>>,
-  imageResult?: { imageData: string; metadata: ReviewImageMetadata },
-  extended?: ExtendedMetadata,
-): GenerationMetadata {
   return {
-    textTokensPrompt: textResult.metadata.textTokensPrompt,
-    textTokensCompletion: textResult.metadata.textTokensCompletion,
-    textDurationMs: textResult.metadata.textDurationMs,
-    imageDurationMs: imageResult?.metadata.imageDurationMs,
-    imageGenerated: Boolean(imageResult),
-    selectedPersonality: textResult.metadata.selectedPersonality,
-    reviewerName: textResult.metadata.reviewerName,
-    selectedArtStyle: imageResult?.metadata.selectedArtStyle,
-    selectedArtTheme: imageResult?.metadata.selectedArtTheme,
-    selectedArtThemes: extended?.artThemes,
-    selectedSecondArtTheme: imageResult?.metadata.selectedSecondArtTheme,
-    systemPrompt: textResult.metadata.systemPrompt,
-    userPrompt: textResult.metadata.userPrompt,
-    openaiRequestParams: textResult.metadata.openaiRequestParams,
-    geminiPrompt: imageResult?.metadata.geminiPrompt,
-    geminiModel: imageResult?.metadata.geminiModel,
-    // Mastra workflow metadata
-    playerIndex: extended?.playerIndex,
-    playerName: extended?.playerName ?? textResult.metadata.playerName,
-    timelineSummary: extended?.timelineSummary,
-    timelineSummaryDurationMs: extended?.timelineSummaryDurationMs,
-    matchAnalysis: extended?.matchAnalysis,
-    matchAnalysisDurationMs: extended?.matchAnalysisDurationMs,
-    artPrompt: extended?.artPrompt,
-    artPromptDurationMs: extended?.artPromptDurationMs,
+    // Text generation timing
+    textDurationMs:
+      (step1a?.durationMs ?? 0) +
+      (step1b?.durationMs ?? 0) +
+      (step2?.durationMs ?? 0),
+    textTokensPrompt: step2?.response?.tokensPrompt,
+    textTokensCompletion: step2?.response?.tokensCompletion,
+
+    // Image generation timing
+    imageDurationMs: (step3?.durationMs ?? 0) + (step4?.durationMs ?? 0),
+    imageGenerated: step4?.status === "success",
+
+    // Personality info
+    selectedPersonality: workflowResult.metadata.personality?.filename,
+    reviewerName: workflowResult.metadata.personality?.name,
+
+    // Art info
+    selectedArtStyle: workflowResult.metadata.artStyle,
+    selectedArtThemes: workflowResult.metadata.artThemes,
+    selectedArtTheme: workflowResult.metadata.artThemes?.[0],
+    selectedSecondArtTheme: workflowResult.metadata.artThemes?.[1],
+
+    // Prompts from step 2
+    systemPrompt: step2?.request.systemPrompt,
+    userPrompt: step2?.request.userPrompt,
+
+    // Image prompts from step 3 & 4
+    geminiPrompt: step3?.response?.imageDescription,
+    artPrompt: step3?.response?.imageDescription,
+    artPromptDurationMs: step3?.durationMs,
+
+    // Player info
+    playerIndex: workflowResult.metadata.playerIndex,
+    playerName: workflowResult.metadata.playerName,
+
+    // Step summaries
+    matchAnalysis: step1a?.response?.summary,
+    matchAnalysisDurationMs: step1a?.durationMs,
+    timelineSummary: step1b?.response?.summary,
+    timelineSummaryDurationMs: step1b?.durationMs,
   };
 }
-
-// All AI analysis functions (summarizeTimeline, analyzeMatchData, generateArtPrompt)
-// are now imported from @scout-for-lol/data to ensure consistency with the backend.
 
 /**
  * Generate a complete match review with text and optional image
  *
- * Implements the same workflow as the Mastra backend:
- * 1. Setup - Load personality, prompts, select player
- * 2. Curate match data - Transform raw Riot API data
- * 3. Summarize timeline (optional) - AI summary of game flow
- * 4. Analyze match (optional) - AI analysis of player performance
- * 5. Generate review text - Main AI review
- * 6. Generate art prompt (optional) - AI art direction
- * 7. Generate image - Gemini image generation
+ * Uses the new 5-step workflow:
+ * 1a. Match Result Summary
+ * 1b. Timeline Summary
+ * 2.  Personality Review (with both summaries + randomBehaviors)
+ * 3.  Image Description (from review text ONLY)
+ * 4.  Image Generation (from description ONLY)
  */
 export async function generateMatchReview(
   match: CompletedMatch | ArenaMatch,
@@ -220,9 +201,6 @@ export async function generateMatchReview(
   rawTimeline?: RawTimeline,
 ): Promise<GenerationResult> {
   try {
-    // Initialize extended metadata to collect Mastra workflow data
-    const extendedMeta: ExtendedMetadata = {};
-
     // Step 1: Setup
     onProgress?.({ step: "setup", message: "Setting up..." });
 
@@ -235,13 +213,11 @@ export async function generateMatchReview(
       dangerouslyAllowBrowser: true,
     });
 
-    // Resolve player index (random, first, or specific)
+    // Resolve player index
     const playerIndex = resolvePlayerIndex(config, match);
-    extendedMeta.playerIndex = playerIndex;
-    const player = match.players[playerIndex];
-    extendedMeta.playerName = player?.playerConfig.alias;
 
     // Get prompt context for the selected player
+    const player = match.players[playerIndex];
     const lane =
       match.queueType === "arena"
         ? undefined
@@ -252,133 +228,83 @@ export async function generateMatchReview(
     const laneContextInfo = config.prompts.laneContext ?? getLaneContext(lane);
     const playerMeta = config.prompts.playerMetadata ?? getGenericPlayerMetadata();
 
-    // Step 2: Curate match data
-    onProgress?.({ step: "curate", message: "Curating match data..." });
-    let curatedData: CuratedMatchData | undefined;
-    if (rawMatch) {
-      curatedData = await curateMatchData(rawMatch, rawTimeline);
+    // Select art style and themes
+    const { artStyle, artThemes } = selectArtThemes(config);
+
+    // Initialize Gemini client if image generation is enabled
+    let geminiClient: GoogleGenerativeAI | undefined;
+    if (config.imageGeneration.enabled && config.api.geminiApiKey) {
+      geminiClient = new GoogleGenerativeAI(config.api.geminiApiKey);
     }
 
-    // Step 3: Summarize timeline (always enabled - Mastra workflow)
-    let timelineSummary: string | undefined;
-    if (curatedData?.timeline) {
-      onProgress?.({ step: "timeline", message: "Summarizing timeline..." });
-      const timelineResult = await summarizeTimeline(
-        curatedData.timeline,
-        openaiClient,
-        config.advancedAI.timelineSummaryModel,
-      );
-      if (timelineResult) {
-        timelineSummary = timelineResult.summary;
-        extendedMeta.timelineSummary = timelineResult.summary;
-        extendedMeta.timelineSummaryDurationMs = timelineResult.durationMs;
-        // Add to curated data like backend does
-        curatedData = { ...curatedData, timelineSummary };
-      }
-    }
-
-    // Step 4: Analyze match (always enabled - Mastra workflow)
-    let matchAnalysis: string | undefined;
-    if (curatedData) {
-      onProgress?.({ step: "analysis", message: "Analyzing match..." });
-      const analysisResult = await analyzeMatchData({
-        match,
-        curatedData,
-        laneContext: laneContextInfo,
-        playerIndex,
-        openaiClient,
-        model: config.advancedAI.matchAnalysisModel,
-        timelineSummary,
-      });
-      if (analysisResult) {
-        matchAnalysis = analysisResult.analysis;
-        extendedMeta.matchAnalysis = analysisResult.analysis;
-        extendedMeta.matchAnalysisDurationMs = analysisResult.durationMs;
-      }
-    }
-
-    // Step 5: Generate review text
-    onProgress?.({ step: "text", message: "Generating review text..." });
-
-    // Call shared review text generation (includes playerIndex, matchAnalysis, timelineSummary like backend)
-    const textResult = await generateReviewText({
-      match,
-      personality,
-      basePromptTemplate,
-      laneContext: laneContextInfo,
-      playerMetadata: playerMeta,
-      openaiClient,
-      model: config.textGeneration.model,
-      maxTokens: config.textGeneration.maxTokens,
-      temperature: config.textGeneration.temperature,
-      topP: config.textGeneration.topP,
-      curatedData,
-      systemPromptPrefix: config.prompts.systemPromptPrefix,
-      playerIndex,
-      ...(matchAnalysis !== undefined && { matchAnalysis }),
-      ...(timelineSummary !== undefined && { timelineSummary }),
-    });
-
-    // Step 6 & 7: Image generation (if enabled)
-    let imageResult: { imageData: string; metadata: ReviewImageMetadata } | undefined;
-    if (config.imageGeneration.enabled) {
-      try {
-        // Select art style and themes (now returns themes array)
-        const { artStyle, artThemes } = selectArtThemes(config);
-        extendedMeta.artThemes = artThemes;
-
-        // Step 6: Generate art prompt (always enabled - Mastra workflow)
-        let artPromptText: string | undefined;
-        onProgress?.({ step: "art-prompt", message: "Generating art prompt..." });
-        const artPromptResult = await generateArtPrompt({
-          reviewText: textResult.text,
-          style: artStyle,
-          themes: artThemes,
-          openaiClient,
-          model: config.advancedAI.artPromptModel,
-        });
-        if (artPromptResult) {
-          artPromptText = artPromptResult.artPrompt;
-          extendedMeta.artPrompt = artPromptResult.artPrompt;
-          extendedMeta.artPromptDurationMs = artPromptResult.durationMs;
-        }
-
-        // Step 7: Generate image
-        onProgress?.({ step: "image", message: "Generating image..." });
-
-        // Initialize Gemini client
-        const geminiClient = new GoogleGenerativeAI(config.api.geminiApiKey ?? "");
-
-        // Use art prompt if generated, otherwise use review text (like backend)
-        const promptForGemini = artPromptText ?? textResult.text;
-
-        // Call shared image generation
-        imageResult = await generateReviewImage({
-          reviewText: promptForGemini,
-          artStyle,
-          artTheme: artThemes[0] ?? "League of Legends gameplay",
-          ...(artThemes[1] !== undefined ? { secondArtTheme: artThemes[1] } : {}),
-          matchData: JSON.stringify(curatedData ? { processedMatch: match, detailedStats: curatedData } : match),
-          geminiClient,
-          model: config.imageGeneration.model,
-          timeoutMs: config.imageGeneration.timeoutMs,
-        });
-      } catch (error) {
-        console.error("Failed to generate image:", error);
-        // Continue without image
-      }
-    }
-
-    onProgress?.({ step: "complete", message: "Complete!" });
-
-    // Build metadata with extended Mastra workflow data
-    const metadata = buildGenerationMetadata(textResult, imageResult, extendedMeta);
-
-    return {
-      text: textResult.text,
-      ...(imageResult?.imageData !== undefined && { image: imageResult.imageData }),
-      metadata,
+    // Convert personality to workflow format (add filename from id)
+    const workflowPersonality = {
+      metadata: personality.metadata,
+      instructions: personality.instructions,
+      filename: personality.id,
     };
+
+    // Execute the workflow
+    const workflowResult = await executeWorkflow(
+      {
+        match,
+        rawMatch,
+        rawTimeline,
+        personality: workflowPersonality,
+        basePromptTemplate,
+        laneContext: laneContextInfo,
+        playerMetadata: playerMeta,
+        playerIndex,
+        artStyle,
+        artThemes,
+        openaiClient,
+        geminiClient,
+        models: {
+          matchSummary: config.advancedAI.matchAnalysisModel,
+          timelineSummary: config.advancedAI.timelineSummaryModel,
+          personalityReview: config.textGeneration.model,
+          imageDescription: config.advancedAI.artPromptModel,
+          imageGeneration: config.imageGeneration.model,
+        },
+        textMaxTokens: config.textGeneration.maxTokens,
+        textTemperature: config.textGeneration.temperature,
+        imageTimeoutMs: config.imageGeneration.timeoutMs,
+        generateImage: config.imageGeneration.enabled,
+      },
+      rawMatch?.metadata.matchId ?? "unknown",
+      (progress) => {
+        // Map workflow progress to UI progress
+        const stepMap: Record<string, GenerationStep> = {
+          setup: "setup",
+          step1a: "step1a",
+          step1b: "step1b",
+          step2: "step2",
+          step3: "step3",
+          step4: "step4",
+          complete: "complete",
+        };
+        onProgress?.({
+          step: stepMap[progress.step] ?? "setup",
+          message: progress.message,
+        });
+      },
+    );
+
+    // Build result
+    const metadata = buildGenerationMetadata(workflowResult);
+
+    const result: GenerationResult = {
+      text: workflowResult.outputs.reviewText ?? "",
+      metadata,
+      workflowResult,
+    };
+    if (workflowResult.outputs.imageBase64) {
+      result.image = workflowResult.outputs.imageBase64;
+    }
+    if (workflowResult.status === "failed") {
+      result.error = "Workflow failed";
+    }
+    return result;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     return {
