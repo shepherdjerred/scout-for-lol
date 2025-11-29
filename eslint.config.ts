@@ -517,6 +517,7 @@ export default tseslint.config(
           leadingUnderscore: "allow",
           trailingUnderscore: "allow",
         },
+        // Non-exported const: camelCase, UPPER_CASE, or PascalCase (for JSX component variables)
         {
           selector: "variable",
           modifiers: ["const"],
@@ -524,7 +525,7 @@ export default tseslint.config(
             regex: "Schema$",
             match: false,
           },
-          format: ["camelCase", "UPPER_CASE"],
+          format: ["camelCase", "UPPER_CASE", "PascalCase"],
           leadingUnderscore: "allow",
           trailingUnderscore: "allow",
         },

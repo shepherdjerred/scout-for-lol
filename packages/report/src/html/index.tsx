@@ -21,7 +21,6 @@ export async function matchToSvg(match: CompletedMatch) {
 
 export async function svgToPng(svg: string) {
   // Lazy load resvg only when needed (server-side only)
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- ok for a dynamic import
   const { Resvg } = await import("@resvg/resvg-js");
   const resvg = new Resvg(svg, {
     dpi: 600,
