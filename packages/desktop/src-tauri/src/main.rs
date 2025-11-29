@@ -40,9 +40,6 @@ use tauri::{Emitter, Manager, State};
 use tokio::sync::Mutex;
 use tokio::time::{timeout, Duration};
 
-#[cfg(target_os = "windows")]
-use std::fs;
-
 /// Appends a message to the startup log.
 /// Before paths are initialized, falls back to current directory.
 fn append_startup_log(message: &str) {

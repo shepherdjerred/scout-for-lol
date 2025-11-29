@@ -1057,6 +1057,10 @@ mod tests {
 
     #[test]
     fn test_base_pack_contains_keys() {
+        // Ensure paths are initialized before testing
+        // early_init() is safe to call multiple times (OnceLock handles it)
+        paths::early_init();
+
         let pack = SoundPack::base();
         for key in [
             "gameStart",
