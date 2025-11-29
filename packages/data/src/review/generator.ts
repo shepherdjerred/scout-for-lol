@@ -11,11 +11,7 @@ import type { GoogleGenerativeAI } from "@google/generative-ai";
 import type { CuratedTimeline } from "./curator-types.js";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
 import { generateImagePrompt } from "@scout-for-lol/data/review/image-prompt.js";
-import {
-  replaceTemplateVariables,
-  type Personality as PromptPersonality,
-  type PlayerMetadata as PromptPlayerMetadata,
-} from "@scout-for-lol/data/review/prompts.js";
+import { replaceTemplateVariables, type Personality, type PlayerMetadata } from "@scout-for-lol/data/review/prompts.js";
 import {
   buildPromptVariables,
   createCompletionParams,
@@ -284,9 +280,9 @@ export const GeminiResponseSchema = z
   })
   .loose();
 
-// Type aliases exported for consumers - identical to prompts.ts types
-export type Personality = PromptPersonality;
-export type PlayerMetadata = PromptPlayerMetadata;
+// Note: Personality and PlayerMetadata types are exported from prompts.ts
+// via the data package index.ts (export * from "./review/prompts.js")
+// Consumers should import them from @scout-for-lol/data directly
 
 /**
  * Curated match data type (from curator module)

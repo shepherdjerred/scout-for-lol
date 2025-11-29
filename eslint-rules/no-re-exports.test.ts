@@ -36,6 +36,22 @@ ruleTester.run("no-re-exports", noReExports, {
       name: "allows importing and using without re-exporting",
       code: `import { something } from "./other"; const x = something();`,
     },
+    {
+      name: "allows type alias that transforms imported type with generics",
+      code: `import type { BaseType } from "./other"; export type MyType = BaseType<string>;`,
+    },
+    {
+      name: "allows type alias that uses imported type in a union",
+      code: `import type { BaseType } from "./other"; export type MyType = BaseType | null;`,
+    },
+    {
+      name: "allows type alias that uses imported type in an intersection",
+      code: `import type { BaseType } from "./other"; export type MyType = BaseType & { extra: boolean };`,
+    },
+    {
+      name: "allows non-exported type alias that references imported type",
+      code: `import type { BaseType } from "./other"; type LocalAlias = BaseType;`,
+    },
   ],
   invalid: [
     {
@@ -71,6 +87,36 @@ ruleTester.run("no-re-exports", noReExports, {
       errors: [
         {
           messageId: "noExportNamed",
+        },
+      ],
+    },
+    {
+      name: "disallows type alias re-exports (disguised re-export)",
+      code: `import type { ImportedType } from "./other"; export type MyType = ImportedType;`,
+      errors: [
+        {
+          messageId: "noTypeAliasReExport",
+        },
+      ],
+    },
+    {
+      name: "disallows type alias re-exports with aliased import",
+      code: `import type { Foo as ImportedFoo } from "./other"; export type Foo = ImportedFoo;`,
+      errors: [
+        {
+          messageId: "noTypeAliasReExport",
+        },
+      ],
+    },
+    {
+      name: "disallows multiple type alias re-exports",
+      code: `import type { TypeA, TypeB } from "./other"; export type AliasA = TypeA; export type AliasB = TypeB;`,
+      errors: [
+        {
+          messageId: "noTypeAliasReExport",
+        },
+        {
+          messageId: "noTypeAliasReExport",
         },
       ],
     },

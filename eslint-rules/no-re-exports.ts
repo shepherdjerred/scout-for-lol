@@ -20,6 +20,8 @@ export const noReExports = createRule({
         "Re-exports (export { ... } from) are not allowed. Only export declarations from the same file. Import and re-declare if you need to expose external symbols.",
       noReExportImported:
         "Re-exports of imported identifiers (export type { ... }) are not allowed. Only export declarations from the same file. Import and re-declare if you need to expose external symbols.",
+      noTypeAliasReExport:
+        "Type alias re-exports (export type Foo = ImportedType) are not allowed. This is a disguised re-export. Import the type where it's needed instead.",
     },
     schema: [],
   },
@@ -29,6 +31,25 @@ export const noReExports = createRule({
     const importedIdentifiers = new Set<string>();
     // Track locally declared identifiers (functions, classes, types, interfaces, etc.)
     const localDeclarations = new Set<string>();
+
+    /**
+     * Check if a type annotation is just a simple reference to an imported type.
+     * Returns the imported type name if it's a disguised re-export, null otherwise.
+     */
+    function getImportedTypeReference(typeAnnotation: TSESTree.TypeNode): string | null {
+      // Direct type reference: `type Foo = ImportedBar`
+      if (
+        typeAnnotation.type === AST_NODE_TYPES.TSTypeReference &&
+        typeAnnotation.typeName.type === AST_NODE_TYPES.Identifier &&
+        !typeAnnotation.typeArguments // No generic parameters
+      ) {
+        const typeName = typeAnnotation.typeName.name;
+        if (importedIdentifiers.has(typeName)) {
+          return typeName;
+        }
+      }
+      return null;
+    }
 
     return {
       // Track imports to detect re-exports of imported identifiers
@@ -62,6 +83,19 @@ export const noReExports = createRule({
       },
       TSTypeAliasDeclaration(node: TSESTree.TSTypeAliasDeclaration) {
         localDeclarations.add(node.id.name);
+
+        // Check if this is an exported type alias that is just re-exporting an imported type
+        // Pattern: export type Foo = ImportedBar
+        const parent = node.parent;
+        if (parent?.type === AST_NODE_TYPES.ExportNamedDeclaration) {
+          const importedTypeName = getImportedTypeReference(node.typeAnnotation);
+          if (importedTypeName) {
+            context.report({
+              node,
+              messageId: "noTypeAliasReExport",
+            });
+          }
+        }
       },
       VariableDeclarator(node: TSESTree.VariableDeclarator) {
         if (node.id.type === AST_NODE_TYPES.Identifier) {
