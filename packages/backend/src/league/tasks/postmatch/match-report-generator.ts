@@ -29,7 +29,6 @@ function captureError(error: unknown, source: string, matchId?: string, extra?: 
   Sentry.captureException(error, { tags: { source, ...(matchId && { matchId }), ...extra } });
 }
 
-
 /**
  * Fetch match data from Riot API
  *
@@ -292,7 +291,6 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
       if (review) {
         reviewText = review.text;
         reviewImage = review.image;
-
       }
     } catch (error) {
       console.error(`[generateMatchReport] Error generating AI review:`, error);
