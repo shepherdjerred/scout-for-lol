@@ -106,8 +106,8 @@ export async function selectRandomPersonality(): Promise<Personality> {
   const personalities = await listValidPersonalities();
   const selectedPersonality = selectBalancedReviewer(personalities);
 
-  console.log(
-    `[selectRandomPersonality] Selected: ${selectedPersonality.filename ?? selectedPersonality.metadata.name}, ` +
+  logger.info(
+    `Selected: ${selectedPersonality.filename ?? selectedPersonality.metadata.name}, ` +
       `usage counts: ${JSON.stringify(Object.fromEntries(reviewerUsageCount))}`,
   );
 

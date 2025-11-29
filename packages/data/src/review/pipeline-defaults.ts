@@ -82,7 +82,7 @@ export const DEFAULT_MATCH_SUMMARY_MODEL: ModelConfig = {
  * Default model config for review text (Stage 2)
  */
 export const DEFAULT_REVIEW_TEXT_MODEL: ModelConfig = {
-  model: "gpt-4.1",
+  model: "gpt-5.1",
   maxTokens: 1000,
 };
 
@@ -90,7 +90,7 @@ export const DEFAULT_REVIEW_TEXT_MODEL: ModelConfig = {
  * Default model config for image description (Stage 3)
  */
 export const DEFAULT_IMAGE_DESCRIPTION_MODEL: ModelConfig = {
-  model: "gpt-4.1",
+  model: "gpt-5.1",
   maxTokens: 600,
   temperature: 0.8,
 };
@@ -98,7 +98,7 @@ export const DEFAULT_IMAGE_DESCRIPTION_MODEL: ModelConfig = {
 /**
  * Default model for image generation (Stage 4)
  */
-export const DEFAULT_IMAGE_GENERATION_MODEL = "gemini-2.0-flash-preview-image-generation";
+export const DEFAULT_IMAGE_GENERATION_MODEL = "gemini-3-pro-image-preview";
 
 /**
  * Default timeout for image generation (Stage 4)

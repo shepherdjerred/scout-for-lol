@@ -2,12 +2,14 @@
  * Main application component - Redesigned UI
  */
 import { useState, useSyncExternalStore } from "react";
-import type { GenerationResult, GlobalConfig, TabConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import {
   createDefaultGlobalConfig,
   createDefaultTabConfig,
   mergeConfigs,
   splitConfig,
+  type GenerationResult,
+  type GlobalConfig,
+  type TabConfig,
 } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import {
   loadCurrentConfig,

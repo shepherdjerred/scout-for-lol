@@ -4,7 +4,10 @@
 import { useState, useSyncExternalStore } from "react";
 import { z } from "zod";
 import type { TabConfig, Personality } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
-import { createDefaultTabConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import {
+  createDefaultTabConfig,
+  createDefaultPipelineStages,
+} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { BUILTIN_PERSONALITIES } from "@scout-for-lol/frontend/lib/review-tool/prompts";
 import { ConfigImportModal } from "./config-import-modal";
 import { downloadConfigBundle } from "@scout-for-lol/frontend/lib/review-tool/config-export";
@@ -35,6 +38,7 @@ import {
   deleteCustomArtTheme,
   generateArtThemeId,
 } from "@scout-for-lol/frontend/lib/review-tool/art-style-storage";
+import { StageConfigSections } from "./stage-config/stage-config-sections";
 
 type TabSettingsPanelProps = {
   config: TabConfig;
@@ -86,6 +90,10 @@ function loadCustomData() {
 
 // Start loading immediately
 void loadCustomData();
+
+function getStagesOrDefault(config: TabConfig) {
+  return config.stages ?? createDefaultPipelineStages();
+}
 
 export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   // Subscribe to custom data store
@@ -325,6 +333,21 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
       </div>
 
       <div className="divide-y divide-surface-200/50 dark:divide-surface-700/50">
+        <div className="px-4 py-5 bg-surface-50 dark:bg-surface-900">
+          <div className="mb-3">
+            <h3 className="text-base font-semibold text-surface-900 dark:text-white">Pipeline stages</h3>
+            <p className="text-sm text-surface-500 dark:text-surface-400">
+              Configure the unified review pipeline stages used by frontend and backend.
+            </p>
+          </div>
+          <StageConfigSections
+            stages={getStagesOrDefault(config)}
+            onChange={(next) => {
+              onChange({ ...config, stages: next });
+            }}
+          />
+        </div>
+
         <TextGenerationSettings config={config} onChange={onChange} />
 
         <ImageGenerationSettings

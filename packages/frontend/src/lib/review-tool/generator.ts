@@ -53,14 +53,101 @@ function resolvePersonality(config: ReviewConfig): Personality {
 }
 
 /**
+ * Convert frontend stages config to data package format
+ *
+ * We need to manually rebuild each object to handle exactOptionalPropertyTypes
+ * which requires conditional property assignment for optional fields.
+ */
+function convertStagesToDataPackageFormat(stages: NonNullable<ReviewConfig["stages"]>): PipelineStagesConfig {
+  // Build timeline summary stage
+  const timelineSummaryModel: PipelineStagesConfig["timelineSummary"]["model"] = {
+    model: stages.timelineSummary.model.model,
+    maxTokens: stages.timelineSummary.model.maxTokens,
+  };
+  if (stages.timelineSummary.model.temperature !== undefined) {
+    timelineSummaryModel.temperature = stages.timelineSummary.model.temperature;
+  }
+  if (stages.timelineSummary.model.topP !== undefined) {
+    timelineSummaryModel.topP = stages.timelineSummary.model.topP;
+  }
+  const timelineSummary: PipelineStagesConfig["timelineSummary"] = {
+    enabled: stages.timelineSummary.enabled,
+    model: timelineSummaryModel,
+  };
+  if (stages.timelineSummary.systemPrompt !== undefined) {
+    timelineSummary.systemPrompt = stages.timelineSummary.systemPrompt;
+  }
+
+  // Build match summary stage
+  const matchSummaryModel: PipelineStagesConfig["matchSummary"]["model"] = {
+    model: stages.matchSummary.model.model,
+    maxTokens: stages.matchSummary.model.maxTokens,
+  };
+  if (stages.matchSummary.model.temperature !== undefined) {
+    matchSummaryModel.temperature = stages.matchSummary.model.temperature;
+  }
+  if (stages.matchSummary.model.topP !== undefined) {
+    matchSummaryModel.topP = stages.matchSummary.model.topP;
+  }
+  const matchSummary: PipelineStagesConfig["matchSummary"] = {
+    enabled: stages.matchSummary.enabled,
+    model: matchSummaryModel,
+  };
+  if (stages.matchSummary.systemPrompt !== undefined) {
+    matchSummary.systemPrompt = stages.matchSummary.systemPrompt;
+  }
+
+  // Build review text stage
+  const reviewTextModel: PipelineStagesConfig["reviewText"]["model"] = {
+    model: stages.reviewText.model.model,
+    maxTokens: stages.reviewText.model.maxTokens,
+  };
+  if (stages.reviewText.model.temperature !== undefined) {
+    reviewTextModel.temperature = stages.reviewText.model.temperature;
+  }
+  if (stages.reviewText.model.topP !== undefined) {
+    reviewTextModel.topP = stages.reviewText.model.topP;
+  }
+
+  // Build image description stage
+  const imageDescriptionModel: PipelineStagesConfig["imageDescription"]["model"] = {
+    model: stages.imageDescription.model.model,
+    maxTokens: stages.imageDescription.model.maxTokens,
+  };
+  if (stages.imageDescription.model.temperature !== undefined) {
+    imageDescriptionModel.temperature = stages.imageDescription.model.temperature;
+  }
+  if (stages.imageDescription.model.topP !== undefined) {
+    imageDescriptionModel.topP = stages.imageDescription.model.topP;
+  }
+  const imageDescription: PipelineStagesConfig["imageDescription"] = {
+    enabled: stages.imageDescription.enabled,
+    model: imageDescriptionModel,
+  };
+  if (stages.imageDescription.systemPrompt !== undefined) {
+    imageDescription.systemPrompt = stages.imageDescription.systemPrompt;
+  }
+
+  return {
+    timelineSummary,
+    matchSummary,
+    reviewText: { model: reviewTextModel },
+    imageDescription,
+    imageGeneration: {
+      enabled: stages.imageGeneration.enabled,
+      model: stages.imageGeneration.model,
+      timeoutMs: stages.imageGeneration.timeoutMs,
+    },
+  };
+}
+
+/**
  * Get pipeline stages config from ReviewConfig
  * Falls back to default if not provided
  */
 function getStagesConfig(config: ReviewConfig): PipelineStagesConfig {
   if (config.stages) {
-    // The frontend PipelineStagesConfig matches the data package PipelineStagesConfig
-    // Validate with schema if needed in production
-    return config.stages as unknown as PipelineStagesConfig;
+    return convertStagesToDataPackageFormat(config.stages);
   }
 
   // Fall back to defaults, but override with legacy textGeneration/imageGeneration settings
