@@ -2,6 +2,7 @@
 
 use crate::discord::{DiscordClient, SoundEvent};
 use crate::lcu::LcuConnection;
+use crate::paths;
 use futures_util::{SinkExt, StreamExt};
 use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
@@ -19,12 +20,16 @@ use tokio_tungstenite::tungstenite::Message;
 
 fn debug_log(msg: &str) {
     eprintln!("[SCOUT] {}", msg);
-    // Also write to a log file
-    if let Ok(mut file) = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open("scout-debug.log")
-    {
+
+    // Also write to the centralized debug log file
+    let log_path = paths::debug_log_file();
+
+    // Ensure parent directory exists
+    if let Some(parent) = log_path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+
+    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&log_path) {
         let _ = writeln!(file, "{}", msg);
     }
 }

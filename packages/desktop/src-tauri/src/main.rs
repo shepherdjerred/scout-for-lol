@@ -27,6 +27,7 @@ mod config;
 mod discord;
 mod events;
 mod lcu;
+mod paths;
 
 #[cfg(test)]
 mod tests;
@@ -43,16 +44,29 @@ use tokio::time::{timeout, Duration};
 #[cfg(target_os = "windows")]
 use std::fs;
 
+/// Appends a message to the startup log.
+/// Before paths are initialized, falls back to current directory.
 fn append_startup_log(message: &str) {
-    if let Ok(cwd) = std::env::current_dir() {
-        let path = cwd.join("startup-log.txt");
-        if let Ok(mut file) = std::fs::OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(&path)
-        {
-            let _ = writeln!(file, "{}", message);
-        }
+    // Try to use the centralized path if initialized, otherwise fall back to cwd
+    let path = if let Some(app_dir) = paths::try_app_data_dir() {
+        app_dir.join("logs").join("startup-log.txt")
+    } else if let Ok(cwd) = std::env::current_dir() {
+        cwd.join("startup-log.txt")
+    } else {
+        return;
+    };
+
+    // Ensure parent directory exists
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+    {
+        let _ = writeln!(file, "{}", message);
     }
 }
 
@@ -60,7 +74,6 @@ struct AppState {
     lcu_connection: Arc<Mutex<Option<lcu::LcuConnection>>>,
     discord_client: Arc<Mutex<Option<discord::DiscordClient>>>,
     is_monitoring: Arc<Mutex<bool>>,
-    config_path: PathBuf,
 }
 
 #[tauri::command]
@@ -122,7 +135,7 @@ async fn configure_discord(
             sound_pack: sound_pack.clone(),
             event_sounds: event_sounds.clone(),
         };
-        cfg.save(&state.config_path)?;
+        cfg.save(&paths::config_file())?;
     }
 
     match timeout(
@@ -202,23 +215,20 @@ async fn play_test_sound(
 
 #[derive(serde::Serialize)]
 struct LogPaths {
-    app_log_dir: String,
-    working_dir_log: String,
+    /// Directory containing all log files
+    logs_dir: String,
+    /// Main debug log file path
+    debug_log: String,
+    /// Startup diagnostics log path
+    startup_log: String,
 }
 
 #[tauri::command]
-async fn get_log_paths(app_handle: tauri::AppHandle) -> Result<LogPaths, String> {
-    let app_log_dir = app_handle
-        .path()
-        .app_log_dir()
-        .map_err(|e| format!("Failed to get app log dir: {e}"))?;
-
-    let working_dir = std::env::current_dir().map_err(|e| format!("Failed to get cwd: {e}"))?;
-    let working_dir_log = working_dir.join("scout-debug.log");
-
+async fn get_log_paths() -> Result<LogPaths, String> {
     Ok(LogPaths {
-        app_log_dir: app_log_dir.to_string_lossy().to_string(),
-        working_dir_log: working_dir_log.to_string_lossy().to_string(),
+        logs_dir: paths::logs_dir().to_string_lossy().to_string(),
+        debug_log: paths::debug_log_file().to_string_lossy().to_string(),
+        startup_log: paths::startup_log_file().to_string_lossy().to_string(),
     })
 }
 
@@ -276,9 +286,10 @@ async fn get_monitoring_status(state: State<'_, AppState>) -> Result<bool, Strin
 }
 
 #[tauri::command]
-async fn load_config(state: State<'_, AppState>) -> Result<config::Config, String> {
-    info!("Loading config from {}", state.config_path.display());
-    Ok(config::Config::load(&state.config_path))
+async fn load_config() -> Result<config::Config, String> {
+    let config_path = paths::config_file();
+    info!("Loading config from {}", config_path.display());
+    Ok(config::Config::load(&config_path))
 }
 
 #[derive(serde::Serialize)]
@@ -458,6 +469,10 @@ async fn test_event_detection(state: State<'_, AppState>) -> Result<EventTestRes
 
 #[allow(clippy::expect_used, clippy::large_stack_frames)]
 fn main() {
+    // Initialize paths early so they can be used for log plugin configuration
+    paths::early_init();
+    paths::ensure_directories();
+
     append_startup_log("starting main()");
     std::panic::set_hook(Box::new(|info| {
         append_startup_log(&format!("panic: {info}"));
@@ -473,8 +488,9 @@ fn main() {
         .plugin(
             tauri_plugin_log::Builder::new()
                 .targets([
-                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir {
-                        file_name: None,
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Folder {
+                        path: paths::logs_dir(),
+                        file_name: Some("scout".into()),
                     }),
                     tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
                     tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Webview),
@@ -501,24 +517,25 @@ fn main() {
         .setup(|app| {
             append_startup_log("tauri setup()");
 
-            info!("Scout for LoL Desktop starting up...");
-
-            // Get app config directory
-            let config_dir = app
+            // Re-initialize with Tauri's app_data_dir (should match our computed path)
+            let app_data_dir = app
                 .path()
-                .app_config_dir()
-                .expect("Failed to get app config directory");
-            let config_path = config_dir.join("config.json");
-            append_startup_log(&format!("config path: {}", config_path.display()));
+                .app_data_dir()
+                .expect("Failed to get app data directory");
+            paths::init(app_data_dir.clone());
 
-            info!("Config path: {}", config_path.display());
+            append_startup_log(&format!("app data dir: {}", app_data_dir.display()));
+
+            info!("Scout for LoL Desktop starting up...");
+            info!("App data directory: {}", app_data_dir.display());
+            info!("Config path: {}", paths::config_file().display());
+            info!("Logs directory: {}", paths::logs_dir().display());
 
             // Initialize app state
             let app_state = AppState {
                 lcu_connection: Arc::new(Mutex::new(None)),
                 discord_client: Arc::new(Mutex::new(None)),
                 is_monitoring: Arc::new(Mutex::new(false)),
-                config_path,
             };
 
             app.manage(app_state);
