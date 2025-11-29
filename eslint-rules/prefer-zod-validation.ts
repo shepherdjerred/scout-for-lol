@@ -18,6 +18,8 @@ export const preferZodValidation = createRule({
         "Repeated type checking on nested properties should use Zod validation instead. Validate the entire structure once with a Zod schema.",
       complexTypeChecking:
         "Complex type checking chain detected ({{count}} checks). Use Zod validation to validate the entire structure once with a schema.",
+      objectTypeCheck:
+        "Manual object type checking with 'typeof === \"object\"' and 'in' operator detected. Use Zod schema validation instead (e.g., schema.safeParse(value)).",
     },
     schema: [],
   },
@@ -104,6 +106,63 @@ export const preferZodValidation = createRule({
       return 0;
     }
 
+    // Check if a node is a typeof === "object" comparison
+    function isTypeofObjectCheck(node: TSESTree.Node): TSESTree.Identifier | null {
+      if (
+        node.type === AST_NODE_TYPES.BinaryExpression &&
+        (node.operator === "===" || node.operator === "==") &&
+        node.left.type === AST_NODE_TYPES.UnaryExpression &&
+        node.left.operator === "typeof" &&
+        node.right.type === AST_NODE_TYPES.Literal &&
+        node.right.value === "object"
+      ) {
+        // Return the identifier being checked
+        if (node.left.argument.type === AST_NODE_TYPES.Identifier) {
+          return node.left.argument;
+        }
+      }
+      return null;
+    }
+
+    // Check if a node is an "in" operator check
+    function isInOperatorCheck(node: TSESTree.Node): TSESTree.Identifier | null {
+      if (node.type === AST_NODE_TYPES.BinaryExpression && node.operator === "in") {
+        // Return the object being checked (right side of "prop" in obj)
+        if (node.right.type === AST_NODE_TYPES.Identifier) {
+          return node.right;
+        }
+      }
+      return null;
+    }
+
+    // Collect all expressions in a logical expression chain (flattened)
+    function collectLogicalExpressions(node: TSESTree.Node): TSESTree.Node[] {
+      if (node.type === AST_NODE_TYPES.LogicalExpression && node.operator === "&&") {
+        return [...collectLogicalExpressions(node.left), ...collectLogicalExpressions(node.right)];
+      }
+      return [node];
+    }
+
+    // Check if a logical expression contains the pattern: typeof x === "object" && "prop" in x
+    function hasObjectTypeCheckPattern(node: TSESTree.LogicalExpression): boolean {
+      const expressions = collectLogicalExpressions(node);
+
+      // Find any typeof x === "object" check
+      for (const expr of expressions) {
+        const typeofTarget = isTypeofObjectCheck(expr);
+        if (typeofTarget) {
+          // Look for a matching "in" operator check on the same variable
+          for (const otherExpr of expressions) {
+            const inTarget = isInOperatorCheck(otherExpr);
+            if (inTarget && inTarget.name === typeofTarget.name) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
     return {
       // Track typeof checks on member expressions (for repeated checks)
       UnaryExpression(node) {
@@ -152,6 +211,16 @@ export const preferZodValidation = createRule({
         const parent = node.parent;
         if (parent.type === AST_NODE_TYPES.LogicalExpression) {
           return; // Let the parent handle it
+        }
+
+        // Check for the specific pattern: typeof x === "object" && "prop" in x
+        // This is a manual object shape check that should use Zod instead
+        if (hasObjectTypeCheckPattern(node)) {
+          context.report({
+            node,
+            messageId: "objectTypeCheck",
+          });
+          return; // Don't also report complexTypeChecking for the same expression
         }
 
         const typeCheckCount = countTypeChecks(node);
