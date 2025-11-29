@@ -200,6 +200,17 @@ impl YouTubeCacheState {
     pub fn get_cached_path(&self, url: &str) -> Option<&PathBuf> {
         self.cached.get(url)
     }
+
+    /// Atomically checks if a download should proceed and marks it as downloading.
+    /// Returns true if the download should proceed (was not already downloading or cached).
+    /// Returns false if already downloading or cached (download should be skipped).
+    pub fn try_start_download(&mut self, url: &str) -> bool {
+        if self.downloading.contains_key(url) || self.cached.contains_key(url) {
+            return false;
+        }
+        self.downloading.insert(url.to_string(), ());
+        true
+    }
 }
 
 fn write_sound_log(message: &str) {
@@ -486,27 +497,24 @@ impl DiscordClient {
             for url in youtube_urls {
                 let cache = Arc::clone(&self.youtube_cache);
                 tokio::spawn(async move {
-                    // Check if already downloading or cached
-                    {
-                        let state = cache.read().await;
-                        if state.is_downloading(&url) || state.get_cached_path(&url).is_some() {
-                            return;
-                        }
-                    }
-
-                    // Check if already cached on disk
+                    // Check if already cached on disk (no lock needed for filesystem check)
                     if is_youtube_cached(&url) {
                         let cached_path = get_youtube_cache_path(&url);
                         info!("YouTube URL already cached on disk: {}", url);
                         let mut state = cache.write().await;
+                        // Use finish_download to update in-memory state (it handles if already present)
                         state.finish_download(&url, cached_path);
                         return;
                     }
 
-                    // Mark as downloading
+                    // Atomically check if already downloading/cached and mark as downloading
+                    // This prevents race conditions where multiple tasks could start the same download
                     {
                         let mut state = cache.write().await;
-                        state.start_download(&url);
+                        if !state.try_start_download(&url) {
+                            // Already downloading or cached, skip
+                            return;
+                        }
                     }
 
                     // Download
