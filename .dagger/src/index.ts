@@ -254,13 +254,11 @@ export class ScoutForLol {
       await checkDesktop(source).sync();
     });
 
-    // Desktop build only in prod (slow due to Rust)
-    const desktopBuildPromise = isProd
-      ? withTiming("desktop application build", async () => {
-          logWithTimestamp("🔄 Building desktop application...");
-          await buildDesktopLinux(source, version).sync();
-        })
-      : Promise.resolve();
+    // Desktop build runs in all environments (started early to run in parallel)
+    const desktopBuildPromise = withTiming("desktop application build", async () => {
+      logWithTimestamp("🔄 Building desktop application...");
+      await buildDesktopLinux(source, version).sync();
+    });
 
     // Wait for checks, backend image build, desktop checks, and desktop build to complete
     const [, backendImage] = await Promise.all([
