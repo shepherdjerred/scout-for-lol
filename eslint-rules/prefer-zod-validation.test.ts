@@ -56,6 +56,18 @@ ruleTester.run("prefer-zod-validation", preferZodValidation, {
       name: "allows two type checks chained",
       code: `if (obj && typeof obj.field === "string") { }`,
     },
+    {
+      name: "allows typeof object check without in operator",
+      code: `if (typeof obj === "object") { }`,
+    },
+    {
+      name: "allows in operator check without typeof object",
+      code: `if ("field" in obj) { }`,
+    },
+    {
+      name: "allows typeof object and in on different variables",
+      code: `if (typeof obj === "object" && "field" in other) { }`,
+    },
   ],
   invalid: [
     {
@@ -90,7 +102,7 @@ ruleTester.run("prefer-zod-validation", preferZodValidation, {
       code: `const isValid = obj && typeof obj === "object" && "field" in obj && typeof obj.field === "string";`,
       errors: [
         {
-          messageId: "complexTypeChecking",
+          messageId: "objectTypeCheck",
         },
       ],
     },
@@ -99,7 +111,7 @@ ruleTester.run("prefer-zod-validation", preferZodValidation, {
       code: `const isAdmin = member && typeof member === "object" && "permissions" in member && member.permissions && typeof member.permissions.has === "function";`,
       errors: [
         {
-          messageId: "complexTypeChecking",
+          messageId: "objectTypeCheck",
         },
       ],
     },
@@ -117,7 +129,43 @@ ruleTester.run("prefer-zod-validation", preferZodValidation, {
       code: `const valid = typeof obj === "object" && "prop" in obj && obj.prop instanceof Error;`,
       errors: [
         {
-          messageId: "complexTypeChecking",
+          messageId: "objectTypeCheck",
+        },
+      ],
+    },
+    {
+      name: "disallows typeof object with in operator on same variable",
+      code: `if (typeof obj === "object" && "field" in obj) { }`,
+      errors: [
+        {
+          messageId: "objectTypeCheck",
+        },
+      ],
+    },
+    {
+      name: "disallows typeof object with in operator pattern in larger chain",
+      code: `if (obj && typeof obj === "object" && "field" in obj) { }`,
+      errors: [
+        {
+          messageId: "objectTypeCheck",
+        },
+      ],
+    },
+    {
+      name: "disallows typeof object with in and further property check",
+      code: `if (opponent && typeof opponent === "object" && "championName" in opponent && typeof opponent.championName === "string") { }`,
+      errors: [
+        {
+          messageId: "objectTypeCheck",
+        },
+      ],
+    },
+    {
+      name: "disallows typeof object with multiple in checks",
+      code: `if (typeof data === "object" && "name" in data && "age" in data) { }`,
+      errors: [
+        {
+          messageId: "objectTypeCheck",
         },
       ],
     },
