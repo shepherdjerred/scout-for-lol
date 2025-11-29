@@ -38,6 +38,11 @@ const LOG_FILE_PATH = Bun.env["LOG_FILE_PATH"] ?? "./logs/app.log";
 const LOG_LEVEL_STDOUT = Bun.env["LOG_LEVEL_STDOUT"] ?? "info";
 const LOG_LEVEL_FILE = Bun.env["LOG_LEVEL_FILE"] ?? "debug";
 
+// Detect if we're running in a TTY environment
+// In non-TTY environments (CI, Docker, etc.), we disable pretty styling to avoid color code errors
+// Note: process.stdout.isTTY can be undefined at runtime even though TS types say boolean
+const IS_TTY = "isTTY" in process.stdout && process.stdout.isTTY;
+
 // Map log level names to numbers
 const LOG_LEVEL_MAP: Record<string, number> = {
   silly: 0,
@@ -131,29 +136,34 @@ function fileTransport(logObj: ILogObj): void {
 
 /**
  * Base logger settings for all loggers
+ * Uses pretty formatting with colors in TTY, plain text in non-TTY (CI, Docker)
  */
 const baseSettings: ISettingsParam<ILogObj> = {
+  // Use "pretty" in TTY for colored output, "pretty" without styling in non-TTY
   type: "pretty",
   minLevel: getLogLevelNumber(LOG_LEVEL_STDOUT),
-  prettyLogTemplate:
-    "{{dateIsoStr}} {{logLevelName}} [{{name}}] {{filePathWithLine}}\t",
+  prettyLogTemplate: "{{dateIsoStr}} {{logLevelName}} [{{name}}] {{filePathWithLine}}\t",
   prettyLogTimeZone: "UTC",
-  stylePrettyLogs: true,
-  prettyLogStyles: {
-    logLevelName: {
-      "*": ["bold", "black", "bgWhiteBright"],
-      SILLY: ["bold", "white", "bgMagenta"],
-      TRACE: ["bold", "white", "bgCyan"],
-      DEBUG: ["bold", "white", "bgBlue"],
-      INFO: ["bold", "white", "bgGreen"],
-      WARN: ["bold", "white", "bgYellow"],
-      ERROR: ["bold", "white", "bgRed"],
-      FATAL: ["bold", "white", "bgRedBright"],
+  // Only enable styling in TTY environments to avoid ANSI color code errors in CI
+  stylePrettyLogs: IS_TTY,
+  // Only include styles when in TTY mode
+  ...(IS_TTY && {
+    prettyLogStyles: {
+      logLevelName: {
+        "*": ["bold", "black", "bgWhiteBright"],
+        SILLY: ["bold", "white", "bgMagenta"],
+        TRACE: ["bold", "white", "bgCyan"],
+        DEBUG: ["bold", "white", "bgBlue"],
+        INFO: ["bold", "white", "bgGreen"],
+        WARN: ["bold", "white", "bgYellow"],
+        ERROR: ["bold", "white", "bgRed"],
+        FATAL: ["bold", "white", "bgRedBright"],
+      },
+      dateIsoStr: "gray",
+      filePathWithLine: "dim",
+      name: "cyan",
     },
-    dateIsoStr: "gray",
-    filePathWithLine: "dim",
-    name: "cyan",
-  },
+  }),
   hideLogPositionForProduction: false,
   // Attach file transport for all logs
   attachedTransports: [
