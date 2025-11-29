@@ -21,8 +21,8 @@ function getPromptsDir(): string {
 function getStyleCardsDir(): string {
   const dataPackageUrl = import.meta.resolve("@scout-for-lol/data");
   const url = new URL(dataPackageUrl);
-  // Navigate from data/src/index.ts -> packages/data/src -> packages/analysis/llm-out
-  return url.pathname.replace(/\/src\/index\.ts$/, "/../analysis/llm-out");
+  // Navigate from data/src/index.ts -> packages/data/src/review/prompts/style-cards
+  return url.pathname.replace(/\/src\/index\.ts$/, "/src/review/prompts/style-cards");
 }
 
 const PROMPTS_DIR = getPromptsDir();

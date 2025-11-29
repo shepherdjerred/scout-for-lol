@@ -16,10 +16,10 @@ import nekoryanjson from "@scout-for-lol/data/src/review/prompts/personalities/n
 import nekoryanTxt from "@scout-for-lol/data/src/review/prompts/personalities/nekoryan.txt?raw";
 import genericJson from "@scout-for-lol/data/src/review/prompts/personalities/generic.json";
 import genericTxt from "@scout-for-lol/data/src/review/prompts/personalities/generic.txt?raw";
-import aaronStyleCard from "./prompts/style-cards/aaron_style.json";
-import brianStyleCard from "./prompts/style-cards/brian_style.json";
-import irfanStyleCard from "./prompts/style-cards/irfan_style.json";
-import ryanStyleCard from "./prompts/style-cards/ryan_style.json";
+import aaronStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/aaron_style.json";
+import brianStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/brian_style.json";
+import irfanStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/irfan_style.json";
+import ryanStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/ryan_style.json";
 
 // Import lane contexts
 import topLane from "@scout-for-lol/data/src/review/prompts/lanes/top.txt?raw";
