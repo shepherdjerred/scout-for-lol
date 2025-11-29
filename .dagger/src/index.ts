@@ -249,20 +249,16 @@ export class ScoutForLol {
       ]);
     });
 
-    // Desktop checks only in prod (separate because Rust toolchain isn't in prepared workspace)
-    const desktopChecksPromise = isProd
-      ? withTiming("desktop check", async () => {
-          await checkDesktop(source).sync();
-        })
-      : Promise.resolve();
+    // Desktop checks run in all environments to catch Rust issues early
+    const desktopChecksPromise = withTiming("desktop check", async () => {
+      await checkDesktop(source).sync();
+    });
 
-    // Desktop build only in prod (slow due to Rust)
-    const desktopBuildPromise = isProd
-      ? withTiming("desktop application build", async () => {
-          logWithTimestamp("🔄 Building desktop application...");
-          await buildDesktopLinux(source, version).sync();
-        })
-      : Promise.resolve();
+    // Desktop build runs in all environments (started early to run in parallel)
+    const desktopBuildPromise = withTiming("desktop application build", async () => {
+      logWithTimestamp("🔄 Building desktop application...");
+      await buildDesktopLinux(source, version).sync();
+    });
 
     // Wait for checks, backend image build, desktop checks, and desktop build to complete
     const [, backendImage] = await Promise.all([
