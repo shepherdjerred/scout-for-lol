@@ -3,6 +3,9 @@ import { PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors";
 import { discordPermissionErrorsTotal, discordOwnerNotificationsTotal } from "@scout-for-lol/backend/metrics/index";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("permissions");
 
 /**
  * Schema for Discord API errors
@@ -86,7 +89,7 @@ export async function checkSendMessagePermission(
         targetForPermissions = await (fetchFunction as (userId: string) => Promise<unknown>)(botUser.id);
       } catch (fetchError) {
         // If fetch fails, we'll still try with botUser below
-        console.warn(`[Permissions] Failed to fetch bot member: ${String(fetchError)}`);
+        logger.warn(`[Permissions] Failed to fetch bot member: ${String(fetchError)}`);
       }
     }
 
@@ -210,7 +213,7 @@ Need help? Check Discord's permission guide or contact your bot administrator.`;
 
     // Try to send DM
     await owner.send(message);
-    console.log(
+    logger.info(
       `[PermissionNotify] ✅ Notified server owner ${owner.user.tag} about permission error in guild ${serverId}`,
     );
     discordOwnerNotificationsTotal.inc({
@@ -221,7 +224,7 @@ Need help? Check Discord's permission guide or contact your bot administrator.`;
     // DM failures are expected (user may have DMs disabled) - don't escalate
     const errorMsg = getErrorMessage(error);
     if (errorMsg.includes("Cannot send messages to this user")) {
-      console.log(
+      logger.info(
         `[PermissionNotify] Server owner for guild ${serverId} has DMs disabled - cannot notify about permission error`,
       );
       discordOwnerNotificationsTotal.inc({
@@ -229,7 +232,7 @@ Need help? Check Discord's permission guide or contact your bot administrator.`;
         status: "dm_disabled",
       });
     } else {
-      console.warn(`[PermissionNotify] Failed to notify server owner for guild ${serverId}: ${errorMsg}`);
+      logger.warn(`[PermissionNotify] Failed to notify server owner for guild ${serverId}: ${errorMsg}`);
       discordOwnerNotificationsTotal.inc({
         guild_id: serverId,
         status: "dm_failed",

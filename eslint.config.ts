@@ -19,6 +19,7 @@ import { noParentImports } from "./eslint-rules/no-parent-imports";
 import { noTypeGuards } from "./eslint-rules/no-type-guards";
 import { preferAsyncAwait } from "./eslint-rules/prefer-async-await";
 import { noDtoNaming } from "./eslint-rules/no-dto-naming";
+import { preferStructuredLogging } from "./eslint-rules/prefer-structured-logging";
 import * as importPlugin from "eslint-plugin-import";
 import * as regexpPlugin from "eslint-plugin-regexp";
 import * as eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
@@ -56,6 +57,7 @@ const customRulesPlugin = {
     "no-type-guards": noTypeGuards,
     "prefer-async-await": preferAsyncAwait,
     "no-dto-naming": noDtoNaming,
+    "prefer-structured-logging": preferStructuredLogging,
   },
 };
 
@@ -563,6 +565,17 @@ export default tseslint.config(
     files: ["eslint.config.ts"],
     rules: {
       "no-relative-import-paths/no-relative-import-paths": "off",
+    },
+  },
+  // Prefer structured logging over console in backend
+  {
+    files: ["packages/backend/**/*.ts"],
+    ignores: ["**/*.test.ts", "**/*.integration.test.ts"],
+    plugins: {
+      "custom-rules": customRulesPlugin,
+    },
+    rules: {
+      "custom-rules/prefer-structured-logging": "error",
     },
   },
 );

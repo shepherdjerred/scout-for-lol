@@ -13,6 +13,9 @@ import { discordPermissionErrorsTotal } from "@scout-for-lol/backend/metrics/ind
 import { prisma } from "@scout-for-lol/backend/database/index";
 import { recordPermissionError, recordSuccessfulSend } from "@scout-for-lol/backend/database/guild-permission-errors";
 import type { DiscordChannelId, DiscordGuildId } from "@scout-for-lol/data";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("discord-channel");
 
 /**
  * Custom error class for channel send failures
@@ -59,7 +62,7 @@ export async function send(
     const fetchedChannel = await client.channels.fetch(channelId);
     if (!fetchedChannel) {
       const error = new ChannelSendError("Channel not found or bot cannot access it", channelId, false);
-      console.error(`[ChannelSend] ${error.message} - channel: ${channelId}`);
+      logger.error(`[ChannelSend] ${error.message} - channel: ${channelId}`);
       Sentry.captureException(error, { tags: { source: "channel-send", channelId, reason: "not-found" } });
       throw error;
     }
@@ -68,7 +71,7 @@ export async function send(
     const channel = asTextChannel(fetchedChannel);
     if (!channel) {
       const error = new ChannelSendError("Channel is not text-based", channelId, false);
-      console.error(`[ChannelSend] ${error.message} - channel: ${channelId}`);
+      logger.error(`[ChannelSend] ${error.message} - channel: ${channelId}`);
       Sentry.captureException(error, { tags: { source: "channel-send", channelId, reason: "not-text-based" } });
       throw error;
     }
@@ -76,9 +79,9 @@ export async function send(
     // Log message info - only log string messages to avoid object stringification
     const stringResult = z.string().safeParse(options);
     if (stringResult.success) {
-      console.log(`[ChannelSend] Sending message to ${channelId}: ${stringResult.data}`);
+      logger.info(`[ChannelSend] Sending message to ${channelId}: ${stringResult.data}`);
     } else {
-      console.log(`[ChannelSend] Sending message to ${channelId}: [MessagePayload/MessageCreateOptions]`);
+      logger.info(`[ChannelSend] Sending message to ${channelId}: [MessagePayload/MessageCreateOptions]`);
     }
 
     // Send the message
@@ -90,7 +93,7 @@ export async function send(
         try {
           await recordSuccessfulSend(prisma, serverId, channelId);
         } catch (dbError) {
-          console.error(`[ChannelSend] Failed to record successful send in DB:`, dbError);
+          logger.error(`[ChannelSend] Failed to record successful send in DB:`, dbError);
           Sentry.captureException(dbError, { tags: { source: "channel-send-db-record", channelId } });
         }
       })();
@@ -125,7 +128,7 @@ export async function send(
 
     // Log appropriately based on error type
     if (isPermError) {
-      console.warn(`[ChannelSend] ${errorMessage}`);
+      logger.warn(`[ChannelSend] ${errorMessage}`);
 
       // Track permission error in metrics (only if serverId not provided to avoid duplication)
       if (!serverId) {
@@ -146,7 +149,7 @@ export async function send(
               ...(permissionReason ? { errorReason: permissionReason } : {}),
             });
           } catch (dbError) {
-            console.error(`[ChannelSend] Failed to record permission error in DB:`, dbError);
+            logger.error(`[ChannelSend] Failed to record permission error in DB:`, dbError);
             Sentry.captureException(dbError, { tags: { source: "channel-permission-db-record", channelId } });
           }
         })();
@@ -155,7 +158,7 @@ export async function send(
         void notifyServerOwnerAboutPermissionError(client, serverId, channelId, permissionReason);
       }
     } else {
-      console.error(`[ChannelSend] ${errorMessage}`);
+      logger.error(`[ChannelSend] ${errorMessage}`);
       Sentry.captureException(error, { tags: { source: "channel-send", channelId, isPermissionError: "false" } });
     }
 

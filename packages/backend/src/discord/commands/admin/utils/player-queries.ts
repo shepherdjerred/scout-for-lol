@@ -1,6 +1,9 @@
 import type { PrismaClient, Prisma } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { type ChatInputCommandInteraction } from "discord.js";
 import { type DiscordGuildId } from "@scout-for-lol/data";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("utils-player-queries");
 
 export type PlayerWithAccounts = Awaited<ReturnType<typeof findPlayerByAliasWithAccounts>>;
 export type PlayerWithSubscriptions = Awaited<ReturnType<typeof findPlayerByAliasWithSubscriptions>>;
@@ -51,7 +54,7 @@ async function findPlayerByAliasGeneric<T extends Prisma.PlayerInclude>(options:
   });
 
   if (!player && interaction) {
-    console.log(`❌ Player not found: "${alias}"`);
+    logger.info(`❌ Player not found: "${alias}"`);
     await interaction.reply({
       content: `❌ **Player not found**\n\nNo player with alias "${alias}" exists in this server.`,
       ephemeral: true,

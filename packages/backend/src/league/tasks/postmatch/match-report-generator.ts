@@ -23,6 +23,9 @@ import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
 import { match } from "ts-pattern";
 import { logErrorDetails } from "./match-report-debug.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("postmatch-match-report-generator");
 
 /** Helper to capture exceptions with source and match context */
 function captureError(error: unknown, source: string, matchId?: string, extra?: Record<string, string>): void {
@@ -39,7 +42,7 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
     const region = mapRegionToEnum(playerRegion);
     const regionGroup = regionToRegionGroup(region);
 
-    console.log(`[fetchMatchData] 📥 Fetching match data for ${matchId}`);
+    logger.info(`[fetchMatchData] 📥 Fetching match data for ${matchId}`);
     const response = await api.MatchV5.get(matchId, regionGroup);
 
     // Validate and parse the API response to ensure it matches our schema
@@ -47,23 +50,23 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
       const validated = RawMatchSchema.parse(response.response);
       return validated;
     } catch (parseError) {
-      console.error(`[fetchMatchData] ❌ Match data validation failed for ${matchId}:`, parseError);
-      console.error(`[fetchMatchData] This may indicate an API schema change or data corruption`);
+      logger.error(`[fetchMatchData] ❌ Match data validation failed for ${matchId}:`, parseError);
+      logger.error(`[fetchMatchData] This may indicate an API schema change or data corruption`);
       captureError(parseError, "match-data-validation", matchId);
-      console.error(`[fetchMatchData] 🔍 Raw API response:`, JSON.stringify(response.response, null, 2));
+      logger.error(`[fetchMatchData] 🔍 Raw API response:`, JSON.stringify(response.response, null, 2));
       return undefined;
     }
   } catch (e) {
     const result = z.object({ status: z.number() }).safeParse(e);
     if (result.success) {
       if (result.data.status === 404) {
-        console.log(`[fetchMatchData] ℹ️  Match ${matchId} not found (404) - may still be processing`);
+        logger.info(`[fetchMatchData] ℹ️  Match ${matchId} not found (404) - may still be processing`);
         return undefined;
       }
-      console.error(`[fetchMatchData] ❌ HTTP Error ${result.data.status.toString()} for match ${matchId}`);
+      logger.error(`[fetchMatchData] ❌ HTTP Error ${result.data.status.toString()} for match ${matchId}`);
       captureError(e, "match-data-fetch", matchId, { httpStatus: result.data.status.toString() });
     } else {
-      console.error(`[fetchMatchData] ❌ Error fetching match ${matchId}:`, e);
+      logger.error(`[fetchMatchData] ❌ Error fetching match ${matchId}:`, e);
       captureError(e, "match-data-fetch", matchId);
     }
     return undefined;
@@ -84,7 +87,7 @@ export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region)
     const region = mapRegionToEnum(playerRegion);
     const regionGroup = regionToRegionGroup(region);
 
-    console.log(`[fetchMatchTimeline] 📥 Fetching timeline data for ${matchId}`);
+    logger.info(`[fetchMatchTimeline] 📥 Fetching timeline data for ${matchId}`);
 
     // Use the timeline endpoint from the twisted library
     // The twisted library provides api.MatchV5.timeline() for Match V5 Timeline API
@@ -93,11 +96,11 @@ export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region)
     // Validate and parse the API response to ensure it matches our schema
     try {
       const validated = RawTimelineSchema.parse(response.response);
-      console.log(`[fetchMatchTimeline] ✅ Timeline validated with ${validated.info.frames.length.toString()} frames`);
+      logger.info(`[fetchMatchTimeline] ✅ Timeline validated with ${validated.info.frames.length.toString()} frames`);
       return validated;
     } catch (parseError) {
-      console.error(`[fetchMatchTimeline] ❌ Timeline data validation failed for ${matchId}:`, parseError);
-      console.error(`[fetchMatchTimeline] This may indicate an API schema change or data corruption`);
+      logger.error(`[fetchMatchTimeline] ❌ Timeline data validation failed for ${matchId}:`, parseError);
+      logger.error(`[fetchMatchTimeline] This may indicate an API schema change or data corruption`);
       captureError(parseError, "timeline-data-validation", matchId);
       return undefined;
     }
@@ -105,13 +108,13 @@ export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region)
     const result = z.object({ status: z.number() }).safeParse(e);
     if (result.success) {
       if (result.data.status === 404) {
-        console.log(`[fetchMatchTimeline] ℹ️  Timeline ${matchId} not found (404) - may still be processing`);
+        logger.info(`[fetchMatchTimeline] ℹ️  Timeline ${matchId} not found (404) - may still be processing`);
         return undefined;
       }
-      console.error(`[fetchMatchTimeline] ❌ HTTP Error ${result.data.status.toString()} for timeline ${matchId}`);
+      logger.error(`[fetchMatchTimeline] ❌ HTTP Error ${result.data.status.toString()} for timeline ${matchId}`);
       captureError(e, "timeline-data-fetch", matchId, { httpStatus: result.data.status.toString() });
     } else {
-      console.error(`[fetchMatchTimeline] ❌ Error fetching timeline ${matchId}:`, e);
+      logger.error(`[fetchMatchTimeline] ❌ Error fetching timeline ${matchId}:`, e);
       captureError(e, "timeline-data-fetch", matchId);
     }
     return undefined;
@@ -171,11 +174,11 @@ async function createMatchImage(
     svg = SvgSchema.parse(svgData);
   } catch (error) {
     if (error instanceof Error) {
-      console.error(`[createMatchImage] Failed to generate SVG:`, error);
+      logger.error(`[createMatchImage] Failed to generate SVG:`, error);
       throw error;
     }
     const wrappedError = new Error(String(error));
-    console.error(`[createMatchImage] Failed to generate SVG:`, wrappedError);
+    logger.error(`[createMatchImage] Failed to generate SVG:`, wrappedError);
     throw wrappedError;
   }
 
@@ -186,11 +189,11 @@ async function createMatchImage(
     image = ImageSchema.parse(imageData);
   } catch (error) {
     if (error instanceof Error) {
-      console.error(`[createMatchImage] Failed to convert SVG to PNG:`, error);
+      logger.error(`[createMatchImage] Failed to convert SVG to PNG:`, error);
       throw error;
     }
     const wrappedError = new Error(String(error));
-    console.error(`[createMatchImage] Failed to convert SVG to PNG:`, wrappedError);
+    logger.error(`[createMatchImage] Failed to convert SVG to PNG:`, wrappedError);
     throw wrappedError;
   }
 
@@ -201,7 +204,7 @@ async function createMatchImage(
     await saveImageToS3(matchId, image, queueTypeForStorage, trackedPlayerAliases);
     await saveSvgToS3(matchId, svg, queueTypeForStorage, trackedPlayerAliases);
   } catch (error) {
-    console.error(`[createMatchImage] Failed to save images to S3:`, error);
+    logger.error(`[createMatchImage] Failed to save images to S3:`, error);
   }
 
   // Convert Uint8Array to Buffer for Discord.js type compatibility
@@ -244,7 +247,7 @@ async function processArenaMatch(
   matchId: MatchId,
   playersInMatch: PlayerConfigEntry[],
 ): Promise<MessageCreateOptions> {
-  console.log(`[generateMatchReport] 🎯 Processing as arena match`);
+  logger.info(`[generateMatchReport] 🎯 Processing as arena match`);
   const arenaMatch = await toArenaMatch(players, matchData);
 
   // Create Discord message for arena
@@ -274,7 +277,7 @@ type StandardMatchContext = {
  */
 async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageCreateOptions> {
   const { players, matchData, matchId, playersInMatch, timelineData } = ctx;
-  console.log(`[generateMatchReport] ⚔️  Processing as standard match`);
+  logger.info(`[generateMatchReport] ⚔️  Processing as standard match`);
   // Process match for all tracked players
   if (players.length === 0) {
     throw new Error("No player data available");
@@ -293,11 +296,11 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
         reviewImage = review.image;
       }
     } catch (error) {
-      console.error(`[generateMatchReport] Error generating AI review:`, error);
+      logger.error(`[generateMatchReport] Error generating AI review:`, error);
       captureError(error, "ai-review-generation", matchId, { queueType: completedMatch.queueType ?? "unknown" });
     }
   } else {
-    console.log(
+    logger.info(
       `[generateMatchReport] Skipping AI review - not a ranked queue and Jerred not in match (queueType: ${completedMatch.queueType ?? "unknown"})`,
     );
   }
@@ -315,7 +318,7 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
     const aiBuffer = Buffer.from(reviewImage);
     const aiImageAttachment = new AttachmentBuilder(aiBuffer).setName("ai-review.png");
     files.push(aiImageAttachment);
-    console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
+    logger.info(`[generateMatchReport] ✨ Added AI-generated image to message`);
   }
 
   // Generate completion message
@@ -357,16 +360,16 @@ async function fetchTimelineIfStandardMatch(
 
   const playerRegion = firstPlayer.league.leagueAccount.region;
   try {
-    console.log(`[generateMatchReport] 📊 Fetching timeline data for match ${matchId}`);
+    logger.info(`[generateMatchReport] 📊 Fetching timeline data for match ${matchId}`);
     const timelineData = await fetchMatchTimeline(matchId, playerRegion);
     if (timelineData) {
-      console.log(
+      logger.info(
         `[generateMatchReport] ✅ Timeline fetched with ${timelineData.info.frames.length.toString()} frames`,
       );
     }
     return timelineData;
   } catch (error) {
-    console.error(`[generateMatchReport] ⚠️  Failed to fetch timeline, continuing without it:`, error);
+    logger.error(`[generateMatchReport] ⚠️  Failed to fetch timeline, continuing without it:`, error);
     captureError(error, "timeline-fetch-wrapper", matchId);
     return undefined;
   }
@@ -384,7 +387,7 @@ export async function generateMatchReport(
   trackedPlayers: PlayerConfigEntry[],
 ): Promise<MessageCreateOptions | undefined> {
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
-  console.log(`[generateMatchReport] 🎮 Generating report for match ${matchId}`);
+  logger.info(`[generateMatchReport] 🎮 Generating report for match ${matchId}`);
 
   try {
     // Determine which tracked players are in this match
@@ -397,16 +400,16 @@ export async function generateMatchReport(
       const trackedPlayerAliases = playersInMatch.map((p) => p.alias);
       await saveMatchToS3(matchData, trackedPlayerAliases);
     } catch (error) {
-      console.error(`[generateMatchReport] Error saving match ${matchId} to S3:`, error);
+      logger.error(`[generateMatchReport] Error saving match ${matchId} to S3:`, error);
       // Continue processing even if S3 storage fails
     }
 
     if (playersInMatch.length === 0) {
-      console.log(`[generateMatchReport] ⚠️  No tracked players found in match ${matchId}`);
+      logger.info(`[generateMatchReport] ⚠️  No tracked players found in match ${matchId}`);
       return undefined;
     }
 
-    console.log(
+    logger.info(
       `[generateMatchReport] 👥 Found ${playersInMatch.length.toString()} tracked player(s) in match: ${playersInMatch.map((p) => p.alias).join(", ")}`,
     );
 

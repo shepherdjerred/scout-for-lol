@@ -3,6 +3,9 @@ import type { z } from "zod";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import * as Sentry from "@sentry/node";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("utils-validation");
 
 export type ValidationSuccess<T> = {
   success: true;
@@ -30,15 +33,15 @@ export async function validateCommandArgs<T>(
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
-  console.log(`Starting ${commandName} for user ${username} (${userId})`);
+  logger.info(`Starting ${commandName} for user ${username} (${userId})`);
 
   try {
     const rawArgs = argsBuilder(interaction);
     const data = schema.parse(rawArgs);
-    console.log(`✅ Command arguments validated successfully`);
+    logger.info(`✅ Command arguments validated successfully`);
     return { success: true, data, userId, username };
   } catch (error) {
-    console.error(`❌ Invalid command arguments from ${username}:`, error);
+    logger.error(`❌ Invalid command arguments from ${username}:`, error);
     Sentry.captureException(error, {
       tags: {
         source: "discord-command-validation",
@@ -67,11 +70,11 @@ export async function executeWithTiming<T>(
   try {
     const result = await operation();
     const executionTime = Date.now() - startTime;
-    console.log(`✅ ${commandName} completed successfully for ${username} in ${executionTime.toString()}ms`);
+    logger.info(`✅ ${commandName} completed successfully for ${username} in ${executionTime.toString()}ms`);
     return result;
   } catch (error) {
     const executionTime = Date.now() - startTime;
-    console.error(`❌ ${commandName} failed for ${username} after ${executionTime.toString()}ms:`, error);
+    logger.error(`❌ ${commandName} failed for ${username} after ${executionTime.toString()}ms:`, error);
     throw error;
   }
 }

@@ -4,6 +4,9 @@ import * as Sentry from "@sentry/node";
 import { saveAIReviewImageToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import { saveImageGenerationToS3 } from "@scout-for-lol/backend/storage/ai-review-s3.js";
 import { getGeminiClient } from "./ai-clients.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("review-image-backend");
 
 const AI_IMAGES_DIR = `${import.meta.dir}/ai-images`;
 const GEMINI_MODEL = "gemini-3-pro-image-preview";
@@ -21,9 +24,9 @@ async function saveImageLocally(buffer: Uint8Array): Promise<void> {
   try {
     const filepath = `${AI_IMAGES_DIR}/ai-review-${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
     await Bun.write(filepath, buffer);
-    console.log(`[generateReviewImageBackend] Saved image to: ${filepath}`);
+    logger.info(`[generateReviewImageBackend] Saved image to: ${filepath}`);
   } catch (fsError: unknown) {
-    console.error("[generateReviewImageBackend] Failed to save image to filesystem:", fsError);
+    logger.error("[generateReviewImageBackend] Failed to save image to filesystem:", fsError);
   }
 }
 
@@ -37,7 +40,7 @@ async function uploadImageToS3(params: {
     const { matchId, buffer, queueType, trackedPlayerAliases } = params;
     await saveAIReviewImageToS3(matchId, buffer, queueType, trackedPlayerAliases);
   } catch (s3Error: unknown) {
-    console.error("[generateReviewImageBackend] Failed to save image to S3:", s3Error);
+    logger.error("[generateReviewImageBackend] Failed to save image to S3:", s3Error);
   }
 }
 
@@ -55,15 +58,15 @@ export async function generateReviewImageBackend(params: {
   const { imageDescription, matchId, queueType, trackedPlayerAliases } = params;
   const client = getGeminiClient();
   if (!client) {
-    console.log("[generateReviewImageBackend] Gemini API key not configured, skipping image generation");
+    logger.info("[generateReviewImageBackend] Gemini API key not configured, skipping image generation");
     return undefined;
   }
 
   const startTime = Date.now();
 
   try {
-    console.log(`[generateReviewImageBackend] Using image description (${imageDescription.length.toString()} chars)`);
-    console.log("[generateReviewImageBackend] Calling Gemini API to generate image...");
+    logger.info(`[generateReviewImageBackend] Using image description (${imageDescription.length.toString()} chars)`);
+    logger.info("[generateReviewImageBackend] Calling Gemini API to generate image...");
 
     const result = await generateReviewImage({
       imageDescription,
@@ -73,12 +76,12 @@ export async function generateReviewImageBackend(params: {
     });
 
     const duration = Date.now() - startTime;
-    console.log(
+    logger.info(
       `[generateReviewImageBackend] Gemini API call completed in ${result.metadata.imageDurationMs.toString()}ms`,
     );
 
     const buffer = decodeImageBase64(result.imageData);
-    console.log("[generateReviewImageBackend] Successfully generated image");
+    logger.info("[generateReviewImageBackend] Successfully generated image");
 
     // Save S3 tracing for the image generation step
     try {
@@ -98,7 +101,7 @@ export async function generateReviewImageBackend(params: {
         },
       });
     } catch (s3Error) {
-      console.error("[generateReviewImageBackend] Failed to save image generation trace to S3:", s3Error);
+      logger.error("[generateReviewImageBackend] Failed to save image generation trace to S3:", s3Error);
     }
 
     await saveImageLocally(buffer);
@@ -114,9 +117,9 @@ export async function generateReviewImageBackend(params: {
     const isTimeout = parseResult.success && parseResult.data.message.includes("timed out");
 
     if (isTimeout) {
-      console.error("[generateReviewImageBackend] Gemini API call timed out - request took too long");
+      logger.error("[generateReviewImageBackend] Gemini API call timed out - request took too long");
     } else {
-      console.error("[generateReviewImageBackend] Error generating image:", error);
+      logger.error("[generateReviewImageBackend] Error generating image:", error);
     }
 
     // Save S3 tracing for failed image generation
@@ -136,7 +139,7 @@ export async function generateReviewImageBackend(params: {
         },
       });
     } catch (s3Error) {
-      console.error("[generateReviewImageBackend] Failed to save image generation trace to S3:", s3Error);
+      logger.error("[generateReviewImageBackend] Failed to save image generation trace to S3:", s3Error);
     }
 
     Sentry.captureException(error, {

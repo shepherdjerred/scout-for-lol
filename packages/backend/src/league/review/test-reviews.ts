@@ -21,6 +21,9 @@ import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/clien
 import configuration from "@scout-for-lol/backend/configuration.js";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("review-test-reviews");
 
 const MATCH_TYPES = ["ranked", "unranked", "aram", "arena"] as const;
 type MatchType = (typeof MATCH_TYPES)[number];
@@ -100,7 +103,7 @@ function parseArgs(): TestOptions {
 }
 
 function printHelp(): void {
-  console.log(`
+  logger.info(`
 Test AI Review Generation
 
 Usage: bun run src/league/review/test-reviews.ts [options]
@@ -183,7 +186,7 @@ async function fetchMatchKeysFromS3(daysBack: number): Promise<string[]> {
   const prefixes = generateDatePrefixes(startDate, endDate);
   const allKeys: string[] = [];
 
-  console.log(`\n🔍 Searching S3 for matches in last ${String(daysBack)} days...`);
+  logger.info(`\n🔍 Searching S3 for matches in last ${String(daysBack)} days...`);
 
   for (const prefix of prefixes) {
     try {
@@ -198,14 +201,14 @@ async function fetchMatchKeysFromS3(daysBack: number): Promise<string[]> {
       if (response.Contents) {
         const keys = response.Contents.flatMap((obj) => (obj.Key ? [obj.Key] : []));
         allKeys.push(...keys);
-        console.log(`  Found ${String(keys.length)} match(es) in ${prefix}`);
+        logger.info(`  Found ${String(keys.length)} match(es) in ${prefix}`);
       }
     } catch (error) {
-      console.warn(`  Warning: Could not list ${prefix}:`, error);
+      logger.warn(`  Warning: Could not list ${prefix}:`, error);
     }
   }
 
-  console.log(`✅ Found ${String(allKeys.length)} total matches\n`);
+  logger.info(`✅ Found ${String(allKeys.length)} total matches\n`);
   return allKeys;
 }
 
@@ -238,7 +241,7 @@ async function fetchMatchFromS3(key: string): Promise<RawMatch | null> {
     const matchData = JSON.parse(bodyString);
     return RawMatchSchema.parse(matchData);
   } catch (error) {
-    console.warn(`Failed to fetch match ${key}:`, error);
+    logger.warn(`Failed to fetch match ${key}:`, error);
     return null;
   }
 }
@@ -318,7 +321,7 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
       (matchType === "unranked" && (queueType === "quickplay" || queueType === "draft pick"));
 
     if (isMatchingType) {
-      console.log(`📦 Using match from S3: ${key}`);
+      logger.info(`📦 Using match from S3: ${key}`);
       return await convertRawMatchToInternalFormat(rawMatch);
     }
   }
@@ -329,20 +332,20 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
 async function main(): Promise<void> {
   const options = parseArgs();
 
-  console.log(`\n${"=".repeat(80)}`);
-  console.log(`Testing AI Review Generation`);
-  console.log(`${"=".repeat(80)}\n`);
-  console.log(`Match Type: ${options.matchType}`);
-  console.log("Review Count:", options.count);
-  console.log(`Source: ${options.useS3 ? `S3 (last ${String(options.s3Days)} days)` : "Example data"}`);
-  console.log();
+  logger.info(`\n${"=".repeat(80)}`);
+  logger.info(`Testing AI Review Generation`);
+  logger.info(`${"=".repeat(80)}\n`);
+  logger.info(`Match Type: ${options.matchType}`);
+  logger.info("Review Count:", options.count);
+  logger.info(`Source: ${options.useS3 ? `S3 (last ${String(options.s3Days)} days)` : "Example data"}`);
+  logger.info();
 
   // Generate multiple reviews
   for (let i = 0; i < options.count; i++) {
     if (options.count > 1) {
-      console.log("─".repeat(80));
-      console.log(`Review ${String(i + 1)}/${String(options.count)}`);
-      console.log("─".repeat(80) + "\n");
+      logger.info("─".repeat(80));
+      logger.info(`Review ${String(i + 1)}/${String(options.count)}`);
+      logger.info("─".repeat(80) + "\n");
     }
 
     // Get the match (from S3 or example data)
@@ -352,8 +355,8 @@ async function main(): Promise<void> {
 
     const matchSummary = getMatchSummary(match);
 
-    console.log(`Match: ${matchSummary}`);
-    console.log(`Queue: ${match.queueType ?? "unknown"}\n`);
+    logger.info(`Match: ${matchSummary}`);
+    logger.info(`Queue: ${match.queueType ?? "unknown"}\n`);
 
     const startTime = Date.now();
     const testMatchId = MatchIdSchema.parse(`NA1_${Date.now().toString()}`);
@@ -361,42 +364,42 @@ async function main(): Promise<void> {
     const duration = Date.now() - startTime;
 
     if (!reviewResult) {
-      console.log("❌ No review generated - API keys not configured");
-      console.log(`   Set OPENAI_API_KEY environment variable to generate AI reviews`);
-      console.log();
+      logger.info("❌ No review generated - API keys not configured");
+      logger.info(`   Set OPENAI_API_KEY environment variable to generate AI reviews`);
+      logger.info();
       continue;
     }
 
-    console.log("Generated Review:");
-    console.log(`┌${"─".repeat(78)}┐`);
+    logger.info("Generated Review:");
+    logger.info(`┌${"─".repeat(78)}┐`);
     // Word wrap the review to 76 chars
     const words = reviewResult.text.split(" ");
     let line = "│ ";
     for (const word of words) {
       if (line.length + word.length + 1 > 77) {
-        console.log(line.padEnd(79, " ") + "│");
+        logger.info(line.padEnd(79, " ") + "│");
         line = "│ " + word + " ";
       } else {
         line += word + " ";
       }
     }
     if (line.length > 2) {
-      console.log(line.padEnd(79, " ") + "│");
+      logger.info(line.padEnd(79, " ") + "│");
     }
-    console.log(`└${"─".repeat(78)}┘`);
-    console.log();
+    logger.info(`└${"─".repeat(78)}┘`);
+    logger.info();
 
-    console.log(`Stats:`);
-    console.log(`  - Length: ${String(reviewResult.text.length)} characters`);
-    console.log(`  - Generation time: ${String(duration)}ms`);
+    logger.info(`Stats:`);
+    logger.info(`  - Length: ${String(reviewResult.text.length)} characters`);
+    logger.info(`  - Generation time: ${String(duration)}ms`);
     if (reviewResult.image) {
-      console.log(`  - AI Image: Generated (${String(reviewResult.image.length)} bytes)`);
+      logger.info(`  - AI Image: Generated (${String(reviewResult.image.length)} bytes)`);
     }
-    console.log();
+    logger.info();
 
     if (reviewResult.text.length > 400) {
-      console.log(`⚠️  Warning: Review exceeds 400 character limit!`);
-      console.log();
+      logger.info(`⚠️  Warning: Review exceeds 400 character limit!`);
+      logger.info();
     }
 
     if (i < options.count - 1) {
@@ -405,14 +408,14 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log(`${"=".repeat(80)}\n`);
+  logger.info(`${"=".repeat(80)}\n`);
 }
 
 void (async () => {
   try {
     await main();
   } catch (error) {
-    console.error("Error generating review:", error);
+    logger.error("Error generating review:", error);
     process.exit(1);
   }
 })();

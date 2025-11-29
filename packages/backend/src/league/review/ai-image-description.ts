@@ -2,6 +2,9 @@ import type { MatchId } from "@scout-for-lol/data";
 import type OpenAI from "openai";
 import * as Sentry from "@sentry/node";
 import { saveImageDescriptionToS3 } from "@scout-for-lol/backend/storage/ai-review-s3.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("ai-image-description");
 
 const IMAGE_DESCRIPTION_SYSTEM_PROMPT = `You are an art director turning a League of Legends performance review into a single striking image concept.
 Focus on the mood, key moments, and emotions from the review text.
@@ -28,7 +31,7 @@ export async function generateImageDescriptionFromReview(params: {
 Review text to translate into art:
 ${reviewText}`;
 
-  console.log(`[generateImageDescriptionFromReview] Calling OpenAI to craft image description from review`);
+  logger.info(`[generateImageDescriptionFromReview] Calling OpenAI to craft image description from review`);
   const startTime = Date.now();
   try {
     const response = await openaiClient.chat.completions.create({
@@ -47,10 +50,10 @@ ${reviewText}`;
     const duration = Date.now() - startTime;
     const imageDescription = response.choices[0]?.message.content?.trim();
     if (!imageDescription) {
-      console.log("[generateImageDescriptionFromReview] No image description content returned from OpenAI");
+      logger.info("[generateImageDescriptionFromReview] No image description content returned from OpenAI");
       return undefined;
     }
-    console.log(
+    logger.info(
       `[generateImageDescriptionFromReview] Generated image description (${imageDescription.length.toString()} chars)`,
     );
 
@@ -70,13 +73,13 @@ ${reviewText}`;
         },
       });
     } catch (s3Error) {
-      console.error("[generateImageDescriptionFromReview] Failed to save image description to S3:", s3Error);
+      logger.error("[generateImageDescriptionFromReview] Failed to save image description to S3:", s3Error);
     }
 
     return imageDescription;
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
-    console.error("[generateImageDescriptionFromReview] Error generating image description:", err);
+    logger.error("[generateImageDescriptionFromReview] Error generating image description:", err);
     Sentry.captureException(err, {
       tags: {
         source: "openai-image-description",

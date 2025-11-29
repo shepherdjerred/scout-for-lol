@@ -4,6 +4,10 @@
  * which is much faster and avoids Bun segfault issues.
  */
 
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("generate-test-template-db");
+
 const templatePath = `${import.meta.dirname}/../src/testing/template.db`;
 const schemaPath = `${import.meta.dirname}/../prisma/schema.prisma`;
 
@@ -14,18 +18,10 @@ if (await templateFile.exists()) {
   unlinkSync(templatePath);
 }
 
-console.log("Generating test template database...");
+logger.info("Generating test template database...");
 
 const result = Bun.spawnSync(
-  [
-    "bunx",
-    "prisma",
-    "db",
-    "push",
-    `--schema=${schemaPath}`,
-    "--skip-generate",
-    "--accept-data-loss",
-  ],
+  ["bunx", "prisma", "db", "push", `--schema=${schemaPath}`, "--skip-generate", "--accept-data-loss"],
   {
     cwd: `${import.meta.dirname}/..`,
     env: {
@@ -40,8 +36,8 @@ const result = Bun.spawnSync(
 );
 
 if (result.exitCode !== 0) {
-  console.error("Failed to generate test template database");
+  logger.error("Failed to generate test template database");
   process.exit(1);
 }
 
-console.log(`Template database generated at: ${templatePath}`);
+logger.info(`Template database generated at: ${templatePath}`);

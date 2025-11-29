@@ -1,55 +1,58 @@
 import configuration from "@scout-for-lol/backend/configuration.js";
 import * as Sentry from "@sentry/node";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
 
-console.log("🚀 Starting Scout for LoL backend application");
-console.log(`📦 Version: ${configuration.version}`);
-console.log(`🔧 Environment: ${configuration.environment}`);
-console.log(`🌐 Git SHA: ${configuration.gitSha}`);
-console.log(`🔌 Port: ${configuration.port.toString()}`);
+const logger = createLogger("app");
+
+logger.info("🚀 Starting Scout for LoL backend application");
+logger.info(`📦 Version: ${configuration.version}`);
+logger.info(`🔧 Environment: ${configuration.environment}`);
+logger.info(`🌐 Git SHA: ${configuration.gitSha}`);
+logger.info(`🔌 Port: ${configuration.port.toString()}`);
 
 if (configuration.sentryDsn) {
-  console.log("🔍 Initializing Sentry error tracking");
+  logger.info("🔍 Initializing Sentry error tracking");
   Sentry.init({
     dsn: configuration.sentryDsn,
     environment: configuration.environment,
     release: configuration.gitSha,
   });
-  console.log("✅ Sentry initialized successfully");
+  logger.info("✅ Sentry initialized successfully");
 } else {
-  console.log("⚠️  Sentry DSN not configured, error tracking disabled");
+  logger.info("⚠️  Sentry DSN not configured, error tracking disabled");
 }
 
 // Initialize metrics (must be imported early to set up metrics collection)
-console.log("📊 Initializing metrics system");
+logger.info("📊 Initializing metrics system");
 import "@scout-for-lol/backend/metrics/index.js";
 
 // Initialize HTTP server for health checks and metrics
-console.log("🌐 Starting HTTP server for health checks and metrics");
+logger.info("🌐 Starting HTTP server for health checks and metrics");
 import { shutdownHttpServer } from "@scout-for-lol/backend/http-server.js";
 
 // Preload Arena augments once at startup; continue if it fails
-console.log("🧩 Initializing Arena augments cache");
+logger.info("🧩 Initializing Arena augments cache");
 await initArenaAugmentsOnce()
   .then(() => {
-    console.log("✅ Arena augments cache initialized");
+    logger.info("✅ Arena augments cache initialized");
   })
   .catch((e: unknown) => {
-    console.warn("⚠️  Failed to initialize Arena augments cache:", e);
+    logger.warn("⚠️  Failed to initialize Arena augments cache:", e);
   });
 
-console.log("🔌 Starting Discord bot initialization");
+logger.info("🔌 Starting Discord bot initialization");
 import "@scout-for-lol/backend/discord/index.js";
 
-console.log("⏰ Starting cron job scheduler");
+logger.info("⏰ Starting cron job scheduler");
 import { startCronJobs } from "@scout-for-lol/backend/league/cron.js";
 import { initArenaAugmentsOnce } from "@scout-for-lol/backend/league/arena/augment.js";
 startCronJobs();
 
-console.log("✅ Backend application startup complete");
+logger.info("✅ Backend application startup complete");
 
 // Handle graceful shutdown
 process.on("SIGTERM", () => {
-  console.log("🛑 Received SIGTERM, shutting down gracefully");
+  logger.info("🛑 Received SIGTERM, shutting down gracefully");
   void (async () => {
     await shutdownHttpServer();
     process.exit(0);
@@ -57,7 +60,7 @@ process.on("SIGTERM", () => {
 });
 
 process.on("SIGINT", () => {
-  console.log("🛑 Received SIGINT, shutting down gracefully");
+  logger.info("🛑 Received SIGINT, shutting down gracefully");
   void (async () => {
     await shutdownHttpServer();
     process.exit(0);
@@ -66,8 +69,8 @@ process.on("SIGINT", () => {
 
 // Handle unhandled promise rejections
 process.on("unhandledRejection", (reason, promise) => {
-  console.error("❌ Unhandled Promise Rejection:", reason);
-  console.error("Promise:", promise);
+  logger.error("❌ Unhandled Promise Rejection:", reason);
+  logger.error("Promise:", promise);
   Sentry.captureException(reason);
 
   // Track unhandled errors in metrics
@@ -83,7 +86,7 @@ process.on("unhandledRejection", (reason, promise) => {
 
 // Handle uncaught exceptions
 process.on("uncaughtException", (error) => {
-  console.error("❌ Uncaught Exception:", error);
+  logger.error("❌ Uncaught Exception:", error);
   Sentry.captureException(error);
 
   // Track unhandled errors in metrics

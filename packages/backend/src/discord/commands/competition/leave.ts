@@ -2,6 +2,9 @@ import { type ChatInputCommandInteraction } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { removeParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("competition-leave");
 import {
   replyWithErrorFromException,
   replyWithError,
@@ -56,7 +59,7 @@ export async function executeCompetitionLeave(interaction: ChatInputCommandInter
   try {
     participantStatus = await getParticipantStatus(prisma, competitionId, player.id);
   } catch (error) {
-    console.error(`[Competition Leave] Error checking participant status:`, error);
+    logger.error(`[Competition Leave] Error checking participant status:`, error);
     await replyWithErrorFromException(interaction, error, "checking participation status");
     return;
   }
@@ -78,11 +81,11 @@ You're not in this competition. Use \`/competition list\` to see competitions yo
 
   try {
     await removeParticipant(prisma, competitionId, player.id);
-    console.log(
+    logger.info(
       `[Competition Leave] User ${userId} left competition ${competitionId.toString()} (status was: ${participantStatus})`,
     );
   } catch (error) {
-    console.error(`[Competition Leave] Error removing participant:`, error);
+    logger.error(`[Competition Leave] Error removing participant:`, error);
     await replyWithErrorFromException(interaction, error, "leaving competition");
     return;
   }

@@ -1,5 +1,8 @@
 import type { MostRankClimbCriteria, Ranks } from "@scout-for-lol/data";
 import { rankToLeaguePoints } from "@scout-for-lol/data";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("processors-most-rank-climb");
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
@@ -29,14 +32,14 @@ export function processMostRankClimb(
     // 2. Player hasn't played their placement matches yet (no END snapshot)
     // These players simply don't appear on the leaderboard until they have both snapshots
     if (!startRanks) {
-      console.log(
+      logger.info(
         `[MostRankClimb] Skipping player ${participant.id.toString()} (${participant.alias}) - no START snapshot (likely unranked at competition start)`,
       );
       continue;
     }
 
     if (!endRanks) {
-      console.log(
+      logger.info(
         `[MostRankClimb] Skipping player ${participant.id.toString()} (${participant.alias}) - no END snapshot`,
       );
       continue;
@@ -47,14 +50,14 @@ export function processMostRankClimb(
 
     // Skip if player doesn't have rank data for the specific queue
     if (!startRank) {
-      console.log(
+      logger.info(
         `[MostRankClimb] Skipping player ${participant.id.toString()} (${participant.alias}) - no ${criteria.queue} rank at START`,
       );
       continue;
     }
 
     if (!endRank) {
-      console.log(
+      logger.info(
         `[MostRankClimb] Skipping player ${participant.id.toString()} (${participant.alias}) - no ${criteria.queue} rank at END`,
       );
       continue;

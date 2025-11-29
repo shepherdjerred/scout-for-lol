@@ -14,6 +14,9 @@ import { EmbedBuilder } from "discord.js";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
 import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("competition-daily-update");
 
 // ============================================================================
 // Error Handling
@@ -66,9 +69,9 @@ async function postSnapshotErrorMessage(competition: CompetitionWithCriteria, er
       competition.channelId,
       competition.serverId,
     );
-    console.log(`[DailyLeaderboard] ✅ Posted snapshot error message for competition ${competition.id.toString()}`);
+    logger.info(`[DailyLeaderboard] ✅ Posted snapshot error message for competition ${competition.id.toString()}`);
   } catch (error) {
-    console.error(
+    logger.error(
       `[DailyLeaderboard] ⚠️  Failed to post snapshot error message for competition ${competition.id.toString()}:`,
       error,
     );
@@ -97,7 +100,7 @@ async function backfillStartSnapshots(competition: CompetitionWithCriteria): Pro
     return;
   }
 
-  console.log(
+  logger.info(
     `[DailyLeaderboard] Checking for START snapshot backfill opportunities in competition ${competition.id.toString()}`,
   );
 
@@ -123,7 +126,7 @@ async function backfillStartSnapshots(competition: CompetitionWithCriteria): Pro
       // No START snapshot - try to create one
       // createSnapshot will check if player is now ranked and create the snapshot
       // If player is still unranked, createSnapshot will skip it (return early)
-      console.log(
+      logger.info(
         `[DailyLeaderboard] Attempting to create START snapshot for player ${participant.playerId.toString()} who was previously unranked`,
       );
 
@@ -134,10 +137,10 @@ async function backfillStartSnapshots(competition: CompetitionWithCriteria): Pro
         criteria: competition.criteria,
       });
 
-      console.log(`[DailyLeaderboard] ✅ Created START snapshot for player ${participant.playerId.toString()}`);
+      logger.info(`[DailyLeaderboard] ✅ Created START snapshot for player ${participant.playerId.toString()}`);
     } catch (error) {
       // Log but don't fail the entire update
-      console.warn(
+      logger.warn(
         `[DailyLeaderboard] ⚠️  Failed to backfill START snapshot for player ${participant.playerId.toString()}:`,
         error,
       );
@@ -167,7 +170,7 @@ async function calculateLeaderboardSafely(
       errorMessage.includes("Missing END snapshot");
 
     if (isMissingSnapshot) {
-      console.error(
+      logger.error(
         `[DailyLeaderboard] ❌ Missing snapshots for competition ${competition.id.toString()}:`,
         errorMessage,
       );
@@ -194,16 +197,16 @@ async function calculateLeaderboardSafely(
  * Called by cron job daily at midnight UTC
  */
 export async function runDailyLeaderboardUpdate(): Promise<void> {
-  console.log("[DailyLeaderboard] Running daily leaderboard update");
+  logger.info("[DailyLeaderboard] Running daily leaderboard update");
 
   try {
     // Get all active competitions (across all servers)
     const activeCompetitions = await getActiveCompetitions(prisma);
 
-    console.log(`[DailyLeaderboard] Found ${activeCompetitions.length.toString()} active competition(s)`);
+    logger.info(`[DailyLeaderboard] Found ${activeCompetitions.length.toString()} active competition(s)`);
 
     if (activeCompetitions.length === 0) {
-      console.log("[DailyLeaderboard] No active competitions to update");
+      logger.info("[DailyLeaderboard] No active competitions to update");
       return;
     }
 
@@ -213,12 +216,12 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
 
     for (const competition of activeCompetitions) {
       try {
-        console.log(`[DailyLeaderboard] Updating competition ${competition.id.toString()}: ${competition.title}`);
+        logger.info(`[DailyLeaderboard] Updating competition ${competition.id.toString()}: ${competition.title}`);
 
         // Verify competition is actually ACTIVE (not DRAFT, ENDED, or CANCELLED)
         const status = getCompetitionStatus(competition);
         if (status !== "ACTIVE") {
-          console.log(
+          logger.info(
             `[DailyLeaderboard] Skipping competition ${competition.id.toString()} - status is ${status}, not ACTIVE`,
           );
           continue;
@@ -245,9 +248,9 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
 
         try {
           await saveCachedLeaderboard(cachedLeaderboard);
-          console.log(`[DailyLeaderboard] ✅ Cached leaderboard to S3 for competition ${competition.id.toString()}`);
+          logger.info(`[DailyLeaderboard] ✅ Cached leaderboard to S3 for competition ${competition.id.toString()}`);
         } catch (error) {
-          console.error(
+          logger.error(
             `[DailyLeaderboard] ⚠️  Failed to cache leaderboard to S3 for competition ${competition.id.toString()}:`,
             error,
           );
@@ -276,7 +279,7 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
           competition.serverId,
         );
 
-        console.log(`[DailyLeaderboard] ✅ Updated competition ${competition.id.toString()}`);
+        logger.info(`[DailyLeaderboard] ✅ Updated competition ${competition.id.toString()}`);
         successCount++;
 
         // Small delay to avoid rate limits (1 second between posts)
@@ -287,11 +290,11 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
         // Handle permission errors gracefully - they're expected in some cases
         const channelSendError = z.instanceof(ChannelSendError).safeParse(error);
         if (channelSendError.success && channelSendError.data.isPermissionError) {
-          console.warn(
+          logger.warn(
             `[DailyLeaderboard] ⚠️  Cannot update competition ${competition.id.toString()} - missing permissions in channel ${competition.channelId}. Server owner has been notified.`,
           );
         } else {
-          console.error(`[DailyLeaderboard] ❌ Error updating competition ${competition.id.toString()}:`, error);
+          logger.error(`[DailyLeaderboard] ❌ Error updating competition ${competition.id.toString()}:`, error);
           Sentry.captureException(error, {
             tags: { source: "daily-leaderboard-update", competitionId: competition.id.toString() },
           });
@@ -301,11 +304,11 @@ export async function runDailyLeaderboardUpdate(): Promise<void> {
       }
     }
 
-    console.log(
+    logger.info(
       `[DailyLeaderboard] Daily update complete - ${successCount.toString()} succeeded, ${failureCount.toString()} failed`,
     );
   } catch (error) {
-    console.error("[DailyLeaderboard] ❌ Fatal error during daily update:", error);
+    logger.error("[DailyLeaderboard] ❌ Fatal error during daily update:", error);
     Sentry.captureException(error, { tags: { source: "daily-leaderboard-fatal" } });
     throw error; // Re-throw so cron job can track failures
   }

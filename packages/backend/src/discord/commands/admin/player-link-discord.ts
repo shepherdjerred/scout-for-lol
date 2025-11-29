@@ -6,6 +6,9 @@ import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/co
 import { findPlayerByAliasWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
 import { buildPlayerUpdateResponse } from "@scout-for-lol/backend/discord/commands/admin/utils/player-responses.js";
 import { updatePlayerDiscordId } from "@scout-for-lol/backend/discord/commands/admin/utils/player-updates.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("admin-player-link-discord");
 import {
   validateDiscordLink,
   executeDiscordLinkOperation,
@@ -52,7 +55,7 @@ export async function executePlayerLinkDiscord(interaction: ChatInputCommandInte
         return;
       }
 
-      console.log(`💾 Linking Discord ID ${discordUserId} to player "${playerAlias}"`);
+      logger.info(`💾 Linking Discord ID ${discordUserId} to player "${playerAlias}"`);
 
       await executeDiscordLinkOperation(
         interaction,

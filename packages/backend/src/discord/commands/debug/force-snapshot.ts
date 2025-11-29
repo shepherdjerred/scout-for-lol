@@ -3,9 +3,12 @@ import { z } from "zod";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
 import { createSnapshotsForAllParticipants } from "@scout-for-lol/backend/league/competition/snapshots.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("debug-force-snapshot");
 
 export async function executeDebugForceSnapshot(interaction: ChatInputCommandInteraction) {
-  console.log("🐛 Executing debug force-snapshot command");
+  logger.info("🐛 Executing debug force-snapshot command");
 
   // Validate command options at boundary
   const ForceSnapshotOptionsSchema = z.object({
@@ -35,7 +38,7 @@ export async function executeDebugForceSnapshot(interaction: ChatInputCommandInt
   await interaction.deferReply({ ephemeral: true });
 
   try {
-    console.log(`🔍 Looking up competition ${competitionId.toString()}`);
+    logger.info(`🔍 Looking up competition ${competitionId.toString()}`);
     const competition = await getCompetitionById(prisma, competitionId);
 
     if (!competition) {
@@ -43,7 +46,7 @@ export async function executeDebugForceSnapshot(interaction: ChatInputCommandInt
       return;
     }
 
-    console.log(`📸 Creating ${snapshotType} snapshots for competition "${competition.title}"`);
+    logger.info(`📸 Creating ${snapshotType} snapshots for competition "${competition.title}"`);
 
     // Force create snapshots for all participants
     await createSnapshotsForAllParticipants(prisma, competition.id, snapshotType, competition.criteria);
@@ -52,9 +55,9 @@ export async function executeDebugForceSnapshot(interaction: ChatInputCommandInt
       `✅ Created ${snapshotType} snapshots for all participants in competition **${competition.title}** (ID: ${competitionId.toString()})`,
     );
 
-    console.log(`✅ Successfully created ${snapshotType} snapshots for competition ${competitionId.toString()}`);
+    logger.info(`✅ Successfully created ${snapshotType} snapshots for competition ${competitionId.toString()}`);
   } catch (error) {
-    console.error(`❌ Error creating snapshots for competition ${competitionId.toString()}:`, error);
+    logger.error(`❌ Error creating snapshots for competition ${competitionId.toString()}:`, error);
     await interaction.editReply(`❌ Error: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
