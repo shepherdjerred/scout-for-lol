@@ -80,6 +80,66 @@ async function postPrComment(
   logWithTimestamp(`✅ Comment posted to PR #${prNumber}`);
 }
 
+// Helper function to create a GitHub release and upload artifacts
+async function createGitHubRelease(
+  version: string,
+  gitSha: string,
+  linuxArtifacts: Directory,
+  windowsArtifacts: Directory,
+  ghToken: Secret,
+  repo = "shepherdjerred/scout-for-lol",
+): Promise<string> {
+  logWithTimestamp(`📦 Creating GitHub release v${version}...`);
+
+  const releaseNotes = `## Scout for LoL v${version}
+
+### Downloads
+
+**Windows:**
+- \`Scout-for-LoL_${version}_x64-setup.exe\` - Windows installer (NSIS)
+
+**Linux:**
+- \`scout-for-lol_${version}_amd64.AppImage\` - AppImage (portable)
+- \`scout-for-lol_${version}_amd64.deb\` - Debian package
+
+---
+*Built from commit ${gitSha.substring(0, 7)}*`;
+
+  const result = await getGitHubContainer()
+    .withSecretVariable("GH_TOKEN", ghToken)
+    .withWorkdir("/artifacts")
+    // Mount Linux artifacts
+    .withDirectory("/artifacts/linux", linuxArtifacts)
+    // Mount Windows artifacts
+    .withDirectory("/artifacts/windows", windowsArtifacts)
+    // List artifacts for debugging
+    .withExec([
+      "sh",
+      "-c",
+      "echo '=== Linux artifacts ===' && find /artifacts/linux -type f -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' 2>/dev/null || true",
+    ])
+    .withExec([
+      "sh",
+      "-c",
+      "echo '=== Windows artifacts ===' && find /artifacts/windows -type f -name '*.exe' -o -name '*.msi' 2>/dev/null || true",
+    ])
+    // Create release with artifacts - use glob patterns to find the actual files
+    .withExec([
+      "sh",
+      "-c",
+      `gh release create "v${version}" \
+        --repo "${repo}" \
+        --title "Scout for LoL v${version}" \
+        --notes '${releaseNotes.replace(/'/g, "'\\''")}' \
+        $(find /artifacts/linux -type f \\( -name '*.AppImage' -o -name '*.deb' \\) 2>/dev/null | tr '\\n' ' ') \
+        $(find /artifacts/windows -type f -name '*.exe' 2>/dev/null | tr '\\n' ' ')`,
+    ])
+    .stdout();
+
+  logWithTimestamp(`✅ GitHub release v${version} created successfully`);
+  return result;
+}
+
 // Helper function to parse preview URL from wrangler output
 function parsePreviewUrl(wranglerOutput: string): string | undefined {
   // Wrangler outputs lines like: "Deployment complete! Take a peek over at https://..."
@@ -254,18 +314,31 @@ export class ScoutForLol {
       await checkDesktop(source).sync();
     });
 
-    // Desktop build runs in all environments (started early to run in parallel)
-    const desktopBuildPromise = withTiming("desktop application build", async () => {
-      logWithTimestamp("🔄 Building desktop application...");
-      await buildDesktopLinux(source, version).sync();
+    // Desktop Linux build runs in all environments (started early to run in parallel)
+    const desktopLinuxBuildPromise = withTiming("desktop application build (Linux)", async () => {
+      logWithTimestamp("🔄 Building desktop application for Linux...");
+      const container = buildDesktopLinux(source, version);
+      await container.sync();
+      return container;
     });
 
-    // Wait for checks, backend image build, desktop checks, and desktop build to complete
-    const [, backendImage] = await Promise.all([
+    // Desktop Windows build runs only in prod (started early to run in parallel)
+    const desktopWindowsBuildPromise = isProd
+      ? withTiming("desktop application build (Windows)", async () => {
+          logWithTimestamp("🔄 Building desktop application for Windows...");
+          const container = buildDesktopWindowsGnu(source, version);
+          await container.sync();
+          return container;
+        })
+      : Promise.resolve(null);
+
+    // Wait for checks, backend image build, desktop checks, and desktop builds to complete
+    const [, backendImage, , desktopLinuxContainer, desktopWindowsContainer] = await Promise.all([
       checksPromise,
       backendImagePromise,
       desktopChecksPromise,
-      desktopBuildPromise,
+      desktopLinuxBuildPromise,
+      desktopWindowsBuildPromise,
     ]);
 
     logWithTimestamp("✅ Phase 1 complete: All checks passed and builds finished");
@@ -336,6 +409,27 @@ export class ScoutForLol {
       });
     } else {
       logWithTimestamp("⏭️ Phase 4: Skipping frontend deployment (no Cloudflare credentials or branch not provided)");
+    }
+
+    // Create GitHub release with desktop artifacts (only for prod)
+    if (isProd && ghToken && desktopLinuxContainer && desktopWindowsContainer) {
+      await withTiming("CI GitHub release phase", async () => {
+        logWithTimestamp("📦 Phase 5: Creating GitHub release with desktop artifacts...");
+
+        // Get the artifact directories from the build containers
+        const linuxArtifacts = desktopLinuxContainer.directory(
+          "/workspace/packages/desktop/src-tauri/target/release/bundle",
+        );
+        const windowsArtifacts = desktopWindowsContainer.directory(
+          "/workspace/packages/desktop/src-tauri/target/x86_64-pc-windows-gnu/release/bundle",
+        );
+
+        await createGitHubRelease(version, gitSha, linuxArtifacts, windowsArtifacts, ghToken);
+      });
+    } else if (isProd) {
+      logWithTimestamp("⏭️ Phase 5: Skipping GitHub release (missing token or desktop builds)");
+    } else {
+      logWithTimestamp("⏭️ Phase 5: Skipping GitHub release (not prod environment)");
     }
 
     logWithTimestamp("🎉 CI pipeline completed successfully");
