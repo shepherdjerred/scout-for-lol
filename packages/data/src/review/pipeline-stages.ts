@@ -6,16 +6,9 @@
  */
 
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
-import type {
-  OpenAIClient,
-  ModelConfig,
-  StageTrace,
-  ImageGenerationTrace,
-  CuratedMatchData,
-  CuratedTimeline,
-  Personality,
-  PlayerMetadata,
-} from "./pipeline-types.js";
+import type { OpenAIClient, ModelConfig, StageTrace, ImageGenerationTrace } from "./pipeline-types.js";
+import type { CuratedMatchData, CuratedTimeline } from "./curator-types.js";
+import type { Personality, PlayerMetadata } from "./prompts.js";
 import { getStageSystemPrompt } from "./pipeline-defaults.js";
 import { generateImagePrompt } from "./image-prompt.js";
 import { replaceTemplateVariables } from "./prompts.js";

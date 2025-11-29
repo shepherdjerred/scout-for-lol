@@ -120,16 +120,20 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
     setViewingHistory(false); // Switch back to current result when generating
 
     try {
-      const generatedResult = await generateMatchReview(matchToUse, config, (p) => {
-        setActiveGenerations((prev) => {
-          const updated = new Map(prev);
-          const gen = updated.get(historyId);
-          if (gen) {
-            gen.progress = p;
-            updated.set(historyId, gen);
-          }
-          return updated;
-        });
+      const generatedResult = await generateMatchReview({
+        match: matchToUse,
+        config,
+        onProgress: (p) => {
+          setActiveGenerations((prev) => {
+            const updated = new Map(prev);
+            const gen = updated.get(historyId);
+            if (gen) {
+              gen.progress = p;
+              updated.set(historyId, gen);
+            }
+            return updated;
+          });
+        },
       });
 
       // Only update the displayed result if this is the selected generation

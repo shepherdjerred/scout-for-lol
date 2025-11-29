@@ -14,6 +14,9 @@
 
 import type { MatchId, ReviewPipelineOutput, PipelineContext, StageTrace, ImageGenerationTrace } from "@scout-for-lol/data";
 import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("pipeline-s3");
 
 type SavePipelineTracesParams = {
   matchId: MatchId;
@@ -204,6 +207,17 @@ async function saveFinalImage(params: {
 }
 
 /**
+ * Wrapper to safely run a save operation and log errors
+ */
+async function safeSave(operation: () => Promise<unknown>, errorMessage: string): Promise<void> {
+  try {
+    await operation();
+  } catch (err) {
+    logger.error(errorMessage, err);
+  }
+}
+
+/**
  * Save all pipeline traces and outputs to S3
  *
  * This saves:
@@ -218,91 +232,120 @@ export async function savePipelineTracesToS3(params: SavePipelineTracesParams): 
   const savePromises: Promise<void>[] = [];
 
   // Save stage traces
-  if (traces.timelineSummary) {
+  const timelineSummaryTrace = traces.timelineSummary;
+  if (timelineSummaryTrace) {
     savePromises.push(
-      saveStageTrace({
-        matchId,
-        queueType,
-        trackedPlayerAliases,
-        stageName: "timeline-summary",
-        stageNumber: "1a",
-        trace: traces.timelineSummary,
-      }).catch((err: unknown) => console.error("[Pipeline S3] Failed to save timeline summary trace:", err)),
+      safeSave(
+        () =>
+          saveStageTrace({
+            matchId,
+            queueType,
+            trackedPlayerAliases,
+            stageName: "timeline-summary",
+            stageNumber: "1a",
+            trace: timelineSummaryTrace,
+          }),
+        "Failed to save timeline summary trace",
+      ),
     );
   }
 
-  if (traces.matchSummary) {
+  const matchSummaryTrace = traces.matchSummary;
+  if (matchSummaryTrace) {
     savePromises.push(
-      saveStageTrace({
-        matchId,
-        queueType,
-        trackedPlayerAliases,
-        stageName: "match-summary",
-        stageNumber: "1b",
-        trace: traces.matchSummary,
-      }).catch((err: unknown) => console.error("[Pipeline S3] Failed to save match summary trace:", err)),
+      safeSave(
+        () =>
+          saveStageTrace({
+            matchId,
+            queueType,
+            trackedPlayerAliases,
+            stageName: "match-summary",
+            stageNumber: "1b",
+            trace: matchSummaryTrace,
+          }),
+        "Failed to save match summary trace",
+      ),
     );
   }
 
   // Review text trace is always present
   savePromises.push(
-    saveStageTrace({
-      matchId,
-      queueType,
-      trackedPlayerAliases,
-      stageName: "review-text",
-      stageNumber: "2",
-      trace: traces.reviewText,
-    }).catch((err: unknown) => console.error("[Pipeline S3] Failed to save review text trace:", err)),
+    safeSave(
+      () =>
+        saveStageTrace({
+          matchId,
+          queueType,
+          trackedPlayerAliases,
+          stageName: "review-text",
+          stageNumber: "2",
+          trace: traces.reviewText,
+        }),
+      "Failed to save review text trace",
+    ),
   );
 
-  if (traces.imageDescription) {
+  const imageDescriptionTrace = traces.imageDescription;
+  if (imageDescriptionTrace) {
     savePromises.push(
-      saveStageTrace({
-        matchId,
-        queueType,
-        trackedPlayerAliases,
-        stageName: "image-description",
-        stageNumber: "3",
-        trace: traces.imageDescription,
-      }).catch((err: unknown) => console.error("[Pipeline S3] Failed to save image description trace:", err)),
+      safeSave(
+        () =>
+          saveStageTrace({
+            matchId,
+            queueType,
+            trackedPlayerAliases,
+            stageName: "image-description",
+            stageNumber: "3",
+            trace: imageDescriptionTrace,
+          }),
+        "Failed to save image description trace",
+      ),
     );
   }
 
-  if (traces.imageGeneration) {
+  const imageGenerationTrace = traces.imageGeneration;
+  if (imageGenerationTrace) {
     savePromises.push(
-      saveImageGenerationTrace({
-        matchId,
-        queueType,
-        trackedPlayerAliases,
-        trace: traces.imageGeneration,
-      }).catch((err: unknown) => console.error("[Pipeline S3] Failed to save image generation trace:", err)),
+      safeSave(
+        () =>
+          saveImageGenerationTrace({
+            matchId,
+            queueType,
+            trackedPlayerAliases,
+            trace: imageGenerationTrace,
+          }),
+        "Failed to save image generation trace",
+      ),
     );
   }
 
   // Save final outputs
   savePromises.push(
-    saveFinalReview({
-      matchId,
-      queueType,
-      trackedPlayerAliases,
-      reviewText: review.text,
-      context,
-    }).catch((err: unknown) => console.error("[Pipeline S3] Failed to save final review:", err)),
+    safeSave(
+      () =>
+        saveFinalReview({
+          matchId,
+          queueType,
+          trackedPlayerAliases,
+          reviewText: review.text,
+          context,
+        }),
+      "Failed to save final review",
+    ),
   );
 
-  if (review.imageBase64) {
+  const imageBase64 = review.imageBase64;
+  if (imageBase64) {
     savePromises.push(
-      saveFinalImage({
-        matchId,
-        queueType,
-        trackedPlayerAliases,
-        imageBase64: review.imageBase64,
-      })
-        .then(() => {
-          /* void */
-        })
-        .catch((err: unknown) => console.error("[Pipeline S3] Failed to save final image:", err)),
+      safeSave(
+        () =>
+          saveFinalImage({
+            matchId,
+            queueType,
+            trackedPlayerAliases,
+            imageBase64,
+          }),
+        "Failed to save final image",
+      ),
     );
   }
 

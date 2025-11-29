@@ -58,8 +58,9 @@ function resolvePersonality(config: ReviewConfig): Personality {
  */
 function getStagesConfig(config: ReviewConfig): PipelineStagesConfig {
   if (config.stages) {
-    // Convert frontend config to data package format
-    return config.stages as PipelineStagesConfig;
+    // The frontend PipelineStagesConfig matches the data package PipelineStagesConfig
+    // Validate with schema if needed in production
+    return config.stages as unknown as PipelineStagesConfig;
   }
 
   // Fall back to defaults, but override with legacy textGeneration/imageGeneration settings
@@ -69,13 +70,9 @@ function getStagesConfig(config: ReviewConfig): PipelineStagesConfig {
   const reviewTextModel: PipelineStagesConfig["reviewText"]["model"] = {
     model: config.textGeneration.model,
     maxTokens: config.textGeneration.maxTokens,
+    temperature: config.textGeneration.temperature,
+    topP: config.textGeneration.topP,
   };
-  if (config.textGeneration.temperature !== undefined) {
-    reviewTextModel.temperature = config.textGeneration.temperature;
-  }
-  if (config.textGeneration.topP !== undefined) {
-    reviewTextModel.topP = config.textGeneration.topP;
-  }
 
   // Build the result object piece by piece to handle exactOptionalPropertyTypes correctly
   const result: PipelineStagesConfig = {
@@ -181,15 +178,21 @@ function buildGenerationMetadata(pipelineOutput: ReviewPipelineOutput): Generati
 }
 
 /**
+ * Parameters for generating a match review
+ */
+export type GenerateMatchReviewParams = {
+  match: CompletedMatch | ArenaMatch;
+  config: ReviewConfig;
+  onProgress?: (progress: GenerationProgress) => void;
+  rawMatch?: RawMatch;
+  rawTimeline?: RawTimeline;
+};
+
+/**
  * Generate a complete match review using the unified pipeline
  */
-export async function generateMatchReview(
-  match: CompletedMatch | ArenaMatch,
-  config: ReviewConfig,
-  onProgress?: (progress: GenerationProgress) => void,
-  rawMatch?: RawMatch,
-  rawTimeline?: RawTimeline,
-): Promise<GenerationResult> {
+export async function generateMatchReview(params: GenerateMatchReviewParams): Promise<GenerationResult> {
+  const { match, config, onProgress, rawMatch, rawTimeline } = params;
   const startTime = Date.now();
 
   try {

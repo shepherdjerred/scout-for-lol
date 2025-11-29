@@ -23,6 +23,9 @@ import * as Sentry from "@sentry/node";
 import { loadPromptFile, selectRandomPersonality, loadPlayerMetadata, getLaneContext } from "./prompts.js";
 import { getOpenAIClient, getGeminiClient } from "./ai-clients.js";
 import { savePipelineTracesToS3, savePipelineDebugToS3 } from "@scout-for-lol/backend/storage/pipeline-s3.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("generator");
 
 /**
  * Metadata about the generated review
@@ -67,7 +70,7 @@ export async function generateMatchReview(
   // Initialize clients
   const openaiClient = getOpenAIClient();
   if (!openaiClient) {
-    console.log("[generateMatchReview] OpenAI API key not configured, skipping review generation");
+    logger.info("OpenAI API key not configured, skipping review generation");
     return undefined;
   }
 
@@ -77,13 +80,13 @@ export async function generateMatchReview(
   const playerIndex = selectPlayerIndex(match);
   const selectedPlayer = match.players[playerIndex];
   if (!selectedPlayer) {
-    console.log("[generateMatchReview] No player found at selected index, skipping review generation");
+    logger.info("No player found at selected index, skipping review generation");
     return undefined;
   }
 
   const playerName = selectedPlayer.playerConfig.alias;
   if (!playerName) {
-    console.log("[generateMatchReview] No player name found, skipping review generation");
+    logger.info("No player name found, skipping review generation");
     return undefined;
   }
 
@@ -101,9 +104,9 @@ export async function generateMatchReview(
     loadPlayerMetadata(playerName),
   ]);
 
-  console.log(`[generateMatchReview] Selected player ${(playerIndex + 1).toString()}/${match.players.length.toString()}: ${playerName}`);
-  console.log(`[generateMatchReview] Selected personality: ${personality.filename ?? personality.metadata.name}`);
-  console.log(`[generateMatchReview] Selected lane context: ${laneContextInfo.filename}`);
+  logger.info(`Selected player ${(playerIndex + 1).toString()}/${match.players.length.toString()}: ${playerName}`);
+  logger.info(`Selected personality: ${personality.filename ?? personality.metadata.name}`);
+  logger.info(`Selected lane context: ${laneContextInfo.filename}`);
 
   const queueType = match.queueType === "arena" ? "arena" : (match.queueType ?? "unknown");
   const trackedPlayerAliases = match.players.map((p) => p.playerConfig.alias);
@@ -146,7 +149,7 @@ export async function generateMatchReview(
       stages: DEFAULT_STAGE_CONFIGS,
     });
   } catch (error) {
-    console.error("[generateMatchReview] Pipeline failed:", error);
+    logger.error("Pipeline failed:", error);
     Sentry.captureException(error, {
       tags: {
         source: "review-pipeline",
@@ -157,24 +160,32 @@ export async function generateMatchReview(
   }
 
   // Save traces to S3 (fire and forget, don't block return)
-  savePipelineTracesToS3({
-    matchId,
-    queueType,
-    trackedPlayerAliases,
-    output: pipelineOutput,
-  }).catch((err: unknown) => {
-    console.error("[generateMatchReview] Failed to save pipeline traces to S3:", err);
-  });
+  void (async () => {
+    try {
+      await savePipelineTracesToS3({
+        matchId,
+        queueType,
+        trackedPlayerAliases,
+        output: pipelineOutput,
+      });
+    } catch (err) {
+      logger.error("Failed to save pipeline traces to S3:", err);
+    }
+  })();
 
   // Also save debug data
-  savePipelineDebugToS3({
-    matchId,
-    queueType,
-    trackedPlayerAliases,
-    output: pipelineOutput,
-  }).catch((err: unknown) => {
-    console.error("[generateMatchReview] Failed to save pipeline debug to S3:", err);
-  });
+  void (async () => {
+    try {
+      await savePipelineDebugToS3({
+        matchId,
+        queueType,
+        trackedPlayerAliases,
+        output: pipelineOutput,
+      });
+    } catch (err) {
+      logger.error("Failed to save pipeline debug to S3:", err);
+    }
+  })();
 
   // Convert base64 image to Uint8Array if present
   let reviewImage: Uint8Array | undefined;
@@ -187,7 +198,7 @@ export async function generateMatchReview(
       }
       reviewImage = bytes;
     } catch (err) {
-      console.error("[generateMatchReview] Failed to decode image:", err);
+      logger.error("Failed to decode image:", err);
     }
   }
 

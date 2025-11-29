@@ -26,9 +26,10 @@ import type {
   PipelineIntermediateResults,
   PipelineContext,
   StageTrace,
-  CuratedMatchData,
-  CuratedTimeline,
+  PipelineStagesConfig,
+  PipelineClientsInput,
 } from "./pipeline-types.js";
+import type { CuratedMatchData, CuratedTimeline } from "./curator-types.js";
 import {
   generateTimelineSummary,
   generateMatchSummary,
@@ -55,6 +56,19 @@ type Stage1Context = {
   curatedTimeline?: CuratedTimeline;
   intermediate: PipelineIntermediateResults;
   traces: Partial<PipelineTraces>;
+};
+
+type Stage3And4Context = {
+  reviewText: string;
+  stages: PipelineStagesConfig;
+  clients: PipelineClientsInput;
+  traces: Partial<PipelineTraces>;
+  intermediate: PipelineIntermediateResults;
+};
+
+type Stage3And4Result = {
+  imageDescriptionText?: string;
+  imageBase64?: string;
 };
 
 // ============================================================================
@@ -142,6 +156,79 @@ async function runStage1Parallel(ctx: Stage1Context): Promise<Stage1Result> {
 }
 
 // ============================================================================
+// Stage 3 & 4 Helpers
+// ============================================================================
+
+async function runStage3ImageDescription(
+  ctx: Stage3And4Context,
+): Promise<string | undefined> {
+  const { reviewText, stages, clients, traces, intermediate } = ctx;
+
+  if (!stages.imageDescription.enabled) {
+    return undefined;
+  }
+
+  try {
+    const params: Parameters<typeof generateImageDescription>[0] = {
+      reviewText,
+      client: clients.openai,
+      model: stages.imageDescription.model,
+    };
+    if (stages.imageDescription.systemPrompt !== undefined) {
+      params.systemPromptOverride = stages.imageDescription.systemPrompt;
+    }
+
+    const result = await generateImageDescription(params);
+    traces.imageDescription = result.trace;
+    intermediate.imageDescriptionText = result.text;
+    return result.text;
+  } catch (error) {
+    console.error("[Pipeline Stage 3] Image description failed:", error);
+    return undefined;
+  }
+}
+
+async function runStage4ImageGeneration(
+  ctx: Stage3And4Context,
+  imageDescriptionText: string,
+): Promise<string | undefined> {
+  const { stages, clients, traces } = ctx;
+
+  if (!stages.imageGeneration.enabled || !clients.gemini) {
+    return undefined;
+  }
+
+  try {
+    const result = await generateImage({
+      imageDescription: imageDescriptionText,
+      geminiClient: clients.gemini,
+      model: stages.imageGeneration.model,
+      timeoutMs: stages.imageGeneration.timeoutMs,
+    });
+    traces.imageGeneration = result.trace;
+    return result.imageBase64;
+  } catch (error) {
+    console.error("[Pipeline Stage 4] Image generation failed:", error);
+    return undefined;
+  }
+}
+
+async function runStage3And4(ctx: Stage3And4Context): Promise<Stage3And4Result> {
+  const result: Stage3And4Result = {};
+
+  const imageDescriptionText = await runStage3ImageDescription(ctx);
+  if (imageDescriptionText !== undefined) {
+    result.imageDescriptionText = imageDescriptionText;
+    const imageBase64 = await runStage4ImageGeneration(ctx, imageDescriptionText);
+    if (imageBase64 !== undefined) {
+      result.imageBase64 = imageBase64;
+    }
+  }
+
+  return result;
+}
+
+// ============================================================================
 // Main Pipeline Function
 // ============================================================================
 
@@ -162,28 +249,20 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
   const traces: Partial<PipelineTraces> = {};
   const intermediate: PipelineIntermediateResults = {};
 
-  // ========================================================================
-  // Data Preparation
-  // ========================================================================
-
+  // Data Preparation - curate raw match data if provided
   let curatedData: CuratedMatchData | undefined;
   let curatedTimeline: CuratedTimeline | undefined;
 
-  // Curate raw match data if provided
   if (match.raw) {
     curatedData = await curateMatchData(match.raw, match.rawTimeline);
     intermediate.curatedData = curatedData;
-
     if (curatedData.timeline) {
       curatedTimeline = curatedData.timeline;
       intermediate.curatedTimeline = curatedTimeline;
     }
   }
 
-  // ========================================================================
-  // Stage 1: Parallel Summarization (1a Timeline + 1b Match)
-  // ========================================================================
-
+  // Stage 1: Parallel Summarization
   const stage1Ctx: Stage1Context = { input, intermediate, traces };
   if (curatedData !== undefined) {
     stage1Ctx.curatedData = curatedData;
@@ -193,11 +272,7 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
   }
   const stage1Result = await runStage1Parallel(stage1Ctx);
 
-  // ========================================================================
-  // Stage 2: Review Text (Personality)
-  // ========================================================================
-
-  // Ensure we have at least some text to work with
+  // Stage 2: Review Text
   const effectiveMatchSummary =
     stage1Result.matchSummaryText ??
     "No match summary was generated. Please analyze the player's performance based on available context.";
@@ -213,7 +288,6 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
     client: clients.openai,
     model: stages.reviewText.model,
   };
-
   if (curatedData !== undefined) {
     reviewTextParams.curatedData = curatedData;
   }
@@ -225,8 +299,6 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
   }
 
   const reviewResult = await generateReviewTextStage(reviewTextParams);
-
-  const reviewText = reviewResult.text;
   traces.reviewText = reviewResult.trace;
 
   // Build context
@@ -234,84 +306,29 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
     reviewerName: reviewResult.reviewerName,
     playerName: reviewResult.playerName,
     playerIndex: player.index,
-    personality: {
-      name: prompts.personality.metadata.name,
-    },
+    personality: { name: prompts.personality.metadata.name },
   };
-
-  // Add filename if available
   if (prompts.personality.filename !== undefined) {
     context.personality.filename = prompts.personality.filename;
   }
 
-  // ========================================================================
-  // Stage 3: Image Description (if enabled)
-  // ========================================================================
+  // Stage 3 & 4: Image Description and Generation
+  const stage3And4Ctx: Stage3And4Context = {
+    reviewText: reviewResult.text,
+    stages,
+    clients,
+    traces,
+    intermediate,
+  };
+  const imageResult = await runStage3And4(stage3And4Ctx);
 
-  let imageDescriptionText: string | undefined;
-
-  if (stages.imageDescription.enabled) {
-    try {
-      const imageDescParams: Parameters<typeof generateImageDescription>[0] = {
-        reviewText,
-        client: clients.openai,
-        model: stages.imageDescription.model,
-      };
-
-      if (stages.imageDescription.systemPrompt !== undefined) {
-        imageDescParams.systemPromptOverride = stages.imageDescription.systemPrompt;
-      }
-
-      const imageDescResult = await generateImageDescription(imageDescParams);
-
-      imageDescriptionText = imageDescResult.text;
-      traces.imageDescription = imageDescResult.trace;
-      intermediate.imageDescriptionText = imageDescResult.text;
-    } catch (error) {
-      console.error("[Pipeline Stage 3] Image description failed:", error);
-      // Continue without image
-    }
-  }
-
-  // ========================================================================
-  // Stage 4: Image Generation (if enabled and description available)
-  // ========================================================================
-
-  let imageBase64: string | undefined;
-
-  if (stages.imageGeneration.enabled && imageDescriptionText && clients.gemini) {
-    try {
-      const imageResult = await generateImage({
-        imageDescription: imageDescriptionText,
-        geminiClient: clients.gemini,
-        model: stages.imageGeneration.model,
-        timeoutMs: stages.imageGeneration.timeoutMs,
-      });
-
-      imageBase64 = imageResult.imageBase64;
-      traces.imageGeneration = imageResult.trace;
-    } catch (error) {
-      console.error("[Pipeline Stage 4] Image generation failed:", error);
-      // Continue without image
-    }
-  }
-
-  // ========================================================================
   // Build Final Output
-  // ========================================================================
-
-  const reviewOutput: ReviewPipelineOutput["review"] = {
-    text: reviewText,
-  };
-
-  if (imageBase64 !== undefined) {
-    reviewOutput.imageBase64 = imageBase64;
+  const reviewOutput: ReviewPipelineOutput["review"] = { text: reviewResult.text };
+  if (imageResult.imageBase64 !== undefined) {
+    reviewOutput.imageBase64 = imageResult.imageBase64;
   }
 
-  // Build traces - reviewText is always present, others are optional
-  const finalTraces: PipelineTraces = {
-    reviewText: traces.reviewText,
-  };
+  const finalTraces: PipelineTraces = { reviewText: traces.reviewText };
   if (traces.timelineSummary !== undefined) {
     finalTraces.timelineSummary = traces.timelineSummary;
   }
@@ -325,12 +342,7 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
     finalTraces.imageGeneration = traces.imageGeneration;
   }
 
-  return {
-    review: reviewOutput,
-    traces: finalTraces,
-    intermediate,
-    context,
-  };
+  return { review: reviewOutput, traces: finalTraces, intermediate, context };
 }
 
 /**
@@ -363,11 +375,9 @@ export async function runStage1Sequential(params: {
         client: clients.openai,
         model: stages.timelineSummary.model,
       };
-
       if (stages.timelineSummary.systemPrompt !== undefined) {
         timelineParams.systemPromptOverride = stages.timelineSummary.systemPrompt;
       }
-
       const result = await generateTimelineSummary(timelineParams);
       timelineSummaryText = result.text;
       timelineSummaryTrace = result.trace;
@@ -390,14 +400,12 @@ export async function runStage1Sequential(params: {
         client: clients.openai,
         model: stages.matchSummary.model,
       };
-
       if (timelineSummaryText !== undefined) {
         matchParams.timelineSummary = timelineSummaryText;
       }
       if (stages.matchSummary.systemPrompt !== undefined) {
         matchParams.systemPromptOverride = stages.matchSummary.systemPrompt;
       }
-
       const result = await generateMatchSummary(matchParams);
       matchSummaryText = result.text;
       matchSummaryTrace = result.trace;
@@ -412,7 +420,6 @@ export async function runStage1Sequential(params: {
     matchSummaryText?: string;
     matchSummaryTrace?: StageTrace;
   } = {};
-
   if (timelineSummaryText !== undefined) {
     result.timelineSummaryText = timelineSummaryText;
   }
@@ -425,6 +432,5 @@ export async function runStage1Sequential(params: {
   if (matchSummaryTrace !== undefined) {
     result.matchSummaryTrace = matchSummaryTrace;
   }
-
   return result;
 }
