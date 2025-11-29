@@ -7,6 +7,9 @@ import {
   executeWithTiming,
 } from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
 import { findPlayerByAliasWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("admin-player-edit");
 import {
   buildDatabaseError,
   buildSuccessResponse,
@@ -59,7 +62,7 @@ export async function executePlayerEdit(interaction: ChatInputCommandInteraction
     });
 
     if (existingPlayer) {
-      console.log(`❌ New alias already taken: "${newAlias}"`);
+      logger.info(`❌ New alias already taken: "${newAlias}"`);
       await interaction.reply({
         content: `❌ **Alias already taken**\n\nA player with alias "${newAlias}" already exists in this server.\n\nIf you want to merge these players, use \`/admin player-merge\` instead.`,
         ephemeral: true,
@@ -67,7 +70,7 @@ export async function executePlayerEdit(interaction: ChatInputCommandInteraction
       return;
     }
 
-    console.log(`💾 Updating player alias from "${currentAlias}" to "${newAlias}"`);
+    logger.info(`💾 Updating player alias from "${currentAlias}" to "${newAlias}"`);
 
     try {
       const now = new Date();
@@ -97,7 +100,7 @@ export async function executePlayerEdit(interaction: ChatInputCommandInteraction
         ),
       );
     } catch (error) {
-      console.error(`❌ Database error during alias update:`, error);
+      logger.error(`❌ Database error during alias update:`, error);
       await interaction.reply(buildDatabaseError("update player alias", error));
     }
   });

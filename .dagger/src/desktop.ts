@@ -1,6 +1,8 @@
 import type { Directory, Container } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
 
+type DesktopTarget = "linux" | "windows-gnu";
+
 /**
  * Get a Rust container with Tauri dependencies
  * @returns A Rust container with system dependencies for Tauri
@@ -24,6 +26,8 @@ export function getRustTauriContainer(): Container {
         "libayatana-appindicator3-dev",
         "librsvg2-dev",
         "patchelf",
+        "cmake",
+        "pkg-config",
         "curl",
         "ca-certificates",
         "gnupg",
@@ -48,9 +52,10 @@ export function installBunInRustContainer(container: Container): Container {
 /**
  * Install dependencies for the desktop package
  * @param workspaceSource The full workspace source directory
+ * @param target Which desktop target to prepare for (linux or Windows GNU cross-compile)
  * @returns The container with dependencies installed
  */
-export function installDesktopDeps(workspaceSource: Directory): Container {
+export function installDesktopDeps(workspaceSource: Directory, target: DesktopTarget = "linux"): Container {
   let container = getRustTauriContainer();
 
   // Install Bun for frontend dependencies
@@ -58,6 +63,13 @@ export function installDesktopDeps(workspaceSource: Directory): Container {
 
   // Mount Bun install cache
   container = container.withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-install-cache"));
+
+  if (target === "windows-gnu") {
+    // Dependencies for cross-compiling Windows GNU target and bundling with NSIS
+    container = container
+      .withExec(["apt", "install", "-y", "mingw-w64", "nsis", "zip"])
+      .withExec(["rustup", "target", "add", "x86_64-pc-windows-gnu"]);
+  }
 
   // Set up workspace structure - include all required files like base.ts does
   return (
@@ -190,6 +202,21 @@ export function buildDesktopLinux(workspaceSource: Directory, version: string): 
 }
 
 /**
+ * Build the desktop application for Windows (x86_64-pc-windows-gnu)
+ * @param workspaceSource The full workspace source directory
+ * @param version The version tag
+ * @returns The container with built artifacts
+ */
+export function buildDesktopWindowsGnu(workspaceSource: Directory, version: string): Container {
+  return installDesktopDeps(workspaceSource, "windows-gnu")
+    .withEnvVariable("VERSION", version)
+    .withWorkdir("/workspace/packages/desktop")
+    .withExec(["sh", "-c", "echo '🏗️  [CI] Building desktop application for Windows (x86_64-pc-windows-gnu)...'"])
+    .withExec(["bun", "run", "build:windows"])
+    .withExec(["sh", "-c", "echo '✅ [CI] Desktop Windows (GNU) build completed!'"]);
+}
+
+/**
  * Export desktop Linux build artifacts
  * @param workspaceSource The full workspace source directory
  * @param version The version tag
@@ -198,5 +225,17 @@ export function buildDesktopLinux(workspaceSource: Directory, version: string): 
 export function getDesktopLinuxArtifacts(workspaceSource: Directory, version: string): Directory {
   return buildDesktopLinux(workspaceSource, version).directory(
     "/workspace/packages/desktop/src-tauri/target/release/bundle",
+  );
+}
+
+/**
+ * Export desktop Windows (x86_64-pc-windows-gnu) build artifacts
+ * @param workspaceSource The full workspace source directory
+ * @param version The version tag
+ * @returns The directory containing built artifacts
+ */
+export function getDesktopWindowsArtifacts(workspaceSource: Directory, version: string): Directory {
+  return buildDesktopWindowsGnu(workspaceSource, version).directory(
+    "/workspace/packages/desktop/src-tauri/target/x86_64-pc-windows-gnu/release/bundle",
   );
 }

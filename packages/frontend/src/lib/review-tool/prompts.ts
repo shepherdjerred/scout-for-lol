@@ -6,61 +6,83 @@ import { PersonalityMetadataSchema, PlayerMetadataSchema } from "./config/schema
 import type { Lane } from "@scout-for-lol/data";
 
 // Import personality files
-import aaronJson from "./prompts/personalities/aaron.json";
-import aaronTxt from "./prompts/personalities/aaron.txt?raw";
-import brianJson from "./prompts/personalities/brian.json";
-import brianTxt from "./prompts/personalities/brian.txt?raw";
-import irfanJson from "./prompts/personalities/irfan.json";
-import irfanTxt from "./prompts/personalities/irfan.txt?raw";
-import nekoryanjson from "./prompts/personalities/nekoryan.json";
-import nekoryanTxt from "./prompts/personalities/nekoryan.txt?raw";
-import genericJson from "./prompts/personalities/generic.json";
-import genericTxt from "./prompts/personalities/generic.txt?raw";
+import aaronJson from "@scout-for-lol/data/src/review/prompts/personalities/aaron.json";
+import aaronTxt from "@scout-for-lol/data/src/review/prompts/personalities/aaron.txt?raw";
+import brianJson from "@scout-for-lol/data/src/review/prompts/personalities/brian.json";
+import brianTxt from "@scout-for-lol/data/src/review/prompts/personalities/brian.txt?raw";
+import irfanJson from "@scout-for-lol/data/src/review/prompts/personalities/irfan.json";
+import irfanTxt from "@scout-for-lol/data/src/review/prompts/personalities/irfan.txt?raw";
+import nekoryanjson from "@scout-for-lol/data/src/review/prompts/personalities/nekoryan.json";
+import nekoryanTxt from "@scout-for-lol/data/src/review/prompts/personalities/nekoryan.txt?raw";
+import genericJson from "@scout-for-lol/data/src/review/prompts/personalities/generic.json";
+import genericTxt from "@scout-for-lol/data/src/review/prompts/personalities/generic.txt?raw";
+import aaronStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/aaron_style.json";
+import brianStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/brian_style.json";
+import irfanStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/irfan_style.json";
+import ryanStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/ryan_style.json";
 
 // Import lane contexts
-import topLane from "./prompts/lanes/top.txt?raw";
-import middleLane from "./prompts/lanes/middle.txt?raw";
-import jungleLane from "./prompts/lanes/jungle.txt?raw";
-import adcLane from "./prompts/lanes/adc.txt?raw";
-import supportLane from "./prompts/lanes/support.txt?raw";
-import genericLane from "./prompts/lanes/generic.txt?raw";
+import topLane from "@scout-for-lol/data/src/review/prompts/lanes/top.txt?raw";
+import middleLane from "@scout-for-lol/data/src/review/prompts/lanes/middle.txt?raw";
+import jungleLane from "@scout-for-lol/data/src/review/prompts/lanes/jungle.txt?raw";
+import adcLane from "@scout-for-lol/data/src/review/prompts/lanes/adc.txt?raw";
+import supportLane from "@scout-for-lol/data/src/review/prompts/lanes/support.txt?raw";
+import genericLane from "@scout-for-lol/data/src/review/prompts/lanes/generic.txt?raw";
 
 // Import base prompt
-import basePrompt from "./prompts/base.txt?raw";
+import basePrompt from "@scout-for-lol/data/src/review/prompts/base.txt?raw";
 
 // Import player metadata
-import genericPlayer from "./prompts/players/generic.json";
+import genericPlayer from "@scout-for-lol/data/src/review/prompts/players/generic.json";
 
 /**
  * Built-in personalities (from prompt files)
  */
-const BUILTIN_PERSONALITIES_INTERNAL: Personality[] = [
+const RAW_BUILTIN_PERSONALITIES: Personality[] = [
   {
     id: "aaron",
     metadata: PersonalityMetadataSchema.parse(aaronJson),
     instructions: aaronTxt,
+    styleCard: JSON.stringify(aaronStyleCard),
   },
   {
     id: "brian",
     metadata: PersonalityMetadataSchema.parse(brianJson),
     instructions: brianTxt,
+    styleCard: JSON.stringify(brianStyleCard),
   },
   {
     id: "irfan",
     metadata: PersonalityMetadataSchema.parse(irfanJson),
     instructions: irfanTxt,
+    styleCard: JSON.stringify(irfanStyleCard),
   },
   {
     id: "nekoryan",
     metadata: PersonalityMetadataSchema.parse(nekoryanjson),
     instructions: nekoryanTxt,
+    styleCard: JSON.stringify(ryanStyleCard),
   },
   {
     id: "generic",
     metadata: PersonalityMetadataSchema.parse(genericJson),
     instructions: genericTxt,
+    styleCard: "",
   },
 ];
+
+const discardedPersonalities: string[] = [];
+const BUILTIN_PERSONALITIES_INTERNAL: Personality[] = RAW_BUILTIN_PERSONALITIES.filter((p) => {
+  if (p.styleCard.trim().length === 0) {
+    discardedPersonalities.push(p.id);
+    return false;
+  }
+  return true;
+});
+
+if (discardedPersonalities.length > 0) {
+  console.warn(`[review-tool] Discarded personalities missing style cards: ${discardedPersonalities.join(", ")}`);
+}
 
 export const BUILTIN_PERSONALITIES = BUILTIN_PERSONALITIES_INTERNAL;
 

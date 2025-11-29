@@ -11,14 +11,9 @@ import {
   type CompletedMatch,
   type CuratedMatchData,
   type ReviewImageMetadata,
-  type MatchDto,
+  type RawMatch,
 } from "@scout-for-lol/data";
-import type {
-  ReviewConfig,
-  GenerationResult,
-  GenerationMetadata,
-  Personality,
-} from "./config/schema";
+import type { ReviewConfig, GenerationResult, GenerationMetadata, Personality } from "./config/schema";
 import {
   getBasePrompt,
   selectRandomPersonality,
@@ -26,7 +21,6 @@ import {
   getLaneContext,
   getGenericPlayerMetadata,
 } from "./prompts";
-import { selectRandomStyleAndTheme } from "./art-styles";
 
 export type GenerationStep = "text" | "image" | "complete";
 
@@ -65,50 +59,46 @@ function getPromptContext(config: ReviewConfig, match: CompletedMatch | ArenaMat
   return { basePromptTemplate, laneContextInfo, playerMeta };
 }
 
+const IMAGE_DESCRIPTION_SYSTEM_PROMPT = `You are an art director turning a League of Legends performance review into a single striking image concept.
+Focus on the mood, key moments, and emotions from the review text.
+Describe one vivid scene with the focal action, characters, and environment.
+Include composition ideas, color palette, and mood direction.
+Do NOT ask for text to be placed in the image.
+Keep it under 120 words.`;
+
 /**
- * Select art styles and themes for image generation
+ * Generate an image description from review text (Step 3)
  */
-function selectArtThemes(config: ReviewConfig): {
-  artStyle: string;
-  artTheme: string;
-  secondArtTheme?: string;
-} {
-  let artStyle: string;
-  let artTheme: string;
-  let secondArtTheme: string | undefined;
+async function generateImageDescription(
+  reviewText: string,
+  openaiClient: OpenAI,
+  model: string,
+): Promise<string | undefined> {
+  const userPrompt = `Create a vivid art description for a single image inspired by the League of Legends review below.
+- Lean into the emotions, key moments, and champion identities referenced in the review
+- Describe one striking scene with composition and mood cues
+- Include color palette and lighting direction
+- Do NOT ask for any text to be drawn in the image
 
-  if (config.imageGeneration.artStyle === "random" || config.imageGeneration.artTheme === "random") {
-    const selected = selectRandomStyleAndTheme(
-      config.imageGeneration.useMatchingPairs,
-      config.imageGeneration.matchingPairProbability,
-    );
-    artStyle = config.imageGeneration.artStyle === "random" ? selected.style : config.imageGeneration.artStyle;
-    artTheme = config.imageGeneration.artTheme === "random" ? selected.theme : config.imageGeneration.artTheme;
-  } else {
-    artStyle = config.imageGeneration.artStyle;
-    artTheme = config.imageGeneration.artTheme;
-  }
+Review text to translate into art:
+${reviewText}`;
 
-  if (config.imageGeneration.mashupMode) {
-    if (config.imageGeneration.secondArtTheme === "random") {
-      const selected = selectRandomStyleAndTheme(
-        config.imageGeneration.useMatchingPairs,
-        config.imageGeneration.matchingPairProbability,
-      );
-      secondArtTheme = selected.theme;
-    } else {
-      secondArtTheme = config.imageGeneration.secondArtTheme;
-    }
-  }
+  try {
+    const response = await openaiClient.chat.completions.create({
+      model,
+      messages: [
+        { role: "system", content: IMAGE_DESCRIPTION_SYSTEM_PROMPT },
+        { role: "user", content: userPrompt },
+      ],
+      max_completion_tokens: 600,
+      temperature: 0.8,
+    });
 
-  const result: { artStyle: string; artTheme: string; secondArtTheme?: string } = {
-    artStyle,
-    artTheme,
-  };
-  if (secondArtTheme) {
-    result.secondArtTheme = secondArtTheme;
+    return response.choices[0]?.message.content?.trim();
+  } catch (error) {
+    console.error("Failed to generate image description:", error);
+    return undefined;
   }
-  return result;
 }
 
 /**
@@ -117,6 +107,7 @@ function selectArtThemes(config: ReviewConfig): {
 function buildGenerationMetadata(
   textResult: Awaited<ReturnType<typeof generateReviewText>>,
   imageResult?: { imageData: string; metadata: ReviewImageMetadata },
+  imageDescription?: string,
 ): GenerationMetadata {
   return {
     textTokensPrompt: textResult.metadata.textTokensPrompt,
@@ -126,14 +117,12 @@ function buildGenerationMetadata(
     imageGenerated: Boolean(imageResult),
     selectedPersonality: textResult.metadata.selectedPersonality,
     reviewerName: textResult.metadata.reviewerName,
-    selectedArtStyle: imageResult?.metadata.selectedArtStyle,
-    selectedArtTheme: imageResult?.metadata.selectedArtTheme,
-    selectedSecondArtTheme: imageResult?.metadata.selectedSecondArtTheme,
     systemPrompt: textResult.metadata.systemPrompt,
     userPrompt: textResult.metadata.userPrompt,
     openaiRequestParams: textResult.metadata.openaiRequestParams,
     geminiPrompt: imageResult?.metadata.geminiPrompt,
     geminiModel: imageResult?.metadata.geminiModel,
+    imageDescription,
   };
 }
 
@@ -144,13 +133,13 @@ export async function generateMatchReview(
   match: CompletedMatch | ArenaMatch,
   config: ReviewConfig,
   onProgress?: (progress: GenerationProgress) => void,
-  rawMatchData?: MatchDto,
+  rawMatch?: RawMatch,
 ): Promise<GenerationResult> {
   try {
     // Curate match data if provided (like backend does)
     let curatedData: CuratedMatchData | undefined;
-    if (rawMatchData) {
-      curatedData = await curateMatchData(rawMatchData);
+    if (rawMatch) {
+      curatedData = await curateMatchData(rawMatch);
     }
 
     // Generate text review
@@ -158,6 +147,11 @@ export async function generateMatchReview(
 
     // Get personality from config
     const personality = resolvePersonality(config);
+    if (!personality.styleCard || personality.styleCard.trim().length === 0) {
+      throw new Error(
+        `Style card missing for personality "${personality.id}". Add a corresponding file under packages/analysis/llm-out/<name>_style.json and wire it into the personality loader.`,
+      );
+    }
 
     // Get prompt context
     const { basePromptTemplate, laneContextInfo, playerMeta } = getPromptContext(config, match);
@@ -186,31 +180,28 @@ export async function generateMatchReview(
 
     // Generate image if enabled
     let imageResult: { imageData: string; metadata: ReviewImageMetadata } | undefined;
+    let imageDescription: string | undefined;
     if (config.imageGeneration.enabled) {
       try {
-        onProgress?.({ step: "image", message: "Generating image..." });
+        onProgress?.({ step: "image", message: "Generating image description..." });
 
-        // Select art style and theme
-        const { artStyle, artTheme, secondArtTheme } = selectArtThemes(config);
+        // Step 3: Generate image description from review text
+        imageDescription = await generateImageDescription(textResult.text, openaiClient, config.textGeneration.model);
 
-        // Initialize Gemini client
-        const geminiClient = new GoogleGenerativeAI(config.api.geminiApiKey ?? "");
+        if (imageDescription) {
+          onProgress?.({ step: "image", message: "Generating image..." });
 
-        // Call shared image generation
-        imageResult = await generateReviewImage({
-          reviewText: textResult.text,
-          artStyle,
-          artTheme,
-          ...(secondArtTheme ? { secondArtTheme } : {}),
-          matchData: JSON.stringify(
-            curatedData ? { processedMatch: match, detailedStats: curatedData } : match,
-            null,
-            2,
-          ),
-          geminiClient,
-          model: config.imageGeneration.model,
-          timeoutMs: config.imageGeneration.timeoutMs,
-        });
+          // Initialize Gemini client
+          const geminiClient = new GoogleGenerativeAI(config.api.geminiApiKey ?? "");
+
+          // Step 4: Generate image from description only
+          imageResult = await generateReviewImage({
+            imageDescription,
+            geminiClient,
+            model: config.imageGeneration.model,
+            timeoutMs: config.imageGeneration.timeoutMs,
+          });
+        }
       } catch (error) {
         console.error("Failed to generate image:", error);
         // Continue without image
@@ -220,7 +211,7 @@ export async function generateMatchReview(
     onProgress?.({ step: "complete", message: "Complete!" });
 
     // Build metadata
-    const metadata = buildGenerationMetadata(textResult, imageResult);
+    const metadata = buildGenerationMetadata(textResult, imageResult, imageDescription);
 
     return {
       text: textResult.text,

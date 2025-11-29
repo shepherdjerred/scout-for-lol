@@ -1,6 +1,9 @@
 #!/usr/bin/env bun
 
 import { spawn } from "bun";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("migrate");
 
 // Run prisma migrate deploy using Bun
 const proc = spawn(["bunx", "prisma", "migrate", "deploy"], {
@@ -14,4 +17,4 @@ if (exitCode !== 0) {
   process.exit(exitCode);
 }
 
-console.log("✅ All migrations have been successfully applied");
+logger.info("✅ All migrations have been successfully applied");

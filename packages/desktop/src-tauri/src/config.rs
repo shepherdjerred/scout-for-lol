@@ -1,9 +1,10 @@
 //! Configuration management module for persisting app settings
 
+use log::{error, info};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
-use tracing::{error, info};
 
 /// Application configuration
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -13,6 +14,12 @@ pub struct Config {
     pub bot_token: Option<String>,
     /// Discord channel ID
     pub channel_id: Option<String>,
+    /// Discord voice channel ID for the bot to join
+    pub voice_channel_id: Option<String>,
+    /// Selected sound pack identifier
+    pub sound_pack: Option<String>,
+    /// Per-event sound overrides (event key -> sound name or file path)
+    pub event_sounds: Option<HashMap<String, String>>,
 }
 
 impl Config {
@@ -21,7 +28,7 @@ impl Config {
         match fs::read_to_string(config_path) {
             Ok(contents) => match serde_json::from_str(&contents) {
                 Ok(config) => {
-                    info!("Loaded config from {:?}", config_path);
+                    info!("Loaded config from {}", config_path.display());
                     config
                 }
                 Err(e) => {
@@ -49,7 +56,7 @@ impl Config {
 
         fs::write(config_path, json).map_err(|e| format!("Failed to write config file: {e}"))?;
 
-        info!("Saved config to {:?}", config_path);
+        info!("Saved config to {}", config_path.display());
         Ok(())
     }
 }
@@ -65,13 +72,22 @@ mod tests {
         let config = Config {
             bot_token: Some("test-token".to_string()),
             channel_id: Some("123456".to_string()),
+            voice_channel_id: Some("654321".to_string()),
+            sound_pack: Some("base".to_string()),
+            event_sounds: Some(HashMap::from([(
+                "kill".to_string(),
+                "sharp-beep".to_string(),
+            )])),
         };
 
         let json = serde_json::to_string(&config).expect("test should serialize");
         assert!(json.contains("botToken"));
         assert!(json.contains("channelId"));
+        assert!(json.contains("voiceChannelId"));
+        assert!(json.contains("soundPack"));
         assert!(json.contains("test-token"));
         assert!(json.contains("123456"));
+        assert!(json.contains("654321"));
     }
 
     #[test]
@@ -81,6 +97,7 @@ mod tests {
 
         assert_eq!(config.bot_token, Some("token123".to_string()));
         assert_eq!(config.channel_id, Some("channel456".to_string()));
+        assert!(config.voice_channel_id.is_none());
     }
 
     #[test]
@@ -88,6 +105,9 @@ mod tests {
         let config = Config::default();
         assert!(config.bot_token.is_none());
         assert!(config.channel_id.is_none());
+        assert!(config.voice_channel_id.is_none());
+        assert!(config.sound_pack.is_none());
+        assert!(config.event_sounds.is_none());
     }
 
     #[test]
@@ -101,6 +121,12 @@ mod tests {
         let config = Config {
             bot_token: Some("save-test-token".to_string()),
             channel_id: Some("save-test-channel".to_string()),
+            voice_channel_id: Some("save-test-voice".to_string()),
+            sound_pack: Some("base".to_string()),
+            event_sounds: Some(HashMap::from([(
+                "kill".to_string(),
+                "sharp-beep".to_string(),
+            )])),
         };
 
         // Save

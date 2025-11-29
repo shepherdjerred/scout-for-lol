@@ -1,12 +1,15 @@
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import configuration from "@scout-for-lol/backend/configuration.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import { MatchDtoSchema, type MatchDto } from "@scout-for-lol/data";
+import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("storage-s3-query");
 
 /**
  * Generate date prefixes for S3 listing between start and end dates (inclusive)
- * Returns paths in format: matches/YYYY/MM/DD/
+ * Returns paths in format: games/YYYY/MM/DD/
  */
 function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
   const days = eachDayOfInterval({
@@ -18,14 +21,14 @@ function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
     const year = format(day, "yyyy");
     const month = format(day, "MM");
     const dayStr = format(day, "dd");
-    return `matches/${year}/${month}/${dayStr}/`;
+    return `games/${year}/${month}/${dayStr}/`;
   });
 }
 
 /**
  * Check if a match includes any of the specified participant PUUIDs
  */
-function matchIncludesParticipant(match: MatchDto, puuids: string[]): boolean {
+function matchIncludesParticipant(match: RawMatch, puuids: string[]): boolean {
   return match.metadata.participants.some((puuid) => puuids.includes(puuid));
 }
 
@@ -33,10 +36,10 @@ function matchIncludesParticipant(match: MatchDto, puuids: string[]): boolean {
  * Process match download results and filter by participant PUUIDs
  */
 function processMatchResults(
-  results: PromiseSettledResult<{ key: string; match: MatchDto | null }>[],
+  results: PromiseSettledResult<{ key: string; match: RawMatch | null }>[],
   puuids: string[],
-): MatchDto[] {
-  const matches: MatchDto[] = [];
+): RawMatch[] {
+  const matches: RawMatch[] = [];
   for (const result of results) {
     if (result.status !== "fulfilled" || !result.value.match) {
       continue;
@@ -55,7 +58,7 @@ function processMatchResults(
 /**
  * Fetch and parse a match from S3
  */
-async function getMatchFromS3(client: S3Client, bucket: string, key: string): Promise<MatchDto | null> {
+async function getMatchFromS3(client: S3Client, bucket: string, key: string): Promise<RawMatch | null> {
   try {
     const command = new GetObjectCommand({
       Bucket: bucket,
@@ -65,7 +68,7 @@ async function getMatchFromS3(client: S3Client, bucket: string, key: string): Pr
     const response = await client.send(command);
 
     if (!response.Body) {
-      console.warn(`[S3Query] No body in response for key: ${key}`);
+      logger.warn(`[S3Query] No body in response for key: ${key}`);
       return null;
     }
 
@@ -73,11 +76,11 @@ async function getMatchFromS3(client: S3Client, bucket: string, key: string): Pr
     const bodyString = await response.Body.transformToString();
     // Parse and validate the match data with Zod schema for runtime type safety
     const matchData = JSON.parse(bodyString);
-    const match = MatchDtoSchema.parse(matchData);
+    const match = RawMatchSchema.parse(matchData);
 
     return match;
   } catch (error) {
-    console.warn(`[S3Query] Failed to fetch or parse match from S3 key ${key}: ${getErrorMessage(error)}`);
+    logger.warn(`[S3Query] Failed to fetch or parse match from S3 key ${key}: ${getErrorMessage(error)}`);
     return null;
   }
 }
@@ -90,29 +93,29 @@ async function getMatchFromS3(client: S3Client, bucket: string, key: string): Pr
  * @param puuids Array of participant PUUIDs to filter by
  * @returns Array of matches that occurred in the date range and include any of the specified participants
  */
-export async function queryMatchesByDateRange(startDate: Date, endDate: Date, puuids: string[]): Promise<MatchDto[]> {
+export async function queryMatchesByDateRange(startDate: Date, endDate: Date, puuids: string[]): Promise<RawMatch[]> {
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
-    console.warn("[S3Query] S3_BUCKET_NAME not configured, returning empty results");
+    logger.warn("[S3Query] S3_BUCKET_NAME not configured, returning empty results");
     return [];
   }
 
   if (puuids.length === 0) {
-    console.warn("[S3Query] No PUUIDs provided, returning empty results");
+    logger.warn("[S3Query] No PUUIDs provided, returning empty results");
     return [];
   }
 
-  console.log(`[S3Query] 🔍 Querying matches from ${startDate.toISOString()} to ${endDate.toISOString()}`);
-  console.log(`[S3Query] 👥 Filtering for ${puuids.length.toString()} participants`);
+  logger.info(`[S3Query] 🔍 Querying matches from ${startDate.toISOString()} to ${endDate.toISOString()}`);
+  logger.info(`[S3Query] 👥 Filtering for ${puuids.length.toString()} participants`);
 
   const client = new S3Client();
   const dayPrefixes = generateDatePrefixes(startDate, endDate);
-  const matches: MatchDto[] = [];
+  const matches: RawMatch[] = [];
   let totalObjects = 0;
   let matchedObjects = 0;
 
-  console.log(`[S3Query] 📅 Scanning ${dayPrefixes.length.toString()} day(s)`);
+  logger.info(`[S3Query] 📅 Scanning ${dayPrefixes.length.toString()} day(s)`);
 
   // Process days in batches to avoid overwhelming S3 and memory
   const BATCH_SIZE = 5; // Process 5 days at a time
@@ -134,18 +137,25 @@ export async function queryMatchesByDateRange(startDate: Date, endDate: Date, pu
         const response = await client.send(listCommand);
 
         if (!response.Contents || response.Contents.length === 0) {
-          console.log(`[S3Query] No objects found for prefix: ${prefix}`);
+          logger.info(`[S3Query] No objects found for prefix: ${prefix}`);
           continue;
         }
 
-        console.log(`[S3Query] Found ${response.Contents.length.toString()} object(s) in ${prefix}`);
-        totalObjects += response.Contents.length;
+        logger.info(`[S3Query] Found ${response.Contents.length.toString()} object(s) in ${prefix}`);
+
+        // Filter for only match.json files (games/{date}/{matchId}/match.json)
+        const matchJsonKeys = response.Contents.flatMap((obj) =>
+          obj.Key?.endsWith("/match.json") ? [obj.Key] : [],
+        ).slice(0, 1000); // Limit to prevent memory issues
+
+        logger.info(`[S3Query] Found ${matchJsonKeys.length.toString()} match.json file(s) in ${prefix}`);
+        totalObjects += matchJsonKeys.length;
 
         // Get all keys for this day
-        const keys = response.Contents.flatMap((obj) => (obj.Key ? [obj.Key] : [])).slice(0, 1000); // Limit to prevent memory issues
+        const keys = matchJsonKeys;
 
         if (keys.length === 0) {
-          console.log(`[S3Query] No valid keys found for ${prefix}`);
+          logger.info(`[S3Query] No valid keys found for ${prefix}`);
           continue;
         }
 
@@ -158,7 +168,7 @@ export async function queryMatchesByDateRange(startDate: Date, endDate: Date, pu
               const match = await getMatchFromS3(client, bucket, key);
               return { key, match };
             } catch (error) {
-              console.warn(`[S3Query] Failed to fetch match ${key}: ${getErrorMessage(error)}`);
+              logger.warn(`[S3Query] Failed to fetch match ${key}: ${getErrorMessage(error)}`);
               return { key, match: null };
             }
           });
@@ -169,12 +179,12 @@ export async function queryMatchesByDateRange(startDate: Date, endDate: Date, pu
           matchedObjects += batchMatches.length;
         }
       } catch (error) {
-        console.error(`[S3Query] Error processing prefix ${prefix}: ${getErrorMessage(error)}`);
+        logger.error(`[S3Query] Error processing prefix ${prefix}: ${getErrorMessage(error)}`);
         consecutiveErrors++;
 
         // Circuit breaker: if we get too many consecutive errors, stop processing
         if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
-          console.error(`[S3Query] ❌ Too many consecutive errors (${consecutiveErrors.toString()}), stopping query`);
+          logger.error(`[S3Query] ❌ Too many consecutive errors (${consecutiveErrors.toString()}), stopping query`);
           throw new Error(
             `S3 query failed after ${consecutiveErrors.toString()} consecutive errors. Last error: ${getErrorMessage(error)}`,
           );
@@ -190,7 +200,7 @@ export async function queryMatchesByDateRange(startDate: Date, endDate: Date, pu
     // Log progress every few batches
     if ((i / BATCH_SIZE) % 5 === 0 && i > 0) {
       const progress = Math.round((i / dayPrefixes.length) * 100);
-      console.log(
+      logger.info(
         `[S3Query] 📈 Progress: ${progress.toString()}% (${i.toString()}/${dayPrefixes.length.toString()} days processed, ${matchedObjects.toString()} matches found)`,
       );
     }
@@ -201,10 +211,10 @@ export async function queryMatchesByDateRange(startDate: Date, endDate: Date, pu
     }
   }
 
-  console.log(
+  logger.info(
     `[S3Query] ✅ Query complete: ${matchedObjects.toString()}/${totalObjects.toString()} matches matched filter`,
   );
-  console.log(`[S3Query] 📊 Returning ${matches.length.toString()} matches`);
+  logger.info(`[S3Query] 📊 Returning ${matches.length.toString()} matches`);
 
   return matches;
 }

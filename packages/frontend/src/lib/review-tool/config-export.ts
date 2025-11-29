@@ -12,10 +12,7 @@ import {
   loadCustomArtThemes,
   saveCustomArtThemes,
 } from "./art-style-storage";
-import {
-  loadCustomPersonalities,
-  saveCustomPersonalities,
-} from "./personality-storage";
+import { loadCustomPersonalities, saveCustomPersonalities } from "./personality-storage";
 import { getPersonalityById } from "./prompts";
 
 /**

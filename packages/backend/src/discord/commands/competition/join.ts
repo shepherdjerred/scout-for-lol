@@ -22,6 +22,9 @@ import {
   checkParticipantLimit,
 } from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("competition-join");
 
 /**
  * Execute /competition join command
@@ -52,7 +55,7 @@ export async function executeCompetitionJoin(interaction: ChatInputCommandIntera
       },
     });
   } catch (error) {
-    console.error(`[Competition Join] Error fetching player for user ${userId}:`, error);
+    logger.error(`[Competition Join] Error fetching player for user ${userId}:`, error);
     await replyWithErrorFromException(interaction, error, "fetching player data");
     return;
   }
@@ -102,7 +105,7 @@ You need to link your League of Legends account first. Use:
   try {
     participantStatus = await getParticipantStatus(prisma, competitionId, player.id);
   } catch (error) {
-    console.error(`[Competition Join] Error checking participant status:`, error);
+    logger.error(`[Competition Join] Error checking participant status:`, error);
     await replyWithErrorFromException(interaction, error, "checking participation status");
     return;
   }
@@ -171,16 +174,16 @@ This is an invite-only competition. Ask the competition owner (<@${competition.o
       .with("INVITED", async () => {
         // User was invited, accept the invitation
         await acceptInvitation(prisma, competitionId, player.id);
-        console.log(`[Competition Join] User ${userId} accepted invitation to competition ${competitionId.toString()}`);
+        logger.info(`[Competition Join] User ${userId} accepted invitation to competition ${competitionId.toString()}`);
       })
       .with(null, async () => {
         // User is joining for the first time (OPEN or SERVER_WIDE)
         await addParticipant({ prisma, competitionId, playerId: player.id, status: "JOINED" });
-        console.log(`[Competition Join] User ${userId} joined competition ${competitionId.toString()}`);
+        logger.info(`[Competition Join] User ${userId} joined competition ${competitionId.toString()}`);
       })
       .exhaustive();
   } catch (error) {
-    console.error(`[Competition Join] Error adding participant:`, error);
+    logger.error(`[Competition Join] Error adding participant:`, error);
     await replyWithErrorFromException(interaction, error, "joining competition");
     return;
   }
@@ -198,7 +201,7 @@ This is an invite-only competition. Ask the competition owner (<@${competition.o
       },
     });
   } catch (error) {
-    console.error(`[Competition Join] Error counting updated participants:`, error);
+    logger.error(`[Competition Join] Error counting updated participants:`, error);
     updatedParticipantCount = activeParticipantCount + 1;
   }
 

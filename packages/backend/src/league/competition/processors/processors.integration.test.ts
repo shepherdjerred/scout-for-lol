@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import type { MatchDto, ParticipantDto, Rank, Ranks } from "@scout-for-lol/data";
+import type { RawMatch, RawParticipant, Rank, Ranks } from "@scout-for-lol/data";
 import {
   AccountIdSchema,
   ChampionIdSchema,
   LeaguePuuidSchema,
-  MatchDtoSchema,
+  RawMatchSchema,
   PlayerIdSchema,
 } from "@scout-for-lol/data";
 import { processCriteria } from "@scout-for-lol/backend/league/competition/processors/index.js";
@@ -15,9 +15,9 @@ import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-id
 // Test Fixtures - Load Real Match Data
 // ============================================================================
 
-async function loadMatch(path: string): Promise<MatchDto> {
+async function loadMatch(path: string): Promise<RawMatch> {
   const content = await Bun.file(path).text();
-  return MatchDtoSchema.parse(JSON.parse(content));
+  return RawMatchSchema.parse(JSON.parse(content));
 }
 
 // ============================================================================
@@ -80,7 +80,7 @@ function createTestPlayerFromPuuid(puuid: string, index: number): PlayerWithAcco
 /**
  * Create test player from participant
  */
-function createTestPlayerFromParticipant(participant: ParticipantDto): PlayerWithAccounts {
+function createTestPlayerFromParticipant(participant: RawParticipant): PlayerWithAccounts {
   return {
     id: PlayerIdSchema.parse(1),
     alias: "TestPlayer",
@@ -100,7 +100,7 @@ function createTestPlayerFromParticipant(participant: ParticipantDto): PlayerWit
  * Test empty match data handling
  */
 function testEmptyMatchData() {
-  const emptyMatches: MatchDto[] = [];
+  const emptyMatches: RawMatch[] = [];
   const players = testPlayers;
 
   // Test all criteria types with empty matches

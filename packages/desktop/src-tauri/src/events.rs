@@ -1,8 +1,10 @@
 //! Game event monitoring and processing module
 
-use crate::discord::DiscordClient;
+use crate::discord::{DiscordClient, SoundEvent};
 use crate::lcu::LcuConnection;
+use crate::paths;
 use futures_util::{SinkExt, StreamExt};
+use log::{debug, error, info, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -15,16 +17,19 @@ use tokio::time::{sleep, Duration};
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::Message;
-use tracing::{debug, error, info, warn};
 
 fn debug_log(msg: &str) {
     eprintln!("[SCOUT] {}", msg);
-    // Also write to a log file
-    if let Ok(mut file) = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open("scout-debug.log")
-    {
+
+    // Also write to the centralized debug log file
+    let log_path = paths::debug_log_file();
+
+    // Ensure parent directory exists
+    if let Some(parent) = log_path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+
+    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&log_path) {
         let _ = writeln!(file, "{}", msg);
     }
 }
@@ -99,6 +104,18 @@ struct GameState {
     last_api_warning: Option<std::time::Instant>,
 }
 
+async fn play_sound(discord: &DiscordClient, event: SoundEvent, app_handle: &tauri::AppHandle) {
+    if let Err(err) = discord.play_sound_for_event(event, Some(app_handle)).await {
+        warn!("Failed to play sound for {:?}: {}", event, err);
+        let _ = app_handle.emit(
+            "backend-log",
+            format!("🔇 Sound error for {:?}: {}", event, err),
+        );
+    } else {
+        let _ = app_handle.emit("backend-log", format!("🔊 Queued sound for {:?}", event));
+    }
+}
+
 /// Starts monitoring game events and posting to Discord
 pub async fn start_event_monitoring(
     lcu: Arc<Mutex<Option<LcuConnection>>>,
@@ -128,8 +145,9 @@ pub async fn start_event_monitoring(
     let discord_for_polling = discord_client.clone();
     let app_handle_for_polling = app_handle.clone();
 
+    let app_handle_for_ws = app_handle.clone();
     tokio::spawn(async move {
-        if let Err(e) = run_event_loop(lcu_conn, discord_client).await {
+        if let Err(e) = run_event_loop(lcu_conn, discord_client, app_handle_for_ws).await {
             error!("Event monitoring WebSocket failed: {}", e);
         }
     });
@@ -150,7 +168,11 @@ pub async fn start_event_monitoring(
     Ok(())
 }
 
-async fn run_event_loop(lcu: LcuConnection, discord: DiscordClient) -> Result<(), String> {
+async fn run_event_loop(
+    lcu: LcuConnection,
+    discord: DiscordClient,
+    app_handle: tauri::AppHandle,
+) -> Result<(), String> {
     info!("Connecting to LCU WebSocket...");
 
     let ws_url = lcu.get_websocket_url();
@@ -210,7 +232,7 @@ async fn run_event_loop(lcu: LcuConnection, discord: DiscordClient) -> Result<()
                 debug!("Received WebSocket message: {}", text);
 
                 if let Ok(ws_msg) = serde_json::from_str::<LcuWebSocketMessage>(&text) {
-                    if let Err(e) = handle_event(&ws_msg, &discord).await {
+                    if let Err(e) = handle_event(&ws_msg, &discord, &app_handle).await {
                         warn!("Failed to handle event: {}", e);
                     }
                 }
@@ -494,7 +516,8 @@ async fn process_live_game_data(
                             "backend-log",
                             format!("💀 Posting ChampionKill to Discord..."),
                         );
-                        if let Err(e) = handle_champion_kill_event(event, discord, game_state).await
+                        if let Err(e) =
+                            handle_champion_kill_event(event, discord, game_state, app_handle).await
                         {
                             error!("Failed to post kill event to Discord: {}", e);
                             debug_log(&format!("Discord post FAILED: {}", e));
@@ -509,7 +532,9 @@ async fn process_live_game_data(
                     }
                     "FirstBlood" => {
                         info!("Found FirstBlood event. Posting to Discord...");
-                        if let Err(e) = handle_first_blood_event(event, discord, game_state).await {
+                        if let Err(e) =
+                            handle_first_blood_event(event, discord, game_state, app_handle).await
+                        {
                             error!("Failed to post first blood to Discord: {}", e);
                         } else {
                             info!("✅ Successfully posted first blood to Discord");
@@ -517,7 +542,7 @@ async fn process_live_game_data(
                     }
                     "Multikill" => {
                         info!("Found Multikill event. Posting to Discord...");
-                        if let Err(e) = handle_multikill_event(event, discord).await {
+                        if let Err(e) = handle_multikill_event(event, discord, app_handle).await {
                             error!("Failed to post multikill to Discord: {}", e);
                         } else {
                             info!("✅ Successfully posted multikill to Discord");
@@ -525,7 +550,7 @@ async fn process_live_game_data(
                     }
                     "Ace" => {
                         info!("Found Ace event. Posting to Discord...");
-                        if let Err(e) = handle_ace_event(event, discord).await {
+                        if let Err(e) = handle_ace_event(event, discord, app_handle).await {
                             error!("Failed to post ace to Discord: {}", e);
                         } else {
                             info!("✅ Successfully posted ace to Discord");
@@ -537,7 +562,7 @@ async fn process_live_game_data(
                             "Found {} event #{}. Posting to Discord...",
                             event_type, kill_count
                         );
-                        if let Err(e) = handle_turret_kill_event(event, discord).await {
+                        if let Err(e) = handle_turret_kill_event(event, discord, app_handle).await {
                             error!("Failed to post turret event to Discord: {}", e);
                         } else {
                             info!("✅ Successfully posted turret event to Discord");
@@ -545,7 +570,7 @@ async fn process_live_game_data(
                     }
                     "DragonKill" => {
                         info!("Found DragonKill event. Posting to Discord...");
-                        if let Err(e) = handle_dragon_kill_event(event, discord).await {
+                        if let Err(e) = handle_dragon_kill_event(event, discord, app_handle).await {
                             error!("Failed to post dragon kill to Discord: {}", e);
                         } else {
                             info!("✅ Successfully posted dragon kill to Discord");
@@ -553,7 +578,7 @@ async fn process_live_game_data(
                     }
                     "BaronKill" => {
                         info!("Found BaronKill event. Posting to Discord...");
-                        if let Err(e) = handle_baron_kill_event(event, discord).await {
+                        if let Err(e) = handle_baron_kill_event(event, discord, app_handle).await {
                             error!("Failed to post baron kill to Discord: {}", e);
                         } else {
                             info!("✅ Successfully posted baron kill to Discord");
@@ -561,7 +586,7 @@ async fn process_live_game_data(
                     }
                     "HeraldKill" => {
                         info!("Found HeraldKill event. Posting to Discord...");
-                        if let Err(e) = handle_herald_kill_event(event, discord).await {
+                        if let Err(e) = handle_herald_kill_event(event, discord, app_handle).await {
                             error!("Failed to post herald kill to Discord: {}", e);
                         } else {
                             info!("✅ Successfully posted herald kill to Discord");
@@ -569,7 +594,7 @@ async fn process_live_game_data(
                     }
                     "InhibKilled" => {
                         info!("Found InhibKilled event. Posting to Discord...");
-                        if let Err(e) = handle_inhib_kill_event(event, discord).await {
+                        if let Err(e) = handle_inhib_kill_event(event, discord, app_handle).await {
                             error!("Failed to post inhibitor kill to Discord: {}", e);
                         } else {
                             info!("✅ Successfully posted inhibitor kill to Discord");
@@ -622,6 +647,7 @@ async fn handle_champion_kill_event(
     event: &Value,
     discord: &DiscordClient,
     _game_state: &Arc<Mutex<GameState>>,
+    app_handle: &tauri::AppHandle,
 ) -> Result<(), String> {
     // KillerName can be empty or missing for non-player kills (turrets, minions, etc.)
     let killer = event
@@ -650,6 +676,7 @@ async fn handle_champion_kill_event(
         killer, victim, timestamp_str
     );
     discord.post_kill(killer, victim, &timestamp_str).await?;
+    play_sound(discord, SoundEvent::Kill, app_handle).await;
 
     Ok(())
 }
@@ -659,6 +686,7 @@ async fn handle_first_blood_event(
     event: &Value,
     discord: &DiscordClient,
     game_state: &Arc<Mutex<GameState>>,
+    app_handle: &tauri::AppHandle,
 ) -> Result<(), String> {
     let killer = event
         .get("KillerName")
@@ -691,12 +719,17 @@ async fn handle_first_blood_event(
     discord
         .post_first_blood(killer, victim, &timestamp_str)
         .await?;
+    play_sound(discord, SoundEvent::FirstBlood, app_handle).await;
 
     Ok(())
 }
 
 /// Handles a multikill event
-async fn handle_multikill_event(event: &Value, discord: &DiscordClient) -> Result<(), String> {
+async fn handle_multikill_event(
+    event: &Value,
+    discord: &DiscordClient,
+    app_handle: &tauri::AppHandle,
+) -> Result<(), String> {
     let killer = event
         .get("KillerName")
         .and_then(|v| v.as_str())
@@ -731,12 +764,17 @@ async fn handle_multikill_event(event: &Value, discord: &DiscordClient) -> Resul
     discord
         .post_multikill(killer, multikill_type, &timestamp_str)
         .await?;
+    play_sound(discord, SoundEvent::MultiKill, app_handle).await;
 
     Ok(())
 }
 
 /// Handles an ace event
-async fn handle_ace_event(event: &Value, discord: &DiscordClient) -> Result<(), String> {
+async fn handle_ace_event(
+    event: &Value,
+    discord: &DiscordClient,
+    app_handle: &tauri::AppHandle,
+) -> Result<(), String> {
     let acer = event
         .get("Acer")
         .and_then(|v| v.as_str())
@@ -761,12 +799,17 @@ async fn handle_ace_event(event: &Value, discord: &DiscordClient) -> Result<(), 
         acer, acing_team, timestamp_str
     );
     discord.post_ace(acing_team, &timestamp_str).await?;
+    play_sound(discord, SoundEvent::Ace, app_handle).await;
 
     Ok(())
 }
 
 /// Handles a dragon kill event
-async fn handle_dragon_kill_event(event: &Value, discord: &DiscordClient) -> Result<(), String> {
+async fn handle_dragon_kill_event(
+    event: &Value,
+    discord: &DiscordClient,
+    app_handle: &tauri::AppHandle,
+) -> Result<(), String> {
     let killer = event
         .get("KillerName")
         .and_then(|v| v.as_str())
@@ -804,12 +847,17 @@ async fn handle_dragon_kill_event(event: &Value, discord: &DiscordClient) -> Res
     discord
         .post_objective(killer, &objective_name, &timestamp_str)
         .await?;
+    play_sound(discord, SoundEvent::Objective, app_handle).await;
 
     Ok(())
 }
 
 /// Handles a baron kill event
-async fn handle_baron_kill_event(event: &Value, discord: &DiscordClient) -> Result<(), String> {
+async fn handle_baron_kill_event(
+    event: &Value,
+    discord: &DiscordClient,
+    app_handle: &tauri::AppHandle,
+) -> Result<(), String> {
     let killer = event
         .get("KillerName")
         .and_then(|v| v.as_str())
@@ -842,12 +890,17 @@ async fn handle_baron_kill_event(event: &Value, discord: &DiscordClient) -> Resu
     discord
         .post_objective(killer, objective_name, &timestamp_str)
         .await?;
+    play_sound(discord, SoundEvent::Objective, app_handle).await;
 
     Ok(())
 }
 
 /// Handles a herald kill event
-async fn handle_herald_kill_event(event: &Value, discord: &DiscordClient) -> Result<(), String> {
+async fn handle_herald_kill_event(
+    event: &Value,
+    discord: &DiscordClient,
+    app_handle: &tauri::AppHandle,
+) -> Result<(), String> {
     let killer = event
         .get("KillerName")
         .and_then(|v| v.as_str())
@@ -880,12 +933,17 @@ async fn handle_herald_kill_event(event: &Value, discord: &DiscordClient) -> Res
     discord
         .post_objective(killer, objective_name, &timestamp_str)
         .await?;
+    play_sound(discord, SoundEvent::Objective, app_handle).await;
 
     Ok(())
 }
 
 /// Handles an inhibitor kill event
-async fn handle_inhib_kill_event(event: &Value, discord: &DiscordClient) -> Result<(), String> {
+async fn handle_inhib_kill_event(
+    event: &Value,
+    discord: &DiscordClient,
+    app_handle: &tauri::AppHandle,
+) -> Result<(), String> {
     let killer = event
         .get("KillerName")
         .and_then(|v| v.as_str())
@@ -907,12 +965,17 @@ async fn handle_inhib_kill_event(event: &Value, discord: &DiscordClient) -> Resu
     discord
         .post_objective(killer, "INHIBITOR", &timestamp_str)
         .await?;
+    play_sound(discord, SoundEvent::Objective, app_handle).await;
 
     Ok(())
 }
 
 /// Handles a turret kill event
-async fn handle_turret_kill_event(event: &Value, discord: &DiscordClient) -> Result<(), String> {
+async fn handle_turret_kill_event(
+    event: &Value,
+    discord: &DiscordClient,
+    app_handle: &tauri::AppHandle,
+) -> Result<(), String> {
     let killer = event
         .get("KillerName")
         .and_then(|v| v.as_str())
@@ -939,23 +1002,28 @@ async fn handle_turret_kill_event(event: &Value, discord: &DiscordClient) -> Res
         .post_objective(killer, "TOWER", &timestamp_str)
         .await?;
     info!("Turret kill event posted successfully");
+    play_sound(discord, SoundEvent::Objective, app_handle).await;
 
     Ok(())
 }
 
-async fn handle_event(msg: &LcuWebSocketMessage, discord: &DiscordClient) -> Result<(), String> {
+async fn handle_event(
+    msg: &LcuWebSocketMessage,
+    discord: &DiscordClient,
+    app_handle: &tauri::AppHandle,
+) -> Result<(), String> {
     // Use event_type to determine how to handle the event
     let event_type = &msg.event_type;
 
     match msg.uri.as_str() {
         uri if uri.contains("/lol-gameflow/v1/gameflow-phase") => {
-            handle_gameflow_event(&msg.data, discord, event_type).await
+            handle_gameflow_event(&msg.data, discord, event_type, app_handle).await
         }
         uri if uri.contains("/lol-champ-select/v1/session") => {
             handle_champ_select_event(&msg.data, discord, event_type).await
         }
         uri if uri.contains("/lol-end-of-game/v1/eog-stats-block") => {
-            handle_end_of_game_event(&msg.data, discord, event_type).await
+            handle_end_of_game_event(&msg.data, discord, event_type, app_handle).await
         }
         _ => Ok(()),
     }
@@ -965,6 +1033,7 @@ async fn handle_gameflow_event(
     data: &Value,
     discord: &DiscordClient,
     event_type: &str,
+    app_handle: &tauri::AppHandle,
 ) -> Result<(), String> {
     if let Some(phase) = data.as_str() {
         match phase {
@@ -973,6 +1042,7 @@ async fn handle_gameflow_event(
                 discord
                     .post_game_start("Summoner's Rift", "Normal Game")
                     .await?;
+                play_sound(discord, SoundEvent::GameStart, app_handle).await;
             }
             "WaitingForStats" | "PreEndOfGame" => {
                 info!("Game ending");
@@ -1026,6 +1096,7 @@ async fn handle_end_of_game_event(
     data: &Value,
     discord: &DiscordClient,
     _event_type: &str,
+    app_handle: &tauri::AppHandle,
 ) -> Result<(), String> {
     if !data.is_null() {
         // Extract game duration and winning team
@@ -1061,6 +1132,7 @@ async fn handle_end_of_game_event(
         };
 
         discord.post_game_end(winning_team, &duration_str).await?;
+        play_sound(discord, SoundEvent::GameEnd, app_handle).await;
     }
     Ok(())
 }

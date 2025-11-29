@@ -285,10 +285,14 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   };
 
   const handleExportConfig = () => {
-    void downloadConfigBundle(config).catch((error) => {
-      const errorResult = ErrorSchema.safeParse(error);
-      alert(`Failed to export config: ${errorResult.success ? errorResult.data.message : String(error)}`);
-    });
+    void (async () => {
+      try {
+        await downloadConfigBundle(config);
+      } catch (error) {
+        const errorResult = ErrorSchema.safeParse(error);
+        alert(`Failed to export config: ${errorResult.success ? errorResult.data.message : String(error)}`);
+      }
+    })();
   };
 
   const handleImportConfig = () => {
@@ -314,13 +318,13 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Generation Settings</h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Tune parameters for this tab</p>
+    <div className="card p-0 overflow-hidden">
+      <div className="px-6 py-4 border-b border-surface-200/50 dark:border-surface-700/50">
+        <h2 className="text-lg font-semibold text-surface-900 dark:text-white">Generation Settings</h2>
+        <p className="text-sm text-surface-500 dark:text-surface-400 mt-0.5">Configure how reviews are generated</p>
       </div>
 
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-surface-200/50 dark:divide-surface-700/50">
         <TextGenerationSettings config={config} onChange={onChange} />
 
         <ImageGenerationSettings

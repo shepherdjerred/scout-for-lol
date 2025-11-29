@@ -18,9 +18,13 @@ export function ResultRating({ rating, notes, onRatingChange, onNotesChange }: R
         <StarRating
           rating={rating}
           onRate={(newRating) => {
-            onRatingChange(newRating).catch(() => {
-              // Error handling is done in the parent component
-            });
+            void (async () => {
+              try {
+                await onRatingChange(newRating);
+              } catch {
+                // Error handling is done in the parent component
+              }
+            })();
           }}
           size="large"
         />
@@ -33,9 +37,13 @@ export function ResultRating({ rating, notes, onRatingChange, onNotesChange }: R
           id="rating-notes"
           value={notes}
           onChange={(e) => {
-            onNotesChange(e.target.value).catch(() => {
-              // Error handling is done in the parent component
-            });
+            void (async () => {
+              try {
+                await onNotesChange(e.target.value);
+              } catch {
+                // Error handling is done in the parent component
+              }
+            })();
           }}
           placeholder="What did you like or dislike about this generation?"
           className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent resize-vertical placeholder:text-gray-400 dark:placeholder:text-gray-500"

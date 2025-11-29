@@ -27,24 +27,49 @@ mod config;
 mod discord;
 mod events;
 mod lcu;
+mod paths;
 
 #[cfg(test)]
 mod tests;
 
-use std::path::PathBuf;
+use log::{error, info};
+use std::collections::HashMap;
+use std::io::Write;
 use std::sync::Arc;
 use tauri::{Emitter, Manager, State};
 use tokio::sync::Mutex;
-use tracing::{error, info};
+use tokio::time::{timeout, Duration};
 
-#[cfg(target_os = "windows")]
-use std::fs;
+/// Appends a message to the startup log.
+/// Before paths are initialized, falls back to current directory.
+fn append_startup_log(message: &str) {
+    // Try to use the centralized path if initialized, otherwise fall back to cwd
+    let path = if let Some(app_dir) = paths::try_app_data_dir() {
+        app_dir.join("logs").join("startup-log.txt")
+    } else if let Ok(cwd) = std::env::current_dir() {
+        cwd.join("startup-log.txt")
+    } else {
+        return;
+    };
+
+    // Ensure parent directory exists
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+    {
+        let _ = writeln!(file, "{}", message);
+    }
+}
 
 struct AppState {
     lcu_connection: Arc<Mutex<Option<lcu::LcuConnection>>>,
     discord_client: Arc<Mutex<Option<discord::DiscordClient>>>,
     is_monitoring: Arc<Mutex<bool>>,
-    config_path: PathBuf,
 }
 
 #[tauri::command]
@@ -90,25 +115,44 @@ async fn disconnect_lcu(state: State<'_, AppState>) -> Result<(), String> {
 async fn configure_discord(
     bot_token: String,
     channel_id: String,
+    voice_channel_id: Option<String>,
+    sound_pack: Option<String>,
+    event_sounds: Option<HashMap<String, String>>,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
     info!("Configuring Discord client...");
 
-    match discord::DiscordClient::new(bot_token.clone(), channel_id.clone()).await {
+    // Save the provided settings locally right away so new fields persist even if setup fails
+    {
+        let cfg = config::Config {
+            bot_token: Some(bot_token.clone()),
+            channel_id: Some(channel_id.clone()),
+            voice_channel_id: voice_channel_id.clone(),
+            sound_pack: sound_pack.clone(),
+            event_sounds: event_sounds.clone(),
+        };
+        cfg.save(&paths::config_file())?;
+    }
+
+    match timeout(
+        Duration::from_secs(12),
+        discord::DiscordClient::new(
+            bot_token.clone(),
+            channel_id.clone(),
+            voice_channel_id.clone(),
+            sound_pack.clone(),
+            event_sounds.clone(),
+        ),
+    )
+    .await
+    .map_err(|_| "Discord setup timed out".to_string())?
+    {
         Ok(client) => {
             info!("Successfully configured Discord client");
 
             let mut discord = state.discord_client.lock().await;
             *discord = Some(client);
             drop(discord);
-
-            // Save config to disk
-            let config = config::Config {
-                bot_token: Some(bot_token),
-                channel_id: Some(channel_id),
-            };
-            config.save(&state.config_path)?;
-
             Ok(())
         }
         Err(e) => {
@@ -125,9 +169,63 @@ async fn get_discord_status(state: State<'_, AppState>) -> Result<discord::Disco
         discord::DiscordStatus {
             connected: false,
             channel_name: None,
+            voice_connected: false,
+            voice_channel_name: None,
+            active_sound_pack: None,
         },
         discord::DiscordClient::get_status,
     ))
+}
+
+#[tauri::command]
+async fn join_discord_voice(
+    voice_channel_id: Option<String>,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let mut guard = state.discord_client.lock().await;
+    let client = guard.as_mut().ok_or("Discord not configured")?;
+
+    if voice_channel_id.is_some() {
+        client.set_voice_channel_id(voice_channel_id);
+    }
+
+    client.ensure_voice_connected().await?;
+    // Play a short test sound so the user can verify audio path
+    client
+        .play_sound_for_event(discord::SoundEvent::GameStart, None)
+        .await?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn play_test_sound(
+    state: State<'_, AppState>,
+    app_handle: tauri::AppHandle,
+) -> Result<(), String> {
+    let guard = state.discord_client.lock().await;
+    let client = guard.as_ref().ok_or("Discord not configured")?;
+    client
+        .play_sound_for_event(discord::SoundEvent::GameStart, Some(&app_handle))
+        .await
+}
+
+#[derive(serde::Serialize)]
+struct LogPaths {
+    /// Directory containing all log files
+    logs_dir: String,
+    /// Main debug log file path
+    debug_log: String,
+    /// Startup diagnostics log path
+    startup_log: String,
+}
+
+#[tauri::command]
+async fn get_log_paths() -> Result<LogPaths, String> {
+    Ok(LogPaths {
+        logs_dir: paths::logs_dir().to_string_lossy().to_string(),
+        debug_log: paths::debug_log_file().to_string_lossy().to_string(),
+        startup_log: paths::startup_log_file().to_string_lossy().to_string(),
+    })
 }
 
 #[tauri::command]
@@ -184,9 +282,10 @@ async fn get_monitoring_status(state: State<'_, AppState>) -> Result<bool, Strin
 }
 
 #[tauri::command]
-async fn load_config(state: State<'_, AppState>) -> Result<config::Config, String> {
-    info!("Loading config from {:?}", state.config_path);
-    Ok(config::Config::load(&state.config_path))
+async fn load_config() -> Result<config::Config, String> {
+    let config_path = paths::config_file();
+    info!("Loading config from {}", config_path.display());
+    Ok(config::Config::load(&config_path))
 }
 
 #[derive(serde::Serialize)]
@@ -364,68 +463,37 @@ async fn test_event_detection(state: State<'_, AppState>) -> Result<EventTestRes
     }
 }
 
-#[cfg(target_os = "windows")]
-fn extract_embedded_dll() -> Result<(), Box<dyn std::error::Error>> {
-    // Embed the DLL at compile time from resources directory
-    const DLL_BYTES: &[u8] = include_bytes!("../resources/WebView2Loader.dll");
-
-    // Get the executable's directory
-    let exe_path = std::env::current_exe()
-        .or_else(|_| std::env::var("CARGO_MANIFEST_DIR").map(PathBuf::from))
-        .map_err(|_| "Failed to get executable path")?;
-
-    let exe_dir = exe_path
-        .parent()
-        .ok_or("Failed to get executable directory")?;
-    let dll_path = exe_dir.join("WebView2Loader.dll");
-
-    // Extract DLL if it doesn't exist or is different
-    let needs_extraction = match fs::read(&dll_path) {
-        Ok(existing) => existing != DLL_BYTES,
-        Err(_) => true, // File doesn't exist
-    };
-
-    if needs_extraction {
-        fs::write(&dll_path, DLL_BYTES)
-            .map_err(|e| format!("Failed to write DLL to {:?}: {}", dll_path, e))?;
-        eprintln!("Extracted WebView2Loader.dll to {:?}", dll_path);
-    }
-
-    Ok(())
-}
-
-#[cfg(not(target_os = "windows"))]
-#[allow(dead_code, clippy::unnecessary_wraps)]
-fn extract_embedded_dll() -> Result<(), Box<dyn std::error::Error>> {
-    // No-op on non-Windows platforms
-    Ok(())
-}
-
 #[allow(clippy::expect_used, clippy::large_stack_frames)]
 fn main() {
-    // Extract embedded DLL FIRST on Windows - before anything else
-    // This must happen before Tauri/WinRT tries to load WebView2Loader.dll
-    #[cfg(target_os = "windows")]
-    {
-        if let Err(e) = extract_embedded_dll() {
-            eprintln!("Failed to extract WebView2Loader.dll: {}", e);
-            // Continue anyway - might work if DLL is already present
-        }
-    }
+    // Initialize paths early so they can be used for log plugin configuration
+    paths::early_init();
+    paths::ensure_directories();
 
-    // Initialize tracing
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
-        )
-        .init();
+    append_startup_log("starting main()");
+    std::panic::set_hook(Box::new(|info| {
+        append_startup_log(&format!("panic: {info}"));
+    }));
+
+    append_startup_log("tracing skipped (using log plugin)");
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .targets([
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Folder {
+                        path: paths::logs_dir(),
+                        file_name: Some("scout".into()),
+                    }),
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Webview),
+                ])
+                .level(log::LevelFilter::Debug)
+                .build(),
+        )
         .invoke_handler(tauri::generate_handler![
             get_lcu_status,
             connect_lcu,
@@ -438,25 +506,32 @@ fn main() {
             load_config,
             get_diagnostics,
             test_event_detection,
+            join_discord_voice,
+            play_test_sound,
+            get_log_paths,
         ])
         .setup(|app| {
-            info!("Scout for LoL Desktop starting up...");
+            append_startup_log("tauri setup()");
 
-            // Get app config directory
-            let config_dir = app
+            // Re-initialize with Tauri's app_data_dir (should match our computed path)
+            let app_data_dir = app
                 .path()
-                .app_config_dir()
-                .expect("Failed to get app config directory");
-            let config_path = config_dir.join("config.json");
+                .app_data_dir()
+                .expect("Failed to get app data directory");
+            paths::init(&app_data_dir);
 
-            info!("Config path: {:?}", config_path);
+            append_startup_log(&format!("app data dir: {}", app_data_dir.display()));
+
+            info!("Scout for LoL Desktop starting up...");
+            info!("App data directory: {}", app_data_dir.display());
+            info!("Config path: {}", paths::config_file().display());
+            info!("Logs directory: {}", paths::logs_dir().display());
 
             // Initialize app state
             let app_state = AppState {
                 lcu_connection: Arc::new(Mutex::new(None)),
                 discord_client: Arc::new(Mutex::new(None)),
                 is_monitoring: Arc::new(Mutex::new(false)),
-                config_path,
             };
 
             app.manage(app_state);

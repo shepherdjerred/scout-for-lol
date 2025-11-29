@@ -29,10 +29,6 @@
       "Bash(which:*)",
       "Bash(echo:*)",
       "Bash(cd:*)"
-    ],
-    "deny": [
-      "Bash(dagger:*)",
-      "Bash(docker:*)"
     ]
   }
 }

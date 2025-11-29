@@ -37,7 +37,6 @@ export const noParentImports: TSESLint.RuleModule<"noParentImports"> = {
         const importPath = node.source.value;
 
         // Check if the import path contains ../ (parent directory navigation)
-        // eslint-disable-next-line custom-rules/prefer-zod-validation -- ESLint rule needs typeof for AST node checking
         if (typeof importPath === "string" && importPath.includes("../")) {
           const currentFilePath = context.filename;
 

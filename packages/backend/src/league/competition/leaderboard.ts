@@ -5,14 +5,14 @@ import type {
   LeaguePuuid,
   Rank,
   Ranks,
-  MatchDto,
+  RawMatch,
 } from "@scout-for-lol/data";
 import {
   getCompetitionStatus,
   rankToLeaguePoints,
   RankSchema,
   LeaguePuuidSchema,
-  SummonerLeagueDtoSchema,
+  RawSummonerLeagueSchema,
 } from "@scout-for-lol/data";
 import { sortBy } from "remeda";
 import { match } from "ts-pattern";
@@ -28,6 +28,9 @@ import { getSnapshot } from "@scout-for-lol/backend/league/competition/snapshots
 import { api } from "@scout-for-lol/backend/league/api/api.js";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.js";
 import { getRank } from "@scout-for-lol/backend/league/model/rank.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("competition-leaderboard");
 
 // ============================================================================
 // Types
@@ -78,7 +81,7 @@ export async function fetchSnapshotData(options: {
     return null;
   }
 
-  console.log(`[Leaderboard] Fetching snapshot data for ${participants.length.toString()} participants`);
+  logger.info(`[Leaderboard] Fetching snapshot data for ${participants.length.toString()} participants`);
 
   const startSnapshots: Record<string, Ranks> = {};
   const endSnapshots: Record<string, Ranks> = {};
@@ -99,7 +102,7 @@ export async function fetchSnapshotData(options: {
             const response = await api.League.byPUUID(account.puuid, mapRegionToEnum(region));
 
             // Validate response with Zod schema to ensure proper types
-            const validatedResponse = z.array(SummonerLeagueDtoSchema).parse(response.response);
+            const validatedResponse = z.array(RawSummonerLeagueSchema).parse(response.response);
 
             const solo = getRank(validatedResponse, "RANKED_SOLO_5x5");
             const flex = getRank(validatedResponse, "RANKED_FLEX_SR");
@@ -109,7 +112,7 @@ export async function fetchSnapshotData(options: {
               flex: flex,
             };
           } catch (error) {
-            console.warn(
+            logger.warn(
               `[Leaderboard] Failed to fetch rank data for player ${playerId.toString()} account ${account.puuid}: ${String(error)}`,
             );
           }
@@ -258,7 +261,7 @@ export async function fetchSnapshotData(options: {
     }),
   );
 
-  console.log(
+  logger.info(
     `[Leaderboard] Fetched snapshots: ${Object.keys(startSnapshots).length.toString()} start, ${Object.keys(endSnapshots).length.toString()} end, ${Object.keys(currentRanks).length.toString()} current`,
   );
 
@@ -334,6 +337,7 @@ function assignRanks(entries: LeaderboardEntry[]): RankedLeaderboardEntry[] {
       playerName: entry.playerName,
       score: entry.score,
       ...(entry.metadata !== undefined && { metadata: entry.metadata }),
+      ...(entry.discordId !== undefined && { discordId: entry.discordId }),
       rank: currentRank,
     });
   }
@@ -368,7 +372,7 @@ export async function calculateLeaderboard(
 ): Promise<RankedLeaderboardEntry[]> {
   const status = getCompetitionStatus(competition);
 
-  console.log(`[Leaderboard] Calculating leaderboard for competition ${competition.id.toString()} (${status})`);
+  logger.info(`[Leaderboard] Calculating leaderboard for competition ${competition.id.toString()} (${status})`);
 
   // DRAFT competitions don't have a leaderboard yet
   if (status === "DRAFT") {
@@ -391,7 +395,7 @@ export async function calculateLeaderboard(
   });
 
   if (participants.length === 0) {
-    console.log("[Leaderboard] No participants found");
+    logger.info("[Leaderboard] No participants found");
     return [];
   }
 
@@ -408,7 +412,7 @@ export async function calculateLeaderboard(
     })),
   }));
 
-  console.log(`[Leaderboard] Found ${players.length.toString()} participants`);
+  logger.info(`[Leaderboard] Found ${players.length.toString()} participants`);
 
   // Get all PUUIDs for match querying
   const puuids = players.flatMap((p) => p.accounts.map((a) => a.puuid));
@@ -423,10 +427,10 @@ export async function calculateLeaderboard(
     .with({ type: "HIGHEST_WIN_RATE" }, () => true)
     .exhaustive();
 
-  let matches: MatchDto[] = [];
+  let matches: RawMatch[] = [];
 
   if (needsMatchData) {
-    console.log(`[Leaderboard] Querying matches for ${puuids.length.toString()} accounts`);
+    logger.info(`[Leaderboard] Querying matches for ${puuids.length.toString()} accounts`);
 
     // Determine date range
     // For active competitions, use current time as end date
@@ -437,9 +441,9 @@ export async function calculateLeaderboard(
     // If no start date (shouldn't happen for non-DRAFT), use empty results
     matches = startDate ? await queryMatchesByDateRange(startDate, endDate, puuids) : [];
 
-    console.log(`[Leaderboard] Found ${matches.length.toString()} matches in date range`);
+    logger.info(`[Leaderboard] Found ${matches.length.toString()} matches in date range`);
   } else {
-    console.log(
+    logger.info(
       `[Leaderboard] Criteria type ${competition.criteria.type} does not need match data - skipping S3 query`,
     );
   }
@@ -457,7 +461,7 @@ export async function calculateLeaderboard(
   // Process matches with criteria processor
   const entries = processCriteria(competition.criteria, matches, players, snapshotData ?? undefined);
 
-  console.log(`[Leaderboard] Processed ${entries.length.toString()} leaderboard entries`);
+  logger.info(`[Leaderboard] Processed ${entries.length.toString()} leaderboard entries`);
 
   // Sort entries by score
   const sorted = sortBy(entries, [
@@ -482,7 +486,7 @@ export async function calculateLeaderboard(
   // Assign ranks with tie handling
   const ranked = assignRanks(sorted);
 
-  console.log(`[Leaderboard] ✅ Leaderboard calculated with ${ranked.length.toString()} entries`);
+  logger.info(`[Leaderboard] ✅ Leaderboard calculated with ${ranked.length.toString()} entries`);
 
   return ranked;
 }

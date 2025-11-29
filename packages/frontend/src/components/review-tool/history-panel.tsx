@@ -1,7 +1,7 @@
 /**
  * Panel showing history of generated reviews
  */
-import { useState, useSyncExternalStore, useRef } from "react";
+import { useState, useSyncExternalStore } from "react";
 import type { HistoryEntry } from "@scout-for-lol/frontend/lib/review-tool/history-manager";
 import { loadHistory, deleteHistoryEntry, clearHistory } from "@scout-for-lol/frontend/lib/review-tool/history-manager";
 import { StarRating } from "./star-rating";
@@ -20,8 +20,14 @@ const historyListeners = new Set<() => void>();
 
 function subscribeToHistory(callback: () => void) {
   historyListeners.add(callback);
+  // Also listen for history-update events
+  const handleHistoryUpdate = () => {
+    void loadHistoryData();
+  };
+  window.addEventListener("history-update", handleHistoryUpdate);
   return () => {
     historyListeners.delete(callback);
+    window.removeEventListener("history-update", handleHistoryUpdate);
   };
 }
 
@@ -45,18 +51,15 @@ function loadHistoryData() {
 // Start loading immediately
 void loadHistoryData();
 
-export function HistoryPanel({ onSelectEntry, selectedEntryId, onCancelPending, refreshTrigger }: HistoryPanelProps) {
+export function HistoryPanel({
+  onSelectEntry,
+  selectedEntryId,
+  onCancelPending,
+  refreshTrigger: _refreshTrigger,
+}: HistoryPanelProps) {
   // Subscribe to history data store
   const history = useSyncExternalStore(subscribeToHistory, getHistorySnapshot, getHistorySnapshot);
   const [showConfirmClear, setShowConfirmClear] = useState(false);
-
-  // Track previous refreshTrigger to detect changes
-  const prevRefreshTriggerRef = useRef(refreshTrigger);
-  if (refreshTrigger !== undefined && refreshTrigger !== prevRefreshTriggerRef.current && refreshTrigger > 0) {
-    prevRefreshTriggerRef.current = refreshTrigger;
-    // Refresh when trigger changes
-    void loadHistoryData();
-  }
 
   const refreshHistory = async () => {
     console.log("[History] Refreshing history");

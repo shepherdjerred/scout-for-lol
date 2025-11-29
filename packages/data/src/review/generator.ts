@@ -8,9 +8,14 @@
  */
 
 import type { GoogleGenerativeAI } from "@google/generative-ai";
+import type { CuratedTimeline } from "./curator-types.js";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
 import { generateImagePrompt } from "@scout-for-lol/data/review/image-prompt.js";
-import { replaceTemplateVariables } from "@scout-for-lol/data/review/prompts.js";
+import {
+  replaceTemplateVariables,
+  type Personality as PromptPersonality,
+  type PlayerMetadata as PromptPlayerMetadata,
+} from "@scout-for-lol/data/review/prompts.js";
 import {
   buildPromptVariables,
   createCompletionParams,
@@ -56,6 +61,8 @@ export async function generateReviewText(params: {
   curatedData?: CuratedMatchData | undefined;
   systemPromptPrefix?: string | undefined;
   playerIndex?: number | undefined;
+  matchAnalysis?: string | undefined;
+  timelineSummary?: string | undefined;
 }): Promise<{ text: string; metadata: ReviewTextMetadata }> {
   const {
     match,
@@ -71,6 +78,8 @@ export async function generateReviewText(params: {
     curatedData,
     systemPromptPrefix = "",
     playerIndex = 0,
+    matchAnalysis,
+    timelineSummary,
   } = params;
 
   const { matchData } = extractMatchData(match, playerIndex);
@@ -82,9 +91,12 @@ export async function generateReviewText(params: {
     match,
     playerIndex,
     ...(curatedData !== undefined && { curatedData }),
+    ...(matchAnalysis !== undefined && { matchAnalysis }),
+    ...(timelineSummary !== undefined && { timelineSummary }),
   });
   const userPrompt = replaceTemplateVariables(basePromptTemplate, promptVariables);
-  const systemPrompt = `${systemPromptPrefix}${personality.instructions}\n\n${laneContext}`;
+  const styleCardSection = `\n\nReviewer style card (from Discord chat analysis; keep the tone aligned):\n${personality.styleCard}`;
+  const systemPrompt = `${systemPromptPrefix}${personality.instructions}${styleCardSection}\n\n${laneContext}`;
   const completionParams = createCompletionParams({
     systemPrompt,
     userPrompt,
@@ -110,7 +122,17 @@ export async function generateReviewText(params: {
   }
   const messageContent = firstChoice.message.content;
   if (!messageContent || messageContent.trim().length === 0) {
-    throw new Error("No review content returned from OpenAI");
+    const refusal = firstChoice.message.refusal;
+    const finishReason = firstChoice.finish_reason;
+    const details: string[] = [];
+    if (refusal) {
+      details.push(`refusal: ${refusal}`);
+    }
+    if (finishReason) {
+      details.push(`finish_reason: ${finishReason}`);
+    }
+    const detailStr = details.length > 0 ? ` (${details.join(", ")})` : "";
+    throw new Error(`No review content returned from OpenAI${detailStr}`);
   }
 
   const review = messageContent.trim();
@@ -136,22 +158,22 @@ export async function generateReviewText(params: {
  * Core image generation function
  *
  * This is a pure function that takes all dependencies as parameters.
+ * The image description should be the ONLY input for what to generate -
+ * all context (review text, match data, etc.) should have been processed
+ * in the previous step (Step 3: generateImageDescription).
+ *
  * Callers (backend/review-dev-tool) are responsible for:
  * - Initializing the Gemini client
- * - Selecting art style and theme
+ * - Generating the image description (Step 3)
  * - Handling the image data (S3 upload, display, etc.)
  */
 export async function generateReviewImage(params: {
-  reviewText: string;
-  artStyle: string;
-  artTheme: string;
-  secondArtTheme?: string;
-  matchData?: string;
+  imageDescription: string;
   geminiClient: GoogleGenerativeAI;
   model: string;
   timeoutMs: number;
 }): Promise<{ imageData: string; metadata: ReviewImageMetadata }> {
-  const { reviewText, artStyle, artTheme, secondArtTheme, matchData, geminiClient, model, timeoutMs } = params;
+  const { imageDescription, geminiClient, model, timeoutMs } = params;
 
   const geminiModel = geminiClient.getGenerativeModel({ model });
 
@@ -164,13 +186,7 @@ export async function generateReviewImage(params: {
     }, timeoutMs);
   });
 
-  const prompt = generateImagePrompt({
-    artStyle,
-    artTheme,
-    secondArtTheme,
-    reviewText,
-    matchData,
-  });
+  const prompt = generateImagePrompt(imageDescription);
 
   const resultRaw = await Promise.race([geminiModel.generateContent(prompt), timeoutPromise]);
 
@@ -205,9 +221,6 @@ export async function generateReviewImage(params: {
     imageData,
     metadata: {
       imageDurationMs: duration,
-      selectedArtStyle: artStyle,
-      selectedArtTheme: artTheme,
-      selectedSecondArtTheme: secondArtTheme,
       geminiPrompt: prompt,
       geminiModel: model,
     },
@@ -230,7 +243,9 @@ export type ChatCompletionCreateParams = {
 export const OpenAIChatCompletionChoiceSchema = z.object({
   message: z.object({
     content: z.string().nullable(),
+    refusal: z.string().nullable().optional(),
   }),
+  finish_reason: z.string().nullable().optional(),
 });
 
 export const OpenAIChatCompletionUsageSchema = z
@@ -269,28 +284,9 @@ export const GeminiResponseSchema = z
   })
   .loose();
 
-/**
- * Personality type (from prompts module)
- */
-export type Personality = {
-  metadata: {
-    name: string;
-    description: string;
-    favoriteChampions: string[];
-    favoriteLanes: string[];
-  };
-  instructions: string;
-  filename?: string;
-};
-
-/**
- * Player metadata type
- */
-export type PlayerMetadata = {
-  description: string;
-  favoriteChampions: string[];
-  favoriteLanes: string[];
-};
+// Type aliases exported for consumers - identical to prompts.ts types
+export type Personality = PromptPersonality;
+export type PlayerMetadata = PromptPlayerMetadata;
 
 /**
  * Curated match data type (from curator module)
@@ -302,6 +298,8 @@ export type CuratedMatchData = {
     queueId: number;
   };
   participants: unknown[]; // Full type in curator module
+  timeline?: CuratedTimeline | undefined;
+  timelineSummary?: string | undefined;
 };
 
 /**
@@ -324,9 +322,6 @@ export type ReviewTextMetadata = {
  */
 export type ReviewImageMetadata = {
   imageDurationMs: number;
-  selectedArtStyle: string;
-  selectedArtTheme: string;
-  selectedSecondArtTheme?: string | undefined;
   geminiPrompt?: string | undefined;
   geminiModel?: string | undefined;
 };

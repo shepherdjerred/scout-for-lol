@@ -20,6 +20,7 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
   const [favoriteChampions, setFavoriteChampions] = useState(personality?.metadata.favoriteChampions.join(", ") ?? "");
   const [favoriteLanes, setFavoriteLanes] = useState(personality?.metadata.favoriteLanes.join(", ") ?? "");
   const [instructions, setInstructions] = useState(personality?.instructions ?? "");
+  const [styleCard, setStyleCard] = useState(personality?.styleCard ?? "");
   const [error, setError] = useState<string | null>(null);
 
   const handleSave = () => {
@@ -41,6 +42,7 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
         id: personality?.id ?? `custom-${Date.now().toString()}`,
         metadata,
         instructions: instructions.trim(),
+        styleCard: styleCard.trim(),
       };
 
       // Validate with Zod
@@ -164,6 +166,28 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
             />
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               This is the system prompt that defines how the reviewer thinks and writes.
+            </p>
+          </div>
+
+          <div>
+            <label
+              htmlFor="personality-style-card"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Style Card (required)
+            </label>
+            <textarea
+              id="personality-style-card"
+              value={styleCard}
+              onChange={(e) => {
+                setStyleCard(e.target.value);
+              }}
+              rows={12}
+              className="w-full px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 font-mono text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              placeholder="Paste the reviewer’s style card (JSON or text) here"
+            />
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Required. Paste the voice/style analysis used to steer this reviewer.
             </p>
           </div>
         </div>

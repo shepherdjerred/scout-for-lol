@@ -5,6 +5,7 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx",
     "types": ["vite/client", "@tauri-apps/api", "bun-types"],
+    "baseUrl": ".",
     "paths": {
       "@scout-for-lol/desktop/*": ["./src/*"],
       "@scout-for-lol/data/*": ["../data/src/*"],

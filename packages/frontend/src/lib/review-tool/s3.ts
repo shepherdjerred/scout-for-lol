@@ -3,14 +3,14 @@
  */
 import { S3Client, ListObjectsV2Command, GetObjectCommand, type ListObjectsV2CommandOutput } from "@aws-sdk/client-s3";
 import {
-  MatchDtoSchema,
+  RawMatchSchema,
   parseQueueType,
   getLaneOpponent,
   parseTeam,
   invertTeam,
   getOrdinalSuffix,
   parseLane,
-  type MatchDto,
+  type RawMatch,
   type ArenaMatch,
   type CompletedMatch,
 } from "@scout-for-lol/data";
@@ -198,7 +198,7 @@ export async function listMatchesFromS3(config: S3Config): Promise<{ key: string
  * Fetch a match from S3 (direct client-side)
  * Results are cached for 7 days (match data is immutable)
  */
-export async function fetchMatchFromS3(config: S3Config, key: string): Promise<MatchDto | null> {
+export async function fetchMatchFromS3(config: S3Config, key: string): Promise<RawMatch | null> {
   try {
     // Cache key parameters (exclude credentials for security)
     const cacheParams = {
@@ -211,7 +211,7 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
     // Try to get from cache first (7 days TTL - match data is immutable)
     const cached: unknown = await getCachedDataAsync("r2-get", cacheParams);
 
-    const cachedResult = MatchDtoSchema.safeParse(cached);
+    const cachedResult = RawMatchSchema.safeParse(cached);
     if (cachedResult.success) {
       return cachedResult.data;
     }
@@ -245,8 +245,8 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
     const bodyString = await response.Body.transformToString();
     const rawData: unknown = JSON.parse(bodyString);
 
-    // Validate using proper MatchDto schema
-    const rawDataResult = MatchDtoSchema.parse(rawData);
+    // Validate using proper RawMatch schema
+    const rawDataResult = RawMatchSchema.parse(rawData);
 
     // Cache the result for 7 days (match data is immutable)
     await setCachedData("r2-get", cacheParams, rawDataResult, 7 * 24 * 60 * 60 * 1000);
@@ -262,14 +262,14 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<M
  * Convert a Riot API match to our internal format
  * This is a simplified conversion for dev tool purposes - we use example match structure
  * but populate it with real player data including Riot IDs
- * @param matchDto - The Riot API match DTO
+ * @param rawMatch - The raw Riot API match data
  * @param selectedPlayerName - The Riot ID (GameName#Tagline) of the player to prioritize as first player
  */
-export function convertMatchDtoToInternalFormat(
-  matchDto: MatchDto,
+export function convertRawMatchToInternalFormat(
+  rawMatch: RawMatch,
   selectedPlayerName?: string,
 ): CompletedMatch | ArenaMatch {
-  const queueType = parseQueueType(matchDto.info.queueId);
+  const queueType = parseQueueType(rawMatch.info.queueId);
 
   // Get base example match structure
   let baseMatch: CompletedMatch | ArenaMatch;
@@ -284,7 +284,7 @@ export function convertMatchDtoToInternalFormat(
   }
 
   // Reorder participants so selected player is first
-  let reorderedParticipants = [...matchDto.info.participants];
+  let reorderedParticipants = [...rawMatch.info.participants];
   if (selectedPlayerName) {
     const selectedIndex = reorderedParticipants.findIndex((p) => {
       const riotId = p.riotIdGameName && p.riotIdTagline ? `${p.riotIdGameName}#${p.riotIdTagline}` : "Unknown";
@@ -302,8 +302,8 @@ export function convertMatchDtoToInternalFormat(
 
   // Build team rosters first (needed for lane opponent calculation)
   const teams = {
-    blue: matchDto.info.participants.filter((p) => p.teamId === 100).map(participantToChampion),
-    red: matchDto.info.participants.filter((p) => p.teamId === 200).map(participantToChampion),
+    blue: rawMatch.info.participants.filter((p) => p.teamId === 100).map(participantToChampion),
+    red: rawMatch.info.participants.filter((p) => p.teamId === 200).map(participantToChampion),
   };
 
   // Update players with real data from the match - split by queue type for proper typing
@@ -340,7 +340,7 @@ export function convertMatchDtoToInternalFormat(
     return {
       ...arenaMatch,
       players: updatedPlayers,
-      durationInSeconds: matchDto.info.gameDuration,
+      durationInSeconds: rawMatch.info.gameDuration,
     };
   }
 
@@ -387,7 +387,7 @@ export function convertMatchDtoToInternalFormat(
   return {
     ...completedMatch,
     players: updatedPlayers,
-    durationInSeconds: matchDto.info.gameDuration,
+    durationInSeconds: rawMatch.info.gameDuration,
     teams,
   };
 }
@@ -407,13 +407,13 @@ export type MatchMetadata = {
 };
 
 /**
- * Extract metadata for all participants from a Riot API match DTO
+ * Extract metadata for all participants from a raw Riot API match
  */
-export function extractMatchMetadataFromDto(matchDto: MatchDto, key: string): MatchMetadata[] {
-  const queueType = parseQueueType(matchDto.info.queueId);
-  const timestamp = new Date(matchDto.info.gameEndTimestamp);
+export function extractMatchMetadataFromRawMatch(rawMatch: RawMatch, key: string): MatchMetadata[] {
+  const queueType = parseQueueType(rawMatch.info.queueId);
+  const timestamp = new Date(rawMatch.info.gameEndTimestamp);
 
-  return matchDto.info.participants.map((participant) => {
+  return rawMatch.info.participants.map((participant) => {
     // Build Riot ID (GameName#Tagline)
     const riotId =
       participant.riotIdGameName && participant.riotIdTagline

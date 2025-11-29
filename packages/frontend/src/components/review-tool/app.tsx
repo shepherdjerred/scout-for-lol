@@ -1,5 +1,5 @@
 /**
- * Main application component
+ * Main application component - Redesigned UI
  */
 import { useState, useSyncExternalStore } from "react";
 import type { GenerationResult, GlobalConfig, TabConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
@@ -17,14 +17,14 @@ import {
 } from "@scout-for-lol/frontend/lib/review-tool/config-manager";
 import { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import { migrateFromLocalStorage } from "@scout-for-lol/frontend/lib/review-tool/storage";
-import { TabBar } from "./tab-bar";
+import { AppHeader } from "./app-header";
 import { ConfigModal } from "./config-modal";
 import { TabSettingsPanel } from "./tab-settings-panel";
 import { ResultsPanel } from "./results-panel";
 import { MatchBrowser } from "./match-browser";
 import { MatchDetailsPanel } from "./match-details-panel";
 import { RatingsAnalytics } from "./ratings-analytics";
-import { Footer } from "./footer";
+import { Spinner } from "./ui/spinner";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 
 export type TabData = {
@@ -74,52 +74,63 @@ let appInitPromise: Promise<void> | null = null;
 
 function initializeAppData() {
   appInitPromise ??= (async () => {
-    // First, migrate any localStorage data to IndexedDB
-    await migrateFromLocalStorage();
+    try {
+      // First, migrate any localStorage data to IndexedDB
+      await migrateFromLocalStorage();
 
-    // Then load from IndexedDB
-    let globalConfig = await loadGlobalConfig();
-    if (!globalConfig) {
-      // Try migrating from old merged config
+      // Then load from IndexedDB
+      let globalConfig = await loadGlobalConfig();
+      if (!globalConfig) {
+        // Try migrating from old merged config
+        const oldConfig = await loadCurrentConfig();
+        if (oldConfig) {
+          const { global } = splitConfig(oldConfig);
+          globalConfig = global;
+        } else {
+          globalConfig = createDefaultGlobalConfig();
+        }
+      }
+
+      // Load tab config
+      let tabs: TabData[];
       const oldConfig = await loadCurrentConfig();
       if (oldConfig) {
-        const { global } = splitConfig(oldConfig);
-        globalConfig = global;
+        const { tab } = splitConfig(oldConfig);
+        tabs = [
+          {
+            id: "tab-1",
+            name: "Config 1",
+            config: tab,
+          },
+        ];
       } else {
-        globalConfig = createDefaultGlobalConfig();
+        tabs = [
+          {
+            id: "tab-1",
+            name: "Config 1",
+            config: createDefaultTabConfig(),
+          },
+        ];
       }
-    }
 
-    // Load tab config
-    let tabs: TabData[];
-    const oldConfig = await loadCurrentConfig();
-    if (oldConfig) {
-      const { tab } = splitConfig(oldConfig);
-      tabs = [
-        {
-          id: "tab-1",
-          name: "Config 1",
-          config: tab,
-        },
-      ];
-    } else {
-      tabs = [
-        {
-          id: "tab-1",
-          name: "Config 1",
-          config: createDefaultTabConfig(),
-        },
-      ];
+      // Create new object reference to trigger useSyncExternalStore update
+      appInitState = {
+        globalConfig,
+        tabs,
+        isInitialized: true,
+      };
+      appInitListeners.forEach((listener) => {
+        listener();
+      });
+    } catch (error) {
+      console.error("Failed to initialize app:", error);
+      // Still update state even on error so component can render
+      appInitState.isInitialized = true;
+      appInitListeners.forEach((listener) => {
+        listener();
+      });
+      throw error;
     }
-
-    appInitState = {
-      globalConfig,
-      tabs,
-      isInitialized: true,
-    };
-    appInitListeners.forEach((listener) => {
-      listener();
-    });
   })();
   return appInitPromise;
 }
@@ -137,6 +148,18 @@ export default function App() {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
 
+  // Show loading state while initializing
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-surface-50 dark:bg-surface-950 flex items-center justify-center">
+        <div className="card p-8 flex flex-col items-center gap-4 animate-fade-in">
+          <Spinner size="lg" className="text-brand-500" />
+          <p className="text-surface-600 dark:text-surface-300 font-medium">Loading configuration...</p>
+        </div>
+      </div>
+    );
+  }
+
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
 
   // Wrapper to save global config when it changes
@@ -145,10 +168,8 @@ export default function App() {
     appInitListeners.forEach((listener) => {
       listener();
     });
-    // Save config when it changes (after initialization)
-    if (isInitialized) {
-      void saveGlobalConfig(config);
-    }
+    // Save config when it changes
+    void saveGlobalConfig(config);
   };
 
   const addTab = () => {
@@ -223,13 +244,11 @@ export default function App() {
     appInitListeners.forEach((listener) => {
       listener();
     });
-    // Save config when it changes (after initialization)
-    if (isInitialized) {
-      const updatedTab = newTabs.find((t) => t.id === id);
-      if (updatedTab) {
-        const merged = mergeConfigs(globalConfig, updatedTab.config);
-        void saveCurrentConfig(merged);
-      }
+    // Save config when it changes
+    const updatedTab = newTabs.find((t) => t.id === id);
+    if (updatedTab) {
+      const merged = mergeConfigs(globalConfig, updatedTab.config);
+      void saveCurrentConfig(merged);
     }
   };
 
@@ -258,95 +277,78 @@ export default function App() {
   };
 
   if (!activeTab) {
-    return <div className="p-4 text-gray-900 dark:text-white">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-surface-50 dark:bg-surface-950 flex items-center justify-center">
+        <div className="card p-8 text-surface-600 dark:text-surface-300">Loading...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Review Generator Dev Tool</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Experiment with match review generation settings</p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => {
-                setShowConfigModal(true);
-              }}
-              className="px-4 py-2 bg-gray-700 dark:bg-gray-600 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-700 transition-colors flex items-center gap-2"
-              title="Configure API keys and settings"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              Settings
-            </button>
-            <button
-              onClick={() => {
-                setShowAnalytics(!showAnalytics);
-              }}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
-              {showAnalytics ? "Hide Ratings" : "View Ratings"}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <TabBar
+    <div className="min-h-screen bg-surface-50 dark:bg-surface-950 bg-hero-pattern">
+      {/* Header with integrated tabs */}
+      <AppHeader
         tabs={tabs}
         activeTabId={activeTabId}
+        showAnalytics={showAnalytics}
         onTabSelect={setActiveTabId}
         onTabClose={closeTab}
         onTabAdd={addTab}
         onTabClone={cloneTab}
         onTabRename={updateTabName}
+        onSettingsClick={() => {
+          setShowConfigModal(true);
+        }}
+        onAnalyticsToggle={() => {
+          setShowAnalytics(!showAnalytics);
+        }}
       />
 
-      <div className="flex-1">
+      {/* Main content area */}
+      <main className="max-w-[1800px] mx-auto px-6 py-8">
         {showAnalytics ? (
-          <div className="p-6">
+          <div className="animate-fade-in">
             <RatingsAnalytics />
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 animate-fade-in">
+            {/* Left column - Match selection & settings */}
             <div className="space-y-6">
-              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              {/* Match Browser */}
+              <section className="card p-0 overflow-hidden">
+                <div className="px-6 py-4 border-b border-surface-200/50 dark:border-surface-700/50">
+                  <h2 className="text-lg font-semibold text-surface-900 dark:text-white">Browse Matches</h2>
+                  <p className="text-sm text-surface-500 dark:text-surface-400 mt-0.5">
+                    Select a match to generate a review
+                  </p>
+                </div>
                 <MatchBrowser
                   onMatchSelected={(match) => {
                     updateTabMatch(activeTabId, match);
                   }}
                   apiSettings={globalConfig.api}
                 />
-              </div>
-              {activeTab.match && <MatchDetailsPanel match={activeTab.match} />}
-              <TabSettingsPanel
-                config={activeTab.config}
-                onChange={(config) => {
-                  updateTabConfig(activeTabId, config);
-                }}
-              />
+              </section>
+
+              {/* Selected Match Details */}
+              {activeTab.match && (
+                <section className="animate-slide-up">
+                  <MatchDetailsPanel match={activeTab.match} />
+                </section>
+              )}
+
+              {/* Generation Settings */}
+              <section>
+                <TabSettingsPanel
+                  config={activeTab.config}
+                  onChange={(config) => {
+                    updateTabConfig(activeTabId, config);
+                  }}
+                />
+              </section>
             </div>
+
+            {/* Right column - Results */}
             <div className="space-y-6">
               <ResultsPanel
                 config={mergeConfigs(globalConfig, activeTab.config)}
@@ -360,9 +362,7 @@ export default function App() {
             </div>
           </div>
         )}
-      </div>
-
-      <Footer />
+      </main>
 
       {/* API Configuration Modal */}
       <ConfigModal

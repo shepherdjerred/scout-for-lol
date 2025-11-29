@@ -1,7 +1,7 @@
 /**
  * Results panel showing generated review and metadata
  */
-import { useState, useSyncExternalStore, useMemo } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { z } from "zod";
 import type { ReviewConfig, GenerationResult } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
@@ -29,23 +29,38 @@ import { ResultRating } from "./result-rating";
 
 const ErrorSchema = z.object({ message: z.string() });
 
-// External store for cost update events - must be outside component for stable references
-// Track the actual update count, NOT Date.now() which changes every call and breaks useSyncExternalStore
-let costUpdateCount = 0;
+// Global timer for tracking elapsed time - updates every second
+let timerTick = 0;
+const timerSubscribers = new Set<() => void>();
+let timerInterval: ReturnType<typeof setInterval> | null = null;
 
-function subscribeToCostUpdates(callback: () => void) {
-  const handler = () => {
-    costUpdateCount += 1;
-    callback();
-  };
-  window.addEventListener("cost-update", handler);
+function startGlobalTimer() {
+  timerInterval ??= setInterval(() => {
+    timerTick += 1;
+    timerSubscribers.forEach((callback) => {
+      callback();
+    });
+  }, 1000);
+}
+
+function stopGlobalTimer() {
+  if (timerInterval !== null && timerSubscribers.size === 0) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function subscribeToTimer(callback: () => void) {
+  timerSubscribers.add(callback);
+  startGlobalTimer();
   return () => {
-    window.removeEventListener("cost-update", handler);
+    timerSubscribers.delete(callback);
+    stopGlobalTimer();
   };
 }
 
-function getCostUpdateSnapshot() {
-  return costUpdateCount;
+function getTimerSnapshot() {
+  return timerTick;
 }
 
 type ResultsPanelProps = {
@@ -70,15 +85,15 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | undefined>();
   const [notes, setNotes] = useState("");
 
-  // Subscribe to cost update events
-  useSyncExternalStore(subscribeToCostUpdates, getCostUpdateSnapshot, getCostUpdateSnapshot);
+  // Subscribe to global timer - always active but cheap
+  // This triggers a re-render every second, causing elapsed times to update
+  useSyncExternalStore(subscribeToTimer, getTimerSnapshot, getTimerSnapshot);
 
-  // Calculate elapsed times during render - recalculates on every render
-  // This is fine since renders happen frequently enough for smooth animation
-  const activeGenerationTimers = useMemo(() => {
-    const now = Date.now();
-    return new Map(Array.from(activeGenerations.entries()).map(([id, gen]) => [id, now - gen.startTime]));
-  }, [activeGenerations]);
+  // Calculate elapsed times only when there are active generations
+  const now = Date.now();
+  const activeGenerationTimers = new Map<string, number>(
+    Array.from(activeGenerations.entries()).map(([id, gen]) => [id, now - gen.startTime]),
+  );
 
   const handleGenerate = async () => {
     // Use provided match or example match
@@ -126,11 +141,8 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       if (generatedResult.metadata.selectedPersonality) {
         configSnapshot.personality = generatedResult.metadata.selectedPersonality;
       }
-      if (generatedResult.metadata.selectedArtStyle) {
-        configSnapshot.artStyle = generatedResult.metadata.selectedArtStyle;
-      }
-      if (generatedResult.metadata.selectedArtTheme) {
-        configSnapshot.artTheme = generatedResult.metadata.selectedArtTheme;
+      if (generatedResult.metadata.imageDescription) {
+        configSnapshot.imageDescription = generatedResult.metadata.imageDescription;
       }
 
       // Save completed entry to IndexedDB
@@ -141,14 +153,13 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       // Calculate and track cost
       if (!generatedResult.error) {
         const cost = calculateCost(generatedResult.metadata, config.textGeneration.model, config.imageGeneration.model);
-        costTracker
-          .add(cost)
-          .then(() => {
-            window.dispatchEvent(new Event("cost-update"));
-          })
-          .catch(() => {
+        void (async () => {
+          try {
+            await costTracker.add(cost);
+          } catch {
             // Error handling is done in the cost tracker
-          });
+          }
+        })();
       }
 
       // Trigger history panel refresh via history store
@@ -244,30 +255,67 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       />
 
       {/* Current/Selected Result */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex justify-between items-center mb-4">
+      <div className="card p-6">
+        <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Generated Review</h2>
-            {viewingHistory && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Viewing from history</p>}
+            <h2 className="text-xl font-semibold text-surface-900 dark:text-white">Generated Review</h2>
+            {viewingHistory && (
+              <p className="text-xs text-surface-500 dark:text-surface-400 mt-1 flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Viewing from history
+              </p>
+            )}
             {isViewingActiveGeneration && (
-              <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">Viewing active generation</p>
+              <p className="text-xs text-victory-600 dark:text-victory-400 mt-1 flex items-center gap-1">
+                <svg className="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                Generating...
+              </p>
             )}
           </div>
           <button
             onClick={() => {
-              handleGenerate().catch(() => {
-                // Error handling is done in handleGenerate
-              });
+              void (async () => {
+                try {
+                  await handleGenerate();
+                } catch {
+                  // Error handling is done in handleGenerate
+                }
+              })();
             }}
-            className="px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
+            className="btn-primary"
           >
-            Generate New Review
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Generate
           </button>
         </div>
 
         {!match && (
-          <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded text-sm text-yellow-800 dark:text-yellow-200">
-            No match selected. Using example match data.
+          <div className="mb-4 p-4 rounded-xl bg-victory-50 dark:bg-victory-900/20 border border-victory-200 dark:border-victory-800 text-sm text-victory-800 dark:text-victory-200 flex items-center gap-3">
+            <svg className="w-5 h-5 text-victory-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>No match selected. Using example match data for preview.</span>
           </div>
         )}
 
@@ -279,13 +327,9 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
 
         {/* Error Display */}
         {result?.error && (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded">
+          <div className="mb-4 p-4 rounded-xl bg-defeat-50 dark:bg-defeat-900/20 border border-defeat-200 dark:border-defeat-800 animate-fade-in">
             <div className="flex items-start gap-3">
-              <svg
-                className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
+              <svg className="w-5 h-5 text-defeat-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
                   d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -293,8 +337,8 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
                 />
               </svg>
               <div className="flex-1">
-                <div className="font-semibold text-red-900 dark:text-red-200 mb-1">Error</div>
-                <div className="text-sm text-red-800 dark:text-red-300">{result.error}</div>
+                <div className="font-semibold text-defeat-900 dark:text-defeat-200 mb-1">Generation Failed</div>
+                <div className="text-sm text-defeat-700 dark:text-defeat-300">{result.error}</div>
               </div>
             </div>
           </div>

@@ -1,46 +1,17 @@
 import { useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import {
-  LeagueClientSection,
-  DiscordConfigSection,
-  MonitoringSection,
-  DebugPanel,
-} from "./components";
-
-function getErrorMessage(error: unknown): string {
-  if (typeof error === "string") {
-    return error;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return "An unknown error occurred";
-}
-
-type LcuStatus = {
-  connected: boolean;
-  summonerName: string | null;
-  inGame: boolean;
-};
-
-type DiscordStatus = {
-  connected: boolean;
-  channelName: string | null;
-};
-
-type Config = {
-  botToken: string | null;
-  channelId: string | null;
-};
-
-type LogEntry = {
-  timestamp: string;
-  level: "info" | "error" | "warning";
-  message: string;
-};
+import { Sidebar } from "./components/layout";
+import { LeagueSection, DiscordSection, MonitorSection, DebugPanel } from "./components/sections";
+import { Alert } from "./components/ui";
+import type { LcuStatus, DiscordStatus, Config, LogEntry, LogPaths, Section } from "./types";
+import { DEFAULT_EVENT_SOUNDS, getErrorMessage } from "./types";
 
 export default function App() {
+  // Navigation state
+  const [activeSection, setActiveSection] = useState<Section>("league");
+
+  // Connection states
   const [lcuStatus, setLcuStatus] = useState<LcuStatus>({
     connected: false,
     summonerName: null,
@@ -50,15 +21,25 @@ export default function App() {
   const [discordStatus, setDiscordStatus] = useState<DiscordStatus>({
     connected: false,
     channelName: null,
+    voiceConnected: false,
+    voiceChannelName: null,
+    activeSoundPack: null,
   });
 
+  // Form states
   const [botToken, setBotToken] = useState("");
   const [channelId, setChannelId] = useState("");
+  const [voiceChannelId, setVoiceChannelId] = useState("");
+  const [soundPack, setSoundPack] = useState("base");
+  const [eventSounds, setEventSounds] = useState<Record<string, string>>(DEFAULT_EVENT_SOUNDS);
+
+  // App states
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<string | null>(null);
   const [showDebug, setShowDebug] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [logPaths, setLogPaths] = useState<LogPaths | null>(null);
 
   const addLog = (level: LogEntry["level"], message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -78,18 +59,40 @@ export default function App() {
   }, []);
 
   // Load config on mount
+  // eslint-disable-next-line custom-rules/no-use-effect -- ok for now
   useEffect(() => {
     const loadConfig = async () => {
       try {
         const config = await invoke<Config>("load_config");
-        if (config.botToken || config.channelId) {
-          if (config.botToken) {
-            setBotToken(config.botToken);
-          }
-          if (config.channelId) {
-            setChannelId(config.channelId);
-          }
+        if (config.botToken) {
+          setBotToken(config.botToken);
+        }
+        if (config.channelId) {
+          setChannelId(config.channelId);
+        }
+        if (config.voiceChannelId) {
+          setVoiceChannelId(config.voiceChannelId);
+        }
+        if (config.soundPack) {
+          setSoundPack(config.soundPack);
+        }
+        if (config.eventSounds) {
+          setEventSounds((prev) => ({
+            ...prev,
+            ...config.eventSounds,
+          }));
+        }
+        if (config.botToken || config.channelId || config.voiceChannelId) {
           addLog("info", "Loaded saved Discord configuration");
+        }
+
+        // Fetch log paths for easier debugging
+        try {
+          const paths = await invoke<LogPaths>("get_log_paths");
+          setLogPaths(paths);
+          addLog("info", `Log files: ${paths.working_dir_log} (working dir), ${paths.app_log_dir} (app logs)`);
+        } catch (pathErr) {
+          console.error("Failed to load log paths:", pathErr);
         }
       } catch (err) {
         console.error("Failed to load config:", err);
@@ -100,6 +103,7 @@ export default function App() {
   }, []);
 
   // Load status on mount and setup polling
+  // eslint-disable-next-line custom-rules/no-use-effect -- ok for now
   useEffect(() => {
     void loadStatus();
     const interval = setInterval(() => {
@@ -111,15 +115,17 @@ export default function App() {
   }, [loadStatus]);
 
   // Listen for backend logs
+  // eslint-disable-next-line custom-rules/no-use-effect -- ok for now
   useEffect(() => {
     const unlisten = listen<string>("backend-log", (event) => {
       addLog("info", event.payload);
     });
 
     return () => {
-      void unlisten.then((fn) => {
+      void (async () => {
+        const fn = await unlisten;
         fn();
-      });
+      })();
     };
   }, []);
 
@@ -170,7 +176,13 @@ export default function App() {
     addLog("info", `Configuring Discord for channel ${channelId}...`);
 
     try {
-      await invoke("configure_discord", { botToken, channelId });
+      await invoke("configure_discord", {
+        botToken,
+        channelId,
+        voiceChannelId: voiceChannelId || null,
+        soundPack,
+        eventSounds,
+      });
       await loadStatus();
       addLog("info", "Discord configured successfully");
     } catch (err) {
@@ -180,6 +192,48 @@ export default function App() {
     } finally {
       setLoading(null);
     }
+  };
+
+  const handleJoinVoice = async () => {
+    setError(null);
+    setLoading("Joining voice channel...");
+    addLog("info", "Requesting voice connection...");
+
+    try {
+      await invoke("join_discord_voice", { voiceChannelId: voiceChannelId || null });
+      await loadStatus();
+      addLog("info", "Voice join request sent");
+    } catch (err) {
+      const errorMsg = getErrorMessage(err);
+      setError(errorMsg);
+      addLog("error", `Failed to join voice: ${errorMsg}`);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleTestSound = async () => {
+    setError(null);
+    setLoading("Playing test sound...");
+    addLog("info", "Playing test sound...");
+
+    try {
+      await invoke("play_test_sound");
+      addLog("info", "Test sound requested");
+    } catch (err) {
+      const errorMsg = getErrorMessage(err);
+      setError(errorMsg);
+      addLog("error", `Failed to play test sound: ${errorMsg}`);
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleEventSoundChange = (key: string, value: string) => {
+    setEventSounds((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   };
 
   const handleStartMonitoring = async () => {
@@ -201,17 +255,17 @@ export default function App() {
           error_message: string | null;
         }>("get_diagnostics");
 
-          addLog("info", `Gameflow phase: ${diagnostics.gameflow_phase}`);
-          if (diagnostics.live_client_data_available) {
-            addLog("info", `Live Client Data API: Available (status: ${String(diagnostics.live_client_data_status)})`);
-          } else {
-            addLog("error", `Live Client Data API: NOT AVAILABLE`);
-            addLog("error", `To enable: League Client → Settings → Game → Enable Live Client Data API`);
-            addLog("error", `Then restart League Client and reconnect.`);
-            if (diagnostics.error_message) {
-              addLog("error", `Error: ${diagnostics.error_message}`);
-            }
+        addLog("info", `Gameflow phase: ${diagnostics.gameflow_phase}`);
+        if (diagnostics.live_client_data_available) {
+          addLog("info", `Live Client Data API: Available (status: ${String(diagnostics.live_client_data_status)})`);
+        } else {
+          addLog("error", `Live Client Data API: NOT AVAILABLE`);
+          addLog("error", `To enable: League Client → Settings → Game → Enable Live Client Data API`);
+          addLog("error", `Then restart League Client and reconnect.`);
+          if (diagnostics.error_message) {
+            addLog("error", `Error: ${diagnostics.error_message}`);
           }
+        }
       } catch (diagErr) {
         addLog("warning", `Could not get diagnostics: ${getErrorMessage(diagErr)}`);
       }
@@ -289,97 +343,107 @@ export default function App() {
     setLogs([]);
   };
 
-  return (
-    <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-white px-8 py-6 text-center dark:border-gray-800 dark:bg-gray-800">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-black">
-          Scout for LoL
-        </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Live Game Updates for Discord
-        </p>
-        <button
-          onClick={() => {
-            setShowDebug(!showDebug);
-          }}
-          className="mt-4 rounded-md bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
-        >
-          {showDebug ? "Hide" : "Show"} Debug Panel
-        </button>
-      </header>
-
-      <main className="flex flex-1 flex-col gap-6 p-8 lg:flex-row">
-        {/* Main Content */}
-        <div className="flex-1 space-y-6">
-          {/* Alerts */}
-          {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
-              <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                <strong>Error:</strong> {error}
-              </p>
-            </div>
-          )}
-
-          {loading && (
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
-              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                {loading}
-              </p>
-            </div>
-          )}
-
-          <LeagueClientSection
+  // Render active section content
+  const renderSection = () => {
+    switch (activeSection) {
+      case "league":
+        return (
+          <LeagueSection
             lcuStatus={lcuStatus}
             loading={loading}
-            onConnect={() => {
-              void handleConnectLcu();
-            }}
-            onDisconnect={() => {
-              void handleDisconnectLcu();
-            }}
+            onConnect={() => void handleConnectLcu()}
+            onDisconnect={() => void handleDisconnectLcu()}
           />
-
-          <DiscordConfigSection
+        );
+      case "discord":
+        return (
+          <DiscordSection
             discordStatus={discordStatus}
             loading={loading}
             botToken={botToken}
             channelId={channelId}
+            voiceChannelId={voiceChannelId}
+            soundPack={soundPack}
+            eventSounds={eventSounds}
             onBotTokenChange={setBotToken}
             onChannelIdChange={setChannelId}
-            onConfigure={() => {
-              void handleConfigureDiscord();
-            }}
+            onVoiceChannelIdChange={setVoiceChannelId}
+            onSoundPackChange={setSoundPack}
+            onEventSoundChange={handleEventSoundChange}
+            onConfigure={() => void handleConfigureDiscord()}
+            onJoinVoice={() => void handleJoinVoice()}
+            onTestSound={() => void handleTestSound()}
           />
-
-          {lcuStatus.connected && discordStatus.connected && (
-            <MonitoringSection
-              isMonitoring={isMonitoring}
-              loading={loading}
-              onStart={() => {
-                void handleStartMonitoring();
-              }}
-              onStop={() => {
-                void handleStopMonitoring();
-              }}
-              onTest={() => {
-                void handleTestEvents();
-              }}
-            />
-          )}
-        </div>
-
-        {/* Debug Panel */}
-        {showDebug && (
-          <DebugPanel
-            lcuStatus={lcuStatus}
-            discordStatus={discordStatus}
+        );
+      case "monitor":
+        return (
+          <MonitorSection
             isMonitoring={isMonitoring}
-            logs={logs}
-            onClearLogs={handleClearLogs}
+            loading={loading}
+            lcuConnected={lcuStatus.connected}
+            discordConnected={discordStatus.connected}
+            inGame={lcuStatus.inGame}
+            onStart={() => void handleStartMonitoring()}
+            onStop={() => void handleStopMonitoring()}
+            onTest={() => void handleTestEvents()}
           />
+        );
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-900">
+      {/* Sidebar */}
+      <Sidebar
+        lcuConnected={lcuStatus.connected}
+        discordConnected={discordStatus.connected}
+        voiceConnected={discordStatus.voiceConnected}
+        isMonitoring={isMonitoring}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+        showDebug={showDebug}
+        onToggleDebug={() => {
+          setShowDebug(!showDebug);
+        }}
+      />
+
+      {/* Main Content */}
+      <main className="flex flex-1 flex-col overflow-hidden">
+        {/* Error/Loading Alerts */}
+        {(error !== null || loading !== null) && (
+          <div className="border-b border-gray-800 px-6 py-3 space-y-2">
+            {error && (
+              <Alert
+                variant="error"
+                onDismiss={() => {
+                  setError(null);
+                }}
+              >
+                {error}
+              </Alert>
+            )}
+            {loading && <Alert variant="loading">{loading}</Alert>}
+          </div>
         )}
+
+        {/* Section Content */}
+        <div className="flex-1 overflow-y-auto p-6">{renderSection()}</div>
       </main>
+
+      {/* Debug Panel */}
+      {showDebug && (
+        <DebugPanel
+          lcuStatus={lcuStatus}
+          discordStatus={discordStatus}
+          isMonitoring={isMonitoring}
+          logs={logs}
+          logPaths={logPaths}
+          onClearLogs={handleClearLogs}
+          onClose={() => {
+            setShowDebug(false);
+          }}
+        />
+      )}
     </div>
   );
 }

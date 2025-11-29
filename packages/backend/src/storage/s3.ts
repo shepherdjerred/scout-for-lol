@@ -1,4 +1,4 @@
-import type { MatchId, MatchDto, ReviewTextMetadata, TimelineDto } from "@scout-for-lol/data";
+import type { MatchId, RawMatch, ReviewTextMetadata, RawTimeline, CuratedTimeline } from "@scout-for-lol/data";
 import { MatchIdSchema } from "@scout-for-lol/data";
 import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.js";
 
@@ -8,14 +8,14 @@ import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.js";
  * @param trackedPlayerAliases Array of tracked player aliases in this match (empty array if none)
  * @returns Promise that resolves when the match is saved
  */
-export async function saveMatchToS3(match: MatchDto, trackedPlayerAliases: string[]): Promise<void> {
+export async function saveMatchToS3(match: RawMatch, trackedPlayerAliases: string[]): Promise<void> {
   const matchId = MatchIdSchema.parse(match.metadata.matchId);
   const body = JSON.stringify(match, null, 2);
 
   await saveToS3({
     matchId,
-    keyPrefix: "matches",
-    keyExtension: "json",
+    assetType: "match",
+    extension: "json",
     body,
     contentType: "application/json",
     metadata: {
@@ -59,8 +59,8 @@ export async function saveImageToS3(
 ): Promise<string | undefined> {
   return saveToS3({
     matchId,
-    keyPrefix: "images",
-    keyExtension: "png",
+    assetType: "report",
+    extension: "png",
     body: imageBuffer,
     contentType: "image/png",
     metadata: {
@@ -95,8 +95,8 @@ export async function saveSvgToS3(
 ): Promise<string | undefined> {
   return saveToS3({
     matchId,
-    keyPrefix: "images",
-    keyExtension: "svg",
+    assetType: "report",
+    extension: "svg",
     body: svgContent,
     contentType: "image/svg+xml",
     metadata: {
@@ -131,8 +131,8 @@ export async function saveAIReviewTextToS3(
 ): Promise<string | undefined> {
   return saveToS3({
     matchId,
-    keyPrefix: "ai-reviews",
-    keyExtension: "txt",
+    assetType: "ai-review",
+    extension: "txt",
     body: reviewText,
     contentType: "text/plain",
     metadata: {
@@ -168,8 +168,8 @@ export async function saveAIReviewImageToS3(
 ): Promise<string | undefined> {
   return saveToS3({
     matchId,
-    keyPrefix: "ai-reviews",
-    keyExtension: "png",
+    assetType: "ai-review-image",
+    extension: "png",
     body: imageBuffer,
     contentType: "image/png",
     metadata: {
@@ -222,8 +222,8 @@ export async function saveAIReviewRequestToS3(
 
   return saveToS3({
     matchId,
-    keyPrefix: "ai-requests",
-    keyExtension: "json",
+    assetType: "ai-request",
+    extension: "json",
     body,
     contentType: "application/json",
     metadata: {
@@ -252,10 +252,62 @@ export async function saveAIReviewRequestToS3(
 
 type TimelineSummaryS3Params = {
   matchId: MatchId;
-  timelineDto: TimelineDto;
+  rawTimeline: RawTimeline | CuratedTimeline;
   prompt: string;
   summary: string;
   durationMs: number;
+};
+
+/**
+ * Comprehensive debug data for a match review
+ * Contains all AI requests/responses, prompts, and intermediate processing
+ */
+export type ComprehensiveDebugData = {
+  matchId: MatchId;
+  generatedAt: string;
+  queueType: string;
+  trackedPlayerAliases: string[];
+  personality: {
+    filename: string;
+    name: string;
+    description: string;
+    favoriteChampions: string[];
+    favoriteLanes: string[];
+  };
+  selectedPlayer: {
+    playerIndex: number;
+    playerName: string;
+    champion?: string;
+    lane?: string;
+    laneContext: string;
+    playerMetadata: unknown;
+  };
+  curatedData?: unknown;
+  timelineSummary?: {
+    summary: string;
+    durationMs?: number;
+  };
+  matchAnalysis?: {
+    analysis: string;
+    durationMs?: number;
+    model?: string;
+  };
+  reviewTextGeneration: {
+    systemPrompt: string;
+    userPrompt: string;
+    model?: string;
+    maxTokens?: number;
+    temperature?: number;
+    response: string;
+    tokensPrompt?: number;
+    tokensCompletion?: number;
+    durationMs: number;
+  };
+  imageGeneration?: {
+    imageDescription?: string;
+    imageGenerated: boolean;
+    geminiModel?: string;
+  };
 };
 
 /**
@@ -264,34 +316,38 @@ type TimelineSummaryS3Params = {
  * @returns Promise that resolves when both files are saved
  */
 export async function saveTimelineSummaryToS3(params: TimelineSummaryS3Params): Promise<void> {
-  const { matchId, timelineDto, prompt, summary, durationMs } = params;
+  const { matchId, rawTimeline, prompt, summary, durationMs } = params;
   // Save the request (timeline + prompt)
   const requestBody = JSON.stringify(
     {
       prompt,
-      timeline: timelineDto,
+      timeline: rawTimeline,
     },
     null,
     2,
   );
 
+  // Handle both RawTimeline and CuratedTimeline formats
+  const isCuratedTimeline = "keyEvents" in rawTimeline;
+  const eventCount = isCuratedTimeline ? rawTimeline.keyEvents.length : rawTimeline.info.frames.length;
+
   await saveToS3({
     matchId,
-    keyPrefix: "timeline-summaries",
-    keyExtension: "request.json",
+    assetType: "timeline-summary",
+    extension: "request.json",
     body: requestBody,
     contentType: "application/json",
     metadata: {
       matchId: matchId,
       type: "timeline-summary-request",
-      frameCount: timelineDto.info.frames.length.toString(),
+      frameCount: eventCount.toString(),
     },
     logEmoji: "📊",
     logMessage: "Saving timeline summary request to S3",
     errorContext: "timeline summary request",
     returnUrl: false,
     additionalLogDetails: {
-      frameCount: timelineDto.info.frames.length,
+      frameCount: eventCount,
     },
   });
 
@@ -308,8 +364,8 @@ export async function saveTimelineSummaryToS3(params: TimelineSummaryS3Params): 
 
   await saveToS3({
     matchId,
-    keyPrefix: "timeline-summaries",
-    keyExtension: "response.json",
+    assetType: "timeline-summary",
+    extension: "response.json",
     body: responseBody,
     contentType: "application/json",
     metadata: {
@@ -325,6 +381,41 @@ export async function saveTimelineSummaryToS3(params: TimelineSummaryS3Params): 
     additionalLogDetails: {
       durationMs,
       summaryLength: summary.length,
+    },
+  });
+}
+
+/**
+ * Save comprehensive debug data as a single JSON file to S3
+ * Contains all AI requests/responses, prompts, and intermediate processing for a match review
+ * @param debugData The comprehensive debug data to save
+ * @returns Promise that resolves to the S3 URL when saved, or undefined if S3 is not configured
+ */
+export async function saveComprehensiveDebugToS3(debugData: ComprehensiveDebugData): Promise<string | undefined> {
+  const body = JSON.stringify(debugData, null, 2);
+
+  return saveToS3({
+    matchId: debugData.matchId,
+    assetType: "debug",
+    extension: "json",
+    body,
+    contentType: "application/json",
+    metadata: {
+      matchId: debugData.matchId,
+      type: "comprehensive-debug",
+      queueType: debugData.queueType,
+      personality: debugData.personality.filename,
+      playerName: debugData.selectedPlayer.playerName,
+      trackedPlayers: debugData.trackedPlayerAliases.join(", "),
+    },
+    logEmoji: "🔍",
+    logMessage: "Saving comprehensive debug data to S3",
+    errorContext: "comprehensive debug data",
+    returnUrl: true,
+    additionalLogDetails: {
+      queueType: debugData.queueType,
+      personality: debugData.personality.filename,
+      playerName: debugData.selectedPlayer.playerName,
     },
   });
 }

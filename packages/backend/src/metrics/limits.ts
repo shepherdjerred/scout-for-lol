@@ -13,6 +13,9 @@ import {
 import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
 import { LIMIT_WARNING_THRESHOLD } from "@scout-for-lol/backend/configuration/subscription-limits.js";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("metrics-limits");
 
 /**
  * Update limit metrics based on current database state
@@ -81,6 +84,6 @@ export async function updateLimitMetrics(): Promise<void> {
     serversAtAccountLimit.set(atAcctLimit);
     serversApproachingAccountLimit.set(approachingAcctLimit);
   } catch (error) {
-    console.error("Failed to update limit metrics:", error);
+    logger.error("Failed to update limit metrics:", error);
   }
 }

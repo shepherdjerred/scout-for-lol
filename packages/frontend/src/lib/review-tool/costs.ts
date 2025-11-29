@@ -26,6 +26,17 @@ export function formatCost(cost: number): string {
 export class CostTracker {
   private costs: CostBreakdown[] = [];
   private initPromise: Promise<void>;
+  private subscribers = new Set<() => void>();
+  private cachedTotal: CostBreakdown = {
+    textInputCost: 0,
+    textOutputCost: 0,
+    imageCost: 0,
+    totalCost: 0,
+  };
+  private cachedSnapshot: { total: CostBreakdown; count: number } = {
+    total: this.cachedTotal,
+    count: 0,
+  };
 
   constructor() {
     // Load costs from IndexedDB on initialization
@@ -40,6 +51,8 @@ export class CostTracker {
         const result = ArraySchema.safeParse(stored);
         if (result.success) {
           this.costs = result.data;
+          this.updateCachedTotal();
+          this.notifySubscribers();
         }
       }
     } catch (error) {
@@ -57,15 +70,8 @@ export class CostTracker {
     }
   }
 
-  async add(cost: CostBreakdown): Promise<void> {
-    await this.initPromise;
-    this.costs.push(cost);
-    await this.saveToStorage();
-  }
-
-  async getTotal(): Promise<CostBreakdown> {
-    await this.initPromise;
-    return this.costs.reduce(
+  private updateCachedTotal(): void {
+    this.cachedTotal = this.costs.reduce(
       (acc, cost) => ({
         textInputCost: acc.textInputCost + cost.textInputCost,
         textOutputCost: acc.textOutputCost + cost.textOutputCost,
@@ -79,10 +85,47 @@ export class CostTracker {
         totalCost: 0,
       },
     );
+    // Update cached snapshot with new stable reference
+    this.cachedSnapshot = {
+      total: this.cachedTotal,
+      count: this.costs.length,
+    };
   }
 
-  async getCount(): Promise<number> {
+  private notifySubscribers(): void {
+    this.subscribers.forEach((callback) => {
+      callback();
+    });
+  }
+
+  /** Subscribe to cost updates - returns unsubscribe function */
+  subscribe(callback: () => void): () => void {
+    this.subscribers.add(callback);
+    return () => {
+      this.subscribers.delete(callback);
+    };
+  }
+
+  /** Get current snapshot synchronously (safe to call from useSyncExternalStore) */
+  getSnapshot(): { total: CostBreakdown; count: number } {
+    // Return cached snapshot to avoid creating new object reference on every call
+    return this.cachedSnapshot;
+  }
+
+  async add(cost: CostBreakdown): Promise<void> {
     await this.initPromise;
+    this.costs.push(cost);
+    this.updateCachedTotal();
+    this.notifySubscribers();
+    await this.saveToStorage();
+  }
+
+  async getTotal(): Promise<CostBreakdown> {
+    await this.initPromise;
+    return this.cachedTotal;
+  }
+
+  getCount(): number {
     return this.costs.length;
   }
 
@@ -94,23 +137,24 @@ export class CostTracker {
   async clear(): Promise<void> {
     await this.initPromise;
     this.costs = [];
+    this.updateCachedTotal();
+    this.notifySubscribers();
     await this.saveToStorage();
   }
 
   async export(): Promise<string> {
     await this.initPromise;
-    const total = await this.getTotal();
     const lines = [
       "Cost Report",
       "===========",
       `Total Requests: ${this.costs.length.toString()}`,
       "",
       "Breakdown:",
-      `  Text Input:  ${formatCost(total.textInputCost)}`,
-      `  Text Output: ${formatCost(total.textOutputCost)}`,
-      `  Images:      ${formatCost(total.imageCost)}`,
+      `  Text Input:  ${formatCost(this.cachedTotal.textInputCost)}`,
+      `  Text Output: ${formatCost(this.cachedTotal.textOutputCost)}`,
+      `  Images:      ${formatCost(this.cachedTotal.imageCost)}`,
       `  --------------------------------`,
-      `  TOTAL:       ${formatCost(total.totalCost)}`,
+      `  TOTAL:       ${formatCost(this.cachedTotal.totalCost)}`,
       "",
       "Per-Request Details:",
     ];

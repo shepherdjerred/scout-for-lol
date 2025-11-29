@@ -4,7 +4,9 @@ import { func, argument, object } from "@dagger.io/dagger";
 import {
   buildBackendImage,
   publishBackendImage,
+  publishBackendImageWithContainer,
   smokeTestBackendImage,
+  smokeTestBackendImageWithContainer,
   getBackendCoverage,
   getBackendTestReport,
 } from "@scout-for-lol/.dagger/src/backend";
@@ -15,8 +17,10 @@ import {
   checkDesktop,
   buildDesktopLinux,
   getDesktopLinuxArtifacts,
+  buildDesktopWindowsGnu,
+  getDesktopWindowsArtifacts,
 } from "@scout-for-lol/.dagger/src/desktop";
-import { getGitHubContainer, getBunNodeContainer } from "@scout-for-lol/.dagger/src/base";
+import { getGitHubContainer, getBunNodeContainer, getPreparedWorkspace } from "@scout-for-lol/.dagger/src/base";
 import {
   runAllChecksWithAnnotations,
   outputAnnotations,
@@ -153,22 +157,20 @@ export class ScoutForLol {
   ): Promise<string> {
     logWithTimestamp(`🔨 Starting build process for version ${version} (${gitSha})`);
 
-    // Build backend image
-    await withTiming("backend Docker image build", async () => {
-      logWithTimestamp("🔄 Building backend Docker image...");
-      const image = buildBackendImage(source, version, gitSha);
-      // Force the container to be evaluated by getting its ID
+    // OPTIMIZATION: Prepare workspace - don't sync(), let Dagger optimize
+    const preparedWorkspace = getPreparedWorkspace(source);
+
+    // Build backend image using prepared workspace
+    const backendImage = await withTiming("backend Docker image build", async () => {
+      const image = buildBackendImage(source, version, gitSha, preparedWorkspace);
       await image.id();
       return image;
     });
 
-    // Smoke test the backend image
+    // Smoke test the backend image (reuse already-built image)
     await withTiming("backend image smoke test", async () => {
-      logWithTimestamp("🧪 Running smoke test on backend image...");
-      const smokeTestResult = await smokeTestBackendImage(source, version, gitSha);
+      const smokeTestResult = await smokeTestBackendImageWithContainer(backendImage, source);
       logWithTimestamp(`Smoke test result: ${smokeTestResult}`);
-
-      // If smoke test indicates failure, throw an error
       if (smokeTestResult.startsWith("❌")) {
         throw new Error(`Backend image smoke test failed: ${smokeTestResult}`);
       }
@@ -176,10 +178,7 @@ export class ScoutForLol {
 
     // Build desktop application
     await withTiming("desktop application build", async () => {
-      logWithTimestamp("🔄 Building desktop application...");
-      const container = buildDesktopLinux(source, version);
-      await container.sync();
-      return container;
+      await buildDesktopLinux(source, version).sync();
     });
 
     logWithTimestamp("🎉 All builds completed successfully");
@@ -845,6 +844,33 @@ export class ScoutForLol {
   }
 
   /**
+   * Build the desktop application for Windows (x86_64-pc-windows-gnu)
+   * @param source The workspace source directory
+   * @param version The version to build
+   * @returns A message indicating completion
+   */
+  @func()
+  async buildDesktopWindows(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+  ): Promise<string> {
+    logWithTimestamp(`🏗️  Building desktop application for Windows (GNU) version ${version}`);
+
+    await withTiming("desktop build (windows gnu)", async () => {
+      const container = buildDesktopWindowsGnu(source, version);
+      await container.sync();
+      return container;
+    });
+
+    logWithTimestamp("✅ Desktop Windows build completed successfully");
+    return `Desktop Windows (GNU) build completed successfully for version ${version}`;
+  }
+
+  /**
    * Export desktop Linux build artifacts
    * @param source The workspace source directory
    * @param version The version to build
@@ -866,6 +892,31 @@ export class ScoutForLol {
     );
 
     logWithTimestamp("✅ Desktop artifacts exported successfully");
+    return result;
+  }
+
+  /**
+   * Export desktop Windows (x86_64-pc-windows-gnu) build artifacts
+   * @param source The workspace source directory
+   * @param version The version to build
+   * @returns The directory containing built artifacts
+   */
+  @func()
+  async desktopWindowsArtifacts(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+  ): Promise<Directory> {
+    logWithTimestamp(`📦 Exporting desktop Windows artifacts for version ${version}`);
+
+    const result = await withTiming("desktop windows artifacts export", () =>
+      Promise.resolve(getDesktopWindowsArtifacts(source, version)),
+    );
+
+    logWithTimestamp("✅ Desktop Windows artifacts exported successfully");
     return result;
   }
 }

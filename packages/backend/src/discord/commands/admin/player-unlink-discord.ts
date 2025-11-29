@@ -6,6 +6,9 @@ import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/co
 import { findPlayerByAliasWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
 import { buildPlayerUpdateResponse } from "@scout-for-lol/backend/discord/commands/admin/utils/player-responses.js";
 import { updatePlayerDiscordId } from "@scout-for-lol/backend/discord/commands/admin/utils/player-updates.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("admin-player-unlink-discord");
 import {
   validateDiscordUnlink,
   executeDiscordLinkOperation,
@@ -50,7 +53,7 @@ export async function executePlayerUnlinkDiscord(interaction: ChatInputCommandIn
         // This should never happen due to validation, but TypeScript needs the check
         return;
       }
-      console.log(`💾 Unlinking Discord ID ${previousDiscordId} from player "${playerAlias}"`);
+      logger.info(`💾 Unlinking Discord ID ${previousDiscordId} from player "${playerAlias}"`);
 
       await executeDiscordLinkOperation(
         interaction,

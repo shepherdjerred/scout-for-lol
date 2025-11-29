@@ -18,8 +18,7 @@ const GenerationResultSchema = z.object({
 const ConfigSnapshotSchema = z.object({
   model: z.string(),
   personality: z.string().optional(),
-  artStyle: z.string().optional(),
-  artTheme: z.string().optional(),
+  imageDescription: z.string().optional(),
 });
 
 export type HistoryEntry = {
@@ -29,8 +28,7 @@ export type HistoryEntry = {
   configSnapshot: {
     model: string;
     personality?: string;
-    artStyle?: string;
-    artTheme?: string;
+    imageDescription?: string;
   };
   status: "pending" | "complete" | "error";
   rating?: 1 | 2 | 3 | 4;
@@ -47,8 +45,7 @@ function buildConfigSnapshot(configData: z.infer<typeof ConfigSnapshotSchema>): 
   return {
     model: configData.model,
     ...(configData.personality !== undefined ? { personality: configData.personality } : {}),
-    ...(configData.artStyle !== undefined ? { artStyle: configData.artStyle } : {}),
-    ...(configData.artTheme !== undefined ? { artTheme: configData.artTheme } : {}),
+    ...(configData.imageDescription !== undefined ? { imageDescription: configData.imageDescription } : {}),
   };
 }
 
@@ -236,6 +233,9 @@ export async function saveCompletedEntry(
 
     // Trim old entries if we exceed max
     await db.trimToMaxEntries(MAX_HISTORY_ENTRIES);
+
+    // Trigger history panel to reload
+    window.dispatchEvent(new Event("history-update"));
   } catch (error) {
     console.error("Failed to save to history:", error);
   }
@@ -247,6 +247,8 @@ export async function saveCompletedEntry(
 export async function deleteHistoryEntry(id: string): Promise<void> {
   try {
     await db.deleteEntry(id);
+    // Trigger history panel to reload
+    window.dispatchEvent(new Event("history-update"));
   } catch (error) {
     console.error("Failed to delete history entry:", error);
   }
@@ -260,6 +262,8 @@ export async function clearHistory(): Promise<void> {
     await db.clearAllEntries();
     // Also clear old localStorage data if it exists
     localStorage.removeItem(STORAGE_KEY);
+    // Trigger history panel to reload
+    window.dispatchEvent(new Event("history-update"));
   } catch (error) {
     console.error("Failed to clear history:", error);
   }
@@ -282,6 +286,8 @@ export async function updateHistoryRating(id: string, rating: 1 | 2 | 3 | 4, not
     }
 
     await db.saveEntry(entry);
+    // Trigger history panel to reload
+    window.dispatchEvent(new Event("history-update"));
   } catch (error) {
     console.error("Failed to update rating:", error);
   }

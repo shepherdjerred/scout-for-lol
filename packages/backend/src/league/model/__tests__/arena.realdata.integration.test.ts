@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
-import type { MatchDto, Player } from "@scout-for-lol/data";
-import { ArenaMatchSchema, LeaguePuuidSchema, MatchDtoSchema } from "@scout-for-lol/data";
+import type { RawMatch, Player } from "@scout-for-lol/data";
+import { ArenaMatchSchema, LeaguePuuidSchema, RawMatchSchema } from "@scout-for-lol/data";
 import { toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
 
 const currentDir = new URL(".", import.meta.url).pathname;
@@ -10,22 +10,22 @@ const RAW_FILE_PATHS = [
   `${currentDir}/testdata/matches_2025_09_19_NA1_5370986469.json`,
 ];
 
-async function loadMatch(path: string): Promise<MatchDto> {
+async function loadMatch(path: string): Promise<RawMatch> {
   const file = Bun.file(path);
   const json = (await file.json()) as unknown;
-  return MatchDtoSchema.parse(json);
+  return RawMatchSchema.parse(json);
 }
 
 describe("toArenaMatch with real arena JSON", () => {
   it("produces valid ArenaMatch for each provided real match JSON", async () => {
     for (const path of RAW_FILE_PATHS) {
-      const matchDto = await loadMatch(path);
-      expect(matchDto.info.queueId).toBe(1700);
-      expect(matchDto.info.gameMode).toBe("CHERRY");
-      expect(matchDto.info.mapId).toBe(30);
-      expect(matchDto.info.participants.length).toBe(16);
+      const rawMatch = await loadMatch(path);
+      expect(rawMatch.info.queueId).toBe(1700);
+      expect(rawMatch.info.gameMode).toBe("CHERRY");
+      expect(rawMatch.info.mapId).toBe(30);
+      expect(rawMatch.info.participants.length).toBe(16);
       // choose first participant as the tracked player
-      const tracked = matchDto.info.participants[0];
+      const tracked = rawMatch.info.participants[0];
       if (!tracked) {
         throw new Error("participants should not be empty in real data test");
       }
@@ -44,7 +44,7 @@ describe("toArenaMatch with real arena JSON", () => {
         ranks: {},
       } satisfies Player;
 
-      const arenaMatch = await toArenaMatch([player], matchDto);
+      const arenaMatch = await toArenaMatch([player], rawMatch);
       const parsed = ArenaMatchSchema.parse(arenaMatch);
 
       expect(parsed).toMatchSnapshot();
