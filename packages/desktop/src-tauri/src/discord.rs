@@ -84,7 +84,9 @@ fn youtube_url_to_cache_filename(url: &str) -> String {
     url.hash(&mut hasher);
     let hash = hasher.finish();
 
-    format!("{hash:016x}.opus")
+    // Use MP3 format because Symphonia (used by Songbird for local file decoding)
+    // does not support Opus codec. MP3 is widely supported and has good compression.
+    format!("{hash:016x}.mp3")
 }
 
 /// Returns the full cache path for a YouTube URL
@@ -115,17 +117,27 @@ async fn download_youtube_to_cache(url: &str) -> Result<PathBuf, String> {
         cache_path.display()
     );
 
-    // Use yt-dlp to download audio only in opus format
-    // The -x flag extracts audio, --audio-format opus converts to opus
+    // Use yt-dlp to download audio only in MP3 format
+    // MP3 is used because Symphonia (Songbird's decoder for local files) doesn't support Opus
+    // The -x flag extracts audio, --audio-format mp3 converts to mp3
     // We use a temp file first to avoid partial downloads
-    let temp_path = cache_path.with_extension("opus.tmp");
+    //
+    // Note: yt-dlp appends the format extension to the output path, so if we specify
+    // "file_tmp" as output, it will create "file_tmp.mp3". We handle this by using
+    // a base temp path without extension.
+    let temp_base = cache_path.with_extension(""); // Remove .mp3 extension
+    let temp_path = temp_base.with_file_name(format!(
+        "{}_tmp",
+        temp_base.file_name().unwrap_or_default().to_string_lossy()
+    ));
+    let expected_output = temp_path.with_extension("mp3");
 
     let output = AsyncCommand::new("yt-dlp")
         .arg("-x")
         .arg("--audio-format")
-        .arg("opus")
+        .arg("mp3")
         .arg("--audio-quality")
-        .arg("0") // Best quality
+        .arg("0") // Best quality (320kbps for mp3)
         .arg("-o")
         .arg(&temp_path)
         .arg("--no-playlist")
@@ -140,15 +152,16 @@ async fn download_youtube_to_cache(url: &str) -> Result<PathBuf, String> {
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         error!("yt-dlp failed: {}", stderr);
-        // Clean up temp file if it exists
+        // Clean up temp files if they exist
         let _ = std::fs::remove_file(&temp_path);
+        let _ = std::fs::remove_file(&expected_output);
         return Err(format!("yt-dlp failed: {stderr}"));
     }
 
-    // Move temp file to final location
-    if let Err(err) = std::fs::rename(&temp_path, &cache_path) {
+    // yt-dlp outputs to temp_path.mp3, move it to final location
+    if let Err(err) = std::fs::rename(&expected_output, &cache_path) {
         error!("Failed to move cached file: {}", err);
-        let _ = std::fs::remove_file(&temp_path);
+        let _ = std::fs::remove_file(&expected_output);
         return Err(format!("Failed to finalize cached file: {err}"));
     }
 
