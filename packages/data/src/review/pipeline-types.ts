@@ -9,8 +9,9 @@
  */
 
 import type { GoogleGenerativeAI } from "@google/generative-ai";
-import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
-import type { RawMatch, RawTimeline } from "@scout-for-lol/data";
+import type { ArenaMatch, CompletedMatch } from "../model/index.js";
+import type { RawMatch } from "../league/raw-match.schema.js";
+import type { RawTimeline } from "../league/raw-timeline.schema.js";
 import type { CuratedMatchData, CuratedTimeline } from "./curator-types.js";
 import type { Personality, PlayerMetadata } from "./prompts.js";
 
