@@ -3,6 +3,9 @@ import type OpenAI from "openai";
 import * as Sentry from "@sentry/node";
 import { saveTimelineSummaryToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import { getOpenAIClient } from "./ai-clients.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("review-timeline-summary");
 
 const TIMELINE_SUMMARY_PROMPT = `You are a League of Legends analyst. Analyze this match timeline data and provide a concise summary of how the game unfolded.
 
@@ -33,7 +36,7 @@ export async function summarizeTimeline(
 ): Promise<string | undefined> {
   const openaiClient = client ?? getOpenAIClient();
   if (!openaiClient) {
-    console.log("[summarizeTimeline] OpenAI API key not configured, skipping timeline summary");
+    logger.info("[summarizeTimeline] OpenAI API key not configured, skipping timeline summary");
     return undefined;
   }
 
@@ -42,8 +45,8 @@ export async function summarizeTimeline(
     const timelineJson = JSON.stringify(curatedTimeline);
     const fullPrompt = TIMELINE_SUMMARY_PROMPT + timelineJson;
 
-    console.log("[summarizeTimeline] Calling OpenAI to summarize timeline...");
-    console.log(`[summarizeTimeline] Timeline JSON size: ${timelineJson.length.toString()} chars`);
+    logger.info("[summarizeTimeline] Calling OpenAI to summarize timeline...");
+    logger.info(`[summarizeTimeline] Timeline JSON size: ${timelineJson.length.toString()} chars`);
     const startTime = Date.now();
 
     const response = await openaiClient.chat.completions.create({
@@ -59,16 +62,16 @@ export async function summarizeTimeline(
     });
 
     const duration = Date.now() - startTime;
-    console.log(`[summarizeTimeline] OpenAI response received in ${duration.toString()}ms`);
+    logger.info(`[summarizeTimeline] OpenAI response received in ${duration.toString()}ms`);
 
     const content = response.choices[0]?.message.content;
     if (!content) {
-      console.log("[summarizeTimeline] No content in OpenAI response");
+      logger.info("[summarizeTimeline] No content in OpenAI response");
       return undefined;
     }
 
     const summary = content.trim();
-    console.log(`[summarizeTimeline] Generated summary (${summary.length.toString()} chars)`);
+    logger.info(`[summarizeTimeline] Generated summary (${summary.length.toString()} chars)`);
 
     try {
       await saveTimelineSummaryToS3({
@@ -79,12 +82,12 @@ export async function summarizeTimeline(
         durationMs: duration,
       });
     } catch (s3Error) {
-      console.error("[summarizeTimeline] Failed to save to S3:", s3Error);
+      logger.error("[summarizeTimeline] Failed to save to S3:", s3Error);
     }
 
     return summary;
   } catch (error) {
-    console.error("[summarizeTimeline] Error summarizing timeline:", error);
+    logger.error("[summarizeTimeline] Error summarizing timeline:", error);
     Sentry.captureException(error, {
       tags: {
         source: "timeline-summarization",

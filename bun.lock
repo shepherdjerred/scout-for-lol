@@ -71,6 +71,7 @@
         "remeda": "^2.21.2",
         "satori": "^0.18.0",
         "ts-pattern": "^5.7.0",
+        "tslog": "^4.10.2",
         "twisted": "^1.63.3",
         "uuid": "^13.0.0",
         "yoga-wasm-web": "^0.3.3",
@@ -2709,6 +2710,8 @@
     "tsconfig-paths": ["tsconfig-paths@3.15.0", "", { "dependencies": { "@types/json5": "^0.0.29", "json5": "^1.0.2", "minimist": "^1.2.6", "strip-bom": "^3.0.0" } }, "sha512-2Ac2RgzDe/cn48GvOe3M+o82pEFewD3UPbyoUHHdKasHwJKjds4fLXWf/Ux5kATBKN20oaFGu+jbElp1pos0mg=="],
 
     "tslib": ["tslib@2.8.1", "", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
+
+    "tslog": ["tslog@4.10.2", "", {}, "sha512-XuELoRpMR+sq8fuWwX7P0bcj+PRNiicOKDEb3fGNURhxWVyykCi9BNq7c4uVz7h7P0sj8qgBsr5SWS6yBClq3g=="],
 
     "twisted": ["twisted@1.72.2", "", { "dependencies": { "axios": "^1.6.2", "dotenv": "^16.3.1", "http-status-codes": "^2.3.0", "lodash": "^4.17.21", "promise-queue": "^2.2.5", "uuid": "^9.0.1" } }, "sha512-JXB+NHchuzeQEJotQ2t1yNfHoJeNPo3iFLdc7GxIg1Jwhh5D7BcINFv/FdMlXzDYfgR94vCuQ5GXwkdB0bvCPg=="],
 

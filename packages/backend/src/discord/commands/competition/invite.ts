@@ -19,6 +19,9 @@ import {
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import type { CompetitionId } from "@scout-for-lol/data";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("competition-invite");
 
 /**
  * Handle existing participant status
@@ -132,7 +135,7 @@ Only the competition owner can invite participants. The owner of this competitio
       },
     });
   } catch (error) {
-    console.error(`[Competition Invite] Error fetching player for user ${targetUser.id}:`, error);
+    logger.error(`[Competition Invite] Error fetching player for user ${targetUser.id}:`, error);
     await replyWithErrorFromException(interaction, error, "fetching player data");
     return;
   }
@@ -155,7 +158,7 @@ Only the competition owner can invite participants. The owner of this competitio
   try {
     participantStatus = await getParticipantStatus(prisma, competitionId, player.id);
   } catch (error) {
-    console.error(`[Competition Invite] Error checking participant status:`, error);
+    logger.error(`[Competition Invite] Error checking participant status:`, error);
     await replyWithErrorFromException(interaction, error, "checking participation status");
     return;
   }
@@ -198,11 +201,11 @@ Only the competition owner can invite participants. The owner of this competitio
       status: "INVITED",
       invitedBy: userId,
     });
-    console.log(
+    logger.info(
       `[Competition Invite] User ${userId} invited ${targetUser.id} to competition ${competitionId.toString()}`,
     );
   } catch (error) {
-    console.error(`[Competition Invite] Error adding participant:`, error);
+    logger.error(`[Competition Invite] Error adding participant:`, error);
     await replyWithErrorFromException(interaction, error, "sending invitation");
     return;
   }
@@ -234,9 +237,9 @@ You've been invited to compete in **${competition.title}**!
 To join, use:
 \`/competition join competition-id:${competitionId.toString()}\``),
     });
-    console.log(`[Competition Invite] DM sent to user ${targetUser.id}`);
+    logger.info(`[Competition Invite] DM sent to user ${targetUser.id}`);
   } catch (error) {
-    console.warn(`[Competition Invite] Failed to DM user ${targetUser.id}:`, getErrorMessage(error));
+    logger.warn(`[Competition Invite] Failed to DM user ${targetUser.id}:`, getErrorMessage(error));
     dmFailed = true;
   }
 

@@ -4,6 +4,9 @@ import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.js";
 import type { PlayerConfigEntry, LeaguePuuid } from "@scout-for-lol/data";
 import { updateLastMatchTime } from "@scout-for-lol/backend/database/index.js";
 import { getRecentMatchIds } from "@scout-for-lol/backend/league/api/match-history.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("api-backfill-match-history");
 
 /**
  * Backfill the lastMatchTime for a newly added player.
@@ -21,24 +24,24 @@ export async function backfillLastMatchTime(player: PlayerConfigEntry, puuid: Le
   const playerPuuid = player.league.leagueAccount.puuid;
   const playerRegion = player.league.leagueAccount.region;
 
-  console.log(`🔄 Backfilling match history for ${playerAlias} (${playerPuuid})`);
+  logger.info(`🔄 Backfilling match history for ${playerAlias} (${playerPuuid})`);
 
   try {
     // Fetch most recent match ID
     const recentMatchIds = await getRecentMatchIds(player, 1);
 
     if (!recentMatchIds || recentMatchIds.length === 0) {
-      console.log(`ℹ️  No match history found for ${playerAlias}, will use MAX polling interval`);
+      logger.info(`ℹ️  No match history found for ${playerAlias}, will use MAX polling interval`);
       return undefined;
     }
 
     const mostRecentMatchId = recentMatchIds[0];
     if (!mostRecentMatchId) {
-      console.log(`ℹ️  No match history found for ${playerAlias}, will use MAX polling interval`);
+      logger.info(`ℹ️  No match history found for ${playerAlias}, will use MAX polling interval`);
       return undefined;
     }
 
-    console.log(`📜 Most recent match ID for ${playerAlias}: ${mostRecentMatchId}`);
+    logger.info(`📜 Most recent match ID for ${playerAlias}: ${mostRecentMatchId}`);
 
     // Fetch match details to get game creation time
     const region = mapRegionToEnum(playerRegion);
@@ -47,14 +50,14 @@ export async function backfillLastMatchTime(player: PlayerConfigEntry, puuid: Le
     const matchData = response.response;
     const gameCreationTime = new Date(matchData.info.gameCreation);
 
-    console.log(`✅ Found most recent match for ${playerAlias} at ${gameCreationTime.toISOString()}`);
+    logger.info(`✅ Found most recent match for ${playerAlias} at ${gameCreationTime.toISOString()}`);
 
     // Update the database
     await updateLastMatchTime(puuid, gameCreationTime);
 
     return gameCreationTime;
   } catch (error) {
-    console.error(`❌ Error backfilling match history for ${playerAlias}:`, error);
+    logger.error(`❌ Error backfilling match history for ${playerAlias}:`, error);
     return undefined;
   }
 }

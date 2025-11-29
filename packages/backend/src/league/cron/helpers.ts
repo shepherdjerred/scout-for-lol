@@ -2,6 +2,9 @@ import { CronJob } from "cron";
 import { logErrors } from "@scout-for-lol/backend/league/util";
 import { cronJobExecutionsTotal, cronJobDuration, cronJobLastSuccess } from "@scout-for-lol/backend/metrics/index.js";
 import { logCronTrigger } from "@scout-for-lol/backend/utils/notification-logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("cron-helpers");
 
 type CronJobConfig = {
   schedule: string;
@@ -31,7 +34,7 @@ export function createCronJob(config: CronJobConfig): CronJob {
     schedule,
     logErrors(async () => {
       const startTime = Date.now();
-      console.log(logMessage);
+      logger.info(logMessage);
 
       if (logTrigger) {
         logCronTrigger(jobName, logTrigger);
@@ -41,7 +44,7 @@ export function createCronJob(config: CronJobConfig): CronJob {
         await task();
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
-        console.log(`✅ ${jobName} completed in ${executionTime.toString()}ms`);
+        logger.info(`✅ ${jobName} completed in ${executionTime.toString()}ms`);
 
         // Record successful execution metrics
         cronJobExecutionsTotal.inc({ job_name: jobName, status: "success" });

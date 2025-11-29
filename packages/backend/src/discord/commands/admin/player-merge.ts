@@ -3,6 +3,9 @@ import { z } from "zod";
 import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("admin-player-merge");
 import {
   validateCommandArgs,
   executeWithTiming,
@@ -36,7 +39,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
   await executeWithTiming("player-merge", username, async () => {
     // Check if trying to merge with self
     if (sourceAlias === targetAlias) {
-      console.log(`❌ Cannot merge player with itself`);
+      logger.info(`❌ Cannot merge player with itself`);
       await interaction.reply({
         content: `❌ **Invalid merge**\n\nCannot merge a player with itself.`,
         ephemeral: true,
@@ -60,7 +63,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
     });
 
     if (!sourcePlayer) {
-      console.log(`❌ Source player not found: "${sourceAlias}"`);
+      logger.info(`❌ Source player not found: "${sourceAlias}"`);
       await interaction.reply({
         content: `❌ **Source player not found**\n\nNo player with alias "${sourceAlias}" exists in this server.`,
         ephemeral: true,
@@ -84,7 +87,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
     });
 
     if (!targetPlayer) {
-      console.log(`❌ Target player not found: "${targetAlias}"`);
+      logger.info(`❌ Target player not found: "${targetAlias}"`);
       await interaction.reply({
         content: `❌ **Target player not found**\n\nNo player with alias "${targetAlias}" exists in this server.`,
         ephemeral: true,
@@ -92,7 +95,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
       return;
     }
 
-    console.log(
+    logger.info(
       `💾 Merging player "${sourceAlias}" (${sourcePlayer.accounts.length.toString()} accounts, ${sourcePlayer.subscriptions.length.toString()} subscriptions) into "${targetAlias}" (${targetPlayer.accounts.length.toString()} accounts, ${targetPlayer.subscriptions.length.toString()} subscriptions)`,
     );
 
@@ -112,7 +115,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
           },
         });
 
-        console.log(`✅ Moved ${sourcePlayer.accounts.length.toString()} accounts to target player`);
+        logger.info(`✅ Moved ${sourcePlayer.accounts.length.toString()} accounts to target player`);
 
         // 2. Handle subscriptions - keep target's subscriptions, delete source's duplicates
         // Get all unique channel IDs from both players
@@ -126,7 +129,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
           },
         });
 
-        console.log(`✅ Removed ${sourcePlayer.subscriptions.length.toString()} subscriptions from source player`);
+        logger.info(`✅ Removed ${sourcePlayer.subscriptions.length.toString()} subscriptions from source player`);
 
         // Create new subscriptions for channels that were only in source
         const uniqueSourceChannels = Array.from(sourceChannelIds).filter(
@@ -145,7 +148,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
             })),
           });
 
-          console.log(`✅ Added ${uniqueSourceChannels.length.toString()} new subscriptions to target player`);
+          logger.info(`✅ Added ${uniqueSourceChannels.length.toString()} new subscriptions to target player`);
         }
 
         // 3. Handle competition participants
@@ -160,7 +163,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
           },
         });
 
-        console.log(
+        logger.info(
           `✅ Removed ${sourcePlayer.competitionParticipants.length.toString()} competition participants from source player`,
         );
 
@@ -187,7 +190,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
             })),
           });
 
-          console.log(
+          logger.info(
             `✅ Added ${uniqueSourceCompetitions.length.toString()} competition participations to target player`,
           );
         }
@@ -202,7 +205,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
           },
         });
 
-        console.log(`✅ Moved competition snapshots to target player`);
+        logger.info(`✅ Moved competition snapshots to target player`);
 
         // 5. Delete the source player
         await tx.player.delete({
@@ -211,7 +214,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
           },
         });
 
-        console.log(`✅ Deleted source player "${sourceAlias}"`);
+        logger.info(`✅ Deleted source player "${sourceAlias}"`);
 
         // 6. Update target player's metadata
         await tx.player.update({
@@ -236,7 +239,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
         ephemeral: true,
       });
     } catch (error) {
-      console.error(`❌ Database error during player merge:`, error);
+      logger.error(`❌ Database error during player merge:`, error);
       await interaction.reply({
         content: `❌ **Error merging players**\n\nFailed to merge players: ${getErrorMessage(error)}\n\nNo changes were made.`,
         ephemeral: true,
