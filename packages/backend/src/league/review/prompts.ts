@@ -6,6 +6,13 @@ import {
   type PlayerMetadata,
 } from "@scout-for-lol/data";
 
+/**
+ * In-memory state tracking for balanced reviewer selection.
+ * Tracks how many times each reviewer has been selected to ensure
+ * fair distribution across all available reviewers.
+ */
+const reviewerUsageCount = new Map<string, number>();
+
 // Resolve the prompts directory from the data package
 // import.meta.resolve returns a file:// URL, so we extract the pathname
 function getPromptsDir(): string {
@@ -88,16 +95,60 @@ async function loadPersonality(basename: string): Promise<Personality> {
 }
 
 /**
- * Select a random personality prompt
- * Note: Currently hardcoded to always return "aaron" personality
+ * Select a random personality prompt using balanced pseudo-random selection.
+ * All reviewers with complete data (metadata + instructions + style card) are included.
+ * The algorithm ensures no reviewer is selected too often or too seldom.
  */
 export async function selectRandomPersonality(): Promise<Personality> {
   const personalities = await listValidPersonalities();
-  const pick = personalities[Math.floor(Math.random() * personalities.length)];
-  if (!pick) {
-    throw new Error("No personalities available with complete data.");
+  const selectedPersonality = selectBalancedReviewer(personalities);
+
+  console.log(
+    `[selectRandomPersonality] Selected: ${selectedPersonality.filename ?? selectedPersonality.metadata.name}, ` +
+      `usage counts: ${JSON.stringify(Object.fromEntries(reviewerUsageCount))}`,
+  );
+
+  return selectedPersonality;
+}
+
+/**
+ * Select a personality using a balanced pseudo-random algorithm.
+ * Prioritizes reviewers who have been selected fewer times to ensure
+ * fair distribution across all available reviewers.
+ */
+function selectBalancedReviewer(availablePersonalities: Personality[]): Personality {
+  if (availablePersonalities.length === 0) {
+    throw new Error("No personalities available for selection");
   }
-  return pick;
+
+  // Initialize usage counts for new personalities
+  for (const personality of availablePersonalities) {
+    const key = personality.filename ?? personality.metadata.name;
+    if (!reviewerUsageCount.has(key)) {
+      reviewerUsageCount.set(key, 0);
+    }
+  }
+
+  // Find the minimum usage count among available personalities
+  const getUsageCount = (p: Personality) => reviewerUsageCount.get(p.filename ?? p.metadata.name) ?? 0;
+  const minUsage = Math.min(...availablePersonalities.map(getUsageCount));
+
+  // Get all personalities that have the minimum usage count
+  const leastUsedPersonalities = availablePersonalities.filter((p) => getUsageCount(p) === minUsage);
+
+  // Randomly select from the least used personalities
+  const randomIndex = Math.floor(Math.random() * leastUsedPersonalities.length);
+  const selected = leastUsedPersonalities[randomIndex];
+
+  if (!selected) {
+    throw new Error("Failed to select personality from least used pool");
+  }
+
+  // Increment the usage count for the selected personality
+  const key = selected.filename ?? selected.metadata.name;
+  reviewerUsageCount.set(key, (reviewerUsageCount.get(key) ?? 0) + 1);
+
+  return selected;
 }
 
 let cachedPersonalities: Personality[] | null = null;
