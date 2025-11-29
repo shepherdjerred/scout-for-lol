@@ -1,7 +1,7 @@
 /**
  * Application header with integrated tabs and quick actions
  */
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import type { TabData } from "./app";
 import { Button } from "./ui/button";
 import { IconButton } from "./ui/icon-button";
@@ -34,6 +34,13 @@ export function AppHeader({
 }: AppHeaderProps) {
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+
+  // Callback ref to focus input when it mounts (accessible alternative to autoFocus)
+  const focusInputRef = useCallback((node: HTMLInputElement | null) => {
+    if (node) {
+      node.focus();
+    }
+  }, []);
 
   const startEditing = (tab: TabData) => {
     setEditingTabId(tab.id);
@@ -132,6 +139,7 @@ export function AppHeader({
 
                 {editingTabId === tab.id ? (
                   <input
+                    ref={focusInputRef}
                     type="text"
                     value={editName}
                     onChange={(e) => {
@@ -147,7 +155,6 @@ export function AppHeader({
                       }
                     }}
                     className="px-2 py-0.5 text-sm bg-white dark:bg-surface-800 border border-brand-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-surface-900 dark:text-white"
-                    autoFocus
                   />
                 ) : (
                   <span
