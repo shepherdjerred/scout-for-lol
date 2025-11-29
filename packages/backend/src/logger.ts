@@ -17,6 +17,7 @@
  * ```
  */
 import { Logger, type ILogObj, type ISettingsParam } from "tslog";
+import { z } from "zod";
 // Bun.write() does not support append mode (see https://github.com/oven-sh/bun/issues/10473)
 // Bun implements node:fs for this use case, and recommends using it for file appending
 // eslint-disable-next-line no-restricted-imports -- Bun.write() lacks append support, node:fs/promises is the official Bun-recommended approach for file appending
@@ -33,9 +34,9 @@ import { appendFile, mkdir } from "node:fs/promises";
  * 6 = fatal
  */
 
-const LOG_FILE_PATH = Bun.env.LOG_FILE_PATH ?? "./logs/app.log";
-const LOG_LEVEL_STDOUT = Bun.env.LOG_LEVEL_STDOUT ?? "info";
-const LOG_LEVEL_FILE = Bun.env.LOG_LEVEL_FILE ?? "debug";
+const LOG_FILE_PATH = Bun.env["LOG_FILE_PATH"] ?? "./logs/app.log";
+const LOG_LEVEL_STDOUT = Bun.env["LOG_LEVEL_STDOUT"] ?? "info";
+const LOG_LEVEL_FILE = Bun.env["LOG_LEVEL_FILE"] ?? "debug";
 
 // Map log level names to numbers
 const LOG_LEVEL_MAP: Record<string, number> = {
@@ -68,14 +69,19 @@ async function ensureLogDirectory(): Promise<void> {
 // Initialize log directory (fire and forget)
 void ensureLogDirectory();
 
-type LogMeta = {
-  logLevelName?: string;
-  logLevelId?: number;
-  name?: string;
-  path?: {
-    filePathWithLine?: string;
-  };
-};
+/**
+ * Parse log metadata using Zod for type safety
+ */
+const LogMetaSchema = z.object({
+  logLevelName: z.string().optional(),
+  logLevelId: z.number().optional(),
+  name: z.string().optional(),
+  path: z
+    .object({
+      filePathWithLine: z.string().optional(),
+    })
+    .optional(),
+});
 
 /**
  * File transport that writes all log levels to a file
@@ -83,9 +89,10 @@ type LogMeta = {
  */
 function fileTransport(logObj: ILogObj): void {
   const timestamp = new Date().toISOString();
-  const meta = logObj._meta as LogMeta | undefined;
-  const level = String(meta?.logLevelName ?? "INFO").toUpperCase();
-  const name = String(meta?.name ?? "app");
+  const metaResult = LogMetaSchema.safeParse(logObj["_meta"]);
+  const meta = metaResult.success ? metaResult.data : undefined;
+  const level = (meta?.logLevelName ?? "INFO").toUpperCase();
+  const name = meta?.name ?? "app";
   const filePath = meta?.path?.filePathWithLine ?? "";
 
   // Extract message and additional data
@@ -112,10 +119,14 @@ function fileTransport(logObj: ILogObj): void {
   const logLine = `${timestamp} [${level}] [${name}] ${filePath ? `(${filePath}) ` : ""}${message}\n`;
 
   // Fire and forget async append
-  void appendFile(LOG_FILE_PATH, logLine).catch(() => {
-    // Silently fail if we can't write to the log file
-    // We don't want logging failures to crash the app
-  });
+  void (async () => {
+    try {
+      await appendFile(LOG_FILE_PATH, logLine);
+    } catch {
+      // Silently fail if we can't write to the log file
+      // We don't want logging failures to crash the app
+    }
+  })();
 }
 
 /**
@@ -148,7 +159,8 @@ const baseSettings: ISettingsParam<ILogObj> = {
   attachedTransports: [
     (logObj: ILogObj) => {
       // File transport logs everything (level 0 = silly)
-      const meta = logObj._meta as LogMeta | undefined;
+      const metaResult = LogMetaSchema.safeParse(logObj["_meta"]);
+      const meta = metaResult.success ? metaResult.data : undefined;
       const logLevel = meta?.logLevelId ?? 3;
       const minFileLevel = getLogLevelNumber(LOG_LEVEL_FILE);
       if (logLevel >= minFileLevel) {

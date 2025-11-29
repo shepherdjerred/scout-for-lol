@@ -1,27 +1,30 @@
 import * as Sentry from "@sentry/node";
 import { z } from "zod";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("league-util");
 
 export function logErrors(fn: () => Promise<unknown>) {
   return async () => {
     const functionName = fn.name || "anonymous";
-    console.log(`🔄 Executing function: ${functionName}`);
+    logger.info(`🔄 Executing function: ${functionName}`);
 
     try {
       const startTime = Date.now();
       await fn();
       const executionTime = Date.now() - startTime;
-      console.log(`✅ Function ${functionName} completed successfully in ${executionTime.toString()}ms`);
+      logger.info(`✅ Function ${functionName} completed successfully in ${executionTime.toString()}ms`);
     } catch (e) {
-      console.error(`❌ Function ${functionName} failed:`, e);
+      logger.error(`❌ Function ${functionName} failed:`, e);
 
       // Log additional error context
       const ErrorDetailsSchema = z.object({ name: z.string(), message: z.string(), stack: z.string().optional() });
       const errorResult = ErrorDetailsSchema.safeParse(e);
       if (errorResult.success) {
-        console.error(`❌ Error name: ${errorResult.data.name}`);
-        console.error(`❌ Error message: ${errorResult.data.message}`);
+        logger.error(`❌ Error name: ${errorResult.data.name}`);
+        logger.error(`❌ Error message: ${errorResult.data.message}`);
         if (errorResult.data.stack) {
-          console.error(`❌ Error stack: ${errorResult.data.stack}`);
+          logger.error(`❌ Error stack: ${errorResult.data.stack}`);
         }
       }
 

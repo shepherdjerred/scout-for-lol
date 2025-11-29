@@ -2,6 +2,9 @@ import type { MatchId } from "@scout-for-lol/data";
 import type OpenAI from "openai";
 import * as Sentry from "@sentry/node";
 import { saveArtPromptToS3 } from "@scout-for-lol/backend/storage/ai-review-s3.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("review-ai-art");
 
 const ART_PROMPT_SYSTEM_PROMPT = `You are an art director turning a League of Legends performance review into a single striking image concept.
 Blend the specified art style and theme(s) with the mood and key beats from the review text.
@@ -41,7 +44,7 @@ ${reviewText}`;
   const hintsInfo = personalityImageHints?.length
     ? ` with ${personalityImageHints.length.toString()} personality hints`
     : "";
-  console.log(
+  logger.info(
     `[generateArtPromptFromReview] Calling OpenAI to craft art prompt with style "${style}" and themes "${themeSummary}"${hintsInfo}`,
   );
   const startTime = Date.now();
@@ -62,10 +65,10 @@ ${reviewText}`;
     const duration = Date.now() - startTime;
     const artPrompt = response.choices[0]?.message.content?.trim();
     if (!artPrompt) {
-      console.log("[generateArtPromptFromReview] No art prompt content returned from OpenAI");
+      logger.info("[generateArtPromptFromReview] No art prompt content returned from OpenAI");
       return undefined;
     }
-    console.log(`[generateArtPromptFromReview] Generated art prompt (${artPrompt.length.toString()} chars)`);
+    logger.info(`[generateArtPromptFromReview] Generated art prompt (${artPrompt.length.toString()} chars)`);
 
     try {
       await saveArtPromptToS3({
@@ -86,13 +89,13 @@ ${reviewText}`;
         },
       });
     } catch (s3Error) {
-      console.error("[generateArtPromptFromReview] Failed to save art prompt to S3:", s3Error);
+      logger.error("[generateArtPromptFromReview] Failed to save art prompt to S3:", s3Error);
     }
 
     return artPrompt;
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
-    console.error("[generateArtPromptFromReview] Error generating art prompt:", err);
+    logger.error("[generateArtPromptFromReview] Error generating art prompt:", err);
     Sentry.captureException(err, {
       tags: {
         source: "openai-art-prompt",

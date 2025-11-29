@@ -1,8 +1,11 @@
 import configuration from "@scout-for-lol/backend/configuration.js";
 import { getMetrics } from "@scout-for-lol/backend/metrics/index.js";
 import * as Sentry from "@sentry/node";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
 
-console.log("🌐 Initializing HTTP server");
+const logger = createLogger("http-server");
+
+logger.info("🌐 Initializing HTTP server");
 
 /**
  * Simple HTTP server for health checks and metrics using Bun's native server
@@ -34,7 +37,7 @@ const server = Bun.serve({
           },
         });
       } catch (error) {
-        console.error("❌ Error generating metrics:", error);
+        logger.error("❌ Error generating metrics:", error);
         Sentry.captureException(error, { tags: { source: "http-server-metrics" } });
         return new Response("Internal Server Error", {
           status: 500,
@@ -54,7 +57,7 @@ const server = Bun.serve({
     });
   },
   error(error) {
-    console.error("❌ HTTP server error:", error);
+    logger.error("❌ HTTP server error:", error);
     Sentry.captureException(error, { tags: { source: "http-server" } });
     return new Response("Internal Server Error", {
       status: 500,
@@ -66,15 +69,15 @@ const server = Bun.serve({
 });
 
 const port = server.port?.toString() ?? "unknown";
-console.log(`✅ HTTP server started on http://0.0.0.0:${port}`);
-console.log(`🏥 Health check: http://0.0.0.0:${port}/ping`);
-console.log(`📊 Metrics endpoint: http://0.0.0.0:${port}/metrics`);
+logger.info(`✅ HTTP server started on http://0.0.0.0:${port}`);
+logger.info(`🏥 Health check: http://0.0.0.0:${port}/ping`);
+logger.info(`📊 Metrics endpoint: http://0.0.0.0:${port}/metrics`);
 
 /**
  * Gracefully shut down the HTTP server
  */
 export async function shutdownHttpServer(): Promise<void> {
-  console.log("🛑 Shutting down HTTP server");
+  logger.info("🛑 Shutting down HTTP server");
   await server.stop();
-  console.log("✅ HTTP server shut down successfully");
+  logger.info("✅ HTTP server shut down successfully");
 }

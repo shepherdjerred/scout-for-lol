@@ -9,6 +9,9 @@ import { z } from "zod";
 import * as Sentry from "@sentry/node";
 import { saveAIReviewImageToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import { getGeminiClient } from "./ai-clients.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("review-image-backend");
 
 const AI_IMAGES_DIR = `${import.meta.dir}/ai-images`;
 
@@ -25,9 +28,9 @@ async function saveImageLocally(buffer: Uint8Array): Promise<void> {
   try {
     const filepath = `${AI_IMAGES_DIR}/ai-review-${new Date().toISOString().replace(/[:.]/g, "-")}.png`;
     await Bun.write(filepath, buffer);
-    console.log(`[generateReviewImage] Saved image to: ${filepath}`);
+    logger.info(`[generateReviewImage] Saved image to: ${filepath}`);
   } catch (fsError: unknown) {
-    console.error("[generateReviewImage] Failed to save image to filesystem:", fsError);
+    logger.error("[generateReviewImage] Failed to save image to filesystem:", fsError);
   }
 }
 
@@ -42,7 +45,7 @@ async function uploadImageToS3(params: {
     const trackedPlayerAliases = match.players.map((p) => p.playerConfig.alias);
     await saveAIReviewImageToS3(matchId, buffer, queueType, trackedPlayerAliases);
   } catch (s3Error: unknown) {
-    console.error("[generateReviewImage] Failed to save image to S3:", s3Error);
+    logger.error("[generateReviewImage] Failed to save image to S3:", s3Error);
   }
 }
 
@@ -63,24 +66,24 @@ export async function generateReviewImageBackend(params: {
   const { reviewText, artPrompt, match, matchId, queueType, style, themes, curatedData } = params;
   const client = getGeminiClient();
   if (!client) {
-    console.log("[generateReviewImage] Gemini API key not configured, skipping image generation");
+    logger.info("[generateReviewImage] Gemini API key not configured, skipping image generation");
     return undefined;
   }
 
   try {
     const isMashup = themes.length > 1;
 
-    console.log(`[generateReviewImage] Using art style: ${style}`);
+    logger.info(`[generateReviewImage] Using art style: ${style}`);
     if (isMashup) {
-      console.log(`[generateReviewImage] MASHUP! Themes: ${themes.join(" meets ")}`);
+      logger.info(`[generateReviewImage] MASHUP! Themes: ${themes.join(" meets ")}`);
     } else {
       const firstTheme = themes[0];
-      console.log(`[generateReviewImage] Using theme: ${firstTheme ?? "unknown"}`);
+      logger.info(`[generateReviewImage] Using theme: ${firstTheme ?? "unknown"}`);
     }
     if (artPrompt) {
-      console.log(`[generateReviewImage] Using AI-crafted art prompt (${artPrompt.length.toString()} chars)`);
+      logger.info(`[generateReviewImage] Using AI-crafted art prompt (${artPrompt.length.toString()} chars)`);
     }
-    console.log("[generateReviewImage] Calling Gemini API to generate image...");
+    logger.info("[generateReviewImage] Calling Gemini API to generate image...");
 
     const matchDataJson = buildMatchDataJson(match, curatedData);
     const promptForGemini = artPrompt ?? reviewText;
@@ -96,10 +99,10 @@ export async function generateReviewImageBackend(params: {
       timeoutMs: 60_000,
     });
 
-    console.log(`[generateReviewImage] Gemini API call completed in ${result.metadata.imageDurationMs.toString()}ms`);
+    logger.info(`[generateReviewImage] Gemini API call completed in ${result.metadata.imageDurationMs.toString()}ms`);
 
     const buffer = decodeImageBase64(result.imageData);
-    console.log("[generateReviewImage] Successfully generated image");
+    logger.info("[generateReviewImage] Successfully generated image");
 
     await saveImageLocally(buffer);
     await uploadImageToS3({ matchId, buffer, match, queueType });
@@ -112,9 +115,9 @@ export async function generateReviewImageBackend(params: {
     const result = ErrorSchema.safeParse(error);
 
     if (result.success && result.data.message.includes("timed out")) {
-      console.error("[generateReviewImage] Gemini API call timed out - request took too long");
+      logger.error("[generateReviewImage] Gemini API call timed out - request took too long");
     } else {
-      console.error("[generateReviewImage] Error generating image:", error);
+      logger.error("[generateReviewImage] Error generating image:", error);
     }
     Sentry.captureException(error, {
       tags: {

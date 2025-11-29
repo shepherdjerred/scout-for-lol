@@ -32,6 +32,9 @@ import { summarizeTimeline } from "@scout-for-lol/backend/league/review/timeline
 import { analyzeMatchData } from "@scout-for-lol/backend/league/review/ai-analysis.js";
 import { generateArtPromptFromReview } from "@scout-for-lol/backend/league/review/ai-art.js";
 import { generateReviewImageBackend } from "@scout-for-lol/backend/league/review/image-backend.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("review-generator");
 
 /**
  * Metadata about the generated review
@@ -141,14 +144,14 @@ async function saveReviewDataToS3(params: SaveReviewDataParams): Promise<void> {
     await saveAIReviewTextToS3(matchId, reviewText, queueType, trackedPlayerAliases);
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
-    console.error("[generateMatchReview] Failed to save review text to S3:", err);
+    logger.error("[generateMatchReview] Failed to save review text to S3:", err);
   }
 
   try {
     await saveAIReviewRequestToS3(matchId, textMetadata, queueType, trackedPlayerAliases);
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
-    console.error("[generateMatchReview] Failed to save AI request to S3:", err);
+    logger.error("[generateMatchReview] Failed to save AI request to S3:", err);
   }
 }
 
@@ -260,12 +263,12 @@ async function selectPlayerContext(match: CompletedMatch | ArenaMatch): Promise<
   const playerIndex = jerredIndex !== -1 ? jerredIndex : Math.floor(Math.random() * match.players.length);
   const selectedPlayer = match.players[playerIndex];
   if (!selectedPlayer) {
-    console.log("[generateMatchReview] No player found at selected index, skipping review generation");
+    logger.info("[generateMatchReview] No player found at selected index, skipping review generation");
     return undefined;
   }
   const playerName = selectedPlayer.playerConfig.alias;
   if (!playerName) {
-    console.log("[generateMatchReview] No player name found, skipping review generation");
+    logger.info("[generateMatchReview] No player name found, skipping review generation");
     return undefined;
   }
 
@@ -277,10 +280,10 @@ async function selectPlayerContext(match: CompletedMatch | ArenaMatch): Promise<
   const laneContextInfo = await getLaneContext(laneForContext);
   const playerMeta = await loadPlayerMetadata(playerName);
 
-  console.log(
+  logger.info(
     `[generateMatchReview] Selected player ${(playerIndex + 1).toString()}/${match.players.length.toString()}: ${playerName}`,
   );
-  console.log(`[generateMatchReview] Selected lane context: ${laneContextInfo.filename}`);
+  logger.info(`[generateMatchReview] Selected lane context: ${laneContextInfo.filename}`);
 
   return {
     playerIndex,
@@ -320,11 +323,11 @@ async function generateAIReview(params: {
 
   try {
     const player = match.players[playerIndex];
-    console.log(
+    logger.info(
       `[generateAIReview] Generating review for player ${(playerIndex + 1).toString()}/${match.players.length.toString()}: ${player?.playerConfig.alias ?? "unknown"}`,
     );
 
-    console.log("[generateAIReview] Calling OpenAI API...");
+    logger.info("[generateAIReview] Calling OpenAI API...");
 
     // Call shared review text generation function
     const result = await generateReviewText({
@@ -342,7 +345,7 @@ async function generateAIReview(params: {
       ...(timelineSummary !== undefined && { timelineSummary }),
     });
 
-    console.log("[generateAIReview] Successfully generated AI review");
+    logger.info("[generateAIReview] Successfully generated AI review");
     return {
       review: result.text,
       metadata: {
@@ -352,7 +355,7 @@ async function generateAIReview(params: {
       textMetadata: result.metadata,
     };
   } catch (error) {
-    console.error("[generateAIReview] Error generating AI review:", error);
+    logger.error("[generateAIReview] Error generating AI review:", error);
     Sentry.captureException(error, {
       tags: {
         source: "openai-review-generation",
@@ -379,13 +382,13 @@ export async function generateMatchReview(
 ): Promise<{ text: string; image?: Uint8Array; metadata?: ReviewMetadata } | undefined> {
   const openaiClient = getOpenAIClient();
   if (!openaiClient) {
-    console.log("[generateMatchReview] OpenAI API key not configured, skipping review generation");
+    logger.info("[generateMatchReview] OpenAI API key not configured, skipping review generation");
     return undefined;
   }
 
   const basePromptTemplate = await loadPromptFile("base.txt");
   const personality = await selectRandomPersonality();
-  console.log(`[generateMatchReview] Selected personality: ${personality.filename ?? personality.metadata.name}`);
+  logger.info(`[generateMatchReview] Selected personality: ${personality.filename ?? personality.metadata.name}`);
 
   const curatedData = await prepareCuratedData(rawMatchData, timelineData, matchId, openaiClient);
 
@@ -410,7 +413,7 @@ export async function generateMatchReview(
       openaiClient,
     });
   } else {
-    console.log("[generateMatchReview] Skipping match analysis - no curated data available");
+    logger.info("[generateMatchReview] Skipping match analysis - no curated data available");
   }
 
   const aiReviewResult = await generateAIReview({
@@ -427,7 +430,7 @@ export async function generateMatchReview(
   });
 
   if (!aiReviewResult) {
-    console.log("[generateMatchReview] Failed to generate AI review");
+    logger.info("[generateMatchReview] Failed to generate AI review");
     return undefined;
   }
 
@@ -479,7 +482,7 @@ export async function generateMatchReview(
     await saveComprehensiveDebugToS3(comprehensiveDebugData);
   } catch (error: unknown) {
     const err = error instanceof Error ? error : new Error(String(error));
-    console.error("[generateMatchReview] Failed to save comprehensive debug data to S3:", err);
+    logger.error("[generateMatchReview] Failed to save comprehensive debug data to S3:", err);
   }
 
   return {

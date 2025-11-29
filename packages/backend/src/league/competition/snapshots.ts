@@ -11,6 +11,9 @@ import {
 import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.js";
 import { fetchSnapshotData } from "@scout-for-lol/backend/league/competition/leaderboard.js";
 import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("competition-snapshots");
 
 // ============================================================================
 // Snapshot Creation
@@ -39,7 +42,7 @@ export async function createSnapshot(
   },
 ): Promise<void> {
   const { competitionId, playerId, snapshotType, criteria } = params;
-  console.log(
+  logger.info(
     `[Snapshots] Creating ${snapshotType} snapshot for competition ${competitionId.toString()}, player ${playerId.toString()}`,
   );
 
@@ -72,7 +75,7 @@ export async function createSnapshot(
   // Check if snapshots are needed for this criteria type
   // Some criteria (MOST_GAMES_PLAYED, MOST_WINS_*, etc.) don't use snapshots
   if (snapshotDataContainer === null) {
-    console.log(`[Snapshots] No snapshot needed for ${criteria.type} criteria - skipping`);
+    logger.info(`[Snapshots] No snapshot needed for ${criteria.type} criteria - skipping`);
     return;
   }
 
@@ -89,7 +92,7 @@ export async function createSnapshot(
     const hasRank = rankData && (queue === "SOLO" ? rankData.solo : rankData.flex);
 
     if (!hasRank) {
-      console.log(
+      logger.info(
         `[Snapshots] Skipping START snapshot for unranked player ${playerId.toString()} in MOST_RANK_CLIMB competition. ` +
           `Will create START snapshot when player completes placement matches.`,
       );
@@ -100,7 +103,7 @@ export async function createSnapshot(
   // If no rank data was fetched, use empty object (player is unranked)
   const snapshotToStore = rankData ?? {};
 
-  console.log(`[Snapshots] Extracted rank data for player ${playerId.toString()}:`, JSON.stringify(snapshotToStore));
+  logger.info(`[Snapshots] Extracted rank data for player ${playerId.toString()}:`, JSON.stringify(snapshotToStore));
 
   // Get the appropriate schema for validation
   const schema = getSnapshotSchemaForCriteria(criteria);
@@ -130,7 +133,7 @@ export async function createSnapshot(
     },
   });
 
-  console.log(`[Snapshots] ✅ Created ${snapshotType} snapshot for player ${playerId.toString()}`);
+  logger.info(`[Snapshots] ✅ Created ${snapshotType} snapshot for player ${playerId.toString()}`);
 }
 
 // ============================================================================
@@ -202,12 +205,12 @@ export async function createSnapshotsForAllParticipants(
   snapshotType: SnapshotType,
   criteria: CompetitionCriteria,
 ): Promise<void> {
-  console.log(`[Snapshots] Creating ${snapshotType} snapshots for competition ${competitionId.toString()}`);
+  logger.info(`[Snapshots] Creating ${snapshotType} snapshots for competition ${competitionId.toString()}`);
 
   // Get all JOINED participants
   const participants = await getParticipants(prisma, competitionId, "JOINED", true);
 
-  console.log(`[Snapshots] Found ${participants.length.toString()} participants`);
+  logger.info(`[Snapshots] Found ${participants.length.toString()} participants`);
 
   // Create snapshots in parallel
   const results = await Promise.allSettled(
@@ -225,16 +228,16 @@ export async function createSnapshotsForAllParticipants(
   const successful = results.filter((r) => r.status === "fulfilled").length;
   const failed = results.filter((r) => r.status === "rejected").length;
 
-  console.log(`[Snapshots] ✅ Created ${successful.toString()} snapshots`);
+  logger.info(`[Snapshots] ✅ Created ${successful.toString()} snapshots`);
   if (failed > 0) {
-    console.warn(`[Snapshots] ⚠️  Failed to create ${failed.toString()} snapshots`);
+    logger.warn(`[Snapshots] ⚠️  Failed to create ${failed.toString()} snapshots`);
 
     // Log individual failures
     results.forEach((result, index) => {
       if (result.status === "rejected") {
         const participant = participants[index];
         if (participant) {
-          console.error(
+          logger.error(
             `[Snapshots] Failed snapshot for player ${participant.playerId.toString()}: ${String(result.reason)}`,
           );
         }

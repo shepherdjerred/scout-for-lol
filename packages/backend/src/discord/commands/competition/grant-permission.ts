@@ -5,6 +5,9 @@ import { grantPermission } from "@scout-for-lol/backend/database/competition/per
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
 import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("competition-grant-permission");
 
 /**
  * Execute /competition grant-permission command
@@ -69,9 +72,9 @@ export async function executeGrantPermission(interaction: ChatInputCommandIntera
       grantedBy: DiscordAccountIdSchema.parse(adminId),
     });
 
-    console.log(`[Grant Permission] ${adminId} granted CREATE_COMPETITION to ${targetUser.id} on server ${serverId}`);
+    logger.info(`[Grant Permission] ${adminId} granted CREATE_COMPETITION to ${targetUser.id} on server ${serverId}`);
   } catch (error) {
-    console.error(`[Grant Permission] Error granting permission to ${targetUser.id}:`, error);
+    logger.error(`[Grant Permission] Error granting permission to ${targetUser.id}:`, error);
     await interaction.reply({
       content: truncateDiscordMessage(`Error granting permission: ${getErrorMessage(error)}`),
       ephemeral: true,

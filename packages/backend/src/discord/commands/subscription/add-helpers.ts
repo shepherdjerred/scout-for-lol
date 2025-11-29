@@ -10,6 +10,9 @@ import {
   LIMIT_WARNING_THRESHOLD,
 } from "@scout-for-lol/backend/configuration/subscription-limits.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("subscription-add-helpers");
 
 /**
  * Check subscription limit for a server
@@ -22,7 +25,7 @@ export async function checkSubscriptionLimit(
 ): Promise<boolean> {
   // Check subscription limit (only if creating a new player)
   if (existingPlayer) {
-    console.log(`📌 Adding account to existing player (ID: ${existingPlayer.id.toString()}) - no limit check needed`);
+    logger.info(`📌 Adding account to existing player (ID: ${existingPlayer.id.toString()}) - no limit check needed`);
     return true;
   }
 
@@ -30,7 +33,7 @@ export async function checkSubscriptionLimit(
   const isUnlimited = subscriptionLimit === "unlimited";
 
   if (!isUnlimited) {
-    console.log(`🔍 Checking subscription limit for server ${guildId}: ${subscriptionLimit.toString()} players`);
+    logger.info(`🔍 Checking subscription limit for server ${guildId}: ${subscriptionLimit.toString()} players`);
 
     // Count unique players with subscriptions in this server
     const subscribedPlayerCount = await prisma.player.count({
@@ -42,10 +45,10 @@ export async function checkSubscriptionLimit(
       },
     });
 
-    console.log(`📊 Current subscribed players: ${subscribedPlayerCount.toString()}/${subscriptionLimit.toString()}`);
+    logger.info(`📊 Current subscribed players: ${subscribedPlayerCount.toString()}/${subscriptionLimit.toString()}`);
 
     if (subscribedPlayerCount >= subscriptionLimit) {
-      console.log(
+      logger.info(
         `❌ Subscription limit reached for server ${guildId} (${subscribedPlayerCount.toString()}/${subscriptionLimit.toString()})`,
       );
 
@@ -64,7 +67,7 @@ export async function checkSubscriptionLimit(
       });
     }
   } else {
-    console.log(`♾️ Server ${guildId} has unlimited subscriptions`);
+    logger.info(`♾️ Server ${guildId} has unlimited subscriptions`);
   }
 
   return true;
@@ -82,7 +85,7 @@ export async function checkAccountLimit(
   const isUnlimitedAccounts = accountLimit === "unlimited";
 
   if (!isUnlimitedAccounts) {
-    console.log(`🔍 Checking account limit for server ${guildId}: ${accountLimit.toString()} accounts`);
+    logger.info(`🔍 Checking account limit for server ${guildId}: ${accountLimit.toString()} accounts`);
 
     // Count all accounts in this server
     const accountCount = await prisma.account.count({
@@ -91,10 +94,10 @@ export async function checkAccountLimit(
       },
     });
 
-    console.log(`📊 Current accounts: ${accountCount.toString()}/${accountLimit.toString()}`);
+    logger.info(`📊 Current accounts: ${accountCount.toString()}/${accountLimit.toString()}`);
 
     if (accountCount >= accountLimit) {
-      console.log(
+      logger.info(
         `❌ Account limit reached for server ${guildId} (${accountCount.toString()}/${accountLimit.toString()})`,
       );
 
@@ -113,7 +116,7 @@ export async function checkAccountLimit(
       });
     }
   } else {
-    console.log(`♾️ Server ${guildId} has unlimited accounts`);
+    logger.info(`♾️ Server ${guildId} has unlimited accounts`);
   }
 
   return true;
@@ -128,23 +131,23 @@ export async function resolveRiotIdToPuuid(
   riotId: RiotId,
   region: Region,
 ): Promise<string | null> {
-  console.log(`🔍 Looking up Riot ID: ${riotId.game_name}#${riotId.tag_line} in region ${region}`);
+  logger.info(`🔍 Looking up Riot ID: ${riotId.game_name}#${riotId.tag_line} in region ${region}`);
 
   try {
     const apiStartTime = Date.now();
     const regionGroup = regionToRegionGroupForAccountAPI(mapRegionToEnum(region));
 
-    console.log(`🌐 Using region group: ${regionGroup}`);
+    logger.info(`🌐 Using region group: ${regionGroup}`);
 
     const account = await riotApi.Account.getByRiotId(riotId.game_name, riotId.tag_line, regionGroup);
 
     const apiTime = Date.now() - apiStartTime;
     const puuid = account.response.puuid;
 
-    console.log(`✅ Successfully resolved Riot ID to PUUID: ${puuid} (${apiTime.toString()}ms)`);
+    logger.info(`✅ Successfully resolved Riot ID to PUUID: ${puuid} (${apiTime.toString()}ms)`);
     return puuid;
   } catch (error) {
-    console.error(`❌ Failed to resolve Riot ID ${riotId.game_name}#${riotId.tag_line}:`, error);
+    logger.error(`❌ Failed to resolve Riot ID ${riotId.game_name}#${riotId.tag_line}:`, error);
     await interaction.editReply({
       content: `Error looking up Riot ID: ${getErrorMessage(error)}`,
     });

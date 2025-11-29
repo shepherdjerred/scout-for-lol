@@ -23,6 +23,9 @@ import {
 import { strict as assert } from "assert";
 import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
 import { participantToChampion } from "@scout-for-lol/data/model/match-helpers";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("model-match");
 
 export function toMatch(
   players: Player[],
@@ -50,8 +53,8 @@ export function toMatch(
 
     const participantRaw = findParticipant(player.config.league.leagueAccount.puuid, rawMatch.info.participants);
     if (participantRaw === undefined) {
-      console.debug("Player PUUID:", player.config.league.leagueAccount.puuid);
-      console.debug("Match Participants:", rawMatch.info.participants);
+      logger.debug("Player PUUID:", player.config.league.leagueAccount.puuid);
+      logger.debug("Match Participants:", rawMatch.info.participants);
       throw new Error(`participant not found for player ${player.config.alias}`);
     }
 

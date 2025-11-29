@@ -3,6 +3,9 @@ import { z } from "zod";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { getFlag } from "@scout-for-lol/backend/configuration/flags.js";
 import { match } from "ts-pattern";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("discord-commands");
 
 import { executeHelp } from "@scout-for-lol/backend/discord/commands/help";
 import { executeCompetitionCreate } from "@scout-for-lol/backend/discord/commands/competition/create.js";
@@ -39,7 +42,7 @@ import { executeSubscriptionDelete } from "@scout-for-lol/backend/discord/comman
 import { executeSubscriptionList } from "@scout-for-lol/backend/discord/commands/subscription/list";
 
 export function handleCommands(client: Client) {
-  console.log("⚡ Setting up Discord command handlers");
+  logger.info("⚡ Setting up Discord command handlers");
 
   // Handle autocomplete interactions
   client.on("interactionCreate", (interaction) => {
@@ -83,13 +86,13 @@ export function handleCommands(client: Client) {
       const guildId = interaction.guildId;
       const channelId = interaction.channelId;
 
-      console.log(
+      logger.info(
         `📥 Command received: ${commandName} from ${username} (${userId}) in guild ${guildId ?? "DM"} channel ${channelId}`,
       );
 
       // Log command options if any
       if (interaction.options.data.length > 0) {
-        console.log(
+        logger.info(
           `📝 Command options:`,
           interaction.options.data.map((opt) => `${opt.name}: ${String(opt.value)}`).join(", "),
         );
@@ -98,14 +101,14 @@ export function handleCommands(client: Client) {
       try {
         if (commandName === "subscription") {
           const subcommandName = interaction.options.getSubcommand();
-          console.log(`🔔 Executing subscription ${subcommandName} command`);
+          logger.info(`🔔 Executing subscription ${subcommandName} command`);
 
           await match(subcommandName)
             .with("add", () => executeSubscriptionAdd(interaction))
             .with("delete", () => executeSubscriptionDelete(interaction))
             .with("list", () => executeSubscriptionList(interaction))
             .otherwise(() => {
-              console.warn(`⚠️  Unknown subscription subcommand: ${subcommandName}`);
+              logger.warn(`⚠️  Unknown subscription subcommand: ${subcommandName}`);
               return interaction.reply({
                 content: "Unknown subscription subcommand",
                 ephemeral: true,
@@ -113,7 +116,7 @@ export function handleCommands(client: Client) {
             });
         } else if (commandName === "competition") {
           const subcommandName = interaction.options.getSubcommand();
-          console.log(`🏆 Executing competition ${subcommandName} command`);
+          logger.info(`🏆 Executing competition ${subcommandName} command`);
 
           await match(subcommandName)
             .with("create", async () => executeCompetitionCreate(interaction))
@@ -126,7 +129,7 @@ export function handleCommands(client: Client) {
             .with("view", async () => executeCompetitionView(interaction))
             .with("list", async () => executeCompetitionList(interaction))
             .otherwise(async () => {
-              console.warn(`⚠️  Unknown competition subcommand: ${subcommandName}`);
+              logger.warn(`⚠️  Unknown competition subcommand: ${subcommandName}`);
               await interaction.reply({
                 content: "Unknown competition subcommand",
                 ephemeral: true,
@@ -141,7 +144,7 @@ export function handleCommands(client: Client) {
             permissionResult.success && permissionResult.data.permissions.has(PermissionFlagsBits.Administrator);
 
           if (!hasAdminPermission) {
-            console.warn(`⚠️  Unauthorized admin command access attempt by ${username} (${userId})`);
+            logger.warn(`⚠️  Unauthorized admin command access attempt by ${username} (${userId})`);
             await interaction.reply({
               content: "❌ Admin commands require Administrator permissions in this server.",
               ephemeral: true,
@@ -150,7 +153,7 @@ export function handleCommands(client: Client) {
           }
 
           const subcommandName = interaction.options.getSubcommand();
-          console.log(`🔧 Executing admin ${subcommandName} command (authorized: ${username})`);
+          logger.info(`🔧 Executing admin ${subcommandName} command (authorized: ${username})`);
 
           await match(subcommandName)
             .with("player-edit", () => executePlayerEdit(interaction))
@@ -163,7 +166,7 @@ export function handleCommands(client: Client) {
             .with("player-unlink-discord", () => executePlayerUnlinkDiscord(interaction))
             .with("player-view", () => executePlayerView(interaction))
             .otherwise(() => {
-              console.warn(`⚠️  Unknown admin subcommand: ${subcommandName}`);
+              logger.warn(`⚠️  Unknown admin subcommand: ${subcommandName}`);
               return interaction.reply({
                 content: "Unknown admin subcommand",
                 ephemeral: true,
@@ -172,7 +175,7 @@ export function handleCommands(client: Client) {
         } else if (commandName === "debug") {
           // Check if user has debug access (applies to all debug subcommands)
           if (!getFlag("debug", { user: userId })) {
-            console.warn(`⚠️  Unauthorized debug command access attempt by ${username} (${userId})`);
+            logger.warn(`⚠️  Unauthorized debug command access attempt by ${username} (${userId})`);
             await interaction.reply({
               content: "❌ Debug commands are only available to authorized users.",
               ephemeral: true,
@@ -181,7 +184,7 @@ export function handleCommands(client: Client) {
           }
 
           const subcommandName = interaction.options.getSubcommand();
-          console.log(`🐛 Executing debug ${subcommandName} command (authorized: ${username})`);
+          logger.info(`🐛 Executing debug ${subcommandName} command (authorized: ${username})`);
 
           await match(subcommandName)
             .with("database", async () => executeDebugDatabase(interaction))
@@ -191,23 +194,23 @@ export function handleCommands(client: Client) {
             .with("force-leaderboard-update", async () => executeDebugForceLeaderboardUpdate(interaction))
             .with("manage-participant", async () => executeDebugManageParticipant(interaction))
             .otherwise(async () => {
-              console.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
+              logger.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
               await interaction.reply({
                 content: "Unknown debug subcommand",
                 ephemeral: true,
               });
             });
         } else if (commandName === "help") {
-          console.log("❓ Executing help command");
+          logger.info("❓ Executing help command");
           await executeHelp(interaction);
         } else {
-          console.warn(`⚠️  Unknown command received: ${commandName}`);
+          logger.warn(`⚠️  Unknown command received: ${commandName}`);
           await interaction.reply("Unknown command");
         }
 
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
-        console.log(`✅ Command ${commandName} completed successfully in ${executionTime.toString()}ms`);
+        logger.info(`✅ Command ${commandName} completed successfully in ${executionTime.toString()}ms`);
 
         // Record successful command metrics
         discordCommandsTotal.inc({ command: commandName, status: "success" });
@@ -215,12 +218,12 @@ export function handleCommands(client: Client) {
       } catch (error) {
         const executionTime = Date.now() - startTime;
         const executionTimeSeconds = executionTime / 1000;
-        console.error(`❌ Command ${commandName} failed after ${executionTime.toString()}ms:`, error);
+        logger.error(`❌ Command ${commandName} failed after ${executionTime.toString()}ms:`, error);
 
         // Record failed command metrics
         discordCommandsTotal.inc({ command: commandName, status: "error" });
         discordCommandDuration.observe({ command: commandName }, executionTimeSeconds);
-        console.error(
+        logger.error(
           `❌ Error details - User: ${username} (${userId}), Guild: ${String(guildId)}, Channel: ${channelId}`,
         );
 
@@ -245,5 +248,5 @@ export function handleCommands(client: Client) {
     })();
   });
 
-  console.log("✅ Discord command handlers configured");
+  logger.info("✅ Discord command handlers configured");
 }

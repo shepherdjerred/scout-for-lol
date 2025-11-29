@@ -6,12 +6,15 @@ import { checkAbandonedGuilds } from "@scout-for-lol/backend/league/tasks/cleanu
 import { runDataValidation } from "@scout-for-lol/backend/league/tasks/cleanup/validate-data.js";
 import { client } from "@scout-for-lol/backend/discord/client.js";
 import { createCronJob } from "@scout-for-lol/backend/league/cron/helpers.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("league-cron");
 
 export function startCronJobs() {
-  console.log("⏰ Initializing cron job scheduler");
+  logger.info("⏰ Initializing cron job scheduler");
 
   // check match history every minute
-  console.log("📅 Setting up match history polling job (every minute at :00)");
+  logger.info("📅 Setting up match history polling job (every minute at :00)");
   createCronJob({
     schedule: "0 * * * * *",
     jobName: "post_match_check",
@@ -22,7 +25,7 @@ export function startCronJobs() {
   });
 
   // check competition lifecycle every 15 minutes
-  console.log("📅 Setting up competition lifecycle job (every 15 minutes)");
+  logger.info("📅 Setting up competition lifecycle job (every 15 minutes)");
   createCronJob({
     schedule: "0 */15 * * * *",
     jobName: "competition_lifecycle",
@@ -34,7 +37,7 @@ export function startCronJobs() {
   });
 
   // validate data (cleanup orphaned guilds/channels) every hour
-  console.log("📅 Setting up data validation job (every hour at :00)");
+  logger.info("📅 Setting up data validation job (every hour at :00)");
   createCronJob({
     schedule: "0 0 * * * *",
     jobName: "data_validation",
@@ -45,7 +48,7 @@ export function startCronJobs() {
   });
 
   // post daily leaderboard updates at midnight UTC
-  console.log("📅 Setting up daily leaderboard update job (midnight UTC)");
+  logger.info("📅 Setting up daily leaderboard update job (midnight UTC)");
   createCronJob({
     schedule: "0 0 0 * * *",
     jobName: "daily_leaderboard_update",
@@ -57,7 +60,7 @@ export function startCronJobs() {
   });
 
   // prune orphaned players daily at 3 AM UTC
-  console.log("📅 Setting up daily player pruning job (3 AM UTC)");
+  logger.info("📅 Setting up daily player pruning job (3 AM UTC)");
   createCronJob({
     schedule: "0 0 3 * * *",
     jobName: "player_pruning",
@@ -68,7 +71,7 @@ export function startCronJobs() {
   });
 
   // check for abandoned guilds daily at 4 AM UTC (after player pruning)
-  console.log("📅 Setting up abandoned guild cleanup job (4 AM UTC)");
+  logger.info("📅 Setting up abandoned guild cleanup job (4 AM UTC)");
   createCronJob({
     schedule: "0 0 4 * * *",
     jobName: "abandoned_guild_cleanup",
@@ -78,8 +81,8 @@ export function startCronJobs() {
     runOnInit: true,
   });
 
-  console.log("✅ Cron jobs initialized successfully");
-  console.log(
+  logger.info("✅ Cron jobs initialized successfully");
+  logger.info(
     "📊 Match history polling (1min), competition lifecycle (15min), data validation (hourly), daily leaderboard (midnight UTC), player pruning (3AM UTC), and abandoned guild cleanup (4AM UTC) cron jobs are now active",
   );
 }

@@ -8,6 +8,9 @@ import type { getCompetitionById } from "@scout-for-lol/backend/database/competi
 import { formatScore } from "@scout-for-lol/backend/discord/embeds/competition.js";
 import { loadCachedLeaderboard } from "@scout-for-lol/backend/storage/s3-leaderboard.js";
 import { replyWithErrorFromException } from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
+import { createLogger } from "@scout-for-lol/backend/logger.js";
+
+const logger = createLogger("competition-view");
 import {
   extractCompetitionId,
   fetchCompetitionWithErrorHandling,
@@ -83,7 +86,7 @@ export async function executeCompetitionView(interaction: ChatInputCommandIntera
   try {
     participants = await getParticipants(prisma, competitionId, "JOINED", true);
   } catch (error) {
-    console.error(`[Competition View] Error fetching participants:`, error);
+    logger.error(`[Competition View] Error fetching participants:`, error);
     await replyWithErrorFromException(interaction, error, "fetching participants");
     return;
   }
@@ -261,11 +264,11 @@ async function addLeaderboard(
   embed.addFields({ name: title, value: "━━━━━━━━━━━━━━━━━━━━━", inline: false });
 
   // Try to load from cache
-  console.log(`[Competition View] Attempting to load cached leaderboard for competition ${competition.id.toString()}`);
+  logger.info(`[Competition View] Attempting to load cached leaderboard for competition ${competition.id.toString()}`);
   const cached = await loadCachedLeaderboard(competition.id);
 
   if (!cached) {
-    console.log(`[Competition View] No cached leaderboard found for competition ${competition.id.toString()}`);
+    logger.info(`[Competition View] No cached leaderboard found for competition ${competition.id.toString()}`);
     embed.addFields({
       name: "\u200B",
       value:
@@ -275,7 +278,7 @@ async function addLeaderboard(
     return;
   }
 
-  console.log(`[Competition View] Using cached leaderboard from ${cached.calculatedAt}`);
+  logger.info(`[Competition View] Using cached leaderboard from ${cached.calculatedAt}`);
 
   // Map cached entries to RankedLeaderboardEntry type to ensure type compatibility
   const leaderboard = cached.entries.map((entry) => ({
