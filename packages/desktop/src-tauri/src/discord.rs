@@ -1,5 +1,6 @@
 //! Discord integration module for posting game events and playing sounds in voice chat
 
+use crate::paths;
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use serenity::all::{ChannelId, GatewayIntents, GuildId, Ready};
@@ -46,23 +47,30 @@ impl VoiceEventHandler for TrackLogger {
 }
 
 fn ensure_base_beep_file() -> PathBuf {
-    let temp_path = std::env::temp_dir().join("scout-base-beep.wav");
-    if !temp_path.exists() {
-        if let Err(err) = std::fs::write(&temp_path, BASE_BEEP_BYTES) {
-            error!("Failed to write base beep to temp: {}", err);
+    let beep_path = paths::base_beep_file();
+
+    // Ensure parent directory exists
+    if let Some(parent) = beep_path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+
+    if !beep_path.exists() {
+        if let Err(err) = std::fs::write(&beep_path, BASE_BEEP_BYTES) {
+            error!(
+                "Failed to write base beep to {}: {}",
+                beep_path.display(),
+                err
+            );
         } else {
-            info!("Wrote base beep to {}", temp_path.display());
+            info!("Wrote base beep to {}", beep_path.display());
         }
     }
-    temp_path
+    beep_path
 }
 
 /// Returns the cache directory for YouTube audio files
 fn get_youtube_cache_dir() -> PathBuf {
-    let cache_dir = dirs::cache_dir()
-        .unwrap_or_else(std::env::temp_dir)
-        .join("scout-for-lol")
-        .join("youtube-audio");
+    let cache_dir = paths::youtube_cache_dir();
 
     if !cache_dir.exists() {
         if let Err(err) = std::fs::create_dir_all(&cache_dir) {
@@ -227,10 +235,17 @@ impl YouTubeCacheState {
 }
 
 fn write_sound_log(message: &str) {
+    let log_path = paths::debug_log_file();
+
+    // Ensure parent directory exists
+    if let Some(parent) = log_path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+
     if let Ok(mut file) = std::fs::OpenOptions::new()
         .create(true)
         .append(true)
-        .open("scout-debug.log")
+        .open(&log_path)
     {
         let _ = writeln!(file, "{}", message);
     }
