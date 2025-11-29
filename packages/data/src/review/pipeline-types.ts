@@ -1,0 +1,288 @@
+/**
+ * Type definitions for the unified AI review pipeline
+ *
+ * This module defines all types for the review generation pipeline that is shared
+ * between the backend and frontend dev tool. The pipeline is designed to be:
+ * - Platform-agnostic (no filesystem, S3, or Sentry dependencies)
+ * - Fully configurable per-stage
+ * - Observable with full trace output
+ */
+
+import type { GoogleGenerativeAI } from "@google/generative-ai";
+import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
+import type { RawMatch, RawTimeline } from "@scout-for-lol/data";
+import type { CuratedMatchData, CuratedTimeline } from "./curator-types.js";
+import type { Personality, PlayerMetadata } from "./prompts.js";
+
+// ============================================================================
+// Model Configuration
+// ============================================================================
+
+/**
+ * Configuration for an AI model call
+ */
+export type ModelConfig = {
+  model: string;
+  maxTokens: number;
+  temperature?: number;
+  topP?: number;
+};
+
+/**
+ * Configuration for a pipeline stage that can be enabled/disabled
+ */
+export type StageConfig = {
+  enabled: boolean;
+  model: ModelConfig;
+  /** Override the default system prompt for this stage */
+  systemPrompt?: string;
+};
+
+/**
+ * Configuration for the review text stage (always enabled)
+ */
+export type ReviewTextStageConfig = {
+  model: ModelConfig;
+};
+
+/**
+ * Configuration for image generation stage
+ */
+export type ImageGenerationStageConfig = {
+  enabled: boolean;
+  model: string;
+  timeoutMs: number;
+};
+
+/**
+ * All pipeline stage configurations
+ */
+export type PipelineStagesConfig = {
+  /** Stage 1a: Summarize timeline JSON to text */
+  timelineSummary: StageConfig;
+  /** Stage 1b: Summarize match JSON to text */
+  matchSummary: StageConfig;
+  /** Stage 2: Generate review text using personality */
+  reviewText: ReviewTextStageConfig;
+  /** Stage 3: Generate image description from review */
+  imageDescription: StageConfig;
+  /** Stage 4: Generate image from description */
+  imageGeneration: ImageGenerationStageConfig;
+};
+
+// ============================================================================
+// Pipeline Input
+// ============================================================================
+
+/**
+ * OpenAI client interface - minimal interface for dependency injection
+ */
+export type OpenAIClient = {
+  chat: {
+    completions: {
+      create(params: {
+        model: string;
+        messages: { role: "system" | "user" | "assistant"; content: string }[];
+        max_completion_tokens: number;
+        temperature?: number;
+        top_p?: number;
+      }): Promise<{
+        choices: {
+          message: {
+            content: string | null;
+            refusal?: string | null;
+          };
+          finish_reason?: string | null;
+        }[];
+        usage?: {
+          prompt_tokens?: number;
+          completion_tokens?: number;
+        };
+      }>;
+    };
+  };
+};
+
+/**
+ * Match data input for the pipeline
+ */
+export type PipelineMatchInput = {
+  /** Processed match data (our internal format) */
+  processed: CompletedMatch | ArenaMatch;
+  /** Raw match data from Riot API (optional, for detailed curation) */
+  raw?: RawMatch;
+  /** Raw timeline data from Riot API (optional, for timeline summary) */
+  rawTimeline?: RawTimeline;
+};
+
+/**
+ * Player input for the pipeline
+ */
+export type PipelinePlayerInput = {
+  /** Index of the player in the match (0-based) */
+  index: number;
+  /** Player metadata for personalization */
+  metadata: PlayerMetadata;
+};
+
+/**
+ * Prompts and personality input for the pipeline
+ */
+export type PipelinePromptsInput = {
+  /** The personality to use for review generation */
+  personality: Personality;
+  /** Base template for the review prompt */
+  baseTemplate: string;
+  /** Lane-specific context text */
+  laneContext: string;
+  /** Optional prefix to add to system prompts */
+  systemPromptPrefix?: string;
+};
+
+/**
+ * AI clients input for the pipeline
+ */
+export type PipelineClientsInput = {
+  /** OpenAI client for text generation */
+  openai: OpenAIClient;
+  /** Gemini client for image generation (optional) */
+  gemini?: GoogleGenerativeAI;
+};
+
+/**
+ * Complete input for the review pipeline
+ */
+export type ReviewPipelineInput = {
+  /** Match data */
+  match: PipelineMatchInput;
+  /** Player to review */
+  player: PipelinePlayerInput;
+  /** Prompts and personality */
+  prompts: PipelinePromptsInput;
+  /** AI clients (injected) */
+  clients: PipelineClientsInput;
+  /** Per-stage configuration */
+  stages: PipelineStagesConfig;
+};
+
+// ============================================================================
+// Pipeline Output - Traces
+// ============================================================================
+
+/**
+ * Trace for a text generation stage (OpenAI call)
+ */
+export type StageTrace = {
+  request: {
+    systemPrompt?: string;
+    userPrompt: string;
+  };
+  response: {
+    text: string;
+  };
+  model: ModelConfig;
+  durationMs: number;
+  tokensPrompt?: number;
+  tokensCompletion?: number;
+};
+
+/**
+ * Trace for image generation stage (Gemini call)
+ */
+export type ImageGenerationTrace = {
+  request: {
+    prompt: string;
+  };
+  response: {
+    imageGenerated: boolean;
+    imageSizeBytes?: number;
+  };
+  model: string;
+  durationMs: number;
+};
+
+/**
+ * All pipeline traces
+ */
+export type PipelineTraces = {
+  /** Stage 1a trace */
+  timelineSummary?: StageTrace;
+  /** Stage 1b trace */
+  matchSummary?: StageTrace;
+  /** Stage 2 trace (always present) */
+  reviewText: StageTrace;
+  /** Stage 3 trace */
+  imageDescription?: StageTrace;
+  /** Stage 4 trace */
+  imageGeneration?: ImageGenerationTrace;
+};
+
+// ============================================================================
+// Pipeline Output - Intermediate Results
+// ============================================================================
+
+/**
+ * Intermediate results from the pipeline (for debugging/dev tool)
+ */
+export type PipelineIntermediateResults = {
+  /** Curated match data (if raw match provided) */
+  curatedData?: CuratedMatchData;
+  /** Curated timeline (if raw timeline provided) */
+  curatedTimeline?: CuratedTimeline;
+  /** Text output from Stage 1a */
+  timelineSummaryText?: string;
+  /** Text output from Stage 1b */
+  matchSummaryText?: string;
+  /** Text output from Stage 3 */
+  imageDescriptionText?: string;
+};
+
+// ============================================================================
+// Pipeline Output - Context
+// ============================================================================
+
+/**
+ * Context about the generated review
+ */
+export type PipelineContext = {
+  /** Name of the reviewer personality */
+  reviewerName: string;
+  /** Name of the player being reviewed */
+  playerName: string;
+  /** Index of the player in the match */
+  playerIndex: number;
+  /** Personality information */
+  personality: {
+    filename?: string;
+    name: string;
+  };
+};
+
+// ============================================================================
+// Pipeline Output
+// ============================================================================
+
+/**
+ * Final review output
+ */
+export type PipelineReviewOutput = {
+  /** The generated review text */
+  text: string;
+  /** Base64-encoded image (if image generation enabled and successful) */
+  imageBase64?: string;
+};
+
+/**
+ * Complete output from the review pipeline
+ */
+export type ReviewPipelineOutput = {
+  /** Final review outputs */
+  review: PipelineReviewOutput;
+  /** Per-stage traces (for observability/S3) */
+  traces: PipelineTraces;
+  /** Intermediate results (for debugging/dev tool) */
+  intermediate: PipelineIntermediateResults;
+  /** Context about the review */
+  context: PipelineContext;
+};
+
