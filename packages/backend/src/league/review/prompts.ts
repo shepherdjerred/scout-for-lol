@@ -11,7 +11,7 @@ import {
  * Tracks how many times each reviewer has been selected to ensure
  * fair distribution across all available reviewers.
  */
-const reviewerUsageCount: Map<string, number> = new Map();
+const reviewerUsageCount = new Map<string, number>();
 
 // Resolve the prompts directory from the data package
 // import.meta.resolve returns a file:// URL, so we extract the pathname
@@ -104,7 +104,7 @@ export async function selectRandomPersonality(): Promise<Personality> {
   const selectedPersonality = selectBalancedReviewer(personalities);
 
   console.log(
-    `[selectRandomPersonality] Selected: ${selectedPersonality.filename}, ` +
+    `[selectRandomPersonality] Selected: ${selectedPersonality.filename ?? selectedPersonality.metadata.name}, ` +
       `usage counts: ${JSON.stringify(Object.fromEntries(reviewerUsageCount))}`,
   );
 
