@@ -167,14 +167,12 @@ export const GenerationMetadataSchema = z.object({
   imageGenerated: z.boolean(),
   selectedPersonality: z.string().optional(),
   reviewerName: z.string().optional(),
-  selectedArtStyle: z.string().optional(),
-  selectedArtTheme: z.string().optional(),
-  selectedSecondArtTheme: z.string().optional(),
   systemPrompt: z.string().optional(),
   userPrompt: z.string().optional(),
   openaiRequestParams: z.unknown().optional(),
   geminiPrompt: z.string().optional(),
   geminiModel: z.string().optional(),
+  imageDescription: z.string().optional(),
 });
 
 export type GenerationMetadata = z.infer<typeof GenerationMetadataSchema>;

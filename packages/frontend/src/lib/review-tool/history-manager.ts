@@ -18,8 +18,7 @@ const GenerationResultSchema = z.object({
 const ConfigSnapshotSchema = z.object({
   model: z.string(),
   personality: z.string().optional(),
-  artStyle: z.string().optional(),
-  artTheme: z.string().optional(),
+  imageDescription: z.string().optional(),
 });
 
 export type HistoryEntry = {
@@ -29,8 +28,7 @@ export type HistoryEntry = {
   configSnapshot: {
     model: string;
     personality?: string;
-    artStyle?: string;
-    artTheme?: string;
+    imageDescription?: string;
   };
   status: "pending" | "complete" | "error";
   rating?: 1 | 2 | 3 | 4;
@@ -47,8 +45,7 @@ function buildConfigSnapshot(configData: z.infer<typeof ConfigSnapshotSchema>): 
   return {
     model: configData.model,
     ...(configData.personality !== undefined ? { personality: configData.personality } : {}),
-    ...(configData.artStyle !== undefined ? { artStyle: configData.artStyle } : {}),
-    ...(configData.artTheme !== undefined ? { artTheme: configData.artTheme } : {}),
+    ...(configData.imageDescription !== undefined ? { imageDescription: configData.imageDescription } : {}),
   };
 }
 

@@ -303,13 +303,9 @@ export type ComprehensiveDebugData = {
     tokensCompletion?: number;
     durationMs: number;
   };
-  artGeneration?: {
-    style: string;
-    themes: string[];
-    artPrompt?: string;
-    artPromptDurationMs?: number;
+  imageGeneration?: {
+    imageDescription?: string;
     imageGenerated: boolean;
-    imageDurationMs?: number;
     geminiModel?: string;
   };
 };

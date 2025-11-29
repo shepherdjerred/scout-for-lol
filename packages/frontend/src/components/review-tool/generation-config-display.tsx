@@ -80,7 +80,7 @@ function ImageGenerationConfig({ config }: { config: ReviewConfig }) {
 }
 
 function ActuallySelectedDisplay({ result }: { result: GenerationResult }) {
-  if (!result.metadata.selectedPersonality && !result.metadata.selectedArtStyle && !result.metadata.selectedArtTheme) {
+  if (!result.metadata.selectedPersonality && !result.metadata.imageDescription) {
     return null;
   }
 
@@ -102,33 +102,13 @@ function ActuallySelectedDisplay({ result }: { result: GenerationResult }) {
             <span className="ml-2 text-blue-900 dark:text-blue-100">{result.metadata.reviewerName}</span>
           </div>
         )}
-        {result.metadata.selectedArtStyle && (
+        {result.metadata.imageDescription && (
           <div>
-            <span className="text-blue-700 dark:text-blue-300 font-medium">Art Style:</span>
-            <span className="ml-2 text-blue-900 dark:text-blue-100 font-mono wrap-break-word">
-              {result.metadata.selectedArtStyle.length > 80
-                ? `${result.metadata.selectedArtStyle.substring(0, 80)}...`
-                : result.metadata.selectedArtStyle}
-            </span>
-          </div>
-        )}
-        {result.metadata.selectedArtTheme && (
-          <div>
-            <span className="text-blue-700 dark:text-blue-300 font-medium">Art Theme:</span>
+            <span className="text-blue-700 dark:text-blue-300 font-medium">Image Description:</span>
             <span className="ml-2 text-blue-900 dark:text-blue-100 wrap-break-word">
-              {result.metadata.selectedArtTheme.length > 80
-                ? `${result.metadata.selectedArtTheme.substring(0, 80)}...`
-                : result.metadata.selectedArtTheme}
-            </span>
-          </div>
-        )}
-        {result.metadata.selectedSecondArtTheme && (
-          <div>
-            <span className="text-blue-700 dark:text-blue-300 font-medium">Second Art Theme:</span>
-            <span className="ml-2 text-blue-900 dark:text-blue-100 wrap-break-word">
-              {result.metadata.selectedSecondArtTheme.length > 80
-                ? `${result.metadata.selectedSecondArtTheme.substring(0, 80)}...`
-                : result.metadata.selectedSecondArtTheme}
+              {result.metadata.imageDescription.length > 200
+                ? `${result.metadata.imageDescription.substring(0, 200)}...`
+                : result.metadata.imageDescription}
             </span>
           </div>
         )}
