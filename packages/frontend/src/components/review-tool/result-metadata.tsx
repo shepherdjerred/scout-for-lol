@@ -43,19 +43,11 @@ export function ResultMetadata({ result, cost }: ResultMetadataProps) {
               <span className="font-mono text-gray-900 dark:text-gray-100">{result.metadata.selectedPersonality}</span>
             </div>
           )}
-          {result.metadata.selectedArtStyle && (
+          {result.metadata.imageDescription && (
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Art Style:</span>
+              <span className="text-gray-600 dark:text-gray-400">Image Description:</span>
               <span className="font-mono text-xs text-gray-900 dark:text-gray-100">
-                {result.metadata.selectedArtStyle.substring(0, 50)}...
-              </span>
-            </div>
-          )}
-          {result.metadata.selectedArtTheme && (
-            <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Art Theme:</span>
-              <span className="font-mono text-xs text-gray-900 dark:text-gray-100">
-                {result.metadata.selectedArtTheme.substring(0, 50)}...
+                {result.metadata.imageDescription.substring(0, 80)}...
               </span>
             </div>
           )}

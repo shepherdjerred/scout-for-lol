@@ -18,7 +18,7 @@
 //! ```
 
 use log::{error, info};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 /// Application identifier used for path resolution
@@ -38,9 +38,9 @@ pub fn compute_app_data_dir() -> PathBuf {
 
 /// Initialize the app data directory. Called during app setup.
 /// If already initialized (from early init), this is a no-op.
-pub fn init(app_data_dir: PathBuf) {
+pub fn init(app_data_dir: &Path) {
     // Try to set, but don't panic if already set (from early_init)
-    let _ = APP_DATA_DIR.set(app_data_dir.clone());
+    let _ = APP_DATA_DIR.set(app_data_dir.to_path_buf());
     info!("App data directory: {}", app_data_dir.display());
 }
 
@@ -56,6 +56,7 @@ pub fn early_init() {
 /// # Panics
 /// Panics if `init()` has not been called.
 #[must_use]
+#[allow(clippy::expect_used)]
 pub fn app_data_dir() -> &'static PathBuf {
     APP_DATA_DIR
         .get()
@@ -136,7 +137,6 @@ pub fn ensure_directories() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::env;
 
     // Note: These tests use a different initialization approach since
     // OnceLock can only be set once per process

@@ -141,11 +141,8 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       if (generatedResult.metadata.selectedPersonality) {
         configSnapshot.personality = generatedResult.metadata.selectedPersonality;
       }
-      if (generatedResult.metadata.selectedArtStyle) {
-        configSnapshot.artStyle = generatedResult.metadata.selectedArtStyle;
-      }
-      if (generatedResult.metadata.selectedArtTheme) {
-        configSnapshot.artTheme = generatedResult.metadata.selectedArtTheme;
+      if (generatedResult.metadata.imageDescription) {
+        configSnapshot.imageDescription = generatedResult.metadata.imageDescription;
       }
 
       // Save completed entry to IndexedDB

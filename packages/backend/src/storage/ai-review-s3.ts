@@ -89,50 +89,45 @@ export async function saveMatchAnalysisToS3(params: MatchAnalysisS3Params): Prom
   });
 }
 
-type ArtPromptS3Params = {
+type ImageDescriptionS3Params = {
   matchId: MatchId;
   queueType: string;
   trackedPlayerAliases: string[];
   request: {
     reviewText: string;
     reviewTextLength: number;
-    artStyle: string;
-    artThemes: string[];
   };
   response: {
-    artPrompt: string;
+    imageDescription: string;
     durationMs: number;
     model: string;
   };
 };
 
-export async function saveArtPromptToS3(params: ArtPromptS3Params): Promise<void> {
+export async function saveImageDescriptionToS3(params: ImageDescriptionS3Params): Promise<void> {
   const { matchId, queueType, trackedPlayerAliases, request, response } = params;
 
   const requestBody = JSON.stringify(request, null, 2);
 
   await saveToS3({
     matchId,
-    assetType: "ai-art-prompt",
+    assetType: "ai-image-description",
     extension: "request.json",
     body: requestBody,
     contentType: "application/json",
     metadata: {
       matchId,
-      type: "ai-art-prompt-request",
+      type: "ai-image-description-request",
       queueType,
       trackedPlayers: trackedPlayerAliases.join(", "),
-      artStyle: request.artStyle,
-      artThemes: request.artThemes.join(", "),
     },
     logEmoji: "🎨",
-    logMessage: "Saving AI art prompt request to S3",
-    errorContext: "ai art prompt request",
+    logMessage: "Saving AI image description request to S3",
+    errorContext: "ai image description request",
     returnUrl: false,
     additionalLogDetails: {
       queueType,
-      artStyle: request.artStyle,
-      artThemes: request.artThemes,
+      reviewTextLength: request.reviewTextLength,
     },
   });
 
@@ -140,7 +135,7 @@ export async function saveArtPromptToS3(params: ArtPromptS3Params): Promise<void
     {
       ...response,
       generatedAt: new Date().toISOString(),
-      artPromptLength: response.artPrompt.length,
+      imageDescriptionLength: response.imageDescription.length,
     },
     null,
     2,
@@ -148,29 +143,109 @@ export async function saveArtPromptToS3(params: ArtPromptS3Params): Promise<void
 
   await saveToS3({
     matchId,
-    assetType: "ai-art-prompt",
+    assetType: "ai-image-description",
     extension: "response.json",
     body: responseBody,
     contentType: "application/json",
     metadata: {
       matchId,
-      type: "ai-art-prompt-response",
+      type: "ai-image-description-response",
       queueType,
       durationMs: response.durationMs.toString(),
       model: response.model,
       trackedPlayers: trackedPlayerAliases.join(", "),
-      artStyle: request.artStyle,
-      artThemes: request.artThemes.join(", "),
-      artPromptLength: response.artPrompt.length.toString(),
+      imageDescriptionLength: response.imageDescription.length.toString(),
     },
     logEmoji: "🖌️",
-    logMessage: "Saving AI art prompt response to S3",
-    errorContext: "ai art prompt response",
+    logMessage: "Saving AI image description response to S3",
+    errorContext: "ai image description response",
     returnUrl: false,
     additionalLogDetails: {
       queueType,
       durationMs: response.durationMs,
-      artPromptLength: response.artPrompt.length,
+      imageDescriptionLength: response.imageDescription.length,
+    },
+  });
+}
+
+type ImageGenerationS3Params = {
+  matchId: MatchId;
+  queueType: string;
+  trackedPlayerAliases: string[];
+  request: {
+    imageDescription: string;
+    imageDescriptionLength: number;
+    model: string;
+  };
+  response: {
+    imageGenerated: boolean;
+    durationMs: number;
+    imageSizeBytes?: number;
+  };
+};
+
+export async function saveImageGenerationToS3(params: ImageGenerationS3Params): Promise<void> {
+  const { matchId, queueType, trackedPlayerAliases, request, response } = params;
+
+  const requestBody = JSON.stringify(request, null, 2);
+
+  await saveToS3({
+    matchId,
+    assetType: "ai-image-generation",
+    extension: "request.json",
+    body: requestBody,
+    contentType: "application/json",
+    metadata: {
+      matchId,
+      type: "ai-image-generation-request",
+      queueType,
+      trackedPlayers: trackedPlayerAliases.join(", "),
+      model: request.model,
+    },
+    logEmoji: "🖼️",
+    logMessage: "Saving AI image generation request to S3",
+    errorContext: "ai image generation request",
+    returnUrl: false,
+    additionalLogDetails: {
+      queueType,
+      imageDescriptionLength: request.imageDescriptionLength,
+      model: request.model,
+    },
+  });
+
+  const responseBody = JSON.stringify(
+    {
+      ...response,
+      generatedAt: new Date().toISOString(),
+    },
+    null,
+    2,
+  );
+
+  await saveToS3({
+    matchId,
+    assetType: "ai-image-generation",
+    extension: "response.json",
+    body: responseBody,
+    contentType: "application/json",
+    metadata: {
+      matchId,
+      type: "ai-image-generation-response",
+      queueType,
+      durationMs: response.durationMs.toString(),
+      trackedPlayers: trackedPlayerAliases.join(", "),
+      imageGenerated: response.imageGenerated.toString(),
+      ...(response.imageSizeBytes !== undefined && { imageSizeBytes: response.imageSizeBytes.toString() }),
+    },
+    logEmoji: "📸",
+    logMessage: "Saving AI image generation response to S3",
+    errorContext: "ai image generation response",
+    returnUrl: false,
+    additionalLogDetails: {
+      queueType,
+      durationMs: response.durationMs,
+      imageGenerated: response.imageGenerated,
+      imageSizeBytes: response.imageSizeBytes,
     },
   });
 }

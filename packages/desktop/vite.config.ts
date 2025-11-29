@@ -1,4 +1,3 @@
- 
 /* eslint-disable custom-rules/prefer-bun-apis -- Vite config runs in Node context, not Bun */
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
@@ -12,8 +11,8 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@": `${import.meta.dir}/src`,
-      "@scout-for-lol/desktop": `${import.meta.dir}/src`,
+      "@": `${import.meta.dirname}/src`,
+      "@scout-for-lol/desktop": `${import.meta.dirname}/src`,
     },
   },
   clearScreen: false,

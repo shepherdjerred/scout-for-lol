@@ -5,8 +5,6 @@ import {
   type ArenaMatch,
   type CompletedMatch,
   type MatchId,
-  selectRandomStyleAndTheme,
-  selectRandomImagePrompts,
   curateMatchData,
   type CuratedMatchData,
   type ReviewTextMetadata,
@@ -30,7 +28,7 @@ import {
 import { getOpenAIClient } from "@scout-for-lol/backend/league/review/ai-clients.js";
 import { summarizeTimeline } from "@scout-for-lol/backend/league/review/timeline-summary.js";
 import { analyzeMatchData } from "@scout-for-lol/backend/league/review/ai-analysis.js";
-import { generateArtPromptFromReview } from "@scout-for-lol/backend/league/review/ai-art.js";
+import { generateImageDescriptionFromReview } from "@scout-for-lol/backend/league/review/ai-image-description.js";
 import { generateReviewImageBackend } from "@scout-for-lol/backend/league/review/image-backend.js";
 import { createLogger } from "@scout-for-lol/backend/logger.js";
 
@@ -42,8 +40,6 @@ const logger = createLogger("review-generator");
 export type ReviewMetadata = {
   reviewerName: string;
   playerName: string;
-  style?: string;
-  themes?: string[];
 };
 
 type PlayerContext = {
@@ -64,68 +60,55 @@ type DebugDataParams = {
   matchAnalysis?: string;
   textMetadata: ReviewTextMetadata;
   reviewText: string;
-  style: string;
-  themes: string[];
-  artPrompt?: string;
+  imageDescription?: string;
   reviewImage?: Uint8Array;
 };
 
-type ArtGenerationParams = {
+type ImageGenerationParams = {
   reviewText: string;
-  style: string;
-  themes: string[];
   matchId: MatchId;
   queueType: string;
   trackedPlayerAliases: string[];
   openaiClient: OpenAI;
-  match: CompletedMatch | ArenaMatch;
-  curatedData?: CuratedMatchData;
-  personalityImageHints?: string[];
 };
 
-type ArtGenerationResult = {
-  artPrompt?: string;
+type ImageGenerationResult = {
+  imageDescription?: string;
   reviewImage?: Uint8Array;
 };
 
-async function generateArtAndImage(params: ArtGenerationParams): Promise<ArtGenerationResult> {
-  const {
-    reviewText,
-    style,
-    themes,
-    matchId,
-    queueType,
-    trackedPlayerAliases,
-    openaiClient,
-    match,
-    curatedData,
-    personalityImageHints,
-  } = params;
+/**
+ * Generate an image from the review text.
+ * Step 3: Generate image description from review text (OpenAI)
+ * Step 4: Generate image from description (Gemini)
+ */
+async function generateImage(params: ImageGenerationParams): Promise<ImageGenerationResult> {
+  const { reviewText, matchId, queueType, trackedPlayerAliases, openaiClient } = params;
 
-  const artPrompt = await generateArtPromptFromReview({
+  // Step 3: Generate image description from review text
+  const imageDescription = await generateImageDescriptionFromReview({
     reviewText,
-    style,
-    themes,
     matchId,
     queueType,
     trackedPlayerAliases,
     openaiClient,
-    ...(personalityImageHints !== undefined && { personalityImageHints }),
   });
 
+  if (!imageDescription) {
+    logger.info("[generateImage] No image description generated, skipping image generation");
+    return {};
+  }
+
+  // Step 4: Generate image from description only
   const reviewImage = await generateReviewImageBackend({
-    reviewText,
-    artPrompt: artPrompt ?? reviewText,
-    match,
+    imageDescription,
     matchId,
     queueType,
-    style,
-    themes,
-    ...(curatedData !== undefined && { curatedData }),
+    trackedPlayerAliases,
   });
 
   return {
-    ...(artPrompt !== undefined && { artPrompt }),
+    imageDescription,
     ...(reviewImage !== undefined && { reviewImage }),
   };
 }
@@ -167,9 +150,7 @@ function buildComprehensiveDebugData(params: DebugDataParams): ComprehensiveDebu
     matchAnalysis,
     textMetadata,
     reviewText,
-    style,
-    themes,
-    artPrompt,
+    imageDescription,
     reviewImage,
   } = params;
 
@@ -225,10 +206,8 @@ function buildComprehensiveDebugData(params: DebugDataParams): ComprehensiveDebu
       ...(textMetadata.textTokensCompletion !== undefined && { tokensCompletion: textMetadata.textTokensCompletion }),
       durationMs: textMetadata.textDurationMs,
     },
-    artGeneration: {
-      style,
-      themes,
-      ...(artPrompt !== undefined && { artPrompt }),
+    imageGeneration: {
+      ...(imageDescription !== undefined && { imageDescription }),
       imageGenerated: reviewImage !== undefined,
       geminiModel: "gemini-3-pro-image-preview",
     },
@@ -438,26 +417,13 @@ export async function generateMatchReview(
 
   await saveReviewDataToS3({ matchId, reviewText, textMetadata, queueType, trackedPlayerAliases });
 
-  const { style, themes } = selectRandomStyleAndTheme();
-  const personalityImageHints = selectRandomImagePrompts(personality.metadata.image);
-
-  const fullMetadata: ReviewMetadata = {
-    ...metadata,
-    style,
-    themes,
-  };
-
-  const { artPrompt, reviewImage } = await generateArtAndImage({
+  // Step 3 & 4: Generate image description and image
+  const { imageDescription, reviewImage } = await generateImage({
     reviewText,
-    style,
-    themes,
     matchId,
     queueType,
     trackedPlayerAliases,
     openaiClient,
-    personalityImageHints,
-    match,
-    ...(curatedData !== undefined && { curatedData }),
   });
 
   // Save comprehensive debug data to S3
@@ -473,9 +439,7 @@ export async function generateMatchReview(
       ...(matchAnalysis !== undefined && { matchAnalysis }),
       textMetadata,
       reviewText,
-      style,
-      themes,
-      ...(artPrompt !== undefined && { artPrompt }),
+      ...(imageDescription !== undefined && { imageDescription }),
       ...(reviewImage !== undefined && { reviewImage }),
     });
 
@@ -488,6 +452,6 @@ export async function generateMatchReview(
   return {
     text: reviewText,
     ...(reviewImage ? { image: reviewImage } : {}),
-    metadata: fullMetadata,
+    metadata,
   };
 }

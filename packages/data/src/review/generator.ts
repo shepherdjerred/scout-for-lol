@@ -95,7 +95,8 @@ export async function generateReviewText(params: {
     ...(timelineSummary !== undefined && { timelineSummary }),
   });
   const userPrompt = replaceTemplateVariables(basePromptTemplate, promptVariables);
-  const systemPrompt = `${systemPromptPrefix}${personality.instructions}\n\n${laneContext}`;
+  const styleCardSection = `\n\nReviewer style card (from Discord chat analysis; keep the tone aligned):\n${personality.styleCard}`;
+  const systemPrompt = `${systemPromptPrefix}${personality.instructions}${styleCardSection}\n\n${laneContext}`;
   const completionParams = createCompletionParams({
     systemPrompt,
     userPrompt,
@@ -157,22 +158,22 @@ export async function generateReviewText(params: {
  * Core image generation function
  *
  * This is a pure function that takes all dependencies as parameters.
+ * The image description should be the ONLY input for what to generate -
+ * all context (review text, match data, etc.) should have been processed
+ * in the previous step (Step 3: generateImageDescription).
+ *
  * Callers (backend/review-dev-tool) are responsible for:
  * - Initializing the Gemini client
- * - Selecting art style and theme
+ * - Generating the image description (Step 3)
  * - Handling the image data (S3 upload, display, etc.)
  */
 export async function generateReviewImage(params: {
-  reviewText: string;
-  artStyle: string;
-  artTheme: string;
-  secondArtTheme?: string;
-  matchData?: string;
+  imageDescription: string;
   geminiClient: GoogleGenerativeAI;
   model: string;
   timeoutMs: number;
 }): Promise<{ imageData: string; metadata: ReviewImageMetadata }> {
-  const { reviewText, artStyle, artTheme, secondArtTheme, matchData, geminiClient, model, timeoutMs } = params;
+  const { imageDescription, geminiClient, model, timeoutMs } = params;
 
   const geminiModel = geminiClient.getGenerativeModel({ model });
 
@@ -185,13 +186,7 @@ export async function generateReviewImage(params: {
     }, timeoutMs);
   });
 
-  const prompt = generateImagePrompt({
-    artStyle,
-    artTheme,
-    secondArtTheme,
-    reviewText,
-    matchData,
-  });
+  const prompt = generateImagePrompt(imageDescription);
 
   const resultRaw = await Promise.race([geminiModel.generateContent(prompt), timeoutPromise]);
 
@@ -226,9 +221,6 @@ export async function generateReviewImage(params: {
     imageData,
     metadata: {
       imageDurationMs: duration,
-      selectedArtStyle: artStyle,
-      selectedArtTheme: artTheme,
-      selectedSecondArtTheme: secondArtTheme,
       geminiPrompt: prompt,
       geminiModel: model,
     },
@@ -330,9 +322,6 @@ export type ReviewTextMetadata = {
  */
 export type ReviewImageMetadata = {
   imageDurationMs: number;
-  selectedArtStyle: string;
-  selectedArtTheme: string;
-  selectedSecondArtTheme?: string | undefined;
   geminiPrompt?: string | undefined;
   geminiModel?: string | undefined;
 };

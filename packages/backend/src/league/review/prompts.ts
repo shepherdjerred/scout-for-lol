@@ -17,7 +17,17 @@ function getPromptsDir(): string {
   return url.pathname.replace(/\/src\/index\.ts$/, "/src/review/prompts");
 }
 
+// Resolve the analysis style card directory (packages/analysis/llm-out)
+function getStyleCardsDir(): string {
+  const dataPackageUrl = import.meta.resolve("@scout-for-lol/data");
+  const url = new URL(dataPackageUrl);
+  // Navigate from data/src/index.ts -> packages/data/src/review/prompts/style-cards
+  return url.pathname.replace(/\/src\/index\.ts$/, "/src/review/prompts/style-cards");
+}
+
 const PROMPTS_DIR = getPromptsDir();
+const STYLECARDS_DIR = getStyleCardsDir();
+const EXCLUDED = new Set(["generic.json"]);
 
 /**
  * Load a prompt file from the prompts directory
@@ -45,9 +55,34 @@ async function loadPersonality(basename: string): Promise<Personality> {
   const instructionsText = await Bun.file(txtPath).text();
   const instructions = instructionsText.trim();
 
+  // Load a matching style card from analysis/llm-out (required)
+  const normalizedBasename = basename.toLowerCase();
+  const normalizedDisplayName = metadata.name
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  const styleCardCandidates = Array.from(new Set([normalizedBasename, normalizedDisplayName]));
+
+  let styleCard: string | undefined;
+  for (const candidate of styleCardCandidates) {
+    const stylePath = `${STYLECARDS_DIR}/${candidate}_style.json`;
+    const styleFile = Bun.file(stylePath);
+    if (await styleFile.exists()) {
+      styleCard = (await styleFile.text()).trim();
+      break;
+    }
+  }
+
+  if (!styleCard) {
+    throw new Error(
+      `Missing required style card for personality "${basename}". Expected one of: ${styleCardCandidates.map((c) => `${c}_style.json`).join(", ")}`,
+    );
+  }
+
   return {
     metadata,
     instructions,
+    styleCard,
     filename: basename,
   };
 }
@@ -57,8 +92,54 @@ async function loadPersonality(basename: string): Promise<Personality> {
  * Note: Currently hardcoded to always return "aaron" personality
  */
 export async function selectRandomPersonality(): Promise<Personality> {
-  // Temporarily hardcoded to only use aaron personality
-  return loadPersonality("aaron");
+  const personalities = await listValidPersonalities();
+  const pick = personalities[Math.floor(Math.random() * personalities.length)];
+  if (!pick) {
+    throw new Error("No personalities available with complete data.");
+  }
+  return pick;
+}
+
+let cachedPersonalities: Personality[] | null = null;
+
+async function listValidPersonalities(): Promise<Personality[]> {
+  if (cachedPersonalities) {
+    return cachedPersonalities;
+  }
+
+  const personalitiesDir = `${PROMPTS_DIR}/personalities`;
+  const glob = new Bun.Glob("*.json");
+  const basenames: string[] = [];
+  for await (const file of glob.scan(personalitiesDir)) {
+    const name = file.replace(/\.json$/, "");
+    if (!EXCLUDED.has(`${name}.json`)) {
+      basenames.push(name);
+    }
+  }
+
+  const valid: Personality[] = [];
+  const discarded: string[] = [];
+
+  for (const base of basenames) {
+    try {
+      const personality = await loadPersonality(base);
+      valid.push(personality);
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      discarded.push(`${base} (${reason})`);
+    }
+  }
+
+  if (discarded.length > 0) {
+    console.warn(`[ai-review] Discarded personalities due to incomplete data: ${discarded.join("; ")}`);
+  }
+
+  if (valid.length === 0) {
+    throw new Error("No personalities with complete data (metadata + instructions + style card).");
+  }
+
+  cachedPersonalities = valid;
+  return valid;
 }
 
 /**

@@ -23,14 +23,15 @@ export function logErrorDetails(
   const errorResult = ErrorDetailsSchema.safeParse(error);
 
   // Try to extract stack trace directly from error object (even if Zod validation fails)
-  const StackSchema = z.string();
+  // Use a Zod schema to validate any object with a stack property
+  const ObjectWithStackSchema = z.object({ stack: z.string() });
   let stackTrace: string | undefined;
   if (errorResult.success && errorResult.data.stack) {
     stackTrace = errorResult.data.stack;
-  } else if (error && typeof error === "object" && "stack" in error) {
-    const stackResult = StackSchema.safeParse(error.stack);
+  } else {
+    const stackResult = ObjectWithStackSchema.safeParse(error);
     if (stackResult.success) {
-      stackTrace = stackResult.data;
+      stackTrace = stackResult.data.stack;
     }
   }
 
