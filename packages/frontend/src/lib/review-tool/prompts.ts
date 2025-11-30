@@ -2,7 +2,7 @@
  * Prompt loading and management utilities
  */
 import type { Personality, PlayerMetadata } from "./config/schema.ts";
-import { PersonalityMetadataSchema, PlayerMetadataSchema } from "./config/schema.ts";
+import { PersonalityMetadataSchema } from "./config/schema.ts";
 import type { Lane } from "@scout-for-lol/data";
 
 // Import personality files
@@ -14,8 +14,6 @@ import irfanJson from "@scout-for-lol/data/src/review/prompts/personalities/irfa
 import irfanTxt from "@scout-for-lol/data/src/review/prompts/personalities/irfan.txt?raw";
 import nekoryanjson from "@scout-for-lol/data/src/review/prompts/personalities/nekoryan.json";
 import nekoryanTxt from "@scout-for-lol/data/src/review/prompts/personalities/nekoryan.txt?raw";
-import genericJson from "@scout-for-lol/data/src/review/prompts/personalities/generic.json";
-import genericTxt from "@scout-for-lol/data/src/review/prompts/personalities/generic.txt?raw";
 import aaronStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/aaron_style.json";
 import brianStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/brian_style.json";
 import irfanStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/irfan_style.json";
@@ -31,9 +29,6 @@ import genericLane from "@scout-for-lol/data/src/review/prompts/lanes/generic.tx
 
 // Import base prompt
 import basePrompt from "@scout-for-lol/data/src/review/prompts/base.txt?raw";
-
-// Import player metadata
-import genericPlayer from "@scout-for-lol/data/src/review/prompts/players/generic.json";
 
 /**
  * Built-in personalities (from prompt files)
@@ -62,12 +57,6 @@ const RAW_BUILTIN_PERSONALITIES: Personality[] = [
     metadata: PersonalityMetadataSchema.parse(nekoryanjson),
     instructions: nekoryanTxt,
     styleCard: JSON.stringify(ryanStyleCard),
-  },
-  {
-    id: "generic",
-    metadata: PersonalityMetadataSchema.parse(genericJson),
-    instructions: genericTxt,
-    styleCard: "",
   },
 ];
 
@@ -151,5 +140,10 @@ export function getLaneContext(lane: string | undefined): string {
  * Get generic player metadata
  */
 export function getGenericPlayerMetadata(): PlayerMetadata {
-  return PlayerMetadataSchema.parse(genericPlayer);
+  // TODO: grab the player metadata from the personality cards
+  return {
+    description: "Likes to play League of Legends.",
+    favoriteChampions: [],
+    favoriteLanes: [],
+  };
 }

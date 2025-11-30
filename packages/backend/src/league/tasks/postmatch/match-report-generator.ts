@@ -90,7 +90,7 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
  *
  * Validates the response against our schema to ensure type safety and catch API changes.
  */
-export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region): Promise<RawTimeline | undefined> {
+async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region): Promise<RawTimeline | undefined> {
   try {
     const region = mapRegionToEnum(playerRegion);
     const regionGroup = regionToRegionGroup(region);

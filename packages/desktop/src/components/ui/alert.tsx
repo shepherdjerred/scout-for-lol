@@ -58,4 +58,4 @@ function Alert({ className, variant = "default", title, children, onDismiss, ...
   );
 }
 
-export { Alert, alertVariants };
+export { Alert };
