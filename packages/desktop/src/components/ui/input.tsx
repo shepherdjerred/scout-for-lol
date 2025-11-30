@@ -106,4 +106,4 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
 );
 Select.displayName = "Select";
 
-export { Input, Select, Label };
+export { Input, Select };

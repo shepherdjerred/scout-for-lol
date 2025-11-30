@@ -7,8 +7,8 @@ import {
   findParticipant,
   getOutcome,
   getTeams,
+  participantToChampion,
 } from "@scout-for-lol/data";
-import { participantToChampion } from "@scout-for-lol/report/participant-helpers.ts";
 import { strict as assert } from "assert";
 
 export function toMatch(

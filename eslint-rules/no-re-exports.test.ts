@@ -74,5 +74,26 @@ ruleTester.run("no-re-exports", noReExports, {
         },
       ],
     },
+    {
+      name: "disallows exporting const assigned to imported value",
+      code: `import { myFunction } from "./other"; export const reexported = myFunction;`,
+      errors: [
+        {
+          messageId: "noReExportImported",
+        },
+      ],
+    },
+    {
+      name: "disallows multiple const exports assigned to imported values",
+      code: `import { a, b } from "./other"; export const x = a; export const y = b;`,
+      errors: [
+        {
+          messageId: "noReExportImported",
+        },
+        {
+          messageId: "noReExportImported",
+        },
+      ],
+    },
   ],
 });
