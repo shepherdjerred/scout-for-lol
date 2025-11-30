@@ -1,92 +1,33 @@
-/**
- * Card component with variants
- */
-import type { ReactNode, HTMLAttributes } from "react";
+import type { HTMLAttributes } from "react";
+import { cn } from "./cn.ts";
 
-export type CardProps = HTMLAttributes<HTMLDivElement> & {
-  variant?: "default" | "interactive" | "victory" | "defeat";
-  padding?: "none" | "sm" | "md" | "lg";
-  children: ReactNode;
-};
-
-export function Card({ variant = "default", padding = "md", children, className = "", ...props }: CardProps) {
-  const variants = {
-    default: "card",
-    interactive: "card-interactive",
-    victory: "card-victory",
-    defeat: "card-defeat",
-  };
-
-  const paddings = {
-    none: "",
-    sm: "p-4",
-    md: "p-6",
-    lg: "p-8",
-  };
-
+export function Card({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`${variants[variant]} ${paddings[padding]} ${className}`} {...props}>
+    <div className={cn("rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm", className)} {...props}>
       {children}
     </div>
   );
 }
 
-// Sub-components for Card structure
-export function CardHeader({
-  children,
-  className = "",
-  ...props
-}: HTMLAttributes<HTMLDivElement> & { children: ReactNode }) {
+export function CardHeader({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`mb-4 ${className}`} {...props}>
+    <div className={cn("border-b border-gray-100 dark:border-gray-700 px-4 py-3", className)} {...props}>
       {children}
     </div>
   );
 }
 
-export function CardTitle({
-  children,
-  className = "",
-  ...props
-}: HTMLAttributes<HTMLHeadingElement> & { children: ReactNode }) {
+export function CardTitle({ className, children, ...props }: HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h3 className={`text-lg font-semibold text-surface-900 dark:text-white ${className}`} {...props}>
+    <h3 className={cn("text-sm font-semibold text-gray-900 dark:text-white", className)} {...props}>
       {children}
     </h3>
   );
 }
 
-export function CardDescription({
-  children,
-  className = "",
-  ...props
-}: HTMLAttributes<HTMLParagraphElement> & { children: ReactNode }) {
+export function CardContent({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <p className={`text-sm text-surface-500 dark:text-surface-400 mt-1 ${className}`} {...props}>
-      {children}
-    </p>
-  );
-}
-
-export function CardContent({
-  children,
-  className = "",
-  ...props
-}: HTMLAttributes<HTMLDivElement> & { children: ReactNode }) {
-  return (
-    <div className={className} {...props}>
-      {children}
-    </div>
-  );
-}
-
-export function CardFooter({
-  children,
-  className = "",
-  ...props
-}: HTMLAttributes<HTMLDivElement> & { children: ReactNode }) {
-  return (
-    <div className={`mt-4 pt-4 border-t border-surface-200 dark:border-surface-700 ${className}`} {...props}>
+    <div className={cn("px-4 py-3 space-y-3", className)} {...props}>
       {children}
     </div>
   );

@@ -1,800 +1,149 @@
 @import "tailwindcss";
 
-/* =============================================================================
-   DESIGN SYSTEM - Scout for LoL (Tailwind 4)
-   ============================================================================= */
-
-/* -----------------------------------------------------------------------------
-   Theme Configuration (Tailwind 4 CSS-based config)
-   ----------------------------------------------------------------------------- */
-@theme {
-  /* Gaming-inspired brand colors (emerald) */
-  --color-brand-50: #ecfdf5;
-  --color-brand-100: #d1fae5;
-  --color-brand-200: #a7f3d0;
-  --color-brand-300: #6ee7b7;
-  --color-brand-400: #34d399;
-  --color-brand-500: #10b981;
-  --color-brand-600: #059669;
-  --color-brand-700: #047857;
-  --color-brand-800: #065f46;
-  --color-brand-900: #064e3b;
-  --color-brand-950: #022c22;
-
-  /* Victory gold */
-  --color-victory-50: #fffbeb;
-  --color-victory-100: #fef3c7;
-  --color-victory-200: #fde68a;
-  --color-victory-300: #fcd34d;
-  --color-victory-400: #fbbf24;
-  --color-victory-500: #f59e0b;
-  --color-victory-600: #d97706;
-  --color-victory-700: #b45309;
-  --color-victory-800: #92400e;
-  --color-victory-900: #78350f;
-
-  /* Defeat crimson */
-  --color-defeat-50: #fff1f2;
-  --color-defeat-100: #ffe4e6;
-  --color-defeat-200: #fecdd3;
-  --color-defeat-300: #fda4af;
-  --color-defeat-400: #fb7185;
-  --color-defeat-500: #f43f5e;
-  --color-defeat-600: #e11d48;
-  --color-defeat-700: #be123c;
-  --color-defeat-800: #9f1239;
-  --color-defeat-900: #881337;
-
-  /* Surface colors (slate) */
-  --color-surface-50: #f8fafc;
-  --color-surface-100: #f1f5f9;
-  --color-surface-200: #e2e8f0;
-  --color-surface-300: #cbd5e1;
-  --color-surface-400: #94a3b8;
-  --color-surface-500: #64748b;
-  --color-surface-600: #475569;
-  --color-surface-700: #334155;
-  --color-surface-800: #1e293b;
-  --color-surface-850: #172033;
-  --color-surface-900: #0f172a;
-  --color-surface-950: #020617;
-
-  /* Custom shadows */
-  --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.15);
-  --shadow-glow-lg: 0 0 40px rgba(16, 185, 129, 0.2);
-  --shadow-glow-victory: 0 0 20px rgba(245, 158, 11, 0.2);
-  --shadow-glow-defeat: 0 0 20px rgba(244, 63, 94, 0.2);
-  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.12);
-  --shadow-glass-lg: 0 16px 48px rgba(0, 0, 0, 0.2);
-
-  /* Animations */
-  --animate-fade-in: fadeIn 0.3s ease-out;
-  --animate-slide-up: slideUp 0.3s ease-out;
-  --animate-slide-down: slideDown 0.3s ease-out;
-  --animate-scale-in: scaleIn 0.2s ease-out;
-  --animate-shimmer: shimmer 2s linear infinite;
-
-  /* Border radius */
-  --radius-4xl: 2rem;
+/* Beaufort for LoL - Headings/Titles */
+@font-face {
+  font-family: "Beaufort for LoL";
+  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+@font-face {
+  font-family: "Beaufort for LoL";
+  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@font-face {
+  font-family: "Beaufort for LoL";
+  src: url("/fonts/BeaufortForLoL-TTF/BeaufortforLOL-Heavy.ttf") format("truetype");
+  font-weight: 900;
+  font-style: normal;
 }
 
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Spiegel - Body Text */
+@font-face {
+  font-family: "Spiegel";
+  src: url("/fonts/Spiegel-TTF/Spiegel_TT_Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
 }
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+@font-face {
+  font-family: "Spiegel";
+  src: url("/fonts/Spiegel-TTF/Spiegel_TT_SemiBold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
 }
 
-@keyframes shimmer {
-  from {
-    background-position: -200% 0;
-  }
-  to {
-    background-position: 200% 0;
-  }
+@font-face {
+  font-family: "Spiegel";
+  src: url("/fonts/Spiegel-TTF/Spiegel_TT_Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
 }
 
-/* -----------------------------------------------------------------------------
-   Custom Properties
-   ----------------------------------------------------------------------------- */
 :root {
-  /* Glass effects */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
 
-  /* Gradients */
-  --gradient-brand: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --gradient-victory: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-  --gradient-defeat: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%);
-  --gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+
+  --primary: 222.2 47.4% 11.2%;
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
+
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+
+  --accent: 210 40% 96.1%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 222.2 84% 4.9%;
+
+  --radius: 0.5rem;
+
+  --info: 210 100% 50%; /* Blue */
+  --info-foreground: 210 40% 98%;
+  --warning: 38 92% 50%; /* Yellow/Orange */
+  --warning-foreground: 222.2 47.4% 11.2%;
+  --success: 142.1 76.2% 36.3%; /* Green */
+  --success-foreground: 210 40% 98%;
+  --danger: 0 84.2% 60.2%; /* Red (same as destructive) */
+  --danger-foreground: 210 40% 98%;
 }
 
 .dark {
-  --glass-bg: rgba(30, 41, 59, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  --gradient-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 221 83% 53%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 217.2 32.6% 25%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 217.2 32.6% 25%;
+  --muted-foreground: 215 20.2% 65.1%;
+
+  --accent: 217.2 32.6% 30%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 217.2 32.6% 35%;
+  --input: 217.2 32.6% 30%;
+  --ring: 212.7 26.8% 83.9%;
+
+  --info: 210 100% 50%; /* Blue */
+  --info-foreground: 210 40% 98%;
+  --warning: 38 92% 50%; /* Yellow/Orange */
+  --warning-foreground: 222.2 47.4% 11.2%;
+  --success: 142.1 76.2% 36.3%; /* Green */
+  --success-foreground: 210 40% 98%;
+  --danger: 0 62.8% 30.6%; /* Red (same as destructive) */
+  --danger-foreground: 210 40% 98%;
 }
 
-/* -----------------------------------------------------------------------------
-   Base Styles
-   ----------------------------------------------------------------------------- */
-html {
-  scroll-behavior: smooth;
+* {
+  border-color: hsl(var(--border));
 }
 
 body {
-  @apply antialiased;
-}
-
-/* Focus styles */
-:focus-visible {
-  outline-width: 2px;
-  outline-offset: 2px;
-  outline-color: var(--color-brand-500);
-}
-
-/* Selection */
-::selection {
-  background-color: rgba(16, 185, 129, 0.3);
-  color: inherit;
-}
-
-/* -----------------------------------------------------------------------------
-   Glass Components
-   ----------------------------------------------------------------------------- */
-.glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-}
-
-.glass-subtle {
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.dark .glass-subtle {
-  background: rgba(30, 41, 59, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* -----------------------------------------------------------------------------
-   Card Variants
-   ----------------------------------------------------------------------------- */
-.card {
-  @apply rounded-2xl transition-all duration-200;
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-}
-
-.card:hover {
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-}
-
-.dark .card:hover {
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-}
-
-.card-interactive {
-  @apply rounded-2xl transition-all duration-200 cursor-pointer;
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-}
-
-.card-interactive:hover {
-  @apply scale-[1.02];
-  box-shadow: var(--shadow-glass-lg);
-  border-color: rgba(16, 185, 129, 0.3);
-}
-
-.card-victory {
-  @apply rounded-2xl transition-all duration-200;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: var(--glass-shadow);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.05) 0%, transparent 100%), var(--glass-bg);
-}
-
-.card-victory:hover {
-  box-shadow: var(--shadow-glow-victory);
-  border-color: rgba(251, 191, 36, 0.5);
-}
-
-.card-defeat {
-  @apply rounded-2xl transition-all duration-200;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: var(--glass-shadow);
-  border: 1px solid rgba(251, 113, 133, 0.3);
-  background: linear-gradient(135deg, rgba(251, 113, 133, 0.05) 0%, transparent 100%), var(--glass-bg);
-}
-
-.card-defeat:hover {
-  box-shadow: var(--shadow-glow-defeat);
-  border-color: rgba(251, 113, 133, 0.5);
-}
-
-/* -----------------------------------------------------------------------------
-   Button Variants
-   ----------------------------------------------------------------------------- */
-.btn {
-  @apply inline-flex items-center justify-center gap-2 px-4 py-2.5
-         rounded-xl font-medium text-sm
-         transition-all duration-200
-         disabled:opacity-50 disabled:cursor-not-allowed;
-}
-
-.btn:focus-visible {
-  outline-width: 2px;
-  outline-offset: 2px;
-  outline-color: var(--color-brand-500);
-}
-
-.btn-primary {
-  @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-white;
-  background-color: var(--color-brand-500);
-}
-
-.btn-primary:hover {
-  background-color: var(--color-brand-600);
-  box-shadow: var(--shadow-glow);
-}
-
-.btn-primary:active {
-  transform: scale(0.98);
-}
-
-.btn-secondary {
-  @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
-  background-color: var(--color-surface-100);
-  color: var(--color-surface-800);
-}
-
-.btn-secondary:hover {
-  background-color: var(--color-surface-200);
-}
-
-.btn-secondary:active {
-  transform: scale(0.98);
-}
-
-.dark .btn-secondary {
-  background-color: var(--color-surface-800);
-  color: var(--color-surface-100);
-}
-
-.dark .btn-secondary:hover {
-  background-color: var(--color-surface-700);
-}
-
-.btn-ghost {
-  @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-transparent;
-  color: var(--color-surface-600);
-}
-
-.btn-ghost:hover {
-  background-color: var(--color-surface-100);
-}
-
-.btn-ghost:active {
-  transform: scale(0.98);
-}
-
-.dark .btn-ghost {
-  color: var(--color-surface-400);
-}
-
-.dark .btn-ghost:hover {
-  background-color: var(--color-surface-800);
-  color: var(--color-surface-200);
-}
-
-.btn-danger {
-  @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-white;
-  background-color: var(--color-defeat-500);
-}
-
-.btn-danger:hover {
-  background-color: var(--color-defeat-600);
-  box-shadow: var(--shadow-glow-defeat);
-}
-
-.btn-danger:active {
-  transform: scale(0.98);
-}
-
-.btn-icon {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl font-medium text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed p-2.5 aspect-square;
-}
-
-/* -----------------------------------------------------------------------------
-   Input Variants
-   ----------------------------------------------------------------------------- */
-.input {
-  @apply w-full px-4 py-2.5 rounded-xl text-sm transition-all duration-200;
-  background-color: white;
-  border: 1px solid var(--color-surface-200);
-  color: var(--color-surface-900);
-}
-
-.input::placeholder {
-  color: var(--color-surface-400);
-}
-
-.input:focus {
-  outline: none;
-  border-color: var(--color-brand-500);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-}
-
-.dark .input {
-  background-color: var(--color-surface-800);
-  border-color: var(--color-surface-700);
-  color: var(--color-surface-100);
-}
-
-.dark .input::placeholder {
-  color: var(--color-surface-500);
-}
-
-.dark .input:focus {
-  border-color: var(--color-brand-500);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
-}
-
-.select {
-  @apply w-full px-4 py-2.5 rounded-xl text-sm transition-all duration-200 cursor-pointer pr-10;
-  background-color: white;
-  border: 1px solid var(--color-surface-200);
-  color: var(--color-surface-900);
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-  background-size: 1.5rem 1.5rem;
-  background-position: right 0.5rem center;
-  background-repeat: no-repeat;
-}
-
-.select:focus {
-  outline: none;
-  border-color: var(--color-brand-500);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-}
-
-.dark .select {
-  background-color: var(--color-surface-800);
-  border-color: var(--color-surface-700);
-  color: var(--color-surface-100);
-}
-
-.dark .select:focus {
-  border-color: var(--color-brand-500);
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
-}
-
-/* -----------------------------------------------------------------------------
-   Badge Variants
-   ----------------------------------------------------------------------------- */
-.badge {
-  @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium;
-}
-
-.badge-brand {
-  @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium;
-  background-color: var(--color-brand-100);
-  color: var(--color-brand-700);
-}
-
-.dark .badge-brand {
-  background-color: rgba(6, 78, 59, 0.5);
-  color: var(--color-brand-300);
-}
-
-.badge-victory {
-  @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium;
-  background-color: var(--color-victory-100);
-  color: var(--color-victory-700);
-}
-
-.dark .badge-victory {
-  background-color: rgba(120, 53, 15, 0.5);
-  color: var(--color-victory-300);
-}
-
-.badge-defeat {
-  @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium;
-  background-color: var(--color-defeat-100);
-  color: var(--color-defeat-700);
-}
-
-.dark .badge-defeat {
-  background-color: rgba(136, 19, 55, 0.5);
-  color: var(--color-defeat-300);
-}
-
-.badge-neutral {
-  @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium;
-  background-color: var(--color-surface-100);
-  color: var(--color-surface-600);
-}
-
-.dark .badge-neutral {
-  background-color: var(--color-surface-800);
-  color: var(--color-surface-400);
-}
-
-/* -----------------------------------------------------------------------------
-   Skeleton Loading
-   ----------------------------------------------------------------------------- */
-.skeleton {
-  @apply animate-pulse rounded-lg;
-  background-color: var(--color-surface-200);
-}
-
-.dark .skeleton {
-  background-color: var(--color-surface-700);
-}
-
-.skeleton-shimmer {
-  @apply relative overflow-hidden rounded-lg;
-  background-color: var(--color-surface-200);
-}
-
-.dark .skeleton-shimmer {
-  background-color: var(--color-surface-700);
-}
-
-.skeleton-shimmer::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  animation: shimmer 2s infinite;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-}
-
-.dark .skeleton-shimmer::after {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-}
-
-/* -----------------------------------------------------------------------------
-   Scrollbar Styling
-   ----------------------------------------------------------------------------- */
-.scrollbar-thin {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: rgba(148, 163, 184, 0.3);
-  border-radius: 3px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(148, 163, 184, 0.5);
-}
-
-.dark .scrollbar-thin {
-  scrollbar-color: rgba(71, 85, 105, 0.5) transparent;
-}
-
-.dark .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: rgba(71, 85, 105, 0.5);
-}
-
-.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(71, 85, 105, 0.7);
-}
-
-/* -----------------------------------------------------------------------------
-   Dividers
-   ----------------------------------------------------------------------------- */
-.divider {
-  @apply h-px w-full;
-  background: linear-gradient(to right, transparent, var(--color-surface-200), transparent);
-}
-
-.dark .divider {
-  background: linear-gradient(to right, transparent, var(--color-surface-700), transparent);
-}
-
-.divider-vertical {
-  @apply w-px h-full;
-  background: linear-gradient(to bottom, transparent, var(--color-surface-200), transparent);
-}
-
-.dark .divider-vertical {
-  background: linear-gradient(to bottom, transparent, var(--color-surface-700), transparent);
-}
-
-/* -----------------------------------------------------------------------------
-   Empty State
-   ----------------------------------------------------------------------------- */
-.empty-state {
-  @apply flex flex-col items-center justify-center py-12 px-6 text-center;
-}
-
-.empty-state-icon {
-  @apply w-16 h-16 mb-4;
-  color: var(--color-surface-300);
-}
-
-.dark .empty-state-icon {
-  color: var(--color-surface-600);
-}
-
-.empty-state-title {
-  @apply text-lg font-semibold mb-2;
-  color: var(--color-surface-700);
-}
-
-.dark .empty-state-title {
-  color: var(--color-surface-300);
-}
-
-.empty-state-description {
-  @apply text-sm max-w-sm;
-  color: var(--color-surface-500);
-}
-
-.dark .empty-state-description {
-  color: var(--color-surface-400);
-}
-
-/* -----------------------------------------------------------------------------
-   Tab Styles
-   ----------------------------------------------------------------------------- */
-.tab {
-  @apply relative px-4 py-3 text-sm font-medium transition-all duration-200;
-  color: var(--color-surface-500);
-}
-
-.tab:hover {
-  color: var(--color-surface-700);
-}
-
-.dark .tab {
-  color: var(--color-surface-400);
-}
-
-.dark .tab:hover {
-  color: var(--color-surface-200);
-}
-
-.tab-active {
-  color: var(--color-brand-600);
-}
-
-.dark .tab-active {
-  color: var(--color-brand-400);
-}
-
-.tab-active::after {
-  content: "";
-  @apply absolute bottom-0 left-0 right-0 h-0.5 rounded-full;
-  background-color: var(--color-brand-500);
-}
-
-/* -----------------------------------------------------------------------------
-   Tooltip
-   ----------------------------------------------------------------------------- */
-.tooltip {
-  @apply absolute z-50 px-3 py-2 text-xs font-medium text-white rounded-lg shadow-lg pointer-events-none opacity-0 transition-opacity duration-200;
-  background-color: var(--color-surface-900);
-}
-
-.tooltip-visible {
-  @apply opacity-100;
-}
-
-/* -----------------------------------------------------------------------------
-   Progress Bar
-   ----------------------------------------------------------------------------- */
-.progress {
-  @apply h-2 w-full rounded-full overflow-hidden;
-  background-color: var(--color-surface-200);
-}
-
-.dark .progress {
-  background-color: var(--color-surface-700);
-}
-
-.progress-bar {
-  @apply h-full rounded-full transition-all duration-300 ease-out;
-  background-color: var(--color-brand-500);
-}
-
-.progress-bar-animated {
-  @apply h-full rounded-full transition-all duration-300 ease-out;
-  background-color: var(--color-brand-500);
-  animation: progressPulse 2s ease-in-out infinite;
-}
-
-@keyframes progressPulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-/* -----------------------------------------------------------------------------
-   Lane Icons (for LoL)
-   ----------------------------------------------------------------------------- */
-.lane-icon {
-  @apply w-5 h-5;
-  color: var(--color-surface-400);
-}
-
-.lane-icon-active {
-  color: var(--color-brand-500);
-}
-
-/* -----------------------------------------------------------------------------
-   Outcome Indicators
-   ----------------------------------------------------------------------------- */
-.outcome-victory {
-  color: var(--color-victory-500);
-  background-color: var(--color-victory-50);
-}
-
-.dark .outcome-victory {
-  color: var(--color-victory-400);
-  background-color: rgba(120, 53, 15, 0.2);
-}
-
-.outcome-defeat {
-  color: var(--color-defeat-500);
-  background-color: var(--color-defeat-50);
-}
-
-.dark .outcome-defeat {
-  color: var(--color-defeat-400);
-  background-color: rgba(136, 19, 55, 0.2);
-}
-
-/* -----------------------------------------------------------------------------
-   Animations
-   ----------------------------------------------------------------------------- */
-.animate-in {
-  animation: animateIn 0.3s ease-out;
-}
-
-@keyframes animateIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.hover-lift {
-  @apply transition-transform duration-200;
-}
-
-.hover-lift:hover {
-  @apply -translate-y-1;
-}
-
-/* Stagger children animations */
-.stagger-children > * {
-  animation: fadeIn 0.3s ease-out both;
-}
-
-.stagger-children > *:nth-child(1) {
-  animation-delay: 0ms;
-}
-.stagger-children > *:nth-child(2) {
-  animation-delay: 50ms;
-}
-.stagger-children > *:nth-child(3) {
-  animation-delay: 100ms;
-}
-.stagger-children > *:nth-child(4) {
-  animation-delay: 150ms;
-}
-.stagger-children > *:nth-child(5) {
-  animation-delay: 200ms;
-}
-
-/* -----------------------------------------------------------------------------
-   Utility Classes
-   ----------------------------------------------------------------------------- */
-.text-gradient {
-  background: linear-gradient(to right, var(--color-brand-400), var(--color-brand-600));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.text-gradient-victory {
-  background: linear-gradient(to right, var(--color-victory-400), var(--color-victory-600));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.text-gradient-defeat {
-  background: linear-gradient(to right, var(--color-defeat-400), var(--color-defeat-600));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.border-gradient {
-  @apply relative;
-  border: 1px solid transparent;
-  background-origin: border-box;
-  background-clip: padding-box, border-box;
-}
-
-/* Hide scrollbar but keep functionality */
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family:
+    "Spiegel",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Beaufort for LoL", serif;
 }

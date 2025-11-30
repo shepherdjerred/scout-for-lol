@@ -1,20 +1,24 @@
-import { getCompetitionStatus, type CachedLeaderboard, type CompetitionWithCriteria } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { getActiveCompetitions } from "@scout-for-lol/backend/database/competition/queries.js";
+import {
+  getCompetitionStatus,
+  type CachedLeaderboard,
+  type CompetitionWithCriteria,
+} from "@scout-for-lol/data/index.ts";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { getActiveCompetitions } from "@scout-for-lol/backend/database/competition/queries.ts";
 import {
   calculateLeaderboard,
   type RankedLeaderboardEntry,
-} from "@scout-for-lol/backend/league/competition/leaderboard.js";
-import { generateLeaderboardEmbed } from "@scout-for-lol/backend/discord/embeds/competition.js";
-import { send as sendChannelMessage, ChannelSendError } from "@scout-for-lol/backend/league/discord/channel.js";
-import { saveCachedLeaderboard } from "@scout-for-lol/backend/storage/s3-leaderboard.js";
-import { createSnapshot, getSnapshot } from "@scout-for-lol/backend/league/competition/snapshots.js";
-import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.js";
+} from "@scout-for-lol/backend/league/competition/leaderboard.ts";
+import { generateLeaderboardEmbed } from "@scout-for-lol/backend/discord/embeds/competition.ts";
+import { send as sendChannelMessage, ChannelSendError } from "@scout-for-lol/backend/league/discord/channel.ts";
+import { saveCachedLeaderboard } from "@scout-for-lol/backend/storage/s3-leaderboard.ts";
+import { createSnapshot, getSnapshot } from "@scout-for-lol/backend/league/competition/snapshots.ts";
+import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.ts";
 import { EmbedBuilder } from "discord.js";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
-import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("competition-daily-update");
 

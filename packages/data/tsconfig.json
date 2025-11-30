@@ -1,11 +1,5 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "module": "ES2022",
-    "checkJs": false,
-    "jsx": "react-jsx",
-    "types": ["bun-types"]
-  },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "vendor"]
 }

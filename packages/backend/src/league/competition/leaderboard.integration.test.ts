@@ -1,14 +1,14 @@
 import { describe, expect, test, afterAll, beforeEach } from "bun:test";
 import { z } from "zod";
-import { calculateLeaderboard } from "@scout-for-lol/backend/league/competition/leaderboard.js";
-import { createCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
-import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
+import { calculateLeaderboard } from "@scout-for-lol/backend/league/competition/leaderboard.ts";
+import { createCompetition } from "@scout-for-lol/backend/database/competition/queries.ts";
+import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.ts";
 import { PlayerIdSchema, parseCompetition, type Rank, type DiscordGuildId } from "@scout-for-lol/data";
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
-import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
+import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // ============================================================================
 // S3 Mock Setup

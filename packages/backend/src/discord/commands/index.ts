@@ -1,45 +1,45 @@
 import { type Client, PermissionFlagsBits, PermissionsBitField } from "discord.js";
 import { z } from "zod";
-import { DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { getFlag } from "@scout-for-lol/backend/configuration/flags.js";
+import { DiscordAccountIdSchema } from "@scout-for-lol/data/index.ts";
+import { getFlag } from "@scout-for-lol/backend/configuration/flags.ts";
 import { match } from "ts-pattern";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("discord-commands");
 
-import { executeHelp } from "@scout-for-lol/backend/discord/commands/help";
-import { executeCompetitionCreate } from "@scout-for-lol/backend/discord/commands/competition/create.js";
-import { executeCompetitionEdit } from "@scout-for-lol/backend/discord/commands/competition/edit.js";
-import { executeCompetitionCancel } from "@scout-for-lol/backend/discord/commands/competition/cancel.js";
-import { executeGrantPermission } from "@scout-for-lol/backend/discord/commands/competition/grant-permission.js";
-import { executeCompetitionJoin } from "@scout-for-lol/backend/discord/commands/competition/join.js";
-import { executeCompetitionInvite } from "@scout-for-lol/backend/discord/commands/competition/invite.js";
-import { executeCompetitionLeave } from "@scout-for-lol/backend/discord/commands/competition/leave.js";
-import { executeCompetitionView } from "@scout-for-lol/backend/discord/commands/competition/view.js";
-import { executeCompetitionList } from "@scout-for-lol/backend/discord/commands/competition/list.js";
+import { executeHelp } from "@scout-for-lol/backend/discord/commands/help.ts";
+import { executeCompetitionCreate } from "@scout-for-lol/backend/discord/commands/competition/create.ts";
+import { executeCompetitionEdit } from "@scout-for-lol/backend/discord/commands/competition/edit.ts";
+import { executeCompetitionCancel } from "@scout-for-lol/backend/discord/commands/competition/cancel.ts";
+import { executeGrantPermission } from "@scout-for-lol/backend/discord/commands/competition/grant-permission.ts";
+import { executeCompetitionJoin } from "@scout-for-lol/backend/discord/commands/competition/join.ts";
+import { executeCompetitionInvite } from "@scout-for-lol/backend/discord/commands/competition/invite.ts";
+import { executeCompetitionLeave } from "@scout-for-lol/backend/discord/commands/competition/leave.ts";
+import { executeCompetitionView } from "@scout-for-lol/backend/discord/commands/competition/view.ts";
+import { executeCompetitionList } from "@scout-for-lol/backend/discord/commands/competition/list.ts";
 
 import {
   executeDebugDatabase,
   executeDebugPolling,
   executeDebugServerInfo,
-} from "@scout-for-lol/backend/discord/commands/debug.js";
-import { discordCommandsTotal, discordCommandDuration } from "@scout-for-lol/backend/metrics/index.js";
-import { searchChampions } from "@scout-for-lol/backend/utils/champion.js";
-import { executeAccountAdd } from "@scout-for-lol/backend/discord/commands/admin/account-add";
-import { executeAccountDelete } from "@scout-for-lol/backend/discord/commands/admin/account-delete";
-import { executeAccountTransfer } from "@scout-for-lol/backend/discord/commands/admin/account-transfer";
-import { executePlayerDelete } from "@scout-for-lol/backend/discord/commands/admin/player-delete";
-import { executePlayerEdit } from "@scout-for-lol/backend/discord/commands/admin/player-edit";
-import { executePlayerLinkDiscord } from "@scout-for-lol/backend/discord/commands/admin/player-link-discord";
-import { executePlayerMerge } from "@scout-for-lol/backend/discord/commands/admin/player-merge";
-import { executePlayerUnlinkDiscord } from "@scout-for-lol/backend/discord/commands/admin/player-unlink-discord";
-import { executePlayerView } from "@scout-for-lol/backend/discord/commands/admin/player-view";
-import { executeDebugForceLeaderboardUpdate } from "@scout-for-lol/backend/discord/commands/debug/force-leaderboard-update";
-import { executeDebugForceSnapshot } from "@scout-for-lol/backend/discord/commands/debug/force-snapshot";
-import { executeDebugManageParticipant } from "@scout-for-lol/backend/discord/commands/debug/manage-participant";
-import { executeSubscriptionAdd } from "@scout-for-lol/backend/discord/commands/subscription/add";
-import { executeSubscriptionDelete } from "@scout-for-lol/backend/discord/commands/subscription/delete";
-import { executeSubscriptionList } from "@scout-for-lol/backend/discord/commands/subscription/list";
+} from "@scout-for-lol/backend/discord/commands/debug.ts";
+import { discordCommandsTotal, discordCommandDuration } from "@scout-for-lol/backend/metrics/index.ts";
+import { searchChampions } from "@scout-for-lol/backend/utils/champion.ts";
+import { executeAccountAdd } from "@scout-for-lol/backend/discord/commands/admin/account-add.ts";
+import { executeAccountDelete } from "@scout-for-lol/backend/discord/commands/admin/account-delete.ts";
+import { executeAccountTransfer } from "@scout-for-lol/backend/discord/commands/admin/account-transfer.ts";
+import { executePlayerDelete } from "@scout-for-lol/backend/discord/commands/admin/player-delete.ts";
+import { executePlayerEdit } from "@scout-for-lol/backend/discord/commands/admin/player-edit.ts";
+import { executePlayerLinkDiscord } from "@scout-for-lol/backend/discord/commands/admin/player-link-discord.ts";
+import { executePlayerMerge } from "@scout-for-lol/backend/discord/commands/admin/player-merge.ts";
+import { executePlayerUnlinkDiscord } from "@scout-for-lol/backend/discord/commands/admin/player-unlink-discord.ts";
+import { executePlayerView } from "@scout-for-lol/backend/discord/commands/admin/player-view.ts";
+import { executeDebugForceLeaderboardUpdate } from "@scout-for-lol/backend/discord/commands/debug/force-leaderboard-update.ts";
+import { executeDebugForceSnapshot } from "@scout-for-lol/backend/discord/commands/debug/force-snapshot.ts";
+import { executeDebugManageParticipant } from "@scout-for-lol/backend/discord/commands/debug/manage-participant.ts";
+import { executeSubscriptionAdd } from "@scout-for-lol/backend/discord/commands/subscription/add.ts";
+import { executeSubscriptionDelete } from "@scout-for-lol/backend/discord/commands/subscription/delete.ts";
+import { executeSubscriptionList } from "@scout-for-lol/backend/discord/commands/subscription/list.ts";
 
 export function handleCommands(client: Client) {
   logger.info("⚡ Setting up Discord command handlers");

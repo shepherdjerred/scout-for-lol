@@ -4,7 +4,7 @@
  * which is much faster and avoids Bun segfault issues.
  */
 
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("generate-test-template-db");
 

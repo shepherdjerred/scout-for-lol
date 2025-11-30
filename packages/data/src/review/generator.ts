@@ -8,19 +8,19 @@
  */
 
 import type { GoogleGenerativeAI } from "@google/generative-ai";
-import type { CuratedTimeline } from "./curator-types.js";
-import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
-import { generateImagePrompt } from "@scout-for-lol/data/review/image-prompt.js";
+import type { CuratedTimeline } from "./curator-types.ts";
+import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
+import { generateImagePrompt } from "@scout-for-lol/data/review/image-prompt.ts";
 import {
   replaceTemplateVariables,
   type Personality as PromptPersonality,
   type PlayerMetadata as PromptPlayerMetadata,
-} from "@scout-for-lol/data/review/prompts.js";
+} from "@scout-for-lol/data/review/prompts.ts";
 import {
   buildPromptVariables,
   createCompletionParams,
   extractMatchData,
-} from "@scout-for-lol/data/review/generator-helpers.js";
+} from "@scout-for-lol/data/review/generator-helpers.ts";
 
 function minifyJsonString(text: string): string {
   const trimmed = text.trim();

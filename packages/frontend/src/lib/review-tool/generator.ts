@@ -1,26 +1,32 @@
 /**
- * Review generation logic - UI wrapper over shared data package functions
+ * Review generation logic - UI wrapper over shared data package unified pipeline
+ *
+ * This is a thin wrapper that:
+ * 1. Resolves personality and prompts from UI config
+ * 2. Initializes AI clients with user-provided API keys
+ * 3. Calls the unified generateFullMatchReview() pipeline
+ * 4. Returns results with traces for UI display
  */
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import {
-  generateReviewText,
-  generateReviewImage,
-  curateMatchData,
+  generateFullMatchReview,
   type ArenaMatch,
   type CompletedMatch,
-  type CuratedMatchData,
-  type ReviewImageMetadata,
   type RawMatch,
+  type RawTimeline,
+  type ReviewPipelineOutput,
+  type PipelineStagesConfig,
 } from "@scout-for-lol/data";
-import type { ReviewConfig, GenerationResult, GenerationMetadata, Personality } from "./config/schema";
+import type { ReviewConfig, GenerationResult, GenerationMetadata, Personality } from "./config/schema.ts";
+import { createDefaultPipelineStages } from "./config/schema.ts";
 import {
   getBasePrompt,
   selectRandomPersonality,
   getPersonalityById,
   getLaneContext,
   getGenericPlayerMetadata,
-} from "./prompts";
+} from "./prompts.ts";
 
 export type GenerationStep = "text" | "image" | "complete";
 
@@ -47,103 +53,240 @@ function resolvePersonality(config: ReviewConfig): Personality {
 }
 
 /**
- * Get prompt context from config and match
+ * Convert frontend stages config to data package format
+ *
+ * We need to manually rebuild each object to handle exactOptionalPropertyTypes
+ * which requires conditional property assignment for optional fields.
  */
-function getPromptContext(config: ReviewConfig, match: CompletedMatch | ArenaMatch) {
-  const basePromptTemplate = config.prompts.basePrompt || getBasePrompt();
-  const player = match.players[0];
-  const lane = match.queueType === "arena" ? undefined : player && "lane" in player ? player.lane : undefined;
-  const laneContextInfo = config.prompts.laneContext ?? getLaneContext(lane);
-  const playerMeta = config.prompts.playerMetadata ?? getGenericPlayerMetadata();
-
-  return { basePromptTemplate, laneContextInfo, playerMeta };
-}
-
-const IMAGE_DESCRIPTION_SYSTEM_PROMPT = `You are an art director turning a League of Legends performance review into a single striking image concept.
-Focus on the mood, key moments, and emotions from the review text.
-Describe one vivid scene with the focal action, characters, and environment.
-Include composition ideas, color palette, and mood direction.
-Do NOT ask for text to be placed in the image.
-Keep it under 120 words.`;
-
-/**
- * Generate an image description from review text (Step 3)
- */
-async function generateImageDescription(
-  reviewText: string,
-  openaiClient: OpenAI,
-  model: string,
-): Promise<string | undefined> {
-  const userPrompt = `Create a vivid art description for a single image inspired by the League of Legends review below.
-- Lean into the emotions, key moments, and champion identities referenced in the review
-- Describe one striking scene with composition and mood cues
-- Include color palette and lighting direction
-- Do NOT ask for any text to be drawn in the image
-
-Review text to translate into art:
-${reviewText}`;
-
-  try {
-    const response = await openaiClient.chat.completions.create({
-      model,
-      messages: [
-        { role: "system", content: IMAGE_DESCRIPTION_SYSTEM_PROMPT },
-        { role: "user", content: userPrompt },
-      ],
-      max_completion_tokens: 600,
-      temperature: 0.8,
-    });
-
-    return response.choices[0]?.message.content?.trim();
-  } catch (error) {
-    console.error("Failed to generate image description:", error);
-    return undefined;
+function convertStagesToDataPackageFormat(stages: NonNullable<ReviewConfig["stages"]>): PipelineStagesConfig {
+  // Build timeline summary stage
+  const timelineSummaryModel: PipelineStagesConfig["timelineSummary"]["model"] = {
+    model: stages.timelineSummary.model.model,
+    maxTokens: stages.timelineSummary.model.maxTokens,
+  };
+  if (stages.timelineSummary.model.temperature !== undefined) {
+    timelineSummaryModel.temperature = stages.timelineSummary.model.temperature;
   }
-}
+  if (stages.timelineSummary.model.topP !== undefined) {
+    timelineSummaryModel.topP = stages.timelineSummary.model.topP;
+  }
+  const timelineSummary: PipelineStagesConfig["timelineSummary"] = {
+    enabled: stages.timelineSummary.enabled,
+    model: timelineSummaryModel,
+  };
+  if (stages.timelineSummary.systemPrompt !== undefined) {
+    timelineSummary.systemPrompt = stages.timelineSummary.systemPrompt;
+  }
 
-/**
- * Build generation metadata from results
- */
-function buildGenerationMetadata(
-  textResult: Awaited<ReturnType<typeof generateReviewText>>,
-  imageResult?: { imageData: string; metadata: ReviewImageMetadata },
-  imageDescription?: string,
-): GenerationMetadata {
+  // Build match summary stage
+  const matchSummaryModel: PipelineStagesConfig["matchSummary"]["model"] = {
+    model: stages.matchSummary.model.model,
+    maxTokens: stages.matchSummary.model.maxTokens,
+  };
+  if (stages.matchSummary.model.temperature !== undefined) {
+    matchSummaryModel.temperature = stages.matchSummary.model.temperature;
+  }
+  if (stages.matchSummary.model.topP !== undefined) {
+    matchSummaryModel.topP = stages.matchSummary.model.topP;
+  }
+  const matchSummary: PipelineStagesConfig["matchSummary"] = {
+    enabled: stages.matchSummary.enabled,
+    model: matchSummaryModel,
+  };
+  if (stages.matchSummary.systemPrompt !== undefined) {
+    matchSummary.systemPrompt = stages.matchSummary.systemPrompt;
+  }
+
+  // Build review text stage
+  const reviewTextModel: PipelineStagesConfig["reviewText"]["model"] = {
+    model: stages.reviewText.model.model,
+    maxTokens: stages.reviewText.model.maxTokens,
+  };
+  if (stages.reviewText.model.temperature !== undefined) {
+    reviewTextModel.temperature = stages.reviewText.model.temperature;
+  }
+  if (stages.reviewText.model.topP !== undefined) {
+    reviewTextModel.topP = stages.reviewText.model.topP;
+  }
+
+  // Build image description stage
+  const imageDescriptionModel: PipelineStagesConfig["imageDescription"]["model"] = {
+    model: stages.imageDescription.model.model,
+    maxTokens: stages.imageDescription.model.maxTokens,
+  };
+  if (stages.imageDescription.model.temperature !== undefined) {
+    imageDescriptionModel.temperature = stages.imageDescription.model.temperature;
+  }
+  if (stages.imageDescription.model.topP !== undefined) {
+    imageDescriptionModel.topP = stages.imageDescription.model.topP;
+  }
+  const imageDescription: PipelineStagesConfig["imageDescription"] = {
+    enabled: stages.imageDescription.enabled,
+    model: imageDescriptionModel,
+  };
+  if (stages.imageDescription.systemPrompt !== undefined) {
+    imageDescription.systemPrompt = stages.imageDescription.systemPrompt;
+  }
+
   return {
-    textTokensPrompt: textResult.metadata.textTokensPrompt,
-    textTokensCompletion: textResult.metadata.textTokensCompletion,
-    textDurationMs: textResult.metadata.textDurationMs,
-    imageDurationMs: imageResult?.metadata.imageDurationMs,
-    imageGenerated: Boolean(imageResult),
-    selectedPersonality: textResult.metadata.selectedPersonality,
-    reviewerName: textResult.metadata.reviewerName,
-    systemPrompt: textResult.metadata.systemPrompt,
-    userPrompt: textResult.metadata.userPrompt,
-    openaiRequestParams: textResult.metadata.openaiRequestParams,
-    geminiPrompt: imageResult?.metadata.geminiPrompt,
-    geminiModel: imageResult?.metadata.geminiModel,
+    timelineSummary,
+    matchSummary,
+    reviewText: { model: reviewTextModel },
     imageDescription,
+    imageGeneration: {
+      enabled: stages.imageGeneration.enabled,
+      model: stages.imageGeneration.model,
+      timeoutMs: stages.imageGeneration.timeoutMs,
+    },
   };
 }
 
 /**
- * Generate a complete match review with text and optional image
+ * Get pipeline stages config from ReviewConfig
+ * Falls back to default if not provided
  */
-export async function generateMatchReview(
-  match: CompletedMatch | ArenaMatch,
-  config: ReviewConfig,
-  onProgress?: (progress: GenerationProgress) => void,
-  rawMatch?: RawMatch,
-): Promise<GenerationResult> {
-  try {
-    // Curate match data if provided (like backend does)
-    let curatedData: CuratedMatchData | undefined;
-    if (rawMatch) {
-      curatedData = await curateMatchData(rawMatch);
-    }
+function getStagesConfig(config: ReviewConfig): PipelineStagesConfig {
+  if (config.stages) {
+    return convertStagesToDataPackageFormat(config.stages);
+  }
 
-    // Generate text review
-    onProgress?.({ step: "text", message: "Generating review text..." });
+  // Fall back to defaults, but override with legacy textGeneration/imageGeneration settings
+  const defaults = createDefaultPipelineStages();
+
+  // Build review text model config carefully for exactOptionalPropertyTypes
+  const reviewTextModel: PipelineStagesConfig["reviewText"]["model"] = {
+    model: config.textGeneration.model,
+    maxTokens: config.textGeneration.maxTokens,
+    temperature: config.textGeneration.temperature,
+    topP: config.textGeneration.topP,
+  };
+
+  // Build the result object piece by piece to handle exactOptionalPropertyTypes correctly
+  const result: PipelineStagesConfig = {
+    timelineSummary: {
+      enabled: defaults.timelineSummary.enabled,
+      model: {
+        model: defaults.timelineSummary.model.model,
+        maxTokens: defaults.timelineSummary.model.maxTokens,
+      },
+    },
+    matchSummary: {
+      enabled: defaults.matchSummary.enabled,
+      model: {
+        model: defaults.matchSummary.model.model,
+        maxTokens: defaults.matchSummary.model.maxTokens,
+      },
+    },
+    reviewText: {
+      model: reviewTextModel,
+    },
+    imageDescription: {
+      enabled: defaults.imageDescription.enabled,
+      model: {
+        model: defaults.imageDescription.model.model,
+        maxTokens: defaults.imageDescription.model.maxTokens,
+      },
+    },
+    imageGeneration: {
+      enabled: config.imageGeneration.enabled,
+      model: config.imageGeneration.model,
+      timeoutMs: config.imageGeneration.timeoutMs,
+    },
+  };
+
+  // Add optional properties
+  if (defaults.timelineSummary.model.temperature !== undefined) {
+    result.timelineSummary.model.temperature = defaults.timelineSummary.model.temperature;
+  }
+  if (defaults.timelineSummary.model.topP !== undefined) {
+    result.timelineSummary.model.topP = defaults.timelineSummary.model.topP;
+  }
+  if (defaults.timelineSummary.systemPrompt !== undefined) {
+    result.timelineSummary.systemPrompt = defaults.timelineSummary.systemPrompt;
+  }
+
+  if (defaults.matchSummary.model.temperature !== undefined) {
+    result.matchSummary.model.temperature = defaults.matchSummary.model.temperature;
+  }
+  if (defaults.matchSummary.model.topP !== undefined) {
+    result.matchSummary.model.topP = defaults.matchSummary.model.topP;
+  }
+  if (defaults.matchSummary.systemPrompt !== undefined) {
+    result.matchSummary.systemPrompt = defaults.matchSummary.systemPrompt;
+  }
+
+  if (defaults.imageDescription.model.temperature !== undefined) {
+    result.imageDescription.model.temperature = defaults.imageDescription.model.temperature;
+  }
+  if (defaults.imageDescription.model.topP !== undefined) {
+    result.imageDescription.model.topP = defaults.imageDescription.model.topP;
+  }
+  if (defaults.imageDescription.systemPrompt !== undefined) {
+    result.imageDescription.systemPrompt = defaults.imageDescription.systemPrompt;
+  }
+
+  return result;
+}
+
+/**
+ * Build generation metadata from pipeline output
+ */
+function buildGenerationMetadata(pipelineOutput: ReviewPipelineOutput): GenerationMetadata {
+  const { traces, intermediate, context } = pipelineOutput;
+
+  // Calculate total image duration if image was generated
+  let imageDurationMs: number | undefined;
+  if (traces.imageDescription) {
+    imageDurationMs = traces.imageDescription.durationMs;
+  }
+  if (traces.imageGeneration) {
+    imageDurationMs = (imageDurationMs ?? 0) + traces.imageGeneration.durationMs;
+  }
+
+  return {
+    // Legacy fields for backward compatibility
+    textTokensPrompt: traces.reviewText.tokensPrompt,
+    textTokensCompletion: traces.reviewText.tokensCompletion,
+    textDurationMs: traces.reviewText.durationMs,
+    imageDurationMs,
+    imageGenerated: pipelineOutput.review.imageBase64 !== undefined,
+    selectedPersonality: context.personality.name,
+    reviewerName: context.reviewerName,
+    systemPrompt: traces.reviewText.request.systemPrompt,
+    userPrompt: traces.reviewText.request.userPrompt,
+    geminiPrompt: traces.imageGeneration?.request.prompt,
+    geminiModel: traces.imageGeneration?.model,
+    imageDescription: intermediate.imageDescriptionText,
+    // New pipeline fields
+    traces,
+    intermediate,
+    context,
+  };
+}
+
+/**
+ * Parameters for generating a match review
+ */
+export type GenerateMatchReviewParams = {
+  match: CompletedMatch | ArenaMatch;
+  config: ReviewConfig;
+  onProgress?: (progress: GenerationProgress) => void;
+  rawMatch?: RawMatch;
+  rawTimeline?: RawTimeline;
+};
+
+/**
+ * Generate a complete match review using the unified pipeline
+ */
+export async function generateMatchReview(params: GenerateMatchReviewParams): Promise<GenerationResult> {
+  const { match, config, onProgress, rawMatch, rawTimeline } = params;
+  const startTime = Date.now();
+
+  try {
+    // Validate OpenAI API key
+    if (!config.api.openaiApiKey) {
+      throw new Error("OpenAI API key is required");
+    }
 
     // Get personality from config
     const personality = resolvePersonality(config);
@@ -154,7 +297,11 @@ export async function generateMatchReview(
     }
 
     // Get prompt context
-    const { basePromptTemplate, laneContextInfo, playerMeta } = getPromptContext(config, match);
+    const basePromptTemplate = config.prompts.basePrompt || getBasePrompt();
+    const player = match.players[0];
+    const lane = match.queueType === "arena" ? undefined : player && "lane" in player ? player.lane : undefined;
+    const laneContext = config.prompts.laneContext ?? getLaneContext(lane);
+    const playerMetadata = config.prompts.playerMetadata ?? getGenericPlayerMetadata();
 
     // Initialize OpenAI client
     const openaiClient = new OpenAI({
@@ -162,68 +309,81 @@ export async function generateMatchReview(
       dangerouslyAllowBrowser: true,
     });
 
-    // Call shared review text generation
-    const textResult = await generateReviewText({
-      match,
-      personality,
-      basePromptTemplate,
-      laneContext: laneContextInfo,
-      playerMetadata: playerMeta,
-      openaiClient,
-      model: config.textGeneration.model,
-      maxTokens: config.textGeneration.maxTokens,
-      temperature: config.textGeneration.temperature,
-      topP: config.textGeneration.topP,
-      curatedData,
-      systemPromptPrefix: config.prompts.systemPromptPrefix,
-    });
-
-    // Generate image if enabled
-    let imageResult: { imageData: string; metadata: ReviewImageMetadata } | undefined;
-    let imageDescription: string | undefined;
-    if (config.imageGeneration.enabled) {
-      try {
-        onProgress?.({ step: "image", message: "Generating image description..." });
-
-        // Step 3: Generate image description from review text
-        imageDescription = await generateImageDescription(textResult.text, openaiClient, config.textGeneration.model);
-
-        if (imageDescription) {
-          onProgress?.({ step: "image", message: "Generating image..." });
-
-          // Initialize Gemini client
-          const geminiClient = new GoogleGenerativeAI(config.api.geminiApiKey ?? "");
-
-          // Step 4: Generate image from description only
-          imageResult = await generateReviewImage({
-            imageDescription,
-            geminiClient,
-            model: config.imageGeneration.model,
-            timeoutMs: config.imageGeneration.timeoutMs,
-          });
-        }
-      } catch (error) {
-        console.error("Failed to generate image:", error);
-        // Continue without image
-      }
+    // Initialize Gemini client if API key provided
+    let geminiClient: GoogleGenerativeAI | undefined;
+    if (config.api.geminiApiKey) {
+      geminiClient = new GoogleGenerativeAI(config.api.geminiApiKey);
     }
+
+    // Get stage configs
+    const stages = getStagesConfig(config);
+
+    // Build match input
+    const matchInput: Parameters<typeof generateFullMatchReview>[0]["match"] = {
+      processed: match,
+    };
+    if (rawMatch !== undefined) {
+      matchInput.raw = rawMatch;
+    }
+    if (rawTimeline !== undefined) {
+      matchInput.rawTimeline = rawTimeline;
+    }
+
+    // Build clients input
+    const clientsInput: Parameters<typeof generateFullMatchReview>[0]["clients"] = {
+      openai: openaiClient,
+    };
+    if (geminiClient !== undefined) {
+      clientsInput.gemini = geminiClient;
+    }
+
+    // Build prompts input
+    const promptsInput: Parameters<typeof generateFullMatchReview>[0]["prompts"] = {
+      personality,
+      baseTemplate: basePromptTemplate,
+      laneContext,
+    };
+    if (config.prompts.systemPromptPrefix !== undefined) {
+      promptsInput.systemPromptPrefix = config.prompts.systemPromptPrefix;
+    }
+
+    // Report progress
+    onProgress?.({ step: "text", message: "Generating review..." });
+
+    // Call unified pipeline
+    const pipelineOutput = await generateFullMatchReview({
+      match: matchInput,
+      player: {
+        index: 0, // Always review first player in frontend
+        metadata: playerMetadata,
+      },
+      prompts: promptsInput,
+      clients: clientsInput,
+      stages,
+    });
 
     onProgress?.({ step: "complete", message: "Complete!" });
 
     // Build metadata
-    const metadata = buildGenerationMetadata(textResult, imageResult, imageDescription);
+    const metadata = buildGenerationMetadata(pipelineOutput);
 
-    return {
-      text: textResult.text,
-      ...(imageResult?.imageData !== undefined && { image: imageResult.imageData }),
+    // Return result
+    const result: GenerationResult = {
+      text: pipelineOutput.review.text,
       metadata,
     };
+
+    if (pipelineOutput.review.imageBase64 !== undefined) {
+      result.image = pipelineOutput.review.imageBase64;
+    }
+
+    return result;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     return {
       text: "",
       metadata: {
-        textDurationMs: 0,
+        textDurationMs: Date.now() - startTime,
         imageGenerated: false,
       },
       error: errorMessage,

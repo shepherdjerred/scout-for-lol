@@ -1,7 +1,7 @@
 import { strict as assert } from "assert";
-import configuration from "@scout-for-lol/backend/configuration.js";
-import { ErrorSchema } from "@scout-for-lol/backend/utils/errors.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import configuration from "@scout-for-lol/backend/configuration.ts";
+import { ErrorSchema } from "@scout-for-lol/backend/utils/errors.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("health");
 

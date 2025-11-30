@@ -1,3 +1,5 @@
 {
-  "setup-worktree": ["mise run dev"]
+  "setup-worktree": [
+    "mise dev"
+  ]
 }

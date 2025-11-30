@@ -12,7 +12,7 @@ import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/clien
 import type { GetObjectCommandOutput } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import type { RawMatch } from "@scout-for-lol/data";
-import { queryMatchesByDateRange } from "@scout-for-lol/backend/storage/s3-query.js";
+import { queryMatchesByDateRange } from "@scout-for-lol/backend/storage/s3-query.ts";
 
 // Create S3 mock
 const s3Mock = mockClient(S3Client);

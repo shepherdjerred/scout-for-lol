@@ -2,12 +2,12 @@ import type { RawMatch, CompetitionQueueType, RawParticipant } from "@scout-for-
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
-} from "@scout-for-lol/backend/league/competition/processors/types.js";
+} from "@scout-for-lol/backend/league/competition/processors/types.ts";
 import {
   getPlayerParticipant,
   isWin,
   matchesQueue,
-} from "@scout-for-lol/backend/league/competition/processors/helpers.js";
+} from "@scout-for-lol/backend/league/competition/processors/helpers.ts";
 
 /**
  * Win and game counts for a player

@@ -2,8 +2,7 @@
  * Helper functions for S3 match conversion
  */
 import type { RawParticipant, Rune, Champion } from "@scout-for-lol/data";
-import { parseLane } from "@scout-for-lol/data";
-import { getRuneInfo } from "@scout-for-lol/report";
+import { getRuneInfo, parseLane } from "@scout-for-lol/data";
 
 /**
  * Get match outcome from participant data

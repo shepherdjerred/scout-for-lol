@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { Sidebar } from "./components/layout";
-import { LeagueSection, DiscordSection, MonitorSection, DebugPanel } from "./components/sections";
-import { Alert } from "./components/ui";
-import type { LcuStatus, DiscordStatus, Config, LogEntry, LogPaths, Section } from "./types";
-import { DEFAULT_EVENT_SOUNDS, getErrorMessage } from "./types";
+import { Sidebar } from "./components/layout/index.ts";
+import { LeagueSection, DiscordSection, MonitorSection, DebugPanel } from "./components/sections/index.ts";
+import { Alert } from "./components/ui/index.ts";
+import type { LcuStatus, DiscordStatus, Config, LogEntry, LogPaths, Section } from "./types.ts";
+import { DEFAULT_EVENT_SOUNDS, getErrorMessage } from "./types.ts";
 
 export default function App() {
   // Navigation state

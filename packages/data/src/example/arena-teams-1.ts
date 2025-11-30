@@ -1,5 +1,5 @@
 import { type ArenaTeam, type Augment } from "@scout-for-lol/data";
-import { createArenaChampion, createArenaMetrics, createTeamSupport } from "./arena-factories.js";
+import { createArenaChampion, createArenaMetrics, createTeamSupport } from "./arena-factories.ts";
 
 export function getTeam1(masterAugment: Augment, courageAugment: Augment): ArenaTeam {
   return {

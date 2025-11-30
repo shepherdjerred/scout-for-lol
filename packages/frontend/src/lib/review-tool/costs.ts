@@ -1,10 +1,10 @@
 /**
  * Cost calculation for AI API usage
  */
-import type { GenerationMetadata, CostBreakdown } from "./config/schema";
-import { CostBreakdownSchema } from "./config/schema";
+import type { GenerationMetadata, CostBreakdown } from "./config/schema.ts";
+import { CostBreakdownSchema } from "./config/schema.ts";
 import { calculateCost as calculateCostShared, formatCost as formatCostShared } from "@scout-for-lol/data";
-import { STORES, getItem, setItem } from "./storage";
+import { STORES, getItem, setItem } from "./storage.ts";
 
 /**
  * Calculate cost breakdown from generation metadata

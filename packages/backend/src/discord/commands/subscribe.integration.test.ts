@@ -1,6 +1,6 @@
 import { afterAll, describe, test, expect, beforeEach } from "bun:test";
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
-import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
+import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create test database
 const { prisma: testPrisma } = createTestDatabase("subscribe-test");

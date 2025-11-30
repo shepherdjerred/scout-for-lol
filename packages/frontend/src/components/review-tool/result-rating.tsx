@@ -1,7 +1,7 @@
 /**
  * Result rating component (star rating and notes)
  */
-import { StarRating } from "./star-rating";
+import { StarRating } from "./star-rating.tsx";
 
 type ResultRatingProps = {
   rating: 1 | 2 | 3 | 4 | undefined;

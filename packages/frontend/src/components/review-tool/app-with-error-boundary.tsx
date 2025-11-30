@@ -1,4 +1,4 @@
-import App from "./app";
+import App from "./app.tsx";
 
 /**
  * Review tool app - App component handles its own loading state

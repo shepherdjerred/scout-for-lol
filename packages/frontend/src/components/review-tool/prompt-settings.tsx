@@ -3,7 +3,7 @@
  */
 import { getBasePrompt } from "@scout-for-lol/frontend/lib/review-tool/prompts";
 import type { TabConfig, Personality } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
-import { PersonalitySelector } from "./personality-selector";
+import { PersonalitySelector } from "./personality-selector.tsx";
 
 type PromptSettingsProps = {
   config: TabConfig;

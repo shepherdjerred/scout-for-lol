@@ -1,7 +1,7 @@
-import { LeagueSection as LeagueSectionComponent } from "./league-section";
-import { DiscordSection as DiscordSectionComponent } from "./discord-section";
-import { MonitorSection as MonitorSectionComponent } from "./monitor-section";
-import { DebugPanel as DebugPanelComponent } from "./debug-panel";
+import { LeagueSection as LeagueSectionComponent } from "./league-section.tsx";
+import { DiscordSection as DiscordSectionComponent } from "./discord-section.tsx";
+import { MonitorSection as MonitorSectionComponent } from "./monitor-section.tsx";
+import { DebugPanel as DebugPanelComponent } from "./debug-panel.tsx";
 
 export const LeagueSection = LeagueSectionComponent;
 export const DiscordSection = DiscordSectionComponent;

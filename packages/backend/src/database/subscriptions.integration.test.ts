@@ -1,5 +1,5 @@
 import { afterAll, test, expect, beforeEach, afterEach, describe } from "bun:test";
-import { getChannelsSubscribedToPlayers } from "@scout-for-lol/backend/database/index.js";
+import { getChannelsSubscribedToPlayers } from "@scout-for-lol/backend/database/index.ts";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -12,7 +12,7 @@ import {
   type PlayerId,
 } from "@scout-for-lol/data";
 
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.js";
+import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a temporary database for testing
 const { prisma: testPrisma } = createTestDatabase("subscriptions-test");

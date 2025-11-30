@@ -2,7 +2,7 @@
  * Custom art style and theme storage in IndexedDB
  */
 import { z } from "zod";
-import { STORES, getAllItems, putItem, deleteItem } from "./storage";
+import { STORES, getAllItems, putItem, deleteItem } from "./storage.ts";
 
 /**
  * Custom art style schema

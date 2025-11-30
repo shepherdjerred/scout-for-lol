@@ -77,6 +77,7 @@ bun run build
 ```
 
 This will create platform-specific installers in `src-tauri/target/release/bundle/`:
+
 - Windows: `.msi` and `.exe` installers
 - macOS: `.dmg` and `.app` bundle
 - Linux: Can be built on Linux with `AppImage`, `deb`, `rpm`
@@ -138,17 +139,20 @@ This will create platform-specific installers in `src-tauri/target/release/bundl
 ## Troubleshooting
 
 ### Can't connect to League Client
+
 - Make sure League of Legends is running
 - Try restarting the League client
 - Check if another application is interfering
 
 ### Discord messages not posting
+
 - Verify your bot token is correct
 - Ensure the bot has permissions in the channel
 - Check the channel ID is correct
 - View debug logs for error messages
 
 ### Build errors
+
 - Ensure Rust is up to date: `rustup update`
 - Clear build cache: `cargo clean`
 - Make sure all dependencies are installed

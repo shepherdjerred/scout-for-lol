@@ -1,5 +1,5 @@
 import { Gamepad2, MessageSquare, Activity, Bug, Swords } from "lucide-react";
-import { StatusIndicator } from "@scout-for-lol/desktop/components/ui";
+import { StatusIndicator } from "@scout-for-lol/desktop/components/ui/index.ts";
 
 type SidebarProps = {
   lcuConnected: boolean;

@@ -1,7 +1,7 @@
-import configuration from "@scout-for-lol/backend/configuration.js";
-import { getMetrics } from "@scout-for-lol/backend/metrics/index.js";
+import configuration from "@scout-for-lol/backend/configuration.ts";
+import { getMetrics } from "@scout-for-lol/backend/metrics/index.ts";
 import * as Sentry from "@sentry/node";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("http-server");
 

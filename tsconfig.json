@@ -1,27 +1,6 @@
 {
   "extends": "./tsconfig.base.json",
-  "include": ["scripts/**/*"],
-  "references": [
-    {
-      "path": "./packages/data/tsconfig.json"
-    },
-    {
-      "path": "./packages/report/tsconfig.json"
-    },
-    {
-      "path": "./packages/backend/tsconfig.json"
-    },
-    {
-      "path": "./packages/frontend/tsconfig.json"
-    },
-    {
-      "path": "./packages/report-ui/tsconfig.json"
-    },
-    {
-      "path": "./packages/review-dev-tool/tsconfig.json"
-    },
-    {
-      "path": "./packages/desktop/tsconfig.json"
-    }
-  ]
+  "include": [
+    "scripts/**/*"
+  ],
 }

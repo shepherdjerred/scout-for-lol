@@ -1,6 +1,6 @@
-import configuration from "@scout-for-lol/backend/configuration.js";
+import configuration from "@scout-for-lol/backend/configuration.ts";
 import * as Sentry from "@sentry/node";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("app");
 
@@ -24,11 +24,11 @@ if (configuration.sentryDsn) {
 
 // Initialize metrics (must be imported early to set up metrics collection)
 logger.info("📊 Initializing metrics system");
-import "@scout-for-lol/backend/metrics/index.js";
+import "@scout-for-lol/backend/metrics/index.ts";
 
 // Initialize HTTP server for health checks and metrics
 logger.info("🌐 Starting HTTP server for health checks and metrics");
-import { shutdownHttpServer } from "@scout-for-lol/backend/http-server.js";
+import { shutdownHttpServer } from "@scout-for-lol/backend/http-server.ts";
 
 // Preload Arena augments once at startup; continue if it fails
 logger.info("🧩 Initializing Arena augments cache");
@@ -41,11 +41,11 @@ await initArenaAugmentsOnce()
   });
 
 logger.info("🔌 Starting Discord bot initialization");
-import "@scout-for-lol/backend/discord/index.js";
+import "@scout-for-lol/backend/discord/index.ts";
 
 logger.info("⏰ Starting cron job scheduler");
-import { startCronJobs } from "@scout-for-lol/backend/league/cron.js";
-import { initArenaAugmentsOnce } from "@scout-for-lol/backend/league/arena/augment.js";
+import { startCronJobs } from "@scout-for-lol/backend/league/cron.ts";
+import { initArenaAugmentsOnce } from "@scout-for-lol/backend/league/arena/augment.ts";
 startCronJobs();
 
 logger.info("✅ Backend application startup complete");

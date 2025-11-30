@@ -1,15 +1,15 @@
-import configuration from "@scout-for-lol/backend/configuration";
+import configuration from "@scout-for-lol/backend/configuration.ts";
 import { Client, GatewayIntentBits } from "discord.js";
-import { handleCommands } from "@scout-for-lol/backend/discord/commands/index";
+import { handleCommands } from "@scout-for-lol/backend/discord/commands/index.ts";
 import {
   discordConnectionStatus,
   discordGuildsGauge,
   discordUsersGauge,
   discordLatency,
-} from "@scout-for-lol/backend/metrics/index.js";
-import { handleGuildCreate } from "@scout-for-lol/backend/discord/events/guild-create.js";
+} from "@scout-for-lol/backend/metrics/index.ts";
+import { handleGuildCreate } from "@scout-for-lol/backend/discord/events/guild-create.ts";
 import * as Sentry from "@sentry/node";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("discord-client");
 

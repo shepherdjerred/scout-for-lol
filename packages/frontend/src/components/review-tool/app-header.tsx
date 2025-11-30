@@ -2,10 +2,10 @@
  * Application header with integrated tabs and quick actions
  */
 import { useCallback, useState } from "react";
-import type { TabData } from "./app";
-import { Button } from "./ui/button";
-import { IconButton } from "./ui/icon-button";
-import { ThemeToggle } from "./ui/theme-toggle";
+import type { TabData } from "./app.tsx";
+import { Button } from "./ui/button.tsx";
+import { IconButton } from "./ui/icon-button.tsx";
+import { ThemeToggle } from "./ui/theme-toggle.tsx";
 
 type AppHeaderProps = {
   tabs: TabData[];

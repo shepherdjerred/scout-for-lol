@@ -2,8 +2,8 @@ import type { MostWinsPlayerCriteria, RawMatch } from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
-} from "@scout-for-lol/backend/league/competition/processors/types.js";
-import { createWinBasedProcessor } from "@scout-for-lol/backend/league/competition/processors/processor-helpers.js";
+} from "@scout-for-lol/backend/league/competition/processors/types.ts";
+import { createWinBasedProcessor } from "@scout-for-lol/backend/league/competition/processors/processor-helpers.ts";
 
 /**
  * Process "Most Wins (Player)" criteria

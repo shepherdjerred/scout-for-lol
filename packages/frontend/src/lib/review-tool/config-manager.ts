@@ -2,15 +2,15 @@
  * Configuration persistence and import/export
  */
 import { z } from "zod";
-import type { ReviewConfig, GlobalConfig } from "./config/schema";
+import type { ReviewConfig, GlobalConfig } from "./config/schema.ts";
 import {
   GlobalConfigSchema,
   ApiSettingsSchema,
   TextGenerationSettingsSchema,
   ImageGenerationSettingsSchema,
   PromptSettingsSchema,
-} from "./config/schema";
-import { STORES, getItem, setItem } from "./storage";
+} from "./config/schema.ts";
+import { STORES, getItem, setItem } from "./storage.ts";
 
 // Construct ReviewConfig schema from component schemas for backward compatibility
 const ReviewConfigSchema = z.object({

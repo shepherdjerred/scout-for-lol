@@ -19,8 +19,7 @@ export const noDtoNaming = createRule({
   meta: {
     type: "suggestion",
     docs: {
-      description:
-        "Enforce Raw* prefix instead of *Dto suffix for types representing external/unvalidated data",
+      description: "Enforce Raw* prefix instead of *Dto suffix for types representing external/unvalidated data",
     },
     messages: {
       useDtoSuffix:
@@ -75,10 +74,7 @@ export const noDtoNaming = createRule({
 
       // Check const declarations for schema variables (e.g., const MatchDtoSchema = ...)
       VariableDeclarator(node) {
-        if (
-          node.id.type === AST_NODE_TYPES.Identifier &&
-          node.parent.kind === "const"
-        ) {
+        if (node.id.type === AST_NODE_TYPES.Identifier && node.parent.kind === "const") {
           checkName(node.id.name, node.id);
         }
       },

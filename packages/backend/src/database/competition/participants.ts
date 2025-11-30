@@ -9,7 +9,7 @@ import {
   type CompetitionParticipant,
   type PrismaClient,
 } from "@scout-for-lol/backend/generated/prisma/client/index.js";
-import { isCompetitionActive } from "@scout-for-lol/backend/database/competition/validation.js";
+import { isCompetitionActive } from "@scout-for-lol/backend/database/competition/validation.ts";
 import { match } from "ts-pattern";
 
 // ============================================================================

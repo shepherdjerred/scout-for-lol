@@ -15,12 +15,12 @@ import {
   type MatchMetadata,
 } from "@scout-for-lol/frontend/lib/review-tool/s3";
 import { getCachedDataAsync, setCachedData } from "@scout-for-lol/frontend/lib/review-tool/cache";
-import { MatchFilters } from "./match-filters";
-import { MatchList } from "./match-list";
-import { MatchPagination } from "./match-pagination";
-import { MatchLoadingState } from "./match-loading-state";
-import { Button } from "./ui/button";
-import { EmptyState, CloudIcon, SearchIcon } from "./ui/empty-state";
+import { MatchFilters } from "./match-filters.tsx";
+import { MatchList } from "./match-list.tsx";
+import { MatchPagination } from "./match-pagination.tsx";
+import { MatchLoadingState } from "./match-loading-state.tsx";
+import { Button } from "./ui/button.tsx";
+import { EmptyState, CloudIcon, SearchIcon } from "./ui/empty-state.tsx";
 
 const ErrorSchema = z.object({ message: z.string() });
 const MatchMetadataArraySchema = z.array(

@@ -1,5 +1,5 @@
 import { type CompletedMatch, type ArenaMatch, LeaguePuuidSchema, DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { getArenaExampleMatch } from "./arena-example.js";
+import { getArenaExampleMatch } from "./arena-example.ts";
 
 type MatchType = "ranked" | "unranked" | "aram" | "arena";
 

@@ -204,7 +204,7 @@ const activeCount = await prisma.competition.count({
 Use the global prisma instance from `database/index.js`:
 
 ```typescript
-import { prisma } from "../database/index.js";
+import { prisma } from "../database/index.ts";
 
 // ✅ Use global instance
 await prisma.competition.findMany();

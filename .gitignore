@@ -18,4 +18,4 @@ junit.xml
 
 jscpd-report/
 
-/generated/prisma
+**/generated/

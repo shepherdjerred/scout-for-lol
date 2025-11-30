@@ -5,7 +5,7 @@
  */
 
 import { type ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder, Colors } from "discord.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("commands-help");
 

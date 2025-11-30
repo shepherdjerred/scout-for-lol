@@ -1,5 +1,5 @@
 import { Bug, Trash2, FileText, AlertCircle, Info, AlertTriangle } from "lucide-react";
-import { Button } from "@scout-for-lol/desktop/components/ui";
+import { Button } from "@scout-for-lol/desktop/components/ui/index.ts";
 
 type LogEntry = {
   timestamp: string;

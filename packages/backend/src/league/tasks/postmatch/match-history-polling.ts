@@ -1,5 +1,5 @@
-import type { RawMatch, PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/data";
-import { getRecentMatchIds, filterNewMatches } from "@scout-for-lol/backend/league/api/match-history.js";
+import type { RawMatch, PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/data/index.ts";
+import { getRecentMatchIds, filterNewMatches } from "@scout-for-lol/backend/league/api/match-history.ts";
 import {
   getAccountsWithState,
   updateLastProcessedMatch,
@@ -7,16 +7,16 @@ import {
   getLastProcessedMatch,
   updateLastMatchTime,
   updateLastCheckedAt,
-} from "@scout-for-lol/backend/database/index.js";
-import { MatchIdSchema } from "@scout-for-lol/data";
-import { send } from "@scout-for-lol/backend/league/discord/channel.js";
-import { shouldCheckPlayer, calculatePollingInterval } from "@scout-for-lol/backend/utils/polling-intervals.js";
+} from "@scout-for-lol/backend/database/index.ts";
+import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
+import { send } from "@scout-for-lol/backend/league/discord/channel.ts";
+import { shouldCheckPlayer, calculatePollingInterval } from "@scout-for-lol/backend/utils/polling-intervals.ts";
 import {
   fetchMatchData,
   generateMatchReport,
-} from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.js";
+} from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.ts";
 import * as Sentry from "@sentry/node";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
