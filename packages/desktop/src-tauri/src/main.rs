@@ -467,6 +467,319 @@ async fn test_event_detection(state: State<'_, AppState>) -> Result<EventTestRes
     }
 }
 
+// =============================================================================
+// Sound Pack Editor Commands
+// =============================================================================
+
+/// Champion info returned to the frontend
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct ChampionInfo {
+    id: String,
+    name: String,
+}
+
+/// Local player info returned to the frontend
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct LocalPlayerInfo {
+    summoner_name: String,
+    champion_name: Option<String>,
+    team: Option<String>,
+}
+
+#[tauri::command]
+async fn get_champions() -> Result<Vec<ChampionInfo>, String> {
+    // Return a list of common champions for autocomplete
+    // In a full implementation, this would fetch from Data Dragon or a local cache
+    let champions = vec![
+        ("Aatrox", "Aatrox"),
+        ("Ahri", "Ahri"),
+        ("Akali", "Akali"),
+        ("Akshan", "Akshan"),
+        ("Alistar", "Alistar"),
+        ("Amumu", "Amumu"),
+        ("Anivia", "Anivia"),
+        ("Annie", "Annie"),
+        ("Aphelios", "Aphelios"),
+        ("Ashe", "Ashe"),
+        ("AurelionSol", "Aurelion Sol"),
+        ("Aurora", "Aurora"),
+        ("Azir", "Azir"),
+        ("Bard", "Bard"),
+        ("Belveth", "Bel'Veth"),
+        ("Blitzcrank", "Blitzcrank"),
+        ("Brand", "Brand"),
+        ("Braum", "Braum"),
+        ("Briar", "Briar"),
+        ("Caitlyn", "Caitlyn"),
+        ("Camille", "Camille"),
+        ("Cassiopeia", "Cassiopeia"),
+        ("Chogath", "Cho'Gath"),
+        ("Corki", "Corki"),
+        ("Darius", "Darius"),
+        ("Diana", "Diana"),
+        ("Draven", "Draven"),
+        ("DrMundo", "Dr. Mundo"),
+        ("Ekko", "Ekko"),
+        ("Elise", "Elise"),
+        ("Evelynn", "Evelynn"),
+        ("Ezreal", "Ezreal"),
+        ("Fiddlesticks", "Fiddlesticks"),
+        ("Fiora", "Fiora"),
+        ("Fizz", "Fizz"),
+        ("Galio", "Galio"),
+        ("Gangplank", "Gangplank"),
+        ("Garen", "Garen"),
+        ("Gnar", "Gnar"),
+        ("Gragas", "Gragas"),
+        ("Graves", "Graves"),
+        ("Gwen", "Gwen"),
+        ("Hecarim", "Hecarim"),
+        ("Heimerdinger", "Heimerdinger"),
+        ("Hwei", "Hwei"),
+        ("Illaoi", "Illaoi"),
+        ("Irelia", "Irelia"),
+        ("Ivern", "Ivern"),
+        ("Janna", "Janna"),
+        ("JarvanIV", "Jarvan IV"),
+        ("Jax", "Jax"),
+        ("Jayce", "Jayce"),
+        ("Jhin", "Jhin"),
+        ("Jinx", "Jinx"),
+        ("Kaisa", "Kai'Sa"),
+        ("Kalista", "Kalista"),
+        ("Karma", "Karma"),
+        ("Karthus", "Karthus"),
+        ("Kassadin", "Kassadin"),
+        ("Katarina", "Katarina"),
+        ("Kayle", "Kayle"),
+        ("Kayn", "Kayn"),
+        ("Kennen", "Kennen"),
+        ("Khazix", "Kha'Zix"),
+        ("Kindred", "Kindred"),
+        ("Kled", "Kled"),
+        ("KogMaw", "Kog'Maw"),
+        ("KSante", "K'Sante"),
+        ("Leblanc", "LeBlanc"),
+        ("LeeSin", "Lee Sin"),
+        ("Leona", "Leona"),
+        ("Lillia", "Lillia"),
+        ("Lissandra", "Lissandra"),
+        ("Lucian", "Lucian"),
+        ("Lulu", "Lulu"),
+        ("Lux", "Lux"),
+        ("Malphite", "Malphite"),
+        ("Malzahar", "Malzahar"),
+        ("Maokai", "Maokai"),
+        ("MasterYi", "Master Yi"),
+        ("Milio", "Milio"),
+        ("MissFortune", "Miss Fortune"),
+        ("Mordekaiser", "Mordekaiser"),
+        ("Morgana", "Morgana"),
+        ("Naafiri", "Naafiri"),
+        ("Nami", "Nami"),
+        ("Nasus", "Nasus"),
+        ("Nautilus", "Nautilus"),
+        ("Neeko", "Neeko"),
+        ("Nidalee", "Nidalee"),
+        ("Nilah", "Nilah"),
+        ("Nocturne", "Nocturne"),
+        ("Nunu", "Nunu & Willump"),
+        ("Olaf", "Olaf"),
+        ("Orianna", "Orianna"),
+        ("Ornn", "Ornn"),
+        ("Pantheon", "Pantheon"),
+        ("Poppy", "Poppy"),
+        ("Pyke", "Pyke"),
+        ("Qiyana", "Qiyana"),
+        ("Quinn", "Quinn"),
+        ("Rakan", "Rakan"),
+        ("Rammus", "Rammus"),
+        ("RekSai", "Rek'Sai"),
+        ("Rell", "Rell"),
+        ("Renata", "Renata Glasc"),
+        ("Renekton", "Renekton"),
+        ("Rengar", "Rengar"),
+        ("Riven", "Riven"),
+        ("Rumble", "Rumble"),
+        ("Ryze", "Ryze"),
+        ("Samira", "Samira"),
+        ("Sejuani", "Sejuani"),
+        ("Senna", "Senna"),
+        ("Seraphine", "Seraphine"),
+        ("Sett", "Sett"),
+        ("Shaco", "Shaco"),
+        ("Shen", "Shen"),
+        ("Shyvana", "Shyvana"),
+        ("Singed", "Singed"),
+        ("Sion", "Sion"),
+        ("Sivir", "Sivir"),
+        ("Skarner", "Skarner"),
+        ("Smolder", "Smolder"),
+        ("Sona", "Sona"),
+        ("Soraka", "Soraka"),
+        ("Swain", "Swain"),
+        ("Sylas", "Sylas"),
+        ("Syndra", "Syndra"),
+        ("TahmKench", "Tahm Kench"),
+        ("Taliyah", "Taliyah"),
+        ("Talon", "Talon"),
+        ("Taric", "Taric"),
+        ("Teemo", "Teemo"),
+        ("Thresh", "Thresh"),
+        ("Tristana", "Tristana"),
+        ("Trundle", "Trundle"),
+        ("Tryndamere", "Tryndamere"),
+        ("TwistedFate", "Twisted Fate"),
+        ("Twitch", "Twitch"),
+        ("Udyr", "Udyr"),
+        ("Urgot", "Urgot"),
+        ("Varus", "Varus"),
+        ("Vayne", "Vayne"),
+        ("Veigar", "Veigar"),
+        ("Velkoz", "Vel'Koz"),
+        ("Vex", "Vex"),
+        ("Vi", "Vi"),
+        ("Viego", "Viego"),
+        ("Viktor", "Viktor"),
+        ("Vladimir", "Vladimir"),
+        ("Volibear", "Volibear"),
+        ("Warwick", "Warwick"),
+        ("Xayah", "Xayah"),
+        ("Xerath", "Xerath"),
+        ("XinZhao", "Xin Zhao"),
+        ("Yasuo", "Yasuo"),
+        ("Yone", "Yone"),
+        ("Yorick", "Yorick"),
+        ("Yuumi", "Yuumi"),
+        ("Zac", "Zac"),
+        ("Zed", "Zed"),
+        ("Zeri", "Zeri"),
+        ("Ziggs", "Ziggs"),
+        ("Zilean", "Zilean"),
+        ("Zoe", "Zoe"),
+        ("Zyra", "Zyra"),
+    ];
+
+    Ok(champions
+        .into_iter()
+        .map(|(id, name)| ChampionInfo {
+            id: id.to_string(),
+            name: name.to_string(),
+        })
+        .collect())
+}
+
+#[tauri::command]
+async fn get_local_player() -> Result<Option<LocalPlayerInfo>, String> {
+    let client = live_client::LiveClientConnection::new();
+
+    match client.get_active_player().await {
+        Ok(player) => {
+            // Try to get additional info from player list
+            let player_list = client.get_player_list().await.ok();
+            let player_info = player_list.as_ref().and_then(|list| {
+                list.iter().find(|p| p.summoner_name == player.summoner_name)
+            });
+
+            Ok(Some(LocalPlayerInfo {
+                summoner_name: player.summoner_name,
+                champion_name: player_info.map(|p| p.champion_name.clone()),
+                team: player_info.map(|p| p.team.clone()),
+            }))
+        }
+        Err(_) => Ok(None), // Game not active
+    }
+}
+
+#[tauri::command]
+async fn play_preview_sound(source: sound_pack::SoundSource) -> Result<(), String> {
+    info!("Playing preview sound: {:?}", source);
+    // In a full implementation, this would play the sound locally
+    // For now, just log it - the actual playback happens through Discord voice
+    Ok(())
+}
+
+#[tauri::command]
+async fn stop_preview_sound() -> Result<(), String> {
+    info!("Stopping preview sound");
+    Ok(())
+}
+
+#[tauri::command]
+async fn cache_youtube_audio(url: String) -> Result<CacheResult, String> {
+    info!("Caching YouTube audio: {}", url);
+    // YouTube caching would require yt-dlp or similar
+    // For now, return a placeholder path
+    let cache_dir = paths::cache_dir();
+    let filename = format!("{}.mp3", url.replace(['/', ':', '?', '&', '='], "_"));
+    let cached_path = cache_dir.join(&filename);
+
+    Ok(CacheResult {
+        cached_path: cached_path.to_string_lossy().to_string(),
+    })
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct CacheResult {
+    cached_path: String,
+}
+
+#[tauri::command]
+async fn get_cache_status(url: String) -> Result<String, String> {
+    let cache_dir = paths::cache_dir();
+    let filename = format!("{}.mp3", url.replace(['/', ':', '?', '&', '='], "_"));
+    let cached_path = cache_dir.join(&filename);
+
+    if cached_path.exists() {
+        Ok("cached".to_string())
+    } else {
+        Ok("not-cached".to_string())
+    }
+}
+
+#[tauri::command]
+async fn save_sound_pack(pack: sound_pack::SoundPack) -> Result<(), String> {
+    info!("Saving sound pack: {}", pack.name);
+    let sound_pack_path = paths::sound_pack_file();
+
+    // Ensure parent directory exists
+    if let Some(parent) = sound_pack_path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create directory: {e}"))?;
+    }
+
+    let content = serde_json::to_string_pretty(&pack)
+        .map_err(|e| format!("Failed to serialize sound pack: {e}"))?;
+
+    std::fs::write(&sound_pack_path, content)
+        .map_err(|e| format!("Failed to write sound pack: {e}"))?;
+
+    info!("Sound pack saved to: {}", sound_pack_path.display());
+    Ok(())
+}
+
+#[tauri::command]
+async fn load_sound_pack() -> Result<Option<sound_pack::SoundPack>, String> {
+    let sound_pack_path = paths::sound_pack_file();
+
+    if !sound_pack_path.exists() {
+        info!("No sound pack file found at: {}", sound_pack_path.display());
+        return Ok(None);
+    }
+
+    let content = std::fs::read_to_string(&sound_pack_path)
+        .map_err(|e| format!("Failed to read sound pack: {e}"))?;
+
+    let pack: sound_pack::SoundPack = serde_json::from_str(&content)
+        .map_err(|e| format!("Failed to parse sound pack: {e}"))?;
+
+    info!("Loaded sound pack: {} from {}", pack.name, sound_pack_path.display());
+    Ok(Some(pack))
+}
+
 #[allow(clippy::expect_used, clippy::large_stack_frames)]
 fn main() {
     // Initialize paths early so they can be used for log plugin configuration
@@ -513,6 +826,15 @@ fn main() {
             join_discord_voice,
             play_test_sound,
             get_log_paths,
+            // Sound pack editor commands
+            get_champions,
+            get_local_player,
+            play_preview_sound,
+            stop_preview_sound,
+            cache_youtube_audio,
+            get_cache_status,
+            save_sound_pack,
+            load_sound_pack,
         ])
         .setup(|app| {
             append_startup_log("tauri setup()");

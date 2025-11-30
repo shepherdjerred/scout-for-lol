@@ -76,6 +76,12 @@ pub fn config_file() -> PathBuf {
     app_data_dir().join("config.json")
 }
 
+/// Returns the path to the sound pack file.
+#[must_use]
+pub fn sound_pack_file() -> PathBuf {
+    app_data_dir().join("sound-pack.json")
+}
+
 /// Returns the logs directory.
 #[must_use]
 pub fn logs_dir() -> PathBuf {
