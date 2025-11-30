@@ -28,6 +28,7 @@ import {
   getBunNodeContainer,
   getPreparedWorkspace,
   getPreparedMountedWorkspace,
+  generatePrismaClient,
 } from "@scout-for-lol/.dagger/src/base";
 
 // Helper function to log with timestamp
@@ -142,8 +143,12 @@ export class ScoutForLol {
   ): Promise<string> {
     logWithTimestamp("🔍 Starting comprehensive check process");
 
+    // OPTIMIZATION: Generate Prisma client once and share
+    logWithTimestamp("⚙️ Generating Prisma client...");
+    const prismaGenerated = generatePrismaClient(source);
+
     // OPTIMIZATION: Use mounted workspace for CI checks (faster than copying files)
-    const preparedWorkspace = getPreparedMountedWorkspace(source);
+    const preparedWorkspace = getPreparedMountedWorkspace(source, prismaGenerated);
 
     // OPTIMIZATION: Build desktop frontend once and share
     const desktopFrontend = buildDesktopFrontend(source);
@@ -192,8 +197,12 @@ export class ScoutForLol {
   ): Promise<string> {
     logWithTimestamp(`🔨 Starting build process for version ${version} (${gitSha})`);
 
+    // OPTIMIZATION: Generate Prisma client once
+    logWithTimestamp("⚙️ Generating Prisma client...");
+    const prismaGenerated = generatePrismaClient(source);
+
     // OPTIMIZATION: Prepare workspace - don't sync(), let Dagger optimize
-    const preparedWorkspace = getPreparedWorkspace(source);
+    const preparedWorkspace = getPreparedWorkspace(source, prismaGenerated);
 
     // Build backend image using prepared workspace
     const backendImage = await withTiming("backend Docker image build", async () => {
@@ -258,11 +267,17 @@ export class ScoutForLol {
     const isProd = env === "prod";
     logWithTimestamp(`🚀 Starting CI pipeline for version ${version} (${gitSha}) in ${env ?? "dev"} environment`);
 
+    // OPTIMIZATION: Generate Prisma client ONCE and share across all containers
+    // This is an expensive operation that should only happen once per CI run
+    logWithTimestamp("⚙️ Generating Prisma client (once, shared across containers)...");
+    const prismaGenerated = generatePrismaClient(source);
+
     // OPTIMIZATION: Use mounted workspace for CI checks (faster) and regular for image builds
     // Mounted workspace uses withMountedDirectory (faster for read-only operations)
     // Regular workspace uses withDirectory (files are embedded in publishable image)
-    const mountedWorkspace = getPreparedMountedWorkspace(source);
-    const preparedWorkspace = getPreparedWorkspace(source);
+    // Both use the same pre-generated Prisma client
+    const mountedWorkspace = getPreparedMountedWorkspace(source, prismaGenerated);
+    const preparedWorkspace = getPreparedWorkspace(source, prismaGenerated);
 
     logWithTimestamp("📋 Phase 1: Running checks AND builds in parallel...");
 
@@ -1058,13 +1073,12 @@ export class ScoutForLol {
 
     await withTiming("desktop artifacts GitHub release", async () => {
       // Get the already-built Linux and Windows artifacts from the pre-built containers
+      // Artifacts are copied to /artifacts/ during build to persist beyond the cache mount
       logWithTimestamp("📥 Collecting Linux artifacts...");
-      const linuxArtifactsDir = linuxContainer.directory("/workspace/packages/desktop/src-tauri/target/release/bundle");
+      const linuxArtifactsDir = linuxContainer.directory("/artifacts/bundle");
 
       logWithTimestamp("📥 Collecting Windows artifacts...");
-      const windowsArtifactsDir = windowsContainer.directory(
-        "/workspace/packages/desktop/src-tauri/target/x86_64-pc-windows-gnu/release",
-      );
+      const windowsArtifactsDir = windowsContainer.directory("/artifacts");
 
       // Create a staging directory with all artifacts
       logWithTimestamp("🏗️  Staging artifacts for upload...");
@@ -1242,5 +1256,119 @@ export class ScoutForLol {
       ghToken,
       repo,
     );
+  }
+
+  /**
+   * Generate CI artifacts (test reports, coverage, lint results, etc.)
+   * @param source The workspace source directory
+   * @returns A directory containing all CI artifacts
+   */
+  @func()
+  async ciArtifacts(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Promise<Directory> {
+    logWithTimestamp("📊 Generating CI artifacts...");
+
+    // OPTIMIZATION: Use mounted workspace for CI checks (faster than copying files)
+    const preparedWorkspace = getPreparedMountedWorkspace(source);
+
+    // Run all checks with CI reporters in parallel
+    const container = await withTiming("all CI checks with reporters", async () => {
+      let workspace = preparedWorkspace.withWorkdir("/workspace");
+
+      // Create artifacts directory
+      workspace = workspace.withExec(["mkdir", "-p", "/artifacts"]);
+
+      // Run typecheck (no file output, just needs to pass)
+      workspace = workspace.withExec(["bun", "run", "typecheck"]);
+
+      // Run ESLint with JSON output
+      workspace = workspace.withExec([
+        "sh",
+        "-c",
+        "bunx eslint packages/ --format json --output-file /artifacts/eslint-report.json 2>/dev/null || true",
+      ]);
+
+      // Run knip with JSON output
+      workspace = workspace.withExec([
+        "sh",
+        "-c",
+        "knip-bun --reporter json > /artifacts/knip-report.json 2>/dev/null || true",
+      ]);
+
+      // Run duplication check (generates jscpd-report/)
+      workspace = workspace.withExec(["bun", "run", "duplication-check"]);
+
+      // Copy jscpd reports to artifacts
+      workspace = workspace.withExec(["sh", "-c", "cp -r jscpd-report /artifacts/ 2>/dev/null || true"]);
+
+      // Run tests with CI reporters for each package
+      // Backend tests
+      workspace = workspace
+        .withWorkdir("/workspace/packages/backend")
+        .withExec(["sh", "-c", "bun test --bail --reporter=junit --reporter-outfile=./junit.xml || true"]);
+
+      // Copy backend junit report
+      workspace = workspace.withExec([
+        "sh",
+        "-c",
+        "mkdir -p /artifacts/backend && cp junit.xml /artifacts/backend/ 2>/dev/null || true",
+      ]);
+
+      // Data tests with coverage
+      workspace = workspace
+        .withWorkdir("/workspace/packages/data")
+        .withExec(["sh", "-c", "bun test --bail --coverage --reporter=junit --reporter-outfile=./junit.xml || true"]);
+
+      // Copy data junit report and coverage
+      workspace = workspace.withExec([
+        "sh",
+        "-c",
+        "mkdir -p /artifacts/data && cp junit.xml /artifacts/data/ 2>/dev/null || true && cp -r coverage /artifacts/data/ 2>/dev/null || true",
+      ]);
+
+      // Report tests with coverage
+      workspace = workspace
+        .withWorkdir("/workspace/packages/report")
+        .withExec(["sh", "-c", "bun test --bail --coverage --reporter=junit --reporter-outfile=./junit.xml || true"]);
+
+      // Copy report junit report and coverage
+      workspace = workspace.withExec([
+        "sh",
+        "-c",
+        "mkdir -p /artifacts/report && cp junit.xml /artifacts/report/ 2>/dev/null || true && cp -r coverage /artifacts/report/ 2>/dev/null || true",
+      ]);
+
+      // Desktop tests
+      workspace = workspace
+        .withWorkdir("/workspace/packages/desktop")
+        .withExec(["sh", "-c", "bun test --bail --reporter=junit --reporter-outfile=./junit.xml || true"]);
+
+      // Copy desktop junit report
+      workspace = workspace.withExec([
+        "sh",
+        "-c",
+        "mkdir -p /artifacts/desktop && cp junit.xml /artifacts/desktop/ 2>/dev/null || true",
+      ]);
+
+      // Frontend - no tests currently, but prepare directory
+      workspace = workspace.withExec(["sh", "-c", "mkdir -p /artifacts/frontend"]);
+
+      // Return to workspace root
+      workspace = workspace.withWorkdir("/workspace");
+
+      // List artifacts for debugging
+      workspace = workspace.withExec(["sh", "-c", "echo '📋 Generated artifacts:' && find /artifacts -type f"]);
+
+      await workspace.sync();
+      return workspace;
+    });
+
+    logWithTimestamp("✅ CI artifacts generated successfully");
+    return container.directory("/artifacts");
   }
 }

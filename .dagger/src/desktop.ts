@@ -304,7 +304,17 @@ export function buildDesktopLinux(workspaceSource: Directory, version: string, f
     container = container.withExec(["bun", "run", "build"]);
   }
 
-  return container.withExec(["sh", "-c", "echo '✅ [CI] Desktop build completed!'"]);
+  // Copy artifacts from mounted cache to permanent location in container filesystem
+  // This is necessary because withMountedCache is ephemeral and not accessible
+  // when the container is later used to extract directories
+  return container
+    .withExec(["sh", "-c", "echo '📦 Copying artifacts from cache to permanent location...'"])
+    .withExec([
+      "sh",
+      "-c",
+      "mkdir -p /artifacts && cp -r /workspace/packages/desktop/src-tauri/target/release/bundle /artifacts/",
+    ])
+    .withExec(["sh", "-c", "echo '✅ [CI] Desktop build completed!'"]);
 }
 
 /**
@@ -340,6 +350,9 @@ export function buildDesktopWindowsGnu(
       .withExec(["bunx", "vite", "build"]);
   }
 
+  // Copy artifacts from mounted cache to permanent location in container filesystem
+  // This is necessary because withMountedCache is ephemeral and not accessible
+  // when the container is later used to extract directories
   return container
     .withExec(["sh", "-c", "echo '🦀 Building Rust application with Cargo...'"])
     .withWorkdir("/workspace/packages/desktop/src-tauri")
@@ -350,6 +363,12 @@ export function buildDesktopWindowsGnu(
       "echo '✅ Binary built successfully at target/x86_64-pc-windows-gnu/release/scout-for-lol-desktop.exe'",
     ])
     .withExec(["sh", "-c", "ls -lh target/x86_64-pc-windows-gnu/release/scout-for-lol-desktop.exe"])
+    .withExec(["sh", "-c", "echo '📦 Copying artifacts from cache to permanent location...'"])
+    .withExec([
+      "sh",
+      "-c",
+      "mkdir -p /artifacts && cp target/x86_64-pc-windows-gnu/release/scout-for-lol-desktop.exe /artifacts/",
+    ])
     .withWorkdir("/workspace/packages/desktop")
     .withExec(["sh", "-c", "echo '✅ [CI] Desktop Windows (GNU) build completed!'"]);
 }
@@ -361,9 +380,8 @@ export function buildDesktopWindowsGnu(
  * @returns The directory containing built artifacts
  */
 export function getDesktopLinuxArtifacts(workspaceSource: Directory, version: string): Directory {
-  return buildDesktopLinux(workspaceSource, version).directory(
-    "/workspace/packages/desktop/src-tauri/target/release/bundle",
-  );
+  // Artifacts are copied to /artifacts/bundle during build to persist beyond the cache mount
+  return buildDesktopLinux(workspaceSource, version).directory("/artifacts/bundle");
 }
 
 /**
@@ -373,7 +391,6 @@ export function getDesktopLinuxArtifacts(workspaceSource: Directory, version: st
  * @returns The directory containing built artifacts (exe file)
  */
 export function getDesktopWindowsArtifacts(workspaceSource: Directory, version: string): Directory {
-  return buildDesktopWindowsGnu(workspaceSource, version).directory(
-    "/workspace/packages/desktop/src-tauri/target/x86_64-pc-windows-gnu/release",
-  );
+  // Artifacts are copied to /artifacts during build to persist beyond the cache mount
+  return buildDesktopWindowsGnu(workspaceSource, version).directory("/artifacts");
 }

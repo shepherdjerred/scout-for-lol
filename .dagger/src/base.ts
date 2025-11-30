@@ -10,16 +10,35 @@ export function getBunContainer(): Container {
 }
 
 /**
- * Get a fully prepared workspace container with all dependencies installed and Prisma generated.
- * This is the optimized base container for running CI checks - call it once and share across all checks.
+ * Generate Prisma client once and return the generated directory.
+ * This is expensive and should only be called once per CI run, then shared.
  * @param workspaceSource The full workspace source directory
- * @returns Container with deps installed and Prisma client generated
+ * @returns The generated Prisma client directory
  */
-export function getPreparedWorkspace(workspaceSource: Directory): Container {
+export function generatePrismaClient(workspaceSource: Directory): Directory {
   return installWorkspaceDeps(workspaceSource, true)
     .withWorkdir("/workspace/packages/backend")
     .withExec(["bun", "run", "generate"])
-    .withWorkdir("/workspace");
+    .directory("/workspace/packages/backend/generated");
+}
+
+/**
+ * Get a fully prepared workspace container with all dependencies installed and Prisma generated.
+ * This is the optimized base container for running CI checks - call it once and share across all checks.
+ * @param workspaceSource The full workspace source directory
+ * @param prismaGenerated Optional pre-generated Prisma client directory (avoids re-generating)
+ * @returns Container with deps installed and Prisma client generated
+ */
+export function getPreparedWorkspace(workspaceSource: Directory, prismaGenerated?: Directory): Container {
+  const base = installWorkspaceDeps(workspaceSource, true);
+
+  if (prismaGenerated) {
+    // Use pre-generated Prisma client
+    return base.withDirectory("/workspace/packages/backend/generated", prismaGenerated);
+  }
+
+  // Generate Prisma client (fallback for standalone usage)
+  return base.withWorkdir("/workspace/packages/backend").withExec(["bun", "run", "generate"]).withWorkdir("/workspace");
 }
 
 /**
@@ -132,13 +151,19 @@ export function getMountedWorkspace(workspaceSource: Directory, installOpenssl =
  * Get a fully prepared workspace container using mounts, with Prisma generated.
  * More performant for CI checks than getPreparedWorkspace() since it uses mounts.
  * @param workspaceSource The full workspace source directory
+ * @param prismaGenerated Optional pre-generated Prisma client directory (avoids re-generating)
  * @returns Container with deps installed and Prisma client generated
  */
-export function getPreparedMountedWorkspace(workspaceSource: Directory): Container {
-  return getMountedWorkspace(workspaceSource, true)
-    .withWorkdir("/workspace/packages/backend")
-    .withExec(["bun", "run", "generate"])
-    .withWorkdir("/workspace");
+export function getPreparedMountedWorkspace(workspaceSource: Directory, prismaGenerated?: Directory): Container {
+  const base = getMountedWorkspace(workspaceSource, true);
+
+  if (prismaGenerated) {
+    // Use pre-generated Prisma client (mount it since this is a mounted workspace)
+    return base.withMountedDirectory("/workspace/packages/backend/generated", prismaGenerated);
+  }
+
+  // Generate Prisma client (fallback for standalone usage)
+  return base.withWorkdir("/workspace/packages/backend").withExec(["bun", "run", "generate"]).withWorkdir("/workspace");
 }
 
 /**
