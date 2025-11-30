@@ -10,7 +10,7 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.ts";
 import { fetchSnapshotData } from "@scout-for-lol/backend/league/competition/leaderboard.ts";
-import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.ts";
+import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("competition-snapshots");

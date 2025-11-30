@@ -17,7 +17,7 @@ import {
 import { sortBy } from "remeda";
 import { match } from "ts-pattern";
 import { z } from "zod";
-import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.ts";
+import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { queryMatchesByDateRange } from "@scout-for-lol/backend/storage/s3-query.ts";
 import type {
   LeaderboardEntry,

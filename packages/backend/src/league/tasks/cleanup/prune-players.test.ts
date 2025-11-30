@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
-import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.ts";
+import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { pruneOrphanedPlayers } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.ts";
 import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
 import { CompetitionIdSchema, type CompetitionId } from "@scout-for-lol/data";

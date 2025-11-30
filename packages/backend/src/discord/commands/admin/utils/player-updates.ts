@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.ts";
+import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import type { DiscordAccountId } from "@scout-for-lol/data";
 import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
 

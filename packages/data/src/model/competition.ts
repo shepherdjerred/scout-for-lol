@@ -2,7 +2,7 @@ import { match } from "ts-pattern";
 import { z } from "zod";
 import { RankSchema } from "@scout-for-lol/data/model/rank.ts";
 import { getSeasonById } from "@scout-for-lol/data/seasons.ts";
-import type { Competition } from "@scout-for-lol/backend/generated/prisma/client/index.ts";
+import type { Competition } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 
 // ============================================================================
 // Branded ID Types

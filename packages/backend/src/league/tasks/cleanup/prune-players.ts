@@ -4,7 +4,7 @@ import type {
   Subscription,
   CompetitionParticipant,
   Account,
-} from "@scout-for-lol/backend/generated/prisma/client/index.ts";
+} from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import type { Client } from "discord.js";
 import { groupBy } from "remeda";

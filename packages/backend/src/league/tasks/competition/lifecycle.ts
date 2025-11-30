@@ -7,7 +7,7 @@ import {
   type RankedLeaderboardEntry,
 } from "@scout-for-lol/backend/league/competition/leaderboard.ts";
 import { send as sendChannelMessage, ChannelSendError } from "@scout-for-lol/backend/league/discord/channel.ts";
-import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.ts";
+import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { z } from "zod";
 import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.ts";
 import * as Sentry from "@sentry/node";

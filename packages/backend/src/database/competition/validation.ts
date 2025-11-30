@@ -1,4 +1,4 @@
-import { type PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.ts";
+import { type PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import {
   CompetitionCriteriaSchema,
   CompetitionVisibilitySchema,

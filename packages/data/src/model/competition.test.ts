@@ -32,7 +32,7 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/model/discord.ts";
-import type { Competition } from "@scout-for-lol/backend/generated/prisma/client/index.ts";
+import type { Competition } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 
 describe("CompetitionId branded type", () => {
   test("accepts positive integers", () => {
