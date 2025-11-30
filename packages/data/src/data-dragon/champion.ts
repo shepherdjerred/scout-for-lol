@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { join } from "node:path";
 
 const ChampionSpellSchema = z.object({
   id: z.string(),
@@ -51,7 +50,7 @@ export async function getChampionInfo(championName: string): Promise<
   }
 
   try {
-    const championFilePath = join(import.meta.dir, "assets", "champion", `${championName}.json`);
+    const championFilePath = `${import.meta.dir}/assets/champion/${championName}.json`;
     const fileContent = await Bun.file(championFilePath).text();
     const data = ChampionDataSchema.parse(JSON.parse(fileContent));
     const championData = data.data[championName];

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "../../lib/utils.ts"; // Assuming this utility exists for tailwind class merging
+import { cn } from "@scout-for-lol/frontend/lib/utils.ts";
 
 // Define the badge variants using cva
 const badgeVariants = cva(
@@ -21,7 +21,7 @@ const badgeVariants = cva(
 );
 
 // Define the Badge component props
-export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
+export type BadgeProps = React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof badgeVariants>;
 
 // Create the Badge functional component
 function Badge({ className, variant, ...props }: BadgeProps) {

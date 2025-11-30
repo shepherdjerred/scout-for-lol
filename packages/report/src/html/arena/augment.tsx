@@ -1,5 +1,4 @@
-import { type Augment } from "@scout-for-lol/data";
-import { getAugmentIconUrl } from "@scout-for-lol/report/dataDragon/augment.ts";
+import { getAugmentIconUrl, type Augment } from "@scout-for-lol/data";
 
 const augmentIconSize = "2rem";
 

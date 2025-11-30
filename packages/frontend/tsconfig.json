@@ -1,8 +1,6 @@
 {
   "exclude": [
     "dist",
-    "src/components/review-tool/**/*",
-    "src/lib/review-tool/**/*"
   ],
   "extends": [
     "astro/tsconfigs/strictest",
@@ -12,5 +10,5 @@
     ".astro/types.d.ts",
     "**/*",
     "postcss.config.ts"
-  ],
+  ]
 }

@@ -4,5 +4,4 @@ export { Report } from "./html/report.tsx";
 export { toMatch } from "./match.ts";
 export { extractRunes, participantToChampion } from "./participant-helpers.ts";
 export { arenaMatchToImage, arenaMatchToSvg } from "./html/arena/index.tsx";
-export { getItemInfo, items } from "./dataDragon/item.ts";
 export { getChampionInfo } from "@scout-for-lol/data";
