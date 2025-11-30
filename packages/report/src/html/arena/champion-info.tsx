@@ -1,4 +1,4 @@
-import { getChampionImageUrl } from "@scout-for-lol/data/index.ts";
+import { getChampionImage } from "@scout-for-lol/report/dataDragon/image-cache.ts";
 import { renderItems } from "@scout-for-lol/report/html/champion/item.tsx";
 import { Damage } from "@scout-for-lol/report/html/arena/damage.tsx";
 
@@ -29,7 +29,7 @@ export function ChampionInfo({
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, marginBottom: 8 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
         <img
-          src={getChampionImageUrl(championName)}
+          src={getChampionImage(championName)}
           style={{
             width: 60,
             height: 60,

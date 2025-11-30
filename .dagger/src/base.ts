@@ -10,16 +10,35 @@ export function getBunContainer(): Container {
 }
 
 /**
- * Get a fully prepared workspace container with all dependencies installed and Prisma generated.
- * This is the optimized base container for running CI checks - call it once and share across all checks.
+ * Generate Prisma client once and return the generated directory.
+ * This is expensive and should only be called once per CI run, then shared.
  * @param workspaceSource The full workspace source directory
- * @returns Container with deps installed and Prisma client generated
+ * @returns The generated Prisma client directory
  */
-export function getPreparedWorkspace(workspaceSource: Directory): Container {
+export function generatePrismaClient(workspaceSource: Directory): Directory {
   return installWorkspaceDeps(workspaceSource, true)
     .withWorkdir("/workspace/packages/backend")
     .withExec(["bun", "run", "generate"])
-    .withWorkdir("/workspace");
+    .directory("/workspace/packages/backend/generated");
+}
+
+/**
+ * Get a fully prepared workspace container with all dependencies installed and Prisma generated.
+ * This is the optimized base container for running CI checks - call it once and share across all checks.
+ * @param workspaceSource The full workspace source directory
+ * @param prismaGenerated Optional pre-generated Prisma client directory (avoids re-generating)
+ * @returns Container with deps installed and Prisma client generated
+ */
+export function getPreparedWorkspace(workspaceSource: Directory, prismaGenerated?: Directory): Container {
+  const base = installWorkspaceDeps(workspaceSource, true);
+
+  if (prismaGenerated) {
+    // Use pre-generated Prisma client
+    return base.withDirectory("/workspace/packages/backend/generated", prismaGenerated);
+  }
+
+  // Generate Prisma client (fallback for standalone usage)
+  return base.withWorkdir("/workspace/packages/backend").withExec(["bun", "run", "generate"]).withWorkdir("/workspace");
 }
 
 /**
@@ -32,9 +51,13 @@ export function getPreparedWorkspace(workspaceSource: Directory): Container {
 export function installWorkspaceDeps(workspaceSource: Directory, installOpenssl = false): Container {
   let container = getBunContainer();
 
-  // Install system dependencies if needed (cached by layer)
+  // Install system dependencies if needed (with APT cache for faster subsequent runs)
   if (installOpenssl) {
-    container = container.withExec(["apt", "update"]).withExec(["apt", "install", "-y", "openssl"]);
+    container = container
+      .withMountedCache("/var/cache/apt", dag.cacheVolume("apt-cache"))
+      .withMountedCache("/var/lib/apt/lists", dag.cacheVolume("apt-lists"))
+      .withExec(["apt", "update"])
+      .withExec(["apt", "install", "-y", "openssl"]);
   }
 
   // Mount Bun install cache (persists across runs)
@@ -68,6 +91,79 @@ export function installWorkspaceDeps(workspaceSource: Directory, installOpenssl 
       // Install dependencies (will use cache if lockfile unchanged)
       .withExec(["bun", "install", "--frozen-lockfile"])
   );
+}
+
+/**
+ * Get a workspace container using mounts instead of copies.
+ * More performant for read-only CI checks (typecheck, lint, test) since mounts are faster.
+ * Note: Files mounted this way are NOT included in the final container image.
+ * Use installWorkspaceDeps() instead if you need files in the publishable image (e.g., backend Docker image).
+ * @param workspaceSource The full workspace source directory
+ * @param installOpenssl Whether to install OpenSSL (required for backend/Prisma)
+ * @returns Container with deps installed using mounts for better performance
+ */
+export function getMountedWorkspace(workspaceSource: Directory, installOpenssl = false): Container {
+  let container = getBunContainer();
+
+  // Install system dependencies if needed (with APT cache for faster subsequent runs)
+  if (installOpenssl) {
+    container = container
+      .withMountedCache("/var/cache/apt", dag.cacheVolume("apt-cache"))
+      .withMountedCache("/var/lib/apt/lists", dag.cacheVolume("apt-lists"))
+      .withExec(["apt", "update"])
+      .withExec(["apt", "install", "-y", "openssl"]);
+  }
+
+  // Mount Bun install cache (persists across runs)
+  container = container.withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-install-cache"));
+
+  // Set up workspace structure using MOUNTS (faster than copies for CI checks)
+  // Order matters for caching: mount config files first (change less often),
+  // then dependencies (package.json, lockfile), then source code
+  return (
+    container
+      .withWorkdir("/workspace")
+      // Config files (rarely change - good cache layer)
+      .withMountedFile("/workspace/tsconfig.json", workspaceSource.file("tsconfig.json"))
+      .withMountedFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
+      .withMountedFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
+      .withMountedFile("/workspace/.jscpd.json", workspaceSource.file(".jscpd.json"))
+      .withMountedDirectory("/workspace/eslint-rules", workspaceSource.directory("eslint-rules"))
+      // Dependency files (change occasionally - separate cache layer)
+      .withMountedFile("/workspace/package.json", workspaceSource.file("package.json"))
+      .withMountedFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
+      // Patches directory (needed for bun patch to work)
+      .withMountedDirectory("/workspace/patches", workspaceSource.directory("patches"))
+      // Scripts directory (for utility scripts)
+      .withMountedDirectory("/workspace/scripts", workspaceSource.directory("scripts"))
+      // Package source code (changes frequently - mounted after deps)
+      .withMountedDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
+      .withMountedDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
+      .withMountedDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
+      .withMountedDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
+      .withMountedDirectory("/workspace/packages/desktop", workspaceSource.directory("packages/desktop"))
+      // Install dependencies (will use cache if lockfile unchanged)
+      .withExec(["bun", "install", "--frozen-lockfile"])
+  );
+}
+
+/**
+ * Get a fully prepared workspace container using mounts, with Prisma generated.
+ * More performant for CI checks than getPreparedWorkspace() since it uses mounts.
+ * @param workspaceSource The full workspace source directory
+ * @param prismaGenerated Optional pre-generated Prisma client directory (avoids re-generating)
+ * @returns Container with deps installed and Prisma client generated
+ */
+export function getPreparedMountedWorkspace(workspaceSource: Directory, prismaGenerated?: Directory): Container {
+  const base = getMountedWorkspace(workspaceSource, true);
+
+  if (prismaGenerated) {
+    // Use pre-generated Prisma client (mount it since this is a mounted workspace)
+    return base.withMountedDirectory("/workspace/packages/backend/generated", prismaGenerated);
+  }
+
+  // Generate Prisma client (fallback for standalone usage)
+  return base.withWorkdir("/workspace/packages/backend").withExec(["bun", "run", "generate"]).withWorkdir("/workspace");
 }
 
 /**
@@ -140,6 +236,8 @@ export function getGitHubContainer(): Container {
   return dag
     .container()
     .from("ubuntu:noble")
+    .withMountedCache("/var/cache/apt", dag.cacheVolume("apt-cache"))
+    .withMountedCache("/var/lib/apt/lists", dag.cacheVolume("apt-lists"))
     .withExec(["apt", "update"])
     .withExec(["apt", "install", "-y", "git", "curl"])
     .withExec([

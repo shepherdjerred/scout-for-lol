@@ -1,8 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { Sidebar } from "./components/layout/index.ts";
-import { LeagueSection, DiscordSection, MonitorSection, DebugPanel } from "./components/sections/index.ts";
+import { Sidebar } from "./components/layout/sidebar.tsx";
+import { LeagueSection } from "./components/sections/league-section.tsx";
+import { DiscordSection } from "./components/sections/discord-section.tsx";
+import { MonitorSection } from "./components/sections/monitor-section.tsx";
+import { DebugPanel } from "./components/sections/debug-panel.tsx";
 import { Alert } from "./components/ui/alert.tsx";
 import type { LcuStatus, DiscordStatus, Config, LogEntry, LogPaths, Section } from "./types.ts";
 import { DEFAULT_EVENT_SOUNDS, getErrorMessage } from "./types.ts";

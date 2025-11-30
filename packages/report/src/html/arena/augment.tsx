@@ -1,11 +1,12 @@
-import { getAugmentIconUrl, type Augment } from "@scout-for-lol/data";
+import { type Augment } from "@scout-for-lol/data";
+import { getAugmentIcon } from "@scout-for-lol/report/dataDragon/image-cache.ts";
 
 const augmentIconSize = "2rem";
 
 export function renderAugment(augment: Augment) {
   if (augment.type === "full") {
     // Use iconLarge from augment data (iconSmall exists but we use iconLarge for better quality)
-    const iconUrl = augment.iconLarge ? getAugmentIconUrl(augment.iconLarge) : null;
+    const iconUrl = augment.iconLarge ? getAugmentIcon(augment.iconLarge) : null;
 
     if (iconUrl) {
       return (

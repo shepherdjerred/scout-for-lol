@@ -75,12 +75,18 @@ export * from "./data-dragon/item.ts";
 export * from "./data-dragon/runes.ts";
 export { getChampionInfo } from "./data-dragon/champion.ts";
 export {
-  // URL getters (synchronous)
+  // URL getters (synchronous, for browser/frontend use)
   getChampionImageUrl,
   getItemImageUrl,
   getSpellImageUrl,
   getRuneIconUrl,
   getAugmentIconUrl,
+  // Base64 getters (async, for Satori/server-side rendering)
+  getChampionImageBase64,
+  getItemImageBase64,
+  getSpellImageBase64,
+  getRuneIconBase64,
+  getAugmentIconBase64,
   // Validation functions (async)
   validateChampionImage,
   validateItemImage,
