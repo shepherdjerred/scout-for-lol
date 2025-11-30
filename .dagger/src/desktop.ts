@@ -111,6 +111,7 @@ export function installDesktopDeps(workspaceSource: Directory, target: DesktopTa
 export function checkDesktopRustFmt(workspaceSource: Directory): Container {
   return installDesktopDeps(workspaceSource)
     .withWorkdir("/workspace/packages/desktop/src-tauri")
+    .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("rust-target-linux"))
     .withExec(["sh", "-c", "echo '🎨 [CI] Running Rust formatting check for desktop...'"])
     .withExec(["cargo", "fmt", "--", "--check"])
     .withExec(["sh", "-c", "echo '✅ [CI] Rust formatting check passed!'"]);
@@ -124,6 +125,7 @@ export function checkDesktopRustFmt(workspaceSource: Directory): Container {
 export function checkDesktopRustClippy(workspaceSource: Directory): Container {
   return installDesktopDeps(workspaceSource)
     .withWorkdir("/workspace/packages/desktop/src-tauri")
+    .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("rust-target-linux"))
     .withExec(["sh", "-c", "echo '🔍 [CI] Running Rust clippy for desktop...'"])
     .withExec(["cargo", "clippy", "--all-targets", "--all-features", "--", "-D", "warnings"])
     .withExec(["sh", "-c", "echo '✅ [CI] Rust clippy passed!'"]);
@@ -137,6 +139,7 @@ export function checkDesktopRustClippy(workspaceSource: Directory): Container {
 export function checkDesktopRustTests(workspaceSource: Directory): Container {
   return installDesktopDeps(workspaceSource)
     .withWorkdir("/workspace/packages/desktop/src-tauri")
+    .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("rust-target-linux"))
     .withExec(["sh", "-c", "echo '🧪 [CI] Running Rust tests for desktop...'"])
     .withExec(["cargo", "test", "--verbose"])
     .withExec(["sh", "-c", "echo '✅ [CI] Rust tests passed!'"]);
@@ -176,6 +179,7 @@ export function checkDesktopLint(workspaceSource: Directory): Container {
 export function checkDesktop(workspaceSource: Directory): Container {
   return installDesktopDeps(workspaceSource)
     .withWorkdir("/workspace/packages/desktop")
+    .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("rust-target-linux"))
     .withExec(["sh", "-c", "echo '🔍 [CI] Running all checks for desktop package...'"])
     .withExec(["sh", "-c", "echo '📋 TypeScript checks...'"])
     .withExec(["bun", "run", "typecheck"])
@@ -200,6 +204,7 @@ export function buildDesktopLinux(workspaceSource: Directory, version: string): 
   return installDesktopDeps(workspaceSource)
     .withEnvVariable("VERSION", version)
     .withWorkdir("/workspace/packages/desktop")
+    .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("rust-target-linux"))
     .withExec(["sh", "-c", "echo '🏗️  [CI] Building desktop application for Linux...'"])
     .withExec(["bun", "run", "build"])
     .withExec(["sh", "-c", "echo '✅ [CI] Desktop build completed!'"]);
