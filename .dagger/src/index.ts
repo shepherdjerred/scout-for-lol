@@ -1014,14 +1014,13 @@ export class ScoutForLol {
       // Create or update the GitHub release
       logWithTimestamp(`🚀 Creating/updating GitHub release v${version}...`);
       const releaseContainer = container
+        // Check if gh CLI can authenticate
+        .withExec(["sh", "-c", "gh auth status || echo 'Auth check failed'"])
+        // Check if release already exists
         .withExec([
           "sh",
           "-c",
-          `gh release create "v${version}" \
-            --repo="${repo}" \
-            --title="v${version}" \
-            --notes="Release ${version} (${gitSha.substring(0, 7)})" \
-            --latest || echo "Release already exists"`,
+          `gh release view "v${version}" --repo="${repo}" > /dev/null 2>&1 && echo "Release v${version} already exists" || gh release create "v${version}" --repo="${repo}" --title="v${version}" --notes="Release ${version} (${gitSha.substring(0, 7)})" --latest`,
         ])
         // Upload Linux artifacts
         .withExec([
