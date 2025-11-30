@@ -1,44 +1,33 @@
 import satori from "satori";
-import { type ArenaMatch, validateChampionImage, validateItemImage, validateAugmentIcon } from "@scout-for-lol/data";
+import { type ArenaMatch } from "@scout-for-lol/data";
 import { ArenaReport } from "@scout-for-lol/report/html/arena/report.tsx";
 import { bunBeaufortFonts, bunSpiegelFonts } from "@scout-for-lol/report/assets/index.ts";
 import { svgToPng } from "@scout-for-lol/report/html/index.tsx";
+import { preloadChampionImages, preloadAugmentIcons } from "@scout-for-lol/report/dataDragon/image-cache.ts";
 
 export async function arenaMatchToSvg(match: ArenaMatch) {
-  // Validate all images exist before rendering
-  const validationPromises: Promise<void>[] = [];
-
-  // Validate champion images
+  // Collect all champion names that need pre-loading
+  const championNames: string[] = [];
   for (const team of match.teams) {
     for (const player of team.players) {
-      validationPromises.push(validateChampionImage(player.championName));
+      championNames.push(player.championName);
     }
   }
 
-  // Validate item images
-  for (const team of match.teams) {
-    for (const player of team.players) {
-      for (const item of player.items) {
-        if (item > 0) {
-          validationPromises.push(validateItemImage(item));
-        }
-      }
-    }
-  }
-
-  // Validate augment images
+  // Collect all augment icon paths that need pre-loading
+  const augmentIconPaths: string[] = [];
   for (const team of match.teams) {
     for (const player of team.players) {
       for (const augment of player.augments) {
         if (augment.type === "full" && augment.iconLarge) {
-          validationPromises.push(validateAugmentIcon(augment.iconLarge));
+          augmentIconPaths.push(augment.iconLarge);
         }
       }
     }
   }
 
-  // Throw error if any image is missing
-  await Promise.all(validationPromises);
+  // Pre-load all images before rendering (items and spells are pre-loaded at module level)
+  await Promise.all([preloadChampionImages(championNames), preloadAugmentIcons(augmentIconPaths)]);
 
   const fonts = [...(await bunBeaufortFonts()), ...(await bunSpiegelFonts())];
   const svg = await satori(<ArenaReport match={match} />, {

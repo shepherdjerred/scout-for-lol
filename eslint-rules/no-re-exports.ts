@@ -88,8 +88,25 @@ export const noReExports = createRule({
           return;
         }
 
-        // If there's a declaration (export function foo() {}, export class Bar {}, etc.), it's fine
+        // If there's a declaration, check if it's a VariableDeclaration that assigns imported values
         if (node.declaration) {
+          // For variable declarations, check if any declarator assigns an imported identifier
+          if (node.declaration.type === AST_NODE_TYPES.VariableDeclaration) {
+            for (const declarator of node.declaration.declarations) {
+              // Check if the init value is an imported identifier
+              if (
+                declarator.init &&
+                declarator.init.type === AST_NODE_TYPES.Identifier &&
+                importedIdentifiers.has(declarator.init.name)
+              ) {
+                context.report({
+                  node: declarator,
+                  messageId: "noReExportImported",
+                });
+              }
+            }
+          }
+          // Other declarations (function, class, interface, type alias) are fine
           return;
         }
 
