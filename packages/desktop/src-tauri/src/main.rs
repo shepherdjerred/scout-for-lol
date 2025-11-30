@@ -26,8 +26,12 @@
 mod config;
 mod discord;
 mod events;
-mod lcu;
+mod live_client;
 mod paths;
+mod sound_pack;
+
+// Keep lcu module for backwards compatibility during transition
+mod lcu;
 
 #[cfg(test)]
 mod tests;

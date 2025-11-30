@@ -6,7 +6,8 @@
     "packages/data",
     "packages/report",
     "packages/frontend",
-    "packages/desktop"
+    "packages/desktop",
+    "packages/ui"
   ],
   "trustedDependencies": [
     "husky"
@@ -91,6 +92,10 @@
     "packages/desktop/src-tauri/**/*.rs": [
       "bash -c 'cd packages/desktop/src-tauri && cargo fmt'",
       "bash -c 'cd packages/desktop/src-tauri && cargo clippy -- -D warnings'"
+    ],
+    "packages/ui/**/*.{ts,tsx}": [
+      "bash -c 'cd packages/ui && bun run typecheck'",
+      "bash -c 'cd packages/ui && bunx eslint --cache --fix'"
     ],
     "*.{ts,tsx,js,jsx}": "bun run scripts/check-suppressions.ts"
   },

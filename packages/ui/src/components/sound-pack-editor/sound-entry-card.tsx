@@ -1,0 +1,140 @@
+/**
+ * Sound Entry Card Component
+ *
+ * Displays a single sound entry with controls for volume, preview, and removal.
+ */
+
+import { useState } from "react";
+import type { SoundEntry, SoundSource } from "@scout-for-lol/data";
+import { VolumeSlider } from "./volume-slider.tsx";
+
+type SoundEntryCardProps = {
+  /** The sound entry to display */
+  entry: SoundEntry;
+  /** Called when the entry is updated */
+  onUpdate: (updates: Partial<SoundEntry>) => void;
+  /** Called when the entry should be removed */
+  onRemove: () => void;
+  /** Called when the sound should be previewed */
+  onPreview: (source: SoundSource) => void;
+  /** Called when preview should stop */
+  onStopPreview: () => void;
+};
+
+export function SoundEntryCard({
+  entry,
+  onUpdate,
+  onRemove,
+  onPreview,
+  onStopPreview,
+}: SoundEntryCardProps) {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handlePreview = async () => {
+    if (isPlaying) {
+      onStopPreview();
+      setIsPlaying(false);
+    } else {
+      setIsPlaying(true);
+      onPreview(entry.source);
+      // Auto-stop after a reasonable time (sounds are usually short)
+      setTimeout(() => setIsPlaying(false), 10000);
+    }
+  };
+
+  const sourceDisplay =
+    entry.source.type === "file"
+      ? entry.source.path.split("/").pop() ?? entry.source.path
+      : entry.source.url;
+
+  const isYouTube =
+    entry.source.type === "url" &&
+    (entry.source.url.includes("youtube.com") || entry.source.url.includes("youtu.be"));
+
+  return (
+    <div className="border rounded-lg p-3 bg-white shadow-sm">
+      <div className="flex items-start gap-3">
+        {/* Icon */}
+        <div className="flex-shrink-0 w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
+          {entry.source.type === "file" ? (
+            <span className="text-gray-500">🎵</span>
+          ) : isYouTube ? (
+            <span className="text-red-500">▶</span>
+          ) : (
+            <span className="text-blue-500">🔗</span>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          {/* Source path/URL */}
+          <div className="text-sm font-medium text-gray-900 truncate" title={sourceDisplay}>
+            {sourceDisplay}
+          </div>
+
+          {/* Type badge */}
+          <div className="flex items-center gap-2 mt-1">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+              {entry.source.type === "file" ? "File" : isYouTube ? "YouTube" : "URL"}
+            </span>
+            {!entry.enabled && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">
+                Disabled
+              </span>
+            )}
+          </div>
+
+          {/* Volume slider */}
+          <div className="mt-2">
+            <VolumeSlider
+              value={entry.volume}
+              onChange={(volume) => onUpdate({ volume })}
+              label="Volume"
+            />
+          </div>
+
+          {/* Weight input (for weighted selection) */}
+          <div className="mt-2 flex items-center gap-2">
+            <label className="text-xs text-gray-500">Weight:</label>
+            <input
+              type="number"
+              min="0"
+              step="0.1"
+              value={entry.weight ?? 1}
+              onChange={(e) => onUpdate({ weight: Number(e.target.value) })}
+              className="w-16 px-2 py-1 text-xs border rounded"
+            />
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col gap-1">
+          <button
+            type="button"
+            onClick={handlePreview}
+            className={`p-2 rounded hover:bg-gray-100 ${isPlaying ? "text-blue-600" : "text-gray-500"}`}
+            title={isPlaying ? "Stop preview" : "Preview sound"}
+          >
+            {isPlaying ? "⏹" : "▶️"}
+          </button>
+          <button
+            type="button"
+            onClick={() => onUpdate({ enabled: !entry.enabled })}
+            className={`p-2 rounded hover:bg-gray-100 ${entry.enabled ? "text-green-600" : "text-gray-400"}`}
+            title={entry.enabled ? "Disable" : "Enable"}
+          >
+            {entry.enabled ? "✓" : "○"}
+          </button>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="p-2 rounded hover:bg-red-50 text-red-500"
+            title="Remove sound"
+          >
+            🗑
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

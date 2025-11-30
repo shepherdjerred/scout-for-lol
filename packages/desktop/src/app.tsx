@@ -5,6 +5,7 @@ import { Sidebar } from "./components/layout/sidebar.tsx";
 import { LeagueSection } from "./components/sections/league-section.tsx";
 import { DiscordSection } from "./components/sections/discord-section.tsx";
 import { MonitorSection } from "./components/sections/monitor-section.tsx";
+import { SoundPackSection } from "./components/sections/sound-pack-section.tsx";
 import { DebugPanel } from "./components/sections/debug-panel.tsx";
 import { Alert } from "./components/ui/alert.tsx";
 import type { LcuStatus, DiscordStatus, Config, LogEntry, LogPaths, Section } from "./types.ts";
@@ -391,6 +392,8 @@ export default function App() {
             onTest={() => void handleTestEvents()}
           />
         );
+      case "sounds":
+        return <SoundPackSection />;
     }
   };
 

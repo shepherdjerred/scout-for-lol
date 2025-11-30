@@ -202,6 +202,22 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/ui": {
+      "name": "@scout-for-lol/ui",
+      "version": "0.1.0",
+      "dependencies": {
+        "@scout-for-lol/data": "workspace:*",
+        "react": "^19.1.1",
+      },
+      "devDependencies": {
+        "@types/react": "^19.1.13",
+        "bun-types": "latest",
+        "typescript": "^5.9.3",
+      },
+      "peerDependencies": {
+        "react": "^19.0.0",
+      },
+    },
   },
   "trustedDependencies": [
     "husky",
@@ -901,6 +917,8 @@
     "@scout-for-lol/frontend": ["@scout-for-lol/frontend@workspace:packages/frontend"],
 
     "@scout-for-lol/report": ["@scout-for-lol/report@workspace:packages/report"],
+
+    "@scout-for-lol/ui": ["@scout-for-lol/ui@workspace:packages/ui"],
 
     "@sentry/core": ["@sentry/core@10.27.0", "", {}, "sha512-Zc68kdH7tWTDtDbV1zWIbo3Jv0fHAU2NsF5aD2qamypKgfSIMSbWVxd22qZyDBkaX8gWIPm/0Sgx6aRXRBXrYQ=="],
 

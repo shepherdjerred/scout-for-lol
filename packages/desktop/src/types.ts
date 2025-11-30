@@ -31,7 +31,7 @@ export type LogPaths = {
   working_dir_log: string;
 };
 
-export type Section = "league" | "discord" | "monitor";
+export type Section = "league" | "discord" | "monitor" | "sounds";
 
 export const DEFAULT_EVENT_SOUNDS: Record<string, string> = {
   gameStart: "gameStart",

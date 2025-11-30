@@ -32,6 +32,51 @@ const championCache = new Map<
   }
 >();
 
+// Cache for champion list
+let championListCache: { id: string; name: string }[] | null = null;
+
+/**
+ * Schema for the champion list data from Data Dragon
+ */
+const ChampionListSchema = z.object({
+  data: z.record(
+    z.string(),
+    z.object({
+      id: z.string(),
+      name: z.string(),
+    }),
+  ),
+});
+
+/**
+ * Get a list of all champions (id and display name)
+ * Used for autocomplete and validation
+ * @returns Array of champions with id and name
+ */
+export async function getChampionList(): Promise<{ id: string; name: string }[]> {
+  // Return cached list if available
+  if (championListCache !== null) {
+    return championListCache;
+  }
+
+  try {
+    // Read the champion list file (contains all champions in one file)
+    const championListPath = `${import.meta.dir}/assets/champion.json`;
+    const fileContent = await Bun.file(championListPath).text();
+    const data = ChampionListSchema.parse(JSON.parse(fileContent));
+
+    // Convert to array and sort by name
+    championListCache = Object.values(data.data)
+      .map((c) => ({ id: c.id, name: c.name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    return championListCache;
+  } catch {
+    // Return empty array if file doesn't exist
+    return [];
+  }
+}
+
 /**
  * Get champion ability and passive information from cached local files
  * @param championName - Champion name (e.g., "Aatrox", "LeeSin")

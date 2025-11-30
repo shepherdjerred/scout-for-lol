@@ -1,4 +1,4 @@
-import { Gamepad2, MessageSquare, Activity, Bug, Swords } from "lucide-react";
+import { Gamepad2, MessageSquare, Activity, Bug, Swords, Volume2 } from "lucide-react";
 import { cn } from "@scout-for-lol/desktop/lib/utils";
 
 type SidebarProps = {
@@ -6,8 +6,8 @@ type SidebarProps = {
   discordConnected: boolean;
   voiceConnected: boolean;
   isMonitoring: boolean;
-  activeSection: "league" | "discord" | "monitor";
-  onSectionChange: (section: "league" | "discord" | "monitor") => void;
+  activeSection: "league" | "discord" | "monitor" | "sounds";
+  onSectionChange: (section: "league" | "discord" | "monitor" | "sounds") => void;
   showDebug: boolean;
   onToggleDebug: () => void;
 };
@@ -100,6 +100,15 @@ export function Sidebar({
             onSectionChange("monitor");
           }}
           disabled={!canMonitor}
+        />
+        <NavItem
+          icon={<Volume2 className="h-5 w-5" />}
+          label="Sound Pack"
+          active={activeSection === "sounds"}
+          status="idle"
+          onClick={() => {
+            onSectionChange("sounds");
+          }}
         />
       </nav>
 
