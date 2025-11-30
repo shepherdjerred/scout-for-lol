@@ -1,6 +1,5 @@
 import { runes as importedRunes, getRuneIconUrl as getRuneIconUrlFromData } from "@scout-for-lol/data";
 
-
 // Cache rune icons at module load time
 const runeIconCache = new Map<string, string>();
 
