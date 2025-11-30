@@ -1,5 +1,5 @@
 import { type ChatInputCommandInteraction } from "discord.js";
-import { type DiscordGuildId, type Region, type RiotId } from "@scout-for-lol/data/index.ts";
+import { type DiscordGuildId, type Region, type RiotId } from "@scout-for-lol/data/index";
 import { riotApi } from "@scout-for-lol/backend/league/api/api.ts";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";

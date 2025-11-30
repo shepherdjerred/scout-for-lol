@@ -9,7 +9,7 @@ import {
   abandonmentNotificationsTotal,
   guildDataCleanupTotal,
 } from "@scout-for-lol/backend/metrics/index.ts";
-import type { DiscordGuildId } from "@scout-for-lol/data/index.ts";
+import type { DiscordGuildId } from "@scout-for-lol/data/index";
 import { differenceInCalendarDays } from "date-fns";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 

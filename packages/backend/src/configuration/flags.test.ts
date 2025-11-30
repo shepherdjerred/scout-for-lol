@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
+import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index";
 
 import {
   getLimit,

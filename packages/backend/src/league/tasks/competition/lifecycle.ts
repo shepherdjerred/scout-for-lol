@@ -1,5 +1,5 @@
-import type { CompetitionWithCriteria } from "@scout-for-lol/data/index.ts";
-import { parseCompetition } from "@scout-for-lol/data/index.ts";
+import type { CompetitionWithCriteria } from "@scout-for-lol/data/index";
+import { parseCompetition } from "@scout-for-lol/data/index";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { createSnapshotsForAllParticipants } from "@scout-for-lol/backend/league/competition/snapshots.ts";
 import {

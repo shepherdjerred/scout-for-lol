@@ -1,5 +1,5 @@
-import type { MatchId, RawMatch } from "@scout-for-lol/data/index.ts";
-import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
+import type { MatchId, RawMatch } from "@scout-for-lol/data/index";
+import { MatchIdSchema } from "@scout-for-lol/data/index";
 import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.ts";
 
 /**

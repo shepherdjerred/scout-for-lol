@@ -2,7 +2,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { z } from "zod";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
-import type { MatchId } from "@scout-for-lol/data/index.ts";
+import type { MatchId } from "@scout-for-lol/data/index";
 import { format } from "date-fns";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 

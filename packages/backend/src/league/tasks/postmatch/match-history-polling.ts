@@ -1,4 +1,4 @@
-import type { RawMatch, PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/data/index.ts";
+import type { RawMatch, PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/data/index";
 import { getRecentMatchIds, filterNewMatches } from "@scout-for-lol/backend/league/api/match-history.ts";
 import {
   getAccountsWithState,
@@ -8,7 +8,7 @@ import {
   updateLastMatchTime,
   updateLastCheckedAt,
 } from "@scout-for-lol/backend/database/index.ts";
-import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
+import { MatchIdSchema } from "@scout-for-lol/data/index";
 import { send } from "@scout-for-lol/backend/league/discord/channel.ts";
 import { shouldCheckPlayer, calculatePollingInterval } from "@scout-for-lol/backend/utils/polling-intervals.ts";
 import {

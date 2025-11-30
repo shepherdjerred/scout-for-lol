@@ -7,7 +7,7 @@ import {
   type RankSnapshotData,
   type SnapshotType,
   type WinsSnapshotData,
-} from "@scout-for-lol/data/index.ts";
+} from "@scout-for-lol/data/index";
 import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.ts";
 import { fetchSnapshotData } from "@scout-for-lol/backend/league/competition/leaderboard.ts";
 import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";

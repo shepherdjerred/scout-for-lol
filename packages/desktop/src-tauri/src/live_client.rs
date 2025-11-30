@@ -3,7 +3,8 @@
 //! Provides access to the League of Legends Live Client Data API (port 2999).
 //! This API is only available during active games and provides real-time game data.
 
-use log::{debug, info, warn};
+#![allow(dead_code)]
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

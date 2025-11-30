@@ -5,7 +5,7 @@
  */
 
 import { type Client, DiscordAPIError } from "discord.js";
-import { type DiscordAccountId } from "@scout-for-lol/data/index.ts";
+import { type DiscordAccountId } from "@scout-for-lol/data/index";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 

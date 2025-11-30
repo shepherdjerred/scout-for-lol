@@ -12,7 +12,7 @@ import {
 } from "@scout-for-lol/backend/metrics/index.ts";
 import { getLimit } from "@scout-for-lol/backend/configuration/flags.ts";
 import { LIMIT_WARNING_THRESHOLD } from "@scout-for-lol/backend/configuration/subscription-limits.ts";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data/index";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("metrics-limits");

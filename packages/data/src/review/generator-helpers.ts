@@ -1,6 +1,6 @@
 import { match as matchPattern } from "ts-pattern";
-import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
-import { selectRandomBehavior, type Personality } from "@scout-for-lol/data/review/prompts.ts";
+import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index";
+import { selectRandomBehavior, type Personality } from "@scout-for-lol/data/review/prompts";
 
 /**
  * Extract match data from a match object

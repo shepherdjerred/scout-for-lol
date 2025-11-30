@@ -5,12 +5,12 @@
  * All JSON data is minified before being sent to reduce token usage.
  */
 
-import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
-import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema.ts";
-import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema.ts";
+import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index";
+import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema";
+import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema";
 import type { OpenAIClient, ModelConfig, StageTrace, ImageGenerationTrace } from "./pipeline-types.ts";
 import type { Personality } from "./prompts.ts";
-import type { ArtStyle } from "@scout-for-lol/data/review/art-categories.ts";
+import type { ArtStyle } from "@scout-for-lol/data/review/art-categories";
 import { getStageSystemPrompt } from "./pipeline-defaults.ts";
 import { generateImagePrompt } from "./image-prompt.ts";
 import { replaceTemplateVariables } from "./prompts.ts";

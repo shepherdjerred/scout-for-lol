@@ -2,6 +2,8 @@
 //!
 //! Handles sound pack loading, rules evaluation, and sound selection.
 
+#![allow(dead_code)]
+
 use log::info;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

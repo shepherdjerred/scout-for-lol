@@ -13,7 +13,7 @@ import {
   type DiscordChannelId,
   type DiscordGuildId,
   type PlayerId,
-} from "@scout-for-lol/data/index.ts";
+} from "@scout-for-lol/data/index";
 import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database for integration tests

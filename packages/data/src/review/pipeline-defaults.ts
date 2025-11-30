@@ -5,7 +5,7 @@
  */
 
 import type { PipelineStagesConfig, ModelConfig, StageConfig, ImageGenerationStageConfig } from "./pipeline-types.ts";
-import { selectRandomStyle } from "@scout-for-lol/data/review/art-styles.ts";
+import { selectRandomStyle } from "@scout-for-lol/data/review/art-styles";
 
 // Import system prompts from TXT files
 import TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1b-timeline-summary.txt";

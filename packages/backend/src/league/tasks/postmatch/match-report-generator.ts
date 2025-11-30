@@ -13,14 +13,14 @@ import type {
   RawMatch,
   RawTimeline,
   Rank,
-} from "@scout-for-lol/data/index.ts";
+} from "@scout-for-lol/data/index";
 import {
   parseQueueType,
   MatchIdSchema,
   queueTypeToDisplayString,
   RawMatchSchema,
   RawTimelineSchema,
-} from "@scout-for-lol/data/index.ts";
+} from "@scout-for-lol/data/index";
 import { getPlayer } from "@scout-for-lol/backend/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";

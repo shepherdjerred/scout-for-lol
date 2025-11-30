@@ -2,7 +2,7 @@
  * Art styles list
  */
 
-import type { ArtStyle } from "@scout-for-lol/data/review/art-categories.ts";
+import type { ArtStyle } from "@scout-for-lol/data/review/art-categories";
 
 /**
  * Visual art styles with category tags

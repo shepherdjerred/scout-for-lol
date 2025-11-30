@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { PlayerConfigEntry, MatchId, RawMatch } from "@scout-for-lol/data/index.ts";
+import type { PlayerConfigEntry, MatchId, RawMatch } from "@scout-for-lol/data/index";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("postmatch-match-report-debug");
