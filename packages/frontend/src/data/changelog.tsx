@@ -116,6 +116,28 @@ function ChangelogSection({ title, color, items, className = "" }: ChangelogSect
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2025 11 30",
+    banner: (
+      <>
+        <strong>Rune displays</strong> on match reports
+      </>
+    ),
+    text: (
+      <>
+        <ChangelogSection
+          title="Match Reports"
+          color="green"
+          items={["Display rune selections for all players in match reports"]}
+        />
+      </>
+    ),
+    formatted: {
+      year: 2025,
+      month: 11,
+      day: 30,
+    },
+  },
+  {
     date: "2025 11 23",
     banner: (
       <>
