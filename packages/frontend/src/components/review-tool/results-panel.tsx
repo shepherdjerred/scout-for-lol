@@ -10,7 +10,7 @@ import type {
   PipelineTraces,
   StageTrace,
 } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
-import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
+import type { CompletedMatch, ArenaMatch, RawMatch } from "@scout-for-lol/data";
 import type { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import { calculateCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import {
@@ -19,7 +19,6 @@ import {
 } from "@scout-for-lol/frontend/lib/review-tool/generator";
 import { CostDisplay } from "./cost-display.tsx";
 import { HistoryPanel } from "./history-panel.tsx";
-import { getExampleMatch } from "@scout-for-lol/data";
 import {
   createPendingEntry,
   saveCompletedEntry,
@@ -73,6 +72,7 @@ function getTimerSnapshot() {
 type ResultsPanelProps = {
   config: ReviewConfig;
   match?: CompletedMatch | ArenaMatch | undefined;
+  rawMatch?: RawMatch | undefined;
   result?: GenerationResult | undefined;
   costTracker: CostTracker;
   onResultGenerated: (result: GenerationResult) => void;
@@ -184,7 +184,7 @@ function PipelineTracesPanel({ traces, intermediate }: PipelineTracesPanelProps)
   );
 }
 
-export function ResultsPanel({ config, match, result, costTracker, onResultGenerated }: ResultsPanelProps) {
+export function ResultsPanel({ config, match, rawMatch, result, costTracker, onResultGenerated }: ResultsPanelProps) {
   const [activeGenerations, setActiveGenerations] = useState<Map<string, ActiveGeneration>>(new Map());
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | undefined>();
   const [viewingHistory, setViewingHistory] = useState(false);
@@ -202,8 +202,11 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
   );
 
   const handleGenerate = async () => {
-    // Use provided match or example match
-    const matchToUse = match ?? getExampleMatch("ranked");
+    // Both match and rawMatch are required for review generation
+    if (!match || !rawMatch) {
+      console.error("[Generate] Match and rawMatch are required");
+      return;
+    }
 
     // Create entry ID (not persisted yet)
     console.log("[History] Creating entry ID");
@@ -227,7 +230,8 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
 
     try {
       const generatedResult = await generateMatchReview({
-        match: matchToUse,
+        match,
+        rawMatch,
         config,
         onProgress: (p) => {
           setActiveGenerations((prev) => {

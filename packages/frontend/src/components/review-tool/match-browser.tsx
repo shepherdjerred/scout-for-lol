@@ -5,7 +5,7 @@ import { useState, useMemo, useCallback } from "react";
 import { z } from "zod";
 import Fuse, { type FuseResult } from "fuse.js";
 import type { ApiSettings } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
-import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
+import type { CompletedMatch, ArenaMatch, RawMatch } from "@scout-for-lol/data";
 import {
   listMatchesFromS3,
   fetchMatchFromS3,
@@ -37,7 +37,7 @@ const MatchMetadataArraySchema = z.array(
 );
 
 type MatchBrowserProps = {
-  onMatchSelected: (match: CompletedMatch | ArenaMatch) => void;
+  onMatchSelected: (match: CompletedMatch | ArenaMatch, rawMatch: RawMatch) => void;
   apiSettings: ApiSettings;
 };
 
@@ -192,7 +192,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
       const rawMatch = await fetchMatchFromS3(s3Config, metadata.key);
       if (rawMatch) {
         const match = convertRawMatchToInternalFormat(rawMatch, metadata.playerName);
-        onMatchSelected(match);
+        onMatchSelected(match, rawMatch);
       }
     } catch (err) {
       const errorResult = ErrorSchema.safeParse(err);

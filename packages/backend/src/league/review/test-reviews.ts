@@ -6,7 +6,6 @@
 
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.ts";
 import {
-  getExampleMatch,
   MatchIdSchema,
   LeaguePuuidSchema,
   parseQueueType,
@@ -106,32 +105,32 @@ function printHelp(): void {
   logger.info(`
 Test AI Review Generation
 
-Usage: bun run src/league/review/test-reviews.ts [options]
+Usage: bun run src/league/review/test-reviews.ts --s3 [options]
 
 Options:
   -t, --type <type>      Match type: ranked, unranked, aram, arena (default: ranked)
   -c, --count <n>        Number of reviews to generate (default: 10)
   -p, --show-prompt      Show the system prompt used
-  --s3                   Fetch random matches from S3 instead of using examples
+  --s3                   Fetch random matches from S3 (REQUIRED)
   --s3-days <n>          Number of recent days to search in S3 (default: 7)
   -h, --help             Show this help message
 
 Examples:
-  # Generate 10 ranked match reviews using example data (default)
-  bun run src/league/review/test-reviews.ts
+  # Generate 10 ranked match reviews from S3
+  bun run src/league/review/test-reviews.ts --s3
 
   # Generate 5 arena match reviews from S3
-  bun run src/league/review/test-reviews.ts --type arena --count 5 --s3
+  bun run src/league/review/test-reviews.ts --s3 --type arena --count 5
 
   # Generate reviews from last 30 days of S3 matches
   bun run src/league/review/test-reviews.ts --s3 --s3-days 30
 
   # Generate review and show the prompt
-  bun run src/league/review/test-reviews.ts --show-prompt
+  bun run src/league/review/test-reviews.ts --s3 --show-prompt
 
 Environment:
   OPENAI_API_KEY         Required for AI review generation
-  S3_BUCKET_NAME         Required when using --s3 flag
+  S3_BUCKET_NAME         Required for S3 access
 `);
 }
 
@@ -292,10 +291,15 @@ async function convertRawMatchToInternalFormat(rawMatch: RawMatch): Promise<Comp
   }
 }
 
+type S3MatchResult = {
+  match: CompletedMatch | ArenaMatch;
+  rawMatch: RawMatch;
+};
+
 /**
  * Get a random match from S3 that matches the specified type
  */
-async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Promise<CompletedMatch | ArenaMatch> {
+async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Promise<S3MatchResult> {
   const keys = await fetchMatchKeysFromS3(daysBack);
 
   if (keys.length === 0) {
@@ -322,7 +326,8 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
 
     if (isMatchingType) {
       logger.info(`📦 Using match from S3: ${key}`);
-      return await convertRawMatchToInternalFormat(rawMatch);
+      const match = await convertRawMatchToInternalFormat(rawMatch);
+      return { match, rawMatch };
     }
   }
 
@@ -332,12 +337,21 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
 async function main(): Promise<void> {
   const options = parseArgs();
 
+  // Raw match data is required for match summary generation
+  if (!options.useS3) {
+    logger.error(
+      "❌ The --s3 flag is required. Example data does not include raw match data needed for match summaries.",
+    );
+    logger.info("   Run with: bun run src/league/review/test-reviews.ts --s3");
+    process.exit(1);
+  }
+
   logger.info(`\n${"=".repeat(80)}`);
   logger.info(`Testing AI Review Generation`);
   logger.info(`${"=".repeat(80)}\n`);
   logger.info(`Match Type: ${options.matchType}`);
   logger.info("Review Count:", options.count);
-  logger.info(`Source: ${options.useS3 ? `S3 (last ${String(options.s3Days)} days)` : "Example data"}`);
+  logger.info(`Source: S3 (last ${String(options.s3Days)} days)`);
   logger.info();
 
   // Generate multiple reviews
@@ -348,10 +362,8 @@ async function main(): Promise<void> {
       logger.info("─".repeat(80) + "\n");
     }
 
-    // Get the match (from S3 or example data)
-    const match = options.useS3
-      ? await getRandomMatchFromS3(options.matchType, options.s3Days)
-      : getExampleMatch(options.matchType);
+    // Get the match from S3 (required for raw match data)
+    const { match, rawMatch } = await getRandomMatchFromS3(options.matchType, options.s3Days);
 
     const matchSummary = getMatchSummary(match);
 
@@ -360,7 +372,7 @@ async function main(): Promise<void> {
 
     const startTime = Date.now();
     const testMatchId = MatchIdSchema.parse(`NA1_${Date.now().toString()}`);
-    const reviewResult = await generateMatchReview(match, testMatchId);
+    const reviewResult = await generateMatchReview(match, testMatchId, rawMatch);
     const duration = Date.now() - startTime;
 
     if (!reviewResult) {

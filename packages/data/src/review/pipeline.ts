@@ -52,7 +52,7 @@ type Stage1Result = {
 
 type Stage1Context = {
   input: ReviewPipelineInput;
-  curatedData?: CuratedMatchData;
+  curatedData: CuratedMatchData;
   curatedTimeline?: CuratedTimeline;
   intermediate: PipelineIntermediateResults;
   traces: Partial<PipelineTraces>;
@@ -103,27 +103,23 @@ async function runMatchSummary(ctx: Stage1Context): Promise<{ text: string; trac
   const { input, curatedData } = ctx;
   const { match, player, prompts, clients, stages } = input;
 
-  if (!stages.matchSummary.enabled || !curatedData) {
+  if (!stages.matchSummary.enabled) {
     return undefined;
   }
 
-  try {
-    const params: Parameters<typeof generateMatchSummary>[0] = {
-      match: match.processed,
-      curatedData,
-      playerIndex: player.index,
-      laneContext: prompts.laneContext,
-      client: clients.openai,
-      model: stages.matchSummary.model,
-    };
-    if (stages.matchSummary.systemPrompt !== undefined) {
-      params.systemPromptOverride = stages.matchSummary.systemPrompt;
-    }
-    return await generateMatchSummary(params);
-  } catch (error) {
-    console.error("[Pipeline Stage 1b] Match summary failed:", error);
-    return undefined;
+  // curatedData is now guaranteed to exist since match.raw is required
+  const params: Parameters<typeof generateMatchSummary>[0] = {
+    match: match.processed,
+    curatedData,
+    playerIndex: player.index,
+    laneContext: prompts.laneContext,
+    client: clients.openai,
+    model: stages.matchSummary.model,
+  };
+  if (stages.matchSummary.systemPrompt !== undefined) {
+    params.systemPromptOverride = stages.matchSummary.systemPrompt;
   }
+  return await generateMatchSummary(params);
 }
 
 async function runStage1Parallel(ctx: Stage1Context): Promise<Stage1Result> {
@@ -240,33 +236,26 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
   const traces: Partial<PipelineTraces> = {};
   const intermediate: PipelineIntermediateResults = {};
 
-  // Data Preparation - curate raw match data if provided
-  let curatedData: CuratedMatchData | undefined;
-  let curatedTimeline: CuratedTimeline | undefined;
+  // Data Preparation - curate raw match data (required for match summary)
+  const curatedData = await curateMatchData(match.raw, match.rawTimeline);
+  intermediate.curatedData = curatedData;
 
-  if (match.raw) {
-    curatedData = await curateMatchData(match.raw, match.rawTimeline);
-    intermediate.curatedData = curatedData;
-    if (curatedData.timeline) {
-      curatedTimeline = curatedData.timeline;
-      intermediate.curatedTimeline = curatedTimeline;
-    }
+  let curatedTimeline: CuratedTimeline | undefined;
+  if (curatedData.timeline) {
+    curatedTimeline = curatedData.timeline;
+    intermediate.curatedTimeline = curatedTimeline;
   }
 
   // Stage 1: Parallel Summarization
-  const stage1Ctx: Stage1Context = { input, intermediate, traces };
-  if (curatedData !== undefined) {
-    stage1Ctx.curatedData = curatedData;
-  }
+  const stage1Ctx: Stage1Context = { input, intermediate, traces, curatedData };
   if (curatedTimeline !== undefined) {
     stage1Ctx.curatedTimeline = curatedTimeline;
   }
   const stage1Result = await runStage1Parallel(stage1Ctx);
 
   // Stage 2: Review Text
-  const effectiveMatchSummary =
-    stage1Result.matchSummaryText ??
-    "No match summary was generated. Please analyze the player's performance based on available context.";
+  // matchSummaryText is only undefined if the stage was explicitly disabled
+  const effectiveMatchSummary = stage1Result.matchSummaryText ?? "Match summary stage is disabled.";
 
   const reviewTextParams: Parameters<typeof generateReviewTextStage>[0] = {
     match: match.processed,
@@ -276,12 +265,10 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
     playerMetadata: player.metadata,
     playerIndex: player.index,
     matchSummary: effectiveMatchSummary,
+    curatedData,
     client: clients.openai,
     model: stages.reviewText.model,
   };
-  if (curatedData !== undefined) {
-    reviewTextParams.curatedData = curatedData;
-  }
   if (stage1Result.timelineSummaryText !== undefined) {
     reviewTextParams.timelineSummary = stage1Result.timelineSummaryText;
   }
@@ -344,7 +331,7 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
  */
 export async function runStage1Sequential(params: {
   input: ReviewPipelineInput;
-  curatedData?: CuratedMatchData;
+  curatedData: CuratedMatchData;
   curatedTimeline?: CuratedTimeline;
 }): Promise<{
   timelineSummaryText?: string;
@@ -381,28 +368,24 @@ export async function runStage1Sequential(params: {
   let matchSummaryTrace: StageTrace | undefined;
 
   // Stage 1b: Match Summary (with timeline summary if available)
-  if (stages.matchSummary.enabled && curatedData) {
-    try {
-      const matchParams: Parameters<typeof generateMatchSummary>[0] = {
-        match: match.processed,
-        curatedData,
-        playerIndex: player.index,
-        laneContext: prompts.laneContext,
-        client: clients.openai,
-        model: stages.matchSummary.model,
-      };
-      if (timelineSummaryText !== undefined) {
-        matchParams.timelineSummary = timelineSummaryText;
-      }
-      if (stages.matchSummary.systemPrompt !== undefined) {
-        matchParams.systemPromptOverride = stages.matchSummary.systemPrompt;
-      }
-      const result = await generateMatchSummary(matchParams);
-      matchSummaryText = result.text;
-      matchSummaryTrace = result.trace;
-    } catch (error) {
-      console.error("[Stage 1b] Match summary failed:", error);
+  if (stages.matchSummary.enabled) {
+    const matchParams: Parameters<typeof generateMatchSummary>[0] = {
+      match: match.processed,
+      curatedData,
+      playerIndex: player.index,
+      laneContext: prompts.laneContext,
+      client: clients.openai,
+      model: stages.matchSummary.model,
+    };
+    if (timelineSummaryText !== undefined) {
+      matchParams.timelineSummary = timelineSummaryText;
     }
+    if (stages.matchSummary.systemPrompt !== undefined) {
+      matchParams.systemPromptOverride = stages.matchSummary.systemPrompt;
+    }
+    const result = await generateMatchSummary(matchParams);
+    matchSummaryText = result.text;
+    matchSummaryTrace = result.trace;
   }
 
   const result: {

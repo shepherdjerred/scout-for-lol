@@ -27,7 +27,7 @@ import { MatchBrowser } from "./match-browser.tsx";
 import { MatchDetailsPanel } from "./match-details-panel.tsx";
 import { RatingsAnalytics } from "./ratings-analytics.tsx";
 import { Spinner } from "./ui/spinner.tsx";
-import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
+import type { CompletedMatch, ArenaMatch, RawMatch } from "@scout-for-lol/data";
 
 export type TabData = {
   id: string;
@@ -35,6 +35,7 @@ export type TabData = {
   config: TabConfig;
   result?: GenerationResult;
   match?: CompletedMatch | ArenaMatch;
+  rawMatch?: RawMatch;
 };
 
 const MAX_TABS = 5;
@@ -262,8 +263,8 @@ export default function App() {
     });
   };
 
-  const updateTabMatch = (id: string, match: CompletedMatch | ArenaMatch) => {
-    const newTabs = tabs.map((t) => (t.id === id ? { ...t, match } : t));
+  const updateTabMatch = (id: string, match: CompletedMatch | ArenaMatch, rawMatch: RawMatch) => {
+    const newTabs = tabs.map((t) => (t.id === id ? { ...t, match, rawMatch } : t));
     appInitState = { ...appInitState, tabs: newTabs };
     appInitListeners.forEach((listener) => {
       listener();
@@ -325,8 +326,8 @@ export default function App() {
                   </p>
                 </div>
                 <MatchBrowser
-                  onMatchSelected={(match) => {
-                    updateTabMatch(activeTabId, match);
+                  onMatchSelected={(match, rawMatch) => {
+                    updateTabMatch(activeTabId, match, rawMatch);
                   }}
                   apiSettings={globalConfig.api}
                 />
@@ -355,6 +356,7 @@ export default function App() {
               <ResultsPanel
                 config={mergeConfigs(globalConfig, activeTab.config)}
                 match={activeTab.match}
+                rawMatch={activeTab.rawMatch}
                 result={activeTab.result}
                 costTracker={costTracker}
                 onResultGenerated={(result) => {

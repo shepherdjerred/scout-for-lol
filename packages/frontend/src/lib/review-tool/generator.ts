@@ -271,7 +271,8 @@ export type GenerateMatchReviewParams = {
   match: CompletedMatch | ArenaMatch;
   config: ReviewConfig;
   onProgress?: (progress: GenerationProgress) => void;
-  rawMatch?: RawMatch;
+  /** Raw match data from Riot API (required for match summary generation) */
+  rawMatch: RawMatch;
   rawTimeline?: RawTimeline;
 };
 
@@ -318,13 +319,11 @@ export async function generateMatchReview(params: GenerateMatchReviewParams): Pr
     // Get stage configs
     const stages = getStagesConfig(config);
 
-    // Build match input
+    // Build match input - raw is required for match summary generation
     const matchInput: Parameters<typeof generateFullMatchReview>[0]["match"] = {
       processed: match,
+      raw: rawMatch,
     };
-    if (rawMatch !== undefined) {
-      matchInput.raw = rawMatch;
-    }
     if (rawTimeline !== undefined) {
       matchInput.rawTimeline = rawTimeline;
     }

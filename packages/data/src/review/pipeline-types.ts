@@ -110,8 +110,8 @@ export type OpenAIClient = {
 export type PipelineMatchInput = {
   /** Processed match data (our internal format) */
   processed: CompletedMatch | ArenaMatch;
-  /** Raw match data from Riot API (optional, for detailed curation) */
-  raw?: RawMatch;
+  /** Raw match data from Riot API (required for match summary generation) */
+  raw: RawMatch;
   /** Raw timeline data from Riot API (optional, for timeline summary) */
   rawTimeline?: RawTimeline;
 };

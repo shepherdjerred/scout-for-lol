@@ -300,7 +300,6 @@ export async function generateImageDescription(params: {
 - Lean into the emotions, key moments, and champion identities referenced in the review
 - Describe one striking scene with composition and mood cues
 - Include color palette and lighting direction
-- Do NOT ask for any text to be drawn in the image
 
 Review text to translate into art:
 ${reviewText}`;

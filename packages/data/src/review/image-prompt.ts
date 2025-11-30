@@ -19,6 +19,5 @@ ${imageDescription}
 Important guidelines:
 - Create the image exactly as described above
 - Focus on visual storytelling and emotional impact
-- DO NOT include any text, labels, or captions in the image
 - Make it feel like cover art or a key moment illustration`;
 }
