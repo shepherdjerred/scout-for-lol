@@ -22,10 +22,10 @@ type CardHeaderProps = HTMLAttributes<HTMLDivElement> & {
 function CardHeader({ className, action, children, ...props }: CardHeaderProps) {
   return (
     <div
-      className={cn("flex items-center justify-between border-b border-gray-700/50 px-6 py-5", className)}
+      className={cn("flex items-center justify-between border-b border-gray-700/50 px-6 py-6", className)}
       {...props}
     >
-      <div className="flex flex-col gap-1.5">{children}</div>
+      <div className="flex flex-col gap-2">{children}</div>
       {action && <div>{action}</div>}
     </div>
   );
@@ -49,11 +49,11 @@ function CardDescription({ className, ...props }: HTMLAttributes<HTMLParagraphEl
 }
 
 function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("px-6 py-5", className)} {...props} />;
+  return <div className={cn("px-6 py-6", className)} {...props} />;
 }
 
 function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex items-center gap-3 border-t border-gray-700/50 px-6 py-4", className)} {...props} />;
+  return <div className={cn("flex items-center gap-3 border-t border-gray-700/50 px-6 py-5", className)} {...props} />;
 }
 
 export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };

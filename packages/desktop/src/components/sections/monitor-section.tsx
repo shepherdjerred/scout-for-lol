@@ -1,14 +1,13 @@
 import { Play, Square, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Button } from "@scout-for-lol/desktop/components/ui/button.tsx";
 import {
-  Button,
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent,
-  StatusIndicator,
-  Badge,
-} from "@scout-for-lol/desktop/components/ui/index.ts";
+} from "@scout-for-lol/desktop/components/ui/card.tsx";
+import { StatusIndicator, Badge } from "@scout-for-lol/desktop/components/ui/badge.tsx";
 
 type MonitorSectionProps = {
   isMonitoring: boolean;
@@ -83,7 +82,7 @@ export function MonitorSection({
       {/* Prerequisites Check */}
       {!canMonitor && (
         <Card variant="bordered" className="border-discord-yellow/30 bg-discord-yellow/5">
-          <CardContent className="flex items-start gap-4">
+          <CardContent className="flex items-start gap-5">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-discord-yellow/20">
               <AlertTriangle className="h-5 w-5 text-discord-yellow" />
             </div>
@@ -106,11 +105,13 @@ export function MonitorSection({
         <CardHeader>
           <CardTitle>Monitoring Status</CardTitle>
           <CardDescription>
-            <StatusIndicator status={statusProps.status} label={statusProps.label} />
+            <div className="mt-2">
+              <StatusIndicator status={statusProps.status} label={statusProps.label} />
+            </div>
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
           {/* Game Status */}
           {canMonitor && (
             <div className="flex items-center gap-4 rounded-lg bg-gray-900/50 p-5">
@@ -145,7 +146,7 @@ export function MonitorSection({
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-3 pt-2">
+          <div className="flex flex-wrap gap-3 pt-4">
             {!isMonitoring ? (
               <Button
                 variant="success"

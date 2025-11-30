@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { AlertCircle, CheckCircle2, Info, XCircle, Loader2, X } from "lucide-react";
 import { cn } from "@scout-for-lol/desktop/lib/utils";
 
-const alertVariants = cva("relative flex items-start gap-4 rounded-lg border p-4 animate-fade-in", {
+const alertVariants = cva("relative flex items-start gap-4 rounded-lg border p-5 animate-fade-in", {
   variants: {
     variant: {
       default: "bg-gray-800/50 border-gray-700 text-gray-100",
@@ -42,7 +42,7 @@ function Alert({ className, variant = "default", title, children, onDismiss, ...
     <div className={cn(alertVariants({ variant }), className)} role="alert" {...props}>
       <IconComponent className={cn("h-5 w-5 shrink-0 mt-0.5", isLoading && "animate-spin")} />
       <div className="flex-1 min-w-0">
-        {title && <p className="font-medium mb-1">{title}</p>}
+        {title && <p className="font-medium mb-2">{title}</p>}
         <p className="text-sm opacity-90">{children}</p>
       </div>
       {onDismiss && (

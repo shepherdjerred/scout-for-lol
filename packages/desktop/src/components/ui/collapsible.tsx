@@ -17,7 +17,7 @@ function Collapsible({ title, children, defaultOpen = false, className, badge, .
         <CollapsiblePrimitive.Trigger asChild>
           <button
             type="button"
-            className="flex w-full items-center justify-between px-5 py-4 text-left transition-colors hover:bg-gray-700/30 rounded-t-xl group"
+            className="flex w-full items-center justify-between px-6 py-5 text-left transition-colors hover:bg-gray-700/30 rounded-t-xl group"
           >
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-gray-200">{title}</span>
@@ -27,7 +27,7 @@ function Collapsible({ title, children, defaultOpen = false, className, badge, .
           </button>
         </CollapsiblePrimitive.Trigger>
         <CollapsiblePrimitive.Content className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-          <div className="border-t border-gray-700/50 px-5 py-5">{children}</div>
+          <div className="border-t border-gray-700/50 px-6 py-6">{children}</div>
         </CollapsiblePrimitive.Content>
       </div>
     </CollapsiblePrimitive.Root>

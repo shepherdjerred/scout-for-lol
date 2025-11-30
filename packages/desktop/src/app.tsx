@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { Sidebar } from "./components/layout/index.ts";
 import { LeagueSection, DiscordSection, MonitorSection, DebugPanel } from "./components/sections/index.ts";
-import { Alert } from "./components/ui/index.ts";
+import { Alert } from "./components/ui/alert.tsx";
 import type { LcuStatus, DiscordStatus, Config, LogEntry, LogPaths, Section } from "./types.ts";
 import { DEFAULT_EVENT_SOUNDS, getErrorMessage } from "./types.ts";
 
@@ -411,7 +411,7 @@ export default function App() {
       <main className="flex flex-1 flex-col overflow-hidden">
         {/* Error/Loading Alerts */}
         {(error !== null || loading !== null) && (
-          <div className="border-b border-gray-800 px-8 py-4 space-y-3">
+          <div className="border-b border-gray-800 px-8 py-5 space-y-4">
             {error && (
               <Alert
                 variant="error"
@@ -427,7 +427,7 @@ export default function App() {
         )}
 
         {/* Section Content */}
-        <div className="flex-1 overflow-y-auto px-8 py-6">{renderSection()}</div>
+        <div className="flex-1 overflow-y-auto px-8 py-8">{renderSection()}</div>
       </main>
 
       {/* Debug Panel */}

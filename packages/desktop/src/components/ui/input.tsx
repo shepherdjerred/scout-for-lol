@@ -37,7 +37,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
 
     return (
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {label && <Label htmlFor={inputId}>{label}</Label>}
         <div className="relative">
           {icon && (
@@ -82,7 +82,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const selectId = id ?? label?.toLowerCase().replace(/\s+/g, "-");
 
     return (
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {label && <Label htmlFor={selectId}>{label}</Label>}
         <select
           ref={ref}

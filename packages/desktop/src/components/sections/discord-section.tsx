@@ -1,18 +1,16 @@
 import { Save, Mic, Play } from "lucide-react";
+import { Button } from "@scout-for-lol/desktop/components/ui/button.tsx";
 import {
-  Button,
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent,
   CardFooter,
-  Input,
-  Select,
-  StatusIndicator,
-  Collapsible,
-  Badge,
-} from "@scout-for-lol/desktop/components/ui/index.ts";
+} from "@scout-for-lol/desktop/components/ui/card.tsx";
+import { Input, Select } from "@scout-for-lol/desktop/components/ui/input.tsx";
+import { StatusIndicator, Badge } from "@scout-for-lol/desktop/components/ui/badge.tsx";
+import { Collapsible } from "@scout-for-lol/desktop/components/ui/collapsible.tsx";
 
 type DiscordStatus = {
   connected: boolean;
@@ -80,7 +78,7 @@ export function DiscordSection({
       </div>
 
       {/* Status Overview */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-5 sm:grid-cols-3">
         <StatusCard
           label="Text Channel"
           value={discordStatus.channelName ?? "Not configured"}
@@ -100,7 +98,7 @@ export function DiscordSection({
           <CardTitle>Bot Settings</CardTitle>
           <CardDescription>Configure your Discord bot connection</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
           <div className="grid gap-6 md:grid-cols-2">
             <Input
               label="Bot Token"
@@ -184,7 +182,7 @@ export function DiscordSection({
         </p>
         <div className="grid gap-4 md:grid-cols-2">
           {Object.entries(SOUND_EVENT_LABELS).map(([key, { label, description }]) => (
-            <div key={key} className="rounded-lg border border-gray-700/50 bg-gray-900/30 p-4 space-y-3">
+            <div key={key} className="rounded-lg border border-gray-700/50 bg-gray-900/30 p-5 space-y-3">
               <div>
                 <span className="text-sm font-medium text-gray-200">{label}</span>
                 <p className="text-xs text-gray-500">{description}</p>

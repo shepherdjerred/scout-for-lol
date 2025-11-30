@@ -1,14 +1,13 @@
 import { Link2, Unlink, User } from "lucide-react";
+import { Button } from "@scout-for-lol/desktop/components/ui/button.tsx";
 import {
-  Button,
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent,
-  StatusIndicator,
-  Badge,
-} from "@scout-for-lol/desktop/components/ui/index.ts";
+} from "@scout-for-lol/desktop/components/ui/card.tsx";
+import { StatusIndicator, Badge } from "@scout-for-lol/desktop/components/ui/badge.tsx";
 
 type LcuStatus = {
   connected: boolean;
@@ -39,13 +38,15 @@ export function LeagueSection({ lcuStatus, loading, onConnect, onDisconnect }: L
         <CardHeader>
           <CardTitle>Connection Status</CardTitle>
           <CardDescription>
-            <StatusIndicator
-              status={isConnecting ? "connecting" : lcuStatus.connected ? "connected" : "disconnected"}
-            />
+            <div className="mt-2">
+              <StatusIndicator
+                status={isConnecting ? "connecting" : lcuStatus.connected ? "connected" : "disconnected"}
+              />
+            </div>
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
           {/* Summoner Info */}
           {lcuStatus.connected && lcuStatus.summonerName && (
             <div className="flex items-center gap-4 rounded-lg bg-gray-900/50 p-5">
@@ -66,9 +67,9 @@ export function LeagueSection({ lcuStatus, loading, onConnect, onDisconnect }: L
 
           {/* Connection Info */}
           {!lcuStatus.connected && (
-            <div className="rounded-lg border border-gray-700/50 bg-gray-900/30 p-5">
-              <h4 className="mb-3 text-sm font-medium text-gray-200">How it works</h4>
-              <ul className="space-y-3 text-sm text-gray-400">
+            <div className="rounded-lg border border-gray-700/50 bg-gray-900/30 p-6">
+              <h4 className="mb-4 text-sm font-medium text-gray-200">How it works</h4>
+              <ul className="space-y-4 text-sm text-gray-400">
                 <li className="flex items-start gap-3">
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-discord-blurple" />
                   <span>Make sure League of Legends is running</span>
@@ -86,7 +87,7 @@ export function LeagueSection({ lcuStatus, loading, onConnect, onDisconnect }: L
           )}
 
           {/* Action Button */}
-          <div className="pt-2">
+          <div className="pt-4">
             {!lcuStatus.connected ? (
               <Button
                 size="lg"
