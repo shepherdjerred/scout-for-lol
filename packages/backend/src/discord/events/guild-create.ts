@@ -4,7 +4,7 @@
  * Handles when the bot is added to a new server
  */
 
-import { type Guild, ChannelType, type TextChannel } from "discord.ts";
+import { type Guild, ChannelType, type TextChannel } from "discord.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";

@@ -1,4 +1,4 @@
-import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.ts";
+import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { RegionSchema, toReadableRegion } from "@scout-for-lol/data";
 
 /**

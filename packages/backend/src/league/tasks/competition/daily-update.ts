@@ -14,7 +14,7 @@ import { send as sendChannelMessage, ChannelSendError } from "@scout-for-lol/bac
 import { saveCachedLeaderboard } from "@scout-for-lol/backend/storage/s3-leaderboard.ts";
 import { createSnapshot, getSnapshot } from "@scout-for-lol/backend/league/competition/snapshots.ts";
 import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.ts";
-import { EmbedBuilder } from "discord.ts";
+import { EmbedBuilder } from "discord.js";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
 import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.ts";

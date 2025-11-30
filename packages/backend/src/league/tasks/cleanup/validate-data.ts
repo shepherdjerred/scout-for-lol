@@ -5,7 +5,7 @@
  * Runs periodically to clean up orphaned guilds and channels.
  */
 
-import { type Client } from "discord.ts";
+import { type Client } from "discord.js";
 import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { getCompetitionsByChannelId } from "@scout-for-lol/backend/database/competition/queries.ts";

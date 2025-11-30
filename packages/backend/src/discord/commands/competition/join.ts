@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction } from "discord.ts";
+import { type ChatInputCommandInteraction } from "discord.js";
 import { DiscordAccountIdSchema, getCompetitionStatus } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
 import { differenceInCalendarDays } from "date-fns";

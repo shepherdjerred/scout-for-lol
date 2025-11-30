@@ -218,7 +218,7 @@ File: `packages/backend/src/league/tasks/competition/daily-update.integration.te
 
 ```typescript
 import { CronJob } from "cron";
-import { EmbedBuilder } from "discord.ts";
+import { EmbedBuilder } from "discord.js";
 
 export async function runDailyLeaderboardUpdate() {
   console.log("[DailyLeaderboard] Running daily leaderboard update");

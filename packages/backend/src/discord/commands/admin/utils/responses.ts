@@ -1,4 +1,4 @@
-import type { InteractionReplyOptions } from "discord.ts";
+import type { InteractionReplyOptions } from "discord.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 
 /**

@@ -1,5 +1,5 @@
 import type { PrismaClient, Prisma } from "@scout-for-lol/backend/generated/prisma/client/index.ts";
-import { type ChatInputCommandInteraction } from "discord.ts";
+import { type ChatInputCommandInteraction } from "discord.js";
 import { type DiscordGuildId } from "@scout-for-lol/data";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 

@@ -1,4 +1,4 @@
-import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.ts";
+import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
 import { REGION_CHOICES } from "@scout-for-lol/backend/discord/commands/admin/utils/region-choices.ts";
 
 /**

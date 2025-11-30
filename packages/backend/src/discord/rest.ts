@@ -1,4 +1,4 @@
-import { REST, Routes } from "discord.ts";
+import { REST, Routes } from "discord.js";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
 import configuration from "@scout-for-lol/backend/configuration.ts";

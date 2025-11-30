@@ -1,6 +1,6 @@
 import { palette } from "@scout-for-lol/report/assets/colors.ts";
-import type { Rune } from "@scout-for-lol/data";
-import { getRuneInfo, getRuneTreeForRune, getRuneIconUrl } from "@scout-for-lol/report/dataDragon/runes.ts";
+import { getRuneInfo, getRuneTreeForRune, type Rune } from "@scout-for-lol/data";
+import { getRuneIconUrl } from "@scout-for-lol/report/dataDragon/runes.ts";
 
 const keystoneSize = "3.75rem";
 const secondarySize = "2rem";

@@ -1,4 +1,4 @@
-import type { ChatInputCommandInteraction } from "discord.ts";
+import type { ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";

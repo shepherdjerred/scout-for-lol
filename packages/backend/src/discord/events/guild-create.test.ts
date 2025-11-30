@@ -5,7 +5,7 @@
 import { describe, it, expect, mock } from "bun:test";
 import { z } from "zod";
 import { handleGuildCreate } from "@scout-for-lol/backend/discord/events/guild-create";
-import { ChannelType } from "discord.ts";
+import { ChannelType } from "discord.js";
 import { mockGuild, mockTextChannel } from "@scout-for-lol/backend/testing/discord-mocks";
 import { testGuildId, testAccountId } from "@scout-for-lol/backend/testing/test-ids";
 

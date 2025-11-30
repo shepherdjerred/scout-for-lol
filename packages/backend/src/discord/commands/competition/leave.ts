@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction } from "discord.ts";
+import { type ChatInputCommandInteraction } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { removeParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.ts";

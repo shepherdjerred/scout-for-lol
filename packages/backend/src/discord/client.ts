@@ -1,5 +1,5 @@
 import configuration from "@scout-for-lol/backend/configuration.ts";
-import { Client, GatewayIntentBits } from "discord.ts";
+import { Client, GatewayIntentBits } from "discord.js";
 import { handleCommands } from "@scout-for-lol/backend/discord/commands/index.ts";
 import {
   discordConnectionStatus,

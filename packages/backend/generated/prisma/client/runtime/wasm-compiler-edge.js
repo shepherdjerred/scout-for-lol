@@ -484,6 +484,7 @@ function Jo(e, t) {
         o > a && ((o = a), (n.length = 1)),
         n.reverse();
       o--;
+
     )
       n.push(0);
     n.reverse();
@@ -600,6 +601,7 @@ function Qo(e, t) {
         : r < 0 && (r = t.length),
       n = 0;
     t.charCodeAt(n) === 48;
+
   )
     ++n;
   for (i = t.length; t.charCodeAt(i - 1) === 48; ) --i;
@@ -633,7 +635,7 @@ function q(e, t, r) {
   if (
     (r !== void 0 &&
       ((o = ze(10, s - i - 1)),
-      (a = ((w / o) % 10) | 0),
+      (a = (w / o) % 10 | 0),
       (f = t < 0 || R[A + 1] !== void 0 || w % o),
       (f =
         r < 4
@@ -642,7 +644,7 @@ function q(e, t, r) {
             (a == 5 &&
               (r == 4 ||
                 f ||
-                (r == 6 && ((n > 0 ? (i > 0 ? w / ze(10, s - i) : 0) : R[A - 1]) % 10) & 1) ||
+                (r == 6 && (n > 0 ? (i > 0 ? w / ze(10, s - i) : 0) : R[A - 1]) % 10 & 1) ||
                 r == (e.s < 0 ? 8 : 7))))),
     t < 1 || !R[0])
   )
@@ -655,7 +657,7 @@ function q(e, t, r) {
   if (
     (n == 0
       ? ((R.length = A), (o = 1), A--)
-      : ((R.length = A + 1), (o = ze(10, H - n)), (R[A] = i > 0 ? (((w / ze(10, s - i)) % ze(10, i)) | 0) * o : 0)),
+      : ((R.length = A + 1), (o = ze(10, H - n)), (R[A] = i > 0 ? ((w / ze(10, s - i)) % ze(10, i) | 0) * o : 0)),
     f)
   )
     for (;;)
@@ -693,6 +695,7 @@ function Ko(e, t) {
         r.reverse(),
         i = s;
       i--;
+
     )
       r.push(0);
     r.reverse();
@@ -986,6 +989,7 @@ var mt,
           r = f.precision,
           i = s = r + 3;
         ;
+
       )
         if (((o = n), (n = o.plus(_e(a, o, s + 2)).times(0.5)), Ae(o.d).slice(0, s) === (t = Ae(n.d)).slice(0, s))) {
           if (((t = t.slice(s - 3, s + 1)), i == s && t == "4999")) {
@@ -1023,12 +1027,13 @@ var mt,
           s = f + w,
           n = s;
         n--;
+
       )
         o.push(0);
       for (n = w; --n >= 0; ) {
         for (t = 0, i = f + n; i > n; )
-          ((a = o[i] + C[n] * S[i - n - 1] + t), (o[i--] = (a % te) | 0), (t = (a / te) | 0));
-        o[i] = ((o[i] + t) % te) | 0;
+          ((a = o[i] + C[n] * S[i - n - 1] + t), (o[i--] = a % te | 0), (t = (a / te) | 0));
+        o[i] = (o[i] + t) % te | 0;
       }
       for (; !o[--s]; ) o.pop();
       return (t ? ++r : o.shift(), (e.d = o), (e.e = r), W ? q(e, R.precision) : e);
@@ -1099,6 +1104,7 @@ var mt,
           for (
             i = new f(he), t = Math.ceil(n / H + 4), W = !1;
             r % 2 && ((i = i.times(a)), Ho(i.d, t)), (r = dt(r / 2)), r !== 0;
+
           )
             ((a = a.times(a)), Ho(a.d, t));
           return ((W = !0), e.s < 0 ? new f(he).div(i) : q(i, n));
@@ -1157,7 +1163,7 @@ var mt,
         var o,
           s = 0,
           a = n.length;
-        for (n = n.slice(); a--; ) ((o = n[a] * i + s), (n[a] = (o % te) | 0), (s = (o / te) | 0));
+        for (n = n.slice(); a--; ) ((o = n[a] * i + s), (n[a] = o % te | 0), (s = (o / te) | 0));
         return (s && n.unshift(s), n);
       }
       function t(n, i, o, s) {
@@ -1210,7 +1216,7 @@ var mt,
           return new Wr(0);
         if (((ue = (ue / H + 2) | 0), (w = 0), xe == 1))
           for (A = 0, z = z[0], ue++; (w < Ke || A) && ue--; w++)
-            ((B = A * te + (ve[w] || 0)), (L[w] = (B / z) | 0), (A = (B % z) | 0));
+            ((B = A * te + (ve[w] || 0)), (L[w] = (B / z) | 0), (A = B % z | 0));
         else {
           for (
             A = (te / (z[0] + 1)) | 0,
@@ -1219,6 +1225,7 @@ var mt,
               k = ve.slice(0, xe),
               M = k.length;
             M < xe;
+
           )
             k[M++] = 0;
           ((Jr = z.slice()), Jr.unshift(0), (ci = z[0]), z[1] >= te / 2 && ++ci);

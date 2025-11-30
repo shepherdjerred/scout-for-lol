@@ -1,4 +1,4 @@
-import { type Client, PermissionFlagsBits, PermissionsBitField } from "discord.ts";
+import { type Client, PermissionFlagsBits, PermissionsBitField } from "discord.js";
 import { z } from "zod";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data/index.ts";
 import { getFlag } from "@scout-for-lol/backend/configuration/flags.ts";

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
 import { api } from "@scout-for-lol/backend/league/api/api.ts";
-import { regionToRegionGroup } from "twisted/dist/constants/regions.ts";
+import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import type {
   PlayerConfigEntry,
@@ -20,8 +20,8 @@ import {
   RawTimelineSchema,
 } from "@scout-for-lol/data/index.ts";
 import { getPlayer } from "@scout-for-lol/backend/league/model/player.ts";
-import type { MessageCreateOptions } from "discord.ts";
-import { AttachmentBuilder, EmbedBuilder } from "discord.ts";
+import type { MessageCreateOptions } from "discord.js";
+import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
 import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "@scout-for-lol/backend/storage/s3.ts";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.ts";

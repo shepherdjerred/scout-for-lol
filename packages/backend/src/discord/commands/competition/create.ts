@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.ts";
+import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
 import {
   ChampionIdSchema,

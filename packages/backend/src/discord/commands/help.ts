@@ -4,7 +4,7 @@
  * Provides users with helpful resources and command overview
  */
 
-import { type ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder, Colors } from "discord.ts";
+import { type ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder, Colors } from "discord.js";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("commands-help");

@@ -1,4 +1,4 @@
-import type { Channel, Message, MessageCreateOptions, MessagePayload } from "discord.ts";
+import type { Channel, Message, MessageCreateOptions, MessagePayload } from "discord.js";
 
 /**
  * Minimal interface for text channels that support sending messages

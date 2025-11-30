@@ -6,7 +6,7 @@ import {
   ButtonStyle,
   type MessageActionRowComponentBuilder,
   type ButtonInteraction,
-} from "discord.ts";
+} from "discord.js";
 import {
   type DiscordAccountId,
   DiscordAccountIdSchema,

@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction } from "discord.ts";
+import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
 import type { DiscordGuildId } from "@scout-for-lol/data/index.ts";

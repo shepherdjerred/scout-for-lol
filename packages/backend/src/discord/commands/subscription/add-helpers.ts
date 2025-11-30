@@ -1,8 +1,8 @@
-import { type ChatInputCommandInteraction } from "discord.ts";
+import { type ChatInputCommandInteraction } from "discord.js";
 import { type DiscordGuildId, type Region, type RiotId } from "@scout-for-lol/data/index.ts";
 import { riotApi } from "@scout-for-lol/backend/league/api/api.ts";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
-import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.ts";
+import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { getLimit } from "@scout-for-lol/backend/configuration/flags.ts";
 import {

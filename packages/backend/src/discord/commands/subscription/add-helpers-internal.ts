@@ -1,4 +1,4 @@
-import type { ChatInputCommandInteraction } from "discord.ts";
+import type { ChatInputCommandInteraction } from "discord.js";
 import { DiscordAccountIdSchema, LeaguePuuidSchema, RegionSchema, type RiotId } from "@scout-for-lol/data/index.ts";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";

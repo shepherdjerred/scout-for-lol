@@ -1,4 +1,4 @@
-import type { Client } from "discord.ts";
+import type { Client } from "discord.js";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { getAbandonedGuilds, markGuildAsNotified } from "@scout-for-lol/backend/database/guild-permission-errors.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";

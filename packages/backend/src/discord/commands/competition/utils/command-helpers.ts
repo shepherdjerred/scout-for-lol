@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction } from "discord.ts";
+import { type ChatInputCommandInteraction } from "discord.js";
 import {
   CompetitionIdSchema,
   DiscordGuildIdSchema,

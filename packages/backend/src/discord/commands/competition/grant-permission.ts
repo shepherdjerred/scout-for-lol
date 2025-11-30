@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.ts";
+import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { grantPermission } from "@scout-for-lol/backend/database/competition/permissions.ts";

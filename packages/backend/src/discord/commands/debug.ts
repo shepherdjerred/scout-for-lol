@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction, SlashCommandBuilder, AttachmentBuilder, EmbedBuilder } from "discord.ts";
+import { type ChatInputCommandInteraction, SlashCommandBuilder, AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { formatDistanceToNow } from "date-fns";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
 import configuration from "@scout-for-lol/backend/configuration.ts";

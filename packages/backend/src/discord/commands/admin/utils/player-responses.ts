@@ -1,4 +1,4 @@
-import type { InteractionReplyOptions } from "discord.ts";
+import type { InteractionReplyOptions } from "discord.js";
 import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
 
 /**

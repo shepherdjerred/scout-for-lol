@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { PermissionsBitField, PermissionFlagsBits } from "discord.ts";
+import { PermissionsBitField, PermissionFlagsBits } from "discord.js";
 import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.ts";
 import { addParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.ts";
 import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/database/competition/validation.ts";

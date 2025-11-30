@@ -24,8 +24,8 @@ import type {
   GuildMember,
   Message,
   PermissionsBitField,
-} from "discord.ts";
-import { ChannelType, PermissionFlagsBits } from "discord.ts";
+} from "discord.js";
+import { ChannelType, PermissionFlagsBits } from "discord.js";
 import { testAccountId, testGuildId, testChannelId } from "./test-ids.ts";
 
 /**

@@ -1,4 +1,4 @@
-import type { MessageCreateOptions, MessagePayload, Message } from "discord.ts";
+import type { MessageCreateOptions, MessagePayload, Message } from "discord.js";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
 import { client } from "@scout-for-lol/backend/discord/client.ts";

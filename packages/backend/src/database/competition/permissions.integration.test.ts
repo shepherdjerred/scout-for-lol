@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { PermissionsBitField, PermissionFlagsBits } from "discord.ts";
+import { PermissionsBitField, PermissionFlagsBits } from "discord.js";
 import {
   canCreateCompetition,
   grantPermission,

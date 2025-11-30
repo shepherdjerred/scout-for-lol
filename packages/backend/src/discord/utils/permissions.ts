@@ -1,5 +1,5 @@
-import type { Channel, PermissionsBitField, Client, User } from "discord.ts";
-import { PermissionFlagsBits } from "discord.ts";
+import type { Channel, PermissionsBitField, Client, User } from "discord.js";
+import { PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import { discordPermissionErrorsTotal, discordOwnerNotificationsTotal } from "@scout-for-lol/backend/metrics/index.ts";

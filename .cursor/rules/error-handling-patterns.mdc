@@ -75,7 +75,7 @@ async function fetchUserData(id: string): Promise<User> {
 ### Example 2: Discord Command Error Handling
 
 ```typescript
-import { MessageFlags } from "discord.ts";
+import { MessageFlags } from "discord.js";
 import { getErrorMessage } from "../utils/errors.ts";
 
 async function executeCommand(interaction: ChatInputCommandInteraction) {

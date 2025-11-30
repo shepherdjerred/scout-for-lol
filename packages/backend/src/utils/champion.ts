@@ -1,4 +1,4 @@
-import { Champions, getChampionName } from "twisted/dist/constants/champions.ts";
+import { Champions, getChampionName } from "twisted/dist/constants/champions.js";
 import { z } from "zod";
 
 /**

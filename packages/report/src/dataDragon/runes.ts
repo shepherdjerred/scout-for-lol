@@ -1,16 +1,8 @@
 import { runes as importedRunes, getRuneIconUrl as getRuneIconUrlFromData } from "@scout-for-lol/data";
 
-export {
-  runes,
-  RuneSchema,
-  getRuneInfo,
-  getRuneTreeName,
-  getRuneTreeInfo,
-  getRuneTreeForRune,
-} from "@scout-for-lol/data";
 
 // Cache rune icons at module load time
-const runeIconCache: Map<string, string> = new Map();
+const runeIconCache = new Map<string, string>();
 
 // Pre-load all rune icons
 if (typeof Bun !== "undefined") {
@@ -24,12 +16,10 @@ if (typeof Bun !== "undefined") {
     }
   }
 
-  await Promise.all(
-    allRuneIcons.map(async (iconPath) => {
-      const url = await getRuneIconUrlFromData(iconPath);
-      runeIconCache.set(iconPath, url);
-    }),
-  );
+  for (const iconPath of allRuneIcons) {
+    const url = getRuneIconUrlFromData(iconPath);
+    runeIconCache.set(iconPath, url);
+  }
 }
 
 export function getRuneIconUrl(iconPath: string): string {

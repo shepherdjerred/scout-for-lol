@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction } from "discord.ts";
+import { type ChatInputCommandInteraction } from "discord.js";
 import type { z } from "zod";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";

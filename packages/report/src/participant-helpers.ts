@@ -1,6 +1,6 @@
 import type { RawParticipant, Champion, Rune } from "@scout-for-lol/data";
 import { participantToChampion as participantToChampionBase } from "@scout-for-lol/data/model/match-helpers.ts";
-import { getRuneInfo } from "@scout-for-lol/report/dataDragon/runes.ts";
+import { getRuneInfo } from "@scout-for-lol/data/data-dragon/runes.ts";
 
 /**
  * Helper to extract runes from a single rune style
