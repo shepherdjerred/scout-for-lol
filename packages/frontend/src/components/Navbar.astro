@@ -1,17 +1,13 @@
 ---
-import { Button } from "@/components/ui/button";
+import { Button } from "@scout-for-lol/frontend/components/ui/button";
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
   navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@scout-for-lol/frontend/components/ui/navigation-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@scout-for-lol/frontend/components/ui/sheet";
 
 import { Icon } from "astro-icon/components";
 
@@ -23,16 +19,11 @@ const { activePage } = Astro.props;
 ---
 
 <header class="absolute inset-x-0 top-0 z-50 bg-white dark:bg-gray-900">
-  <nav
-    class="flex items-center justify-between p-4 lg:p-6 lg:px-8"
-    aria-label="Global"
-  >
+  <nav class="flex items-center justify-between p-4 lg:p-6 lg:px-8" aria-label="Global">
     <div class="flex lg:flex-1">
       <a href="/" class="-m-1.5 p-1.5">
         <span class="sr-only">Scout for League of Legends</span>
-        <div
-          class="h-8 w-8 bg-linear-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center"
-        >
+        <div class="h-8 w-8 bg-linear-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
           <span class="text-white font-bold text-sm">S</span>
         </div>
       </a>
@@ -117,39 +108,23 @@ const { activePage } = Astro.props;
     <NavigationMenu>
       <NavigationMenuList>
         <NavigationMenuItem>
-          <NavigationMenuLink href="/" className={navigationMenuTriggerStyle()}>
-            Home
-          </NavigationMenuLink>
+          <NavigationMenuLink href="/" className={navigationMenuTriggerStyle()}> Home </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <NavigationMenuLink
-            href="/getting-started"
-            className={navigationMenuTriggerStyle()}
-          >
+          <NavigationMenuLink href="/getting-started" className={navigationMenuTriggerStyle()}>
             Getting Started
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <NavigationMenuLink
-            href="/docs"
-            className={navigationMenuTriggerStyle()}
-          >
-            Documentation
-          </NavigationMenuLink>
+          <NavigationMenuLink href="/docs" className={navigationMenuTriggerStyle()}> Documentation </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <NavigationMenuLink
-            href="/whatsnew"
-            className={navigationMenuTriggerStyle()}
-          >
+          <NavigationMenuLink href="/whatsnew" className={navigationMenuTriggerStyle()}>
             What's New
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
-          <NavigationMenuLink
-            href="/support"
-            className={navigationMenuTriggerStyle()}
-          >
+          <NavigationMenuLink href="/support" className={navigationMenuTriggerStyle()}>
             <Icon name="heroicons:question-mark-circle" class="h-4 w-4" />
             Support
           </NavigationMenuLink>
@@ -168,12 +143,9 @@ const { activePage } = Astro.props;
       </NavigationMenuList>
     </NavigationMenu>
     <div class="hidden lg:flex lg:flex-1 lg:justify-end">
-        <Button>
-            <a
-                href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
-                >Add to Discord
-            </a>
-        </Button>
+      <Button>
+        <a href="https://discord.com/oauth2/authorize?client_id=1182800769188110366">Add to Discord </a>
+      </Button>
     </div>
   </nav>
 </header>

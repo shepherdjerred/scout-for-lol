@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { z } from "zod";
 import { getExampleMatch, type AnyMatch } from "@scout-for-lol/data/index.ts";
 // Import from browser-safe entry point to avoid satori/resvg dependencies
-import { Report } from "@scout-for-lol/report/browser/index.tsx";
-import { ArenaReport } from "@scout-for-lol/report/html/arena/report/index.tsx";
+import { Report } from "@scout-for-lol/report/html/report.tsx";
+import { ArenaReport } from "@scout-for-lol/report/html/arena/report";
 const MatchTypeSchema = z.enum(["ranked", "unranked", "aram", "arena"]);
 type MatchType = z.infer<typeof MatchTypeSchema>;
 
@@ -33,12 +33,10 @@ const formInputStyle: React.CSSProperties = {
 };
 
 function MatchReportRenderer({ match }: { match: AnyMatch }): React.ReactNode {
-  // Type guard for ArenaMatch
   if (match.queueType === "arena") {
-    return <ArenaReport match={match as ArenaMatch} />;
+    return <ArenaReport match={match } />;
   }
-  // Type guard for CompletedMatch
-  return <Report match={match as CompletedMatch} />;
+  return <Report match={match } />;
 }
 
 export function App() {

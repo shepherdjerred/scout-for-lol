@@ -1,13 +1,13 @@
 ---
 import { Icon } from "astro-icon/components";
-import { cn } from "@/lib/utils";
+import { cn } from "@scout-for-lol/frontend/lib/utils.ts";
 import {
   Card as ShadcnCard,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@scout-for-lol/frontend/components/ui/card";
 import { iconColors, gradientColors, type ColorVariant } from "../lib/colors";
 
 interface Props {
@@ -65,7 +65,14 @@ const iconInnerSize = withCard ? "w-12 h-12" : "h-6 w-6";
   withCard ? (
     <ShadcnCard className={cn("flex flex-col gap-0", layout === "centered" ? "text-center" : "", classNames)}>
       <CardHeader>
-        <div class={cn(iconSize, layout === "centered" ? "mx-auto" : "", "rounded-lg flex items-center justify-center", iconBgClass)}>
+        <div
+          class={cn(
+            iconSize,
+            layout === "centered" ? "mx-auto" : "",
+            "rounded-lg flex items-center justify-center",
+            iconBgClass,
+          )}
+        >
           {icon && <Icon name={icon} class={cn(iconInnerSize, "text-primary-foreground")} />}
           {iconHtml && <div set:html={iconHtml} class={cn(iconInnerSize, "text-primary-foreground")} />}
           {number && <span class="font-semibold text-primary-foreground">{number}</span>}
@@ -93,7 +100,15 @@ const iconInnerSize = withCard ? "w-12 h-12" : "h-6 w-6";
   ) : number ? (
     <div class={cn(layout === "centered" ? "text-center" : "")}>
       <dt class="flex items-center gap-x-3 text-base font-semibold text-foreground">
-        <div class={cn(iconSize, "flex items-center justify-center rounded-lg", iconBgClass, "font-semibold", layout === "centered" ? "mx-auto" : "")}>
+        <div
+          class={cn(
+            iconSize,
+            "flex items-center justify-center rounded-lg",
+            iconBgClass,
+            "font-semibold",
+            layout === "centered" ? "mx-auto" : "",
+          )}
+        >
           {number}
         </div>
         {title}
@@ -107,13 +122,18 @@ const iconInnerSize = withCard ? "w-12 h-12" : "h-6 w-6";
     </div>
   ) : (
     <div class={cn(layout === "centered" ? "text-center" : "flex flex-col")}>
-      <div class={cn(iconSize, layout === "centered" ? "mx-auto" : "", "flex items-center justify-center rounded-lg", iconBgClass)}>
+      <div
+        class={cn(
+          iconSize,
+          layout === "centered" ? "mx-auto" : "",
+          "flex items-center justify-center rounded-lg",
+          iconBgClass,
+        )}
+      >
         {icon && <Icon name={icon} class={iconInnerSize} />}
         {iconHtml && <div set:html={iconHtml} class={iconInnerSize} />}
       </div>
-      <h3 class={cn(layout === "centered" ? "mt-4" : "mt-0", "text-lg font-semibold text-foreground")}>
-        {title}
-      </h3>
+      <h3 class={cn(layout === "centered" ? "mt-4" : "mt-0", "text-lg font-semibold text-foreground")}>{title}</h3>
       {description && <p class="mt-2 text-sm text-muted-foreground">{description}</p>}
       <slot />
     </div>

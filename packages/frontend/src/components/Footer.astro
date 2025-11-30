@@ -1,5 +1,5 @@
 ---
-import { Button } from "@/components/ui/button";
+import { Button } from "@scout-for-lol/frontend/components/ui/button";
 import { Icon } from "astro-icon/components";
 
 interface Props {
@@ -14,39 +14,27 @@ const { variant = "default" } = Astro.props;
     <footer class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
       <div class="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
         <div class="flex flex-wrap justify-center gap-4 md:order-2">
-            <Button variant="link" asChild>
-                <a href="/privacy">
-                    Privacy Policy
-                </a>
-            </Button>
-            <Button variant="link" asChild>
-                <a href="/tos">
-                    Terms of Service
-                </a>
-            </Button>
+          <Button variant="link" asChild>
+            <a href="/privacy">Privacy Policy</a>
+          </Button>
+          <Button variant="link" asChild>
+            <a href="/tos">Terms of Service</a>
+          </Button>
           <Button variant="outline" asChild>
-            <a
-              href="/support"
-            >
+            <a href="/support">
               <Icon name="heroicons:question-mark-circle" class="h-4 w-4" />
               Get Support
             </a>
           </Button>
           <Button variant="secondary" asChild>
-            <a
-              href="https://github.com/shepherdjerred/scout-for-lol"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <a href="https://github.com/shepherdjerred/scout-for-lol" target="_blank" rel="noopener noreferrer">
               <Icon name="simple-icons:github" class="h-4 w-4" />
               View on GitHub
             </a>
           </Button>
         </div>
         <div class="mt-8 md:order-1 md:mt-0">
-          <p class="text-center text-xs/5 text-gray-500 dark:text-gray-400">
-            &copy; 2025 Scout for League of Legends.
-          </p>
+          <p class="text-center text-xs/5 text-gray-500 dark:text-gray-400">&copy; 2025 Scout for League of Legends.</p>
         </div>
       </div>
     </footer>
@@ -56,34 +44,22 @@ const { variant = "default" } = Astro.props;
         <div class="text-center">
           <p class="text-sm text-gray-600 dark:text-gray-300">
             <Button variant="link" asChild>
-                <a href="/privacy">
-                    Privacy Policy
-                </a>
+              <a href="/privacy">Privacy Policy</a>
             </Button>
             •
             <Button variant="link" asChild>
-                <a href="/tos">
-                    Terms of Service
-                </a>
+              <a href="/tos">Terms of Service</a>
             </Button>
             •
             <Button variant="link" asChild>
-                <a href="/support">
-                    Get Support
-                </a>
+              <a href="/support">Get Support</a>
             </Button>
             •
             <Button variant="link" asChild>
-                <a
-              href="https://github.com/shepherdjerred/scout-for-lol"
-            >
-              View on GitHub
-            </a>
+              <a href="https://github.com/shepherdjerred/scout-for-lol">View on GitHub</a>
             </Button>
           </p>
-          <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">
-            © 2025 Scout for League of Legends.
-          </p>
+          <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">© 2025 Scout for League of Legends.</p>
         </div>
       </div>
     </footer>
