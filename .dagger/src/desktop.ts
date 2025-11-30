@@ -205,10 +205,7 @@ export function checkDesktopLint(workspaceSource: Directory): Container {
  * @param frontendDist Optional pre-built frontend dist directory (avoids rebuilding)
  * @returns Promise that resolves when all checks pass
  */
-export async function checkDesktopParallel(
-  workspaceSource: Directory,
-  frontendDist?: Directory,
-): Promise<void> {
+export async function checkDesktopParallel(workspaceSource: Directory, frontendDist?: Directory): Promise<void> {
   // Get the base container with deps installed
   const baseContainer = installDesktopDeps(workspaceSource);
 
@@ -283,26 +280,44 @@ export function checkDesktop(workspaceSource: Directory, frontendDist?: Director
  * Build the desktop application for Linux
  * @param workspaceSource The full workspace source directory
  * @param version The version tag
+ * @param frontendDist Optional pre-built frontend dist directory (avoids rebuilding)
  * @returns The container with built artifacts
  */
-export function buildDesktopLinux(workspaceSource: Directory, version: string): Container {
-  return installDesktopDeps(workspaceSource)
+export function buildDesktopLinux(workspaceSource: Directory, version: string, frontendDist?: Directory): Container {
+  let container = installDesktopDeps(workspaceSource)
     .withEnvVariable("VERSION", version)
     .withWorkdir("/workspace/packages/desktop")
     .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("rust-target-linux"))
-    .withExec(["sh", "-c", "echo '🏗️  [CI] Building desktop application for Linux...'"])
-    .withExec(["bun", "run", "build"])
-    .withExec(["sh", "-c", "echo '✅ [CI] Desktop build completed!'"]);
+    .withExec(["sh", "-c", "echo '🏗️  [CI] Building desktop application for Linux...'"]);
+
+  // Use pre-built frontend if provided
+  if (frontendDist) {
+    container = container
+      .withDirectory("/workspace/packages/desktop/dist", frontendDist)
+      .withExec(["sh", "-c", "echo '📦 Using pre-built frontend, running Tauri build...'"])
+      .withWorkdir("/workspace/packages/desktop/src-tauri")
+      .withExec(["cargo", "tauri", "build"]);
+  } else {
+    // Build everything (frontend + Tauri)
+    container = container.withExec(["bun", "run", "build"]);
+  }
+
+  return container.withExec(["sh", "-c", "echo '✅ [CI] Desktop build completed!'"]);
 }
 
 /**
  * Build the desktop application for Windows (x86_64-pc-windows-gnu)
  * @param workspaceSource The full workspace source directory
  * @param version The version tag
+ * @param frontendDist Optional pre-built frontend dist directory (avoids rebuilding)
  * @returns The container with built artifacts
  */
-export function buildDesktopWindowsGnu(workspaceSource: Directory, version: string): Container {
-  return installDesktopDeps(workspaceSource, "windows-gnu")
+export function buildDesktopWindowsGnu(
+  workspaceSource: Directory,
+  version: string,
+  frontendDist?: Directory,
+): Container {
+  let container = installDesktopDeps(workspaceSource, "windows-gnu")
     .withEnvVariable("VERSION", version)
     .withEnvVariable("CARGO_TARGET_DIR", "/workspace/packages/desktop/src-tauri/target")
     .withEnvVariable("RUSTUP_HOME", "/usr/local/rustup")
@@ -310,9 +325,20 @@ export function buildDesktopWindowsGnu(workspaceSource: Directory, version: stri
     .withEnvVariable("PATH", "/usr/local/cargo/bin:/usr/local/rustup/bin:$PATH", { expand: true })
     .withWorkdir("/workspace/packages/desktop")
     .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("rust-target-windows-gnu"))
-    .withExec(["sh", "-c", "echo '🏗️  [CI] Building desktop application for Windows (x86_64-pc-windows-gnu)...'"])
-    .withExec(["sh", "-c", "echo '📦 Building frontend first...'"])
-    .withExec(["bunx", "vite", "build"])
+    .withExec(["sh", "-c", "echo '🏗️  [CI] Building desktop application for Windows (x86_64-pc-windows-gnu)...'"]);
+
+  // Use pre-built frontend if provided, otherwise build it
+  if (frontendDist) {
+    container = container
+      .withDirectory("/workspace/packages/desktop/dist", frontendDist)
+      .withExec(["sh", "-c", "echo '📦 Using pre-built frontend...'"]);
+  } else {
+    container = container
+      .withExec(["sh", "-c", "echo '📦 Building frontend first...'"])
+      .withExec(["bunx", "vite", "build"]);
+  }
+
+  return container
     .withExec(["sh", "-c", "echo '🦀 Building Rust application with Cargo...'"])
     .withWorkdir("/workspace/packages/desktop/src-tauri")
     .withExec(["cargo", "build", "--release", "--target", "x86_64-pc-windows-gnu"])

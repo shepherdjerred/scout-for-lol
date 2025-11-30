@@ -16,7 +16,9 @@ import { checkData, getDataCoverage, getDataTestReport } from "@scout-for-lol/.d
 import { checkFrontend, buildFrontend, deployFrontend } from "@scout-for-lol/.dagger/src/frontend";
 import {
   checkDesktop,
+  checkDesktopParallel,
   buildDesktopLinux,
+  buildDesktopFrontend,
   getDesktopLinuxArtifacts,
   buildDesktopWindowsGnu,
   getDesktopWindowsArtifacts,
@@ -143,6 +145,9 @@ export class ScoutForLol {
     // OPTIMIZATION: Use mounted workspace for CI checks (faster than copying files)
     const preparedWorkspace = getPreparedMountedWorkspace(source);
 
+    // OPTIMIZATION: Build desktop frontend once and share
+    const desktopFrontend = buildDesktopFrontend(source);
+
     // Run all checks in parallel for maximum speed
     await withTiming("all checks", async () => {
       await Promise.all([
@@ -158,8 +163,8 @@ export class ScoutForLol {
         withTiming("duplication check", async () => {
           await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "duplication-check"]).sync();
         }),
-        withTiming("desktop check", async () => {
-          await checkDesktop(source).sync();
+        withTiming("desktop check (parallel TS + Rust)", async () => {
+          await checkDesktopParallel(source, desktopFrontend);
         }),
       ]);
     });
@@ -286,22 +291,27 @@ export class ScoutForLol {
       ]);
     });
 
+    // OPTIMIZATION: Build frontend once and share across all desktop operations
+    const desktopFrontend = buildDesktopFrontend(source);
+
     // Desktop checks run in all environments to catch Rust issues early
-    const desktopChecksPromise = withTiming("desktop check", async () => {
-      await checkDesktop(source).sync();
+    // Uses parallel TypeScript + Rust checks for speed
+    const desktopChecksPromise = withTiming("desktop check (parallel TS + Rust)", async () => {
+      await checkDesktopParallel(source, desktopFrontend);
     });
 
     // Desktop builds run in all environments (started early to run in parallel)
+    // Share the pre-built frontend to avoid rebuilding
     const desktopBuildLinuxPromise = withTiming("desktop application build (Linux)", async () => {
       logWithTimestamp("🔄 Building desktop application for Linux...");
-      const container = buildDesktopLinux(source, version);
+      const container = buildDesktopLinux(source, version, desktopFrontend);
       await container.sync();
       return container;
     });
 
     const desktopBuildWindowsPromise = withTiming("desktop application build (Windows)", async () => {
       logWithTimestamp("🔄 Building desktop application for Windows...");
-      const container = buildDesktopWindowsGnu(source, version);
+      const container = buildDesktopWindowsGnu(source, version, desktopFrontend);
       await container.sync();
       return container;
     });
