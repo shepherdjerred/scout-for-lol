@@ -47,6 +47,8 @@ export function getRustTauriContainer(): Container {
       // Use mold linker for faster linking on Linux (x86_64)
       .withEnvVariable("CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER", "clang")
       .withEnvVariable("RUSTFLAGS", "-C link-arg=-fuse-ld=mold")
+      // Install Tauri CLI for `cargo tauri build`
+      .withExec(["cargo", "install", "tauri-cli", "--locked"])
   );
 }
 
