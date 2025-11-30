@@ -121,7 +121,7 @@ ruleTester.run("require-ts-extensions", requireTsExtensions, {
           data: { suggestedExtension: ".ts" },
         },
       ],
-      output: 'import { foo } from \'./config.ts\';',
+      output: "import { foo } from './config.ts';",
     },
     // Invalid: Using .js extension instead of .ts
     {

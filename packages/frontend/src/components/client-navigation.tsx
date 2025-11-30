@@ -11,11 +11,11 @@ type NavItem = {
   label: string;
   icon?: string;
   external?: boolean;
-}
+};
 
 type Props = {
   items: NavItem[];
-}
+};
 
 export function ClientNavigation({ items }: Props) {
   return (

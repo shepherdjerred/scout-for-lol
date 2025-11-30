@@ -225,7 +225,11 @@ export function buildDesktopWindowsGnu(workspaceSource: Directory, version: stri
     .withExec(["sh", "-c", "echo '🦀 Building Rust application with Cargo...'"])
     .withWorkdir("/workspace/packages/desktop/src-tauri")
     .withExec(["cargo", "build", "--release", "--target", "x86_64-pc-windows-gnu"])
-    .withExec(["sh", "-c", "echo '✅ Binary built successfully at target/x86_64-pc-windows-gnu/release/scout-for-lol-desktop.exe'"])
+    .withExec([
+      "sh",
+      "-c",
+      "echo '✅ Binary built successfully at target/x86_64-pc-windows-gnu/release/scout-for-lol-desktop.exe'",
+    ])
     .withExec(["sh", "-c", "ls -lh target/x86_64-pc-windows-gnu/release/scout-for-lol-desktop.exe"])
     .withWorkdir("/workspace/packages/desktop")
     .withExec(["sh", "-c", "echo '✅ [CI] Desktop Windows (GNU) build completed!'"]);

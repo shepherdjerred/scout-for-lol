@@ -30,6 +30,8 @@ export default {
         "fade-in": "fadeIn 0.2s ease-out",
         "slide-in": "slideIn 0.2s ease-out",
         "scale-in": "scaleIn 0.15s ease-out",
+        "collapsible-down": "collapsible-down 0.2s ease-out",
+        "collapsible-up": "collapsible-up 0.2s ease-out",
       },
       keyframes: {
         fadeIn: {
@@ -43,6 +45,14 @@ export default {
         scaleIn: {
           "0%": { opacity: "0", transform: "scale(0.95)" },
           "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "collapsible-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-collapsible-content-height)" },
+        },
+        "collapsible-up": {
+          from: { height: "var(--radix-collapsible-content-height)" },
+          to: { height: "0" },
         },
       },
       backdropBlur: {

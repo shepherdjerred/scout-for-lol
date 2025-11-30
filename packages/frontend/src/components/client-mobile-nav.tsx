@@ -8,13 +8,13 @@ type MobileNavItem = {
   external?: boolean;
   activePage?: string;
   currentPage?: string;
-}
+};
 
 type Props = {
   items: MobileNavItem[];
   activePage?: string | undefined;
   discordLink: string;
-}
+};
 
 export function ClientMobileNav({ items, activePage, discordLink }: Props) {
   return (

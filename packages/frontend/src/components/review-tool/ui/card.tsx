@@ -3,7 +3,13 @@ import { cn } from "./cn.ts";
 
 export function Card({ className, children, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm", className)} {...props}>
+    <div
+      className={cn(
+        "rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm",
+        className,
+      )}
+      {...props}
+    >
       {children}
     </div>
   );
