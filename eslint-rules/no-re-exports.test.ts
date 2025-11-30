@@ -25,6 +25,14 @@ ruleTester.run("no-re-exports", noReExports, {
       code: `export type MyType = { id: string; };`,
     },
     {
+      name: "allows exporting type alias that transforms imported type",
+      code: `import { type ImportedType } from "./other"; export type MyType = ImportedType & { extra: string };`,
+    },
+    {
+      name: "allows exporting type alias that wraps imported type",
+      code: `import { type ImportedType } from "./other"; export type MyType = Array<ImportedType>;`,
+    },
+    {
       name: "allows exporting locally declared interface",
       code: `export interface MyInterface { id: string; }`,
     },
@@ -90,6 +98,24 @@ ruleTester.run("no-re-exports", noReExports, {
         {
           messageId: "noReExportImported",
         },
+        {
+          messageId: "noReExportImported",
+        },
+      ],
+    },
+    {
+      name: "disallows type alias that just renames an imported type",
+      code: `import { type ImportedType } from "./other"; export type MyType = ImportedType;`,
+      errors: [
+        {
+          messageId: "noReExportImported",
+        },
+      ],
+    },
+    {
+      name: "disallows type alias renaming imported type (non-type import)",
+      code: `import { ImportedType } from "./other"; export type MyType = ImportedType;`,
+      errors: [
         {
           messageId: "noReExportImported",
         },

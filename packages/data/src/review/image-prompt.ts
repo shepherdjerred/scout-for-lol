@@ -5,19 +5,19 @@
  * The image description is generated in a previous step (Step 3) from the review text.
  */
 
+import type { ArtStyle } from "@scout-for-lol/data/review/art-categories.ts";
+import IMAGE_GENERATION_PROMPT_TEMPLATE from "./prompts/user/4-image-generation.txt";
+
 /**
  * Generate the image generation prompt for Gemini
  *
  * @param imageDescription - The pre-crafted image description from Step 3
+ * @param artStyle - The art style to apply to the generated image
  * @returns The prompt to send to Gemini for image generation
  */
-export function generateImagePrompt(imageDescription: string): string {
-  return `Generate a creative and visually striking image based on this art direction:
-
-${imageDescription}
-
-Important guidelines:
-- Create the image exactly as described above
-- Focus on visual storytelling and emotional impact
-- Make it feel like cover art or a key moment illustration`;
+export function generateImagePrompt(imageDescription: string, artStyle: ArtStyle): string {
+  return IMAGE_GENERATION_PROMPT_TEMPLATE.replaceAll("<IMAGE_DESCRIPTION>", imageDescription).replaceAll(
+    "<ART_STYLE>",
+    artStyle.description,
+  );
 }

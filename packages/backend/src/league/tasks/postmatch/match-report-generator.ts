@@ -1,5 +1,5 @@
 import { z } from "zod";
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/bun";
 import { api } from "@scout-for-lol/backend/league/api/api.ts";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";

@@ -4,14 +4,7 @@
 import { z } from "zod";
 import { TabConfigSchema, PersonalitySchema } from "./config/schema.ts";
 import type { TabConfig } from "./config/schema.ts";
-import {
-  CustomArtStyleSchema,
-  CustomArtThemeSchema,
-  loadCustomArtStyles,
-  saveCustomArtStyles,
-  loadCustomArtThemes,
-  saveCustomArtThemes,
-} from "./art-style-storage.ts";
+import { CustomArtStyleSchema, loadCustomArtStyles, saveCustomArtStyles } from "./art-style-storage.ts";
 import { loadCustomPersonalities, saveCustomPersonalities } from "./personality-storage.ts";
 import { getPersonalityById } from "./prompts.ts";
 
@@ -23,7 +16,6 @@ const ConfigBundleSchema = z.object({
   tabConfig: TabConfigSchema,
   customPersonalities: z.array(PersonalitySchema),
   customArtStyles: z.array(CustomArtStyleSchema),
-  customArtThemes: z.array(CustomArtThemeSchema),
   exportedAt: z.string(),
 });
 
@@ -51,7 +43,6 @@ async function exportAllConfig(tabConfig: TabConfig): Promise<ConfigBundle> {
     tabConfig: exportedTabConfig,
     customPersonalities: await loadCustomPersonalities(),
     customArtStyles: await loadCustomArtStyles(),
-    customArtThemes: await loadCustomArtThemes(),
     exportedAt: new Date().toISOString(),
   };
 }
@@ -99,7 +90,6 @@ export async function applyConfigBundle(
     importTabConfig: boolean;
     importPersonalities: boolean;
     importArtStyles: boolean;
-    importArtThemes: boolean;
     mergeWithExisting: boolean;
   },
 ): Promise<TabConfig | undefined> {
@@ -131,17 +121,6 @@ export async function applyConfigBundle(
     }
   }
 
-  if (options.importArtThemes) {
-    if (options.mergeWithExisting) {
-      const existing = await loadCustomArtThemes();
-      const existingIds = new Set(existing.map((t) => t.id));
-      const newThemes = bundle.customArtThemes.filter((t) => !existingIds.has(t.id));
-      await saveCustomArtThemes([...existing, ...newThemes]);
-    } else {
-      await saveCustomArtThemes(bundle.customArtThemes);
-    }
-  }
-
   return importedTabConfig;
 }
 
@@ -152,14 +131,12 @@ export function getConfigBundleSummary(bundle: ConfigBundle): {
   hasTabConfig: boolean;
   personalitiesCount: number;
   artStylesCount: number;
-  artThemesCount: number;
   exportedAt: string;
 } {
   return {
     hasTabConfig: Boolean(bundle.tabConfig),
     personalitiesCount: bundle.customPersonalities.length,
     artStylesCount: bundle.customArtStyles.length,
-    artThemesCount: bundle.customArtThemes.length,
     exportedAt: bundle.exportedAt,
   };
 }

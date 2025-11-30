@@ -3,7 +3,7 @@ export * from "./model/index.ts";
 export * from "./seasons.ts";
 export * from "./review/art-styles.ts";
 export { ART_STYLES } from "./review/art-styles-list.ts";
-export { ART_THEMES } from "./review/art-themes-list.ts";
+export type { ArtStyle } from "./review/art-categories.ts";
 export * from "./review/models.ts";
 export * from "./review/prompts.ts";
 export * from "./review/image-prompt.ts";
@@ -31,7 +31,7 @@ export {
   generateImage,
 } from "./review/pipeline-stages.ts";
 export {
-  DEFAULT_STAGE_CONFIGS,
+  getDefaultStageConfigs,
   DEFAULT_TIMELINE_SUMMARY_MODEL,
   DEFAULT_MATCH_SUMMARY_MODEL,
   DEFAULT_REVIEW_TEXT_MODEL,

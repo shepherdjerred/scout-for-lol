@@ -34,7 +34,7 @@
     "@resvg/resvg-js": "^2.6.2",
     "@scout-for-lol/data": "workspace:*",
     "@scout-for-lol/report": "workspace:*",
-    "@sentry/node": "^10.0.0",
+    "@sentry/bun": "^10.0.0",
     "cron": "^4.1.4",
     "date-fns": "^4.1.0",
     "discord.js": "^14.18.0",
@@ -58,7 +58,7 @@
     "@types/uuid": "^11.0.0",
     "aws-sdk-client-mock": "^4.1.0",
     "bun-types": "latest",
-    "glob": "^11.0.3",
+    "glob": "^13.0.0",
     "ts-morph": "^27.0.2",
     "typescript": "^5.9.3"
   },

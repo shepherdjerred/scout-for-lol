@@ -16,11 +16,14 @@ import {
   type CompletedMatch,
   type MatchId,
   generateFullMatchReview,
-  DEFAULT_STAGE_CONFIGS,
+  getDefaultStageConfigs,
   type ReviewPipelineOutput,
 } from "@scout-for-lol/data/index.ts";
-import * as Sentry from "@sentry/node";
-import { loadPromptFile, selectRandomPersonality, loadPlayerMetadata, getLaneContext } from "./prompts.ts";
+import * as Sentry from "@sentry/bun";
+import { selectRandomPersonality, getLaneContext } from "./prompts.ts";
+
+// Static import for base prompt template (user prompt for review text stage)
+import basePromptTemplate from "@scout-for-lol/data/src/review/prompts/user/2-review-text.txt";
 import { getOpenAIClient, getGeminiClient } from "./ai-clients.ts";
 import { savePipelineTracesToS3, savePipelineDebugToS3 } from "@scout-for-lol/backend/storage/pipeline-s3.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
@@ -96,13 +99,9 @@ export async function generateMatchReview(
     laneForContext = selectedPlayer.lane;
   }
 
-  // Load prompts and personality
-  const [basePromptTemplate, personality, laneContextInfo, playerMetadata] = await Promise.all([
-    loadPromptFile("base.txt"),
-    selectRandomPersonality(),
-    getLaneContext(laneForContext),
-    loadPlayerMetadata(playerName),
-  ]);
+  // Get lane context (sync) and load personality (async)
+  const laneContextInfo = getLaneContext(laneForContext);
+  const personality = await selectRandomPersonality();
 
   logger.info(`Selected player ${(playerIndex + 1).toString()}/${match.players.length.toString()}: ${playerName}`);
   logger.info(`Selected personality: ${personality.filename ?? personality.metadata.name}`);
@@ -134,7 +133,6 @@ export async function generateMatchReview(
       match: matchInput,
       player: {
         index: playerIndex,
-        metadata: playerMetadata,
       },
       prompts: {
         personality,
@@ -142,7 +140,7 @@ export async function generateMatchReview(
         laneContext: laneContextInfo.content,
       },
       clients: clientsInput,
-      stages: DEFAULT_STAGE_CONFIGS,
+      stages: getDefaultStageConfigs(),
     });
   } catch (error) {
     logger.error("Pipeline failed:", error);

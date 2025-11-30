@@ -12,7 +12,7 @@ import { getCompetitionsByChannelId } from "@scout-for-lol/backend/database/comp
 import { sendDM } from "@scout-for-lol/backend/discord/utils/dm.ts";
 import { discordSubscriptionsCleanedTotal, guildDataCleanupTotal } from "@scout-for-lol/backend/metrics/index.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("cleanup-validate-data");

@@ -5,6 +5,12 @@
  */
 
 import type { PipelineStagesConfig, ModelConfig, StageConfig, ImageGenerationStageConfig } from "./pipeline-types.ts";
+import { selectRandomStyle } from "@scout-for-lol/data/review/art-styles.ts";
+
+// Import system prompts from TXT files
+import TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1b-timeline-summary.txt";
+import MATCH_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1a-match-summary.txt";
+import IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW from "./prompts/system/3-image-description.txt";
 
 // ============================================================================
 // System Prompts
@@ -16,17 +22,7 @@ import type { PipelineStagesConfig, ModelConfig, StageConfig, ImageGenerationSta
  * Summarizes curated timeline data (kills, objectives, towers, gold snapshots)
  * into a concise narrative of how the game unfolded.
  */
-export const TIMELINE_SUMMARY_SYSTEM_PROMPT = `You are a League of Legends analyst. Analyze this match timeline data and provide a concise summary of how the game unfolded.
-
-The timeline contains key events (kills, objectives, towers) and gold snapshots at intervals. Teams are "Blue" and "Red". Players are identified by champion name.
-
-Focus on:
-- Early game: First blood, early kills, lane advantages
-- Mid game: Dragon/Herald takes, tower pushes, gold leads
-- Late game: Baron takes, team fights, game-ending plays
-- Notable momentum swings or comeback moments
-
-Keep the summary factual and under 900 words. Reference players by their champion name.`;
+export const TIMELINE_SUMMARY_SYSTEM_PROMPT = TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW.trim();
 
 /**
  * System prompt for Stage 1b: Match Summary
@@ -35,26 +31,14 @@ Keep the summary factual and under 900 words. Reference players by their champio
  * Output is factual and will be used by the personality reviewer.
  */
 // TODO: include the lane context in the system prompt
-export const MATCH_SUMMARY_SYSTEM_PROMPT = `You are a League of Legends analyst who writes concise match summaries for a single player's performance.
-
-Use the provided match data to summarize:
-- The player's overall performance (KDA, damage, objectives)
-- Key moments that defined their game
-- How their lane/role went
-- Their contribution to team fights and objectives
-
-Keep it factual, grounded in the numbers provided, and under 750 words. Focus on facts not opinions.`;
+export const MATCH_SUMMARY_SYSTEM_PROMPT = MATCH_SUMMARY_SYSTEM_PROMPT_RAW.trim();
 
 /**
  * System prompt for Stage 3: Image Description
  *
  * Turns a review into a vivid image concept for Gemini to generate.
  */
-export const IMAGE_DESCRIPTION_SYSTEM_PROMPT = `You are an art director turning a League of Legends performance review into a single striking image concept.
-Focus on the mood, key moments, and emotions from the review text.
-Describe one vivid scene with the focal action, characters, and environment.
-Include composition ideas, color palette, and mood direction.
-Keep it under 160 words.`;
+export const IMAGE_DESCRIPTION_SYSTEM_PROMPT = IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW.trim();
 
 // ============================================================================
 // Default Model Configurations
@@ -137,18 +121,38 @@ const DEFAULT_IMAGE_DESCRIPTION_STAGE: StageConfig = {
 };
 
 /**
- * Default configuration for image generation stage
+ * Create default configuration for image generation stage
+ * Selects a random art style for each call
  */
-const DEFAULT_IMAGE_GENERATION_STAGE: ImageGenerationStageConfig = {
-  enabled: true,
-  model: DEFAULT_IMAGE_GENERATION_MODEL,
-  timeoutMs: DEFAULT_IMAGE_GENERATION_TIMEOUT_MS,
-};
+function createDefaultImageGenerationStage(): ImageGenerationStageConfig {
+  return {
+    enabled: true,
+    model: DEFAULT_IMAGE_GENERATION_MODEL,
+    timeoutMs: DEFAULT_IMAGE_GENERATION_TIMEOUT_MS,
+    artStyle: selectRandomStyle(),
+  };
+}
 
 /**
- * Complete default stage configurations
+ * Create complete default stage configurations
  *
- * Can be used as a starting point and overridden per-stage by callers.
+ * Returns a new config each time to ensure fresh random art style selection.
+ * Use this instead of a constant to get proper per-generation randomization.
+ */
+export function getDefaultStageConfigs(): PipelineStagesConfig {
+  return {
+    timelineSummary: DEFAULT_TIMELINE_SUMMARY_STAGE,
+    matchSummary: DEFAULT_MATCH_SUMMARY_STAGE,
+    reviewText: {
+      model: DEFAULT_REVIEW_TEXT_MODEL,
+    },
+    imageDescription: DEFAULT_IMAGE_DESCRIPTION_STAGE,
+    imageGeneration: createDefaultImageGenerationStage(),
+  };
+}
+
+/**
+ * @deprecated Use getDefaultStageConfigs() instead to get fresh random art style per generation
  */
 export const DEFAULT_STAGE_CONFIGS: PipelineStagesConfig = {
   timelineSummary: DEFAULT_TIMELINE_SUMMARY_STAGE,
@@ -157,7 +161,7 @@ export const DEFAULT_STAGE_CONFIGS: PipelineStagesConfig = {
     model: DEFAULT_REVIEW_TEXT_MODEL,
   },
   imageDescription: DEFAULT_IMAGE_DESCRIPTION_STAGE,
-  imageGeneration: DEFAULT_IMAGE_GENERATION_STAGE,
+  imageGeneration: createDefaultImageGenerationStage(),
 };
 
 // ============================================================================
@@ -168,10 +172,21 @@ export const DEFAULT_STAGE_CONFIGS: PipelineStagesConfig = {
  * Create stage configs with custom overrides
  *
  * Merges custom overrides with defaults, allowing partial overrides.
+ * Selects a fresh random art style if not provided in overrides.
  */
 export function createStageConfigs(overrides?: Partial<PipelineStagesConfig>): PipelineStagesConfig {
+  const defaultImageGeneration = createDefaultImageGenerationStage();
+
   if (!overrides) {
-    return DEFAULT_STAGE_CONFIGS;
+    return {
+      timelineSummary: DEFAULT_TIMELINE_SUMMARY_STAGE,
+      matchSummary: DEFAULT_MATCH_SUMMARY_STAGE,
+      reviewText: {
+        model: DEFAULT_REVIEW_TEXT_MODEL,
+      },
+      imageDescription: DEFAULT_IMAGE_DESCRIPTION_STAGE,
+      imageGeneration: defaultImageGeneration,
+    };
   }
 
   return {
@@ -206,7 +221,7 @@ export function createStageConfigs(overrides?: Partial<PipelineStagesConfig>): P
       },
     },
     imageGeneration: {
-      ...DEFAULT_IMAGE_GENERATION_STAGE,
+      ...defaultImageGeneration,
       ...overrides.imageGeneration,
     },
   };

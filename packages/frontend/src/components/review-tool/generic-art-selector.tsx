@@ -1,10 +1,10 @@
 /**
- * Generic art selector component (for styles and themes)
+ * Generic art selector component (for styles)
  */
 import { ArtStyleEditor } from "./art-style-editor.tsx";
-import type { CustomArtStyle, CustomArtTheme } from "@scout-for-lol/frontend/lib/review-tool/art-style-storage";
+import type { CustomArtStyle } from "@scout-for-lol/frontend/lib/review-tool/art-style-storage";
 
-type GenericArtSelectorProps<T extends CustomArtStyle | CustomArtTheme> = {
+type GenericArtSelectorProps<T extends CustomArtStyle> = {
   items: T[];
   customItems: T[];
   selectedItem: string;
@@ -12,7 +12,7 @@ type GenericArtSelectorProps<T extends CustomArtStyle | CustomArtTheme> = {
   showEditor: boolean;
   enabled: boolean;
   variant?: "primary" | "secondary";
-  mode: "style" | "theme";
+  mode: "style";
   label: string;
   randomDescription: string;
   onSelect: (item: T) => void;
@@ -24,7 +24,7 @@ type GenericArtSelectorProps<T extends CustomArtStyle | CustomArtTheme> = {
   onCancelEdit: () => void;
 };
 
-export function GenericArtSelector<T extends CustomArtStyle | CustomArtTheme>({
+export function GenericArtSelector<T extends CustomArtStyle>({
   items,
   customItems,
   selectedItem,
@@ -132,7 +132,7 @@ export function GenericArtSelector<T extends CustomArtStyle | CustomArtTheme>({
                   >
                     {isSelected ? "✓" : "Use"}
                   </button>
-                  {isCustom && (mode === "style" || !isSecondary) && (
+                  {isCustom && (
                     <>
                       <button
                         onClick={() => {

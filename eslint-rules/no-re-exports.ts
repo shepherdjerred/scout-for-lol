@@ -89,6 +89,7 @@ export const noReExports = createRule({
         }
 
         // If there's a declaration, check if it's a VariableDeclaration that assigns imported values
+        // or a TSTypeAliasDeclaration that just aliases an imported type
         if (node.declaration) {
           // For variable declarations, check if any declarator assigns an imported identifier
           if (node.declaration.type === AST_NODE_TYPES.VariableDeclaration) {
@@ -106,7 +107,24 @@ export const noReExports = createRule({
               }
             }
           }
-          // Other declarations (function, class, interface, type alias) are fine
+          // For type alias declarations, check if the type annotation is just an imported type reference
+          // e.g., export type Foo = ImportedType; (should be flagged)
+          // but NOT export type Foo = ImportedType & { extra: string }; (actual transformation)
+          if (node.declaration.type === AST_NODE_TYPES.TSTypeAliasDeclaration) {
+            const typeAnnotation = node.declaration.typeAnnotation;
+            // Only flag if the type annotation is a simple type reference to an imported identifier
+            if (
+              typeAnnotation.type === AST_NODE_TYPES.TSTypeReference &&
+              typeAnnotation.typeName.type === AST_NODE_TYPES.Identifier &&
+              importedIdentifiers.has(typeAnnotation.typeName.name)
+            ) {
+              context.report({
+                node: node.declaration,
+                messageId: "noReExportImported",
+              });
+            }
+          }
+          // Other declarations (function, class, interface) are fine
           return;
         }
 

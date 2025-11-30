@@ -16,7 +16,7 @@ import { createSnapshot, getSnapshot } from "@scout-for-lol/backend/league/compe
 import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.ts";
 import { EmbedBuilder } from "discord.js";
 import { z } from "zod";
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/bun";
 import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 

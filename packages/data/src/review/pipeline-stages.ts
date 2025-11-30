@@ -9,7 +9,8 @@ import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index
 import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema.ts";
 import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema.ts";
 import type { OpenAIClient, ModelConfig, StageTrace, ImageGenerationTrace } from "./pipeline-types.ts";
-import type { Personality, PlayerMetadata } from "./prompts.ts";
+import type { Personality } from "./prompts.ts";
+import type { ArtStyle } from "@scout-for-lol/data/review/art-categories.ts";
 import { getStageSystemPrompt } from "./pipeline-defaults.ts";
 import { generateImagePrompt } from "./image-prompt.ts";
 import { replaceTemplateVariables } from "./prompts.ts";
@@ -17,6 +18,14 @@ import { buildPromptVariables, extractMatchData } from "./generator-helpers.ts";
 import { enrichTimelineData } from "./timeline-enricher.ts";
 import type { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
+
+// Import user prompts from TXT files
+import TIMELINE_SUMMARY_USER_PROMPT_TEMPLATE from "./prompts/user/1b-timeline-summary.txt";
+import MATCH_SUMMARY_USER_PROMPT_TEMPLATE from "./prompts/user/1a-match-summary.txt";
+import IMAGE_DESCRIPTION_USER_PROMPT_TEMPLATE from "./prompts/user/3-image-description.txt";
+
+// Import system prompt templates
+import REVIEW_TEXT_SYSTEM_PROMPT_TEMPLATE from "./prompts/system/2-review-text.txt";
 
 // ============================================================================
 // Utility Functions
@@ -27,6 +36,17 @@ import { z } from "zod";
  */
 function minifyJson(data: unknown): string {
   return JSON.stringify(data);
+}
+
+/**
+ * Replace template variables in a prompt template using <VARIABLE> syntax
+ */
+function replacePromptVariables(template: string, variables: Record<string, string>): string {
+  let result = template;
+  for (const [key, value] of Object.entries(variables)) {
+    result = result.replaceAll(`<${key}>`, value);
+  }
+  return result;
 }
 
 /**
@@ -112,17 +132,23 @@ async function callOpenAI(params: {
 export async function generateTimelineSummary(params: {
   rawTimeline: RawTimeline;
   rawMatch: RawMatch;
+  laneContext: string;
   client: OpenAIClient;
   model: ModelConfig;
   systemPromptOverride?: string;
 }): Promise<{ text: string; trace: StageTrace }> {
-  const { rawTimeline, rawMatch, client, model, systemPromptOverride } = params;
+  const { rawTimeline, rawMatch, laneContext, client, model, systemPromptOverride } = params;
 
   // Enrich timeline with participant lookup table for human-readable names
   const enrichedData = enrichTimelineData(rawTimeline, rawMatch);
 
-  const systemPrompt = getStageSystemPrompt("timelineSummary", systemPromptOverride);
-  const userPrompt = `Timeline data:\n${minifyJson(enrichedData)}`;
+  const systemPromptTemplate = getStageSystemPrompt("timelineSummary", systemPromptOverride);
+  const systemPrompt = replacePromptVariables(systemPromptTemplate, {
+    LANE_CONTEXT: laneContext,
+  });
+  const userPrompt = replacePromptVariables(TIMELINE_SUMMARY_USER_PROMPT_TEMPLATE, {
+    TIMELINE_DATA: minifyJson(enrichedData),
+  });
 
   return callOpenAI({
     client,
@@ -147,13 +173,11 @@ export async function generateMatchSummary(params: {
   match: CompletedMatch | ArenaMatch;
   rawMatch: RawMatch;
   playerIndex: number;
-  laneContext: string;
-  timelineSummary?: string;
   client: OpenAIClient;
   model: ModelConfig;
   systemPromptOverride?: string;
 }): Promise<{ text: string; trace: StageTrace }> {
-  const { match, rawMatch, playerIndex, laneContext, timelineSummary, client, model, systemPromptOverride } = params;
+  const { match, rawMatch, playerIndex, client, model, systemPromptOverride } = params;
 
   const player = match.players[playerIndex] ?? match.players[0];
   if (!player) {
@@ -171,22 +195,15 @@ export async function generateMatchSummary(params: {
 
   const systemPrompt = getStageSystemPrompt("matchSummary", systemPromptOverride);
 
-  const timelineSummarySection =
-    timelineSummary && timelineSummary.trim().length > 0
-      ? `\n\nTimeline summary:\n${timelineSummary}`
-      : "\n\nNo timeline summary available.";
-
-  const userPrompt = `Summarize ${playerName}'s performance playing ${playerChampion} in the ${lane} role.
-
-Lane context:
-${laneContext}
-${timelineSummarySection}
-
-Match data:
-${minifyJson({
-  processedMatch: match,
-  rawMatch,
-})}`;
+  const userPrompt = replacePromptVariables(MATCH_SUMMARY_USER_PROMPT_TEMPLATE, {
+    PLAYER_NAME: playerName,
+    PLAYER_CHAMPION: playerChampion,
+    PLAYER_LANE: lane,
+    MATCH_DATA: minifyJson({
+      processedMatch: match,
+      rawMatch,
+    }),
+  });
 
   return callOpenAI({
     client,
@@ -226,11 +243,9 @@ export async function generateReviewTextStage(params: {
   personality: Personality;
   basePromptTemplate: string;
   laneContext: string;
-  playerMetadata: PlayerMetadata;
   playerIndex: number;
   matchSummary: string;
   timelineSummary?: string;
-  systemPromptPrefix?: string;
   client: OpenAIClient;
   model: ModelConfig;
 }): Promise<{ text: string; reviewerName: string; playerName: string; trace: StageTrace }> {
@@ -239,11 +254,9 @@ export async function generateReviewTextStage(params: {
     personality,
     basePromptTemplate,
     laneContext,
-    playerMetadata,
     playerIndex,
     matchSummary,
     timelineSummary,
-    systemPromptPrefix = "",
     client,
     model,
   } = params;
@@ -254,7 +267,6 @@ export async function generateReviewTextStage(params: {
   const promptVariables = buildPromptVariables({
     matchData,
     personality,
-    playerMetadata,
     laneContext,
     match,
     playerIndex,
@@ -263,8 +275,11 @@ export async function generateReviewTextStage(params: {
   });
 
   const userPrompt = replaceTemplateVariables(basePromptTemplate, promptVariables);
-  const styleCardSection = `\n\nReviewer style card (from Discord chat analysis; keep the tone aligned):\n${minifyJsonString(personality.styleCard)}`;
-  const systemPrompt = `${systemPromptPrefix}${personality.instructions}${styleCardSection}\n\n${laneContext}`;
+  const systemPrompt = replacePromptVariables(REVIEW_TEXT_SYSTEM_PROMPT_TEMPLATE, {
+    PERSONALITY_INSTRUCTIONS: personality.instructions,
+    STYLE_CARD: minifyJsonString(personality.styleCard),
+    LANE_CONTEXT: laneContext,
+  });
 
   const { text, trace } = await callOpenAI({
     client,
@@ -300,13 +315,9 @@ export async function generateImageDescription(params: {
   const { reviewText, client, model, systemPromptOverride } = params;
 
   const systemPrompt = getStageSystemPrompt("imageDescription", systemPromptOverride);
-  const userPrompt = `Create a vivid art description for a single image inspired by the League of Legends review below.
-- Lean into the emotions, key moments, and champion identities referenced in the review
-- Describe one striking scene with composition and mood cues
-- Include color palette and lighting direction
-
-Review text to translate into art:
-${reviewText}`;
+  const userPrompt = replacePromptVariables(IMAGE_DESCRIPTION_USER_PROMPT_TEMPLATE, {
+    REVIEW_TEXT: reviewText,
+  });
 
   return callOpenAI({
     client,
@@ -349,14 +360,15 @@ const GeminiResponseSchema = z
  */
 export async function generateImage(params: {
   imageDescription: string;
+  artStyle: ArtStyle;
   geminiClient: GoogleGenerativeAI;
   model: string;
   timeoutMs: number;
 }): Promise<{ imageBase64: string; trace: ImageGenerationTrace }> {
-  const { imageDescription, geminiClient, model, timeoutMs } = params;
+  const { imageDescription, artStyle, geminiClient, model, timeoutMs } = params;
 
   const geminiModel = geminiClient.getGenerativeModel({ model });
-  const prompt = generateImagePrompt(imageDescription);
+  const prompt = generateImagePrompt(imageDescription, artStyle);
 
   const startTime = Date.now();
 

@@ -120,21 +120,9 @@ export const ImageGenerationSettingsSchema = z.object({
       z.string(), // specific art style
     ])
     .default("random"),
-  artTheme: z
-    .union([
-      z.literal("random"),
-      z.string(), // specific art theme
-    ])
-    .default("random"),
   useMatchingPairs: z.boolean().default(true),
   matchingPairProbability: z.number().min(0).max(1).default(0.7),
   mashupMode: z.boolean().default(false),
-  secondArtTheme: z
-    .union([
-      z.literal("random"),
-      z.string(), // specific art theme
-    ])
-    .default("random"),
 });
 
 export type ImageGenerationSettings = z.infer<typeof ImageGenerationSettingsSchema>;
@@ -155,8 +143,6 @@ export type RandomBehavior = z.infer<typeof RandomBehaviorSchema>;
 export const PersonalityMetadataSchema = z.object({
   name: z.string(),
   description: z.string(),
-  favoriteChampions: z.array(z.string()),
-  favoriteLanes: z.array(z.string()),
   randomBehaviors: z.array(RandomBehaviorSchema).optional(),
 });
 
@@ -175,22 +161,10 @@ export const PersonalitySchema = z.object({
 export type Personality = z.infer<typeof PersonalitySchema>;
 
 /**
- * Player metadata schema
- */
-export const PlayerMetadataSchema = z.object({
-  description: z.string(),
-  favoriteChampions: z.array(z.string()),
-  favoriteLanes: z.array(z.string()),
-});
-
-export type PlayerMetadata = z.infer<typeof PlayerMetadataSchema>;
-
-/**
  * Prompt settings schema
  */
 export const PromptSettingsSchema = z.object({
   basePrompt: z.string(),
-  systemPromptPrefix: z.string().optional(),
   personalityId: z
     .union([
       z.literal("random"),
@@ -199,7 +173,6 @@ export const PromptSettingsSchema = z.object({
     .default("random"),
   customPersonality: PersonalitySchema.optional(),
   laneContext: z.string().optional(), // Override lane context
-  playerMetadata: PlayerMetadataSchema.optional(), // Override player metadata
 });
 
 export type PromptSettings = z.infer<typeof PromptSettingsSchema>;
@@ -421,11 +394,9 @@ export function createDefaultTabConfig(): TabConfig {
       model: DEFAULT_IMAGE_GENERATION_MODEL,
       timeoutMs: DEFAULT_IMAGE_GENERATION_TIMEOUT_MS,
       artStyle: "random",
-      artTheme: "random",
       useMatchingPairs: true,
       matchingPairProbability: 0.7,
       mashupMode: false,
-      secondArtTheme: "random",
     },
     prompts: {
       basePrompt: "", // Will be loaded from file

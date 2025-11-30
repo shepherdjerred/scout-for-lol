@@ -1,11 +1,13 @@
-import {
-  PersonalityMetadataSchema,
-  PlayerMetadataSchema,
-  LANE_CONTEXT_MAP,
-  type Personality,
-  type PlayerMetadata,
-} from "@scout-for-lol/data/index.ts";
+import { PersonalityMetadataSchema, type Personality } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+// Static imports for lane context files
+import topLane from "@scout-for-lol/data/src/review/prompts/lanes/top.txt";
+import middleLane from "@scout-for-lol/data/src/review/prompts/lanes/middle.txt";
+import jungleLane from "@scout-for-lol/data/src/review/prompts/lanes/jungle.txt";
+import adcLane from "@scout-for-lol/data/src/review/prompts/lanes/adc.txt";
+import supportLane from "@scout-for-lol/data/src/review/prompts/lanes/support.txt";
+import genericLane from "@scout-for-lol/data/src/review/prompts/lanes/generic.txt";
 
 const logger = createLogger("review-prompts");
 
@@ -38,15 +40,6 @@ function getStyleCardsDir(): string {
 const PROMPTS_DIR = getPromptsDir();
 const STYLECARDS_DIR = getStyleCardsDir();
 const EXCLUDED = new Set(["generic.json"]);
-
-/**
- * Load a prompt file from the prompts directory
- */
-export async function loadPromptFile(filename: string): Promise<string> {
-  const filePath = `${PROMPTS_DIR}/${filename}`;
-  const text = await Bun.file(filePath).text();
-  return text.trim();
-}
 
 /**
  * Load a personality (both JSON metadata and TXT instructions)
@@ -196,53 +189,30 @@ async function listValidPersonalities(): Promise<Personality[]> {
   return valid;
 }
 
-/**
- * Load player metadata from JSON file
- */
-export async function loadPlayerMetadata(playerAlias: string): Promise<PlayerMetadata> {
-  const playersDir = `${PROMPTS_DIR}/players`;
-
-  // Try to load player-specific file, fall back to generic
-  const playerFile = `${playerAlias.toLowerCase().replace(/\s+/g, "-")}.json`;
-  const filePath = `${playersDir}/${playerFile}`;
-
-  try {
-    const jsonContent = await Bun.file(filePath).text();
-    const parsed: unknown = JSON.parse(jsonContent);
-    return PlayerMetadataSchema.parse(parsed);
-  } catch {
-    // Fall back to generic player metadata
-    const genericPath = `${playersDir}/generic.json`;
-    const genericContent = await Bun.file(genericPath).text();
-    const parsed: unknown = JSON.parse(genericContent);
-    return PlayerMetadataSchema.parse(parsed);
-  }
-}
+/** Lane context map using static imports */
+const LANE_CONTEXTS: Record<string, string> = {
+  top: topLane,
+  middle: middleLane,
+  jungle: jungleLane,
+  adc: adcLane,
+  support: supportLane,
+};
 
 /**
  * Get lane context based on player's lane
  */
-export async function getLaneContext(lane: string | undefined): Promise<{ content: string; filename: string }> {
+export function getLaneContext(lane: string | undefined): { content: string; filename: string } {
   const lowerLane = lane?.toLowerCase();
-  let laneFile: string | undefined = undefined;
+  let filename = "lanes/generic.txt";
+  let content = genericLane;
 
-  // Type-safe lane lookup
-  if (lowerLane) {
-    switch (lowerLane) {
-      case "top":
-      case "middle":
-      case "jungle":
-      case "adc":
-      case "support":
-        laneFile = LANE_CONTEXT_MAP[lowerLane];
-        break;
+  if (lowerLane && lowerLane in LANE_CONTEXTS) {
+    const laneContent = LANE_CONTEXTS[lowerLane];
+    if (laneContent) {
+      content = laneContent;
+      filename = `lanes/${lowerLane}.txt`;
     }
   }
 
-  const filename = laneFile ?? "lanes/generic.txt";
-  const content = await loadPromptFile(filename);
-  return {
-    content,
-    filename,
-  };
+  return { content, filename };
 }

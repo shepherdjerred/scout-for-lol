@@ -21,7 +21,7 @@ export const SoundSourceSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal("url"),
-    url: z.string().url(),
+    url: z.url(),
   }),
 ]);
 
@@ -139,15 +139,7 @@ export type ObjectiveCondition = z.infer<typeof ObjectiveConditionSchema>;
 /**
  * Dragon types in the game
  */
-export const DragonTypeSchema = z.enum([
-  "infernal",
-  "mountain",
-  "ocean",
-  "cloud",
-  "hextech",
-  "chemtech",
-  "elder",
-]);
+export const DragonTypeSchema = z.enum(["infernal", "mountain", "ocean", "cloud", "hextech", "chemtech", "elder"]);
 
 export type DragonType = z.infer<typeof DragonTypeSchema>;
 
@@ -244,30 +236,14 @@ export type SoundRule = z.infer<typeof SoundRuleSchema>;
 /**
  * Event types that can trigger sounds
  */
-export const EventTypeSchema = z.enum([
-  "gameStart",
-  "gameEnd",
-  "firstBlood",
-  "kill",
-  "multiKill",
-  "objective",
-  "ace",
-]);
+export const EventTypeSchema = z.enum(["gameStart", "gameEnd", "firstBlood", "kill", "multiKill", "objective", "ace"]);
 
 export type EventType = z.infer<typeof EventTypeSchema>;
 
 /**
  * All event types as a constant array
  */
-export const EVENT_TYPES: EventType[] = [
-  "gameStart",
-  "gameEnd",
-  "firstBlood",
-  "kill",
-  "multiKill",
-  "objective",
-  "ace",
-];
+export const EVENT_TYPES: EventType[] = ["gameStart", "gameEnd", "firstBlood", "kill", "multiKill", "objective", "ace"];
 
 /**
  * Human-readable labels for event types
@@ -394,5 +370,6 @@ export function createEmptyRule(id: string, name: string): SoundRule {
  * Generates a unique ID for a new item
  */
 export function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  // I guess Claude doesn't know about UUIDs
+  return `${String(Date.now())}-${Math.random().toString(36).slice(2, 9)}`;
 }
