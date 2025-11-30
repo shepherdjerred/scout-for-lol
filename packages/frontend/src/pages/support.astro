@@ -4,10 +4,9 @@ import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import InfoBox from "../components/InfoBox.astro";
-import { Icon } from 'astro-icon/components';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'; // Import shadcn Card components
-import Button from '../components/Button.astro'; // Use the migrated Button
-
+import { Icon } from "astro-icon/components";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card"; // Import shadcn Card components
+import Button from "../components/Button.astro"; // Use the migrated Button
 ---
 
 <Layout>
@@ -17,11 +16,7 @@ import Button from '../components/Button.astro'; // Use the migrated Button
     <!-- Main Content -->
     <div class="relative px-6 pt-14 lg:px-8">
       <div class="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56">
-        <Header
-          variant="page"
-          title="Get Support"
-          subtitle="Need help with Scout? We're here to assist you."
-        />
+        <Header variant="page" title="Get Support" subtitle="Need help with Scout? We're here to assist you." />
 
         <!-- Support Options -->
         <div class="space-y-8">
@@ -34,25 +29,19 @@ import Button from '../components/Button.astro'; // Use the migrated Button
               <CardTitle className="ml-6 text-2xl mb-0">Join Our Discord Server</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-                <p class="text-muted-foreground mb-4">
-                  Get quick help from the community and the Scout team. Perfect for:
-                </p>
-                <ul class="list-disc list-inside space-y-2 text-muted-foreground mb-6">
-                  <li>Quick questions and troubleshooting</li>
-                  <li>Feature requests and suggestions</li>
-                  <li>General discussion and tips</li>
-                  <li>Support from the community</li>
-                </ul>
-                <Button
-                  href="https://discord.gg/qmRewyHXFE"
-                  external={true}
-                  variant="primary"
-                  color="indigo"
-                  class="inline-flex items-center"
-                >
-                  Join Discord Server
-                  <Icon name="heroicons:arrow-top-right-on-square" class="ml-2 -mr-1 h-5 w-5" />
-                </Button>
+              <p class="text-muted-foreground mb-4">
+                Get quick help from the community and the Scout team. Perfect for:
+              </p>
+              <ul class="list-disc list-inside space-y-2 text-muted-foreground mb-6">
+                <li>Quick questions and troubleshooting</li>
+                <li>Feature requests and suggestions</li>
+                <li>General discussion and tips</li>
+                <li>Support from the community</li>
+              </ul>
+              <Button href="https://discord.gg/qmRewyHXFE" external={true} variant="primary" color="indigo">
+                Join Discord Server
+                <Icon name="heroicons:arrow-top-right-on-square" class="ml-2 -mr-1 h-5 w-5" />
+              </Button>
             </CardContent>
           </Card>
 
@@ -79,7 +68,6 @@ import Button from '../components/Button.astro'; // Use the migrated Button
                 external={true}
                 variant="primary"
                 color="gray"
-                class="inline-flex items-center"
               >
                 Open an Issue
                 <Icon name="heroicons:arrow-top-right-on-square" class="ml-2 -mr-1 h-5 w-5" />
@@ -94,23 +82,16 @@ import Button from '../components/Button.astro'; // Use the migrated Button
           <InfoBox variant="info">
             <ul class="space-y-3 text-muted-foreground">
               <li class="flex items-start">
-                <Icon
-                  name="heroicons:check-circle"
-                  class="h-6 w-6 text-primary mr-3 shrink-0"
-                />
+                <Icon name="heroicons:check-circle" class="h-6 w-6 text-primary mr-3 shrink-0" />
                 <span
                   ><strong>Check the documentation:</strong> Visit our <a
                     href="/docs"
-                    class="text-primary hover:text-primary/80 underline"
-                    >documentation page</a
+                    class="text-primary hover:text-primary/80 underline">documentation page</a
                   > for comprehensive guides and command references.</span
                 >
               </li>
               <li class="flex items-start">
-                <Icon
-                  name="heroicons:check-circle"
-                  class="h-6 w-6 text-primary mr-3 shrink-0"
-                />
+                <Icon name="heroicons:check-circle" class="h-6 w-6 text-primary mr-3 shrink-0" />
                 <span
                   ><strong>Use the /help command:</strong> Type <code
                     class="bg-muted px-2 py-1 rounded text-sm text-foreground">/help</code
@@ -118,17 +99,13 @@ import Button from '../components/Button.astro'; // Use the migrated Button
                 >
               </li>
               <li class="flex items-start">
-                <Icon
-                  name="heroicons:check-circle"
-                  class="h-6 w-6 text-primary mr-3 shrink-0"
-                />
+                <Icon name="heroicons:check-circle" class="h-6 w-6 text-primary mr-3 shrink-0" />
                 <span
                   ><strong>Search existing issues:</strong> Your question might already be answered in <a
                     href="https://github.com/shepherdjerred/scout-for-lol/issues"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="text-primary hover:text-primary/80 underline"
-                    >existing GitHub issues</a
+                    class="text-primary hover:text-primary/80 underline">existing GitHub issues</a
                   >.</span
                 >
               </li>
@@ -138,11 +115,7 @@ import Button from '../components/Button.astro'; // Use the migrated Button
 
         <!-- Back to Home -->
         <div class="mt-16 text-center">
-          <Button
-            href="/"
-            variant="text"
-            class="inline-flex items-center"
-          >
+          <Button href="/" variant="text" class="inline-flex items-center">
             <Icon name="heroicons:arrow-left" class="mr-2 h-5 w-5" />
             Back to Home
           </Button>

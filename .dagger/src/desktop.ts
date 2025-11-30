@@ -69,11 +69,16 @@ export function installDesktopDeps(workspaceSource: Directory, target: DesktopTa
     container = container
       .withExec(["apt", "install", "-y", "mingw-w64", "nsis", "zip"])
       .withExec(["sh", "-c", "echo '🔧 Installing Windows GNU target for cross-compilation...'"])
+      // Install target for both default and stable toolchains since rust-toolchain.toml uses stable
       .withExec(["rustup", "target", "add", "x86_64-pc-windows-gnu"])
+      .withExec(["rustup", "target", "add", "x86_64-pc-windows-gnu", "--toolchain", "stable"])
       .withExec(["sh", "-c", "echo '✅ Windows GNU target installed'"])
       .withExec(["sh", "-c", "rustup target list --installed | grep -q x86_64-pc-windows-gnu || (echo '❌ Failed to install target' && exit 1)"])
-      .withExec(["sh", "-c", "echo '📋 Installed Rust targets:'"])
-      .withExec(["rustup", "target", "list", "--installed"]);
+      .withExec(["sh", "-c", "rustup target list --toolchain stable --installed | grep -q x86_64-pc-windows-gnu || (echo '❌ Failed to install target on stable toolchain' && exit 1)"])
+      .withExec(["sh", "-c", "echo '📋 Installed Rust targets (default):'"])
+      .withExec(["rustup", "target", "list", "--installed"])
+      .withExec(["sh", "-c", "echo '📋 Installed Rust targets (stable):'"])
+      .withExec(["rustup", "target", "list", "--toolchain", "stable", "--installed"]);
   }
 
   // Set up workspace structure - include all required files like base.ts does
@@ -218,12 +223,18 @@ export function buildDesktopWindowsGnu(workspaceSource: Directory, version: stri
     .withEnvVariable("CARGO_TARGET_DIR", "/workspace/packages/desktop/src-tauri/target")
     .withEnvVariable("RUSTUP_HOME", "/usr/local/rustup")
     .withEnvVariable("CARGO_HOME", "/usr/local/cargo")
+    .withEnvVariable("PATH", "/usr/local/cargo/bin:/usr/local/rustup/bin:$PATH", { expand: true })
     .withWorkdir("/workspace/packages/desktop")
     .withExec(["sh", "-c", "echo '🏗️  [CI] Building desktop application for Windows (x86_64-pc-windows-gnu)...'"])
-    .withExec(["sh", "-c", "echo '🔍 Verifying Rust environment before build...'"])
-    .withExec(["sh", "-c", "rustup show"])
+    .withExec(["sh", "-c", "echo '📦 Building frontend first...'"])
+    .withExec(["bunx", "vite", "build"])
+    .withExec(["sh", "-c", "echo '🦀 Building Rust application with Cargo...'"])
+    .withWorkdir("/workspace/packages/desktop/src-tauri")
     .withExec(["sh", "-c", "rustup target list --installed"])
-    .withExec(["bun", "run", "build:windows"])
+    .withExec(["cargo", "build", "--release", "--target", "x86_64-pc-windows-gnu"])
+    .withExec(["sh", "-c", "echo '📦 Creating bundles...'"])
+    .withExec(["cargo", "tauri", "build", "--target", "x86_64-pc-windows-gnu", "--bundles", "nsis,msi"])
+    .withWorkdir("/workspace/packages/desktop")
     .withExec(["sh", "-c", "echo '✅ [CI] Desktop Windows (GNU) build completed!'"]);
 }
 
