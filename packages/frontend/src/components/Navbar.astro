@@ -1,21 +1,33 @@
 ---
 import { Button } from "@scout-for-lol/frontend/components/ui/button";
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from "@scout-for-lol/frontend/components/ui/navigation-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@scout-for-lol/frontend/components/ui/sheet";
-
-import { Icon } from "astro-icon/components";
+import { ClientNavigation } from "@scout-for-lol/frontend/components/ClientNavigation";
+import { ClientMobileNav } from "@scout-for-lol/frontend/components/ClientMobileNav";
 
 interface Props {
   activePage?: "home" | "getting-started" | "docs" | "support" | "whatsnew";
 }
 
 const { activePage } = Astro.props;
+
+const navItems = [
+  { href: "/", label: "Home" },
+  { href: "/getting-started", label: "Getting Started" },
+  { href: "/docs", label: "Documentation" },
+  { href: "/whatsnew", label: "What's New" },
+  { href: "/support", label: "Support" },
+  { href: "https://github.com/shepherdjerred/scout-for-lol", label: "GitHub", external: true },
+];
+
+const mobileNavItems = [
+  { href: "/", label: "Home", currentPage: "home" },
+  { href: "/getting-started", label: "Getting Started", currentPage: "getting-started" },
+  { href: "/docs", label: "Documentation", currentPage: "docs" },
+  { href: "/whatsnew", label: "What's New", currentPage: "whatsnew" },
+  { href: "/support", label: "Support", currentPage: "support" },
+  { href: "https://github.com/shepherdjerred/scout-for-lol", label: "GitHub", external: true },
+];
+
+const discordLink = "https://discord.com/oauth2/authorize?client_id=1182800769188110366";
 ---
 
 <header class="absolute inset-x-0 top-0 z-50 bg-white dark:bg-gray-900">
@@ -29,122 +41,12 @@ const { activePage } = Astro.props;
       </a>
     </div>
     <div class="flex lg:hidden">
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button variant="outline">
-            <Icon name="heroicons:bars-3" class="h-6 w-6" />
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left">
-          <div class="space-y-1 px-2 pb-3 pt-2">
-            <a
-              href="/"
-              class:list={[
-                "block rounded-md px-3 py-2 text-base font-medium",
-                activePage === "home"
-                  ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-                  : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
-              ]}>Home</a
-            >
-            <a
-              href="/getting-started"
-              class:list={[
-                "block rounded-md px-3 py-2 text-base font-medium",
-                activePage === "getting-started"
-                  ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-                  : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
-              ]}>Getting Started</a
-            >
-            <a
-              href="/docs"
-              class:list={[
-                "block rounded-md px-3 py-2 text-base font-medium",
-                activePage === "docs"
-                  ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-                  : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
-              ]}>Documentation</a
-            >
-            <a
-              href="/whatsnew"
-              class:list={[
-                "block rounded-md px-3 py-2 text-base font-medium",
-                activePage === "whatsnew"
-                  ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-                  : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
-              ]}>What's New</a
-            >
-            <a
-              href="/support"
-              class:list={[
-                "rounded-md px-3 py-2 text-base font-medium inline-flex items-center gap-2",
-                activePage === "support"
-                  ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-                  : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
-              ]}
-            >
-              <Icon name="heroicons:question-mark-circle" class="h-4 w-4" />
-              Support
-            </a>
-            <a
-              href="https://github.com/shepherdjerred/scout-for-lol"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="rounded-md px-3 py-2 text-base font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 inline-flex items-center gap-2"
-            >
-              <Icon name="simple-icons:github" class="h-4 w-4" />
-              GitHub
-            </a>
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-              <a
-                href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
-                class="block rounded-md bg-indigo-600 px-3 py-2 text-base font-semibold text-white text-center shadow-sm hover:bg-indigo-500"
-                >Add to Discord</a
-              >
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      <ClientMobileNav items={mobileNavItems} activePage={activePage} discordLink={discordLink} client:load />
     </div>
-    <NavigationMenu>
-      <NavigationMenuList>
-        <NavigationMenuItem>
-          <NavigationMenuLink href="/" className={navigationMenuTriggerStyle()}> Home </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink href="/getting-started" className={navigationMenuTriggerStyle()}>
-            Getting Started
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink href="/docs" className={navigationMenuTriggerStyle()}> Documentation </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink href="/whatsnew" className={navigationMenuTriggerStyle()}>
-            What's New
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink href="/support" className={navigationMenuTriggerStyle()}>
-            <Icon name="heroicons:question-mark-circle" class="h-4 w-4" />
-            Support
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink
-            href="https://github.com/shepherdjerred/scout-for-lol"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={navigationMenuTriggerStyle()}
-          >
-            <Icon name="simple-icons:github" class="h-4 w-4" />
-            GitHub
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-      </NavigationMenuList>
-    </NavigationMenu>
+    <ClientNavigation items={navItems} client:load />
     <div class="hidden lg:flex lg:flex-1 lg:justify-end">
       <Button>
-        <a href="https://discord.com/oauth2/authorize?client_id=1182800769188110366">Add to Discord </a>
+        <a href={discordLink}>Add to Discord </a>
       </Button>
     </div>
   </nav>

@@ -2,9 +2,9 @@
  * Manages generation history in IndexedDB (supports large images)
  */
 import { z } from "zod";
-import type { GenerationResult } from "./config/schema";
-import { GenerationMetadataSchema } from "./config/schema";
-import * as db from "./indexeddb";
+import type { GenerationResult } from "./config/schema.ts";
+import { GenerationMetadataSchema } from "./config/schema.ts";
+import * as db from "./indexeddb.ts";
 
 // Zod schemas for validation
 // Note: We use `.optional()` which produces `T | undefined`, matching the exact optional properties

@@ -64,7 +64,7 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    "isolatedDeclarations": true,
+    "isolatedDeclarations": false,
     "strictBuiltinIteratorReturn": true,
     "noErrorTruncation": true,
     // Performance - enable incremental compilation

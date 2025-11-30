@@ -15,10 +15,10 @@ import {
   type CompletedMatch,
 } from "@scout-for-lol/data";
 import { getExampleMatch } from "@scout-for-lol/data";
-import { getCachedDataAsync, setCachedData } from "./cache";
+import { getCachedDataAsync, setCachedData } from "./cache.ts";
 import { z } from "zod";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
-import { getOutcome, participantToChampion } from "./s3-helpers";
+import { getOutcome, participantToChampion } from "./s3-helpers.ts";
 
 /**
  * Fetch all objects from S3 with pagination

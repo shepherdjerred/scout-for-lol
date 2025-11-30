@@ -17,8 +17,8 @@ import {
   generateMatchReview,
   type GenerationProgress as GenerationProgressType,
 } from "@scout-for-lol/frontend/lib/review-tool/generator";
-import { CostDisplay } from "./cost-display";
-import { HistoryPanel } from "./history-panel";
+import { CostDisplay } from "./cost-display.tsx";
+import { HistoryPanel } from "./history-panel.tsx";
 import { getExampleMatch } from "@scout-for-lol/data";
 import {
   createPendingEntry,
@@ -26,13 +26,13 @@ import {
   updateHistoryRating,
   type HistoryEntry,
 } from "@scout-for-lol/frontend/lib/review-tool/history-manager";
-import { ActiveGenerationsPanel } from "./active-generations-panel";
-import { GenerationProgress } from "./generation-progress";
-import { GenerationConfigDisplay } from "./generation-config-display";
-import { ResultDisplay } from "./result-display";
-import { ResultMetadata } from "./result-metadata";
-import { ResultRating } from "./result-rating";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { ActiveGenerationsPanel } from "./active-generations-panel.tsx";
+import { GenerationProgress } from "./generation-progress.tsx";
+import { GenerationConfigDisplay } from "./generation-config-display.tsx";
+import { ResultDisplay } from "./result-display.tsx";
+import { ResultMetadata } from "./result-metadata.tsx";
+import { ResultRating } from "./result-rating.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card.tsx";
 
 const ErrorSchema = z.object({ message: z.string() });
 

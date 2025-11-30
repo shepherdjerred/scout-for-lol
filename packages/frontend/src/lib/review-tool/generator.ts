@@ -18,15 +18,15 @@ import {
   type ReviewPipelineOutput,
   type PipelineStagesConfig,
 } from "@scout-for-lol/data";
-import type { ReviewConfig, GenerationResult, GenerationMetadata, Personality } from "./config/schema";
-import { createDefaultPipelineStages } from "./config/schema";
+import type { ReviewConfig, GenerationResult, GenerationMetadata, Personality } from "./config/schema.ts";
+import { createDefaultPipelineStages } from "./config/schema.ts";
 import {
   getBasePrompt,
   selectRandomPersonality,
   getPersonalityById,
   getLaneContext,
   getGenericPlayerMetadata,
-} from "./prompts";
+} from "./prompts.ts";
 
 export type GenerationStep = "text" | "image" | "complete";
 

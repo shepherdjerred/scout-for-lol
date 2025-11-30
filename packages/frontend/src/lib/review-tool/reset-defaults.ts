@@ -1,8 +1,8 @@
 /**
  * Reset tool settings to defaults while preserving API keys, cache, and cost data
  */
-import { clearAllEntries } from "./indexeddb";
-import { STORES, clearStore } from "./storage";
+import { clearAllEntries } from "./indexeddb.ts";
+import { STORES, clearStore } from "./storage.ts";
 
 /**
  * Reset all settings to defaults while preserving:

@@ -1,5 +1,5 @@
 import type { InputHTMLAttributes } from "react";
-import { cn } from "./cn";
+import { cn } from "./cn.ts";
 
 type SwitchProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type">;
 

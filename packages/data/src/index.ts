@@ -65,6 +65,9 @@ export type {
 } from "./review/pipeline-types.ts";
 
 export * from "./league/raw-match.schema.ts";
+export * from "./league/raw-participant.schema.ts";
+export * from "./league/raw-perks.schema.ts";
+export * from "./league/raw-challenges.schema.ts";
 export * from "./league/raw-timeline.schema.ts";
 export * from "./league/raw-summoner-league.schema.ts";
 export { getExampleMatch, type AnyMatch } from "./example/example.ts";

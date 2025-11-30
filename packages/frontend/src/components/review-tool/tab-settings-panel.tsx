@@ -9,13 +9,13 @@ import {
   createDefaultPipelineStages,
 } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { BUILTIN_PERSONALITIES } from "@scout-for-lol/frontend/lib/review-tool/prompts";
-import { ConfigImportModal } from "./config-import-modal";
+import { ConfigImportModal } from "./config-import-modal.tsx";
 import { downloadConfigBundle } from "@scout-for-lol/frontend/lib/review-tool/config-export";
 import { ART_STYLES, ART_THEMES } from "@scout-for-lol/data";
-import { TextGenerationSettings } from "./text-generation-settings";
-import { ImageGenerationSettings } from "./image-generation-settings";
-import { PromptSettings } from "./prompt-settings";
-import { TabConfigActions } from "./tab-config-actions";
+import { TextGenerationSettings } from "./text-generation-settings.tsx";
+import { ImageGenerationSettings } from "./image-generation-settings.tsx";
+import { PromptSettings } from "./prompt-settings.tsx";
+import { TabConfigActions } from "./tab-config-actions.tsx";
 
 const ErrorSchema = z.object({ message: z.string() });
 import {
@@ -38,7 +38,7 @@ import {
   deleteCustomArtTheme,
   generateArtThemeId,
 } from "@scout-for-lol/frontend/lib/review-tool/art-style-storage";
-import { StageConfigSections } from "./stage-config/stage-config-sections";
+import { StageConfigSections } from "./stage-config/stage-config-sections.tsx";
 
 type TabSettingsPanelProps = {
   config: TabConfig;

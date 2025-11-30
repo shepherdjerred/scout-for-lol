@@ -1,8 +1,8 @@
 /**
  * Prompt loading and management utilities
  */
-import type { Personality, PlayerMetadata } from "./config/schema";
-import { PersonalityMetadataSchema, PlayerMetadataSchema } from "./config/schema";
+import type { Personality, PlayerMetadata } from "./config/schema.ts";
+import { PersonalityMetadataSchema, PlayerMetadataSchema } from "./config/schema.ts";
 import type { Lane } from "@scout-for-lol/data";
 
 // Import personality files

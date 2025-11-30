@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@scout-for-lol/fronten
 import { Label } from "@scout-for-lol/frontend/components/review-tool/ui/label";
 import { Switch } from "@scout-for-lol/frontend/components/review-tool/ui/switch";
 import type { ReviewTextStageConfig, StageConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
-import { ModelConfigForm } from "./model-config-form";
-import { PromptEditor } from "./prompt-editor";
+import { ModelConfigForm } from "./model-config-form.tsx";
+import { PromptEditor } from "./prompt-editor.tsx";
 
 type ToggleableStageConfig = StageConfig;
 

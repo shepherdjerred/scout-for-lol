@@ -4,7 +4,7 @@
 import { useState, useSyncExternalStore } from "react";
 import type { HistoryEntry } from "@scout-for-lol/frontend/lib/review-tool/history-manager";
 import { loadHistory, deleteHistoryEntry, clearHistory } from "@scout-for-lol/frontend/lib/review-tool/history-manager";
-import { StarRating } from "./star-rating";
+import { StarRating } from "./star-rating.tsx";
 import { differenceInMinutes, differenceInHours, differenceInDays, format } from "date-fns";
 
 type HistoryPanelProps = {

@@ -8,14 +8,10 @@ interface Props {
 const { title, subtitle, centered = true } = Astro.props;
 ---
 
-<div class={centered ? 'text-center mb-16' : 'mb-16'}>
-  <h1 class="text-4xl font-extrabold tracking-tight lg:text-5xl">
+<div class={centered ? "text-center mb-16" : "mb-16"}>
+  <h1 class="text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl">
     {title}
   </h1>
-  {subtitle && (
-    <p class="mt-6 text-lg text-muted-foreground">
-      {subtitle}
-    </p>
-  )}
+  {subtitle && <p class="mt-6 text-lg text-muted-foreground">{subtitle}</p>}
   <slot />
 </div>

@@ -2,7 +2,7 @@
  * Personality selector component
  */
 import type { Personality } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
-import { PersonalityEditor } from "./personality-editor";
+import { PersonalityEditor } from "./personality-editor.tsx";
 
 type PersonalitySelectorProps = {
   personalities: Personality[];

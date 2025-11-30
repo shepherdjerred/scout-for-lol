@@ -19,14 +19,14 @@ import {
 } from "@scout-for-lol/frontend/lib/review-tool/config-manager";
 import { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import { migrateFromLocalStorage } from "@scout-for-lol/frontend/lib/review-tool/storage";
-import { AppHeader } from "./app-header";
-import { ConfigModal } from "./config-modal";
-import { TabSettingsPanel } from "./tab-settings-panel";
-import { ResultsPanel } from "./results-panel";
-import { MatchBrowser } from "./match-browser";
-import { MatchDetailsPanel } from "./match-details-panel";
-import { RatingsAnalytics } from "./ratings-analytics";
-import { Spinner } from "./ui/spinner";
+import { AppHeader } from "./app-header.tsx";
+import { ConfigModal } from "./config-modal.tsx";
+import { TabSettingsPanel } from "./tab-settings-panel.tsx";
+import { ResultsPanel } from "./results-panel.tsx";
+import { MatchBrowser } from "./match-browser.tsx";
+import { MatchDetailsPanel } from "./match-details-panel.tsx";
+import { RatingsAnalytics } from "./ratings-analytics.tsx";
+import { Spinner } from "./ui/spinner.tsx";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 
 export type TabData = {

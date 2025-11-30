@@ -1,5 +1,5 @@
 import type { DetailedHTMLProps, LabelHTMLAttributes } from "react";
-import { cn } from "./cn";
+import { cn } from "./cn.ts";
 
 type LabelProps = DetailedHTMLProps<LabelHTMLAttributes<HTMLLabelElement>, HTMLLabelElement>;
 

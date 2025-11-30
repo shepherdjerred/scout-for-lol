@@ -2,7 +2,7 @@
  * Tab bar for switching between configurations
  */
 import { useState } from "react";
-import type { TabData } from "./app";
+import type { TabData } from "./app.tsx";
 
 type TabBarProps = {
   tabs: TabData[];

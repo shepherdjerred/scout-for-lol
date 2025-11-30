@@ -19,11 +19,6 @@ ruleTester.run("require-ts-extensions", requireTsExtensions, {
       code: 'import { Component } from "./Component.tsx";',
       filename: "src/index.tsx",
     },
-    // Valid: Has .js extension (allowed for compatibility)
-    {
-      code: 'import { legacy } from "./legacy.js";',
-      filename: "src/index.ts",
-    },
     // Valid: Third-party package without extension
     {
       code: 'import { Client } from "discord.js";',
@@ -44,10 +39,25 @@ ruleTester.run("require-ts-extensions", requireTsExtensions, {
       code: 'import { z } from "zod";',
       filename: "src/index.ts",
     },
-    // Valid: Parent import with extension
+    // Valid: Parent import with .ts extension
     {
       code: 'import { helper } from "../utils/helper.ts";',
       filename: "src/components/Button.tsx",
+    },
+    // Valid: Parent import with .tsx extension
+    {
+      code: 'import { Component } from "../shared/Component.tsx";',
+      filename: "src/components/Button.tsx",
+    },
+    // Valid: JSON import (has extension, different from .js/.jsx)
+    {
+      code: 'import config from "./config.json";',
+      filename: "src/index.ts",
+    },
+    // Valid: CSS module import
+    {
+      code: 'import styles from "./styles.module.css";',
+      filename: "src/index.ts",
     },
   ],
 
@@ -77,6 +87,7 @@ ruleTester.run("require-ts-extensions", requireTsExtensions, {
       output: 'import { bar } from "../models/user.ts";',
     },
     // Invalid: Missing .tsx extension in tsx file
+    // Note: Auto-fix uses heuristic based on importing file's extension
     {
       code: 'import { Component } from "./Component";',
       filename: "src/index.tsx",
@@ -86,7 +97,7 @@ ruleTester.run("require-ts-extensions", requireTsExtensions, {
           data: { suggestedExtension: ".tsx" },
         },
       ],
-      output: 'import { Component } from "./Component.ts";',
+      output: 'import { Component } from "./Component.tsx";',
     },
     // Invalid: Deep relative path without extension
     {
@@ -111,6 +122,42 @@ ruleTester.run("require-ts-extensions", requireTsExtensions, {
         },
       ],
       output: 'import { foo } from \'./config.ts\';',
+    },
+    // Invalid: Using .js extension instead of .ts
+    {
+      code: 'import { legacy } from "./legacy.js";',
+      filename: "src/index.ts",
+      errors: [
+        {
+          messageId: "noJsExtension",
+          data: { suggestedExtension: ".ts" },
+        },
+      ],
+      output: 'import { legacy } from "./legacy.ts";',
+    },
+    // Invalid: Using .jsx extension instead of .tsx
+    {
+      code: 'import { Component } from "./Component.jsx";',
+      filename: "src/index.tsx",
+      errors: [
+        {
+          messageId: "noJsExtension",
+          data: { suggestedExtension: ".tsx" },
+        },
+      ],
+      output: 'import { Component } from "./Component.tsx";',
+    },
+    // Invalid: Using .js extension in tsx file (should suggest .tsx)
+    {
+      code: 'import { helper } from "../utils/helper.js";',
+      filename: "src/components/Button.tsx",
+      errors: [
+        {
+          messageId: "noJsExtension",
+          data: { suggestedExtension: ".tsx" },
+        },
+      ],
+      output: 'import { helper } from "../utils/helper.tsx";',
     },
   ],
 });

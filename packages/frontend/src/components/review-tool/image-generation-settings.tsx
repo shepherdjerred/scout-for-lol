@@ -3,8 +3,8 @@
  */
 import type { TabConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { getImagePricing } from "@scout-for-lol/data";
-import { ArtStyleSelector } from "./art-style-selector";
-import { ArtThemeSelector } from "./art-theme-selector";
+import { ArtStyleSelector } from "./art-style-selector.tsx";
+import { ArtThemeSelector } from "./art-theme-selector.tsx";
 import type { CustomArtStyle, CustomArtTheme } from "@scout-for-lol/frontend/lib/review-tool/art-style-storage";
 
 type ImageGenerationSettingsProps = {
