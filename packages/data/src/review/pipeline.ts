@@ -316,9 +316,7 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
  * This helper ensures Stage 1b can use the timeline summary if available.
  * It runs 1a first, then 1b with the timeline summary.
  */
-export async function runStage1Sequential(params: {
-  input: ReviewPipelineInput;
-}): Promise<{
+export async function runStage1Sequential(params: { input: ReviewPipelineInput }): Promise<{
   timelineSummaryText?: string;
   timelineSummaryTrace?: StageTrace;
   matchSummaryText?: string;
