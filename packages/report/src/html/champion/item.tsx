@@ -97,14 +97,14 @@ export function renderItems(items: number[], visionScore: number, isArena = fals
 
     // Vision item slot
     const renderedVisionItem = visionItem !== undefined ? (
-      <div
-        style={{
-          display: "flex",
-          position: "relative",
-          width: dimension,
-          height: dimension,
-        }}
-      >
+        <div
+          style={{
+            display: "flex",
+            position: "relative",
+            width: dimension,
+            height: dimension,
+          }}
+        >
         {renderItem(visionItem)}
         <span
           style={{
@@ -132,28 +132,28 @@ export function renderItems(items: number[], visionScore: number, isArena = fals
         }}
       >
         {renderItem(0)}
-        <span
-          style={{
-            position: "absolute",
-            color: palette.white[1],
-            textShadow: "8px 8px #000",
-            bottom: "-10px",
-            right: "5px",
-            fontWeight: 700,
-            stroke: "#000",
-            strokeWidth: "100px",
-          }}
-        >
-          {visionScore}
-        </span>
-      </div>
-    );
+          <span
+            style={{
+              position: "absolute",
+              color: palette.white[1],
+              textShadow: "8px 8px #000",
+              bottom: "-10px",
+              right: "5px",
+              fontWeight: 700,
+              stroke: "#000",
+              strokeWidth: "100px",
+            }}
+          >
+            {visionScore}
+          </span>
+        </div>
+      );
 
-    return (
-      <div style={{ display: "flex", gap: "1rem" }}>
+  return (
+    <div style={{ display: "flex", gap: "1rem" }}>
         {renderedRegularItems}
         {renderedVisionItem}
-      </div>
-    );
+    </div>
+  );
   }
 }
