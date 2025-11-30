@@ -1,11 +1,6 @@
 import { match as matchPattern } from "ts-pattern";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
-import type {
-  ChatCompletionCreateParams,
-  CuratedMatchData,
-  Personality,
-  PlayerMetadata,
-} from "@scout-for-lol/data/review/generator.ts";
+import type { CuratedMatchData, Personality, PlayerMetadata } from "@scout-for-lol/data/review/generator.ts";
 import { selectRandomBehavior } from "@scout-for-lol/data/review/prompts.ts";
 
 /**
@@ -106,7 +101,7 @@ export function getOrdinalSuffix(num: number): string {
  * @param playerIndex - Index of the player being reviewed (to exclude from friends list)
  * @returns A formatted string describing friends in the match, or empty string if none
  */
-export function buildFriendsContext(match: CompletedMatch | ArenaMatch, playerIndex: number): string {
+function buildFriendsContext(match: CompletedMatch | ArenaMatch, playerIndex: number): string {
   const allPlayers = match.players;
   const totalTrackedPlayers = allPlayers.length;
   const friends = allPlayers.filter((_, index) => index !== playerIndex);
@@ -219,7 +214,7 @@ function buildFlexQueueContext(
  * Build queue context text based on the queue type
  * Provides additional context for competitive game modes like Clash
  */
-export function buildQueueContext(queueType: string | undefined): string {
+function buildQueueContext(queueType: string | undefined): string {
   if (queueType === "clash") {
     return "This is a CLASH game - a competitive tournament mode where teams sign up in advance and play bracket-style matches. Clash games are typically more serious and strategic than regular games, with coordinated team compositions and communication. The stakes feel higher and players often try harder.";
   }
@@ -335,32 +330,4 @@ export function buildPromptVariables(params: {
     timelineSummary: timelineSummaryText,
     queueContext,
   };
-}
-
-export function createCompletionParams(params: {
-  systemPrompt: string;
-  userPrompt: string;
-  model: string;
-  maxTokens: number;
-  temperature?: number;
-  topP?: number;
-}): ChatCompletionCreateParams {
-  const { systemPrompt, userPrompt, model, maxTokens, temperature, topP } = params;
-  const completionParams: ChatCompletionCreateParams = {
-    model,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    max_completion_tokens: maxTokens,
-  };
-
-  if (temperature !== undefined) {
-    completionParams.temperature = temperature;
-  }
-  if (topP !== undefined) {
-    completionParams.top_p = topP;
-  }
-
-  return completionParams;
 }

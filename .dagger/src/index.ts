@@ -257,16 +257,20 @@ export class ScoutForLol {
     // Desktop builds run in all environments (started early to run in parallel)
     const desktopBuildLinuxPromise = withTiming("desktop application build (Linux)", async () => {
       logWithTimestamp("🔄 Building desktop application for Linux...");
-      await buildDesktopLinux(source, version).sync();
+      const container = buildDesktopLinux(source, version);
+      await container.sync();
+      return container;
     });
 
     const desktopBuildWindowsPromise = withTiming("desktop application build (Windows)", async () => {
       logWithTimestamp("🔄 Building desktop application for Windows...");
-      await buildDesktopWindowsGnu(source, version).sync();
+      const container = buildDesktopWindowsGnu(source, version);
+      await container.sync();
+      return container;
     });
 
     // Wait for checks, backend image build, desktop checks, and desktop builds to complete
-    const [, backendImage] = await Promise.all([
+    const [, backendImage, , desktopLinuxContainer, desktopWindowsContainer] = await Promise.all([
       checksPromise,
       backendImagePromise,
       desktopChecksPromise,
@@ -315,7 +319,13 @@ export class ScoutForLol {
     if (shouldPublishDesktop) {
       await withTiming("CI desktop artifacts publish phase", async () => {
         logWithTimestamp("📦 Phase 2.5: Publishing desktop artifacts to GitHub Releases...");
-        await this.publishDesktopArtifacts(source, version, gitSha, ghToken);
+        await this.publishDesktopArtifactsWithContainers(
+          desktopLinuxContainer,
+          desktopWindowsContainer,
+          version,
+          gitSha,
+          ghToken,
+        );
         logWithTimestamp("✅ Desktop artifacts published to GitHub Releases");
       });
     } else {
@@ -978,13 +988,20 @@ export class ScoutForLol {
    * @param repo The repository name (defaults to "shepherdjerred/scout-for-lol")
    * @returns A message indicating completion
    */
+  /**
+   * Publish desktop artifacts using pre-built containers
+   * @param linuxContainer The Linux build container
+   * @param windowsContainer The Windows build container
+   * @param version The version tag
+   * @param gitSha The git commit SHA
+   * @param ghToken GitHub token for authentication
+   * @param repo The repository name (default: shepherdjerred/scout-for-lol)
+   * @returns A message indicating completion
+   */
   @func()
-  async publishDesktopArtifacts(
-    @argument({
-      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
-      defaultPath: ".",
-    })
-    source: Directory,
+  async publishDesktopArtifactsWithContainers(
+    linuxContainer: Container,
+    windowsContainer: Container,
     @argument() version: string,
     @argument() gitSha: string,
     ghToken: Secret,
@@ -993,12 +1010,14 @@ export class ScoutForLol {
     logWithTimestamp(`📦 Publishing desktop artifacts to GitHub Releases for version ${version}`);
 
     await withTiming("desktop artifacts GitHub release", async () => {
-      // Get the already-built Linux and Windows artifacts
+      // Get the already-built Linux and Windows artifacts from the pre-built containers
       logWithTimestamp("📥 Collecting Linux artifacts...");
-      const linuxArtifactsDir = getDesktopLinuxArtifacts(source, version);
+      const linuxArtifactsDir = linuxContainer.directory("/workspace/packages/desktop/src-tauri/target/release/bundle");
 
       logWithTimestamp("📥 Collecting Windows artifacts...");
-      const windowsArtifactsDir = getDesktopWindowsArtifacts(source, version);
+      const windowsArtifactsDir = windowsContainer.directory(
+        "/workspace/packages/desktop/src-tauri/target/x86_64-pc-windows-gnu/release",
+      );
 
       // Create a staging directory with all artifacts
       logWithTimestamp("🏗️  Staging artifacts for upload...");
@@ -1018,27 +1037,55 @@ export class ScoutForLol {
       logWithTimestamp(`🔐 Verifying GitHub authentication...`);
 
       // First, check basic auth status (allow failure to capture output)
-      const authCheckContainer = container.withExec(["sh", "-c", 'gh auth status 2>&1; echo "AUTH_EXIT_CODE=$?"']);
-      const authOutput = await authCheckContainer.stdout();
-      logWithTimestamp(`Auth status output: ${authOutput.trim()}`);
+      let authCheckContainer: Container;
+      let authOutput: string;
+      try {
+        authCheckContainer = container.withExec(["sh", "-c", 'gh auth status 2>&1; echo "AUTH_EXIT_CODE=$?"']);
+        authOutput = await authCheckContainer.stdout();
+        logWithTimestamp(`Auth status output: ${authOutput.trim()}`);
 
-      if (authOutput.includes("AUTH_EXIT_CODE=0")) {
-        logWithTimestamp(`✓ GitHub authentication successful`);
-      } else {
-        logWithTimestamp(`⚠️ GitHub authentication check returned non-zero exit code`);
+        if (authOutput.includes("AUTH_EXIT_CODE=0")) {
+          logWithTimestamp(`✓ GitHub authentication successful`);
+        } else {
+          logWithTimestamp(`⚠️ GitHub authentication check returned non-zero exit code`);
+        }
+      } catch (error) {
+        logWithTimestamp(`❌ Auth check failed with error: ${error instanceof Error ? error.message : String(error)}`);
+        // Try to get any stderr output
+        try {
+          const stderr = await authCheckContainer!.stderr();
+          logWithTimestamp(`Auth check stderr: ${stderr}`);
+        } catch {
+          // Ignore stderr fetch errors
+        }
+        throw error;
       }
 
       // Try a simple API call to verify token works
       logWithTimestamp(`🔍 Testing GitHub API access...`);
-      const apiTestContainer = container.withExec(["sh", "-c", 'gh api user 2>&1; echo "API_EXIT_CODE=$?"']);
-      const apiOutput = await apiTestContainer.stdout();
-      logWithTimestamp(`API test output: ${apiOutput.trim()}`);
+      let apiTestContainer: Container;
+      let apiOutput: string;
+      try {
+        apiTestContainer = container.withExec(["sh", "-c", 'gh api user 2>&1; echo "API_EXIT_CODE=$?"']);
+        apiOutput = await apiTestContainer.stdout();
+        logWithTimestamp(`API test output: ${apiOutput.trim()}`);
 
-      if (!apiOutput.includes("API_EXIT_CODE=0")) {
-        throw new Error(`GitHub API access failed. Output: ${apiOutput}`);
+        if (!apiOutput.includes("API_EXIT_CODE=0")) {
+          throw new Error(`GitHub API access failed. Output: ${apiOutput}`);
+        }
+
+        logWithTimestamp(`✓ GitHub authentication verified`);
+      } catch (error) {
+        logWithTimestamp(`❌ API test failed with error: ${error instanceof Error ? error.message : String(error)}`);
+        // Try to get stderr
+        try {
+          const stderr = await apiTestContainer!.stderr();
+          logWithTimestamp(`API test stderr: ${stderr}`);
+        } catch {
+          // Ignore stderr fetch errors
+        }
+        throw error;
       }
-
-      logWithTimestamp(`✓ GitHub authentication verified`);
 
       // Step 2: Check if release exists (capture output for debugging)
       logWithTimestamp(`🔍 Checking if release v${version} exists...`);
@@ -1107,5 +1154,46 @@ export class ScoutForLol {
 
     logWithTimestamp(`✅ Desktop artifacts published to GitHub Releases: v${version}`);
     return `Desktop artifacts published to GitHub Releases: v${version}`;
+  }
+
+  /**
+   * Build and publish desktop artifacts (builds from scratch)
+   * @param source The source directory
+   * @param version The version tag
+   * @param gitSha The git commit SHA
+   * @param ghToken GitHub token for authentication
+   * @param repo The repository name (default: shepherdjerred/scout-for-lol)
+   * @returns A message indicating completion
+   */
+  @func()
+  async publishDesktopArtifacts(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+    @argument() gitSha: string,
+    ghToken: Secret,
+    repo = "shepherdjerred/scout-for-lol",
+  ): Promise<string> {
+    logWithTimestamp(`📦 Building desktop applications for publishing...`);
+
+    // Build both platforms
+    const linuxContainer = buildDesktopLinux(source, version);
+    const windowsContainer = buildDesktopWindowsGnu(source, version);
+
+    // Wait for builds to complete
+    await Promise.all([linuxContainer.sync(), windowsContainer.sync()]);
+
+    // Use the pre-built containers to publish
+    return await this.publishDesktopArtifactsWithContainers(
+      linuxContainer,
+      windowsContainer,
+      version,
+      gitSha,
+      ghToken,
+      repo,
+    );
   }
 }

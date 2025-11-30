@@ -1,12 +1,12 @@
 import { z } from "zod";
 
-export const RawEpicMonsterKillSchema = z
+const RawEpicMonsterKillSchema = z
   .object({
     featState: z.number(),
   })
   .strict();
 
-export const RawFeatsSchema = z
+const RawFeatsSchema = z
   .object({
     EPIC_MONSTER_KILL: RawEpicMonsterKillSchema,
     FIRST_BLOOD: RawEpicMonsterKillSchema,
@@ -14,14 +14,14 @@ export const RawFeatsSchema = z
   })
   .strict();
 
-export const RawObjectiveSchema = z
+const RawObjectiveSchema = z
   .object({
     first: z.boolean(),
     kills: z.number(),
   })
   .strict();
 
-export const RawObjectivesSchema = z
+const RawObjectivesSchema = z
   .object({
     baron: RawObjectiveSchema,
     champion: RawObjectiveSchema,
@@ -34,7 +34,7 @@ export const RawObjectivesSchema = z
   })
   .strict();
 
-export const RawBanSchema = z
+const RawBanSchema = z
   .object({
     championId: z.number(),
     pickTurn: z.number(),
@@ -52,4 +52,3 @@ export const RawTeamSchema = z
   .strict();
 
 export type RawTeam = z.infer<typeof RawTeamSchema>;
-export type RawObjectives = z.infer<typeof RawObjectivesSchema>;

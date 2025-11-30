@@ -1,48 +1,25 @@
-This game was played in a special mode or the lane information is not available. Focus on overall performance metrics.
+Special mode or lane unavailable. Focus on overall performance metrics.
 
-GOOD Performance:
-- Positive KDA (2.0+)
-- High damage/healing relative to game length
-- Good gold income for role
-- Decent vision score (15+)
-- High kill participation (50%+)
+GOOD: 2.0+ KDA, high damage/healing, good gold, 0.5+ vision/min, 50%+ kill participation
+BAD: Negative KDA, bottom damage with carry, very low gold, near-zero vision, low participation
 
-BAD Performance:
-- Negative KDA (more deaths than kills+assists)
-- Bottom damage with carry champion
-- Very low gold income
-- Near-zero vision score
-- Low kill participation (not involved in fights)
+Key metrics:
+- KDA: Positive or inting?
+- Damage: Contributing to fights?
+- Gold: Farmed effectively?
+- Vision: Placing wards?
+- Kill participation: Involved or AFK farming?
 
-What to look for in general performance:
-- KDA: Is it positive (more kills+assists than deaths) or are they inting?
-- Damage dealt: Are they contributing to fights or just running around?
-- Gold earned: Did they farm effectively or struggle economically?
-- Vision score: Are they placing wards or playing blind?
-- Kill participation: Are they involved in their team's kills or AFK farming?
-- Win/Loss: Did they carry, get carried, or actively lose the game?
+Assess stats based on champion type (tank, assassin, mage, support, etc.)
 
-Look at the champion they played and assess if their stats make sense for that champion type (tank, assassin, mage, support, etc.)
-
-20 GENERAL TIPS FOR ANY ROLE:
-
-1. **Pentakill**: Extremely rare achievement, wiping entire enemy team
-2. **10+ deaths**: Feeding hard, constantly getting caught out
-3. **Perfect KDA (0 deaths)**: Clean gameplay, excellent positioning and awareness
-4. **Highest damage on team**: Carrying through massive damage output
-5. **80%+ kill participation**: Involved in almost every team play
-6. **Below 20% kill participation**: Not participating in fights, AFK farming
-7. **Solo carrying (high KDA + highest damage in loss)**: Tried to 1v9 but team too heavy
-8. **Getting carried (negative KDA in win)**: Teammates won despite poor performance
-9. **Clutch Baron/Dragon steal**: Game-changing objective theft at critical moment
-10. **Throwing at nexus**: Dying in enemy base and costing the win
-11. **First blood**: Getting early kill advantage, setting game tempo
-12. **First blood victim**: Dying first, setting team behind early
-13. **Massive gold lead**: Highest gold on team by significant margin
-14. **Bottom gold on team as carry**: Not farming or constantly dying
-15. **High structure damage**: Taking objectives and pushing lanes effectively
-16. **Zero structure damage**: Not helping end the game or take towers
-17. **Extreme game length (40+ min)**: Both teams struggling to close, test of endurance
-18. **Fast stomp (sub-20 min)**: Completely dominant performance by one team
-19. **Multiple quadra kills**: Nearly perfect teamfight execution multiple times
-20. **Comeback victory**: Turning around a losing game through key plays
+10 KEY TIPS:
+1. **Perfect KDA (0 deaths)**: Clean gameplay, excellent positioning
+2. **10+ deaths**: Feeding hard, constantly caught
+3. **Highest damage on team**: Carrying through damage output
+4. **80%+ kill participation**: Involved in almost every play
+5. **Below 20% kill participation**: AFK farming, not participating
+6. **Solo carrying (high KDA + damage in loss)**: 1v9 attempt, team too heavy
+7. **Getting carried (negative KDA in win)**: Won despite poor performance
+8. **Clutch objective steal**: Game-changing theft at critical moment
+9. **First blood**: Early kill advantage, setting tempo
+10. **Fast stomp (sub-20 min)**: Completely dominant performance

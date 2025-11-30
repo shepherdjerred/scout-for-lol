@@ -82,4 +82,4 @@ function StatusIndicator({ status, label, className, ...props }: StatusIndicator
   );
 }
 
-export { Badge, badgeVariants, StatusIndicator };
+export { Badge, StatusIndicator };
