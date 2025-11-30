@@ -86,7 +86,7 @@ export function participantToChampion(participant: RawParticipant): Champion {
       participant.item4,
       participant.item5,
       participant.item6,
-    ].filter((item) => item !== 0),
+    ],
     spells: [participant.summoner1Id, participant.summoner2Id],
     gold: participant.goldEarned,
     runes: extractRunes(participant),

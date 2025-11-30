@@ -10,7 +10,7 @@ import { send as sendChannelMessage, ChannelSendError } from "@scout-for-lol/bac
 import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 import { z } from "zod";
 import { logNotification } from "@scout-for-lol/backend/utils/notification-logger.ts";
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("competition-lifecycle");

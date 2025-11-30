@@ -1,7 +1,7 @@
 import type { ChatInputCommandInteraction, InteractionReplyOptions } from "discord.js";
 import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/bun";
 
 /**
  * Build an ephemeral error reply for competition commands

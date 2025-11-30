@@ -404,8 +404,6 @@ export type GenerationMetadata = {
   imageGenerated: boolean;
   selectedPersonality?: string | undefined;
   selectedArtStyle?: string | undefined;
-  selectedArtTheme?: string | undefined;
-  selectedSecondArtTheme?: string | undefined;
 };
 
 /**

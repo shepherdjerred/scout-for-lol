@@ -17,8 +17,6 @@ type PersonalityEditorProps = {
 export function PersonalityEditor({ personality, onSave, onCancel }: PersonalityEditorProps) {
   const [name, setName] = useState(personality?.metadata.name ?? "");
   const [description, setDescription] = useState(personality?.metadata.description ?? "");
-  const [favoriteChampions, setFavoriteChampions] = useState(personality?.metadata.favoriteChampions.join(", ") ?? "");
-  const [favoriteLanes, setFavoriteLanes] = useState(personality?.metadata.favoriteLanes.join(", ") ?? "");
   const [instructions, setInstructions] = useState(personality?.instructions ?? "");
   const [styleCard, setStyleCard] = useState(personality?.styleCard ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -28,14 +26,6 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
       const metadata: PersonalityMetadata = {
         name: name.trim(),
         description: description.trim(),
-        favoriteChampions: favoriteChampions
-          .split(",")
-          .map((c) => c.trim())
-          .filter((c) => c.length > 0),
-        favoriteLanes: favoriteLanes
-          .split(",")
-          .map((l) => l.trim())
-          .filter((l) => l.length > 0),
       };
 
       const newPersonality: Personality = {
@@ -106,44 +96,6 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
               rows={3}
               className="w-full px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="Brief description of this reviewer's personality"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="favorite-champions-comma-separated"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Favorite Champions (comma-separated)
-            </label>
-            <input
-              id="favorite-champions-comma-separated"
-              type="text"
-              value={favoriteChampions}
-              onChange={(e) => {
-                setFavoriteChampions(e.target.value);
-              }}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-              placeholder="e.g., Yasuo, Zed, Lee Sin"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="favorite-lanes-comma-separated"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Favorite Lanes (comma-separated)
-            </label>
-            <input
-              id="favorite-lanes-comma-separated"
-              type="text"
-              value={favoriteLanes}
-              onChange={(e) => {
-                setFavoriteLanes(e.target.value);
-              }}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-              placeholder="e.g., mid, jungle"
             />
           </div>
 

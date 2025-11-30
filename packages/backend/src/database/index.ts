@@ -8,7 +8,7 @@ import {
   LeagueAccountSchema,
 } from "@scout-for-lol/data";
 import { uniqueBy } from "remeda";
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("database");

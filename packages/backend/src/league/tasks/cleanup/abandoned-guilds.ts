@@ -2,7 +2,7 @@ import type { Client } from "discord.js";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { getAbandonedGuilds, markGuildAsNotified } from "@scout-for-lol/backend/database/guild-permission-errors.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/bun";
 import {
   abandonedGuildsDetectedTotal,
   guildsLeftTotal,

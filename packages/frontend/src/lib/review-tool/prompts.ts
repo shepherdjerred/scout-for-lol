@@ -1,7 +1,7 @@
 /**
  * Prompt loading and management utilities
  */
-import type { Personality, PlayerMetadata } from "./config/schema.ts";
+import type { Personality } from "./config/schema.ts";
 import { PersonalityMetadataSchema } from "./config/schema.ts";
 import type { Lane } from "@scout-for-lol/data";
 
@@ -27,8 +27,8 @@ import adcLane from "@scout-for-lol/data/src/review/prompts/lanes/adc.txt?raw";
 import supportLane from "@scout-for-lol/data/src/review/prompts/lanes/support.txt?raw";
 import genericLane from "@scout-for-lol/data/src/review/prompts/lanes/generic.txt?raw";
 
-// Import base prompt
-import basePrompt from "@scout-for-lol/data/src/review/prompts/base.txt?raw";
+// Import base prompt template (user prompt for review text stage)
+import basePrompt from "@scout-for-lol/data/src/review/prompts/user/2-review-text.txt?raw";
 
 /**
  * Built-in personalities (from prompt files)
@@ -134,16 +134,4 @@ export function getLaneContext(lane: string | undefined): string {
   }
 
   return genericLane;
-}
-
-/**
- * Get generic player metadata
- */
-export function getGenericPlayerMetadata(): PlayerMetadata {
-  // TODO: grab the player metadata from the personality cards
-  return {
-    description: "Likes to play League of Legends.",
-    favoriteChampions: [],
-    favoriteLanes: [],
-  };
 }

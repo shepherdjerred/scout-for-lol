@@ -12,7 +12,8 @@ import type { GoogleGenerativeAI } from "@google/generative-ai";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
 import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema.ts";
 import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema.ts";
-import type { Personality, PlayerMetadata } from "./prompts.ts";
+import type { Personality } from "./prompts.ts";
+import type { ArtStyle } from "@scout-for-lol/data/review/art-categories.ts";
 
 // ============================================================================
 // Model Configuration
@@ -52,6 +53,8 @@ export type ImageGenerationStageConfig = {
   enabled: boolean;
   model: string;
   timeoutMs: number;
+  /** Art style to apply to the generated image */
+  artStyle: ArtStyle;
 };
 
 /**
@@ -121,8 +124,6 @@ export type PipelineMatchInput = {
 export type PipelinePlayerInput = {
   /** Index of the player in the match (0-based) */
   index: number;
-  /** Player metadata for personalization */
-  metadata: PlayerMetadata;
 };
 
 /**
@@ -135,8 +136,6 @@ export type PipelinePromptsInput = {
   baseTemplate: string;
   /** Lane-specific context text */
   laneContext: string;
-  /** Optional prefix to add to system prompts */
-  systemPromptPrefix?: string;
 };
 
 /**

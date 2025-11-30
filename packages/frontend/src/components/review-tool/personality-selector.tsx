@@ -99,13 +99,6 @@ export function PersonalitySelector({
                     {personality.metadata.description.substring(0, 80)}
                     {personality.metadata.description.length > 80 ? "..." : ""}
                   </p>
-                  <div className="flex flex-wrap gap-1">
-                    {personality.metadata.favoriteChampions.slice(0, 3).map((champ) => (
-                      <span key={champ} className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-xs rounded">
-                        {champ}
-                      </span>
-                    ))}
-                  </div>
                 </div>
                 <div className="flex flex-col gap-1 ml-2">
                   <button

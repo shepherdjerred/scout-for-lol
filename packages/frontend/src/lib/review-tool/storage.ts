@@ -15,7 +15,6 @@ export const STORES = {
   GLOBAL_CONFIG: "global-config",
   PERSONALITIES: "personalities",
   ART_STYLES: "art-styles",
-  ART_THEMES: "art-themes",
   COSTS: "costs",
   PREFERENCES: "preferences",
 } as const;
@@ -49,9 +48,6 @@ function getDB(): Promise<IDBDatabase> {
     }
     if (!db.objectStoreNames.contains(STORES.ART_STYLES)) {
       db.createObjectStore(STORES.ART_STYLES, { keyPath: "id" });
-    }
-    if (!db.objectStoreNames.contains(STORES.ART_THEMES)) {
-      db.createObjectStore(STORES.ART_THEMES, { keyPath: "id" });
     }
     if (!db.objectStoreNames.contains(STORES.COSTS)) {
       db.createObjectStore(STORES.COSTS);
@@ -240,11 +236,6 @@ export async function migrateFromLocalStorage(): Promise<void> {
     {
       localStorageKey: "review-dev-tool-custom-art-styles",
       store: STORES.ART_STYLES,
-      isArray: true,
-    },
-    {
-      localStorageKey: "review-dev-tool-custom-art-themes",
-      store: STORES.ART_THEMES,
       isArray: true,
     },
     {

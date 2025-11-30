@@ -17,16 +17,11 @@ import {
   type RawTimeline,
   type ReviewPipelineOutput,
   type PipelineStagesConfig,
+  selectRandomStyle,
 } from "@scout-for-lol/data";
 import type { ReviewConfig, GenerationResult, GenerationMetadata, Personality } from "./config/schema.ts";
 import { createDefaultPipelineStages } from "./config/schema.ts";
-import {
-  getBasePrompt,
-  selectRandomPersonality,
-  getPersonalityById,
-  getLaneContext,
-  getGenericPlayerMetadata,
-} from "./prompts.ts";
+import { selectRandomPersonality, getPersonalityById, getLaneContext } from "./prompts.ts";
 
 export type GenerationStep = "text" | "image" | "complete";
 
@@ -137,6 +132,7 @@ function convertStagesToDataPackageFormat(stages: NonNullable<ReviewConfig["stag
       enabled: stages.imageGeneration.enabled,
       model: stages.imageGeneration.model,
       timeoutMs: stages.imageGeneration.timeoutMs,
+      artStyle: selectRandomStyle(),
     },
   };
 }
@@ -191,6 +187,7 @@ function getStagesConfig(config: ReviewConfig): PipelineStagesConfig {
       enabled: config.imageGeneration.enabled,
       model: config.imageGeneration.model,
       timeoutMs: config.imageGeneration.timeoutMs,
+      artStyle: selectRandomStyle(),
     },
   };
 
@@ -299,11 +296,10 @@ export async function generateMatchReview(params: GenerateMatchReviewParams): Pr
     }
 
     // Get prompt context
-    const basePromptTemplate = config.prompts.basePrompt || getBasePrompt();
+    const basePromptTemplate = config.prompts.basePrompt;
     const player = match.players[0];
     const lane = match.queueType === "arena" ? undefined : player && "lane" in player ? player.lane : undefined;
     const laneContext = config.prompts.laneContext ?? getLaneContext(lane);
-    const playerMetadata = config.prompts.playerMetadata ?? getGenericPlayerMetadata();
 
     // Initialize OpenAI client
     const openaiClient = new OpenAI({
@@ -341,9 +337,6 @@ export async function generateMatchReview(params: GenerateMatchReviewParams): Pr
       baseTemplate: basePromptTemplate,
       laneContext,
     };
-    if (config.prompts.systemPromptPrefix !== undefined) {
-      promptsInput.systemPromptPrefix = config.prompts.systemPromptPrefix;
-    }
 
     // Report progress
     onProgress?.({ step: "text", message: "Generating review..." });
@@ -353,7 +346,6 @@ export async function generateMatchReview(params: GenerateMatchReviewParams): Pr
       match: matchInput,
       player: {
         index: 0, // Always review first player in frontend
-        metadata: playerMetadata,
       },
       prompts: promptsInput,
       clients: clientsInput,

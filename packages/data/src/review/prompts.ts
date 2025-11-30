@@ -25,8 +25,6 @@ export type RandomBehavior = z.infer<typeof RandomBehaviorSchema>;
 export const PersonalityMetadataSchema = z.strictObject({
   name: z.string(),
   description: z.string(),
-  favoriteChampions: z.array(z.string()),
-  favoriteLanes: z.array(z.string()),
   randomBehaviors: z.array(RandomBehaviorSchema).optional(),
   image: z.array(z.string()).optional(),
 });
@@ -45,17 +43,6 @@ export type Personality = {
   styleCard: string;
   filename?: string;
 };
-
-/**
- * Player metadata schema
- */
-export const PlayerMetadataSchema = z.strictObject({
-  description: z.string(),
-  favoriteChampions: z.array(z.string()),
-  favoriteLanes: z.array(z.string()),
-});
-
-export type PlayerMetadata = z.infer<typeof PlayerMetadataSchema>;
 
 /**
  * Lane context mapping (relative paths from prompts directory)
@@ -138,7 +125,6 @@ export function replaceTemplateVariables(
     reviewerName: string;
     reviewerPersonality: string;
     playerName: string;
-    playerPersonality: string;
     playerChampion: string;
     playerLane: string;
     opponentChampion: string;
@@ -152,7 +138,6 @@ export function replaceTemplateVariables(
     .replaceAll("<REVIEWER NAME>", variables.reviewerName)
     .replaceAll("<REVIEWER PERSONALITY>", variables.reviewerPersonality)
     .replaceAll("<PLAYER NAME>", variables.playerName)
-    .replaceAll("<PLAYER PERSONALITY>", variables.playerPersonality)
     .replaceAll("<PLAYER CHAMPION>", variables.playerChampion)
     .replaceAll("<PLAYER LANE>", variables.playerLane)
     .replaceAll("<OPPONENT CHAMPION>", variables.opponentChampion)

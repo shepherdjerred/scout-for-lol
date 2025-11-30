@@ -24,7 +24,6 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
     historyEntries: 0,
     customPersonalities: 0,
     customArtStyles: 0,
-    customArtThemes: 0,
   });
 
   if (!isOpen) {
@@ -184,11 +183,7 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
                           {preview.customArtStyles} custom art style{preview.customArtStyles !== 1 ? "s" : ""}
                         </li>
                       )}
-                      {preview.customArtThemes > 0 && (
-                        <li>
-                          {preview.customArtThemes} custom art theme{preview.customArtThemes !== 1 ? "s" : ""}
-                        </li>
-                      )}
+
                       {!hasDataToReset && (
                         <li className="text-gray-400 dark:text-gray-500 italic">No custom data found</li>
                       )}

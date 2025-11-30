@@ -22,7 +22,6 @@ const DBHistoryEntrySchema = z.object({
     model: z.string(),
     personality: z.string().optional(),
     artStyle: z.string().optional(),
-    artTheme: z.string().optional(),
   }),
   status: z.enum(["pending", "complete", "error"]),
   rating: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]).optional(),
