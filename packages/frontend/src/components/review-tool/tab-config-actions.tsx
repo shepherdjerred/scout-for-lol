@@ -14,7 +14,7 @@ export function TabConfigActions({ onExport, onImport, onReset }: TabConfigActio
         <button
           onClick={onExport}
           className="px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-          title="Export tab settings, custom personalities, art styles, and themes"
+          title="Export tab settings, custom personalities, and art styles"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path

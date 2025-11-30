@@ -4,7 +4,7 @@ import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import type { PlayerConfigEntry, MatchId } from "@scout-for-lol/data/index.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { z } from "zod";
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("api-match-history");

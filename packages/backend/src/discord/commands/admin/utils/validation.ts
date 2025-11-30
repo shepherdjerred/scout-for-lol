@@ -2,7 +2,7 @@ import { type ChatInputCommandInteraction } from "discord.js";
 import type { z } from "zod";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("utils-validation");

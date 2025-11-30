@@ -1,7 +1,6 @@
 import { match as matchPattern } from "ts-pattern";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
-import type { Personality, PlayerMetadata } from "@scout-for-lol/data/review/generator.ts";
-import { selectRandomBehavior } from "@scout-for-lol/data/review/prompts.ts";
+import { selectRandomBehavior, type Personality } from "@scout-for-lol/data/review/prompts.ts";
 
 /**
  * Extract match data from a match object
@@ -239,7 +238,6 @@ function buildQueueContext(queueType: string | undefined): string {
 export function buildPromptVariables(params: {
   matchData: Record<string, string>;
   personality: Personality;
-  playerMetadata: PlayerMetadata;
   laneContext: string;
   match: CompletedMatch | ArenaMatch;
   playerIndex?: number;
@@ -248,12 +246,7 @@ export function buildPromptVariables(params: {
 }): {
   reviewerName: string;
   reviewerPersonality: string;
-  reviewerFavoriteChampions: string;
-  reviewerFavoriteLanes: string;
   playerName: string;
-  playerPersonality: string;
-  playerFavoriteChampions: string;
-  playerFavoriteLanes: string;
   playerChampion: string;
   playerLane: string;
   opponentChampion: string;
@@ -265,16 +258,7 @@ export function buildPromptVariables(params: {
   timelineSummary: string;
   queueContext: string;
 } {
-  const {
-    matchData,
-    personality,
-    playerMetadata,
-    laneContext,
-    match,
-    playerIndex = 0,
-    matchAnalysis,
-    timelineSummary,
-  } = params;
+  const { matchData, personality, laneContext, match, playerIndex = 0, matchAnalysis, timelineSummary } = params;
   const playerName = matchData["playerName"];
   if (!playerName) {
     throw new Error("No player name found");
@@ -282,12 +266,6 @@ export function buildPromptVariables(params: {
 
   const reviewerName = personality.metadata.name;
   const reviewerPersonality = personality.metadata.description;
-  const reviewerFavoriteChampions = JSON.stringify(personality.metadata.favoriteChampions);
-  const reviewerFavoriteLanes = JSON.stringify(personality.metadata.favoriteLanes);
-
-  const playerPersonality = playerMetadata.description;
-  const playerFavoriteChampions = JSON.stringify(playerMetadata.favoriteChampions);
-  const playerFavoriteLanes = JSON.stringify(playerMetadata.favoriteLanes);
 
   const playerChampion = matchData["champion"] ?? "unknown champion";
   const playerLane = matchData["lane"] ?? "unknown lane";
@@ -316,12 +294,7 @@ export function buildPromptVariables(params: {
   return {
     reviewerName,
     reviewerPersonality,
-    reviewerFavoriteChampions,
-    reviewerFavoriteLanes,
     playerName,
-    playerPersonality,
-    playerFavoriteChampions,
-    playerFavoriteLanes,
     playerChampion,
     playerLane,
     opponentChampion,

@@ -1,8 +1,3 @@
-import {
-  type Personality as PromptPersonality,
-  type PlayerMetadata as PromptPlayerMetadata,
-} from "@scout-for-lol/data/review/prompts.ts";
-
 /**
  * Chat completion parameters - extracted to avoid dependency on concrete OpenAI types
  */
@@ -13,10 +8,6 @@ export type ChatCompletionCreateParams = {
   temperature?: number;
   top_p?: number;
 };
-
-// Type aliases exported for consumers - identical to prompts.ts types
-export type Personality = PromptPersonality;
-export type PlayerMetadata = PromptPlayerMetadata;
 
 /**
  * Review text generation metadata

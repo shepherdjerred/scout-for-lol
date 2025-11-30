@@ -15,7 +15,7 @@ import {
   fetchMatchData,
   generateMatchReport,
 } from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.ts";
-import * as Sentry from "@sentry/node";
+import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("postmatch-match-history-polling");

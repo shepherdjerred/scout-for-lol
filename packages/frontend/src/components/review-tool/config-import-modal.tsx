@@ -26,7 +26,6 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
   const [importTabConfig, setImportTabConfig] = useState(true);
   const [importPersonalities, setImportPersonalities] = useState(true);
   const [importArtStyles, setImportArtStyles] = useState(true);
-  const [importArtThemes, setImportArtThemes] = useState(true);
   const [mergeWithExisting, setMergeWithExisting] = useState(true);
 
   if (!isOpen) {
@@ -56,7 +55,6 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
           importTabConfig,
           importPersonalities,
           importArtStyles,
-          importArtThemes,
           mergeWithExisting,
         });
 
@@ -106,7 +104,6 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
     setImportTabConfig(true);
     setImportPersonalities(true);
     setImportArtStyles(true);
-    setImportArtThemes(true);
     setMergeWithExisting(true);
     onClose();
   };
@@ -211,7 +208,6 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                   <li>• Tab Settings: {summary.hasTabConfig ? "✓ Included" : "✗ Not included"}</li>
                   <li>• Custom Personalities: {summary.personalitiesCount}</li>
                   <li>• Custom Art Styles: {summary.artStylesCount}</li>
-                  <li>• Custom Art Themes: {summary.artThemesCount}</li>
                 </ul>
               </div>
             )}
@@ -258,20 +254,6 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                   />
                   <span className="text-sm text-gray-700">
                     Import Custom Art Styles ({summary?.artStylesCount ?? 0})
-                  </span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={importArtThemes}
-                    onChange={(e) => {
-                      setImportArtThemes(e.target.checked);
-                    }}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">
-                    Import Custom Art Themes ({summary?.artThemesCount ?? 0})
                   </span>
                 </label>
 

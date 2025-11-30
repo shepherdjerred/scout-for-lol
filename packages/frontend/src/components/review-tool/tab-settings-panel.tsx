@@ -11,7 +11,7 @@ import {
 import { BUILTIN_PERSONALITIES } from "@scout-for-lol/frontend/lib/review-tool/prompts";
 import { ConfigImportModal } from "./config-import-modal.tsx";
 import { downloadConfigBundle } from "@scout-for-lol/frontend/lib/review-tool/config-export";
-import { ART_STYLES, ART_THEMES } from "@scout-for-lol/data";
+import { ART_STYLES } from "@scout-for-lol/data";
 import { TextGenerationSettings } from "./text-generation-settings.tsx";
 import { ImageGenerationSettings } from "./image-generation-settings.tsx";
 import { PromptSettings } from "./prompt-settings.tsx";
@@ -25,18 +25,13 @@ import {
   deleteCustomPersonality,
   generatePersonalityId,
 } from "@scout-for-lol/frontend/lib/review-tool/personality-storage";
-import type { CustomArtStyle, CustomArtTheme } from "@scout-for-lol/frontend/lib/review-tool/art-style-storage";
+import type { CustomArtStyle } from "@scout-for-lol/frontend/lib/review-tool/art-style-storage";
 import {
   loadCustomArtStyles,
   addCustomArtStyle,
   updateCustomArtStyle,
   deleteCustomArtStyle,
   generateArtStyleId,
-  loadCustomArtThemes,
-  addCustomArtTheme,
-  updateCustomArtTheme,
-  deleteCustomArtTheme,
-  generateArtThemeId,
 } from "@scout-for-lol/frontend/lib/review-tool/art-style-storage";
 import { StageConfigSections } from "./stage-config/stage-config-sections.tsx";
 
@@ -49,13 +44,11 @@ type TabSettingsPanelProps = {
 type CustomDataState = {
   personalities: Personality[];
   styles: CustomArtStyle[];
-  themes: CustomArtTheme[];
 };
 
 let customDataState: CustomDataState = {
   personalities: [],
   styles: [],
-  themes: [],
 };
 
 const customDataListeners = new Set<() => void>();
@@ -79,7 +72,6 @@ function loadCustomData() {
     customDataState = {
       personalities: await loadCustomPersonalities(),
       styles: await loadCustomArtStyles(),
-      themes: await loadCustomArtThemes(),
     };
     customDataListeners.forEach((listener) => {
       listener();
@@ -98,15 +90,13 @@ function getStagesOrDefault(config: TabConfig) {
 export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   // Subscribe to custom data store
   const customData = useSyncExternalStore(subscribeToCustomData, getCustomDataSnapshot, getCustomDataSnapshot);
-  const { personalities: customPersonalities, styles: customStyles, themes: customThemes } = customData;
+  const { personalities: customPersonalities, styles: customStyles } = customData;
 
   const [editingPersonality, setEditingPersonality] = useState<Personality | null>(null);
   const [showPersonalityEditor, setShowPersonalityEditor] = useState(false);
 
   const [editingStyle, setEditingStyle] = useState<CustomArtStyle | null>(null);
-  const [editingTheme, setEditingTheme] = useState<CustomArtTheme | null>(null);
   const [showStyleEditor, setShowStyleEditor] = useState(false);
-  const [showThemeEditor, setShowThemeEditor] = useState(false);
 
   const [showImportModal, setShowImportModal] = useState(false);
 
@@ -118,22 +108,11 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
     description: style.description,
   }));
 
-  const builtinThemesFormatted = ART_THEMES.map((theme: { description: string }, index: number) => ({
-    id: `builtin-theme-${index.toString()}`,
-    description: theme.description,
-  }));
-
   // Merge built-in and custom, removing any duplicates based on description
   const allStyles = [
     ...builtinStylesFormatted,
     ...customStyles.filter(
       (cs) => !builtinStylesFormatted.some((bs: { description: string }) => bs.description === cs.description),
-    ),
-  ];
-  const allThemes = [
-    ...builtinThemesFormatted,
-    ...customThemes.filter(
-      (ct) => !builtinThemesFormatted.some((bt: { description: string }) => bt.description === ct.description),
     ),
   ];
 
@@ -145,11 +124,6 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   const handleCreateNewStyle = () => {
     setEditingStyle(null);
     setShowStyleEditor(true);
-  };
-
-  const handleCreateNewTheme = () => {
-    setEditingTheme(null);
-    setShowThemeEditor(true);
   };
 
   const handleEditPersonality = (personality: Personality, createCopy = false) => {
@@ -174,7 +148,6 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
     customDataState = {
       personalities: await loadCustomPersonalities(),
       styles: await loadCustomArtStyles(),
-      themes: await loadCustomArtThemes(),
     };
     customDataListeners.forEach((listener) => {
       listener();
@@ -217,22 +190,6 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
     setEditingStyle(null);
   };
 
-  const handleSaveTheme = async (theme: CustomArtTheme) => {
-    if (editingTheme && customThemes.some((t) => t.id === editingTheme.id)) {
-      await updateCustomArtTheme(theme);
-    } else {
-      const newTheme = {
-        ...theme,
-        id: editingTheme?.id ?? generateArtThemeId(theme.description),
-      };
-      await addCustomArtTheme(newTheme);
-    }
-
-    await refreshCustomData();
-    setShowThemeEditor(false);
-    setEditingTheme(null);
-  };
-
   const handleDeletePersonality = async (id: string) => {
     if (confirm("Are you sure you want to delete this personality?")) {
       await deleteCustomPersonality(id);
@@ -261,34 +218,11 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
     }
   };
 
-  const handleDeleteTheme = async (id: string) => {
-    if (confirm("Are you sure you want to delete this custom art theme?")) {
-      await deleteCustomArtTheme(id);
-      await refreshCustomData();
-      // If this theme was selected, reset to random
-      const deletedTheme = customThemes.find((t) => t.id === id);
-      if (deletedTheme && config.imageGeneration.artTheme === deletedTheme.description) {
-        onChange({
-          ...config,
-          imageGeneration: { ...config.imageGeneration, artTheme: "random" },
-        });
-      }
-    }
-  };
-
   const handleEditStyle = (style: { id: string; description: string }) => {
     const foundStyle = customStyles.find((s) => s.id === style.id);
     if (foundStyle) {
       setEditingStyle(foundStyle);
       setShowStyleEditor(true);
-    }
-  };
-
-  const handleEditTheme = (theme: { id: string; description: string }) => {
-    const foundTheme = customThemes.find((t) => t.id === theme.id);
-    if (foundTheme) {
-      setEditingTheme(foundTheme);
-      setShowThemeEditor(true);
     }
   };
 
@@ -316,11 +250,7 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   };
 
   const handleResetToDefaults = () => {
-    if (
-      confirm(
-        "Reset this tab's settings to defaults? This will not affect custom personalities, art styles, or themes.",
-      )
-    ) {
+    if (confirm("Reset this tab's settings to defaults? This will not affect custom personalities or art styles.")) {
       onChange(createDefaultTabConfig());
     }
   };
@@ -353,29 +283,17 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
         <ImageGenerationSettings
           config={config}
           allStyles={allStyles}
-          allThemes={allThemes}
           customStyles={customStyles}
-          customThemes={customThemes}
           editingStyle={editingStyle}
-          editingTheme={editingTheme}
           showStyleEditor={showStyleEditor}
-          showThemeEditor={showThemeEditor}
           onChange={onChange}
           onCreateNewStyle={handleCreateNewStyle}
-          onCreateNewTheme={handleCreateNewTheme}
           onEditStyle={handleEditStyle}
-          onEditTheme={handleEditTheme}
           onDeleteStyle={handleDeleteStyle}
-          onDeleteTheme={handleDeleteTheme}
           onSaveStyle={handleSaveStyle}
-          onSaveTheme={handleSaveTheme}
           onCancelStyleEdit={() => {
             setShowStyleEditor(false);
             setEditingStyle(null);
-          }}
-          onCancelThemeEdit={() => {
-            setShowThemeEditor(false);
-            setEditingTheme(null);
           }}
         />
 

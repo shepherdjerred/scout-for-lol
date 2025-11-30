@@ -77,7 +77,7 @@ type Stage3And4Result = {
 
 async function runTimelineSummary(ctx: Stage1Context): Promise<{ text: string; trace: StageTrace } | undefined> {
   const { input } = ctx;
-  const { match, clients, stages } = input;
+  const { match, prompts, clients, stages } = input;
 
   if (!stages.timelineSummary.enabled) {
     return undefined;
@@ -86,6 +86,7 @@ async function runTimelineSummary(ctx: Stage1Context): Promise<{ text: string; t
   const params: Parameters<typeof generateTimelineSummary>[0] = {
     rawTimeline: match.rawTimeline,
     rawMatch: match.raw,
+    laneContext: prompts.laneContext,
     client: clients.openai,
     model: stages.timelineSummary.model,
   };
@@ -97,7 +98,7 @@ async function runTimelineSummary(ctx: Stage1Context): Promise<{ text: string; t
 
 async function runMatchSummary(ctx: Stage1Context): Promise<{ text: string; trace: StageTrace } | undefined> {
   const { input } = ctx;
-  const { match, player, prompts, clients, stages } = input;
+  const { match, player, clients, stages } = input;
 
   if (!stages.matchSummary.enabled) {
     return undefined;
@@ -107,7 +108,6 @@ async function runMatchSummary(ctx: Stage1Context): Promise<{ text: string; trac
     match: match.processed,
     rawMatch: match.raw,
     playerIndex: player.index,
-    laneContext: prompts.laneContext,
     client: clients.openai,
     model: stages.matchSummary.model,
   };
@@ -183,6 +183,7 @@ async function runStage4ImageGeneration(
   try {
     const result = await generateImage({
       imageDescription: imageDescriptionText,
+      artStyle: stages.imageGeneration.artStyle,
       geminiClient: clients.gemini,
       model: stages.imageGeneration.model,
       timeoutMs: stages.imageGeneration.timeoutMs,
@@ -250,7 +251,6 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
     personality: prompts.personality,
     basePromptTemplate: prompts.baseTemplate,
     laneContext: prompts.laneContext,
-    playerMetadata: player.metadata,
     playerIndex: player.index,
     matchSummary: effectiveMatchSummary,
     client: clients.openai,
@@ -258,9 +258,6 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
   };
   if (stage1Result.timelineSummaryText !== undefined) {
     reviewTextParams.timelineSummary = stage1Result.timelineSummaryText;
-  }
-  if (prompts.systemPromptPrefix !== undefined) {
-    reviewTextParams.systemPromptPrefix = prompts.systemPromptPrefix;
   }
 
   const reviewResult = await generateReviewTextStage(reviewTextParams);
@@ -333,6 +330,7 @@ export async function runStage1Sequential(params: { input: ReviewPipelineInput }
     const timelineParams: Parameters<typeof generateTimelineSummary>[0] = {
       rawTimeline: match.rawTimeline,
       rawMatch: match.raw,
+      laneContext: prompts.laneContext,
       client: clients.openai,
       model: stages.timelineSummary.model,
     };
@@ -347,19 +345,15 @@ export async function runStage1Sequential(params: { input: ReviewPipelineInput }
   let matchSummaryText: string | undefined;
   let matchSummaryTrace: StageTrace | undefined;
 
-  // Stage 1b: Match Summary (with timeline summary if available)
+  // Stage 1b: Match Summary
   if (stages.matchSummary.enabled) {
     const matchParams: Parameters<typeof generateMatchSummary>[0] = {
       match: match.processed,
       rawMatch: match.raw,
       playerIndex: player.index,
-      laneContext: prompts.laneContext,
       client: clients.openai,
       model: stages.matchSummary.model,
     };
-    if (timelineSummaryText !== undefined) {
-      matchParams.timelineSummary = timelineSummaryText;
-    }
     if (stages.matchSummary.systemPrompt !== undefined) {
       matchParams.systemPromptOverride = stages.matchSummary.systemPrompt;
     }

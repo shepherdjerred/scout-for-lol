@@ -27,12 +27,6 @@ function ImageGenerationConfig({ config }: { config: ReviewConfig }) {
             {config.imageGeneration.model}
           </span>
         </div>
-        <div>
-          <span className="text-blue-700 dark:text-blue-300 font-medium">Mashup Mode:</span>
-          <span className="ml-2 text-blue-900 dark:text-blue-100">
-            {config.imageGeneration.mashupMode ? "On (2 Themes)" : "Off"}
-          </span>
-        </div>
       </div>
 
       <div>
@@ -47,34 +41,6 @@ function ImageGenerationConfig({ config }: { config: ReviewConfig }) {
           )}
         </span>
       </div>
-
-      <div>
-        <span className="text-blue-700 dark:text-blue-300 font-medium">Art Theme:</span>
-        <span className="ml-2 text-blue-900 dark:text-blue-100 text-xs">
-          {config.imageGeneration.artTheme === "random" ? (
-            <span className="italic">Random</span>
-          ) : config.imageGeneration.artTheme.length > 60 ? (
-            `${config.imageGeneration.artTheme.substring(0, 60)}...`
-          ) : (
-            config.imageGeneration.artTheme
-          )}
-        </span>
-      </div>
-
-      {config.imageGeneration.mashupMode && (
-        <div>
-          <span className="text-blue-700 dark:text-blue-300 font-medium">Second Theme:</span>
-          <span className="ml-2 text-blue-900 dark:text-blue-100 text-xs">
-            {config.imageGeneration.secondArtTheme === "random" ? (
-              <span className="italic">Random</span>
-            ) : config.imageGeneration.secondArtTheme.length > 60 ? (
-              `${config.imageGeneration.secondArtTheme.substring(0, 60)}...`
-            ) : (
-              config.imageGeneration.secondArtTheme
-            )}
-          </span>
-        </div>
-      )}
     </>
   );
 }
