@@ -68,7 +68,12 @@ export function installDesktopDeps(workspaceSource: Directory, target: DesktopTa
     // Dependencies for cross-compiling Windows GNU target and bundling with NSIS
     container = container
       .withExec(["apt", "install", "-y", "mingw-w64", "nsis", "zip"])
-      .withExec(["rustup", "target", "add", "x86_64-pc-windows-gnu"]);
+      .withExec(["sh", "-c", "echo '🔧 Installing Windows GNU target for cross-compilation...'"])
+      .withExec(["rustup", "target", "add", "x86_64-pc-windows-gnu"])
+      .withExec(["sh", "-c", "echo '✅ Windows GNU target installed'"])
+      .withExec(["sh", "-c", "rustup target list --installed | grep -q x86_64-pc-windows-gnu || (echo '❌ Failed to install target' && exit 1)"])
+      .withExec(["sh", "-c", "echo '📋 Installed Rust targets:'"])
+      .withExec(["rustup", "target", "list", "--installed"]);
   }
 
   // Set up workspace structure - include all required files like base.ts does

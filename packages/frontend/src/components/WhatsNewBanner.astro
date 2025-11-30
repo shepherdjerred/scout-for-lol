@@ -1,5 +1,5 @@
 ---
-import { Icon } from 'astro-icon/components';
+import { Icon } from "astro-icon/components";
 import { changelog, formatChangelogDate, renderChangelogToHtml } from "../data/changelog";
 
 const latestEntry = changelog[0];
@@ -22,7 +22,7 @@ const latestEntry = changelog[0];
           </div>
           <a
             href="/whatsnew"
-            class="shrink-0 text-sm font-semibold text-primary-foreground hover:text-primary-foreground/80 transition-colors whitespace-nowrap ml-9 md:ml-0"
+            class="shrink-0 text-sm font-semibold text-primary-foreground dark:text-white hover:text-primary-foreground/80 dark:hover:text-gray-100 transition-colors whitespace-nowrap ml-9 md:ml-0"
           >
             View all <span aria-hidden="true">→</span>
           </a>
