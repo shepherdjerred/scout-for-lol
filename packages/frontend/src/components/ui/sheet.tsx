@@ -9,7 +9,6 @@ import { cn } from "@scout-for-lol/frontend/lib/utils.ts";
 
 const Sheet = SheetPrimitive.Root;
 const SheetTrigger = SheetPrimitive.Trigger;
-const SheetClose = SheetPrimitive.Close;
 const SheetPortal = SheetPrimitive.Portal;
 
 const SheetOverlay = React.forwardRef<
@@ -91,15 +90,4 @@ const SheetDescription = React.forwardRef<React.ComponentRef<"p">, React.Compone
 );
 SheetDescription.displayName = "SheetDescription";
 
-export {
-  Sheet,
-  SheetPortal,
-  SheetOverlay,
-  SheetTrigger,
-  SheetClose,
-  SheetContent,
-  SheetHeader,
-  SheetFooter,
-  SheetTitle,
-  SheetDescription,
-};
+export { Sheet, SheetTrigger, SheetContent };
