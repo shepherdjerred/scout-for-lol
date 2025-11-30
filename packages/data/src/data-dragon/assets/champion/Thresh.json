@@ -133,10 +133,7 @@
         "Intentionally breaking a wall of The Box can allow a vulnerable ally to escape unscathed.",
         "Thresh relies on collecting souls for a portion of his defense and damage. Try punishing him when he moves to collect them."
       ],
-      "tags": [
-        "Support",
-        "Tank"
-      ],
+      "tags": ["Support", "Tank"],
       "partype": "Mana",
       "info": {
         "attack": 5,
@@ -173,129 +170,33 @@
           "description": "Thresh binds an enemy in chains and pulls them toward him. Activating this ability a second time pulls Thresh to the enemy.",
           "tooltip": "Thresh throws out his scythe, <status>Stunning</status> the first unit hit and <status>Pulling</status> them towards Thresh for {{ tauntlength }} seconds. The scythe does <magicDamage>{{ totaldamage }} magic damage</magicDamage> and also grants <keywordStealth>True Sight</keywordStealth> for the duration.<br /><br />Thresh can <recast>Recast</recast> this Ability to pull himself to the enemy.<br /><br />If this Ability hits, its Cooldown is reduced by {{ hitbonuscooldown }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
-            "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
-            ]
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
           },
           "maxrank": 5,
-          "cooldown": [
-            19,
-            16.5,
-            14,
-            11.5,
-            9
-          ],
+          "cooldown": [19, 16.5, 14, 11.5, 9],
           "cooldownBurn": "19/16.5/14/11.5/9",
-          "cost": [
-            70,
-            70,
-            70,
-            70,
-            70
-          ],
+          "cost": [70, 70, 70, 70, 70],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              100,
-              100,
-              100,
-              100,
-              100
-            ],
-            [
-              1.5,
-              1.5,
-              1.5,
-              1.5,
-              1.5
-            ],
-            [
-              75,
-              75,
-              75,
-              75,
-              75
-            ],
-            [
-              12,
-              12,
-              12,
-              12,
-              12
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [100, 100, 100, 100, 100],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [75, 75, 75, 75, 75],
+            [12, 12, 12, 12, 12],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "100",
-            "1.5",
-            "75",
-            "12",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "100", "1.5", "75", "12", "0", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1075,
-            1075,
-            1075,
-            1075,
-            1075
-          ],
+          "range": [1075, 1075, 1075, 1075, 1075],
           "rangeBurn": "1075",
           "image": {
             "full": "ThreshQ.png",
@@ -314,11 +215,7 @@
           "description": "Thresh throws out a lantern that shields nearby allied Champions from damage. Allies can click the lantern to dash to Thresh.",
           "tooltip": "Thresh throws his lantern, allowing an ally to click on it to dash to Thresh.<br /><br />The lantern also grants <shield>{{ totalshield }} Shield</shield> for {{ shieldduration }} seconds to Thresh and the first ally champion to come in contact with it.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Shield Amount",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Shield Amount", "Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ baseshieldvalue }} -> {{ baseshieldvalueNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -326,119 +223,29 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            21,
-            20,
-            19,
-            18,
-            17
-          ],
+          "cooldown": [21, 20, 19, 18, 17],
           "cooldownBurn": "21/20/19/18/17",
-          "cost": [
-            50,
-            55,
-            60,
-            65,
-            70
-          ],
+          "cost": [50, 55, 60, 65, 70],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              2,
-              2,
-              2,
-              2,
-              2
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              6,
-              6,
-              6,
-              6,
-              6
-            ],
-            [
-              4,
-              4,
-              4,
-              4,
-              4
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [1, 1, 1, 1, 1],
+            [2, 2, 2, 2, 2],
+            [0, 0, 0, 0, 0],
+            [6, 6, 6, 6, 6],
+            [4, 4, 4, 4, 4],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "1",
-            "2",
-            "0",
-            "6",
-            "4",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "1", "2", "0", "6", "4", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            950,
-            950,
-            950,
-            950,
-            950
-          ],
+          "range": [950, 950, 950, 950, 950],
           "rangeBurn": "950",
           "image": {
             "full": "ThreshW.png",
@@ -457,13 +264,7 @@
           "description": "Thresh's attacks wind up, dealing more damage the longer he waits between attacks. When activated, Thresh sweeps his chain, knocking all enemies hit in the direction of the blow.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Thresh's Attacks deal additional damage based on how long since he last Attacked. They deal between <magicDamage>{{ pattackdamagemin }}</magicDamage> and <magicDamage>{{ pattackdamagemax }} magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Thresh whips his chains, <status>Pulling</status> or <status>Pushing</status> enemies in the direction of the swing. Enemies hit are also <status>Slowed</status> by {{ e2 }}% for {{ e4 }} second and take <magicDamage>{{ totaldamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Passive Damage",
-              "Active Damage",
-              "Slow",
-              "@AbilityResourceName@ Cost",
-              "Cooldown"
-            ],
+            "label": ["Passive Damage", "Active Damage", "Slow", "@AbilityResourceName@ Cost", "Cooldown"],
             "effect": [
               "{{ passiveadratio }}% -> {{ passiveadratioNL }}%",
               "{{ e1 }} -> {{ e1NL }}",
@@ -473,95 +274,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            13,
-            12.25,
-            11.5,
-            10.75,
-            10
-          ],
+          "cooldown": [13, 12.25, 11.5, 10.75, 10],
           "cooldownBurn": "13/12.25/11.5/10.75/10",
-          "cost": [
-            60,
-            65,
-            70,
-            75,
-            80
-          ],
+          "cost": [60, 65, 70, 75, 80],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [
-              75,
-              120,
-              165,
-              210,
-              255
-            ],
-            [
-              20,
-              25,
-              30,
-              35,
-              40
-            ],
-            [
-              80,
-              110,
-              140,
-              170,
-              200
-            ],
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              1.5,
-              1.5,
-              1.5,
-              1.5,
-              1.5
-            ],
-            [
-              1.7,
-              1.7,
-              1.7,
-              1.7,
-              1.7
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [75, 120, 165, 210, 255],
+            [20, 25, 30, 35, 40],
+            [80, 110, 140, 170, 200],
+            [1, 1, 1, 1, 1],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [1.7, 1.7, 1.7, 1.7, 1.7],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -579,13 +308,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            500,
-            500,
-            500,
-            500,
-            500
-          ],
+          "range": [500, 500, 500, 500, 500],
           "rangeBurn": "500",
           "image": {
             "full": "ThreshE.png",
@@ -604,103 +327,33 @@
           "description": "A prison of walls that slow and deal damage if broken.",
           "tooltip": "Thresh creates a prison of spectral walls, <status>Slowing</status> champions by {{ e3 }}% for {{ e2 }} seconds and dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage>. Walls break after one collision, and after one is broken, the rest deal no damage and <status>Slow</status> for half duration.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
-            "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
-            ]
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
           },
           "maxrank": 3,
-          "cooldown": [
-            120,
-            100,
-            80
-          ],
+          "cooldown": [120, 100, 80],
           "cooldownBurn": "120/100/80",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              250,
-              400,
-              550
-            ],
-            [
-              2,
-              2,
-              2
-            ],
-            [
-              99,
-              99,
-              99
-            ],
-            [
-              4,
-              4,
-              4
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [250, 400, 550],
+            [2, 2, 2],
+            [99, 99, 99],
+            [4, 4, 4],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "250/400/550",
-            "2",
-            "99",
-            "4",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "250/400/550", "2", "99", "4", "0", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            450,
-            450,
-            450
-          ],
+          "range": [450, 450, 450],
           "rangeBurn": "450",
           "image": {
             "full": "ThreshRPenta.png",

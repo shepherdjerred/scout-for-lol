@@ -75,9 +75,7 @@ type Stage3And4Result = {
 // Stage 1 Helpers
 // ============================================================================
 
-async function runTimelineSummary(
-  ctx: Stage1Context,
-): Promise<{ text: string; trace: StageTrace } | undefined> {
+async function runTimelineSummary(ctx: Stage1Context): Promise<{ text: string; trace: StageTrace } | undefined> {
   const { input, curatedTimeline } = ctx;
   const { clients, stages } = input;
 
@@ -101,9 +99,7 @@ async function runTimelineSummary(
   }
 }
 
-async function runMatchSummary(
-  ctx: Stage1Context,
-): Promise<{ text: string; trace: StageTrace } | undefined> {
+async function runMatchSummary(ctx: Stage1Context): Promise<{ text: string; trace: StageTrace } | undefined> {
   const { input, curatedData } = ctx;
   const { match, player, prompts, clients, stages } = input;
 
@@ -131,10 +127,7 @@ async function runMatchSummary(
 }
 
 async function runStage1Parallel(ctx: Stage1Context): Promise<Stage1Result> {
-  const [timelineResult, matchResult] = await Promise.all([
-    runTimelineSummary(ctx),
-    runMatchSummary(ctx),
-  ]);
+  const [timelineResult, matchResult] = await Promise.all([runTimelineSummary(ctx), runMatchSummary(ctx)]);
 
   const result: Stage1Result = {};
 
@@ -159,9 +152,7 @@ async function runStage1Parallel(ctx: Stage1Context): Promise<Stage1Result> {
 // Stage 3 & 4 Helpers
 // ============================================================================
 
-async function runStage3ImageDescription(
-  ctx: Stage3And4Context,
-): Promise<string | undefined> {
+async function runStage3ImageDescription(ctx: Stage3And4Context): Promise<string | undefined> {
   const { reviewText, stages, clients, traces, intermediate } = ctx;
 
   if (!stages.imageDescription.enabled) {

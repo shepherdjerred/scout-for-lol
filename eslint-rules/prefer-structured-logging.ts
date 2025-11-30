@@ -4,14 +4,7 @@ const createRule = ESLintUtils.RuleCreator(
   (name) => `https://github.com/shepherdjerred/scout-for-lol/blob/main/eslint-rules/${name}.ts`,
 );
 
-const CONSOLE_METHODS = new Set([
-  "log",
-  "error",
-  "warn",
-  "info",
-  "debug",
-  "trace",
-]);
+const CONSOLE_METHODS = new Set(["log", "error", "warn", "info", "debug", "trace"]);
 
 export const preferStructuredLogging = createRule({
   name: "prefer-structured-logging",
@@ -45,9 +38,7 @@ export const preferStructuredLogging = createRule({
           const filename = context.filename;
           const pathParts = filename.split("/");
           const fileBasename = pathParts[pathParts.length - 1] ?? "app";
-          const suggestedName = fileBasename
-            .replace(/\.tsx?$/, "")
-            .replace(/\.test$/, "");
+          const suggestedName = fileBasename.replace(/\.tsx?$/, "").replace(/\.test$/, "");
 
           // Map console methods to logger methods
           const logMethodMap: Record<string, string> = {

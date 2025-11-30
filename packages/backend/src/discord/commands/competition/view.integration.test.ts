@@ -4,7 +4,16 @@ import { createCompetition, getCompetitionById } from "@scout-for-lol/backend/da
 import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.ts";
 import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.ts";
 import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
-import { ChampionIdSchema, getCompetitionStatus, type ChampionId, type CompetitionId, type DiscordAccountId, type DiscordChannelId, type DiscordGuildId, type PlayerId, } from "@scout-for-lol/data/index.ts";
+import {
+  ChampionIdSchema,
+  getCompetitionStatus,
+  type ChampionId,
+  type CompetitionId,
+  type DiscordAccountId,
+  type DiscordChannelId,
+  type DiscordGuildId,
+  type PlayerId,
+} from "@scout-for-lol/data/index.ts";
 import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database for integration tests

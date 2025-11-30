@@ -27,8 +27,6 @@ export const RuneTreeSchema = z.array(
 
 export const runes = RuneTreeSchema.parse(runesData);
 
-
-
 export function getRuneInfo(runeId: number):
   | {
       name: string;

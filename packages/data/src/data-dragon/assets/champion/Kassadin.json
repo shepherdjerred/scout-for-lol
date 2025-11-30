@@ -91,10 +91,7 @@
         "Each time Kassadin consecutively uses Riftwalk, he pays more and more mana. Keep this in mind as you chase him.",
         "It takes 6 spell casts for Kassadin's slow, Force Pulse, to become castable. If he levels up that ability, judiciously use your own skills while laning against him."
       ],
-      "tags": [
-        "Assassin",
-        "Mage"
-      ],
+      "tags": ["Assassin", "Mage"],
       "partype": "Mana",
       "info": {
         "attack": 3,
@@ -131,12 +128,7 @@
           "description": "Kassadin fires an orb of void energy at a target, dealing damage and interrupting channels. The excess energy forms around himself, granting a temporary shield that absorbs magic damage.",
           "tooltip": "Kassadin fires an orb of void energy, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and interrupting channels. Kassadin also gains <shield>{{ totalshield }} Magic Shield</shield> for 1.5 seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Shield Amount",
-              "@AbilityResourceName@ Cost",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Shield Amount", "@AbilityResourceName@ Cost", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ shieldamount }} -> {{ shieldamountNL }}",
@@ -145,119 +137,29 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            10,
-            9.5,
-            9,
-            8.5,
-            8
-          ],
+          "cooldown": [10, 9.5, 9, 8.5, 8],
           "cooldownBurn": "10/9.5/9/8.5/8",
-          "cost": [
-            60,
-            65,
-            70,
-            75,
-            80
-          ],
+          "cost": [60, 65, 70, 75, 80],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [
-              65,
-              95,
-              125,
-              155,
-              185
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              80,
-              110,
-              140,
-              170,
-              200
-            ],
-            [
-              1.5,
-              1.5,
-              1.5,
-              1.5,
-              1.5
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [65, 95, 125, 155, 185],
+            [0, 0, 0, 0, 0],
+            [80, 110, 140, 170, 200],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "65/95/125/155/185",
-            "0",
-            "80/110/140/170/200",
-            "1.5",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "65/95/125/155/185", "0", "80/110/140/170/200", "1.5", "0", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            650,
-            650,
-            650,
-            650,
-            650
-          ],
+          "range": [650, 650, 650, 650, 650],
           "rangeBurn": "650",
           "image": {
             "full": "NullLance.png",
@@ -276,11 +178,7 @@
           "description": "Passive: Kassadin's basic attacks deal bonus magic damage. Active: Kassadin's next basic attack deals significant bonus magic damage and restores Mana.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Kassadin's Attacks deal an additional <magicDamage>{{ onhitdamage }} magic damage</magicDamage>.<br /><br /><spellActive>Active:</spellActive> Kassadin charges his blade, causing his next Attack to deal <magicDamage>{{ activedamage }} magic damage</magicDamage> and restore <scaleMana>{{ missingmanaratio }}% missing Mana</scaleMana>, increased to <scaleMana>{{ championmissingmanaratio }}%</scaleMana> against champions.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Active Damage",
-              "Base Mana Restore",
-              "Champion Mana Restore"
-            ],
+            "label": ["Active Damage", "Base Mana Restore", "Champion Mana Restore"],
             "effect": [
               "{{ activebasedamage }} -> {{ activebasedamageNL }}",
               "{{ missingmanaratio }}% -> {{ missingmanaratioNL }}%",
@@ -288,95 +186,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            7,
-            7,
-            7,
-            7,
-            7
-          ],
+          "cooldown": [7, 7, 7, 7, 7],
           "cooldownBurn": "7",
-          "cost": [
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
+          "cost": [1, 1, 1, 1, 1],
           "costBurn": "1",
           "datavalues": {},
           "effect": [
             null,
-            [
-              4,
-              4.5,
-              5,
-              5.5,
-              6
-            ],
-            [
-              20,
-              20,
-              20,
-              20,
-              20
-            ],
-            [
-              50,
-              75,
-              100,
-              125,
-              150
-            ],
-            [
-              20,
-              22.5,
-              25,
-              27.5,
-              30
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [4, 4.5, 5, 5.5, 6],
+            [20, 20, 20, 20, 20],
+            [50, 75, 100, 125, 150],
+            [20, 22.5, 25, 27.5, 30],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -394,13 +220,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1,
-            1,
-            1,
-            1,
-            1
-          ],
+          "range": [1, 1, 1, 1, 1],
           "rangeBurn": "1",
           "image": {
             "full": "NetherBlade.png",
@@ -419,12 +239,7 @@
           "description": "Kassadin draws energy from spells cast in his vicinity. Upon charging up, Kassadin can use Force Pulse to damage and slow enemies in a cone in front of him.",
           "tooltip": "<spellPassive>Passive:</spellPassive> <spellName>Force Pulse's</spellName> Cooldown is reduced by {{ reductionperspellcast }} second whenever any Ability is used near Kassadin.<br /><br /><spellActive>Active:</spellActive> Kassadin unleashes a void pulse, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> and <status>Slowing</status> by {{ e2 }}% for {{ e3 }} second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Slow",
-              "Cooldown",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "Slow", "Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ e2 }}% -> {{ e2NL }}%",
@@ -433,119 +248,29 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            21,
-            20,
-            19,
-            18,
-            17
-          ],
+          "cooldown": [21, 20, 19, 18, 17],
           "cooldownBurn": "21/20/19/18/17",
-          "cost": [
-            60,
-            65,
-            70,
-            75,
-            80
-          ],
+          "cost": [60, 65, 70, 75, 80],
           "costBurn": "60/65/70/75/80",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              50,
-              60,
-              70,
-              80,
-              90
-            ],
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [50, 60, 70, 80, 90],
+            [1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "0",
-            "50/60/70/80/90",
-            "1",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "0", "50/60/70/80/90", "1", "0", "0", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            400,
-            400,
-            400,
-            400,
-            400
-          ],
+          "range": [400, 400, 400, 400, 400],
           "rangeBurn": "400",
           "image": {
             "full": "ForcePulse.png",
@@ -564,11 +289,7 @@
           "description": "Kassadin teleports to a nearby location dealing damage to nearby enemy units. Multiple Riftwalks in a short period of time cost additional Mana but also deal additional damage.",
           "tooltip": "Kassadin teleports to a nearby location, dealing <magicDamage>{{ basedamage }} magic damage</magicDamage>.<br /><br />Each subsequent use of this Ability within the next {{ rstackduration }} seconds doubles the Mana cost and deals an additional <magicDamage>{{ bonusdamage }} magic damage</magicDamage>. The cost and damage increases can stack up to {{ maxstacks }} times.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Damage Per Stack",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Damage Per Stack", "Cooldown"],
             "effect": [
               "{{ rbasedamage }} -> {{ rbasedamageNL }}",
               "{{ stackdamage }} -> {{ stackdamageNL }}",
@@ -576,93 +297,29 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            5,
-            3.5,
-            2
-          ],
+          "cooldown": [5, 3.5, 2],
           "cooldownBurn": "5/3.5/2",
-          "cost": [
-            40,
-            40,
-            40
-          ],
+          "cost": [40, 40, 40],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            500,
-            500,
-            500
-          ],
+          "range": [500, 500, 500],
           "rangeBurn": "500",
           "image": {
             "full": "RiftWalk.png",

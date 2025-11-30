@@ -49,10 +49,7 @@ export async function checkAbandonedGuilds(client: Client): Promise<void> {
       try {
         await handleAbandonedGuild(client, guildInfo);
       } catch (error) {
-        logger.error(
-          `[AbandonedGuilds] Error handling abandoned guild ${guildInfo.serverId}:`,
-          getErrorMessage(error),
-        );
+        logger.error(`[AbandonedGuilds] Error handling abandoned guild ${guildInfo.serverId}:`, getErrorMessage(error));
         Sentry.captureException(error, { tags: { source: "handle-abandoned-guild", serverId: guildInfo.serverId } });
         // Continue with other guilds even if one fails
       }

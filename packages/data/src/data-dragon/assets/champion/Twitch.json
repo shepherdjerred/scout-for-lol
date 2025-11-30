@@ -121,10 +121,7 @@
         "Spell Shields won't block the damage from Deadly Venom, but they will block the effects Twitch can trigger with it.",
         "If you suspect Twitch has left the lane, let your teammates know that Twitch is ''MIA.''"
       ],
-      "tags": [
-        "Marksman",
-        "Assassin"
-      ],
+      "tags": ["Marksman", "Assassin"],
       "partype": "Mana",
       "info": {
         "attack": 9,
@@ -161,129 +158,33 @@
           "description": "Twitch becomes Camouflaged for a short duration and gains Move Speed. When leaving Camouflage, Twitch gains Attack Speed for a short duration.<br><br>When an enemy champion with Deadly Venom dies, Ambush's cooldown is reset.",
           "tooltip": "Twitch <keywordStealth>Camouflages</keywordStealth> and gains <speed>{{ e3 }}% Move Speed</speed> for {{ e2 }} seconds. The Move Speed increases to {{ e3 }}% while near an enemy champion that can't see him. After exiting <keywordStealth>Camouflage</keywordStealth>, Twitch gains <attackSpeed>{{ e1 }}% Attack Speed</attackSpeed> for {{ e6 }} seconds.<br /><br />When an enemy champion dies while afflicted with <keywordMajor>Venom</keywordMajor>, this Ability's Cooldown is refreshed.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Camouflage Duration",
-              "Attack Speed"
-            ],
-            "effect": [
-              "{{ e2 }} -> {{ e2NL }}",
-              "{{ e1 }}% -> {{ e1NL }}%"
-            ]
+            "label": ["Camouflage Duration", "Attack Speed"],
+            "effect": ["{{ e2 }} -> {{ e2NL }}", "{{ e1 }}% -> {{ e1NL }}%"]
           },
           "maxrank": 5,
-          "cooldown": [
-            16,
-            16,
-            16,
-            16,
-            16
-          ],
+          "cooldown": [16, 16, 16, 16, 16],
           "cooldownBurn": "16",
-          "cost": [
-            40,
-            40,
-            40,
-            40,
-            40
-          ],
+          "cost": [40, 40, 40, 40, 40],
           "costBurn": "40",
           "datavalues": {},
           "effect": [
             null,
-            [
-              45,
-              50,
-              55,
-              60,
-              65
-            ],
-            [
-              10,
-              11,
-              12,
-              13,
-              14
-            ],
-            [
-              30,
-              30,
-              30,
-              30,
-              30
-            ],
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              1,
-              1,
-              1,
-              1,
-              1
-            ],
-            [
-              6,
-              6,
-              6,
-              6,
-              6
-            ],
-            [
-              3,
-              3,
-              3,
-              3,
-              3
-            ],
-            [
-              500,
-              500,
-              500,
-              500,
-              500
-            ],
-            [
-              1000,
-              1000,
-              1000,
-              1000,
-              1000
-            ],
-            [
-              30,
-              30,
-              30,
-              30,
-              30
-            ]
+            [45, 50, 55, 60, 65],
+            [10, 11, 12, 13, 14],
+            [30, 30, 30, 30, 30],
+            [1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1],
+            [6, 6, 6, 6, 6],
+            [3, 3, 3, 3, 3],
+            [500, 500, 500, 500, 500],
+            [1000, 1000, 1000, 1000, 1000],
+            [30, 30, 30, 30, 30]
           ],
-          "effectBurn": [
-            null,
-            "45/50/55/60/65",
-            "10/11/12/13/14",
-            "30",
-            "1",
-            "1",
-            "6",
-            "3",
-            "500",
-            "1000",
-            "30"
-          ],
+          "effectBurn": [null, "45/50/55/60/65", "10/11/12/13/14", "30", "1", "1", "6", "3", "500", "1000", "30"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            20,
-            20,
-            20,
-            20,
-            20
-          ],
+          "range": [20, 20, 20, 20, 20],
           "rangeBurn": "20",
           "image": {
             "full": "TwitchHideInShadows.png",
@@ -302,129 +203,33 @@
           "description": "Twitch hurls a cask of venom that explodes in an area, slowing targets and applying deadly venom to the target.",
           "tooltip": "Twitch hurls a cask that adds a stack of <spellName>Deadly Venom</spellName> to all enemies struck and leaves behind a toxic cloud that persists for {{ duration }} seconds.<br /><br />Enemies that remain within the cloud are <status>Slowed</status> by {{ totalslowamount }}% and receive an additional stack of <spellName>Deadly Venom</spellName> each second.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Move Speed Slow",
-              "Cooldown"
-            ],
-            "effect": [
-              "{{ baseslowamount }}% -> {{ baseslowamountNL }}%",
-              "{{ cooldown }} -> {{ cooldownNL }}"
-            ]
+            "label": ["Move Speed Slow", "Cooldown"],
+            "effect": ["{{ baseslowamount }}% -> {{ baseslowamountNL }}%", "{{ cooldown }} -> {{ cooldownNL }}"]
           },
           "maxrank": 5,
-          "cooldown": [
-            13,
-            12,
-            11,
-            10,
-            9
-          ],
+          "cooldown": [13, 12, 11, 10, 9],
           "cooldownBurn": "13/12/11/10/9",
-          "cost": [
-            70,
-            70,
-            70,
-            70,
-            70
-          ],
+          "cost": [70, 70, 70, 70, 70],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            950,
-            950,
-            950,
-            950,
-            950
-          ],
+          "range": [950, 950, 950, 950, 950],
           "rangeBurn": "950",
           "image": {
             "full": "TwitchVenomCask.png",
@@ -443,11 +248,7 @@
           "description": "Twitch wreaks further havoc on poisoned enemies with a blast of his vile diseases.",
           "tooltip": "Deals <physicalDamage>{{ basedamage }} physical damage</physicalDamage> to all nearby enemies affected by <spellName>Deadly Venom</spellName>, plus an additional <physicalDamage>{{ physicaldamageperstack }} physical damage</physicalDamage> and <magicDamage>{{ magicdamageperstack }} magical damage</magicDamage> per stack of <spellName>Deadly Venom</spellName>.<br /><br />Max Damage: <physicalDamage>{{ maxphysicaldamage }} physical damage</physicalDamage> and <magicDamage>{{ maxmagicdamage }} magical damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Damage per Stack",
-              "@AbilityResourceName@ Cost"
-            ],
+            "label": ["Damage", "Damage per Stack", "@AbilityResourceName@ Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ basephysicaldamageperstack }} -> {{ basephysicaldamageperstackNL }}",
@@ -455,119 +256,29 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            12,
-            11,
-            10,
-            9,
-            8
-          ],
+          "cooldown": [12, 11, 10, 9, 8],
           "cooldownBurn": "12/11/10/9/8",
-          "cost": [
-            50,
-            60,
-            70,
-            80,
-            90
-          ],
+          "cost": [50, 60, 70, 80, 90],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1200,
-            1200,
-            1200,
-            1200,
-            1200
-          ],
+          "range": [1200, 1200, 1200, 1200, 1200],
           "rangeBurn": "1200",
           "image": {
             "full": "TwitchExpunge.png",
@@ -586,101 +297,33 @@
           "description": "Twitch unleashes the full power of his crossbow, shooting bolts over a great distance that pierce all enemies caught in their path.",
           "tooltip": "Twitch unleashes his crossbow, gaining {{ bonusrange }} Attack Range and <scaleAD>{{ bonusad }} Attack Damage</scaleAD>, and causing his Attacks to become piercing bolts for {{ duration }} seconds. These bolts hit all enemies they pass through, but deal {{ falloffdamage*100 }}% less damage to subsequent targets, down to a minimum of {{ minimumfalloffdamage*100 }}% damage.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Attack Damage"
-            ],
-            "effect": [
-              "{{ bonusad }} -> {{ bonusadNL }}"
-            ]
+            "label": ["Attack Damage"],
+            "effect": ["{{ bonusad }} -> {{ bonusadNL }}"]
           },
           "maxrank": 3,
-          "cooldown": [
-            90,
-            90,
-            90
-          ],
+          "cooldown": [90, 90, 90],
           "cooldownBurn": "90",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1200,
-            1200,
-            1200
-          ],
+          "range": [1200, 1200, 1200],
           "rangeBurn": "1200",
           "image": {
             "full": "TwitchFullAutomatic.png",

@@ -1,10 +1,5 @@
 import satori from "satori";
-import {
-  type ArenaMatch,
-  validateChampionImage,
-  validateItemImage,
-  validateAugmentIcon,
-} from "@scout-for-lol/data";
+import { type ArenaMatch, validateChampionImage, validateItemImage, validateAugmentIcon } from "@scout-for-lol/data";
 import { ArenaReport } from "@scout-for-lol/report/html/arena/report.tsx";
 import { bunBeaufortFonts, bunSpiegelFonts } from "@scout-for-lol/report/assets/index.ts";
 import { svgToPng } from "@scout-for-lol/report/html/index.tsx";

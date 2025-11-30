@@ -18,17 +18,17 @@ packages/
 
 ## Core Technologies
 
-| Category | Technology |
-|----------|------------|
-| Runtime | Bun |
-| Language | TypeScript (strict mode) |
-| Linting | ESLint + Prettier |
-| Database | Prisma ORM |
-| Validation | Zod |
-| CI/CD | Dagger (requires Docker) |
-| Bot Framework | Discord.js |
-| Frontend | Astro |
-| Reports | React + satori + @resvg/resvg-js |
+| Category      | Technology                       |
+| ------------- | -------------------------------- |
+| Runtime       | Bun                              |
+| Language      | TypeScript (strict mode)         |
+| Linting       | ESLint + Prettier                |
+| Database      | Prisma ORM                       |
+| Validation    | Zod                              |
+| CI/CD         | Dagger (requires Docker)         |
+| Bot Framework | Discord.js                       |
+| Frontend      | Astro                            |
+| Reports       | React + satori + @resvg/resvg-js |
 
 ## Development Commands
 
@@ -130,7 +130,7 @@ if (!result.success) {
 
 // Use type guards instead of casting
 function isString(value: unknown): value is string {
-  return typeof value === 'string';
+  return typeof value === "string";
 }
 
 // Advanced types for complex scenarios
@@ -150,17 +150,17 @@ type DeepReadonly<T> = {
 
 ## Key Libraries
 
-| Library | Purpose |
-|---------|---------|
-| `remeda` | Functional data transformations |
-| `ts-pattern` | Complex control flow / pattern matching |
-| `env-var` | Type-safe environment configuration |
-| `date-fns` | Date operations |
-| `zod` | Runtime validation and schemas |
-| `zod-validation-error` | User-friendly validation errors |
-| `twisted` | Riot Games API client |
-| `satori` | JSX to SVG rendering |
-| `@resvg/resvg-js` | SVG to PNG conversion |
+| Library                | Purpose                                 |
+| ---------------------- | --------------------------------------- |
+| `remeda`               | Functional data transformations         |
+| `ts-pattern`           | Complex control flow / pattern matching |
+| `env-var`              | Type-safe environment configuration     |
+| `date-fns`             | Date operations                         |
+| `zod`                  | Runtime validation and schemas          |
+| `zod-validation-error` | User-friendly validation errors         |
+| `twisted`              | Riot Games API client                   |
+| `satori`               | JSX to SVG rendering                    |
+| `@resvg/resvg-js`      | SVG to PNG conversion                   |
 
 ---
 
@@ -169,6 +169,7 @@ type DeepReadonly<T> = {
 ### Command Structure
 
 Commands live in `packages/backend/src/discord/commands/`. Each command exports:
+
 - `SlashCommandBuilder` - Command definition
 - `execute` function - Command handler
 
@@ -177,13 +178,13 @@ Commands live in `packages/backend/src/discord/commands/`. Each command exports:
 ```typescript
 // Always handle Discord API errors gracefully
 try {
-  await interaction.reply({ content: 'Success!' });
+  await interaction.reply({ content: "Success!" });
 } catch (error) {
-  console.error('Discord API error:', error);
+  console.error("Discord API error:", error);
   if (interaction.replied || interaction.deferred) {
-    await interaction.followUp({ content: 'An error occurred', ephemeral: true });
+    await interaction.followUp({ content: "An error occurred", ephemeral: true });
   } else {
-    await interaction.reply({ content: 'An error occurred', ephemeral: true });
+    await interaction.reply({ content: "An error occurred", ephemeral: true });
   }
 }
 ```
@@ -222,11 +223,13 @@ type ParticipantDto = ...;  // ❌ Use RawParticipant instead
 ```
 
 **File naming**: Schema files should use `raw-*.schema.ts` pattern:
+
 - `raw-match.schema.ts`
 - `raw-participant.schema.ts`
 - `raw-timeline.schema.ts`
 
 **Why this convention?**
+
 - Clearly distinguishes between unvalidated external data (`Raw*`) and validated internal types
 - Enforced by ESLint rule `custom-rules/no-dto-naming`
 - Never import DTO types directly from `twisted` - use `@scout-for-lol/data` schemas instead

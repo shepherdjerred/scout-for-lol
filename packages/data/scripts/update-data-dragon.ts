@@ -96,11 +96,7 @@ async function getLatestVersion(): Promise<string> {
   return latestVersion;
 }
 
-async function downloadAsset(
-  version: string,
-  filename: string,
-  schema: z.ZodType,
-): Promise<unknown> {
+async function downloadAsset(version: string, filename: string, schema: z.ZodType): Promise<unknown> {
   const url = `${BASE_URL}/cdn/${version}/data/en_US/${filename}`;
   console.log(`Downloading ${filename} from ${url}...`);
 
@@ -175,33 +171,17 @@ async function main() {
     // Write JSON assets to disk
     console.log("\nWriting JSON assets to disk...");
 
-    await writeFile(
-      join(ASSETS_DIR, "summoner.json"),
-      JSON.stringify(summoner, null, 2),
-      "utf-8",
-    );
+    await writeFile(join(ASSETS_DIR, "summoner.json"), JSON.stringify(summoner, null, 2), "utf-8");
     console.log("✓ Written summoner.json");
 
-    await writeFile(
-      join(ASSETS_DIR, "item.json"),
-      JSON.stringify(items, null, 2),
-      "utf-8",
-    );
+    await writeFile(join(ASSETS_DIR, "item.json"), JSON.stringify(items, null, 2), "utf-8");
     console.log("✓ Written item.json");
 
-    await writeFile(
-      join(ASSETS_DIR, "runesReforged.json"),
-      JSON.stringify(runes, null, 2),
-      "utf-8",
-    );
+    await writeFile(join(ASSETS_DIR, "runesReforged.json"), JSON.stringify(runes, null, 2), "utf-8");
     console.log("✓ Written runesReforged.json");
 
     // Write version metadata
-    await writeFile(
-      join(ASSETS_DIR, "version.json"),
-      JSON.stringify({ version }, null, 2),
-      "utf-8",
-    );
+    await writeFile(join(ASSETS_DIR, "version.json"), JSON.stringify({ version }, null, 2), "utf-8");
     console.log("✓ Written version.json");
 
     // Download champion list to get all champion names
@@ -251,11 +231,7 @@ async function main() {
         const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
-          await writeFile(
-            join(ASSETS_DIR, "champion", `${championName}.json`),
-            JSON.stringify(data, null, 2),
-            "utf-8",
-          );
+          await writeFile(join(ASSETS_DIR, "champion", `${championName}.json`), JSON.stringify(data, null, 2), "utf-8");
           championDataCount++;
           if (championDataCount % 20 === 0) {
             console.log(`  Downloaded ${championDataCount}/${championNames.length} champion data files...`);
@@ -348,7 +324,8 @@ async function main() {
       console.log("  No augment icons found in test data");
     }
 
-    const totalImages = spellImages.length + itemImages.length + championImages.length + runeImages.length + augmentImages.length;
+    const totalImages =
+      spellImages.length + itemImages.length + championImages.length + runeImages.length + augmentImages.length;
     console.log(`\n✅ Successfully updated Data Dragon assets to version ${version}`);
     console.log(`\nAssets written to: ${ASSETS_DIR}`);
     console.log(`Total images downloaded: ${totalImages}`);

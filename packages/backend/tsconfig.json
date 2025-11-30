@@ -1,13 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "checkJs": false,
-    "allowImportingTsExtensions": true,
-    "jsx": "react-jsx",
-    "types": ["bun-types", "node"]
-  },
-  "include": ["src/**/*", "scripts/**/*", "test-*.ts"],
-  "exclude": ["node_modules", "vendor"]
+  "include": [
+    "src/**/*",
+    "scripts/**/*",
+    "test-*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "vendor"
+  ]
 }

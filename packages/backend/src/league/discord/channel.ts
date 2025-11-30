@@ -11,7 +11,10 @@ import {
 } from "@scout-for-lol/backend/discord/utils/permissions.ts";
 import { discordPermissionErrorsTotal } from "@scout-for-lol/backend/metrics/index.ts";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
-import { recordPermissionError, recordSuccessfulSend } from "@scout-for-lol/backend/database/guild-permission-errors.ts";
+import {
+  recordPermissionError,
+  recordSuccessfulSend,
+} from "@scout-for-lol/backend/database/guild-permission-errors.ts";
 import type { DiscordChannelId, DiscordGuildId } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 

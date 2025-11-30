@@ -85,10 +85,7 @@
         "Rengar's passive enables him to leap out of brush, so avoid fighting him when near bushes.",
         "Rengar puts an indicator over the nearest enemy champion when he is camouflaged during his ultimate."
       ],
-      "tags": [
-        "Assassin",
-        "Fighter"
-      ],
+      "tags": ["Assassin", "Fighter"],
       "partype": "Ferocity",
       "info": {
         "attack": 7,
@@ -125,11 +122,7 @@
           "description": "Rengar's next Attack brutally stabs his target for bonus damage.<br><br>Ferocity effect: deals increased damage and grants Attack Speed.",
           "tooltip": "Rengar's next 2 Attacks gain <attackSpeed>{{ e5 }}% Attack Speed</attackSpeed>. The first Attack critically strikes for <physicalDamage>{{ F4 }} (%i:scaleAD%%i:scaleCrit%) physical damage</physicalDamage>.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> The first Attack critically strikes for <physicalDamage>{{ F5 }} (%i:scaleLevel%%i:scaleAD%%i:scaleCrit%) physical damage</physicalDamage> and grants Rengar <attackSpeed>{{ empoweredqas }} Attack Speed</attackSpeed> for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Total AD Ratio",
-              "Cooldown"
-            ],
+            "label": ["Damage", "Total AD Ratio", "Cooldown"],
             "effect": [
               "{{ e1 }} -> {{ e1NL }}",
               "{{ e2 }}% -> {{ e2NL }}%",
@@ -137,95 +130,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            0.25,
-            0.25,
-            0.25,
-            0.25,
-            0.25
-          ],
+          "cooldown": [0.25, 0.25, 0.25, 0.25, 0.25],
           "cooldownBurn": "0.25",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              30,
-              60,
-              90,
-              120,
-              150
-            ],
-            [
-              100,
-              105,
-              110,
-              115,
-              120
-            ],
-            [
-              5,
-              5,
-              5,
-              5,
-              5
-            ],
-            [
-              5,
-              5,
-              5,
-              5,
-              5
-            ],
-            [
-              40,
-              40,
-              40,
-              40,
-              40
-            ],
-            [
-              3,
-              3,
-              3,
-              3,
-              3
-            ],
-            [
-              0.2,
-              0.3,
-              0.4,
-              0.5,
-              0.6
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [30, 60, 90, 120, 150],
+            [100, 105, 110, 115, 120],
+            [5, 5, 5, 5, 5],
+            [5, 5, 5, 5, 5],
+            [40, 40, 40, 40, 40],
+            [3, 3, 3, 3, 3],
+            [0.2, 0.3, 0.4, 0.5, 0.6],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -243,13 +164,7 @@
           "vars": [],
           "costType": "Generates 1 Ferocity",
           "maxammo": "1",
-          "range": [
-            450,
-            450,
-            450,
-            450,
-            450
-          ],
+          "range": [450, 450, 450, 450, 450],
           "rangeBurn": "450",
           "image": {
             "full": "RengarQ.png",
@@ -268,129 +183,33 @@
           "description": "Rengar lets out a battle roar, damaging enemies and healing for some of the recent damage he has taken.<br><br>Ferocity effect: additionally breaks crowd control effects.",
           "tooltip": "Rengar roars, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies and restoring <healing>{{ damagepercentagehealed }}%</healing> of the damage taken in the last {{ e3 }} seconds as Health.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> Deals <magicDamage>{{ totaldamageempowered }} magic damage</magicDamage> and additionally cleanses Rengar of crowd control.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown"
-            ],
-            "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
-            ]
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"]
           },
           "maxrank": 5,
-          "cooldown": [
-            0.25,
-            0.25,
-            0.25,
-            0.25,
-            0.25
-          ],
+          "cooldown": [0.25, 0.25, 0.25, 0.25, 0.25],
           "cooldownBurn": "0.25",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              50,
-              50,
-              50,
-              50,
-              50
-            ],
-            [
-              1.5,
-              1.5,
-              1.5,
-              1.5,
-              1.5
-            ],
-            [
-              1.5,
-              1.5,
-              1.5,
-              1.5,
-              1.5
-            ],
-            [
-              100,
-              100,
-              100,
-              100,
-              100
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [50, 50, 50, 50, 50],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [100, 100, 100, 100, 100],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "0",
-            "50",
-            "1.5",
-            "1.5",
-            "100",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "0", "50", "1.5", "1.5", "100", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": "Generates 1 Ferocity",
           "maxammo": "1",
-          "range": [
-            450,
-            450,
-            450,
-            450,
-            450
-          ],
+          "range": [450, 450, 450, 450, 450],
           "rangeBurn": "450",
           "image": {
             "full": "RengarW.png",
@@ -409,129 +228,33 @@
           "description": "Rengar throws a bola, slowing the first target hit for a short duration.<br><br>Ferocity effect: roots the target.",
           "tooltip": "Rengar throws a bola, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first enemy hit, revealing and <status>Slowing</status> them by {{ e2 }}% for {{ e3 }} seconds.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> Deals <physicalDamage>{{ totalempowereddamage }} physical damage</physicalDamage> and <status>Roots</status> for {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Slow"
-            ],
-            "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ slowamount }}% -> {{ slowamountNL }}%"
-            ]
+            "label": ["Damage", "Slow"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ slowamount }}% -> {{ slowamountNL }}%"]
           },
           "maxrank": 5,
-          "cooldown": [
-            0.25,
-            0.25,
-            0.25,
-            0.25,
-            0.25
-          ],
+          "cooldown": [0.25, 0.25, 0.25, 0.25, 0.25],
           "cooldownBurn": "0.25",
-          "cost": [
-            0,
-            0,
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              55,
-              100,
-              145,
-              190,
-              235
-            ],
-            [
-              30,
-              45,
-              60,
-              75,
-              90
-            ],
-            [
-              1.75,
-              1.75,
-              1.75,
-              1.75,
-              1.75
-            ],
-            [
-              1.75,
-              1.75,
-              1.75,
-              1.75,
-              1.75
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [55, 100, 145, 190, 235],
+            [30, 45, 60, 75, 90],
+            [1.75, 1.75, 1.75, 1.75, 1.75],
+            [1.75, 1.75, 1.75, 1.75, 1.75],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "55/100/145/190/235",
-            "30/45/60/75/90",
-            "1.75",
-            "1.75",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "55/100/145/190/235", "30/45/60/75/90", "1.75", "1.75", "0", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": "Generates 1 Ferocity",
           "maxammo": "1",
-          "range": [
-            1000,
-            1000,
-            1000,
-            1000,
-            1000
-          ],
+          "range": [1000, 1000, 1000, 1000, 1000],
           "rangeBurn": "1000",
           "image": {
             "full": "RengarE.png",
@@ -550,13 +273,7 @@
           "description": "Rengar's predatory instincts take over, <font color='#cd90ee'>Camouflaging</font> him and revealing the nearest enemy champion in a large radius around him. During Thrill of the Hunt, Rengar gains Move Speed and he can leap to the tracked enemy without being in brush, reducing their armor.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Rengar will also leap Attack when <keywordStealth>Camouflaged</keywordStealth>.<br /><br /><spellActive>Active:</spellActive> Rengar gains <speed>{{ stealthms }}% Move Speed</speed> and <keywordStealth>True Sight</keywordStealth> in a small area around the nearest enemy champion for {{ stealthduration }} seconds.<br /><br />After {{ fadetime }} seconds, Rengar becomes <keywordStealth>Camouflaged</keywordStealth> and can leap without being in Brush. Leaping to the nearest champion deals an additional <physicalDamage>{{ bonusdamage }} physical damage</physicalDamage>, shreds <scaleArmor>{{ armorshred }} Armor</scaleArmor> for {{ armorshredduration }} seconds, and ends this Ability.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Armor Reduction",
-              "Duration",
-              "Move Speed",
-              "Tracking Range",
-              "Cooldown"
-            ],
+            "label": ["Armor Reduction", "Duration", "Move Speed", "Tracking Range", "Cooldown"],
             "effect": [
               "{{ armorshred }} -> {{ armorshredNL }}",
               "{{ stealthduration }} -> {{ stealthdurationNL }}",
@@ -566,93 +283,29 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            100,
-            90,
-            80
-          ],
+          "cooldown": [100, 90, 80],
           "cooldownBurn": "100/90/80",
-          "cost": [
-            0,
-            0,
-            0
-          ],
+          "cost": [0, 0, 0],
           "costBurn": "0",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": "No Cost",
           "maxammo": "-1",
-          "range": [
-            2500,
-            3000,
-            3500
-          ],
+          "range": [2500, 3000, 3500],
           "rangeBurn": "2500/3000/3500",
           "image": {
             "full": "RengarR.png",
