@@ -15,6 +15,23 @@ async function validateImageExists(absolutePath: string, description: string): P
   }
 }
 
+// Helper function to load an image as base64 data URI
+async function loadImageAsBase64(relativePath: string, mimeType: string): Promise<string> {
+  const absolutePath = getAbsolutePath(relativePath);
+  const file = Bun.file(absolutePath);
+  const exists = await file.exists();
+
+  if (!exists) {
+    throw new Error(
+      `Image not found at ${absolutePath}. Run 'bun run update-data-dragon' in packages/data to cache latest assets.`,
+    );
+  }
+
+  const buffer = await file.arrayBuffer();
+  const base64 = Buffer.from(buffer).toString("base64");
+  return `data:${mimeType};base64,${base64}`;
+}
+
 // Validation functions (async, for preloading/checking)
 export async function validateChampionImage(championName: string): Promise<void> {
   const relativePath = `./assets/img/champion/${championName}.png`;
@@ -67,4 +84,32 @@ export function getRuneIconUrl(runeIconPath: string): string {
 
 export function getAugmentIconUrl(augmentIconPath: string): string {
   return `https://raw.communitydragon.org/latest/game/${augmentIconPath}`;
+}
+
+// Base64 getters (async, for Satori/server-side rendering with local cached assets)
+export async function getChampionImageBase64(championName: string): Promise<string> {
+  const relativePath = `./assets/img/champion/${championName}.png`;
+  return loadImageAsBase64(relativePath, "image/png");
+}
+
+export async function getItemImageBase64(itemId: number): Promise<string> {
+  const relativePath = `./assets/img/item/${itemId.toString()}.png`;
+  return loadImageAsBase64(relativePath, "image/png");
+}
+
+export async function getSpellImageBase64(spellImageName: string): Promise<string> {
+  const relativePath = `./assets/img/spell/${spellImageName}`;
+  return loadImageAsBase64(relativePath, "image/png");
+}
+
+export async function getRuneIconBase64(runeIconPath: string): Promise<string> {
+  const filename = runeIconPath.split("/").pop() ?? "unknown.png";
+  const relativePath = `./assets/img/rune/${filename}`;
+  return loadImageAsBase64(relativePath, "image/png");
+}
+
+export async function getAugmentIconBase64(augmentIconPath: string): Promise<string> {
+  const filename = augmentIconPath.split("/").pop() ?? "unknown.png";
+  const relativePath = `./assets/img/augment/${filename}`;
+  return loadImageAsBase64(relativePath, "image/png");
 }

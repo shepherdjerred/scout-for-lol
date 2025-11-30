@@ -116,6 +116,21 @@ export function installDesktopDeps(workspaceSource: Directory, target: DesktopTa
 }
 
 /**
+ * Build the desktop frontend (Vite) and return the dist directory.
+ * This can be shared across multiple desktop operations to avoid rebuilding.
+ * @param workspaceSource The full workspace source directory
+ * @returns The built frontend dist directory
+ */
+export function buildDesktopFrontend(workspaceSource: Directory): Directory {
+  return installDesktopDeps(workspaceSource)
+    .withWorkdir("/workspace/packages/desktop")
+    .withExec(["sh", "-c", "echo '🏗️  Building desktop frontend (Vite)...'"])
+    .withExec(["bunx", "vite", "build"])
+    .withExec(["sh", "-c", "echo '✅ Desktop frontend built successfully'"])
+    .directory("/workspace/packages/desktop/dist");
+}
+
+/**
  * Run Rust formatting check
  * @param workspaceSource The full workspace source directory
  * @returns The container with fmt check results
@@ -185,19 +200,77 @@ export function checkDesktopLint(workspaceSource: Directory): Container {
 
 /**
  * Run all checks for desktop (TypeScript, Rust fmt, clippy, tests)
+ * This runs TypeScript and Rust checks in PARALLEL for faster execution.
  * @param workspaceSource The full workspace source directory
+ * @param frontendDist Optional pre-built frontend dist directory (avoids rebuilding)
+ * @returns Promise that resolves when all checks pass
+ */
+export async function checkDesktopParallel(
+  workspaceSource: Directory,
+  frontendDist?: Directory,
+): Promise<void> {
+  // Get the base container with deps installed
+  const baseContainer = installDesktopDeps(workspaceSource);
+
+  // Build frontend if not provided (needed for Rust compilation)
+  const frontend = frontendDist ?? buildDesktopFrontend(workspaceSource);
+
+  // Container with frontend for Rust checks
+  const containerWithFrontend = baseContainer
+    .withDirectory("/workspace/packages/desktop/dist", frontend)
+    .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("rust-target-linux"));
+
+  // Run TypeScript and Rust checks in PARALLEL
+  await Promise.all([
+    // TypeScript checks (don't need Rust)
+    baseContainer
+      .withWorkdir("/workspace/packages/desktop")
+      .withExec(["sh", "-c", "echo '📋 [CI] Running TypeScript checks for desktop...'"])
+      .withExec(["bun", "run", "typecheck"])
+      .withExec(["bun", "run", "lint"])
+      .withExec(["sh", "-c", "echo '✅ [CI] TypeScript checks passed!'"])
+      .sync(),
+
+    // Rust checks (need frontend built for Tauri)
+    containerWithFrontend
+      .withWorkdir("/workspace/packages/desktop/src-tauri")
+      .withExec(["sh", "-c", "echo '📋 [CI] Running Rust checks for desktop...'"])
+      .withExec(["cargo", "fmt", "--", "--check"])
+      .withExec(["cargo", "clippy", "--all-targets", "--all-features", "--", "-D", "warnings"])
+      .withExec(["cargo", "test", "--verbose"])
+      .withExec(["sh", "-c", "echo '✅ [CI] Rust checks passed!'"])
+      .sync(),
+  ]);
+}
+
+/**
+ * Run all checks for desktop (TypeScript, Rust fmt, clippy, tests)
+ * Sequential version that returns a container (for backwards compatibility).
+ * @param workspaceSource The full workspace source directory
+ * @param frontendDist Optional pre-built frontend dist directory (avoids rebuilding)
  * @returns The container with all check results
  */
-export function checkDesktop(workspaceSource: Directory): Container {
-  return installDesktopDeps(workspaceSource)
+export function checkDesktop(workspaceSource: Directory, frontendDist?: Directory): Container {
+  let container = installDesktopDeps(workspaceSource)
     .withWorkdir("/workspace/packages/desktop")
     .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("rust-target-linux"))
     .withExec(["sh", "-c", "echo '🔍 [CI] Running all checks for desktop package...'"])
     .withExec(["sh", "-c", "echo '📋 TypeScript checks...'"])
     .withExec(["bun", "run", "typecheck"])
-    .withExec(["bun", "run", "lint"])
-    .withExec(["sh", "-c", "echo '🏗️  Building frontend for Rust compilation...'"])
-    .withExec(["bun", "run", "build:frontend"])
+    .withExec(["bun", "run", "lint"]);
+
+  // Use pre-built frontend if provided, otherwise build it
+  if (frontendDist) {
+    container = container
+      .withDirectory("/workspace/packages/desktop/dist", frontendDist)
+      .withExec(["sh", "-c", "echo '📦 Using pre-built frontend...'"]);
+  } else {
+    container = container
+      .withExec(["sh", "-c", "echo '🏗️  Building frontend for Rust compilation...'"])
+      .withExec(["bun", "run", "build:frontend"]);
+  }
+
+  return container
     .withExec(["sh", "-c", "echo '📋 Rust checks...'"])
     .withWorkdir("/workspace/packages/desktop/src-tauri")
     .withExec(["cargo", "fmt", "--", "--check"])

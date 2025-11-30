@@ -21,7 +21,12 @@ import {
   buildDesktopWindowsGnu,
   getDesktopWindowsArtifacts,
 } from "@scout-for-lol/.dagger/src/desktop";
-import { getGitHubContainer, getBunNodeContainer, getPreparedWorkspace } from "@scout-for-lol/.dagger/src/base";
+import {
+  getGitHubContainer,
+  getBunNodeContainer,
+  getPreparedWorkspace,
+  getPreparedMountedWorkspace,
+} from "@scout-for-lol/.dagger/src/base";
 
 // Helper function to log with timestamp
 function logWithTimestamp(message: string): void {
@@ -29,17 +34,47 @@ function logWithTimestamp(message: string): void {
 }
 
 // Helper to extract message from unknown error value
+// Dagger errors often contain a 'stderr' property with the actual command output
 function getErrorMessage(error: unknown): string {
   if (error === null || error === undefined) {
     return String(error);
   }
-  // Check if it's an Error object with message
+
+  // Check if it's an Error object with message first
   if (error instanceof Error) {
+    // Check if the Error also has stderr (Dagger exec errors extend Error)
+    const errorWithStderr = error as Error & { stderr?: string; stdout?: string };
+    if (typeof errorWithStderr.stderr === "string" && errorWithStderr.stderr.length > 0) {
+      return `${error.message}\n\nStderr:\n${errorWithStderr.stderr}`;
+    }
+    if (typeof errorWithStderr.stdout === "string" && errorWithStderr.stdout.length > 0) {
+      return `${error.message}\n\nOutput:\n${errorWithStderr.stdout}`;
+    }
     return error.message;
   }
+
+  // Check if it's an object with stderr (Dagger exec errors)
+  if (typeof error === "object") {
+    const errorObj = error as Record<string, unknown>;
+
+    // Dagger errors may have stderr with actual command output
+    const stderr = errorObj["stderr"];
+    if (typeof stderr === "string" && stderr.length > 0) {
+      const message = typeof errorObj["message"] === "string" ? errorObj["message"] : "Command failed";
+      return `${message}\n\nStderr:\n${stderr}`;
+    }
+
+    // Check for stdout as fallback (some errors output there)
+    const stdout = errorObj["stdout"];
+    if (typeof stdout === "string" && stdout.length > 0) {
+      const message = typeof errorObj["message"] === "string" ? errorObj["message"] : "Command failed";
+      return `${message}\n\nOutput:\n${stdout}`;
+    }
+  }
+
   // Try JSON stringify for other types
   try {
-    return JSON.stringify(error);
+    return JSON.stringify(error, null, 2);
   } catch {
     // Fallback if stringify fails - return generic message
     return "Unknown error occurred";
@@ -105,8 +140,8 @@ export class ScoutForLol {
   ): Promise<string> {
     logWithTimestamp("🔍 Starting comprehensive check process");
 
-    // OPTIMIZATION: Prepare workspace - don't sync(), let Dagger optimize
-    const preparedWorkspace = getPreparedWorkspace(source);
+    // OPTIMIZATION: Use mounted workspace for CI checks (faster than copying files)
+    const preparedWorkspace = getPreparedMountedWorkspace(source);
 
     // Run all checks in parallel for maximum speed
     await withTiming("all checks", async () => {
@@ -218,33 +253,35 @@ export class ScoutForLol {
     const isProd = env === "prod";
     logWithTimestamp(`🚀 Starting CI pipeline for version ${version} (${gitSha}) in ${env ?? "dev"} environment`);
 
-    // OPTIMIZATION: Create a prepared workspace - DON'T sync() here, let Dagger optimize the dependency graph
-    // All operations that use preparedWorkspace will naturally wait for it when needed
+    // OPTIMIZATION: Use mounted workspace for CI checks (faster) and regular for image builds
+    // Mounted workspace uses withMountedDirectory (faster for read-only operations)
+    // Regular workspace uses withDirectory (files are embedded in publishable image)
+    const mountedWorkspace = getPreparedMountedWorkspace(source);
     const preparedWorkspace = getPreparedWorkspace(source);
 
     logWithTimestamp("📋 Phase 1: Running checks AND builds in parallel...");
 
-    // Build the backend image in parallel with checks
+    // Build the backend image in parallel with checks (uses regular workspace for publishable image)
     const backendImagePromise = withTiming("backend Docker image build", async () => {
       const image = buildBackendImage(source, version, gitSha, preparedWorkspace);
       await image.id();
       return image;
     });
 
-    // Run typecheck, lint, and tests in PARALLEL for maximum speed
+    // Run typecheck, lint, and tests in PARALLEL for maximum speed (uses mounted workspace for speed)
     const checksPromise = withTiming("all checks (lint, typecheck, tests)", async () => {
       await Promise.all([
         withTiming("typecheck all", async () => {
-          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "typecheck"]).sync();
+          await mountedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "typecheck"]).sync();
         }),
         withTiming("lint all", async () => {
-          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "lint"]).sync();
+          await mountedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "lint"]).sync();
         }),
         withTiming("test all", async () => {
-          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "test"]).sync();
+          await mountedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "test"]).sync();
         }),
         withTiming("duplication check", async () => {
-          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "duplication-check"]).sync();
+          await mountedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "duplication-check"]).sync();
         }),
       ]);
     });

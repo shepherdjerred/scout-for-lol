@@ -1,5 +1,5 @@
 import { palette } from "@scout-for-lol/report/assets/colors.ts";
-import { getItemImageUrl } from "@scout-for-lol/data/index.ts";
+import { getItemImage } from "@scout-for-lol/report/dataDragon/image-cache.ts";
 import { map } from "remeda";
 
 const dimension = "7.5rem";
@@ -10,9 +10,8 @@ function isPrismaticItem(itemId: number): boolean {
 }
 
 function getItemIconUrl(itemId: number): string {
-  // All items (including prismatic) use Data Dragon
-  // Prismatic items have IDs starting with 44 and are available via Data Dragon
-  return getItemImageUrl(itemId);
+  // All items (including prismatic) use cached base64 images
+  return getItemImage(itemId);
 }
 
 function renderItem(item: number) {
