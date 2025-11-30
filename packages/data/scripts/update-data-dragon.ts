@@ -294,72 +294,41 @@ async function downloadRuneImages(runes: RuneTreeData): Promise<number> {
   return runeImages.length;
 }
 
-const TestDataSchema = z.object({
-  teams: z.array(
-    z.object({
-      players: z.array(
-        z.object({
-          augments: z.array(
-            z.object({
-              iconLarge: z.string().optional(),
-              iconSmall: z.string().optional(),
-            }),
-          ),
-        }),
-      ),
-    }),
-  ),
+// Schema for CommunityDragon Arena augments API response
+const ArenaAugmentSchema = z.object({
+  iconLarge: z.string(),
+  iconSmall: z.string(),
 });
 
-function extractAugmentIconsFromTestData(testData: unknown): string[] {
-  const result = TestDataSchema.safeParse(testData);
-  if (!result.success) {
-    return [];
-  }
+const ArenaAugmentsResponseSchema = z.object({
+  augments: z.array(ArenaAugmentSchema),
+});
 
-  const iconPaths: string[] = [];
-  for (const team of result.data.teams) {
-    for (const player of team.players) {
-      for (const augment of player.augments) {
-        if (augment.iconLarge) {
-          iconPaths.push(augment.iconLarge);
-        }
-        if (augment.iconSmall) {
-          iconPaths.push(augment.iconSmall);
-        }
-      }
-    }
-  }
-  return iconPaths;
-}
+const ARENA_AUGMENTS_URL = "https://raw.communitydragon.org/latest/cdragon/arena/en_us.json";
 
 async function collectAugmentIconPaths(): Promise<Set<string>> {
-  const augmentIconPaths = new Set<string>();
-  try {
-    const testDataDir = `${import.meta.dir}/../../report/src/html/arena/testdata`;
-    const testFiles = ["1.json", "2.json"];
+  console.log("Fetching augment list from CommunityDragon API...");
 
-    for (const file of testFiles) {
-      try {
-        const testDataText = await Bun.file(`${testDataDir}/${file}`).text();
-        const testData: unknown = JSON.parse(testDataText);
-        const icons = extractAugmentIconsFromTestData(testData);
-        for (const icon of icons) {
-          augmentIconPaths.add(icon);
-        }
-      } catch (error) {
-        console.warn(`  ⚠ Could not read test data from ${file}: ${String(error)}`);
-      }
-    }
-  } catch (error) {
-    console.warn(`  ⚠ Could not find arena test data: ${String(error)}`);
+  const response = await fetch(ARENA_AUGMENTS_URL);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Arena augments: ${String(response.status)} ${response.statusText}`);
   }
+
+  const data: unknown = await response.json();
+  const parsed = ArenaAugmentsResponseSchema.parse(data);
+
+  const augmentIconPaths = new Set<string>();
+  for (const augment of parsed.augments) {
+    augmentIconPaths.add(augment.iconLarge);
+    augmentIconPaths.add(augment.iconSmall);
+  }
+
+  console.log(`Found ${String(parsed.augments.length)} augments with ${String(augmentIconPaths.size)} icon paths`);
   return augmentIconPaths;
 }
 
 async function downloadAugmentImages(): Promise<number> {
   console.log("\nDownloading augment icons from CommunityDragon...");
-  console.log("Note: Downloading common augments. Full augment set depends on game data.");
 
   const augmentIconPaths = await collectAugmentIconPaths();
 
