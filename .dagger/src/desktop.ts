@@ -31,14 +31,22 @@ export function getRustTauriContainer(): Container {
         "curl",
         "ca-certificates",
         "gnupg",
+        "clang", // Required for mold linker
+        "mold", // Modern linker - much faster than ld
       ])
       // Mount Cargo caches for faster builds
-      // - registry: Downloaded crate sources
+      // - registry: Downloaded crate sources and metadata
       // - git: Git dependencies
-      // - .package-cache: Cargo's package cache
       .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
       .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
-      .withMountedCache("/usr/local/cargo/.package-cache", dag.cacheVolume("cargo-package-cache"))
+      // Cargo build optimizations via environment variables
+      .withEnvVariable("CARGO_INCREMENTAL", "1") // Enable incremental compilation
+      .withEnvVariable("CARGO_BUILD_JOBS", "4") // Parallel compilation jobs
+      .withEnvVariable("CARGO_NET_GIT_FETCH_WITH_CLI", "false") // Faster git fetching
+      .withEnvVariable("CARGO_REGISTRIES_CRATES_IO_PROTOCOL", "sparse") // Sparse index protocol
+      // Use mold linker for faster linking on Linux (x86_64)
+      .withEnvVariable("CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER", "clang")
+      .withEnvVariable("RUSTFLAGS", "-C link-arg=-fuse-ld=mold")
   );
 }
 
