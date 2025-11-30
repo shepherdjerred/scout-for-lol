@@ -32,9 +32,13 @@ export function getRustTauriContainer(): Container {
         "ca-certificates",
         "gnupg",
       ])
-      // Mount Cargo cache for faster builds
+      // Mount Cargo caches for faster builds
+      // - registry: Downloaded crate sources
+      // - git: Git dependencies
+      // - .package-cache: Cargo's package cache
       .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
       .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
+      .withMountedCache("/usr/local/cargo/.package-cache", dag.cacheVolume("cargo-package-cache"))
   );
 }
 
@@ -224,6 +228,7 @@ export function buildDesktopWindowsGnu(workspaceSource: Directory, version: stri
     .withEnvVariable("CARGO_HOME", "/usr/local/cargo")
     .withEnvVariable("PATH", "/usr/local/cargo/bin:/usr/local/rustup/bin:$PATH", { expand: true })
     .withWorkdir("/workspace/packages/desktop")
+    .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("rust-target-windows-gnu"))
     .withExec(["sh", "-c", "echo '🏗️  [CI] Building desktop application for Windows (x86_64-pc-windows-gnu)...'"])
     .withExec(["sh", "-c", "echo '📦 Building frontend first...'"])
     .withExec(["bunx", "vite", "build"])
