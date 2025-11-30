@@ -5,14 +5,14 @@
  * All JSON data is minified before being sent to reduce token usage.
  */
 
-import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
-import type { OpenAIClient, ModelConfig, StageTrace, ImageGenerationTrace } from "./pipeline-types.js";
-import type { CuratedMatchData, CuratedTimeline } from "./curator-types.js";
-import type { Personality, PlayerMetadata } from "./prompts.js";
-import { getStageSystemPrompt } from "./pipeline-defaults.js";
-import { generateImagePrompt } from "./image-prompt.js";
-import { replaceTemplateVariables } from "./prompts.js";
-import { buildPromptVariables, extractMatchData } from "./generator-helpers.js";
+import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
+import type { OpenAIClient, ModelConfig, StageTrace, ImageGenerationTrace } from "./pipeline-types.ts";
+import type { CuratedMatchData, CuratedTimeline } from "./curator-types.ts";
+import type { Personality, PlayerMetadata } from "./prompts.ts";
+import { getStageSystemPrompt } from "./pipeline-defaults.ts";
+import { generateImagePrompt } from "./image-prompt.ts";
+import { replaceTemplateVariables } from "./prompts.ts";
+import { buildPromptVariables, extractMatchData } from "./generator-helpers.ts";
 import type { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 

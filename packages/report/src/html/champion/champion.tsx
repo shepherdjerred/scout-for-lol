@@ -1,8 +1,7 @@
 import { renderItems } from "@scout-for-lol/report/html/champion/item.tsx";
 import { palette } from "@scout-for-lol/report/assets/colors.ts";
 import type { Champion } from "@scout-for-lol/data";
-import { summoner } from "@scout-for-lol/report/dataDragon/summoner.ts";
-import { latestVersion } from "@scout-for-lol/report/dataDragon/version.ts";
+import { summoner, getSpellImageUrl } from "@scout-for-lol/data/index.ts";
 import { CreepScore } from "@scout-for-lol/report/html/champion/creep-score.tsx";
 import { Gold } from "@scout-for-lol/report/html/champion/gold.tsx";
 import { Damage } from "@scout-for-lol/report/html/champion/damage.tsx";
@@ -25,12 +24,17 @@ export function renderChampion(champion: Champion, highlight: boolean, durationI
       throw new Error(`Summoner spell ${spell.toString()} not found`);
     }
 
+    const spellData = summoner.data[name];
+    if (!spellData) {
+      throw new Error(`Summoner spell data not found for ${name}`);
+    }
+
     const size = "3.75rem";
 
     return (
       <div style={{ width: size, height: size, display: "flex" }}>
         <img
-          src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/spell/${name}.png`}
+          src={getSpellImageUrl(spellData.image.full)}
           alt=""
           style={{
             backgroundColor: palette.blue[5],

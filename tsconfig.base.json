@@ -3,10 +3,7 @@
     // Environment setup & latest features
     "lib": ["ESNext"],
     "target": "ESNext",
-    "module": "Preserve",
-    "moduleDetection": "force",
-    "allowJs": true,
-    // Bundler mode
+    "module": "nodenext",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "esModuleInterop": true,
@@ -20,7 +17,10 @@
       "@scout-for-lol/data": ["./packages/data/src/index.ts"],
       "@scout-for-lol/report/*": ["./packages/report/src/*"],
       "@scout-for-lol/report": ["./packages/report/src/index.ts"],
-      "@scout-for-lol/desktop/*": ["./packages/desktop/src/*"]
+      "@scout-for-lol/desktop/*": ["./packages/desktop/src/*"],
+      "@/*": ["./packages/frontend/src/*"],
+      "@/components/*": ["./packages/frontend/src/components/*"],
+      "@/lib/*": ["./packages/frontend/src/lib/*"]
     },
     // Best practices
     "strict": true,

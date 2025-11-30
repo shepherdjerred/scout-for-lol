@@ -1,8 +1,8 @@
 import { describe, it, expect } from "bun:test";
 import type { RawChallenges, RawParticipant, Player, RawMatch } from "@scout-for-lol/data";
 import { ArenaMatchSchema, ArenaTeamSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
-import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
-import { toArenaMatch, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.js";
+import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.ts";
+import { toArenaMatch, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.ts";
 
 function makeParticipant(
   overrides: Partial<RawParticipant> & {

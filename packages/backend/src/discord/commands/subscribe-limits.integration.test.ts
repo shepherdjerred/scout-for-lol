@@ -1,9 +1,9 @@
 import { afterAll, describe, test, expect, beforeEach } from "bun:test";
 
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
-import { addLimitOverride, clearLimitOverrides } from "@scout-for-lol/backend/configuration/flags.js";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
+import { addLimitOverride, clearLimitOverrides } from "@scout-for-lol/backend/configuration/flags.ts";
 import { type DiscordGuildId, type DiscordAccountId, type DiscordChannelId } from "@scout-for-lol/data";
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.js";
+import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Constants for testing
 const DEFAULT_PLAYER_SUBSCRIPTION_LIMIT = 75;

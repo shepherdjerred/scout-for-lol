@@ -4,10 +4,10 @@
  * Handles when the bot is added to a new server
  */
 
-import { type Guild, ChannelType, type TextChannel } from "discord.js";
-import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { type Guild, ChannelType, type TextChannel } from "discord.ts";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("guild-create");
 

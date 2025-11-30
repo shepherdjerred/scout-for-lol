@@ -1,9 +1,9 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { CachedLeaderboardSchema, type CachedLeaderboard } from "@scout-for-lol/data";
-import configuration from "@scout-for-lol/backend/configuration.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { CachedLeaderboardSchema, type CachedLeaderboard } from "@scout-for-lol/data/index.ts";
+import configuration from "@scout-for-lol/backend/configuration.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import * as Sentry from "@sentry/node";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("storage-s3-leaderboard");
 

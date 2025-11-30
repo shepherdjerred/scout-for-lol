@@ -7,7 +7,7 @@ const latestEntry = changelog[0];
 
 {
   latestEntry && (
-    <div class="bg-linear-to-r from-indigo-600 to-blue-600 dark:from-indigo-700 dark:to-blue-700 text-white pt-16 lg:pt-21.5 relative z-40 pointer-events-auto">
+    <div class="bg-primary text-primary-foreground pt-16 lg:pt-21.5 relative z-40 pointer-events-auto">
       <div class="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-x-6 select-text">
           <div class="flex items-start gap-x-3 min-w-0 flex-1">
@@ -15,14 +15,14 @@ const latestEntry = changelog[0];
             <div class="min-w-0">
               <p class="text-sm font-semibold leading-tight">What's New - {formatChangelogDate(latestEntry)}</p>
               <p
-                class="text-xs text-indigo-100 dark:text-indigo-200 leading-snug mt-0.5"
+                class="text-sm text-primary-foreground/80 leading-snug mt-0.5"
                 set:html={renderChangelogToHtml(latestEntry.banner)}
               />
             </div>
           </div>
           <a
             href="/whatsnew"
-            class="shrink-0 text-sm font-semibold text-white hover:text-indigo-100 dark:hover:text-indigo-200 transition-colors whitespace-nowrap ml-9 md:ml-0"
+            class="shrink-0 text-sm font-semibold text-primary-foreground hover:text-primary-foreground/80 transition-colors whitespace-nowrap ml-9 md:ml-0"
           >
             View all <span aria-hidden="true">→</span>
           </a>

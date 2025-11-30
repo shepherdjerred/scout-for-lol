@@ -1,12 +1,12 @@
-import { checkPostMatch } from "@scout-for-lol/backend/league/tasks/postmatch/index";
-import { runLifecycleCheck } from "@scout-for-lol/backend/league/tasks/competition/lifecycle.js";
-import { runDailyLeaderboardUpdate } from "@scout-for-lol/backend/league/tasks/competition/daily-update.js";
-import { runPlayerPruning } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.js";
-import { checkAbandonedGuilds } from "@scout-for-lol/backend/league/tasks/cleanup/abandoned-guilds.js";
-import { runDataValidation } from "@scout-for-lol/backend/league/tasks/cleanup/validate-data.js";
-import { client } from "@scout-for-lol/backend/discord/client.js";
-import { createCronJob } from "@scout-for-lol/backend/league/cron/helpers.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { checkPostMatch } from "@scout-for-lol/backend/league/tasks/postmatch/index.ts";
+import { runLifecycleCheck } from "@scout-for-lol/backend/league/tasks/competition/lifecycle.ts";
+import { runDailyLeaderboardUpdate } from "@scout-for-lol/backend/league/tasks/competition/daily-update.ts";
+import { runPlayerPruning } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.ts";
+import { checkAbandonedGuilds } from "@scout-for-lol/backend/league/tasks/cleanup/abandoned-guilds.ts";
+import { runDataValidation } from "@scout-for-lol/backend/league/tasks/cleanup/validate-data.ts";
+import { client } from "@scout-for-lol/backend/discord/client.ts";
+import { createCronJob } from "@scout-for-lol/backend/league/cron/helpers.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("league-cron");
 

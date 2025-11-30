@@ -1,10 +1,10 @@
 /* eslint-disable custom-rules/no-re-exports -- raw-match.schema.ts is a library file that needs to re-export types from sub-modules for backward compatibility */
 import { z } from "zod";
-import { RawParticipantSchema, type RawParticipant } from "./raw-participant.schema.js";
-import { RawTeamSchema, RawObjectivesSchema, type RawTeam, type RawObjectives } from "./raw-team.schema.js";
-import { RawChallengesSchema, type RawChallenges } from "./raw-challenges.schema.js";
-import { RawPerksSchema, type RawPerks } from "./raw-perks.schema.js";
-import { RawMissionsSchema, type RawMissions } from "./raw-missions.schema.js";
+import { RawParticipantSchema, type RawParticipant } from "./raw-participant.schema.ts";
+import { RawTeamSchema, RawObjectivesSchema, type RawTeam, type RawObjectives } from "./raw-team.schema.ts";
+import { RawChallengesSchema, type RawChallenges } from "./raw-challenges.schema.ts";
+import { RawPerksSchema, type RawPerks } from "./raw-perks.schema.ts";
+import { RawMissionsSchema, type RawMissions } from "./raw-missions.schema.ts";
 
 /**
  * Zod schema for RawMatch from the twisted library

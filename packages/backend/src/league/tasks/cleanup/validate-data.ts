@@ -5,15 +5,15 @@
  * Runs periodically to clean up orphaned guilds and channels.
  */
 
-import { type Client } from "discord.js";
-import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { getCompetitionsByChannelId } from "@scout-for-lol/backend/database/competition/queries.js";
-import { sendDM } from "@scout-for-lol/backend/discord/utils/dm.js";
-import { discordSubscriptionsCleanedTotal, guildDataCleanupTotal } from "@scout-for-lol/backend/metrics/index.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { type Client } from "discord.ts";
+import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { getCompetitionsByChannelId } from "@scout-for-lol/backend/database/competition/queries.ts";
+import { sendDM } from "@scout-for-lol/backend/discord/utils/dm.ts";
+import { discordSubscriptionsCleanedTotal, guildDataCleanupTotal } from "@scout-for-lol/backend/metrics/index.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import * as Sentry from "@sentry/node";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("cleanup-validate-data");
 

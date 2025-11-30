@@ -12,9 +12,9 @@ import {
   type ArtTheme,
   type StyleCategory,
   type ThemeCategory,
-} from "@scout-for-lol/data/review/art-categories.js";
-import { ART_STYLES } from "@scout-for-lol/data/review/art-styles-list.js";
-import { ART_THEMES } from "@scout-for-lol/data/review/art-themes-list.js";
+} from "@scout-for-lol/data/review/art-categories.ts";
+import { ART_STYLES } from "@scout-for-lol/data/review/art-styles-list.ts";
+import { ART_THEMES } from "@scout-for-lol/data/review/art-themes-list.ts";
 
 /**
  * Selection result - can have one or two themes

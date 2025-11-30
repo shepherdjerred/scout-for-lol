@@ -1,5 +1,5 @@
-import type { InteractionReplyOptions } from "discord.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import type { InteractionReplyOptions } from "discord.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 
 /**
  * Build a player not found error response

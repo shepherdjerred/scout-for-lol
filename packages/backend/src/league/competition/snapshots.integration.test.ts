@@ -3,13 +3,13 @@ import {
   createSnapshot,
   getSnapshot,
   createSnapshotsForAllParticipants,
-} from "@scout-for-lol/backend/league/competition/snapshots.js";
-import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
-import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
-import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
+} from "@scout-for-lol/backend/league/competition/snapshots.ts";
+import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.ts";
+import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.ts";
+import { testGuildId, testAccountId, testChannelId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
 import type { CompetitionId, CompetitionCriteria, LeaguePuuid, PlayerId, Region } from "@scout-for-lol/data";
 import { ChampionIdSchema, CompetitionIdSchema, LeaguePuuidSchema, PlayerIdSchema } from "@scout-for-lol/data";
-import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.js";
+import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database
 const { prisma } = createTestDatabase("snapshots-test");

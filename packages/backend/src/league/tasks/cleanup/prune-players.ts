@@ -4,11 +4,11 @@ import type {
   Subscription,
   CompetitionParticipant,
   Account,
-} from "@scout-for-lol/backend/generated/prisma/client/index.js";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import type { Client } from "discord.js";
+} from "@scout-for-lol/backend/generated/prisma/client/index.ts";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import type { Client } from "discord.ts";
 import { groupBy } from "remeda";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("cleanup-prune-players");
 

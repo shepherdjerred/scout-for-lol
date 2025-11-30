@@ -1,0 +1,77 @@
+---
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  variant?: "default" | "homepage";
+}
+
+const { variant = "default" } = Astro.props;
+---
+
+{
+  variant === "homepage" ? (
+    <footer class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+      <div class="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
+        <div class="flex flex-wrap justify-center gap-4 md:order-2">
+          <a href="/privacy" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
+            Privacy Policy
+          </a>
+          <a href="/tos" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
+            Terms of Service
+          </a>
+          <a
+            href="/support"
+            class="inline-flex items-center gap-1.5 rounded-md bg-blue-50 dark:bg-blue-900/30 px-3 py-1.5 text-sm font-medium text-blue-700 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+          >
+            <Icon name="heroicons:question-mark-circle" class="h-4 w-4" />
+            Get Support
+          </a>
+          <a
+            href="https://github.com/shepherdjerred/scout-for-lol"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 rounded-md bg-gray-900 dark:bg-gray-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors"
+          >
+            <Icon name="simple-icons:github" class="h-4 w-4" />
+            View on GitHub
+          </a>
+        </div>
+        <div class="mt-8 md:order-1 md:mt-0">
+          <p class="text-center text-xs/5 text-gray-500 dark:text-gray-400">
+            &copy; 2025 Scout for League of Legends.
+          </p>
+        </div>
+      </div>
+    </footer>
+  ) : (
+    <footer class="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+      <div class="mx-auto max-w-7xl px-6 py-12 lg:px-8">
+        <div class="text-center">
+          <p class="text-sm text-gray-600 dark:text-gray-300">
+            <a href="/privacy" class="hover:text-indigo-600 dark:hover:text-indigo-400">
+              Privacy Policy
+            </a>
+            •
+            <a href="/tos" class="hover:text-indigo-600 dark:hover:text-indigo-400">
+              Terms of Service
+            </a>
+            •
+            <a href="/support" class="hover:text-indigo-600 dark:hover:text-indigo-400">
+              Get Support
+            </a>
+            •
+            <a
+              href="https://github.com/shepherdjerred/scout-for-lol"
+              class="hover:text-indigo-600 dark:hover:text-indigo-400"
+            >
+              View on GitHub
+            </a>
+          </p>
+          <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">
+            © 2025 Scout for League of Legends.
+          </p>
+        </div>
+      </div>
+    </footer>
+  )
+}

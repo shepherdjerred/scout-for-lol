@@ -1,4 +1,6 @@
 ---
+import { Button } from "@/components/ui/button";
+
 interface Props {
   title: string;
   subtitle?: string;
@@ -40,16 +42,14 @@ const { title, subtitle, showGradient = true, ctaButtons = [] } = Astro.props;
       {ctaButtons.length > 0 && (
         <div class="mt-10 flex items-center justify-center gap-x-6">
           {ctaButtons.map((button) => (
-            <a
-              href={button.href}
-              class={button.variant === 'secondary'
-                ? "text-sm/6 font-semibold text-gray-900 dark:text-white"
-                : "rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              }
-            >
-              {button.text}
-              {button.variant === 'secondary' && <span aria-hidden="true">→</span>}
-            </a>
+            <Button asChild variant={button.variant === 'secondary' ? 'link' : 'default'}>
+                <a
+                href={button.href}
+                >
+                {button.text}
+                {button.variant === 'secondary' && <span aria-hidden="true">→</span>}
+                </a>
+            </Button>
           ))}
         </div>
       )}

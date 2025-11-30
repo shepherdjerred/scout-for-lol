@@ -1,7 +1,7 @@
 import { describe, it, expect } from "bun:test";
 import type { RawMatch, Player } from "@scout-for-lol/data";
 import { ArenaMatchSchema, LeaguePuuidSchema, RawMatchSchema } from "@scout-for-lol/data";
-import { toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
+import { toArenaMatch } from "@scout-for-lol/backend/league/model/match.ts";
 
 const currentDir = new URL(".", import.meta.url).pathname;
 

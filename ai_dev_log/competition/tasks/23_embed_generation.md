@@ -235,7 +235,7 @@ File: `packages/backend/src/discord/embeds/competition.test.ts`
 ## Example Implementation
 
 ```typescript
-import { EmbedBuilder, Colors } from "discord.js";
+import { EmbedBuilder, Colors } from "discord.ts";
 import { match } from "ts-pattern";
 
 export function generateLeaderboardEmbed(

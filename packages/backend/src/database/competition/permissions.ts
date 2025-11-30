@@ -1,8 +1,8 @@
 import { type DiscordAccountId, type DiscordGuildId, type PermissionType } from "@scout-for-lol/data";
-import type { PermissionsBitField } from "discord.js";
-import { PermissionFlagsBits } from "discord.js";
-import { type PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
-import { checkRateLimit, getTimeRemaining } from "@scout-for-lol/backend/database/competition/rate-limit.js";
+import type { PermissionsBitField } from "discord.ts";
+import { PermissionFlagsBits } from "discord.ts";
+import { type PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.ts";
+import { checkRateLimit, getTimeRemaining } from "@scout-for-lol/backend/database/competition/rate-limit.ts";
 
 // ============================================================================
 // Permission Check Result

@@ -3,7 +3,7 @@
  * IndexedDB can handle much larger data than localStorage (hundreds of MB vs 5-10MB)
  */
 import { z } from "zod";
-import { openIndexedDB, executeRequest, getStore } from "./indexeddb-helpers.js";
+import { openIndexedDB, executeRequest, getStore } from "./indexeddb-helpers.ts";
 
 const DB_NAME = "scout-review-history";
 const DB_VERSION = 1;

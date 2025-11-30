@@ -3,7 +3,7 @@
  */
 import { useState, useMemo, useCallback } from "react";
 import { z } from "zod";
-import Fuse, { type FuseResult } from "fuse.js";
+import Fuse, { type FuseResult } from "fuse.ts";
 import type { ApiSettings } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 import {

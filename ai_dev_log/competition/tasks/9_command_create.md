@@ -101,7 +101,7 @@ File: `packages/backend/src/discord/commands/competition/create.integration.test
 ## Example Implementation
 
 ```typescript
-import { SlashCommandBuilder, PermissionFlagsBits } from "discord.js";
+import { SlashCommandBuilder, PermissionFlagsBits } from "discord.ts";
 import { z } from "zod";
 
 export const competitionCreateCommand = new SlashCommandBuilder()

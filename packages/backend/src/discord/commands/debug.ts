@@ -1,10 +1,10 @@
-import { type ChatInputCommandInteraction, SlashCommandBuilder, AttachmentBuilder, EmbedBuilder } from "discord.js";
+import { type ChatInputCommandInteraction, SlashCommandBuilder, AttachmentBuilder, EmbedBuilder } from "discord.ts";
 import { formatDistanceToNow } from "date-fns";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import configuration from "@scout-for-lol/backend/configuration";
-import { getAccountsWithState, prisma } from "@scout-for-lol/backend/database/index.js";
-import { calculatePollingInterval, shouldCheckPlayer } from "@scout-for-lol/backend/utils/polling-intervals.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
+import configuration from "@scout-for-lol/backend/configuration.ts";
+import { getAccountsWithState, prisma } from "@scout-for-lol/backend/database/index.ts";
+import { calculatePollingInterval, shouldCheckPlayer } from "@scout-for-lol/backend/utils/polling-intervals.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("commands-debug");
 

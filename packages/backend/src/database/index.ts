@@ -9,7 +9,7 @@ import {
 } from "@scout-for-lol/data";
 import { uniqueBy } from "remeda";
 import * as Sentry from "@sentry/node";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("database");
 

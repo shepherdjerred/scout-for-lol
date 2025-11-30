@@ -5,7 +5,7 @@ import {
   getPermissionErrorMessage,
   formatPermissionErrorForLog,
 } from "@scout-for-lol/backend/discord/utils/permissions";
-import { PermissionFlagsBits } from "discord.js";
+import { PermissionFlagsBits } from "discord.ts";
 import { mockUser, mockTextChannel } from "@scout-for-lol/backend/testing/discord-mocks";
 import { testAccountId } from "@scout-for-lol/backend/testing/test-ids";
 

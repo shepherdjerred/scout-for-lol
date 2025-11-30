@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
+import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.ts";
 import { z } from "zod";
 import {
   ChampionIdSchema,
@@ -8,26 +8,26 @@ import {
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import { match, P } from "ts-pattern";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { canCreateCompetition } from "@scout-for-lol/backend/database/competition/permissions.js";
-import { type CreateCompetitionInput, createCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
-import { recordCreation } from "@scout-for-lol/backend/database/competition/rate-limit.js";
-import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/database/competition/validation.js";
-import { getChampionId } from "@scout-for-lol/backend/utils/champion.js";
-import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { canCreateCompetition } from "@scout-for-lol/backend/database/competition/permissions.ts";
+import { type CreateCompetitionInput, createCompetition } from "@scout-for-lol/backend/database/competition/queries.ts";
+import { recordCreation } from "@scout-for-lol/backend/database/competition/rate-limit.ts";
+import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/database/competition/validation.ts";
+import { getChampionId } from "@scout-for-lol/backend/utils/champion.ts";
+import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("competition-create");
 import {
   formatCriteriaType,
   getStatusEmoji,
   formatDateInfo,
-} from "@scout-for-lol/backend/discord/commands/competition/helpers.js";
+} from "@scout-for-lol/backend/discord/commands/competition/helpers.ts";
 import {
   replyWithErrorFromException,
   replyWithError,
   replyWithSuccess,
-} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
+} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.ts";
 import {
   CommonArgsSchema,
   FixedDatesArgsSchema,
@@ -38,7 +38,7 @@ import {
   MostWinsPlayerArgsSchema,
   MostWinsChampionArgsSchema,
   HighestWinRateArgsSchema,
-} from "@scout-for-lol/backend/discord/commands/competition/schemas.js";
+} from "@scout-for-lol/backend/discord/commands/competition/schemas.ts";
 
 // ============================================================================
 // Input Parsing Schema - Discriminated Unions

@@ -1,9 +1,9 @@
-import { type ChatInputCommandInteraction } from "discord.js";
+import { type ChatInputCommandInteraction } from "discord.ts";
 import type { z } from "zod";
 import {
   validateCommandArgs,
   executeWithTiming,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.ts";
 
 /**
  * Higher-order function that combines validation and timing execution

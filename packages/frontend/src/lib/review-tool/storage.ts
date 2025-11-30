@@ -3,7 +3,7 @@
  * Replaces localStorage with a more robust and capable storage solution
  */
 import { z } from "zod";
-import { openIndexedDB, executeRequest, getStore } from "./indexeddb-helpers.js";
+import { openIndexedDB, executeRequest, getStore } from "./indexeddb-helpers.ts";
 
 const DB_NAME = "scout-review-storage";
 const DB_VERSION = 1;

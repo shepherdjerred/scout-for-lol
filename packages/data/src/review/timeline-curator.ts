@@ -3,7 +3,7 @@ import type {
   CuratedTimeline,
   CuratedTimelineEvent,
   CuratedParticipantSnapshot,
-} from "@scout-for-lol/data/review/curator-types.js";
+} from "@scout-for-lol/data/review/curator-types.ts";
 
 type ParticipantInfo = { championName: string; team: "Blue" | "Red" };
 type ParticipantMapping = Map<number, ParticipantInfo>;

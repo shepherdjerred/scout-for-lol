@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { spawn } from "bun";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("migrate");
 

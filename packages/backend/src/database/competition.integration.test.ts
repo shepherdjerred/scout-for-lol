@@ -1,14 +1,14 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { PermissionsBitField, PermissionFlagsBits } from "discord.js";
-import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
-import { addParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.js";
-import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/database/competition/validation.js";
-import { canCreateCompetition, grantPermission } from "@scout-for-lol/backend/database/competition/permissions.js";
-import { clearAllRateLimits } from "@scout-for-lol/backend/database/competition/rate-limit.js";
+import { PermissionsBitField, PermissionFlagsBits } from "discord.ts";
+import { createCompetition, type CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.ts";
+import { addParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.ts";
+import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/database/competition/validation.ts";
+import { canCreateCompetition, grantPermission } from "@scout-for-lol/backend/database/competition/permissions.ts";
+import { clearAllRateLimits } from "@scout-for-lol/backend/database/competition/rate-limit.ts";
 import type { CompetitionId, DiscordAccountId, DiscordGuildId, PlayerId } from "@scout-for-lol/data";
 
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.js";
+import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
+import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // ============================================================================
 // Test Database Setup

@@ -1,13 +1,13 @@
-import { REST, Routes } from "discord.js";
+import { REST, Routes } from "discord.ts";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
-import configuration from "@scout-for-lol/backend/configuration";
-import { debugCommand } from "@scout-for-lol/backend/discord/commands/debug";
-import { competitionCommand } from "@scout-for-lol/backend/discord/commands/competition/index.js";
-import { adminCommand } from "@scout-for-lol/backend/discord/commands/admin/index.js";
-import { subscriptionCommand } from "@scout-for-lol/backend/discord/commands/subscription/index.js";
-import { helpCommand } from "@scout-for-lol/backend/discord/commands/help.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import configuration from "@scout-for-lol/backend/configuration.ts";
+import { debugCommand } from "@scout-for-lol/backend/discord/commands/debug.ts";
+import { competitionCommand } from "@scout-for-lol/backend/discord/commands/competition/index.ts";
+import { adminCommand } from "@scout-for-lol/backend/discord/commands/admin/index.ts";
+import { subscriptionCommand } from "@scout-for-lol/backend/discord/commands/subscription/index.ts";
+import { helpCommand } from "@scout-for-lol/backend/discord/commands/help.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("discord-rest");
 

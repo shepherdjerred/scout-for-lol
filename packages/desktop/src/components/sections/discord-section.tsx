@@ -11,7 +11,7 @@ import {
   StatusIndicator,
   Collapsible,
   Badge,
-} from "@scout-for-lol/desktop/components/ui";
+} from "@scout-for-lol/desktop/components/ui/index.ts";
 
 type DiscordStatus = {
   connected: boolean;

@@ -1,20 +1,20 @@
-import { type ChatInputCommandInteraction } from "discord.js";
+import { type ChatInputCommandInteraction } from "discord.ts";
 import { z } from "zod";
 import { DiscordGuildIdSchema, RegionSchema, RiotIdSchema } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import {
   validateCommandArgs,
   executeWithTiming,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
-import { resolvePuuidFromRiotId } from "@scout-for-lol/backend/discord/commands/admin/utils/riot-api.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.ts";
+import { resolvePuuidFromRiotId } from "@scout-for-lol/backend/discord/commands/admin/utils/riot-api.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("admin-account-delete");
 import {
   buildRiotApiError,
   buildDatabaseError,
   buildSuccessResponse,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.ts";
 
 const ArgsSchema = z.object({
   riotId: RiotIdSchema,

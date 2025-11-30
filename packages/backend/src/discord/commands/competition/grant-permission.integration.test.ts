@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { grantPermission, hasPermission } from "@scout-for-lol/backend/database/competition/permissions.js";
-import { testGuildId, testAccountId } from "@scout-for-lol/backend/testing/test-ids.js";
-import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.js";
+import { grantPermission, hasPermission } from "@scout-for-lol/backend/database/competition/permissions.ts";
+import { testGuildId, testAccountId } from "@scout-for-lol/backend/testing/test-ids.ts";
+import { createTestDatabase } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database for integration tests
 const { prisma } = createTestDatabase("grant-permission-test");

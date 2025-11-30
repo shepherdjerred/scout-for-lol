@@ -1,5 +1,5 @@
-import type { InteractionReplyOptions } from "discord.js";
-import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
+import type { InteractionReplyOptions } from "discord.ts";
+import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
 
 /**
  * Format a list of player accounts for display

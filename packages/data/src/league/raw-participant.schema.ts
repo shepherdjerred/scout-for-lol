@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { PositionSchema, RoleSchema, LaneSchema } from "./enums.js";
-import { RawChallengesSchema } from "./raw-challenges.schema.js";
-import { RawMissionsSchema } from "./raw-missions.schema.js";
-import { RawPerksSchema } from "./raw-perks.schema.js";
+import { PositionSchema, RoleSchema, LaneSchema } from "./enums.ts";
+import { RawChallengesSchema } from "./raw-challenges.schema.ts";
+import { RawMissionsSchema } from "./raw-missions.schema.ts";
+import { RawPerksSchema } from "./raw-perks.schema.ts";
 
 /**
  * Raw Participant - Contains all data for a single participant in a match from Riot API

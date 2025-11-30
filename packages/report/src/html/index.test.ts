@@ -1,5 +1,5 @@
 import { type CompletedMatch, DiscordAccountIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
-import { matchToSvg, svgToPng } from "@scout-for-lol/report/html/index.js";
+import { matchToSvg, svgToPng } from "@scout-for-lol/report/html/index.tsx";
 import { test, expect } from "bun:test";
 
 function hashSvg(svg: string): string {

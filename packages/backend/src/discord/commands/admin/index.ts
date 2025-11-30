@@ -1,5 +1,5 @@
-import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.js";
-import { REGION_CHOICES } from "@scout-for-lol/backend/discord/commands/admin/utils/region-choices.js";
+import { InteractionContextType, PermissionFlagsBits, SlashCommandBuilder } from "discord.ts";
+import { REGION_CHOICES } from "@scout-for-lol/backend/discord/commands/admin/utils/region-choices.ts";
 
 /**
  * Admin command for managing players and accounts

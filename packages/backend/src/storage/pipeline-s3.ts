@@ -12,9 +12,9 @@
  *   └── final-image.png
  */
 
-import type { MatchId, ReviewPipelineOutput, PipelineContext, StageTrace, ImageGenerationTrace } from "@scout-for-lol/data";
-import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import type { MatchId, ReviewPipelineOutput, PipelineContext, StageTrace, ImageGenerationTrace } from "@scout-for-lol/data/index.ts";
+import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("pipeline-s3");
 

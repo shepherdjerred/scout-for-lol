@@ -28,16 +28,16 @@ import type {
   StageTrace,
   PipelineStagesConfig,
   PipelineClientsInput,
-} from "./pipeline-types.js";
-import type { CuratedMatchData, CuratedTimeline } from "./curator-types.js";
+} from "./pipeline-types.ts";
+import type { CuratedMatchData, CuratedTimeline } from "./curator-types.ts";
 import {
   generateTimelineSummary,
   generateMatchSummary,
   generateReviewTextStage,
   generateImageDescription,
   generateImage,
-} from "./pipeline-stages.js";
-import { curateMatchData } from "./curator.js";
+} from "./pipeline-stages.ts";
+import { curateMatchData } from "./curator.ts";
 
 // ============================================================================
 // Helper Types

@@ -4,7 +4,7 @@
  * This module contains all the default values that can be overridden by callers.
  */
 
-import type { PipelineStagesConfig, ModelConfig, StageConfig, ImageGenerationStageConfig } from "./pipeline-types.js";
+import type { PipelineStagesConfig, ModelConfig, StageConfig, ImageGenerationStageConfig } from "./pipeline-types.ts";
 
 // ============================================================================
 // System Prompts

@@ -147,23 +147,7 @@ const baseSettings: ISettingsParam<ILogObj> = {
   // Only enable styling in TTY environments to avoid ANSI color code errors in CI
   stylePrettyLogs: IS_TTY,
   // Only include styles when in TTY mode
-  ...(IS_TTY && {
-    prettyLogStyles: {
-      logLevelName: {
-        "*": ["bold", "black", "bgWhiteBright"],
-        SILLY: ["bold", "white", "bgMagenta"],
-        TRACE: ["bold", "white", "bgCyan"],
-        DEBUG: ["bold", "white", "bgBlue"],
-        INFO: ["bold", "white", "bgGreen"],
-        WARN: ["bold", "white", "bgYellow"],
-        ERROR: ["bold", "white", "bgRed"],
-        FATAL: ["bold", "white", "bgRedBright"],
-      },
-      dateIsoStr: "gray",
-      filePathWithLine: "dim",
-      name: "cyan",
-    },
-  }),
+
   hideLogPositionForProduction: false,
   // Attach file transport for all logs
   attachedTransports: [

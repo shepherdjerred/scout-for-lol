@@ -1,19 +1,19 @@
-import { type ChatInputCommandInteraction } from "discord.js";
+import { type ChatInputCommandInteraction } from "discord.ts";
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("admin-player-delete");
 import {
   validateCommandArgs,
   executeWithTiming,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.ts";
 import {
   buildDatabaseError,
   buildSuccessResponse,
   buildPlayerNotFoundError,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.ts";
 
 const ArgsSchema = z.object({
   alias: z.string().min(1).max(100),

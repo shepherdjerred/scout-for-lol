@@ -1,5 +1,19 @@
 ---
-import { Icon } from 'astro-icon/components';
+import { Button } from "@/components/ui/button";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+
+import { Icon } from "astro-icon/components";
 
 interface Props {
   activePage?: "home" | "getting-started" | "docs" | "support" | "whatsnew";
@@ -9,167 +23,157 @@ const { activePage } = Astro.props;
 ---
 
 <header class="absolute inset-x-0 top-0 z-50 bg-white dark:bg-gray-900">
-  <nav class="flex items-center justify-between p-4 lg:p-6 lg:px-8" aria-label="Global">
+  <nav
+    class="flex items-center justify-between p-4 lg:p-6 lg:px-8"
+    aria-label="Global"
+  >
     <div class="flex lg:flex-1">
       <a href="/" class="-m-1.5 p-1.5">
         <span class="sr-only">Scout for League of Legends</span>
-        <div class="h-8 w-8 bg-linear-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+        <div
+          class="h-8 w-8 bg-linear-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center"
+        >
           <span class="text-white font-bold text-sm">S</span>
         </div>
       </a>
     </div>
     <div class="flex lg:hidden">
-      <button
-        type="button"
-        class="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 dark:text-gray-300"
-        id="mobile-menu-button"
-      >
-        <span class="sr-only">Open main menu</span>
-        <Icon name="heroicons:bars-3" class="h-6 w-6" />
-      </button>
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="outline">
+            <Icon name="heroicons:bars-3" class="h-6 w-6" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left">
+          <div class="space-y-1 px-2 pb-3 pt-2">
+            <a
+              href="/"
+              class:list={[
+                "block rounded-md px-3 py-2 text-base font-medium",
+                activePage === "home"
+                  ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                  : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
+              ]}>Home</a
+            >
+            <a
+              href="/getting-started"
+              class:list={[
+                "block rounded-md px-3 py-2 text-base font-medium",
+                activePage === "getting-started"
+                  ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                  : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
+              ]}>Getting Started</a
+            >
+            <a
+              href="/docs"
+              class:list={[
+                "block rounded-md px-3 py-2 text-base font-medium",
+                activePage === "docs"
+                  ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                  : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
+              ]}>Documentation</a
+            >
+            <a
+              href="/whatsnew"
+              class:list={[
+                "block rounded-md px-3 py-2 text-base font-medium",
+                activePage === "whatsnew"
+                  ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                  : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
+              ]}>What's New</a
+            >
+            <a
+              href="/support"
+              class:list={[
+                "rounded-md px-3 py-2 text-base font-medium inline-flex items-center gap-2",
+                activePage === "support"
+                  ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                  : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
+              ]}
+            >
+              <Icon name="heroicons:question-mark-circle" class="h-4 w-4" />
+              Support
+            </a>
+            <a
+              href="https://github.com/shepherdjerred/scout-for-lol"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="rounded-md px-3 py-2 text-base font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 inline-flex items-center gap-2"
+            >
+              <Icon name="simple-icons:github" class="h-4 w-4" />
+              GitHub
+            </a>
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+              <a
+                href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
+                class="block rounded-md bg-indigo-600 px-3 py-2 text-base font-semibold text-white text-center shadow-sm hover:bg-indigo-500"
+                >Add to Discord</a
+              >
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
-    <div class="hidden lg:flex lg:gap-x-4 xl:gap-x-8">
-      <a
-        href="/"
-        class:list={[
-          "text-sm/6 font-semibold",
-          activePage === "home" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100",
-        ]}>Home</a
-      >
-      <a
-        href="/getting-started"
-        class:list={[
-          "text-sm/6 font-semibold",
-          activePage === "getting-started"
-            ? "text-indigo-600 dark:text-indigo-400"
-            : "text-gray-900 dark:text-gray-100",
-        ]}>Getting Started</a
-      >
-      <a
-        href="/docs"
-        class:list={[
-          "text-sm/6 font-semibold",
-          activePage === "docs" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100",
-        ]}>Documentation</a
-      >
-      <a
-        href="/whatsnew"
-        class:list={[
-          "text-sm/6 font-semibold",
-          activePage === "whatsnew" ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-gray-100",
-        ]}>What's New</a
-      >
-      <a
-        href="/support"
-        class:list={[
-          "text-sm/6 font-semibold inline-flex items-center gap-1",
-          activePage === "support"
-            ? "text-indigo-600 dark:text-indigo-400"
-            : "text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400",
-        ]}
-      >
-        <Icon name="heroicons:question-mark-circle" class="h-4 w-4" />
-        Support
-      </a>
-      <a
-        href="https://github.com/shepherdjerred/scout-for-lol"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-sm/6 font-semibold text-gray-900 dark:text-gray-100 hover:text-indigo-600 dark:hover:text-indigo-400 inline-flex items-center gap-1"
-      >
-        <Icon name="simple-icons:github" class="h-4 w-4" />
-        GitHub
-      </a>
-    </div>
+    <NavigationMenu>
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <NavigationMenuLink href="/" className={navigationMenuTriggerStyle()}>
+            Home
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <NavigationMenuLink
+            href="/getting-started"
+            className={navigationMenuTriggerStyle()}
+          >
+            Getting Started
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <NavigationMenuLink
+            href="/docs"
+            className={navigationMenuTriggerStyle()}
+          >
+            Documentation
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <NavigationMenuLink
+            href="/whatsnew"
+            className={navigationMenuTriggerStyle()}
+          >
+            What's New
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <NavigationMenuLink
+            href="/support"
+            className={navigationMenuTriggerStyle()}
+          >
+            <Icon name="heroicons:question-mark-circle" class="h-4 w-4" />
+            Support
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <NavigationMenuLink
+            href="https://github.com/shepherdjerred/scout-for-lol"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={navigationMenuTriggerStyle()}
+          >
+            <Icon name="simple-icons:github" class="h-4 w-4" />
+            GitHub
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
     <div class="hidden lg:flex lg:flex-1 lg:justify-end">
-      <a
-        href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
-        class="rounded-md bg-indigo-600 px-2.5 py-2 lg:px-3.5 lg:py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 whitespace-nowrap"
-        >Add to Discord</a
-      >
+        <Button>
+            <a
+                href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
+                >Add to Discord
+            </a>
+        </Button>
     </div>
   </nav>
-
-  <!-- Mobile menu, show/hide based on menu state -->
-  <div class="lg:hidden hidden" id="mobile-menu">
-    <div class="space-y-1 px-2 pb-3 pt-2">
-      <a
-        href="/"
-        class:list={[
-          "block rounded-md px-3 py-2 text-base font-medium",
-          activePage === "home"
-            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-            : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
-        ]}>Home</a
-      >
-      <a
-        href="/getting-started"
-        class:list={[
-          "block rounded-md px-3 py-2 text-base font-medium",
-          activePage === "getting-started"
-            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-            : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
-        ]}>Getting Started</a
-      >
-      <a
-        href="/docs"
-        class:list={[
-          "block rounded-md px-3 py-2 text-base font-medium",
-          activePage === "docs"
-            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-            : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
-        ]}>Documentation</a
-      >
-      <a
-        href="/whatsnew"
-        class:list={[
-          "block rounded-md px-3 py-2 text-base font-medium",
-          activePage === "whatsnew"
-            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-            : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
-        ]}>What's New</a
-      >
-      <a
-        href="/support"
-        class:list={[
-          "rounded-md px-3 py-2 text-base font-medium inline-flex items-center gap-2",
-          activePage === "support"
-            ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
-            : "text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800",
-        ]}
-      >
-        <Icon name="heroicons:question-mark-circle" class="h-4 w-4" />
-        Support
-      </a>
-      <a
-        href="https://github.com/shepherdjerred/scout-for-lol"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="rounded-md px-3 py-2 text-base font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 inline-flex items-center gap-2"
-      >
-        <Icon name="simple-icons:github" class="h-4 w-4" />
-        GitHub
-      </a>
-      <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-        <a
-          href="https://discord.com/oauth2/authorize?client_id=1182800769188110366"
-          class="block rounded-md bg-indigo-600 px-3 py-2 text-base font-semibold text-white text-center shadow-sm hover:bg-indigo-500"
-          >Add to Discord</a
-        >
-      </div>
-    </div>
-  </div>
 </header>
-
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const button = document.getElementById("mobile-menu-button");
-    const menu = document.getElementById("mobile-menu");
-
-    if (button && menu) {
-      button.addEventListener("click", () => {
-        menu.classList.toggle("hidden");
-      });
-    }
-  });
-</script>

@@ -1,11 +1,11 @@
-import { type ChatInputCommandInteraction } from "discord.js";
+import { type ChatInputCommandInteraction } from "discord.ts";
 import { z } from "zod";
 import { DiscordGuildIdSchema, RegionSchema, RiotIdSchema } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/command-wrapper.js";
-import { findPlayerByAliasWithAccounts } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
-import { resolvePuuidFromRiotId } from "@scout-for-lol/backend/discord/commands/admin/utils/riot-api.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/command-wrapper.ts";
+import { findPlayerByAliasWithAccounts } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
+import { resolvePuuidFromRiotId } from "@scout-for-lol/backend/discord/commands/admin/utils/riot-api.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("admin-account-transfer");
 import {
@@ -13,7 +13,7 @@ import {
   buildPlayerNotFoundError,
   buildDatabaseError,
   buildSuccessResponse,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.ts";
 
 const ArgsSchema = z.object({
   riotId: RiotIdSchema,

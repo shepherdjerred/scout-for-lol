@@ -1,7 +1,7 @@
 import { describe, expect, test, mock } from "bun:test";
 import { MatchIdSchema, type ArenaMatch, type CompletedMatch } from "@scout-for-lol/data";
 
-import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
+import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
 
 // Test match ID for all tests
 const TEST_MATCH_ID = MatchIdSchema.parse("NA1_1234567890");

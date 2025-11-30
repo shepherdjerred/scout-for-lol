@@ -1,12 +1,12 @@
-import type { ChatInputCommandInteraction } from "discord.js";
-import { DiscordAccountIdSchema, LeaguePuuidSchema, RegionSchema, type RiotId } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.js";
-import { sendWelcomeMatch } from "@scout-for-lol/backend/discord/commands/subscription/welcome-match.js";
-import type { ArgsSchema } from "./add.js";
+import type { ChatInputCommandInteraction } from "discord.ts";
+import { DiscordAccountIdSchema, LeaguePuuidSchema, RegionSchema, type RiotId } from "@scout-for-lol/data/index.ts";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.ts";
+import { sendWelcomeMatch } from "@scout-for-lol/backend/discord/commands/subscription/welcome-match.ts";
+import type { ArgsSchema } from "./add.ts";
 import type { z } from "zod";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("subscription-add-helpers-internal");
 

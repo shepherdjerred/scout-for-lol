@@ -1,11 +1,18 @@
 {
-  "exclude": ["dist"],
+  "exclude": ["dist", "src/components/review-tool/**/*", "src/lib/review-tool/**/*"],
   "extends": ["astro/tsconfigs/strictest", "../../tsconfig.base.json"],
   "include": [".astro/types.d.ts", "**/*", "postcss.config.ts"],
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "strictNullChecks": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@scout-for-lol/frontend/*": ["./src/*"]
+    }
   }
 }

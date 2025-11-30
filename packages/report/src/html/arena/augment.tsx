@@ -1,11 +1,12 @@
 import { type Augment } from "@scout-for-lol/data";
+import { getAugmentIconUrl } from "@scout-for-lol/report/dataDragon/augment.ts";
 
 const augmentIconSize = "2rem";
 
 export function renderAugment(augment: Augment) {
   if (augment.type === "full") {
-    // Use iconSmall path directly from the augment data
-    const iconUrl = augment.iconSmall ? `https://raw.communitydragon.org/latest/game/${augment.iconLarge}` : null;
+    // Use iconLarge from augment data (iconSmall exists but we use iconLarge for better quality)
+    const iconUrl = augment.iconLarge ? getAugmentIconUrl(augment.iconLarge) : null;
 
     if (iconUrl) {
       return (

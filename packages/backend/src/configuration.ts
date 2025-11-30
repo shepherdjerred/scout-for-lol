@@ -1,6 +1,6 @@
 import "dotenv/config";
 import env from "env-var";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("config");
 

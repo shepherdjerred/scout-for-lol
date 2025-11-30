@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { type Champion, ChampionSchema } from "@scout-for-lol/data/model/champion.js";
-import { RosterSchema } from "@scout-for-lol/data/model/roster.js";
-import { TeamSchema } from "@scout-for-lol/data/model/team.js";
-import { LaneSchema } from "@scout-for-lol/data/model/lane.js";
-import { QueueTypeSchema } from "@scout-for-lol/data/model/state.js";
-import { RankSchema } from "@scout-for-lol/data/model/rank.js";
-import { PlayerConfigEntrySchema } from "@scout-for-lol/data/model/player-config.js";
+import { type Champion, ChampionSchema } from "@scout-for-lol/data/model/champion.ts";
+import { RosterSchema } from "@scout-for-lol/data/model/roster.ts";
+import { TeamSchema } from "@scout-for-lol/data/model/team.ts";
+import { LaneSchema } from "@scout-for-lol/data/model/lane.ts";
+import { QueueTypeSchema } from "@scout-for-lol/data/model/state.ts";
+import { RankSchema } from "@scout-for-lol/data/model/rank.ts";
+import { PlayerConfigEntrySchema } from "@scout-for-lol/data/model/player-config.ts";
 import { filter, first, pipe } from "remeda";
 
 /**

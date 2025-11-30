@@ -1,11 +1,11 @@
-import { api } from "@scout-for-lol/backend/league/api/api.js";
-import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
-import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.js";
-import type { PlayerConfigEntry, MatchId } from "@scout-for-lol/data";
-import { MatchIdSchema } from "@scout-for-lol/data";
+import { api } from "@scout-for-lol/backend/league/api/api.ts";
+import { regionToRegionGroup } from "twisted/dist/constants/regions.ts";
+import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
+import type { PlayerConfigEntry, MatchId } from "@scout-for-lol/data/index.ts";
+import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("api-match-history");
 

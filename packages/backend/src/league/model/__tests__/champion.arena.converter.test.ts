@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import type { RawParticipant } from "@scout-for-lol/data";
-import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
+import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.ts";
 
 const baseParticipant = (): RawParticipant => {
   // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type

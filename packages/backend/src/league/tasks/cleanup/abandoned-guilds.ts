@@ -1,17 +1,17 @@
-import type { Client } from "discord.js";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { getAbandonedGuilds, markGuildAsNotified } from "@scout-for-lol/backend/database/guild-permission-errors.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import type { Client } from "discord.ts";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { getAbandonedGuilds, markGuildAsNotified } from "@scout-for-lol/backend/database/guild-permission-errors.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import * as Sentry from "@sentry/node";
 import {
   abandonedGuildsDetectedTotal,
   guildsLeftTotal,
   abandonmentNotificationsTotal,
   guildDataCleanupTotal,
-} from "@scout-for-lol/backend/metrics/index.js";
-import type { DiscordGuildId } from "@scout-for-lol/data";
+} from "@scout-for-lol/backend/metrics/index.ts";
+import type { DiscordGuildId } from "@scout-for-lol/data/index.ts";
 import { differenceInCalendarDays } from "date-fns";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("cleanup-abandoned-guilds");
 

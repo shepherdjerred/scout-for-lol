@@ -1,4 +1,4 @@
-import { type ChatInputCommandInteraction } from "discord.js";
+import { type ChatInputCommandInteraction } from "discord.ts";
 import { z } from "zod";
 import {
   ChampionIdSchema,
@@ -12,16 +12,16 @@ import {
 } from "@scout-for-lol/data";
 import { fromError } from "zod-validation-error";
 import { match, P } from "ts-pattern";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import {
   getCompetitionById,
   type UpdateCompetitionInput,
   updateCompetition,
-} from "@scout-for-lol/backend/database/competition/queries.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import { getChampionId } from "@scout-for-lol/backend/utils/champion.js";
-import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+} from "@scout-for-lol/backend/database/competition/queries.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { getChampionId } from "@scout-for-lol/backend/utils/champion.ts";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("competition-edit");
 import {
@@ -35,7 +35,7 @@ import {
   MostWinsPlayerEditArgsSchema,
   MostWinsChampionEditArgsSchema,
   HighestWinRateEditArgsSchema,
-} from "@scout-for-lol/backend/discord/commands/competition/schemas.js";
+} from "@scout-for-lol/backend/discord/commands/competition/schemas.ts";
 
 // ============================================================================
 // Input Parsing Schema - Editable Fields

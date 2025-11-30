@@ -4,8 +4,8 @@ import {
   LANE_CONTEXT_MAP,
   type Personality,
   type PlayerMetadata,
-} from "@scout-for-lol/data";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+} from "@scout-for-lol/data/index.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("review-prompts");
 

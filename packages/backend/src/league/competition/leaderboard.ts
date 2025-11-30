@@ -6,29 +6,29 @@ import type {
   Rank,
   Ranks,
   RawMatch,
-} from "@scout-for-lol/data";
+} from "@scout-for-lol/data/index.ts";
 import {
   getCompetitionStatus,
   rankToLeaguePoints,
   RankSchema,
   LeaguePuuidSchema,
   RawSummonerLeagueSchema,
-} from "@scout-for-lol/data";
+} from "@scout-for-lol/data/index.ts";
 import { sortBy } from "remeda";
 import { match } from "ts-pattern";
 import { z } from "zod";
-import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
-import { queryMatchesByDateRange } from "@scout-for-lol/backend/storage/s3-query.js";
+import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.ts";
+import { queryMatchesByDateRange } from "@scout-for-lol/backend/storage/s3-query.ts";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
-} from "@scout-for-lol/backend/league/competition/processors/types.js";
-import { processCriteria, type SnapshotData } from "@scout-for-lol/backend/league/competition/processors/index.js";
-import { getSnapshot } from "@scout-for-lol/backend/league/competition/snapshots.js";
-import { api } from "@scout-for-lol/backend/league/api/api.js";
-import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.js";
-import { getRank } from "@scout-for-lol/backend/league/model/rank.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+} from "@scout-for-lol/backend/league/competition/processors/types.ts";
+import { processCriteria, type SnapshotData } from "@scout-for-lol/backend/league/competition/processors/index.ts";
+import { getSnapshot } from "@scout-for-lol/backend/league/competition/snapshots.ts";
+import { api } from "@scout-for-lol/backend/league/api/api.ts";
+import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
+import { getRank } from "@scout-for-lol/backend/league/model/rank.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("competition-leaderboard");
 

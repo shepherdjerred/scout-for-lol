@@ -1,4 +1,4 @@
-import { Regions } from "twisted/dist/constants/index.js";
+import { Regions } from "twisted/dist/constants/index.ts";
 import { match } from "ts-pattern";
 import type { Region } from "@scout-for-lol/data";
 

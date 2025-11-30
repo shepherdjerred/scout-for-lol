@@ -1,5 +1,5 @@
-import { Button as ButtonComponent } from "./button";
-import { Input as InputComponent, Select as SelectComponent } from "./input";
+import { Button as ButtonComponent } from "./button.tsx";
+import { Input as InputComponent, Select as SelectComponent } from "./input.tsx";
 import {
   Card as CardComponent,
   CardHeader as CardHeaderComponent,
@@ -7,10 +7,10 @@ import {
   CardDescription as CardDescriptionComponent,
   CardContent as CardContentComponent,
   CardFooter as CardFooterComponent,
-} from "./card";
-import { Badge as BadgeComponent, StatusIndicator as StatusIndicatorComponent } from "./badge";
-import { Collapsible as CollapsibleComponent } from "./collapsible";
-import { Alert as AlertComponent } from "./alert";
+} from "./card.tsx";
+import { Badge as BadgeComponent, StatusIndicator as StatusIndicatorComponent } from "./badge.tsx";
+import { Collapsible as CollapsibleComponent } from "./collapsible.tsx";
+import { Alert as AlertComponent } from "./alert.tsx";
 
 export const Button = ButtonComponent;
 export const Input = InputComponent;

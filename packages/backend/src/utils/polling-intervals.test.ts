@@ -5,7 +5,7 @@ import {
   shouldCheckPlayer,
   getPollingReferenceTime,
   POLLING_INTERVALS,
-} from "@scout-for-lol/backend/utils/polling-intervals.js";
+} from "@scout-for-lol/backend/utils/polling-intervals.ts";
 
 describe("calculatePollingInterval", () => {
   const now = new Date("2024-01-15T12:00:00Z");

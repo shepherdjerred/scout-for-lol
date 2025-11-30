@@ -6,7 +6,7 @@ import {
   ButtonStyle,
   type MessageActionRowComponentBuilder,
   type ButtonInteraction,
-} from "discord.js";
+} from "discord.ts";
 import {
   type DiscordAccountId,
   DiscordAccountIdSchema,
@@ -14,11 +14,11 @@ import {
   getCompetitionStatus,
 } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { getCompetitionsByServer } from "@scout-for-lol/backend/database/competition/queries.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { getCompetitionsByServer } from "@scout-for-lol/backend/database/competition/queries.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("competition-list");
 

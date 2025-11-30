@@ -1,6 +1,6 @@
 import { match, P } from "ts-pattern";
 import { palette } from "@scout-for-lol/report/assets/colors.ts";
-import { latestVersion } from "@scout-for-lol/report/dataDragon/version.ts";
+import { getItemImageUrl } from "@scout-for-lol/data/index.ts";
 import { last, map, pipe, take } from "remeda";
 
 const dimension = "7.5rem";
@@ -13,7 +13,7 @@ function isPrismaticItem(itemId: number): boolean {
 function getItemIconUrl(itemId: number): string {
   // All items (including prismatic) use Data Dragon
   // Prismatic items have IDs starting with 44 and are available via Data Dragon
-  return `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/item/${itemId.toString()}.png`;
+  return getItemImageUrl(itemId);
 }
 
 function renderItem(item: number) {

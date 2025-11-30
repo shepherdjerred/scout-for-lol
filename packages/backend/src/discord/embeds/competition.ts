@@ -1,10 +1,10 @@
 import type { CompetitionCriteria, CompetitionQueueType, CompetitionWithCriteria, Rank } from "@scout-for-lol/data";
 import { getCompetitionStatus, competitionQueueTypeToString, rankToString, RankSchema } from "@scout-for-lol/data";
-import { EmbedBuilder, Colors } from "discord.js";
+import { EmbedBuilder, Colors } from "discord.ts";
 import { match } from "ts-pattern";
 import { z } from "zod";
-import { getChampionName } from "twisted/dist/constants/champions.js";
-import type { RankedLeaderboardEntry } from "@scout-for-lol/backend/league/competition/leaderboard.js";
+import { getChampionName } from "twisted/dist/constants/champions.ts";
+import type { RankedLeaderboardEntry } from "@scout-for-lol/backend/league/competition/leaderboard.ts";
 import { differenceInCalendarDays, format } from "date-fns";
 
 // ============================================================================

@@ -1,11 +1,11 @@
-import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
+import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.ts";
 import { z } from "zod";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { grantPermission } from "@scout-for-lol/backend/database/competition/permissions.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { grantPermission } from "@scout-for-lol/backend/database/competition/permissions.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("competition-grant-permission");
 

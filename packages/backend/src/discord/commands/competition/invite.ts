@@ -1,13 +1,13 @@
-import { type ChatInputCommandInteraction } from "discord.js";
+import { type ChatInputCommandInteraction } from "discord.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { addParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.js";
-import { formatCriteriaType } from "@scout-for-lol/backend/discord/commands/competition/helpers.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { addParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.ts";
+import { formatCriteriaType } from "@scout-for-lol/backend/discord/commands/competition/helpers.ts";
 import {
   replyWithError,
   replyWithErrorFromException,
   replyWithSuccess,
-} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
+} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.ts";
 import {
   extractCompetitionId,
   validateServerContext,
@@ -15,11 +15,11 @@ import {
   checkCompetitionCancelled,
   checkCompetitionEnded,
   checkParticipantLimit,
-} from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.js";
-import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+} from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.ts";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import type { CompetitionId } from "@scout-for-lol/data";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("competition-invite");
 

@@ -1,4 +1,4 @@
-import { InteractionContextType, SlashCommandBuilder } from "discord.js";
+import { InteractionContextType, SlashCommandBuilder } from "discord.ts";
 import { getSeasonChoices } from "@scout-for-lol/data";
 
 /**

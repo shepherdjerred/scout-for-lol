@@ -9,11 +9,11 @@
  */
 
 import type { GoogleGenerativeAI } from "@google/generative-ai";
-import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
-import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema.js";
-import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema.js";
-import type { CuratedMatchData, CuratedTimeline } from "./curator-types.js";
-import type { Personality, PlayerMetadata } from "./prompts.js";
+import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
+import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema.ts";
+import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema.ts";
+import type { CuratedMatchData, CuratedTimeline } from "./curator-types.ts";
+import type { Personality, PlayerMetadata } from "./prompts.ts";
 
 // ============================================================================
 // Model Configuration
@@ -286,4 +286,3 @@ export type ReviewPipelineOutput = {
   /** Context about the review */
   context: PipelineContext;
 };
-

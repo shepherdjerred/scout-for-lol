@@ -24,9 +24,9 @@ import type {
   GuildMember,
   Message,
   PermissionsBitField,
-} from "discord.js";
-import { ChannelType, PermissionFlagsBits } from "discord.js";
-import { testAccountId, testGuildId, testChannelId } from "./test-ids.js";
+} from "discord.ts";
+import { ChannelType, PermissionFlagsBits } from "discord.ts";
+import { testAccountId, testGuildId, testChannelId } from "./test-ids.ts";
 
 /**
  * Create a mock Discord User object

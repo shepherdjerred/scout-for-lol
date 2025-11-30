@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import type { ChampionId, LeaguePuuid, RawMatch, RawPerks, Rank, Ranks } from "@scout-for-lol/data";
 import { AccountIdSchema, ChampionIdSchema, PlayerIdSchema, rankToLeaguePoints } from "@scout-for-lol/data";
-import { processCriteria } from "@scout-for-lol/backend/league/competition/processors/index.js";
-import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.js";
+import { processCriteria } from "@scout-for-lol/backend/league/competition/processors/index.ts";
+import type { PlayerWithAccounts } from "@scout-for-lol/backend/league/competition/processors/types.ts";
 
-import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
+import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
 // ============================================================================
 // Test Fixtures - Players
 // ============================================================================

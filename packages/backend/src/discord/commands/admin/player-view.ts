@@ -1,16 +1,16 @@
-import { type ChatInputCommandInteraction } from "discord.js";
+import { type ChatInputCommandInteraction } from "discord.ts";
 import { z } from "zod";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import type { DiscordGuildId } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
+import type { DiscordGuildId } from "@scout-for-lol/data/index.ts";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import {
   validateCommandArgs,
   executeWithTiming,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
-import { findPlayerByAliasWithCompetitions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
-import type { PlayerWithCompetitions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
-import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.ts";
+import { findPlayerByAliasWithCompetitions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
+import type { PlayerWithCompetitions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
+import { getLimit } from "@scout-for-lol/backend/configuration/flags.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("admin-player-view");
 
