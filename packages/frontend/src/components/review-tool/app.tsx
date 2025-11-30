@@ -27,7 +27,7 @@ import { MatchBrowser } from "./match-browser.tsx";
 import { MatchDetailsPanel } from "./match-details-panel.tsx";
 import { RatingsAnalytics } from "./ratings-analytics.tsx";
 import { Spinner } from "./ui/spinner.tsx";
-import type { CompletedMatch, ArenaMatch, RawMatch } from "@scout-for-lol/data";
+import type { CompletedMatch, ArenaMatch, RawMatch, RawTimeline } from "@scout-for-lol/data";
 
 export type TabData = {
   id: string;
@@ -36,7 +36,17 @@ export type TabData = {
   result?: GenerationResult;
   match?: CompletedMatch | ArenaMatch;
   rawMatch?: RawMatch;
+  rawTimeline?: RawTimeline;
 };
+
+// TODO: Frontend cannot fetch timeline from Riot API (browser limitation).
+// Need to either: 1) Store timelines in S3, or 2) Add backend API endpoint.
+// For now, use a placeholder that will skip timeline summary generation.
+// eslint-disable-next-line custom-rules/no-type-assertions -- placeholder until timeline fetching is implemented
+const PLACEHOLDER_TIMELINE = {
+  metadata: { matchId: "placeholder", participants: [], dataVersion: "2" },
+  info: { frameInterval: 60000, frames: [], gameId: 0, participants: [] },
+} as unknown as RawTimeline;
 
 const MAX_TABS = 5;
 
@@ -264,7 +274,8 @@ export default function App() {
   };
 
   const updateTabMatch = (id: string, match: CompletedMatch | ArenaMatch, rawMatch: RawMatch) => {
-    const newTabs = tabs.map((t) => (t.id === id ? { ...t, match, rawMatch } : t));
+    // TODO: Fetch real timeline data when available (see PLACEHOLDER_TIMELINE comment)
+    const newTabs = tabs.map((t) => (t.id === id ? { ...t, match, rawMatch, rawTimeline: PLACEHOLDER_TIMELINE } : t));
     appInitState = { ...appInitState, tabs: newTabs };
     appInitListeners.forEach((listener) => {
       listener();
@@ -357,6 +368,7 @@ export default function App() {
                 config={mergeConfigs(globalConfig, activeTab.config)}
                 match={activeTab.match}
                 rawMatch={activeTab.rawMatch}
+                rawTimeline={activeTab.rawTimeline}
                 result={activeTab.result}
                 costTracker={costTracker}
                 onResultGenerated={(result) => {

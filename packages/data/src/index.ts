@@ -10,13 +10,16 @@ export * from "./review/image-prompt.ts";
 export {
   type ReviewTextMetadata,
   type ReviewImageMetadata,
-  type CuratedMatchData,
   type ChatCompletionCreateParams,
 } from "./review/generator.ts";
 export { extractMatchData, getOrdinalSuffix } from "./review/generator-helpers.ts";
-export { curateMatchData, curateParticipantData } from "./review/curator.ts";
-export { curateTimelineData } from "./review/timeline-curator.ts";
-export type { CuratedTimeline, CuratedTimelineEvent, CuratedParticipantSnapshot } from "./review/curator-types.ts";
+export {
+  buildTimelineEnrichment,
+  enrichTimelineData,
+  type ParticipantLookup,
+  type TimelineEnrichment,
+  type EnrichedTimelineData,
+} from "./review/timeline-enricher.ts";
 
 // Pipeline exports
 export { generateFullMatchReview, runStage1Sequential } from "./review/pipeline.ts";

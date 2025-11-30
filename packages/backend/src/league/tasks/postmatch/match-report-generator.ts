@@ -331,15 +331,21 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
   let reviewImage: Uint8Array | undefined;
   const shouldGenerateReview = isRankedQueue(completedMatch.queueType) || hasJerred(playersInMatch);
   if (shouldGenerateReview) {
-    try {
-      const review = await generateMatchReview(completedMatch, matchId, matchData, timelineData);
-      if (review) {
-        reviewText = review.text;
-        reviewImage = review.image;
+    if (!timelineData) {
+      logger.warn(
+        `[generateMatchReport] Skipping AI review - timeline data required but not available for match ${matchId}`,
+      );
+    } else {
+      try {
+        const review = await generateMatchReview(completedMatch, matchId, matchData, timelineData);
+        if (review) {
+          reviewText = review.text;
+          reviewImage = review.image;
+        }
+      } catch (error) {
+        logger.error(`[generateMatchReport] Error generating AI review:`, error);
+        captureError(error, "ai-review-generation", matchId, { queueType: completedMatch.queueType ?? "unknown" });
       }
-    } catch (error) {
-      logger.error(`[generateMatchReport] Error generating AI review:`, error);
-      captureError(error, "ai-review-generation", matchId, { queueType: completedMatch.queueType ?? "unknown" });
     }
   } else {
     logger.info(

@@ -12,7 +12,6 @@ import type { GoogleGenerativeAI } from "@google/generative-ai";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
 import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema.ts";
 import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema.ts";
-import type { CuratedMatchData, CuratedTimeline } from "./curator-types.ts";
 import type { Personality, PlayerMetadata } from "./prompts.ts";
 
 // ============================================================================
@@ -112,8 +111,8 @@ export type PipelineMatchInput = {
   processed: CompletedMatch | ArenaMatch;
   /** Raw match data from Riot API (required for match summary generation) */
   raw: RawMatch;
-  /** Raw timeline data from Riot API (optional, for timeline summary) */
-  rawTimeline?: RawTimeline;
+  /** Raw timeline data from Riot API (required for timeline summary) */
+  rawTimeline: RawTimeline;
 };
 
 /**
@@ -226,10 +225,6 @@ export type PipelineTraces = {
  * Intermediate results from the pipeline (for debugging/dev tool)
  */
 export type PipelineIntermediateResults = {
-  /** Curated match data (if raw match provided) */
-  curatedData?: CuratedMatchData;
-  /** Curated timeline (if raw timeline provided) */
-  curatedTimeline?: CuratedTimeline;
   /** Text output from Stage 1a */
   timelineSummaryText?: string;
   /** Text output from Stage 1b */

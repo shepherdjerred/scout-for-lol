@@ -1,6 +1,6 @@
 import { match as matchPattern } from "ts-pattern";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
-import type { CuratedMatchData, Personality, PlayerMetadata } from "@scout-for-lol/data/review/generator.ts";
+import type { Personality, PlayerMetadata } from "@scout-for-lol/data/review/generator.ts";
 import { selectRandomBehavior } from "@scout-for-lol/data/review/prompts.ts";
 
 /**
@@ -212,16 +212,28 @@ function buildFlexQueueContext(
 
 /**
  * Build queue context text based on the queue type
- * Provides additional context for competitive game modes like Clash
+ * Provides context about the game mode to help the AI understand the stakes and setting
  */
 function buildQueueContext(queueType: string | undefined): string {
-  if (queueType === "clash") {
-    return "This is a CLASH game - a competitive tournament mode where teams sign up in advance and play bracket-style matches. Clash games are typically more serious and strategic than regular games, with coordinated team compositions and communication. The stakes feel higher and players often try harder.";
+  switch (queueType) {
+    case "solo":
+      return "This is a Solo/Duo Ranked game - the most competitive standard queue where players climb the ranked ladder. Games are taken seriously and LP is on the line.";
+    case "flex":
+      return "This is a Flex Ranked game - a ranked queue that allows groups of any size. Generally more relaxed than Solo/Duo but still competitive since LP is on the line.";
+    case "clash":
+      return "This is a CLASH game - a competitive tournament mode where teams sign up in advance and play bracket-style matches. Clash games are typically more serious and strategic than regular games, with coordinated team compositions and communication. The stakes feel higher and players often try harder.";
+    case "aram clash":
+      return "This is an ARAM CLASH game - a competitive ARAM tournament where teams play All Random All Mid in bracket-style matches. Like regular Clash, these games are more competitive and coordinated than normal ARAM games, with players taking the random champion assignments more seriously.";
+    case "arena":
+      return "This is an Arena game - a 2v2v2v2 round-based mode where four teams fight to survive. Players pick augments between rounds and the last team standing wins.";
+    case "aram":
+      return "This is an ARAM game - All Random All Mid on the Howling Abyss. Players get random champions and fight in a single lane. It's a more casual, chaotic mode focused on teamfighting.";
+    case "normal":
+      return "This is a Normal (unranked) game - a casual queue for practicing or playing without ranked pressure.";
+    case undefined:
+    default:
+      return "This is a standard League of Legends game.";
   }
-  if (queueType === "aram clash") {
-    return "This is an ARAM CLASH game - a competitive ARAM tournament where teams play All Random All Mid in bracket-style matches. Like regular Clash, these games are more competitive and coordinated than normal ARAM games, with players taking the random champion assignments more seriously.";
-  }
-  return "";
 }
 
 export function buildPromptVariables(params: {
@@ -230,7 +242,6 @@ export function buildPromptVariables(params: {
   playerMetadata: PlayerMetadata;
   laneContext: string;
   match: CompletedMatch | ArenaMatch;
-  curatedData?: CuratedMatchData;
   playerIndex?: number;
   matchAnalysis?: string;
   timelineSummary?: string;
@@ -260,7 +271,6 @@ export function buildPromptVariables(params: {
     playerMetadata,
     laneContext,
     match,
-    curatedData,
     playerIndex = 0,
     matchAnalysis,
     timelineSummary,
@@ -285,12 +295,7 @@ export function buildPromptVariables(params: {
   const laneDescription = laneContext;
 
   // Minify JSON to save tokens
-  const matchReport = curatedData
-    ? JSON.stringify({
-        processedMatch: match,
-        detailedStats: curatedData,
-      })
-    : JSON.stringify(match);
+  const matchReport = JSON.stringify(match);
 
   const friendsContext = buildFriendsContext(match, playerIndex);
 
@@ -304,9 +309,7 @@ export function buildPromptVariables(params: {
   const timelineSummaryText =
     timelineSummary && timelineSummary.trim().length > 0
       ? timelineSummary.trim()
-      : curatedData?.timelineSummary && curatedData.timelineSummary.trim().length > 0
-        ? curatedData.timelineSummary.trim()
-        : "No timeline summary available for this match.";
+      : "No timeline summary available for this match.";
 
   const queueContext = buildQueueContext(match.queueType);
 

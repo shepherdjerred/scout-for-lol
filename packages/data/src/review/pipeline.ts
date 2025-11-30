@@ -6,8 +6,8 @@
  * with traces for observability.
  *
  * Pipeline stages:
- * 1a. Timeline Summary - Summarize timeline JSON to text (parallel with 1b)
- * 1b. Match Summary - Summarize match JSON to text (parallel with 1a)
+ * 1a. Timeline Summary - Summarize raw timeline JSON to text (parallel with 1b)
+ * 1b. Match Summary - Summarize raw match JSON to text (parallel with 1a)
  * 2.  Review Text - Generate review using personality (uses 1a + 1b text)
  * 3.  Image Description - Generate image prompt from review text
  * 4.  Image Generation - Generate image using Gemini
@@ -29,7 +29,8 @@ import type {
   PipelineStagesConfig,
   PipelineClientsInput,
 } from "./pipeline-types.ts";
-import type { CuratedMatchData, CuratedTimeline } from "./curator-types.ts";
+import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema.ts";
+import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema.ts";
 import {
   generateTimelineSummary,
   generateMatchSummary,
@@ -37,7 +38,6 @@ import {
   generateImageDescription,
   generateImage,
 } from "./pipeline-stages.ts";
-import { curateMatchData } from "./curator.ts";
 
 // ============================================================================
 // Helper Types
@@ -52,10 +52,10 @@ type Stage1Result = {
 
 type Stage1Context = {
   input: ReviewPipelineInput;
-  curatedData: CuratedMatchData;
-  curatedTimeline?: CuratedTimeline;
   intermediate: PipelineIntermediateResults;
   traces: Partial<PipelineTraces>;
+  rawMatch: RawMatch;
+  rawTimeline: RawTimeline;
 };
 
 type Stage3And4Context = {
@@ -76,41 +76,36 @@ type Stage3And4Result = {
 // ============================================================================
 
 async function runTimelineSummary(ctx: Stage1Context): Promise<{ text: string; trace: StageTrace } | undefined> {
-  const { input, curatedTimeline } = ctx;
-  const { clients, stages } = input;
+  const { input } = ctx;
+  const { match, clients, stages } = input;
 
-  if (!stages.timelineSummary.enabled || !curatedTimeline) {
+  if (!stages.timelineSummary.enabled) {
     return undefined;
   }
 
-  try {
-    const params: Parameters<typeof generateTimelineSummary>[0] = {
-      curatedTimeline,
-      client: clients.openai,
-      model: stages.timelineSummary.model,
-    };
-    if (stages.timelineSummary.systemPrompt !== undefined) {
-      params.systemPromptOverride = stages.timelineSummary.systemPrompt;
-    }
-    return await generateTimelineSummary(params);
-  } catch (error) {
-    console.error("[Pipeline Stage 1a] Timeline summary failed:", error);
-    return undefined;
+  const params: Parameters<typeof generateTimelineSummary>[0] = {
+    rawTimeline: match.rawTimeline,
+    rawMatch: match.raw,
+    client: clients.openai,
+    model: stages.timelineSummary.model,
+  };
+  if (stages.timelineSummary.systemPrompt !== undefined) {
+    params.systemPromptOverride = stages.timelineSummary.systemPrompt;
   }
+  return await generateTimelineSummary(params);
 }
 
 async function runMatchSummary(ctx: Stage1Context): Promise<{ text: string; trace: StageTrace } | undefined> {
-  const { input, curatedData } = ctx;
+  const { input } = ctx;
   const { match, player, prompts, clients, stages } = input;
 
   if (!stages.matchSummary.enabled) {
     return undefined;
   }
 
-  // curatedData is now guaranteed to exist since match.raw is required
   const params: Parameters<typeof generateMatchSummary>[0] = {
     match: match.processed,
-    curatedData,
+    rawMatch: match.raw,
     playerIndex: player.index,
     laneContext: prompts.laneContext,
     client: clients.openai,
@@ -236,21 +231,14 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
   const traces: Partial<PipelineTraces> = {};
   const intermediate: PipelineIntermediateResults = {};
 
-  // Data Preparation - curate raw match data (required for match summary)
-  const curatedData = await curateMatchData(match.raw, match.rawTimeline);
-  intermediate.curatedData = curatedData;
-
-  let curatedTimeline: CuratedTimeline | undefined;
-  if (curatedData.timeline) {
-    curatedTimeline = curatedData.timeline;
-    intermediate.curatedTimeline = curatedTimeline;
-  }
-
-  // Stage 1: Parallel Summarization
-  const stage1Ctx: Stage1Context = { input, intermediate, traces, curatedData };
-  if (curatedTimeline !== undefined) {
-    stage1Ctx.curatedTimeline = curatedTimeline;
-  }
+  // Stage 1: Parallel Summarization (using raw data)
+  const stage1Ctx: Stage1Context = {
+    input,
+    intermediate,
+    traces,
+    rawMatch: match.raw,
+    rawTimeline: match.rawTimeline,
+  };
   const stage1Result = await runStage1Parallel(stage1Ctx);
 
   // Stage 2: Review Text
@@ -265,7 +253,6 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
     playerMetadata: player.metadata,
     playerIndex: player.index,
     matchSummary: effectiveMatchSummary,
-    curatedData,
     client: clients.openai,
     model: stages.reviewText.model,
   };
@@ -331,37 +318,32 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
  */
 export async function runStage1Sequential(params: {
   input: ReviewPipelineInput;
-  curatedData: CuratedMatchData;
-  curatedTimeline?: CuratedTimeline;
 }): Promise<{
   timelineSummaryText?: string;
   timelineSummaryTrace?: StageTrace;
   matchSummaryText?: string;
   matchSummaryTrace?: StageTrace;
 }> {
-  const { input, curatedData, curatedTimeline } = params;
+  const { input } = params;
   const { match, player, prompts, clients, stages } = input;
 
   let timelineSummaryText: string | undefined;
   let timelineSummaryTrace: StageTrace | undefined;
 
   // Stage 1a: Timeline Summary
-  if (stages.timelineSummary.enabled && curatedTimeline) {
-    try {
-      const timelineParams: Parameters<typeof generateTimelineSummary>[0] = {
-        curatedTimeline,
-        client: clients.openai,
-        model: stages.timelineSummary.model,
-      };
-      if (stages.timelineSummary.systemPrompt !== undefined) {
-        timelineParams.systemPromptOverride = stages.timelineSummary.systemPrompt;
-      }
-      const result = await generateTimelineSummary(timelineParams);
-      timelineSummaryText = result.text;
-      timelineSummaryTrace = result.trace;
-    } catch (error) {
-      console.error("[Stage 1a] Timeline summary failed:", error);
+  if (stages.timelineSummary.enabled) {
+    const timelineParams: Parameters<typeof generateTimelineSummary>[0] = {
+      rawTimeline: match.rawTimeline,
+      rawMatch: match.raw,
+      client: clients.openai,
+      model: stages.timelineSummary.model,
+    };
+    if (stages.timelineSummary.systemPrompt !== undefined) {
+      timelineParams.systemPromptOverride = stages.timelineSummary.systemPrompt;
     }
+    const result = await generateTimelineSummary(timelineParams);
+    timelineSummaryText = result.text;
+    timelineSummaryTrace = result.trace;
   }
 
   let matchSummaryText: string | undefined;
@@ -371,7 +353,7 @@ export async function runStage1Sequential(params: {
   if (stages.matchSummary.enabled) {
     const matchParams: Parameters<typeof generateMatchSummary>[0] = {
       match: match.processed,
-      curatedData,
+      rawMatch: match.raw,
       playerIndex: player.index,
       laneContext: prompts.laneContext,
       client: clients.openai,

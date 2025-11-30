@@ -10,17 +10,24 @@ import {
   LeaguePuuidSchema,
   parseQueueType,
   RawMatchSchema,
+  RawTimelineSchema,
   getOrdinalSuffix,
   type ArenaMatch,
   type CompletedMatch,
   type PlayerConfigEntry,
   type RawMatch,
+  type RawTimeline,
+  type MatchId,
 } from "@scout-for-lol/data/index.ts";
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
+import { LolApi, Constants } from "twisted";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.ts";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+// Initialize Riot API client for timeline fetching
+const api = new LolApi({ key: configuration.riotApiToken });
 
 const logger = createLogger("review-test-reviews");
 
@@ -294,7 +301,24 @@ async function convertRawMatchToInternalFormat(rawMatch: RawMatch): Promise<Comp
 type S3MatchResult = {
   match: CompletedMatch | ArenaMatch;
   rawMatch: RawMatch;
+  matchId: MatchId;
 };
+
+/**
+ * Fetch timeline data from Riot API for a match
+ */
+async function fetchTimelineFromRiotApi(matchId: MatchId): Promise<RawTimeline | undefined> {
+  try {
+    logger.info(`📊 Fetching timeline from Riot API for ${matchId}`);
+    const response = await api.MatchV5.timeline(matchId, Constants.RegionGroups.AMERICAS);
+    const validated = RawTimelineSchema.parse(response.response);
+    logger.info(`✅ Timeline fetched with ${validated.info.frames.length.toString()} frames`);
+    return validated;
+  } catch (error) {
+    logger.warn(`⚠️  Failed to fetch timeline for ${matchId}:`, error);
+    return undefined;
+  }
+}
 
 /**
  * Get a random match from S3 that matches the specified type
@@ -327,7 +351,8 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
     if (isMatchingType) {
       logger.info(`📦 Using match from S3: ${key}`);
       const match = await convertRawMatchToInternalFormat(rawMatch);
-      return { match, rawMatch };
+      const matchId = MatchIdSchema.parse(rawMatch.metadata.matchId);
+      return { match, rawMatch, matchId };
     }
   }
 
@@ -363,16 +388,22 @@ async function main(): Promise<void> {
     }
 
     // Get the match from S3 (required for raw match data)
-    const { match, rawMatch } = await getRandomMatchFromS3(options.matchType, options.s3Days);
+    const { match, rawMatch, matchId } = await getRandomMatchFromS3(options.matchType, options.s3Days);
 
     const matchSummary = getMatchSummary(match);
 
     logger.info(`Match: ${matchSummary}`);
     logger.info(`Queue: ${match.queueType ?? "unknown"}\n`);
 
+    // Fetch timeline from Riot API (required for timeline summary)
+    const rawTimeline = await fetchTimelineFromRiotApi(matchId);
+    if (!rawTimeline) {
+      logger.warn(`⚠️  Skipping match ${matchId} - timeline not available`);
+      continue;
+    }
+
     const startTime = Date.now();
-    const testMatchId = MatchIdSchema.parse(`NA1_${Date.now().toString()}`);
-    const reviewResult = await generateMatchReview(match, testMatchId, rawMatch);
+    const reviewResult = await generateMatchReview(match, matchId, rawMatch, rawTimeline);
     const duration = Date.now() - startTime;
 
     if (!reviewResult) {

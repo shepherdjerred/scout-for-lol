@@ -6,13 +6,15 @@
  */
 
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
+import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema.ts";
+import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema.ts";
 import type { OpenAIClient, ModelConfig, StageTrace, ImageGenerationTrace } from "./pipeline-types.ts";
-import type { CuratedMatchData, CuratedTimeline } from "./curator-types.ts";
 import type { Personality, PlayerMetadata } from "./prompts.ts";
 import { getStageSystemPrompt } from "./pipeline-defaults.ts";
 import { generateImagePrompt } from "./image-prompt.ts";
 import { replaceTemplateVariables } from "./prompts.ts";
 import { buildPromptVariables, extractMatchData } from "./generator-helpers.ts";
+import { enrichTimelineData } from "./timeline-enricher.ts";
 import type { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 
@@ -101,21 +103,26 @@ async function callOpenAI(params: {
 // ============================================================================
 
 /**
- * Stage 1a: Summarize curated timeline data into a narrative
+ * Stage 1a: Summarize raw timeline data into a narrative
  *
- * Takes curated timeline data (with champion names, Blue/Red teams, etc.)
- * and generates a narrative summary of how the game unfolded.
+ * Takes raw timeline data from Riot API along with match data for participant
+ * context, and generates a narrative summary of how the game unfolded.
+ * The timeline is enriched with a participant lookup table for champion/team names.
  */
 export async function generateTimelineSummary(params: {
-  curatedTimeline: CuratedTimeline;
+  rawTimeline: RawTimeline;
+  rawMatch: RawMatch;
   client: OpenAIClient;
   model: ModelConfig;
   systemPromptOverride?: string;
 }): Promise<{ text: string; trace: StageTrace }> {
-  const { curatedTimeline, client, model, systemPromptOverride } = params;
+  const { rawTimeline, rawMatch, client, model, systemPromptOverride } = params;
+
+  // Enrich timeline with participant lookup table for human-readable names
+  const enrichedData = enrichTimelineData(rawTimeline, rawMatch);
 
   const systemPrompt = getStageSystemPrompt("timelineSummary", systemPromptOverride);
-  const userPrompt = `Timeline data:\n${minifyJson(curatedTimeline)}`;
+  const userPrompt = `Timeline data:\n${minifyJson(enrichedData)}`;
 
   return callOpenAI({
     client,
@@ -132,13 +139,13 @@ export async function generateTimelineSummary(params: {
 /**
  * Stage 1b: Summarize match data for a single player
  *
- * Takes match data and curated stats to generate a factual summary
+ * Takes raw match data from Riot API to generate a factual summary
  * of the player's performance. This summary is used by the personality
  * reviewer instead of raw JSON.
  */
 export async function generateMatchSummary(params: {
   match: CompletedMatch | ArenaMatch;
-  curatedData: CuratedMatchData;
+  rawMatch: RawMatch;
   playerIndex: number;
   laneContext: string;
   timelineSummary?: string;
@@ -146,7 +153,7 @@ export async function generateMatchSummary(params: {
   model: ModelConfig;
   systemPromptOverride?: string;
 }): Promise<{ text: string; trace: StageTrace }> {
-  const { match, curatedData, playerIndex, laneContext, timelineSummary, client, model, systemPromptOverride } = params;
+  const { match, rawMatch, playerIndex, laneContext, timelineSummary, client, model, systemPromptOverride } = params;
 
   const player = match.players[playerIndex] ?? match.players[0];
   if (!player) {
@@ -178,7 +185,7 @@ ${timelineSummarySection}
 Match data:
 ${minifyJson({
   processedMatch: match,
-  detailedStats: curatedData,
+  rawMatch,
 })}`;
 
   return callOpenAI({
@@ -216,7 +223,6 @@ function minifyJsonString(text: string): string {
  */
 export async function generateReviewTextStage(params: {
   match: CompletedMatch | ArenaMatch;
-  curatedData?: CuratedMatchData;
   personality: Personality;
   basePromptTemplate: string;
   laneContext: string;
@@ -230,7 +236,6 @@ export async function generateReviewTextStage(params: {
 }): Promise<{ text: string; reviewerName: string; playerName: string; trace: StageTrace }> {
   const {
     match,
-    curatedData,
     personality,
     basePromptTemplate,
     laneContext,
@@ -254,7 +259,6 @@ export async function generateReviewTextStage(params: {
     match,
     playerIndex,
     matchAnalysis: matchSummary, // Use match summary text
-    ...(curatedData !== undefined && { curatedData }),
     ...(timelineSummary !== undefined && { timelineSummary }),
   });
 

@@ -58,14 +58,14 @@ function selectPlayerIndex(match: CompletedMatch | ArenaMatch): number {
  * @param match - The completed match data (regular or arena)
  * @param matchId - The match ID for S3 storage
  * @param rawMatchData - Raw match data from Riot API (required for match summary generation)
- * @param timelineData - Optional timeline data from Riot API for game progression context
+ * @param timelineData - Timeline data from Riot API (required for timeline summary)
  * @returns A promise that resolves to an object with review text, optional image, and metadata, or undefined if API keys are not configured
  */
 export async function generateMatchReview(
   match: CompletedMatch | ArenaMatch,
   matchId: MatchId,
   rawMatchData: RawMatch,
-  timelineData?: RawTimeline,
+  timelineData: RawTimeline,
 ): Promise<{ text: string; image?: Uint8Array; metadata?: ReviewMetadata } | undefined> {
   // Initialize clients
   const openaiClient = getOpenAIClient();
@@ -114,14 +114,12 @@ export async function generateMatchReview(
   // Call unified pipeline
   let pipelineOutput: ReviewPipelineOutput;
 
-  // Build match input - raw is required for match summary generation
+  // Build match input - raw and rawTimeline are required for summaries
   const matchInput: Parameters<typeof generateFullMatchReview>[0]["match"] = {
     processed: match,
     raw: rawMatchData,
+    rawTimeline: timelineData,
   };
-  if (timelineData !== undefined) {
-    matchInput.rawTimeline = timelineData;
-  }
 
   // Build clients input
   const clientsInput: Parameters<typeof generateFullMatchReview>[0]["clients"] = {

@@ -10,7 +10,7 @@ import type {
   PipelineTraces,
   StageTrace,
 } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
-import type { CompletedMatch, ArenaMatch, RawMatch } from "@scout-for-lol/data";
+import type { CompletedMatch, ArenaMatch, RawMatch, RawTimeline } from "@scout-for-lol/data";
 import type { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import { calculateCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import {
@@ -73,6 +73,7 @@ type ResultsPanelProps = {
   config: ReviewConfig;
   match?: CompletedMatch | ArenaMatch | undefined;
   rawMatch?: RawMatch | undefined;
+  rawTimeline?: RawTimeline | undefined;
   result?: GenerationResult | undefined;
   costTracker: CostTracker;
   onResultGenerated: (result: GenerationResult) => void;
@@ -184,7 +185,8 @@ function PipelineTracesPanel({ traces, intermediate }: PipelineTracesPanelProps)
   );
 }
 
-export function ResultsPanel({ config, match, rawMatch, result, costTracker, onResultGenerated }: ResultsPanelProps) {
+export function ResultsPanel(props: ResultsPanelProps) {
+  const { config, match, rawMatch, rawTimeline, result, costTracker, onResultGenerated } = props;
   const [activeGenerations, setActiveGenerations] = useState<Map<string, ActiveGeneration>>(new Map());
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | undefined>();
   const [viewingHistory, setViewingHistory] = useState(false);
@@ -202,9 +204,9 @@ export function ResultsPanel({ config, match, rawMatch, result, costTracker, onR
   );
 
   const handleGenerate = async () => {
-    // Both match and rawMatch are required for review generation
-    if (!match || !rawMatch) {
-      console.error("[Generate] Match and rawMatch are required");
+    // match, rawMatch, and rawTimeline are required for review generation
+    if (!match || !rawMatch || !rawTimeline) {
+      console.error("[Generate] Match, rawMatch, and rawTimeline are required");
       return;
     }
 
@@ -232,6 +234,7 @@ export function ResultsPanel({ config, match, rawMatch, result, costTracker, onR
       const generatedResult = await generateMatchReview({
         match,
         rawMatch,
+        rawTimeline,
         config,
         onProgress: (p) => {
           setActiveGenerations((prev) => {

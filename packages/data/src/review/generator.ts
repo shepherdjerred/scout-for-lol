@@ -1,4 +1,3 @@
-import type { CuratedTimeline } from "./curator-types.ts";
 import {
   type Personality as PromptPersonality,
   type PlayerMetadata as PromptPlayerMetadata,
@@ -18,20 +17,6 @@ export type ChatCompletionCreateParams = {
 // Type aliases exported for consumers - identical to prompts.ts types
 export type Personality = PromptPersonality;
 export type PlayerMetadata = PromptPlayerMetadata;
-
-/**
- * Curated match data type (from curator module)
- */
-export type CuratedMatchData = {
-  gameInfo: {
-    gameDuration: number;
-    gameMode: string;
-    queueId: number;
-  };
-  participants: unknown[]; // Full type in curator module
-  timeline?: CuratedTimeline | undefined;
-  timelineSummary?: string | undefined;
-};
 
 /**
  * Review text generation metadata
