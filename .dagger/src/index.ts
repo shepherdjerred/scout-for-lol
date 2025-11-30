@@ -1013,30 +1013,82 @@ export class ScoutForLol {
 
       // Create or update the GitHub release
       logWithTimestamp(`🚀 Creating/updating GitHub release v${version}...`);
-      const releaseContainer = container
-        // Check if gh CLI can authenticate
-        .withExec(["sh", "-c", "gh auth status || echo 'Auth check failed'"])
-        // Check if release already exists
-        .withExec([
-          "sh",
-          "-c",
-          `gh release view "v${version}" --repo="${repo}" > /dev/null 2>&1 && echo "Release v${version} already exists" || gh release create "v${version}" --repo="${repo}" --title="v${version}" --notes="Release ${version} (${gitSha.substring(0, 7)})" --latest`,
-        ])
-        // Upload Linux artifacts
-        .withExec([
-          "sh",
-          "-c",
-          `find linux -type f \\( -name "*.deb" -o -name "*.AppImage" -o -name "*.rpm" \\) -exec gh release upload "v${version}" {} --repo="${repo}" --clobber \\;`,
-        ])
-        // Upload Windows artifacts
-        .withExec([
-          "sh",
-          "-c",
-          `find windows -type f \\( -name "*.exe" -o -name "*.msi" \\) -exec gh release upload "v${version}" {} --repo="${repo}" --clobber \\;`,
-        ])
-        .withExec(["sh", "-c", `echo "✅ Artifacts uploaded to https://github.com/${repo}/releases/tag/v${version}"`]);
 
+      // Step 1: Verify authentication and check token scopes
+      logWithTimestamp(`🔐 Verifying GitHub authentication...`);
+      const authContainer = container
+        .withExec(["sh", "-c", "gh auth status 2>&1 || (echo '❌ Auth failed' && exit 1)"])
+        .withExec([
+          "sh",
+          "-c",
+          `gh api user --jq '.login' 2>&1 && echo '✓ Token is valid' || echo '❌ Token validation failed'`,
+        ]);
+      await authContainer.sync();
+      logWithTimestamp(`✓ GitHub authentication verified`);
+
+      // Step 2: Check if release exists (capture output for debugging)
+      logWithTimestamp(`🔍 Checking if release v${version} exists...`);
+      const checkReleaseContainer = authContainer.withExec([
+        "sh",
+        "-c",
+        // Use a more robust check that captures the exit code
+        `if gh release view "v${version}" --repo="${repo}" > /dev/null 2>&1; then
+          echo "RELEASE_EXISTS"
+        else
+          EXIT_CODE=$?
+          echo "RELEASE_NOT_FOUND"
+          if [ $EXIT_CODE -ne 1 ]; then
+            echo "ERROR: gh release view failed with exit code $EXIT_CODE" >&2
+            gh release view "v${version}" --repo="${repo}" 2>&1 || true
+          fi
+        fi`,
+      ]);
+      const checkOutput = await checkReleaseContainer.stdout();
+      const releaseExists = checkOutput.includes("RELEASE_EXISTS");
+
+      if (checkOutput.includes("ERROR:")) {
+        logWithTimestamp(`⚠️  Warning during release check: ${checkOutput}`);
+      }
+
+      logWithTimestamp(`Release check result: ${releaseExists ? "exists" : "needs creation"}`);
+
+      // Step 3: Create release if it doesn't exist
+      let releaseContainer = checkReleaseContainer;
+      if (!releaseExists) {
+        logWithTimestamp(`Creating new release v${version}...`);
+        releaseContainer = releaseContainer.withExec([
+          "gh",
+          "release",
+          "create",
+          `v${version}`,
+          `--repo=${repo}`,
+          `--title=v${version}`,
+          `--notes=Release ${version} (${gitSha.substring(0, 7)})`,
+          "--latest",
+        ]);
+        await releaseContainer.sync();
+        logWithTimestamp(`✓ Release v${version} created successfully`);
+      }
+
+      // Step 4: Upload Linux artifacts
+      logWithTimestamp(`📤 Uploading Linux artifacts...`);
+      releaseContainer = releaseContainer.withExec([
+        "sh",
+        "-c",
+        `find linux -type f \\( -name "*.deb" -o -name "*.AppImage" -o -name "*.rpm" \\) -exec gh release upload "v${version}" {} --repo="${repo}" --clobber \\; 2>&1 || (echo '❌ Linux upload failed' && exit 1)`,
+      ]);
       await releaseContainer.sync();
+
+      // Step 5: Upload Windows artifacts
+      logWithTimestamp(`📤 Uploading Windows artifacts...`);
+      releaseContainer = releaseContainer.withExec([
+        "sh",
+        "-c",
+        `find windows -type f \\( -name "*.exe" -o -name "*.msi" \\) -exec gh release upload "v${version}" {} --repo="${repo}" --clobber \\; 2>&1 || (echo '❌ Windows upload failed' && exit 1)`,
+      ]);
+      await releaseContainer.sync();
+
+      logWithTimestamp(`✅ All artifacts uploaded to https://github.com/${repo}/releases/tag/v${version}`);
     });
 
     logWithTimestamp(`✅ Desktop artifacts published to GitHub Releases: v${version}`);
