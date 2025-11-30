@@ -8,8 +8,6 @@ export * from "./review/models.ts";
 export * from "./review/prompts.ts";
 export * from "./review/image-prompt.ts";
 export {
-  generateReviewText,
-  generateReviewImage,
   type ReviewTextMetadata,
   type ReviewImageMetadata,
   type CuratedMatchData,

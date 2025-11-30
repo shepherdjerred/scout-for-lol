@@ -39,30 +39,6 @@ export async function saveMatchRankHistory(params: {
 }
 
 /**
- * Get rank history for a specific match and player
- */
-export async function getMatchRankHistory(
-  matchId: MatchId,
-  puuid: LeaguePuuid,
-  queueType: "solo" | "flex",
-): Promise<{ rankBefore: Rank | undefined; rankAfter: Rank | undefined } | null> {
-  const record = await prisma.matchRankHistory.findUnique({
-    where: {
-      matchId_puuid_queueType: { matchId, puuid, queueType },
-    },
-  });
-
-  if (!record) {
-    return null;
-  }
-
-  return {
-    rankBefore: record.rankBefore ? RankSchema.parse(JSON.parse(record.rankBefore)) : undefined,
-    rankAfter: record.rankAfter ? RankSchema.parse(JSON.parse(record.rankAfter)) : undefined,
-  };
-}
-
-/**
  * Get the most recent rank before a specific timestamp
  */
 export async function getLatestRankBefore(

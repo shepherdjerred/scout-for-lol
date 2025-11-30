@@ -137,41 +137,27 @@ export function replaceTemplateVariables(
   variables: {
     reviewerName: string;
     reviewerPersonality: string;
-    reviewerFavoriteChampions: string;
-    reviewerFavoriteLanes: string;
     playerName: string;
     playerPersonality: string;
-    playerFavoriteChampions: string;
-    playerFavoriteLanes: string;
     playerChampion: string;
     playerLane: string;
     opponentChampion: string;
-    laneDescription: string;
-    matchReport: string;
     friendsContext: string;
     randomBehavior: string;
     matchAnalysis: string;
-    timelineSummary: string;
     queueContext: string;
   },
 ): string {
   return template
     .replaceAll("<REVIEWER NAME>", variables.reviewerName)
     .replaceAll("<REVIEWER PERSONALITY>", variables.reviewerPersonality)
-    .replaceAll("<REVIEWER FAVORITE CHAMPIONS>", variables.reviewerFavoriteChampions)
-    .replaceAll("<REVIEWER FAVORITE LANES>", variables.reviewerFavoriteLanes)
     .replaceAll("<PLAYER NAME>", variables.playerName)
     .replaceAll("<PLAYER PERSONALITY>", variables.playerPersonality)
-    .replaceAll("<PLAYER FAVORITE CHAMPIONS>", variables.playerFavoriteChampions)
-    .replaceAll("<PLAYER FAVORITE LANES>", variables.playerFavoriteLanes)
     .replaceAll("<PLAYER CHAMPION>", variables.playerChampion)
     .replaceAll("<PLAYER LANE>", variables.playerLane)
     .replaceAll("<OPPONENT CHAMPION>", variables.opponentChampion)
-    .replaceAll("<LANE DESCRIPTION>", variables.laneDescription)
-    .replaceAll("<MATCH REPORT>", variables.matchReport)
     .replaceAll("<FRIENDS CONTEXT>", variables.friendsContext)
     .replaceAll("<RANDOM BEHAVIOR>", variables.randomBehavior)
     .replaceAll("<MATCH ANALYSIS>", variables.matchAnalysis)
-    .replaceAll("<TIMELINE SUMMARY>", variables.timelineSummary)
     .replaceAll("<QUEUE CONTEXT>", variables.queueContext);
 }
