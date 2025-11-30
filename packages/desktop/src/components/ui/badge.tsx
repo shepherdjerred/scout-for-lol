@@ -17,7 +17,7 @@ const badgeVariants = cva(
     defaultVariants: {
       variant: "default",
     },
-  }
+  },
 );
 
 type BadgeProps = HTMLAttributes<HTMLSpanElement> &
@@ -43,7 +43,7 @@ function Badge({ className, variant = "default", dot, pulse, children, ...props 
             <span
               className={cn(
                 "absolute inline-flex h-full w-full animate-ping rounded-full opacity-75",
-                dotColors[variant ?? "default"]
+                dotColors[variant ?? "default"],
               )}
             />
           )}

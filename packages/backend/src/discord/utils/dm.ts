@@ -5,9 +5,9 @@
  */
 
 import { type Client, DiscordAPIError } from "discord.js";
-import { type DiscordAccountId } from "@scout-for-lol/data";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { type DiscordAccountId } from "@scout-for-lol/data/index.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("discord-dm");
 

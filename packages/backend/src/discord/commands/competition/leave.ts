@@ -1,21 +1,21 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { removeParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { removeParticipant, getParticipantStatus } from "@scout-for-lol/backend/database/competition/participants.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("competition-leave");
 import {
   replyWithErrorFromException,
   replyWithError,
   replyWithSuccess,
-} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
+} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.ts";
 import {
   extractCompetitionId,
   validateServerContext,
   fetchCompetitionWithErrorHandling,
   fetchLinkedPlayerForUser,
-} from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.js";
+} from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.ts";
 
 /**
  * Execute /competition leave command

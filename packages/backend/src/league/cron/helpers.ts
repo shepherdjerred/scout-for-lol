@@ -1,8 +1,8 @@
 import { CronJob } from "cron";
-import { logErrors } from "@scout-for-lol/backend/league/util";
-import { cronJobExecutionsTotal, cronJobDuration, cronJobLastSuccess } from "@scout-for-lol/backend/metrics/index.js";
-import { logCronTrigger } from "@scout-for-lol/backend/utils/notification-logger.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { logErrors } from "@scout-for-lol/backend/league/util.ts";
+import { cronJobExecutionsTotal, cronJobDuration, cronJobLastSuccess } from "@scout-for-lol/backend/metrics/index.ts";
+import { logCronTrigger } from "@scout-for-lol/backend/utils/notification-logger.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("cron-helpers");
 

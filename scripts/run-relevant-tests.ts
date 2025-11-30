@@ -63,4 +63,4 @@ const testResult = Bun.spawnSync(["bun", "test", ...testFiles], {
   stdin: "inherit",
 });
 
-process.exit(testResult.exitCode ?? 1);
+process.exit(testResult.exitCode);

@@ -254,18 +254,24 @@ export class ScoutForLol {
       await checkDesktop(source).sync();
     });
 
-    // Desktop build runs in all environments (started early to run in parallel)
-    const desktopBuildPromise = withTiming("desktop application build", async () => {
-      logWithTimestamp("🔄 Building desktop application...");
+    // Desktop builds run in all environments (started early to run in parallel)
+    const desktopBuildLinuxPromise = withTiming("desktop application build (Linux)", async () => {
+      logWithTimestamp("🔄 Building desktop application for Linux...");
       await buildDesktopLinux(source, version).sync();
     });
 
-    // Wait for checks, backend image build, desktop checks, and desktop build to complete
+    const desktopBuildWindowsPromise = withTiming("desktop application build (Windows)", async () => {
+      logWithTimestamp("🔄 Building desktop application for Windows...");
+      await buildDesktopWindowsGnu(source, version).sync();
+    });
+
+    // Wait for checks, backend image build, desktop checks, and desktop builds to complete
     const [, backendImage] = await Promise.all([
       checksPromise,
       backendImagePromise,
       desktopChecksPromise,
-      desktopBuildPromise,
+      desktopBuildLinuxPromise,
+      desktopBuildWindowsPromise,
     ]);
 
     logWithTimestamp("✅ Phase 1 complete: All checks passed and builds finished");
@@ -302,6 +308,18 @@ export class ScoutForLol {
       });
     } else {
       logWithTimestamp("⏭️ Phase 2: Skipping image publishing (no credentials or not prod environment)");
+    }
+
+    // Publish desktop artifacts to GitHub Releases (only for prod with GitHub token)
+    const shouldPublishDesktop = isProd && ghToken;
+    if (shouldPublishDesktop) {
+      await withTiming("CI desktop artifacts publish phase", async () => {
+        logWithTimestamp("📦 Phase 2.5: Publishing desktop artifacts to GitHub Releases...");
+        await this.publishDesktopArtifacts(source, version, gitSha, ghToken);
+        logWithTimestamp("✅ Desktop artifacts published to GitHub Releases");
+      });
+    } else {
+      logWithTimestamp("⏭️ Phase 2.5: Skipping desktop artifacts publishing (not prod or no GitHub token)");
     }
 
     // Deploy backend to homelab (only for prod)
@@ -949,5 +967,80 @@ export class ScoutForLol {
 
     logWithTimestamp("✅ Desktop Windows artifacts exported successfully");
     return result;
+  }
+
+  /**
+   * Publish desktop artifacts to GitHub Releases
+   * @param source The workspace source directory
+   * @param version The version to publish
+   * @param gitSha The git commit SHA
+   * @param ghToken GitHub token for authentication
+   * @param repo The repository name (defaults to "shepherdjerred/scout-for-lol")
+   * @returns A message indicating completion
+   */
+  @func()
+  async publishDesktopArtifacts(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+    @argument() gitSha: string,
+    ghToken: Secret,
+    repo = "shepherdjerred/scout-for-lol",
+  ): Promise<string> {
+    logWithTimestamp(`📦 Publishing desktop artifacts to GitHub Releases for version ${version}`);
+
+    await withTiming("desktop artifacts GitHub release", async () => {
+      // Get the already-built Linux and Windows artifacts
+      logWithTimestamp("📥 Collecting Linux artifacts...");
+      const linuxArtifactsDir = getDesktopLinuxArtifacts(source, version);
+
+      logWithTimestamp("📥 Collecting Windows artifacts...");
+      const windowsArtifactsDir = getDesktopWindowsArtifacts(source, version);
+
+      // Create a staging directory with all artifacts
+      logWithTimestamp("🏗️  Staging artifacts for upload...");
+      const container = getGitHubContainer()
+        .withSecretVariable("GH_TOKEN", ghToken)
+        .withWorkdir("/artifacts")
+        .withDirectory("/artifacts/linux", linuxArtifactsDir)
+        .withDirectory("/artifacts/windows", windowsArtifactsDir)
+        // List the artifacts for debugging
+        .withExec(["sh", "-c", "echo '📋 Linux artifacts:' && find linux -type f"])
+        .withExec(["sh", "-c", "echo '📋 Windows artifacts:' && find windows -type f"]);
+
+      // Create or update the GitHub release
+      logWithTimestamp(`🚀 Creating/updating GitHub release v${version}...`);
+      const releaseContainer = container
+        .withExec([
+          "sh",
+          "-c",
+          `gh release create "v${version}" \
+            --repo="${repo}" \
+            --title="v${version}" \
+            --notes="Release ${version} (${gitSha.substring(0, 7)})" \
+            --latest || echo "Release already exists"`,
+        ])
+        // Upload Linux artifacts
+        .withExec([
+          "sh",
+          "-c",
+          `find linux -type f \\( -name "*.deb" -o -name "*.AppImage" -o -name "*.rpm" \\) -exec gh release upload "v${version}" {} --repo="${repo}" --clobber \\;`,
+        ])
+        // Upload Windows artifacts
+        .withExec([
+          "sh",
+          "-c",
+          `find windows -type f \\( -name "*.exe" -o -name "*.msi" \\) -exec gh release upload "v${version}" {} --repo="${repo}" --clobber \\;`,
+        ])
+        .withExec(["sh", "-c", `echo "✅ Artifacts uploaded to https://github.com/${repo}/releases/tag/v${version}"`]);
+
+      await releaseContainer.sync();
+    });
+
+    logWithTimestamp(`✅ Desktop artifacts published to GitHub Releases: v${version}`);
+    return `Desktop artifacts published to GitHub Releases: v${version}`;
   }
 }

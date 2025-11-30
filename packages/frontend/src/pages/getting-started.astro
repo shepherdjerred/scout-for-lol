@@ -3,7 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import Navbar from "../components/Navbar.astro";
 import Footer from "../components/Footer.astro";
 import PageHeader from "../components/PageHeader.astro";
-import StepCard from "../components/StepCard.astro";
+import ProcessStep from "../components/ProcessStep.astro"; // Changed from StepCard
 import InfoBox from "../components/InfoBox.astro";
 import CommandBox from "../components/CommandBox.astro";
 import GalleryItem from "../components/GalleryItem.astro";
@@ -22,7 +22,7 @@ import GalleryItem from "../components/GalleryItem.astro";
         />
 
         <!-- Step 1: Add Scout -->
-        <StepCard number={1} title="Add Scout to Your Server">
+        <ProcessStep number={1} title="Add Scout to Your Server">
           <InfoBox variant="info">
             <p><strong>Note:</strong> You need Administrator permissions in your Discord server to add Scout.</p>
           </InfoBox>
@@ -50,10 +50,10 @@ import GalleryItem from "../components/GalleryItem.astro";
               <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"></path>
             </svg>
           </a>
-        </StepCard>
+        </ProcessStep>
 
         <!-- Step 2: Subscribe to a Player -->
-        <StepCard number={2} title="Subscribe to a Player">
+        <ProcessStep number={2} title="Subscribe to a Player">
           <div class="prose max-w-none mb-6">
             <p class="text-lg text-gray-700 dark:text-gray-300 mb-4">
               Once Scout is in your server, use the <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm"
@@ -91,10 +91,10 @@ import GalleryItem from "../components/GalleryItem.astro";
               example: <code class="bg-yellow-100 dark:bg-yellow-800/50 px-2 py-1 rounded">Faker#KR1</code>
             </p>
           </InfoBox>
-        </StepCard>
+        </ProcessStep>
 
         <!-- Step 3: Enjoy Automatic Updates -->
-        <StepCard number={3} title="Enjoy Automatic Updates">
+        <ProcessStep number={3} title="Enjoy Automatic Updates">
           <div class="prose max-w-none">
             <p class="text-lg text-gray-700 dark:text-gray-300 mb-6">That's it! Scout will now automatically:</p>
 
@@ -129,7 +129,7 @@ import GalleryItem from "../components/GalleryItem.astro";
               />
             </div>
           </div>
-        </StepCard>
+        </ProcessStep>
 
         <!-- Next Steps -->
         <section class="mb-16">

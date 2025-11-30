@@ -1,4 +1,10 @@
-import { forwardRef, type InputHTMLAttributes, type ReactNode, type ComponentRef, type ComponentPropsWithoutRef } from "react";
+import {
+  forwardRef,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type ComponentRef,
+  type ComponentPropsWithoutRef,
+} from "react";
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { cn } from "@scout-for-lol/desktop/lib/utils";
 
@@ -11,7 +17,7 @@ const Label = forwardRef<
     ref={ref}
     className={cn(
       "text-sm font-medium text-gray-200 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
-      className
+      className,
     )}
     {...props}
   />
@@ -32,14 +38,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div className="space-y-2">
-        {label && (
-          <Label htmlFor={inputId}>{label}</Label>
-        )}
+        {label && <Label htmlFor={inputId}>{label}</Label>}
         <div className="relative">
           {icon && (
-            <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-              {icon}
-            </div>
+            <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">{icon}</div>
           )}
           <input
             ref={ref}
@@ -54,19 +56,17 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               error
                 ? "border-discord-red focus-visible:ring-discord-red"
                 : "border-gray-700 hover:border-gray-600 focus-visible:border-discord-blurple focus-visible:ring-discord-blurple",
-              className
+              className,
             )}
             {...props}
           />
         </div>
         {(helperText ?? error) && (
-          <p className={cn("text-xs", error ? "text-discord-red" : "text-gray-500")}>
-            {error ?? helperText}
-          </p>
+          <p className={cn("text-xs", error ? "text-discord-red" : "text-gray-500")}>{error ?? helperText}</p>
         )}
       </div>
     );
-  }
+  },
 );
 Input.displayName = "Input";
 
@@ -83,9 +83,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
 
     return (
       <div className="space-y-2">
-        {label && (
-          <Label htmlFor={selectId}>{label}</Label>
-        )}
+        {label && <Label htmlFor={selectId}>{label}</Label>}
         <select
           ref={ref}
           id={selectId}
@@ -95,7 +93,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             "hover:border-gray-600",
             "focus-visible:border-discord-blurple focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-discord-blurple focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900",
             "disabled:cursor-not-allowed disabled:opacity-50",
-            className
+            className,
           )}
           {...props}
         >
@@ -104,7 +102,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {helperText && <p className="text-xs text-gray-500">{helperText}</p>}
       </div>
     );
-  }
+  },
 );
 Select.displayName = "Select";
 

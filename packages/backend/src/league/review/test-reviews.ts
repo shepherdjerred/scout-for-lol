@@ -4,7 +4,7 @@
  * Usage: bun run src/league/review/test-reviews.ts [options]
  */
 
-import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
+import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.ts";
 import {
   getExampleMatch,
   MatchIdSchema,
@@ -16,12 +16,12 @@ import {
   type CompletedMatch,
   type PlayerConfigEntry,
   type RawMatch,
-} from "@scout-for-lol/data";
+} from "@scout-for-lol/data/index.ts";
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
-import configuration from "@scout-for-lol/backend/configuration.js";
-import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
+import configuration from "@scout-for-lol/backend/configuration.ts";
+import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.ts";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("review-test-reviews");
 

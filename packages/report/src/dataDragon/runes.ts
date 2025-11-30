@@ -1,107 +1,30 @@
-import { z } from "zod";
-import { latestVersion } from "@scout-for-lol/report/dataDragon/version.js";
+import { runes as importedRunes, getRuneIconUrl as getRuneIconUrlFromData } from "@scout-for-lol/data";
 
-// Runes are organized by style (tree) with selections
-const RuneSchema = z.array(
-  z.object({
-    id: z.number(),
-    key: z.string(),
-    icon: z.string(),
-    name: z.string(),
-    slots: z.array(
-      z.object({
-        runes: z.array(
-          z.object({
-            id: z.number(),
-            key: z.string(),
-            icon: z.string(),
-            name: z.string(),
-            shortDesc: z.string(),
-            longDesc: z.string(),
-          }),
-        ),
-      }),
-    ),
-  }),
-);
+// Cache rune icons at module load time
+const runeIconCache = new Map<string, string>();
 
-export const runes = RuneSchema.parse(
-  await (await fetch(`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/data/en_US/runesReforged.json`)).json(),
-);
-
-// Base URL for rune icons (note: rune icons don't use the versioned CDN path)
-const RUNE_ICON_BASE_URL = "https://ddragon.leagueoflegends.com/cdn/img";
-
-export function getRuneInfo(runeId: number):
-  | {
-      name: string;
-      shortDesc: string;
-      longDesc: string;
-      icon: string;
-    }
-  | undefined {
-  // Flatten and search through all runes
-  for (const tree of runes) {
+// Pre-load all rune icons
+if (typeof Bun !== "undefined") {
+  const allRuneIcons: string[] = [];
+  for (const tree of importedRunes) {
+    allRuneIcons.push(tree.icon);
     for (const slot of tree.slots) {
       for (const rune of slot.runes) {
-        if (rune.id === runeId) {
-          return {
-            name: rune.name,
-            shortDesc: rune.shortDesc,
-            longDesc: rune.longDesc,
-            icon: rune.icon,
-          };
-        }
+        allRuneIcons.push(rune.icon);
       }
     }
   }
-  return undefined;
-}
 
-export function getRuneTreeName(treeId: number): string | undefined {
-  const tree = runes.find((t) => t.id === treeId);
-  return tree?.name;
-}
-
-export function getRuneTreeInfo(treeId: number):
-  | {
-      name: string;
-      icon: string;
-    }
-  | undefined {
-  const tree = runes.find((t) => t.id === treeId);
-  if (!tree) {
-    return undefined;
+  for (const iconPath of allRuneIcons) {
+    const url = getRuneIconUrlFromData(iconPath);
+    runeIconCache.set(iconPath, url);
   }
-  return {
-    name: tree.name,
-    icon: tree.icon,
-  };
 }
 
 export function getRuneIconUrl(iconPath: string): string {
-  return `${RUNE_ICON_BASE_URL}/${iconPath}`;
-}
-
-export function getRuneTreeForRune(runeId: number):
-  | {
-      treeId: number;
-      treeName: string;
-      treeIcon: string;
-    }
-  | undefined {
-  for (const tree of runes) {
-    for (const slot of tree.slots) {
-      for (const rune of slot.runes) {
-        if (rune.id === runeId) {
-          return {
-            treeId: tree.id,
-            treeName: tree.name,
-            treeIcon: tree.icon,
-          };
-        }
-      }
-    }
+  const cached = runeIconCache.get(iconPath);
+  if (cached) {
+    return cached;
   }
-  return undefined;
+  throw new Error(`Rune icon ${iconPath} not found in cache. This should not happen.`);
 }

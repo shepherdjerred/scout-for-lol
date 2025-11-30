@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
+import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
 import {
   type CreateCompetitionInput,
   cancelCompetition,
@@ -7,9 +7,9 @@ import {
   getActiveCompetitions,
   getCompetitionById,
   getCompetitionsByServer,
-} from "@scout-for-lol/backend/database/competition/queries.js";
+} from "@scout-for-lol/backend/database/competition/queries.ts";
 import { ChampionIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.js";
+import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database
 const { prisma } = createTestDatabase("competition-queries-test");

@@ -1,8 +1,8 @@
 import { describe, it, expect } from "bun:test";
 import type { RawChallenges, RawParticipant, Player, RawMatch } from "@scout-for-lol/data";
 import { ArenaMatchSchema, ArenaTeamSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
-import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
-import { toArenaMatch, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.js";
+import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.ts";
+import { toArenaMatch, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.ts";
 
 function makeParticipant(
   overrides: Partial<RawParticipant> & {
@@ -54,6 +54,28 @@ function makeParticipant(
     challenges: {
       damageTakenOnTeamPercentage: 0.2,
     } satisfies Partial<RawChallenges> as unknown as RawChallenges,
+    perks: {
+      statPerks: {
+        defense: 0,
+        flex: 0,
+        offense: 0,
+      },
+      styles: [
+        {
+          description: "primaryStyle",
+          selections: [
+            { perk: 8112, var1: 0, var2: 0, var3: 0 },
+            { perk: 8126, var1: 0, var2: 0, var3: 0 },
+          ],
+          style: 8100,
+        },
+        {
+          description: "subStyle",
+          selections: [{ perk: 8210, var1: 0, var2: 0, var3: 0 }],
+          style: 8200,
+        },
+      ],
+    },
   };
   // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
   return {

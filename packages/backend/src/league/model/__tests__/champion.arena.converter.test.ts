@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 import type { RawParticipant } from "@scout-for-lol/data";
-import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
+import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.ts";
 
 const baseParticipant = (): RawParticipant => {
   // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
@@ -49,6 +49,28 @@ const baseParticipant = (): RawParticipant => {
     challenges: {
       damageTakenOnTeamPercentage: 0.2,
     } as unknown as RawParticipant["challenges"],
+    perks: {
+      statPerks: {
+        defense: 0,
+        flex: 0,
+        offense: 0,
+      },
+      styles: [
+        {
+          description: "primaryStyle",
+          selections: [
+            { perk: 8112, var1: 0, var2: 0, var3: 0 },
+            { perk: 8126, var1: 0, var2: 0, var3: 0 },
+          ],
+          style: 8100,
+        },
+        {
+          description: "subStyle",
+          selections: [{ perk: 8210, var1: 0, var2: 0, var3: 0 }],
+          style: 8200,
+        },
+      ],
+    },
     // unused fields for this test
     teamId: 100,
   } as unknown as RawParticipant;

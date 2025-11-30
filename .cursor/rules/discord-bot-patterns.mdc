@@ -117,7 +117,7 @@ if (!isOwner && !isAdmin) {
 Use `getErrorMessage` utility from `utils/errors.js`:
 
 ```typescript
-import { getErrorMessage } from "../utils/errors.js";
+import { getErrorMessage } from "../utils/errors.ts";
 
 catch (error) {
   await interaction.reply({

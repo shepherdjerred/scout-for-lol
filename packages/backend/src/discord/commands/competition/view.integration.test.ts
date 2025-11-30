@@ -1,9 +1,9 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { match } from "ts-pattern";
-import { createCompetition, getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
-import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
-import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.js";
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
+import { createCompetition, getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
+import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.ts";
+import { addParticipant } from "@scout-for-lol/backend/database/competition/participants.ts";
+import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
 import {
   ChampionIdSchema,
   getCompetitionStatus,
@@ -13,8 +13,8 @@ import {
   type DiscordChannelId,
   type DiscordGuildId,
   type PlayerId,
-} from "@scout-for-lol/data";
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.js";
+} from "@scout-for-lol/data/index.ts";
+import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database for integration tests
 const { prisma } = createTestDatabase("competition-view-test");
@@ -263,8 +263,7 @@ describe("Competition View - ACTIVE Status", () => {
     const status = getCompetitionStatus(competition);
     expect(status).toBe("ACTIVE");
 
-    // Test leaderboard calculation
-    const { calculateLeaderboard } = await import("@scout-for-lol/backend/league/competition/leaderboard");
+    const { calculateLeaderboard } = await import("@scout-for-lol/backend/league/competition/leaderboard.js");
     const leaderboard = await calculateLeaderboard(prisma, competition);
 
     // Should have entries for both participants
@@ -364,7 +363,7 @@ describe("Competition View - ENDED Status", () => {
     expect(participants).toHaveLength(2);
 
     // Test final leaderboard for ended competition
-    const { calculateLeaderboard } = await import("@scout-for-lol/backend/league/competition/leaderboard");
+    const { calculateLeaderboard } = await import("@scout-for-lol/backend/league/competition/leaderboard.js");
     const leaderboard = await calculateLeaderboard(prisma, competition);
 
     // Should have entries for both participants

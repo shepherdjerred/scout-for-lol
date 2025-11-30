@@ -4,15 +4,18 @@
 import { useState, useSyncExternalStore } from "react";
 import { z } from "zod";
 import type { TabConfig, Personality } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
-import { createDefaultTabConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import {
+  createDefaultTabConfig,
+  createDefaultPipelineStages,
+} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import { BUILTIN_PERSONALITIES } from "@scout-for-lol/frontend/lib/review-tool/prompts";
-import { ConfigImportModal } from "./config-import-modal";
+import { ConfigImportModal } from "./config-import-modal.tsx";
 import { downloadConfigBundle } from "@scout-for-lol/frontend/lib/review-tool/config-export";
 import { ART_STYLES, ART_THEMES } from "@scout-for-lol/data";
-import { TextGenerationSettings } from "./text-generation-settings";
-import { ImageGenerationSettings } from "./image-generation-settings";
-import { PromptSettings } from "./prompt-settings";
-import { TabConfigActions } from "./tab-config-actions";
+import { TextGenerationSettings } from "./text-generation-settings.tsx";
+import { ImageGenerationSettings } from "./image-generation-settings.tsx";
+import { PromptSettings } from "./prompt-settings.tsx";
+import { TabConfigActions } from "./tab-config-actions.tsx";
 
 const ErrorSchema = z.object({ message: z.string() });
 import {
@@ -35,6 +38,7 @@ import {
   deleteCustomArtTheme,
   generateArtThemeId,
 } from "@scout-for-lol/frontend/lib/review-tool/art-style-storage";
+import { StageConfigSections } from "./stage-config/stage-config-sections.tsx";
 
 type TabSettingsPanelProps = {
   config: TabConfig;
@@ -86,6 +90,10 @@ function loadCustomData() {
 
 // Start loading immediately
 void loadCustomData();
+
+function getStagesOrDefault(config: TabConfig) {
+  return config.stages ?? createDefaultPipelineStages();
+}
 
 export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   // Subscribe to custom data store
@@ -325,6 +333,21 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
       </div>
 
       <div className="divide-y divide-surface-200/50 dark:divide-surface-700/50">
+        <div className="px-4 py-5 bg-surface-50 dark:bg-surface-900">
+          <div className="mb-3">
+            <h3 className="text-base font-semibold text-surface-900 dark:text-white">Pipeline stages</h3>
+            <p className="text-sm text-surface-500 dark:text-surface-400">
+              Configure the unified review pipeline stages used by frontend and backend.
+            </p>
+          </div>
+          <StageConfigSections
+            stages={getStagesOrDefault(config)}
+            onChange={(next) => {
+              onChange({ ...config, stages: next });
+            }}
+          />
+        </div>
+
         <TextGenerationSettings config={config} onChange={onChange} />
 
         <ImageGenerationSettings

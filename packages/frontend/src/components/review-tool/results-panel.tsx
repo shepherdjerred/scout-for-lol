@@ -3,7 +3,13 @@
  */
 import { useState, useSyncExternalStore } from "react";
 import { z } from "zod";
-import type { ReviewConfig, GenerationResult } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import type {
+  ReviewConfig,
+  GenerationResult,
+  PipelineIntermediateResults,
+  PipelineTraces,
+  StageTrace,
+} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
 import type { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import { calculateCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
@@ -11,8 +17,8 @@ import {
   generateMatchReview,
   type GenerationProgress as GenerationProgressType,
 } from "@scout-for-lol/frontend/lib/review-tool/generator";
-import { CostDisplay } from "./cost-display";
-import { HistoryPanel } from "./history-panel";
+import { CostDisplay } from "./cost-display.tsx";
+import { HistoryPanel } from "./history-panel.tsx";
 import { getExampleMatch } from "@scout-for-lol/data";
 import {
   createPendingEntry,
@@ -20,12 +26,13 @@ import {
   updateHistoryRating,
   type HistoryEntry,
 } from "@scout-for-lol/frontend/lib/review-tool/history-manager";
-import { ActiveGenerationsPanel } from "./active-generations-panel";
-import { GenerationProgress } from "./generation-progress";
-import { GenerationConfigDisplay } from "./generation-config-display";
-import { ResultDisplay } from "./result-display";
-import { ResultMetadata } from "./result-metadata";
-import { ResultRating } from "./result-rating";
+import { ActiveGenerationsPanel } from "./active-generations-panel.tsx";
+import { GenerationProgress } from "./generation-progress.tsx";
+import { GenerationConfigDisplay } from "./generation-config-display.tsx";
+import { ResultDisplay } from "./result-display.tsx";
+import { ResultMetadata } from "./result-metadata.tsx";
+import { ResultRating } from "./result-rating.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card.tsx";
 
 const ErrorSchema = z.object({ message: z.string() });
 
@@ -78,6 +85,105 @@ type ActiveGeneration = {
   configSnapshot: HistoryEntry["configSnapshot"];
 };
 
+type TraceCardProps = {
+  label: string;
+  trace: StageTrace | undefined;
+  text: string | undefined;
+};
+
+function TraceCard({ label, trace, text }: TraceCardProps) {
+  if (!trace && !text) {
+    return null;
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex items-start justify-between">
+        <CardTitle>{label}</CardTitle>
+        {trace && (
+          <div className="text-xs text-gray-600">
+            {trace.model.model} · {trace.durationMs}ms
+          </div>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {trace?.request.systemPrompt && (
+          <div>
+            <div className="text-xs font-semibold text-gray-700">System prompt</div>
+            <pre className="mt-1 whitespace-pre-wrap rounded-md bg-gray-50 p-2 text-xs text-gray-800">
+              {trace.request.systemPrompt}
+            </pre>
+          </div>
+        )}
+        {trace?.request.userPrompt && (
+          <div>
+            <div className="text-xs font-semibold text-gray-700">User prompt</div>
+            <pre className="mt-1 whitespace-pre-wrap rounded-md bg-gray-50 p-2 text-xs text-gray-800">
+              {trace.request.userPrompt}
+            </pre>
+          </div>
+        )}
+        {(trace?.response.text ?? text) && (
+          <div>
+            <div className="text-xs font-semibold text-gray-700">Response</div>
+            <pre className="mt-1 whitespace-pre-wrap rounded-md bg-gray-50 p-2 text-xs text-gray-800">
+              {trace?.response.text ?? text}
+            </pre>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+type PipelineTracesPanelProps = {
+  traces: PipelineTraces | undefined;
+  intermediate: PipelineIntermediateResults | undefined;
+};
+
+function PipelineTracesPanel({ traces, intermediate }: PipelineTracesPanelProps) {
+  if (!traces) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-3">
+      <TraceCard
+        label="Stage 1a: Timeline Summary"
+        trace={traces.timelineSummary}
+        text={intermediate?.timelineSummaryText}
+      />
+      <TraceCard label="Stage 1b: Match Summary" trace={traces.matchSummary} text={intermediate?.matchSummaryText} />
+      <TraceCard label="Stage 2: Review Text" trace={traces.reviewText} text={undefined} />
+      <TraceCard
+        label="Stage 3: Image Description"
+        trace={traces.imageDescription}
+        text={intermediate?.imageDescriptionText}
+      />
+      {traces.imageGeneration && (
+        <Card>
+          <CardHeader className="flex items-start justify-between">
+            <CardTitle>Stage 4: Image Generation</CardTitle>
+            <div className="text-xs text-gray-600">
+              {traces.imageGeneration.model} · {traces.imageGeneration.durationMs}ms
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2 text-xs text-gray-800">
+            <div className="font-semibold text-gray-700">Prompt</div>
+            <pre className="whitespace-pre-wrap rounded-md bg-gray-50 p-2">{traces.imageGeneration.request.prompt}</pre>
+            <div className="text-gray-700">
+              Generated: {traces.imageGeneration.response.imageGenerated ? "yes" : "no"}{" "}
+              {traces.imageGeneration.response.imageSizeBytes
+                ? `(${traces.imageGeneration.response.imageSizeBytes.toString()} bytes)`
+                : ""}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 export function ResultsPanel({ config, match, result, costTracker, onResultGenerated }: ResultsPanelProps) {
   const [activeGenerations, setActiveGenerations] = useState<Map<string, ActiveGeneration>>(new Map());
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | undefined>();
@@ -120,16 +226,20 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
     setViewingHistory(false); // Switch back to current result when generating
 
     try {
-      const generatedResult = await generateMatchReview(matchToUse, config, (p) => {
-        setActiveGenerations((prev) => {
-          const updated = new Map(prev);
-          const gen = updated.get(historyId);
-          if (gen) {
-            gen.progress = p;
-            updated.set(historyId, gen);
-          }
-          return updated;
-        });
+      const generatedResult = await generateMatchReview({
+        match: matchToUse,
+        config,
+        onProgress: (p) => {
+          setActiveGenerations((prev) => {
+            const updated = new Map(prev);
+            const gen = updated.get(historyId);
+            if (gen) {
+              gen.progress = p;
+              updated.set(historyId, gen);
+            }
+            return updated;
+          });
+        },
       });
 
       // Only update the displayed result if this is the selected generation
@@ -361,6 +471,18 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
 
             {/* Metadata */}
             <ResultMetadata result={result} cost={cost} />
+
+            <div className="mt-4 space-y-2 rounded-xl border border-surface-200/50 bg-white p-4 shadow-sm dark:border-surface-700/50 dark:bg-surface-900">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-surface-900 dark:text-white">Pipeline traces</div>
+                  <p className="text-xs text-surface-500 dark:text-surface-400">
+                    Raw prompts, responses, and timings from each stage.
+                  </p>
+                </div>
+              </div>
+              <PipelineTracesPanel traces={result.metadata.traces} intermediate={result.metadata.intermediate} />
+            </div>
           </>
         )}
       </div>

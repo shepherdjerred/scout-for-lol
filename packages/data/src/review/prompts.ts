@@ -7,7 +7,7 @@
  */
 
 import { z } from "zod";
-import type { Lane } from "@scout-for-lol/data/model/lane.js";
+import type { Lane } from "@scout-for-lol/data/model/lane.ts";
 
 /**
  * Random behavior schema - weighted random prompts

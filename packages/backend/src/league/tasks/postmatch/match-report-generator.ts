@@ -1,8 +1,8 @@
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
-import { api } from "@scout-for-lol/backend/league/api/api.js";
+import { api } from "@scout-for-lol/backend/league/api/api.ts";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
-import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.js";
+import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import type {
   PlayerConfigEntry,
   Region,
@@ -12,18 +12,23 @@ import type {
   QueueType,
   RawMatch,
   RawTimeline,
-} from "@scout-for-lol/data";
-import { MatchIdSchema, queueTypeToDisplayString, RawMatchSchema, RawTimelineSchema } from "@scout-for-lol/data";
-import { getPlayer } from "@scout-for-lol/backend/league/model/player.js";
+} from "@scout-for-lol/data/index.ts";
+import {
+  MatchIdSchema,
+  queueTypeToDisplayString,
+  RawMatchSchema,
+  RawTimelineSchema,
+} from "@scout-for-lol/data/index.ts";
+import { getPlayer } from "@scout-for-lol/backend/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
-import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "@scout-for-lol/backend/storage/s3.js";
-import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
-import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
+import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "@scout-for-lol/backend/storage/s3.ts";
+import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.ts";
+import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.ts";
 import { match } from "ts-pattern";
-import { logErrorDetails } from "./match-report-debug.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { logErrorDetails } from "./match-report-debug.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("postmatch-match-report-generator");
 

@@ -1,7 +1,7 @@
 /**
  * Art style selector component
  */
-import { GenericArtSelector } from "./generic-art-selector";
+import { GenericArtSelector } from "./generic-art-selector.tsx";
 import type { CustomArtStyle } from "@scout-for-lol/frontend/lib/review-tool/art-style-storage";
 
 type ArtStyleSelectorProps = {

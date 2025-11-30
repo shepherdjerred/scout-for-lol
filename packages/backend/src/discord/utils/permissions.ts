@@ -1,9 +1,9 @@
 import type { Channel, PermissionsBitField, Client, User } from "discord.js";
 import { PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors";
-import { discordPermissionErrorsTotal, discordOwnerNotificationsTotal } from "@scout-for-lol/backend/metrics/index";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { discordPermissionErrorsTotal, discordOwnerNotificationsTotal } from "@scout-for-lol/backend/metrics/index.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("permissions");
 

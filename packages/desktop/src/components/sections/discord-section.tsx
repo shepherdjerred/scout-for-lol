@@ -12,7 +12,7 @@ import {
   StatusIndicator,
   Collapsible,
   Badge,
-} from "@scout-for-lol/desktop/components/ui";
+} from "@scout-for-lol/desktop/components/ui/index.ts";
 
 type DiscordStatus = {
   connected: boolean;
@@ -91,11 +91,7 @@ export function DiscordSection({
           value={discordStatus.voiceChannelName ?? "Not joined"}
           connected={discordStatus.voiceConnected}
         />
-        <StatusCard
-          label="Sound Pack"
-          value={discordStatus.activeSoundPack ?? soundPack}
-          connected={true}
-        />
+        <StatusCard label="Sound Pack" value={discordStatus.activeSoundPack ?? soundPack} connected={true} />
       </div>
 
       {/* Bot Configuration */}
@@ -210,15 +206,7 @@ export function DiscordSection({
   );
 }
 
-function StatusCard({
-  label,
-  value,
-  connected,
-}: {
-  label: string;
-  value: string;
-  connected: boolean;
-}) {
+function StatusCard({ label, value, connected }: { label: string; value: string; connected: boolean }) {
   return (
     <div className="rounded-lg border border-gray-700/50 bg-gray-800/30 px-5 py-4">
       <div className="flex items-center justify-between mb-2">

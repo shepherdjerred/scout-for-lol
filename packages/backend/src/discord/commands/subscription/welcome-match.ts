@@ -1,12 +1,12 @@
 import { type ChatInputCommandInteraction } from "discord.js";
-import type { PlayerConfigEntry } from "@scout-for-lol/data";
-import { getRecentMatchIds } from "@scout-for-lol/backend/league/api/match-history.js";
+import type { PlayerConfigEntry } from "@scout-for-lol/data/index.ts";
+import { getRecentMatchIds } from "@scout-for-lol/backend/league/api/match-history.ts";
 import {
   fetchMatchData,
   generateMatchReport,
-} from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+} from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("subscription-welcome-match");
 

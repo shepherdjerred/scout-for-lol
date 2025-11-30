@@ -13,6 +13,7 @@ bunx tauri signer generate -w ~/.tauri/scout-for-lol.key
 ```
 
 This creates:
+
 - **Private key**: `~/.tauri/scout-for-lol.key` (keep secret!)
 - **Public key**: Printed to console (add to `tauri.conf.json`)
 
@@ -27,9 +28,7 @@ Update `src-tauri/tauri.conf.json`:
       "active": true,
       "dialog": true,
       "pubkey": "YOUR_PUBLIC_KEY_HERE",
-      "endpoints": [
-        "https://releases.myserver.com/{{target}}/{{current_version}}"
-      ]
+      "endpoints": ["https://releases.myserver.com/{{target}}/{{current_version}}"]
     }
   }
 }
@@ -49,6 +48,7 @@ bun run build
 ```
 
 This generates:
+
 - Application installer (`.msi`, `.dmg`, `.AppImage`)
 - Update manifest (`.json`)
 - Signature file (`.sig`)
@@ -136,9 +136,7 @@ For simpler setup, use GitHub Releases:
 {
   "plugins": {
     "updater": {
-      "endpoints": [
-        "https://github.com/shepherdjerred/scout-for-lol/releases/latest/download/latest.json"
-      ]
+      "endpoints": ["https://github.com/shepherdjerred/scout-for-lol/releases/latest/download/latest.json"]
     }
   }
 }
@@ -149,16 +147,19 @@ Upload your `.json`, `.sig`, and installer files to GitHub Releases.
 ## Troubleshooting
 
 ### Update Not Found
+
 - Check endpoint URL is correct
 - Verify files are accessible via HTTPS
 - Check version number formatting
 
 ### Signature Verification Failed
+
 - Ensure public key in `tauri.conf.json` matches private key
 - Verify `.sig` file was generated correctly
 - Check file wasn't corrupted during upload
 
 ### Update Dialog Not Showing
+
 - Check `dialog: true` in config
 - Verify `active: true` in config
 - Check logs for errors

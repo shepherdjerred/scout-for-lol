@@ -59,11 +59,11 @@ Use `import type` for type-only imports:
 
 ```typescript
 // ✅ CORRECT
-import { createUser, type CreateUserInput } from "./api.js";
-import type { User } from "./types.js";
+import { createUser, type CreateUserInput } from "./api.ts";
+import type { User } from "./types.ts";
 
 // ❌ WRONG - function used at runtime
-import type { createUser } from "./api.js";
+import type { createUser } from "./api.ts";
 ```
 
 ## Template Literals

@@ -20,6 +20,7 @@ import { noTypeGuards } from "./eslint-rules/no-type-guards";
 import { preferAsyncAwait } from "./eslint-rules/prefer-async-await";
 import { noDtoNaming } from "./eslint-rules/no-dto-naming";
 import { preferStructuredLogging } from "./eslint-rules/prefer-structured-logging";
+import { requireTsExtensions } from "./eslint-rules/require-ts-extensions";
 import * as importPlugin from "eslint-plugin-import";
 import * as regexpPlugin from "eslint-plugin-regexp";
 import * as eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
@@ -58,6 +59,7 @@ const customRulesPlugin = {
     "prefer-async-await": preferAsyncAwait,
     "no-dto-naming": noDtoNaming,
     "prefer-structured-logging": preferStructuredLogging,
+    "require-ts-extensions": requireTsExtensions,
   },
 };
 
@@ -274,6 +276,7 @@ export default tseslint.config(
       "custom-rules/no-type-guards": "error",
       "custom-rules/prefer-async-await": "error",
       "custom-rules/no-dto-naming": "error",
+      "custom-rules/require-ts-extensions": "error",
     },
   },
   // Dagger index.ts - Dagger module API can have many parameters for external interface
@@ -563,9 +566,10 @@ export default tseslint.config(
   },
   // Config file itself can use relative imports for local eslint rules
   {
-    files: ["eslint.config.ts"],
+    files: ["eslint.config.ts", "eslint-rules/**/*.ts"],
     rules: {
       "no-relative-import-paths/no-relative-import-paths": "off",
+      "custom-rules/require-ts-extensions": "off",
     },
   },
   // Prefer structured logging over console in backend

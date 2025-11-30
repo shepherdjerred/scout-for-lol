@@ -10,7 +10,7 @@ import { z } from "zod";
 
 describe("Abandoned Guilds - Unit Tests", () => {
   test("should export the main function", async () => {
-    const { checkAbandonedGuilds } = await import("./abandoned-guilds");
+    const { checkAbandonedGuilds } = await import("./abandoned-guilds.js");
     expect(checkAbandonedGuilds).toBeDefined();
     expect(checkAbandonedGuilds).toBeFunction();
   });

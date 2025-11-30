@@ -1,7 +1,6 @@
-import { match, P } from "ts-pattern";
 import { palette } from "@scout-for-lol/report/assets/colors.ts";
-import { latestVersion } from "@scout-for-lol/report/dataDragon/version.ts";
-import { last, map, pipe, take } from "remeda";
+import { getItemImageUrl } from "@scout-for-lol/data/index.ts";
+import { map } from "remeda";
 
 const dimension = "7.5rem";
 
@@ -13,7 +12,7 @@ function isPrismaticItem(itemId: number): boolean {
 function getItemIconUrl(itemId: number): string {
   // All items (including prismatic) use Data Dragon
   // Prismatic items have IDs starting with 44 and are available via Data Dragon
-  return `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/item/${itemId.toString()}.png`;
+  return getItemImageUrl(itemId);
 }
 
 function renderItem(item: number) {
@@ -80,18 +79,25 @@ function renderItem(item: number) {
 }
 
 export function renderItems(items: number[], visionScore: number, isArena = false) {
-  const mainItems = pipe(items, take(6), map(renderItem));
+  if (isArena) {
+    // Arena: render up to 6 items, padding with empty slots
+    const itemsToRender = items.slice(0, 6);
+    const paddedItems: number[] = [...itemsToRender, ...Array<number>(6 - itemsToRender.length).fill(0)];
+    const renderedItems = map(paddedItems, renderItem);
 
-  const lastItem = last(items);
-  const visionItem = match([lastItem, isArena])
-    .with([undefined, false], () => {
-      throw new Error(`Last item must exist in normal games: ${items.toString()}`);
-    })
-    .with([P.any, true], () => {
-      return null;
-    })
-    .with([P.not(undefined), false], ([lastItem]) => {
-      return (
+    return <div style={{ display: "flex", gap: "1rem" }}>{renderedItems}</div>;
+  } else {
+    // Normal game: first 6 slots are regular items, 7th slot is vision item
+    const regularItems = items.slice(0, 6);
+    const visionItem = items[6]; // 7th item (index 6) is always the vision ward slot
+
+    // Pad regular items to always show 6 slots
+    const paddedRegularItems: number[] = [...regularItems, ...Array<number>(6 - regularItems.length).fill(0)];
+    const renderedRegularItems = map(paddedRegularItems, renderItem);
+
+    // Vision item slot
+    const renderedVisionItem =
+      visionItem !== undefined ? (
         <div
           style={{
             display: "flex",
@@ -100,7 +106,33 @@ export function renderItems(items: number[], visionScore: number, isArena = fals
             height: dimension,
           }}
         >
-          {renderItem(lastItem)}
+          {renderItem(visionItem)}
+          <span
+            style={{
+              position: "absolute",
+              color: palette.white[1],
+              textShadow: "8px 8px #000",
+              bottom: "-10px",
+              right: "5px",
+              fontWeight: 700,
+              stroke: "#000",
+              strokeWidth: "100px",
+            }}
+          >
+            {visionScore}
+          </span>
+        </div>
+      ) : (
+        // Empty vision slot
+        <div
+          style={{
+            display: "flex",
+            position: "relative",
+            width: dimension,
+            height: dimension,
+          }}
+        >
+          {renderItem(0)}
           <span
             style={{
               position: "absolute",
@@ -117,13 +149,12 @@ export function renderItems(items: number[], visionScore: number, isArena = fals
           </span>
         </div>
       );
-    })
-    .exhaustive();
 
-  return (
-    <div style={{ display: "flex", gap: "1rem" }}>
-      {mainItems}
-      {visionItem}
-    </div>
-  );
+    return (
+      <div style={{ display: "flex", gap: "1rem" }}>
+        {renderedRegularItems}
+        {renderedVisionItem}
+      </div>
+    );
+  }
 }

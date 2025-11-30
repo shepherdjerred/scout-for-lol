@@ -1,15 +1,15 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("admin-player-merge");
 import {
   validateCommandArgs,
   executeWithTiming,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.ts";
 
 const ArgsSchema = z.object({
   sourceAlias: z.string().min(1).max(100),

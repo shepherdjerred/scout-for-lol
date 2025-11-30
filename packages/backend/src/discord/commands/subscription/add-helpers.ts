@@ -1,16 +1,16 @@
 import { type ChatInputCommandInteraction } from "discord.js";
-import { type DiscordGuildId, type Region, type RiotId } from "@scout-for-lol/data";
-import { riotApi } from "@scout-for-lol/backend/league/api/api";
-import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region";
+import { type DiscordGuildId, type Region, type RiotId } from "@scout-for-lol/data/index.ts";
+import { riotApi } from "@scout-for-lol/backend/league/api/api.ts";
+import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
-import { prisma } from "@scout-for-lol/backend/database/index";
-import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { getLimit } from "@scout-for-lol/backend/configuration/flags.ts";
 import {
   DISCORD_SERVER_INVITE,
   LIMIT_WARNING_THRESHOLD,
-} from "@scout-for-lol/backend/configuration/subscription-limits.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+} from "@scout-for-lol/backend/configuration/subscription-limits.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("subscription-add-helpers");
 

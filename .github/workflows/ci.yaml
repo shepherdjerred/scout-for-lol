@@ -105,5 +105,5 @@ jobs:
             --pr-number="${{ github.event.pull_request.number }}"
 
 permissions:
-  contents: read
+  contents: write
   packages: write

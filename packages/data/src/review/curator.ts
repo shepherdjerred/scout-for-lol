@@ -1,8 +1,8 @@
 import type { RawMatch, RawParticipant, RawTimeline } from "@scout-for-lol/data";
-import { getItemInfo, summoner, getRuneInfo, getRuneTreeName, getChampionInfo } from "@scout-for-lol/report/index";
+import { getItemInfo, summoner, getRuneInfo, getRuneTreeName, getChampionInfo } from "@scout-for-lol/data";
 import { first, keys, pickBy } from "remeda";
-import type { CuratedParticipant, CuratedMatchData } from "@scout-for-lol/data/review/curator-types.js";
-import { curateTimelineData } from "@scout-for-lol/data/review/timeline-curator.js";
+import type { CuratedParticipant, CuratedMatchData } from "@scout-for-lol/data/review/curator-types.ts";
+import { curateTimelineData } from "@scout-for-lol/data/review/timeline-curator.ts";
 
 function getSummonerSpellName(spellId: number): string | undefined {
   return first(keys(pickBy(summoner.data, (s) => s.key === spellId.toString())));

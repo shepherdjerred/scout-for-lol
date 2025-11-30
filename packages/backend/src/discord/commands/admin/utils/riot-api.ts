@@ -1,9 +1,9 @@
 import type { Region, RiotId } from "@scout-for-lol/data";
-import { riotApi } from "@scout-for-lol/backend/league/api/api.js";
-import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.js";
+import { riotApi } from "@scout-for-lol/backend/league/api/api.ts";
+import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("utils-riot-api");
 

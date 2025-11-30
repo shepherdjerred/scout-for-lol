@@ -1,6 +1,6 @@
-import { latestVersion } from "@scout-for-lol/report/dataDragon/version";
-import { renderItems } from "@scout-for-lol/report/html/champion/item";
-import { Damage } from "@scout-for-lol/report/html/arena/damage";
+import { getChampionImageUrl } from "@scout-for-lol/data/index.ts";
+import { renderItems } from "@scout-for-lol/report/html/champion/item.tsx";
+import { Damage } from "@scout-for-lol/report/html/arena/damage.tsx";
 
 export function ChampionInfo({
   playerName,
@@ -29,7 +29,7 @@ export function ChampionInfo({
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, marginBottom: 8 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1 }}>
         <img
-          src={`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${championName}.png`}
+          src={getChampionImageUrl(championName)}
           style={{
             width: 60,
             height: 60,

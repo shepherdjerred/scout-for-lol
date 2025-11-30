@@ -1,15 +1,15 @@
 import { type ChatInputCommandInteraction, PermissionFlagsBits } from "discord.js";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { cancelCompetition } from "@scout-for-lol/backend/database/competition/queries.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import { asTextChannel } from "@scout-for-lol/backend/discord/utils/channel.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { cancelCompetition } from "@scout-for-lol/backend/database/competition/queries.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { asTextChannel } from "@scout-for-lol/backend/discord/utils/channel.ts";
 import {
   extractCompetitionId,
   fetchCompetitionWithErrorHandling,
-} from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.js";
-import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+} from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.ts";
+import { truncateDiscordMessage } from "@scout-for-lol/backend/discord/utils/message.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("competition-cancel");
 

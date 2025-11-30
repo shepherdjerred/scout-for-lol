@@ -1,8 +1,8 @@
 import { describe, it, expect } from "bun:test";
 import type { RawParticipant } from "@scout-for-lol/data";
-import { groupArenaTeams, getArenaTeammate, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.js";
+import { groupArenaTeams, getArenaTeammate, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.ts";
 
-import { testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
+import { testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
 
 function makeParticipant(extra: Record<string, unknown> = {}): RawParticipant {
   // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type

@@ -2,8 +2,8 @@
  * Export and import all config data for sharing
  */
 import { z } from "zod";
-import { TabConfigSchema, PersonalitySchema } from "./config/schema";
-import type { TabConfig } from "./config/schema";
+import { TabConfigSchema, PersonalitySchema } from "./config/schema.ts";
+import type { TabConfig } from "./config/schema.ts";
 import {
   CustomArtStyleSchema,
   CustomArtThemeSchema,
@@ -11,9 +11,9 @@ import {
   saveCustomArtStyles,
   loadCustomArtThemes,
   saveCustomArtThemes,
-} from "./art-style-storage";
-import { loadCustomPersonalities, saveCustomPersonalities } from "./personality-storage";
-import { getPersonalityById } from "./prompts";
+} from "./art-style-storage.ts";
+import { loadCustomPersonalities, saveCustomPersonalities } from "./personality-storage.ts";
+import { getPersonalityById } from "./prompts.ts";
 
 /**
  * Complete exportable config bundle schema (tab-level)

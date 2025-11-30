@@ -2,19 +2,19 @@ import { type ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { getCompetitionStatus } from "@scout-for-lol/data";
 import { match } from "ts-pattern";
 import { z } from "zod";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.js";
-import type { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
-import { formatScore } from "@scout-for-lol/backend/discord/embeds/competition.js";
-import { loadCachedLeaderboard } from "@scout-for-lol/backend/storage/s3-leaderboard.js";
-import { replyWithErrorFromException } from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
-import { createLogger } from "@scout-for-lol/backend/logger.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { getParticipants } from "@scout-for-lol/backend/database/competition/participants.ts";
+import type { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
+import { formatScore } from "@scout-for-lol/backend/discord/embeds/competition.ts";
+import { loadCachedLeaderboard } from "@scout-for-lol/backend/storage/s3-leaderboard.ts";
+import { replyWithErrorFromException } from "@scout-for-lol/backend/discord/commands/competition/utils/replies.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("competition-view");
 import {
   extractCompetitionId,
   fetchCompetitionWithErrorHandling,
-} from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.js";
+} from "@scout-for-lol/backend/discord/commands/competition/utils/command-helpers.ts";
 
 // ============================================================================
 // Utility functions

@@ -119,12 +119,7 @@ export function DebugPanel({
       <div className="flex flex-1 flex-col overflow-hidden">
         <div className="flex items-center justify-between border-b border-gray-800 px-5 py-3">
           <h4 className="text-xs font-medium uppercase tracking-wider text-gray-500">Live Logs ({logs.length})</h4>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClearLogs}
-            icon={<Trash2 className="h-3 w-3" />}
-          >
+          <Button variant="ghost" size="sm" onClick={onClearLogs} icon={<Trash2 className="h-3 w-3" />}>
             Clear
           </Button>
         </div>
@@ -145,7 +140,7 @@ export function DebugPanel({
                   key={index}
                   className={cn(
                     "flex items-start gap-2 rounded-lg px-3 py-2 hover:bg-gray-800/50",
-                    getLogColorClass(log.level)
+                    getLogColorClass(log.level),
                   )}
                 >
                   <span className="mt-0.5 shrink-0">{getLogIcon(log.level)}</span>

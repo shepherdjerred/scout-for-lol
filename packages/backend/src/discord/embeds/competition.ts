@@ -4,7 +4,7 @@ import { EmbedBuilder, Colors } from "discord.js";
 import { match } from "ts-pattern";
 import { z } from "zod";
 import { getChampionName } from "twisted/dist/constants/champions.js";
-import type { RankedLeaderboardEntry } from "@scout-for-lol/backend/league/competition/leaderboard.js";
+import type { RankedLeaderboardEntry } from "@scout-for-lol/backend/league/competition/leaderboard.ts";
 import { differenceInCalendarDays, format } from "date-fns";
 
 // ============================================================================

@@ -1,12 +1,12 @@
 import { match as matchPattern } from "ts-pattern";
-import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
+import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
 import type {
   ChatCompletionCreateParams,
   CuratedMatchData,
   Personality,
   PlayerMetadata,
-} from "@scout-for-lol/data/review/generator.js";
-import { selectRandomBehavior } from "@scout-for-lol/data/review/prompts.js";
+} from "@scout-for-lol/data/review/generator.ts";
+import { selectRandomBehavior } from "@scout-for-lol/data/review/prompts.ts";
 
 /**
  * Extract match data from a match object

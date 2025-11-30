@@ -8,7 +8,7 @@ import {
   CardContent,
   StatusIndicator,
   Badge,
-} from "@scout-for-lol/desktop/components/ui";
+} from "@scout-for-lol/desktop/components/ui/index.ts";
 
 type MonitorSectionProps = {
   isMonitoring: boolean;
@@ -171,12 +171,7 @@ export function MonitorSection({
                   Stop Monitoring
                 </Button>
                 {onTest && (
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={onTest}
-                    loading={isTesting}
-                  >
+                  <Button variant="outline" size="lg" onClick={onTest} loading={isTesting}>
                     Test Events
                   </Button>
                 )}

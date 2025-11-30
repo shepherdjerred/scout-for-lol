@@ -10,23 +10,10 @@ type CollapsibleProps = HTMLAttributes<HTMLDivElement> & {
   badge?: ReactNode;
 };
 
-function Collapsible({
-  title,
-  children,
-  defaultOpen = false,
-  className,
-  badge,
-  ...props
-}: CollapsibleProps) {
+function Collapsible({ title, children, defaultOpen = false, className, badge, ...props }: CollapsibleProps) {
   return (
     <CollapsiblePrimitive.Root defaultOpen={defaultOpen}>
-      <div
-        className={cn(
-          "rounded-xl border border-gray-700/50 bg-gray-800/30",
-          className
-        )}
-        {...props}
-      >
+      <div className={cn("rounded-xl border border-gray-700/50 bg-gray-800/30", className)} {...props}>
         <CollapsiblePrimitive.Trigger asChild>
           <button
             type="button"

@@ -8,7 +8,7 @@ import {
   CardContent,
   StatusIndicator,
   Badge,
-} from "@scout-for-lol/desktop/components/ui";
+} from "@scout-for-lol/desktop/components/ui/index.ts";
 
 type LcuStatus = {
   connected: boolean;

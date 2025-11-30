@@ -65,10 +65,14 @@ export function installDesktopDeps(workspaceSource: Directory, target: DesktopTa
   container = container.withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-install-cache"));
 
   if (target === "windows-gnu") {
-    // Dependencies for cross-compiling Windows GNU target and bundling with NSIS
+    // Dependencies for cross-compiling Windows GNU target
     container = container
       .withExec(["apt", "install", "-y", "mingw-w64", "nsis", "zip"])
-      .withExec(["rustup", "target", "add", "x86_64-pc-windows-gnu"]);
+      .withExec(["sh", "-c", "echo '🔧 Installing Windows GNU target for cross-compilation...'"])
+      // Install target for both default and stable toolchains since rust-toolchain.toml uses stable
+      .withExec(["rustup", "target", "add", "x86_64-pc-windows-gnu"])
+      .withExec(["rustup", "target", "add", "x86_64-pc-windows-gnu", "--toolchain", "stable"])
+      .withExec(["sh", "-c", "echo '✅ Windows GNU target installed for both default and stable toolchains'"]);
   }
 
   // Set up workspace structure - include all required files like base.ts does
@@ -210,9 +214,24 @@ export function buildDesktopLinux(workspaceSource: Directory, version: string): 
 export function buildDesktopWindowsGnu(workspaceSource: Directory, version: string): Container {
   return installDesktopDeps(workspaceSource, "windows-gnu")
     .withEnvVariable("VERSION", version)
+    .withEnvVariable("CARGO_TARGET_DIR", "/workspace/packages/desktop/src-tauri/target")
+    .withEnvVariable("RUSTUP_HOME", "/usr/local/rustup")
+    .withEnvVariable("CARGO_HOME", "/usr/local/cargo")
+    .withEnvVariable("PATH", "/usr/local/cargo/bin:/usr/local/rustup/bin:$PATH", { expand: true })
     .withWorkdir("/workspace/packages/desktop")
     .withExec(["sh", "-c", "echo '🏗️  [CI] Building desktop application for Windows (x86_64-pc-windows-gnu)...'"])
-    .withExec(["bun", "run", "build:windows"])
+    .withExec(["sh", "-c", "echo '📦 Building frontend first...'"])
+    .withExec(["bunx", "vite", "build"])
+    .withExec(["sh", "-c", "echo '🦀 Building Rust application with Cargo...'"])
+    .withWorkdir("/workspace/packages/desktop/src-tauri")
+    .withExec(["cargo", "build", "--release", "--target", "x86_64-pc-windows-gnu"])
+    .withExec([
+      "sh",
+      "-c",
+      "echo '✅ Binary built successfully at target/x86_64-pc-windows-gnu/release/scout-for-lol-desktop.exe'",
+    ])
+    .withExec(["sh", "-c", "ls -lh target/x86_64-pc-windows-gnu/release/scout-for-lol-desktop.exe"])
+    .withWorkdir("/workspace/packages/desktop")
     .withExec(["sh", "-c", "echo '✅ [CI] Desktop Windows (GNU) build completed!'"]);
 }
 
@@ -232,10 +251,10 @@ export function getDesktopLinuxArtifacts(workspaceSource: Directory, version: st
  * Export desktop Windows (x86_64-pc-windows-gnu) build artifacts
  * @param workspaceSource The full workspace source directory
  * @param version The version tag
- * @returns The directory containing built artifacts
+ * @returns The directory containing built artifacts (exe file)
  */
 export function getDesktopWindowsArtifacts(workspaceSource: Directory, version: string): Directory {
   return buildDesktopWindowsGnu(workspaceSource, version).directory(
-    "/workspace/packages/desktop/src-tauri/target/x86_64-pc-windows-gnu/release/bundle",
+    "/workspace/packages/desktop/src-tauri/target/x86_64-pc-windows-gnu/release",
   );
 }

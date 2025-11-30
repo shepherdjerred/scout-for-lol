@@ -8,19 +8,32 @@
  */
 
 import type { GoogleGenerativeAI } from "@google/generative-ai";
-import type { CuratedTimeline } from "./curator-types.js";
-import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
-import { generateImagePrompt } from "@scout-for-lol/data/review/image-prompt.js";
+import type { CuratedTimeline } from "./curator-types.ts";
+import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
+import { generateImagePrompt } from "@scout-for-lol/data/review/image-prompt.ts";
 import {
   replaceTemplateVariables,
   type Personality as PromptPersonality,
   type PlayerMetadata as PromptPlayerMetadata,
-} from "@scout-for-lol/data/review/prompts.js";
+} from "@scout-for-lol/data/review/prompts.ts";
 import {
   buildPromptVariables,
   createCompletionParams,
   extractMatchData,
-} from "@scout-for-lol/data/review/generator-helpers.js";
+} from "@scout-for-lol/data/review/generator-helpers.ts";
+
+function minifyJsonString(text: string): string {
+  const trimmed = text.trim();
+  if (trimmed.length === 0) {
+    return trimmed;
+  }
+  try {
+    return JSON.stringify(JSON.parse(trimmed));
+  } catch {
+    // If the style card is invalid JSON, fall back to the original text
+    return trimmed;
+  }
+}
 
 /**
  * Core review text generation function
@@ -95,7 +108,7 @@ export async function generateReviewText(params: {
     ...(timelineSummary !== undefined && { timelineSummary }),
   });
   const userPrompt = replaceTemplateVariables(basePromptTemplate, promptVariables);
-  const styleCardSection = `\n\nReviewer style card (from Discord chat analysis; keep the tone aligned):\n${personality.styleCard}`;
+  const styleCardSection = `\n\nReviewer style card (from Discord chat analysis; keep the tone aligned):\n${minifyJsonString(personality.styleCard)}`;
   const systemPrompt = `${systemPromptPrefix}${personality.instructions}${styleCardSection}\n\n${laneContext}`;
   const completionParams = createCompletionParams({
     systemPrompt,

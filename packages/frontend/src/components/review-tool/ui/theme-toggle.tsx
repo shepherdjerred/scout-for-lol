@@ -2,7 +2,7 @@
  * Theme Toggle component (dark/light mode)
  */
 import { useSyncExternalStore } from "react";
-import { IconButton } from "./icon-button";
+import { IconButton } from "./icon-button.tsx";
 
 // Theme store
 let currentTheme: "dark" | "light" = "dark";
