@@ -1018,27 +1018,55 @@ export class ScoutForLol {
       logWithTimestamp(`🔐 Verifying GitHub authentication...`);
 
       // First, check basic auth status (allow failure to capture output)
-      const authCheckContainer = container.withExec(["sh", "-c", 'gh auth status 2>&1; echo "AUTH_EXIT_CODE=$?"']);
-      const authOutput = await authCheckContainer.stdout();
-      logWithTimestamp(`Auth status output: ${authOutput.trim()}`);
+      let authCheckContainer: Container;
+      let authOutput: string;
+      try {
+        authCheckContainer = container.withExec(["sh", "-c", 'gh auth status 2>&1; echo "AUTH_EXIT_CODE=$?"']);
+        authOutput = await authCheckContainer.stdout();
+        logWithTimestamp(`Auth status output: ${authOutput.trim()}`);
 
-      if (authOutput.includes("AUTH_EXIT_CODE=0")) {
-        logWithTimestamp(`✓ GitHub authentication successful`);
-      } else {
-        logWithTimestamp(`⚠️ GitHub authentication check returned non-zero exit code`);
+        if (authOutput.includes("AUTH_EXIT_CODE=0")) {
+          logWithTimestamp(`✓ GitHub authentication successful`);
+        } else {
+          logWithTimestamp(`⚠️ GitHub authentication check returned non-zero exit code`);
+        }
+      } catch (error) {
+        logWithTimestamp(`❌ Auth check failed with error: ${error instanceof Error ? error.message : String(error)}`);
+        // Try to get any stderr output
+        try {
+          const stderr = await authCheckContainer!.stderr();
+          logWithTimestamp(`Auth check stderr: ${stderr}`);
+        } catch {
+          // Ignore stderr fetch errors
+        }
+        throw error;
       }
 
       // Try a simple API call to verify token works
       logWithTimestamp(`🔍 Testing GitHub API access...`);
-      const apiTestContainer = container.withExec(["sh", "-c", 'gh api user 2>&1; echo "API_EXIT_CODE=$?"']);
-      const apiOutput = await apiTestContainer.stdout();
-      logWithTimestamp(`API test output: ${apiOutput.trim()}`);
+      let apiTestContainer: Container;
+      let apiOutput: string;
+      try {
+        apiTestContainer = container.withExec(["sh", "-c", 'gh api user 2>&1; echo "API_EXIT_CODE=$?"']);
+        apiOutput = await apiTestContainer.stdout();
+        logWithTimestamp(`API test output: ${apiOutput.trim()}`);
 
-      if (!apiOutput.includes("API_EXIT_CODE=0")) {
-        throw new Error(`GitHub API access failed. Output: ${apiOutput}`);
+        if (!apiOutput.includes("API_EXIT_CODE=0")) {
+          throw new Error(`GitHub API access failed. Output: ${apiOutput}`);
+        }
+
+        logWithTimestamp(`✓ GitHub authentication verified`);
+      } catch (error) {
+        logWithTimestamp(`❌ API test failed with error: ${error instanceof Error ? error.message : String(error)}`);
+        // Try to get stderr
+        try {
+          const stderr = await apiTestContainer!.stderr();
+          logWithTimestamp(`API test stderr: ${stderr}`);
+        } catch {
+          // Ignore stderr fetch errors
+        }
+        throw error;
       }
-
-      logWithTimestamp(`✓ GitHub authentication verified`);
 
       // Step 2: Check if release exists (capture output for debugging)
       logWithTimestamp(`🔍 Checking if release v${version} exists...`);
