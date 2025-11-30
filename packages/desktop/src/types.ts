@@ -33,6 +33,13 @@ export type LogPaths = {
 
 export type Section = "league" | "discord" | "monitor" | "sounds";
 
+export type AvailableSoundPack = {
+  id: string;
+  name: string;
+  description?: string;
+  isBuiltIn: boolean;
+};
+
 export const DEFAULT_EVENT_SOUNDS: Record<string, string> = {
   gameStart: "gameStart",
   firstBlood: "firstBlood",

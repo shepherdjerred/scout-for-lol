@@ -11,6 +11,7 @@ import {
 import { Input, Select } from "@scout-for-lol/desktop/components/ui/input.tsx";
 import { StatusIndicator, Badge } from "@scout-for-lol/desktop/components/ui/badge.tsx";
 import { Collapsible } from "@scout-for-lol/desktop/components/ui/collapsible.tsx";
+import type { AvailableSoundPack } from "../../types.ts";
 
 type DiscordStatus = {
   connected: boolean;
@@ -27,6 +28,7 @@ type DiscordSectionProps = {
   channelId: string;
   voiceChannelId: string;
   soundPack: string;
+  availableSoundPacks: AvailableSoundPack[];
   eventSounds: Record<string, string>;
   onBotTokenChange: (value: string) => void;
   onChannelIdChange: (value: string) => void;
@@ -55,6 +57,7 @@ export function DiscordSection({
   channelId,
   voiceChannelId,
   soundPack,
+  availableSoundPacks,
   eventSounds,
   onBotTokenChange,
   onChannelIdChange,
@@ -89,7 +92,14 @@ export function DiscordSection({
           value={discordStatus.voiceChannelName ?? "Not joined"}
           connected={discordStatus.voiceConnected}
         />
-        <StatusCard label="Sound Pack" value={discordStatus.activeSoundPack ?? soundPack} connected={true} />
+        <StatusCard
+          label="Sound Pack"
+          value={
+            availableSoundPacks.find((p) => p.id === (discordStatus.activeSoundPack ?? soundPack))?.name ??
+            (discordStatus.activeSoundPack ?? soundPack)
+          }
+          connected={true}
+        />
       </div>
 
       {/* Bot Configuration */}
@@ -139,7 +149,12 @@ export function DiscordSection({
               }}
               helperText="Audio theme for notifications"
             >
-              <option value="base">Base Pack (Synth tones)</option>
+              {availableSoundPacks.map((pack) => (
+                <option key={pack.id} value={pack.id}>
+                  {pack.name}
+                  {!pack.isBuiltIn && " (Custom)"}
+                </option>
+              ))}
             </Select>
           </div>
         </CardContent>

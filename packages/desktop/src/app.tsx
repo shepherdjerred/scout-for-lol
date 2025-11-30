@@ -8,8 +8,9 @@ import { MonitorSection } from "./components/sections/monitor-section.tsx";
 import { SoundPackSection } from "./components/sections/sound-pack-section.tsx";
 import { DebugPanel } from "./components/sections/debug-panel.tsx";
 import { Alert } from "./components/ui/alert.tsx";
-import type { LcuStatus, DiscordStatus, Config, LogEntry, LogPaths, Section } from "./types.ts";
+import type { LcuStatus, DiscordStatus, Config, LogEntry, LogPaths, Section, AvailableSoundPack } from "./types.ts";
 import { DEFAULT_EVENT_SOUNDS, getErrorMessage } from "./types.ts";
+import type { SoundPack } from "@scout-for-lol/data";
 
 export default function App() {
   // Navigation state
@@ -36,6 +37,9 @@ export default function App() {
   const [voiceChannelId, setVoiceChannelId] = useState("");
   const [soundPack, setSoundPack] = useState("base");
   const [eventSounds, setEventSounds] = useState<Record<string, string>>(DEFAULT_EVENT_SOUNDS);
+  const [availableSoundPacks, setAvailableSoundPacks] = useState<AvailableSoundPack[]>([
+    { id: "base", name: "Base Pack (Synth tones)", isBuiltIn: true },
+  ]);
 
   // App states
   const [isMonitoring, setIsMonitoring] = useState(false);
@@ -60,6 +64,31 @@ export default function App() {
     } catch (err) {
       console.error("Failed to load status:", err);
     }
+  }, []);
+
+  // Load available sound packs
+  const loadAvailableSoundPacks = useCallback(async () => {
+    const packs: AvailableSoundPack[] = [
+      { id: "base", name: "Base Pack (Synth tones)", isBuiltIn: true },
+    ];
+
+    try {
+      // Load custom sound pack from storage
+      const customPack = await invoke<SoundPack | null>("load_sound_pack");
+      if (customPack) {
+        packs.push({
+          id: customPack.id,
+          name: customPack.name,
+          description: customPack.description ?? undefined,
+          isBuiltIn: false,
+        });
+        addLog("info", `Loaded custom sound pack: ${customPack.name}`);
+      }
+    } catch (err) {
+      console.error("Failed to load custom sound pack:", err);
+    }
+
+    setAvailableSoundPacks(packs);
   }, []);
 
   // Load config on mount
@@ -104,7 +133,8 @@ export default function App() {
     };
 
     void loadConfig();
-  }, []);
+    void loadAvailableSoundPacks();
+  }, [loadAvailableSoundPacks]);
 
   // Load status on mount and setup polling
   // eslint-disable-next-line custom-rules/no-use-effect -- ok for now
@@ -368,6 +398,7 @@ export default function App() {
             channelId={channelId}
             voiceChannelId={voiceChannelId}
             soundPack={soundPack}
+            availableSoundPacks={availableSoundPacks}
             eventSounds={eventSounds}
             onBotTokenChange={setBotToken}
             onChannelIdChange={setChannelId}
