@@ -215,13 +215,15 @@ export function buildDesktopLinux(workspaceSource: Directory, version: string): 
 export function buildDesktopWindowsGnu(workspaceSource: Directory, version: string): Container {
   return installDesktopDeps(workspaceSource, "windows-gnu")
     .withEnvVariable("VERSION", version)
+    .withEnvVariable("CARGO_TARGET_DIR", "/workspace/packages/desktop/src-tauri/target")
+    .withEnvVariable("RUSTUP_HOME", "/usr/local/rustup")
+    .withEnvVariable("CARGO_HOME", "/usr/local/cargo")
     .withWorkdir("/workspace/packages/desktop")
     .withExec(["sh", "-c", "echo '🏗️  [CI] Building desktop application for Windows (x86_64-pc-windows-gnu)...'"])
     .withExec(["sh", "-c", "echo '🔍 Verifying Rust environment before build...'"])
     .withExec(["sh", "-c", "rustup show"])
     .withExec(["sh", "-c", "rustup target list --installed"])
-    .withExec(["sh", "-c", "which cargo"])
-    .withExec(["sh", "-c", ". $HOME/.cargo/env && bun run build:windows"])
+    .withExec(["bun", "run", "build:windows"])
     .withExec(["sh", "-c", "echo '✅ [CI] Desktop Windows (GNU) build completed!'"]);
 }
 
