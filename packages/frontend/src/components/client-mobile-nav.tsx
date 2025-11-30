@@ -1,7 +1,7 @@
 import { Sheet, SheetContent, SheetTrigger } from "@scout-for-lol/frontend/components/ui/sheet";
 import { Button } from "@scout-for-lol/frontend/components/ui/button";
 
-interface MobileNavItem {
+type MobileNavItem = {
   href: string;
   label: string;
   icon?: string;
@@ -10,9 +10,9 @@ interface MobileNavItem {
   currentPage?: string;
 }
 
-interface Props {
+type Props = {
   items: MobileNavItem[];
-  activePage?: string;
+  activePage?: string | undefined;
   discordLink: string;
 }
 
@@ -63,4 +63,3 @@ export function ClientMobileNav({ items, activePage, discordLink }: Props) {
     </Sheet>
   );
 }
-

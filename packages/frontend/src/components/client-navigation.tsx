@@ -6,14 +6,14 @@ import {
   navigationMenuTriggerStyle,
 } from "@scout-for-lol/frontend/components/ui/navigation-menu";
 
-interface NavItem {
+type NavItem = {
   href: string;
   label: string;
   icon?: string;
   external?: boolean;
 }
 
-interface Props {
+type Props = {
   items: NavItem[];
 }
 
@@ -37,4 +37,3 @@ export function ClientNavigation({ items }: Props) {
     </NavigationMenu>
   );
 }
-

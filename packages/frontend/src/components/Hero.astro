@@ -1,6 +1,4 @@
 ---
-import { Button } from "@scout-for-lol/frontend/components/ui/button";
-
 interface Props {
   title: string;
   subtitle?: string;
@@ -43,17 +41,20 @@ const { title, subtitle, showGradient = true, ctaButtons = [] } = Astro.props;
       {
         ctaButtons.length > 0 && (
           <div class="mt-10 flex items-center justify-center gap-x-6">
-            {ctaButtons.map((button) => (
+            {ctaButtons.map((button) =>
               button.variant === "secondary" ? (
                 <a href={button.href} class="text-sm font-semibold text-indigo-400 hover:text-indigo-300">
                   {button.text} <span aria-hidden="true">→</span>
                 </a>
               ) : (
-                <a href={button.href} class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                <a
+                  href={button.href}
+                  class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                >
                   {button.text}
                 </a>
-              )
-            ))}
+              ),
+            )}
           </div>
         )
       }

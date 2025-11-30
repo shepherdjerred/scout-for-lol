@@ -82,7 +82,7 @@ export function renderItems(items: number[], visionScore: number, isArena = fals
   if (isArena) {
     // Arena: render up to 6 items, padding with empty slots
     const itemsToRender = items.slice(0, 6);
-    const paddedItems = [...itemsToRender, ...Array(6 - itemsToRender.length).fill(0)];
+    const paddedItems: number[] = [...itemsToRender, ...Array<number>(6 - itemsToRender.length).fill(0)];
     const renderedItems = map(paddedItems, renderItem);
 
     return <div style={{ display: "flex", gap: "1rem" }}>{renderedItems}</div>;
@@ -92,7 +92,7 @@ export function renderItems(items: number[], visionScore: number, isArena = fals
     const visionItem = items[6]; // 7th item (index 6) is always the vision ward slot
 
     // Pad regular items to always show 6 slots
-    const paddedRegularItems = [...regularItems, ...Array(6 - regularItems.length).fill(0)];
+    const paddedRegularItems: number[] = [...regularItems, ...Array<number>(6 - regularItems.length).fill(0)];
     const renderedRegularItems = map(paddedRegularItems, renderItem);
 
     // Vision item slot
