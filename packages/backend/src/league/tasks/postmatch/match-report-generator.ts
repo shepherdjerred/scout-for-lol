@@ -12,8 +12,10 @@ import type {
   QueueType,
   RawMatch,
   RawTimeline,
+  Rank,
 } from "@scout-for-lol/data/index.ts";
 import {
+  parseQueueType,
   MatchIdSchema,
   queueTypeToDisplayString,
   RawMatchSchema,
@@ -29,6 +31,7 @@ import { generateMatchReview } from "@scout-for-lol/backend/league/review/genera
 import { match } from "ts-pattern";
 import { logErrorDetails } from "./match-report-debug.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { saveMatchRankHistory, getLatestRankBefore } from "@scout-for-lol/backend/league/model/rank-history.ts";
 
 const logger = createLogger("postmatch-match-report-generator");
 
@@ -287,7 +290,41 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
   if (players.length === 0) {
     throw new Error("No player data available");
   }
-  const completedMatch = toMatch(players, matchData, undefined, undefined);
+
+  const queueType = parseQueueType(matchData.info.queueId);
+  const queue = queueType === "solo" || queueType === "flex" ? queueType : undefined;
+
+  // Build rank map for each player by looking up previous rank and using current as "after"
+  const playerRanksMap = new Map<string, { before: Rank | undefined; after: Rank | undefined }>();
+
+  if (queue) {
+    await Promise.all(
+      players.map(async (player) => {
+        const puuid = player.config.league.leagueAccount.puuid;
+        const currentRank = player.ranks[queue]; // This is POST-match rank (already fetched by getPlayer)
+
+        // Look up the most recent rank before this match
+        const previousRank = await getLatestRankBefore(puuid, queue, matchData.info.gameEndTimestamp);
+
+        // Store this match's rank history
+        await saveMatchRankHistory({
+          matchId,
+          puuid,
+          queueType: queue,
+          rankBefore: previousRank,
+          rankAfter: currentRank,
+        });
+
+        playerRanksMap.set(puuid, {
+          before: previousRank,
+          after: currentRank,
+        });
+      }),
+    );
+  }
+
+  // Build CompletedMatch with per-player rank data
+  const completedMatch = toMatch(players, matchData, playerRanksMap);
 
   // Generate AI review (text and optional image) - for ranked queues or matches with Jerred
   let reviewText: string | undefined;
@@ -328,8 +365,8 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
 
   // Generate completion message
   const playerAliases = playersInMatch.map((p) => p.alias);
-  const queueType = completedMatch.queueType ?? "custom";
-  const completionMessage = formatGameCompletionMessage(playerAliases, queueType);
+  const queueTypeForMessage = completedMatch.queueType ?? "custom";
+  const completionMessage = formatGameCompletionMessage(playerAliases, queueTypeForMessage);
 
   // Combine completion message with review text if available (always include text, even with image)
   let messageContent = completionMessage;

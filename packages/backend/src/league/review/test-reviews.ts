@@ -288,7 +288,7 @@ async function convertRawMatchToInternalFormat(rawMatch: RawMatch): Promise<Comp
   if (queueType === "arena") {
     return await toArenaMatch([player], rawMatch);
   } else {
-    return toMatch([player], rawMatch, undefined, undefined);
+    return toMatch([player], rawMatch, new Map());
   }
 }
 

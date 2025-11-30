@@ -30,8 +30,7 @@ const logger = createLogger("model-match");
 export function toMatch(
   players: Player[],
   rawMatch: RawMatch,
-  rankBeforeMatch: Rank | undefined,
-  rankAfterMatch: Rank | undefined,
+  playerRanks: Map<string, { before: Rank | undefined; after: Rank | undefined }>,
 ): CompletedMatch {
   const teams = getTeams(rawMatch.info.participants, participantToChampion);
   const queueType = parseQueueType(rawMatch.info.queueId);
@@ -68,10 +67,14 @@ export function toMatch(
 
     const enemyTeam = invertTeam(team);
 
+    // Get per-player rank data from the map
+    const puuid = player.config.league.leagueAccount.puuid;
+    const ranks = playerRanks.get(puuid) ?? { before: undefined, after: undefined };
+
     const playerObject = {
       playerConfig: validatedConfig,
-      rankBeforeMatch,
-      rankAfterMatch,
+      rankBeforeMatch: ranks.before,
+      rankAfterMatch: ranks.after,
       wins: queueType === "solo" || queueType === "flex" ? (player.ranks[queueType]?.wins ?? undefined) : undefined,
       losses: queueType === "solo" || queueType === "flex" ? (player.ranks[queueType]?.losses ?? undefined) : undefined,
       champion,

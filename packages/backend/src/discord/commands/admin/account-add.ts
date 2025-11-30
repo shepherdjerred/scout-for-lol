@@ -107,9 +107,7 @@ export async function executeAccountAdd(interaction: ChatInputCommandInteraction
               region: region,
             },
           },
-          discordAccount: {
-            id: player.discordId ?? undefined,
-          },
+          ...(player.discordId && { discordAccount: { id: DiscordAccountIdSchema.parse(player.discordId) } }),
         };
 
         await backfillLastMatchTime(playerConfigEntry, LeaguePuuidSchema.parse(puuid));
