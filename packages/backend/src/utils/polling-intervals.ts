@@ -9,6 +9,12 @@
 import { differenceInMinutes, differenceInHours } from "date-fns";
 
 /**
+ * Maximum number of players to check per polling run.
+ * This prevents API rate limiting when many players become eligible at once.
+ */
+export const MAX_PLAYERS_PER_RUN = 20;
+
+/**
  * Polling interval configuration based on player activity.
  * Intervals scale from 1 minute (very active) to 60 minutes (very inactive)
  */

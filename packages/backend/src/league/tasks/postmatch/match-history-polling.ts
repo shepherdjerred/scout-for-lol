@@ -10,7 +10,11 @@ import {
 } from "@scout-for-lol/backend/database/index.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { send } from "@scout-for-lol/backend/league/discord/channel.ts";
-import { shouldCheckPlayer, calculatePollingInterval } from "@scout-for-lol/backend/utils/polling-intervals.ts";
+import {
+  shouldCheckPlayer,
+  calculatePollingInterval,
+  MAX_PLAYERS_PER_RUN,
+} from "@scout-for-lol/backend/utils/polling-intervals.ts";
 import {
   fetchMatchData,
   generateMatchReport,
@@ -186,13 +190,39 @@ export async function checkMatchHistory(): Promise<void> {
     }
 
     // Filter to only players that should be checked this cycle
-    const playersToCheck = accountsWithState.filter(({ lastMatchTime, lastCheckedAt }) =>
+    const eligiblePlayers = accountsWithState.filter(({ lastMatchTime, lastCheckedAt }) =>
       shouldCheckPlayer(lastMatchTime, lastCheckedAt, currentTime),
     );
 
     logger.info(
-      `📊 ${playersToCheck.length.toString()} / ${accountsWithState.length.toString()} account(s) should be checked this cycle`,
+      `📊 ${eligiblePlayers.length.toString()} / ${accountsWithState.length.toString()} account(s) eligible this cycle`,
     );
+
+    // Sort by lastCheckedAt (oldest first) to prioritize players who haven't been checked recently
+    // Players never checked (undefined) come first
+    const sortedEligiblePlayers = eligiblePlayers.toSorted((a, b) => {
+      if (a.lastCheckedAt === undefined && b.lastCheckedAt === undefined) {
+        return 0;
+      }
+      if (a.lastCheckedAt === undefined) {
+        return -1;
+      }
+      if (b.lastCheckedAt === undefined) {
+        return 1;
+      }
+      return a.lastCheckedAt.getTime() - b.lastCheckedAt.getTime();
+    });
+
+    // Limit to MAX_PLAYERS_PER_RUN to prevent API rate limiting
+    const playersToCheck = sortedEligiblePlayers.slice(0, MAX_PLAYERS_PER_RUN);
+
+    if (eligiblePlayers.length > MAX_PLAYERS_PER_RUN) {
+      logger.info(
+        `⚠️  Limiting to ${MAX_PLAYERS_PER_RUN.toString()} players (${(eligiblePlayers.length - MAX_PLAYERS_PER_RUN).toString()} deferred to next run)`,
+      );
+    }
+
+    logger.info(`📊 Checking ${playersToCheck.length.toString()} account(s) this run`);
 
     if (playersToCheck.length === 0) {
       logger.info("⏸️  No players to check this cycle (based on polling intervals)");
