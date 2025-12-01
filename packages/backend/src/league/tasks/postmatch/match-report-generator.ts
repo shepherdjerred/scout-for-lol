@@ -27,7 +27,7 @@ import { getPlayer } from "@scout-for-lol/backend/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
-import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "@scout-for-lol/backend/storage/s3.ts";
+import { saveMatchToS3, saveImageToS3, saveSvgToS3, saveTimelineToS3 } from "@scout-for-lol/backend/storage/s3.ts";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.ts";
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.ts";
 import { match } from "ts-pattern";
@@ -344,6 +344,7 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
 /**
  * Fetch timeline data for standard (non-arena) matches
  * Returns undefined for arena matches or if timeline fetch fails
+ * Also saves the timeline to S3 for later use (e.g., frontend AI review generation)
  */
 async function fetchTimelineIfStandardMatch(
   matchData: RawMatch,
@@ -368,6 +369,15 @@ async function fetchTimelineIfStandardMatch(
       logger.info(
         `[generateMatchReport] ✅ Timeline fetched with ${timelineData.info.frames.length.toString()} frames`,
       );
+
+      // Save timeline to S3 for later use (e.g., frontend AI review generation)
+      try {
+        const trackedPlayerAliases = playersInMatch.map((p) => p.alias);
+        await saveTimelineToS3(timelineData, trackedPlayerAliases);
+      } catch (error) {
+        logger.error(`[generateMatchReport] Error saving timeline ${matchId} to S3:`, error);
+        // Continue processing even if S3 storage fails
+      }
     }
     return timelineData;
   } catch (error) {
