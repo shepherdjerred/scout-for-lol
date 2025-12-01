@@ -303,16 +303,15 @@ export async function generateReviewTextStage(params: {
 /**
  * Build the image inspirations section for the prompt
  *
- * @param imagePrompts - Array of image prompts from personality, or undefined
+ * @param selectedPrompts - Array of already-selected image prompts
  * @returns Formatted string for the prompt, or empty string if no prompts
  */
-function buildImageInspirationsSection(imagePrompts: string[] | undefined): string {
-  const selected = selectRandomImagePrompts(imagePrompts);
-  if (selected.length === 0) {
+function buildImageInspirationsSection(selectedPrompts: string[]): string {
+  if (selectedPrompts.length === 0) {
     return "";
   }
 
-  const formattedPrompts = selected.map((p) => `- ${p}`).join("\n");
+  const formattedPrompts = selectedPrompts.map((p) => `- ${p}`).join("\n");
   return `\n\nFor visual inspiration, consider incorporating elements from these themes:\n${formattedPrompts}`;
 }
 
@@ -330,22 +329,27 @@ export async function generateImageDescription(params: {
   model: ModelConfig;
   systemPromptOverride?: string | undefined;
   imagePrompts?: string[] | undefined;
-}): Promise<{ text: string; trace: StageTrace }> {
+}): Promise<{ text: string; trace: StageTrace; selectedImagePrompts: string[] }> {
   const { reviewText, client, model, systemPromptOverride, imagePrompts } = params;
 
+  // Select 2-3 random image prompts from personality
+  const selectedImagePrompts = selectRandomImagePrompts(imagePrompts);
+
   const systemPrompt = getStageSystemPrompt("imageDescription", systemPromptOverride);
-  const imageInspirations = buildImageInspirationsSection(imagePrompts);
+  const imageInspirations = buildImageInspirationsSection(selectedImagePrompts);
   const userPrompt = replacePromptVariables(IMAGE_DESCRIPTION_USER_PROMPT_TEMPLATE, {
     REVIEW_TEXT: reviewText,
     IMAGE_INSPIRATIONS: imageInspirations,
   });
 
-  return callOpenAI({
+  const { text, trace } = await callOpenAI({
     client,
     model,
     systemPrompt,
     userPrompt,
   });
+
+  return { text, trace, selectedImagePrompts };
 }
 
 // ============================================================================

@@ -167,6 +167,9 @@ async function runStage3ImageDescription(ctx: Stage3And4Context): Promise<string
     const result = await generateImageDescription(params);
     traces.imageDescription = result.trace;
     intermediate.imageDescriptionText = result.text;
+    if (result.selectedImagePrompts.length > 0) {
+      intermediate.selectedImagePrompts = result.selectedImagePrompts;
+    }
     return result.text;
   } catch (error) {
     console.error("[Pipeline Stage 3] Image description failed:", error);
