@@ -16,6 +16,7 @@ import { generateImagePrompt } from "./image-prompt.ts";
 import { replaceTemplateVariables } from "./prompts.ts";
 import { buildPromptVariables, extractMatchData } from "./generator-helpers.ts";
 import { enrichTimelineData } from "./timeline-enricher.ts";
+import { createSlimRawMatch } from "./raw-match-filter.ts";
 import type { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 
@@ -195,13 +196,17 @@ export async function generateMatchSummary(params: {
 
   const systemPrompt = getStageSystemPrompt("matchSummary", systemPromptOverride);
 
+  // Create a slim version of raw match to avoid token overflow
+  // Full rawMatch can be 200k+ tokens; slim version is ~5-10k tokens
+  const slimRawMatch = createSlimRawMatch(rawMatch, playerChampion);
+
   const userPrompt = replacePromptVariables(MATCH_SUMMARY_USER_PROMPT_TEMPLATE, {
     PLAYER_NAME: playerName,
     PLAYER_CHAMPION: playerChampion,
     PLAYER_LANE: lane,
     MATCH_DATA: minifyJson({
       processedMatch: match,
-      rawMatch,
+      rawMatch: slimRawMatch,
     }),
   });
 
