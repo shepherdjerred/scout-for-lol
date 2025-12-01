@@ -37,6 +37,8 @@ export type StageConfig = {
   model: ModelConfig;
   /** Override the default system prompt for this stage */
   systemPrompt?: string;
+  /** Override the default user prompt template for this stage */
+  userPrompt?: string;
 };
 
 /**
@@ -44,6 +46,10 @@ export type StageConfig = {
  */
 export type ReviewTextStageConfig = {
   model: ModelConfig;
+  /** Override the default system prompt for this stage */
+  systemPrompt?: string;
+  /** Override the default user prompt template for this stage */
+  userPrompt?: string;
 };
 
 /**
@@ -55,6 +61,8 @@ export type ImageGenerationStageConfig = {
   timeoutMs: number;
   /** Art style to apply to the generated image */
   artStyle: ArtStyle;
+  /** Override the default user prompt template for image generation */
+  userPrompt?: string;
 };
 
 /**

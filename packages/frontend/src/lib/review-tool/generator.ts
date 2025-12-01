@@ -72,6 +72,9 @@ function convertStagesToDataPackageFormat(stages: NonNullable<ReviewConfig["stag
   if (stages.timelineSummary.systemPrompt !== undefined) {
     timelineSummary.systemPrompt = stages.timelineSummary.systemPrompt;
   }
+  if (stages.timelineSummary.userPrompt !== undefined) {
+    timelineSummary.userPrompt = stages.timelineSummary.userPrompt;
+  }
 
   // Build match summary stage
   const matchSummaryModel: PipelineStagesConfig["matchSummary"]["model"] = {
@@ -91,6 +94,9 @@ function convertStagesToDataPackageFormat(stages: NonNullable<ReviewConfig["stag
   if (stages.matchSummary.systemPrompt !== undefined) {
     matchSummary.systemPrompt = stages.matchSummary.systemPrompt;
   }
+  if (stages.matchSummary.userPrompt !== undefined) {
+    matchSummary.userPrompt = stages.matchSummary.userPrompt;
+  }
 
   // Build review text stage
   const reviewTextModel: PipelineStagesConfig["reviewText"]["model"] = {
@@ -102,6 +108,15 @@ function convertStagesToDataPackageFormat(stages: NonNullable<ReviewConfig["stag
   }
   if (stages.reviewText.model.topP !== undefined) {
     reviewTextModel.topP = stages.reviewText.model.topP;
+  }
+  const reviewText: PipelineStagesConfig["reviewText"] = {
+    model: reviewTextModel,
+  };
+  if (stages.reviewText.systemPrompt !== undefined) {
+    reviewText.systemPrompt = stages.reviewText.systemPrompt;
+  }
+  if (stages.reviewText.userPrompt !== undefined) {
+    reviewText.userPrompt = stages.reviewText.userPrompt;
   }
 
   // Build image description stage
@@ -122,18 +137,27 @@ function convertStagesToDataPackageFormat(stages: NonNullable<ReviewConfig["stag
   if (stages.imageDescription.systemPrompt !== undefined) {
     imageDescription.systemPrompt = stages.imageDescription.systemPrompt;
   }
+  if (stages.imageDescription.userPrompt !== undefined) {
+    imageDescription.userPrompt = stages.imageDescription.userPrompt;
+  }
+
+  // Build image generation stage
+  const imageGeneration: PipelineStagesConfig["imageGeneration"] = {
+    enabled: stages.imageGeneration.enabled,
+    model: stages.imageGeneration.model,
+    timeoutMs: stages.imageGeneration.timeoutMs,
+    artStyle: selectRandomStyle(),
+  };
+  if (stages.imageGeneration.userPrompt !== undefined) {
+    imageGeneration.userPrompt = stages.imageGeneration.userPrompt;
+  }
 
   return {
     timelineSummary,
     matchSummary,
-    reviewText: { model: reviewTextModel },
+    reviewText,
     imageDescription,
-    imageGeneration: {
-      enabled: stages.imageGeneration.enabled,
-      model: stages.imageGeneration.model,
-      timeoutMs: stages.imageGeneration.timeoutMs,
-      artStyle: selectRandomStyle(),
-    },
+    imageGeneration,
   };
 }
 

@@ -10,7 +10,15 @@ import { selectRandomStyle } from "@scout-for-lol/data/review/art-styles.ts";
 // Import system prompts from TXT files
 import TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1b-timeline-summary.txt";
 import MATCH_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1a-match-summary.txt";
+import REVIEW_TEXT_SYSTEM_PROMPT_RAW from "./prompts/system/2-review-text.txt";
 import IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW from "./prompts/system/3-image-description.txt";
+
+// Import user prompts from TXT files
+import TIMELINE_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1b-timeline-summary.txt";
+import MATCH_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1a-match-summary.txt";
+import REVIEW_TEXT_USER_PROMPT_RAW from "./prompts/user/2-review-text.txt";
+import IMAGE_DESCRIPTION_USER_PROMPT_RAW from "./prompts/user/3-image-description.txt";
+import IMAGE_GENERATION_USER_PROMPT_RAW from "./prompts/user/4-image-generation.txt";
 
 // ============================================================================
 // System Prompts
@@ -34,11 +42,76 @@ export const TIMELINE_SUMMARY_SYSTEM_PROMPT = TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW
 export const MATCH_SUMMARY_SYSTEM_PROMPT = MATCH_SUMMARY_SYSTEM_PROMPT_RAW.trim();
 
 /**
+ * System prompt for Stage 2: Review Text
+ *
+ * Uses the personality instructions, style card, and lane context
+ * to guide the review generation.
+ */
+export const REVIEW_TEXT_SYSTEM_PROMPT = REVIEW_TEXT_SYSTEM_PROMPT_RAW.trim();
+
+/**
  * System prompt for Stage 3: Image Description
  *
  * Turns a review into a vivid image concept for Gemini to generate.
  */
 export const IMAGE_DESCRIPTION_SYSTEM_PROMPT = IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW.trim();
+
+// ============================================================================
+// User Prompts (Templates with variables)
+// ============================================================================
+
+/**
+ * User prompt template for Stage 1a: Timeline Summary
+ *
+ * Variables:
+ * - <TIMELINE_DATA> - Minified JSON of enriched timeline data
+ */
+export const TIMELINE_SUMMARY_USER_PROMPT = TIMELINE_SUMMARY_USER_PROMPT_RAW.trim();
+
+/**
+ * User prompt template for Stage 1b: Match Summary
+ *
+ * Variables:
+ * - <PLAYER_NAME> - Player alias
+ * - <PLAYER_CHAMPION> - Champion name
+ * - <PLAYER_LANE> - Lane (or "arena" for arena queue)
+ * - <MATCH_DATA> - Minified JSON containing both processedMatch and rawMatch
+ */
+export const MATCH_SUMMARY_USER_PROMPT = MATCH_SUMMARY_USER_PROMPT_RAW.trim();
+
+/**
+ * User prompt template for Stage 2: Review Text
+ *
+ * Variables:
+ * - <REVIEWER NAME> - Personality name
+ * - <PLAYER NAME> - Player being reviewed
+ * - <PLAYER CHAMPION> - Their champion
+ * - <PLAYER LANE> - Their lane
+ * - <OPPONENT CHAMPION> - Enemy laner's champion
+ * - <FRIENDS CONTEXT> - Info about other tracked players in match
+ * - <RANDOM BEHAVIOR> - Random personality-specific behavior
+ * - <MATCH ANALYSIS> - Text output from Stage 1b (match summary)
+ * - <QUEUE CONTEXT> - Queue type and context
+ * - <REVIEWER PERSONALITY> - Personality instructions text (from style card)
+ */
+export const REVIEW_TEXT_USER_PROMPT = REVIEW_TEXT_USER_PROMPT_RAW.trim();
+
+/**
+ * User prompt template for Stage 3: Image Description
+ *
+ * Variables:
+ * - <REVIEW_TEXT> - Output from Stage 2
+ * - <ART_STYLE> - Selected art style description
+ */
+export const IMAGE_DESCRIPTION_USER_PROMPT = IMAGE_DESCRIPTION_USER_PROMPT_RAW.trim();
+
+/**
+ * User prompt template for Stage 4: Image Generation
+ *
+ * Variables:
+ * - <IMAGE_DESCRIPTION> - Output from Stage 3
+ */
+export const IMAGE_GENERATION_USER_PROMPT = IMAGE_GENERATION_USER_PROMPT_RAW.trim();
 
 // ============================================================================
 // Default Model Configurations
@@ -244,7 +317,7 @@ export function createStageConfigs(overrides?: Partial<PipelineStagesConfig>): P
  * Get the system prompt for a stage, using override if provided
  */
 export function getStageSystemPrompt(
-  stage: "timelineSummary" | "matchSummary" | "imageDescription",
+  stage: "timelineSummary" | "matchSummary" | "reviewText" | "imageDescription",
   override?: string,
 ): string {
   if (override) {
@@ -256,7 +329,34 @@ export function getStageSystemPrompt(
       return TIMELINE_SUMMARY_SYSTEM_PROMPT;
     case "matchSummary":
       return MATCH_SUMMARY_SYSTEM_PROMPT;
+    case "reviewText":
+      return REVIEW_TEXT_SYSTEM_PROMPT;
     case "imageDescription":
       return IMAGE_DESCRIPTION_SYSTEM_PROMPT;
+  }
+}
+
+/**
+ * Get the user prompt template for a stage, using override if provided
+ */
+export function getStageUserPrompt(
+  stage: "timelineSummary" | "matchSummary" | "reviewText" | "imageDescription" | "imageGeneration",
+  override?: string,
+): string {
+  if (override) {
+    return override;
+  }
+
+  switch (stage) {
+    case "timelineSummary":
+      return TIMELINE_SUMMARY_USER_PROMPT;
+    case "matchSummary":
+      return MATCH_SUMMARY_USER_PROMPT;
+    case "reviewText":
+      return REVIEW_TEXT_USER_PROMPT;
+    case "imageDescription":
+      return IMAGE_DESCRIPTION_USER_PROMPT;
+    case "imageGeneration":
+      return IMAGE_GENERATION_USER_PROMPT;
   }
 }

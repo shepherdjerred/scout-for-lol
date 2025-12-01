@@ -3,13 +3,7 @@
  */
 import { useState, useSyncExternalStore } from "react";
 import { z } from "zod";
-import type {
-  ReviewConfig,
-  GenerationResult,
-  PipelineIntermediateResults,
-  PipelineTraces,
-  StageTrace,
-} from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import type { ReviewConfig, GenerationResult } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
 import type { CompletedMatch, ArenaMatch, RawMatch, RawTimeline } from "@scout-for-lol/data";
 import type { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import { calculateCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
@@ -31,7 +25,7 @@ import { GenerationConfigDisplay } from "./generation-config-display.tsx";
 import { ResultDisplay } from "./result-display.tsx";
 import { ResultMetadata } from "./result-metadata.tsx";
 import { ResultRating } from "./result-rating.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card.tsx";
+import { PipelineTracesPanel } from "./pipeline-traces-panel.tsx";
 
 const ErrorSchema = z.object({ message: z.string() });
 
@@ -85,105 +79,6 @@ type ActiveGeneration = {
   startTime: number;
   configSnapshot: HistoryEntry["configSnapshot"];
 };
-
-type TraceCardProps = {
-  label: string;
-  trace: StageTrace | undefined;
-  text: string | undefined;
-};
-
-function TraceCard({ label, trace, text }: TraceCardProps) {
-  if (!trace && !text) {
-    return null;
-  }
-
-  return (
-    <Card>
-      <CardHeader className="flex items-start justify-between">
-        <CardTitle>{label}</CardTitle>
-        {trace && (
-          <div className="text-xs text-gray-600">
-            {trace.model.model} · {trace.durationMs}ms
-          </div>
-        )}
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {trace?.request.systemPrompt && (
-          <div>
-            <div className="text-xs font-semibold text-gray-700">System prompt</div>
-            <pre className="mt-1 whitespace-pre-wrap rounded-md bg-gray-50 p-2 text-xs text-gray-800">
-              {trace.request.systemPrompt}
-            </pre>
-          </div>
-        )}
-        {trace?.request.userPrompt && (
-          <div>
-            <div className="text-xs font-semibold text-gray-700">User prompt</div>
-            <pre className="mt-1 whitespace-pre-wrap rounded-md bg-gray-50 p-2 text-xs text-gray-800">
-              {trace.request.userPrompt}
-            </pre>
-          </div>
-        )}
-        {(trace?.response.text ?? text) && (
-          <div>
-            <div className="text-xs font-semibold text-gray-700">Response</div>
-            <pre className="mt-1 whitespace-pre-wrap rounded-md bg-gray-50 p-2 text-xs text-gray-800">
-              {trace?.response.text ?? text}
-            </pre>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-type PipelineTracesPanelProps = {
-  traces: PipelineTraces | undefined;
-  intermediate: PipelineIntermediateResults | undefined;
-};
-
-function PipelineTracesPanel({ traces, intermediate }: PipelineTracesPanelProps) {
-  if (!traces) {
-    return null;
-  }
-
-  return (
-    <div className="space-y-3">
-      <TraceCard
-        label="Stage 1a: Timeline Summary"
-        trace={traces.timelineSummary}
-        text={intermediate?.timelineSummaryText}
-      />
-      <TraceCard label="Stage 1b: Match Summary" trace={traces.matchSummary} text={intermediate?.matchSummaryText} />
-      <TraceCard label="Stage 2: Review Text" trace={traces.reviewText} text={undefined} />
-      <TraceCard
-        label="Stage 3: Image Description"
-        trace={traces.imageDescription}
-        text={intermediate?.imageDescriptionText}
-      />
-      {traces.imageGeneration && (
-        <Card>
-          <CardHeader className="flex items-start justify-between">
-            <CardTitle>Stage 4: Image Generation</CardTitle>
-            <div className="text-xs text-gray-600">
-              {traces.imageGeneration.model} · {traces.imageGeneration.durationMs}ms
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-2 text-xs text-gray-800">
-            <div className="font-semibold text-gray-700">Prompt</div>
-            <pre className="whitespace-pre-wrap rounded-md bg-gray-50 p-2">{traces.imageGeneration.request.prompt}</pre>
-            <div className="text-gray-700">
-              Generated: {traces.imageGeneration.response.imageGenerated ? "yes" : "no"}{" "}
-              {traces.imageGeneration.response.imageSizeBytes
-                ? `(${traces.imageGeneration.response.imageSizeBytes.toString()} bytes)`
-                : ""}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-}
 
 export function ResultsPanel(props: ResultsPanelProps) {
   const { config, match, rawMatch, rawTimeline, result, costTracker, onResultGenerated } = props;

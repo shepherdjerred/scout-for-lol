@@ -93,6 +93,9 @@ async function runTimelineSummary(ctx: Stage1Context): Promise<{ text: string; t
   if (stages.timelineSummary.systemPrompt !== undefined) {
     params.systemPromptOverride = stages.timelineSummary.systemPrompt;
   }
+  if (stages.timelineSummary.userPrompt !== undefined) {
+    params.userPromptOverride = stages.timelineSummary.userPrompt;
+  }
   return await generateTimelineSummary(params);
 }
 
@@ -113,6 +116,9 @@ async function runMatchSummary(ctx: Stage1Context): Promise<{ text: string; trac
   };
   if (stages.matchSummary.systemPrompt !== undefined) {
     params.systemPromptOverride = stages.matchSummary.systemPrompt;
+  }
+  if (stages.matchSummary.userPrompt !== undefined) {
+    params.userPromptOverride = stages.matchSummary.userPrompt;
   }
   return await generateMatchSummary(params);
 }
@@ -153,11 +159,15 @@ async function runStage3ImageDescription(ctx: Stage3And4Context): Promise<string
   try {
     const params: Parameters<typeof generateImageDescription>[0] = {
       reviewText,
+      artStyle: stages.imageGeneration.artStyle.description,
       client: clients.openai,
       model: stages.imageDescription.model,
     };
     if (stages.imageDescription.systemPrompt !== undefined) {
       params.systemPromptOverride = stages.imageDescription.systemPrompt;
+    }
+    if (stages.imageDescription.userPrompt !== undefined) {
+      params.userPromptOverride = stages.imageDescription.userPrompt;
     }
 
     const result = await generateImageDescription(params);
@@ -181,13 +191,17 @@ async function runStage4ImageGeneration(
   }
 
   try {
-    const result = await generateImage({
+    const params: Parameters<typeof generateImage>[0] = {
       imageDescription: imageDescriptionText,
       artStyle: stages.imageGeneration.artStyle,
       geminiClient: clients.gemini,
       model: stages.imageGeneration.model,
       timeoutMs: stages.imageGeneration.timeoutMs,
-    });
+    };
+    if (stages.imageGeneration.userPrompt !== undefined) {
+      params.userPromptOverride = stages.imageGeneration.userPrompt;
+    }
+    const result = await generateImage(params);
     traces.imageGeneration = result.trace;
     return result.imageBase64;
   } catch (error) {
@@ -258,6 +272,12 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
   };
   if (stage1Result.timelineSummaryText !== undefined) {
     reviewTextParams.timelineSummary = stage1Result.timelineSummaryText;
+  }
+  if (stages.reviewText.systemPrompt !== undefined) {
+    reviewTextParams.systemPromptOverride = stages.reviewText.systemPrompt;
+  }
+  if (stages.reviewText.userPrompt !== undefined) {
+    reviewTextParams.userPromptOverride = stages.reviewText.userPrompt;
   }
 
   const reviewResult = await generateReviewTextStage(reviewTextParams);
@@ -337,6 +357,9 @@ export async function runStage1Sequential(params: { input: ReviewPipelineInput }
     if (stages.timelineSummary.systemPrompt !== undefined) {
       timelineParams.systemPromptOverride = stages.timelineSummary.systemPrompt;
     }
+    if (stages.timelineSummary.userPrompt !== undefined) {
+      timelineParams.userPromptOverride = stages.timelineSummary.userPrompt;
+    }
     const result = await generateTimelineSummary(timelineParams);
     timelineSummaryText = result.text;
     timelineSummaryTrace = result.trace;
@@ -356,6 +379,9 @@ export async function runStage1Sequential(params: { input: ReviewPipelineInput }
     };
     if (stages.matchSummary.systemPrompt !== undefined) {
       matchParams.systemPromptOverride = stages.matchSummary.systemPrompt;
+    }
+    if (stages.matchSummary.userPrompt !== undefined) {
+      matchParams.userPromptOverride = stages.matchSummary.userPrompt;
     }
     const result = await generateMatchSummary(matchParams);
     matchSummaryText = result.text;

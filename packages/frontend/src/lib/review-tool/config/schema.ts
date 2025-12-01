@@ -11,9 +11,17 @@ import {
   DEFAULT_IMAGE_DESCRIPTION_MODEL,
   DEFAULT_IMAGE_GENERATION_MODEL,
   DEFAULT_IMAGE_GENERATION_TIMEOUT_MS,
+  // System prompts
   TIMELINE_SUMMARY_SYSTEM_PROMPT,
   MATCH_SUMMARY_SYSTEM_PROMPT,
+  REVIEW_TEXT_SYSTEM_PROMPT,
   IMAGE_DESCRIPTION_SYSTEM_PROMPT,
+  // User prompts
+  TIMELINE_SUMMARY_USER_PROMPT,
+  MATCH_SUMMARY_USER_PROMPT,
+  REVIEW_TEXT_USER_PROMPT,
+  IMAGE_DESCRIPTION_USER_PROMPT,
+  IMAGE_GENERATION_USER_PROMPT,
 } from "@scout-for-lol/data";
 
 /**
@@ -54,6 +62,7 @@ export const StageConfigSchema = z.object({
   enabled: z.boolean(),
   model: ModelConfigSchema,
   systemPrompt: z.string().optional(),
+  userPrompt: z.string().optional(),
 });
 
 export type StageConfig = z.infer<typeof StageConfigSchema>;
@@ -63,6 +72,8 @@ export type StageConfig = z.infer<typeof StageConfigSchema>;
  */
 export const ReviewTextStageConfigSchema = z.object({
   model: ModelConfigSchema,
+  systemPrompt: z.string().optional(),
+  userPrompt: z.string().optional(),
 });
 
 export type ReviewTextStageConfig = z.infer<typeof ReviewTextStageConfigSchema>;
@@ -74,6 +85,7 @@ export const ImageGenerationStageConfigSchema = z.object({
   enabled: z.boolean(),
   model: z.string(),
   timeoutMs: z.number().int().min(10000).max(300000),
+  userPrompt: z.string().optional(),
 });
 
 export type ImageGenerationStageConfig = z.infer<typeof ImageGenerationStageConfigSchema>;
@@ -355,24 +367,30 @@ export function createDefaultPipelineStages(): PipelineStagesConfig {
       enabled: true,
       model: { ...DEFAULT_TIMELINE_SUMMARY_MODEL },
       systemPrompt: TIMELINE_SUMMARY_SYSTEM_PROMPT,
+      userPrompt: TIMELINE_SUMMARY_USER_PROMPT,
     },
     matchSummary: {
       enabled: true,
       model: { ...DEFAULT_MATCH_SUMMARY_MODEL },
       systemPrompt: MATCH_SUMMARY_SYSTEM_PROMPT,
+      userPrompt: MATCH_SUMMARY_USER_PROMPT,
     },
     reviewText: {
       model: { ...DEFAULT_REVIEW_TEXT_MODEL },
+      systemPrompt: REVIEW_TEXT_SYSTEM_PROMPT,
+      userPrompt: REVIEW_TEXT_USER_PROMPT,
     },
     imageDescription: {
       enabled: true,
       model: { ...DEFAULT_IMAGE_DESCRIPTION_MODEL },
       systemPrompt: IMAGE_DESCRIPTION_SYSTEM_PROMPT,
+      userPrompt: IMAGE_DESCRIPTION_USER_PROMPT,
     },
     imageGeneration: {
       enabled: true,
       model: DEFAULT_IMAGE_GENERATION_MODEL,
       timeoutMs: DEFAULT_IMAGE_GENERATION_TIMEOUT_MS,
+      userPrompt: IMAGE_GENERATION_USER_PROMPT,
     },
   };
 }

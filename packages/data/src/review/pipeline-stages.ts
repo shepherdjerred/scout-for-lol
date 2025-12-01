@@ -11,7 +11,7 @@ import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema
 import type { OpenAIClient, ModelConfig, StageTrace, ImageGenerationTrace } from "./pipeline-types.ts";
 import type { Personality } from "./prompts.ts";
 import type { ArtStyle } from "@scout-for-lol/data/review/art-categories.ts";
-import { getStageSystemPrompt } from "./pipeline-defaults.ts";
+import { getStageSystemPrompt, getStageUserPrompt } from "./pipeline-defaults.ts";
 import { generateImagePrompt } from "./image-prompt.ts";
 import { replaceTemplateVariables } from "./prompts.ts";
 import { buildPromptVariables, extractMatchData } from "./generator-helpers.ts";
@@ -19,13 +19,7 @@ import { enrichTimelineData } from "./timeline-enricher.ts";
 import type { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 
-// Import user prompts from TXT files
-import TIMELINE_SUMMARY_USER_PROMPT_TEMPLATE from "./prompts/user/1b-timeline-summary.txt";
-import MATCH_SUMMARY_USER_PROMPT_TEMPLATE from "./prompts/user/1a-match-summary.txt";
-import IMAGE_DESCRIPTION_USER_PROMPT_TEMPLATE from "./prompts/user/3-image-description.txt";
-
-// Import system prompt templates
-import REVIEW_TEXT_SYSTEM_PROMPT_TEMPLATE from "./prompts/system/2-review-text.txt";
+// Note: User prompts are now loaded via getStageUserPrompt() from pipeline-defaults.ts
 
 // ============================================================================
 // Utility Functions
@@ -136,8 +130,9 @@ export async function generateTimelineSummary(params: {
   client: OpenAIClient;
   model: ModelConfig;
   systemPromptOverride?: string;
+  userPromptOverride?: string;
 }): Promise<{ text: string; trace: StageTrace }> {
-  const { rawTimeline, rawMatch, laneContext, client, model, systemPromptOverride } = params;
+  const { rawTimeline, rawMatch, laneContext, client, model, systemPromptOverride, userPromptOverride } = params;
 
   // Enrich timeline with participant lookup table for human-readable names
   const enrichedData = enrichTimelineData(rawTimeline, rawMatch);
@@ -146,7 +141,8 @@ export async function generateTimelineSummary(params: {
   const systemPrompt = replacePromptVariables(systemPromptTemplate, {
     LANE_CONTEXT: laneContext,
   });
-  const userPrompt = replacePromptVariables(TIMELINE_SUMMARY_USER_PROMPT_TEMPLATE, {
+  const userPromptTemplate = getStageUserPrompt("timelineSummary", userPromptOverride);
+  const userPrompt = replacePromptVariables(userPromptTemplate, {
     TIMELINE_DATA: minifyJson(enrichedData),
   });
 
@@ -176,8 +172,9 @@ export async function generateMatchSummary(params: {
   client: OpenAIClient;
   model: ModelConfig;
   systemPromptOverride?: string;
+  userPromptOverride?: string;
 }): Promise<{ text: string; trace: StageTrace }> {
-  const { match, rawMatch, playerIndex, client, model, systemPromptOverride } = params;
+  const { match, rawMatch, playerIndex, client, model, systemPromptOverride, userPromptOverride } = params;
 
   const player = match.players[playerIndex] ?? match.players[0];
   if (!player) {
@@ -195,7 +192,8 @@ export async function generateMatchSummary(params: {
 
   const systemPrompt = getStageSystemPrompt("matchSummary", systemPromptOverride);
 
-  const userPrompt = replacePromptVariables(MATCH_SUMMARY_USER_PROMPT_TEMPLATE, {
+  const userPromptTemplate = getStageUserPrompt("matchSummary", userPromptOverride);
+  const userPrompt = replacePromptVariables(userPromptTemplate, {
     PLAYER_NAME: playerName,
     PLAYER_CHAMPION: playerChampion,
     PLAYER_LANE: lane,
@@ -248,6 +246,8 @@ export async function generateReviewTextStage(params: {
   timelineSummary?: string;
   client: OpenAIClient;
   model: ModelConfig;
+  systemPromptOverride?: string;
+  userPromptOverride?: string;
 }): Promise<{ text: string; reviewerName: string; playerName: string; trace: StageTrace }> {
   const {
     match,
@@ -259,6 +259,8 @@ export async function generateReviewTextStage(params: {
     timelineSummary,
     client,
     model,
+    systemPromptOverride,
+    userPromptOverride,
   } = params;
 
   const { matchData } = extractMatchData(match, playerIndex);
@@ -274,8 +276,11 @@ export async function generateReviewTextStage(params: {
     ...(timelineSummary !== undefined && { timelineSummary }),
   });
 
-  const userPrompt = replaceTemplateVariables(basePromptTemplate, promptVariables);
-  const systemPrompt = replacePromptVariables(REVIEW_TEXT_SYSTEM_PROMPT_TEMPLATE, {
+  // Use override or base template
+  const userPromptTemplate = userPromptOverride ?? basePromptTemplate;
+  const userPrompt = replaceTemplateVariables(userPromptTemplate, promptVariables);
+  const systemPromptTemplate = getStageSystemPrompt("reviewText", systemPromptOverride);
+  const systemPrompt = replacePromptVariables(systemPromptTemplate, {
     PERSONALITY_INSTRUCTIONS: personality.instructions,
     STYLE_CARD: minifyJsonString(personality.styleCard),
     LANE_CONTEXT: laneContext,
@@ -308,15 +313,19 @@ export async function generateReviewTextStage(params: {
  */
 export async function generateImageDescription(params: {
   reviewText: string;
+  artStyle: string;
   client: OpenAIClient;
   model: ModelConfig;
   systemPromptOverride?: string;
+  userPromptOverride?: string;
 }): Promise<{ text: string; trace: StageTrace }> {
-  const { reviewText, client, model, systemPromptOverride } = params;
+  const { reviewText, artStyle, client, model, systemPromptOverride, userPromptOverride } = params;
 
   const systemPrompt = getStageSystemPrompt("imageDescription", systemPromptOverride);
-  const userPrompt = replacePromptVariables(IMAGE_DESCRIPTION_USER_PROMPT_TEMPLATE, {
+  const userPromptTemplate = getStageUserPrompt("imageDescription", userPromptOverride);
+  const userPrompt = replacePromptVariables(userPromptTemplate, {
     REVIEW_TEXT: reviewText,
+    ART_STYLE: artStyle,
   });
 
   return callOpenAI({
@@ -364,11 +373,21 @@ export async function generateImage(params: {
   geminiClient: GoogleGenerativeAI;
   model: string;
   timeoutMs: number;
+  userPromptOverride?: string;
 }): Promise<{ imageBase64: string; trace: ImageGenerationTrace }> {
-  const { imageDescription, artStyle, geminiClient, model, timeoutMs } = params;
+  const { imageDescription, artStyle, geminiClient, model, timeoutMs, userPromptOverride } = params;
 
   const geminiModel = geminiClient.getGenerativeModel({ model });
-  const prompt = generateImagePrompt(imageDescription, artStyle);
+  // Use custom prompt or generate default
+  let prompt: string;
+  if (userPromptOverride) {
+    // Replace variables in custom prompt
+    prompt = userPromptOverride
+      .replaceAll("<IMAGE_DESCRIPTION>", imageDescription)
+      .replaceAll("<ART_STYLE>", artStyle.description);
+  } else {
+    prompt = generateImagePrompt(imageDescription, artStyle);
+  }
 
   const startTime = Date.now();
 
