@@ -46,18 +46,20 @@ export const IMAGE_DESCRIPTION_SYSTEM_PROMPT = IMAGE_DESCRIPTION_SYSTEM_PROMPT_R
 
 /**
  * Default model config for timeline summary (Stage 1a)
+ * Uses gpt-5.1 for 400k context window to handle full timeline data
  */
 export const DEFAULT_TIMELINE_SUMMARY_MODEL: ModelConfig = {
-  model: "gpt-4o-mini",
+  model: "gpt-5.1",
   maxTokens: 6000,
   temperature: 0.3,
 };
 
 /**
  * Default model config for match summary (Stage 1b)
+ * Uses gpt-5.1 for 400k context window to handle full match data
  */
 export const DEFAULT_MATCH_SUMMARY_MODEL: ModelConfig = {
-  model: "gpt-4o-mini",
+  model: "gpt-5.1",
   maxTokens: 6000,
   temperature: 0.4,
 };
