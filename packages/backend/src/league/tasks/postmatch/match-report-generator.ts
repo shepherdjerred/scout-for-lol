@@ -133,20 +133,26 @@ async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region): Promi
 /** Format a natural language message about who finished the game */
 function formatGameCompletionMessage(playerAliases: string[], queueType: QueueType): string {
   const queueName = queueTypeToDisplayString(queueType);
-  if (playerAliases.length === 0) {
+  const validAliases = z.array(z.string().min(1)).parse(playerAliases.filter((alias) => alias.trim().length > 0));
+
+  if (validAliases.length === 0) {
     return `Game finished: ${queueName}`;
   }
-  const first = playerAliases[0];
-  const second = playerAliases[1];
-  if (first !== undefined && playerAliases.length === 1) {
-    return `${first} finished a ${queueName} game`;
+
+  if (validAliases.length === 1) {
+    const soloAlias = z.string().parse(validAliases[0]);
+    return `${soloAlias} finished a ${queueName} game`;
   }
-  if (first !== undefined && second !== undefined && playerAliases.length === 2) {
-    return `${first} and ${second} finished a ${queueName} game`;
+
+  if (validAliases.length === 2) {
+    const firstAlias = z.string().parse(validAliases[0]);
+    const secondAlias = z.string().parse(validAliases[1]);
+    return `${firstAlias} and ${secondAlias} finished a ${queueName} game`;
   }
-  const allButLast = playerAliases.slice(0, -1).join(", ");
-  const last = playerAliases.at(-1) ?? "";
-  return `${allButLast}, and ${last} finished a ${queueName} game`;
+
+  const allButLast = validAliases.slice(0, -1).join(", ");
+  const lastAlias = z.string().parse(validAliases[validAliases.length - 1]);
+  return `${allButLast}, and ${lastAlias} finished a ${queueName} game`;
 }
 
 /** Create image attachments for Discord message */
@@ -154,12 +160,8 @@ async function createMatchImage(
   matchToRender: CompletedMatch | ArenaMatch,
   matchId: MatchId,
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
-  let svgData: string;
-  if (matchToRender.queueType === "arena") {
-    svgData = await arenaMatchToSvg(matchToRender);
-  } else {
-    svgData = await matchToSvg(matchToRender);
-  }
+  const svgData =
+    matchToRender.queueType === "arena" ? await arenaMatchToSvg(matchToRender) : await matchToSvg(matchToRender);
   const svg = z.string().parse(svgData);
   const image = z.instanceof(Uint8Array).parse(await svgToPng(svg));
 

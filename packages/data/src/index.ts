@@ -93,6 +93,7 @@ export * from "./data-dragon/summoner.ts";
 export * from "./data-dragon/item.ts";
 export * from "./data-dragon/runes.ts";
 export { getChampionInfo } from "./data-dragon/champion.ts";
+export { arenaAugmentCache, getCachedArenaAugmentById } from "./data-dragon/arena-augments.ts";
 export {
   // URL getters (synchronous, for browser/frontend use)
   getChampionImageUrl,
