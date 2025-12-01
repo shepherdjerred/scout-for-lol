@@ -1,6 +1,8 @@
 import { match as matchPattern } from "ts-pattern";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
 import { selectRandomBehavior, type Personality } from "@scout-for-lol/data/review/prompts.ts";
+import { wasPromoted, wasDemoted, rankToSimpleString, tierToPercentileString } from "@scout-for-lol/data/model/rank.ts";
+import { lpDiffToString, rankToLeaguePoints } from "@scout-for-lol/data/model/league-points.ts";
 
 /**
  * Extract match data from a match object
@@ -235,6 +237,59 @@ function buildQueueContext(queueType: string | undefined): string {
   }
 }
 
+/**
+ * Build rank context describing promotions/demotions for tracked players
+ * @param match - The completed match data
+ * @returns A formatted string describing rank changes, or empty string if none
+ */
+function buildRankContext(match: CompletedMatch | ArenaMatch): string {
+  // Arena matches don't have rank changes
+  if (match.queueType === "arena") {
+    return "";
+  }
+
+  const rankInfo: string[] = [];
+
+  for (const player of match.players) {
+    const rankBefore = player.rankBeforeMatch;
+    const rankAfter = player.rankAfterMatch;
+    const playerName = player.playerConfig.alias;
+
+    if (!rankAfter) {
+      continue;
+    }
+
+    // Add current rank with percentile context
+    const rankStr = rankToSimpleString(rankAfter);
+    const percentileStr = tierToPercentileString(rankAfter.tier);
+    const rankLine = `${playerName} is currently ${rankStr} (${percentileStr} of players).`;
+
+    if (wasPromoted(rankBefore, rankAfter)) {
+      rankInfo.push(`${rankLine} They were PROMOTED after this game!`);
+    } else if (wasDemoted(rankBefore, rankAfter)) {
+      rankInfo.push(`${rankLine} They were DEMOTED after this game.`);
+    } else if (rankBefore) {
+      // Show LP change for non-promotion/demotion games
+      const lpDelta = rankToLeaguePoints(rankAfter) - rankToLeaguePoints(rankBefore);
+      if (lpDelta !== 0) {
+        const lpStr = lpDiffToString(lpDelta);
+        const changeStr = lpDelta > 0 ? `gained ${lpStr.replace(/[+-]/, "")}` : `lost ${lpStr.replace(/[+-]/, "")}`;
+        rankInfo.push(`${rankLine} They ${changeStr}.`);
+      } else {
+        rankInfo.push(rankLine);
+      }
+    } else {
+      rankInfo.push(rankLine);
+    }
+  }
+
+  if (rankInfo.length === 0) {
+    return "";
+  }
+
+  return rankInfo.join(" ");
+}
+
 export function buildPromptVariables(params: {
   matchData: Record<string, string>;
   personality: Personality;
@@ -257,6 +312,7 @@ export function buildPromptVariables(params: {
   matchAnalysis: string;
   timelineSummary: string;
   queueContext: string;
+  rankContext: string;
 } {
   const { matchData, personality, laneContext, match, playerIndex = 0, matchAnalysis, timelineSummary } = params;
   const playerName = matchData["playerName"];
@@ -290,6 +346,7 @@ export function buildPromptVariables(params: {
       : "No timeline summary available for this match.";
 
   const queueContext = buildQueueContext(match.queueType);
+  const rankContext = buildRankContext(match);
 
   return {
     reviewerName,
@@ -305,5 +362,6 @@ export function buildPromptVariables(params: {
     matchAnalysis: matchAnalysisText,
     timelineSummary: timelineSummaryText,
     queueContext,
+    rankContext,
   };
 }
