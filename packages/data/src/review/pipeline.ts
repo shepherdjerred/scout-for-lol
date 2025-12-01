@@ -64,6 +64,7 @@ type Stage3And4Context = {
   clients: PipelineClientsInput;
   traces: Partial<PipelineTraces>;
   intermediate: PipelineIntermediateResults;
+  imagePrompts?: string[] | undefined;
 };
 
 type Stage3And4Result = {
@@ -144,7 +145,7 @@ async function runStage1Parallel(ctx: Stage1Context): Promise<Stage1Result> {
 // ============================================================================
 
 async function runStage3ImageDescription(ctx: Stage3And4Context): Promise<string | undefined> {
-  const { reviewText, stages, clients, traces, intermediate } = ctx;
+  const { reviewText, stages, clients, traces, intermediate, imagePrompts } = ctx;
 
   if (!stages.imageDescription.enabled) {
     return undefined;
@@ -159,10 +160,16 @@ async function runStage3ImageDescription(ctx: Stage3And4Context): Promise<string
     if (stages.imageDescription.systemPrompt !== undefined) {
       params.systemPromptOverride = stages.imageDescription.systemPrompt;
     }
+    if (imagePrompts !== undefined && imagePrompts.length > 0) {
+      params.imagePrompts = imagePrompts;
+    }
 
     const result = await generateImageDescription(params);
     traces.imageDescription = result.trace;
     intermediate.imageDescriptionText = result.text;
+    if (result.selectedImagePrompts.length > 0) {
+      intermediate.selectedImagePrompts = result.selectedImagePrompts;
+    }
     return result.text;
   } catch (error) {
     console.error("[Pipeline Stage 3] Image description failed:", error);
@@ -281,6 +288,7 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
     clients,
     traces,
     intermediate,
+    imagePrompts: prompts.personality.metadata.image,
   };
   const imageResult = await runStage3And4(stage3And4Ctx);
 
