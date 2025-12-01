@@ -84,17 +84,15 @@ async function runTimelineSummary(ctx: Stage1Context): Promise<{ text: string; t
     return undefined;
   }
 
-  const params: Parameters<typeof generateTimelineSummary>[0] = {
+  return await generateTimelineSummary({
     rawTimeline: match.rawTimeline,
     rawMatch: match.raw,
     laneContext: prompts.laneContext,
     client: clients.openai,
     model: stages.timelineSummary.model,
-  };
-  if (stages.timelineSummary.systemPrompt !== undefined) {
-    params.systemPromptOverride = stages.timelineSummary.systemPrompt;
-  }
-  return await generateTimelineSummary(params);
+    systemPrompt: stages.timelineSummary.systemPrompt,
+    userPrompt: stages.timelineSummary.userPrompt,
+  });
 }
 
 async function runMatchSummary(ctx: Stage1Context): Promise<{ text: string; trace: StageTrace } | undefined> {
@@ -105,17 +103,15 @@ async function runMatchSummary(ctx: Stage1Context): Promise<{ text: string; trac
     return undefined;
   }
 
-  const params: Parameters<typeof generateMatchSummary>[0] = {
+  return await generateMatchSummary({
     match: match.processed,
     rawMatch: match.raw,
     playerIndex: player.index,
     client: clients.openai,
     model: stages.matchSummary.model,
-  };
-  if (stages.matchSummary.systemPrompt !== undefined) {
-    params.systemPromptOverride = stages.matchSummary.systemPrompt;
-  }
-  return await generateMatchSummary(params);
+    systemPrompt: stages.matchSummary.systemPrompt,
+    userPrompt: stages.matchSummary.userPrompt,
+  });
 }
 
 async function runStage1Parallel(ctx: Stage1Context): Promise<Stage1Result> {
@@ -152,19 +148,15 @@ async function runStage3ImageDescription(ctx: Stage3And4Context): Promise<string
   }
 
   try {
-    const params: Parameters<typeof generateImageDescription>[0] = {
+    const result = await generateImageDescription({
       reviewText,
+      artStyle: stages.imageGeneration.artStyle.description,
       client: clients.openai,
       model: stages.imageDescription.model,
-    };
-    if (stages.imageDescription.systemPrompt !== undefined) {
-      params.systemPromptOverride = stages.imageDescription.systemPrompt;
-    }
-    if (imagePrompts !== undefined && imagePrompts.length > 0) {
-      params.imagePrompts = imagePrompts;
-    }
-
-    const result = await generateImageDescription(params);
+      systemPrompt: stages.imageDescription.systemPrompt,
+      userPrompt: stages.imageDescription.userPrompt,
+      imagePrompts,
+    });
     traces.imageDescription = result.trace;
     intermediate.imageDescriptionText = result.text;
     if (result.selectedImagePrompts.length > 0) {
@@ -194,6 +186,7 @@ async function runStage4ImageGeneration(
       geminiClient: clients.gemini,
       model: stages.imageGeneration.model,
       timeoutMs: stages.imageGeneration.timeoutMs,
+      userPrompt: stages.imageGeneration.userPrompt,
     });
     traces.imageGeneration = result.trace;
     return result.imageBase64;
@@ -256,12 +249,13 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
   const reviewTextParams: Parameters<typeof generateReviewTextStage>[0] = {
     match: match.processed,
     personality: prompts.personality,
-    basePromptTemplate: prompts.baseTemplate,
     laneContext: prompts.laneContext,
     playerIndex: player.index,
     matchSummary: effectiveMatchSummary,
     client: clients.openai,
     model: stages.reviewText.model,
+    systemPrompt: stages.reviewText.systemPrompt,
+    userPrompt: stages.reviewText.userPrompt,
   };
   if (stage1Result.timelineSummaryText !== undefined) {
     reviewTextParams.timelineSummary = stage1Result.timelineSummaryText;
@@ -335,17 +329,15 @@ export async function runStage1Sequential(params: { input: ReviewPipelineInput }
 
   // Stage 1a: Timeline Summary
   if (stages.timelineSummary.enabled) {
-    const timelineParams: Parameters<typeof generateTimelineSummary>[0] = {
+    const result = await generateTimelineSummary({
       rawTimeline: match.rawTimeline,
       rawMatch: match.raw,
       laneContext: prompts.laneContext,
       client: clients.openai,
       model: stages.timelineSummary.model,
-    };
-    if (stages.timelineSummary.systemPrompt !== undefined) {
-      timelineParams.systemPromptOverride = stages.timelineSummary.systemPrompt;
-    }
-    const result = await generateTimelineSummary(timelineParams);
+      systemPrompt: stages.timelineSummary.systemPrompt,
+      userPrompt: stages.timelineSummary.userPrompt,
+    });
     timelineSummaryText = result.text;
     timelineSummaryTrace = result.trace;
   }
@@ -355,17 +347,15 @@ export async function runStage1Sequential(params: { input: ReviewPipelineInput }
 
   // Stage 1b: Match Summary
   if (stages.matchSummary.enabled) {
-    const matchParams: Parameters<typeof generateMatchSummary>[0] = {
+    const result = await generateMatchSummary({
       match: match.processed,
       rawMatch: match.raw,
       playerIndex: player.index,
       client: clients.openai,
       model: stages.matchSummary.model,
-    };
-    if (stages.matchSummary.systemPrompt !== undefined) {
-      matchParams.systemPromptOverride = stages.matchSummary.systemPrompt;
-    }
-    const result = await generateMatchSummary(matchParams);
+      systemPrompt: stages.matchSummary.systemPrompt,
+      userPrompt: stages.matchSummary.userPrompt,
+    });
     matchSummaryText = result.text;
     matchSummaryTrace = result.trace;
   }

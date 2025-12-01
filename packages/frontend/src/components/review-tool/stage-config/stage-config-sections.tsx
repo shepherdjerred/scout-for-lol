@@ -20,6 +20,7 @@ export function StageConfigSections({ stages, onChange }: StageConfigSectionsPro
               type="toggleable"
               title="Timeline Summary"
               description="Summarize curated timeline JSON to text"
+              stageName="timelineSummary"
               config={stages.timelineSummary}
               onChange={(next) => {
                 onChange({ ...stages, timelineSummary: next });
@@ -35,6 +36,7 @@ export function StageConfigSections({ stages, onChange }: StageConfigSectionsPro
               type="toggleable"
               title="Match Summary"
               description="Summarize match JSON to text for the selected player"
+              stageName="matchSummary"
               config={stages.matchSummary}
               onChange={(next) => {
                 onChange({ ...stages, matchSummary: next });
@@ -50,6 +52,7 @@ export function StageConfigSections({ stages, onChange }: StageConfigSectionsPro
               type="review-text"
               title="Review Text"
               description="Generate the final review in the personality voice"
+              stageName="reviewText"
               config={stages.reviewText}
               onChange={(next) => {
                 onChange({ ...stages, reviewText: next });
@@ -65,6 +68,7 @@ export function StageConfigSections({ stages, onChange }: StageConfigSectionsPro
               type="toggleable"
               title="Image Description"
               description="Turn review text into an art direction prompt"
+              stageName="imageDescription"
               config={stages.imageDescription}
               onChange={(next) => {
                 onChange({ ...stages, imageDescription: next });

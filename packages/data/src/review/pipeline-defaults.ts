@@ -4,13 +4,27 @@
  * This module contains all the default values that can be overridden by callers.
  */
 
-import type { PipelineStagesConfig, ModelConfig, StageConfig, ImageGenerationStageConfig } from "./pipeline-types.ts";
+import type {
+  PipelineStagesConfig,
+  ModelConfig,
+  StageConfig,
+  ImageGenerationStageConfig,
+  ReviewTextStageConfig,
+} from "./pipeline-types.ts";
 import { selectRandomStyle } from "@scout-for-lol/data/review/art-styles.ts";
 
 // Import system prompts from TXT files
 import TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1b-timeline-summary.txt";
 import MATCH_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1a-match-summary.txt";
+import REVIEW_TEXT_SYSTEM_PROMPT_RAW from "./prompts/system/2-review-text.txt";
 import IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW from "./prompts/system/3-image-description.txt";
+
+// Import user prompts from TXT files
+import TIMELINE_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1b-timeline-summary.txt";
+import MATCH_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1a-match-summary.txt";
+import REVIEW_TEXT_USER_PROMPT_RAW from "./prompts/user/2-review-text.txt";
+import IMAGE_DESCRIPTION_USER_PROMPT_RAW from "./prompts/user/3-image-description.txt";
+import IMAGE_GENERATION_USER_PROMPT_RAW from "./prompts/user/4-image-generation.txt";
 
 // ============================================================================
 // System Prompts
@@ -34,11 +48,30 @@ export const TIMELINE_SUMMARY_SYSTEM_PROMPT = TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW
 export const MATCH_SUMMARY_SYSTEM_PROMPT = MATCH_SUMMARY_SYSTEM_PROMPT_RAW.trim();
 
 /**
+ * System prompt for Stage 2: Review Text
+ *
+ * Uses the personality instructions, style card, and lane context
+ * to guide the review generation.
+ */
+export const REVIEW_TEXT_SYSTEM_PROMPT = REVIEW_TEXT_SYSTEM_PROMPT_RAW.trim();
+
+/**
  * System prompt for Stage 3: Image Description
  *
  * Turns a review into a vivid image concept for Gemini to generate.
  */
 export const IMAGE_DESCRIPTION_SYSTEM_PROMPT = IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW.trim();
+
+// ============================================================================
+// User Prompts (Templates with variables)
+// See prompt-variables.ts for variable documentation
+// ============================================================================
+
+export const TIMELINE_SUMMARY_USER_PROMPT = TIMELINE_SUMMARY_USER_PROMPT_RAW.trim();
+export const MATCH_SUMMARY_USER_PROMPT = MATCH_SUMMARY_USER_PROMPT_RAW.trim();
+export const REVIEW_TEXT_USER_PROMPT = REVIEW_TEXT_USER_PROMPT_RAW.trim();
+export const IMAGE_DESCRIPTION_USER_PROMPT = IMAGE_DESCRIPTION_USER_PROMPT_RAW.trim();
+export const IMAGE_GENERATION_USER_PROMPT = IMAGE_GENERATION_USER_PROMPT_RAW.trim();
 
 // ============================================================================
 // Default Model Configurations
@@ -113,6 +146,7 @@ const DEFAULT_TIMELINE_SUMMARY_STAGE: StageConfig = {
   enabled: true,
   model: DEFAULT_TIMELINE_SUMMARY_MODEL,
   systemPrompt: TIMELINE_SUMMARY_SYSTEM_PROMPT,
+  userPrompt: TIMELINE_SUMMARY_USER_PROMPT,
 };
 
 /**
@@ -122,6 +156,7 @@ const DEFAULT_MATCH_SUMMARY_STAGE: StageConfig = {
   enabled: true,
   model: DEFAULT_MATCH_SUMMARY_MODEL,
   systemPrompt: MATCH_SUMMARY_SYSTEM_PROMPT,
+  userPrompt: MATCH_SUMMARY_USER_PROMPT,
 };
 
 /**
@@ -131,6 +166,16 @@ const DEFAULT_IMAGE_DESCRIPTION_STAGE: StageConfig = {
   enabled: true,
   model: DEFAULT_IMAGE_DESCRIPTION_MODEL,
   systemPrompt: IMAGE_DESCRIPTION_SYSTEM_PROMPT,
+  userPrompt: IMAGE_DESCRIPTION_USER_PROMPT,
+};
+
+/**
+ * Default configuration for review text stage
+ */
+const DEFAULT_REVIEW_TEXT_STAGE: ReviewTextStageConfig = {
+  model: DEFAULT_REVIEW_TEXT_MODEL,
+  systemPrompt: REVIEW_TEXT_SYSTEM_PROMPT,
+  userPrompt: REVIEW_TEXT_USER_PROMPT,
 };
 
 /**
@@ -143,6 +188,7 @@ function createDefaultImageGenerationStage(): ImageGenerationStageConfig {
     model: DEFAULT_IMAGE_GENERATION_MODEL,
     timeoutMs: DEFAULT_IMAGE_GENERATION_TIMEOUT_MS,
     artStyle: selectRandomStyle(),
+    userPrompt: IMAGE_GENERATION_USER_PROMPT,
   };
 }
 
@@ -156,9 +202,7 @@ export function getDefaultStageConfigs(): PipelineStagesConfig {
   return {
     timelineSummary: DEFAULT_TIMELINE_SUMMARY_STAGE,
     matchSummary: DEFAULT_MATCH_SUMMARY_STAGE,
-    reviewText: {
-      model: DEFAULT_REVIEW_TEXT_MODEL,
-    },
+    reviewText: DEFAULT_REVIEW_TEXT_STAGE,
     imageDescription: DEFAULT_IMAGE_DESCRIPTION_STAGE,
     imageGeneration: createDefaultImageGenerationStage(),
   };
@@ -170,9 +214,7 @@ export function getDefaultStageConfigs(): PipelineStagesConfig {
 export const DEFAULT_STAGE_CONFIGS: PipelineStagesConfig = {
   timelineSummary: DEFAULT_TIMELINE_SUMMARY_STAGE,
   matchSummary: DEFAULT_MATCH_SUMMARY_STAGE,
-  reviewText: {
-    model: DEFAULT_REVIEW_TEXT_MODEL,
-  },
+  reviewText: DEFAULT_REVIEW_TEXT_STAGE,
   imageDescription: DEFAULT_IMAGE_DESCRIPTION_STAGE,
   imageGeneration: createDefaultImageGenerationStage(),
 };
@@ -194,9 +236,7 @@ export function createStageConfigs(overrides?: Partial<PipelineStagesConfig>): P
     return {
       timelineSummary: DEFAULT_TIMELINE_SUMMARY_STAGE,
       matchSummary: DEFAULT_MATCH_SUMMARY_STAGE,
-      reviewText: {
-        model: DEFAULT_REVIEW_TEXT_MODEL,
-      },
+      reviewText: DEFAULT_REVIEW_TEXT_STAGE,
       imageDescription: DEFAULT_IMAGE_DESCRIPTION_STAGE,
       imageGeneration: defaultImageGeneration,
     };
@@ -220,6 +260,8 @@ export function createStageConfigs(overrides?: Partial<PipelineStagesConfig>): P
       },
     },
     reviewText: {
+      ...DEFAULT_REVIEW_TEXT_STAGE,
+      ...overrides.reviewText,
       model: {
         ...DEFAULT_REVIEW_TEXT_MODEL,
         ...overrides.reviewText?.model,
@@ -238,25 +280,4 @@ export function createStageConfigs(overrides?: Partial<PipelineStagesConfig>): P
       ...overrides.imageGeneration,
     },
   };
-}
-
-/**
- * Get the system prompt for a stage, using override if provided
- */
-export function getStageSystemPrompt(
-  stage: "timelineSummary" | "matchSummary" | "imageDescription",
-  override?: string,
-): string {
-  if (override) {
-    return override;
-  }
-
-  switch (stage) {
-    case "timelineSummary":
-      return TIMELINE_SUMMARY_SYSTEM_PROMPT;
-    case "matchSummary":
-      return MATCH_SUMMARY_SYSTEM_PROMPT;
-    case "imageDescription":
-      return IMAGE_DESCRIPTION_SYSTEM_PROMPT;
-  }
 }
