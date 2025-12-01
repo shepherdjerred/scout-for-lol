@@ -24,7 +24,6 @@ export type RandomBehavior = z.infer<typeof RandomBehaviorSchema>;
  */
 export const PersonalityMetadataSchema = z.strictObject({
   name: z.string(),
-  description: z.string(),
   randomBehaviors: z.array(RandomBehaviorSchema).optional(),
   image: z.array(z.string()).optional(),
 });

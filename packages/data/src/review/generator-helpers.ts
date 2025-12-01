@@ -265,7 +265,7 @@ export function buildPromptVariables(params: {
   }
 
   const reviewerName = personality.metadata.name;
-  const reviewerPersonality = personality.metadata.description;
+  const reviewerPersonality = personality.styleCard;
 
   const playerChampion = matchData["champion"] ?? "unknown champion";
   const playerLane = matchData["lane"] ?? "unknown lane";
