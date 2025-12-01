@@ -37,7 +37,6 @@ import { saveMatchRankHistory, getLatestRankBefore } from "@scout-for-lol/backen
 
 const logger = createLogger("postmatch-match-report-generator");
 
-/** Helper to capture exceptions with source and match context */
 function captureError(error: unknown, source: string, matchId?: string, extra?: Record<string, string>): void {
   Sentry.captureException(error, { tags: { source, ...(matchId && { matchId }), ...extra } });
 }
@@ -131,107 +130,41 @@ async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region): Promi
   }
 }
 
-/**
- * Format a natural language message about who finished the game
- */
+/** Format a natural language message about who finished the game */
 function formatGameCompletionMessage(playerAliases: string[], queueType: QueueType): string {
   const queueName = queueTypeToDisplayString(queueType);
-
-  if (playerAliases.length === 1) {
-    const player = playerAliases[0];
-    if (player === undefined) {
-      return `Game finished: ${queueName}`;
-    }
-    return `${player} finished a ${queueName} game`;
-  } else if (playerAliases.length === 2) {
-    const player1 = playerAliases[0];
-    const player2 = playerAliases[1];
-    if (player1 === undefined || player2 === undefined) {
-      return `Game finished: ${queueName}`;
-    }
-    return `${player1} and ${player2} finished a ${queueName} game`;
-  } else if (playerAliases.length >= 3) {
-    const allButLast = playerAliases.slice(0, -1).join(", ");
-    const last = playerAliases[playerAliases.length - 1];
-    if (last === undefined) {
-      return `Game finished: ${queueName}`;
-    }
-    return `${allButLast}, and ${last} finished a ${queueName} game`;
-  }
-
-  // Fallback (shouldn't happen)
-  return `Game finished: ${queueName}`;
+  const validAliases = playerAliases.filter((a): a is string => a !== undefined);
+  if (validAliases.length === 0) return `Game finished: ${queueName}`;
+  if (validAliases.length === 1) return `${validAliases[0]} finished a ${queueName} game`;
+  if (validAliases.length === 2) return `${validAliases[0]} and ${validAliases[1]} finished a ${queueName} game`;
+  const allButLast = validAliases.slice(0, -1).join(", ");
+  return `${allButLast}, and ${validAliases.at(-1)} finished a ${queueName} game`;
 }
 
-/**
- * Create image attachments for Discord message
- */
+/** Create image attachments for Discord message */
 async function createMatchImage(
-  match: CompletedMatch | ArenaMatch,
+  matchToRender: CompletedMatch | ArenaMatch,
   matchId: MatchId,
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
-  let svg: string;
-  try {
-    let svgData: string;
-    if (match.queueType === "arena") {
-      const arenaMatch: ArenaMatch = match;
-      svgData = await arenaMatchToSvg(arenaMatch);
-    } else {
-      const completedMatch: CompletedMatch = match;
-      svgData = await matchToSvg(completedMatch);
-    }
-    const SvgSchema = z.string();
-    svg = SvgSchema.parse(svgData);
-  } catch (error) {
-    if (error instanceof Error) {
-      logger.error(`[createMatchImage] Failed to generate SVG:`, error);
-      throw error;
-    }
-    const wrappedError = new Error(String(error));
-    logger.error(`[createMatchImage] Failed to generate SVG:`, wrappedError);
-    throw wrappedError;
-  }
+  const svgData =
+    matchToRender.queueType === "arena"
+      ? await arenaMatchToSvg(matchToRender)
+      : await matchToSvg(matchToRender as CompletedMatch);
+  const svg = z.string().parse(svgData);
+  const image = z.instanceof(Uint8Array).parse(await svgToPng(svg));
 
-  let image: Uint8Array;
-  try {
-    const imageData = await svgToPng(svg);
-    const ImageSchema = z.instanceof(Uint8Array);
-    image = ImageSchema.parse(imageData);
-  } catch (error) {
-    if (error instanceof Error) {
-      logger.error(`[createMatchImage] Failed to convert SVG to PNG:`, error);
-      throw error;
-    }
-    const wrappedError = new Error(String(error));
-    logger.error(`[createMatchImage] Failed to convert SVG to PNG:`, wrappedError);
-    throw wrappedError;
-  }
+  // Save both PNG and SVG to S3 (fire and forget)
+  const queueTypeForStorage = matchToRender.queueType === "arena" ? "arena" : (matchToRender.queueType ?? "unknown");
+  const trackedPlayerAliases = matchToRender.players.map((p) => p.playerConfig.alias);
+  Promise.all([
+    saveImageToS3(matchId, image, queueTypeForStorage, trackedPlayerAliases),
+    saveSvgToS3(matchId, svg, queueTypeForStorage, trackedPlayerAliases),
+  ]).catch((error) => logger.error(`[createMatchImage] Failed to save images to S3:`, error));
 
-  // Save both PNG and SVG to S3
-  try {
-    const queueTypeForStorage = match.queueType === "arena" ? "arena" : (match.queueType ?? "unknown");
-    const trackedPlayerAliases = match.players.map((p) => p.playerConfig.alias);
-    await saveImageToS3(matchId, image, queueTypeForStorage, trackedPlayerAliases);
-    await saveSvgToS3(matchId, svg, queueTypeForStorage, trackedPlayerAliases);
-  } catch (error) {
-    logger.error(`[createMatchImage] Failed to save images to S3:`, error);
-  }
-
-  // Convert Uint8Array to Buffer for Discord.js type compatibility
-  const buffer = Buffer.from(image);
   const attachmentName = `${matchId}.png`;
-  const attachment = new AttachmentBuilder(buffer).setName(attachmentName);
-  if (!attachment.name) {
-    throw new Error("[createMatchImage] Attachment name is null");
-  }
-
-  const embed = {
-    image: {
-      url: `attachment://${attachmentName}`,
-    },
-  };
-
-  return [attachment, new EmbedBuilder(embed)];
+  const attachment = new AttachmentBuilder(Buffer.from(image)).setName(attachmentName);
+  const embed = new EmbedBuilder({ image: { url: `attachment://${attachmentName}` } });
+  return [attachment, embed];
 }
 
 /**
