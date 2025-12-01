@@ -21,9 +21,6 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import * as Sentry from "@sentry/bun";
 import { selectRandomPersonality, getLaneContext } from "./prompts.ts";
-
-// Static import for base prompt template (user prompt for review text stage)
-import basePromptTemplate from "@scout-for-lol/data/src/review/prompts/user/2-review-text.txt";
 import { getOpenAIClient, getGeminiClient } from "./ai-clients.ts";
 import { savePipelineTracesToS3, savePipelineDebugToS3 } from "@scout-for-lol/backend/storage/pipeline-s3.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
@@ -136,7 +133,6 @@ export async function generateMatchReview(
       },
       prompts: {
         personality,
-        baseTemplate: basePromptTemplate,
         laneContext: laneContextInfo.content,
       },
       clients: clientsInput,

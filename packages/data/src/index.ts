@@ -50,8 +50,6 @@ export {
   IMAGE_DESCRIPTION_USER_PROMPT,
   IMAGE_GENERATION_USER_PROMPT,
   createStageConfigs,
-  getStageSystemPrompt,
-  getStageUserPrompt,
 } from "./review/pipeline-defaults.ts";
 export type {
   ModelConfig,

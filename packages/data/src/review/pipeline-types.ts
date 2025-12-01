@@ -35,10 +35,10 @@ export type ModelConfig = {
 export type StageConfig = {
   enabled: boolean;
   model: ModelConfig;
-  /** Override the default system prompt for this stage */
-  systemPrompt?: string;
-  /** Override the default user prompt template for this stage */
-  userPrompt?: string;
+  /** System prompt for this stage */
+  systemPrompt: string;
+  /** User prompt template for this stage (with variable placeholders) */
+  userPrompt: string;
 };
 
 /**
@@ -46,10 +46,10 @@ export type StageConfig = {
  */
 export type ReviewTextStageConfig = {
   model: ModelConfig;
-  /** Override the default system prompt for this stage */
-  systemPrompt?: string;
-  /** Override the default user prompt template for this stage */
-  userPrompt?: string;
+  /** System prompt for this stage */
+  systemPrompt: string;
+  /** User prompt template for this stage (with variable placeholders) */
+  userPrompt: string;
 };
 
 /**
@@ -61,8 +61,8 @@ export type ImageGenerationStageConfig = {
   timeoutMs: number;
   /** Art style to apply to the generated image */
   artStyle: ArtStyle;
-  /** Override the default user prompt template for image generation */
-  userPrompt?: string;
+  /** User prompt template for image generation (with variable placeholders) */
+  userPrompt: string;
 };
 
 /**
@@ -140,8 +140,6 @@ export type PipelinePlayerInput = {
 export type PipelinePromptsInput = {
   /** The personality to use for review generation */
   personality: Personality;
-  /** Base template for the review prompt */
-  baseTemplate: string;
   /** Lane-specific context text */
   laneContext: string;
 };

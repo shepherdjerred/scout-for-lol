@@ -4,7 +4,13 @@
  * This module contains all the default values that can be overridden by callers.
  */
 
-import type { PipelineStagesConfig, ModelConfig, StageConfig, ImageGenerationStageConfig } from "./pipeline-types.ts";
+import type {
+  PipelineStagesConfig,
+  ModelConfig,
+  StageConfig,
+  ImageGenerationStageConfig,
+  ReviewTextStageConfig,
+} from "./pipeline-types.ts";
 import { selectRandomStyle } from "@scout-for-lol/data/review/art-styles.ts";
 
 // Import system prompts from TXT files
@@ -58,59 +64,13 @@ export const IMAGE_DESCRIPTION_SYSTEM_PROMPT = IMAGE_DESCRIPTION_SYSTEM_PROMPT_R
 
 // ============================================================================
 // User Prompts (Templates with variables)
+// See prompt-variables.ts for variable documentation
 // ============================================================================
 
-/**
- * User prompt template for Stage 1a: Timeline Summary
- *
- * Variables:
- * - <TIMELINE_DATA> - Minified JSON of enriched timeline data
- */
 export const TIMELINE_SUMMARY_USER_PROMPT = TIMELINE_SUMMARY_USER_PROMPT_RAW.trim();
-
-/**
- * User prompt template for Stage 1b: Match Summary
- *
- * Variables:
- * - <PLAYER_NAME> - Player alias
- * - <PLAYER_CHAMPION> - Champion name
- * - <PLAYER_LANE> - Lane (or "arena" for arena queue)
- * - <MATCH_DATA> - Minified JSON containing both processedMatch and rawMatch
- */
 export const MATCH_SUMMARY_USER_PROMPT = MATCH_SUMMARY_USER_PROMPT_RAW.trim();
-
-/**
- * User prompt template for Stage 2: Review Text
- *
- * Variables:
- * - <REVIEWER NAME> - Personality name
- * - <PLAYER NAME> - Player being reviewed
- * - <PLAYER CHAMPION> - Their champion
- * - <PLAYER LANE> - Their lane
- * - <OPPONENT CHAMPION> - Enemy laner's champion
- * - <FRIENDS CONTEXT> - Info about other tracked players in match
- * - <RANDOM BEHAVIOR> - Random personality-specific behavior
- * - <MATCH ANALYSIS> - Text output from Stage 1b (match summary)
- * - <QUEUE CONTEXT> - Queue type and context
- * - <REVIEWER PERSONALITY> - Personality instructions text (from style card)
- */
 export const REVIEW_TEXT_USER_PROMPT = REVIEW_TEXT_USER_PROMPT_RAW.trim();
-
-/**
- * User prompt template for Stage 3: Image Description
- *
- * Variables:
- * - <REVIEW_TEXT> - Output from Stage 2
- * - <ART_STYLE> - Selected art style description
- */
 export const IMAGE_DESCRIPTION_USER_PROMPT = IMAGE_DESCRIPTION_USER_PROMPT_RAW.trim();
-
-/**
- * User prompt template for Stage 4: Image Generation
- *
- * Variables:
- * - <IMAGE_DESCRIPTION> - Output from Stage 3
- */
 export const IMAGE_GENERATION_USER_PROMPT = IMAGE_GENERATION_USER_PROMPT_RAW.trim();
 
 // ============================================================================
@@ -186,6 +146,7 @@ const DEFAULT_TIMELINE_SUMMARY_STAGE: StageConfig = {
   enabled: true,
   model: DEFAULT_TIMELINE_SUMMARY_MODEL,
   systemPrompt: TIMELINE_SUMMARY_SYSTEM_PROMPT,
+  userPrompt: TIMELINE_SUMMARY_USER_PROMPT,
 };
 
 /**
@@ -195,6 +156,7 @@ const DEFAULT_MATCH_SUMMARY_STAGE: StageConfig = {
   enabled: true,
   model: DEFAULT_MATCH_SUMMARY_MODEL,
   systemPrompt: MATCH_SUMMARY_SYSTEM_PROMPT,
+  userPrompt: MATCH_SUMMARY_USER_PROMPT,
 };
 
 /**
@@ -204,6 +166,16 @@ const DEFAULT_IMAGE_DESCRIPTION_STAGE: StageConfig = {
   enabled: true,
   model: DEFAULT_IMAGE_DESCRIPTION_MODEL,
   systemPrompt: IMAGE_DESCRIPTION_SYSTEM_PROMPT,
+  userPrompt: IMAGE_DESCRIPTION_USER_PROMPT,
+};
+
+/**
+ * Default configuration for review text stage
+ */
+const DEFAULT_REVIEW_TEXT_STAGE: ReviewTextStageConfig = {
+  model: DEFAULT_REVIEW_TEXT_MODEL,
+  systemPrompt: REVIEW_TEXT_SYSTEM_PROMPT,
+  userPrompt: REVIEW_TEXT_USER_PROMPT,
 };
 
 /**
@@ -216,6 +188,7 @@ function createDefaultImageGenerationStage(): ImageGenerationStageConfig {
     model: DEFAULT_IMAGE_GENERATION_MODEL,
     timeoutMs: DEFAULT_IMAGE_GENERATION_TIMEOUT_MS,
     artStyle: selectRandomStyle(),
+    userPrompt: IMAGE_GENERATION_USER_PROMPT,
   };
 }
 
@@ -229,9 +202,7 @@ export function getDefaultStageConfigs(): PipelineStagesConfig {
   return {
     timelineSummary: DEFAULT_TIMELINE_SUMMARY_STAGE,
     matchSummary: DEFAULT_MATCH_SUMMARY_STAGE,
-    reviewText: {
-      model: DEFAULT_REVIEW_TEXT_MODEL,
-    },
+    reviewText: DEFAULT_REVIEW_TEXT_STAGE,
     imageDescription: DEFAULT_IMAGE_DESCRIPTION_STAGE,
     imageGeneration: createDefaultImageGenerationStage(),
   };
@@ -243,9 +214,7 @@ export function getDefaultStageConfigs(): PipelineStagesConfig {
 export const DEFAULT_STAGE_CONFIGS: PipelineStagesConfig = {
   timelineSummary: DEFAULT_TIMELINE_SUMMARY_STAGE,
   matchSummary: DEFAULT_MATCH_SUMMARY_STAGE,
-  reviewText: {
-    model: DEFAULT_REVIEW_TEXT_MODEL,
-  },
+  reviewText: DEFAULT_REVIEW_TEXT_STAGE,
   imageDescription: DEFAULT_IMAGE_DESCRIPTION_STAGE,
   imageGeneration: createDefaultImageGenerationStage(),
 };
@@ -267,9 +236,7 @@ export function createStageConfigs(overrides?: Partial<PipelineStagesConfig>): P
     return {
       timelineSummary: DEFAULT_TIMELINE_SUMMARY_STAGE,
       matchSummary: DEFAULT_MATCH_SUMMARY_STAGE,
-      reviewText: {
-        model: DEFAULT_REVIEW_TEXT_MODEL,
-      },
+      reviewText: DEFAULT_REVIEW_TEXT_STAGE,
       imageDescription: DEFAULT_IMAGE_DESCRIPTION_STAGE,
       imageGeneration: defaultImageGeneration,
     };
@@ -293,6 +260,8 @@ export function createStageConfigs(overrides?: Partial<PipelineStagesConfig>): P
       },
     },
     reviewText: {
+      ...DEFAULT_REVIEW_TEXT_STAGE,
+      ...overrides.reviewText,
       model: {
         ...DEFAULT_REVIEW_TEXT_MODEL,
         ...overrides.reviewText?.model,
@@ -311,52 +280,4 @@ export function createStageConfigs(overrides?: Partial<PipelineStagesConfig>): P
       ...overrides.imageGeneration,
     },
   };
-}
-
-/**
- * Get the system prompt for a stage, using override if provided
- */
-export function getStageSystemPrompt(
-  stage: "timelineSummary" | "matchSummary" | "reviewText" | "imageDescription",
-  override?: string,
-): string {
-  if (override) {
-    return override;
-  }
-
-  switch (stage) {
-    case "timelineSummary":
-      return TIMELINE_SUMMARY_SYSTEM_PROMPT;
-    case "matchSummary":
-      return MATCH_SUMMARY_SYSTEM_PROMPT;
-    case "reviewText":
-      return REVIEW_TEXT_SYSTEM_PROMPT;
-    case "imageDescription":
-      return IMAGE_DESCRIPTION_SYSTEM_PROMPT;
-  }
-}
-
-/**
- * Get the user prompt template for a stage, using override if provided
- */
-export function getStageUserPrompt(
-  stage: "timelineSummary" | "matchSummary" | "reviewText" | "imageDescription" | "imageGeneration",
-  override?: string,
-): string {
-  if (override) {
-    return override;
-  }
-
-  switch (stage) {
-    case "timelineSummary":
-      return TIMELINE_SUMMARY_USER_PROMPT;
-    case "matchSummary":
-      return MATCH_SUMMARY_USER_PROMPT;
-    case "reviewText":
-      return REVIEW_TEXT_USER_PROMPT;
-    case "imageDescription":
-      return IMAGE_DESCRIPTION_USER_PROMPT;
-    case "imageGeneration":
-      return IMAGE_GENERATION_USER_PROMPT;
-  }
 }
