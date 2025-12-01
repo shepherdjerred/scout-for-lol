@@ -11,10 +11,11 @@ import {
   MATCH_SUMMARY_USER_PROMPT,
   REVIEW_TEXT_USER_PROMPT,
   IMAGE_DESCRIPTION_USER_PROMPT,
+  IMAGE_GENERATION_USER_PROMPT,
+  type PromptStageName,
 } from "@scout-for-lol/data";
 import { ModelConfigForm } from "./model-config-form.tsx";
 import { PromptEditor } from "./prompt-editor.tsx";
-import type { STAGE_VARIABLES } from "./prompt-variables-info.tsx";
 
 type ToggleableStageConfig = StageConfig;
 
@@ -23,7 +24,7 @@ type StageConfigPanelProps =
       type: "toggleable";
       title: string;
       description?: string;
-      stageName: keyof typeof STAGE_VARIABLES;
+      stageName: PromptStageName;
       config: ToggleableStageConfig;
       onChange: (next: ToggleableStageConfig) => void;
     }
@@ -31,15 +32,18 @@ type StageConfigPanelProps =
       type: "review-text";
       title: string;
       description?: string;
-      stageName: keyof typeof STAGE_VARIABLES;
+      stageName: PromptStageName;
       config: ReviewTextStageConfig;
       onChange: (next: ReviewTextStageConfig) => void;
     };
 
 /**
  * Get default prompts for a stage
+ *
+ * This function is exhaustive - TypeScript will error if a new stage is added
+ * to PromptStageName without updating this switch statement.
  */
-function getDefaultPrompts(stageName: string): { system?: string; user?: string } {
+function getDefaultPrompts(stageName: PromptStageName): { system?: string; user?: string } {
   switch (stageName) {
     case "timelineSummary":
       return { system: TIMELINE_SUMMARY_SYSTEM_PROMPT, user: TIMELINE_SUMMARY_USER_PROMPT };
@@ -49,8 +53,9 @@ function getDefaultPrompts(stageName: string): { system?: string; user?: string 
       return { system: REVIEW_TEXT_SYSTEM_PROMPT, user: REVIEW_TEXT_USER_PROMPT };
     case "imageDescription":
       return { system: IMAGE_DESCRIPTION_SYSTEM_PROMPT, user: IMAGE_DESCRIPTION_USER_PROMPT };
-    default:
-      return {};
+    case "imageGeneration":
+      // Image generation only has a user prompt (Gemini doesn't use system prompts)
+      return { user: IMAGE_GENERATION_USER_PROMPT };
   }
 }
 

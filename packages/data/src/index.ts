@@ -74,6 +74,15 @@ export type {
   ReviewPipelineOutput,
 } from "./review/pipeline-types.ts";
 
+// Prompt variable metadata (single source of truth for frontend/backend)
+export { STAGE_PROMPT_VARIABLES, PROMPT_STAGE_NAMES, getStageVariables } from "./review/prompt-variables.ts";
+export type {
+  PromptVariable,
+  StagePromptVariables,
+  PromptStageName,
+  StagePromptVariablesMap,
+} from "./review/prompt-variables.ts";
+
 export * from "./league/raw-match.schema.ts";
 export * from "./league/raw-participant.schema.ts";
 export * from "./league/raw-perks.schema.ts";

@@ -2,15 +2,14 @@ import { Button } from "@scout-for-lol/frontend/components/review-tool/ui/button
 import { Dialog } from "@scout-for-lol/frontend/components/review-tool/ui/dialog";
 import { Textarea } from "@scout-for-lol/frontend/components/review-tool/ui/textarea";
 import { useState } from "react";
-import type { STAGE_VARIABLES } from "./prompt-variables-info.tsx";
-import { PromptVariablesInfo } from "./prompt-variables-info.tsx";
+import { PromptVariablesInfo, type PromptStageName } from "./prompt-variables-info.tsx";
 
 type PromptEditorProps = {
   label: string;
   prompt: string | undefined;
   defaultPrompt?: string;
   onSave: (next: string | undefined) => void;
-  stage?: keyof typeof STAGE_VARIABLES;
+  stage?: PromptStageName;
   promptType?: "system" | "user";
 };
 
