@@ -46,7 +46,13 @@ export const IMAGE_DESCRIPTION_SYSTEM_PROMPT = IMAGE_DESCRIPTION_SYSTEM_PROMPT_R
 
 /**
  * Default model config for timeline summary (Stage 1a)
- * Uses gpt-5.1 for 400k context window to handle full timeline data
+ *
+ * TODO: We use gpt-5.1 (400k context) instead of gpt-4o-mini (128k context) because
+ * the full raw timeline from Riot API can be 100k+ tokens (one frame per minute with
+ * 10 participants' detailed stats + hundreds of events). Filtering the timeline to
+ * fit in 128k would lose important game narrative data. Consider switching back to
+ * gpt-4o-mini if costs become a concern, but would require implementing timeline
+ * segmentation (e.g., summarize 10-min chunks separately then combine).
  */
 export const DEFAULT_TIMELINE_SUMMARY_MODEL: ModelConfig = {
   model: "gpt-5.1",
@@ -56,7 +62,12 @@ export const DEFAULT_TIMELINE_SUMMARY_MODEL: ModelConfig = {
 
 /**
  * Default model config for match summary (Stage 1b)
- * Uses gpt-5.1 for 400k context window to handle full match data
+ *
+ * TODO: We use gpt-5.1 (400k context) instead of gpt-4o-mini (128k context) because
+ * the full raw match from Riot API can be 100k+ tokens (10 players × 150+ fields each,
+ * including challenges, perks, missions). Filtering would lose detailed stats that
+ * help the AI understand player performance. Consider switching back to gpt-4o-mini
+ * if costs become a concern, but would require significant data filtering.
  */
 export const DEFAULT_MATCH_SUMMARY_MODEL: ModelConfig = {
   model: "gpt-5.1",
