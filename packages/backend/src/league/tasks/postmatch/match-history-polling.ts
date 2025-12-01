@@ -201,9 +201,15 @@ export async function checkMatchHistory(): Promise<void> {
     // Sort by lastCheckedAt (oldest first) to prioritize players who haven't been checked recently
     // Players never checked (undefined) come first
     const sortedEligiblePlayers = eligiblePlayers.toSorted((a, b) => {
-      if (a.lastCheckedAt === undefined && b.lastCheckedAt === undefined) return 0;
-      if (a.lastCheckedAt === undefined) return -1;
-      if (b.lastCheckedAt === undefined) return 1;
+      if (a.lastCheckedAt === undefined && b.lastCheckedAt === undefined) {
+        return 0;
+      }
+      if (a.lastCheckedAt === undefined) {
+        return -1;
+      }
+      if (b.lastCheckedAt === undefined) {
+        return 1;
+      }
       return a.lastCheckedAt.getTime() - b.lastCheckedAt.getTime();
     });
 
