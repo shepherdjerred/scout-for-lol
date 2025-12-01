@@ -1,8 +1,7 @@
 /* eslint-disable max-lines  -- this file cannot be split up due to Dagger */
 import type { Directory, Secret, Container } from "@dagger.io/dagger";
-import { func, argument, object } from "@dagger.io/dagger";
+import { dag, func, argument, object } from "@dagger.io/dagger";
 import {
-  checkBackend,
   buildBackendImage,
   publishBackendImage,
   publishBackendImageWithContainer,
@@ -11,7 +10,7 @@ import {
   getBackendCoverage,
   getBackendTestReport,
 } from "@scout-for-lol/.dagger/src/backend";
-import { checkReport, getReportCoverage, getReportTestReport } from "@scout-for-lol/.dagger/src/report";
+import { getReportCoverage, getReportTestReport } from "@scout-for-lol/.dagger/src/report";
 import { checkData, getDataCoverage, getDataTestReport } from "@scout-for-lol/.dagger/src/data";
 import { checkFrontend, buildFrontend, deployFrontend } from "@scout-for-lol/.dagger/src/frontend";
 import {
@@ -22,6 +21,7 @@ import {
   getDesktopLinuxArtifacts,
   buildDesktopWindowsGnu,
   getDesktopWindowsArtifacts,
+  installDesktopDeps,
 } from "@scout-for-lol/.dagger/src/desktop";
 import {
   getGitHubContainer,
@@ -276,20 +276,21 @@ export class ScoutForLol {
     apiToken?: Secret,
     projectName?: string,
     prNumber?: string,
+    skipDesktopBuild?: string,
   ): Promise<string> {
     const isProd = env === "prod";
+    const shouldSkipDesktopBuild = skipDesktopBuild === "true" && !isProd;
     logWithTimestamp(`🚀 Starting CI pipeline for version ${version} (${gitSha}) in ${env ?? "dev"} environment`);
+    if (shouldSkipDesktopBuild) {
+      logWithTimestamp("⏭️ Skipping desktop build (no desktop changes detected)");
+    }
 
     // OPTIMIZATION: Generate Prisma client ONCE and share across all containers
     // This is an expensive operation that should only happen once per CI run
     logWithTimestamp("⚙️ Generating Prisma client (once, shared across containers)...");
     const prismaGenerated = generatePrismaClient(source);
 
-    // OPTIMIZATION: Use mounted workspace for CI checks (faster) and regular for image builds
-    // Mounted workspace uses withMountedDirectory (faster for read-only operations)
-    // Regular workspace uses withDirectory (files are embedded in publishable image)
-    // Both use the same pre-generated Prisma client
-    const mountedWorkspace = getPreparedMountedWorkspace(source, prismaGenerated);
+    // Use preparedWorkspace for all operations (embedded files work better with Dagger parallelism)
     const preparedWorkspace = getPreparedWorkspace(source, prismaGenerated);
 
     logWithTimestamp("📋 Phase 1: Running checks AND builds in parallel...");
@@ -302,86 +303,129 @@ export class ScoutForLol {
     });
 
     // Run typecheck, lint, and tests with MAXIMUM PARALLELISM via Dagger
-    // Instead of using bun's sequential --filter, we run each package in its own parallel container
+    // Use preparedWorkspace (embedded files) instead of mountedWorkspace for parallel operations
+    // This avoids issues with mounted files when forking containers in parallel
     const checksPromise = withTiming("all checks (lint, typecheck, tests)", async () => {
       await Promise.all([
         // TYPECHECK: Run each package's typecheck in parallel (5 parallel containers)
+        // Use "bun run typecheck" to invoke each package's typecheck script properly
         withTiming("typecheck all (parallel)", async () => {
           await Promise.all([
-            mountedWorkspace.withWorkdir("/workspace/packages/backend").withExec(["bunx", "tsc", "--noEmit"]).sync(),
-            mountedWorkspace.withWorkdir("/workspace/packages/data").withExec(["bunx", "tsc", "--noEmit"]).sync(),
-            mountedWorkspace.withWorkdir("/workspace/packages/report").withExec(["bunx", "tsc", "--noEmit"]).sync(),
-            mountedWorkspace
-              .withWorkdir("/workspace/packages/frontend")
-              .withExec(["sh", "-c", "astro check && bunx tsc --noEmit"])
-              .sync(),
-            mountedWorkspace.withWorkdir("/workspace/packages/desktop").withExec(["bunx", "tsc", "--noEmit"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/backend").withExec(["bun", "run", "typecheck"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/data").withExec(["bun", "run", "typecheck"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/report").withExec(["bun", "run", "typecheck"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/frontend").withExec(["bun", "run", "typecheck"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/desktop").withExec(["bun", "run", "typecheck"]).sync(),
           ]);
         }),
 
-        // LINT: Run ESLint for each package in parallel with caching
+        // LINT: Run ESLint for each package in parallel
+        // Use "bun run lint" to invoke each package's lint script properly
         withTiming("lint all (parallel)", async () => {
-          const eslintArgs = ["bunx", "eslint", "src", "--cache", "--cache-strategy", "content"];
           await Promise.all([
-            mountedWorkspace.withWorkdir("/workspace/packages/backend").withExec(eslintArgs).sync(),
-            mountedWorkspace.withWorkdir("/workspace/packages/data").withExec(eslintArgs).sync(),
-            mountedWorkspace.withWorkdir("/workspace/packages/report").withExec(eslintArgs).sync(),
-            mountedWorkspace.withWorkdir("/workspace/packages/frontend").withExec(eslintArgs).sync(),
-            mountedWorkspace.withWorkdir("/workspace/packages/desktop").withExec(eslintArgs).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/backend").withExec(["bun", "run", "lint"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/data").withExec(["bun", "run", "lint"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/report").withExec(["bun", "run", "lint"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/frontend").withExec(["bun", "run", "lint"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/desktop").withExec(["bun", "run", "lint"]).sync(),
           ]);
         }),
 
-        // TESTS: Run tests for each package in parallel
-        withTiming("test all (parallel)", async () => {
+        // TESTS: Run tests for each package in parallel with JUnit output
+        // JUnit reports are stored in a cache volume for artifact collection later
+        withTiming("test all (parallel with JUnit)", async () => {
+          const testArtifactsCache = dag.cacheVolume("test-artifacts");
           await Promise.all([
             // eslint-rules tests (root level)
-            mountedWorkspace.withWorkdir("/workspace").withExec(["bun", "test", "eslint-rules/"]).sync(),
-            // Package tests
-            mountedWorkspace.withWorkdir("/workspace/packages/backend").withExec(["bun", "test"]).sync(),
-            mountedWorkspace.withWorkdir("/workspace/packages/data").withExec(["bun", "test"]).sync(),
-            mountedWorkspace.withWorkdir("/workspace/packages/report").withExec(["bun", "test"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "test", "eslint-rules/"]).sync(),
+            // Package tests with JUnit reporters - output to cache for artifact collection
+            preparedWorkspace
+              .withMountedCache("/artifacts", testArtifactsCache)
+              .withExec(["mkdir", "-p", "/artifacts/backend", "/artifacts/data", "/artifacts/report"])
+              .withWorkdir("/workspace/packages/backend")
+              .withExec([
+                "bun",
+                "test",
+                "--reporter=default",
+                "--reporter=junit",
+                "--reporter-outfile=/artifacts/backend/junit.xml",
+              ])
+              .sync(),
+            preparedWorkspace
+              .withMountedCache("/artifacts", testArtifactsCache)
+              .withWorkdir("/workspace/packages/data")
+              .withExec([
+                "bun",
+                "test",
+                "--reporter=default",
+                "--reporter=junit",
+                "--reporter-outfile=/artifacts/data/junit.xml",
+              ])
+              .sync(),
+            preparedWorkspace
+              .withMountedCache("/artifacts", testArtifactsCache)
+              .withWorkdir("/workspace/packages/report")
+              .withExec([
+                "bun",
+                "test",
+                "--reporter=default",
+                "--reporter=junit",
+                "--reporter-outfile=/artifacts/report/junit.xml",
+              ])
+              .sync(),
             // Note: frontend and desktop tests are no-ops currently
           ]);
         }),
 
         // Duplication check
         withTiming("duplication check", async () => {
-          await mountedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "duplication-check"]).sync();
+          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "duplication-check"]).sync();
         }),
       ]);
     });
 
-    // OPTIMIZATION: Build frontend once and share across all desktop operations
-    const desktopFrontend = buildDesktopFrontend(source);
+    // Desktop checks and builds - only run if not skipped
+    // Build frontend once and share across all desktop operations
+    let desktopChecksPromise: Promise<void>;
+    let desktopBuildWindowsPromise: Promise<Container | undefined>;
 
-    // Desktop checks run in all environments to catch Rust issues early
-    // Uses parallel TypeScript + Rust checks for speed
-    const desktopChecksPromise = withTiming("desktop check (parallel TS + Rust)", async () => {
-      await checkDesktopParallel(source, desktopFrontend);
-    });
+    if (shouldSkipDesktopBuild) {
+      desktopChecksPromise = Promise.resolve();
+      desktopBuildWindowsPromise = Promise.resolve(undefined);
+    } else {
+      // Build desktop frontend once, share across checks and builds
+      const desktopFrontend = buildDesktopFrontend(source);
 
-    // Desktop builds run in all environments (started early to run in parallel)
-    // Share the pre-built frontend to avoid rebuilding
-    const desktopBuildLinuxPromise = withTiming("desktop application build (Linux)", async () => {
-      logWithTimestamp("🔄 Building desktop application for Linux...");
-      const container = buildDesktopLinux(source, version, desktopFrontend);
-      await container.sync();
-      return container;
-    });
+      // Desktop Rust checks (TypeScript/lint already covered by main checks above)
+      // Only run Rust-specific checks: fmt, clippy, test
+      desktopChecksPromise = withTiming("desktop Rust checks (fmt, clippy, test)", async () => {
+        const baseContainer = installDesktopDeps(source);
+        const containerWithFrontend = baseContainer
+          .withDirectory("/workspace/packages/desktop/dist", desktopFrontend)
+          .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("rust-target-linux"));
 
-    const desktopBuildWindowsPromise = withTiming("desktop application build (Windows)", async () => {
-      logWithTimestamp("🔄 Building desktop application for Windows...");
-      const container = buildDesktopWindowsGnu(source, version, desktopFrontend);
-      await container.sync();
-      return container;
-    });
+        await containerWithFrontend
+          .withWorkdir("/workspace/packages/desktop/src-tauri")
+          .withExec(["cargo", "fmt", "--", "--check"])
+          .withExec(["cargo", "clippy", "--all-targets", "--all-features", "--", "-D", "warnings"])
+          .withExec(["cargo", "test", "--verbose"])
+          .sync();
+      });
 
-    // Wait for checks, backend image build, desktop checks, and desktop builds to complete
-    const [, backendImage, , desktopLinuxContainer, desktopWindowsContainer] = await Promise.all([
+      // Desktop build - Windows only (Linux not needed)
+      desktopBuildWindowsPromise = withTiming("desktop application build (Windows)", async () => {
+        logWithTimestamp("🔄 Building desktop application for Windows...");
+        const container = buildDesktopWindowsGnu(source, version, desktopFrontend);
+        await container.sync();
+        return container;
+      });
+    }
+
+    // Wait for checks, backend image build, desktop checks, and desktop build to complete
+    const [, backendImage, , desktopWindowsContainer] = await Promise.all([
       checksPromise,
       backendImagePromise,
       desktopChecksPromise,
-      desktopBuildLinuxPromise,
       desktopBuildWindowsPromise,
     ]);
 
@@ -421,20 +465,16 @@ export class ScoutForLol {
       logWithTimestamp("⏭️ Phase 2: Skipping image publishing (no credentials or not prod environment)");
     }
 
-    // Publish desktop artifacts to GitHub Releases (only for prod with GitHub token)
-    const shouldPublishDesktop = isProd && ghToken;
+    // Publish desktop artifacts to GitHub Releases (only for prod with GitHub token and when desktop was built)
+    const shouldPublishDesktop = isProd && ghToken && desktopWindowsContainer;
     if (shouldPublishDesktop) {
       await withTiming("CI desktop artifacts publish phase", async () => {
         logWithTimestamp("📦 Phase 2.5: Publishing desktop artifacts to GitHub Releases...");
-        await this.publishDesktopArtifactsWithContainers(
-          desktopLinuxContainer,
-          desktopWindowsContainer,
-          version,
-          gitSha,
-          ghToken,
-        );
+        await this.publishDesktopArtifactsWindowsOnly(desktopWindowsContainer, version, gitSha, ghToken);
         logWithTimestamp("✅ Desktop artifacts published to GitHub Releases");
       });
+    } else if (shouldSkipDesktopBuild) {
+      logWithTimestamp("⏭️ Phase 2.5: Skipping desktop artifacts publishing (desktop build was skipped)");
     } else {
       logWithTimestamp("⏭️ Phase 2.5: Skipping desktop artifacts publishing (not prod or no GitHub token)");
     }
@@ -1263,6 +1303,87 @@ export class ScoutForLol {
   }
 
   /**
+   * Publish Windows-only desktop artifacts to GitHub Releases
+   * @param windowsContainer The Windows build container
+   * @param version The version tag
+   * @param gitSha The git commit SHA
+   * @param ghToken GitHub token for authentication
+   * @param repo The repository name (default: shepherdjerred/scout-for-lol)
+   * @returns A message indicating completion
+   */
+  @func()
+  async publishDesktopArtifactsWindowsOnly(
+    windowsContainer: Container,
+    @argument() version: string,
+    @argument() gitSha: string,
+    ghToken: Secret,
+    repo = "shepherdjerred/scout-for-lol",
+  ): Promise<string> {
+    logWithTimestamp(`📦 Publishing Windows desktop artifacts to GitHub Releases for version ${version}`);
+
+    await withTiming("desktop artifacts GitHub release (Windows only)", async () => {
+      logWithTimestamp("📥 Collecting Windows artifacts...");
+      const windowsArtifactsDir = windowsContainer.directory("/artifacts");
+
+      // Create a staging directory with Windows artifacts
+      logWithTimestamp("🏗️  Staging artifacts for upload...");
+      const container = getGitHubContainer()
+        .withSecretVariable("GH_TOKEN", ghToken)
+        .withWorkdir("/artifacts")
+        .withDirectory("/artifacts/windows", windowsArtifactsDir)
+        .withExec(["sh", "-c", "echo '📋 Windows artifacts:' && find windows -type f"]);
+
+      // Verify GitHub authentication
+      logWithTimestamp(`🔐 Verifying GitHub authentication...`);
+      const authCheckContainer = container.withExec(["sh", "-c", 'gh auth status 2>&1; echo "AUTH_EXIT_CODE=$?"']);
+      const authOutput = await authCheckContainer.stdout();
+      if (!authOutput.includes("AUTH_EXIT_CODE=0")) {
+        throw new Error(`GitHub authentication failed: ${authOutput}`);
+      }
+
+      // Check if release exists
+      logWithTimestamp(`🔍 Checking if release v${version} exists...`);
+      const checkReleaseContainer = container.withExec([
+        "sh",
+        "-c",
+        `if gh release view "v${version}" --repo="${repo}" > /dev/null 2>&1; then echo "RELEASE_EXISTS"; else echo "RELEASE_NOT_FOUND"; fi`,
+      ]);
+      const checkOutput = await checkReleaseContainer.stdout();
+      const releaseExists = checkOutput.includes("RELEASE_EXISTS");
+
+      // Create release if it doesn't exist
+      let releaseContainer = checkReleaseContainer;
+      if (!releaseExists) {
+        logWithTimestamp(`Creating new release v${version}...`);
+        releaseContainer = releaseContainer.withExec([
+          "gh",
+          "release",
+          "create",
+          `v${version}`,
+          `--repo=${repo}`,
+          `--title=v${version}`,
+          `--notes=Release ${version} (${gitSha.substring(0, 7)})`,
+          "--latest",
+        ]);
+        await releaseContainer.sync();
+      }
+
+      // Upload Windows artifacts
+      logWithTimestamp(`📤 Uploading Windows artifacts...`);
+      releaseContainer = releaseContainer.withExec([
+        "sh",
+        "-c",
+        `find windows -type f \\( -name "*.exe" -o -name "*.msi" \\) -exec gh release upload "v${version}" {} --repo="${repo}" --clobber \\; 2>&1 || (echo '❌ Windows upload failed' && exit 1)`,
+      ]);
+      await releaseContainer.sync();
+
+      logWithTimestamp(`✅ Windows artifacts uploaded to https://github.com/${repo}/releases/tag/v${version}`);
+    });
+
+    return `Windows desktop artifacts published to GitHub Releases: v${version}`;
+  }
+
+  /**
    * Build and publish desktop artifacts (builds from scratch)
    * @param source The source directory
    * @param version The version tag
@@ -1339,6 +1460,7 @@ export class ScoutForLol {
     apiToken?: Secret,
     projectName?: string,
     prNumber?: string,
+    skipDesktopBuild?: string,
   ): Promise<Directory> {
     // Run the full CI pipeline first
     await this.ci(
@@ -1354,6 +1476,7 @@ export class ScoutForLol {
       apiToken,
       projectName,
       prNumber,
+      skipDesktopBuild,
     );
 
     // After CI passes, collect artifacts
@@ -1365,46 +1488,47 @@ export class ScoutForLol {
     const preparedWorkspace = getPreparedMountedWorkspace(source, prismaGenerated);
 
     const artifactsContainer = await withTiming("artifact collection", async () => {
-      let workspace = preparedWorkspace.withWorkdir("/workspace");
+      // Use the same cache volume where tests stored their JUnit reports
+      const testArtifactsCache = dag.cacheVolume("test-artifacts");
 
-      // Create artifacts directory structure
-      workspace = workspace.withExec([
-        "mkdir",
-        "-p",
-        "/artifacts/backend",
-        "/artifacts/data",
-        "/artifacts/report",
-        "/artifacts/desktop",
-        "/artifacts/frontend",
-      ]);
+      let workspace = preparedWorkspace
+        .withWorkdir("/workspace")
+        // Mount the test artifacts cache to copy JUnit reports from it
+        .withMountedCache("/test-artifacts", testArtifactsCache);
 
-      // Run tests with junit reporters (Dagger caches test execution, only report generation runs)
-      // Backend tests
+      // Create artifacts directory and copy JUnit reports from cache
+      // Tests already ran with JUnit output during ci() - just copy the reports
+      workspace = workspace
+        .withExec([
+          "mkdir",
+          "-p",
+          "/artifacts/backend",
+          "/artifacts/data",
+          "/artifacts/report",
+          "/artifacts/desktop",
+          "/artifacts/frontend",
+        ])
+        .withExec([
+          "sh",
+          "-c",
+          "cp /test-artifacts/backend/junit.xml /artifacts/backend/ 2>/dev/null || echo 'No backend JUnit found'",
+        ])
+        .withExec([
+          "sh",
+          "-c",
+          "cp /test-artifacts/data/junit.xml /artifacts/data/ 2>/dev/null || echo 'No data JUnit found'",
+        ])
+        .withExec([
+          "sh",
+          "-c",
+          "cp /test-artifacts/report/junit.xml /artifacts/report/ 2>/dev/null || echo 'No report JUnit found'",
+        ]);
+
+      // ESLint report (JSON format) - uses cache so should be fast
       workspace = workspace.withExec([
         "sh",
         "-c",
-        "cd /workspace/packages/backend && bun test --reporter=junit --reporter-outfile=/artifacts/backend/junit.xml 2>/dev/null || true",
-      ]);
-
-      // Data tests with coverage
-      workspace = workspace.withExec([
-        "sh",
-        "-c",
-        "cd /workspace/packages/data && bun test --coverage --reporter=junit --reporter-outfile=/artifacts/data/junit.xml 2>/dev/null || true",
-      ]);
-
-      // Report tests with coverage
-      workspace = workspace.withExec([
-        "sh",
-        "-c",
-        "cd /workspace/packages/report && bun test --coverage --reporter=junit --reporter-outfile=/artifacts/report/junit.xml 2>/dev/null || true",
-      ]);
-
-      // ESLint report (JSON format)
-      workspace = workspace.withExec([
-        "sh",
-        "-c",
-        "cd /workspace && bunx eslint packages/ --format json --output-file /artifacts/eslint-report.json 2>/dev/null || true",
+        "cd /workspace && bunx eslint packages/ --cache --format json --output-file /artifacts/eslint-report.json 2>/dev/null || true",
       ]);
 
       // Knip report (JSON format)
@@ -1414,11 +1538,11 @@ export class ScoutForLol {
         "cd /workspace && knip-bun --reporter json > /artifacts/knip-report.json 2>/dev/null || true",
       ]);
 
-      // JSCPD duplication report
+      // JSCPD duplication report - already ran, just copy results
       workspace = workspace.withExec([
         "sh",
         "-c",
-        "cd /workspace && bun run duplication-check 2>/dev/null || true && cp -r jscpd-report /artifacts/ 2>/dev/null || true",
+        "cp -r /workspace/jscpd-report /artifacts/ 2>/dev/null || echo 'No JSCPD report found'",
       ]);
 
       // List artifacts for debugging

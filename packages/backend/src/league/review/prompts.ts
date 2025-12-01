@@ -42,6 +42,12 @@ const STYLECARDS_DIR = getStyleCardsDir();
 const EXCLUDED = new Set(["generic.json"]);
 
 /**
+ * Allowed personalities for AI review selection.
+ * Only these personalities will be loaded and used.
+ */
+const ALLOWED_PERSONALITIES = new Set(["aaron", "brian", "danny", "irfan", "nekoryan"]);
+
+/**
  * Load a personality (both JSON metadata and TXT instructions)
  */
 async function loadPersonality(basename: string): Promise<Personality> {
@@ -159,7 +165,7 @@ async function listValidPersonalities(): Promise<Personality[]> {
   const basenames: string[] = [];
   for await (const file of glob.scan(personalitiesDir)) {
     const name = file.replace(/\.json$/, "");
-    if (!EXCLUDED.has(`${name}.json`)) {
+    if (!EXCLUDED.has(`${name}.json`) && ALLOWED_PERSONALITIES.has(name)) {
       basenames.push(name);
     }
   }
