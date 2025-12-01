@@ -456,6 +456,198 @@ export class ScoutForLol {
   }
 
   /**
+   * Run CI pipeline and export test artifacts in a single call.
+   * This avoids re-running tests just to generate junit.xml files.
+   * @param source The source directory
+   * @returns A directory containing test artifacts (junit.xml, coverage)
+   */
+  @func()
+  async ciWithArtifacts(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+    @argument() gitSha: string,
+    branch?: string,
+    ghcrUsername?: string,
+    ghcrPassword?: Secret,
+    env?: string,
+    ghToken?: Secret,
+    accountId?: Secret,
+    apiToken?: Secret,
+    projectName?: string,
+    prNumber?: string,
+  ): Promise<Directory> {
+    const isProd = env === "prod";
+    logWithTimestamp(`🚀 Starting CI pipeline with artifacts for version ${version} (${gitSha}) in ${env ?? "dev"} environment`);
+
+    // Generate Prisma client ONCE and share
+    logWithTimestamp("⚙️ Generating Prisma client (once, shared across containers)...");
+    const prismaGenerated = generatePrismaClient(source);
+    const mountedWorkspace = getPreparedMountedWorkspace(source, prismaGenerated);
+    const preparedWorkspace = getPreparedWorkspace(source, prismaGenerated);
+
+    logWithTimestamp("📋 Phase 1: Running checks AND builds in parallel (with artifact generation)...");
+
+    // Build backend image
+    const backendImagePromise = withTiming("backend Docker image build", async () => {
+      const image = buildBackendImage(source, version, gitSha, preparedWorkspace);
+      await image.id();
+      return image;
+    });
+
+    // Run tests with junit reporters and collect artifacts - all in parallel
+    const baseWorkspace = mountedWorkspace.withWorkdir("/workspace");
+
+    const artifactsPromise = withTiming("all checks with artifacts", async () => {
+      const [, , testArtifacts, duplicationArtifacts] = await Promise.all([
+        withTiming("typecheck all", async () => {
+          await baseWorkspace.withExec(["bun", "run", "typecheck"]).sync();
+        }),
+        withTiming("lint all", async () => {
+          await baseWorkspace.withExec(["bun", "run", "lint"]).sync();
+        }),
+        withTiming("test all with junit", async () => {
+          // Run each package's tests with junit reporter
+          const container = await baseWorkspace
+            .withExec(["mkdir", "-p", "/artifacts/backend", "/artifacts/data", "/artifacts/report", "/artifacts/desktop"])
+            .withWorkdir("/workspace/packages/backend")
+            .withExec(["sh", "-c", "bun test --bail --reporter=junit --reporter-outfile=/artifacts/backend/junit.xml"])
+            .withWorkdir("/workspace/packages/data")
+            .withExec([
+              "sh",
+              "-c",
+              "bun test --bail --coverage --reporter=junit --reporter-outfile=/artifacts/data/junit.xml && cp -r coverage /artifacts/data/ 2>/dev/null || true",
+            ])
+            .withWorkdir("/workspace/packages/report")
+            .withExec([
+              "sh",
+              "-c",
+              "bun test --bail --coverage --reporter=junit --reporter-outfile=/artifacts/report/junit.xml && cp -r coverage /artifacts/report/ 2>/dev/null || true",
+            ])
+            .withWorkdir("/workspace/packages/desktop")
+            .withExec(["sh", "-c", "bun test --bail --reporter=junit --reporter-outfile=/artifacts/desktop/junit.xml"])
+            .sync();
+          return container.directory("/artifacts");
+        }),
+        withTiming("duplication check", async () => {
+          const container = await baseWorkspace
+            .withExec(["mkdir", "-p", "/artifacts/jscpd-report"])
+            .withExec(["bun", "run", "duplication-check"])
+            .withExec(["sh", "-c", "cp -r jscpd-report/* /artifacts/jscpd-report/ 2>/dev/null || true"])
+            .sync();
+          return container.directory("/artifacts");
+        }),
+      ]);
+      return { testArtifacts, duplicationArtifacts };
+    });
+
+    // Desktop operations
+    const desktopFrontend = buildDesktopFrontend(source);
+    const desktopChecksPromise = withTiming("desktop check (parallel TS + Rust)", () => checkDesktopParallel(source, desktopFrontend));
+    const desktopBuildLinuxPromise = withTiming("desktop application build (Linux)", async () => {
+      const container = buildDesktopLinux(source, version, desktopFrontend);
+      await container.sync();
+      return container;
+    });
+    const desktopBuildWindowsPromise = withTiming("desktop application build (Windows)", async () => {
+      const container = buildDesktopWindowsGnu(source, version, desktopFrontend);
+      await container.sync();
+      return container;
+    });
+
+    // Wait for all parallel work
+    const [{ testArtifacts, duplicationArtifacts }, backendImage, , desktopLinuxContainer, desktopWindowsContainer] = await Promise.all([
+      artifactsPromise,
+      backendImagePromise,
+      desktopChecksPromise,
+      desktopBuildLinuxPromise,
+      desktopBuildWindowsPromise,
+    ]);
+
+    logWithTimestamp("✅ Phase 1 complete: All checks passed and builds finished");
+
+    // Smoke test
+    await withTiming("backend image smoke test", async () => {
+      const smokeTestResult = await smokeTestBackendImageWithContainer(backendImage, source);
+      if (smokeTestResult.startsWith("❌")) {
+        throw new Error(`Backend image smoke test failed: ${smokeTestResult}`);
+      }
+    });
+
+    // Phase 2: Publish (parallel)
+    const shouldPublish = ghcrUsername && ghcrPassword && isProd;
+    const shouldPublishDesktop = isProd && ghToken;
+
+    if (shouldPublish || shouldPublishDesktop) {
+      logWithTimestamp("📦 Phase 2: Publishing artifacts in parallel...");
+      const publishPromises: Promise<void>[] = [];
+
+      if (shouldPublish) {
+        publishPromises.push(
+          withTiming("backend image publish", async () => {
+            await publishBackendImageWithContainer({
+              image: backendImage,
+              version,
+              gitSha,
+              registryAuth: { username: ghcrUsername, password: ghcrPassword },
+            });
+          }),
+        );
+      }
+
+      if (shouldPublishDesktop) {
+        publishPromises.push(
+          withTiming("desktop artifacts publish", async () => {
+            await this.publishDesktopArtifactsWithContainers(desktopLinuxContainer, desktopWindowsContainer, version, gitSha, ghToken);
+          }),
+        );
+      }
+
+      await Promise.all(publishPromises);
+    }
+
+    // Phase 3: Deploy (parallel)
+    const shouldDeployBackend = isProd;
+    const shouldDeployFrontend = accountId && apiToken && branch;
+
+    if (shouldDeployBackend || shouldDeployFrontend) {
+      logWithTimestamp("🚀 Phase 3: Deploying in parallel...");
+      const deployPromises: Promise<void>[] = [];
+
+      if (shouldDeployBackend) {
+        deployPromises.push(withTiming("backend deploy", () => this.deploy(source, version, "beta", ghToken)));
+      }
+
+      if (shouldDeployFrontend) {
+        deployPromises.push(
+          withTiming("frontend deploy", async () => {
+            const project = projectName ?? "scout-for-lol";
+            const deployOutput = await this.deployFrontend(source, branch, gitSha, project, accountId, apiToken);
+            const previewUrl = parsePreviewUrl(deployOutput);
+            if (prNumber && ghToken && branch !== "main") {
+              const displayUrl = previewUrl ?? `https://${branch}.${project}.pages.dev`;
+              await postPrComment(prNumber, `## 🚀 Deploy Preview Ready!\n\n**Preview URL:** ${displayUrl}`, ghToken);
+            }
+          }),
+        );
+      }
+
+      await Promise.all(deployPromises);
+    }
+
+    logWithTimestamp("🎉 CI pipeline completed successfully");
+
+    // Merge and return all artifacts
+    return dag
+      .directory()
+      .withDirectory("/", testArtifacts)
+      .withDirectory("/", duplicationArtifacts);
+  }
+
+  /**
    * Deploy to the specified stage
    * @param source The source directory
    * @param version The version to deploy
@@ -1247,100 +1439,112 @@ export class ScoutForLol {
 
     // OPTIMIZATION: Use mounted workspace for CI checks (faster than copying files)
     const preparedWorkspace = getPreparedMountedWorkspace(source);
+    const baseWorkspace = preparedWorkspace.withWorkdir("/workspace");
 
-    // Run all checks with CI reporters in parallel
-    const container = await withTiming("all CI checks with reporters", async () => {
-      let workspace = preparedWorkspace.withWorkdir("/workspace");
+    // OPTIMIZATION: Run all artifact-generating checks in PARALLEL
+    const [eslintArtifacts, knipArtifacts, duplicationArtifacts, backendArtifacts, dataArtifacts, reportArtifacts, desktopArtifacts] =
+      await withTiming("all CI checks with reporters (parallel)", () =>
+        Promise.all([
+          // ESLint with JSON output
+          withTiming("eslint artifacts", async () => {
+            const container = await baseWorkspace
+              .withExec(["mkdir", "-p", "/artifacts"])
+              .withExec([
+                "sh",
+                "-c",
+                "bunx eslint packages/ --format json --output-file /artifacts/eslint-report.json 2>/dev/null || true",
+              ])
+              .sync();
+            return container.directory("/artifacts");
+          }),
 
-      // Create artifacts directory
-      workspace = workspace.withExec(["mkdir", "-p", "/artifacts"]);
+          // Knip with JSON output
+          withTiming("knip artifacts", async () => {
+            const container = await baseWorkspace
+              .withExec(["mkdir", "-p", "/artifacts"])
+              .withExec(["sh", "-c", "knip-bun --reporter json > /artifacts/knip-report.json 2>/dev/null || true"])
+              .sync();
+            return container.directory("/artifacts");
+          }),
 
-      // Run typecheck (no file output, just needs to pass)
-      workspace = workspace.withExec(["bun", "run", "typecheck"]);
+          // Duplication check
+          withTiming("duplication artifacts", async () => {
+            const container = await baseWorkspace
+              .withExec(["mkdir", "-p", "/artifacts"])
+              .withExec(["bun", "run", "duplication-check"])
+              .withExec(["sh", "-c", "cp -r jscpd-report /artifacts/ 2>/dev/null || true"])
+              .sync();
+            return container.directory("/artifacts");
+          }),
 
-      // Run ESLint with JSON output
-      workspace = workspace.withExec([
-        "sh",
-        "-c",
-        "bunx eslint packages/ --format json --output-file /artifacts/eslint-report.json 2>/dev/null || true",
-      ]);
+          // Backend tests
+          withTiming("backend test artifacts", async () => {
+            const container = await baseWorkspace
+              .withExec(["mkdir", "-p", "/artifacts/backend"])
+              .withWorkdir("/workspace/packages/backend")
+              .withExec(["sh", "-c", "bun test --bail --reporter=junit --reporter-outfile=./junit.xml || true"])
+              .withExec(["sh", "-c", "cp junit.xml /artifacts/backend/ 2>/dev/null || true"])
+              .sync();
+            return container.directory("/artifacts");
+          }),
 
-      // Run knip with JSON output
-      workspace = workspace.withExec([
-        "sh",
-        "-c",
-        "knip-bun --reporter json > /artifacts/knip-report.json 2>/dev/null || true",
-      ]);
+          // Data tests with coverage
+          withTiming("data test artifacts", async () => {
+            const container = await baseWorkspace
+              .withExec(["mkdir", "-p", "/artifacts/data"])
+              .withWorkdir("/workspace/packages/data")
+              .withExec(["sh", "-c", "bun test --bail --coverage --reporter=junit --reporter-outfile=./junit.xml || true"])
+              .withExec([
+                "sh",
+                "-c",
+                "cp junit.xml /artifacts/data/ 2>/dev/null || true && cp -r coverage /artifacts/data/ 2>/dev/null || true",
+              ])
+              .sync();
+            return container.directory("/artifacts");
+          }),
 
-      // Run duplication check (generates jscpd-report/)
-      workspace = workspace.withExec(["bun", "run", "duplication-check"]);
+          // Report tests with coverage
+          withTiming("report test artifacts", async () => {
+            const container = await baseWorkspace
+              .withExec(["mkdir", "-p", "/artifacts/report"])
+              .withWorkdir("/workspace/packages/report")
+              .withExec(["sh", "-c", "bun test --bail --coverage --reporter=junit --reporter-outfile=./junit.xml || true"])
+              .withExec([
+                "sh",
+                "-c",
+                "cp junit.xml /artifacts/report/ 2>/dev/null || true && cp -r coverage /artifacts/report/ 2>/dev/null || true",
+              ])
+              .sync();
+            return container.directory("/artifacts");
+          }),
 
-      // Copy jscpd reports to artifacts
-      workspace = workspace.withExec(["sh", "-c", "cp -r jscpd-report /artifacts/ 2>/dev/null || true"]);
+          // Desktop tests
+          withTiming("desktop test artifacts", async () => {
+            const container = await baseWorkspace
+              .withExec(["mkdir", "-p", "/artifacts/desktop"])
+              .withWorkdir("/workspace/packages/desktop")
+              .withExec(["sh", "-c", "bun test --bail --reporter=junit --reporter-outfile=./junit.xml || true"])
+              .withExec(["sh", "-c", "cp junit.xml /artifacts/desktop/ 2>/dev/null || true"])
+              .sync();
+            return container.directory("/artifacts");
+          }),
+        ]),
+      );
 
-      // Run tests with CI reporters for each package
-      // Backend tests
-      workspace = workspace
-        .withWorkdir("/workspace/packages/backend")
-        .withExec(["sh", "-c", "bun test --bail --reporter=junit --reporter-outfile=./junit.xml || true"]);
-
-      // Copy backend junit report
-      workspace = workspace.withExec([
-        "sh",
-        "-c",
-        "mkdir -p /artifacts/backend && cp junit.xml /artifacts/backend/ 2>/dev/null || true",
-      ]);
-
-      // Data tests with coverage
-      workspace = workspace
-        .withWorkdir("/workspace/packages/data")
-        .withExec(["sh", "-c", "bun test --bail --coverage --reporter=junit --reporter-outfile=./junit.xml || true"]);
-
-      // Copy data junit report and coverage
-      workspace = workspace.withExec([
-        "sh",
-        "-c",
-        "mkdir -p /artifacts/data && cp junit.xml /artifacts/data/ 2>/dev/null || true && cp -r coverage /artifacts/data/ 2>/dev/null || true",
-      ]);
-
-      // Report tests with coverage
-      workspace = workspace
-        .withWorkdir("/workspace/packages/report")
-        .withExec(["sh", "-c", "bun test --bail --coverage --reporter=junit --reporter-outfile=./junit.xml || true"]);
-
-      // Copy report junit report and coverage
-      workspace = workspace.withExec([
-        "sh",
-        "-c",
-        "mkdir -p /artifacts/report && cp junit.xml /artifacts/report/ 2>/dev/null || true && cp -r coverage /artifacts/report/ 2>/dev/null || true",
-      ]);
-
-      // Desktop tests
-      workspace = workspace
-        .withWorkdir("/workspace/packages/desktop")
-        .withExec(["sh", "-c", "bun test --bail --reporter=junit --reporter-outfile=./junit.xml || true"]);
-
-      // Copy desktop junit report
-      workspace = workspace.withExec([
-        "sh",
-        "-c",
-        "mkdir -p /artifacts/desktop && cp junit.xml /artifacts/desktop/ 2>/dev/null || true",
-      ]);
-
-      // Frontend - no tests currently, but prepare directory
-      workspace = workspace.withExec(["sh", "-c", "mkdir -p /artifacts/frontend"]);
-
-      // Return to workspace root
-      workspace = workspace.withWorkdir("/workspace");
-
-      // List artifacts for debugging
-      workspace = workspace.withExec(["sh", "-c", "echo '📋 Generated artifacts:' && find /artifacts -type f"]);
-
-      await workspace.sync();
-      return workspace;
-    });
+    // Merge all artifact directories into one
+    logWithTimestamp("📦 Merging artifacts...");
+    const mergedArtifacts = dag
+      .directory()
+      .withDirectory("/", eslintArtifacts)
+      .withDirectory("/", knipArtifacts)
+      .withDirectory("/", duplicationArtifacts)
+      .withDirectory("/", backendArtifacts)
+      .withDirectory("/", dataArtifacts)
+      .withDirectory("/", reportArtifacts)
+      .withDirectory("/", desktopArtifacts)
+      .withDirectory("/frontend", dag.directory()); // Empty frontend dir
 
     logWithTimestamp("✅ CI artifacts generated successfully");
-    return container.directory("/artifacts");
+    return mergedArtifacts;
   }
 }
