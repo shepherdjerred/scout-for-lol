@@ -2,23 +2,10 @@
  * S3 integration for fetching match data (direct client-side)
  */
 import { S3Client, ListObjectsV2Command, GetObjectCommand, type ListObjectsV2CommandOutput } from "@aws-sdk/client-s3";
-import {
-  RawMatchSchema,
-  parseQueueType,
-  getLaneOpponent,
-  parseTeam,
-  invertTeam,
-  getOrdinalSuffix,
-  parseLane,
-  type RawMatch,
-  type ArenaMatch,
-  type CompletedMatch,
-} from "@scout-for-lol/data";
-import { getExampleMatch } from "@scout-for-lol/data";
+import { RawMatchSchema, RawTimelineSchema, type RawMatch, type RawTimeline } from "@scout-for-lol/data";
 import { getCachedDataAsync, setCachedData } from "./cache.ts";
 import { z } from "zod";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
-import { getOutcome, participantToChampion } from "./s3-helpers.ts";
 
 /**
  * Fetch all objects from S3 with pagination
@@ -259,193 +246,74 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<R
 }
 
 /**
- * Convert a Riot API match to our internal format
- * This is a simplified conversion for dev tool purposes - we use example match structure
- * but populate it with real player data including Riot IDs
- * @param rawMatch - The raw Riot API match data
- * @param selectedPlayerName - The Riot ID (GameName#Tagline) of the player to prioritize as first player
+ * Fetch a timeline from S3 (direct client-side)
+ * Results are cached for 7 days (timeline data is immutable)
+ * @param config - S3 configuration
+ * @param matchKey - The S3 key for the match (e.g., games/2024/01/15/NA_123456789/match.json)
+ * @returns The timeline data or null if not found
  */
-export function convertRawMatchToInternalFormat(
-  rawMatch: RawMatch,
-  selectedPlayerName?: string,
-): CompletedMatch | ArenaMatch {
-  const queueType = parseQueueType(rawMatch.info.queueId);
+export async function fetchTimelineFromS3(config: S3Config, matchKey: string): Promise<RawTimeline | null> {
+  try {
+    // Derive timeline key from match key
+    // Match key: games/2024/01/15/NA_123456789/match.json
+    // Timeline key: games/2024/01/15/NA_123456789/timeline.json
+    const timelineKey = matchKey.replace(/\/match\.json$/, "/timeline.json");
 
-  // Get base example match structure
-  let baseMatch: CompletedMatch | ArenaMatch;
-  if (queueType === "arena") {
-    baseMatch = getExampleMatch("arena");
-  } else if (queueType === "aram") {
-    baseMatch = getExampleMatch("aram");
-  } else if (queueType === "solo" || queueType === "flex") {
-    baseMatch = getExampleMatch("ranked");
-  } else {
-    baseMatch = getExampleMatch("unranked");
-  }
+    // Cache key parameters (exclude credentials for security)
+    const cacheParams = {
+      bucketName: config.bucketName,
+      region: config.region,
+      endpoint: config.endpoint,
+      key: timelineKey,
+    };
 
-  // Reorder participants so selected player is first
-  let reorderedParticipants = [...rawMatch.info.participants];
-  if (selectedPlayerName) {
-    const selectedIndex = reorderedParticipants.findIndex((p) => {
-      const riotId = p.riotIdGameName && p.riotIdTagline ? `${p.riotIdGameName}#${p.riotIdTagline}` : "Unknown";
-      return riotId === selectedPlayerName;
+    // Try to get from cache first (7 days TTL - timeline data is immutable)
+    const cached: unknown = await getCachedDataAsync("r2-timeline", cacheParams);
+
+    const cachedResult = RawTimelineSchema.safeParse(cached);
+    if (cachedResult.success) {
+      return cachedResult.data;
+    }
+
+    // Cache miss - fetch directly from S3
+    console.log(`[S3] Fetching timeline: ${timelineKey}`);
+
+    // Create S3 client
+    const client = new S3Client({
+      region: config.region,
+      ...(config.endpoint ? { endpoint: config.endpoint } : {}),
+      credentials: {
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey,
+      },
     });
 
-    if (selectedIndex !== -1 && selectedIndex !== 0) {
-      // Move selected player to first position
-      const selectedPlayer = reorderedParticipants[selectedIndex];
-      if (selectedPlayer) {
-        reorderedParticipants = [selectedPlayer, ...reorderedParticipants.filter((_, i) => i !== selectedIndex)];
-      }
-    }
-  }
-
-  // Build team rosters first (needed for lane opponent calculation)
-  const teams = {
-    blue: rawMatch.info.participants.filter((p) => p.teamId === 100).map(participantToChampion),
-    red: rawMatch.info.participants.filter((p) => p.teamId === 200).map(participantToChampion),
-  };
-
-  // Update players with real data from the match - split by queue type for proper typing
-  if (baseMatch.queueType === "arena") {
-    const arenaMatch: ArenaMatch = baseMatch;
-    const updatedPlayers = arenaMatch.players.map((player, index) => {
-      const participant = reorderedParticipants[index];
-      if (participant) {
-        // Build Riot ID (GameName#Tagline)
-        const riotId =
-          participant.riotIdGameName && participant.riotIdTagline
-            ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
-            : player.playerConfig.alias;
-
-        return {
-          ...player,
-          playerConfig: {
-            ...player.playerConfig,
-            alias: riotId,
-          },
-          champion: {
-            ...player.champion,
-            championName: participant.championName,
-            kills: participant.kills,
-            deaths: participant.deaths,
-            assists: participant.assists,
-          },
-        };
-      }
-      return player;
+    // Get object
+    const command = new GetObjectCommand({
+      Bucket: config.bucketName,
+      Key: timelineKey,
     });
 
-    // For arena matches, no teams roster
-    return {
-      ...arenaMatch,
-      players: updatedPlayers,
-      durationInSeconds: rawMatch.info.gameDuration,
-    };
+    const response = await client.send(command);
+
+    if (!response.Body) {
+      console.log(`[S3] Timeline not found: ${timelineKey}`);
+      return null;
+    }
+
+    // Convert stream to string
+    const bodyString = await response.Body.transformToString();
+    const rawData: unknown = JSON.parse(bodyString);
+
+    // Validate using proper RawTimeline schema
+    const rawDataResult = RawTimelineSchema.parse(rawData);
+
+    // Cache the result for 7 days (timeline data is immutable)
+    await setCachedData("r2-timeline", cacheParams, rawDataResult, 7 * 24 * 60 * 60 * 1000);
+
+    return rawDataResult;
+  } catch (error) {
+    console.error(`Failed to fetch timeline for match ${matchKey}:`, error);
+    return null;
   }
-
-  // For regular matches, convert participant to full champion and calculate lane opponent
-  const completedMatch = baseMatch;
-  const updatedPlayers = completedMatch.players.map((player, index) => {
-    const participant = reorderedParticipants[index];
-    if (participant) {
-      // Build Riot ID (GameName#Tagline)
-      const riotId =
-        participant.riotIdGameName && participant.riotIdTagline
-          ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
-          : player.playerConfig.alias;
-
-      const champion = participantToChampion(participant);
-      const team = parseTeam(participant.teamId);
-      // Team should always be defined for valid matches (teamId is 100 or 200)
-      if (!team) {
-        console.warn(`Invalid teamId ${participant.teamId.toString()} for participant`);
-        return player; // Keep original player if team is invalid
-      }
-      const enemyTeam = invertTeam(team);
-      const laneOpponent = getLaneOpponent(champion, teams[enemyTeam]);
-      const outcome = getOutcome(participant);
-
-      // For regular matches, include lane, lane opponent, outcome, and team
-      return {
-        ...player,
-        playerConfig: {
-          ...player.playerConfig,
-          alias: riotId,
-        },
-        champion,
-        lane: champion.lane,
-        laneOpponent,
-        outcome,
-        team,
-      };
-    }
-    return player;
-  });
-
-  // Return completed match with updated players
-  return {
-    ...completedMatch,
-    players: updatedPlayers,
-    durationInSeconds: rawMatch.info.gameDuration,
-    teams,
-  };
-}
-
-/**
- * Match metadata for display
- */
-export type MatchMetadata = {
-  key: string;
-  queueType: string;
-  playerName: string;
-  champion: string;
-  lane: string;
-  outcome: string;
-  kda: string;
-  timestamp: Date;
-};
-
-/**
- * Extract metadata for all participants from a raw Riot API match
- */
-export function extractMatchMetadataFromRawMatch(rawMatch: RawMatch, key: string): MatchMetadata[] {
-  const queueType = parseQueueType(rawMatch.info.queueId);
-  const timestamp = new Date(rawMatch.info.gameEndTimestamp);
-
-  return rawMatch.info.participants.map((participant) => {
-    // Build Riot ID (GameName#Tagline)
-    const riotId =
-      participant.riotIdGameName && participant.riotIdTagline
-        ? `${participant.riotIdGameName}#${participant.riotIdTagline}`
-        : "Unknown";
-
-    // Determine outcome
-    let outcome: string;
-    if (queueType === "arena") {
-      const placement = participant.placement;
-      if (placement === undefined) {
-        outcome = "Unknown";
-      } else {
-        outcome = `${String(placement)}${getOrdinalSuffix(placement)} place`;
-      }
-    } else {
-      outcome = participant.win ? "Victory" : "Defeat";
-    }
-
-    // Parse lane
-    const lane = parseLane(participant.teamPosition);
-
-    const laneStr = lane ?? "unknown";
-    return {
-      key,
-      queueType: queueType ?? "unknown",
-      playerName: riotId,
-      champion: participant.championName,
-      lane: laneStr,
-      outcome,
-      kda: `${String(participant.kills)}/${String(participant.deaths)}/${String(participant.assists)}`,
-      timestamp,
-    };
-  });
 }

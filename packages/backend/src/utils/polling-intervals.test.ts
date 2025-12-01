@@ -5,7 +5,18 @@ import {
   shouldCheckPlayer,
   getPollingReferenceTime,
   POLLING_INTERVALS,
+  MAX_PLAYERS_PER_RUN,
 } from "@scout-for-lol/backend/utils/polling-intervals.ts";
+
+describe("MAX_PLAYERS_PER_RUN", () => {
+  test("is a positive number", () => {
+    expect(MAX_PLAYERS_PER_RUN).toBeGreaterThan(0);
+  });
+
+  test("is exported for use in match history polling", () => {
+    expect(typeof MAX_PLAYERS_PER_RUN).toBe("number");
+  });
+});
 
 describe("calculatePollingInterval", () => {
   const now = new Date("2024-01-15T12:00:00Z");

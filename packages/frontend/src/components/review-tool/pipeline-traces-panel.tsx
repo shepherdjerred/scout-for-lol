@@ -132,6 +132,27 @@ export function PipelineTracesPanel({ traces, intermediate }: PipelineTracesPane
       />
       <TraceCard label="Stage 1b: Match Summary" trace={traces.matchSummary} text={intermediate?.matchSummaryText} />
       <TraceCard label="Stage 2: Review Text" trace={traces.reviewText} text={undefined} />
+      {intermediate?.selectedImagePrompts && intermediate.selectedImagePrompts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Selected Image Prompts</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-xs text-gray-800">
+            <p className="text-gray-600">
+              {intermediate.selectedImagePrompts.length.toString()} prompt
+              {intermediate.selectedImagePrompts.length === 1 ? "" : "s"} selected from personality to influence Stage
+              3:
+            </p>
+            <ul className="list-disc list-inside space-y-1">
+              {intermediate.selectedImagePrompts.map((prompt, index) => (
+                <li key={index} className="text-gray-700">
+                  {prompt}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
       <TraceCard
         label="Stage 3: Image Description"
         trace={traces.imageDescription}

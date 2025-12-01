@@ -236,6 +236,8 @@ export type PipelineIntermediateResults = {
   matchSummaryText?: string;
   /** Text output from Stage 3 */
   imageDescriptionText?: string;
+  /** Image prompts selected from personality for Stage 3 (2-3 random picks) */
+  selectedImagePrompts?: string[];
 };
 
 // ============================================================================
