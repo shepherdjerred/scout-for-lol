@@ -5,10 +5,11 @@ import { useState, useMemo, useCallback } from "react";
 import { z } from "zod";
 import Fuse, { type FuseResult } from "fuse.js";
 import type { ApiSettings } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
-import type { CompletedMatch, ArenaMatch, RawMatch } from "@scout-for-lol/data";
+import type { CompletedMatch, ArenaMatch, RawMatch, RawTimeline } from "@scout-for-lol/data";
 import {
   listMatchesFromS3,
   fetchMatchFromS3,
+  fetchTimelineFromS3,
   convertRawMatchToInternalFormat,
   extractMatchMetadataFromRawMatch,
   type S3Config,
@@ -37,7 +38,7 @@ const MatchMetadataArraySchema = z.array(
 );
 
 type MatchBrowserProps = {
-  onMatchSelected: (match: CompletedMatch | ArenaMatch, rawMatch: RawMatch) => void;
+  onMatchSelected: (match: CompletedMatch | ArenaMatch, rawMatch: RawMatch, rawTimeline: RawTimeline | null) => void;
   apiSettings: ApiSettings;
 };
 
@@ -189,10 +190,15 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     setLoading(true);
     setSelectedMetadata(metadata);
     try {
-      const rawMatch = await fetchMatchFromS3(s3Config, metadata.key);
+      // Fetch match and timeline in parallel
+      const [rawMatch, rawTimeline] = await Promise.all([
+        fetchMatchFromS3(s3Config, metadata.key),
+        fetchTimelineFromS3(s3Config, metadata.key),
+      ]);
+
       if (rawMatch) {
         const match = convertRawMatchToInternalFormat(rawMatch, metadata.playerName);
-        onMatchSelected(match, rawMatch);
+        onMatchSelected(match, rawMatch, rawTimeline);
       }
     } catch (err) {
       const errorResult = ErrorSchema.safeParse(err);

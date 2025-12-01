@@ -39,14 +39,6 @@ export type TabData = {
   rawTimeline?: RawTimeline;
 };
 
-// TODO: Frontend cannot fetch timeline from Riot API (browser limitation).
-// Need to either: 1) Store timelines in S3, or 2) Add backend API endpoint.
-// For now, use a placeholder that will skip timeline summary generation.
-// eslint-disable-next-line custom-rules/no-type-assertions -- placeholder until timeline fetching is implemented
-const PLACEHOLDER_TIMELINE = {
-  metadata: { matchId: "placeholder", participants: [], dataVersion: "2" },
-  info: { frameInterval: 60000, frames: [], gameId: 0, participants: [] },
-} as unknown as RawTimeline;
 
 const MAX_TABS = 5;
 
@@ -273,9 +265,20 @@ export default function App() {
     });
   };
 
-  const updateTabMatch = (id: string, match: CompletedMatch | ArenaMatch, rawMatch: RawMatch) => {
-    // TODO: Fetch real timeline data when available (see PLACEHOLDER_TIMELINE comment)
-    const newTabs = tabs.map((t) => (t.id === id ? { ...t, match, rawMatch, rawTimeline: PLACEHOLDER_TIMELINE } : t));
+  const updateTabMatch = (
+    id: string,
+    match: CompletedMatch | ArenaMatch,
+    rawMatch: RawMatch,
+    rawTimeline: RawTimeline | null,
+  ) => {
+    const newTabs = tabs.map((t) => {
+      if (t.id !== id) return t;
+      const updated: TabData = { ...t, match, rawMatch };
+      if (rawTimeline) {
+        updated.rawTimeline = rawTimeline;
+      }
+      return updated;
+    });
     appInitState = { ...appInitState, tabs: newTabs };
     appInitListeners.forEach((listener) => {
       listener();
@@ -337,8 +340,8 @@ export default function App() {
                   </p>
                 </div>
                 <MatchBrowser
-                  onMatchSelected={(match, rawMatch) => {
-                    updateTabMatch(activeTabId, match, rawMatch);
+                  onMatchSelected={(match, rawMatch, rawTimeline) => {
+                    updateTabMatch(activeTabId, match, rawMatch, rawTimeline);
                   }}
                   apiSettings={globalConfig.api}
                 />

@@ -4,6 +4,7 @@
 import { S3Client, ListObjectsV2Command, GetObjectCommand, type ListObjectsV2CommandOutput } from "@aws-sdk/client-s3";
 import {
   RawMatchSchema,
+  RawTimelineSchema,
   parseQueueType,
   getLaneOpponent,
   parseTeam,
@@ -11,6 +12,7 @@ import {
   getOrdinalSuffix,
   parseLane,
   type RawMatch,
+  type RawTimeline,
   type ArenaMatch,
   type CompletedMatch,
 } from "@scout-for-lol/data";
@@ -254,6 +256,79 @@ export async function fetchMatchFromS3(config: S3Config, key: string): Promise<R
     return rawDataResult;
   } catch (error) {
     console.error(`Failed to fetch match ${key}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Fetch a timeline from S3 (direct client-side)
+ * Results are cached for 7 days (timeline data is immutable)
+ * @param config - S3 configuration
+ * @param matchKey - The S3 key for the match (e.g., games/2024/01/15/NA_123456789/match.json)
+ * @returns The timeline data or null if not found
+ */
+export async function fetchTimelineFromS3(config: S3Config, matchKey: string): Promise<RawTimeline | null> {
+  try {
+    // Derive timeline key from match key
+    // Match key: games/2024/01/15/NA_123456789/match.json
+    // Timeline key: games/2024/01/15/NA_123456789/timeline.json
+    const timelineKey = matchKey.replace(/\/match\.json$/, "/timeline.json");
+
+    // Cache key parameters (exclude credentials for security)
+    const cacheParams = {
+      bucketName: config.bucketName,
+      region: config.region,
+      endpoint: config.endpoint,
+      key: timelineKey,
+    };
+
+    // Try to get from cache first (7 days TTL - timeline data is immutable)
+    const cached: unknown = await getCachedDataAsync("r2-timeline", cacheParams);
+
+    const cachedResult = RawTimelineSchema.safeParse(cached);
+    if (cachedResult.success) {
+      return cachedResult.data;
+    }
+
+    // Cache miss - fetch directly from S3
+    console.log(`[S3] Fetching timeline: ${timelineKey}`);
+
+    // Create S3 client
+    const client = new S3Client({
+      region: config.region,
+      ...(config.endpoint ? { endpoint: config.endpoint } : {}),
+      credentials: {
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey,
+      },
+    });
+
+    // Get object
+    const command = new GetObjectCommand({
+      Bucket: config.bucketName,
+      Key: timelineKey,
+    });
+
+    const response = await client.send(command);
+
+    if (!response.Body) {
+      console.log(`[S3] Timeline not found: ${timelineKey}`);
+      return null;
+    }
+
+    // Convert stream to string
+    const bodyString = await response.Body.transformToString();
+    const rawData: unknown = JSON.parse(bodyString);
+
+    // Validate using proper RawTimeline schema
+    const rawDataResult = RawTimelineSchema.parse(rawData);
+
+    // Cache the result for 7 days (timeline data is immutable)
+    await setCachedData("r2-timeline", cacheParams, rawDataResult, 7 * 24 * 60 * 60 * 1000);
+
+    return rawDataResult;
+  } catch (error) {
+    console.error(`Failed to fetch timeline for match ${matchKey}:`, error);
     return null;
   }
 }
