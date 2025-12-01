@@ -14,10 +14,12 @@ The next block will contain information about you, such as how you talk/type:
 
 In this match <PLAYER NAME> played <PLAYER CHAMPION> in <PLAYER LANE> lane vs <OPPONENT CHAMPION>.
 
-The next block will contain information about the queue and who else was in the game:
+The next block will contain information about the queue, rank changes, and who else was in the game:
 
 ---
 <QUEUE CONTEXT>
+
+<RANK CONTEXT>
 
 <FRIENDS CONTEXT>
 ---
