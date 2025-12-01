@@ -18,8 +18,9 @@ import { SoundPackSchema, getChampionImageUrl } from "@scout-for-lol/data";
 
 /**
  * Creates a Tauri-specific adapter for the sound pack editor
+ * @param onSave - Optional callback called after saving a sound pack
  */
-export function createTauriAdapter(): SoundPackAdapter {
+export function createTauriAdapter(onSave?: () => void): SoundPackAdapter {
   return {
     // =========================================================================
     // File Operations
@@ -136,6 +137,8 @@ export function createTauriAdapter(): SoundPackAdapter {
 
     saveSoundPack: async (pack: SoundPack) => {
       await invoke("save_sound_pack", { pack });
+      // Notify parent of save so it can refresh available packs
+      onSave?.();
     },
 
     loadSoundPack: async () => {

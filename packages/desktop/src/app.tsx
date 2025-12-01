@@ -424,7 +424,7 @@ export default function App() {
           />
         );
       case "sounds":
-        return <SoundPackSection />;
+        return <SoundPackSection onSave={() => void loadAvailableSoundPacks()} />;
     }
   };
 

@@ -11,9 +11,13 @@ import {
 } from "@scout-for-lol/ui";
 import { createTauriAdapter } from "../../adapters/sound-pack-adapter";
 
-export function SoundPackSection() {
-  // Create the adapter once
-  const adapter = useMemo(() => createTauriAdapter(), []);
+type SoundPackSectionProps = {
+  onSave?: () => void;
+};
+
+export function SoundPackSection({ onSave }: SoundPackSectionProps) {
+  // Create the adapter with save callback
+  const adapter = useMemo(() => createTauriAdapter(onSave), [onSave]);
 
   return (
     <SoundPackEditorProvider adapter={adapter}>

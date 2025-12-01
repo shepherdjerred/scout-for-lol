@@ -1,6 +1,7 @@
 //! Discord integration module for posting game events and playing sounds in voice chat
 
 use crate::paths;
+use crate::sound_pack as custom_sound_pack;
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use serenity::all::{ChannelId, GatewayIntents, GuildId, Ready};
@@ -379,6 +380,84 @@ impl SoundPack {
     pub fn cue_for(&self, key: &str) -> Option<SoundCue> {
         self.cues.get(key).cloned()
     }
+
+    /// Load a custom sound pack from disk and convert it to a simple SoundPack
+    pub fn load_custom(pack_id: &str) -> Option<Self> {
+        let sound_pack_path = paths::sound_pack_file();
+        if !sound_pack_path.exists() {
+            info!("No custom sound pack file found");
+            return None;
+        }
+
+        let content = match std::fs::read_to_string(&sound_pack_path) {
+            Ok(c) => c,
+            Err(e) => {
+                warn!("Failed to read sound pack file: {}", e);
+                return None;
+            }
+        };
+
+        let custom_pack: custom_sound_pack::SoundPack = match serde_json::from_str(&content) {
+            Ok(p) => p,
+            Err(e) => {
+                warn!("Failed to parse sound pack: {}", e);
+                return None;
+            }
+        };
+
+        // Check if this is the requested pack
+        if custom_pack.id != pack_id {
+            info!(
+                "Custom pack id '{}' doesn't match requested '{}'",
+                custom_pack.id, pack_id
+            );
+            return None;
+        }
+
+        info!("Loading custom sound pack: {}", custom_pack.name);
+
+        // Convert custom pack defaults to our cue format
+        let mut cues = HashMap::new();
+        let base_beep = ensure_base_beep_file();
+
+        // Map event types to our cue keys
+        let event_mappings = [
+            (custom_sound_pack::EventType::GameStart, SoundEvent::GameStart.key()),
+            (custom_sound_pack::EventType::GameEnd, SoundEvent::GameEnd.key()),
+            (custom_sound_pack::EventType::FirstBlood, SoundEvent::FirstBlood.key()),
+            (custom_sound_pack::EventType::Kill, SoundEvent::Kill.key()),
+            (custom_sound_pack::EventType::MultiKill, SoundEvent::MultiKill.key()),
+            (custom_sound_pack::EventType::Objective, SoundEvent::Objective.key()),
+            (custom_sound_pack::EventType::Ace, SoundEvent::Ace.key()),
+        ];
+
+        for (event_type, key) in event_mappings {
+            if let Some(pool) = custom_pack.defaults.get(&event_type) {
+                if let Some(sound) = pool.select_sound() {
+                    let cue = match &sound.source {
+                        custom_sound_pack::SoundSource::File { path } => {
+                            SoundCue::File(path.clone())
+                        }
+                        custom_sound_pack::SoundSource::Url { url } => {
+                            SoundCue::Youtube(url.clone())
+                        }
+                    };
+                    cues.insert(key.to_string(), cue);
+                    info!("Custom sound for {}: {:?}", key, sound.source);
+                }
+            } else {
+                // Fall back to base beep for unmapped events
+                cues.insert(key.to_string(), SoundCue::File(base_beep.clone()));
+            }
+        }
+
+        Some(Self {
+            id: custom_pack.id,
+            _name: custom_pack.name,
+            _description: custom_pack.description.unwrap_or_default(),
+            cues,
+        })
+    }
 }
 
 /// Minimal event handler to keep the gateway session alive
@@ -442,9 +521,18 @@ impl DiscordClient {
             songbird: None,
             sound_pack: match sound_pack.as_deref() {
                 Some("base") | None => SoundPack::base(),
-                Some(other) => {
-                    info!("Unknown sound pack `{other}`, falling back to base");
-                    SoundPack::base()
+                Some(pack_id) => {
+                    // Try to load the custom sound pack
+                    match SoundPack::load_custom(pack_id) {
+                        Some(custom) => {
+                            info!("Loaded custom sound pack: {}", pack_id);
+                            custom
+                        }
+                        None => {
+                            info!("Custom sound pack `{}` not found, falling back to base", pack_id);
+                            SoundPack::base()
+                        }
+                    }
                 }
             },
             event_overrides: HashMap::new(),
