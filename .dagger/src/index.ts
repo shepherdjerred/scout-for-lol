@@ -301,31 +301,50 @@ export class ScoutForLol {
       return image;
     });
 
-    // Run typecheck, lint, and tests in PARALLEL for maximum speed (uses mounted workspace for speed)
+    // Run typecheck, lint, and tests with MAXIMUM PARALLELISM via Dagger
+    // Instead of using bun's sequential --filter, we run each package in its own parallel container
     const checksPromise = withTiming("all checks (lint, typecheck, tests)", async () => {
       await Promise.all([
-        withTiming("typecheck all", async () => {
-          await mountedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "typecheck"]).sync();
+        // TYPECHECK: Run each package's typecheck in parallel (5 parallel containers)
+        withTiming("typecheck all (parallel)", async () => {
+          await Promise.all([
+            mountedWorkspace.withWorkdir("/workspace/packages/backend").withExec(["bunx", "tsc", "--noEmit"]).sync(),
+            mountedWorkspace.withWorkdir("/workspace/packages/data").withExec(["bunx", "tsc", "--noEmit"]).sync(),
+            mountedWorkspace.withWorkdir("/workspace/packages/report").withExec(["bunx", "tsc", "--noEmit"]).sync(),
+            mountedWorkspace
+              .withWorkdir("/workspace/packages/frontend")
+              .withExec(["sh", "-c", "astro check && bunx tsc --noEmit"])
+              .sync(),
+            mountedWorkspace.withWorkdir("/workspace/packages/desktop").withExec(["bunx", "tsc", "--noEmit"]).sync(),
+          ]);
         }),
-        withTiming("lint all", async () => {
-          // Use ESLint with content-based caching for faster incremental runs
-          await mountedWorkspace
-            .withWorkdir("/workspace")
-            .withExec([
-              "bunx",
-              "eslint",
-              "packages/",
-              "--cache",
-              "--cache-strategy",
-              "content",
-              "--cache-location",
-              "/workspace/.eslintcache",
-            ])
-            .sync();
+
+        // LINT: Run ESLint for each package in parallel with caching
+        withTiming("lint all (parallel)", async () => {
+          const eslintArgs = ["bunx", "eslint", "src", "--cache", "--cache-strategy", "content"];
+          await Promise.all([
+            mountedWorkspace.withWorkdir("/workspace/packages/backend").withExec(eslintArgs).sync(),
+            mountedWorkspace.withWorkdir("/workspace/packages/data").withExec(eslintArgs).sync(),
+            mountedWorkspace.withWorkdir("/workspace/packages/report").withExec(eslintArgs).sync(),
+            mountedWorkspace.withWorkdir("/workspace/packages/frontend").withExec(eslintArgs).sync(),
+            mountedWorkspace.withWorkdir("/workspace/packages/desktop").withExec(eslintArgs).sync(),
+          ]);
         }),
-        withTiming("test all", async () => {
-          await mountedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "test"]).sync();
+
+        // TESTS: Run tests for each package in parallel
+        withTiming("test all (parallel)", async () => {
+          await Promise.all([
+            // eslint-rules tests (root level)
+            mountedWorkspace.withWorkdir("/workspace").withExec(["bun", "test", "eslint-rules/"]).sync(),
+            // Package tests
+            mountedWorkspace.withWorkdir("/workspace/packages/backend").withExec(["bun", "test"]).sync(),
+            mountedWorkspace.withWorkdir("/workspace/packages/data").withExec(["bun", "test"]).sync(),
+            mountedWorkspace.withWorkdir("/workspace/packages/report").withExec(["bun", "test"]).sync(),
+            // Note: frontend and desktop tests are no-ops currently
+          ]);
         }),
+
+        // Duplication check
         withTiming("duplication check", async () => {
           await mountedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "duplication-check"]).sync();
         }),
