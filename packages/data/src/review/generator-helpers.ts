@@ -1,7 +1,7 @@
 import { match as matchPattern } from "ts-pattern";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
 import { selectRandomBehavior, type Personality } from "@scout-for-lol/data/review/prompts.ts";
-import { wasPromoted, wasDemoted, rankToSimpleString } from "@scout-for-lol/data/model/rank.ts";
+import { wasPromoted, wasDemoted, rankToSimpleString, tierToPercentileString } from "@scout-for-lol/data/model/rank.ts";
 import { lpDiffToString, rankToLeaguePoints } from "@scout-for-lol/data/model/league-points.ts";
 
 /**
@@ -248,7 +248,7 @@ function buildRankContext(match: CompletedMatch | ArenaMatch): string {
     return "";
   }
 
-  const rankChanges: string[] = [];
+  const rankInfo: string[] = [];
 
   for (const player of match.players) {
     const rankBefore = player.rankBeforeMatch;
@@ -259,27 +259,35 @@ function buildRankContext(match: CompletedMatch | ArenaMatch): string {
       continue;
     }
 
+    // Add current rank with percentile context
+    const rankStr = rankToSimpleString(rankAfter);
+    const percentileStr = tierToPercentileString(rankAfter.tier);
+    const rankLine = `${playerName} is currently ${rankStr} (${percentileStr} of players).`;
+
     if (wasPromoted(rankBefore, rankAfter)) {
-      const newRankStr = rankToSimpleString(rankAfter);
-      rankChanges.push(`${playerName} was PROMOTED to ${newRankStr} after this game!`);
+      rankInfo.push(`${rankLine} They were PROMOTED after this game!`);
     } else if (wasDemoted(rankBefore, rankAfter)) {
-      const newRankStr = rankToSimpleString(rankAfter);
-      rankChanges.push(`${playerName} was DEMOTED to ${newRankStr} after this game.`);
+      rankInfo.push(`${rankLine} They were DEMOTED after this game.`);
     } else if (rankBefore) {
       // Show LP change for non-promotion/demotion games
       const lpDelta = rankToLeaguePoints(rankAfter) - rankToLeaguePoints(rankBefore);
       if (lpDelta !== 0) {
         const lpStr = lpDiffToString(lpDelta);
-        rankChanges.push(`${playerName} ${lpDelta > 0 ? "gained" : "lost"} ${lpStr.replace(/[+-]/, "")}.`);
+        const changeStr = lpDelta > 0 ? `gained ${lpStr.replace(/[+-]/, "")}` : `lost ${lpStr.replace(/[+-]/, "")}`;
+        rankInfo.push(`${rankLine} They ${changeStr}.`);
+      } else {
+        rankInfo.push(rankLine);
       }
+    } else {
+      rankInfo.push(rankLine);
     }
   }
 
-  if (rankChanges.length === 0) {
+  if (rankInfo.length === 0) {
     return "";
   }
 
-  return rankChanges.join(" ");
+  return rankInfo.join(" ");
 }
 
 export function buildPromptVariables(params: {
