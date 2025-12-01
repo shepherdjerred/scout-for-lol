@@ -52,7 +52,8 @@ export function getRustTauriContainer(): Container {
       .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
       .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
       // Cargo build optimizations via environment variables
-      .withEnvVariable("CARGO_INCREMENTAL", "1") // Enable incremental compilation
+      // NOTE: CARGO_INCREMENTAL must be 0 when using sccache (they're incompatible)
+      .withEnvVariable("CARGO_INCREMENTAL", "0")
       .withEnvVariable("CARGO_BUILD_JOBS", "4") // Parallel compilation jobs
       .withEnvVariable("CARGO_NET_GIT_FETCH_WITH_CLI", "false") // Faster git fetching
       .withEnvVariable("CARGO_REGISTRIES_CRATES_IO_PROTOCOL", "sparse") // Sparse index protocol
