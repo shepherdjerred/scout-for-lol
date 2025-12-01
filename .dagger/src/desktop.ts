@@ -378,23 +378,23 @@ export function checkDesktop(workspaceSource: Directory, frontendDist?: Director
  * @returns The container with built artifacts
  */
 export function buildDesktopLinux(workspaceSource: Directory, version: string, frontendDist?: Directory): Container {
-  // Step 1: Cook dependencies using cargo-chef (cached layer)
-  const cookedContainer = cookCargoChefRecipe(workspaceSource, "linux", true);
-  const cookedTarget = cookedContainer.directory("/workspace/packages/desktop/src-tauri/target");
-
-  // Step 2: Build the actual app with pre-compiled dependencies
+  // Build with sccache for compilation caching + mounted target cache
   let container = installDesktopDeps(workspaceSource)
     .withEnvVariable("VERSION", version)
+    // Mount sccache for compilation caching
+    .withMountedCache("/root/.cache/sccache", dag.cacheVolume("sccache-linux"))
+    .withEnvVariable("RUSTC_WRAPPER", "sccache")
+    .withEnvVariable("SCCACHE_DIR", "/root/.cache/sccache")
+    // Mount target cache for incremental builds
+    .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("cargo-target-linux"))
     .withWorkdir("/workspace/packages/desktop")
-    // Use pre-cooked dependencies from cargo-chef
-    .withDirectory("/workspace/packages/desktop/src-tauri/target", cookedTarget)
     .withExec(["sh", "-c", "echo '🏗️  [CI] Building desktop application for Linux...'"]);
 
   // Use pre-built frontend if provided
   if (frontendDist) {
     container = container
       .withDirectory("/workspace/packages/desktop/dist", frontendDist)
-      .withExec(["sh", "-c", "echo '📦 Using pre-built frontend, running Tauri build (deps pre-compiled)...'"])
+      .withExec(["sh", "-c", "echo '📦 Using pre-built frontend, running Tauri build...'"])
       .withWorkdir("/workspace/packages/desktop/src-tauri")
       .withExec(["cargo", "tauri", "build"]);
   } else {
@@ -402,7 +402,7 @@ export function buildDesktopLinux(workspaceSource: Directory, version: string, f
     container = container.withExec(["bun", "run", "build"]);
   }
 
-  // Copy artifacts from target to permanent location in container filesystem
+  // Copy artifacts from target cache to permanent location in container filesystem
   return container
     .withExec(["sh", "-c", "echo '📦 Copying artifacts to permanent location...'"])
     .withExec([
@@ -415,8 +415,7 @@ export function buildDesktopLinux(workspaceSource: Directory, version: string, f
 
 /**
  * Build the desktop application for Windows (x86_64-pc-windows-gnu)
- * Uses cargo-chef for better dependency caching - dependencies are compiled separately
- * and cached, so only app code needs to recompile on changes.
+ * Uses sccache for compilation caching and mounted target cache for incremental builds.
  * @param workspaceSource The full workspace source directory
  * @param version The version tag
  * @param frontendDist Optional pre-built frontend dist directory (avoids rebuilding)
@@ -427,21 +426,20 @@ export function buildDesktopWindowsGnu(
   version: string,
   frontendDist?: Directory,
 ): Container {
-  // Step 1: Cook dependencies using cargo-chef (cached layer)
-  // This compiles all dependencies but not the app code
-  const cookedContainer = cookCargoChefRecipe(workspaceSource, "windows-gnu", true);
-  const cookedTarget = cookedContainer.directory("/workspace/packages/desktop/src-tauri/target");
-
-  // Step 2: Build the actual app with pre-compiled dependencies
+  // Build with sccache for compilation caching + mounted target cache
   let container = installDesktopDeps(workspaceSource, "windows-gnu")
     .withEnvVariable("VERSION", version)
     .withEnvVariable("CARGO_TARGET_DIR", "/workspace/packages/desktop/src-tauri/target")
     .withEnvVariable("RUSTUP_HOME", "/usr/local/rustup")
     .withEnvVariable("CARGO_HOME", "/usr/local/cargo")
     .withEnvVariable("PATH", "/usr/local/cargo/bin:/usr/local/rustup/bin:$PATH", { expand: true })
+    // Mount sccache for compilation caching
+    .withMountedCache("/root/.cache/sccache", dag.cacheVolume("sccache-windows"))
+    .withEnvVariable("RUSTC_WRAPPER", "sccache")
+    .withEnvVariable("SCCACHE_DIR", "/root/.cache/sccache")
+    // Mount target cache for incremental builds
+    .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("cargo-target-windows-gnu"))
     .withWorkdir("/workspace/packages/desktop")
-    // Use pre-cooked dependencies from cargo-chef
-    .withDirectory("/workspace/packages/desktop/src-tauri/target", cookedTarget)
     .withExec(["sh", "-c", "echo '🏗️  [CI] Building desktop application for Windows (x86_64-pc-windows-gnu)...'"]);
 
   // Use pre-built frontend if provided, otherwise build it
@@ -455,9 +453,9 @@ export function buildDesktopWindowsGnu(
       .withExec(["bunx", "vite", "build"]);
   }
 
-  // Build app code (dependencies already compiled by cargo-chef)
+  // Build app code (sccache handles compilation caching)
   return container
-    .withExec(["sh", "-c", "echo '🦀 Building Rust application with Cargo (deps pre-compiled by cargo-chef)...'"])
+    .withExec(["sh", "-c", "echo '🦀 Building Rust application with Cargo...'"])
     .withWorkdir("/workspace/packages/desktop/src-tauri")
     .withExec(["cargo", "build", "--release", "--target", "x86_64-pc-windows-gnu"])
     .withExec([
