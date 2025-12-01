@@ -1,4 +1,4 @@
-import type { RawMatch, PlayerConfigEntry, LeaguePuuid, MatchId } from "@scout-for-lol/data/index.ts";
+import type { RawMatch, PlayerConfigEntry, LeaguePuuid, MatchId, DiscordGuildId } from "@scout-for-lol/data/index.ts";
 import { getRecentMatchIds, filterNewMatches } from "@scout-for-lol/backend/league/api/match-history.ts";
 import {
   getAccountsWithState,
@@ -8,7 +8,7 @@ import {
   updateLastMatchTime,
   updateLastCheckedAt,
 } from "@scout-for-lol/backend/database/index.ts";
-import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
+import { MatchIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
 import { send } from "@scout-for-lol/backend/league/discord/channel.ts";
 import { shouldCheckPlayer, calculatePollingInterval } from "@scout-for-lol/backend/utils/polling-intervals.ts";
 import {
@@ -17,6 +17,7 @@ import {
 } from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { uniqueBy } from "remeda";
 
 const logger = createLogger("postmatch-match-history-polling");
 
@@ -73,22 +74,35 @@ async function processMatch(matchData: RawMatch, trackedPlayers: PlayerConfigEnt
   logger.info(`[processMatch] 🎮 Processing match ${matchId}`);
 
   try {
-    // Generate the match report message
-    const message = await generateMatchReport(matchData, trackedPlayers);
-
-    if (!message) {
-      logger.info(`[processMatch] ⚠️  No message generated for match ${matchId}`);
-      return;
-    }
-
     // Determine which tracked players are in this match
     const playersInMatch = trackedPlayers.filter((player) =>
       matchData.metadata.participants.includes(player.league.leagueAccount.puuid),
     );
 
-    // Get channels to notify
+    // Get channels to notify FIRST - we need guild IDs for feature flag checks
     const puuids: LeaguePuuid[] = playersInMatch.map((p) => p.league.leagueAccount.puuid);
     const channels = await getChannelsSubscribedToPlayers(puuids);
+
+    if (channels.length === 0) {
+      logger.info(`[processMatch] ⚠️  No channels subscribed to players in match ${matchId}`);
+      return;
+    }
+
+    // Extract unique guild IDs for feature flag checks
+    const targetGuildIds: DiscordGuildId[] = uniqueBy(
+      channels.map((c) => DiscordGuildIdSchema.parse(c.serverId)),
+      (id) => id,
+    );
+
+    logger.info(`[processMatch] 🎯 Target guilds: ${targetGuildIds.join(", ")}`);
+
+    // Generate the match report message with guild context for feature flags
+    const message = await generateMatchReport(matchData, trackedPlayers, { targetGuildIds });
+
+    if (!message) {
+      logger.info(`[processMatch] ⚠️  No message generated for match ${matchId}`);
+      return;
+    }
 
     logger.info(`[processMatch] 📢 Sending notifications to ${channels.length.toString()} channel(s)`);
 

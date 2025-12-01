@@ -13,6 +13,7 @@ import type {
   RawMatch,
   RawTimeline,
   Rank,
+  DiscordGuildId,
 } from "@scout-for-lol/data/index.ts";
 import {
   parseQueueType,
@@ -21,6 +22,7 @@ import {
   RawMatchSchema,
   RawTimelineSchema,
 } from "@scout-for-lol/data/index.ts";
+import { getFlag } from "@scout-for-lol/backend/configuration/flags.ts";
 import { getPlayer } from "@scout-for-lol/backend/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
@@ -278,13 +280,22 @@ type StandardMatchContext = {
   matchId: MatchId;
   playersInMatch: PlayerConfigEntry[];
   timelineData: RawTimeline | undefined;
+  /** Guild IDs that will receive this match report - used for feature flag checks */
+  targetGuildIds: DiscordGuildId[];
 };
+
+/**
+ * Check if AI reviews are enabled for any of the target guilds
+ */
+function isAiReviewEnabledForAnyGuild(guildIds: DiscordGuildId[]): boolean {
+  return guildIds.some((guildId) => getFlag("ai_reviews_enabled", { server: guildId }));
+}
 
 /**
  * Process standard match and generate Discord message
  */
 async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageCreateOptions> {
-  const { players, matchData, matchId, playersInMatch, timelineData } = ctx;
+  const { players, matchData, matchId, playersInMatch, timelineData, targetGuildIds } = ctx;
   logger.info(`[generateMatchReport] ⚔️  Processing as standard match`);
   // Process match for all tracked players
   if (players.length === 0) {
@@ -326,10 +337,20 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
   // Build CompletedMatch with per-player rank data
   const completedMatch = toMatch(players, matchData, playerRanksMap);
 
-  // Generate AI review (text and optional image) - for ranked queues or matches with Jerred
+  // Generate AI review (text and optional image) - gated by feature flag and queue type
   let reviewText: string | undefined;
   let reviewImage: Uint8Array | undefined;
-  const shouldGenerateReview = isRankedQueue(completedMatch.queueType) || hasJerred(playersInMatch);
+
+  // Check if AI reviews are enabled for any target guild
+  const aiReviewsEnabled = isAiReviewEnabledForAnyGuild(targetGuildIds);
+  if (!aiReviewsEnabled) {
+    logger.info(
+      `[generateMatchReport] Skipping AI review - feature not enabled for target guilds: ${targetGuildIds.join(", ")}`,
+    );
+  }
+
+  const shouldGenerateReview =
+    aiReviewsEnabled && (isRankedQueue(completedMatch.queueType) || hasJerred(playersInMatch));
   if (shouldGenerateReview) {
     if (!timelineData) {
       logger.warn(
@@ -347,7 +368,7 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
         captureError(error, "ai-review-generation", matchId, { queueType: completedMatch.queueType ?? "unknown" });
       }
     }
-  } else {
+  } else if (aiReviewsEnabled) {
     logger.info(
       `[generateMatchReport] Skipping AI review - not a ranked queue and Jerred not in match (queueType: ${completedMatch.queueType ?? "unknown"})`,
     );
@@ -424,15 +445,25 @@ async function fetchTimelineIfStandardMatch(
 }
 
 /**
+ * Options for generating a match report
+ */
+export type GenerateMatchReportOptions = {
+  /** Guild IDs that will receive this report - used for feature flag checks (e.g., AI reviews) */
+  targetGuildIds: DiscordGuildId[];
+};
+
+/**
  * Generate a match report message for Discord
  *
  * @param matchData - The match data from Riot API
  * @param trackedPlayers - List of player configs to include in the match (should be in the match)
+ * @param options - Options including target guild IDs for feature flag checks
  * @returns MessageCreateOptions ready to send to Discord, or undefined if no tracked players found
  */
 export async function generateMatchReport(
   matchData: RawMatch,
   trackedPlayers: PlayerConfigEntry[],
+  options: GenerateMatchReportOptions,
 ): Promise<MessageCreateOptions | undefined> {
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
   logger.info(`[generateMatchReport] 🎮 Generating report for match ${matchId}`);
@@ -470,7 +501,16 @@ export async function generateMatchReport(
     // Process match based on queue type
     return await match<number, Promise<MessageCreateOptions>>(matchData.info.queueId)
       .with(1700, () => processArenaMatch(players, matchData, matchId, playersInMatch))
-      .otherwise(() => processStandardMatch({ players, matchData, matchId, playersInMatch, timelineData }));
+      .otherwise(() =>
+        processStandardMatch({
+          players,
+          matchData,
+          matchId,
+          playersInMatch,
+          timelineData,
+          targetGuildIds: options.targetGuildIds,
+        }),
+      );
   } catch (error) {
     logErrorDetails(error, matchId, matchData, trackedPlayers);
     throw error;
