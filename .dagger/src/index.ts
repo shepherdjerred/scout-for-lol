@@ -498,74 +498,122 @@ export class ScoutForLol {
       return image;
     });
 
-    // Run tests with junit reporters and collect artifacts - all in parallel
+    // Run ALL checks, tests, and builds in parallel
     const baseWorkspace = mountedWorkspace.withWorkdir("/workspace");
-
-    const artifactsPromise = withTiming("all checks with artifacts", async () => {
-      const [, , testArtifacts, duplicationArtifacts] = await Promise.all([
-        withTiming("typecheck all", async () => {
-          await baseWorkspace.withExec(["bun", "run", "typecheck"]).sync();
-        }),
-        withTiming("lint all", async () => {
-          await baseWorkspace.withExec(["bun", "run", "lint"]).sync();
-        }),
-        withTiming("test all with junit", async () => {
-          // Run each package's tests with junit reporter
-          const container = await baseWorkspace
-            .withExec(["mkdir", "-p", "/artifacts/backend", "/artifacts/data", "/artifacts/report", "/artifacts/desktop"])
-            .withWorkdir("/workspace/packages/backend")
-            .withExec(["sh", "-c", "bun test --bail --reporter=junit --reporter-outfile=/artifacts/backend/junit.xml"])
-            .withWorkdir("/workspace/packages/data")
-            .withExec([
-              "sh",
-              "-c",
-              "bun test --bail --coverage --reporter=junit --reporter-outfile=/artifacts/data/junit.xml && cp -r coverage /artifacts/data/ 2>/dev/null || true",
-            ])
-            .withWorkdir("/workspace/packages/report")
-            .withExec([
-              "sh",
-              "-c",
-              "bun test --bail --coverage --reporter=junit --reporter-outfile=/artifacts/report/junit.xml && cp -r coverage /artifacts/report/ 2>/dev/null || true",
-            ])
-            .withWorkdir("/workspace/packages/desktop")
-            .withExec(["sh", "-c", "bun test --bail --reporter=junit --reporter-outfile=/artifacts/desktop/junit.xml"])
-            .sync();
-          return container.directory("/artifacts");
-        }),
-        withTiming("duplication check", async () => {
-          const container = await baseWorkspace
-            .withExec(["mkdir", "-p", "/artifacts/jscpd-report"])
-            .withExec(["bun", "run", "duplication-check"])
-            .withExec(["sh", "-c", "cp -r jscpd-report/* /artifacts/jscpd-report/ 2>/dev/null || true"])
-            .sync();
-          return container.directory("/artifacts");
-        }),
-      ]);
-      return { testArtifacts, duplicationArtifacts };
-    });
-
-    // Desktop operations
     const desktopFrontend = buildDesktopFrontend(source);
-    const desktopChecksPromise = withTiming("desktop check (parallel TS + Rust)", () => checkDesktopParallel(source, desktopFrontend));
-    const desktopBuildLinuxPromise = withTiming("desktop application build (Linux)", async () => {
-      const container = buildDesktopLinux(source, version, desktopFrontend);
-      await container.sync();
-      return container;
-    });
-    const desktopBuildWindowsPromise = withTiming("desktop application build (Windows)", async () => {
-      const container = buildDesktopWindowsGnu(source, version, desktopFrontend);
-      await container.sync();
-      return container;
-    });
 
-    // Wait for all parallel work
-    const [{ testArtifacts, duplicationArtifacts }, backendImage, , desktopLinuxContainer, desktopWindowsContainer] = await Promise.all([
-      artifactsPromise,
+    logWithTimestamp("📋 Running all checks, tests, and builds in parallel...");
+
+    // OPTIMIZATION: Everything runs in parallel
+    const [
+      ,
+      ,
+      backendTestArtifacts,
+      dataTestArtifacts,
+      reportTestArtifacts,
+      desktopTestArtifacts,
+      duplicationArtifacts,
+      backendImage,
+      ,
+      desktopLinuxContainer,
+      desktopWindowsContainer,
+    ] = await Promise.all([
+      // Typecheck all packages
+      withTiming("typecheck all", async () => {
+        await baseWorkspace.withExec(["bun", "run", "typecheck"]).sync();
+      }),
+
+      // Lint with cache for speed
+      withTiming("lint all", async () => {
+        await baseWorkspace.withExec(["bunx", "eslint", "packages/", "--cache"]).sync();
+      }),
+
+      // Backend tests
+      withTiming("backend tests", async () => {
+        const container = await baseWorkspace
+          .withExec(["mkdir", "-p", "/artifacts/backend"])
+          .withWorkdir("/workspace/packages/backend")
+          .withExec(["sh", "-c", "bun test --bail --reporter=junit --reporter-outfile=/artifacts/backend/junit.xml"])
+          .sync();
+        return container.directory("/artifacts");
+      }),
+
+      // Data tests
+      withTiming("data tests", async () => {
+        const container = await baseWorkspace
+          .withExec(["mkdir", "-p", "/artifacts/data"])
+          .withWorkdir("/workspace/packages/data")
+          .withExec([
+            "sh",
+            "-c",
+            "bun test --bail --coverage --reporter=junit --reporter-outfile=/artifacts/data/junit.xml && cp -r coverage /artifacts/data/ 2>/dev/null || true",
+          ])
+          .sync();
+        return container.directory("/artifacts");
+      }),
+
+      // Report tests
+      withTiming("report tests", async () => {
+        const container = await baseWorkspace
+          .withExec(["mkdir", "-p", "/artifacts/report"])
+          .withWorkdir("/workspace/packages/report")
+          .withExec([
+            "sh",
+            "-c",
+            "bun test --bail --coverage --reporter=junit --reporter-outfile=/artifacts/report/junit.xml && cp -r coverage /artifacts/report/ 2>/dev/null || true",
+          ])
+          .sync();
+        return container.directory("/artifacts");
+      }),
+
+      // Desktop TS tests
+      withTiming("desktop tests", async () => {
+        const container = await baseWorkspace
+          .withExec(["mkdir", "-p", "/artifacts/desktop"])
+          .withWorkdir("/workspace/packages/desktop")
+          .withExec(["sh", "-c", "bun test --bail --reporter=junit --reporter-outfile=/artifacts/desktop/junit.xml"])
+          .sync();
+        return container.directory("/artifacts");
+      }),
+
+      // Duplication check
+      withTiming("duplication check", async () => {
+        const container = await baseWorkspace
+          .withExec(["mkdir", "-p", "/artifacts/jscpd-report"])
+          .withExec(["bun", "run", "duplication-check"])
+          .withExec(["sh", "-c", "cp -r jscpd-report/* /artifacts/jscpd-report/ 2>/dev/null || true"])
+          .sync();
+        return container.directory("/artifacts");
+      }),
+
+      // Backend image build
       backendImagePromise,
-      desktopChecksPromise,
-      desktopBuildLinuxPromise,
-      desktopBuildWindowsPromise,
+
+      // Desktop Rust checks
+      withTiming("desktop check (parallel TS + Rust)", () => checkDesktopParallel(source, desktopFrontend)),
+
+      // Desktop Linux build
+      withTiming("desktop application build (Linux)", async () => {
+        const container = buildDesktopLinux(source, version, desktopFrontend);
+        await container.sync();
+        return container;
+      }),
+
+      // Desktop Windows build
+      withTiming("desktop application build (Windows)", async () => {
+        const container = buildDesktopWindowsGnu(source, version, desktopFrontend);
+        await container.sync();
+        return container;
+      }),
     ]);
+
+    // Merge test artifacts
+    const testArtifacts = dag
+      .directory()
+      .withDirectory("/", backendTestArtifacts)
+      .withDirectory("/", dataTestArtifacts)
+      .withDirectory("/", reportTestArtifacts)
+      .withDirectory("/", desktopTestArtifacts);
 
     logWithTimestamp("✅ Phase 1 complete: All checks passed and builds finished");
 

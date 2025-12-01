@@ -37,8 +37,12 @@ export function getRustTauriContainer(): Container {
       // Mount Cargo caches for faster builds
       // - registry: Downloaded crate sources and metadata
       // - git: Git dependencies
+      // - bin: Installed binaries (tauri-cli, sccache)
       .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
       .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
+      .withMountedCache("/usr/local/cargo/bin", dag.cacheVolume("cargo-bin"))
+      // sccache for compilation caching
+      .withMountedCache("/root/.cache/sccache", dag.cacheVolume("sccache"))
       // Cargo build optimizations via environment variables
       .withEnvVariable("CARGO_INCREMENTAL", "1") // Enable incremental compilation
       .withEnvVariable("CARGO_BUILD_JOBS", "4") // Parallel compilation jobs
@@ -47,8 +51,12 @@ export function getRustTauriContainer(): Container {
       // Use mold linker for faster linking on Linux (x86_64)
       .withEnvVariable("CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER", "clang")
       .withEnvVariable("RUSTFLAGS", "-C link-arg=-fuse-ld=mold")
-      // Install Tauri CLI for `cargo tauri build`
-      .withExec(["cargo", "install", "tauri-cli", "--locked"])
+      // Install sccache and tauri-cli (uses cargo bin cache)
+      .withExec(["sh", "-c", "command -v sccache || cargo install sccache --locked"])
+      .withExec(["sh", "-c", "command -v cargo-tauri || cargo install tauri-cli --locked"])
+      // Enable sccache as the Rust compiler wrapper
+      .withEnvVariable("RUSTC_WRAPPER", "sccache")
+      .withEnvVariable("SCCACHE_DIR", "/root/.cache/sccache")
   );
 }
 
