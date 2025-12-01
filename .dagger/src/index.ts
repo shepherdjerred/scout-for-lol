@@ -353,79 +353,102 @@ export class ScoutForLol {
       }
     });
 
-    // Publish images if credentials provided and environment is prod
+    // OPTIMIZATION: Publish backend image and desktop artifacts in PARALLEL
+    // These operations don't depend on each other
     const shouldPublish = ghcrUsername && ghcrPassword && isProd;
-    if (shouldPublish) {
-      await withTiming("CI publish phase", async () => {
-        logWithTimestamp("📦 Phase 2: Publishing Docker image to registry...");
-
-        // Reuse the already-built image for publishing
-        const publishedRefs = await publishBackendImageWithContainer({
-          image: backendImage,
-          version,
-          gitSha,
-          registryAuth: {
-            username: ghcrUsername,
-            password: ghcrPassword,
-          },
-        });
-
-        logWithTimestamp(`✅ Images published: ${publishedRefs.join(", ")}`);
-      });
-    } else {
-      logWithTimestamp("⏭️ Phase 2: Skipping image publishing (no credentials or not prod environment)");
-    }
-
-    // Publish desktop artifacts to GitHub Releases (only for prod with GitHub token)
     const shouldPublishDesktop = isProd && ghToken;
-    if (shouldPublishDesktop) {
-      await withTiming("CI desktop artifacts publish phase", async () => {
-        logWithTimestamp("📦 Phase 2.5: Publishing desktop artifacts to GitHub Releases...");
-        await this.publishDesktopArtifactsWithContainers(
-          desktopLinuxContainer,
-          desktopWindowsContainer,
-          version,
-          gitSha,
-          ghToken,
+
+    if (shouldPublish || shouldPublishDesktop) {
+      logWithTimestamp("📦 Phase 2: Publishing artifacts in parallel...");
+
+      const publishPromises: Promise<void>[] = [];
+
+      if (shouldPublish) {
+        publishPromises.push(
+          withTiming("backend image publish", async () => {
+            logWithTimestamp("📦 Publishing Docker image to registry...");
+            const publishedRefs = await publishBackendImageWithContainer({
+              image: backendImage,
+              version,
+              gitSha,
+              registryAuth: {
+                username: ghcrUsername,
+                password: ghcrPassword,
+              },
+            });
+            logWithTimestamp(`✅ Images published: ${publishedRefs.join(", ")}`);
+          }),
         );
-        logWithTimestamp("✅ Desktop artifacts published to GitHub Releases");
-      });
+      }
+
+      if (shouldPublishDesktop) {
+        publishPromises.push(
+          withTiming("desktop artifacts publish", async () => {
+            logWithTimestamp("📦 Publishing desktop artifacts to GitHub Releases...");
+            await this.publishDesktopArtifactsWithContainers(
+              desktopLinuxContainer,
+              desktopWindowsContainer,
+              version,
+              gitSha,
+              ghToken,
+            );
+            logWithTimestamp("✅ Desktop artifacts published to GitHub Releases");
+          }),
+        );
+      }
+
+      await Promise.all(publishPromises);
+      logWithTimestamp("✅ Phase 2 complete: All artifacts published");
     } else {
-      logWithTimestamp("⏭️ Phase 2.5: Skipping desktop artifacts publishing (not prod or no GitHub token)");
+      logWithTimestamp("⏭️ Phase 2: Skipping artifact publishing (no credentials or not prod environment)");
     }
 
-    // Deploy backend to homelab (only for prod)
-    if (isProd) {
-      await withTiming("CI backend deploy phase", () => {
-        logWithTimestamp("🚀 Phase 3: Deploying backend to beta...");
-        return this.deploy(source, version, "beta", ghToken);
-      });
-    } else {
-      logWithTimestamp("⏭️ Phase 3: Skipping backend deployment (not prod environment)");
-    }
-
-    // Deploy frontend to Cloudflare Pages if credentials provided
+    // OPTIMIZATION: Deploy backend and frontend in PARALLEL
+    // These operations don't depend on each other
+    const shouldDeployBackend = isProd;
     const shouldDeployFrontend = accountId && apiToken && branch;
-    if (shouldDeployFrontend) {
-      await withTiming("CI frontend deploy phase", async () => {
-        logWithTimestamp(`🚀 Phase 4: Deploying frontend to Cloudflare Pages (branch: ${branch})...`);
-        const project = projectName ?? "scout-for-lol";
-        const deployOutput = await this.deployFrontend(source, branch, gitSha, project, accountId, apiToken);
 
-        // Parse the preview URL from wrangler output
-        const previewUrl = parsePreviewUrl(deployOutput);
-        const displayUrl = previewUrl ?? `https://${branch === "main" ? "" : `${branch}.`}${project}.pages.dev`;
+    if (shouldDeployBackend || shouldDeployFrontend) {
+      logWithTimestamp("🚀 Phase 3: Deploying in parallel...");
 
-        logWithTimestamp(`✅ Frontend deployed to ${displayUrl}`);
+      const deployPromises: Promise<void>[] = [];
 
-        // Post a comment to the PR with the preview URL (only for PRs, not main branch)
-        if (prNumber && ghToken && branch !== "main") {
-          const comment = `## 🚀 Deploy Preview Ready!\n\nA preview of this PR has been deployed to Cloudflare Pages:\n\n**Preview URL:** ${displayUrl}\n\n---\n*Deployed from commit ${gitSha.substring(0, 7)}*`;
-          await postPrComment(prNumber, comment, ghToken);
-        }
-      });
+      if (shouldDeployBackend) {
+        deployPromises.push(
+          withTiming("backend deploy", async () => {
+            logWithTimestamp("🚀 Deploying backend to beta...");
+            await this.deploy(source, version, "beta", ghToken);
+            logWithTimestamp("✅ Backend deployed to beta");
+          }),
+        );
+      }
+
+      if (shouldDeployFrontend) {
+        deployPromises.push(
+          withTiming("frontend deploy", async () => {
+            logWithTimestamp(`🚀 Deploying frontend to Cloudflare Pages (branch: ${branch})...`);
+            const project = projectName ?? "scout-for-lol";
+            const deployOutput = await this.deployFrontend(source, branch, gitSha, project, accountId, apiToken);
+
+            // Parse the preview URL from wrangler output
+            const previewUrl = parsePreviewUrl(deployOutput);
+            const displayUrl = previewUrl ?? `https://${branch === "main" ? "" : `${branch}.`}${project}.pages.dev`;
+
+            logWithTimestamp(`✅ Frontend deployed to ${displayUrl}`);
+
+            // Post a comment to the PR with the preview URL (only for PRs, not main branch)
+            if (prNumber && ghToken && branch !== "main") {
+              const comment = `## 🚀 Deploy Preview Ready!\n\nA preview of this PR has been deployed to Cloudflare Pages:\n\n**Preview URL:** ${displayUrl}\n\n---\n*Deployed from commit ${gitSha.substring(0, 7)}*`;
+              await postPrComment(prNumber, comment, ghToken);
+            }
+          }),
+        );
+      }
+
+      await Promise.all(deployPromises);
+      logWithTimestamp("✅ Phase 3 complete: All deployments finished");
     } else {
-      logWithTimestamp("⏭️ Phase 4: Skipping frontend deployment (no Cloudflare credentials or branch not provided)");
+      logWithTimestamp("⏭️ Phase 3: Skipping deployments (not prod or no credentials)");
     }
 
     logWithTimestamp("🎉 CI pipeline completed successfully");
@@ -1094,61 +1117,10 @@ export class ScoutForLol {
       // Create or update the GitHub release
       logWithTimestamp(`🚀 Creating/updating GitHub release v${version}...`);
 
-      // Step 1: Verify authentication and check token scopes
-      logWithTimestamp(`🔐 Verifying GitHub authentication...`);
+      // Note: Auth verification removed for performance - ghToken is already validated by caller
+      // If auth fails, the release commands will fail with clear error messages
 
-      // First, check basic auth status (allow failure to capture output)
-      let authCheckContainer: Container;
-      let authOutput: string;
-      try {
-        authCheckContainer = container.withExec(["sh", "-c", 'gh auth status 2>&1; echo "AUTH_EXIT_CODE=$?"']);
-        authOutput = await authCheckContainer.stdout();
-        logWithTimestamp(`Auth status output: ${authOutput.trim()}`);
-
-        if (authOutput.includes("AUTH_EXIT_CODE=0")) {
-          logWithTimestamp(`✓ GitHub authentication successful`);
-        } else {
-          logWithTimestamp(`⚠️ GitHub authentication check returned non-zero exit code`);
-        }
-      } catch (error) {
-        logWithTimestamp(`❌ Auth check failed with error: ${error instanceof Error ? error.message : String(error)}`);
-        // Try to get any stderr output
-        try {
-          const stderr = await authCheckContainer!.stderr();
-          logWithTimestamp(`Auth check stderr: ${stderr}`);
-        } catch {
-          // Ignore stderr fetch errors
-        }
-        throw error;
-      }
-
-      // Try a simple API call to verify token works
-      logWithTimestamp(`🔍 Testing GitHub API access...`);
-      let apiTestContainer: Container;
-      let apiOutput: string;
-      try {
-        apiTestContainer = container.withExec(["sh", "-c", 'gh api user 2>&1; echo "API_EXIT_CODE=$?"']);
-        apiOutput = await apiTestContainer.stdout();
-        logWithTimestamp(`API test output: ${apiOutput.trim()}`);
-
-        if (!apiOutput.includes("API_EXIT_CODE=0")) {
-          throw new Error(`GitHub API access failed. Output: ${apiOutput}`);
-        }
-
-        logWithTimestamp(`✓ GitHub authentication verified`);
-      } catch (error) {
-        logWithTimestamp(`❌ API test failed with error: ${error instanceof Error ? error.message : String(error)}`);
-        // Try to get stderr
-        try {
-          const stderr = await apiTestContainer!.stderr();
-          logWithTimestamp(`API test stderr: ${stderr}`);
-        } catch {
-          // Ignore stderr fetch errors
-        }
-        throw error;
-      }
-
-      // Step 2: Check if release exists (capture output for debugging)
+      // Check if release exists (capture output for debugging)
       logWithTimestamp(`🔍 Checking if release v${version} exists...`);
       const checkReleaseContainer = container.withExec([
         "sh",

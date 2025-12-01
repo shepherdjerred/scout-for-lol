@@ -83,10 +83,9 @@ export function installDesktopDeps(workspaceSource: Directory, target: DesktopTa
     container = container
       .withExec(["apt", "install", "-y", "mingw-w64", "nsis", "zip"])
       .withExec(["sh", "-c", "echo '🔧 Installing Windows GNU target for cross-compilation...'"])
-      // Install target for both default and stable toolchains since rust-toolchain.toml uses stable
-      .withExec(["rustup", "target", "add", "x86_64-pc-windows-gnu"])
+      // Install target for stable toolchain (rust-toolchain.toml uses stable)
       .withExec(["rustup", "target", "add", "x86_64-pc-windows-gnu", "--toolchain", "stable"])
-      .withExec(["sh", "-c", "echo '✅ Windows GNU target installed for both default and stable toolchains'"]);
+      .withExec(["sh", "-c", "echo '✅ Windows GNU target installed'"]);
   }
 
   // Set up workspace structure - include all required files like base.ts does
