@@ -133,12 +133,26 @@ async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region): Promi
 /** Format a natural language message about who finished the game */
 function formatGameCompletionMessage(playerAliases: string[], queueType: QueueType): string {
   const queueName = queueTypeToDisplayString(queueType);
-  const validAliases = playerAliases.filter((a): a is string => a !== undefined);
-  if (validAliases.length === 0) return `Game finished: ${queueName}`;
-  if (validAliases.length === 1) return `${validAliases[0]} finished a ${queueName} game`;
-  if (validAliases.length === 2) return `${validAliases[0]} and ${validAliases[1]} finished a ${queueName} game`;
+  const validAliases = z.array(z.string().min(1)).parse(playerAliases.filter((alias) => alias.trim().length > 0));
+
+  if (validAliases.length === 0) {
+    return `Game finished: ${queueName}`;
+  }
+
+  if (validAliases.length === 1) {
+    const soloAlias = z.string().parse(validAliases[0]);
+    return `${soloAlias} finished a ${queueName} game`;
+  }
+
+  if (validAliases.length === 2) {
+    const firstAlias = z.string().parse(validAliases[0]);
+    const secondAlias = z.string().parse(validAliases[1]);
+    return `${firstAlias} and ${secondAlias} finished a ${queueName} game`;
+  }
+
   const allButLast = validAliases.slice(0, -1).join(", ");
-  return `${allButLast}, and ${validAliases.at(-1)} finished a ${queueName} game`;
+  const lastAlias = z.string().parse(validAliases[validAliases.length - 1]);
+  return `${allButLast}, and ${lastAlias} finished a ${queueName} game`;
 }
 
 /** Create image attachments for Discord message */
@@ -147,19 +161,23 @@ async function createMatchImage(
   matchId: MatchId,
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
   const svgData =
-    matchToRender.queueType === "arena"
-      ? await arenaMatchToSvg(matchToRender)
-      : await matchToSvg(matchToRender as CompletedMatch);
+    matchToRender.queueType === "arena" ? await arenaMatchToSvg(matchToRender) : await matchToSvg(matchToRender);
   const svg = z.string().parse(svgData);
   const image = z.instanceof(Uint8Array).parse(await svgToPng(svg));
 
   // Save both PNG and SVG to S3 (fire and forget)
   const queueTypeForStorage = matchToRender.queueType === "arena" ? "arena" : (matchToRender.queueType ?? "unknown");
   const trackedPlayerAliases = matchToRender.players.map((p) => p.playerConfig.alias);
-  Promise.all([
-    saveImageToS3(matchId, image, queueTypeForStorage, trackedPlayerAliases),
-    saveSvgToS3(matchId, svg, queueTypeForStorage, trackedPlayerAliases),
-  ]).catch((error) => logger.error(`[createMatchImage] Failed to save images to S3:`, error));
+  void (async () => {
+    try {
+      await Promise.all([
+        saveImageToS3(matchId, image, queueTypeForStorage, trackedPlayerAliases),
+        saveSvgToS3(matchId, svg, queueTypeForStorage, trackedPlayerAliases),
+      ]);
+    } catch (error) {
+      logger.error(`[createMatchImage] Failed to save images to S3:`, error);
+    }
+  })();
 
   const attachmentName = `${matchId}.png`;
   const attachment = new AttachmentBuilder(Buffer.from(image)).setName(attachmentName);

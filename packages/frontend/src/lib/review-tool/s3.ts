@@ -317,4 +317,3 @@ export async function fetchTimelineFromS3(config: S3Config, matchKey: string): P
     return null;
   }
 }
-

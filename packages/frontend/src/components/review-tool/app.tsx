@@ -39,7 +39,6 @@ export type TabData = {
   rawTimeline?: RawTimeline;
 };
 
-
 const MAX_TABS = 5;
 
 // Store for app initialization state
