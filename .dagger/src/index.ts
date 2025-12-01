@@ -160,7 +160,20 @@ export class ScoutForLol {
           await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "typecheck"]).sync();
         }),
         withTiming("lint all", async () => {
-          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "lint"]).sync();
+          // Use ESLint with content-based caching for faster incremental runs
+          await preparedWorkspace
+            .withWorkdir("/workspace")
+            .withExec([
+              "bunx",
+              "eslint",
+              "packages/",
+              "--cache",
+              "--cache-strategy",
+              "content",
+              "--cache-location",
+              "/workspace/.eslintcache",
+            ])
+            .sync();
         }),
         withTiming("test all", async () => {
           await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "test"]).sync();
@@ -295,7 +308,20 @@ export class ScoutForLol {
           await mountedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "typecheck"]).sync();
         }),
         withTiming("lint all", async () => {
-          await mountedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "lint"]).sync();
+          // Use ESLint with content-based caching for faster incremental runs
+          await mountedWorkspace
+            .withWorkdir("/workspace")
+            .withExec([
+              "bunx",
+              "eslint",
+              "packages/",
+              "--cache",
+              "--cache-strategy",
+              "content",
+              "--cache-location",
+              "/workspace/.eslintcache",
+            ])
+            .sync();
         }),
         withTiming("test all", async () => {
           await mountedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "test"]).sync();
@@ -1259,107 +1285,122 @@ export class ScoutForLol {
   }
 
   /**
-   * Generate CI artifacts (test reports, coverage, lint results, etc.)
+   * Run CI and return artifacts (test reports, coverage, lint results)
+   * This is a combined function that runs CI checks and collects artifacts in one pass.
+   * Use this instead of calling ci() + ciArtifacts() separately to avoid running checks twice.
    * @param source The workspace source directory
-   * @returns A directory containing all CI artifacts
+   * @param version The version to build
+   * @param gitSha The git SHA
+   * @param branch The git branch name (optional)
+   * @param ghcrUsername The GitHub Container Registry username (optional)
+   * @param ghcrPassword The GitHub Container Registry password/token (optional)
+   * @param env The environment (prod/dev)
+   * @param ghToken The GitHub token (optional)
+   * @param accountId Cloudflare account ID (optional)
+   * @param apiToken Cloudflare API token (optional)
+   * @param projectName Cloudflare Pages project name (optional)
+   * @param prNumber The PR number (optional)
+   * @returns A directory containing CI artifacts (junit.xml, coverage, etc.)
    */
   @func()
-  async ciArtifacts(
+  async ciWithArtifacts(
     @argument({
       ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
       defaultPath: ".",
     })
     source: Directory,
+    @argument() version: string,
+    @argument() gitSha: string,
+    branch?: string,
+    ghcrUsername?: string,
+    ghcrPassword?: Secret,
+    env?: string,
+    ghToken?: Secret,
+    accountId?: Secret,
+    apiToken?: Secret,
+    projectName?: string,
+    prNumber?: string,
   ): Promise<Directory> {
-    logWithTimestamp("📊 Generating CI artifacts...");
+    // Run the full CI pipeline first
+    await this.ci(
+      source,
+      version,
+      gitSha,
+      branch,
+      ghcrUsername,
+      ghcrPassword,
+      env,
+      ghToken,
+      accountId,
+      apiToken,
+      projectName,
+      prNumber,
+    );
 
-    // OPTIMIZATION: Use mounted workspace for CI checks (faster than copying files)
-    const preparedWorkspace = getPreparedMountedWorkspace(source);
+    // After CI passes, collect artifacts
+    // Since we just ran CI with the same inputs, Dagger will cache all the setup
+    // and only run the artifact collection commands
+    logWithTimestamp("📊 Collecting CI artifacts...");
 
-    // Run all checks with CI reporters in parallel
-    const container = await withTiming("all CI checks with reporters", async () => {
+    const prismaGenerated = generatePrismaClient(source);
+    const preparedWorkspace = getPreparedMountedWorkspace(source, prismaGenerated);
+
+    const artifactsContainer = await withTiming("artifact collection", async () => {
       let workspace = preparedWorkspace.withWorkdir("/workspace");
 
-      // Create artifacts directory
-      workspace = workspace.withExec(["mkdir", "-p", "/artifacts"]);
-
-      // Run typecheck (no file output, just needs to pass)
-      workspace = workspace.withExec(["bun", "run", "typecheck"]);
-
-      // Run ESLint with JSON output
+      // Create artifacts directory structure
       workspace = workspace.withExec([
-        "sh",
-        "-c",
-        "bunx eslint packages/ --format json --output-file /artifacts/eslint-report.json 2>/dev/null || true",
+        "mkdir",
+        "-p",
+        "/artifacts/backend",
+        "/artifacts/data",
+        "/artifacts/report",
+        "/artifacts/desktop",
+        "/artifacts/frontend",
       ]);
 
-      // Run knip with JSON output
-      workspace = workspace.withExec([
-        "sh",
-        "-c",
-        "knip-bun --reporter json > /artifacts/knip-report.json 2>/dev/null || true",
-      ]);
-
-      // Run duplication check (generates jscpd-report/)
-      workspace = workspace.withExec(["bun", "run", "duplication-check"]);
-
-      // Copy jscpd reports to artifacts
-      workspace = workspace.withExec(["sh", "-c", "cp -r jscpd-report /artifacts/ 2>/dev/null || true"]);
-
-      // Run tests with CI reporters for each package
+      // Run tests with junit reporters (Dagger caches test execution, only report generation runs)
       // Backend tests
-      workspace = workspace
-        .withWorkdir("/workspace/packages/backend")
-        .withExec(["sh", "-c", "bun test --bail --reporter=junit --reporter-outfile=./junit.xml || true"]);
-
-      // Copy backend junit report
       workspace = workspace.withExec([
         "sh",
         "-c",
-        "mkdir -p /artifacts/backend && cp junit.xml /artifacts/backend/ 2>/dev/null || true",
+        "cd /workspace/packages/backend && bun test --reporter=junit --reporter-outfile=/artifacts/backend/junit.xml 2>/dev/null || true",
       ]);
 
       // Data tests with coverage
-      workspace = workspace
-        .withWorkdir("/workspace/packages/data")
-        .withExec(["sh", "-c", "bun test --bail --coverage --reporter=junit --reporter-outfile=./junit.xml || true"]);
-
-      // Copy data junit report and coverage
       workspace = workspace.withExec([
         "sh",
         "-c",
-        "mkdir -p /artifacts/data && cp junit.xml /artifacts/data/ 2>/dev/null || true && cp -r coverage /artifacts/data/ 2>/dev/null || true",
+        "cd /workspace/packages/data && bun test --coverage --reporter=junit --reporter-outfile=/artifacts/data/junit.xml 2>/dev/null || true",
       ]);
 
       // Report tests with coverage
-      workspace = workspace
-        .withWorkdir("/workspace/packages/report")
-        .withExec(["sh", "-c", "bun test --bail --coverage --reporter=junit --reporter-outfile=./junit.xml || true"]);
-
-      // Copy report junit report and coverage
       workspace = workspace.withExec([
         "sh",
         "-c",
-        "mkdir -p /artifacts/report && cp junit.xml /artifacts/report/ 2>/dev/null || true && cp -r coverage /artifacts/report/ 2>/dev/null || true",
+        "cd /workspace/packages/report && bun test --coverage --reporter=junit --reporter-outfile=/artifacts/report/junit.xml 2>/dev/null || true",
       ]);
 
-      // Desktop tests
-      workspace = workspace
-        .withWorkdir("/workspace/packages/desktop")
-        .withExec(["sh", "-c", "bun test --bail --reporter=junit --reporter-outfile=./junit.xml || true"]);
-
-      // Copy desktop junit report
+      // ESLint report (JSON format)
       workspace = workspace.withExec([
         "sh",
         "-c",
-        "mkdir -p /artifacts/desktop && cp junit.xml /artifacts/desktop/ 2>/dev/null || true",
+        "cd /workspace && bunx eslint packages/ --format json --output-file /artifacts/eslint-report.json 2>/dev/null || true",
       ]);
 
-      // Frontend - no tests currently, but prepare directory
-      workspace = workspace.withExec(["sh", "-c", "mkdir -p /artifacts/frontend"]);
+      // Knip report (JSON format)
+      workspace = workspace.withExec([
+        "sh",
+        "-c",
+        "cd /workspace && knip-bun --reporter json > /artifacts/knip-report.json 2>/dev/null || true",
+      ]);
 
-      // Return to workspace root
-      workspace = workspace.withWorkdir("/workspace");
+      // JSCPD duplication report
+      workspace = workspace.withExec([
+        "sh",
+        "-c",
+        "cd /workspace && bun run duplication-check 2>/dev/null || true && cp -r jscpd-report /artifacts/ 2>/dev/null || true",
+      ]);
 
       // List artifacts for debugging
       workspace = workspace.withExec(["sh", "-c", "echo '📋 Generated artifacts:' && find /artifacts -type f"]);
@@ -1368,7 +1409,7 @@ export class ScoutForLol {
       return workspace;
     });
 
-    logWithTimestamp("✅ CI artifacts generated successfully");
-    return container.directory("/artifacts");
+    logWithTimestamp("✅ CI artifacts collected successfully");
+    return artifactsContainer.directory("/artifacts");
   }
 }

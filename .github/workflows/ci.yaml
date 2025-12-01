@@ -61,7 +61,7 @@ jobs:
           DAGGER_ENGINE_POD_NAME="$(kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger --output=jsonpath='{.items[0].metadata.name}')"
           echo "DAGGER_ENGINE_POD_NAME=$DAGGER_ENGINE_POD_NAME" >> "$GITHUB_ENV"
 
-      - name: Run Dagger CI pipeline (prod)
+      - name: Run Dagger CI pipeline with artifacts (prod)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GHCR_USERNAME: ${{ github.actor }}
@@ -72,7 +72,7 @@ jobs:
           DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
           _EXPERIMENTAL_DAGGER_RUNNER_HOST: kube-pod://${{ env.DAGGER_ENGINE_POD_NAME }}?namespace=dagger
         run: |
-          dagger call ci \
+          dagger call ci-with-artifacts \
             --source=. \
             --version="1.0.${{ github.run_number }}" \
             --git-sha="${{ github.sha }}" \
@@ -82,9 +82,10 @@ jobs:
             --env="prod" \
             --gh-token=env://GITHUB_TOKEN \
             --account-id=env://CLOUDFLARE_ACCOUNT_ID \
-            --api-token=env://CLOUDFLARE_API_TOKEN
+            --api-token=env://CLOUDFLARE_API_TOKEN \
+            export --path=./ci-artifacts
 
-      - name: Run Dagger CI pipeline (dev)
+      - name: Run Dagger CI pipeline with artifacts (dev)
         if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -94,7 +95,7 @@ jobs:
           _EXPERIMENTAL_DAGGER_RUNNER_HOST: kube-pod://${{ env.DAGGER_ENGINE_POD_NAME }}?namespace=dagger
           BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
         run: |
-          dagger call ci \
+          dagger call ci-with-artifacts \
             --source=. \
             --version="dev-${{ github.run_number }}" \
             --git-sha="${{ github.sha }}" \
@@ -103,15 +104,8 @@ jobs:
             --gh-token=env://GITHUB_TOKEN \
             --account-id=env://CLOUDFLARE_ACCOUNT_ID \
             --api-token=env://CLOUDFLARE_API_TOKEN \
-            --pr-number="${{ github.event.pull_request.number }}"
-
-      - name: Export CI artifacts from Dagger
-        if: always()
-        env:
-          DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
-          _EXPERIMENTAL_DAGGER_RUNNER_HOST: kube-pod://${{ env.DAGGER_ENGINE_POD_NAME }}?namespace=dagger
-        run: |
-          dagger call ci-artifacts --source=. export --path=./ci-artifacts
+            --pr-number="${{ github.event.pull_request.number }}" \
+            export --path=./ci-artifacts
 
       - name: Upload CI artifacts
         if: always()

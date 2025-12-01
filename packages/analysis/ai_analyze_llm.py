@@ -71,6 +71,7 @@ USER_ID_ALIASES: Dict[str, str] = {
     "208425244128444418": "Virmel",
     "251485022429642752": "Long",
     "160509172704739328": "Jerred",
+    # TODO: Colin, Caitlyn, Richard
 }
 
 

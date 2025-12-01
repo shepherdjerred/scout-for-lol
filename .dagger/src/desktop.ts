@@ -4,7 +4,7 @@ import { dag } from "@dagger.io/dagger";
 type DesktopTarget = "linux" | "windows-gnu";
 
 /**
- * Get a Rust container with Tauri dependencies
+ * Get a Rust container with Tauri dependencies and sccache for faster builds
  * @returns A Rust container with system dependencies for Tauri
  */
 export function getRustTauriContainer(): Container {
@@ -34,6 +34,18 @@ export function getRustTauriContainer(): Container {
         "clang", // Required for mold linker
         "mold", // Modern linker - much faster than ld
       ])
+      // Install sccache via pre-built binary (much faster than cargo install)
+      // sccache caches compiled object files based on content hashes - safe and deterministic
+      .withExec([
+        "sh",
+        "-c",
+        "curl -L https://github.com/mozilla/sccache/releases/download/v0.8.1/sccache-v0.8.1-x86_64-unknown-linux-musl.tar.gz | tar xz && mv sccache-v0.8.1-x86_64-unknown-linux-musl/sccache /usr/local/bin/ && rm -rf sccache-v0.8.1-x86_64-unknown-linux-musl",
+      ])
+      // Mount sccache directory for cross-run caching
+      .withMountedCache("/root/.cache/sccache", dag.cacheVolume("sccache"))
+      // Configure sccache as the Rust compiler wrapper
+      .withEnvVariable("RUSTC_WRAPPER", "sccache")
+      .withEnvVariable("SCCACHE_DIR", "/root/.cache/sccache")
       // Mount Cargo caches for faster builds
       // - registry: Downloaded crate sources and metadata
       // - git: Git dependencies
@@ -65,6 +77,13 @@ export function installBunInRustContainer(container: Container): Container {
 
 /**
  * Install dependencies for the desktop package
+ *
+ * LAYER ORDERING FOR CACHING:
+ * 1. System deps (apt, Rust, Tauri CLI) - rarely change
+ * 2. Dependency files (package.json, bun.lock, patches) - change occasionally
+ * 3. bun install - cached if lockfile unchanged
+ * 4. Config files + source code - change frequently
+ *
  * @param workspaceSource The full workspace source directory
  * @param target Which desktop target to prepare for (linux or Windows GNU cross-compile)
  * @returns The container with dependencies installed
@@ -89,31 +108,40 @@ export function installDesktopDeps(workspaceSource: Directory, target: DesktopTa
       .withExec(["sh", "-c", "echo '✅ Windows GNU target installed for both default and stable toolchains'"]);
   }
 
-  // Set up workspace structure - include all required files like base.ts does
+  // PHASE 1: Dependency files only (for bun install caching)
+  container = container
+    .withWorkdir("/workspace")
+    // Root dependency files
+    .withFile("/workspace/package.json", workspaceSource.file("package.json"))
+    .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
+    // Patches directory (needed for bun patch to work during install)
+    .withDirectory("/workspace/patches", workspaceSource.directory("patches"))
+    // Each workspace's package.json (bun needs these for workspace resolution)
+    .withFile("/workspace/packages/backend/package.json", workspaceSource.file("packages/backend/package.json"))
+    .withFile("/workspace/packages/data/package.json", workspaceSource.file("packages/data/package.json"))
+    .withFile("/workspace/packages/report/package.json", workspaceSource.file("packages/report/package.json"))
+    .withFile("/workspace/packages/frontend/package.json", workspaceSource.file("packages/frontend/package.json"))
+    .withFile("/workspace/packages/desktop/package.json", workspaceSource.file("packages/desktop/package.json"))
+    // Install dependencies (cached if lockfile + package.jsons unchanged)
+    .withExec(["bun", "install", "--frozen-lockfile"]);
+
+  // PHASE 2: Config files and source code (changes frequently)
   return (
     container
-      .withWorkdir("/workspace")
-      // Config files (rarely change - good cache layer)
+      // Config files
       .withFile("/workspace/tsconfig.json", workspaceSource.file("tsconfig.json"))
       .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
       .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
       .withFile("/workspace/.jscpd.json", workspaceSource.file(".jscpd.json"))
       .withDirectory("/workspace/eslint-rules", workspaceSource.directory("eslint-rules"))
-      // Dependency files (change occasionally - separate cache layer)
-      .withFile("/workspace/package.json", workspaceSource.file("package.json"))
-      .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-      // Patches directory (needed for bun patch to work)
-      .withDirectory("/workspace/patches", workspaceSource.directory("patches"))
       // Scripts directory (for utility scripts like check-suppressions)
       .withDirectory("/workspace/scripts", workspaceSource.directory("scripts"))
-      // Package source code (changes frequently - mounted after deps)
+      // Package source code (changes frequently)
       .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
       .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
       .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
       .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
       .withDirectory("/workspace/packages/desktop", workspaceSource.directory("packages/desktop"))
-      // Install dependencies (will use cache if lockfile unchanged)
-      .withExec(["bun", "install", "--frozen-lockfile"])
   );
 }
 
