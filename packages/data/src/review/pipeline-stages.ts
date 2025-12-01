@@ -13,7 +13,7 @@ import type { Personality } from "./prompts.ts";
 import type { ArtStyle } from "@scout-for-lol/data/review/art-categories.ts";
 import { getStageSystemPrompt } from "./pipeline-defaults.ts";
 import { generateImagePrompt } from "./image-prompt.ts";
-import { replaceTemplateVariables } from "./prompts.ts";
+import { replaceTemplateVariables, selectRandomImagePrompts } from "./prompts.ts";
 import { buildPromptVariables, extractMatchData } from "./generator-helpers.ts";
 import { enrichTimelineData } from "./timeline-enricher.ts";
 import type { GoogleGenerativeAI } from "@google/generative-ai";
@@ -301,22 +301,43 @@ export async function generateReviewTextStage(params: {
 // ============================================================================
 
 /**
+ * Build the image inspirations section for the prompt
+ *
+ * @param imagePrompts - Array of image prompts from personality, or undefined
+ * @returns Formatted string for the prompt, or empty string if no prompts
+ */
+function buildImageInspirationsSection(imagePrompts: string[] | undefined): string {
+  const selected = selectRandomImagePrompts(imagePrompts);
+  if (selected.length === 0) {
+    return "";
+  }
+
+  const formattedPrompts = selected.map((p) => `- ${p}`).join("\n");
+  return `\n\nFor visual inspiration, consider incorporating elements from these themes:\n${formattedPrompts}`;
+}
+
+/**
  * Stage 3: Generate image description from review text
  *
  * Takes the review text and turns it into a vivid art concept
  * that can be used for image generation.
+ *
+ * @param params.imagePrompts - Optional array of image prompts from personality metadata to influence the art concept
  */
 export async function generateImageDescription(params: {
   reviewText: string;
   client: OpenAIClient;
   model: ModelConfig;
-  systemPromptOverride?: string;
+  systemPromptOverride?: string | undefined;
+  imagePrompts?: string[] | undefined;
 }): Promise<{ text: string; trace: StageTrace }> {
-  const { reviewText, client, model, systemPromptOverride } = params;
+  const { reviewText, client, model, systemPromptOverride, imagePrompts } = params;
 
   const systemPrompt = getStageSystemPrompt("imageDescription", systemPromptOverride);
+  const imageInspirations = buildImageInspirationsSection(imagePrompts);
   const userPrompt = replacePromptVariables(IMAGE_DESCRIPTION_USER_PROMPT_TEMPLATE, {
     REVIEW_TEXT: reviewText,
+    IMAGE_INSPIRATIONS: imageInspirations,
   });
 
   return callOpenAI({
