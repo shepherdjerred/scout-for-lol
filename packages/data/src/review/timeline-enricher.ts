@@ -2,8 +2,7 @@
  * Timeline enrichment utilities
  *
  * Provides helpful context data that makes the raw timeline easier for AI to interpret.
- * Unlike the previous curator, this does NOT filter or transform the timeline -
- * it just adds a participant lookup table for champion names and team names.
+ * Adds a participant lookup table for champion names and team names.
  */
 
 import type { RawMatch, RawTimeline } from "@scout-for-lol/data";

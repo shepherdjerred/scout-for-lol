@@ -96,8 +96,8 @@ export function PersonalitySelector({
                     {isSelected && <span className="text-blue-600 text-xs">✓</span>}
                   </div>
                   <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                    {personality.metadata.description.substring(0, 80)}
-                    {personality.metadata.description.length > 80 ? "..." : ""}
+                    {personality.instructions.substring(0, 80)}
+                    {personality.instructions.length > 80 ? "..." : ""}
                   </p>
                 </div>
                 <div className="flex flex-col gap-1 ml-2">

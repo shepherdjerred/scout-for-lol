@@ -16,7 +16,6 @@ type PersonalityEditorProps = {
 
 export function PersonalityEditor({ personality, onSave, onCancel }: PersonalityEditorProps) {
   const [name, setName] = useState(personality?.metadata.name ?? "");
-  const [description, setDescription] = useState(personality?.metadata.description ?? "");
   const [instructions, setInstructions] = useState(personality?.instructions ?? "");
   const [styleCard, setStyleCard] = useState(personality?.styleCard ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +24,6 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
     try {
       const metadata: PersonalityMetadata = {
         name: name.trim(),
-        description: description.trim(),
       };
 
       const newPersonality: Personality = {
@@ -77,25 +75,6 @@ export function PersonalityEditor({ personality, onSave, onCancel }: Personality
               }}
               className="w-full px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 placeholder:text-gray-400 dark:placeholder:text-gray-500"
               placeholder="e.g., Friendly Coach"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="personality-description"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
-              Description <span className="text-red-500 dark:text-red-400">*</span>
-            </label>
-            <textarea
-              id="personality-description"
-              value={description}
-              onChange={(e) => {
-                setDescription(e.target.value);
-              }}
-              rows={3}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 placeholder:text-gray-400 dark:placeholder:text-gray-500"
-              placeholder="Brief description of this reviewer's personality"
             />
           </div>
 

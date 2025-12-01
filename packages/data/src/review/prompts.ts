@@ -24,7 +24,6 @@ export type RandomBehavior = z.infer<typeof RandomBehaviorSchema>;
  */
 export const PersonalityMetadataSchema = z.strictObject({
   name: z.string(),
-  description: z.string(),
   randomBehaviors: z.array(RandomBehaviorSchema).optional(),
   image: z.array(z.string()).optional(),
 });
@@ -132,6 +131,7 @@ export function replaceTemplateVariables(
     randomBehavior: string;
     matchAnalysis: string;
     queueContext: string;
+    rankContext: string;
   },
 ): string {
   return template
@@ -144,5 +144,6 @@ export function replaceTemplateVariables(
     .replaceAll("<FRIENDS CONTEXT>", variables.friendsContext)
     .replaceAll("<RANDOM BEHAVIOR>", variables.randomBehavior)
     .replaceAll("<MATCH ANALYSIS>", variables.matchAnalysis)
-    .replaceAll("<QUEUE CONTEXT>", variables.queueContext);
+    .replaceAll("<QUEUE CONTEXT>", variables.queueContext)
+    .replaceAll("<RANK CONTEXT>", variables.rankContext);
 }
