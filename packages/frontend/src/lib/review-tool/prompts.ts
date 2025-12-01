@@ -17,7 +17,7 @@ import nekoryanTxt from "@scout-for-lol/data/src/review/prompts/personalities/ne
 import aaronStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/aaron_style.json";
 import brianStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/brian_style.json";
 import irfanStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/irfan_style.json";
-import ryanStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/ryan_style.json";
+import ryanStyleCard from "@scout-for-lol/data/src/review/prompts/style-cards/nekoryan_style.json";
 
 // Import lane contexts
 import topLane from "@scout-for-lol/data/src/review/prompts/lanes/top.txt?raw";
