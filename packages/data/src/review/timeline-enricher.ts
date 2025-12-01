@@ -2,11 +2,12 @@
  * Timeline enrichment utilities
  *
  * Provides helpful context data that makes the raw timeline easier for AI to interpret.
- * Unlike the previous curator, this does NOT filter or transform the timeline -
- * it just adds a participant lookup table for champion names and team names.
+ * Includes a participant lookup table for champion names and filters the timeline
+ * to reduce token usage while preserving important game narrative.
  */
 
 import type { RawMatch, RawTimeline } from "@scout-for-lol/data";
+import { createSlimTimeline } from "./timeline-filter.ts";
 
 /**
  * Participant info for the lookup table
@@ -52,22 +53,27 @@ export function buildTimelineEnrichment(rawMatch: RawMatch): TimelineEnrichment 
 /**
  * Timeline data with enrichment context
  *
- * This is what gets sent to OpenAI - the full raw timeline plus
+ * This is what gets sent to OpenAI - a filtered timeline plus
  * a participant lookup table for human-readable names.
  */
 export type EnrichedTimelineData = {
-  /** Full raw timeline from Riot API */
-  timeline: RawTimeline;
+  /** Filtered timeline (important events + sampled frames) */
+  timeline: object;
   /** Enrichment context (participant mapping) */
   context: TimelineEnrichment;
 };
 
 /**
  * Create enriched timeline data for AI consumption
+ *
+ * Filters the timeline to reduce token usage:
+ * - Keeps only important events (kills, objectives, buildings)
+ * - Samples frames every 5 minutes instead of every minute
+ * - Keeps only key participant stats (gold, level, CS)
  */
 export function enrichTimelineData(rawTimeline: RawTimeline, rawMatch: RawMatch): EnrichedTimelineData {
   return {
-    timeline: rawTimeline,
+    timeline: createSlimTimeline(rawTimeline),
     context: buildTimelineEnrichment(rawMatch),
   };
 }
