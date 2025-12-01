@@ -10,11 +10,13 @@ import {
   listMatchesFromS3,
   fetchMatchFromS3,
   fetchTimelineFromS3,
+  type S3Config,
+} from "@scout-for-lol/frontend/lib/review-tool/s3";
+import {
   convertRawMatchToInternalFormat,
   extractMatchMetadataFromRawMatch,
-  type S3Config,
   type MatchMetadata,
-} from "@scout-for-lol/frontend/lib/review-tool/s3";
+} from "@scout-for-lol/frontend/lib/review-tool/match-converter";
 import { getCachedDataAsync, setCachedData } from "@scout-for-lol/frontend/lib/review-tool/cache";
 import { MatchFilters } from "./match-filters.tsx";
 import { MatchList } from "./match-list.tsx";

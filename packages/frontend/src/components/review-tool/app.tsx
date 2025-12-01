@@ -272,7 +272,9 @@ export default function App() {
     rawTimeline: RawTimeline | null,
   ) => {
     const newTabs = tabs.map((t) => {
-      if (t.id !== id) return t;
+      if (t.id !== id) {
+        return t;
+      }
       const updated: TabData = { ...t, match, rawMatch };
       if (rawTimeline) {
         updated.rawTimeline = rawTimeline;
