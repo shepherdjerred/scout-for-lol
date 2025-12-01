@@ -1,5 +1,5 @@
-import type { MatchId, RawMatch } from "@scout-for-lol/data/index";
-import { MatchIdSchema } from "@scout-for-lol/data/index";
+import type { MatchId, RawMatch, RawTimeline } from "@scout-for-lol/data/index.ts";
+import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { saveToS3 } from "@scout-for-lol/backend/storage/s3-helpers.ts";
 
 /**
@@ -111,6 +111,40 @@ export async function saveSvgToS3(
     returnUrl: true,
     additionalLogDetails: {
       queueType,
+    },
+  });
+}
+
+/**
+ * Save a match timeline to S3 storage
+ * @param timeline The timeline data to save
+ * @param trackedPlayerAliases Array of tracked player aliases in this match (empty array if none)
+ * @returns Promise that resolves when the timeline is saved
+ */
+export async function saveTimelineToS3(timeline: RawTimeline, trackedPlayerAliases: string[]): Promise<void> {
+  const matchId = MatchIdSchema.parse(timeline.metadata.matchId);
+  const body = JSON.stringify(timeline, null, 2);
+
+  await saveToS3({
+    matchId,
+    assetType: "timeline",
+    extension: "json",
+    body,
+    contentType: "application/json",
+    metadata: {
+      matchId: matchId,
+      frameCount: timeline.info.frames.length.toString(),
+      frameInterval: timeline.info.frameInterval.toString(),
+      dataVersion: timeline.metadata.dataVersion,
+      trackedPlayers: trackedPlayerAliases.join(", "),
+    },
+    logEmoji: "📊",
+    logMessage: "Saving timeline to S3",
+    errorContext: "timeline",
+    returnUrl: false,
+    additionalLogDetails: {
+      frameCount: timeline.info.frames.length,
+      frameInterval: timeline.info.frameInterval,
     },
   });
 }

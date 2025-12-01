@@ -274,6 +274,98 @@ pub struct DiscordStatus {
     pub active_sound_pack: Option<String>,
 }
 
+/// Context for sound rule evaluation
+#[derive(Debug, Clone, Default)]
+pub struct SoundEventContext {
+    /// The event type
+    pub event_type: SoundEvent,
+    /// Killer's summoner name
+    pub killer_name: Option<String>,
+    /// Victim's summoner name
+    pub victim_name: Option<String>,
+    /// Killer's champion name
+    pub killer_champion: Option<String>,
+    /// Victim's champion name
+    pub victim_champion: Option<String>,
+    /// Whether the killer is the local player
+    pub killer_is_local: bool,
+    /// Whether the victim is the local player
+    pub victim_is_local: bool,
+    /// Multi-kill type (2=double, 3=triple, 4=quadra, 5=penta)
+    pub multikill_count: Option<i64>,
+    /// Objective type (dragon, baron, herald, tower, inhib)
+    pub objective_type: Option<String>,
+    /// Dragon type (fire, water, earth, air, elder, etc)
+    pub dragon_type: Option<String>,
+    /// Whether the objective was stolen
+    pub is_stolen: bool,
+    /// Whether the actor is on the ally team
+    pub is_ally_team: bool,
+    /// Game result (win/loss) - for game end events
+    pub game_result: Option<String>,
+    /// Local player's summoner name
+    pub local_player_name: Option<String>,
+}
+
+impl SoundEventContext {
+    /// Create a new context for a simple event (no additional context)
+    pub fn simple(event_type: SoundEvent) -> Self {
+        Self {
+            event_type,
+            ..Default::default()
+        }
+    }
+
+    /// Create a context for a kill event
+    pub fn kill(killer: &str, victim: &str, local_player: Option<&str>) -> Self {
+        let killer_is_local = local_player.map(|lp| lp == killer).unwrap_or(false);
+        let victim_is_local = local_player.map(|lp| lp == victim).unwrap_or(false);
+        Self {
+            event_type: SoundEvent::Kill,
+            killer_name: Some(killer.to_string()),
+            victim_name: Some(victim.to_string()),
+            killer_is_local,
+            victim_is_local,
+            local_player_name: local_player.map(String::from),
+            ..Default::default()
+        }
+    }
+
+    /// Create a context for a multikill event
+    pub fn multikill(killer: &str, kill_count: i64, local_player: Option<&str>) -> Self {
+        let killer_is_local = local_player.map(|lp| lp == killer).unwrap_or(false);
+        Self {
+            event_type: SoundEvent::MultiKill,
+            killer_name: Some(killer.to_string()),
+            killer_is_local,
+            multikill_count: Some(kill_count),
+            local_player_name: local_player.map(String::from),
+            ..Default::default()
+        }
+    }
+
+    /// Create a context for an objective event
+    pub fn objective(killer: &str, objective: &str, stolen: bool, dragon_type: Option<&str>) -> Self {
+        Self {
+            event_type: SoundEvent::Objective,
+            killer_name: Some(killer.to_string()),
+            objective_type: Some(objective.to_string()),
+            dragon_type: dragon_type.map(String::from),
+            is_stolen: stolen,
+            ..Default::default()
+        }
+    }
+
+    /// Create a context for game end
+    pub fn game_end(result: &str) -> Self {
+        Self {
+            event_type: SoundEvent::GameEnd,
+            game_result: Some(result.to_string()),
+            ..Default::default()
+        }
+    }
+}
+
 /// Events that can trigger audio cues
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "camelCase")]
@@ -379,6 +471,23 @@ impl SoundPack {
     /// Returns the cue for a given key if present
     pub fn cue_for(&self, key: &str) -> Option<SoundCue> {
         self.cues.get(key).cloned()
+    }
+
+    /// Load a custom sound pack from disk (the full version with rules)
+    fn load_custom_full(pack_id: &str) -> Option<custom_sound_pack::SoundPack> {
+        let sound_pack_path = paths::sound_pack_file();
+        if !sound_pack_path.exists() {
+            return None;
+        }
+
+        let content = std::fs::read_to_string(&sound_pack_path).ok()?;
+        let custom_pack: custom_sound_pack::SoundPack = serde_json::from_str(&content).ok()?;
+
+        if custom_pack.id == pack_id {
+            Some(custom_pack)
+        } else {
+            None
+        }
     }
 
     /// Load a custom sound pack from disk and convert it to a simple SoundPack
@@ -489,6 +598,8 @@ pub struct DiscordClient {
     client: reqwest::Client,
     songbird: Option<Arc<Songbird>>,
     sound_pack: SoundPack,
+    /// Full custom sound pack with rules for advanced evaluation
+    custom_rules_pack: Option<custom_sound_pack::SoundPack>,
     event_overrides: HashMap<String, SoundCue>,
     /// Shared cache state for YouTube audio downloads
     youtube_cache: Arc<RwLock<YouTubeCacheState>>,
@@ -513,6 +624,12 @@ impl DiscordClient {
 
         let youtube_cache = Arc::new(RwLock::new(YouTubeCacheState::new()));
 
+        // Load full custom pack with rules if specified
+        let custom_rules_pack = match sound_pack.as_deref() {
+            Some("base") | None => None,
+            Some(pack_id) => SoundPack::load_custom_full(pack_id),
+        };
+
         let discord_client = Self {
             token: token.clone(),
             channel_id: channel_id.clone(),
@@ -535,6 +652,7 @@ impl DiscordClient {
                     }
                 }
             },
+            custom_rules_pack,
             event_overrides: HashMap::new(),
             youtube_cache,
         };

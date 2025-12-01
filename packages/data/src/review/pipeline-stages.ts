@@ -13,7 +13,7 @@ import type { Personality } from "./prompts.ts";
 import type { ArtStyle } from "@scout-for-lol/data/review/art-categories";
 import { getStageSystemPrompt } from "./pipeline-defaults.ts";
 import { generateImagePrompt } from "./image-prompt.ts";
-import { replaceTemplateVariables } from "./prompts.ts";
+import { replaceTemplateVariables, selectRandomImagePrompts } from "./prompts.ts";
 import { buildPromptVariables, extractMatchData } from "./generator-helpers.ts";
 import { enrichTimelineData } from "./timeline-enricher.ts";
 import type { GoogleGenerativeAI } from "@google/generative-ai";
@@ -301,30 +301,55 @@ export async function generateReviewTextStage(params: {
 // ============================================================================
 
 /**
+ * Build the image inspirations section for the prompt
+ *
+ * @param selectedPrompts - Array of already-selected image prompts
+ * @returns Formatted string for the prompt, or empty string if no prompts
+ */
+function buildImageInspirationsSection(selectedPrompts: string[]): string {
+  if (selectedPrompts.length === 0) {
+    return "";
+  }
+
+  const formattedPrompts = selectedPrompts.map((p) => `- ${p}`).join("\n");
+  return `\n\nFor visual inspiration, consider incorporating elements from these themes:\n${formattedPrompts}`;
+}
+
+/**
  * Stage 3: Generate image description from review text
  *
  * Takes the review text and turns it into a vivid art concept
  * that can be used for image generation.
+ *
+ * @param params.imagePrompts - Optional array of image prompts from personality metadata to influence the art concept
  */
 export async function generateImageDescription(params: {
   reviewText: string;
   client: OpenAIClient;
   model: ModelConfig;
-  systemPromptOverride?: string;
-}): Promise<{ text: string; trace: StageTrace }> {
-  const { reviewText, client, model, systemPromptOverride } = params;
+  systemPromptOverride?: string | undefined;
+  imagePrompts?: string[] | undefined;
+}): Promise<{ text: string; trace: StageTrace; selectedImagePrompts: string[] }> {
+  const { reviewText, client, model, systemPromptOverride, imagePrompts } = params;
+
+  // Select 2-3 random image prompts from personality
+  const selectedImagePrompts = selectRandomImagePrompts(imagePrompts);
 
   const systemPrompt = getStageSystemPrompt("imageDescription", systemPromptOverride);
+  const imageInspirations = buildImageInspirationsSection(selectedImagePrompts);
   const userPrompt = replacePromptVariables(IMAGE_DESCRIPTION_USER_PROMPT_TEMPLATE, {
     REVIEW_TEXT: reviewText,
+    IMAGE_INSPIRATIONS: imageInspirations,
   });
 
-  return callOpenAI({
+  const { text, trace } = await callOpenAI({
     client,
     model,
     systemPrompt,
     userPrompt,
   });
+
+  return { text, trace, selectedImagePrompts };
 }
 
 // ============================================================================

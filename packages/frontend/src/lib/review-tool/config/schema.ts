@@ -143,6 +143,7 @@ export type RandomBehavior = z.infer<typeof RandomBehaviorSchema>;
 export const PersonalityMetadataSchema = z.object({
   name: z.string(),
   randomBehaviors: z.array(RandomBehaviorSchema).optional(),
+  image: z.array(z.string()).optional(),
 });
 
 export type PersonalityMetadata = z.infer<typeof PersonalityMetadataSchema>;
@@ -268,6 +269,7 @@ export const PipelineIntermediateResultsSchema = z.object({
   timelineSummaryText: z.string().optional(),
   matchSummaryText: z.string().optional(),
   imageDescriptionText: z.string().optional(),
+  selectedImagePrompts: z.array(z.string()).optional(),
 });
 
 export type PipelineIntermediateResults = z.infer<typeof PipelineIntermediateResultsSchema>;
