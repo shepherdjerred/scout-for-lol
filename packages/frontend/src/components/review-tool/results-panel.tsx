@@ -21,11 +21,11 @@ import {
 } from "@scout-for-lol/frontend/lib/review-tool/history-manager";
 import { ActiveGenerationsPanel } from "./active-generations-panel.tsx";
 import { GenerationProgress } from "./generation-progress.tsx";
-import { GenerationConfigDisplay } from "./generation-config-display.tsx";
 import { ResultDisplay } from "./result-display.tsx";
 import { ResultMetadata } from "./result-metadata.tsx";
 import { ResultRating } from "./result-rating.tsx";
 import { PipelineTracesPanel } from "./pipeline-traces-panel.tsx";
+import { MatchAndReviewerInfo } from "./match-reviewer-info.tsx";
 
 const ErrorSchema = z.object({ message: z.string() });
 
@@ -77,7 +77,6 @@ type ActiveGeneration = {
   id: string;
   progress?: GenerationProgressType;
   startTime: number;
-  configSnapshot: HistoryEntry["configSnapshot"];
 };
 
 export function ResultsPanel(props: ResultsPanelProps) {
@@ -119,16 +118,13 @@ export function ResultsPanel(props: ResultsPanelProps) {
     const historyId = createPendingEntry();
     console.log("[History] Created entry ID:", historyId);
 
-    // Build config snapshot
-    const configSnapshot: HistoryEntry["configSnapshot"] = {
-      model: config.textGeneration.model,
-    };
+    // Build config snapshot (for saving to history later)
+    const configSnapshot: HistoryEntry["configSnapshot"] = {};
 
     // Add to active generations
     const newGen: ActiveGeneration = {
       id: historyId,
       startTime: Date.now(),
-      configSnapshot,
     };
     setActiveGenerations((prev) => new Map(prev).set(historyId, newGen));
     setSelectedHistoryId(historyId);
@@ -317,7 +313,7 @@ export function ResultsPanel(props: ResultsPanelProps) {
                 }
               })();
             }}
-            className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-black font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 active:scale-95"
+            className="flex items-center gap-2 px-5 py-2.5 bg-black text-white hover:bg-brand-700 text-black font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 active:scale-95"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -369,8 +365,8 @@ export function ResultsPanel(props: ResultsPanelProps) {
           </div>
         )}
 
-        {/* Generation Configuration Details */}
-        <GenerationConfigDisplay config={config} result={result} />
+        {/* Selected Match & Reviewer Info */}
+        <MatchAndReviewerInfo match={match} config={config} />
 
         {/* Generation Progress */}
         {selectedGen?.progress && <GenerationProgress progress={selectedGen.progress} elapsedMs={elapsedMs} />}

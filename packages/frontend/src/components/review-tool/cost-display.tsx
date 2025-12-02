@@ -65,7 +65,7 @@ export function CostDisplay({ costTracker }: CostDisplayProps) {
                 URL.revokeObjectURL(url);
               })();
             }}
-            className="flex-1 px-3 py-2 bg-brand-600 text-white rounded hover:bg-brand-700 transition-colors text-sm"
+            className="flex-1 px-3 py-2 bg-black text-white rounded hover:bg-brand-700 transition-colors text-sm"
           >
             Export Report
           </button>
@@ -75,7 +75,7 @@ export function CostDisplay({ costTracker }: CostDisplayProps) {
                 void costTracker.clear();
               }
             }}
-            className="flex-1 px-3 py-2 bg-defeat-600 text-white rounded hover:bg-defeat-700 transition-colors text-sm"
+            className="flex-1 px-3 py-2 bg-defeat-600 text-white bg-black rounded hover:bg-defeat-700 transition-colors text-sm"
           >
             Clear History
           </button>

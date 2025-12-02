@@ -1,8 +1,7 @@
 /**
  * Generation progress indicator
  *
- * Note: The pipeline doesn't support intermediate progress updates,
- * so we show an indeterminate-style progress based on elapsed time.
+ * Shows a 5-stage pill progress that matches the active generations panel.
  */
 import type { GenerationProgress as GenerationProgressType } from "@scout-for-lol/frontend/lib/review-tool/generator";
 
@@ -11,23 +10,56 @@ type GenerationProgressProps = {
   elapsedMs: number;
 };
 
-/** Estimate total duration based on number of stages (rough approximation) */
-function estimateTotalDuration(totalStages: number | undefined): number {
-  // Base: ~20s for text, ~15s per summary stage, ~30s for image
-  // With all stages: ~60-90s typical
-  const stages = totalStages ?? 3;
-  return stages * 20000; // ~20s per stage average
+type StageStatus = "complete" | "active" | "pending";
+
+/** Pill-style progress bar with 5 connected segments */
+function PipelinePillProgress({
+  currentStage,
+  totalStages,
+  isComplete,
+}: {
+  currentStage: number;
+  totalStages: number;
+  isComplete: boolean;
+}) {
+  const stages = 5;
+
+  return (
+    <div className="flex gap-1">
+      {Array.from({ length: stages }).map((_, index) => {
+        let status: StageStatus = "pending";
+        if (isComplete || index < currentStage) {
+          status = "complete";
+        } else if (index === currentStage) {
+          status = "active";
+        }
+        // If this stage is beyond totalStages, it's skipped
+        if (index >= totalStages && !isComplete) {
+          status = "pending";
+        }
+
+        return (
+          <div
+            key={index}
+            className={`h-2 flex-1 rounded-full transition-all duration-300 ${
+              status === "complete"
+                ? "bg-green-500"
+                : status === "active"
+                  ? "bg-yellow-500 animate-pulse"
+                  : "bg-surface-200"
+            }`}
+          />
+        );
+      })}
+    </div>
+  );
 }
 
 export function GenerationProgress({ progress, elapsedMs }: GenerationProgressProps) {
-  const { step, message, totalStages } = progress;
-
-  // Time-based progress that smoothly fills over expected duration
-  const expectedDuration = estimateTotalDuration(totalStages);
-  // Use asymptotic progress: approaches 95% but never reaches it until complete
-  const timeProgress = step === "complete" ? 100 : Math.min(95, (elapsedMs / expectedDuration) * 100 * 0.95);
+  const { step, message, currentStage, totalStages } = progress;
 
   const elapsedSeconds = Math.floor(elapsedMs / 1000);
+  const isComplete = step === "complete";
 
   return (
     <div className="mb-4 p-4 bg-brand-50 border border-brand-200 rounded-xl">
@@ -35,7 +67,7 @@ export function GenerationProgress({ progress, elapsedMs }: GenerationProgressPr
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Spinning loader */}
-            {step !== "complete" && (
+            {!isComplete && (
               <div className="shrink-0">
                 <svg
                   className="animate-spin h-5 w-5 text-brand-600"
@@ -52,7 +84,7 @@ export function GenerationProgress({ progress, elapsedMs }: GenerationProgressPr
                 </svg>
               </div>
             )}
-            {step === "complete" && (
+            {isComplete && (
               <div className="shrink-0">
                 <svg className="h-5 w-5 text-victory-500" fill="currentColor" viewBox="0 0 20 20">
                   <path
@@ -64,22 +96,14 @@ export function GenerationProgress({ progress, elapsedMs }: GenerationProgressPr
               </div>
             )}
             <div className="flex-1">
-              <div className="text-sm font-medium text-brand-900">{step === "complete" ? "Complete!" : message}</div>
-              {totalStages !== undefined && step !== "complete" && (
-                <div className="text-xs text-brand-600">{totalStages} stages</div>
-              )}
+              <div className="text-sm font-medium text-brand-900">{isComplete ? "Complete!" : message}</div>
             </div>
           </div>
           <div className="text-sm font-mono text-brand-700">{elapsedSeconds}s</div>
         </div>
 
-        {/* Progress bar - indeterminate style with time-based fill */}
-        <div className="w-full bg-brand-200 rounded-full h-2 overflow-hidden">
-          <div
-            className={`h-2 rounded-full transition-all duration-1000 ease-out ${step === "complete" ? "bg-victory-500" : "bg-brand-500"}`}
-            style={{ width: `${Math.floor(timeProgress).toString()}%` }}
-          ></div>
-        </div>
+        {/* 5-stage pill progress bar */}
+        <PipelinePillProgress currentStage={currentStage ?? 0} totalStages={totalStages ?? 5} isComplete={isComplete} />
       </div>
     </div>
   );

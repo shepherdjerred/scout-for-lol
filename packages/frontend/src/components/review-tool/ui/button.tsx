@@ -21,8 +21,8 @@ export function Button({
   const base =
     "inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:pointer-events-none";
   const variants: Record<NonNullable<ButtonProps["variant"]>, string> = {
-    default: "bg-brand-600 text-white hover:bg-brand-700 focus:ring-brand-500",
-    primary: "bg-brand-600 text-white hover:bg-brand-700 focus:ring-brand-500",
+    default: "bg-black text-white hover:bg-brand-700 focus:ring-brand-500",
+    primary: "bg-black text-white hover:bg-brand-700 focus:ring-brand-500",
     secondary: "bg-surface-100 text-surface-900 hover:bg-surface-200 focus:ring-brand-500",
     outline: "border border-surface-300 text-surface-900 hover:bg-surface-50 focus:ring-brand-500",
     ghost: "text-surface-700 hover:bg-surface-100 focus:ring-brand-500",

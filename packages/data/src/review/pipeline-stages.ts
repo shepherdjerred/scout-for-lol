@@ -13,6 +13,7 @@ import type { Personality } from "./prompts.ts";
 import { replaceTemplateVariables, selectRandomImagePrompts } from "./prompts.ts";
 import { buildPromptVariables, extractMatchData } from "./generator-helpers.ts";
 import { enrichTimelineData } from "./timeline-enricher.ts";
+import { modelSupportsParameter } from "./models.ts";
 import type { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
 
@@ -95,12 +96,17 @@ async function callOpenAI(params: {
 
   const startTime = Date.now();
 
+  // Only include temperature and topP if the model supports them
+  // Some models (like GPT-5 series and O-series) don't support these parameters
+  const supportsTemperature = modelSupportsParameter(model.model, "temperature");
+  const supportsTopP = modelSupportsParameter(model.model, "topP");
+
   const response = await client.chat.completions.create({
     model: model.model,
     messages,
     max_completion_tokens: model.maxTokens,
-    ...(model.temperature !== undefined && { temperature: model.temperature }),
-    ...(model.topP !== undefined && { top_p: model.topP }),
+    ...(supportsTemperature && model.temperature !== undefined && { temperature: model.temperature }),
+    ...(supportsTopP && model.topP !== undefined && { top_p: model.topP }),
   });
 
   const durationMs = Date.now() - startTime;

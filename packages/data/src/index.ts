@@ -70,6 +70,9 @@ export type {
   PipelineContext,
   PipelineReviewOutput,
   ReviewPipelineOutput,
+  PipelineStageName,
+  PipelineProgress,
+  PipelineProgressCallback,
 } from "./review/pipeline-types.ts";
 
 // Prompt variable metadata (single source of truth for frontend/backend)

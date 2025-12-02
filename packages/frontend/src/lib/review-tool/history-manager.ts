@@ -16,7 +16,7 @@ const GenerationResultSchema = z.object({
 });
 
 const ConfigSnapshotSchema = z.object({
-  model: z.string(),
+  model: z.string().optional(),
   personality: z.string().optional(),
   imageDescription: z.string().optional(),
 });
@@ -26,7 +26,7 @@ export type HistoryEntry = {
   timestamp: Date;
   result: GenerationResult;
   configSnapshot: {
-    model: string;
+    model?: string;
     personality?: string;
     imageDescription?: string;
   };
@@ -43,7 +43,7 @@ const MAX_HISTORY_ENTRIES = 50;
  */
 function buildConfigSnapshot(configData: z.infer<typeof ConfigSnapshotSchema>): HistoryEntry["configSnapshot"] {
   return {
-    model: configData.model,
+    ...(configData.model !== undefined ? { model: configData.model } : {}),
     ...(configData.personality !== undefined ? { personality: configData.personality } : {}),
     ...(configData.imageDescription !== undefined ? { imageDescription: configData.imageDescription } : {}),
   };

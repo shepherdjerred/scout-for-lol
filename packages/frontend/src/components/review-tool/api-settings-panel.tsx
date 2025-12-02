@@ -242,7 +242,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
       </div>
 
       <div className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded p-3">
-        ⚠️ API keys are stored in browser IndexedDB and shared across all tabs.
+        ⚠️ API keys are stored in browser IndexedDB.
       </div>
     </div>
   );

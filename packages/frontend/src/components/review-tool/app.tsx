@@ -21,7 +21,7 @@ import { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import { migrateFromLocalStorage } from "@scout-for-lol/frontend/lib/review-tool/storage";
 import { AppHeader } from "./app-header.tsx";
 import { ConfigModal } from "./config-modal.tsx";
-import { TabSettingsPanel } from "./tab-settings-panel.tsx";
+import { SettingsPanel } from "./settings-panel.tsx";
 import { ResultsPanel } from "./results-panel.tsx";
 import { MatchBrowser } from "./match-browser.tsx";
 import { MatchDetailsPanel } from "./match-details-panel.tsx";
@@ -29,34 +29,24 @@ import { RatingsAnalytics } from "./ratings-analytics.tsx";
 import { Spinner } from "./ui/spinner.tsx";
 import type { CompletedMatch, ArenaMatch, RawMatch, RawTimeline } from "@scout-for-lol/data";
 
-export type TabData = {
-  id: string;
-  name: string;
-  config: TabConfig;
-  result?: GenerationResult;
-  match?: CompletedMatch | ArenaMatch;
-  rawMatch?: RawMatch;
-  rawTimeline?: RawTimeline;
-};
-
-const MAX_TABS = 5;
-
 // Store for app initialization state
 type AppInitState = {
   globalConfig: GlobalConfig;
-  tabs: TabData[];
+  config: TabConfig;
   isInitialized: boolean;
+};
+
+// Current match state (kept separate from persisted config)
+type MatchState = {
+  match?: CompletedMatch | ArenaMatch;
+  rawMatch?: RawMatch;
+  rawTimeline?: RawTimeline;
+  result?: GenerationResult;
 };
 
 let appInitState: AppInitState = {
   globalConfig: createDefaultGlobalConfig(),
-  tabs: [
-    {
-      id: "tab-1",
-      name: "Config 1",
-      config: createDefaultTabConfig(),
-    },
-  ],
+  config: createDefaultTabConfig(),
   isInitialized: false,
 };
 
@@ -95,32 +85,20 @@ function initializeAppData() {
         }
       }
 
-      // Load tab config
-      let tabs: TabData[];
+      // Load config
+      let config: TabConfig;
       const oldConfig = await loadCurrentConfig();
       if (oldConfig) {
         const { tab } = splitConfig(oldConfig);
-        tabs = [
-          {
-            id: "tab-1",
-            name: "Config 1",
-            config: tab,
-          },
-        ];
+        config = tab;
       } else {
-        tabs = [
-          {
-            id: "tab-1",
-            name: "Config 1",
-            config: createDefaultTabConfig(),
-          },
-        ];
+        config = createDefaultTabConfig();
       }
 
       // Create new object reference to trigger useSyncExternalStore update
       appInitState = {
         globalConfig,
-        tabs,
+        config,
         isInitialized: true,
       };
       appInitListeners.forEach((listener) => {
@@ -145,9 +123,9 @@ void initializeAppData();
 export default function App() {
   // Subscribe to app initialization state
   const initState = useSyncExternalStore(subscribeToAppInit, getAppInitSnapshot, getAppInitSnapshot);
-  const { globalConfig, tabs, isInitialized } = initState;
+  const { globalConfig, config, isInitialized } = initState;
 
-  const [activeTabId, setActiveTabId] = useState("tab-1");
+  const [matchState, setMatchState] = useState<MatchState>({});
   const [costTracker] = useState(() => new CostTracker());
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
@@ -164,156 +142,46 @@ export default function App() {
     );
   }
 
-  const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
-
   // Wrapper to save global config when it changes
-  const updateGlobalConfig = (config: GlobalConfig) => {
-    appInitState = { ...appInitState, globalConfig: config };
+  const updateGlobalConfig = (newGlobalConfig: GlobalConfig) => {
+    appInitState = { ...appInitState, globalConfig: newGlobalConfig };
     appInitListeners.forEach((listener) => {
       listener();
     });
     // Save config when it changes
-    void saveGlobalConfig(config);
+    void saveGlobalConfig(newGlobalConfig);
   };
 
-  const addTab = () => {
-    if (tabs.length >= MAX_TABS) {
-      alert(`Maximum ${MAX_TABS.toString()} tabs allowed`);
-      return;
-    }
-
-    const newTab: TabData = {
-      id: `tab-${Date.now().toString()}`,
-      name: `Config ${(tabs.length + 1).toString()}`,
-      config: createDefaultTabConfig(),
-    };
-
-    appInitState = { ...appInitState, tabs: [...tabs, newTab] };
-    appInitListeners.forEach((listener) => {
-      listener();
-    });
-    setActiveTabId(newTab.id);
-  };
-
-  const cloneTab = (id: string) => {
-    if (tabs.length >= MAX_TABS) {
-      alert(`Maximum ${MAX_TABS.toString()} tabs allowed`);
-      return;
-    }
-
-    const tabToClone = tabs.find((t) => t.id === id);
-    if (!tabToClone) {
-      return;
-    }
-
-    const newTab: TabData = {
-      id: `tab-${Date.now().toString()}`,
-      name: `${tabToClone.name} (Copy)`,
-      config: structuredClone(tabToClone.config),
-      // Don't copy result or match - start fresh
-    };
-
-    appInitState = { ...appInitState, tabs: [...tabs, newTab] };
-    appInitListeners.forEach((listener) => {
-      listener();
-    });
-    setActiveTabId(newTab.id);
-  };
-
-  const closeTab = (id: string) => {
-    if (tabs.length === 1) {
-      alert("Cannot close the last tab");
-      return;
-    }
-
-    const index = tabs.findIndex((t) => t.id === id);
-    const newTabs = tabs.filter((t) => t.id !== id);
-    appInitState = { ...appInitState, tabs: newTabs };
-    appInitListeners.forEach((listener) => {
-      listener();
-    });
-
-    // Set active tab to the one before or after the closed tab
-    if (activeTabId === id) {
-      const newActiveTab = newTabs[index] ?? newTabs[index - 1] ?? newTabs[0];
-      if (newActiveTab) {
-        setActiveTabId(newActiveTab.id);
-      }
-    }
-  };
-
-  const updateTabConfig = (id: string, config: TabConfig) => {
-    const newTabs = tabs.map((t) => (t.id === id ? { ...t, config } : t));
-    appInitState = { ...appInitState, tabs: newTabs };
+  const updateConfig = (newConfig: TabConfig) => {
+    appInitState = { ...appInitState, config: newConfig };
     appInitListeners.forEach((listener) => {
       listener();
     });
     // Save config when it changes
-    const updatedTab = newTabs.find((t) => t.id === id);
-    if (updatedTab) {
-      const merged = mergeConfigs(globalConfig, updatedTab.config);
-      void saveCurrentConfig(merged);
+    const merged = mergeConfigs(globalConfig, newConfig);
+    void saveCurrentConfig(merged);
+  };
+
+  const updateResult = (result: GenerationResult) => {
+    setMatchState((prev) => ({ ...prev, result }));
+  };
+
+  const updateMatch = (match: CompletedMatch | ArenaMatch, rawMatch: RawMatch, rawTimeline: RawTimeline | null) => {
+    const newState: MatchState = {
+      match,
+      rawMatch,
+    };
+    if (rawTimeline) {
+      newState.rawTimeline = rawTimeline;
     }
+    setMatchState(newState);
   };
-
-  const updateTabResult = (id: string, result: GenerationResult) => {
-    const newTabs = tabs.map((t) => (t.id === id ? { ...t, result } : t));
-    appInitState = { ...appInitState, tabs: newTabs };
-    appInitListeners.forEach((listener) => {
-      listener();
-    });
-  };
-
-  const updateTabMatch = (
-    id: string,
-    match: CompletedMatch | ArenaMatch,
-    rawMatch: RawMatch,
-    rawTimeline: RawTimeline | null,
-  ) => {
-    const newTabs = tabs.map((t) => {
-      if (t.id !== id) {
-        return t;
-      }
-      const updated: TabData = { ...t, match, rawMatch };
-      if (rawTimeline) {
-        updated.rawTimeline = rawTimeline;
-      }
-      return updated;
-    });
-    appInitState = { ...appInitState, tabs: newTabs };
-    appInitListeners.forEach((listener) => {
-      listener();
-    });
-  };
-
-  const updateTabName = (id: string, name: string) => {
-    const newTabs = tabs.map((t) => (t.id === id ? { ...t, name } : t));
-    appInitState = { ...appInitState, tabs: newTabs };
-    appInitListeners.forEach((listener) => {
-      listener();
-    });
-  };
-
-  if (!activeTab) {
-    return (
-      <div className="min-h-screen bg-surface-50 flex items-center justify-center">
-        <div className="card p-8 text-surface-600">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-surface-50 bg-hero-pattern">
-      {/* Header with integrated tabs */}
+      {/* Header */}
       <AppHeader
-        tabs={tabs}
-        activeTabId={activeTabId}
         showAnalytics={showAnalytics}
-        onTabSelect={setActiveTabId}
-        onTabClose={closeTab}
-        onTabAdd={addTab}
-        onTabClone={cloneTab}
-        onTabRename={updateTabName}
         onSettingsClick={() => {
           setShowConfigModal(true);
         }}
@@ -340,42 +208,35 @@ export default function App() {
                 </div>
                 <MatchBrowser
                   onMatchSelected={(match, rawMatch, rawTimeline) => {
-                    updateTabMatch(activeTabId, match, rawMatch, rawTimeline);
+                    updateMatch(match, rawMatch, rawTimeline);
                   }}
                   apiSettings={globalConfig.api}
                 />
               </section>
 
               {/* Selected Match Details */}
-              {activeTab.match && (
+              {matchState.match && (
                 <section className="animate-slide-up">
-                  <MatchDetailsPanel match={activeTab.match} hasTimeline={activeTab.rawTimeline !== undefined} />
+                  <MatchDetailsPanel match={matchState.match} hasTimeline={matchState.rawTimeline !== undefined} />
                 </section>
               )}
 
               {/* Generation Settings */}
               <section>
-                <TabSettingsPanel
-                  config={activeTab.config}
-                  onChange={(config) => {
-                    updateTabConfig(activeTabId, config);
-                  }}
-                />
+                <SettingsPanel config={config} onChange={updateConfig} />
               </section>
             </div>
 
             {/* Right column - Results */}
             <div className="space-y-6">
               <ResultsPanel
-                config={mergeConfigs(globalConfig, activeTab.config)}
-                match={activeTab.match}
-                rawMatch={activeTab.rawMatch}
-                rawTimeline={activeTab.rawTimeline}
-                result={activeTab.result}
+                config={mergeConfigs(globalConfig, config)}
+                match={matchState.match}
+                rawMatch={matchState.rawMatch}
+                rawTimeline={matchState.rawTimeline}
+                result={matchState.result}
                 costTracker={costTracker}
-                onResultGenerated={(result) => {
-                  updateTabResult(activeTabId, result);
-                }}
+                onResultGenerated={updateResult}
               />
             </div>
           </div>

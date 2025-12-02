@@ -1,6 +1,7 @@
 import { Input } from "@scout-for-lol/frontend/components/review-tool/ui/input";
 import { Label } from "@scout-for-lol/frontend/components/review-tool/ui/label";
 import type { ModelConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
+import { modelSupportsParameter } from "@scout-for-lol/data";
 import type { ChangeEvent } from "react";
 
 type ModelConfigFormProps = {
@@ -14,6 +15,9 @@ function handleNumberChange(event: ChangeEvent<HTMLInputElement>, fallback: numb
 }
 
 export function ModelConfigForm({ value, onChange }: ModelConfigFormProps) {
+  const supportsTemperature = modelSupportsParameter(value.model, "temperature");
+  const supportsTopP = modelSupportsParameter(value.model, "topP");
+
   return (
     <div className="grid gap-3 md:grid-cols-2">
       <div>
@@ -41,7 +45,10 @@ export function ModelConfigForm({ value, onChange }: ModelConfigFormProps) {
         />
       </div>
       <div>
-        <Label htmlFor="temperature">Temperature</Label>
+        <Label htmlFor="temperature">
+          Temperature
+          {!supportsTemperature && <span className="ml-1 text-xs text-amber-600">(unsupported)</span>}
+        </Label>
         <Input
           id="temperature"
           type="number"
@@ -54,10 +61,13 @@ export function ModelConfigForm({ value, onChange }: ModelConfigFormProps) {
             onChange({ ...value, temperature: Number.isFinite(next) ? next : undefined });
           }}
           placeholder="0.7"
+          disabled={!supportsTemperature}
         />
       </div>
       <div>
-        <Label htmlFor="topP">Top P</Label>
+        <Label htmlFor="topP">
+          Top P{!supportsTopP && <span className="ml-1 text-xs text-amber-600">(unsupported)</span>}
+        </Label>
         <Input
           id="topP"
           type="number"
@@ -70,6 +80,7 @@ export function ModelConfigForm({ value, onChange }: ModelConfigFormProps) {
             onChange({ ...value, topP: Number.isFinite(next) ? next : undefined });
           }}
           placeholder="0.9"
+          disabled={!supportsTopP}
         />
       </div>
     </div>

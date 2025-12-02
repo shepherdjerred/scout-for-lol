@@ -322,39 +322,6 @@ function buildEnabledStagesList(stages: PipelineStagesConfig, hasGeminiClient: b
 }
 
 /**
- * Report initial generation progress based on enabled stages
- * Note: The pipeline doesn't support intermediate progress updates,
- * so this message stays until generation completes.
- */
-function reportInitialProgress(
-  stages: PipelineStagesConfig,
-  enabledStages: GenerationStep[],
-  onProgress?: (progress: GenerationProgress) => void,
-): void {
-  // Build a description of what will happen
-  const stageNames: string[] = [];
-  if (stages.timelineSummary.enabled) {
-    stageNames.push("timeline");
-  }
-  if (stages.matchSummary.enabled) {
-    stageNames.push("match data");
-  }
-  stageNames.push("review");
-  if (stages.imageDescription.enabled) {
-    stageNames.push("image prompt");
-  }
-  if (stages.imageGeneration.enabled) {
-    stageNames.push("image");
-  }
-
-  onProgress?.({
-    step: "review-text",
-    message: `Generating ${stageNames.join(" → ")}...`,
-    totalStages: enabledStages.length,
-  });
-}
-
-/**
  * Generate a complete match review using the unified pipeline
  */
 export async function generateMatchReview(params: GenerateMatchReviewParams): Promise<GenerationResult> {
@@ -416,12 +383,11 @@ export async function generateMatchReview(params: GenerateMatchReviewParams): Pr
       laneContext,
     };
 
-    // Count enabled stages and report initial progress
+    // Count enabled stages for completion tracking
     const enabledStages = buildEnabledStagesList(stages, geminiClient !== undefined);
-    reportInitialProgress(stages, enabledStages, onProgress);
 
-    // Call unified pipeline
-    const pipelineOutput = await generateFullMatchReview({
+    // Build pipeline input, conditionally including onProgress to satisfy exactOptionalPropertyTypes
+    const pipelineInput: Parameters<typeof generateFullMatchReview>[0] = {
       match: matchInput,
       player: {
         index: 0, // Always review first player in frontend
@@ -429,7 +395,22 @@ export async function generateMatchReview(params: GenerateMatchReviewParams): Pr
       prompts: promptsInput,
       clients: clientsInput,
       stages,
-    });
+    };
+
+    // Add progress callback if provided
+    if (onProgress) {
+      pipelineInput.onProgress = (p) => {
+        onProgress({
+          step: p.stage,
+          message: p.message,
+          currentStage: p.currentStage,
+          totalStages: p.totalStages,
+        });
+      };
+    }
+
+    // Call unified pipeline
+    const pipelineOutput = await generateFullMatchReview(pipelineInput);
 
     onProgress?.({
       step: "complete",

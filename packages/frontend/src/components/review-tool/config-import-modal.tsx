@@ -209,7 +209,7 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                 <p className="text-sm font-semibold text-blue-900 mb-2">Config Bundle Summary:</p>
                 <ul className="text-sm text-blue-800 space-y-1">
                   <li>• Exported: {new Date(summary.exportedAt).toLocaleString()}</li>
-                  <li>• Tab Settings: {summary.hasTabConfig ? "✓ Included" : "✗ Not included"}</li>
+                  <li>• Settings: {summary.hasTabConfig ? "✓ Included" : "✗ Not included"}</li>
                   <li>• Custom Personalities: {summary.personalitiesCount}</li>
                   <li>• Custom Art Styles: {summary.artStylesCount}</li>
                 </ul>
@@ -230,7 +230,7 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                     }}
                     className="w-4 h-4 text-brand-600 rounded focus:ring-2 focus:ring-brand-500"
                   />
-                  <span className="text-sm text-surface-700">Import Tab Settings (text/image generation, prompts)</span>
+                  <span className="text-sm text-surface-700">Import Settings (text/image generation, prompts)</span>
                 </label>
 
                 <label className="flex items-center gap-2 cursor-pointer">

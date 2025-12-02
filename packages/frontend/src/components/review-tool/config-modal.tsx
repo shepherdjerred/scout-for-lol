@@ -80,7 +80,7 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
           <div className="sticky top-0 bg-white border-b border-surface-200 px-6 py-4 flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold text-surface-900">API Configuration</h2>
-              <p className="text-sm text-surface-500 mt-1">Settings shared across all tabs</p>
+              <p className="text-sm text-surface-500 mt-1">API keys and external service configuration</p>
             </div>
             <button
               onClick={onClose}

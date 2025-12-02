@@ -213,14 +213,14 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
     category: "gpt-3.5",
   },
 
-  // GPT-5 Series
+  // GPT-5 Series (Reasoning models - no temperature/topP support)
   "gpt-5": {
     id: "gpt-5",
     name: "GPT-5",
-    description: "🧠 GPT-5 base model • $1.25 input / $10 output per 1M tokens",
+    description: "🧠 GPT-5 base model • $1.25 input / $10 output per 1M tokens • No temp control",
     capabilities: {
-      supportsTemperature: true,
-      supportsTopP: true,
+      supportsTemperature: false,
+      supportsTopP: false,
       maxTokens: 400000,
       costPer1MInputTokens: 1.25,
       costPer1MOutputTokens: 10.0,
@@ -230,10 +230,10 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "gpt-5-mini": {
     id: "gpt-5-mini",
     name: "GPT-5 Mini",
-    description: "💰 Balanced GPT-5 variant • $0.25 input / $2 output per 1M tokens",
+    description: "💰 Balanced GPT-5 variant • $0.25 input / $2 output per 1M tokens • No temp control",
     capabilities: {
-      supportsTemperature: true,
-      supportsTopP: true,
+      supportsTemperature: false,
+      supportsTopP: false,
       maxTokens: 200000,
       costPer1MInputTokens: 0.25,
       costPer1MOutputTokens: 2.0,
@@ -243,10 +243,10 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
   "gpt-5-nano": {
     id: "gpt-5-nano",
     name: "GPT-5 Nano",
-    description: "⚡ Fastest, most cost-effective • $0.05 input / $0.40 output per 1M tokens",
+    description: "⚡ Fastest, most cost-effective • $0.05 input / $0.40 output per 1M tokens • No temp control",
     capabilities: {
-      supportsTemperature: true,
-      supportsTopP: true,
+      supportsTemperature: false,
+      supportsTopP: false,
       maxTokens: 100000,
       costPer1MInputTokens: 0.05,
       costPer1MOutputTokens: 0.4,
@@ -254,14 +254,14 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
     category: "other",
   },
 
-  // GPT-5.1 (Latest flagship model)
+  // GPT-5.1 (Latest flagship model - no temperature/topP support)
   "gpt-5.1": {
     id: "gpt-5.1",
     name: "GPT-5.1",
-    description: "🚀 Latest GPT-5.1 • 400k context • $1.25 input / $10 output per 1M tokens",
+    description: "🚀 Latest GPT-5.1 • 400k context • $1.25 input / $10 output per 1M tokens • No temp control",
     capabilities: {
-      supportsTemperature: true,
-      supportsTopP: true,
+      supportsTemperature: false,
+      supportsTopP: false,
       maxTokens: 400000,
       costPer1MInputTokens: 1.25,
       costPer1MOutputTokens: 10.0,

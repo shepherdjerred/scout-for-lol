@@ -168,6 +168,8 @@ export type ReviewPipelineInput = {
   clients: PipelineClientsInput;
   /** Per-stage configuration */
   stages: PipelineStagesConfig;
+  /** Optional callback for progress updates */
+  onProgress?: PipelineProgressCallback;
 };
 
 // ============================================================================
@@ -290,3 +292,36 @@ export type ReviewPipelineOutput = {
   /** Context about the review */
   context: PipelineContext;
 };
+
+// ============================================================================
+// Pipeline Progress
+// ============================================================================
+
+/**
+ * Names of pipeline stages for progress tracking
+ */
+export type PipelineStageName =
+  | "timeline-summary"
+  | "match-summary"
+  | "review-text"
+  | "image-description"
+  | "image-generation";
+
+/**
+ * Progress update from the pipeline
+ */
+export type PipelineProgress = {
+  /** Current stage being executed */
+  stage: PipelineStageName;
+  /** Human-readable message */
+  message: string;
+  /** Current stage number (1-based) */
+  currentStage: number;
+  /** Total number of enabled stages */
+  totalStages: number;
+};
+
+/**
+ * Callback for pipeline progress updates
+ */
+export type PipelineProgressCallback = (progress: PipelineProgress) => void;

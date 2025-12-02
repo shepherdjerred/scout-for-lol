@@ -19,7 +19,7 @@ const DBHistoryEntrySchema = z.object({
     error: z.string().optional(),
   }),
   configSnapshot: z.object({
-    model: z.string(),
+    model: z.string().optional(),
     personality: z.string().optional(),
     artStyle: z.string().optional(),
   }),

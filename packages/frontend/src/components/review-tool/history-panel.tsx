@@ -203,7 +203,6 @@ export function HistoryPanel({
                       <span className="text-xs text-surface-500">{formatTimestamp(entry.timestamp)}</span>
                     </div>
                     <div className="text-xs text-surface-700 space-y-0.5">
-                      <div className="font-mono truncate">{entry.configSnapshot.model}</div>
                       {entry.configSnapshot.personality && (
                         <div className="truncate">🎭 {entry.configSnapshot.personality}</div>
                       )}
