@@ -51,7 +51,7 @@ export function PromptEditor({ label, prompt, defaultPrompt, onSave, stage, prom
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-700">Prompt template</span>
+              <span className="text-xs font-medium text-surface-700">Prompt template</span>
               {defaultPrompt && (
                 <Button variant="ghost" size="sm" type="button" onClick={handleReset}>
                   Reset to default

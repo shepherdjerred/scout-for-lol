@@ -49,7 +49,6 @@ export function RankedBadge({
 
   const showPromoted = wasPromoted(oldRank, newRank);
   const showDemoted = wasDemoted(oldRank, newRank);
-  const showPlacements = !oldRank && newRank;
 
   // Scale all dimensions proportionally
   const iconSize = 24 * scale;
@@ -121,7 +120,6 @@ export function RankedBadge({
           <span style={{ position: "absolute", top: `${promotedTextTop.toString()}rem` }}>
             {showPromoted && `Promoted`}
             {showDemoted && `Demoted`}
-            {showPlacements && `Placed`}
           </span>
         </div>
       </div>

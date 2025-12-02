@@ -90,7 +90,7 @@ function generateDatePrefixes(startDate: Date, endDate: Date): string[] {
     const year = format(day, "yyyy");
     const month = format(day, "MM");
     const dayStr = format(day, "dd");
-    return `matches/${year}/${month}/${dayStr}/`;
+    return `games/${year}/${month}/${dayStr}/`;
   });
 }
 

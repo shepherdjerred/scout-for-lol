@@ -155,10 +155,10 @@ export default function App() {
   // Show loading state while initializing
   if (!isInitialized) {
     return (
-      <div className="min-h-screen bg-surface-50 dark:bg-surface-950 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-50 flex items-center justify-center">
         <div className="card p-8 flex flex-col items-center gap-4 animate-fade-in">
           <Spinner size="lg" className="text-brand-500" />
-          <p className="text-surface-600 dark:text-surface-300 font-medium">Loading configuration...</p>
+          <p className="text-surface-600 font-medium">Loading configuration...</p>
         </div>
       </div>
     );
@@ -296,14 +296,14 @@ export default function App() {
 
   if (!activeTab) {
     return (
-      <div className="min-h-screen bg-surface-50 dark:bg-surface-950 flex items-center justify-center">
-        <div className="card p-8 text-surface-600 dark:text-surface-300">Loading...</div>
+      <div className="min-h-screen bg-surface-50 flex items-center justify-center">
+        <div className="card p-8 text-surface-600">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-surface-50 dark:bg-surface-950 bg-hero-pattern">
+    <div className="min-h-screen bg-surface-50 bg-hero-pattern">
       {/* Header with integrated tabs */}
       <AppHeader
         tabs={tabs}
@@ -334,11 +334,9 @@ export default function App() {
             <div className="space-y-6">
               {/* Match Browser */}
               <section className="card p-0 overflow-hidden">
-                <div className="px-6 py-4 border-b border-surface-200/50 dark:border-surface-700/50">
-                  <h2 className="text-lg font-semibold text-surface-900 dark:text-white">Browse Matches</h2>
-                  <p className="text-sm text-surface-500 dark:text-surface-400 mt-0.5">
-                    Select a match to generate a review
-                  </p>
+                <div className="px-6 py-4 border-b border-surface-200/50">
+                  <h2 className="text-lg font-semibold text-surface-900">Browse Matches</h2>
+                  <p className="text-sm text-surface-500 mt-0.5">Select a match to generate a review</p>
                 </div>
                 <MatchBrowser
                   onMatchSelected={(match, rawMatch, rawTimeline) => {
@@ -351,7 +349,7 @@ export default function App() {
               {/* Selected Match Details */}
               {activeTab.match && (
                 <section className="animate-slide-up">
-                  <MatchDetailsPanel match={activeTab.match} />
+                  <MatchDetailsPanel match={activeTab.match} hasTimeline={activeTab.rawTimeline !== undefined} />
                 </section>
               )}
 

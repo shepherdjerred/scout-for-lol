@@ -52,13 +52,13 @@ export function PromptSettings({
 
   return (
     <div>
-      <div className="w-full px-4 py-3 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
-        <span className="font-semibold text-gray-900 dark:text-white text-sm">Prompts & Personality</span>
+      <div className="w-full px-4 py-3 flex justify-between items-center bg-surface-50">
+        <span className="font-semibold text-surface-900 text-sm">Prompts & Personality</span>
       </div>
       <div>
         <div className="px-4 pb-4 space-y-3">
           <div>
-            <label htmlFor="base-prompt" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="base-prompt" className="block text-sm font-medium text-surface-700 mb-1">
               Base Prompt
             </label>
             <textarea
@@ -70,8 +70,8 @@ export function PromptSettings({
                   prompts: { ...config.prompts, basePrompt: e.target.value },
                 });
               }}
-              rows={6}
-              className="w-full px-3 py-2 text-xs bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              rows={12}
+              className="w-full px-3 py-2 text-xs bg-white text-surface-900 border border-surface-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-mono placeholder:text-surface-400"
               placeholder="Base prompt template..."
             />
             <button
@@ -81,7 +81,7 @@ export function PromptSettings({
                   prompts: { ...config.prompts, basePrompt: getBasePrompt() },
                 });
               }}
-              className="mt-2 text-sm text-blue-600 hover:text-blue-700"
+              className="mt-2 text-sm text-brand-600 hover:text-blue-700"
             >
               Reset to Default
             </button>

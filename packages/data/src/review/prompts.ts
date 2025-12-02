@@ -122,7 +122,6 @@ export function replaceTemplateVariables(
   template: string,
   variables: {
     reviewerName: string;
-    reviewerPersonality: string;
     playerName: string;
     playerChampion: string;
     playerLane: string;
@@ -136,7 +135,6 @@ export function replaceTemplateVariables(
 ): string {
   return template
     .replaceAll("<REVIEWER NAME>", variables.reviewerName)
-    .replaceAll("<REVIEWER PERSONALITY>", variables.reviewerPersonality)
     .replaceAll("<PLAYER NAME>", variables.playerName)
     .replaceAll("<PLAYER CHAMPION>", variables.playerChampion)
     .replaceAll("<PLAYER LANE>", variables.playerLane)

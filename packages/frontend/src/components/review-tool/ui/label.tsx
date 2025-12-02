@@ -5,7 +5,7 @@ type LabelProps = DetailedHTMLProps<LabelHTMLAttributes<HTMLLabelElement>, HTMLL
 
 export function Label({ className, children, ...props }: LabelProps) {
   return (
-    <label className={cn("text-sm font-medium text-gray-800", className)} {...props}>
+    <label className={cn("text-sm font-medium text-surface-800", className)} {...props}>
       {children}
     </label>
   );

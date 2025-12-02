@@ -668,7 +668,7 @@ test("multiple players with promotion and demotion test", async () => {
     },
   });
 
-  // Third player (mid) - PLACED (no rank before)
+  // Third player (mid) - no rank before (first tracked game in this queue)
   match.players.push({
     playerConfig: {
       alias: "midlaner",

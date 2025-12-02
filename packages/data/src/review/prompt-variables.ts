@@ -91,7 +91,6 @@ export const STAGE_PROMPT_VARIABLES = {
         name: "STYLE_CARD",
         description: "Minified JSON style card (AI analysis of writing style)",
       },
-      { name: "LANE_CONTEXT", description: "Lane-specific context" },
     ],
     user: [
       { name: "REVIEWER NAME", description: "Personality name (e.g., 'Aaron')" },
@@ -115,10 +114,7 @@ export const STAGE_PROMPT_VARIABLES = {
         name: "QUEUE CONTEXT",
         description: "Queue type and context (solo, flex, clash, etc.)",
       },
-      {
-        name: "REVIEWER PERSONALITY",
-        description: "Personality instructions text (from style card)",
-      },
+      { name: "RANK CONTEXT", description: "Rank changes (promos, demotions, LP gains)" },
     ],
   },
 

@@ -33,11 +33,21 @@ import type { ReviewConfig, GenerationResult, GenerationMetadata, Personality } 
 import { createDefaultPipelineStages } from "./config/schema.ts";
 import { selectRandomPersonality, getPersonalityById, getLaneContext } from "./prompts.ts";
 
-export type GenerationStep = "text" | "image" | "complete";
+export type GenerationStep =
+  | "timeline-summary"
+  | "match-summary"
+  | "review-text"
+  | "image-description"
+  | "image-generation"
+  | "complete";
 
 export type GenerationProgress = {
   step: GenerationStep;
   message: string;
+  /** Current stage number (1-based) */
+  currentStage?: number;
+  /** Total number of enabled stages */
+  totalStages?: number;
 };
 
 /**
@@ -291,6 +301,60 @@ export type GenerateMatchReviewParams = {
 };
 
 /**
+ * Build the list of enabled pipeline stages for progress tracking
+ */
+function buildEnabledStagesList(stages: PipelineStagesConfig, hasGeminiClient: boolean): GenerationStep[] {
+  const enabledStages: GenerationStep[] = [];
+  if (stages.timelineSummary.enabled) {
+    enabledStages.push("timeline-summary");
+  }
+  if (stages.matchSummary.enabled) {
+    enabledStages.push("match-summary");
+  }
+  enabledStages.push("review-text"); // Always enabled
+  if (stages.imageDescription.enabled) {
+    enabledStages.push("image-description");
+  }
+  if (stages.imageGeneration.enabled && hasGeminiClient) {
+    enabledStages.push("image-generation");
+  }
+  return enabledStages;
+}
+
+/**
+ * Report initial generation progress based on enabled stages
+ * Note: The pipeline doesn't support intermediate progress updates,
+ * so this message stays until generation completes.
+ */
+function reportInitialProgress(
+  stages: PipelineStagesConfig,
+  enabledStages: GenerationStep[],
+  onProgress?: (progress: GenerationProgress) => void,
+): void {
+  // Build a description of what will happen
+  const stageNames: string[] = [];
+  if (stages.timelineSummary.enabled) {
+    stageNames.push("timeline");
+  }
+  if (stages.matchSummary.enabled) {
+    stageNames.push("match data");
+  }
+  stageNames.push("review");
+  if (stages.imageDescription.enabled) {
+    stageNames.push("image prompt");
+  }
+  if (stages.imageGeneration.enabled) {
+    stageNames.push("image");
+  }
+
+  onProgress?.({
+    step: "review-text",
+    message: `Generating ${stageNames.join(" → ")}...`,
+    totalStages: enabledStages.length,
+  });
+}
+
+/**
  * Generate a complete match review using the unified pipeline
  */
 export async function generateMatchReview(params: GenerateMatchReviewParams): Promise<GenerationResult> {
@@ -352,8 +416,9 @@ export async function generateMatchReview(params: GenerateMatchReviewParams): Pr
       laneContext,
     };
 
-    // Report progress
-    onProgress?.({ step: "text", message: "Generating review..." });
+    // Count enabled stages and report initial progress
+    const enabledStages = buildEnabledStagesList(stages, geminiClient !== undefined);
+    reportInitialProgress(stages, enabledStages, onProgress);
 
     // Call unified pipeline
     const pipelineOutput = await generateFullMatchReview({
@@ -366,7 +431,12 @@ export async function generateMatchReview(params: GenerateMatchReviewParams): Pr
       stages,
     });
 
-    onProgress?.({ step: "complete", message: "Complete!" });
+    onProgress?.({
+      step: "complete",
+      message: "Complete!",
+      currentStage: enabledStages.length,
+      totalStages: enabledStages.length,
+    });
 
     // Build metadata
     const metadata = buildGenerationMetadata(pipelineOutput);

@@ -154,6 +154,16 @@ async function processMatchAndUpdatePlayers(
     matchData.metadata.participants.includes(p.league.leagueAccount.puuid),
   );
 
+  // Debug: Log which tracked players were found in this match
+  logger.info(
+    `[processMatch] 🔍 Match has ${matchData.metadata.participants.length.toString()} participants, ` +
+      `we track ${allPlayerConfigs.length.toString()} accounts, ` +
+      `found ${allTrackedPlayers.length.toString()} tracked players in match`,
+  );
+  if (allTrackedPlayers.length > 0) {
+    logger.info(`[processMatch] 👥 Tracked players in match: ${allTrackedPlayers.map((p) => p.alias).join(", ")}`);
+  }
+
   // Process the match
   await processMatch(matchData, allTrackedPlayers);
 
@@ -164,11 +174,15 @@ async function processMatchAndUpdatePlayers(
   const matchCreationTime = new Date(matchData.info.gameCreation);
 
   // Update lastProcessedMatchId and lastMatchTime for all players in this match
+  logger.info(
+    `[processMatch] ⏰ Updating lastMatchTime to ${matchCreationTime.toISOString()} for ${allTrackedPlayers.length.toString()} player(s)`,
+  );
   for (const trackedPlayer of allTrackedPlayers) {
     const playerPuuid = trackedPlayer.league.leagueAccount.puuid;
     const brandedMatchId = MatchIdSchema.parse(matchId);
     await updateLastProcessedMatch(playerPuuid, brandedMatchId);
     await updateLastMatchTime(playerPuuid, matchCreationTime);
+    logger.info(`[processMatch] ✅ Updated ${trackedPlayer.alias} lastMatchTime`);
   }
 }
 

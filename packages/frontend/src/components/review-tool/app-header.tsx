@@ -5,7 +5,6 @@ import { useCallback, useState } from "react";
 import type { TabData } from "./app.tsx";
 import { Button } from "./ui/button.tsx";
 import { IconButton } from "./ui/icon-button.tsx";
-import { ThemeToggle } from "./ui/theme-toggle.tsx";
 
 type AppHeaderProps = {
   tabs: TabData[];
@@ -55,7 +54,7 @@ export function AppHeader({
   };
 
   return (
-    <header className="sticky top-0 z-40 glass border-b border-surface-200/50 dark:border-surface-700/50">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-surface-200/50 shadow-sm">
       <div className="max-w-[1800px] mx-auto">
         {/* Top bar - Logo, title, actions */}
         <div className="flex items-center justify-between px-6 py-4">
@@ -73,18 +72,14 @@ export function AppHeader({
                 </svg>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-surface-900 dark:text-white">Review Generator</h1>
-                <p className="text-xs text-surface-500 dark:text-surface-400">Scout for LoL Dev Tools</p>
+                <h1 className="text-xl font-bold text-surface-900">Review Generator</h1>
+                <p className="text-xs text-surface-500">Scout for LoL Dev Tools</p>
               </div>
             </div>
           </div>
 
           {/* Right actions */}
           <div className="flex items-center gap-2">
-            <ThemeToggle />
-
-            <div className="w-px h-6 bg-surface-200 dark:bg-surface-700 mx-2" />
-
             <Button variant={showAnalytics ? "primary" : "ghost"} size="sm" onClick={onAnalyticsToggle}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -118,18 +113,14 @@ export function AppHeader({
         </div>
 
         {/* Tab bar */}
-        <div className="px-6 border-t border-surface-200/50 dark:border-surface-700/50">
+        <div className="px-6 border-t border-surface-200/50">
           <div className="flex items-center gap-1 -mb-px overflow-x-auto hide-scrollbar">
             {tabs.map((tab) => (
               <div
                 key={tab.id}
                 className={`
                   group relative flex items-center gap-2 px-4 py-3 cursor-pointer transition-all duration-200
-                  ${
-                    activeTabId === tab.id
-                      ? "text-brand-600 dark:text-brand-400"
-                      : "text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200"
-                  }
+                  ${activeTabId === tab.id ? "text-brand-600" : "text-surface-500 hover:text-surface-700"}
                 `}
               >
                 {/* Active indicator */}
@@ -154,7 +145,7 @@ export function AppHeader({
                         setEditingTabId(null);
                       }
                     }}
-                    className="px-2 py-0.5 text-sm bg-white dark:bg-surface-800 border border-brand-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-surface-900 dark:text-white"
+                    className="px-2 py-0.5 text-sm bg-white border border-brand-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20 text-surface-900"
                   />
                 ) : (
                   <span
@@ -225,7 +216,7 @@ export function AppHeader({
             {/* Add tab button */}
             <button
               onClick={onTabAdd}
-              className="flex items-center gap-1.5 px-3 py-2 mx-1 text-sm font-medium text-surface-400 hover:text-brand-500 dark:text-surface-500 dark:hover:text-brand-400 transition-colors rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800"
+              className="flex items-center gap-1.5 px-3 py-2 mx-1 text-sm font-medium text-surface-400 hover:text-brand-500 transition-colors rounded-lg hover:bg-surface-100"
               title="Add new configuration tab"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

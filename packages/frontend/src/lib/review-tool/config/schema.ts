@@ -109,10 +109,11 @@ export type PipelineStagesConfig = z.infer<typeof PipelineStagesConfigSchema>;
 
 /**
  * Text generation settings schema (legacy - maps to reviewText stage)
+ * Note: maxTokens default of 3000 matches backend DEFAULT_REVIEW_TEXT_MODEL
  */
 export const TextGenerationSettingsSchema = z.object({
-  model: z.string().default("gpt-5"),
-  maxTokens: z.number().int().min(100).max(100000).default(25000),
+  model: z.string().default("gpt-5.1"),
+  maxTokens: z.number().int().min(100).max(100000).default(3000),
   temperature: z.number().min(0).max(2).default(1.0),
   topP: z.number().min(0).max(1).default(1.0),
 });
@@ -282,6 +283,7 @@ export const PipelineIntermediateResultsSchema = z.object({
   matchSummaryText: z.string().optional(),
   imageDescriptionText: z.string().optional(),
   selectedImagePrompts: z.array(z.string()).optional(),
+  selectedArtStyle: z.string().optional(),
 });
 
 export type PipelineIntermediateResults = z.infer<typeof PipelineIntermediateResultsSchema>;

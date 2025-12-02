@@ -122,7 +122,12 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
   };
 
   const handleCreateNewStyle = () => {
-    setEditingStyle(null);
+    // Create a new empty style template
+    const newStyle: CustomArtStyle = {
+      id: `custom-${Date.now().toString()}`,
+      description: "",
+    };
+    setEditingStyle(newStyle);
     setShowStyleEditor(true);
   };
 
@@ -257,16 +262,16 @@ export function TabSettingsPanel({ config, onChange }: TabSettingsPanelProps) {
 
   return (
     <div className="card p-0 overflow-hidden">
-      <div className="px-6 py-4 border-b border-surface-200/50 dark:border-surface-700/50">
-        <h2 className="text-lg font-semibold text-surface-900 dark:text-white">Generation Settings</h2>
-        <p className="text-sm text-surface-500 dark:text-surface-400 mt-0.5">Configure how reviews are generated</p>
+      <div className="px-6 py-4 border-b border-surface-200/50">
+        <h2 className="text-lg font-semibold text-surface-900">Generation Settings</h2>
+        <p className="text-sm text-surface-500 mt-0.5">Configure how reviews are generated</p>
       </div>
 
-      <div className="divide-y divide-surface-200/50 dark:divide-surface-700/50">
-        <div className="px-4 py-5 bg-surface-50 dark:bg-surface-900">
+      <div className="divide-y divide-surface-200/50">
+        <div className="px-4 py-5 bg-surface-50">
           <div className="mb-3">
-            <h3 className="text-base font-semibold text-surface-900 dark:text-white">Pipeline stages</h3>
-            <p className="text-sm text-surface-500 dark:text-surface-400">
+            <h3 className="text-base font-semibold text-surface-900">Pipeline stages</h3>
+            <p className="text-sm text-surface-500">
               Configure the unified review pipeline stages used by frontend and backend.
             </p>
           </div>

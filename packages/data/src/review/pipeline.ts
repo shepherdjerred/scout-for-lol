@@ -147,10 +147,12 @@ async function runStage3ImageDescription(ctx: Stage3And4Context): Promise<string
     return undefined;
   }
 
+  const artStyleDescription = stages.imageGeneration.artStyle.description;
+
   try {
     const result = await generateImageDescription({
       reviewText,
-      artStyle: stages.imageGeneration.artStyle.description,
+      artStyle: artStyleDescription,
       client: clients.openai,
       model: stages.imageDescription.model,
       systemPrompt: stages.imageDescription.systemPrompt,
@@ -159,6 +161,7 @@ async function runStage3ImageDescription(ctx: Stage3And4Context): Promise<string
     });
     traces.imageDescription = result.trace;
     intermediate.imageDescriptionText = result.text;
+    intermediate.selectedArtStyle = artStyleDescription;
     if (result.selectedImagePrompts.length > 0) {
       intermediate.selectedImagePrompts = result.selectedImagePrompts;
     }
@@ -182,7 +185,6 @@ async function runStage4ImageGeneration(
   try {
     const result = await generateImage({
       imageDescription: imageDescriptionText,
-      artStyle: stages.imageGeneration.artStyle,
       geminiClient: clients.gemini,
       model: stages.imageGeneration.model,
       timeoutMs: stages.imageGeneration.timeoutMs,

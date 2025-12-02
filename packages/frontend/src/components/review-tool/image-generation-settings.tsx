@@ -49,8 +49,8 @@ export function ImageGenerationSettings({
 
   return (
     <div>
-      <div className="w-full px-4 py-3 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
-        <span className="font-semibold text-gray-900 dark:text-white text-sm">Image Generation</span>
+      <div className="w-full px-4 py-3 flex justify-between items-center bg-surface-50">
+        <span className="font-semibold text-surface-900 text-sm">Image Generation</span>
       </div>
       <div>
         <div className="px-4 pb-4 space-y-3">
@@ -66,12 +66,12 @@ export function ImageGenerationSettings({
               }}
               className="rounded"
             />
-            <label htmlFor="enable-image-generation" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label htmlFor="enable-image-generation" className="text-sm font-medium text-surface-700">
               Enable Image Generation
             </label>
           </div>
           <div>
-            <label htmlFor="model" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="model" className="block text-sm font-medium text-surface-700 mb-1">
               Model
             </label>
             <select
@@ -83,7 +83,7 @@ export function ImageGenerationSettings({
                   imageGeneration: { ...config.imageGeneration, model: e.target.value },
                 });
               }}
-              className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
+              className="w-full px-3 py-2 text-sm bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 disabled:opacity-50"
               disabled={!config.imageGeneration.enabled}
             >
               <option value="gemini-3-pro-image-preview">Gemini 3 Pro Image Preview</option>
@@ -92,13 +92,11 @@ export function ImageGenerationSettings({
             </select>
             {(() => {
               const pricing = getImagePricing(config.imageGeneration.model);
-              return (
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">💵 ${pricing.toFixed(2)} per image</p>
-              );
+              return <p className="text-xs text-surface-600 mt-1">💵 ${pricing.toFixed(2)} per image</p>;
             })()}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-surface-700 mb-1">
               Timeout: {(config.imageGeneration.timeoutMs / 1000).toFixed(0)}s
             </label>
             <input
@@ -120,24 +118,6 @@ export function ImageGenerationSettings({
               disabled={!config.imageGeneration.enabled}
             />
           </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={config.imageGeneration.useMatchingPairs}
-              onChange={(e) => {
-                onChange({
-                  ...config,
-                  imageGeneration: {
-                    ...config.imageGeneration,
-                    useMatchingPairs: e.target.checked,
-                  },
-                });
-              }}
-              className="rounded"
-              disabled={!config.imageGeneration.enabled}
-            />
-          </div>
-
           {/* Art Style Selector */}
           <ArtStyleSelector
             styles={allStyles}

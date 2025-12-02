@@ -10,7 +10,6 @@ import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema.ts";
 import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema.ts";
 import type { OpenAIClient, ModelConfig, StageTrace, ImageGenerationTrace } from "./pipeline-types.ts";
 import type { Personality } from "./prompts.ts";
-import type { ArtStyle } from "@scout-for-lol/data/review/art-categories.ts";
 import { replaceTemplateVariables, selectRandomImagePrompts } from "./prompts.ts";
 import { buildPromptVariables, extractMatchData } from "./generator-helpers.ts";
 import { enrichTimelineData } from "./timeline-enricher.ts";
@@ -314,7 +313,6 @@ export async function generateReviewTextStage(params: {
   const systemPrompt = replacePromptVariables(systemPromptTemplate, {
     PERSONALITY_INSTRUCTIONS: personality.instructions,
     STYLE_CARD: minifyJsonString(personality.styleCard),
-    LANE_CONTEXT: laneContext,
   });
 
   const { text, trace } = await callOpenAI({
@@ -423,19 +421,18 @@ const GeminiResponseSchema = z
  */
 export async function generateImage(params: {
   imageDescription: string;
-  artStyle: ArtStyle;
   geminiClient: GoogleGenerativeAI;
   model: string;
   timeoutMs: number;
   userPrompt: string;
 }): Promise<{ imageBase64: string; trace: ImageGenerationTrace }> {
-  const { imageDescription, artStyle, geminiClient, model, timeoutMs, userPrompt: userPromptTemplate } = params;
+  const { imageDescription, geminiClient, model, timeoutMs, userPrompt: userPromptTemplate } = params;
 
   const geminiModel = geminiClient.getGenerativeModel({ model });
   // Replace variables in prompt template
+  // Note: ART_STYLE is already embedded in IMAGE_DESCRIPTION from step 3
   const prompt = replacePromptVariables(userPromptTemplate, {
     IMAGE_DESCRIPTION: imageDescription,
-    ART_STYLE: artStyle.description,
   });
 
   const startTime = Date.now();

@@ -13,18 +13,18 @@ import type {
 } from "./pipeline-types.ts";
 import { selectRandomStyle } from "@scout-for-lol/data/review/art-styles.ts";
 
-// Import system prompts from TXT files
-import TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1b-timeline-summary.txt";
-import MATCH_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1a-match-summary.txt";
-import REVIEW_TEXT_SYSTEM_PROMPT_RAW from "./prompts/system/2-review-text.txt";
-import IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW from "./prompts/system/3-image-description.txt";
+// Import system prompts from TXT files (using ?raw for Vite to return content, not URL)
+import TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1b-timeline-summary.txt?raw";
+import MATCH_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1a-match-summary.txt?raw";
+import REVIEW_TEXT_SYSTEM_PROMPT_RAW from "./prompts/system/2-review-text.txt?raw";
+import IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW from "./prompts/system/3-image-description.txt?raw";
 
-// Import user prompts from TXT files
-import TIMELINE_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1b-timeline-summary.txt";
-import MATCH_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1a-match-summary.txt";
-import REVIEW_TEXT_USER_PROMPT_RAW from "./prompts/user/2-review-text.txt";
-import IMAGE_DESCRIPTION_USER_PROMPT_RAW from "./prompts/user/3-image-description.txt";
-import IMAGE_GENERATION_USER_PROMPT_RAW from "./prompts/user/4-image-generation.txt";
+// Import user prompts from TXT files (using ?raw for Vite to return content, not URL)
+import TIMELINE_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1b-timeline-summary.txt?raw";
+import MATCH_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1a-match-summary.txt?raw";
+import REVIEW_TEXT_USER_PROMPT_RAW from "./prompts/user/2-review-text.txt?raw";
+import IMAGE_DESCRIPTION_USER_PROMPT_RAW from "./prompts/user/3-image-description.txt?raw";
+import IMAGE_GENERATION_USER_PROMPT_RAW from "./prompts/user/4-image-generation.txt?raw";
 
 // ============================================================================
 // System Prompts
@@ -80,15 +80,12 @@ export const IMAGE_GENERATION_USER_PROMPT = IMAGE_GENERATION_USER_PROMPT_RAW.tri
 /**
  * Default model config for timeline summary (Stage 1a)
  *
- * TODO: We use gpt-5.1 (400k context) instead of gpt-4o-mini (128k context) because
- * the full raw timeline from Riot API can be 100k+ tokens (one frame per minute with
- * 10 participants' detailed stats + hundreds of events). Filtering the timeline to
- * fit in 128k would lose important game narrative data. Consider switching back to
- * gpt-4o-mini if costs become a concern, but would require implementing timeline
- * segmentation (e.g., summarize 10-min chunks separately then combine).
+ * Uses gpt-5-mini (200k context) which handles large timeline data well.
+ * The full raw timeline from Riot API can be 100k+ tokens (one frame per minute with
+ * 10 participants' detailed stats + hundreds of events).
  */
 export const DEFAULT_TIMELINE_SUMMARY_MODEL: ModelConfig = {
-  model: "gpt-5.1",
+  model: "gpt-5-mini",
   maxTokens: 6000,
   temperature: 0.3,
 };
@@ -96,14 +93,12 @@ export const DEFAULT_TIMELINE_SUMMARY_MODEL: ModelConfig = {
 /**
  * Default model config for match summary (Stage 1b)
  *
- * TODO: We use gpt-5.1 (400k context) instead of gpt-4o-mini (128k context) because
- * the full raw match from Riot API can be 100k+ tokens (10 players × 150+ fields each,
- * including challenges, perks, missions). Filtering would lose detailed stats that
- * help the AI understand player performance. Consider switching back to gpt-4o-mini
- * if costs become a concern, but would require significant data filtering.
+ * Uses gpt-5-mini (200k context) which handles large match data well.
+ * The full raw match from Riot API can be 100k+ tokens (10 players × 150+ fields each,
+ * including challenges, perks, missions).
  */
 export const DEFAULT_MATCH_SUMMARY_MODEL: ModelConfig = {
-  model: "gpt-5.1",
+  model: "gpt-5-mini",
   maxTokens: 6000,
   temperature: 0.4,
 };

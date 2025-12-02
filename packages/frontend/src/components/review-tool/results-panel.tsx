@@ -87,6 +87,7 @@ export function ResultsPanel(props: ResultsPanelProps) {
   const [viewingHistory, setViewingHistory] = useState(false);
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | undefined>();
   const [notes, setNotes] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   // Subscribe to global timer - always active but cheap
   // This triggers a re-render every second, causing elapsed times to update
@@ -99,9 +100,17 @@ export function ResultsPanel(props: ResultsPanelProps) {
   );
 
   const handleGenerate = async () => {
+    // Clear any previous validation error
+    setValidationError(null);
+
     // match, rawMatch, and rawTimeline are required for review generation
-    if (!match || !rawMatch || !rawTimeline) {
-      console.error("[Generate] Match, rawMatch, and rawTimeline are required");
+    if (!match || !rawMatch) {
+      setValidationError("Please select a match first. Browse and click on a match from the list.");
+      return;
+    }
+
+    if (!rawTimeline) {
+      setValidationError("Timeline data is missing for this match. Try selecting a different match.");
       return;
     }
 
@@ -270,9 +279,9 @@ export function ResultsPanel(props: ResultsPanelProps) {
       <div className="card p-6">
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-xl font-semibold text-surface-900 dark:text-white">Generated Review</h2>
+            <h2 className="text-xl font-semibold text-surface-900">Generated Review</h2>
             {viewingHistory && (
-              <p className="text-xs text-surface-500 dark:text-surface-400 mt-1 flex items-center gap-1">
+              <p className="text-xs text-surface-500 mt-1 flex items-center gap-1">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -285,7 +294,7 @@ export function ResultsPanel(props: ResultsPanelProps) {
               </p>
             )}
             {isViewingActiveGeneration && (
-              <p className="text-xs text-victory-600 dark:text-victory-400 mt-1 flex items-center gap-1">
+              <p className="text-xs text-victory-600 mt-1 flex items-center gap-1">
                 <svg className="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -308,17 +317,17 @@ export function ResultsPanel(props: ResultsPanelProps) {
                 }
               })();
             }}
-            className="btn-primary"
+            className="flex items-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-black font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 active:scale-95"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            Generate
+            Generate Review
           </button>
         </div>
 
         {!match && (
-          <div className="mb-4 p-4 rounded-xl bg-victory-50 dark:bg-victory-900/20 border border-victory-200 dark:border-victory-800 text-sm text-victory-800 dark:text-victory-200 flex items-center gap-3">
+          <div className="mb-4 p-4 rounded-xl bg-victory-50 border border-victory-200 text-sm text-victory-800 flex items-center gap-3">
             <svg className="w-5 h-5 text-victory-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
@@ -327,7 +336,36 @@ export function ResultsPanel(props: ResultsPanelProps) {
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span>No match selected. Using example match data for preview.</span>
+            <span>No match selected. Select a match from the browser to generate a review.</span>
+          </div>
+        )}
+
+        {/* Validation Error Display */}
+        {validationError && (
+          <div className="mb-4 p-4 rounded-xl bg-defeat-50 border border-defeat-200 animate-fade-in">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-defeat-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <div className="flex-1">
+                <div className="font-semibold text-defeat-900 mb-1">Cannot Generate Review</div>
+                <div className="text-sm text-defeat-700">{validationError}</div>
+              </div>
+              <button
+                onClick={() => {
+                  setValidationError(null);
+                }}
+                className="text-defeat-400 hover:text-defeat-600"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
         )}
 
@@ -339,7 +377,7 @@ export function ResultsPanel(props: ResultsPanelProps) {
 
         {/* Error Display */}
         {result?.error && (
-          <div className="mb-4 p-4 rounded-xl bg-defeat-50 dark:bg-defeat-900/20 border border-defeat-200 dark:border-defeat-800 animate-fade-in">
+          <div className="mb-4 p-4 rounded-xl bg-defeat-50 border border-defeat-200 animate-fade-in">
             <div className="flex items-start gap-3">
               <svg className="w-5 h-5 text-defeat-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path
@@ -349,8 +387,8 @@ export function ResultsPanel(props: ResultsPanelProps) {
                 />
               </svg>
               <div className="flex-1">
-                <div className="font-semibold text-defeat-900 dark:text-defeat-200 mb-1">Generation Failed</div>
-                <div className="text-sm text-defeat-700 dark:text-defeat-300">{result.error}</div>
+                <div className="font-semibold text-defeat-900 mb-1">Generation Failed</div>
+                <div className="text-sm text-defeat-700">{result.error}</div>
               </div>
             </div>
           </div>
@@ -372,15 +410,13 @@ export function ResultsPanel(props: ResultsPanelProps) {
             )}
 
             {/* Metadata */}
-            <ResultMetadata result={result} cost={cost} />
+            <ResultMetadata result={result} cost={cost} imageModel={config.imageGeneration.model} />
 
-            <div className="mt-4 space-y-2 rounded-xl border border-surface-200/50 bg-white p-4 shadow-sm dark:border-surface-700/50 dark:bg-surface-900">
+            <div className="mt-4 space-y-2 rounded-xl border border-surface-200/50 bg-white p-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-semibold text-surface-900 dark:text-white">Pipeline traces</div>
-                  <p className="text-xs text-surface-500 dark:text-surface-400">
-                    Raw prompts, responses, and timings from each stage.
-                  </p>
+                  <div className="text-sm font-semibold text-surface-900">Pipeline traces</div>
+                  <p className="text-xs text-surface-500">Raw prompts, responses, and timings from each stage.</p>
                 </div>
               </div>
               <PipelineTracesPanel traces={result.metadata.traces} intermediate={result.metadata.intermediate} />

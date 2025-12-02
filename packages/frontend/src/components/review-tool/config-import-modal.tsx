@@ -134,12 +134,16 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
           className="relative bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
         >
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <div className="sticky top-0 bg-white border-b border-surface-200 px-6 py-4 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Import Configuration</h2>
-              <p className="text-sm text-gray-500 mt-1">Import shared config from JSON</p>
+              <h2 className="text-xl font-bold text-surface-900">Import Configuration</h2>
+              <p className="text-sm text-surface-500 mt-1">Import shared config from JSON</p>
             </div>
-            <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 transition-colors" title="Close">
+            <button
+              onClick={handleClose}
+              className="text-surface-400 hover:text-surface-600 transition-colors"
+              title="Close"
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -150,7 +154,7 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
           <div className="p-6 space-y-4">
             {/* File Upload */}
             <div>
-              <label htmlFor="upload-config-file" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="upload-config-file" className="block text-sm font-medium text-surface-700 mb-2">
                 Upload Config File
               </label>
               <input
@@ -158,7 +162,7 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                 type="file"
                 accept=".json"
                 onChange={handleFileUpload}
-                className="block w-full text-sm text-gray-500
+                className="block w-full text-sm text-surface-500
                   file:mr-4 file:py-2 file:px-4
                   file:rounded-lg file:border-0
                   file:text-sm file:font-semibold
@@ -170,7 +174,7 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
 
             {/* Or Paste JSON */}
             <div>
-              <label htmlFor="or-paste-json" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="or-paste-json" className="block text-sm font-medium text-surface-700 mb-2">
                 Or Paste JSON
               </label>
               <textarea
@@ -180,11 +184,11 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                   setJsonInput(e.target.value);
                 }}
                 placeholder="Paste your config JSON here..."
-                className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                className="w-full h-32 px-3 py-2 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono text-sm"
               />
               <button
                 onClick={handleParseJSON}
-                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mt-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={!jsonInput.trim()}
               >
                 Parse JSON
@@ -215,7 +219,7 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
             {/* Import Options */}
             {parsedBundle && (
               <div className="space-y-3">
-                <p className="text-sm font-medium text-gray-700">Import Options:</p>
+                <p className="text-sm font-medium text-surface-700">Import Options:</p>
 
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -224,9 +228,9 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                     onChange={(e) => {
                       setImportTabConfig(e.target.checked);
                     }}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-4 h-4 text-brand-600 rounded focus:ring-2 focus:ring-brand-500"
                   />
-                  <span className="text-sm text-gray-700">Import Tab Settings (text/image generation, prompts)</span>
+                  <span className="text-sm text-surface-700">Import Tab Settings (text/image generation, prompts)</span>
                 </label>
 
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -236,9 +240,9 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                     onChange={(e) => {
                       setImportPersonalities(e.target.checked);
                     }}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-4 h-4 text-brand-600 rounded focus:ring-2 focus:ring-brand-500"
                   />
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-surface-700">
                     Import Custom Personalities ({summary?.personalitiesCount ?? 0})
                   </span>
                 </label>
@@ -250,14 +254,14 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                     onChange={(e) => {
                       setImportArtStyles(e.target.checked);
                     }}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-4 h-4 text-brand-600 rounded focus:ring-2 focus:ring-brand-500"
                   />
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-surface-700">
                     Import Custom Art Styles ({summary?.artStylesCount ?? 0})
                   </span>
                 </label>
 
-                <div className="pt-2 border-t border-gray-200">
+                <div className="pt-2 border-t border-surface-200">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -265,13 +269,13 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
                       onChange={(e) => {
                         setMergeWithExisting(e.target.checked);
                       }}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      className="w-4 h-4 text-brand-600 rounded focus:ring-2 focus:ring-brand-500"
                     />
-                    <span className="text-sm text-gray-700 font-medium">
+                    <span className="text-sm text-surface-700 font-medium">
                       Merge with existing data (uncheck to replace)
                     </span>
                   </label>
-                  <p className="text-xs text-gray-500 ml-6 mt-1">
+                  <p className="text-xs text-surface-500 ml-6 mt-1">
                     {mergeWithExisting
                       ? "New items will be added, existing items will be kept"
                       : "All existing custom data will be replaced"}
@@ -282,16 +286,16 @@ export function ConfigImportModal({ isOpen, onClose, onImportSuccess }: ConfigIm
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+          <div className="sticky bottom-0 bg-surface-50 border-t border-surface-200 px-6 py-4 flex justify-end gap-3">
             <button
               onClick={handleClose}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+              className="px-4 py-2 bg-surface-300 text-surface-700 rounded-lg hover:bg-surface-400 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleImport}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               disabled={!parsedBundle}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

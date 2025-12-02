@@ -238,6 +238,8 @@ export type PipelineIntermediateResults = {
   imageDescriptionText?: string;
   /** Image prompts selected from personality for Stage 3 (2-3 random picks) */
   selectedImagePrompts?: string[];
+  /** Art style selected for Stage 3 image description */
+  selectedArtStyle?: string;
 };
 
 // ============================================================================

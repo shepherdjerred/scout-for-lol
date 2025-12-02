@@ -9,7 +9,7 @@ type TabConfigActionsProps = {
 
 export function TabConfigActions({ onExport, onImport, onReset }: TabConfigActionsProps) {
   return (
-    <div className="p-6 mt-8 border-t border-gray-200 dark:border-gray-700">
+    <div className="p-6 mt-8 border-t border-surface-200">
       <div className="flex gap-3 flex-wrap">
         <button
           onClick={onExport}

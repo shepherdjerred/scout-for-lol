@@ -22,10 +22,10 @@ function CollapsibleSection({ title, defaultOpen = false, children, badge }: Col
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="rounded-md border border-gray-200 overflow-hidden">
+    <div className="rounded-md border border-surface-200 overflow-hidden">
       <button
         type="button"
-        className="w-full flex items-center justify-between px-3 py-2 bg-gray-50 hover:bg-gray-100 text-left"
+        className="w-full flex items-center justify-between px-3 py-2 bg-surface-50 hover:bg-surface-100 text-left"
         onClick={() => {
           setIsOpen(!isOpen);
         }}
@@ -39,9 +39,9 @@ function CollapsibleSection({ title, defaultOpen = false, children, badge }: Col
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-xs font-semibold text-gray-700">{title}</span>
+          <span className="text-xs font-semibold text-surface-700">{title}</span>
         </div>
-        {badge && <span className="text-xs text-gray-500">{badge}</span>}
+        {badge && <span className="text-xs text-surface-500">{badge}</span>}
       </button>
       {isOpen && <div className="p-2">{children}</div>}
     </div>
@@ -72,15 +72,15 @@ function TraceCard({ label, trace, text }: TraceCardProps) {
       <CardHeader className="flex items-start justify-between">
         <CardTitle>{label}</CardTitle>
         {trace && (
-          <div className="text-xs text-gray-600 text-right space-y-0.5">
+          <div className="text-xs text-surface-600 text-right space-y-0.5">
             <div>{trace.model.model}</div>
             <div className="flex items-center gap-2">
               <span>{trace.durationMs}ms</span>
               {trace.tokensPrompt !== undefined && (
-                <span className="text-gray-500">{trace.tokensPrompt.toLocaleString()} input tokens</span>
+                <span className="text-surface-500">{trace.tokensPrompt.toLocaleString()} input tokens</span>
               )}
               {trace.tokensCompletion !== undefined && (
-                <span className="text-gray-500">{trace.tokensCompletion.toLocaleString()} output tokens</span>
+                <span className="text-surface-500">{trace.tokensCompletion.toLocaleString()} output tokens</span>
               )}
             </div>
           </div>
@@ -89,21 +89,21 @@ function TraceCard({ label, trace, text }: TraceCardProps) {
       <CardContent className="space-y-2">
         {systemPrompt && (
           <CollapsibleSection title="System prompt" badge={`${systemPromptLength.toLocaleString()} chars`}>
-            <pre className="whitespace-pre-wrap rounded-md bg-gray-50 p-2 text-xs text-gray-800 max-h-64 overflow-auto">
+            <pre className="whitespace-pre-wrap rounded-md bg-surface-50 p-2 text-xs text-surface-800 max-h-64 overflow-auto">
               {systemPrompt}
             </pre>
           </CollapsibleSection>
         )}
         {userPrompt && (
           <CollapsibleSection title="User prompt" badge={`${userPromptLength.toLocaleString()} chars`}>
-            <pre className="whitespace-pre-wrap rounded-md bg-gray-50 p-2 text-xs text-gray-800 max-h-64 overflow-auto">
+            <pre className="whitespace-pre-wrap rounded-md bg-surface-50 p-2 text-xs text-surface-800 max-h-64 overflow-auto">
               {userPrompt}
             </pre>
           </CollapsibleSection>
         )}
         {responseText && (
           <CollapsibleSection title="Response" defaultOpen={true} badge={`${responseLength.toLocaleString()} chars`}>
-            <pre className="whitespace-pre-wrap rounded-md bg-gray-50 p-2 text-xs text-gray-800 max-h-64 overflow-auto">
+            <pre className="whitespace-pre-wrap rounded-md bg-surface-50 p-2 text-xs text-surface-800 max-h-64 overflow-auto">
               {responseText}
             </pre>
           </CollapsibleSection>
@@ -132,27 +132,36 @@ export function PipelineTracesPanel({ traces, intermediate }: PipelineTracesPane
       />
       <TraceCard label="Stage 1b: Match Summary" trace={traces.matchSummary} text={intermediate?.matchSummaryText} />
       <TraceCard label="Stage 2: Review Text" trace={traces.reviewText} text={undefined} />
-      {intermediate?.selectedImagePrompts && intermediate.selectedImagePrompts.length > 0 && (
+      {(intermediate?.selectedImagePrompts?.length ?? 0) > 0 || intermediate?.selectedArtStyle ? (
         <Card>
           <CardHeader>
-            <CardTitle>Selected Image Prompts</CardTitle>
+            <CardTitle>Image Generation Settings</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-xs text-gray-800">
-            <p className="text-gray-600">
-              {intermediate.selectedImagePrompts.length.toString()} prompt
-              {intermediate.selectedImagePrompts.length === 1 ? "" : "s"} selected from personality to influence Stage
-              3:
-            </p>
-            <ul className="list-disc list-inside space-y-1">
-              {intermediate.selectedImagePrompts.map((prompt, index) => (
-                <li key={index} className="text-gray-700">
-                  {prompt}
-                </li>
-              ))}
-            </ul>
+          <CardContent className="space-y-3 text-xs text-surface-800">
+            {intermediate?.selectedArtStyle && (
+              <div>
+                <p className="text-surface-600 mb-1">Art style:</p>
+                <p className="text-surface-700 bg-surface-50 rounded-md p-2">{intermediate.selectedArtStyle}</p>
+              </div>
+            )}
+            {intermediate?.selectedImagePrompts && intermediate.selectedImagePrompts.length > 0 && (
+              <div>
+                <p className="text-surface-600 mb-1">
+                  {intermediate.selectedImagePrompts.length.toString()} prompt
+                  {intermediate.selectedImagePrompts.length === 1 ? "" : "s"} selected from personality:
+                </p>
+                <ul className="list-disc list-inside space-y-1">
+                  {intermediate.selectedImagePrompts.map((prompt, index) => (
+                    <li key={index} className="text-surface-700">
+                      {prompt}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
+      ) : null}
       <TraceCard
         label="Stage 3: Image Description"
         trace={traces.imageDescription}
@@ -162,20 +171,20 @@ export function PipelineTracesPanel({ traces, intermediate }: PipelineTracesPane
         <Card>
           <CardHeader className="flex items-start justify-between">
             <CardTitle>Stage 4: Image Generation</CardTitle>
-            <div className="text-xs text-gray-600">
+            <div className="text-xs text-surface-600">
               {traces.imageGeneration.model} · {traces.imageGeneration.durationMs}ms
             </div>
           </CardHeader>
-          <CardContent className="space-y-2 text-xs text-gray-800">
+          <CardContent className="space-y-2 text-xs text-surface-800">
             <CollapsibleSection
               title="Prompt"
               badge={`${traces.imageGeneration.request.prompt.length.toLocaleString()} chars`}
             >
-              <pre className="whitespace-pre-wrap rounded-md bg-gray-50 p-2 max-h-64 overflow-auto">
+              <pre className="whitespace-pre-wrap rounded-md bg-surface-50 p-2 max-h-64 overflow-auto">
                 {traces.imageGeneration.request.prompt}
               </pre>
             </CollapsibleSection>
-            <div className="text-gray-700">
+            <div className="text-surface-700">
               Generated: {traces.imageGeneration.response.imageGenerated ? "yes" : "no"}{" "}
               {traces.imageGeneration.response.imageSizeBytes
                 ? `(${traces.imageGeneration.response.imageSizeBytes.toLocaleString()} bytes)`

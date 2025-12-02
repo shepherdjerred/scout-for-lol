@@ -17,10 +17,10 @@ export function ImageGenerationPanel({ config, onChange }: ImageGenerationPanelP
       <CardHeader className="flex items-start justify-between">
         <div>
           <CardTitle>Stage 4: Image Generation</CardTitle>
-          <p className="mt-1 text-xs text-gray-600">Gemini image generation settings</p>
+          <p className="mt-1 text-xs text-surface-600">Gemini image generation settings</p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-600">Enabled</span>
+          <span className="text-xs text-surface-600">Enabled</span>
           <Switch
             checked={config.enabled}
             onChange={(e) => {
@@ -58,10 +58,10 @@ export function ImageGenerationPanel({ config, onChange }: ImageGenerationPanelP
         </div>
 
         {/* User Prompt Editor for Image Generation */}
-        <div className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2">
+        <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
           <div>
-            <Label className="text-xs text-gray-600">User prompt template</Label>
-            <p className="text-xs text-gray-500">Template for the Gemini image generation request.</p>
+            <Label className="text-xs text-surface-600">User prompt template</Label>
+            <p className="text-xs text-surface-500">Template for the Gemini image generation request.</p>
           </div>
           <PromptEditor
             label="Image Generation - User Prompt Template"

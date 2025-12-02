@@ -25,17 +25,17 @@ export function PromptVariablesInfo({ stage, type }: PromptVariablesInfoProps) {
   const variables = type === "system" ? stageVars.system : stageVars.user;
 
   if (variables.length === 0) {
-    return <p className="text-xs text-gray-500 italic">No variables available for this prompt.</p>;
+    return <p className="text-xs text-surface-500 italic">No variables available for this prompt.</p>;
   }
 
   return (
     <div className="space-y-1">
-      <p className="text-xs font-medium text-gray-700">Available variables:</p>
-      <div className="space-y-1 rounded-md bg-gray-50 p-2">
+      <p className="text-xs font-medium text-surface-700">Available variables:</p>
+      <div className="space-y-1 rounded-md bg-surface-50 p-2">
         {variables.map((v) => (
           <div key={v.name} className="flex items-start gap-2 text-xs">
-            <code className="shrink-0 rounded bg-gray-200 px-1 py-0.5 font-mono text-gray-800">{`<${v.name}>`}</code>
-            <span className="text-gray-600">{v.description}</span>
+            <code className="shrink-0 rounded bg-surface-200 px-1 py-0.5 font-mono text-surface-800">{`<${v.name}>`}</code>
+            <span className="text-surface-600">{v.description}</span>
           </div>
         ))}
       </div>

@@ -6,12 +6,6 @@ The next block will contain behavior you should try to follow in your message:
 <RANDOM BEHAVIOR>
 ---
 
-The next block will contain information about you, such as how you talk/type:
-
----
-<REVIEWER PERSONALITY>
----
-
 In this match <PLAYER NAME> played <PLAYER CHAMPION> in <PLAYER LANE> lane vs <OPPONENT CHAMPION>.
 
 The next block will contain information about the queue, rank changes, and who else was in the game:

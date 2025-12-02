@@ -70,10 +70,10 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
         <CardHeader className="flex items-start justify-between">
           <div>
             <CardTitle>{title}</CardTitle>
-            {description && <p className="mt-1 text-xs text-gray-600">{description}</p>}
+            {description && <p className="mt-1 text-xs text-surface-600">{description}</p>}
           </div>
           <div className="flex items-center gap-2">
-            <Label className="text-xs text-gray-600">Enabled</Label>
+            <Label className="text-xs text-surface-600">Enabled</Label>
             <Switch
               checked={config.enabled}
               onChange={(e) => {
@@ -93,10 +93,10 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
 
           {/* System Prompt Editor */}
           {defaults.system && (
-            <div className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2">
+            <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
               <div>
-                <Label className="text-xs text-gray-600">System prompt</Label>
-                <p className="text-xs text-gray-500">Instructions for the AI model (context, formatting rules).</p>
+                <Label className="text-xs text-surface-600">System prompt</Label>
+                <p className="text-xs text-surface-500">Instructions for the AI model (context, formatting rules).</p>
               </div>
               <PromptEditor
                 label={`${title} - System Prompt`}
@@ -113,10 +113,10 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
 
           {/* User Prompt Editor */}
           {defaults.user && (
-            <div className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2">
+            <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
               <div>
-                <Label className="text-xs text-gray-600">User prompt template</Label>
-                <p className="text-xs text-gray-500">Template with variables that get replaced with match data.</p>
+                <Label className="text-xs text-surface-600">User prompt template</Label>
+                <p className="text-xs text-surface-500">Template with variables that get replaced with match data.</p>
               </div>
               <PromptEditor
                 label={`${title} - User Prompt Template`}
@@ -142,7 +142,7 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
       <CardHeader className="flex items-start justify-between">
         <div>
           <CardTitle>{title}</CardTitle>
-          {description && <p className="mt-1 text-xs text-gray-600">{description}</p>}
+          {description && <p className="mt-1 text-xs text-surface-600">{description}</p>}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -155,10 +155,10 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
 
         {/* System Prompt Editor */}
         {defaults.system && (
-          <div className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2">
+          <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
             <div>
-              <Label className="text-xs text-gray-600">System prompt</Label>
-              <p className="text-xs text-gray-500">Instructions for the AI model (context, formatting rules).</p>
+              <Label className="text-xs text-surface-600">System prompt</Label>
+              <p className="text-xs text-surface-500">Instructions for the AI model (context, formatting rules).</p>
             </div>
             <PromptEditor
               label={`${title} - System Prompt`}
@@ -175,10 +175,10 @@ export function StageConfigPanel(props: StageConfigPanelProps) {
 
         {/* User Prompt Editor */}
         {defaults.user && (
-          <div className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2">
+          <div className="flex items-center justify-between rounded-md border border-surface-200 px-3 py-2">
             <div>
-              <Label className="text-xs text-gray-600">User prompt template</Label>
-              <p className="text-xs text-gray-500">Template with variables that get replaced with match data.</p>
+              <Label className="text-xs text-surface-600">User prompt template</Label>
+              <p className="text-xs text-surface-500">Template with variables that get replaced with match data.</p>
             </div>
             <PromptEditor
               label={`${title} - User Prompt Template`}

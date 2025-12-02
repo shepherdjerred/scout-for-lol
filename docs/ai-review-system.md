@@ -57,7 +57,7 @@ flowchart TB
 | Model         | Purpose        | Temperature | Max Tokens | Cost (per 1M)        |
 | ------------- | -------------- | ----------- | ---------- | -------------------- |
 | `gpt-4o-mini` | Match analysis | 0.4         | 3000       | $0.15 in / $0.60 out |
-| `gpt-5.1`     | Art prompt     | 0.8         | 600        | $5 in / $15 out      |
+| `gpt-5.1`     | Art prompt     | 0.8         | 600        | $1.25 in / $10 out   |
 
 ## Match Analysis
 
