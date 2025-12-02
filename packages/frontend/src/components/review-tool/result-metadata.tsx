@@ -233,22 +233,6 @@ function ContextDisplay({ metadata }: { metadata: GenerationMetadata }) {
             <span className="font-mono text-surface-900 dark:text-surface-100">{metadata.selectedPersonality}</span>
           </div>
         )}
-        {metadata.intermediate?.selectedArtStyle && (
-          <div className="flex justify-between">
-            <span className="text-surface-600 dark:text-surface-400">Art Style:</span>
-            <span className="font-mono text-surface-900 dark:text-surface-100">
-              {metadata.intermediate.selectedArtStyle}
-            </span>
-          </div>
-        )}
-        {metadata.imageDescription && (
-          <div className="flex justify-between">
-            <span className="text-surface-600 dark:text-surface-400">Image Description:</span>
-            <span className="font-mono text-xs text-surface-900 dark:text-surface-100">
-              {metadata.imageDescription.substring(0, 80)}...
-            </span>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -280,40 +264,6 @@ function OpenAIParamsSection({ params }: { params: unknown }) {
           {JSON.stringify(params, null, 2)}
         </div>
       </details>
-    </div>
-  );
-}
-
-function GeminiPromptSection({ prompt, model }: { prompt: string; model?: string }) {
-  return (
-    <div>
-      <h3 className="text-sm font-semibold text-surface-700 dark:text-surface-300 mb-2">Prompt Sent to Gemini</h3>
-      <div className="space-y-3">
-        {model !== undefined && (
-          <div className="text-xs text-surface-600 dark:text-surface-400">
-            <span className="font-medium">Model:</span>{" "}
-            <span className="font-mono text-surface-900 dark:text-surface-100">{model}</span>
-          </div>
-        )}
-        <details className="group">
-          <summary className="cursor-pointer text-xs font-medium text-surface-600 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-200 list-none">
-            <span className="inline-flex items-center gap-1">
-              <svg
-                className="w-4 h-4 transition-transform group-open:rotate-90"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-              Image Generation Prompt ({prompt.length} chars)
-            </span>
-          </summary>
-          <div className="mt-2 p-3 bg-surface-50 dark:bg-surface-800 rounded border border-surface-200 dark:border-surface-700 font-mono text-xs text-surface-900 dark:text-surface-100 whitespace-pre-wrap max-h-96 overflow-y-auto">
-            {prompt}
-          </div>
-        </details>
-      </div>
     </div>
   );
 }
@@ -354,14 +304,6 @@ export function ResultMetadata({ result, cost, imageModel }: ResultMetadataProps
       {/* OpenAI Params */}
       {metadata.openaiRequestParams !== undefined && metadata.openaiRequestParams !== null && (
         <OpenAIParamsSection params={metadata.openaiRequestParams} />
-      )}
-
-      {/* Gemini Prompt */}
-      {metadata.geminiPrompt !== undefined && (
-        <GeminiPromptSection
-          prompt={metadata.geminiPrompt}
-          {...(metadata.geminiModel !== undefined ? { model: metadata.geminiModel } : {})}
-        />
       )}
 
       {/* Cost */}
