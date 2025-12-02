@@ -25,6 +25,7 @@ import { SettingsPanel } from "./settings-panel.tsx";
 import { ResultsPanel } from "./results-panel.tsx";
 import { MatchBrowser } from "./match-browser.tsx";
 import { MatchDetailsPanel } from "./match-details-panel.tsx";
+import { RankConfigPanel, createDefaultRankConfig, type RankConfig } from "./rank-config-panel.tsx";
 import { RatingsAnalytics } from "./ratings-analytics.tsx";
 import { Spinner } from "./ui/spinner.tsx";
 import type { CompletedMatch, ArenaMatch, RawMatch, RawTimeline } from "@scout-for-lol/data";
@@ -42,6 +43,7 @@ type MatchState = {
   rawMatch?: RawMatch;
   rawTimeline?: RawTimeline;
   result?: GenerationResult;
+  rankConfig: RankConfig;
 };
 
 let appInitState: AppInitState = {
@@ -125,7 +127,9 @@ export default function App() {
   const initState = useSyncExternalStore(subscribeToAppInit, getAppInitSnapshot, getAppInitSnapshot);
   const { globalConfig, config, isInitialized } = initState;
 
-  const [matchState, setMatchState] = useState<MatchState>({});
+  const [matchState, setMatchState] = useState<MatchState>({
+    rankConfig: createDefaultRankConfig(),
+  });
   const [costTracker] = useState(() => new CostTracker());
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
@@ -167,14 +171,51 @@ export default function App() {
   };
 
   const updateMatch = (match: CompletedMatch | ArenaMatch, rawMatch: RawMatch, rawTimeline: RawTimeline | null) => {
-    const newState: MatchState = {
-      match,
-      rawMatch,
-    };
-    if (rawTimeline) {
-      newState.rawTimeline = rawTimeline;
+    setMatchState((prev) => {
+      const newState: MatchState = {
+        match,
+        rawMatch,
+        rankConfig: prev.rankConfig,
+      };
+      if (rawTimeline) {
+        newState.rawTimeline = rawTimeline;
+      }
+      return newState;
+    });
+  };
+
+  const updateRankConfig = (rankConfig: RankConfig) => {
+    setMatchState((prev) => ({ ...prev, rankConfig }));
+  };
+
+  // Apply rank overrides to match if enabled
+  const getMatchWithRankOverrides = (): CompletedMatch | ArenaMatch | undefined => {
+    if (!matchState.match) {
+      return undefined;
     }
-    setMatchState(newState);
+    if (!matchState.rankConfig.enabled) {
+      return matchState.match;
+    }
+
+    // Only apply to non-arena matches (arena doesn't have ranks)
+    if (matchState.match.queueType === "arena") {
+      return matchState.match;
+    }
+
+    // Clone and override rank data for first player
+    const match = matchState.match;
+    const updatedPlayers = match.players.map((player, idx) => {
+      if (idx === 0) {
+        return {
+          ...player,
+          rankBeforeMatch: matchState.rankConfig.rankBefore,
+          rankAfterMatch: matchState.rankConfig.rankAfter,
+        };
+      }
+      return player;
+    });
+
+    return { ...match, players: updatedPlayers };
   };
 
   return (
@@ -221,6 +262,13 @@ export default function App() {
                 </section>
               )}
 
+              {/* Rank Context Override */}
+              {matchState.match && matchState.match.queueType !== "arena" && (
+                <section className="animate-slide-up">
+                  <RankConfigPanel config={matchState.rankConfig} onChange={updateRankConfig} />
+                </section>
+              )}
+
               {/* Generation Settings */}
               <section>
                 <SettingsPanel config={config} onChange={updateConfig} />
@@ -231,7 +279,7 @@ export default function App() {
             <div className="space-y-6">
               <ResultsPanel
                 config={mergeConfigs(globalConfig, config)}
-                match={matchState.match}
+                match={getMatchWithRankOverrides()}
                 rawMatch={matchState.rawMatch}
                 rawTimeline={matchState.rawTimeline}
                 result={matchState.result}
