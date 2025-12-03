@@ -345,7 +345,12 @@ impl SoundEventContext {
     }
 
     /// Create a context for an objective event
-    pub fn objective(killer: &str, objective: &str, stolen: bool, dragon_type: Option<&str>) -> Self {
+    pub fn objective(
+        killer: &str,
+        objective: &str,
+        stolen: bool,
+        dragon_type: Option<&str>,
+    ) -> Self {
         Self {
             event_type: SoundEvent::Objective,
             killer_name: Some(killer.to_string()),
@@ -454,7 +459,7 @@ impl SoundEventContext {
 }
 
 /// Events that can trigger audio cues
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "camelCase")]
 pub enum SoundEvent {
     /// Game started
@@ -462,6 +467,7 @@ pub enum SoundEvent {
     /// First blood occurred
     FirstBlood,
     /// Standard champion kill
+    #[default]
     Kill,
     /// Multi-kill event
     MultiKill,
@@ -618,12 +624,27 @@ impl SoundPack {
 
         // Map event types to our cue keys
         let event_mappings = [
-            (custom_sound_pack::EventType::GameStart, SoundEvent::GameStart.key()),
-            (custom_sound_pack::EventType::GameEnd, SoundEvent::GameEnd.key()),
-            (custom_sound_pack::EventType::FirstBlood, SoundEvent::FirstBlood.key()),
+            (
+                custom_sound_pack::EventType::GameStart,
+                SoundEvent::GameStart.key(),
+            ),
+            (
+                custom_sound_pack::EventType::GameEnd,
+                SoundEvent::GameEnd.key(),
+            ),
+            (
+                custom_sound_pack::EventType::FirstBlood,
+                SoundEvent::FirstBlood.key(),
+            ),
             (custom_sound_pack::EventType::Kill, SoundEvent::Kill.key()),
-            (custom_sound_pack::EventType::MultiKill, SoundEvent::MultiKill.key()),
-            (custom_sound_pack::EventType::Objective, SoundEvent::Objective.key()),
+            (
+                custom_sound_pack::EventType::MultiKill,
+                SoundEvent::MultiKill.key(),
+            ),
+            (
+                custom_sound_pack::EventType::Objective,
+                SoundEvent::Objective.key(),
+            ),
             (custom_sound_pack::EventType::Ace, SoundEvent::Ace.key()),
         ];
 
@@ -634,9 +655,7 @@ impl SoundPack {
                         custom_sound_pack::SoundSource::File { path } => {
                             SoundCue::File(PathBuf::from(path.clone()))
                         }
-                        custom_sound_pack::SoundSource::Url { url } => {
-                            SoundCue::Url(url.clone())
-                        }
+                        custom_sound_pack::SoundSource::Url { url } => SoundCue::Url(url.clone()),
                     };
                     cues.insert(key.to_string(), cue);
                     info!("Custom sound for {}: {:?}", key, sound.source);
@@ -733,7 +752,10 @@ impl DiscordClient {
                             custom
                         }
                         None => {
-                            info!("Custom sound pack `{}` not found, falling back to base", pack_id);
+                            info!(
+                                "Custom sound pack `{}` not found, falling back to base",
+                                pack_id
+                            );
                             SoundPack::base()
                         }
                     }
@@ -1223,9 +1245,7 @@ impl DiscordClient {
                     custom_sound_pack::SoundSource::File { path } => {
                         SoundCue::File(PathBuf::from(path.clone()))
                     }
-                    custom_sound_pack::SoundSource::Url { url } => {
-                        SoundCue::Url(url.clone())
-                    }
+                    custom_sound_pack::SoundSource::Url { url } => SoundCue::Url(url.clone()),
                 };
                 info!(
                     "Rule matched for {:?}, using sound '{}' with volume {}",
@@ -1271,7 +1291,10 @@ impl DiscordClient {
             }
         };
 
-        write_sound_log(&format!("[sound] Sending input {} at volume {}", resolved_path, volume));
+        write_sound_log(&format!(
+            "[sound] Sending input {} at volume {}",
+            resolved_path, volume
+        ));
         let handle = handler.play_only_input(input);
         let _ = handle.set_volume(volume);
         if let Err(e) = handle.play() {
@@ -1279,7 +1302,10 @@ impl DiscordClient {
             log_sound_error(event, &msg);
         }
         write_sound_log("[sound] play_only_input + play() invoked");
-        info!("Queued audio for event {:?} using {} at volume {}", event, resolved_path, volume);
+        info!(
+            "Queued audio for event {:?} using {} at volume {}",
+            event, resolved_path, volume
+        );
         write_sound_log(&format!(
             "[sound] Queued {:?} using {} vol={}",
             event, resolved_path, volume
@@ -1287,7 +1313,12 @@ impl DiscordClient {
         if let Some(app) = app_handle {
             let _ = app.emit(
                 "backend-log",
-                format!("🔊 Queued sound for {:?} ({}) vol={:.0}%", event, resolved_path, volume * 100.0),
+                format!(
+                    "🔊 Queued sound for {:?} ({}) vol={:.0}%",
+                    event,
+                    resolved_path,
+                    volume * 100.0
+                ),
             );
         }
         Ok(())

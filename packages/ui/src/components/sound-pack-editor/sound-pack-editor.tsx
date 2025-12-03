@@ -88,7 +88,7 @@ export function SoundPackEditor() {
         <input
           type="text"
           value={editor.soundPack.name}
-          onChange={(e) => editor.updatePack({ name: e.target.value })}
+          onChange={(e) => editor.updatePack({ name: e.currentTarget.value })}
           className="w-full px-3 py-2 border rounded"
           placeholder="My Sound Pack"
         />
@@ -320,7 +320,7 @@ function SettingsTab() {
           <input
             type="checkbox"
             checked={editor.soundPack.settings.normalization}
-            onChange={(e) => editor.setNormalization(e.target.checked)}
+            onChange={(e) => editor.setNormalization(e.currentTarget.checked)}
             className="rounded"
           />
           <span className="text-sm">Normalize audio levels</span>
@@ -340,7 +340,7 @@ function SettingsTab() {
             <input
               type="text"
               value={editor.soundPack.version}
-              onChange={(e) => editor.updatePack({ version: e.target.value })}
+              onChange={(e) => editor.updatePack({ version: e.currentTarget.value })}
               className="w-full px-3 py-2 border rounded text-sm"
               placeholder="1.0.0"
             />
@@ -350,7 +350,7 @@ function SettingsTab() {
             <input
               type="text"
               value={editor.soundPack.author ?? ""}
-              onChange={(e) => editor.updatePack({ author: e.target.value || undefined })}
+              onChange={(e) => editor.updatePack({ author: e.currentTarget.value || undefined })}
               className="w-full px-3 py-2 border rounded text-sm"
               placeholder="Your name"
             />
@@ -359,7 +359,7 @@ function SettingsTab() {
             <label className="block text-sm text-gray-600 mb-1">Description</label>
             <textarea
               value={editor.soundPack.description ?? ""}
-              onChange={(e) => editor.updatePack({ description: e.target.value || undefined })}
+              onChange={(e) => editor.updatePack({ description: e.currentTarget.value || undefined })}
               className="w-full px-3 py-2 border rounded text-sm"
               rows={3}
               placeholder="Describe your sound pack..."

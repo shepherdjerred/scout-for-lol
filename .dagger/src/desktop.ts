@@ -34,6 +34,7 @@ export function getRustTauriContainer(): Container {
         "gnupg",
         "clang", // Required for mold linker
         "mold", // Modern linker - much faster than ld
+        "libasound2-dev", // ALSA audio library for audio playback
       ])
       // Install sccache via pre-built binary (much faster than cargo install)
       // sccache caches compiled object files based on content hashes - safe and deterministic
@@ -184,6 +185,7 @@ export function installDesktopDeps(workspaceSource: Directory, target: DesktopTa
     .withFile("/workspace/packages/report/package.json", workspaceSource.file("packages/report/package.json"))
     .withFile("/workspace/packages/frontend/package.json", workspaceSource.file("packages/frontend/package.json"))
     .withFile("/workspace/packages/desktop/package.json", workspaceSource.file("packages/desktop/package.json"))
+    .withFile("/workspace/packages/ui/package.json", workspaceSource.file("packages/ui/package.json"))
     // Install dependencies (cached if lockfile + package.jsons unchanged)
     .withExec(["bun", "install", "--frozen-lockfile"]);
 
@@ -204,6 +206,7 @@ export function installDesktopDeps(workspaceSource: Directory, target: DesktopTa
       .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
       .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
       .withDirectory("/workspace/packages/desktop", workspaceSource.directory("packages/desktop"))
+      .withDirectory("/workspace/packages/ui", workspaceSource.directory("packages/ui"))
   );
 }
 

@@ -83,7 +83,7 @@ export function SoundPoolEditor({
           <select
             value={pool.selectionMode}
             onChange={(e) =>
-              onUpdate({ ...pool, selectionMode: e.target.value as SelectionMode })
+              onUpdate({ ...pool, selectionMode: e.currentTarget.value as SelectionMode })
             }
             className="text-xs px-2 py-1 border rounded bg-white"
           >
@@ -126,7 +126,7 @@ export function SoundPoolEditor({
               <input
                 type="url"
                 value={newSoundUrl}
-                onChange={(e) => setNewSoundUrl(e.target.value)}
+                onChange={(e) => setNewSoundUrl(e.currentTarget.value)}
                 placeholder="https://youtube.com/watch?v=..."
                 className="flex-1 px-3 py-2 border rounded text-sm"
               />

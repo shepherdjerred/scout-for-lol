@@ -9,7 +9,7 @@ import {
   SoundPackEditorProvider,
   SoundPackEditor,
 } from "@scout-for-lol/ui";
-import { createTauriAdapter } from "../../adapters/sound-pack-adapter";
+import { createTauriAdapter } from "@scout-for-lol/desktop/adapters/sound-pack-adapter.ts";
 
 type SoundPackSectionProps = {
   onSave?: () => void;

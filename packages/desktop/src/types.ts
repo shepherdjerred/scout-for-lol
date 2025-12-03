@@ -36,7 +36,7 @@ export type Section = "league" | "discord" | "monitor" | "sounds";
 export type AvailableSoundPack = {
   id: string;
   name: string;
-  description?: string;
+  description?: string | undefined;
   isBuiltIn: boolean;
 };
 

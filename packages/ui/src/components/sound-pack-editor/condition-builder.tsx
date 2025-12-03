@@ -21,7 +21,7 @@ type ConditionBuilderProps = {
   /** Available champions for autocomplete */
   champions: Champion[];
   /** Local player name (if available) */
-  localPlayerName?: string;
+  localPlayerName?: string | undefined;
 };
 
 const MULTIKILL_TYPES: { value: MultikillType; label: string }[] = [
@@ -131,7 +131,7 @@ export function ConditionBuilder({
       <div className="flex items-center gap-2">
         <select
           value={newConditionType}
-          onChange={(e) => setNewConditionType(e.target.value as ConditionType)}
+          onChange={(e) => setNewConditionType(e.currentTarget.value as ConditionType)}
           className="px-2 py-1 border rounded text-sm bg-white"
         >
           {CONDITION_TYPES.map((ct) => (
@@ -161,7 +161,7 @@ type ConditionCardProps = {
   onChange: (condition: RuleCondition) => void;
   onRemove: () => void;
   champions: Champion[];
-  localPlayerName?: string;
+  localPlayerName?: string | undefined;
 };
 
 function ConditionCard({
@@ -240,7 +240,7 @@ function PlayerConditionEditor({
 }: {
   condition: Extract<RuleCondition, { type: "player" }>;
   onChange: (condition: RuleCondition) => void;
-  localPlayerName?: string;
+  localPlayerName?: string | undefined;
 }) {
   const [newPlayer, setNewPlayer] = useState("");
 
@@ -261,7 +261,7 @@ function PlayerConditionEditor({
         <select
           value={condition.field}
           onChange={(e) =>
-            onChange({ ...condition, field: e.target.value as "killer" | "victim" })
+            onChange({ ...condition, field: e.currentTarget.value as "killer" | "victim" })
           }
           className="px-2 py-1 border rounded text-sm bg-white"
         >
@@ -278,7 +278,7 @@ function PlayerConditionEditor({
             type="checkbox"
             checked={condition.includeLocalPlayer ?? false}
             onChange={(e) =>
-              onChange({ ...condition, includeLocalPlayer: e.target.checked })
+              onChange({ ...condition, includeLocalPlayer: e.currentTarget.checked })
             }
             className="rounded"
           />
@@ -315,7 +315,7 @@ function PlayerConditionEditor({
         <input
           type="text"
           value={newPlayer}
-          onChange={(e) => setNewPlayer(e.target.value)}
+          onChange={(e) => setNewPlayer(e.currentTarget.value)}
           onKeyDown={(e) => e.key === "Enter" && addPlayer()}
           placeholder="Summoner name"
           className="flex-1 px-2 py-1 border rounded text-sm"
@@ -374,7 +374,7 @@ function ChampionConditionEditor({
           onChange={(e) =>
             onChange({
               ...condition,
-              field: e.target.value as "killerChampion" | "victimChampion",
+              field: e.currentTarget.value as "killerChampion" | "victimChampion",
             })
           }
           className="px-2 py-1 border rounded text-sm bg-white"
@@ -418,7 +418,7 @@ function ChampionConditionEditor({
           type="text"
           value={query}
           onChange={(e) => {
-            setQuery(e.target.value);
+            setQuery(e.currentTarget.value);
             setShowSuggestions(true);
           }}
           onFocus={() => setShowSuggestions(true)}
@@ -560,7 +560,7 @@ function StolenConditionEditor({
       <select
         value={condition.isStolen ? "stolen" : "not-stolen"}
         onChange={(e) =>
-          onChange({ ...condition, isStolen: e.target.value === "stolen" })
+          onChange({ ...condition, isStolen: e.currentTarget.value === "stolen" })
         }
         className="px-2 py-1 border rounded text-sm bg-white"
       >
@@ -584,7 +584,7 @@ function TeamConditionEditor({
       <select
         value={condition.team}
         onChange={(e) =>
-          onChange({ ...condition, team: e.target.value as "ally" | "enemy" })
+          onChange({ ...condition, team: e.currentTarget.value as "ally" | "enemy" })
         }
         className="px-2 py-1 border rounded text-sm bg-white"
       >
@@ -608,7 +608,7 @@ function GameResultConditionEditor({
       <select
         value={condition.result}
         onChange={(e) =>
-          onChange({ ...condition, result: e.target.value as "victory" | "defeat" })
+          onChange({ ...condition, result: e.currentTarget.value as "victory" | "defeat" })
         }
         className="px-2 py-1 border rounded text-sm bg-white"
       >

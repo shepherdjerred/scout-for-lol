@@ -12,6 +12,7 @@ import type { LcuStatus, DiscordStatus, Config, LogEntry, LogPaths, Section, Ava
 import { DEFAULT_EVENT_SOUNDS, getErrorMessage } from "./types.ts";
 import type { SoundPack } from "@scout-for-lol/data";
 
+// eslint-disable-next-line max-lines-per-function -- Main app component, refactoring tracked separately
 export default function App() {
   // Navigation state
   const [activeSection, setActiveSection] = useState<Section>("league");

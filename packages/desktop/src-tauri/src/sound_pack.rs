@@ -78,10 +78,8 @@ impl SoundPool {
             }
             SelectionMode::Weighted => {
                 use rand::Rng;
-                let total_weight: f32 = enabled_sounds
-                    .iter()
-                    .map(|s| s.weight.unwrap_or(1.0))
-                    .sum();
+                let total_weight: f32 =
+                    enabled_sounds.iter().map(|s| s.weight.unwrap_or(1.0)).sum();
                 if total_weight <= 0.0 {
                     return enabled_sounds.first().copied();
                 }

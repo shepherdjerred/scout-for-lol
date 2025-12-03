@@ -101,7 +101,7 @@ export function SoundEntryCard({
               min="0"
               step="0.1"
               value={entry.weight ?? 1}
-              onChange={(e) => onUpdate({ weight: Number(e.target.value) })}
+              onChange={(e) => onUpdate({ weight: Number(e.currentTarget.value) })}
               className="w-16 px-2 py-1 text-xs border rounded"
             />
           </div>

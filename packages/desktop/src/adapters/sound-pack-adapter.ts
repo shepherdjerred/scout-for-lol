@@ -37,7 +37,7 @@ export function createTauriAdapter(onSave?: () => void): SoundPackAdapter {
         ],
       });
 
-      return result as string | null;
+      return result;
     },
 
     // =========================================================================
@@ -49,7 +49,13 @@ export function createTauriAdapter(onSave?: () => void): SoundPackAdapter {
     },
 
     stopSound: () => {
-      invoke("stop_preview_sound").catch(console.error);
+      void (async () => {
+        try {
+          await invoke("stop_preview_sound");
+        } catch (error) {
+          console.error(error);
+        }
+      })();
     },
 
     // =========================================================================
@@ -63,10 +69,10 @@ export function createTauriAdapter(onSave?: () => void): SoundPackAdapter {
       return result;
     },
 
-    getCacheStatus: async (url: string) => {
+    getCacheStatus: async (url: string): Promise<CacheStatus> => {
       try {
-        const result = await invoke<string>("get_cache_status", { url });
-        return result as CacheStatus;
+        const result = await invoke<CacheStatus>("get_cache_status", { url });
+        return result;
       } catch {
         return "not-cached";
       }
@@ -79,7 +85,7 @@ export function createTauriAdapter(onSave?: () => void): SoundPackAdapter {
     exportSoundPack: async (pack: SoundPack) => {
       const path = await save({
         filters: [{ name: "JSON", extensions: ["json"] }],
-        defaultPath: `${pack.name.replace(/[^a-zA-Z0-9]/g, "-")}.json`,
+        defaultPath: `${pack.name.replace(/[^a-z0-9]/gi, "-")}.json`,
       });
 
       if (path) {
@@ -96,7 +102,7 @@ export function createTauriAdapter(onSave?: () => void): SoundPackAdapter {
 
       if (path && typeof path === "string") {
         const content = await readTextFile(path);
-        const data = JSON.parse(content);
+        const data: unknown = JSON.parse(content);
         const result = SoundPackSchema.safeParse(data);
         if (result.success) {
           return result.data;
@@ -161,6 +167,6 @@ export function createTauriAdapter(onSave?: () => void): SoundPackAdapter {
 /**
  * Get the URL for a champion's square icon
  */
-export function getChampionIconUrl(championId: string, version = "14.1.1"): string {
-  return getChampionImageUrl(championId, version);
+export function getChampionIconUrl(championId: string): string {
+  return getChampionImageUrl(championId);
 }

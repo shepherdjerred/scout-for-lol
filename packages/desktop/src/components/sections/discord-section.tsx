@@ -11,7 +11,7 @@ import {
 import { Input, Select } from "@scout-for-lol/desktop/components/ui/input.tsx";
 import { StatusIndicator, Badge } from "@scout-for-lol/desktop/components/ui/badge.tsx";
 import { Collapsible } from "@scout-for-lol/desktop/components/ui/collapsible.tsx";
-import type { AvailableSoundPack } from "../../types.ts";
+import type { AvailableSoundPack } from "@scout-for-lol/desktop/types.ts";
 
 type DiscordStatus = {
   connected: boolean;

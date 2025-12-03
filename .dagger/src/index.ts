@@ -316,6 +316,7 @@ export class ScoutForLol {
             preparedWorkspace.withWorkdir("/workspace/packages/report").withExec(["bun", "run", "typecheck"]).sync(),
             preparedWorkspace.withWorkdir("/workspace/packages/frontend").withExec(["bun", "run", "typecheck"]).sync(),
             preparedWorkspace.withWorkdir("/workspace/packages/desktop").withExec(["bun", "run", "typecheck"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/ui").withExec(["bun", "run", "typecheck"]).sync(),
           ]);
         }),
 
@@ -328,6 +329,7 @@ export class ScoutForLol {
             preparedWorkspace.withWorkdir("/workspace/packages/report").withExec(["bun", "run", "lint"]).sync(),
             preparedWorkspace.withWorkdir("/workspace/packages/frontend").withExec(["bun", "run", "lint"]).sync(),
             preparedWorkspace.withWorkdir("/workspace/packages/desktop").withExec(["bun", "run", "lint"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/ui").withExec(["bun", "run", "lint"]).sync(),
           ]);
         }),
 

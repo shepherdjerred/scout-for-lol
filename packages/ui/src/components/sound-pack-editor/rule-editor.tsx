@@ -32,7 +32,7 @@ type RuleEditorProps = {
   /** Available champions for autocomplete */
   champions: Champion[];
   /** Local player name (if available) */
-  localPlayerName?: string;
+  localPlayerName?: string | undefined;
 };
 
 export function RuleEditor({
@@ -83,7 +83,7 @@ export function RuleEditor({
         <input
           type="text"
           value={rule.name}
-          onChange={(e) => onUpdate({ name: e.target.value })}
+          onChange={(e) => onUpdate({ name: e.currentTarget.value })}
           onClick={(e) => e.stopPropagation()}
           className="flex-1 font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
           placeholder="Rule name"
@@ -97,7 +97,7 @@ export function RuleEditor({
             min="0"
             max="1000"
             value={rule.priority}
-            onChange={(e) => onUpdate({ priority: Number(e.target.value) })}
+            onChange={(e) => onUpdate({ priority: Number(e.currentTarget.value) })}
             className="w-16 px-2 py-1 text-xs border rounded"
           />
         </div>
@@ -125,7 +125,7 @@ export function RuleEditor({
             <select
               value={rule.conditionLogic}
               onChange={(e) =>
-                onUpdate({ conditionLogic: e.target.value as "all" | "any" })
+                onUpdate({ conditionLogic: e.currentTarget.value as "all" | "any" })
               }
               className="px-2 py-1 border rounded text-sm bg-white"
             >

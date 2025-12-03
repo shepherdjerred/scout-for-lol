@@ -2,19 +2,15 @@
 //!
 //! Uses rodio for local audio playback (not through Discord voice).
 
-use log::{error, info, warn};
+use log::{info, warn};
 use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink};
+use std::cell::RefCell;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
-use std::sync::OnceLock;
-use tokio::sync::Mutex;
 
 use crate::discord::{download_youtube_to_cache, get_youtube_cache_path, is_youtube_cached};
 use crate::sound_pack::SoundSource;
-
-/// Global preview audio state
-static PREVIEW_STATE: OnceLock<Mutex<PreviewState>> = OnceLock::new();
 
 /// State for preview audio playback
 struct PreviewState {
@@ -71,8 +67,8 @@ impl PreviewState {
             .map_err(|e| format!("Failed to decode audio file '{}': {e}", path.display()))?;
 
         // Create a new sink and play
-        let sink = Sink::try_new(handle)
-            .map_err(|e| format!("Failed to create audio sink: {e}"))?;
+        let sink =
+            Sink::try_new(handle).map_err(|e| format!("Failed to create audio sink: {e}"))?;
         sink.append(source);
         sink.play();
 
@@ -81,9 +77,9 @@ impl PreviewState {
     }
 }
 
-/// Get or initialize the preview state
-fn get_preview_state() -> &'static Mutex<PreviewState> {
-    PREVIEW_STATE.get_or_init(|| Mutex::new(PreviewState::new()))
+thread_local! {
+    /// Thread-local preview audio state (OutputStream is not Send/Sync)
+    static PREVIEW_STATE: RefCell<PreviewState> = RefCell::new(PreviewState::new());
 }
 
 /// Play a preview sound locally
@@ -99,8 +95,7 @@ pub async fn play_preview(source: SoundSource) -> Result<(), String> {
                 return Err(format!("Audio file not found: {path}"));
             }
 
-            let mut state = get_preview_state().lock().await;
-            state.play_file(&path_buf)?;
+            PREVIEW_STATE.with(|state| state.borrow_mut().play_file(&path_buf))?;
             info!("Started preview playback: {}", path);
             Ok(())
         }
@@ -116,9 +111,11 @@ pub async fn play_preview(source: SoundSource) -> Result<(), String> {
                     download_youtube_to_cache(&url).await?
                 };
 
-                let mut state = get_preview_state().lock().await;
-                state.play_file(&cached_path)?;
-                info!("Started preview playback from cache: {}", cached_path.display());
+                PREVIEW_STATE.with(|state| state.borrow_mut().play_file(&cached_path))?;
+                info!(
+                    "Started preview playback from cache: {}",
+                    cached_path.display()
+                );
                 Ok(())
             } else {
                 // For non-YouTube URLs, we could use reqwest to download
@@ -131,9 +128,11 @@ pub async fn play_preview(source: SoundSource) -> Result<(), String> {
 }
 
 /// Stop any currently playing preview sound
-pub async fn stop_preview() -> Result<(), String> {
+#[allow(clippy::unnecessary_wraps)]
+pub fn stop_preview() -> Result<(), String> {
     info!("Stopping preview sound");
-    let mut state = get_preview_state().lock().await;
-    state.stop();
+    PREVIEW_STATE.with(|state| {
+        state.borrow_mut().stop();
+    });
     Ok(())
 }

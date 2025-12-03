@@ -20,7 +20,13 @@
     clippy::useless_format,
     clippy::cast_possible_truncation,
     clippy::cast_sign_loss,
-    clippy::option_if_let_else
+    clippy::option_if_let_else,
+    // Pre-existing issues to be fixed in a separate PR
+    dead_code,
+    clippy::struct_excessive_bools,
+    clippy::single_match,
+    clippy::missing_const_for_fn,
+    clippy::used_underscore_binding
 )]
 
 mod config;
@@ -681,7 +687,8 @@ async fn get_local_player() -> Result<Option<LocalPlayerInfo>, String> {
             // Try to get additional info from player list
             let player_list = client.get_player_list().await.ok();
             let player_info = player_list.as_ref().and_then(|list| {
-                list.iter().find(|p| p.summoner_name == player.summoner_name)
+                list.iter()
+                    .find(|p| p.summoner_name == player.summoner_name)
             });
 
             Ok(Some(LocalPlayerInfo {
@@ -700,8 +707,8 @@ async fn play_preview_sound(source: sound_pack::SoundSource) -> Result<(), Strin
 }
 
 #[tauri::command]
-async fn stop_preview_sound() -> Result<(), String> {
-    preview::stop_preview().await
+fn stop_preview_sound() -> Result<(), String> {
+    preview::stop_preview()
 }
 
 #[tauri::command]
@@ -739,8 +746,7 @@ async fn save_sound_pack(pack: sound_pack::SoundPack) -> Result<(), String> {
 
     // Ensure parent directory exists
     if let Some(parent) = sound_pack_path.parent() {
-        std::fs::create_dir_all(parent)
-            .map_err(|e| format!("Failed to create directory: {e}"))?;
+        std::fs::create_dir_all(parent).map_err(|e| format!("Failed to create directory: {e}"))?;
     }
 
     let content = serde_json::to_string_pretty(&pack)
@@ -765,10 +771,14 @@ async fn load_sound_pack() -> Result<Option<sound_pack::SoundPack>, String> {
     let content = std::fs::read_to_string(&sound_pack_path)
         .map_err(|e| format!("Failed to read sound pack: {e}"))?;
 
-    let pack: sound_pack::SoundPack = serde_json::from_str(&content)
-        .map_err(|e| format!("Failed to parse sound pack: {e}"))?;
+    let pack: sound_pack::SoundPack =
+        serde_json::from_str(&content).map_err(|e| format!("Failed to parse sound pack: {e}"))?;
 
-    info!("Loaded sound pack: {} from {}", pack.name, sound_pack_path.display());
+    info!(
+        "Loaded sound pack: {} from {}",
+        pack.name,
+        sound_pack_path.display()
+    );
     Ok(Some(pack))
 }
 

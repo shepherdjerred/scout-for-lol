@@ -296,7 +296,9 @@ impl GameContext {
 
     /// Get a player's champion name
     pub fn get_champion(&self, summoner_name: &str) -> Option<&str> {
-        self.players.get(summoner_name).map(|p| p.champion_name.as_str())
+        self.players
+            .get(summoner_name)
+            .map(|p| p.champion_name.as_str())
     }
 }
 
