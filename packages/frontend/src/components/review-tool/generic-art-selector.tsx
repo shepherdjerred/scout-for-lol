@@ -44,16 +44,26 @@ export function GenericArtSelector<T extends CustomArtStyle>({
   onCancelEdit,
 }: GenericArtSelectorProps<T>) {
   const isSecondary = variant === "secondary";
-  const borderColor = isSecondary
-    ? "border-purple-500 dark:border-purple-400 bg-purple-50 dark:bg-purple-900/30"
-    : "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/30";
-  const checkColor = isSecondary ? "text-purple-600" : "text-blue-600";
-  const buttonColor = isSecondary ? "bg-purple-600 hover:bg-purple-700" : "bg-blue-600 hover:bg-blue-700";
+  const borderColor = isSecondary ? "border-purple-500 bg-purple-50" : "border-blue-500 bg-blue-50";
+  const checkColor = isSecondary ? "text-purple-600" : "text-brand-600";
+  const buttonColor = isSecondary ? "bg-purple-600 hover:bg-purple-700" : "bg-brand-600 hover:bg-brand-700";
 
   if (showEditor) {
+    // When creating new, editingItem should be provided by the parent with a default template
+    // If it's null, we can't proceed - the parent should handle creating a default item
     if (!editingItem) {
-      return null;
+      // This shouldn't happen if parent is implemented correctly
+      // Show a fallback to avoid crashes
+      return (
+        <div className="p-4 text-sm text-surface-600">
+          <p>Error: No item to edit. Please try again.</p>
+          <button onClick={onCancelEdit} className="mt-2 text-brand-600 hover:text-brand-700">
+            Cancel
+          </button>
+        </div>
+      );
     }
+
     return (
       <div>
         <ArtStyleEditor
@@ -71,7 +81,7 @@ export function GenericArtSelector<T extends CustomArtStyle>({
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="block text-sm font-medium text-surface-700">
           {label} ({items.length})
         </label>
         <button
@@ -88,14 +98,14 @@ export function GenericArtSelector<T extends CustomArtStyle>({
           onClick={onSelectRandom}
           className={`
             w-full p-2 rounded border transition-colors text-left
-            ${selectedItem === "random" ? borderColor : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600"}
+            ${selectedItem === "random" ? borderColor : "border-surface-200 bg-white hover:border-surface-300"}
           `}
           disabled={!enabled}
         >
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="text-xs font-medium text-gray-900 dark:text-white">Random</h4>
-              <p className="text-xs text-gray-600 dark:text-gray-400">{randomDescription}</p>
+              <h4 className="text-xs font-medium text-surface-900">Random</h4>
+              <p className="text-xs text-surface-600">{randomDescription}</p>
             </div>
             {selectedItem === "random" && <span className={`${checkColor} text-xs`}>✓</span>}
           </div>
@@ -109,7 +119,7 @@ export function GenericArtSelector<T extends CustomArtStyle>({
               key={item.id}
               className={`
                 p-2 rounded border transition-colors
-                ${isSelected ? borderColor : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600"}
+                ${isSelected ? borderColor : "border-surface-200 bg-white hover:border-surface-300"}
               `}
             >
               <div className="flex items-start justify-between gap-2">
@@ -120,7 +130,7 @@ export function GenericArtSelector<T extends CustomArtStyle>({
                     )}
                     {isSelected && <span className={`${checkColor} text-xs shrink-0`}>✓</span>}
                   </div>
-                  <p className="text-xs text-gray-900 dark:text-white">{item.description}</p>
+                  <p className="text-xs text-surface-900">{item.description}</p>
                 </div>
                 <div className="flex flex-col gap-1">
                   <button
@@ -138,7 +148,7 @@ export function GenericArtSelector<T extends CustomArtStyle>({
                         onClick={() => {
                           onEdit(item);
                         }}
-                        className="px-2 py-1 bg-gray-600 text-white text-xs rounded hover:bg-gray-700"
+                        className="px-2 py-1 bg-surface-600 text-white text-xs rounded hover:bg-surface-700"
                         disabled={!enabled}
                       >
                         Edit

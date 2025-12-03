@@ -19,14 +19,14 @@ export function Accordion({ items, className }: AccordionProps) {
       {items.map((item) => (
         <details
           key={item.id}
-          className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm"
+          className="overflow-hidden rounded-lg border border-surface-200 bg-white shadow-sm"
           open={item.defaultOpen}
         >
-          <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700">
+          <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-surface-900 hover:bg-surface-50">
             {item.title}
-            <span className="text-gray-500 dark:text-gray-400">▾</span>
+            <span className="text-surface-500">▾</span>
           </summary>
-          <div className="border-t border-gray-100 dark:border-gray-700 px-4 py-3">{item.content}</div>
+          <div className="border-t border-surface-100 px-4 py-3">{item.content}</div>
         </details>
       ))}
     </div>

@@ -9,6 +9,9 @@
  * otherwise adds .ts extension. This works for 95% of cases. If incorrect,
  * manually adjust the extension.
  *
+ * Vite query strings like ?raw, ?url, ?inline are stripped before checking extensions,
+ * so imports like "./file.txt?raw" are treated as having a .txt extension and allowed.
+ *
  * ❌ BAD:
  * import { x } from "./utils";         // Missing extension
  * import { y } from "../models/user";  // Missing extension
@@ -20,6 +23,7 @@
  * import { y } from "../models/user.tsx";
  * import { z } from "discord.js";  // Third-party OK without extension
  * import { a } from "@scout-for-lol/data";  // Workspace package OK
+ * import text from "./file.txt?raw";  // Vite raw import OK
  */
 
 import type { TSESLint } from "@typescript-eslint/utils";
@@ -51,12 +55,15 @@ export const requireTsExtensions: TSESLint.RuleModule<"requireTsExtension" | "no
           return;
         }
 
+        // Strip Vite query strings like ?raw, ?url, ?inline for extension checking
+        const pathWithoutQuery = importPath.split("?")[0];
+
         // Determine suggested extension based on file type
         const currentFileName = context.filename;
         const suggestedExtension = currentFileName.endsWith(".tsx") ? ".tsx" : ".ts";
 
         // Check for .js/.jsx extensions and flag them
-        const jsExtensionMatch = /\.(jsx?)$/u.exec(importPath);
+        const jsExtensionMatch = /\.jsx?$/u.exec(pathWithoutQuery);
         if (jsExtensionMatch) {
           const oldExtension = jsExtensionMatch[0];
           context.report({
@@ -68,7 +75,7 @@ export const requireTsExtensions: TSESLint.RuleModule<"requireTsExtension" | "no
             fix(fixer) {
               // Replace .js with .ts or .jsx with .tsx
               const newExtension = oldExtension === ".jsx" ? ".tsx" : suggestedExtension;
-              const fixedPath = importPath.replace(/\.(jsx?)$/u, newExtension);
+              const fixedPath = importPath.replace(/\.jsx?(?=\?|$)/u, newExtension);
 
               // Preserve the original quote style
               const sourceText = node.source.raw;
@@ -80,13 +87,14 @@ export const requireTsExtensions: TSESLint.RuleModule<"requireTsExtension" | "no
         }
 
         // Check if it has .ts or .tsx extension (valid)
-        const hasTsExtension = /\.tsx?$/u.exec(importPath);
+        const hasTsExtension = /\.tsx?$/u.exec(pathWithoutQuery);
         if (hasTsExtension) {
           return;
         }
 
-        // Skip imports that have other extensions (like .json, .css.ts, etc.)
-        const hasOtherExtension = /\.[a-z]+(?:\.[a-z]+)?$/iu.exec(importPath);
+        // Skip imports that have other extensions (like .json, .css, .txt, etc.)
+        // This also handles Vite query strings since we check pathWithoutQuery
+        const hasOtherExtension = /\.[a-z]+(?:\.[a-z]+)?$/iu.exec(pathWithoutQuery);
         if (hasOtherExtension) {
           return;
         }

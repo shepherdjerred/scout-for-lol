@@ -300,7 +300,6 @@ export function buildPromptVariables(params: {
   timelineSummary?: string;
 }): {
   reviewerName: string;
-  reviewerPersonality: string;
   playerName: string;
   playerChampion: string;
   playerLane: string;
@@ -321,7 +320,6 @@ export function buildPromptVariables(params: {
   }
 
   const reviewerName = personality.metadata.name;
-  const reviewerPersonality = personality.styleCard;
 
   const playerChampion = matchData["champion"] ?? "unknown champion";
   const playerLane = matchData["lane"] ?? "unknown lane";
@@ -350,7 +348,6 @@ export function buildPromptVariables(params: {
 
   return {
     reviewerName,
-    reviewerPersonality,
     playerName,
     playerChampion,
     playerLane,

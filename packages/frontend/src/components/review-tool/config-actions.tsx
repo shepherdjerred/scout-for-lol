@@ -1,20 +1,20 @@
 /**
- * Tab config action buttons (export, import, reset)
+ * Config action buttons (export, import, reset)
  */
-type TabConfigActionsProps = {
+type ConfigActionsProps = {
   onExport: () => void;
   onImport: () => void;
   onReset: () => void;
 };
 
-export function TabConfigActions({ onExport, onImport, onReset }: TabConfigActionsProps) {
+export function ConfigActions({ onExport, onImport, onReset }: ConfigActionsProps) {
   return (
-    <div className="p-6 mt-8 border-t border-gray-200 dark:border-gray-700">
+    <div className="p-6 mt-8 border-t border-surface-200">
       <div className="flex gap-3 flex-wrap">
         <button
           onClick={onExport}
           className="px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-          title="Export tab settings, custom personalities, and art styles"
+          title="Export settings, custom personalities, and art styles"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -44,7 +44,7 @@ export function TabConfigActions({ onExport, onImport, onReset }: TabConfigActio
         <button
           onClick={onReset}
           className="px-5 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-          title="Reset tab settings to defaults"
+          title="Reset settings to defaults"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path

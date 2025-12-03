@@ -4,13 +4,27 @@
  * This module contains all the default values that can be overridden by callers.
  */
 
-import type { PipelineStagesConfig, ModelConfig, StageConfig, ImageGenerationStageConfig } from "./pipeline-types.ts";
-import { selectRandomStyle } from "@scout-for-lol/data/review/art-styles";
+import type {
+  PipelineStagesConfig,
+  ModelConfig,
+  StageConfig,
+  ImageGenerationStageConfig,
+  ReviewTextStageConfig,
+} from "./pipeline-types.ts";
+import { selectRandomStyle } from "@scout-for-lol/data/review/art-styles.ts";
 
-// Import system prompts from TXT files
-import TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1b-timeline-summary.txt";
-import MATCH_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1a-match-summary.txt";
-import IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW from "./prompts/system/3-image-description.txt";
+// Import system prompts from TXT files (using ?raw for Vite to return content, not URL)
+import TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1b-timeline-summary.txt?raw";
+import MATCH_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1a-match-summary.txt?raw";
+import REVIEW_TEXT_SYSTEM_PROMPT_RAW from "./prompts/system/2-review-text.txt?raw";
+import IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW from "./prompts/system/3-image-description.txt?raw";
+
+// Import user prompts from TXT files (using ?raw for Vite to return content, not URL)
+import TIMELINE_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1b-timeline-summary.txt?raw";
+import MATCH_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1a-match-summary.txt?raw";
+import REVIEW_TEXT_USER_PROMPT_RAW from "./prompts/user/2-review-text.txt?raw";
+import IMAGE_DESCRIPTION_USER_PROMPT_RAW from "./prompts/user/3-image-description.txt?raw";
+import IMAGE_GENERATION_USER_PROMPT_RAW from "./prompts/user/4-image-generation.txt?raw";
 
 // ============================================================================
 // System Prompts
@@ -34,11 +48,30 @@ export const TIMELINE_SUMMARY_SYSTEM_PROMPT = TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW
 export const MATCH_SUMMARY_SYSTEM_PROMPT = MATCH_SUMMARY_SYSTEM_PROMPT_RAW.trim();
 
 /**
+ * System prompt for Stage 2: Review Text
+ *
+ * Uses the personality instructions, style card, and lane context
+ * to guide the review generation.
+ */
+export const REVIEW_TEXT_SYSTEM_PROMPT = REVIEW_TEXT_SYSTEM_PROMPT_RAW.trim();
+
+/**
  * System prompt for Stage 3: Image Description
  *
  * Turns a review into a vivid image concept for Gemini to generate.
  */
 export const IMAGE_DESCRIPTION_SYSTEM_PROMPT = IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW.trim();
+
+// ============================================================================
+// User Prompts (Templates with variables)
+// See prompt-variables.ts for variable documentation
+// ============================================================================
+
+export const TIMELINE_SUMMARY_USER_PROMPT = TIMELINE_SUMMARY_USER_PROMPT_RAW.trim();
+export const MATCH_SUMMARY_USER_PROMPT = MATCH_SUMMARY_USER_PROMPT_RAW.trim();
+export const REVIEW_TEXT_USER_PROMPT = REVIEW_TEXT_USER_PROMPT_RAW.trim();
+export const IMAGE_DESCRIPTION_USER_PROMPT = IMAGE_DESCRIPTION_USER_PROMPT_RAW.trim();
+export const IMAGE_GENERATION_USER_PROMPT = IMAGE_GENERATION_USER_PROMPT_RAW.trim();
 
 // ============================================================================
 // Default Model Configurations
@@ -47,15 +80,12 @@ export const IMAGE_DESCRIPTION_SYSTEM_PROMPT = IMAGE_DESCRIPTION_SYSTEM_PROMPT_R
 /**
  * Default model config for timeline summary (Stage 1a)
  *
- * TODO: We use gpt-5.1 (400k context) instead of gpt-4o-mini (128k context) because
- * the full raw timeline from Riot API can be 100k+ tokens (one frame per minute with
- * 10 participants' detailed stats + hundreds of events). Filtering the timeline to
- * fit in 128k would lose important game narrative data. Consider switching back to
- * gpt-4o-mini if costs become a concern, but would require implementing timeline
- * segmentation (e.g., summarize 10-min chunks separately then combine).
+ * Uses gpt-5-mini (200k context) which handles large timeline data well.
+ * The full raw timeline from Riot API can be 100k+ tokens (one frame per minute with
+ * 10 participants' detailed stats + hundreds of events).
  */
 export const DEFAULT_TIMELINE_SUMMARY_MODEL: ModelConfig = {
-  model: "gpt-5.1",
+  model: "gpt-5-mini",
   maxTokens: 6000,
   temperature: 0.3,
 };
@@ -63,14 +93,12 @@ export const DEFAULT_TIMELINE_SUMMARY_MODEL: ModelConfig = {
 /**
  * Default model config for match summary (Stage 1b)
  *
- * TODO: We use gpt-5.1 (400k context) instead of gpt-4o-mini (128k context) because
- * the full raw match from Riot API can be 100k+ tokens (10 players × 150+ fields each,
- * including challenges, perks, missions). Filtering would lose detailed stats that
- * help the AI understand player performance. Consider switching back to gpt-4o-mini
- * if costs become a concern, but would require significant data filtering.
+ * Uses gpt-5-mini (200k context) which handles large match data well.
+ * The full raw match from Riot API can be 100k+ tokens (10 players × 150+ fields each,
+ * including challenges, perks, missions).
  */
 export const DEFAULT_MATCH_SUMMARY_MODEL: ModelConfig = {
-  model: "gpt-5.1",
+  model: "gpt-5-mini",
   maxTokens: 6000,
   temperature: 0.4,
 };
@@ -113,6 +141,7 @@ const DEFAULT_TIMELINE_SUMMARY_STAGE: StageConfig = {
   enabled: true,
   model: DEFAULT_TIMELINE_SUMMARY_MODEL,
   systemPrompt: TIMELINE_SUMMARY_SYSTEM_PROMPT,
+  userPrompt: TIMELINE_SUMMARY_USER_PROMPT,
 };
 
 /**
@@ -122,6 +151,7 @@ const DEFAULT_MATCH_SUMMARY_STAGE: StageConfig = {
   enabled: true,
   model: DEFAULT_MATCH_SUMMARY_MODEL,
   systemPrompt: MATCH_SUMMARY_SYSTEM_PROMPT,
+  userPrompt: MATCH_SUMMARY_USER_PROMPT,
 };
 
 /**
@@ -131,6 +161,16 @@ const DEFAULT_IMAGE_DESCRIPTION_STAGE: StageConfig = {
   enabled: true,
   model: DEFAULT_IMAGE_DESCRIPTION_MODEL,
   systemPrompt: IMAGE_DESCRIPTION_SYSTEM_PROMPT,
+  userPrompt: IMAGE_DESCRIPTION_USER_PROMPT,
+};
+
+/**
+ * Default configuration for review text stage
+ */
+const DEFAULT_REVIEW_TEXT_STAGE: ReviewTextStageConfig = {
+  model: DEFAULT_REVIEW_TEXT_MODEL,
+  systemPrompt: REVIEW_TEXT_SYSTEM_PROMPT,
+  userPrompt: REVIEW_TEXT_USER_PROMPT,
 };
 
 /**
@@ -143,6 +183,7 @@ function createDefaultImageGenerationStage(): ImageGenerationStageConfig {
     model: DEFAULT_IMAGE_GENERATION_MODEL,
     timeoutMs: DEFAULT_IMAGE_GENERATION_TIMEOUT_MS,
     artStyle: selectRandomStyle(),
+    userPrompt: IMAGE_GENERATION_USER_PROMPT,
   };
 }
 
@@ -156,9 +197,7 @@ export function getDefaultStageConfigs(): PipelineStagesConfig {
   return {
     timelineSummary: DEFAULT_TIMELINE_SUMMARY_STAGE,
     matchSummary: DEFAULT_MATCH_SUMMARY_STAGE,
-    reviewText: {
-      model: DEFAULT_REVIEW_TEXT_MODEL,
-    },
+    reviewText: DEFAULT_REVIEW_TEXT_STAGE,
     imageDescription: DEFAULT_IMAGE_DESCRIPTION_STAGE,
     imageGeneration: createDefaultImageGenerationStage(),
   };
@@ -170,9 +209,7 @@ export function getDefaultStageConfigs(): PipelineStagesConfig {
 export const DEFAULT_STAGE_CONFIGS: PipelineStagesConfig = {
   timelineSummary: DEFAULT_TIMELINE_SUMMARY_STAGE,
   matchSummary: DEFAULT_MATCH_SUMMARY_STAGE,
-  reviewText: {
-    model: DEFAULT_REVIEW_TEXT_MODEL,
-  },
+  reviewText: DEFAULT_REVIEW_TEXT_STAGE,
   imageDescription: DEFAULT_IMAGE_DESCRIPTION_STAGE,
   imageGeneration: createDefaultImageGenerationStage(),
 };
@@ -194,9 +231,7 @@ export function createStageConfigs(overrides?: Partial<PipelineStagesConfig>): P
     return {
       timelineSummary: DEFAULT_TIMELINE_SUMMARY_STAGE,
       matchSummary: DEFAULT_MATCH_SUMMARY_STAGE,
-      reviewText: {
-        model: DEFAULT_REVIEW_TEXT_MODEL,
-      },
+      reviewText: DEFAULT_REVIEW_TEXT_STAGE,
       imageDescription: DEFAULT_IMAGE_DESCRIPTION_STAGE,
       imageGeneration: defaultImageGeneration,
     };
@@ -220,6 +255,8 @@ export function createStageConfigs(overrides?: Partial<PipelineStagesConfig>): P
       },
     },
     reviewText: {
+      ...DEFAULT_REVIEW_TEXT_STAGE,
+      ...overrides.reviewText,
       model: {
         ...DEFAULT_REVIEW_TEXT_MODEL,
         ...overrides.reviewText?.model,
@@ -238,25 +275,4 @@ export function createStageConfigs(overrides?: Partial<PipelineStagesConfig>): P
       ...overrides.imageGeneration,
     },
   };
-}
-
-/**
- * Get the system prompt for a stage, using override if provided
- */
-export function getStageSystemPrompt(
-  stage: "timelineSummary" | "matchSummary" | "imageDescription",
-  override?: string,
-): string {
-  if (override) {
-    return override;
-  }
-
-  switch (stage) {
-    case "timelineSummary":
-      return TIMELINE_SUMMARY_SYSTEM_PROMPT;
-    case "matchSummary":
-      return MATCH_SUMMARY_SYSTEM_PROMPT;
-    case "imageDescription":
-      return IMAGE_DESCRIPTION_SYSTEM_PROMPT;
-  }
 }

@@ -28,6 +28,8 @@ import type {
   StageTrace,
   PipelineStagesConfig,
   PipelineClientsInput,
+  PipelineProgressCallback,
+  PipelineStageName,
 } from "./pipeline-types.ts";
 import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema";
 import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema";
@@ -38,6 +40,54 @@ import {
   generateImageDescription,
   generateImage,
 } from "./pipeline-stages.ts";
+
+// ============================================================================
+// Progress Tracking
+// ============================================================================
+
+/** Stage name to human-readable message */
+const STAGE_MESSAGES: Record<PipelineStageName, string> = {
+  "timeline-summary": "Generating timeline summary...",
+  "match-summary": "Generating match summary...",
+  "review-text": "Generating review...",
+  "image-description": "Generating image prompt...",
+  "image-generation": "Generating image...",
+};
+
+/** Count enabled stages for progress tracking */
+function countEnabledStages(stages: PipelineStagesConfig, hasGemini: boolean): number {
+  let count = 1; // reviewText is always enabled
+  if (stages.timelineSummary.enabled) {
+    count++;
+  }
+  if (stages.matchSummary.enabled) {
+    count++;
+  }
+  if (stages.imageDescription.enabled) {
+    count++;
+  }
+  if (stages.imageGeneration.enabled && hasGemini) {
+    count++;
+  }
+  return count;
+}
+
+/** Create a progress reporter that tracks stage progression */
+function createProgressReporter(
+  onProgress: PipelineProgressCallback | undefined,
+  totalStages: number,
+): (stage: PipelineStageName) => void {
+  let currentStage = 0;
+  return (stage: PipelineStageName): void => {
+    currentStage++;
+    onProgress?.({
+      stage,
+      message: STAGE_MESSAGES[stage],
+      currentStage,
+      totalStages,
+    });
+  };
+}
 
 // ============================================================================
 // Helper Types
@@ -65,6 +115,7 @@ type Stage3And4Context = {
   traces: Partial<PipelineTraces>;
   intermediate: PipelineIntermediateResults;
   imagePrompts?: string[] | undefined;
+  reportProgress: (stage: PipelineStageName) => void;
 };
 
 type Stage3And4Result = {
@@ -84,17 +135,15 @@ async function runTimelineSummary(ctx: Stage1Context): Promise<{ text: string; t
     return undefined;
   }
 
-  const params: Parameters<typeof generateTimelineSummary>[0] = {
+  return await generateTimelineSummary({
     rawTimeline: match.rawTimeline,
     rawMatch: match.raw,
     laneContext: prompts.laneContext,
     client: clients.openai,
     model: stages.timelineSummary.model,
-  };
-  if (stages.timelineSummary.systemPrompt !== undefined) {
-    params.systemPromptOverride = stages.timelineSummary.systemPrompt;
-  }
-  return await generateTimelineSummary(params);
+    systemPrompt: stages.timelineSummary.systemPrompt,
+    userPrompt: stages.timelineSummary.userPrompt,
+  });
 }
 
 async function runMatchSummary(ctx: Stage1Context): Promise<{ text: string; trace: StageTrace } | undefined> {
@@ -105,17 +154,15 @@ async function runMatchSummary(ctx: Stage1Context): Promise<{ text: string; trac
     return undefined;
   }
 
-  const params: Parameters<typeof generateMatchSummary>[0] = {
+  return await generateMatchSummary({
     match: match.processed,
     rawMatch: match.raw,
     playerIndex: player.index,
     client: clients.openai,
     model: stages.matchSummary.model,
-  };
-  if (stages.matchSummary.systemPrompt !== undefined) {
-    params.systemPromptOverride = stages.matchSummary.systemPrompt;
-  }
-  return await generateMatchSummary(params);
+    systemPrompt: stages.matchSummary.systemPrompt,
+    userPrompt: stages.matchSummary.userPrompt,
+  });
 }
 
 async function runStage1Parallel(ctx: Stage1Context): Promise<Stage1Result> {
@@ -151,22 +198,21 @@ async function runStage3ImageDescription(ctx: Stage3And4Context): Promise<string
     return undefined;
   }
 
+  const artStyleDescription = stages.imageGeneration.artStyle.description;
+
   try {
-    const params: Parameters<typeof generateImageDescription>[0] = {
+    const result = await generateImageDescription({
       reviewText,
+      artStyle: artStyleDescription,
       client: clients.openai,
       model: stages.imageDescription.model,
-    };
-    if (stages.imageDescription.systemPrompt !== undefined) {
-      params.systemPromptOverride = stages.imageDescription.systemPrompt;
-    }
-    if (imagePrompts !== undefined && imagePrompts.length > 0) {
-      params.imagePrompts = imagePrompts;
-    }
-
-    const result = await generateImageDescription(params);
+      systemPrompt: stages.imageDescription.systemPrompt,
+      userPrompt: stages.imageDescription.userPrompt,
+      imagePrompts,
+    });
     traces.imageDescription = result.trace;
     intermediate.imageDescriptionText = result.text;
+    intermediate.selectedArtStyle = artStyleDescription;
     if (result.selectedImagePrompts.length > 0) {
       intermediate.selectedImagePrompts = result.selectedImagePrompts;
     }
@@ -190,10 +236,10 @@ async function runStage4ImageGeneration(
   try {
     const result = await generateImage({
       imageDescription: imageDescriptionText,
-      artStyle: stages.imageGeneration.artStyle,
       geminiClient: clients.gemini,
       model: stages.imageGeneration.model,
       timeoutMs: stages.imageGeneration.timeoutMs,
+      userPrompt: stages.imageGeneration.userPrompt,
     });
     traces.imageGeneration = result.trace;
     return result.imageBase64;
@@ -204,11 +250,21 @@ async function runStage4ImageGeneration(
 }
 
 async function runStage3And4(ctx: Stage3And4Context): Promise<Stage3And4Result> {
+  const { stages, clients, reportProgress } = ctx;
   const result: Stage3And4Result = {};
+
+  if (stages.imageDescription.enabled) {
+    reportProgress("image-description");
+  }
 
   const imageDescriptionText = await runStage3ImageDescription(ctx);
   if (imageDescriptionText !== undefined) {
     result.imageDescriptionText = imageDescriptionText;
+
+    if (stages.imageGeneration.enabled && clients.gemini) {
+      reportProgress("image-generation");
+    }
+
     const imageBase64 = await runStage4ImageGeneration(ctx, imageDescriptionText);
     if (imageBase64 !== undefined) {
       result.imageBase64 = imageBase64;
@@ -233,13 +289,19 @@ async function runStage3And4(ctx: Stage3And4Context): Promise<Stage3And4Result> 
  * @returns Complete pipeline output with review, traces, intermediate results, and context
  */
 export async function generateFullMatchReview(input: ReviewPipelineInput): Promise<ReviewPipelineOutput> {
-  const { match, player, prompts, clients, stages } = input;
+  const { match, player, prompts, clients, stages, onProgress } = input;
 
   // Initialize output structures
   const traces: Partial<PipelineTraces> = {};
   const intermediate: PipelineIntermediateResults = {};
 
+  // Set up progress tracking
+  const hasGemini = clients.gemini !== undefined;
+  const totalStages = countEnabledStages(stages, hasGemini);
+  const reportProgress = createProgressReporter(onProgress, totalStages);
+
   // Stage 1: Parallel Summarization (using raw data)
+  // Report progress for both stages before running (they run in parallel)
   const stage1Ctx: Stage1Context = {
     input,
     intermediate,
@@ -247,21 +309,32 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
     rawMatch: match.raw,
     rawTimeline: match.rawTimeline,
   };
+
+  // For parallel stages, report the first enabled one
+  if (stages.timelineSummary.enabled) {
+    reportProgress("timeline-summary");
+  } else if (stages.matchSummary.enabled) {
+    reportProgress("match-summary");
+  }
+
   const stage1Result = await runStage1Parallel(stage1Ctx);
 
   // Stage 2: Review Text
+  reportProgress("review-text");
+
   // matchSummaryText is only undefined if the stage was explicitly disabled
   const effectiveMatchSummary = stage1Result.matchSummaryText ?? "Match summary stage is disabled.";
 
   const reviewTextParams: Parameters<typeof generateReviewTextStage>[0] = {
     match: match.processed,
     personality: prompts.personality,
-    basePromptTemplate: prompts.baseTemplate,
     laneContext: prompts.laneContext,
     playerIndex: player.index,
     matchSummary: effectiveMatchSummary,
     client: clients.openai,
     model: stages.reviewText.model,
+    systemPrompt: stages.reviewText.systemPrompt,
+    userPrompt: stages.reviewText.userPrompt,
   };
   if (stage1Result.timelineSummaryText !== undefined) {
     reviewTextParams.timelineSummary = stage1Result.timelineSummaryText;
@@ -289,6 +362,7 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
     traces,
     intermediate,
     imagePrompts: prompts.personality.metadata.image,
+    reportProgress,
   };
   const imageResult = await runStage3And4(stage3And4Ctx);
 
@@ -335,17 +409,15 @@ export async function runStage1Sequential(params: { input: ReviewPipelineInput }
 
   // Stage 1a: Timeline Summary
   if (stages.timelineSummary.enabled) {
-    const timelineParams: Parameters<typeof generateTimelineSummary>[0] = {
+    const result = await generateTimelineSummary({
       rawTimeline: match.rawTimeline,
       rawMatch: match.raw,
       laneContext: prompts.laneContext,
       client: clients.openai,
       model: stages.timelineSummary.model,
-    };
-    if (stages.timelineSummary.systemPrompt !== undefined) {
-      timelineParams.systemPromptOverride = stages.timelineSummary.systemPrompt;
-    }
-    const result = await generateTimelineSummary(timelineParams);
+      systemPrompt: stages.timelineSummary.systemPrompt,
+      userPrompt: stages.timelineSummary.userPrompt,
+    });
     timelineSummaryText = result.text;
     timelineSummaryTrace = result.trace;
   }
@@ -355,17 +427,15 @@ export async function runStage1Sequential(params: { input: ReviewPipelineInput }
 
   // Stage 1b: Match Summary
   if (stages.matchSummary.enabled) {
-    const matchParams: Parameters<typeof generateMatchSummary>[0] = {
+    const result = await generateMatchSummary({
       match: match.processed,
       rawMatch: match.raw,
       playerIndex: player.index,
       client: clients.openai,
       model: stages.matchSummary.model,
-    };
-    if (stages.matchSummary.systemPrompt !== undefined) {
-      matchParams.systemPromptOverride = stages.matchSummary.systemPrompt;
-    }
-    const result = await generateMatchSummary(matchParams);
+      systemPrompt: stages.matchSummary.systemPrompt,
+      userPrompt: stages.matchSummary.userPrompt,
+    });
     matchSummaryText = result.text;
     matchSummaryTrace = result.trace;
   }

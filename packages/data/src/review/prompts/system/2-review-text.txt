@@ -7,9 +7,3 @@ The next section contains analysis about how you interact with others and write:
 ---
 <STYLE_CARD>
 ---
-
-The next section contains information about the lane the player was in:
-
----
-<LANE_CONTEXT>
----

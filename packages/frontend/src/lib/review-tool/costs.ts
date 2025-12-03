@@ -1,9 +1,20 @@
 /**
  * Cost calculation for AI API usage
  */
-import type { GenerationMetadata, CostBreakdown } from "./config/schema.ts";
+import type {
+  GenerationMetadata,
+  CostBreakdown,
+  PipelineTraces,
+  StageTrace,
+  ImageGenerationTrace,
+} from "./config/schema.ts";
 import { CostBreakdownSchema } from "./config/schema.ts";
-import { calculateCost as calculateCostShared, formatCost as formatCostShared } from "@scout-for-lol/data";
+import {
+  calculateCost as calculateCostShared,
+  formatCost as formatCostShared,
+  getModelPricing,
+  getImagePricing,
+} from "@scout-for-lol/data";
 import { STORES, getItem, setItem } from "./storage.ts";
 
 /**
@@ -18,6 +29,102 @@ export function calculateCost(metadata: GenerationMetadata, textModel: string, i
  */
 export function formatCost(cost: number): string {
   return formatCostShared(cost);
+}
+
+/**
+ * Cost breakdown for a single pipeline stage
+ */
+export type StageCost = {
+  inputCost: number;
+  outputCost: number;
+  totalCost: number;
+};
+
+/**
+ * Per-stage cost breakdown for the entire pipeline
+ */
+export type PipelineCostBreakdown = {
+  timelineSummary?: StageCost;
+  matchSummary?: StageCost;
+  reviewText?: StageCost;
+  imageDescription?: StageCost;
+  imageGeneration?: { cost: number };
+  total: CostBreakdown;
+};
+
+/**
+ * Calculate cost for a single text generation stage
+ */
+function calculateStageCost(trace: StageTrace): StageCost {
+  const modelPricing = getModelPricing(trace.model.model);
+  const inputTokens = trace.tokensPrompt ?? 0;
+  const outputTokens = trace.tokensCompletion ?? 0;
+
+  const inputCost = (inputTokens / 1_000_000) * modelPricing.input;
+  const outputCost = (outputTokens / 1_000_000) * modelPricing.output;
+
+  return {
+    inputCost,
+    outputCost,
+    totalCost: inputCost + outputCost,
+  };
+}
+
+/**
+ * Calculate cost for image generation stage
+ */
+function calculateImageCost(trace: ImageGenerationTrace): number {
+  if (!trace.response.imageGenerated) {
+    return 0;
+  }
+  return getImagePricing(trace.model);
+}
+
+/**
+ * Calculate per-stage cost breakdown from pipeline traces
+ */
+export function calculatePipelineCosts(traces: PipelineTraces, _imageModel: string): PipelineCostBreakdown {
+  const result: PipelineCostBreakdown = {
+    total: {
+      textInputCost: 0,
+      textOutputCost: 0,
+      imageCost: 0,
+      totalCost: 0,
+    },
+  };
+
+  // Calculate per-stage costs
+  if (traces.timelineSummary) {
+    result.timelineSummary = calculateStageCost(traces.timelineSummary);
+    result.total.textInputCost += result.timelineSummary.inputCost;
+    result.total.textOutputCost += result.timelineSummary.outputCost;
+  }
+
+  if (traces.matchSummary) {
+    result.matchSummary = calculateStageCost(traces.matchSummary);
+    result.total.textInputCost += result.matchSummary.inputCost;
+    result.total.textOutputCost += result.matchSummary.outputCost;
+  }
+
+  result.reviewText = calculateStageCost(traces.reviewText);
+  result.total.textInputCost += result.reviewText.inputCost;
+  result.total.textOutputCost += result.reviewText.outputCost;
+
+  if (traces.imageDescription) {
+    result.imageDescription = calculateStageCost(traces.imageDescription);
+    result.total.textInputCost += result.imageDescription.inputCost;
+    result.total.textOutputCost += result.imageDescription.outputCost;
+  }
+
+  if (traces.imageGeneration) {
+    const imageCost = calculateImageCost(traces.imageGeneration);
+    result.imageGeneration = { cost: imageCost };
+    result.total.imageCost = imageCost;
+  }
+
+  result.total.totalCost = result.total.textInputCost + result.total.textOutputCost + result.total.imageCost;
+
+  return result;
 }
 
 /**

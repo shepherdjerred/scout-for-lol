@@ -4,7 +4,8 @@ import { dag } from "@dagger.io/dagger";
 type DesktopTarget = "linux" | "windows-gnu";
 
 /**
- * Get a Rust container with Tauri dependencies
+ * Get a Rust container with Tauri dependencies, sccache, and cargo-chef for faster builds
+ * cargo-chef enables better caching by separating dependency compilation from app compilation
  * @returns A Rust container with system dependencies for Tauri
  */
 export function getRustTauriContainer(): Container {
@@ -34,13 +35,29 @@ export function getRustTauriContainer(): Container {
         "clang", // Required for mold linker
         "mold", // Modern linker - much faster than ld
       ])
+      // Install sccache via pre-built binary (much faster than cargo install)
+      // sccache caches compiled object files based on content hashes - safe and deterministic
+      .withExec([
+        "sh",
+        "-c",
+        "curl -L https://github.com/mozilla/sccache/releases/download/v0.8.1/sccache-v0.8.1-x86_64-unknown-linux-musl.tar.gz | tar xz && mv sccache-v0.8.1-x86_64-unknown-linux-musl/sccache /usr/local/bin/ && rm -rf sccache-v0.8.1-x86_64-unknown-linux-musl",
+      ])
+      // Install cargo-chef for better dependency caching
+      // cargo-chef separates dependency compilation from app code compilation
+      .withExec(["cargo", "install", "cargo-chef", "--locked"])
+      // Mount sccache directory for cross-run caching
+      .withMountedCache("/root/.cache/sccache", dag.cacheVolume("sccache"))
+      // Configure sccache as the Rust compiler wrapper
+      .withEnvVariable("RUSTC_WRAPPER", "sccache")
+      .withEnvVariable("SCCACHE_DIR", "/root/.cache/sccache")
       // Mount Cargo caches for faster builds
       // - registry: Downloaded crate sources and metadata
       // - git: Git dependencies
       .withMountedCache("/usr/local/cargo/registry", dag.cacheVolume("cargo-registry"))
       .withMountedCache("/usr/local/cargo/git", dag.cacheVolume("cargo-git"))
       // Cargo build optimizations via environment variables
-      .withEnvVariable("CARGO_INCREMENTAL", "1") // Enable incremental compilation
+      // NOTE: CARGO_INCREMENTAL must be 0 when using sccache (they're incompatible)
+      .withEnvVariable("CARGO_INCREMENTAL", "0")
       .withEnvVariable("CARGO_BUILD_JOBS", "4") // Parallel compilation jobs
       .withEnvVariable("CARGO_NET_GIT_FETCH_WITH_CLI", "false") // Faster git fetching
       .withEnvVariable("CARGO_REGISTRIES_CRATES_IO_PROTOCOL", "sparse") // Sparse index protocol
@@ -50,6 +67,63 @@ export function getRustTauriContainer(): Container {
       // Install Tauri CLI for `cargo tauri build`
       .withExec(["cargo", "install", "tauri-cli", "--locked"])
   );
+}
+
+/**
+ * Prepare cargo-chef recipe for dependency caching.
+ * This analyzes Cargo.toml/Cargo.lock and creates a recipe.json that can be cached.
+ * @param workspaceSource The full workspace source directory
+ * @returns Container with prepared recipe
+ */
+export function prepareCargoChefRecipe(workspaceSource: Directory): Container {
+  return getRustTauriContainer()
+    .withDirectory("/workspace/packages/desktop/src-tauri", workspaceSource.directory("packages/desktop/src-tauri"))
+    .withWorkdir("/workspace/packages/desktop/src-tauri")
+    .withExec(["cargo", "chef", "prepare", "--recipe-path", "recipe.json"]);
+}
+
+/**
+ * Cook cargo-chef recipe (compile dependencies only).
+ * This step is cached and only invalidated when Cargo.toml/Cargo.lock change.
+ * @param workspaceSource The full workspace source directory
+ * @param target The build target (linux or windows-gnu)
+ * @param release Whether to build in release mode
+ * @returns Container with pre-compiled dependencies
+ */
+export function cookCargoChefRecipe(
+  workspaceSource: Directory,
+  target: DesktopTarget = "linux",
+  release = false,
+): Container {
+  const recipeContainer = prepareCargoChefRecipe(workspaceSource);
+  const recipeFile = recipeContainer.file("/workspace/packages/desktop/src-tauri/recipe.json");
+
+  let container = getRustTauriContainer()
+    .withFile("/workspace/packages/desktop/src-tauri/recipe.json", recipeFile)
+    .withWorkdir("/workspace/packages/desktop/src-tauri");
+
+  // Add Windows cross-compilation target if needed
+  if (target === "windows-gnu") {
+    container = container
+      .withExec(["apt", "install", "-y", "mingw-w64", "nsis", "zip"])
+      .withExec(["rustup", "target", "add", "x86_64-pc-windows-gnu"])
+      .withExec(["rustup", "target", "add", "x86_64-pc-windows-gnu", "--toolchain", "stable"]);
+  }
+
+  // Mount target cache for compiled dependencies
+  const cacheKey = target === "windows-gnu" ? "cargo-chef-windows-gnu" : "cargo-chef-linux";
+  container = container.withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume(cacheKey));
+
+  // Build command with appropriate flags
+  const cookArgs = ["cargo", "chef", "cook", "--recipe-path", "recipe.json"];
+  if (release) {
+    cookArgs.push("--release");
+  }
+  if (target === "windows-gnu") {
+    cookArgs.push("--target", "x86_64-pc-windows-gnu");
+  }
+
+  return container.withExec(cookArgs);
 }
 
 /**
@@ -65,6 +139,13 @@ export function installBunInRustContainer(container: Container): Container {
 
 /**
  * Install dependencies for the desktop package
+ *
+ * LAYER ORDERING FOR CACHING:
+ * 1. System deps (apt, Rust, Tauri CLI) - rarely change
+ * 2. Dependency files (package.json, bun.lock, patches) - change occasionally
+ * 3. bun install - cached if lockfile unchanged
+ * 4. Config files + source code - change frequently
+ *
  * @param workspaceSource The full workspace source directory
  * @param target Which desktop target to prepare for (linux or Windows GNU cross-compile)
  * @returns The container with dependencies installed
@@ -89,31 +170,40 @@ export function installDesktopDeps(workspaceSource: Directory, target: DesktopTa
       .withExec(["sh", "-c", "echo '✅ Windows GNU target installed for both default and stable toolchains'"]);
   }
 
-  // Set up workspace structure - include all required files like base.ts does
+  // PHASE 1: Dependency files only (for bun install caching)
+  container = container
+    .withWorkdir("/workspace")
+    // Root dependency files
+    .withFile("/workspace/package.json", workspaceSource.file("package.json"))
+    .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
+    // Patches directory (needed for bun patch to work during install)
+    .withDirectory("/workspace/patches", workspaceSource.directory("patches"))
+    // Each workspace's package.json (bun needs these for workspace resolution)
+    .withFile("/workspace/packages/backend/package.json", workspaceSource.file("packages/backend/package.json"))
+    .withFile("/workspace/packages/data/package.json", workspaceSource.file("packages/data/package.json"))
+    .withFile("/workspace/packages/report/package.json", workspaceSource.file("packages/report/package.json"))
+    .withFile("/workspace/packages/frontend/package.json", workspaceSource.file("packages/frontend/package.json"))
+    .withFile("/workspace/packages/desktop/package.json", workspaceSource.file("packages/desktop/package.json"))
+    // Install dependencies (cached if lockfile + package.jsons unchanged)
+    .withExec(["bun", "install", "--frozen-lockfile"]);
+
+  // PHASE 2: Config files and source code (changes frequently)
   return (
     container
-      .withWorkdir("/workspace")
-      // Config files (rarely change - good cache layer)
+      // Config files
       .withFile("/workspace/tsconfig.json", workspaceSource.file("tsconfig.json"))
       .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
       .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
       .withFile("/workspace/.jscpd.json", workspaceSource.file(".jscpd.json"))
       .withDirectory("/workspace/eslint-rules", workspaceSource.directory("eslint-rules"))
-      // Dependency files (change occasionally - separate cache layer)
-      .withFile("/workspace/package.json", workspaceSource.file("package.json"))
-      .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-      // Patches directory (needed for bun patch to work)
-      .withDirectory("/workspace/patches", workspaceSource.directory("patches"))
       // Scripts directory (for utility scripts like check-suppressions)
       .withDirectory("/workspace/scripts", workspaceSource.directory("scripts"))
-      // Package source code (changes frequently - mounted after deps)
+      // Package source code (changes frequently)
       .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
       .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
       .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
       .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
       .withDirectory("/workspace/packages/desktop", workspaceSource.directory("packages/desktop"))
-      // Install dependencies (will use cache if lockfile unchanged)
-      .withExec(["bun", "install", "--frozen-lockfile"])
   );
 }
 
@@ -280,16 +370,24 @@ export function checkDesktop(workspaceSource: Directory, frontendDist?: Director
 
 /**
  * Build the desktop application for Linux
+ * Uses cargo-chef for better dependency caching - dependencies are compiled separately
+ * and cached, so only app code needs to recompile on changes.
  * @param workspaceSource The full workspace source directory
  * @param version The version tag
  * @param frontendDist Optional pre-built frontend dist directory (avoids rebuilding)
  * @returns The container with built artifacts
  */
 export function buildDesktopLinux(workspaceSource: Directory, version: string, frontendDist?: Directory): Container {
+  // Build with sccache for compilation caching + mounted target cache
   let container = installDesktopDeps(workspaceSource)
     .withEnvVariable("VERSION", version)
+    // Mount sccache for compilation caching
+    .withMountedCache("/root/.cache/sccache", dag.cacheVolume("sccache-linux"))
+    .withEnvVariable("RUSTC_WRAPPER", "sccache")
+    .withEnvVariable("SCCACHE_DIR", "/root/.cache/sccache")
+    // Mount target cache for incremental builds
+    .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("cargo-target-linux"))
     .withWorkdir("/workspace/packages/desktop")
-    .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("rust-target-linux"))
     .withExec(["sh", "-c", "echo '🏗️  [CI] Building desktop application for Linux...'"]);
 
   // Use pre-built frontend if provided
@@ -304,11 +402,9 @@ export function buildDesktopLinux(workspaceSource: Directory, version: string, f
     container = container.withExec(["bun", "run", "build"]);
   }
 
-  // Copy artifacts from mounted cache to permanent location in container filesystem
-  // This is necessary because withMountedCache is ephemeral and not accessible
-  // when the container is later used to extract directories
+  // Copy artifacts from target cache to permanent location in container filesystem
   return container
-    .withExec(["sh", "-c", "echo '📦 Copying artifacts from cache to permanent location...'"])
+    .withExec(["sh", "-c", "echo '📦 Copying artifacts to permanent location...'"])
     .withExec([
       "sh",
       "-c",
@@ -319,6 +415,7 @@ export function buildDesktopLinux(workspaceSource: Directory, version: string, f
 
 /**
  * Build the desktop application for Windows (x86_64-pc-windows-gnu)
+ * Uses sccache for compilation caching and mounted target cache for incremental builds.
  * @param workspaceSource The full workspace source directory
  * @param version The version tag
  * @param frontendDist Optional pre-built frontend dist directory (avoids rebuilding)
@@ -329,14 +426,20 @@ export function buildDesktopWindowsGnu(
   version: string,
   frontendDist?: Directory,
 ): Container {
+  // Build with sccache for compilation caching + mounted target cache
   let container = installDesktopDeps(workspaceSource, "windows-gnu")
     .withEnvVariable("VERSION", version)
     .withEnvVariable("CARGO_TARGET_DIR", "/workspace/packages/desktop/src-tauri/target")
     .withEnvVariable("RUSTUP_HOME", "/usr/local/rustup")
     .withEnvVariable("CARGO_HOME", "/usr/local/cargo")
     .withEnvVariable("PATH", "/usr/local/cargo/bin:/usr/local/rustup/bin:$PATH", { expand: true })
+    // Mount sccache for compilation caching
+    .withMountedCache("/root/.cache/sccache", dag.cacheVolume("sccache-windows"))
+    .withEnvVariable("RUSTC_WRAPPER", "sccache")
+    .withEnvVariable("SCCACHE_DIR", "/root/.cache/sccache")
+    // Mount target cache for incremental builds
+    .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("cargo-target-windows-gnu"))
     .withWorkdir("/workspace/packages/desktop")
-    .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("rust-target-windows-gnu"))
     .withExec(["sh", "-c", "echo '🏗️  [CI] Building desktop application for Windows (x86_64-pc-windows-gnu)...'"]);
 
   // Use pre-built frontend if provided, otherwise build it
@@ -350,9 +453,7 @@ export function buildDesktopWindowsGnu(
       .withExec(["bunx", "vite", "build"]);
   }
 
-  // Copy artifacts from mounted cache to permanent location in container filesystem
-  // This is necessary because withMountedCache is ephemeral and not accessible
-  // when the container is later used to extract directories
+  // Build app code (sccache handles compilation caching)
   return container
     .withExec(["sh", "-c", "echo '🦀 Building Rust application with Cargo...'"])
     .withWorkdir("/workspace/packages/desktop/src-tauri")

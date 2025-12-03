@@ -59,6 +59,21 @@ ruleTester.run("require-ts-extensions", requireTsExtensions, {
       code: 'import styles from "./styles.module.css";',
       filename: "src/index.ts",
     },
+    // Valid: Vite ?raw import for text files
+    {
+      code: 'import content from "./file.txt?raw";',
+      filename: "src/index.ts",
+    },
+    // Valid: Vite ?url import
+    {
+      code: 'import url from "./image.png?url";',
+      filename: "src/index.ts",
+    },
+    // Valid: Vite ?inline import
+    {
+      code: 'import data from "./data.svg?inline";',
+      filename: "src/index.ts",
+    },
   ],
 
   invalid: [

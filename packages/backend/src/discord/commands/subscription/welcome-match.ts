@@ -1,5 +1,6 @@
 import { type ChatInputCommandInteraction } from "discord.js";
-import type { PlayerConfigEntry } from "@scout-for-lol/data/index";
+import type { PlayerConfigEntry } from "@scout-for-lol/data/index.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
 import { getRecentMatchIds } from "@scout-for-lol/backend/league/api/match-history.ts";
 import {
   fetchMatchData,
@@ -65,8 +66,21 @@ export async function sendWelcomeMatch(
       return;
     }
 
+    // Get target guild ID for feature flag checks
+    const guildId = interaction.guildId;
+    if (!guildId) {
+      logger.warn(`[WelcomeMatch] ⚠️  No guild ID available for interaction`);
+      await interaction.followUp({
+        content: `Welcome to Scout! Unable to determine server context. You'll see reports here when they play their next match.`,
+        ephemeral: true,
+      });
+      return;
+    }
+
+    const targetGuildIds = [DiscordGuildIdSchema.parse(guildId)];
+
     // Generate the match report
-    const message = await generateMatchReport(matchData, [playerConfig]);
+    const message = await generateMatchReport(matchData, [playerConfig], { targetGuildIds });
 
     if (!message) {
       logger.info(`[WelcomeMatch] ⚠️  No message generated for match ${mostRecentMatchId}`);

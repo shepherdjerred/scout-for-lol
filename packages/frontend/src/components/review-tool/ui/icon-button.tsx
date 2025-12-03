@@ -24,11 +24,9 @@ export function IconButton({
   const variants = {
     primary:
       "bg-brand-500 text-white hover:bg-brand-600 hover:shadow-glow active:scale-[0.95] focus-visible:outline-brand-500",
-    secondary:
-      "bg-surface-100 text-surface-600 hover:bg-surface-200 active:scale-[0.95] dark:bg-surface-800 dark:text-surface-400 dark:hover:bg-surface-700",
-    ghost:
-      "text-surface-500 hover:bg-surface-100 hover:text-surface-700 active:scale-[0.95] dark:text-surface-400 dark:hover:bg-surface-800 dark:hover:text-surface-200",
-    danger: "text-defeat-500 hover:bg-defeat-50 active:scale-[0.95] dark:text-defeat-400 dark:hover:bg-defeat-900/20",
+    secondary: "bg-surface-100 text-surface-600 hover:bg-surface-200 active:scale-[0.95]",
+    ghost: "text-surface-500 hover:bg-surface-100 hover:text-surface-700 active:scale-[0.95]",
+    danger: "text-defeat-500 hover:bg-defeat-50 active:scale-[0.95]",
   };
 
   const sizes = {

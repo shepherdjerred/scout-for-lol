@@ -14,7 +14,7 @@ exports[`victory test 1`] = `"3dca6f29ee011f3bb8031ed6de2256acd49a78fc6338aa7acc
 
 exports[`surrender test 1`] = `"fb3cd647d6c11136ef39cd80e9d3dcd8d061898a052b225597e4c7f5d152688c"`;
 
-exports[`no rank before match test 1`] = `"aaead3af20d172f9121b9ffeb0c98f176ee51a0972de0b45792815d46b08d89b"`;
+exports[`no rank before match test 1`] = `"0ab03b504e8e4807ac80ce44736e63121f0d4c41040b84fdba94b39d3a0395c5"`;
 
 exports[`multiple highlighted players test 1`] = `"0974bf0caf1d2a2e68bed58c4156f74da959232fe7958b225285d4776364346a"`;
 
@@ -22,4 +22,4 @@ exports[`clash game test 1`] = `"757b532e99adfed92bba00567233019a8b16e29cd382e75
 
 exports[`aram clash game test 1`] = `"cae4961528a8d20b63a855bd381e964a9631cdb1e22cd636628f58aee6760ec5"`;
 
-exports[`multiple players with promotion and demotion test 1`] = `"5e4f6892f6018cc45182d218114befd399b4256cbea3f2fa9f622d42100aaff8"`;
+exports[`multiple players with promotion and demotion test 1`] = `"babe7d0a38022ed14e7fc827496e6596fcd19e5711cce1a2d8d7655e27ceff46"`;

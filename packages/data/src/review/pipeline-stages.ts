@@ -10,22 +10,12 @@ import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema";
 import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema";
 import type { OpenAIClient, ModelConfig, StageTrace, ImageGenerationTrace } from "./pipeline-types.ts";
 import type { Personality } from "./prompts.ts";
-import type { ArtStyle } from "@scout-for-lol/data/review/art-categories";
-import { getStageSystemPrompt } from "./pipeline-defaults.ts";
-import { generateImagePrompt } from "./image-prompt.ts";
 import { replaceTemplateVariables, selectRandomImagePrompts } from "./prompts.ts";
 import { buildPromptVariables, extractMatchData } from "./generator-helpers.ts";
 import { enrichTimelineData } from "./timeline-enricher.ts";
+import { modelSupportsParameter } from "./models.ts";
 import type { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
-
-// Import user prompts from TXT files
-import TIMELINE_SUMMARY_USER_PROMPT_TEMPLATE from "./prompts/user/1b-timeline-summary.txt";
-import MATCH_SUMMARY_USER_PROMPT_TEMPLATE from "./prompts/user/1a-match-summary.txt";
-import IMAGE_DESCRIPTION_USER_PROMPT_TEMPLATE from "./prompts/user/3-image-description.txt";
-
-// Import system prompt templates
-import REVIEW_TEXT_SYSTEM_PROMPT_TEMPLATE from "./prompts/system/2-review-text.txt";
 
 // ============================================================================
 // Utility Functions
@@ -39,9 +29,46 @@ function minifyJson(data: unknown): string {
 }
 
 /**
+ * Extract all variable names from a template using <VARIABLE> syntax
+ */
+function extractTemplateVariables(template: string): Set<string> {
+  const regex = /<([A-Z][A-Z0-9_]*)>/g;
+  const variables = new Set<string>();
+  let match;
+  while ((match = regex.exec(template)) !== null) {
+    const varName = match[1];
+    if (varName !== undefined) {
+      variables.add(varName);
+    }
+  }
+  return variables;
+}
+
+/**
  * Replace template variables in a prompt template using <VARIABLE> syntax
+ *
+ * Validates that:
+ * 1. All variables in the template have corresponding replacements
+ * 2. All provided replacements are used in the template
+ *
+ * @throws Error if variables are missing or unused
  */
 function replacePromptVariables(template: string, variables: Record<string, string>): string {
+  const templateVars = extractTemplateVariables(template);
+  const providedVars = new Set(Object.keys(variables));
+
+  // Check for missing variables (in template but not provided)
+  const missingVars = [...templateVars].filter((v) => !providedVars.has(v));
+  if (missingVars.length > 0) {
+    throw new Error(`Missing prompt variables: ${missingVars.join(", ")}`);
+  }
+
+  // Check for unused variables (provided but not in template)
+  const unusedVars = [...providedVars].filter((v) => !templateVars.has(v));
+  if (unusedVars.length > 0) {
+    throw new Error(`Unused prompt variables: ${unusedVars.join(", ")}`);
+  }
+
   let result = template;
   for (const [key, value] of Object.entries(variables)) {
     result = result.replaceAll(`<${key}>`, value);
@@ -69,12 +96,17 @@ async function callOpenAI(params: {
 
   const startTime = Date.now();
 
+  // Only include temperature and topP if the model supports them
+  // Some models (like GPT-5 series and O-series) don't support these parameters
+  const supportsTemperature = modelSupportsParameter(model.model, "temperature");
+  const supportsTopP = modelSupportsParameter(model.model, "topP");
+
   const response = await client.chat.completions.create({
     model: model.model,
     messages,
     max_completion_tokens: model.maxTokens,
-    ...(model.temperature !== undefined && { temperature: model.temperature }),
-    ...(model.topP !== undefined && { top_p: model.topP }),
+    ...(supportsTemperature && model.temperature !== undefined && { temperature: model.temperature }),
+    ...(supportsTopP && model.topP !== undefined && { top_p: model.topP }),
   });
 
   const durationMs = Date.now() - startTime;
@@ -135,18 +167,26 @@ export async function generateTimelineSummary(params: {
   laneContext: string;
   client: OpenAIClient;
   model: ModelConfig;
-  systemPromptOverride?: string;
+  systemPrompt: string;
+  userPrompt: string;
 }): Promise<{ text: string; trace: StageTrace }> {
-  const { rawTimeline, rawMatch, laneContext, client, model, systemPromptOverride } = params;
+  const {
+    rawTimeline,
+    rawMatch,
+    laneContext,
+    client,
+    model,
+    systemPrompt: systemPromptTemplate,
+    userPrompt: userPromptTemplate,
+  } = params;
 
   // Enrich timeline with participant lookup table for human-readable names
   const enrichedData = enrichTimelineData(rawTimeline, rawMatch);
 
-  const systemPromptTemplate = getStageSystemPrompt("timelineSummary", systemPromptOverride);
   const systemPrompt = replacePromptVariables(systemPromptTemplate, {
     LANE_CONTEXT: laneContext,
   });
-  const userPrompt = replacePromptVariables(TIMELINE_SUMMARY_USER_PROMPT_TEMPLATE, {
+  const userPrompt = replacePromptVariables(userPromptTemplate, {
     TIMELINE_DATA: minifyJson(enrichedData),
   });
 
@@ -175,9 +215,10 @@ export async function generateMatchSummary(params: {
   playerIndex: number;
   client: OpenAIClient;
   model: ModelConfig;
-  systemPromptOverride?: string;
+  systemPrompt: string;
+  userPrompt: string;
 }): Promise<{ text: string; trace: StageTrace }> {
-  const { match, rawMatch, playerIndex, client, model, systemPromptOverride } = params;
+  const { match, rawMatch, playerIndex, client, model, systemPrompt, userPrompt: userPromptTemplate } = params;
 
   const player = match.players[playerIndex] ?? match.players[0];
   if (!player) {
@@ -193,9 +234,7 @@ export async function generateMatchSummary(params: {
     lane = player.lane;
   }
 
-  const systemPrompt = getStageSystemPrompt("matchSummary", systemPromptOverride);
-
-  const userPrompt = replacePromptVariables(MATCH_SUMMARY_USER_PROMPT_TEMPLATE, {
+  const userPrompt = replacePromptVariables(userPromptTemplate, {
     PLAYER_NAME: playerName,
     PLAYER_CHAMPION: playerChampion,
     PLAYER_LANE: lane,
@@ -241,24 +280,26 @@ function minifyJsonString(text: string): string {
 export async function generateReviewTextStage(params: {
   match: CompletedMatch | ArenaMatch;
   personality: Personality;
-  basePromptTemplate: string;
   laneContext: string;
   playerIndex: number;
   matchSummary: string;
   timelineSummary?: string;
   client: OpenAIClient;
   model: ModelConfig;
+  systemPrompt: string;
+  userPrompt: string;
 }): Promise<{ text: string; reviewerName: string; playerName: string; trace: StageTrace }> {
   const {
     match,
     personality,
-    basePromptTemplate,
     laneContext,
     playerIndex,
     matchSummary,
     timelineSummary,
     client,
     model,
+    systemPrompt: systemPromptTemplate,
+    userPrompt: userPromptTemplate,
   } = params;
 
   const { matchData } = extractMatchData(match, playerIndex);
@@ -274,11 +315,10 @@ export async function generateReviewTextStage(params: {
     ...(timelineSummary !== undefined && { timelineSummary }),
   });
 
-  const userPrompt = replaceTemplateVariables(basePromptTemplate, promptVariables);
-  const systemPrompt = replacePromptVariables(REVIEW_TEXT_SYSTEM_PROMPT_TEMPLATE, {
+  const userPrompt = replaceTemplateVariables(userPromptTemplate, promptVariables);
+  const systemPrompt = replacePromptVariables(systemPromptTemplate, {
     PERSONALITY_INSTRUCTIONS: personality.instructions,
     STYLE_CARD: minifyJsonString(personality.styleCard),
-    LANE_CONTEXT: laneContext,
   });
 
   const { text, trace } = await callOpenAI({
@@ -325,20 +365,22 @@ function buildImageInspirationsSection(selectedPrompts: string[]): string {
  */
 export async function generateImageDescription(params: {
   reviewText: string;
+  artStyle: string;
   client: OpenAIClient;
   model: ModelConfig;
-  systemPromptOverride?: string | undefined;
+  systemPrompt: string;
+  userPrompt: string;
   imagePrompts?: string[] | undefined;
 }): Promise<{ text: string; trace: StageTrace; selectedImagePrompts: string[] }> {
-  const { reviewText, client, model, systemPromptOverride, imagePrompts } = params;
+  const { reviewText, artStyle, client, model, systemPrompt, userPrompt: userPromptTemplate, imagePrompts } = params;
 
   // Select 2-3 random image prompts from personality
   const selectedImagePrompts = selectRandomImagePrompts(imagePrompts);
-
-  const systemPrompt = getStageSystemPrompt("imageDescription", systemPromptOverride);
   const imageInspirations = buildImageInspirationsSection(selectedImagePrompts);
-  const userPrompt = replacePromptVariables(IMAGE_DESCRIPTION_USER_PROMPT_TEMPLATE, {
+
+  const userPrompt = replacePromptVariables(userPromptTemplate, {
     REVIEW_TEXT: reviewText,
+    ART_STYLE: artStyle,
     IMAGE_INSPIRATIONS: imageInspirations,
   });
 
@@ -385,15 +427,19 @@ const GeminiResponseSchema = z
  */
 export async function generateImage(params: {
   imageDescription: string;
-  artStyle: ArtStyle;
   geminiClient: GoogleGenerativeAI;
   model: string;
   timeoutMs: number;
+  userPrompt: string;
 }): Promise<{ imageBase64: string; trace: ImageGenerationTrace }> {
-  const { imageDescription, artStyle, geminiClient, model, timeoutMs } = params;
+  const { imageDescription, geminiClient, model, timeoutMs, userPrompt: userPromptTemplate } = params;
 
   const geminiModel = geminiClient.getGenerativeModel({ model });
-  const prompt = generateImagePrompt(imageDescription, artStyle);
+  // Replace variables in prompt template
+  // Note: ART_STYLE is already embedded in IMAGE_DESCRIPTION from step 3
+  const prompt = replacePromptVariables(userPromptTemplate, {
+    IMAGE_DESCRIPTION: imageDescription,
+  });
 
   const startTime = Date.now();
 

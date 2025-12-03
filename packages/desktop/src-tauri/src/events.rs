@@ -1,6 +1,6 @@
 //! Game event monitoring and processing module
 
-use crate::discord::{DiscordClient, SoundEvent};
+use crate::discord::{DiscordClient, SoundEvent, SoundEventContext};
 use crate::lcu::LcuConnection;
 use crate::paths;
 use futures_util::{SinkExt, StreamExt};
@@ -113,6 +113,29 @@ async fn play_sound(discord: &DiscordClient, event: SoundEvent, app_handle: &tau
         );
     } else {
         let _ = app_handle.emit("backend-log", format!("🔊 Queued sound for {:?}", event));
+    }
+}
+
+/// Plays a sound with full event context for rules evaluation
+async fn play_sound_with_context(
+    discord: &DiscordClient,
+    context: &SoundEventContext,
+    app_handle: &tauri::AppHandle,
+) {
+    if let Err(err) = discord
+        .play_sound_for_event_with_context(context, Some(app_handle))
+        .await
+    {
+        warn!("Failed to play sound for {:?}: {}", context.event_type, err);
+        let _ = app_handle.emit(
+            "backend-log",
+            format!("🔇 Sound error for {:?}: {}", context.event_type, err),
+        );
+    } else {
+        let _ = app_handle.emit(
+            "backend-log",
+            format!("🔊 Queued sound for {:?}", context.event_type),
+        );
     }
 }
 

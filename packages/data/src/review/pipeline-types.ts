@@ -35,8 +35,10 @@ export type ModelConfig = {
 export type StageConfig = {
   enabled: boolean;
   model: ModelConfig;
-  /** Override the default system prompt for this stage */
-  systemPrompt?: string;
+  /** System prompt for this stage */
+  systemPrompt: string;
+  /** User prompt template for this stage (with variable placeholders) */
+  userPrompt: string;
 };
 
 /**
@@ -44,6 +46,10 @@ export type StageConfig = {
  */
 export type ReviewTextStageConfig = {
   model: ModelConfig;
+  /** System prompt for this stage */
+  systemPrompt: string;
+  /** User prompt template for this stage (with variable placeholders) */
+  userPrompt: string;
 };
 
 /**
@@ -55,6 +61,8 @@ export type ImageGenerationStageConfig = {
   timeoutMs: number;
   /** Art style to apply to the generated image */
   artStyle: ArtStyle;
+  /** User prompt template for image generation (with variable placeholders) */
+  userPrompt: string;
 };
 
 /**
@@ -132,8 +140,6 @@ export type PipelinePlayerInput = {
 export type PipelinePromptsInput = {
   /** The personality to use for review generation */
   personality: Personality;
-  /** Base template for the review prompt */
-  baseTemplate: string;
   /** Lane-specific context text */
   laneContext: string;
 };
@@ -162,6 +168,8 @@ export type ReviewPipelineInput = {
   clients: PipelineClientsInput;
   /** Per-stage configuration */
   stages: PipelineStagesConfig;
+  /** Optional callback for progress updates */
+  onProgress?: PipelineProgressCallback;
 };
 
 // ============================================================================
@@ -232,6 +240,8 @@ export type PipelineIntermediateResults = {
   imageDescriptionText?: string;
   /** Image prompts selected from personality for Stage 3 (2-3 random picks) */
   selectedImagePrompts?: string[];
+  /** Art style selected for Stage 3 image description */
+  selectedArtStyle?: string;
 };
 
 // ============================================================================
@@ -282,3 +292,36 @@ export type ReviewPipelineOutput = {
   /** Context about the review */
   context: PipelineContext;
 };
+
+// ============================================================================
+// Pipeline Progress
+// ============================================================================
+
+/**
+ * Names of pipeline stages for progress tracking
+ */
+export type PipelineStageName =
+  | "timeline-summary"
+  | "match-summary"
+  | "review-text"
+  | "image-description"
+  | "image-generation";
+
+/**
+ * Progress update from the pipeline
+ */
+export type PipelineProgress = {
+  /** Current stage being executed */
+  stage: PipelineStageName;
+  /** Human-readable message */
+  message: string;
+  /** Current stage number (1-based) */
+  currentStage: number;
+  /** Total number of enabled stages */
+  totalStages: number;
+};
+
+/**
+ * Callback for pipeline progress updates
+ */
+export type PipelineProgressCallback = (progress: PipelineProgress) => void;

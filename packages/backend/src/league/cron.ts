@@ -4,6 +4,7 @@ import { runDailyLeaderboardUpdate } from "@scout-for-lol/backend/league/tasks/c
 import { runPlayerPruning } from "@scout-for-lol/backend/league/tasks/cleanup/prune-players.ts";
 import { checkAbandonedGuilds } from "@scout-for-lol/backend/league/tasks/cleanup/abandoned-guilds.ts";
 import { runDataValidation } from "@scout-for-lol/backend/league/tasks/cleanup/validate-data.ts";
+import { refreshMatchTimes } from "@scout-for-lol/backend/league/tasks/maintenance/refresh-match-times.ts";
 import { client } from "@scout-for-lol/backend/discord/client.ts";
 import { createCronJob } from "@scout-for-lol/backend/league/cron/helpers.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
@@ -81,8 +82,22 @@ export function startCronJobs() {
     runOnInit: true,
   });
 
+  // refresh match times every 6 hours (runs on startup + periodically)
+  // This ensures all accounts have accurate lastMatchTime for proper polling intervals
+  logger.info("📅 Setting up match time refresh job (every 6 hours)");
+  createCronJob({
+    schedule: "0 0 */6 * * *",
+    jobName: "refresh_match_times",
+    task: refreshMatchTimes,
+    logMessage: "🔄 Refreshing match times for stale accounts",
+    timezone: "UTC",
+    runOnInit: true, // Run on startup to fix any stale data
+  });
+
   logger.info("✅ Cron jobs initialized successfully");
   logger.info(
-    "📊 Match history polling (1min), competition lifecycle (15min), data validation (hourly), daily leaderboard (midnight UTC), player pruning (3AM UTC), and abandoned guild cleanup (4AM UTC) cron jobs are now active",
+    "📊 Match history polling (1min), competition lifecycle (15min), data validation (hourly), " +
+      "match time refresh (6hr), daily leaderboard (midnight UTC), player pruning (3AM UTC), " +
+      "and abandoned guild cleanup (4AM UTC) cron jobs are now active",
   );
 }

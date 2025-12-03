@@ -44,6 +44,15 @@ export function getPreparedWorkspace(workspaceSource: Directory, prismaGenerated
 /**
  * Install workspace dependencies with optimal caching
  * This function is shared across all packages to maximize cache reuse
+ *
+ * LAYER ORDERING FOR CACHING:
+ * 1. System deps (apt) - rarely change
+ * 2. Dependency files (package.json, bun.lock, patches) - change occasionally
+ * 3. bun install - cached if lockfile unchanged
+ * 4. Config files + source code - change frequently
+ *
+ * This ordering ensures bun install is cached even when only source code changes.
+ *
  * @param workspaceSource The full workspace source directory
  * @param installOpenssl Whether to install OpenSSL (required for backend/Prisma)
  * @returns The container with all workspace dependencies installed
@@ -63,33 +72,50 @@ export function installWorkspaceDeps(workspaceSource: Directory, installOpenssl 
   // Mount Bun install cache (persists across runs)
   container = container.withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-install-cache"));
 
-  // Set up workspace structure
-  // Order matters for caching: mount config files first (change less often),
-  // then dependencies (package.json, lockfile), then source code
+  // Mount ESLint cache for faster incremental linting (uses content-based hashing)
+  container = container.withMountedCache("/workspace/.eslintcache", dag.cacheVolume("eslint-cache"));
+
+  // Mount TypeScript incremental build cache
+  container = container.withMountedCache("/workspace/.tsbuildinfo", dag.cacheVolume("tsbuildinfo-cache"));
+
+  // PHASE 1: Dependency files only (for bun install caching)
+  // Only add files needed for bun install - this layer is cached if lockfile unchanged
+  container = container
+    .withWorkdir("/workspace")
+    // Root dependency files
+    .withFile("/workspace/package.json", workspaceSource.file("package.json"))
+    .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
+    // Patches directory (needed for bun patch to work during install)
+    .withDirectory("/workspace/patches", workspaceSource.directory("patches"))
+    // Each workspace's package.json (bun needs these for workspace resolution)
+    .withFile("/workspace/packages/backend/package.json", workspaceSource.file("packages/backend/package.json"))
+    .withFile("/workspace/packages/data/package.json", workspaceSource.file("packages/data/package.json"))
+    .withFile("/workspace/packages/report/package.json", workspaceSource.file("packages/report/package.json"))
+    .withFile("/workspace/packages/frontend/package.json", workspaceSource.file("packages/frontend/package.json"))
+    .withFile("/workspace/packages/desktop/package.json", workspaceSource.file("packages/desktop/package.json"))
+    // Install dependencies (cached if lockfile + package.jsons unchanged)
+    .withExec(["bun", "install", "--frozen-lockfile"]);
+
+  // PHASE 2: Config files and source code (changes frequently)
+  // Added AFTER bun install so source changes don't invalidate install cache
   return (
     container
-      .withWorkdir("/workspace")
-      // Config files (rarely change - good cache layer)
+      // Config files
       .withFile("/workspace/tsconfig.json", workspaceSource.file("tsconfig.json"))
       .withFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
       .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
       .withFile("/workspace/.jscpd.json", workspaceSource.file(".jscpd.json"))
       .withDirectory("/workspace/eslint-rules", workspaceSource.directory("eslint-rules"))
-      // Dependency files (change occasionally - separate cache layer)
-      .withFile("/workspace/package.json", workspaceSource.file("package.json"))
-      .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-      // Patches directory (needed for bun patch to work)
-      .withDirectory("/workspace/patches", workspaceSource.directory("patches"))
+      // Type declarations (needed for ?raw imports, etc.)
+      .withDirectory("/workspace/types", workspaceSource.directory("types"))
       // Scripts directory (for utility scripts)
       .withDirectory("/workspace/scripts", workspaceSource.directory("scripts"))
-      // Package source code (changes frequently - mounted after deps)
+      // Package source code (changes frequently)
       .withDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
       .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
       .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
       .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
       .withDirectory("/workspace/packages/desktop", workspaceSource.directory("packages/desktop"))
-      // Install dependencies (will use cache if lockfile unchanged)
-      .withExec(["bun", "install", "--frozen-lockfile"])
   );
 }
 
@@ -98,6 +124,13 @@ export function installWorkspaceDeps(workspaceSource: Directory, installOpenssl 
  * More performant for read-only CI checks (typecheck, lint, test) since mounts are faster.
  * Note: Files mounted this way are NOT included in the final container image.
  * Use installWorkspaceDeps() instead if you need files in the publishable image (e.g., backend Docker image).
+ *
+ * LAYER ORDERING FOR CACHING:
+ * 1. System deps (apt) - rarely change
+ * 2. Dependency files (package.json, bun.lock, patches) - change occasionally
+ * 3. bun install - cached if lockfile unchanged
+ * 4. Config files + source code - change frequently
+ *
  * @param workspaceSource The full workspace source directory
  * @param installOpenssl Whether to install OpenSSL (required for backend/Prisma)
  * @returns Container with deps installed using mounts for better performance
@@ -117,33 +150,51 @@ export function getMountedWorkspace(workspaceSource: Directory, installOpenssl =
   // Mount Bun install cache (persists across runs)
   container = container.withMountedCache("/root/.bun/install/cache", dag.cacheVolume("bun-install-cache"));
 
-  // Set up workspace structure using MOUNTS (faster than copies for CI checks)
-  // Order matters for caching: mount config files first (change less often),
-  // then dependencies (package.json, lockfile), then source code
+  // Mount ESLint cache for faster incremental linting (uses content-based hashing)
+  container = container.withMountedCache("/workspace/.eslintcache", dag.cacheVolume("eslint-cache"));
+
+  // Mount TypeScript incremental build cache
+  container = container.withMountedCache("/workspace/.tsbuildinfo", dag.cacheVolume("tsbuildinfo-cache"));
+
+  // PHASE 1: Dependency files only (for bun install caching)
+  container = container
+    .withWorkdir("/workspace")
+    // Root dependency files
+    .withMountedFile("/workspace/package.json", workspaceSource.file("package.json"))
+    .withMountedFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
+    // Patches directory (needed for bun patch to work during install)
+    .withMountedDirectory("/workspace/patches", workspaceSource.directory("patches"))
+    // Each workspace's package.json (bun needs these for workspace resolution)
+    .withMountedFile("/workspace/packages/backend/package.json", workspaceSource.file("packages/backend/package.json"))
+    .withMountedFile("/workspace/packages/data/package.json", workspaceSource.file("packages/data/package.json"))
+    .withMountedFile("/workspace/packages/report/package.json", workspaceSource.file("packages/report/package.json"))
+    .withMountedFile(
+      "/workspace/packages/frontend/package.json",
+      workspaceSource.file("packages/frontend/package.json"),
+    )
+    .withMountedFile("/workspace/packages/desktop/package.json", workspaceSource.file("packages/desktop/package.json"))
+    // Install dependencies (cached if lockfile + package.jsons unchanged)
+    .withExec(["bun", "install", "--frozen-lockfile"]);
+
+  // PHASE 2: Config files and source code (changes frequently)
   return (
     container
-      .withWorkdir("/workspace")
-      // Config files (rarely change - good cache layer)
+      // Config files
       .withMountedFile("/workspace/tsconfig.json", workspaceSource.file("tsconfig.json"))
       .withMountedFile("/workspace/tsconfig.base.json", workspaceSource.file("tsconfig.base.json"))
       .withMountedFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
       .withMountedFile("/workspace/.jscpd.json", workspaceSource.file(".jscpd.json"))
       .withMountedDirectory("/workspace/eslint-rules", workspaceSource.directory("eslint-rules"))
-      // Dependency files (change occasionally - separate cache layer)
-      .withMountedFile("/workspace/package.json", workspaceSource.file("package.json"))
-      .withMountedFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
-      // Patches directory (needed for bun patch to work)
-      .withMountedDirectory("/workspace/patches", workspaceSource.directory("patches"))
+      // Type declarations (needed for ?raw imports, etc.)
+      .withMountedDirectory("/workspace/types", workspaceSource.directory("types"))
       // Scripts directory (for utility scripts)
       .withMountedDirectory("/workspace/scripts", workspaceSource.directory("scripts"))
-      // Package source code (changes frequently - mounted after deps)
+      // Package source code (changes frequently)
       .withMountedDirectory("/workspace/packages/backend", workspaceSource.directory("packages/backend"))
       .withMountedDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
       .withMountedDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
       .withMountedDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
       .withMountedDirectory("/workspace/packages/desktop", workspaceSource.directory("packages/desktop"))
-      // Install dependencies (will use cache if lockfile unchanged)
-      .withExec(["bun", "install", "--frozen-lockfile"])
   );
 }
 
@@ -205,6 +256,7 @@ export function getBunNodeContainer(workspaceSource?: Directory): Container {
       .withFile("/workspace/eslint.config.ts", workspaceSource.file("eslint.config.ts"))
       .withFile("/workspace/.jscpd.json", workspaceSource.file(".jscpd.json"))
       .withDirectory("/workspace/eslint-rules", workspaceSource.directory("eslint-rules"))
+      .withDirectory("/workspace/types", workspaceSource.directory("types"))
       .withFile("/workspace/package.json", workspaceSource.file("package.json"))
       .withFile("/workspace/bun.lock", workspaceSource.file("bun.lock"))
       .withDirectory("/workspace/patches", workspaceSource.directory("patches"))

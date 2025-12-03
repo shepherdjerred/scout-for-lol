@@ -13,14 +13,16 @@ import type {
   RawMatch,
   RawTimeline,
   Rank,
-} from "@scout-for-lol/data/index";
+  DiscordGuildId,
+} from "@scout-for-lol/data/index.ts";
 import {
   parseQueueType,
   MatchIdSchema,
   queueTypeToDisplayString,
   RawMatchSchema,
   RawTimelineSchema,
-} from "@scout-for-lol/data/index";
+} from "@scout-for-lol/data/index.ts";
+import { getFlag } from "@scout-for-lol/backend/configuration/flags.ts";
 import { getPlayer } from "@scout-for-lol/backend/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
 import { AttachmentBuilder, EmbedBuilder } from "discord.js";
@@ -35,7 +37,6 @@ import { saveMatchRankHistory, getLatestRankBefore } from "@scout-for-lol/backen
 
 const logger = createLogger("postmatch-match-report-generator");
 
-/** Helper to capture exceptions with source and match context */
 function captureError(error: unknown, source: string, matchId?: string, extra?: Record<string, string>): void {
   Sentry.captureException(error, { tags: { source, ...(matchId && { matchId }), ...extra } });
 }
@@ -129,107 +130,59 @@ async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region): Promi
   }
 }
 
-/**
- * Format a natural language message about who finished the game
- */
+/** Format a natural language message about who finished the game */
 function formatGameCompletionMessage(playerAliases: string[], queueType: QueueType): string {
   const queueName = queueTypeToDisplayString(queueType);
+  const validAliases = z.array(z.string().min(1)).parse(playerAliases.filter((alias) => alias.trim().length > 0));
 
-  if (playerAliases.length === 1) {
-    const player = playerAliases[0];
-    if (player === undefined) {
-      return `Game finished: ${queueName}`;
-    }
-    return `${player} finished a ${queueName} game`;
-  } else if (playerAliases.length === 2) {
-    const player1 = playerAliases[0];
-    const player2 = playerAliases[1];
-    if (player1 === undefined || player2 === undefined) {
-      return `Game finished: ${queueName}`;
-    }
-    return `${player1} and ${player2} finished a ${queueName} game`;
-  } else if (playerAliases.length >= 3) {
-    const allButLast = playerAliases.slice(0, -1).join(", ");
-    const last = playerAliases[playerAliases.length - 1];
-    if (last === undefined) {
-      return `Game finished: ${queueName}`;
-    }
-    return `${allButLast}, and ${last} finished a ${queueName} game`;
+  if (validAliases.length === 0) {
+    return `Game finished: ${queueName}`;
   }
 
-  // Fallback (shouldn't happen)
-  return `Game finished: ${queueName}`;
+  if (validAliases.length === 1) {
+    const soloAlias = z.string().parse(validAliases[0]);
+    return `${soloAlias} finished a ${queueName} game`;
+  }
+
+  if (validAliases.length === 2) {
+    const firstAlias = z.string().parse(validAliases[0]);
+    const secondAlias = z.string().parse(validAliases[1]);
+    return `${firstAlias} and ${secondAlias} finished a ${queueName} game`;
+  }
+
+  const allButLast = validAliases.slice(0, -1).join(", ");
+  const lastAlias = z.string().parse(validAliases[validAliases.length - 1]);
+  return `${allButLast}, and ${lastAlias} finished a ${queueName} game`;
 }
 
-/**
- * Create image attachments for Discord message
- */
+/** Create image attachments for Discord message */
 async function createMatchImage(
-  match: CompletedMatch | ArenaMatch,
+  matchToRender: CompletedMatch | ArenaMatch,
   matchId: MatchId,
 ): Promise<[AttachmentBuilder, EmbedBuilder]> {
-  let svg: string;
-  try {
-    let svgData: string;
-    if (match.queueType === "arena") {
-      const arenaMatch: ArenaMatch = match;
-      svgData = await arenaMatchToSvg(arenaMatch);
-    } else {
-      const completedMatch: CompletedMatch = match;
-      svgData = await matchToSvg(completedMatch);
-    }
-    const SvgSchema = z.string();
-    svg = SvgSchema.parse(svgData);
-  } catch (error) {
-    if (error instanceof Error) {
-      logger.error(`[createMatchImage] Failed to generate SVG:`, error);
-      throw error;
-    }
-    const wrappedError = new Error(String(error));
-    logger.error(`[createMatchImage] Failed to generate SVG:`, wrappedError);
-    throw wrappedError;
-  }
+  const svgData =
+    matchToRender.queueType === "arena" ? await arenaMatchToSvg(matchToRender) : await matchToSvg(matchToRender);
+  const svg = z.string().parse(svgData);
+  const image = z.instanceof(Uint8Array).parse(await svgToPng(svg));
 
-  let image: Uint8Array;
-  try {
-    const imageData = await svgToPng(svg);
-    const ImageSchema = z.instanceof(Uint8Array);
-    image = ImageSchema.parse(imageData);
-  } catch (error) {
-    if (error instanceof Error) {
-      logger.error(`[createMatchImage] Failed to convert SVG to PNG:`, error);
-      throw error;
+  // Save both PNG and SVG to S3 (fire and forget)
+  const queueTypeForStorage = matchToRender.queueType === "arena" ? "arena" : (matchToRender.queueType ?? "unknown");
+  const trackedPlayerAliases = matchToRender.players.map((p) => p.playerConfig.alias);
+  void (async () => {
+    try {
+      await Promise.all([
+        saveImageToS3(matchId, image, queueTypeForStorage, trackedPlayerAliases),
+        saveSvgToS3(matchId, svg, queueTypeForStorage, trackedPlayerAliases),
+      ]);
+    } catch (error) {
+      logger.error(`[createMatchImage] Failed to save images to S3:`, error);
     }
-    const wrappedError = new Error(String(error));
-    logger.error(`[createMatchImage] Failed to convert SVG to PNG:`, wrappedError);
-    throw wrappedError;
-  }
+  })();
 
-  // Save both PNG and SVG to S3
-  try {
-    const queueTypeForStorage = match.queueType === "arena" ? "arena" : (match.queueType ?? "unknown");
-    const trackedPlayerAliases = match.players.map((p) => p.playerConfig.alias);
-    await saveImageToS3(matchId, image, queueTypeForStorage, trackedPlayerAliases);
-    await saveSvgToS3(matchId, svg, queueTypeForStorage, trackedPlayerAliases);
-  } catch (error) {
-    logger.error(`[createMatchImage] Failed to save images to S3:`, error);
-  }
-
-  // Convert Uint8Array to Buffer for Discord.js type compatibility
-  const buffer = Buffer.from(image);
   const attachmentName = `${matchId}.png`;
-  const attachment = new AttachmentBuilder(buffer).setName(attachmentName);
-  if (!attachment.name) {
-    throw new Error("[createMatchImage] Attachment name is null");
-  }
-
-  const embed = {
-    image: {
-      url: `attachment://${attachmentName}`,
-    },
-  };
-
-  return [attachment, new EmbedBuilder(embed)];
+  const attachment = new AttachmentBuilder(Buffer.from(image)).setName(attachmentName);
+  const embed = new EmbedBuilder({ image: { url: `attachment://${attachmentName}` } });
+  return [attachment, embed];
 }
 
 /**
@@ -278,13 +231,22 @@ type StandardMatchContext = {
   matchId: MatchId;
   playersInMatch: PlayerConfigEntry[];
   timelineData: RawTimeline | undefined;
+  /** Guild IDs that will receive this match report - used for feature flag checks */
+  targetGuildIds: DiscordGuildId[];
 };
+
+/**
+ * Check if AI reviews are enabled for any of the target guilds
+ */
+function isAiReviewEnabledForAnyGuild(guildIds: DiscordGuildId[]): boolean {
+  return guildIds.some((guildId) => getFlag("ai_reviews_enabled", { server: guildId }));
+}
 
 /**
  * Process standard match and generate Discord message
  */
 async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageCreateOptions> {
-  const { players, matchData, matchId, playersInMatch, timelineData } = ctx;
+  const { players, matchData, matchId, playersInMatch, timelineData, targetGuildIds } = ctx;
   logger.info(`[generateMatchReport] ⚔️  Processing as standard match`);
   // Process match for all tracked players
   if (players.length === 0) {
@@ -326,10 +288,20 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
   // Build CompletedMatch with per-player rank data
   const completedMatch = toMatch(players, matchData, playerRanksMap);
 
-  // Generate AI review (text and optional image) - for ranked queues or matches with Jerred
+  // Generate AI review (text and optional image) - gated by feature flag and queue type
   let reviewText: string | undefined;
   let reviewImage: Uint8Array | undefined;
-  const shouldGenerateReview = isRankedQueue(completedMatch.queueType) || hasJerred(playersInMatch);
+
+  // Check if AI reviews are enabled for any target guild
+  const aiReviewsEnabled = isAiReviewEnabledForAnyGuild(targetGuildIds);
+  if (!aiReviewsEnabled) {
+    logger.info(
+      `[generateMatchReport] Skipping AI review - feature not enabled for target guilds: ${targetGuildIds.join(", ")}`,
+    );
+  }
+
+  const shouldGenerateReview =
+    aiReviewsEnabled && (isRankedQueue(completedMatch.queueType) || hasJerred(playersInMatch));
   if (shouldGenerateReview) {
     if (!timelineData) {
       logger.warn(
@@ -347,7 +319,7 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
         captureError(error, "ai-review-generation", matchId, { queueType: completedMatch.queueType ?? "unknown" });
       }
     }
-  } else {
+  } else if (aiReviewsEnabled) {
     logger.info(
       `[generateMatchReport] Skipping AI review - not a ranked queue and Jerred not in match (queueType: ${completedMatch.queueType ?? "unknown"})`,
     );
@@ -434,15 +406,25 @@ async function fetchTimelineIfStandardMatch(
 }
 
 /**
+ * Options for generating a match report
+ */
+export type GenerateMatchReportOptions = {
+  /** Guild IDs that will receive this report - used for feature flag checks (e.g., AI reviews) */
+  targetGuildIds: DiscordGuildId[];
+};
+
+/**
  * Generate a match report message for Discord
  *
  * @param matchData - The match data from Riot API
  * @param trackedPlayers - List of player configs to include in the match (should be in the match)
+ * @param options - Options including target guild IDs for feature flag checks
  * @returns MessageCreateOptions ready to send to Discord, or undefined if no tracked players found
  */
 export async function generateMatchReport(
   matchData: RawMatch,
   trackedPlayers: PlayerConfigEntry[],
+  options: GenerateMatchReportOptions,
 ): Promise<MessageCreateOptions | undefined> {
   const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
   logger.info(`[generateMatchReport] 🎮 Generating report for match ${matchId}`);
@@ -480,7 +462,16 @@ export async function generateMatchReport(
     // Process match based on queue type
     return await match<number, Promise<MessageCreateOptions>>(matchData.info.queueId)
       .with(1700, () => processArenaMatch(players, matchData, matchId, playersInMatch))
-      .otherwise(() => processStandardMatch({ players, matchData, matchId, playersInMatch, timelineData }));
+      .otherwise(() =>
+        processStandardMatch({
+          players,
+          matchData,
+          matchId,
+          playersInMatch,
+          timelineData,
+          targetGuildIds: options.targetGuildIds,
+        }),
+      );
   } catch (error) {
     logErrorDetails(error, matchId, matchData, trackedPlayers);
     throw error;

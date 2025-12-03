@@ -1,7 +1,7 @@
 /**
  * S3 match browser for selecting real match data
  */
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { z } from "zod";
 import Fuse, { type FuseResult } from "fuse.js";
 import type { ApiSettings } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
@@ -71,6 +71,9 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     }
     return null;
   }, [apiSettings]);
+
+  // Track if we've already attempted auto-fetch to avoid duplicate calls
+  const hasAttemptedAutoFetch = useRef(false);
 
   const handleBrowse = useCallback(
     async (forceRefresh = false) => {
@@ -184,6 +187,15 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     [s3Config, abortController],
   );
 
+  // Auto-fetch matches on mount when s3Config is available
+  // eslint-disable-next-line custom-rules/no-use-effect -- ok for now
+  useEffect(() => {
+    if (s3Config && !hasAttemptedAutoFetch.current) {
+      hasAttemptedAutoFetch.current = true;
+      void handleBrowse(false); // Use cache if available
+    }
+  }, [s3Config, handleBrowse]);
+
   const handleSelectMatch = async (metadata: MatchMetadata) => {
     if (!s3Config) {
       return;
@@ -281,9 +293,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
           title="Storage Not Configured"
           description="Configure your Cloudflare R2 credentials in Settings to browse match data from your storage."
           action={
-            <div className="text-xs text-surface-400 dark:text-surface-500">
-              Settings &rarr; API Configuration &rarr; Cloudflare R2
-            </div>
+            <div className="text-xs text-surface-400">Settings &rarr; API Configuration &rarr; Cloudflare R2</div>
           }
         />
       </div>
@@ -314,7 +324,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
             </svg>
             Refresh
           </Button>
-          <span className="text-xs text-surface-400 dark:text-surface-500">Last 7 days</span>
+          <span className="text-xs text-surface-400">Last 7 days</span>
         </div>
 
         <MatchFilters
@@ -342,7 +352,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
 
       {/* Error state */}
       {error && (
-        <div className="p-4 rounded-xl bg-defeat-50 dark:bg-defeat-900/20 border border-defeat-200 dark:border-defeat-800 text-sm text-defeat-700 dark:text-defeat-300 mb-4 animate-fade-in">
+        <div className="p-4 rounded-xl bg-defeat-50 border border-defeat-200 text-sm text-defeat-700 mb-4 animate-fade-in">
           <div className="flex items-start gap-3">
             <svg className="w-5 h-5 text-defeat-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
               <path
@@ -353,7 +363,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
             </svg>
             <div>
               <p className="font-medium">Error loading matches</p>
-              <p className="text-defeat-600 dark:text-defeat-400 mt-0.5">{error}</p>
+              <p className="text-defeat-600 mt-0.5">{error}</p>
             </div>
           </div>
         </div>
@@ -361,20 +371,17 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
 
       {/* Match list */}
       {filteredMatches.length > 0 && !loading && (
-        <div className="rounded-xl border border-surface-200 dark:border-surface-700/50 overflow-hidden animate-fade-in">
+        <div className="rounded-xl border border-surface-200 overflow-hidden animate-fade-in">
           {/* Results header */}
-          <div className="px-4 py-3 bg-surface-50 dark:bg-surface-800/50 border-b border-surface-200 dark:border-surface-700/50 flex justify-between items-center">
-            <span className="text-sm text-surface-600 dark:text-surface-400">
-              <span className="font-medium text-surface-900 dark:text-white">
+          <div className="px-4 py-3 bg-surface-50 border-b border-surface-200 flex justify-between items-center">
+            <span className="text-sm text-surface-600">
+              <span className="font-medium text-surface-900">
                 {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredMatches.length)}
               </span>
               {" of "}
-              <span className="font-medium text-surface-900 dark:text-white">{filteredMatches.length}</span>
+              <span className="font-medium text-surface-900">{filteredMatches.length}</span>
               {matches.length !== filteredMatches.length && (
-                <span className="text-surface-400 dark:text-surface-500">
-                  {" "}
-                  (filtered from {matches.length.toString()})
-                </span>
+                <span className="text-surface-400"> (filtered from {matches.length.toString()})</span>
               )}
             </span>
             <select

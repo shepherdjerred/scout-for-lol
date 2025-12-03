@@ -38,11 +38,18 @@ export {
   DEFAULT_IMAGE_DESCRIPTION_MODEL,
   DEFAULT_IMAGE_GENERATION_MODEL,
   DEFAULT_IMAGE_GENERATION_TIMEOUT_MS,
+  // System prompts
   TIMELINE_SUMMARY_SYSTEM_PROMPT,
   MATCH_SUMMARY_SYSTEM_PROMPT,
+  REVIEW_TEXT_SYSTEM_PROMPT,
   IMAGE_DESCRIPTION_SYSTEM_PROMPT,
+  // User prompts
+  TIMELINE_SUMMARY_USER_PROMPT,
+  MATCH_SUMMARY_USER_PROMPT,
+  REVIEW_TEXT_USER_PROMPT,
+  IMAGE_DESCRIPTION_USER_PROMPT,
+  IMAGE_GENERATION_USER_PROMPT,
   createStageConfigs,
-  getStageSystemPrompt,
 } from "./review/pipeline-defaults.ts";
 export type {
   ModelConfig,
@@ -63,7 +70,19 @@ export type {
   PipelineContext,
   PipelineReviewOutput,
   ReviewPipelineOutput,
+  PipelineStageName,
+  PipelineProgress,
+  PipelineProgressCallback,
 } from "./review/pipeline-types.ts";
+
+// Prompt variable metadata (single source of truth for frontend/backend)
+export { STAGE_PROMPT_VARIABLES, PROMPT_STAGE_NAMES, getStageVariables } from "./review/prompt-variables.ts";
+export type {
+  PromptVariable,
+  StagePromptVariables,
+  PromptStageName,
+  StagePromptVariablesMap,
+} from "./review/prompt-variables.ts";
 
 export * from "./league/raw-match.schema.ts";
 export * from "./league/raw-participant.schema.ts";
@@ -77,6 +96,7 @@ export * from "./data-dragon/summoner.ts";
 export * from "./data-dragon/item.ts";
 export * from "./data-dragon/runes.ts";
 export { getChampionInfo, getChampionList } from "./data-dragon/champion.ts";
+export { arenaAugmentCache, getCachedArenaAugmentById } from "./data-dragon/arena-augments.ts";
 
 // Sound pack exports
 export * from "./sound-pack/index.ts";
