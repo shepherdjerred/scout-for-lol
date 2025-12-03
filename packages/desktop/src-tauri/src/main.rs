@@ -28,6 +28,7 @@ mod discord;
 mod events;
 mod live_client;
 mod paths;
+mod preview;
 mod sound_pack;
 
 // Keep lcu module for backwards compatibility during transition
@@ -695,26 +696,20 @@ async fn get_local_player() -> Result<Option<LocalPlayerInfo>, String> {
 
 #[tauri::command]
 async fn play_preview_sound(source: sound_pack::SoundSource) -> Result<(), String> {
-    info!("Playing preview sound: {:?}", source);
-    // In a full implementation, this would play the sound locally
-    // For now, just log it - the actual playback happens through Discord voice
-    Ok(())
+    preview::play_preview(source).await
 }
 
 #[tauri::command]
 async fn stop_preview_sound() -> Result<(), String> {
-    info!("Stopping preview sound");
-    Ok(())
+    preview::stop_preview().await
 }
 
 #[tauri::command]
 async fn cache_youtube_audio(url: String) -> Result<CacheResult, String> {
     info!("Caching YouTube audio: {}", url);
-    // YouTube caching would require yt-dlp or similar
-    // For now, return a placeholder path
-    let cache_dir = paths::cache_dir();
-    let filename = format!("{}.mp3", url.replace(['/', ':', '?', '&', '='], "_"));
-    let cached_path = cache_dir.join(&filename);
+
+    // Use the actual download_youtube_to_cache implementation
+    let cached_path = discord::download_youtube_to_cache(&url).await?;
 
     Ok(CacheResult {
         cached_path: cached_path.to_string_lossy().to_string(),
@@ -729,12 +724,9 @@ struct CacheResult {
 
 #[tauri::command]
 async fn get_cache_status(url: String) -> Result<String, String> {
-    let cache_dir = paths::cache_dir();
-    let filename = format!("{}.mp3", url.replace(['/', ':', '?', '&', '='], "_"));
-    let cached_path = cache_dir.join(&filename);
-
-    if cached_path.exists() {
-        Ok("cached".to_string())
+    if discord::is_youtube_cached(&url) {
+        let cached_path = discord::get_youtube_cache_path(&url);
+        Ok(format!("cached:{}", cached_path.display()))
     } else {
         Ok("not-cached".to_string())
     }

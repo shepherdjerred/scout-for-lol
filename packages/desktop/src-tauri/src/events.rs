@@ -699,7 +699,10 @@ async fn handle_champion_kill_event(
         killer, victim, timestamp_str
     );
     discord.post_kill(killer, victim, &timestamp_str).await?;
-    play_sound(discord, SoundEvent::Kill, app_handle).await;
+
+    // Play sound with context for rules evaluation
+    let context = SoundEventContext::kill(killer, victim, None);
+    play_sound_with_context(discord, &context, app_handle).await;
 
     Ok(())
 }
@@ -742,7 +745,10 @@ async fn handle_first_blood_event(
     discord
         .post_first_blood(killer, victim, &timestamp_str)
         .await?;
-    play_sound(discord, SoundEvent::FirstBlood, app_handle).await;
+
+    // Play sound with first blood context
+    let context = SoundEventContext::simple(SoundEvent::FirstBlood);
+    play_sound_with_context(discord, &context, app_handle).await;
 
     Ok(())
 }
@@ -787,7 +793,10 @@ async fn handle_multikill_event(
     discord
         .post_multikill(killer, multikill_type, &timestamp_str)
         .await?;
-    play_sound(discord, SoundEvent::MultiKill, app_handle).await;
+
+    // Play sound with multikill context
+    let context = SoundEventContext::multikill(killer, kill_streak, None);
+    play_sound_with_context(discord, &context, app_handle).await;
 
     Ok(())
 }
@@ -822,7 +831,10 @@ async fn handle_ace_event(
         acer, acing_team, timestamp_str
     );
     discord.post_ace(acing_team, &timestamp_str).await?;
-    play_sound(discord, SoundEvent::Ace, app_handle).await;
+
+    // Play sound with ace context
+    let context = SoundEventContext::simple(SoundEvent::Ace);
+    play_sound_with_context(discord, &context, app_handle).await;
 
     Ok(())
 }
@@ -870,7 +882,11 @@ async fn handle_dragon_kill_event(
     discord
         .post_objective(killer, &objective_name, &timestamp_str)
         .await?;
-    play_sound(discord, SoundEvent::Objective, app_handle).await;
+
+    // Play sound with objective context (dragon)
+    let is_stolen = stolen == "True";
+    let context = SoundEventContext::objective(killer, "dragon", is_stolen, Some(dragon_type));
+    play_sound_with_context(discord, &context, app_handle).await;
 
     Ok(())
 }
@@ -913,7 +929,11 @@ async fn handle_baron_kill_event(
     discord
         .post_objective(killer, objective_name, &timestamp_str)
         .await?;
-    play_sound(discord, SoundEvent::Objective, app_handle).await;
+
+    // Play sound with objective context (baron)
+    let is_stolen = stolen == "True";
+    let context = SoundEventContext::objective(killer, "baron", is_stolen, None);
+    play_sound_with_context(discord, &context, app_handle).await;
 
     Ok(())
 }
@@ -956,7 +976,11 @@ async fn handle_herald_kill_event(
     discord
         .post_objective(killer, objective_name, &timestamp_str)
         .await?;
-    play_sound(discord, SoundEvent::Objective, app_handle).await;
+
+    // Play sound with objective context (herald)
+    let is_stolen = stolen == "True";
+    let context = SoundEventContext::objective(killer, "herald", is_stolen, None);
+    play_sound_with_context(discord, &context, app_handle).await;
 
     Ok(())
 }
@@ -988,7 +1012,10 @@ async fn handle_inhib_kill_event(
     discord
         .post_objective(killer, "INHIBITOR", &timestamp_str)
         .await?;
-    play_sound(discord, SoundEvent::Objective, app_handle).await;
+
+    // Play sound with objective context (inhibitor)
+    let context = SoundEventContext::objective(killer, "inhibitor", false, None);
+    play_sound_with_context(discord, &context, app_handle).await;
 
     Ok(())
 }
@@ -1025,7 +1052,10 @@ async fn handle_turret_kill_event(
         .post_objective(killer, "TOWER", &timestamp_str)
         .await?;
     info!("Turret kill event posted successfully");
-    play_sound(discord, SoundEvent::Objective, app_handle).await;
+
+    // Play sound with objective context (tower)
+    let context = SoundEventContext::objective(killer, "tower", false, None);
+    play_sound_with_context(discord, &context, app_handle).await;
 
     Ok(())
 }
@@ -1065,7 +1095,9 @@ async fn handle_gameflow_event(
                 discord
                     .post_game_start("Summoner's Rift", "Normal Game")
                     .await?;
-                play_sound(discord, SoundEvent::GameStart, app_handle).await;
+                // Play sound with game start context
+                let context = SoundEventContext::simple(SoundEvent::GameStart);
+                play_sound_with_context(discord, &context, app_handle).await;
             }
             "WaitingForStats" | "PreEndOfGame" => {
                 info!("Game ending");
@@ -1155,7 +1187,11 @@ async fn handle_end_of_game_event(
         };
 
         discord.post_game_end(winning_team, &duration_str).await?;
-        play_sound(discord, SoundEvent::GameEnd, app_handle).await;
+
+        // Play sound with game end context
+        // Note: We don't know the local player's win/loss status here, so we just use winning_team
+        let context = SoundEventContext::game_end(winning_team);
+        play_sound_with_context(discord, &context, app_handle).await;
     }
     Ok(())
 }

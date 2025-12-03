@@ -99,19 +99,19 @@ fn youtube_url_to_cache_filename(url: &str) -> String {
 }
 
 /// Returns the full cache path for a YouTube URL
-fn get_youtube_cache_path(url: &str) -> PathBuf {
+pub fn get_youtube_cache_path(url: &str) -> PathBuf {
     get_youtube_cache_dir().join(youtube_url_to_cache_filename(url))
 }
 
 /// Checks if a YouTube URL is already cached
-fn is_youtube_cached(url: &str) -> bool {
+pub fn is_youtube_cached(url: &str) -> bool {
     let cache_path = get_youtube_cache_path(url);
     cache_path.exists() && cache_path.metadata().is_ok_and(|m| m.len() > 0)
 }
 
 /// Downloads a YouTube URL to the cache using yt-dlp
 /// Returns the path to the cached file on success
-async fn download_youtube_to_cache(url: &str) -> Result<PathBuf, String> {
+pub async fn download_youtube_to_cache(url: &str) -> Result<PathBuf, String> {
     let cache_path = get_youtube_cache_path(url);
 
     // Check if already cached
