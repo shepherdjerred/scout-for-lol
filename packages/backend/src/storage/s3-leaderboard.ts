@@ -205,8 +205,15 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
     return result.data;
   } catch (error) {
     // Check if it's a NoSuchKey error (file doesn't exist)
-    const errorMessage = getErrorMessage(error);
-    if (errorMessage.includes("NoSuchKey") || errorMessage.includes("NotFound")) {
+    // AWS SDK errors have the error code in the 'name' property
+    const isNotFoundError =
+      (error instanceof Error && (error.name === "NoSuchKey" || error.name === "NotFound")) ||
+      (typeof error === "object" &&
+        error !== null &&
+        "name" in error &&
+        (error.name === "NoSuchKey" || error.name === "NotFound"));
+
+    if (isNotFoundError) {
       logger.info(`[S3Leaderboard] No cached leaderboard found for competition ${competitionId.toString()}`);
       return null;
     }

@@ -7,6 +7,7 @@
 import { useState } from "react";
 import type { SoundPool, SoundEntry, SelectionMode, SoundSource } from "@scout-for-lol/data";
 import { SoundEntryCard } from "./sound-entry-card.tsx";
+import type { CacheStatus } from "@scout-for-lol/ui/types/adapter.ts";
 
 type SoundPoolEditorProps = {
   /** The sound pool to edit */
@@ -27,6 +28,10 @@ type SoundPoolEditorProps = {
   onSelectFile: () => Promise<string | null>;
   /** Title for the section (optional) */
   title?: string;
+  /** Called to cache a YouTube URL (optional) */
+  onCache?: ((url: string) => Promise<void>) | undefined;
+  /** Called to get cache status for a URL (optional) */
+  getCacheStatus?: ((url: string) => Promise<CacheStatus>) | undefined;
 };
 
 const SELECTION_MODE_LABELS: Record<SelectionMode, string> = {
@@ -45,6 +50,8 @@ export function SoundPoolEditor({
   onStopPreview,
   onSelectFile,
   title,
+  onCache,
+  getCacheStatus,
 }: SoundPoolEditorProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newSoundUrl, setNewSoundUrl] = useState("");
@@ -114,6 +121,8 @@ export function SoundPoolEditor({
               onRemove={() => { onRemoveSound(entry.id); }}
               onPreview={onPreview}
               onStopPreview={onStopPreview}
+              onCache={onCache}
+              getCacheStatus={getCacheStatus}
             />
           ))}
         </div>

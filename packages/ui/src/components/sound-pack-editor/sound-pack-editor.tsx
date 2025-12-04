@@ -4,7 +4,7 @@
  * Main editor component for creating and editing sound packs.
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   EVENT_TYPES,
   EVENT_TYPE_LABELS,
@@ -14,6 +14,7 @@ import {
   createEmptySoundPool,
   type EventType,
   type RuleTemplate,
+  type SoundEntry,
 } from "@scout-for-lol/data";
 import { useSoundPackEditor } from "@scout-for-lol/ui/hooks/use-sound-pack-editor.tsx";
 import { VolumeSlider } from "./volume-slider.tsx";
@@ -22,9 +23,88 @@ import { RuleEditor } from "./rule-editor.tsx";
 
 type Tab = "defaults" | "rules" | "settings";
 
+type CacheAllState = {
+  isRunning: boolean;
+  total: number;
+  completed: number;
+  failed: number;
+};
+
 export function SoundPackEditor() {
   const [activeTab, setActiveTab] = useState<Tab>("defaults");
+  const [cacheAllState, setCacheAllState] = useState<CacheAllState>({
+    isRunning: false,
+    total: 0,
+    completed: 0,
+    failed: 0,
+  });
   const editor = useSoundPackEditor();
+
+  // Collect all YouTube URLs from the sound pack
+  const getYouTubeUrls = useCallback((): string[] => {
+    const urls: string[] = [];
+    const seen = new Set<string>();
+
+    const addUrl = (entry: SoundEntry) => {
+      if (
+        entry.source.type === "url" &&
+        (entry.source.url.includes("youtube.com") || entry.source.url.includes("youtu.be")) &&
+        !seen.has(entry.source.url)
+      ) {
+        seen.add(entry.source.url);
+        urls.push(entry.source.url);
+      }
+    };
+
+    // Check defaults
+    for (const eventType of EVENT_TYPES) {
+      const pool = editor.soundPack.defaults[eventType];
+      if (pool) {
+        for (const entry of pool.sounds) {
+          addUrl(entry);
+        }
+      }
+    }
+
+    // Check rules
+    for (const rule of editor.soundPack.rules) {
+      for (const entry of rule.sounds.sounds) {
+        addUrl(entry);
+      }
+    }
+
+    return urls;
+  }, [editor.soundPack]);
+
+  // Cache all YouTube URLs
+  const handleCacheAll = useCallback(async () => {
+    const urls = getYouTubeUrls();
+    if (urls.length === 0) return;
+
+    setCacheAllState({ isRunning: true, total: urls.length, completed: 0, failed: 0 });
+
+    for (const url of urls) {
+      try {
+        // Check if already cached
+        const status = await editor.adapter.getCacheStatus(url);
+        if (status === "cached") {
+          setCacheAllState((prev) => ({ ...prev, completed: prev.completed + 1 }));
+          continue;
+        }
+
+        // Cache the URL
+        await editor.adapter.cacheYouTubeAudio(url);
+        setCacheAllState((prev) => ({ ...prev, completed: prev.completed + 1 }));
+      } catch (error) {
+        console.error("Failed to cache:", url, error);
+        setCacheAllState((prev) => ({ ...prev, failed: prev.failed + 1 }));
+      }
+    }
+
+    setCacheAllState((prev) => ({ ...prev, isRunning: false }));
+  }, [getYouTubeUrls, editor.adapter]);
+
+  const youtubeUrlCount = getYouTubeUrls().length;
 
   return (
     <div className="h-full flex flex-col bg-gray-50">
@@ -55,6 +135,26 @@ export function SoundPackEditor() {
           >
             Export
           </button>
+          {youtubeUrlCount > 0 && (
+            <button
+              type="button"
+              onClick={() => { void handleCacheAll(); }}
+              disabled={cacheAllState.isRunning}
+              className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 flex items-center gap-1.5"
+              title={`Cache all ${String(youtubeUrlCount)} YouTube audio files`}
+            >
+              {cacheAllState.isRunning ? (
+                <>
+                  <span className="animate-pulse">⏳</span>
+                  {cacheAllState.completed + cacheAllState.failed}/{cacheAllState.total}
+                </>
+              ) : (
+                <>
+                  📥 Cache All ({youtubeUrlCount})
+                </>
+              )}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => { void editor.savePack(); }}
@@ -178,6 +278,8 @@ function DefaultsTab() {
                   onPreview={(source) => { void editor.previewSound(source); }}
                   onStopPreview={editor.stopPreview}
                   onSelectFile={editor.adapter.selectAudioFile}
+                  onCache={async (url) => { await editor.adapter.cacheYouTubeAudio(url); }}
+                  getCacheStatus={editor.adapter.getCacheStatus}
                 />
               </div>
             )}
@@ -284,6 +386,8 @@ function RulesTab() {
                 onSelectFile={editor.adapter.selectAudioFile}
                 champions={editor.champions}
                 localPlayerName={editor.localPlayer?.summonerName}
+                onCache={async (url) => { await editor.adapter.cacheYouTubeAudio(url); }}
+                getCacheStatus={editor.adapter.getCacheStatus}
               />
             ))}
         </div>

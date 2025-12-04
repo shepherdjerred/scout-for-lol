@@ -142,7 +142,9 @@ export function createTauriAdapter(onSave?: () => void): SoundPackAdapter {
     // =========================================================================
 
     saveSoundPack: async (pack: SoundPack) => {
+      console.log("Saving sound pack:", pack.name, "with", pack.rules.length, "rules");
       await invoke("save_sound_pack", { pack });
+      console.log("Sound pack saved successfully");
       // Notify parent of save so it can refresh available packs
       onSave?.();
     },
@@ -155,9 +157,12 @@ export function createTauriAdapter(onSave?: () => void): SoundPackAdapter {
           if (result.success) {
             return result.data;
           }
+          // Log validation errors for debugging
+          console.error("Sound pack validation failed:", result.error.format());
         }
         return null;
-      } catch {
+      } catch (error) {
+        console.error("Failed to load sound pack:", error);
         return null;
       }
     },

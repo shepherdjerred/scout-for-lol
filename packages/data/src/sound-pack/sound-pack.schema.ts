@@ -21,7 +21,9 @@ export const SoundSourceSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal("url"),
-    url: z.url(),
+    // Use string instead of url() to allow YouTube URLs and other formats
+    // that may not pass strict URL validation
+    url: z.string().min(1),
   }),
 ]);
 
@@ -38,7 +40,7 @@ export const SoundEntrySchema = z.object({
   /** Volume level (0.0 = silent, 1.0 = 100%, 2.0 = 200%) */
   volume: z.number().min(0).max(2).default(1),
   /** Weight for weighted random selection (higher = more likely) */
-  weight: z.number().min(0).optional(),
+  weight: z.number().min(0).nullish(), // nullish accepts null, undefined, or number
   /** Whether this sound is enabled */
   enabled: z.boolean().default(true),
 });
@@ -304,9 +306,9 @@ export const SoundPackSchema = z.object({
   /** Version string (semver) */
   version: z.string().default("1.0.0"),
   /** Author name (optional) */
-  author: z.string().optional(),
+  author: z.string().nullish(), // nullish accepts null, undefined, or string
   /** Description of the sound pack */
-  description: z.string().optional(),
+  description: z.string().nullish(), // nullish accepts null, undefined, or string
 
   /** Global settings */
   settings: SoundPackSettingsSchema.default({ masterVolume: 1, normalization: true }),

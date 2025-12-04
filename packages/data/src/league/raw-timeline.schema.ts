@@ -169,10 +169,11 @@ export const RawTimelineEventSchema = z
 
 /**
  * Raw Timeline Frame - game state at a specific timestamp
+ * Note: participantFrames can be null for the first frame (timestamp 0) in some matches
  */
 export const RawTimelineFrameSchema = z.object({
   events: z.array(RawTimelineEventSchema),
-  participantFrames: z.record(z.string(), RawTimelineParticipantFrameSchema),
+  participantFrames: z.record(z.string(), RawTimelineParticipantFrameSchema).nullable(),
   timestamp: z.number(),
 });
 

@@ -4,9 +4,10 @@
  * Displays a single sound entry with controls for volume, preview, and removal.
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { SoundEntry, SoundSource } from "@scout-for-lol/data";
 import { VolumeSlider } from "./volume-slider.tsx";
+import type { CacheStatus } from "@scout-for-lol/ui/types/adapter.ts";
 
 type SoundEntryCardProps = {
   /** The sound entry to display */
@@ -19,6 +20,10 @@ type SoundEntryCardProps = {
   onPreview: (source: SoundSource) => void;
   /** Called when preview should stop */
   onStopPreview: () => void;
+  /** Called to cache a YouTube URL (optional) */
+  onCache?: ((url: string) => Promise<void>) | undefined;
+  /** Called to get cache status for a URL (optional) */
+  getCacheStatus?: ((url: string) => Promise<CacheStatus>) | undefined;
 };
 
 export function SoundEntryCard({
@@ -27,8 +32,24 @@ export function SoundEntryCard({
   onRemove,
   onPreview,
   onStopPreview,
+  onCache,
+  getCacheStatus,
 }: SoundEntryCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [cacheStatus, setCacheStatus] = useState<CacheStatus>("not-cached");
+  const [isCaching, setIsCaching] = useState(false);
+
+  const isYouTube =
+    entry.source.type === "url" &&
+    (entry.source.url.includes("youtube.com") || entry.source.url.includes("youtu.be"));
+
+  // Check cache status on mount and when URL changes
+  // eslint-disable-next-line custom-rules/no-use-effect -- Need to check cache status on mount
+  useEffect(() => {
+    if (isYouTube && getCacheStatus && entry.source.type === "url") {
+      void getCacheStatus(entry.source.url).then(setCacheStatus);
+    }
+  }, [isYouTube, getCacheStatus, entry.source]);
 
   const handlePreview = () => {
     if (isPlaying) {
@@ -42,14 +63,26 @@ export function SoundEntryCard({
     }
   };
 
+  const handleCache = async () => {
+    if (!onCache || entry.source.type !== "url" || isCaching) return;
+
+    setIsCaching(true);
+    setCacheStatus("caching");
+    try {
+      await onCache(entry.source.url);
+      setCacheStatus("cached");
+    } catch (error) {
+      console.error("Failed to cache:", error);
+      setCacheStatus("error");
+    } finally {
+      setIsCaching(false);
+    }
+  };
+
   const sourceDisplay =
     entry.source.type === "file"
       ? entry.source.path.split("/").pop() ?? entry.source.path
       : entry.source.url;
-
-  const isYouTube =
-    entry.source.type === "url" &&
-    (entry.source.url.includes("youtube.com") || entry.source.url.includes("youtu.be"));
 
   return (
     <div className="border rounded-lg p-3 bg-white shadow-sm">
@@ -118,6 +151,33 @@ export function SoundEntryCard({
           >
             {isPlaying ? "⏹" : "▶️"}
           </button>
+          {isYouTube && onCache && (
+            <button
+              type="button"
+              onClick={() => { void handleCache(); }}
+              disabled={isCaching || cacheStatus === "cached"}
+              className={`p-2 rounded hover:bg-gray-100 text-xs ${
+                cacheStatus === "cached"
+                  ? "text-green-600"
+                  : cacheStatus === "caching"
+                    ? "text-yellow-600 animate-pulse"
+                    : cacheStatus === "error"
+                      ? "text-red-500"
+                      : "text-gray-500"
+              }`}
+              title={
+                cacheStatus === "cached"
+                  ? "Cached"
+                  : cacheStatus === "caching"
+                    ? "Caching..."
+                    : cacheStatus === "error"
+                      ? "Cache failed - click to retry"
+                      : "Cache audio"
+              }
+            >
+              {cacheStatus === "cached" ? "✓📥" : cacheStatus === "caching" ? "⏳" : "📥"}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => { onUpdate({ enabled: !entry.enabled }); }}

@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import type { SoundRule, SoundEntry, SoundSource } from "@scout-for-lol/data";
-import type { Champion } from "@scout-for-lol/ui/types/adapter.ts";
+import type { Champion, CacheStatus } from "@scout-for-lol/ui/types/adapter.ts";
 import { ConditionBuilder } from "./condition-builder.tsx";
 import { SoundPoolEditor } from "./sound-pool-editor.tsx";
 
@@ -33,6 +33,10 @@ type RuleEditorProps = {
   champions: Champion[];
   /** Local player name (if available) */
   localPlayerName?: string | undefined;
+  /** Called to cache a YouTube URL (optional) */
+  onCache?: ((url: string) => Promise<void>) | undefined;
+  /** Called to get cache status for a URL (optional) */
+  getCacheStatus?: ((url: string) => Promise<CacheStatus>) | undefined;
 };
 
 export function RuleEditor({
@@ -47,6 +51,8 @@ export function RuleEditor({
   onSelectFile,
   champions,
   localPlayerName,
+  onCache,
+  getCacheStatus,
 }: RuleEditorProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -165,6 +171,8 @@ export function RuleEditor({
               onPreview={onPreview}
               onStopPreview={onStopPreview}
               onSelectFile={onSelectFile}
+              onCache={onCache}
+              getCacheStatus={getCacheStatus}
             />
           </div>
         </div>
