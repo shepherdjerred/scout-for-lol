@@ -369,9 +369,8 @@ export function createEmptyRule(id: string, name: string): SoundRule {
 }
 
 /**
- * Generates a unique ID for a new item
+ * Generates a unique ID for a new item using a UUID v4
  */
 export function generateId(): string {
-  // I guess Claude doesn't know about UUIDs
-  return `${String(Date.now())}-${Math.random().toString(36).slice(2, 9)}`;
+  return crypto.randomUUID();
 }

@@ -1,6 +1,9 @@
 //! Local audio preview module for sound pack editor
 //!
 //! Uses rodio for local audio playback (not through Discord voice).
+//!
+//! Note: OutputStream is not Send/Sync so it must stay thread-local, but Sink is
+//! Send+Sync so we store it globally to allow stopping from any thread.
 
 use log::{info, warn};
 use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink};
@@ -8,26 +11,27 @@ use std::cell::RefCell;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
+use std::sync::Mutex;
 
 use crate::discord::{download_youtube_to_cache, get_youtube_cache_path, is_youtube_cached};
 use crate::sound_pack::SoundSource;
 
-/// State for preview audio playback
-struct PreviewState {
+/// Global sink for preview playback - Sink is Send+Sync so it can be stopped from any thread
+static GLOBAL_SINK: Mutex<Option<Sink>> = Mutex::new(None);
+
+/// Thread-local state for the audio output stream (OutputStream is not Send/Sync)
+struct StreamState {
     /// The output stream (must be kept alive for playback)
     _stream: Option<OutputStream>,
     /// The stream handle for creating sinks
     stream_handle: Option<OutputStreamHandle>,
-    /// The current playback sink
-    sink: Option<Sink>,
 }
 
-impl PreviewState {
+impl StreamState {
     fn new() -> Self {
         Self {
             _stream: None,
             stream_handle: None,
-            sink: None,
         }
     }
 
@@ -44,17 +48,10 @@ impl PreviewState {
             .ok_or_else(|| "Audio stream not initialized".to_string())
     }
 
-    /// Stop any currently playing preview
-    fn stop(&mut self) {
-        if let Some(sink) = self.sink.take() {
-            sink.stop();
-        }
-    }
-
-    /// Play a file
+    /// Play a file, storing the sink globally for cross-thread stopping
     fn play_file(&mut self, path: &PathBuf) -> Result<(), String> {
-        // Stop any existing playback
-        self.stop();
+        // Stop any existing playback first
+        stop_global_sink();
 
         // Ensure stream is initialized
         let handle = self.ensure_stream()?;
@@ -72,14 +69,27 @@ impl PreviewState {
         sink.append(source);
         sink.play();
 
-        self.sink = Some(sink);
+        // Store sink globally so it can be stopped from any thread
+        if let Ok(mut global_sink) = GLOBAL_SINK.lock() {
+            *global_sink = Some(sink);
+        }
+
         Ok(())
     }
 }
 
+/// Stop the global sink if one exists
+fn stop_global_sink() {
+    if let Ok(mut sink) = GLOBAL_SINK.lock() {
+        if let Some(s) = sink.take() {
+            s.stop();
+        }
+    }
+}
+
 thread_local! {
-    /// Thread-local preview audio state (OutputStream is not Send/Sync)
-    static PREVIEW_STATE: RefCell<PreviewState> = RefCell::new(PreviewState::new());
+    /// Thread-local audio stream state (OutputStream is not Send/Sync)
+    static STREAM_STATE: RefCell<StreamState> = RefCell::new(StreamState::new());
 }
 
 /// Play a preview sound locally
@@ -95,7 +105,7 @@ pub async fn play_preview(source: SoundSource) -> Result<(), String> {
                 return Err(format!("Audio file not found: {path}"));
             }
 
-            PREVIEW_STATE.with(|state| state.borrow_mut().play_file(&path_buf))?;
+            STREAM_STATE.with(|state| state.borrow_mut().play_file(&path_buf))?;
             info!("Started preview playback: {}", path);
             Ok(())
         }
@@ -111,7 +121,7 @@ pub async fn play_preview(source: SoundSource) -> Result<(), String> {
                     download_youtube_to_cache(&url).await?
                 };
 
-                PREVIEW_STATE.with(|state| state.borrow_mut().play_file(&cached_path))?;
+                STREAM_STATE.with(|state| state.borrow_mut().play_file(&cached_path))?;
                 info!(
                     "Started preview playback from cache: {}",
                     cached_path.display()
@@ -128,11 +138,11 @@ pub async fn play_preview(source: SoundSource) -> Result<(), String> {
 }
 
 /// Stop any currently playing preview sound
+///
+/// This can be called from any thread since the Sink is stored globally.
 #[allow(clippy::unnecessary_wraps)]
 pub fn stop_preview() -> Result<(), String> {
     info!("Stopping preview sound");
-    PREVIEW_STATE.with(|state| {
-        state.borrow_mut().stop();
-    });
+    stop_global_sink();
     Ok(())
 }

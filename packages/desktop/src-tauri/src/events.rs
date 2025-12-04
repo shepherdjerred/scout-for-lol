@@ -102,6 +102,8 @@ struct GameState {
     highest_processed_event_id: Option<i64>,
     /// Last time we warned about API unavailability (to throttle warnings)
     last_api_warning: Option<std::time::Instant>,
+    /// Local player's summoner name (for determining if events involve the local player)
+    local_player_name: Option<String>,
 }
 
 async fn play_sound(discord: &DiscordClient, event: SoundEvent, app_handle: &tauri::AppHandle) {
@@ -291,6 +293,7 @@ async fn poll_live_game_data(
         recent_kills: HashMap::new(),
         highest_processed_event_id: None,
         last_api_warning: None,
+        local_player_name: None,
     }));
 
     info!("Starting live game data polling loop...");
@@ -431,9 +434,23 @@ async fn process_live_game_data(
         }
     }
 
-    // Initialize enemy players list if not already done
+    // Initialize game state from API data if not already done
     {
         let mut state = game_state.lock().await;
+
+        // Extract local player name from activePlayer
+        if state.local_player_name.is_none() {
+            if let Some(summoner_name) = data
+                .get("activePlayer")
+                .and_then(|p| p.get("summonerName"))
+                .and_then(|v| v.as_str())
+            {
+                info!("Local player identified: {}", summoner_name);
+                state.local_player_name = Some(summoner_name.to_string());
+            }
+        }
+
+        // Initialize enemy players list
         if state.enemy_players.is_empty() {
             if let Some(players) = data.get("allPlayers").and_then(|v| v.as_array()) {
                 // Get current player's team ID
@@ -565,7 +582,9 @@ async fn process_live_game_data(
                     }
                     "Multikill" => {
                         info!("Found Multikill event. Posting to Discord...");
-                        if let Err(e) = handle_multikill_event(event, discord, app_handle).await {
+                        if let Err(e) =
+                            handle_multikill_event(event, discord, game_state, app_handle).await
+                        {
                             error!("Failed to post multikill to Discord: {}", e);
                         } else {
                             info!("✅ Successfully posted multikill to Discord");
@@ -669,7 +688,7 @@ async fn process_live_game_data(
 async fn handle_champion_kill_event(
     event: &Value,
     discord: &DiscordClient,
-    _game_state: &Arc<Mutex<GameState>>,
+    game_state: &Arc<Mutex<GameState>>,
     app_handle: &tauri::AppHandle,
 ) -> Result<(), String> {
     // KillerName can be empty or missing for non-player kills (turrets, minions, etc.)
@@ -700,8 +719,14 @@ async fn handle_champion_kill_event(
     );
     discord.post_kill(killer, victim, &timestamp_str).await?;
 
+    // Get local player name for context
+    let local_player = {
+        let state = game_state.lock().await;
+        state.local_player_name.clone()
+    };
+
     // Play sound with context for rules evaluation
-    let context = SoundEventContext::kill(killer, victim, None);
+    let context = SoundEventContext::kill(killer, victim, local_player.as_deref());
     play_sound_with_context(discord, &context, app_handle).await;
 
     Ok(())
@@ -757,6 +782,7 @@ async fn handle_first_blood_event(
 async fn handle_multikill_event(
     event: &Value,
     discord: &DiscordClient,
+    game_state: &Arc<Mutex<GameState>>,
     app_handle: &tauri::AppHandle,
 ) -> Result<(), String> {
     let killer = event
@@ -794,8 +820,14 @@ async fn handle_multikill_event(
         .post_multikill(killer, multikill_type, &timestamp_str)
         .await?;
 
+    // Get local player name for context
+    let local_player = {
+        let state = game_state.lock().await;
+        state.local_player_name.clone()
+    };
+
     // Play sound with multikill context
-    let context = SoundEventContext::multikill(killer, kill_streak, None);
+    let context = SoundEventContext::multikill(killer, kill_streak, local_player.as_deref());
     play_sound_with_context(discord, &context, app_handle).await;
 
     Ok(())

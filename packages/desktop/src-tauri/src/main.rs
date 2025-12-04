@@ -733,8 +733,7 @@ struct CacheResult {
 #[tauri::command]
 async fn get_cache_status(url: String) -> Result<String, String> {
     if discord::is_youtube_cached(&url) {
-        let cached_path = discord::get_youtube_cache_path(&url);
-        Ok(format!("cached:{}", cached_path.display()))
+        Ok("cached".to_string())
     } else {
         Ok("not-cached".to_string())
     }
