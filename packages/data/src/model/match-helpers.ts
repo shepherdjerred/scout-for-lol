@@ -1,9 +1,9 @@
 import { filter, first, map, pipe } from "remeda";
 import { match } from "ts-pattern";
-import type { RawParticipant } from "@scout-for-lol/data/league/raw-participant.schema.ts";
-import type { Champion, Rune } from "@scout-for-lol/data/model/champion.ts";
-import { getRuneInfo } from "@scout-for-lol/data/data-dragon/runes.ts";
-import { parseLane } from "@scout-for-lol/data/model/lane.ts";
+import type { RawParticipant } from "@scout-for-lol/data/league/raw-participant.schema";
+import type { Champion, Rune } from "@scout-for-lol/data/model/champion";
+import { getRuneInfo } from "@scout-for-lol/data/data-dragon/runes";
+import { parseLane } from "@scout-for-lol/data/model/lane";
 
 /**
  * Finds a participant in a match by their PUUID

@@ -6,7 +6,7 @@
  */
 
 import { type Client } from "discord.js";
-import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
+import { DiscordAccountIdSchema, DiscordChannelIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { getCompetitionsByChannelId } from "@scout-for-lol/backend/database/competition/queries.ts";
 import { sendDM } from "@scout-for-lol/backend/discord/utils/dm.ts";

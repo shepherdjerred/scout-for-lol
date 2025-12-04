@@ -95,8 +95,11 @@ export * from "./data-dragon/version.ts";
 export * from "./data-dragon/summoner.ts";
 export * from "./data-dragon/item.ts";
 export * from "./data-dragon/runes.ts";
-export { getChampionInfo } from "./data-dragon/champion.ts";
+export { getChampionInfo, getChampionList } from "./data-dragon/champion.ts";
 export { arenaAugmentCache, getCachedArenaAugmentById } from "./data-dragon/arena-augments.ts";
+
+// Sound pack exports
+export * from "./sound-pack/index.ts";
 export {
   // URL getters (synchronous, for browser/frontend use)
   getChampionImageUrl,

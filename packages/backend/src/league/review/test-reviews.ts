@@ -18,7 +18,7 @@ import {
   type RawMatch,
   type RawTimeline,
   type MatchId,
-} from "@scout-for-lol/data/index.ts";
+} from "@scout-for-lol/data/index";
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
 import { LolApi, Constants } from "twisted";
 import configuration from "@scout-for-lol/backend/configuration.ts";

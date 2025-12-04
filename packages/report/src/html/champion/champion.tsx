@@ -1,7 +1,7 @@
 import { renderItems } from "@scout-for-lol/report/html/champion/item.tsx";
 import { palette } from "@scout-for-lol/report/assets/colors.ts";
 import type { Champion } from "@scout-for-lol/data";
-import { summoner } from "@scout-for-lol/data/index.ts";
+import { summoner } from "@scout-for-lol/data/index";
 import { getSpellImage } from "@scout-for-lol/report/dataDragon/image-cache.ts";
 import { CreepScore } from "@scout-for-lol/report/html/champion/creep-score.tsx";
 import { Gold } from "@scout-for-lol/report/html/champion/gold.tsx";

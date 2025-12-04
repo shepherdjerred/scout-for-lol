@@ -17,21 +17,27 @@
 //!     └── youtube-audio/    # Downloaded YouTube audio
 //! ```
 
-use log::{error, info};
+use log::{error, info, warn};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 /// Application identifier used for path resolution
 const APP_IDENTIFIER: &str = "com.shepherdjerred.scout-for-lol";
 
+/// Legacy application identifier from before proper app ID was set
+const LEGACY_APP_IDENTIFIER: &str = "scout-for-lol";
+
 /// Global app data directory, initialized once during app setup
 static APP_DATA_DIR: OnceLock<PathBuf> = OnceLock::new();
 
 /// Computes the app data directory based on the platform.
 /// This can be called before Tauri is initialized.
+///
+/// On Windows, this explicitly uses %LOCALAPPDATA% (Local) rather than %APPDATA% (Roaming)
+/// because logs and cache data don't need to sync across machines.
 #[must_use]
 pub fn compute_app_data_dir() -> PathBuf {
-    dirs::data_dir()
+    dirs::data_local_dir()
         .unwrap_or_else(std::env::temp_dir)
         .join(APP_IDENTIFIER)
 }
@@ -74,6 +80,12 @@ pub fn try_app_data_dir() -> Option<&'static PathBuf> {
 #[must_use]
 pub fn config_file() -> PathBuf {
     app_data_dir().join("config.json")
+}
+
+/// Returns the path to the sound pack file.
+#[must_use]
+pub fn sound_pack_file() -> PathBuf {
+    app_data_dir().join("sound-pack.json")
 }
 
 /// Returns the logs directory.
@@ -132,6 +144,171 @@ pub fn ensure_directories() {
             }
         }
     }
+}
+
+/// Computes the legacy app data directory path.
+/// Returns the path where older versions of the app stored data.
+#[must_use]
+fn legacy_app_data_dir() -> PathBuf {
+    dirs::data_local_dir()
+        .unwrap_or_else(std::env::temp_dir)
+        .join(LEGACY_APP_IDENTIFIER)
+}
+
+/// Migrates data from the legacy app directory to the new location.
+/// This handles the transition from "scout-for-lol" to "com.shepherdjerred.scout-for-lol".
+/// Call this after `init()` and `ensure_directories()`.
+pub fn migrate_from_legacy() {
+    let legacy_dir = legacy_app_data_dir();
+    let new_dir = app_data_dir();
+
+    // If legacy directory doesn't exist, nothing to migrate
+    if !legacy_dir.exists() {
+        return;
+    }
+
+    info!(
+        "Found legacy data directory at {}, checking for data to migrate...",
+        legacy_dir.display()
+    );
+
+    // Files to potentially migrate
+    let files_to_migrate = ["config.json", "sound-pack.json"];
+
+    for filename in &files_to_migrate {
+        let legacy_file = legacy_dir.join(filename);
+        let new_file = new_dir.join(filename);
+
+        // Only migrate if legacy file exists and new file doesn't
+        if legacy_file.exists() && !new_file.exists() {
+            info!(
+                "Migrating {} from legacy location to {}",
+                filename,
+                new_file.display()
+            );
+
+            match std::fs::copy(&legacy_file, &new_file) {
+                Ok(_) => {
+                    info!("Successfully migrated {}", filename);
+                }
+                Err(err) => {
+                    warn!(
+                        "Failed to migrate {} from legacy location: {}",
+                        filename, err
+                    );
+                }
+            }
+        }
+    }
+
+    // Optionally warn the user about the old directory
+    warn!(
+        "Legacy data directory exists at {}. You may safely delete this directory after verifying your data has been migrated.",
+        legacy_dir.display()
+    );
+}
+
+/// Computes the Roaming app data directory path (Windows only).
+/// Tauri uses %APPDATA% (Roaming) by default, but we use %LOCALAPPDATA% (Local).
+/// This function helps migrate any data that might have been written to Roaming.
+#[cfg(target_os = "windows")]
+#[must_use]
+fn roaming_app_data_dir() -> Option<PathBuf> {
+    dirs::config_dir().map(|d| d.join(APP_IDENTIFIER))
+}
+
+/// Migrates data from the Roaming AppData directory to Local (Windows only).
+/// This handles the case where Tauri or plugins may have written to %APPDATA%
+/// instead of our preferred %LOCALAPPDATA%.
+/// Call this after `init()` and `ensure_directories()`.
+#[cfg(target_os = "windows")]
+pub fn migrate_from_roaming() {
+    let Some(roaming_dir) = roaming_app_data_dir() else {
+        return;
+    };
+    let local_dir = app_data_dir();
+
+    // If roaming directory doesn't exist, nothing to migrate
+    if !roaming_dir.exists() {
+        return;
+    }
+
+    // Don't migrate if roaming and local are the same path
+    if roaming_dir == *local_dir {
+        return;
+    }
+
+    info!(
+        "Found Roaming data directory at {}, checking for data to migrate to Local...",
+        roaming_dir.display()
+    );
+
+    // Files to potentially migrate
+    let files_to_migrate = ["config.json", "sound-pack.json"];
+
+    for filename in &files_to_migrate {
+        let roaming_file = roaming_dir.join(filename);
+        let local_file = local_dir.join(filename);
+
+        // Only migrate if roaming file exists and local file doesn't
+        if roaming_file.exists() && !local_file.exists() {
+            info!(
+                "Migrating {} from Roaming to Local: {}",
+                filename,
+                local_file.display()
+            );
+
+            match std::fs::copy(&roaming_file, &local_file) {
+                Ok(_) => {
+                    info!("Successfully migrated {} from Roaming to Local", filename);
+                }
+                Err(err) => {
+                    warn!(
+                        "Failed to migrate {} from Roaming to Local: {}",
+                        filename, err
+                    );
+                }
+            }
+        }
+    }
+
+    // Migrate logs directory if it exists in Roaming
+    let roaming_logs = roaming_dir.join("logs");
+    let local_logs = logs_dir();
+    if roaming_logs.exists() && roaming_logs.is_dir() {
+        if let Ok(entries) = std::fs::read_dir(&roaming_logs) {
+            for entry in entries.flatten() {
+                let roaming_log = entry.path();
+                if roaming_log.is_file() {
+                    if let Some(filename) = roaming_log.file_name() {
+                        let local_log = local_logs.join(filename);
+                        if !local_log.exists() {
+                            if let Err(err) = std::fs::copy(&roaming_log, &local_log) {
+                                warn!(
+                                    "Failed to migrate log file {:?} from Roaming to Local: {}",
+                                    filename, err
+                                );
+                            } else {
+                                info!("Migrated log file {:?} from Roaming to Local", filename);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    warn!(
+        "Roaming data directory exists at {}. You may safely delete this directory after verifying your data has been migrated to {}.",
+        roaming_dir.display(),
+        local_dir.display()
+    );
+}
+
+/// No-op on non-Windows platforms (Roaming/Local split is Windows-specific)
+#[cfg(not(target_os = "windows"))]
+pub fn migrate_from_roaming() {
+    // Roaming vs Local AppData is a Windows-specific concern
 }
 
 #[cfg(test)]

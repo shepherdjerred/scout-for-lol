@@ -1,6 +1,6 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
+import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
@@ -195,17 +195,51 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
           );
         }
 
-        // 4. Handle competition snapshots - move all to target player
-        await tx.competitionSnapshot.updateMany({
-          where: {
-            playerId: sourcePlayer.id,
-          },
-          data: {
-            playerId: targetPlayer.id,
-          },
+        // 4. Handle competition snapshots - move non-conflicting ones, delete duplicates
+        // Get all snapshots from both players
+        const sourceSnapshots = await tx.competitionSnapshot.findMany({
+          where: { playerId: sourcePlayer.id },
+          select: { id: true, competitionId: true, snapshotType: true },
+        });
+        const targetSnapshots = await tx.competitionSnapshot.findMany({
+          where: { playerId: targetPlayer.id },
+          select: { competitionId: true, snapshotType: true },
         });
 
-        logger.info(`✅ Moved competition snapshots to target player`);
+        // Build a set of target's existing (competitionId, snapshotType) combinations
+        const targetSnapshotKeys = new Set(
+          targetSnapshots.map((s) => `${s.competitionId.toString()}-${s.snapshotType}`),
+        );
+
+        // Separate source snapshots into conflicting and non-conflicting
+        const conflictingIds: number[] = [];
+        const nonConflictingIds: number[] = [];
+
+        for (const snapshot of sourceSnapshots) {
+          const key = `${snapshot.competitionId.toString()}-${snapshot.snapshotType}`;
+          if (targetSnapshotKeys.has(key)) {
+            conflictingIds.push(snapshot.id);
+          } else {
+            nonConflictingIds.push(snapshot.id);
+          }
+        }
+
+        // Delete conflicting snapshots (target's snapshots are the canonical ones)
+        if (conflictingIds.length > 0) {
+          await tx.competitionSnapshot.deleteMany({
+            where: { id: { in: conflictingIds } },
+          });
+          logger.info(`✅ Deleted ${conflictingIds.length.toString()} conflicting competition snapshots`);
+        }
+
+        // Move non-conflicting snapshots to target player
+        if (nonConflictingIds.length > 0) {
+          await tx.competitionSnapshot.updateMany({
+            where: { id: { in: nonConflictingIds } },
+            data: { playerId: targetPlayer.id },
+          });
+          logger.info(`✅ Moved ${nonConflictingIds.length.toString()} competition snapshots to target player`);
+        }
 
         // 5. Delete the source player
         await tx.player.delete({

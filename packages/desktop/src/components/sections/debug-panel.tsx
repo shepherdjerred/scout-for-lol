@@ -28,8 +28,9 @@ type DebugPanelProps = {
   isMonitoring: boolean;
   logs: LogEntry[];
   logPaths?: {
-    app_log_dir: string;
-    working_dir_log: string;
+    logs_dir: string;
+    debug_log: string;
+    startup_log: string;
   } | null;
   onClearLogs: () => void;
   onClose: () => void;
@@ -106,10 +107,13 @@ export function DebugPanel({
           </h4>
           <div className="space-y-2.5">
             <p className="break-all text-[11px] text-gray-500">
-              <span className="text-gray-400">Working:</span> {logPaths.working_dir_log}
+              <span className="text-gray-400">Logs:</span> {logPaths.logs_dir}
             </p>
             <p className="break-all text-[11px] text-gray-500">
-              <span className="text-gray-400">App:</span> {logPaths.app_log_dir}
+              <span className="text-gray-400">Debug:</span> {logPaths.debug_log}
+            </p>
+            <p className="break-all text-[11px] text-gray-500">
+              <span className="text-gray-400">Startup:</span> {logPaths.startup_log}
             </p>
           </div>
         </div>

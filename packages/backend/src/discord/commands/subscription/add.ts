@@ -6,7 +6,7 @@ import {
   DiscordGuildIdSchema,
   RegionSchema,
   RiotIdSchema,
-} from "@scout-for-lol/data/index.ts";
+} from "@scout-for-lol/data/index";
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { fromError } from "zod-validation-error";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";

@@ -1,9 +1,15 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { CachedLeaderboardSchema, type CachedLeaderboard } from "@scout-for-lol/data/index.ts";
+import { CachedLeaderboardSchema, type CachedLeaderboard } from "@scout-for-lol/data/index";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { z } from "zod";
+
+// Schema for AWS S3 "not found" errors
+const AwsS3NotFoundErrorSchema = z.object({
+  name: z.enum(["NoSuchKey", "NotFound"]),
+});
 
 const logger = createLogger("storage-s3-leaderboard");
 
@@ -205,8 +211,10 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
     return result.data;
   } catch (error) {
     // Check if it's a NoSuchKey error (file doesn't exist)
-    const errorMessage = getErrorMessage(error);
-    if (errorMessage.includes("NoSuchKey") || errorMessage.includes("NotFound")) {
+    // AWS SDK errors have the error code in the 'name' property
+    const notFoundResult = AwsS3NotFoundErrorSchema.safeParse(error);
+
+    if (notFoundResult.success) {
       logger.info(`[S3Leaderboard] No cached leaderboard found for competition ${competitionId.toString()}`);
       return null;
     }

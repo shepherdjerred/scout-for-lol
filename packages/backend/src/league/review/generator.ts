@@ -18,7 +18,7 @@ import {
   generateFullMatchReview,
   getDefaultStageConfigs,
   type ReviewPipelineOutput,
-} from "@scout-for-lol/data/index.ts";
+} from "@scout-for-lol/data/index";
 import * as Sentry from "@sentry/bun";
 import { selectRandomPersonality, getLaneContext } from "./prompts.ts";
 import { getOpenAIClient, getGeminiClient } from "./ai-clients.ts";

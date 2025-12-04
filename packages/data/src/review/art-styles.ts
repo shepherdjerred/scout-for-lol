@@ -5,8 +5,8 @@
  * Matching via categories creates natural combinations
  */
 
-import type { ArtStyle } from "@scout-for-lol/data/review/art-categories.ts";
-import { ART_STYLES } from "@scout-for-lol/data/review/art-styles-list.ts";
+import type { ArtStyle } from "./art-categories.ts";
+import { ART_STYLES } from "./art-styles-list.ts";
 
 /**
  * Selection result

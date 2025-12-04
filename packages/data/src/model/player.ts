@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { RankSchema, RanksSchema } from "@scout-for-lol/data/model/rank.ts";
-import { rankToLeaguePoints } from "@scout-for-lol/data/model/league-points.ts";
-import { PlayerConfigEntrySchema } from "@scout-for-lol/data/model/player-config.ts";
+import { RankSchema, RanksSchema } from "@scout-for-lol/data/model/rank";
+import { rankToLeaguePoints } from "@scout-for-lol/data/model/league-points";
+import { PlayerConfigEntrySchema } from "@scout-for-lol/data/model/player-config";
 import { flatMap, sortBy } from "remeda";
 
 export type Player = z.infer<typeof PlayerSchema>;

@@ -15,7 +15,7 @@ import {
   recordPermissionError,
   recordSuccessfulSend,
 } from "@scout-for-lol/backend/database/guild-permission-errors.ts";
-import type { DiscordChannelId, DiscordGuildId } from "@scout-for-lol/data/index.ts";
+import type { DiscordChannelId, DiscordGuildId } from "@scout-for-lol/data/index";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 const logger = createLogger("discord-channel");

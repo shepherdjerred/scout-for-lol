@@ -1,6 +1,7 @@
 //! Discord integration module for posting game events and playing sounds in voice chat
 
 use crate::paths;
+use crate::sound_pack as custom_sound_pack;
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use serenity::all::{ChannelId, GatewayIntents, GuildId, Ready};
@@ -98,19 +99,19 @@ fn youtube_url_to_cache_filename(url: &str) -> String {
 }
 
 /// Returns the full cache path for a YouTube URL
-fn get_youtube_cache_path(url: &str) -> PathBuf {
+pub fn get_youtube_cache_path(url: &str) -> PathBuf {
     get_youtube_cache_dir().join(youtube_url_to_cache_filename(url))
 }
 
 /// Checks if a YouTube URL is already cached
-fn is_youtube_cached(url: &str) -> bool {
+pub fn is_youtube_cached(url: &str) -> bool {
     let cache_path = get_youtube_cache_path(url);
     cache_path.exists() && cache_path.metadata().is_ok_and(|m| m.len() > 0)
 }
 
 /// Downloads a YouTube URL to the cache using yt-dlp
 /// Returns the path to the cached file on success
-async fn download_youtube_to_cache(url: &str) -> Result<PathBuf, String> {
+pub async fn download_youtube_to_cache(url: &str) -> Result<PathBuf, String> {
     let cache_path = get_youtube_cache_path(url);
 
     // Check if already cached
@@ -273,8 +274,192 @@ pub struct DiscordStatus {
     pub active_sound_pack: Option<String>,
 }
 
+/// Context for sound rule evaluation
+#[derive(Debug, Clone, Default)]
+pub struct SoundEventContext {
+    /// The event type
+    pub event_type: SoundEvent,
+    /// Killer's summoner name
+    pub killer_name: Option<String>,
+    /// Victim's summoner name
+    pub victim_name: Option<String>,
+    /// Killer's champion name
+    pub killer_champion: Option<String>,
+    /// Victim's champion name
+    pub victim_champion: Option<String>,
+    /// Whether the killer is the local player
+    pub killer_is_local: bool,
+    /// Whether the victim is the local player
+    pub victim_is_local: bool,
+    /// Multi-kill type (2=double, 3=triple, 4=quadra, 5=penta)
+    pub multikill_count: Option<i64>,
+    /// Objective type (dragon, baron, herald, tower, inhib)
+    pub objective_type: Option<String>,
+    /// Dragon type (fire, water, earth, air, elder, etc)
+    pub dragon_type: Option<String>,
+    /// Whether the objective was stolen
+    pub is_stolen: bool,
+    /// Whether the actor is on the ally team
+    pub is_ally_team: bool,
+    /// Game result (win/loss) - for game end events
+    pub game_result: Option<String>,
+    /// Local player's summoner name
+    pub local_player_name: Option<String>,
+}
+
+impl SoundEventContext {
+    /// Create a new context for a simple event (no additional context)
+    pub fn simple(event_type: SoundEvent) -> Self {
+        Self {
+            event_type,
+            ..Default::default()
+        }
+    }
+
+    /// Create a context for a kill event
+    pub fn kill(killer: &str, victim: &str, local_player: Option<&str>) -> Self {
+        let killer_is_local = local_player.map(|lp| lp == killer).unwrap_or(false);
+        let victim_is_local = local_player.map(|lp| lp == victim).unwrap_or(false);
+        Self {
+            event_type: SoundEvent::Kill,
+            killer_name: Some(killer.to_string()),
+            victim_name: Some(victim.to_string()),
+            killer_is_local,
+            victim_is_local,
+            local_player_name: local_player.map(String::from),
+            ..Default::default()
+        }
+    }
+
+    /// Create a context for a multikill event
+    pub fn multikill(killer: &str, kill_count: i64, local_player: Option<&str>) -> Self {
+        let killer_is_local = local_player.map(|lp| lp == killer).unwrap_or(false);
+        Self {
+            event_type: SoundEvent::MultiKill,
+            killer_name: Some(killer.to_string()),
+            killer_is_local,
+            multikill_count: Some(kill_count),
+            local_player_name: local_player.map(String::from),
+            ..Default::default()
+        }
+    }
+
+    /// Create a context for an objective event
+    pub fn objective(
+        killer: &str,
+        objective: &str,
+        stolen: bool,
+        dragon_type: Option<&str>,
+    ) -> Self {
+        Self {
+            event_type: SoundEvent::Objective,
+            killer_name: Some(killer.to_string()),
+            objective_type: Some(objective.to_string()),
+            dragon_type: dragon_type.map(String::from),
+            is_stolen: stolen,
+            ..Default::default()
+        }
+    }
+
+    /// Create a context for game end
+    pub fn game_end(result: &str) -> Self {
+        Self {
+            event_type: SoundEvent::GameEnd,
+            game_result: Some(result.to_string()),
+            ..Default::default()
+        }
+    }
+
+    /// Convert to the sound_pack module's EventContext for rule evaluation
+    fn to_event_context(&self) -> custom_sound_pack::EventContext {
+        let event_type = match self.event_type {
+            SoundEvent::GameStart => Some(custom_sound_pack::EventType::GameStart),
+            SoundEvent::GameEnd => Some(custom_sound_pack::EventType::GameEnd),
+            SoundEvent::FirstBlood => Some(custom_sound_pack::EventType::FirstBlood),
+            SoundEvent::Kill => Some(custom_sound_pack::EventType::Kill),
+            SoundEvent::MultiKill => Some(custom_sound_pack::EventType::MultiKill),
+            SoundEvent::Objective => Some(custom_sound_pack::EventType::Objective),
+            SoundEvent::Ace => Some(custom_sound_pack::EventType::Ace),
+        };
+
+        let multikill_type = self.multikill_count.and_then(|count| match count {
+            2 => Some(custom_sound_pack::MultikillType::Double),
+            3 => Some(custom_sound_pack::MultikillType::Triple),
+            4 => Some(custom_sound_pack::MultikillType::Quadra),
+            5 => Some(custom_sound_pack::MultikillType::Penta),
+            _ => None,
+        });
+
+        let objective_type = self.objective_type.as_ref().and_then(|obj| {
+            let obj_lower = obj.to_lowercase();
+            if obj_lower.contains("dragon") {
+                Some(custom_sound_pack::ObjectiveType::Dragon)
+            } else if obj_lower.contains("baron") {
+                Some(custom_sound_pack::ObjectiveType::Baron)
+            } else if obj_lower.contains("herald") {
+                Some(custom_sound_pack::ObjectiveType::Herald)
+            } else if obj_lower.contains("tower") {
+                Some(custom_sound_pack::ObjectiveType::Tower)
+            } else if obj_lower.contains("inhib") {
+                Some(custom_sound_pack::ObjectiveType::Inhibitor)
+            } else {
+                None
+            }
+        });
+
+        let dragon_type = self.dragon_type.as_ref().and_then(|dt| {
+            let dt_lower = dt.to_lowercase();
+            if dt_lower.contains("infernal") || dt_lower.contains("fire") {
+                Some(custom_sound_pack::DragonKind::Infernal)
+            } else if dt_lower.contains("mountain") || dt_lower.contains("earth") {
+                Some(custom_sound_pack::DragonKind::Mountain)
+            } else if dt_lower.contains("ocean") || dt_lower.contains("water") {
+                Some(custom_sound_pack::DragonKind::Ocean)
+            } else if dt_lower.contains("cloud") || dt_lower.contains("air") {
+                Some(custom_sound_pack::DragonKind::Cloud)
+            } else if dt_lower.contains("hextech") {
+                Some(custom_sound_pack::DragonKind::Hextech)
+            } else if dt_lower.contains("chemtech") {
+                Some(custom_sound_pack::DragonKind::Chemtech)
+            } else if dt_lower.contains("elder") {
+                Some(custom_sound_pack::DragonKind::Elder)
+            } else {
+                None
+            }
+        });
+
+        let game_result = self.game_result.as_ref().and_then(|res| {
+            let res_lower = res.to_lowercase();
+            if res_lower.contains("win") || res_lower.contains("victory") {
+                Some(custom_sound_pack::GameResult::Victory)
+            } else if res_lower.contains("loss") || res_lower.contains("defeat") {
+                Some(custom_sound_pack::GameResult::Defeat)
+            } else {
+                None
+            }
+        });
+
+        custom_sound_pack::EventContext {
+            event_type,
+            killer_name: self.killer_name.clone(),
+            victim_name: self.victim_name.clone(),
+            killer_champion: self.killer_champion.clone(),
+            victim_champion: self.victim_champion.clone(),
+            killer_is_local: self.killer_is_local,
+            victim_is_local: self.victim_is_local,
+            multikill_type,
+            objective_type,
+            dragon_type,
+            is_stolen: self.is_stolen,
+            is_ally_team: self.is_ally_team,
+            game_result,
+            local_player_name: self.local_player_name.clone(),
+        }
+    }
+}
+
 /// Events that can trigger audio cues
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "camelCase")]
 pub enum SoundEvent {
     /// Game started
@@ -282,6 +467,7 @@ pub enum SoundEvent {
     /// First blood occurred
     FirstBlood,
     /// Standard champion kill
+    #[default]
     Kill,
     /// Multi-kill event
     MultiKill,
@@ -379,6 +565,114 @@ impl SoundPack {
     pub fn cue_for(&self, key: &str) -> Option<SoundCue> {
         self.cues.get(key).cloned()
     }
+
+    /// Load a custom sound pack from disk (the full version with rules)
+    fn load_custom_full(pack_id: &str) -> Option<custom_sound_pack::SoundPack> {
+        let sound_pack_path = paths::sound_pack_file();
+        if !sound_pack_path.exists() {
+            return None;
+        }
+
+        let content = std::fs::read_to_string(&sound_pack_path).ok()?;
+        let custom_pack: custom_sound_pack::SoundPack = serde_json::from_str(&content).ok()?;
+
+        if custom_pack.id == pack_id {
+            Some(custom_pack)
+        } else {
+            None
+        }
+    }
+
+    /// Load a custom sound pack from disk and convert it to a simple SoundPack
+    pub fn load_custom(pack_id: &str) -> Option<Self> {
+        let sound_pack_path = paths::sound_pack_file();
+        if !sound_pack_path.exists() {
+            info!("No custom sound pack file found");
+            return None;
+        }
+
+        let content = match std::fs::read_to_string(&sound_pack_path) {
+            Ok(c) => c,
+            Err(e) => {
+                warn!("Failed to read sound pack file: {}", e);
+                return None;
+            }
+        };
+
+        let custom_pack: custom_sound_pack::SoundPack = match serde_json::from_str(&content) {
+            Ok(p) => p,
+            Err(e) => {
+                warn!("Failed to parse sound pack: {}", e);
+                return None;
+            }
+        };
+
+        // Check if this is the requested pack
+        if custom_pack.id != pack_id {
+            info!(
+                "Custom pack id '{}' doesn't match requested '{}'",
+                custom_pack.id, pack_id
+            );
+            return None;
+        }
+
+        info!("Loading custom sound pack: {}", custom_pack.name);
+
+        // Convert custom pack defaults to our cue format
+        let mut cues = HashMap::new();
+        let base_beep = ensure_base_beep_file();
+
+        // Map event types to our cue keys
+        let event_mappings = [
+            (
+                custom_sound_pack::EventType::GameStart,
+                SoundEvent::GameStart.key(),
+            ),
+            (
+                custom_sound_pack::EventType::GameEnd,
+                SoundEvent::GameEnd.key(),
+            ),
+            (
+                custom_sound_pack::EventType::FirstBlood,
+                SoundEvent::FirstBlood.key(),
+            ),
+            (custom_sound_pack::EventType::Kill, SoundEvent::Kill.key()),
+            (
+                custom_sound_pack::EventType::MultiKill,
+                SoundEvent::MultiKill.key(),
+            ),
+            (
+                custom_sound_pack::EventType::Objective,
+                SoundEvent::Objective.key(),
+            ),
+            (custom_sound_pack::EventType::Ace, SoundEvent::Ace.key()),
+        ];
+
+        for (event_type, key) in event_mappings {
+            if let Some(pool) = custom_pack.defaults.get(&event_type) {
+                if let Some(sound) = pool.select_sound() {
+                    let cue = match &sound.source {
+                        custom_sound_pack::SoundSource::File { path } => {
+                            SoundCue::File(PathBuf::from(path.clone()))
+                        }
+                        custom_sound_pack::SoundSource::Url { url } => SoundCue::Url(url.clone()),
+                    };
+                    cues.insert(key.to_string(), cue);
+                    info!("Custom sound for {}: {:?}", key, sound.source);
+                }
+            } else {
+                // Fall back to base beep for unmapped events
+                cues.insert(key.to_string(), SoundCue::File(base_beep.clone()));
+            }
+        }
+
+        Some(Self {
+            id: custom_pack.id,
+            _name: custom_pack.name,
+            _description: custom_pack.description.unwrap_or_default(),
+            cues,
+        })
+    }
 }
 
 /// Minimal event handler to keep the gateway session alive
@@ -410,6 +704,8 @@ pub struct DiscordClient {
     client: reqwest::Client,
     songbird: Option<Arc<Songbird>>,
     sound_pack: SoundPack,
+    /// Full custom sound pack with rules for advanced evaluation
+    custom_rules_pack: Option<custom_sound_pack::SoundPack>,
     event_overrides: HashMap<String, SoundCue>,
     /// Shared cache state for YouTube audio downloads
     youtube_cache: Arc<RwLock<YouTubeCacheState>>,
@@ -434,6 +730,12 @@ impl DiscordClient {
 
         let youtube_cache = Arc::new(RwLock::new(YouTubeCacheState::new()));
 
+        // Load full custom pack with rules if specified
+        let custom_rules_pack = match sound_pack.as_deref() {
+            Some("base") | None => None,
+            Some(pack_id) => SoundPack::load_custom_full(pack_id),
+        };
+
         let discord_client = Self {
             token: token.clone(),
             channel_id: channel_id.clone(),
@@ -442,11 +744,24 @@ impl DiscordClient {
             songbird: None,
             sound_pack: match sound_pack.as_deref() {
                 Some("base") | None => SoundPack::base(),
-                Some(other) => {
-                    info!("Unknown sound pack `{other}`, falling back to base");
-                    SoundPack::base()
+                Some(pack_id) => {
+                    // Try to load the custom sound pack
+                    match SoundPack::load_custom(pack_id) {
+                        Some(custom) => {
+                            info!("Loaded custom sound pack: {}", pack_id);
+                            custom
+                        }
+                        None => {
+                            info!(
+                                "Custom sound pack `{}` not found, falling back to base",
+                                pack_id
+                            );
+                            SoundPack::base()
+                        }
+                    }
                 }
             },
+            custom_rules_pack,
             event_overrides: HashMap::new(),
             youtube_cache,
         };
@@ -845,6 +1160,165 @@ impl DiscordClient {
             let _ = app.emit(
                 "backend-log",
                 format!("🔊 Queued sound for {:?} ({})", event, resolved_path),
+            );
+        }
+        Ok(())
+    }
+
+    /// Plays a sound for an event with full context for rules evaluation
+    pub async fn play_sound_for_event_with_context(
+        &self,
+        context: &SoundEventContext,
+        app_handle: Option<&tauri::AppHandle>,
+    ) -> Result<(), String> {
+        let event = context.event_type;
+
+        let Some(manager) = &self.songbird else {
+            let msg = "Voice manager not initialized".to_string();
+            log_sound_error(event, &msg);
+            return Err(msg);
+        };
+
+        let voice_channel_id = self.voice_channel_id.clone().ok_or_else(|| {
+            let msg = "Voice channel not configured".to_string();
+            log_sound_error(event, &msg);
+            msg
+        })?;
+
+        info!(
+            "Attempting to play sound for event {:?} with context in voice {}",
+            event, voice_channel_id
+        );
+        write_sound_log(&format!(
+            "[sound] Attempting {:?} with rules in voice {}",
+            event, voice_channel_id
+        ));
+
+        if let Some(app) = app_handle {
+            let _ = app.emit(
+                "backend-log",
+                format!(
+                    "🔊 Attempting sound for {:?} in voice channel {}",
+                    event, voice_channel_id
+                ),
+            );
+        }
+
+        let (guild_id, channel_id, channel_name, channel_kind) =
+            match self.resolve_voice_channel(&voice_channel_id).await {
+                Ok(v) => v,
+                Err(e) => {
+                    log_sound_error(event, &e);
+                    return Err(e);
+                }
+            };
+        write_sound_log(&format!(
+            "[sound] Channel lookup: name={:?}, kind={:?}",
+            channel_name, channel_kind
+        ));
+
+        let handler_lock = match manager.join(guild_id, channel_id).await {
+            Ok(lock) => lock,
+            Err(e) => {
+                let msg = format!("Failed to join voice: {e}");
+                log_sound_error(event, &msg);
+                return Err(msg);
+            }
+        };
+
+        let mut handler = handler_lock.lock().await;
+        handler.add_global_event(TrackEvent::Error.into(), TrackLogger);
+        let _ = handler.mute(false).await;
+        let _ = handler.deafen(false).await;
+        write_sound_log(&format!(
+            "[sound] Handler connected={}, channel_id={:?}",
+            handler.current_channel().is_some(),
+            handler.current_channel()
+        ));
+
+        // Try rules evaluation first if custom pack with rules is available
+        let (cue, volume) = if let Some(custom_pack) = &self.custom_rules_pack {
+            let event_context = context.to_event_context();
+            if let Some((sound_entry, vol)) = custom_pack.select_sound_for_event(&event_context) {
+                // Convert SoundEntry to SoundCue
+                let cue = match &sound_entry.source {
+                    custom_sound_pack::SoundSource::File { path } => {
+                        SoundCue::File(PathBuf::from(path.clone()))
+                    }
+                    custom_sound_pack::SoundSource::Url { url } => SoundCue::Url(url.clone()),
+                };
+                info!(
+                    "Rule matched for {:?}, using sound '{}' with volume {}",
+                    event, sound_entry.id, vol
+                );
+                (cue, vol)
+            } else {
+                // Fall back to default lookup
+                let cue_key = event.key().to_string();
+                let fallback_cue = self
+                    .event_overrides
+                    .get(&cue_key)
+                    .cloned()
+                    .or_else(|| self.sound_pack.cue_for(&cue_key))
+                    .ok_or_else(|| {
+                        let msg = format!("No sound mapped for event {}", cue_key);
+                        log_sound_error(event, &msg);
+                        msg
+                    })?;
+                (fallback_cue, 1.0)
+            }
+        } else {
+            // No custom rules pack, use standard lookup
+            let cue_key = event.key().to_string();
+            let fallback_cue = self
+                .event_overrides
+                .get(&cue_key)
+                .cloned()
+                .or_else(|| self.sound_pack.cue_for(&cue_key))
+                .ok_or_else(|| {
+                    let msg = format!("No sound mapped for event {}", cue_key);
+                    log_sound_error(event, &msg);
+                    msg
+                })?;
+            (fallback_cue, 1.0)
+        };
+
+        let (input, resolved_path) = match self.cue_to_input(cue).await {
+            Ok(v) => v,
+            Err(e) => {
+                log_sound_error(event, &e);
+                return Err(e);
+            }
+        };
+
+        write_sound_log(&format!(
+            "[sound] Sending input {} at volume {}",
+            resolved_path, volume
+        ));
+        let handle = handler.play_only_input(input);
+        let _ = handle.set_volume(volume);
+        if let Err(e) = handle.play() {
+            let msg = format!("Failed to start track: {}", e);
+            log_sound_error(event, &msg);
+        }
+        write_sound_log("[sound] play_only_input + play() invoked");
+        info!(
+            "Queued audio for event {:?} using {} at volume {}",
+            event, resolved_path, volume
+        );
+        write_sound_log(&format!(
+            "[sound] Queued {:?} using {} vol={}",
+            event, resolved_path, volume
+        ));
+        if let Some(app) = app_handle {
+            let _ = app.emit(
+                "backend-log",
+                format!(
+                    "🔊 Queued sound for {:?} ({}) vol={:.0}%",
+                    event,
+                    resolved_path,
+                    volume * 100.0
+                ),
             );
         }
         Ok(())

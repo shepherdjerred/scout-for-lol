@@ -93,6 +93,7 @@ export function installWorkspaceDeps(workspaceSource: Directory, installOpenssl 
     .withFile("/workspace/packages/report/package.json", workspaceSource.file("packages/report/package.json"))
     .withFile("/workspace/packages/frontend/package.json", workspaceSource.file("packages/frontend/package.json"))
     .withFile("/workspace/packages/desktop/package.json", workspaceSource.file("packages/desktop/package.json"))
+    .withFile("/workspace/packages/ui/package.json", workspaceSource.file("packages/ui/package.json"))
     // Install dependencies (cached if lockfile + package.jsons unchanged)
     .withExec(["bun", "install", "--frozen-lockfile"]);
 
@@ -116,6 +117,7 @@ export function installWorkspaceDeps(workspaceSource: Directory, installOpenssl 
       .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
       .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
       .withDirectory("/workspace/packages/desktop", workspaceSource.directory("packages/desktop"))
+      .withDirectory("/workspace/packages/ui", workspaceSource.directory("packages/ui"))
   );
 }
 
@@ -173,6 +175,7 @@ export function getMountedWorkspace(workspaceSource: Directory, installOpenssl =
       workspaceSource.file("packages/frontend/package.json"),
     )
     .withMountedFile("/workspace/packages/desktop/package.json", workspaceSource.file("packages/desktop/package.json"))
+    .withMountedFile("/workspace/packages/ui/package.json", workspaceSource.file("packages/ui/package.json"))
     // Install dependencies (cached if lockfile + package.jsons unchanged)
     .withExec(["bun", "install", "--frozen-lockfile"]);
 
@@ -195,6 +198,7 @@ export function getMountedWorkspace(workspaceSource: Directory, installOpenssl =
       .withMountedDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
       .withMountedDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
       .withMountedDirectory("/workspace/packages/desktop", workspaceSource.directory("packages/desktop"))
+      .withMountedDirectory("/workspace/packages/ui", workspaceSource.directory("packages/ui"))
   );
 }
 
@@ -265,7 +269,8 @@ export function getBunNodeContainer(workspaceSource?: Directory): Container {
       .withDirectory("/workspace/packages/data", workspaceSource.directory("packages/data"))
       .withDirectory("/workspace/packages/report", workspaceSource.directory("packages/report"))
       .withDirectory("/workspace/packages/frontend", workspaceSource.directory("packages/frontend"))
-      .withDirectory("/workspace/packages/desktop", workspaceSource.directory("packages/desktop"));
+      .withDirectory("/workspace/packages/desktop", workspaceSource.directory("packages/desktop"))
+      .withDirectory("/workspace/packages/ui", workspaceSource.directory("packages/ui"));
   }
 
   return container;

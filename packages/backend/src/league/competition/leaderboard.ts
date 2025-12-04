@@ -6,14 +6,14 @@ import type {
   Rank,
   Ranks,
   RawMatch,
-} from "@scout-for-lol/data/index.ts";
+} from "@scout-for-lol/data/index";
 import {
   getCompetitionStatus,
   rankToLeaguePoints,
   RankSchema,
   LeaguePuuidSchema,
   RawSummonerLeagueSchema,
-} from "@scout-for-lol/data/index.ts";
+} from "@scout-for-lol/data/index";
 import { sortBy } from "remeda";
 import { match } from "ts-pattern";
 import { z } from "zod";

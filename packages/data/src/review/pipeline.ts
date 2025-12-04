@@ -31,8 +31,8 @@ import type {
   PipelineProgressCallback,
   PipelineStageName,
 } from "./pipeline-types.ts";
-import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema.ts";
-import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema.ts";
+import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema";
+import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema";
 import {
   generateTimelineSummary,
   generateMatchSummary,

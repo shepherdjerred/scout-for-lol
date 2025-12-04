@@ -9,8 +9,8 @@ import {
   CardFooter,
 } from "@scout-for-lol/desktop/components/ui/card.tsx";
 import { Input, Select } from "@scout-for-lol/desktop/components/ui/input.tsx";
-import { StatusIndicator, Badge } from "@scout-for-lol/desktop/components/ui/badge.tsx";
-import { Collapsible } from "@scout-for-lol/desktop/components/ui/collapsible.tsx";
+import { StatusIndicator } from "@scout-for-lol/desktop/components/ui/badge.tsx";
+import type { AvailableSoundPack } from "@scout-for-lol/desktop/types.ts";
 
 type DiscordStatus = {
   connected: boolean;
@@ -27,25 +27,14 @@ type DiscordSectionProps = {
   channelId: string;
   voiceChannelId: string;
   soundPack: string;
-  eventSounds: Record<string, string>;
+  availableSoundPacks: AvailableSoundPack[];
   onBotTokenChange: (value: string) => void;
   onChannelIdChange: (value: string) => void;
   onVoiceChannelIdChange: (value: string) => void;
   onSoundPackChange: (value: string) => void;
-  onEventSoundChange: (key: string, value: string) => void;
   onConfigure: () => void;
   onJoinVoice: () => void;
   onTestSound: () => void;
-};
-
-const SOUND_EVENT_LABELS: Record<string, { label: string; description: string }> = {
-  gameStart: { label: "Game Start", description: "When the game begins" },
-  firstBlood: { label: "First Blood", description: "First kill of the game" },
-  kill: { label: "Kill", description: "When you get a kill" },
-  multiKill: { label: "Multi-kill", description: "Double, triple, quadra, penta" },
-  objective: { label: "Objective", description: "Dragon, Baron, towers" },
-  ace: { label: "Ace", description: "Team ace" },
-  gameEnd: { label: "Game End", description: "Victory or defeat" },
 };
 
 export function DiscordSection({
@@ -55,12 +44,11 @@ export function DiscordSection({
   channelId,
   voiceChannelId,
   soundPack,
-  eventSounds,
+  availableSoundPacks,
   onBotTokenChange,
   onChannelIdChange,
   onVoiceChannelIdChange,
   onSoundPackChange,
-  onEventSoundChange,
   onConfigure,
   onJoinVoice,
   onTestSound,
@@ -89,7 +77,14 @@ export function DiscordSection({
           value={discordStatus.voiceChannelName ?? "Not joined"}
           connected={discordStatus.voiceConnected}
         />
-        <StatusCard label="Sound Pack" value={discordStatus.activeSoundPack ?? soundPack} connected={true} />
+        <StatusCard
+          label="Sound Pack"
+          value={
+            availableSoundPacks.find((p) => p.id === (discordStatus.activeSoundPack ?? soundPack))?.name ??
+            (discordStatus.activeSoundPack ?? soundPack)
+          }
+          connected={true}
+        />
       </div>
 
       {/* Bot Configuration */}
@@ -139,7 +134,12 @@ export function DiscordSection({
               }}
               helperText="Audio theme for notifications"
             >
-              <option value="base">Base Pack (Synth tones)</option>
+              {availableSoundPacks.map((pack) => (
+                <option key={pack.id} value={pack.id}>
+                  {pack.name}
+                  {!pack.isBuiltIn && " (Custom)"}
+                </option>
+              ))}
             </Select>
           </div>
         </CardContent>
@@ -167,39 +167,6 @@ export function DiscordSection({
           </Button>
         </CardFooter>
       </Card>
-
-      {/* Advanced: Sound Event Mapping */}
-      <Collapsible
-        title="Advanced: Event Sound Mapping"
-        badge={
-          <Badge variant="default" className="text-[10px]">
-            {Object.keys(eventSounds).filter((k) => eventSounds[k]).length}/{Object.keys(SOUND_EVENT_LABELS).length}
-          </Badge>
-        }
-      >
-        <p className="mb-5 text-sm text-gray-400">
-          Customize sounds for specific game events. Use a sound pack key or a custom file path.
-        </p>
-        <div className="grid gap-4 md:grid-cols-2">
-          {Object.entries(SOUND_EVENT_LABELS).map(([key, { label, description }]) => (
-            <div key={key} className="rounded-lg border border-gray-700/50 bg-gray-900/30 p-5 space-y-3">
-              <div>
-                <span className="text-sm font-medium text-gray-200">{label}</span>
-                <p className="text-xs text-gray-500">{description}</p>
-              </div>
-              <input
-                type="text"
-                value={eventSounds[key] ?? ""}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  onEventSoundChange(key, e.target.value);
-                }}
-                placeholder={`e.g. ${key} or /path/to/sound.ogg`}
-                className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 transition-colors hover:border-gray-600 focus:border-discord-blurple focus:outline-none focus:ring-2 focus:ring-discord-blurple/30"
-              />
-            </div>
-          ))}
-        </div>
-      </Collapsible>
     </div>
   );
 }

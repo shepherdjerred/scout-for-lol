@@ -3,5 +3,12 @@
   "identifier": "main-capability",
   "description": "Capability for the main window",
   "windows": ["main"],
-  "permissions": ["core:default", "log:default"]
+  "permissions": [
+    "core:default",
+    "log:default",
+    "fs:allow-write-text-file",
+    "fs:allow-read-text-file",
+    "dialog:allow-save",
+    "dialog:allow-open"
+  ]
 }
