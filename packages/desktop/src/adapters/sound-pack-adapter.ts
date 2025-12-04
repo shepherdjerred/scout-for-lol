@@ -15,6 +15,7 @@ import type {
 } from "@scout-for-lol/ui";
 import type { SoundPack, SoundSource } from "@scout-for-lol/data";
 import { SoundPackSchema, getChampionImageUrl } from "@scout-for-lol/data";
+import { z } from "zod";
 
 /**
  * Creates a Tauri-specific adapter for the sound pack editor
@@ -158,7 +159,7 @@ export function createTauriAdapter(onSave?: () => void): SoundPackAdapter {
             return result.data;
           }
           // Log validation errors for debugging
-          console.error("Sound pack validation failed:", result.error.format());
+          console.error("Sound pack validation failed:", z.treeifyError(result.error));
         }
         return null;
       } catch (error) {

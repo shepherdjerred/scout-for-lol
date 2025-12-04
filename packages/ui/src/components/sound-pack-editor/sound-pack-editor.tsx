@@ -79,7 +79,9 @@ export function SoundPackEditor() {
   // Cache all YouTube URLs
   const handleCacheAll = useCallback(async () => {
     const urls = getYouTubeUrls();
-    if (urls.length === 0) return;
+    if (urls.length === 0) {
+      return;
+    }
 
     setCacheAllState({ isRunning: true, total: urls.length, completed: 0, failed: 0 });
 

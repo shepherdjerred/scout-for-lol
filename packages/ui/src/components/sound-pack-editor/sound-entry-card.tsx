@@ -26,6 +26,74 @@ type SoundEntryCardProps = {
   getCacheStatus?: ((url: string) => Promise<CacheStatus>) | undefined;
 };
 
+// =============================================================================
+// Helper functions to reduce component complexity
+// =============================================================================
+
+function getSourceIcon(sourceType: "file" | "url", isYouTube: boolean): { emoji: string; colorClass: string } {
+  if (sourceType === "file") {
+    return { emoji: "🎵", colorClass: "text-gray-500" };
+  }
+  if (isYouTube) {
+    return { emoji: "▶", colorClass: "text-red-500" };
+  }
+  return { emoji: "🔗", colorClass: "text-blue-500" };
+}
+
+function getSourceTypeLabel(sourceType: "file" | "url", isYouTube: boolean): string {
+  if (sourceType === "file") {
+    return "File";
+  }
+  return isYouTube ? "YouTube" : "URL";
+}
+
+function getCacheButtonStyles(status: CacheStatus): { colorClass: string; title: string; emoji: string } {
+  switch (status) {
+    case "cached": {
+      return { colorClass: "text-green-600", title: "Cached", emoji: "✓📥" };
+    }
+    case "caching": {
+      return { colorClass: "text-yellow-600 animate-pulse", title: "Caching...", emoji: "⏳" };
+    }
+    case "error": {
+      return { colorClass: "text-red-500", title: "Cache failed - click to retry", emoji: "📥" };
+    }
+    case "not-cached": {
+      return { colorClass: "text-gray-500", title: "Cache audio", emoji: "📥" };
+    }
+  }
+}
+
+// =============================================================================
+// CacheButton sub-component
+// =============================================================================
+
+type CacheButtonProps = {
+  cacheStatus: CacheStatus;
+  isCaching: boolean;
+  onCache: () => void;
+};
+
+function CacheButton({ cacheStatus, isCaching, onCache }: CacheButtonProps) {
+  const styles = getCacheButtonStyles(cacheStatus);
+
+  return (
+    <button
+      type="button"
+      onClick={onCache}
+      disabled={isCaching || cacheStatus === "cached"}
+      className={`p-2 rounded hover:bg-gray-100 text-xs ${styles.colorClass}`}
+      title={styles.title}
+    >
+      {styles.emoji}
+    </button>
+  );
+}
+
+// =============================================================================
+// Main component
+// =============================================================================
+
 export function SoundEntryCard({
   entry,
   onUpdate,
@@ -46,9 +114,13 @@ export function SoundEntryCard({
   // Check cache status on mount and when URL changes
   // eslint-disable-next-line custom-rules/no-use-effect -- Need to check cache status on mount
   useEffect(() => {
-    if (isYouTube && getCacheStatus && entry.source.type === "url") {
-      void getCacheStatus(entry.source.url).then(setCacheStatus);
-    }
+    const checkStatus = async () => {
+      if (isYouTube && getCacheStatus && entry.source.type === "url") {
+        const status = await getCacheStatus(entry.source.url);
+        setCacheStatus(status);
+      }
+    };
+    void checkStatus();
   }, [isYouTube, getCacheStatus, entry.source]);
 
   const handlePreview = () => {
@@ -64,7 +136,9 @@ export function SoundEntryCard({
   };
 
   const handleCache = async () => {
-    if (!onCache || entry.source.type !== "url" || isCaching) return;
+    if (!onCache || entry.source.type !== "url" || isCaching) {
+      return;
+    }
 
     setIsCaching(true);
     setCacheStatus("caching");
@@ -84,18 +158,15 @@ export function SoundEntryCard({
       ? entry.source.path.split("/").pop() ?? entry.source.path
       : entry.source.url;
 
+  const icon = getSourceIcon(entry.source.type, isYouTube);
+  const typeLabel = getSourceTypeLabel(entry.source.type, isYouTube);
+
   return (
     <div className="border rounded-lg p-3 bg-white shadow-sm">
       <div className="flex items-start gap-3">
         {/* Icon */}
         <div className="flex-shrink-0 w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
-          {entry.source.type === "file" ? (
-            <span className="text-gray-500">🎵</span>
-          ) : isYouTube ? (
-            <span className="text-red-500">▶</span>
-          ) : (
-            <span className="text-blue-500">🔗</span>
-          )}
+          <span className={icon.colorClass}>{icon.emoji}</span>
         </div>
 
         {/* Content */}
@@ -108,7 +179,7 @@ export function SoundEntryCard({
           {/* Type badge */}
           <div className="flex items-center gap-2 mt-1">
             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
-              {entry.source.type === "file" ? "File" : isYouTube ? "YouTube" : "URL"}
+              {typeLabel}
             </span>
             {!entry.enabled && (
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">
@@ -152,31 +223,11 @@ export function SoundEntryCard({
             {isPlaying ? "⏹" : "▶️"}
           </button>
           {isYouTube && onCache && (
-            <button
-              type="button"
-              onClick={() => { void handleCache(); }}
-              disabled={isCaching || cacheStatus === "cached"}
-              className={`p-2 rounded hover:bg-gray-100 text-xs ${
-                cacheStatus === "cached"
-                  ? "text-green-600"
-                  : cacheStatus === "caching"
-                    ? "text-yellow-600 animate-pulse"
-                    : cacheStatus === "error"
-                      ? "text-red-500"
-                      : "text-gray-500"
-              }`}
-              title={
-                cacheStatus === "cached"
-                  ? "Cached"
-                  : cacheStatus === "caching"
-                    ? "Caching..."
-                    : cacheStatus === "error"
-                      ? "Cache failed - click to retry"
-                      : "Cache audio"
-              }
-            >
-              {cacheStatus === "cached" ? "✓📥" : cacheStatus === "caching" ? "⏳" : "📥"}
-            </button>
+            <CacheButton
+              cacheStatus={cacheStatus}
+              isCaching={isCaching}
+              onCache={() => { void handleCache(); }}
+            />
           )}
           <button
             type="button"
