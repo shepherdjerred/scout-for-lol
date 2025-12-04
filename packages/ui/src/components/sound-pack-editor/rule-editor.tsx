@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import type { SoundRule, SoundEntry, SoundSource } from "@scout-for-lol/data";
-import type { Champion } from "../../types/adapter.ts";
+import type { Champion } from "@scout-for-lol/ui/types/adapter.ts";
 import { ConditionBuilder } from "./condition-builder.tsx";
 import { SoundPoolEditor } from "./sound-pool-editor.tsx";
 
@@ -54,10 +54,13 @@ export function RuleEditor({
     <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
       {/* Header */}
       <div
+        role="button"
+        tabIndex={0}
         className={`flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 ${
           !rule.enabled ? "bg-gray-100" : ""
         }`}
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => { setIsExpanded(!isExpanded); }}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { setIsExpanded(!isExpanded); } }}
       >
         {/* Expand/collapse icon */}
         <span className="text-gray-400">{isExpanded ? "▼" : "▶"}</span>
@@ -83,21 +86,23 @@ export function RuleEditor({
         <input
           type="text"
           value={rule.name}
-          onChange={(e) => onUpdate({ name: e.currentTarget.value })}
-          onClick={(e) => e.stopPropagation()}
+          onChange={(e) => { onUpdate({ name: e.currentTarget.value }); }}
+          onClick={(e) => { e.stopPropagation(); }}
           className="flex-1 font-medium bg-transparent border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
           placeholder="Rule name"
         />
 
         {/* Priority */}
-        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-          <label className="text-xs text-gray-500">Priority:</label>
+        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- Priority input area needs to stop click propagation */}
+        <div className="flex items-center gap-1" onClick={(e) => { e.stopPropagation(); }}>
+          <label htmlFor={`priority-${rule.id}`} className="text-xs text-gray-500">Priority:</label>
           <input
+            id={`priority-${rule.id}`}
             type="number"
             min="0"
             max="1000"
             value={rule.priority}
-            onChange={(e) => onUpdate({ priority: Number(e.currentTarget.value) })}
+            onChange={(e) => { onUpdate({ priority: Number(e.currentTarget.value) }); }}
             className="w-16 px-2 py-1 text-xs border rounded"
           />
         </div>
@@ -124,9 +129,12 @@ export function RuleEditor({
             <span className="text-sm text-gray-600">Match</span>
             <select
               value={rule.conditionLogic}
-              onChange={(e) =>
-                onUpdate({ conditionLogic: e.currentTarget.value as "all" | "any" })
-              }
+              onChange={(e) => {
+                const value = e.currentTarget.value;
+                if (value === "all" || value === "any") {
+                  onUpdate({ conditionLogic: value });
+                }
+              }}
               className="px-2 py-1 border rounded text-sm bg-white"
             >
               <option value="all">All conditions (AND)</option>
@@ -139,7 +147,7 @@ export function RuleEditor({
             <h4 className="text-sm font-medium text-gray-700 mb-2">Conditions</h4>
             <ConditionBuilder
               conditions={rule.conditions}
-              onChange={(conditions) => onUpdate({ conditions })}
+              onChange={(conditions) => { onUpdate({ conditions }); }}
               champions={champions}
               localPlayerName={localPlayerName}
             />
@@ -150,7 +158,7 @@ export function RuleEditor({
             <h4 className="text-sm font-medium text-gray-700 mb-2">Sounds</h4>
             <SoundPoolEditor
               pool={rule.sounds}
-              onUpdate={(sounds) => onUpdate({ sounds })}
+              onUpdate={(sounds) => { onUpdate({ sounds }); }}
               onAddSound={onAddSound}
               onUpdateSound={onUpdateSound}
               onRemoveSound={onRemoveSound}

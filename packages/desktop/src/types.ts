@@ -27,8 +27,9 @@ export type LogEntry = {
 };
 
 export type LogPaths = {
-  app_log_dir: string;
-  working_dir_log: string;
+  logs_dir: string;
+  debug_log: string;
+  startup_log: string;
 };
 
 export type Section = "league" | "discord" | "monitor" | "sounds";
@@ -38,16 +39,6 @@ export type AvailableSoundPack = {
   name: string;
   description?: string | undefined;
   isBuiltIn: boolean;
-};
-
-export const DEFAULT_EVENT_SOUNDS: Record<string, string> = {
-  gameStart: "gameStart",
-  firstBlood: "firstBlood",
-  kill: "kill",
-  multiKill: "multiKill",
-  objective: "objective",
-  ace: "ace",
-  gameEnd: "gameEnd",
 };
 
 export function getErrorMessage(error: unknown): string {

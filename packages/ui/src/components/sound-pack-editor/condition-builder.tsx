@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- Component contains multiple related condition editors that benefit from co-location */
 /**
  * Condition Builder Component
  *
@@ -11,7 +12,7 @@ import type {
   ObjectiveType,
   DragonType,
 } from "@scout-for-lol/data";
-import type { Champion } from "../../types/adapter.ts";
+import type { Champion } from "@scout-for-lol/ui/types/adapter.ts";
 
 type ConditionBuilderProps = {
   /** Current conditions */
@@ -120,8 +121,8 @@ export function ConditionBuilder({
         <ConditionCard
           key={index}
           condition={condition}
-          onChange={(updated) => updateCondition(index, updated)}
-          onRemove={() => removeCondition(index)}
+          onChange={(updated) => { updateCondition(index, updated); }}
+          onRemove={() => { removeCondition(index); }}
           champions={champions}
           localPlayerName={localPlayerName}
         />
@@ -131,7 +132,15 @@ export function ConditionBuilder({
       <div className="flex items-center gap-2">
         <select
           value={newConditionType}
-          onChange={(e) => setNewConditionType(e.currentTarget.value as ConditionType)}
+          onChange={(e) => {
+            const value = e.currentTarget.value;
+            // Validate the value before setting
+            if (value === "player" || value === "champion" || value === "multikill" ||
+                value === "objective" || value === "dragonType" || value === "stolen" ||
+                value === "team" || value === "gameResult") {
+              setNewConditionType(value);
+            }
+          }}
           className="px-2 py-1 border rounded text-sm bg-white"
         >
           {CONDITION_TYPES.map((ct) => (
@@ -260,9 +269,12 @@ function PlayerConditionEditor({
         <span className="text-sm font-medium">Player</span>
         <select
           value={condition.field}
-          onChange={(e) =>
-            onChange({ ...condition, field: e.currentTarget.value as "killer" | "victim" })
-          }
+          onChange={(e) => {
+            const value = e.currentTarget.value;
+            if (value === "killer" || value === "victim") {
+              onChange({ ...condition, field: value });
+            }
+          }}
           className="px-2 py-1 border rounded text-sm bg-white"
         >
           <option value="killer">Killer</option>
@@ -273,13 +285,14 @@ function PlayerConditionEditor({
 
       {/* Include local player checkbox */}
       {localPlayerName && (
-        <label className="flex items-center gap-2 text-sm">
+        <label htmlFor="include-local-player" className="flex items-center gap-2 text-sm">
           <input
+            id="include-local-player"
             type="checkbox"
             checked={condition.includeLocalPlayer ?? false}
-            onChange={(e) =>
-              onChange({ ...condition, includeLocalPlayer: e.currentTarget.checked })
-            }
+            onChange={(e) => {
+              onChange({ ...condition, includeLocalPlayer: e.currentTarget.checked });
+            }}
             className="rounded"
           />
           <span>Include me ({localPlayerName})</span>
@@ -296,12 +309,12 @@ function PlayerConditionEditor({
             {player}
             <button
               type="button"
-              onClick={() =>
+              onClick={() => {
                 onChange({
                   ...condition,
                   players: condition.players.filter((p) => p !== player),
-                })
-              }
+                });
+              }}
               className="text-blue-600 hover:text-blue-800"
             >
               ×
@@ -315,8 +328,8 @@ function PlayerConditionEditor({
         <input
           type="text"
           value={newPlayer}
-          onChange={(e) => setNewPlayer(e.currentTarget.value)}
-          onKeyDown={(e) => e.key === "Enter" && addPlayer()}
+          onChange={(e) => { setNewPlayer(e.currentTarget.value); }}
+          onKeyDown={(e) => { if (e.key === "Enter") { addPlayer(); } }}
           placeholder="Summoner name"
           className="flex-1 px-2 py-1 border rounded text-sm"
         />
@@ -371,12 +384,12 @@ function ChampionConditionEditor({
         <span className="text-sm font-medium">Champion</span>
         <select
           value={condition.field}
-          onChange={(e) =>
-            onChange({
-              ...condition,
-              field: e.currentTarget.value as "killerChampion" | "victimChampion",
-            })
-          }
+          onChange={(e) => {
+            const value = e.currentTarget.value;
+            if (value === "killerChampion" || value === "victimChampion") {
+              onChange({ ...condition, field: value });
+            }
+          }}
           className="px-2 py-1 border rounded text-sm bg-white"
         >
           <option value="killerChampion">Killer&apos;s Champion</option>
@@ -397,12 +410,12 @@ function ChampionConditionEditor({
               {champ?.name ?? champId}
               <button
                 type="button"
-                onClick={() =>
+                onClick={() => {
                   onChange({
                     ...condition,
                     champions: condition.champions.filter((c) => c !== champId),
-                  })
-                }
+                  });
+                }}
                 className="text-purple-600 hover:text-purple-800"
               >
                 ×
@@ -421,8 +434,8 @@ function ChampionConditionEditor({
             setQuery(e.currentTarget.value);
             setShowSuggestions(true);
           }}
-          onFocus={() => setShowSuggestions(true)}
-          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+          onFocus={() => { setShowSuggestions(true); }}
+          onBlur={() => { setTimeout(() => { setShowSuggestions(false); }, 200); }}
           placeholder="Search champions..."
           className="w-full px-2 py-1 border rounded text-sm"
         />
@@ -432,7 +445,7 @@ function ChampionConditionEditor({
               <button
                 key={champ.id}
                 type="button"
-                onClick={() => addChampion(champ.id)}
+                onClick={() => { addChampion(champ.id); }}
                 className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
               >
                 {champ.name}
@@ -464,11 +477,12 @@ function MultikillConditionEditor({
       <span className="text-sm font-medium">Multi-kill type is:</span>
       <div className="flex flex-wrap gap-2">
         {MULTIKILL_TYPES.map((mt) => (
-          <label key={mt.value} className="flex items-center gap-1 text-sm">
+          <label key={mt.value} htmlFor={`multikill-${mt.value}`} className="flex items-center gap-1 text-sm">
             <input
+              id={`multikill-${mt.value}`}
               type="checkbox"
               checked={condition.killTypes.includes(mt.value)}
-              onChange={() => toggleType(mt.value)}
+              onChange={() => { toggleType(mt.value); }}
               className="rounded"
             />
             {mt.label}
@@ -498,11 +512,12 @@ function ObjectiveConditionEditor({
       <span className="text-sm font-medium">Objective type is:</span>
       <div className="flex flex-wrap gap-2">
         {OBJECTIVE_TYPES.map((ot) => (
-          <label key={ot.value} className="flex items-center gap-1 text-sm">
+          <label key={ot.value} htmlFor={`objective-${ot.value}`} className="flex items-center gap-1 text-sm">
             <input
+              id={`objective-${ot.value}`}
               type="checkbox"
               checked={condition.objectives.includes(ot.value)}
-              onChange={() => toggleType(ot.value)}
+              onChange={() => { toggleType(ot.value); }}
               className="rounded"
             />
             {ot.label}
@@ -532,11 +547,12 @@ function DragonTypeConditionEditor({
       <span className="text-sm font-medium">Dragon type is:</span>
       <div className="flex flex-wrap gap-2">
         {DRAGON_TYPES.map((dt) => (
-          <label key={dt.value} className="flex items-center gap-1 text-sm">
+          <label key={dt.value} htmlFor={`dragon-${dt.value}`} className="flex items-center gap-1 text-sm">
             <input
+              id={`dragon-${dt.value}`}
               type="checkbox"
               checked={condition.dragons.includes(dt.value)}
-              onChange={() => toggleType(dt.value)}
+              onChange={() => { toggleType(dt.value); }}
               className="rounded"
             />
             {dt.label}
@@ -559,9 +575,9 @@ function StolenConditionEditor({
       <span className="text-sm font-medium">Objective was</span>
       <select
         value={condition.isStolen ? "stolen" : "not-stolen"}
-        onChange={(e) =>
-          onChange({ ...condition, isStolen: e.currentTarget.value === "stolen" })
-        }
+        onChange={(e) => {
+          onChange({ ...condition, isStolen: e.currentTarget.value === "stolen" });
+        }}
         className="px-2 py-1 border rounded text-sm bg-white"
       >
         <option value="stolen">Stolen</option>
@@ -583,9 +599,12 @@ function TeamConditionEditor({
       <span className="text-sm font-medium">Team is</span>
       <select
         value={condition.team}
-        onChange={(e) =>
-          onChange({ ...condition, team: e.currentTarget.value as "ally" | "enemy" })
-        }
+        onChange={(e) => {
+          const value = e.currentTarget.value;
+          if (value === "ally" || value === "enemy") {
+            onChange({ ...condition, team: value });
+          }
+        }}
         className="px-2 py-1 border rounded text-sm bg-white"
       >
         <option value="ally">Ally (my team)</option>
@@ -607,9 +626,12 @@ function GameResultConditionEditor({
       <span className="text-sm font-medium">Game result is</span>
       <select
         value={condition.result}
-        onChange={(e) =>
-          onChange({ ...condition, result: e.currentTarget.value as "victory" | "defeat" })
-        }
+        onChange={(e) => {
+          const value = e.currentTarget.value;
+          if (value === "victory" || value === "defeat") {
+            onChange({ ...condition, result: value });
+          }
+        }}
         className="px-2 py-1 border rounded text-sm bg-white"
       >
         <option value="victory">Victory</option>

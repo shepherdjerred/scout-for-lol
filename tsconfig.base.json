@@ -36,6 +36,12 @@
       ],
       "@scout-for-lol/desktop/*": [
         "./packages/desktop/src/*"
+      ],
+      "@scout-for-lol/ui/*": [
+        "./packages/ui/src/*"
+      ],
+      "@scout-for-lol/ui": [
+        "./packages/ui/src/index.ts"
       ]
     },
     "types": [

@@ -15,7 +15,7 @@ import {
   type EventType,
   type RuleTemplate,
 } from "@scout-for-lol/data";
-import { useSoundPackEditor } from "../../hooks/use-sound-pack-editor.tsx";
+import { useSoundPackEditor } from "@scout-for-lol/ui/hooks/use-sound-pack-editor.tsx";
 import { VolumeSlider } from "./volume-slider.tsx";
 import { SoundPoolEditor } from "./sound-pool-editor.tsx";
 import { RuleEditor } from "./rule-editor.tsx";
@@ -41,7 +41,7 @@ export function SoundPackEditor() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={editor.importPack}
+            onClick={() => { void editor.importPack(); }}
             disabled={editor.isLoading}
             className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 disabled:opacity-50"
           >
@@ -49,7 +49,7 @@ export function SoundPackEditor() {
           </button>
           <button
             type="button"
-            onClick={editor.exportPack}
+            onClick={() => { void editor.exportPack(); }}
             disabled={editor.isLoading}
             className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50 disabled:opacity-50"
           >
@@ -57,7 +57,7 @@ export function SoundPackEditor() {
           </button>
           <button
             type="button"
-            onClick={editor.savePack}
+            onClick={() => { void editor.savePack(); }}
             disabled={editor.isLoading || !editor.isDirty}
             className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
           >
@@ -82,13 +82,14 @@ export function SoundPackEditor() {
 
       {/* Pack name */}
       <div className="px-4 py-3 bg-white border-b">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="pack-name" className="block text-sm font-medium text-gray-700 mb-1">
           Pack Name
         </label>
         <input
+          id="pack-name"
           type="text"
           value={editor.soundPack.name}
-          onChange={(e) => editor.updatePack({ name: e.currentTarget.value })}
+          onChange={(e) => { editor.updatePack({ name: e.currentTarget.value }); }}
           className="w-full px-3 py-2 border rounded"
           placeholder="My Sound Pack"
         />
@@ -100,7 +101,7 @@ export function SoundPackEditor() {
           <button
             key={tab}
             type="button"
-            onClick={() => setActiveTab(tab)}
+            onClick={() => { setActiveTab(tab); }}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
               activeTab === tab
                 ? "border-blue-600 text-blue-600"
@@ -108,7 +109,7 @@ export function SoundPackEditor() {
             }`}
           >
             {tab === "defaults" && "Default Sounds"}
-            {tab === "rules" && `Rules (${editor.soundPack.rules.length})`}
+            {tab === "rules" && `Rules (${String(editor.soundPack.rules.length)})`}
             {tab === "settings" && "Settings"}
           </button>
         ))}
@@ -148,7 +149,7 @@ function DefaultsTab() {
             {/* Header */}
             <button
               type="button"
-              onClick={() => setExpandedEvent(isExpanded ? null : eventType)}
+              onClick={() => { setExpandedEvent(isExpanded ? null : eventType); }}
               className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50"
             >
               <div className="flex items-center gap-3">
@@ -168,13 +169,13 @@ function DefaultsTab() {
               <div className="px-4 pb-4 border-t">
                 <SoundPoolEditor
                   pool={pool}
-                  onUpdate={(updatedPool) => editor.setDefaultPool(eventType, updatedPool)}
-                  onAddSound={(entry) => editor.addDefaultSound(eventType, entry)}
-                  onUpdateSound={(soundId, updates) =>
-                    editor.updateDefaultSound(eventType, soundId, updates)
-                  }
-                  onRemoveSound={(soundId) => editor.removeDefaultSound(eventType, soundId)}
-                  onPreview={editor.previewSound}
+                  onUpdate={(updatedPool) => { editor.setDefaultPool(eventType, updatedPool); }}
+                  onAddSound={(entry) => { editor.addDefaultSound(eventType, entry); }}
+                  onUpdateSound={(soundId, updates) => {
+                    editor.updateDefaultSound(eventType, soundId, updates);
+                  }}
+                  onRemoveSound={(soundId) => { editor.removeDefaultSound(eventType, soundId); }}
+                  onPreview={(source) => { void editor.previewSound(source); }}
                   onStopPreview={editor.stopPreview}
                   onSelectFile={editor.adapter.selectAudioFile}
                 />
@@ -218,14 +219,14 @@ function RulesTab() {
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => setShowTemplates(!showTemplates)}
+            onClick={() => { setShowTemplates(!showTemplates); }}
             className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50"
           >
             {showTemplates ? "Hide Templates" : "Add from Template"}
           </button>
           <button
             type="button"
-            onClick={() => editor.addRule()}
+            onClick={() => { editor.addRule(); }}
             className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             + Add Rule
@@ -245,7 +246,7 @@ function RulesTab() {
                   <button
                     key={template.templateId}
                     type="button"
-                    onClick={() => addFromTemplate(template)}
+                    onClick={() => { addFromTemplate(template); }}
                     className="px-3 py-1.5 text-sm border rounded hover:bg-blue-50 hover:border-blue-300"
                   >
                     {template.name}
@@ -265,20 +266,20 @@ function RulesTab() {
         </div>
       ) : (
         <div className="space-y-3">
-          {editor.soundPack.rules
+            {editor.soundPack.rules
             .sort((a, b) => b.priority - a.priority)
             .map((rule) => (
               <RuleEditor
                 key={rule.id}
                 rule={rule}
-                onUpdate={(updates) => editor.updateRule(rule.id, updates)}
-                onRemove={() => editor.removeRule(rule.id)}
-                onAddSound={(entry) => editor.addRuleSound(rule.id, entry)}
-                onUpdateSound={(soundId, updates) =>
-                  editor.updateRuleSound(rule.id, soundId, updates)
-                }
-                onRemoveSound={(soundId) => editor.removeRuleSound(rule.id, soundId)}
-                onPreview={editor.previewSound}
+                onUpdate={(updates) => { editor.updateRule(rule.id, updates); }}
+                onRemove={() => { editor.removeRule(rule.id); }}
+                onAddSound={(entry) => { editor.addRuleSound(rule.id, entry); }}
+                onUpdateSound={(soundId, updates) => {
+                  editor.updateRuleSound(rule.id, soundId, updates);
+                }}
+                onRemoveSound={(soundId) => { editor.removeRuleSound(rule.id, soundId); }}
+                onPreview={(source) => { void editor.previewSound(source); }}
                 onStopPreview={editor.stopPreview}
                 onSelectFile={editor.adapter.selectAudioFile}
                 champions={editor.champions}
@@ -305,7 +306,7 @@ function SettingsTab() {
         <h3 className="font-medium mb-3">Volume</h3>
         <VolumeSlider
           value={editor.soundPack.settings.masterVolume}
-          onChange={editor.setMasterVolume}
+          onChange={(volume) => { editor.setMasterVolume(volume); }}
           label="Master Volume"
         />
         <p className="text-xs text-gray-500 mt-2">
@@ -316,11 +317,12 @@ function SettingsTab() {
       {/* Normalization */}
       <div className="bg-white border rounded-lg p-4">
         <h3 className="font-medium mb-3">Audio Normalization</h3>
-        <label className="flex items-center gap-2">
+        <label htmlFor="normalization" className="flex items-center gap-2">
           <input
+            id="normalization"
             type="checkbox"
             checked={editor.soundPack.settings.normalization}
-            onChange={(e) => editor.setNormalization(e.currentTarget.checked)}
+            onChange={(e) => { editor.setNormalization(e.currentTarget.checked); }}
             className="rounded"
           />
           <span className="text-sm">Normalize audio levels</span>
@@ -336,30 +338,33 @@ function SettingsTab() {
         <h3 className="font-medium mb-3">Pack Information</h3>
         <div className="space-y-3">
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Version</label>
+            <label htmlFor="version" className="block text-sm text-gray-600 mb-1">Version</label>
             <input
+              id="version"
               type="text"
               value={editor.soundPack.version}
-              onChange={(e) => editor.updatePack({ version: e.currentTarget.value })}
+              onChange={(e) => { editor.updatePack({ version: e.currentTarget.value }); }}
               className="w-full px-3 py-2 border rounded text-sm"
               placeholder="1.0.0"
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Author</label>
+            <label htmlFor="author" className="block text-sm text-gray-600 mb-1">Author</label>
             <input
+              id="author"
               type="text"
               value={editor.soundPack.author ?? ""}
-              onChange={(e) => editor.updatePack({ author: e.currentTarget.value || undefined })}
+              onChange={(e) => { editor.updatePack({ author: e.currentTarget.value || undefined }); }}
               className="w-full px-3 py-2 border rounded text-sm"
               placeholder="Your name"
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Description</label>
+            <label htmlFor="description" className="block text-sm text-gray-600 mb-1">Description</label>
             <textarea
+              id="description"
               value={editor.soundPack.description ?? ""}
-              onChange={(e) => editor.updatePack({ description: e.currentTarget.value || undefined })}
+              onChange={(e) => { editor.updatePack({ description: e.currentTarget.value || undefined }); }}
               className="w-full px-3 py-2 border rounded text-sm"
               rows={3}
               placeholder="Describe your sound pack..."
@@ -373,7 +378,7 @@ function SettingsTab() {
         <h3 className="font-medium text-red-600 mb-3">Danger Zone</h3>
         <button
           type="button"
-          onClick={editor.resetPack}
+          onClick={() => { editor.resetPack(); }}
           className="px-3 py-1.5 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50"
         >
           Reset to Empty Pack

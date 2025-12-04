@@ -9,7 +9,7 @@ import { SoundPackSection } from "./components/sections/sound-pack-section.tsx";
 import { DebugPanel } from "./components/sections/debug-panel.tsx";
 import { Alert } from "./components/ui/alert.tsx";
 import type { LcuStatus, DiscordStatus, Config, LogEntry, LogPaths, Section, AvailableSoundPack } from "./types.ts";
-import { DEFAULT_EVENT_SOUNDS, getErrorMessage } from "./types.ts";
+import { getErrorMessage } from "./types.ts";
 import type { SoundPack } from "@scout-for-lol/data";
 
 // eslint-disable-next-line max-lines-per-function -- Main app component, refactoring tracked separately
@@ -37,7 +37,6 @@ export default function App() {
   const [channelId, setChannelId] = useState("");
   const [voiceChannelId, setVoiceChannelId] = useState("");
   const [soundPack, setSoundPack] = useState("base");
-  const [eventSounds, setEventSounds] = useState<Record<string, string>>(DEFAULT_EVENT_SOUNDS);
   const [availableSoundPacks, setAvailableSoundPacks] = useState<AvailableSoundPack[]>([
     { id: "base", name: "Base Pack (Synth tones)", isBuiltIn: true },
   ]);
@@ -110,12 +109,6 @@ export default function App() {
         if (config.soundPack) {
           setSoundPack(config.soundPack);
         }
-        if (config.eventSounds) {
-          setEventSounds((prev) => ({
-            ...prev,
-            ...config.eventSounds,
-          }));
-        }
         if (config.botToken || config.channelId || config.voiceChannelId) {
           addLog("info", "Loaded saved Discord configuration");
         }
@@ -124,7 +117,7 @@ export default function App() {
         try {
           const paths = await invoke<LogPaths>("get_log_paths");
           setLogPaths(paths);
-          addLog("info", `Log files: ${paths.working_dir_log} (working dir), ${paths.app_log_dir} (app logs)`);
+          addLog("info", `Log files: ${paths.logs_dir} (logs dir), ${paths.debug_log} (debug log)`);
         } catch (pathErr) {
           console.error("Failed to load log paths:", pathErr);
         }
@@ -216,7 +209,7 @@ export default function App() {
         channelId,
         voiceChannelId: voiceChannelId || null,
         soundPack,
-        eventSounds,
+        eventSounds: null,
       });
       await loadStatus();
       addLog("info", "Discord configured successfully");
@@ -262,13 +255,6 @@ export default function App() {
     } finally {
       setLoading(null);
     }
-  };
-
-  const handleEventSoundChange = (key: string, value: string) => {
-    setEventSounds((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
   };
 
   const handleStartMonitoring = async () => {
@@ -378,6 +364,11 @@ export default function App() {
     setLogs([]);
   };
 
+  // Stable callback for sound pack save to prevent adapter recreation
+  const handleSoundPackSave = useCallback(() => {
+    void loadAvailableSoundPacks();
+  }, [loadAvailableSoundPacks]);
+
   // Render active section content
   const renderSection = () => {
     switch (activeSection) {
@@ -400,12 +391,10 @@ export default function App() {
             voiceChannelId={voiceChannelId}
             soundPack={soundPack}
             availableSoundPacks={availableSoundPacks}
-            eventSounds={eventSounds}
             onBotTokenChange={setBotToken}
             onChannelIdChange={setChannelId}
             onVoiceChannelIdChange={setVoiceChannelId}
             onSoundPackChange={setSoundPack}
-            onEventSoundChange={handleEventSoundChange}
             onConfigure={() => void handleConfigureDiscord()}
             onJoinVoice={() => void handleJoinVoice()}
             onTestSound={() => void handleTestSound()}
@@ -425,7 +414,7 @@ export default function App() {
           />
         );
       case "sounds":
-        return <SoundPackSection onSave={() => void loadAvailableSoundPacks()} />;
+        return <SoundPackSection onSave={handleSoundPackSave} />;
     }
   };
 

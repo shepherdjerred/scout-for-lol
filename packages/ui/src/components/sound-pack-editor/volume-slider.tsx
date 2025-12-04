@@ -37,7 +37,7 @@ export function VolumeSlider({
           min="0"
           max="200"
           value={percentage}
-          onChange={(e) => onChange(Number(e.currentTarget.value) / 100)}
+          onChange={(e) => { onChange(Number(e.currentTarget.value) / 100); }}
           disabled={disabled}
           className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         />

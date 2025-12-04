@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- Hook provides comprehensive state management that benefits from co-location */
 /**
  * Sound Pack Editor Hook and Context
  *
@@ -25,7 +26,7 @@ import {
   createEmptyRule,
   generateId,
 } from "@scout-for-lol/data";
-import type { SoundPackAdapter, Champion, LocalPlayer } from "../types/adapter.ts";
+import type { SoundPackAdapter, Champion, LocalPlayer } from "@scout-for-lol/ui/types/adapter.ts";
 
 // =============================================================================
 // Context Types
@@ -120,26 +121,48 @@ export function SoundPackEditorProvider({
   const [localPlayer, setLocalPlayer] = useState<LocalPlayer | null>(null);
 
   // Load champions on mount
+  // eslint-disable-next-line custom-rules/no-use-effect -- Needed to load initial data from adapter
   useEffect(() => {
-    adapter.getChampions().then(setChampions).catch(console.error);
+    const loadChampions = async () => {
+      try {
+        const result = await adapter.getChampions();
+        setChampions(result);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    void loadChampions();
   }, [adapter]);
 
   // Load local player on mount
+  // eslint-disable-next-line custom-rules/no-use-effect -- Needed to load initial data from adapter
   useEffect(() => {
-    adapter.getLocalPlayer().then(setLocalPlayer).catch(() => setLocalPlayer(null));
+    const loadLocalPlayer = async () => {
+      try {
+        const result = await adapter.getLocalPlayer();
+        setLocalPlayer(result);
+      } catch {
+        setLocalPlayer(null);
+      }
+    };
+    void loadLocalPlayer();
   }, [adapter]);
 
   // Load pack on mount if no initial pack provided
+  // eslint-disable-next-line custom-rules/no-use-effect -- Needed to load initial data from adapter
   useEffect(() => {
     if (!initialPack) {
-      adapter
-        .loadSoundPack()
-        .then((pack) => {
+      const loadPack = async () => {
+        try {
+          const pack = await adapter.loadSoundPack();
           if (pack) {
             setSoundPack(pack);
           }
-        })
-        .catch(console.error);
+        } catch (error) {
+          console.error(error);
+        }
+      };
+      void loadPack();
     }
   }, [adapter, initialPack]);
 
@@ -270,7 +293,9 @@ export function SoundPackEditorProvider({
     (eventType: EventType, soundId: string, updates: Partial<SoundEntry>) => {
       setSoundPack((prev) => {
         const existingPool = prev.defaults[eventType];
-        if (!existingPool) return prev;
+        if (!existingPool) {
+          return prev;
+        }
         return {
           ...prev,
           defaults: {
@@ -292,7 +317,9 @@ export function SoundPackEditorProvider({
   const removeDefaultSound = useCallback((eventType: EventType, soundId: string) => {
     setSoundPack((prev) => {
       const existingPool = prev.defaults[eventType];
-      if (!existingPool) return prev;
+      if (!existingPool) {
+        return prev;
+      }
       return {
         ...prev,
         defaults: {

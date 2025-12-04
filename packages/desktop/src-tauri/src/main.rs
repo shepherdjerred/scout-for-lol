@@ -25,6 +25,7 @@
     dead_code,
     clippy::struct_excessive_bools,
     clippy::single_match,
+    clippy::single_match_else,
     clippy::missing_const_for_fn,
     clippy::used_underscore_binding
 )]
@@ -787,6 +788,8 @@ fn main() {
     // Initialize paths early so they can be used for log plugin configuration
     paths::early_init();
     paths::ensure_directories();
+    paths::migrate_from_legacy();
+    paths::migrate_from_roaming();
 
     append_startup_log("starting main()");
     std::panic::set_hook(Box::new(|info| {
@@ -841,17 +844,25 @@ fn main() {
         .setup(|app| {
             append_startup_log("tauri setup()");
 
-            // Re-initialize with Tauri's app_data_dir (should match our computed path)
-            let app_data_dir = app
+            // Log Tauri's app_data_dir for debugging (note: on Windows this is Roaming,
+            // but we use Local via paths::compute_app_data_dir() which is already initialized)
+            let tauri_app_data_dir = app
                 .path()
                 .app_data_dir()
                 .expect("Failed to get app data directory");
-            paths::init(&app_data_dir);
+            paths::init(&tauri_app_data_dir);
 
-            append_startup_log(&format!("app data dir: {}", app_data_dir.display()));
+            append_startup_log(&format!(
+                "tauri app data dir: {}",
+                tauri_app_data_dir.display()
+            ));
+            append_startup_log(&format!(
+                "actual app data dir: {}",
+                paths::app_data_dir().display()
+            ));
 
             info!("Scout for LoL Desktop starting up...");
-            info!("App data directory: {}", app_data_dir.display());
+            info!("App data directory: {}", paths::app_data_dir().display());
             info!("Config path: {}", paths::config_file().display());
             info!("Logs directory: {}", paths::logs_dir().display());
 
