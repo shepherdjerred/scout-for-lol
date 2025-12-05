@@ -263,10 +263,23 @@ export const ImageGenerationTraceSchema = z.object({
 export type ImageGenerationTrace = z.infer<typeof ImageGenerationTraceSchema>;
 
 /**
+ * Timeline chunk trace schema (for chunked processing)
+ */
+export const TimelineChunkTraceSchema = z.object({
+  chunkIndex: z.number(),
+  timeRange: z.string(),
+  trace: StageTraceSchema,
+});
+
+export type TimelineChunkTrace = z.infer<typeof TimelineChunkTraceSchema>;
+
+/**
  * Pipeline traces schema
  */
 export const PipelineTracesSchema = z.object({
   timelineSummary: StageTraceSchema.optional(),
+  timelineChunks: z.array(TimelineChunkTraceSchema).optional(),
+  timelineAggregate: StageTraceSchema.optional(),
   matchSummary: StageTraceSchema.optional(),
   reviewText: StageTraceSchema,
   imageDescription: StageTraceSchema.optional(),
@@ -280,6 +293,7 @@ export type PipelineTraces = z.infer<typeof PipelineTracesSchema>;
  */
 export const PipelineIntermediateResultsSchema = z.object({
   timelineSummaryText: z.string().optional(),
+  timelineChunkSummaries: z.array(z.string()).optional(),
   matchSummaryText: z.string().optional(),
   imageDescriptionText: z.string().optional(),
   selectedImagePrompts: z.array(z.string()).optional(),

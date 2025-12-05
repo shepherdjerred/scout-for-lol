@@ -35,6 +35,8 @@ import { selectRandomPersonality, getPersonalityById, getLaneContext } from "./p
 
 export type GenerationStep =
   | "timeline-summary"
+  | "timeline-chunk"
+  | "timeline-aggregate"
   | "match-summary"
   | "review-text"
   | "image-description"
@@ -48,6 +50,10 @@ export type GenerationProgress = {
   currentStage?: number;
   /** Total number of enabled stages */
   totalStages?: number;
+  /** For chunked stages: current chunk index (1-based) */
+  chunkIndex?: number;
+  /** For chunked stages: total number of chunks */
+  chunkTotal?: number;
 };
 
 /**
@@ -400,12 +406,19 @@ export async function generateMatchReview(params: GenerateMatchReviewParams): Pr
     // Add progress callback if provided
     if (onProgress) {
       pipelineInput.onProgress = (p) => {
-        onProgress({
+        const progress: GenerationProgress = {
           step: p.stage,
           message: p.message,
           currentStage: p.currentStage,
           totalStages: p.totalStages,
-        });
+        };
+        if (p.chunkIndex !== undefined) {
+          progress.chunkIndex = p.chunkIndex;
+        }
+        if (p.chunkTotal !== undefined) {
+          progress.chunkTotal = p.chunkTotal;
+        }
+        onProgress(progress);
       };
     }
 

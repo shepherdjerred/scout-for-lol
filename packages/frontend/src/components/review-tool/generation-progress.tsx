@@ -56,10 +56,16 @@ function PipelinePillProgress({
 }
 
 export function GenerationProgress({ progress, elapsedMs }: GenerationProgressProps) {
-  const { step, message, currentStage, totalStages } = progress;
+  const { step, message, currentStage, totalStages, chunkIndex, chunkTotal } = progress;
 
   const elapsedSeconds = Math.floor(elapsedMs / 1000);
   const isComplete = step === "complete";
+
+  // Build display message with chunk info if applicable
+  let displayMessage = message;
+  if (chunkIndex !== undefined && chunkTotal !== undefined && step === "timeline-chunk") {
+    displayMessage = `Processing timeline (${chunkIndex.toString()}/${chunkTotal.toString()})...`;
+  }
 
   return (
     <div className="mb-4 p-4 bg-brand-50 border border-brand-200 rounded-xl">
@@ -96,7 +102,7 @@ export function GenerationProgress({ progress, elapsedMs }: GenerationProgressPr
               </div>
             )}
             <div className="flex-1">
-              <div className="text-sm font-medium text-brand-900">{isComplete ? "Complete!" : message}</div>
+              <div className="text-sm font-medium text-brand-900">{isComplete ? "Complete!" : displayMessage}</div>
             </div>
           </div>
           <div className="text-sm font-mono text-brand-700">{elapsedSeconds}s</div>
