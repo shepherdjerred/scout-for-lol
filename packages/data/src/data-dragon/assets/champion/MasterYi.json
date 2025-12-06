@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.23.1",
+  "version": "15.24.1",
   "data": {
     "MasterYi": {
       "id": "MasterYi",
@@ -148,7 +148,7 @@
         "difficulty": 4
       },
       "stats": {
-        "hp": 655,
+        "hp": 640,
         "hpperlevel": 105,
         "mp": 251,
         "mpperlevel": 42,
@@ -165,7 +165,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 65,
-        "attackdamageperlevel": 2.8,
+        "attackdamageperlevel": 2.5,
         "attackspeedperlevel": 2.5,
         "attackspeed": 0.679
       },

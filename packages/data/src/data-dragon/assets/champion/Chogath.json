@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.23.1",
+  "version": "15.24.1",
   "data": {
     "Chogath": {
       "id": "Chogath",
@@ -229,10 +229,11 @@
           "description": "Cho'Gath's attacks release deadly spikes, dealing damage and slowing all enemy units in front of him.",
           "tooltip": "Cho'Gath's next 3 Attacks launch spikes that deal <magicDamage>{{ flatdamagecalc }} plus {{ maxhealthpercentcalc }} of the target's max Health magic damage</magicDamage> and <status>Slow</status> by {{ slowamountpercentage }}%, decaying over {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Maximum Health Damage", "Slow", "Cooldown"],
+            "label": ["Damage", "Maximum Health Damage", "Monster Damage", "Slow", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ percenthealthdamage }}% -> {{ percenthealthdamageNL }}%",
+              "{{ modifiedmonstercap }} -> {{ modifiedmonstercapNL }}",
               "{{ slowamountpercentage }}% -> {{ slowamountpercentageNL }}%",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
