@@ -60,39 +60,61 @@ export const LANE_CONTEXT_MAP: Record<Lane, string> = {
 export const EXCLUDED_PERSONALITY_FILES = new Set(["generic.json"]);
 
 /**
- * Select a random behavior from a list based on weights.
- * Each behavior has an independent percentage chance of being selected.
- * If no behavior is selected (roll exceeds total weights), returns undefined.
+ * Select 3-6 random behaviors from a list using weighted sampling without replacement.
+ * Higher-weight behaviors are more likely to be selected.
  *
  * @param behaviors - Array of behaviors with prompts and weights
- * @returns The selected behavior's prompt, or undefined if none selected
+ * @returns The selected behaviors' prompts joined by newlines, or empty string if none available
  */
-export function selectRandomBehavior(behaviors: RandomBehavior[] | undefined): string | undefined {
+export function selectRandomBehaviors(behaviors: RandomBehavior[] | undefined): string {
   if (!behaviors || behaviors.length === 0) {
-    return undefined;
+    return "";
   }
 
-  // Calculate total weight
-  const totalWeight = behaviors.reduce((sum, b) => sum + b.weight, 0);
+  // Determine how many behaviors to select (3-6, capped by available)
+  const minCount = 3;
+  const maxCount = 12;
+  const targetCount = minCount + Math.floor(Math.random() * (maxCount - minCount + 1));
+  const count = Math.min(behaviors.length, targetCount);
 
-  // Roll a random number between 0 and 100
-  const roll = Math.random() * 100;
+  // Create a mutable copy for weighted sampling without replacement
+  const remaining = [...behaviors];
+  const selected: string[] = [];
 
-  // If roll exceeds total weight, no behavior triggers
-  if (roll >= totalWeight) {
-    return undefined;
-  }
+  for (let i = 0; i < count; i++) {
+    // Calculate total weight of remaining behaviors
+    const totalWeight = remaining.reduce((sum, b) => sum + b.weight, 0);
 
-  // Find which behavior was selected based on cumulative weights
-  let cumulative = 0;
-  for (const behavior of behaviors) {
-    cumulative += behavior.weight;
-    if (roll < cumulative) {
-      return behavior.prompt;
+    if (totalWeight <= 0) {
+      break;
+    }
+
+    // Roll based on total remaining weight
+    const roll = Math.random() * totalWeight;
+
+    // Find which behavior was selected
+    let cumulative = 0;
+    let selectedIndex = 0;
+    for (let j = 0; j < remaining.length; j++) {
+      const behavior = remaining[j];
+      if (behavior) {
+        cumulative += behavior.weight;
+        if (roll < cumulative) {
+          selectedIndex = j;
+          break;
+        }
+      }
+    }
+
+    // Add selected behavior and remove from pool
+    const selectedBehavior = remaining[selectedIndex];
+    if (selectedBehavior) {
+      selected.push(selectedBehavior.prompt);
+      remaining.splice(selectedIndex, 1);
     }
   }
 
-  return undefined;
+  return selected.join("\n");
 }
 
 /**
