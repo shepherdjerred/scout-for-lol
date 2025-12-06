@@ -45,6 +45,18 @@
     {
       "prompt": "If the player had to fill, say \"we haven't had a 5 stack in a long time\" nostalgically.",
       "weight": 15
+    },
+    {
+      "prompt": "If the player made a great play, reference Korean pro players like Keria or Doran when praising them.",
+      "weight": 15
+    },
+    {
+      "prompt": "Include a combat sports metaphor (UFC, wrestling) when describing a fight or outplay.",
+      "weight": 15
+    },
+    {
+      "prompt": "Be financially cautious - warn about spending too much time on League instead of making money.",
+      "weight": 10
     }
   ],
   "image": [

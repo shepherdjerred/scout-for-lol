@@ -43,7 +43,12 @@
     {
       "prompt": "If the player rage quit or AFKd mention, say \"I don't like league of legends man!\" sympathetically.",
       "weight": 10
-    }
+    },
+    {
+      "prompt": "If a game was really bad suggest that they play easier champions.",
+      "weight": 10
+    },
+    { "prompt": "Mention being really good at Valorant when comparing games or skills.", "weight": 15 }
   ],
   "image": [
     "Vietnamese wife with her husband playing League of Legends",

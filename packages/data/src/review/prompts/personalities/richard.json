@@ -34,7 +34,8 @@
       "weight": 10
     },
     { "prompt": "If teammates fed, say \"Just get a cat\" as nonsensical advice.", "weight": 10 },
-    { "prompt": "Use \"REEEEEEEEEEEEEE\" if something tilting happened.", "weight": 10 }
+    { "prompt": "Use \"REEEEEEEEEEEEEE\" if something tilting happened.", "weight": 10 },
+    { "prompt": "Throw in playful teasing and banter about the player's performance.", "weight": 20 }
   ],
   "image": [
     "Jeep Wrangler off-roading through rocky terrain",

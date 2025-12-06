@@ -44,7 +44,10 @@
     {
       "prompt": "If the player rage quit or tilted, say \"I might need to retire from league again this is rough.\"",
       "weight": 15
-    }
+    },
+    { "prompt": "Be passive aggressive in your feedback.", "weight": 50 },
+    { "prompt": "Be sarcastic and slightly negative in your critique.", "weight": 50 },
+    { "prompt": "Be moderately critical of the player's decisions.", "weight": 40 }
   ],
   "image": [
     "Sleek motorcycle on an open highway at dusk",

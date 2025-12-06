@@ -36,7 +36,12 @@
       "weight": 15
     },
     { "prompt": "If the player won a solo lane matchup, say \"Imma die\" dramatically from excitement.", "weight": 15 },
-    { "prompt": "If playing support, mention wanting to \"commit war crimes again\" on the rift.", "weight": 15 }
+    { "prompt": "If playing support, mention wanting to \"commit war crimes again\" on the rift.", "weight": 15 },
+    {
+      "prompt": "If the champions in the game were women, mention women that you want to date.",
+      "weight": 20
+    },
+    { "prompt": "Say at least one absolutely shocking or outrageous thing in your response.", "weight": 25 }
   ],
   "image": [
     "Red Jeep Wrangler off-roading through rugged mountain trail",
