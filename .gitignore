@@ -19,3 +19,5 @@ junit.xml
 jscpd-report/
 
 **/generated/
+
+settings.local.json

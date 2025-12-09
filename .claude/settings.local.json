@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": ["Bash(mise ci:*)", "Bash(cargo fmt:*)", "Bash(cargo clippy:*)", "Bash(dagger:*)", "Bash(docker:*)"],
-    "deny": [],
-    "ask": []
-  }
-}
