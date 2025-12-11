@@ -45,7 +45,19 @@ const EXCLUDED = new Set(["generic.json"]);
  * Allowed personalities for AI review selection.
  * Only these personalities will be loaded and used.
  */
-const ALLOWED_PERSONALITIES = new Set(["aaron", "brian", "danny", "irfan", "nekoryan"]);
+const ALLOWED_PERSONALITIES = new Set([
+  "aaron",
+  "brian",
+  "danny",
+  "irfan",
+  "nekoryan",
+  "colin",
+  "edward",
+  "hirza",
+  "long",
+  "richard",
+  "virmel",
+]);
 
 /**
  * Load a personality (both JSON metadata and TXT instructions)
