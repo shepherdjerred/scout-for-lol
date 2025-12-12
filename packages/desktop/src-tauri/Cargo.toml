@@ -54,7 +54,7 @@ songbird = { version = "0.4", default-features = false, features = ["serenity", 
 symphonia = { version = "0.5.5", features = ["all"] }
 dirs = "6"
 rand = "0.9"
-rodio = "0.20"
+rodio = "0.21"
 
 [dev-dependencies]
 mockito = "1.6"
