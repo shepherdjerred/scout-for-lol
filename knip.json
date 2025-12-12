@@ -23,7 +23,7 @@
     "dependencies": "warn",
     "devDependencies": "warn",
     "exports": "warn",
-    "duplicates": "warn",
+    "duplicates": "off",
     "types": "off",
     "nsExports": "off",
     "nsTypes": "off",
@@ -34,7 +34,7 @@
   },
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.ts", ".husky/commit-msg", ".husky/pre-commit"],
+      "entry": ["scripts/*.ts", ".husky/commit-msg", ".husky/pre-commit", "eslint-rules/**/*.test.ts"],
       "project": ["scripts/**/*.ts", "eslint-rules/**/*.ts"]
     },
     ".dagger": {

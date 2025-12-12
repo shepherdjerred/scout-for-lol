@@ -34,8 +34,6 @@ tauri-build = { version = "2.1.0", features = [] }
 
 [dependencies]
 tauri = { version = "2.4.0", features = ["devtools"] }
-tauri-plugin-shell = "2.2.0"
-tauri-plugin-updater = "2.2.0"
 tauri-plugin-dialog = "2.2.0"
 tauri-plugin-fs = "2.2.0"
 tauri-plugin-log = "2.2.0"
@@ -57,9 +55,6 @@ symphonia = { version = "0.5.5", features = ["all"] }
 dirs = "6"
 rand = "0.9"
 rodio = "0.20"
-
-[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-updater = "2.2.0"
 
 [dev-dependencies]
 mockito = "1.6"

@@ -7,14 +7,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import type {
-  SoundPackAdapter,
-  Champion,
-  LocalPlayer,
-  CacheStatus,
-} from "@scout-for-lol/ui";
+import type { SoundPackAdapter, Champion, LocalPlayer, CacheStatus } from "@scout-for-lol/ui";
 import type { SoundPack, SoundSource } from "@scout-for-lol/data";
-import { SoundPackSchema, getChampionImageUrl } from "@scout-for-lol/data";
+import { SoundPackSchema } from "@scout-for-lol/data";
 import { z } from "zod";
 
 /**
@@ -168,11 +163,4 @@ export function createTauriAdapter(onSave?: () => void): SoundPackAdapter {
       }
     },
   };
-}
-
-/**
- * Get the URL for a champion's square icon
- */
-export function getChampionIconUrl(championId: string): string {
-  return getChampionImageUrl(championId);
 }

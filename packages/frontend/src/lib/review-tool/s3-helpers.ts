@@ -20,6 +20,7 @@ export function getOutcome(participant: RawParticipant): "Victory" | "Defeat" | 
 
 /**
  * Extract rune details from participant perks
+ * @lintignore - used internally by participantToChampion
  */
 export function extractRunes(p: RawParticipant): Rune[] {
   const runes: Rune[] = [];

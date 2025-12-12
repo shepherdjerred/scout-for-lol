@@ -46,7 +46,7 @@ export type ApiSettings = z.infer<typeof ApiSettingsSchema>;
 /**
  * Model configuration schema (matches pipeline-types.ts)
  */
-export const ModelConfigSchema = z.object({
+const ModelConfigSchema = z.object({
   model: z.string(),
   maxTokens: z.number().int().min(100).max(100000),
   temperature: z.number().min(0).max(2).optional(),
@@ -58,7 +58,7 @@ export type ModelConfig = z.infer<typeof ModelConfigSchema>;
 /**
  * Stage configuration schema for stages that can be enabled/disabled
  */
-export const StageConfigSchema = z.object({
+const StageConfigSchema = z.object({
   enabled: z.boolean(),
   model: ModelConfigSchema,
   systemPrompt: z.string().optional(),
@@ -70,7 +70,7 @@ export type StageConfig = z.infer<typeof StageConfigSchema>;
 /**
  * Review text stage config (always enabled)
  */
-export const ReviewTextStageConfigSchema = z.object({
+const ReviewTextStageConfigSchema = z.object({
   model: ModelConfigSchema,
   systemPrompt: z.string().optional(),
   userPrompt: z.string().optional(),
@@ -81,7 +81,7 @@ export type ReviewTextStageConfig = z.infer<typeof ReviewTextStageConfigSchema>;
 /**
  * Image generation stage config
  */
-export const ImageGenerationStageConfigSchema = z.object({
+const ImageGenerationStageConfigSchema = z.object({
   enabled: z.boolean(),
   model: z.string(),
   timeoutMs: z.number().int().min(10000).max(300000),
@@ -93,7 +93,7 @@ export type ImageGenerationStageConfig = z.infer<typeof ImageGenerationStageConf
 /**
  * All pipeline stages configuration
  */
-export const PipelineStagesConfigSchema = z.object({
+const PipelineStagesConfigSchema = z.object({
   timelineSummary: StageConfigSchema,
   matchSummary: StageConfigSchema,
   reviewText: ReviewTextStageConfigSchema,
@@ -143,7 +143,7 @@ export type ImageGenerationSettings = z.infer<typeof ImageGenerationSettingsSche
 /**
  * Random behavior schema - weighted random prompts
  */
-export const RandomBehaviorSchema = z.object({
+const RandomBehaviorSchema = z.object({
   prompt: z.string(),
   weight: z.number().min(0).max(100), // Percentage chance (0-100)
 });
@@ -229,7 +229,7 @@ export type ReviewConfig = {
 /**
  * Stage trace schema (for pipeline output)
  */
-export const StageTraceSchema = z.object({
+const StageTraceSchema = z.object({
   request: z.object({
     systemPrompt: z.string().optional(),
     userPrompt: z.string(),
@@ -248,7 +248,7 @@ export type StageTrace = z.infer<typeof StageTraceSchema>;
 /**
  * Image generation trace schema
  */
-export const ImageGenerationTraceSchema = z.object({
+const ImageGenerationTraceSchema = z.object({
   request: z.object({
     prompt: z.string(),
   }),
@@ -265,7 +265,7 @@ export type ImageGenerationTrace = z.infer<typeof ImageGenerationTraceSchema>;
 /**
  * Pipeline traces schema
  */
-export const PipelineTracesSchema = z.object({
+const PipelineTracesSchema = z.object({
   timelineSummary: StageTraceSchema.optional(),
   matchSummary: StageTraceSchema.optional(),
   reviewText: StageTraceSchema,
@@ -278,7 +278,7 @@ export type PipelineTraces = z.infer<typeof PipelineTracesSchema>;
 /**
  * Pipeline intermediate results schema
  */
-export const PipelineIntermediateResultsSchema = z.object({
+const PipelineIntermediateResultsSchema = z.object({
   timelineSummaryText: z.string().optional(),
   matchSummaryText: z.string().optional(),
   imageDescriptionText: z.string().optional(),
@@ -291,7 +291,7 @@ export type PipelineIntermediateResults = z.infer<typeof PipelineIntermediateRes
 /**
  * Pipeline context schema
  */
-export const PipelineContextSchema = z.object({
+const PipelineContextSchema = z.object({
   reviewerName: z.string(),
   playerName: z.string(),
   playerIndex: z.number(),

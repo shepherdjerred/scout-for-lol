@@ -36,7 +36,6 @@
     "@types/eslint-plugin-jsx-a11y": "^6.10.1",
     "@types/node": "^24.10.1",
     "@types/react": "^19.1.13",
-    "@types/react-dom": "^19.1.9",
     "@typescript-eslint/rule-tester": "^8.48.0",
     "@typescript-eslint/utils": "^8.46.0",
     "bun-types": "latest",
@@ -91,7 +90,7 @@
     ],
     "packages/desktop/src-tauri/**/*.rs": [
       "bash -c 'cd packages/desktop/src-tauri && cargo fmt'",
-      "bash -c 'cd packages/desktop/src-tauri && cargo clippy -- -D warnings'"
+      "bash -c 'cd packages/desktop/src-tauri && mkdir -p ../dist && cargo clippy -- -D warnings'"
     ],
     "packages/ui/**/*.{ts,tsx}": [
       "bash -c 'cd packages/ui && bun run typecheck'",
@@ -101,12 +100,8 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.0",
-    "date-fns": "^4.1.0",
     "openai": "^6.9.1",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "remeda": "^2.21.2",
-    "ts-pattern": "^5.7.0",
     "zod": "^4.0.0"
   },
   "patchedDependencies": {

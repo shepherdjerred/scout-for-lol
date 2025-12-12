@@ -3,16 +3,7 @@
     "SessionStart": [
       {
         "matcher": "startup",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/install_pkgs.sh"
-          },
-          {
-            "type": "command",
-            "command": "git -C \"$CLAUDE_PROJECT_DIR\" restore packages/backend/generated/"
-          }
-        ]
+        "hooks": []
       }
     ]
   },
