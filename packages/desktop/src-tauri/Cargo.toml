@@ -50,7 +50,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 log = "0.4"
 serenity = { version = "0.12", default-features = false, features = ["client", "gateway", "voice", "rustls_backend"] }
-songbird = { version = "0.4", default-features = false, features = ["serenity", "gateway", "builtin-queue", "driver", "rustls"] }
+songbird = { version = "0.5", default-features = false, features = ["serenity", "gateway", "builtin-queue", "driver", "rustls"] }
 symphonia = { version = "0.5.5", features = ["all"] }
 dirs = "6"
 rand = "0.9"
