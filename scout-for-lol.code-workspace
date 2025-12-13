@@ -21,6 +21,10 @@
       "path": "packages/frontend",
     },
     {
+      "name": "desktop",
+      "path": "packages/desktop",
+    },
+    {
       "name": "root",
       "path": ".",
     },
@@ -45,6 +49,7 @@
       "dbaeumer.vscode-eslint",
       "oven.bun-vscode",
       "unifiedjs.vscode-mdx",
+      "rust-lang.rust-analyzer",
     ],
   },
   "settings": {

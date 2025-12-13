@@ -1,5 +1,6 @@
 ---
 import { Icon } from 'astro-icon/components';
+import { Badge as ShadcnBadge } from '../components/ui/badge'; // Alias for shadcn Badge
 import { badgeColors, type ColorVariant } from '../lib/colors';
 
 interface Props {
@@ -7,8 +8,8 @@ interface Props {
   color?: ColorVariant;
   icon?: string; // astro-icon name
   iconHtml?: string; // Raw HTML for custom icons
-  size?: 'sm' | 'md';
-  rounded?: 'pill' | 'lg' | 'md';
+  size?: 'sm' | 'md'; // Not directly mapped to shadcn, will be ignored for now
+  rounded?: 'pill' | 'lg' | 'md'; // Not directly mapped to shadcn, will be ignored for now
 }
 
 const {
@@ -16,24 +17,32 @@ const {
   color = 'indigo',
   icon,
   iconHtml,
-  size = 'md',
-  rounded = 'pill',
 } = Astro.props;
 
-const sizeClasses = {
-  sm: 'px-2 py-1 text-xs',
-  md: 'px-3 py-1 text-xs',
-};
+let shadcnVariant: 'default' | 'secondary' | 'destructive' | 'outline' = 'default';
+// Map existing color variants to shadcn/ui variants as best as possible
+switch (color) {
+  case 'indigo':
+  case 'blue':
+  case 'green':
+  case 'purple':
+  case 'yellow':
+    shadcnVariant = 'default'; // Using default for most positive colors
+    break;
+  case 'red':
+    shadcnVariant = 'destructive';
+    break;
+  case 'gray':
+    shadcnVariant = 'secondary';
+    break;
+  default:
+    shadcnVariant = 'default';
+}
 
-const roundedClasses = {
-  pill: 'rounded-full',
-  lg: 'rounded-lg',
-  md: 'rounded-md',
-};
 ---
 
-<span class={`inline-flex items-center ${sizeClasses[size]} ${roundedClasses[rounded]} font-semibold ${badgeColors[color]}`}>
+<ShadcnBadge variant={shadcnVariant} className={badgeColors[color]}>
   {icon && <Icon name={icon} class="h-4 w-4 mr-1" />}
   {iconHtml && <div set:html={iconHtml} class="h-4 w-4 mr-1" />}
   {text}
-</span>
+</ShadcnBadge>

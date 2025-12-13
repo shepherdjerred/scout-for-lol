@@ -11,10 +11,10 @@
     "lint": "bunx eslint src",
     "format": "bunx prettier --check src",
     "format:write": "bunx prettier --write src",
-    "typecheck": "bunx tsc --noEmit"
+    "typecheck": "bunx tsc --noEmit",
+    "update-data-dragon": "bun run scripts/update-data-dragon.ts"
   },
   "dependencies": {
-    "@scout-for-lol/report": "workspace:*",
     "date-fns": "^4.1.0",
     "remeda": "^2.21.2",
     "ts-pattern": "^5.7.0",

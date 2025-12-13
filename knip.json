@@ -23,7 +23,7 @@
     "dependencies": "warn",
     "devDependencies": "warn",
     "exports": "warn",
-    "duplicates": "warn",
+    "duplicates": "off",
     "types": "off",
     "nsExports": "off",
     "nsTypes": "off",
@@ -34,7 +34,7 @@
   },
   "workspaces": {
     ".": {
-      "entry": ["scripts/*.ts", ".husky/commit-msg", ".husky/pre-commit"],
+      "entry": ["scripts/*.ts", ".husky/commit-msg", ".husky/pre-commit", "eslint-rules/**/*.test.ts"],
       "project": ["scripts/**/*.ts", "eslint-rules/**/*.ts"]
     },
     ".dagger": {
@@ -63,8 +63,21 @@
       "ignoreDependencies": ["react", "yoga-wasm-web", "@types/react"]
     },
     "packages/frontend": {
-      "entry": ["src/pages/**/*.astro", "dev/report-ui/src/main.tsx", "dev/report-ui/src/arena-example.ts", "dev/review-dev-tool/src/pages/**/*.astro"],
-      "project": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.astro", "dev/**/*.ts", "dev/**/*.tsx", "dev/**/*.astro", "astro.config.mjs"],
+      "entry": [
+        "src/pages/**/*.astro",
+        "dev/report-ui/src/main.tsx",
+        "dev/report-ui/src/arena-example.ts",
+        "dev/review-dev-tool/src/pages/**/*.astro"
+      ],
+      "project": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.astro",
+        "dev/**/*.ts",
+        "dev/**/*.tsx",
+        "dev/**/*.astro",
+        "astro.config.mjs"
+      ],
       "ignoreDependencies": [
         "@tailwindcss/postcss",
         "@astrojs/tailwind",

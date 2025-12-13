@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import { z } from "zod";
-import { saveSvgToS3 } from "@scout-for-lol/backend/storage/s3.js";
+import { saveSvgToS3 } from "@scout-for-lol/backend/storage/s3.ts";
 import { MatchIdSchema } from "@scout-for-lol/data";
 
 // Create S3 mock
@@ -76,7 +76,7 @@ describe("saveSvgToS3 - Success Cases", () => {
     expect(command.input.ContentType).toBe("image/svg+xml");
 
     // Verify return value format
-    expect(result).toMatch(/^s3:\/\/test-bucket\/images\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\.svg$/);
+    expect(result).toMatch(/^s3:\/\/test-bucket\/games\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\/report\.svg$/);
   });
 
   test("handles arena queue type", async () => {
@@ -204,7 +204,7 @@ describe("saveSvgToS3 - S3 Key Format", () => {
 
     // Verify key structure
     const key = command.input.Key;
-    expect(key).toMatch(/^images\/\d{4}\/\d{2}\/\d{2}\/NA1_DATE_TEST\.svg$/);
+    expect(key).toMatch(/^games\/\d{4}\/\d{2}\/\d{2}\/NA1_DATE_TEST\/report\.svg$/);
 
     // Verify it uses today's date
     const now = new Date();
@@ -212,7 +212,7 @@ describe("saveSvgToS3 - S3 Key Format", () => {
     const month = String(now.getUTCMonth() + 1).padStart(2, "0");
     const day = String(now.getUTCDate()).padStart(2, "0");
 
-    expect(key).toContain(`images/${year.toString()}/${month}/${day}/`);
+    expect(key).toContain(`games/${year.toString()}/${month}/${day}/`);
   });
 
   test("uses .svg extension", async () => {
@@ -243,7 +243,7 @@ describe("saveSvgToS3 - S3 Key Format", () => {
     const result = await saveSvgToS3(matchId, svgContent, queueType, []);
 
     expect(result).toStartWith("s3://test-bucket/");
-    expect(result).toContain("images/");
+    expect(result).toContain("games/");
     expect(result).toEndWith(".svg");
   });
 });

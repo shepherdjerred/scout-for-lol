@@ -1,8 +1,8 @@
 ---
 import Layout from "../../layouts/review-tool/Layout.astro";
-import App from "../../components/review-tool/app";
+import AppWithSuspense from "../../components/review-tool/app-with-error-boundary";
 ---
 
 <Layout title="Review Generator Dev Tool">
-  <App client:only="react" />
+  <AppWithSuspense client:only="react" />
 </Layout>

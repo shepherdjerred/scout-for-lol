@@ -1,9 +1,9 @@
-import { type ArenaChampion, type Augment, type ParticipantDto } from "@scout-for-lol/data";
+import { type ArenaChampion, type Augment, type RawParticipant } from "@scout-for-lol/data";
 import { participantToChampion } from "@scout-for-lol/data/model/match-helpers";
 import { mapAugmentIdsToUnion } from "@scout-for-lol/backend/league/arena/augment";
 
 // Arena champion conversion with arena-specific fields
-export async function participantToArenaChampion(dto: ParticipantDto): Promise<ArenaChampion> {
+export async function participantToArenaChampion(dto: RawParticipant): Promise<ArenaChampion> {
   const baseChampion = participantToChampion(dto);
 
   const augments = await extractAugments(dto);
@@ -19,7 +19,7 @@ export async function participantToArenaChampion(dto: ParticipantDto): Promise<A
 }
 
 // Helpers for arena-specific fields
-async function extractAugments(dto: ParticipantDto): Promise<Augment[]> {
+async function extractAugments(dto: RawParticipant): Promise<Augment[]> {
   const ids: number[] = [];
   const augmentFields = [
     dto.playerAugment1,
@@ -50,7 +50,7 @@ async function extractAugments(dto: ParticipantDto): Promise<Augment[]> {
   }
 }
 
-function extractArenaMetrics(dto: ParticipantDto) {
+function extractArenaMetrics(dto: RawParticipant) {
   return {
     playerScore0: dto.playerScore0 ?? dto.PlayerScore0 ?? 0,
     playerScore1: dto.playerScore1 ?? dto.PlayerScore1 ?? 0,
@@ -64,7 +64,7 @@ function extractArenaMetrics(dto: ParticipantDto) {
   };
 }
 
-function extractTeamSupport(dto: ParticipantDto) {
+function extractTeamSupport(dto: RawParticipant) {
   return {
     damageShieldedOnTeammate: dto.totalDamageShieldedOnTeammates,
     healsOnTeammate: dto.totalHealsOnTeammates,

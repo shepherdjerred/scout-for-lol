@@ -3,13 +3,13 @@ import {
   createCompetition,
   getCompetitionById,
   type CreateCompetitionInput,
-} from "@scout-for-lol/backend/database/competition/queries.js";
-import { clearAllRateLimits } from "@scout-for-lol/backend/database/competition/rate-limit.js";
-import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/database/competition/validation.js";
-import { ErrorSchema } from "@scout-for-lol/backend/utils/errors.js";
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
+} from "@scout-for-lol/backend/database/competition/queries.ts";
+import { clearAllRateLimits } from "@scout-for-lol/backend/database/competition/rate-limit.ts";
+import { validateOwnerLimit, validateServerLimit } from "@scout-for-lol/backend/database/competition/validation.ts";
+import { ErrorSchema } from "@scout-for-lol/backend/utils/errors.ts";
+import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
 import { ChampionIdSchema, DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.js";
+import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database
 const { prisma } = createTestDatabase("create-command-test");

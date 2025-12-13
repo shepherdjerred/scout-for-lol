@@ -30,7 +30,7 @@ export function MatchFilters({
     <div className="space-y-3 mb-3">
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label htmlFor="queue-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="queue-type" className="block text-sm font-medium text-surface-700 mb-1">
             Queue Type
           </label>
           <select
@@ -39,7 +39,7 @@ export function MatchFilters({
             onChange={(e) => {
               onQueueTypeChange(e.target.value);
             }}
-            className="w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded"
+            className="w-full px-2 py-1.5 text-sm bg-white text-surface-900 border border-surface-300 rounded"
           >
             <option value="all">All</option>
             <option value="solo">Ranked Solo</option>
@@ -51,7 +51,7 @@ export function MatchFilters({
         </div>
 
         <div>
-          <label htmlFor="lane" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="lane" className="block text-sm font-medium text-surface-700 mb-1">
             Lane
           </label>
           <select
@@ -60,7 +60,7 @@ export function MatchFilters({
             onChange={(e) => {
               onLaneChange(e.target.value);
             }}
-            className="w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded"
+            className="w-full px-2 py-1.5 text-sm bg-white text-surface-900 border border-surface-300 rounded"
           >
             <option value="all">All</option>
             <option value="top">Top</option>
@@ -72,7 +72,7 @@ export function MatchFilters({
         </div>
 
         <div>
-          <label htmlFor="outcome" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label htmlFor="outcome" className="block text-sm font-medium text-surface-700 mb-1">
             Outcome
           </label>
           <select
@@ -81,7 +81,7 @@ export function MatchFilters({
             onChange={(e) => {
               onOutcomeChange(e.target.value);
             }}
-            className="w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded"
+            className="w-full px-2 py-1.5 text-sm bg-white text-surface-900 border border-surface-300 rounded"
           >
             <option value="all">All</option>
             <option value="victory">Victory</option>
@@ -91,7 +91,7 @@ export function MatchFilters({
       </div>
 
       <div>
-        <label htmlFor="player-game-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label htmlFor="player-game-name" className="block text-sm font-medium text-surface-700 mb-1">
           Player (Game Name)
         </label>
         <input
@@ -102,12 +102,12 @@ export function MatchFilters({
           onChange={(e) => {
             onPlayerChange(e.target.value);
           }}
-          className="w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded"
+          className="w-full px-2 py-1.5 text-sm bg-white text-surface-900 border border-surface-300 rounded"
         />
       </div>
 
       <div>
-        <label htmlFor="champion" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label htmlFor="champion" className="block text-sm font-medium text-surface-700 mb-1">
           Champion
         </label>
         <input
@@ -118,7 +118,7 @@ export function MatchFilters({
           onChange={(e) => {
             onChampionChange(e.target.value);
           }}
-          className="w-full px-2 py-1.5 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded"
+          className="w-full px-2 py-1.5 text-sm bg-white text-surface-900 border border-surface-300 rounded"
         />
       </div>
     </div>

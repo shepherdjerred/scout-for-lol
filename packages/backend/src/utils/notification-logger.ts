@@ -1,3 +1,7 @@
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("notification-logger");
+
 /**
  * Unique instance ID for this bot process
  * Helps identify if multiple instances are running
@@ -86,7 +90,7 @@ export function logNotification(
     ? ` [Competition ${entry.competitionId.toString()}: ${entry.competitionTitle ?? "Unknown"}]`
     : "";
 
-  console.log(`${emoji} [NotificationLog] ${type}${competitionInfo} | Trigger: ${trigger} | Instance: ${INSTANCE_ID}`);
+  logger.info(`${emoji} [NotificationLog] ${type}${competitionInfo} | Trigger: ${trigger} | Instance: ${INSTANCE_ID}`);
 
   // File log (non-blocking)
   void (async () => {
@@ -95,7 +99,7 @@ export function logNotification(
       const logLine = formatLogEntry(entry) + "\n";
       await Bun.write(Bun.file(LOG_FILE), logLine);
     } catch (error) {
-      console.error("❌ Failed to write notification log:", error);
+      logger.error("❌ Failed to write notification log:", error);
     }
   })();
 }
@@ -107,4 +111,4 @@ export function logCronTrigger(jobName: string, details?: string): void {
   logNotification("CRON_TRIGGER", `cron:${jobName}`, details ? { message: details } : {});
 }
 
-console.log(`📝 Notification logger initialized | Instance ID: ${INSTANCE_ID} | Log file: ${LOG_FILE}`);
+logger.info(`📝 Notification logger initialized | Instance ID: ${INSTANCE_ID} | Log file: ${LOG_FILE}`);

@@ -1,18 +1,35 @@
 /* eslint-disable max-lines  -- this file cannot be split up due to Dagger */
 import type { Directory, Secret, Container } from "@dagger.io/dagger";
-import { func, argument, object } from "@dagger.io/dagger";
+import { dag, func, argument, object } from "@dagger.io/dagger";
 import {
-  checkBackend,
   buildBackendImage,
   publishBackendImage,
+  publishBackendImageWithContainer,
   smokeTestBackendImage,
+  smokeTestBackendImageWithContainer,
   getBackendCoverage,
   getBackendTestReport,
 } from "@scout-for-lol/.dagger/src/backend";
-import { checkReport, getReportCoverage, getReportTestReport } from "@scout-for-lol/.dagger/src/report";
+import { getReportCoverage, getReportTestReport } from "@scout-for-lol/.dagger/src/report";
 import { checkData, getDataCoverage, getDataTestReport } from "@scout-for-lol/.dagger/src/data";
 import { checkFrontend, buildFrontend, deployFrontend } from "@scout-for-lol/.dagger/src/frontend";
-import { getGitHubContainer, getBunNodeContainer } from "@scout-for-lol/.dagger/src/base";
+import {
+  checkDesktop,
+  checkDesktopParallel,
+  buildDesktopLinux,
+  buildDesktopFrontend,
+  getDesktopLinuxArtifacts,
+  buildDesktopWindowsGnu,
+  getDesktopWindowsArtifacts,
+  installDesktopDeps,
+} from "@scout-for-lol/.dagger/src/desktop";
+import {
+  getGitHubContainer,
+  getBunNodeContainer,
+  getPreparedWorkspace,
+  getPreparedMountedWorkspace,
+  generatePrismaClient,
+} from "@scout-for-lol/.dagger/src/base";
 
 // Helper function to log with timestamp
 function logWithTimestamp(message: string): void {
@@ -20,17 +37,47 @@ function logWithTimestamp(message: string): void {
 }
 
 // Helper to extract message from unknown error value
+// Dagger errors often contain a 'stderr' property with the actual command output
 function getErrorMessage(error: unknown): string {
   if (error === null || error === undefined) {
     return String(error);
   }
-  // Check if it's an Error object with message
+
+  // Check if it's an Error object with message first
   if (error instanceof Error) {
+    // Check if the Error also has stderr (Dagger exec errors extend Error)
+    const errorWithStderr = error as Error & { stderr?: string; stdout?: string };
+    if (typeof errorWithStderr.stderr === "string" && errorWithStderr.stderr.length > 0) {
+      return `${error.message}\n\nStderr:\n${errorWithStderr.stderr}`;
+    }
+    if (typeof errorWithStderr.stdout === "string" && errorWithStderr.stdout.length > 0) {
+      return `${error.message}\n\nOutput:\n${errorWithStderr.stdout}`;
+    }
     return error.message;
   }
+
+  // Check if it's an object with stderr (Dagger exec errors)
+  if (typeof error === "object") {
+    const errorObj = error as Record<string, unknown>;
+
+    // Dagger errors may have stderr with actual command output
+    const stderr = errorObj["stderr"];
+    if (typeof stderr === "string" && stderr.length > 0) {
+      const message = typeof errorObj["message"] === "string" ? errorObj["message"] : "Command failed";
+      return `${message}\n\nStderr:\n${stderr}`;
+    }
+
+    // Check for stdout as fallback (some errors output there)
+    const stdout = errorObj["stdout"];
+    if (typeof stdout === "string" && stdout.length > 0) {
+      const message = typeof errorObj["message"] === "string" ? errorObj["message"] : "Command failed";
+      return `${message}\n\nOutput:\n${stdout}`;
+    }
+  }
+
   // Try JSON stringify for other types
   try {
-    return JSON.stringify(error);
+    return JSON.stringify(error, null, 2);
   } catch {
     // Fallback if stringify fails - return generic message
     return "Unknown error occurred";
@@ -54,10 +101,35 @@ async function withTiming<T>(operation: string, fn: () => Promise<T>): Promise<T
   }
 }
 
+// Helper function to post a comment to a GitHub PR
+async function postPrComment(
+  prNumber: string,
+  comment: string,
+  ghToken: Secret,
+  repo = "shepherdjerred/scout-for-lol",
+): Promise<void> {
+  logWithTimestamp(`📝 Posting comment to PR #${prNumber}...`);
+
+  await getGitHubContainer()
+    .withSecretVariable("GH_TOKEN", ghToken)
+    .withExec(["gh", "pr", "comment", prNumber, "--repo", repo, "--body", comment])
+    .sync();
+
+  logWithTimestamp(`✅ Comment posted to PR #${prNumber}`);
+}
+
+// Helper function to parse preview URL from wrangler output
+function parsePreviewUrl(wranglerOutput: string): string | undefined {
+  // Wrangler outputs lines like: "Deployment complete! Take a peek over at https://..."
+  // Or: "✨ Deployment complete! Take a peek at: https://..."
+  const urlMatch = wranglerOutput.match(/https:\/\/[^\s]+\.pages\.dev/);
+  return urlMatch?.[0];
+}
+
 @object()
 export class ScoutForLol {
   /**
-   * Run all checks (backend, report, data, frontend)
+   * Run all checks (backend, report, data, frontend, desktop)
    * @param source The source directory
    * @returns A message indicating completion
    */
@@ -70,65 +142,57 @@ export class ScoutForLol {
     source: Directory,
   ): Promise<string> {
     logWithTimestamp("🔍 Starting comprehensive check process");
-    logWithTimestamp(
-      "📋 This includes TypeScript type checking, ESLint, tests for all packages, and custom ESLint rules tests",
-    );
 
-    logWithTimestamp("📁 Prepared source directories for all packages");
+    // OPTIMIZATION: Generate Prisma client once and share
+    logWithTimestamp("⚙️ Generating Prisma client...");
+    const prismaGenerated = generatePrismaClient(source);
 
-    // Run checks in parallel - force container execution with .sync()
-    await withTiming("parallel package checks (lint, typecheck, tests)", async () => {
-      logWithTimestamp("🔄 Running lint, typecheck, and tests in parallel for all packages...");
-      logWithTimestamp("📦 Packages being checked: backend, report, data, frontend, eslint-rules");
+    // OPTIMIZATION: Use mounted workspace for CI checks (faster than copying files)
+    const preparedWorkspace = getPreparedMountedWorkspace(source, prismaGenerated);
 
-      // Force execution of all containers in parallel
+    // OPTIMIZATION: Build desktop frontend once and share
+    const desktopFrontend = buildDesktopFrontend(source);
+
+    // Run all checks in parallel for maximum speed
+    await withTiming("all checks", async () => {
       await Promise.all([
-        withTiming("backend check (lint + typecheck + tests)", async () => {
-          const container = checkBackend(source);
-          await container.sync();
-          return container;
+        withTiming("typecheck all", async () => {
+          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "typecheck"]).sync();
         }),
-        withTiming("report check (lint + typecheck + tests)", async () => {
-          const container = checkReport(source);
-          await container.sync();
-          return container;
+        withTiming("lint all", async () => {
+          // Use ESLint with content-based caching for faster incremental runs
+          await preparedWorkspace
+            .withWorkdir("/workspace")
+            .withExec([
+              "bunx",
+              "eslint",
+              "packages/",
+              "--cache",
+              "--cache-strategy",
+              "content",
+              "--cache-location",
+              "/workspace/.eslintcache",
+            ])
+            .sync();
         }),
-        withTiming("data check (lint + typecheck)", async () => {
-          const container = checkData(source);
-          await container.sync();
-          return container;
+        withTiming("test all", async () => {
+          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "test"]).sync();
         }),
-        withTiming("frontend check (lint + typecheck)", async () => {
-          const container = checkFrontend(source);
-          await container.sync();
-          return container;
+        withTiming("duplication check", async () => {
+          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "duplication-check"]).sync();
         }),
-        withTiming("eslint-rules tests", async () => {
-          const container = getBunNodeContainer(source)
-            .withExec(["bun", "install", "--frozen-lockfile"])
-            .withExec(["bun", "test", "eslint-rules/"]);
-          await container.sync();
-          return container;
-        }),
-        withTiming("code duplication check", async () => {
-          const container = getBunNodeContainer(source)
-            .withExec(["bun", "install", "--frozen-lockfile"])
-            .withExec(["bun", "run", "scripts/check-duplication.ts"]);
-          await container.sync();
-          return container;
+        withTiming("desktop check (parallel TS + Rust)", async () => {
+          await checkDesktopParallel(source, desktopFrontend);
         }),
       ]);
     });
 
     logWithTimestamp("🎉 All checks completed successfully");
-    logWithTimestamp(
-      "✅ All packages passed: TypeScript type checking, ESLint linting, tests, and custom ESLint rules tests",
-    );
     return "All checks completed successfully";
   }
 
   /**
-   * Build all packages (backend image, report npm package)
+   * Build all packages (backend image, desktop app)
    * @param source The source directory
    * @param version The version to build
    * @param gitSha The git SHA
@@ -146,29 +210,36 @@ export class ScoutForLol {
   ): Promise<string> {
     logWithTimestamp(`🔨 Starting build process for version ${version} (${gitSha})`);
 
-    // Build backend image
-    await withTiming("backend Docker image build", async () => {
-      logWithTimestamp("🔄 Building backend Docker image...");
-      const image = buildBackendImage(source, version, gitSha);
-      // Force the container to be evaluated by getting its ID
+    // OPTIMIZATION: Generate Prisma client once
+    logWithTimestamp("⚙️ Generating Prisma client...");
+    const prismaGenerated = generatePrismaClient(source);
+
+    // OPTIMIZATION: Prepare workspace - don't sync(), let Dagger optimize
+    const preparedWorkspace = getPreparedWorkspace(source, prismaGenerated);
+
+    // Build backend image using prepared workspace
+    const backendImage = await withTiming("backend Docker image build", async () => {
+      const image = buildBackendImage(source, version, gitSha, preparedWorkspace);
       await image.id();
       return image;
     });
 
-    // Smoke test the backend image
+    // Smoke test the backend image (reuse already-built image)
     await withTiming("backend image smoke test", async () => {
-      logWithTimestamp("🧪 Running smoke test on backend image...");
-      const smokeTestResult = await smokeTestBackendImage(source, version, gitSha);
+      const smokeTestResult = await smokeTestBackendImageWithContainer(backendImage, source);
       logWithTimestamp(`Smoke test result: ${smokeTestResult}`);
-
-      // If smoke test indicates failure, throw an error
       if (smokeTestResult.startsWith("❌")) {
         throw new Error(`Backend image smoke test failed: ${smokeTestResult}`);
       }
     });
 
-    logWithTimestamp("🎉 Backend image built successfully");
-    return "Backend image built successfully";
+    // Build desktop application
+    await withTiming("desktop application build", async () => {
+      await buildDesktopLinux(source, version).sync();
+    });
+
+    logWithTimestamp("🎉 All builds completed successfully");
+    return "All builds completed successfully";
   }
 
   /**
@@ -184,6 +255,7 @@ export class ScoutForLol {
    * @param accountId Cloudflare account ID (optional, for frontend deployment)
    * @param apiToken Cloudflare API token (optional, for frontend deployment)
    * @param projectName Cloudflare Pages project name (optional, defaults to "scout-for-lol")
+   * @param prNumber The PR number for posting deploy preview comments (optional)
    * @returns A message indicating completion
    */
   @func()
@@ -203,32 +275,184 @@ export class ScoutForLol {
     accountId?: Secret,
     apiToken?: Secret,
     projectName?: string,
+    prNumber?: string,
+    skipDesktopBuild?: string,
   ): Promise<string> {
+    const isProd = env === "prod";
+    const shouldSkipDesktopBuild = skipDesktopBuild === "true" && !isProd;
     logWithTimestamp(`🚀 Starting CI pipeline for version ${version} (${gitSha}) in ${env ?? "dev"} environment`);
-    logWithTimestamp("⚠️  CI will FAIL if lint or typecheck errors are found");
+    if (shouldSkipDesktopBuild) {
+      logWithTimestamp("⏭️ Skipping desktop build (no desktop changes detected)");
+    }
 
-    // First run checks
-    await withTiming("CI checks phase", () => {
-      logWithTimestamp("📋 Phase 1: Running checks (lint, typecheck, tests)...");
-      logWithTimestamp("❌ Pipeline will FAIL if any check fails");
-      return this.check(source);
+    // OPTIMIZATION: Generate Prisma client ONCE and share across all containers
+    // This is an expensive operation that should only happen once per CI run
+    logWithTimestamp("⚙️ Generating Prisma client (once, shared across containers)...");
+    const prismaGenerated = generatePrismaClient(source);
+
+    // Use preparedWorkspace for all operations (embedded files work better with Dagger parallelism)
+    const preparedWorkspace = getPreparedWorkspace(source, prismaGenerated);
+
+    logWithTimestamp("📋 Phase 1: Running checks AND builds in parallel...");
+
+    // Build the backend image in parallel with checks (uses regular workspace for publishable image)
+    const backendImagePromise = withTiming("backend Docker image build", async () => {
+      const image = buildBackendImage(source, version, gitSha, preparedWorkspace);
+      await image.id();
+      return image;
     });
 
-    // Then build
-    await withTiming("CI build phase", () => {
-      logWithTimestamp("🔨 Phase 2: Building packages...");
-      return this.build(source, version, gitSha);
+    // Run typecheck, lint, and tests with MAXIMUM PARALLELISM via Dagger
+    // Use preparedWorkspace (embedded files) instead of mountedWorkspace for parallel operations
+    // This avoids issues with mounted files when forking containers in parallel
+    const checksPromise = withTiming("all checks (lint, typecheck, tests)", async () => {
+      await Promise.all([
+        // TYPECHECK: Run each package's typecheck in parallel (5 parallel containers)
+        // Use "bun run typecheck" to invoke each package's typecheck script properly
+        withTiming("typecheck all (parallel)", async () => {
+          await Promise.all([
+            preparedWorkspace.withWorkdir("/workspace/packages/backend").withExec(["bun", "run", "typecheck"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/data").withExec(["bun", "run", "typecheck"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/report").withExec(["bun", "run", "typecheck"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/frontend").withExec(["bun", "run", "typecheck"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/desktop").withExec(["bun", "run", "typecheck"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/ui").withExec(["bun", "run", "typecheck"]).sync(),
+          ]);
+        }),
+
+        // LINT: Run ESLint for each package in parallel
+        // Use "bun run lint" to invoke each package's lint script properly
+        withTiming("lint all (parallel)", async () => {
+          await Promise.all([
+            preparedWorkspace.withWorkdir("/workspace/packages/backend").withExec(["bun", "run", "lint"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/data").withExec(["bun", "run", "lint"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/report").withExec(["bun", "run", "lint"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/frontend").withExec(["bun", "run", "lint"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/desktop").withExec(["bun", "run", "lint"]).sync(),
+            preparedWorkspace.withWorkdir("/workspace/packages/ui").withExec(["bun", "run", "lint"]).sync(),
+          ]);
+        }),
+
+        // TESTS: Run tests for each package in parallel with JUnit output
+        // JUnit reports are stored in a cache volume for artifact collection later
+        withTiming("test all (parallel with JUnit)", async () => {
+          const testArtifactsCache = dag.cacheVolume("test-artifacts");
+          await Promise.all([
+            // eslint-rules tests (root level)
+            preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "test", "eslint-rules/"]).sync(),
+            // Package tests with JUnit reporters - output to cache for artifact collection
+            preparedWorkspace
+              .withMountedCache("/artifacts", testArtifactsCache)
+              .withExec(["mkdir", "-p", "/artifacts/backend", "/artifacts/data", "/artifacts/report"])
+              .withWorkdir("/workspace/packages/backend")
+              .withExec([
+                "bun",
+                "test",
+                "--reporter=default",
+                "--reporter=junit",
+                "--reporter-outfile=/artifacts/backend/junit.xml",
+              ])
+              .sync(),
+            preparedWorkspace
+              .withMountedCache("/artifacts", testArtifactsCache)
+              .withWorkdir("/workspace/packages/data")
+              .withExec([
+                "bun",
+                "test",
+                "--reporter=default",
+                "--reporter=junit",
+                "--reporter-outfile=/artifacts/data/junit.xml",
+              ])
+              .sync(),
+            preparedWorkspace
+              .withMountedCache("/artifacts", testArtifactsCache)
+              .withWorkdir("/workspace/packages/report")
+              .withExec([
+                "bun",
+                "test",
+                "--reporter=default",
+                "--reporter=junit",
+                "--reporter-outfile=/artifacts/report/junit.xml",
+              ])
+              .sync(),
+            // Note: frontend and desktop tests are no-ops currently
+          ]);
+        }),
+
+        // Duplication check
+        withTiming("duplication check", async () => {
+          await preparedWorkspace.withWorkdir("/workspace").withExec(["bun", "run", "duplication-check"]).sync();
+        }),
+      ]);
+    });
+
+    // Desktop checks and builds - only run if not skipped
+    // Build frontend once and share across all desktop operations
+    let desktopChecksPromise: Promise<void>;
+    let desktopBuildWindowsPromise: Promise<Container | undefined>;
+
+    if (shouldSkipDesktopBuild) {
+      desktopChecksPromise = Promise.resolve();
+      desktopBuildWindowsPromise = Promise.resolve(undefined);
+    } else {
+      // Build desktop frontend once, share across checks and builds
+      const desktopFrontend = buildDesktopFrontend(source);
+
+      // Desktop Rust checks (TypeScript/lint already covered by main checks above)
+      // Only run Rust-specific checks: fmt, clippy, test
+      desktopChecksPromise = withTiming("desktop Rust checks (fmt, clippy, test)", async () => {
+        const baseContainer = installDesktopDeps(source);
+        const containerWithFrontend = baseContainer
+          .withDirectory("/workspace/packages/desktop/dist", desktopFrontend)
+          .withMountedCache("/workspace/packages/desktop/src-tauri/target", dag.cacheVolume("rust-target-linux"));
+
+        await containerWithFrontend
+          .withWorkdir("/workspace/packages/desktop/src-tauri")
+          .withExec(["cargo", "fmt", "--", "--check"])
+          .withExec(["cargo", "clippy", "--all-targets", "--all-features", "--", "-D", "warnings"])
+          .withExec(["cargo", "test", "--verbose"])
+          .sync();
+      });
+
+      // Desktop build - Windows only (Linux not needed)
+      desktopBuildWindowsPromise = withTiming("desktop application build (Windows)", async () => {
+        logWithTimestamp("🔄 Building desktop application for Windows...");
+        const container = buildDesktopWindowsGnu(source, version, desktopFrontend);
+        await container.sync();
+        return container;
+      });
+    }
+
+    // Wait for checks, backend image build, desktop checks, and desktop build to complete
+    const [, backendImage, , desktopWindowsContainer] = await Promise.all([
+      checksPromise,
+      backendImagePromise,
+      desktopChecksPromise,
+      desktopBuildWindowsPromise,
+    ]);
+
+    logWithTimestamp("✅ Phase 1 complete: All checks passed and builds finished");
+
+    // Smoke test the backend image (reuse the already-built image)
+    await withTiming("backend image smoke test", async () => {
+      logWithTimestamp("🧪 Running smoke test on backend image...");
+      const smokeTestResult = await smokeTestBackendImageWithContainer(backendImage, source);
+      logWithTimestamp(`Smoke test result: ${smokeTestResult}`);
+
+      if (smokeTestResult.startsWith("❌")) {
+        throw new Error(`Backend image smoke test failed: ${smokeTestResult}`);
+      }
     });
 
     // Publish images if credentials provided and environment is prod
-    const shouldPublish = ghcrUsername && ghcrPassword && env === "prod";
+    const shouldPublish = ghcrUsername && ghcrPassword && isProd;
     if (shouldPublish) {
       await withTiming("CI publish phase", async () => {
-        logWithTimestamp("📦 Phase 3: Publishing Docker image to registry...");
+        logWithTimestamp("📦 Phase 2: Publishing Docker image to registry...");
 
-        // Login to registry and publish
-        const publishedRefs = await publishBackendImage({
-          workspaceSource: source,
+        // Reuse the already-built image for publishing
+        const publishedRefs = await publishBackendImageWithContainer({
+          image: backendImage,
           version,
           gitSha,
           registryAuth: {
@@ -240,29 +464,55 @@ export class ScoutForLol {
         logWithTimestamp(`✅ Images published: ${publishedRefs.join(", ")}`);
       });
     } else {
-      logWithTimestamp("⏭️ Phase 3: Skipping image publishing (no credentials or not prod environment)");
+      logWithTimestamp("⏭️ Phase 2: Skipping image publishing (no credentials or not prod environment)");
     }
 
-    // Deploy backend to homelab
-    const deployStage = env === "prod" ? "beta" : "dev";
-    await withTiming("CI backend deploy phase", () => {
-      logWithTimestamp(`🚀 Phase 4: Deploying backend to ${deployStage}...`);
-      return this.deploy(source, version, deployStage, ghToken);
-    });
+    // Publish desktop artifacts to GitHub Releases (only for prod with GitHub token and when desktop was built)
+    const shouldPublishDesktop = isProd && ghToken && desktopWindowsContainer;
+    if (shouldPublishDesktop) {
+      await withTiming("CI desktop artifacts publish phase", async () => {
+        logWithTimestamp("📦 Phase 2.5: Publishing desktop artifacts to GitHub Releases...");
+        await this.publishDesktopArtifactsWindowsOnly(desktopWindowsContainer, version, gitSha, ghToken);
+        logWithTimestamp("✅ Desktop artifacts published to GitHub Releases");
+      });
+    } else if (shouldSkipDesktopBuild) {
+      logWithTimestamp("⏭️ Phase 2.5: Skipping desktop artifacts publishing (desktop build was skipped)");
+    } else {
+      logWithTimestamp("⏭️ Phase 2.5: Skipping desktop artifacts publishing (not prod or no GitHub token)");
+    }
+
+    // Deploy backend to homelab (only for prod)
+    if (isProd) {
+      await withTiming("CI backend deploy phase", () => {
+        logWithTimestamp("🚀 Phase 3: Deploying backend to beta...");
+        return this.deploy(source, version, "beta", ghToken);
+      });
+    } else {
+      logWithTimestamp("⏭️ Phase 3: Skipping backend deployment (not prod environment)");
+    }
 
     // Deploy frontend to Cloudflare Pages if credentials provided
     const shouldDeployFrontend = accountId && apiToken && branch;
     if (shouldDeployFrontend) {
       await withTiming("CI frontend deploy phase", async () => {
-        logWithTimestamp(`🚀 Phase 5: Deploying frontend to Cloudflare Pages (branch: ${branch})...`);
+        logWithTimestamp(`🚀 Phase 4: Deploying frontend to Cloudflare Pages (branch: ${branch})...`);
         const project = projectName ?? "scout-for-lol";
-        await this.deployFrontend(source, branch, gitSha, project, accountId, apiToken);
-        logWithTimestamp(
-          `✅ Frontend deployed to https://${branch === "main" ? "" : `${branch}.`}${project}.pages.dev`,
-        );
+        const deployOutput = await this.deployFrontend(source, branch, gitSha, project, accountId, apiToken);
+
+        // Parse the preview URL from wrangler output
+        const previewUrl = parsePreviewUrl(deployOutput);
+        const displayUrl = previewUrl ?? `https://${branch === "main" ? "" : `${branch}.`}${project}.pages.dev`;
+
+        logWithTimestamp(`✅ Frontend deployed to ${displayUrl}`);
+
+        // Post a comment to the PR with the preview URL (only for PRs, not main branch)
+        if (prNumber && ghToken && branch !== "main") {
+          const comment = `## 🚀 Deploy Preview Ready!\n\nA preview of this PR has been deployed to Cloudflare Pages:\n\n**Preview URL:** ${displayUrl}\n\n---\n*Deployed from commit ${gitSha.substring(0, 7)}*`;
+          await postPrComment(prNumber, comment, ghToken);
+        }
       });
     } else {
-      logWithTimestamp("⏭️ Phase 5: Skipping frontend deployment (no Cloudflare credentials or branch not provided)");
+      logWithTimestamp("⏭️ Phase 4: Skipping frontend deployment (no Cloudflare credentials or branch not provided)");
     }
 
     logWithTimestamp("🎉 CI pipeline completed successfully");
@@ -747,5 +997,564 @@ export class ScoutForLol {
 
     logWithTimestamp("✅ Code duplication check completed successfully");
     return "Code duplication check completed successfully";
+  }
+
+  /**
+   * Check the desktop package
+   * @param source The workspace source directory
+   * @returns A message indicating completion
+   */
+  @func()
+  async checkDesktop(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+  ): Promise<string> {
+    logWithTimestamp("🔍 Starting desktop package check");
+
+    await withTiming("desktop package check", async () => {
+      const container = checkDesktop(source);
+      await container.sync();
+      return container;
+    });
+
+    logWithTimestamp("✅ Desktop check completed successfully");
+    return "Desktop check completed successfully";
+  }
+
+  /**
+   * Build the desktop application for Linux
+   * @param source The workspace source directory
+   * @param version The version to build
+   * @returns A message indicating completion
+   */
+  @func()
+  async buildDesktop(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+  ): Promise<string> {
+    logWithTimestamp(`🏗️  Building desktop application for version ${version}`);
+
+    await withTiming("desktop build", async () => {
+      const container = buildDesktopLinux(source, version);
+      await container.sync();
+      return container;
+    });
+
+    logWithTimestamp("✅ Desktop build completed successfully");
+    return `Desktop build completed successfully for version ${version}`;
+  }
+
+  /**
+   * Build the desktop application for Windows (x86_64-pc-windows-gnu)
+   * @param source The workspace source directory
+   * @param version The version to build
+   * @returns A message indicating completion
+   */
+  @func()
+  async buildDesktopWindows(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+  ): Promise<string> {
+    logWithTimestamp(`🏗️  Building desktop application for Windows (GNU) version ${version}`);
+
+    await withTiming("desktop build (windows gnu)", async () => {
+      const container = buildDesktopWindowsGnu(source, version);
+      await container.sync();
+      return container;
+    });
+
+    logWithTimestamp("✅ Desktop Windows build completed successfully");
+    return `Desktop Windows (GNU) build completed successfully for version ${version}`;
+  }
+
+  /**
+   * Export desktop Linux build artifacts
+   * @param source The workspace source directory
+   * @param version The version to build
+   * @returns The directory containing built artifacts
+   */
+  @func()
+  async desktopArtifacts(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+  ): Promise<Directory> {
+    logWithTimestamp(`📦 Exporting desktop artifacts for version ${version}`);
+
+    const result = await withTiming("desktop artifacts export", () =>
+      Promise.resolve(getDesktopLinuxArtifacts(source, version)),
+    );
+
+    logWithTimestamp("✅ Desktop artifacts exported successfully");
+    return result;
+  }
+
+  /**
+   * Export desktop Windows (x86_64-pc-windows-gnu) build artifacts
+   * @param source The workspace source directory
+   * @param version The version to build
+   * @returns The directory containing built artifacts
+   */
+  @func()
+  async desktopWindowsArtifacts(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+  ): Promise<Directory> {
+    logWithTimestamp(`📦 Exporting desktop Windows artifacts for version ${version}`);
+
+    const result = await withTiming("desktop windows artifacts export", () =>
+      Promise.resolve(getDesktopWindowsArtifacts(source, version)),
+    );
+
+    logWithTimestamp("✅ Desktop Windows artifacts exported successfully");
+    return result;
+  }
+
+  /**
+   * Publish desktop artifacts to GitHub Releases
+   * @param source The workspace source directory
+   * @param version The version to publish
+   * @param gitSha The git commit SHA
+   * @param ghToken GitHub token for authentication
+   * @param repo The repository name (defaults to "shepherdjerred/scout-for-lol")
+   * @returns A message indicating completion
+   */
+  /**
+   * Publish desktop artifacts using pre-built containers
+   * @param linuxContainer The Linux build container
+   * @param windowsContainer The Windows build container
+   * @param version The version tag
+   * @param gitSha The git commit SHA
+   * @param ghToken GitHub token for authentication
+   * @param repo The repository name (default: shepherdjerred/scout-for-lol)
+   * @returns A message indicating completion
+   */
+  @func()
+  async publishDesktopArtifactsWithContainers(
+    linuxContainer: Container,
+    windowsContainer: Container,
+    @argument() version: string,
+    @argument() gitSha: string,
+    ghToken: Secret,
+    repo = "shepherdjerred/scout-for-lol",
+  ): Promise<string> {
+    logWithTimestamp(`📦 Publishing desktop artifacts to GitHub Releases for version ${version}`);
+
+    await withTiming("desktop artifacts GitHub release", async () => {
+      // Get the already-built Linux and Windows artifacts from the pre-built containers
+      // Artifacts are copied to /artifacts/ during build to persist beyond the cache mount
+      logWithTimestamp("📥 Collecting Linux artifacts...");
+      const linuxArtifactsDir = linuxContainer.directory("/artifacts/bundle");
+
+      logWithTimestamp("📥 Collecting Windows artifacts...");
+      const windowsArtifactsDir = windowsContainer.directory("/artifacts");
+
+      // Create a staging directory with all artifacts
+      logWithTimestamp("🏗️  Staging artifacts for upload...");
+      const container = getGitHubContainer()
+        .withSecretVariable("GH_TOKEN", ghToken)
+        .withWorkdir("/artifacts")
+        .withDirectory("/artifacts/linux", linuxArtifactsDir)
+        .withDirectory("/artifacts/windows", windowsArtifactsDir)
+        // List the artifacts for debugging
+        .withExec(["sh", "-c", "echo '📋 Linux artifacts:' && find linux -type f"])
+        .withExec(["sh", "-c", "echo '📋 Windows artifacts:' && find windows -type f"]);
+
+      // Create or update the GitHub release
+      logWithTimestamp(`🚀 Creating/updating GitHub release v${version}...`);
+
+      // Step 1: Verify authentication and check token scopes
+      logWithTimestamp(`🔐 Verifying GitHub authentication...`);
+
+      // First, check basic auth status (allow failure to capture output)
+      let authCheckContainer: Container;
+      let authOutput: string;
+      try {
+        authCheckContainer = container.withExec(["sh", "-c", 'gh auth status 2>&1; echo "AUTH_EXIT_CODE=$?"']);
+        authOutput = await authCheckContainer.stdout();
+        logWithTimestamp(`Auth status output: ${authOutput.trim()}`);
+
+        if (authOutput.includes("AUTH_EXIT_CODE=0")) {
+          logWithTimestamp(`✓ GitHub authentication successful`);
+        } else {
+          logWithTimestamp(`⚠️ GitHub authentication check returned non-zero exit code`);
+        }
+      } catch (error) {
+        logWithTimestamp(`❌ Auth check failed with error: ${error instanceof Error ? error.message : String(error)}`);
+        // Try to get any stderr output
+        try {
+          const stderr = await authCheckContainer!.stderr();
+          logWithTimestamp(`Auth check stderr: ${stderr}`);
+        } catch {
+          // Ignore stderr fetch errors
+        }
+        throw error;
+      }
+
+      // Try a simple API call to verify token works
+      logWithTimestamp(`🔍 Testing GitHub API access...`);
+      let apiTestContainer: Container;
+      let apiOutput: string;
+      try {
+        apiTestContainer = container.withExec(["sh", "-c", 'gh api user 2>&1; echo "API_EXIT_CODE=$?"']);
+        apiOutput = await apiTestContainer.stdout();
+        logWithTimestamp(`API test output: ${apiOutput.trim()}`);
+
+        if (!apiOutput.includes("API_EXIT_CODE=0")) {
+          throw new Error(`GitHub API access failed. Output: ${apiOutput}`);
+        }
+
+        logWithTimestamp(`✓ GitHub authentication verified`);
+      } catch (error) {
+        logWithTimestamp(`❌ API test failed with error: ${error instanceof Error ? error.message : String(error)}`);
+        // Try to get stderr
+        try {
+          const stderr = await apiTestContainer!.stderr();
+          logWithTimestamp(`API test stderr: ${stderr}`);
+        } catch {
+          // Ignore stderr fetch errors
+        }
+        throw error;
+      }
+
+      // Step 2: Check if release exists (capture output for debugging)
+      logWithTimestamp(`🔍 Checking if release v${version} exists...`);
+      const checkReleaseContainer = container.withExec([
+        "sh",
+        "-c",
+        // Use a more robust check that captures the exit code
+        `if gh release view "v${version}" --repo="${repo}" > /dev/null 2>&1; then
+          echo "RELEASE_EXISTS"
+        else
+          EXIT_CODE=$?
+          echo "RELEASE_NOT_FOUND"
+          if [ $EXIT_CODE -ne 1 ]; then
+            echo "ERROR: gh release view failed with exit code $EXIT_CODE" >&2
+            gh release view "v${version}" --repo="${repo}" 2>&1 || true
+          fi
+        fi`,
+      ]);
+      const checkOutput = await checkReleaseContainer.stdout();
+      const releaseExists = checkOutput.includes("RELEASE_EXISTS");
+
+      if (checkOutput.includes("ERROR:")) {
+        logWithTimestamp(`⚠️  Warning during release check: ${checkOutput}`);
+      }
+
+      logWithTimestamp(`Release check result: ${releaseExists ? "exists" : "needs creation"}`);
+
+      // Step 3: Create release if it doesn't exist
+      let releaseContainer = checkReleaseContainer;
+      if (!releaseExists) {
+        logWithTimestamp(`Creating new release v${version}...`);
+        releaseContainer = releaseContainer.withExec([
+          "gh",
+          "release",
+          "create",
+          `v${version}`,
+          `--repo=${repo}`,
+          `--title=v${version}`,
+          `--notes=Release ${version} (${gitSha.substring(0, 7)})`,
+          "--latest",
+        ]);
+        await releaseContainer.sync();
+        logWithTimestamp(`✓ Release v${version} created successfully`);
+      }
+
+      // Step 4: Upload Linux artifacts
+      logWithTimestamp(`📤 Uploading Linux artifacts...`);
+      releaseContainer = releaseContainer.withExec([
+        "sh",
+        "-c",
+        `find linux -type f \\( -name "*.deb" -o -name "*.AppImage" -o -name "*.rpm" \\) -exec gh release upload "v${version}" {} --repo="${repo}" --clobber \\; 2>&1 || (echo '❌ Linux upload failed' && exit 1)`,
+      ]);
+      await releaseContainer.sync();
+
+      // Step 5: Upload Windows artifacts
+      logWithTimestamp(`📤 Uploading Windows artifacts...`);
+      releaseContainer = releaseContainer.withExec([
+        "sh",
+        "-c",
+        `find windows -type f \\( -name "*.exe" -o -name "*.msi" \\) -exec gh release upload "v${version}" {} --repo="${repo}" --clobber \\; 2>&1 || (echo '❌ Windows upload failed' && exit 1)`,
+      ]);
+      await releaseContainer.sync();
+
+      logWithTimestamp(`✅ All artifacts uploaded to https://github.com/${repo}/releases/tag/v${version}`);
+    });
+
+    logWithTimestamp(`✅ Desktop artifacts published to GitHub Releases: v${version}`);
+    return `Desktop artifacts published to GitHub Releases: v${version}`;
+  }
+
+  /**
+   * Publish Windows-only desktop artifacts to GitHub Releases
+   * @param windowsContainer The Windows build container
+   * @param version The version tag
+   * @param gitSha The git commit SHA
+   * @param ghToken GitHub token for authentication
+   * @param repo The repository name (default: shepherdjerred/scout-for-lol)
+   * @returns A message indicating completion
+   */
+  @func()
+  async publishDesktopArtifactsWindowsOnly(
+    windowsContainer: Container,
+    @argument() version: string,
+    @argument() gitSha: string,
+    ghToken: Secret,
+    repo = "shepherdjerred/scout-for-lol",
+  ): Promise<string> {
+    logWithTimestamp(`📦 Publishing Windows desktop artifacts to GitHub Releases for version ${version}`);
+
+    await withTiming("desktop artifacts GitHub release (Windows only)", async () => {
+      logWithTimestamp("📥 Collecting Windows artifacts...");
+      const windowsArtifactsDir = windowsContainer.directory("/artifacts");
+
+      // Create a staging directory with Windows artifacts
+      logWithTimestamp("🏗️  Staging artifacts for upload...");
+      const container = getGitHubContainer()
+        .withSecretVariable("GH_TOKEN", ghToken)
+        .withWorkdir("/artifacts")
+        .withDirectory("/artifacts/windows", windowsArtifactsDir)
+        .withExec(["sh", "-c", "echo '📋 Windows artifacts:' && find windows -type f"]);
+
+      // Verify GitHub authentication
+      logWithTimestamp(`🔐 Verifying GitHub authentication...`);
+      const authCheckContainer = container.withExec(["sh", "-c", 'gh auth status 2>&1; echo "AUTH_EXIT_CODE=$?"']);
+      const authOutput = await authCheckContainer.stdout();
+      if (!authOutput.includes("AUTH_EXIT_CODE=0")) {
+        throw new Error(`GitHub authentication failed: ${authOutput}`);
+      }
+
+      // Check if release exists
+      logWithTimestamp(`🔍 Checking if release v${version} exists...`);
+      const checkReleaseContainer = container.withExec([
+        "sh",
+        "-c",
+        `if gh release view "v${version}" --repo="${repo}" > /dev/null 2>&1; then echo "RELEASE_EXISTS"; else echo "RELEASE_NOT_FOUND"; fi`,
+      ]);
+      const checkOutput = await checkReleaseContainer.stdout();
+      const releaseExists = checkOutput.includes("RELEASE_EXISTS");
+
+      // Create release if it doesn't exist
+      let releaseContainer = checkReleaseContainer;
+      if (!releaseExists) {
+        logWithTimestamp(`Creating new release v${version}...`);
+        releaseContainer = releaseContainer.withExec([
+          "gh",
+          "release",
+          "create",
+          `v${version}`,
+          `--repo=${repo}`,
+          `--title=v${version}`,
+          `--notes=Release ${version} (${gitSha.substring(0, 7)})`,
+          "--latest",
+        ]);
+        await releaseContainer.sync();
+      }
+
+      // Upload Windows artifacts
+      logWithTimestamp(`📤 Uploading Windows artifacts...`);
+      releaseContainer = releaseContainer.withExec([
+        "sh",
+        "-c",
+        `find windows -type f \\( -name "*.exe" -o -name "*.msi" \\) -exec gh release upload "v${version}" {} --repo="${repo}" --clobber \\; 2>&1 || (echo '❌ Windows upload failed' && exit 1)`,
+      ]);
+      await releaseContainer.sync();
+
+      logWithTimestamp(`✅ Windows artifacts uploaded to https://github.com/${repo}/releases/tag/v${version}`);
+    });
+
+    return `Windows desktop artifacts published to GitHub Releases: v${version}`;
+  }
+
+  /**
+   * Build and publish desktop artifacts (builds from scratch)
+   * @param source The source directory
+   * @param version The version tag
+   * @param gitSha The git commit SHA
+   * @param ghToken GitHub token for authentication
+   * @param repo The repository name (default: shepherdjerred/scout-for-lol)
+   * @returns A message indicating completion
+   */
+  @func()
+  async publishDesktopArtifacts(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+    @argument() gitSha: string,
+    ghToken: Secret,
+    repo = "shepherdjerred/scout-for-lol",
+  ): Promise<string> {
+    logWithTimestamp(`📦 Building desktop applications for publishing...`);
+
+    // Build both platforms
+    const linuxContainer = buildDesktopLinux(source, version);
+    const windowsContainer = buildDesktopWindowsGnu(source, version);
+
+    // Wait for builds to complete
+    await Promise.all([linuxContainer.sync(), windowsContainer.sync()]);
+
+    // Use the pre-built containers to publish
+    return await this.publishDesktopArtifactsWithContainers(
+      linuxContainer,
+      windowsContainer,
+      version,
+      gitSha,
+      ghToken,
+      repo,
+    );
+  }
+
+  /**
+   * Run CI and return artifacts (test reports, coverage, lint results)
+   * This is a combined function that runs CI checks and collects artifacts in one pass.
+   * Use this instead of calling ci() + ciArtifacts() separately to avoid running checks twice.
+   * @param source The workspace source directory
+   * @param version The version to build
+   * @param gitSha The git SHA
+   * @param branch The git branch name (optional)
+   * @param ghcrUsername The GitHub Container Registry username (optional)
+   * @param ghcrPassword The GitHub Container Registry password/token (optional)
+   * @param env The environment (prod/dev)
+   * @param ghToken The GitHub token (optional)
+   * @param accountId Cloudflare account ID (optional)
+   * @param apiToken Cloudflare API token (optional)
+   * @param projectName Cloudflare Pages project name (optional)
+   * @param prNumber The PR number (optional)
+   * @returns A directory containing CI artifacts (junit.xml, coverage, etc.)
+   */
+  @func()
+  async ciWithArtifacts(
+    @argument({
+      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
+      defaultPath: ".",
+    })
+    source: Directory,
+    @argument() version: string,
+    @argument() gitSha: string,
+    branch?: string,
+    ghcrUsername?: string,
+    ghcrPassword?: Secret,
+    env?: string,
+    ghToken?: Secret,
+    accountId?: Secret,
+    apiToken?: Secret,
+    projectName?: string,
+    prNumber?: string,
+    skipDesktopBuild?: string,
+  ): Promise<Directory> {
+    // Run the full CI pipeline first
+    await this.ci(
+      source,
+      version,
+      gitSha,
+      branch,
+      ghcrUsername,
+      ghcrPassword,
+      env,
+      ghToken,
+      accountId,
+      apiToken,
+      projectName,
+      prNumber,
+      skipDesktopBuild,
+    );
+
+    // After CI passes, collect artifacts
+    // Since we just ran CI with the same inputs, Dagger will cache all the setup
+    // and only run the artifact collection commands
+    logWithTimestamp("📊 Collecting CI artifacts...");
+
+    const prismaGenerated = generatePrismaClient(source);
+    const preparedWorkspace = getPreparedMountedWorkspace(source, prismaGenerated);
+
+    const artifactsContainer = await withTiming("artifact collection", async () => {
+      // Use the same cache volume where tests stored their JUnit reports
+      const testArtifactsCache = dag.cacheVolume("test-artifacts");
+
+      let workspace = preparedWorkspace
+        .withWorkdir("/workspace")
+        // Mount the test artifacts cache to copy JUnit reports from it
+        .withMountedCache("/test-artifacts", testArtifactsCache);
+
+      // Create artifacts directory and copy JUnit reports from cache
+      // Tests already ran with JUnit output during ci() - just copy the reports
+      workspace = workspace
+        .withExec([
+          "mkdir",
+          "-p",
+          "/artifacts/backend",
+          "/artifacts/data",
+          "/artifacts/report",
+          "/artifacts/desktop",
+          "/artifacts/frontend",
+        ])
+        .withExec([
+          "sh",
+          "-c",
+          "cp /test-artifacts/backend/junit.xml /artifacts/backend/ 2>/dev/null || echo 'No backend JUnit found'",
+        ])
+        .withExec([
+          "sh",
+          "-c",
+          "cp /test-artifacts/data/junit.xml /artifacts/data/ 2>/dev/null || echo 'No data JUnit found'",
+        ])
+        .withExec([
+          "sh",
+          "-c",
+          "cp /test-artifacts/report/junit.xml /artifacts/report/ 2>/dev/null || echo 'No report JUnit found'",
+        ]);
+
+      // ESLint report (JSON format) - uses cache so should be fast
+      workspace = workspace.withExec([
+        "sh",
+        "-c",
+        "cd /workspace && bunx eslint packages/ --cache --format json --output-file /artifacts/eslint-report.json 2>/dev/null || true",
+      ]);
+
+      // Knip report (JSON format)
+      workspace = workspace.withExec([
+        "sh",
+        "-c",
+        "cd /workspace && knip-bun --reporter json > /artifacts/knip-report.json 2>/dev/null || true",
+      ]);
+
+      // JSCPD duplication report - already ran, just copy results
+      workspace = workspace.withExec([
+        "sh",
+        "-c",
+        "cp -r /workspace/jscpd-report /artifacts/ 2>/dev/null || echo 'No JSCPD report found'",
+      ]);
+
+      // List artifacts for debugging
+      workspace = workspace.withExec(["sh", "-c", "echo '📋 Generated artifacts:' && find /artifacts -type f"]);
+
+      await workspace.sync();
+      return workspace;
+    });
+
+    logWithTimestamp("✅ CI artifacts collected successfully");
+    return artifactsContainer.directory("/artifacts");
   }
 }

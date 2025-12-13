@@ -1,6 +1,6 @@
 import type { Directory, Container, Secret } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
-import { installWorkspaceDeps } from "@scout-for-lol/.dagger/src/base";
+import { installWorkspaceDeps, getPreparedWorkspace } from "@scout-for-lol/.dagger/src/base";
 
 /**
  * Install dependencies for the frontend package
@@ -14,31 +14,26 @@ export function installFrontendDeps(workspaceSource: Directory): Container {
 /**
  * Run type checking and linting for the frontend package
  * @param workspaceSource The full workspace source directory
+ * @param preparedWorkspace Optional pre-prepared container (with deps already installed)
  * @returns The check results container
  */
-export function checkFrontend(workspaceSource: Directory): Container {
-  return installFrontendDeps(workspaceSource)
+export function checkFrontend(workspaceSource: Directory, preparedWorkspace?: Container): Container {
+  const base = preparedWorkspace ?? getPreparedWorkspace(workspaceSource);
+  return base
     .withWorkdir("/workspace/packages/frontend")
-    .withExec(["sh", "-c", "echo '🔍 [CI] Running TypeScript type checking for frontend...'"])
     .withExec(["bun", "run", "typecheck"])
-    .withExec(["sh", "-c", "echo '✅ [CI] TypeScript type checking passed!'"])
-    .withExec(["sh", "-c", "echo '🔍 [CI] Running ESLint for frontend...'"])
-    .withExec(["bun", "run", "lint"])
-    .withExec(["sh", "-c", "echo '✅ [CI] ESLint passed!'"])
-    .withExec(["sh", "-c", "echo '✅ [CI] All frontend checks completed successfully!'"]);
+    .withExec(["bun", "run", "lint"]);
 }
 
 /**
  * Build the frontend for production
  * @param workspaceSource The full workspace source directory
+ * @param preparedWorkspace Optional pre-prepared container (with deps already installed)
  * @returns The built dist directory
  */
-export function buildFrontend(workspaceSource: Directory): Directory {
-  const container = installFrontendDeps(workspaceSource)
-    .withWorkdir("/workspace/packages/frontend")
-    .withExec(["sh", "-c", "echo '🏗️  [CI] Building frontend for production...'"])
-    .withExec(["bun", "run", "build"])
-    .withExec(["sh", "-c", "echo '✅ [CI] Frontend build completed successfully!'"]);
+export function buildFrontend(workspaceSource: Directory, preparedWorkspace?: Container): Directory {
+  const base = preparedWorkspace ?? getPreparedWorkspace(workspaceSource);
+  const container = base.withWorkdir("/workspace/packages/frontend").withExec(["bun", "run", "build"]);
 
   return container.directory("/workspace/packages/frontend/dist");
 }

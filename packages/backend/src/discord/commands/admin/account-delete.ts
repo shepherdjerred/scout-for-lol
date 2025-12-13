@@ -1,17 +1,20 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { DiscordGuildIdSchema, RegionSchema, RiotIdSchema } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import {
   validateCommandArgs,
   executeWithTiming,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
-import { resolvePuuidFromRiotId } from "@scout-for-lol/backend/discord/commands/admin/utils/riot-api.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.ts";
+import { resolvePuuidFromRiotId } from "@scout-for-lol/backend/discord/commands/admin/utils/riot-api.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("admin-account-delete");
 import {
   buildRiotApiError,
   buildDatabaseError,
   buildSuccessResponse,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.ts";
 
 const ArgsSchema = z.object({
   riotId: RiotIdSchema,
@@ -67,7 +70,7 @@ export async function executeAccountDelete(interaction: ChatInputCommandInteract
     });
 
     if (!account) {
-      console.log(`❌ Account not found: ${riotId.game_name}#${riotId.tag_line}`);
+      logger.info(`❌ Account not found: ${riotId.game_name}#${riotId.tag_line}`);
       await interaction.reply({
         content: `❌ **Account not found**\n\nNo account with Riot ID ${riotId.game_name}#${riotId.tag_line} exists in this server.`,
         ephemeral: true,
@@ -80,7 +83,7 @@ export async function executeAccountDelete(interaction: ChatInputCommandInteract
 
     // Check if this is the last account for the player
     if (remainingAccountsCount === 0) {
-      console.log(`⚠️  Cannot remove last account for player "${player.alias}" - player would have no accounts`);
+      logger.info(`⚠️  Cannot remove last account for player "${player.alias}" - player would have no accounts`);
       await interaction.reply({
         content: `❌ **Cannot remove last account**\n\nPlayer "${player.alias}" only has one account. Removing it would leave the player with no accounts.\n\nIf you want to delete the entire player, use \`/admin player-delete\` instead.`,
         ephemeral: true,
@@ -88,7 +91,7 @@ export async function executeAccountDelete(interaction: ChatInputCommandInteract
       return;
     }
 
-    console.log(`💾 Deleting account ${riotId.game_name}#${riotId.tag_line} from player "${player.alias}"`);
+    logger.info(`💾 Deleting account ${riotId.game_name}#${riotId.tag_line} from player "${player.alias}"`);
 
     try {
       // Delete the account
@@ -108,7 +111,7 @@ export async function executeAccountDelete(interaction: ChatInputCommandInteract
         ),
       );
     } catch (error) {
-      console.error(`❌ Database error during account deletion:`, error);
+      logger.error(`❌ Database error during account deletion:`, error);
       await interaction.reply(buildDatabaseError("delete account", error));
     }
   });

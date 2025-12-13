@@ -10,8 +10,14 @@ const historyListeners = new Set<() => void>();
 
 function subscribeToHistory(callback: () => void) {
   historyListeners.add(callback);
+  // Also listen for history-update events
+  const handleHistoryUpdate = () => {
+    void loadHistoryData();
+  };
+  window.addEventListener("history-update", handleHistoryUpdate);
   return () => {
     historyListeners.delete(callback);
+    window.removeEventListener("history-update", handleHistoryUpdate);
   };
 }
 
@@ -23,7 +29,8 @@ function getHistorySnapshot() {
 let historyLoadPromise: Promise<void> | null = null;
 
 function loadHistoryData() {
-  historyLoadPromise ??= (async () => {
+  // Always reload (don't cache the promise) so updates are reflected
+  historyLoadPromise = (async () => {
     historyData = await loadHistory();
     historyListeners.forEach((listener) => {
       listener();
@@ -78,85 +85,35 @@ export function RatingsAnalytics() {
       }))
       .sort((a, b) => b.average - a.average);
 
-    // Art style stats
-    const styleMap = new Map<string, { total: number; sum: number }>();
-    for (const entry of ratedEntries) {
-      const style = entry.configSnapshot.artStyle;
-      if (style && entry.rating) {
-        const existing = styleMap.get(style);
-        if (existing) {
-          existing.total += 1;
-          existing.sum += entry.rating;
-        } else {
-          styleMap.set(style, { total: 1, sum: entry.rating });
-        }
-      }
-    }
-
-    const styleStats = Array.from(styleMap.entries())
-      .map(([style, data]) => ({
-        style: style.length > 60 ? `${style.substring(0, 60)}...` : style,
-        average: data.sum / data.total,
-        count: data.total,
-      }))
-      .sort((a, b) => b.average - a.average);
-
-    // Art theme stats
-    const themeMap = new Map<string, { total: number; sum: number }>();
-    for (const entry of ratedEntries) {
-      const theme = entry.configSnapshot.artTheme;
-      if (theme && entry.rating) {
-        const existing = themeMap.get(theme);
-        if (existing) {
-          existing.total += 1;
-          existing.sum += entry.rating;
-        } else {
-          themeMap.set(theme, { total: 1, sum: entry.rating });
-        }
-      }
-    }
-
-    const themeStats = Array.from(themeMap.entries())
-      .map(([theme, data]) => ({
-        theme: theme.length > 60 ? `${theme.substring(0, 60)}...` : theme,
-        average: data.sum / data.total,
-        count: data.total,
-      }))
-      .sort((a, b) => b.average - a.average);
-
     return {
       totalRated,
       totalGenerated: history.filter((e) => e.status === "complete").length,
       averageRating,
       ratingCounts,
       personalityStats,
-      styleStats,
-      themeStats,
     };
   }, [history]);
 
   if (statistics.totalRated === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
+      <div className="bg-white rounded-lg border border-surface-200 p-8 text-center">
         <div className="text-4xl mb-3">📊</div>
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">No ratings yet</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">
-          Generate some reviews and rate them to see analytics here
-        </p>
+        <h3 className="text-lg font-bold text-surface-900 mb-2">No ratings yet</h3>
+        <p className="text-sm text-surface-600">Generate some reviews and rate them to see analytics here</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Rating Analytics</h2>
+      <div className="bg-white rounded-lg border border-surface-200 p-6">
+        <h2 className="text-xl font-bold text-surface-900 mb-4">Rating Analytics</h2>
 
         {/* Summary Stats */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded">
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{statistics.totalRated}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400 dark:text-gray-500">Rated Generations</div>
+          <div className="p-4 bg-surface-50 rounded">
+            <div className="text-2xl font-bold text-surface-900">{statistics.totalRated}</div>
+            <div className="text-sm text-surface-600">Rated Generations</div>
           </div>
           <div className="p-4 bg-blue-50 rounded">
             <div className="text-2xl font-bold text-blue-900">{statistics.totalGenerated}</div>
@@ -170,7 +127,7 @@ export function RatingsAnalytics() {
 
         {/* Rating Distribution */}
         <div className="mb-6">
-          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Rating Distribution</h3>
+          <h3 className="text-sm font-semibold text-surface-700 mb-3">Rating Distribution</h3>
           <div className="flex gap-4 items-end h-32">
             {[1, 2, 3, 4].map((rating) => {
               const count = statistics.ratingCounts[rating] ?? 0;
@@ -185,9 +142,7 @@ export function RatingsAnalytics() {
                   >
                     {count > 0 && count}
                   </div>
-                  <div className="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400 dark:text-gray-500">
-                    {rating} ⭐
-                  </div>
+                  <div className="mt-2 text-sm font-medium text-surface-600">{rating} ⭐</div>
                 </div>
               );
             })}
@@ -197,61 +152,16 @@ export function RatingsAnalytics() {
 
       {/* Best Personalities */}
       {statistics.personalityStats.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Best Personalities</h3>
+        <div className="bg-white rounded-lg border border-surface-200 p-6">
+          <h3 className="text-lg font-bold text-surface-900 mb-4">Best Personalities</h3>
           <div className="space-y-2">
             {statistics.personalityStats.slice(0, 10).map((stat) => (
-              <div
-                key={stat.personality}
-                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded"
-              >
+              <div key={stat.personality} className="flex items-center justify-between p-3 bg-surface-50 rounded">
                 <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">{stat.personality}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
-                    {stat.count} generations
-                  </div>
+                  <div className="text-sm font-medium text-surface-900">{stat.personality}</div>
+                  <div className="text-xs text-surface-500">{stat.count} generations</div>
                 </div>
-                <div className="text-lg font-bold text-blue-600">{stat.average.toFixed(2)}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Best Art Styles */}
-      {statistics.styleStats.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Best Art Styles</h3>
-          <div className="space-y-2">
-            {statistics.styleStats.slice(0, 10).map((stat, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">{stat.style}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
-                    {stat.count} generations
-                  </div>
-                </div>
-                <div className="text-lg font-bold text-blue-600">{stat.average.toFixed(2)}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Best Art Themes */}
-      {statistics.themeStats.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Best Art Themes</h3>
-          <div className="space-y-2">
-            {statistics.themeStats.slice(0, 10).map((stat, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded">
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">{stat.theme}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
-                    {stat.count} generations
-                  </div>
-                </div>
-                <div className="text-lg font-bold text-blue-600">{stat.average.toFixed(2)}</div>
+                <div className="text-lg font-bold text-brand-600">{stat.average.toFixed(2)}</div>
               </div>
             ))}
           </div>

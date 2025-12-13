@@ -4,23 +4,32 @@
  * Usage: bun run src/league/review/test-reviews.ts [options]
  */
 
-import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
+import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.ts";
 import {
-  getExampleMatch,
   MatchIdSchema,
   LeaguePuuidSchema,
   parseQueueType,
-  MatchDtoSchema,
+  RawMatchSchema,
+  RawTimelineSchema,
   getOrdinalSuffix,
   type ArenaMatch,
   type CompletedMatch,
   type PlayerConfigEntry,
-  type MatchDto,
-} from "@scout-for-lol/data";
+  type RawMatch,
+  type RawTimeline,
+  type MatchId,
+} from "@scout-for-lol/data/index";
 import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
-import configuration from "@scout-for-lol/backend/configuration.js";
-import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
+import { LolApi, Constants } from "twisted";
+import configuration from "@scout-for-lol/backend/configuration.ts";
+import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.ts";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+// Initialize Riot API client for timeline fetching
+const api = new LolApi({ key: configuration.riotApiToken });
+
+const logger = createLogger("review-test-reviews");
 
 const MATCH_TYPES = ["ranked", "unranked", "aram", "arena"] as const;
 type MatchType = (typeof MATCH_TYPES)[number];
@@ -100,35 +109,35 @@ function parseArgs(): TestOptions {
 }
 
 function printHelp(): void {
-  console.log(`
+  logger.info(`
 Test AI Review Generation
 
-Usage: bun run src/league/review/test-reviews.ts [options]
+Usage: bun run src/league/review/test-reviews.ts --s3 [options]
 
 Options:
   -t, --type <type>      Match type: ranked, unranked, aram, arena (default: ranked)
   -c, --count <n>        Number of reviews to generate (default: 10)
   -p, --show-prompt      Show the system prompt used
-  --s3                   Fetch random matches from S3 instead of using examples
+  --s3                   Fetch random matches from S3 (REQUIRED)
   --s3-days <n>          Number of recent days to search in S3 (default: 7)
   -h, --help             Show this help message
 
 Examples:
-  # Generate 10 ranked match reviews using example data (default)
-  bun run src/league/review/test-reviews.ts
+  # Generate 10 ranked match reviews from S3
+  bun run src/league/review/test-reviews.ts --s3
 
   # Generate 5 arena match reviews from S3
-  bun run src/league/review/test-reviews.ts --type arena --count 5 --s3
+  bun run src/league/review/test-reviews.ts --s3 --type arena --count 5
 
   # Generate reviews from last 30 days of S3 matches
   bun run src/league/review/test-reviews.ts --s3 --s3-days 30
 
   # Generate review and show the prompt
-  bun run src/league/review/test-reviews.ts --show-prompt
+  bun run src/league/review/test-reviews.ts --s3 --show-prompt
 
 Environment:
   OPENAI_API_KEY         Required for AI review generation
-  S3_BUCKET_NAME         Required when using --s3 flag
+  S3_BUCKET_NAME         Required for S3 access
 `);
 }
 
@@ -183,7 +192,7 @@ async function fetchMatchKeysFromS3(daysBack: number): Promise<string[]> {
   const prefixes = generateDatePrefixes(startDate, endDate);
   const allKeys: string[] = [];
 
-  console.log(`\n🔍 Searching S3 for matches in last ${String(daysBack)} days...`);
+  logger.info(`\n🔍 Searching S3 for matches in last ${String(daysBack)} days...`);
 
   for (const prefix of prefixes) {
     try {
@@ -198,21 +207,21 @@ async function fetchMatchKeysFromS3(daysBack: number): Promise<string[]> {
       if (response.Contents) {
         const keys = response.Contents.flatMap((obj) => (obj.Key ? [obj.Key] : []));
         allKeys.push(...keys);
-        console.log(`  Found ${String(keys.length)} match(es) in ${prefix}`);
+        logger.info(`  Found ${String(keys.length)} match(es) in ${prefix}`);
       }
     } catch (error) {
-      console.warn(`  Warning: Could not list ${prefix}:`, error);
+      logger.warn(`  Warning: Could not list ${prefix}:`, error);
     }
   }
 
-  console.log(`✅ Found ${String(allKeys.length)} total matches\n`);
+  logger.info(`✅ Found ${String(allKeys.length)} total matches\n`);
   return allKeys;
 }
 
 /**
  * Fetch and parse a match from S3
  */
-async function fetchMatchFromS3(key: string): Promise<MatchDto | null> {
+async function fetchMatchFromS3(key: string): Promise<RawMatch | null> {
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
@@ -236,9 +245,9 @@ async function fetchMatchFromS3(key: string): Promise<MatchDto | null> {
     const bodyString = await response.Body.transformToString();
     // Parse and validate the match data with Zod schema
     const matchData = JSON.parse(bodyString);
-    return MatchDtoSchema.parse(matchData);
+    return RawMatchSchema.parse(matchData);
   } catch (error) {
-    console.warn(`Failed to fetch match ${key}:`, error);
+    logger.warn(`Failed to fetch match ${key}:`, error);
     return null;
   }
 }
@@ -259,13 +268,13 @@ function createMinimalPlayerConfig(puuid: string, name: string): PlayerConfigEnt
 }
 
 /**
- * Convert a Riot API match to our internal format
+ * Convert a raw Riot API match to our internal format
  */
-async function convertMatchDtoToInternalFormat(matchDto: MatchDto): Promise<CompletedMatch | ArenaMatch> {
-  const queueType = parseQueueType(matchDto.info.queueId);
+async function convertRawMatchToInternalFormat(rawMatch: RawMatch): Promise<CompletedMatch | ArenaMatch> {
+  const queueType = parseQueueType(rawMatch.info.queueId);
 
   // Pick the first participant as our "tracked player"
-  const firstParticipant = matchDto.info.participants[0];
+  const firstParticipant = rawMatch.info.participants[0];
   if (!firstParticipant) {
     throw new Error("No participants in match");
   }
@@ -283,16 +292,38 @@ async function convertMatchDtoToInternalFormat(matchDto: MatchDto): Promise<Comp
   };
 
   if (queueType === "arena") {
-    return await toArenaMatch([player], matchDto);
+    return await toArenaMatch([player], rawMatch);
   } else {
-    return toMatch([player], matchDto, undefined, undefined);
+    return toMatch([player], rawMatch, new Map());
+  }
+}
+
+type S3MatchResult = {
+  match: CompletedMatch | ArenaMatch;
+  rawMatch: RawMatch;
+  matchId: MatchId;
+};
+
+/**
+ * Fetch timeline data from Riot API for a match
+ */
+async function fetchTimelineFromRiotApi(matchId: MatchId): Promise<RawTimeline | undefined> {
+  try {
+    logger.info(`📊 Fetching timeline from Riot API for ${matchId}`);
+    const response = await api.MatchV5.timeline(matchId, Constants.RegionGroups.AMERICAS);
+    const validated = RawTimelineSchema.parse(response.response);
+    logger.info(`✅ Timeline fetched with ${validated.info.frames.length.toString()} frames`);
+    return validated;
+  } catch (error) {
+    logger.warn(`⚠️  Failed to fetch timeline for ${matchId}:`, error);
+    return undefined;
   }
 }
 
 /**
  * Get a random match from S3 that matches the specified type
  */
-async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Promise<CompletedMatch | ArenaMatch> {
+async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Promise<S3MatchResult> {
   const keys = await fetchMatchKeysFromS3(daysBack);
 
   if (keys.length === 0) {
@@ -303,12 +334,12 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
   const shuffled = keys.sort(() => Math.random() - 0.5);
 
   for (const key of shuffled) {
-    const matchDto = await fetchMatchFromS3(key);
-    if (!matchDto) {
+    const rawMatch = await fetchMatchFromS3(key);
+    if (!rawMatch) {
       continue;
     }
 
-    const queueType = parseQueueType(matchDto.info.queueId);
+    const queueType = parseQueueType(rawMatch.info.queueId);
 
     // Check if this match type matches what we're looking for
     const isMatchingType =
@@ -318,8 +349,10 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
       (matchType === "unranked" && (queueType === "quickplay" || queueType === "draft pick"));
 
     if (isMatchingType) {
-      console.log(`📦 Using match from S3: ${key}`);
-      return await convertMatchDtoToInternalFormat(matchDto);
+      logger.info(`📦 Using match from S3: ${key}`);
+      const match = await convertRawMatchToInternalFormat(rawMatch);
+      const matchId = MatchIdSchema.parse(rawMatch.metadata.matchId);
+      return { match, rawMatch, matchId };
     }
   }
 
@@ -329,74 +362,87 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
 async function main(): Promise<void> {
   const options = parseArgs();
 
-  console.log(`\n${"=".repeat(80)}`);
-  console.log(`Testing AI Review Generation`);
-  console.log(`${"=".repeat(80)}\n`);
-  console.log(`Match Type: ${options.matchType}`);
-  console.log("Review Count:", options.count);
-  console.log(`Source: ${options.useS3 ? `S3 (last ${String(options.s3Days)} days)` : "Example data"}`);
-  console.log();
+  // Raw match data is required for match summary generation
+  if (!options.useS3) {
+    logger.error(
+      "❌ The --s3 flag is required. Example data does not include raw match data needed for match summaries.",
+    );
+    logger.info("   Run with: bun run src/league/review/test-reviews.ts --s3");
+    process.exit(1);
+  }
+
+  logger.info(`\n${"=".repeat(80)}`);
+  logger.info(`Testing AI Review Generation`);
+  logger.info(`${"=".repeat(80)}\n`);
+  logger.info(`Match Type: ${options.matchType}`);
+  logger.info("Review Count:", options.count);
+  logger.info(`Source: S3 (last ${String(options.s3Days)} days)`);
+  logger.info();
 
   // Generate multiple reviews
   for (let i = 0; i < options.count; i++) {
     if (options.count > 1) {
-      console.log("─".repeat(80));
-      console.log(`Review ${String(i + 1)}/${String(options.count)}`);
-      console.log("─".repeat(80) + "\n");
+      logger.info("─".repeat(80));
+      logger.info(`Review ${String(i + 1)}/${String(options.count)}`);
+      logger.info("─".repeat(80) + "\n");
     }
 
-    // Get the match (from S3 or example data)
-    const match = options.useS3
-      ? await getRandomMatchFromS3(options.matchType, options.s3Days)
-      : getExampleMatch(options.matchType);
+    // Get the match from S3 (required for raw match data)
+    const { match, rawMatch, matchId } = await getRandomMatchFromS3(options.matchType, options.s3Days);
 
     const matchSummary = getMatchSummary(match);
 
-    console.log(`Match: ${matchSummary}`);
-    console.log(`Queue: ${match.queueType ?? "unknown"}\n`);
+    logger.info(`Match: ${matchSummary}`);
+    logger.info(`Queue: ${match.queueType ?? "unknown"}\n`);
 
-    const startTime = Date.now();
-    const testMatchId = MatchIdSchema.parse(`NA1_${Date.now().toString()}`);
-    const reviewResult = await generateMatchReview(match, testMatchId);
-    const duration = Date.now() - startTime;
-
-    if (!reviewResult) {
-      console.log("❌ No review generated - API keys not configured");
-      console.log(`   Set OPENAI_API_KEY environment variable to generate AI reviews`);
-      console.log();
+    // Fetch timeline from Riot API (required for timeline summary)
+    const rawTimeline = await fetchTimelineFromRiotApi(matchId);
+    if (!rawTimeline) {
+      logger.warn(`⚠️  Skipping match ${matchId} - timeline not available`);
       continue;
     }
 
-    console.log("Generated Review:");
-    console.log(`┌${"─".repeat(78)}┐`);
+    const startTime = Date.now();
+    const reviewResult = await generateMatchReview(match, matchId, rawMatch, rawTimeline);
+    const duration = Date.now() - startTime;
+
+    if (!reviewResult) {
+      logger.info("❌ No review generated - API keys not configured");
+      logger.info(`   Set OPENAI_API_KEY environment variable to generate AI reviews`);
+      logger.info();
+      continue;
+    }
+
+    logger.info("Generated Review:");
+    logger.info(`┌${"─".repeat(78)}┐`);
     // Word wrap the review to 76 chars
     const words = reviewResult.text.split(" ");
     let line = "│ ";
     for (const word of words) {
       if (line.length + word.length + 1 > 77) {
-        console.log(line.padEnd(79, " ") + "│");
+        logger.info(line.padEnd(79, " ") + "│");
         line = "│ " + word + " ";
       } else {
         line += word + " ";
       }
     }
     if (line.length > 2) {
-      console.log(line.padEnd(79, " ") + "│");
+      logger.info(line.padEnd(79, " ") + "│");
     }
-    console.log(`└${"─".repeat(78)}┘`);
-    console.log();
+    logger.info(`└${"─".repeat(78)}┘`);
+    logger.info();
 
-    console.log(`Stats:`);
-    console.log(`  - Length: ${String(reviewResult.text.length)} characters`);
-    console.log(`  - Generation time: ${String(duration)}ms`);
+    logger.info(`Stats:`);
+    logger.info(`  - Length: ${String(reviewResult.text.length)} characters`);
+    logger.info(`  - Generation time: ${String(duration)}ms`);
     if (reviewResult.image) {
-      console.log(`  - AI Image: Generated (${String(reviewResult.image.length)} bytes)`);
+      logger.info(`  - AI Image: Generated (${String(reviewResult.image.length)} bytes)`);
     }
-    console.log();
+    logger.info();
 
     if (reviewResult.text.length > 400) {
-      console.log(`⚠️  Warning: Review exceeds 400 character limit!`);
-      console.log();
+      logger.info(`⚠️  Warning: Review exceeds 400 character limit!`);
+      logger.info();
     }
 
     if (i < options.count - 1) {
@@ -405,10 +451,14 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log(`${"=".repeat(80)}\n`);
+  logger.info(`${"=".repeat(80)}\n`);
 }
 
-main().catch((error) => {
-  console.error("Error generating review:", error);
-  process.exit(1);
-});
+void (async () => {
+  try {
+    await main();
+  } catch (error) {
+    logger.error("Error generating review:", error);
+    process.exit(1);
+  }
+})();

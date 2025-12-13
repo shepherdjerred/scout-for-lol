@@ -1,9 +1,13 @@
-import { api } from "@scout-for-lol/backend/league/api/api.js";
+import { api } from "@scout-for-lol/backend/league/api/api.ts";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
-import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.js";
-import type { PlayerConfigEntry, MatchId } from "@scout-for-lol/data";
-import { MatchIdSchema } from "@scout-for-lol/data";
+import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
+import type { PlayerConfigEntry, MatchId } from "@scout-for-lol/data/index";
+import { MatchIdSchema } from "@scout-for-lol/data/index";
 import { z } from "zod";
+import * as Sentry from "@sentry/bun";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("api-match-history");
 
 /**
  * Fetch recent match IDs for a player
@@ -14,7 +18,7 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
   const playerPuuid = player.league.leagueAccount.puuid;
   const playerRegion = player.league.leagueAccount.region;
 
-  console.log(`📜 Fetching recent match IDs for player: ${playerAlias} (${playerPuuid}) in region ${playerRegion}`);
+  logger.info(`📜 Fetching recent match IDs for player: ${playerAlias} (${playerPuuid}) in region ${playerRegion}`);
 
   try {
     const startTime = Date.now();
@@ -29,12 +33,15 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
     const matchIdsResult = z.array(MatchIdSchema).safeParse(response.response);
 
     if (!matchIdsResult.success) {
-      console.error(`❌ Failed to parse match IDs for ${playerAlias}:`, matchIdsResult.error);
+      logger.error(`❌ Failed to parse match IDs for ${playerAlias}:`, matchIdsResult.error);
+      Sentry.captureException(matchIdsResult.error, {
+        tags: { source: "match-id-parsing", playerAlias },
+      });
       return undefined;
     }
 
     const matchIds = matchIdsResult.data;
-    console.log(
+    logger.info(
       `✅ Successfully fetched ${matchIds.length.toString()} match IDs for ${playerAlias} (${apiTime.toString()}ms)`,
     );
 
@@ -43,12 +50,18 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
     const result = z.object({ status: z.number() }).safeParse(e);
     if (result.success) {
       if (result.data.status === 404) {
-        console.log(`ℹ️  Player ${playerAlias} has no match history (404)`);
+        logger.info(`ℹ️  Player ${playerAlias} has no match history (404)`);
         return undefined;
       }
-      console.error(`❌ HTTP Error ${result.data.status.toString()} for ${playerAlias}`);
+      logger.error(`❌ HTTP Error ${result.data.status.toString()} for ${playerAlias}`);
+      Sentry.captureException(e, {
+        tags: { source: "match-history-api", playerAlias, httpStatus: result.data.status.toString() },
+      });
     } else {
-      console.error(`❌ Error fetching match history for ${playerAlias}:`, e);
+      logger.error(`❌ Error fetching match history for ${playerAlias}:`, e);
+      Sentry.captureException(e, {
+        tags: { source: "match-history-api", playerAlias },
+      });
     }
     return undefined;
   }
@@ -71,7 +84,7 @@ export function filterNewMatches(matchIds: MatchId[], lastProcessedMatchId: Matc
     // Last processed match not found in recent history
     // This could happen if player played many games since last check
     // Return only the most recent match to avoid spam
-    console.log(
+    logger.info(
       `⚠️  Last processed match ${lastProcessedMatchId} not found in recent history, returning most recent match only`,
     );
     return matchIds.slice(0, 1);

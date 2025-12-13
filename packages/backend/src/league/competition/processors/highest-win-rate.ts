@@ -1,9 +1,9 @@
-import type { HighestWinRateCriteria, MatchDto } from "@scout-for-lol/data";
+import type { HighestWinRateCriteria, RawMatch } from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
-} from "@scout-for-lol/backend/league/competition/processors/types.js";
-import { createWinBasedProcessor } from "@scout-for-lol/backend/league/competition/processors/processor-helpers.js";
+} from "@scout-for-lol/backend/league/competition/processors/types.ts";
+import { createWinBasedProcessor } from "@scout-for-lol/backend/league/competition/processors/processor-helpers.ts";
 
 /**
  * Process "Highest Win Rate" criteria
@@ -11,7 +11,7 @@ import { createWinBasedProcessor } from "@scout-for-lol/backend/league/competiti
  * Only includes players who meet the minimum games threshold
  */
 export function processHighestWinRate(
-  matches: MatchDto[],
+  matches: RawMatch[],
   participants: PlayerWithAccounts[],
   criteria: HighestWinRateCriteria,
 ): LeaderboardEntry[] {

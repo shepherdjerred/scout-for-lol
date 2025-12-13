@@ -1,8 +1,8 @@
 /**
  * Reset tool settings to defaults while preserving API keys, cache, and cost data
  */
-import { clearAllEntries } from "./indexeddb";
-import { STORES, clearStore } from "./storage";
+import { clearAllEntries } from "./indexeddb.ts";
+import { STORES, clearStore } from "./storage.ts";
 
 /**
  * Reset all settings to defaults while preserving:
@@ -16,7 +16,6 @@ import { STORES, clearStore } from "./storage";
  * - Generation history (IndexedDB)
  * - Custom personalities
  * - Custom art styles
- * - Custom art themes
  */
 export async function resetToDefaults(): Promise<void> {
   try {
@@ -25,7 +24,6 @@ export async function resetToDefaults(): Promise<void> {
     await clearStore(STORES.CURRENT_CONFIG);
     await clearStore(STORES.PERSONALITIES);
     await clearStore(STORES.ART_STYLES);
-    await clearStore(STORES.ART_THEMES);
 
     // Clear IndexedDB history
     await clearAllEntries();
@@ -44,7 +42,6 @@ export async function getResetPreview(): Promise<{
   historyEntries: number;
   customPersonalities: number;
   customArtStyles: number;
-  customArtThemes: number;
 }> {
   try {
     // Get IndexedDB history count
@@ -56,14 +53,12 @@ export async function getResetPreview(): Promise<{
     const configs = await getAllItems(STORES.CONFIGS);
     const personalities = await getAllItems(STORES.PERSONALITIES);
     const artStyles = await getAllItems(STORES.ART_STYLES);
-    const artThemes = await getAllItems(STORES.ART_THEMES);
 
     return {
       configs: configs.length,
       historyEntries,
       customPersonalities: personalities.length,
       customArtStyles: artStyles.length,
-      customArtThemes: artThemes.length,
     };
   } catch {
     // Return zeros if not in browser environment
@@ -72,7 +67,6 @@ export async function getResetPreview(): Promise<{
       historyEntries: 0,
       customPersonalities: 0,
       customArtStyles: 0,
-      customArtThemes: 0,
     };
   }
 }

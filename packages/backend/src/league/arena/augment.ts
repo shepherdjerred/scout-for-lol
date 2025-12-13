@@ -6,6 +6,7 @@ import {
   type FullAugment,
 } from "@scout-for-lol/data";
 import { z } from "zod";
+import { arenaAugmentCache } from "@scout-for-lol/data/data-dragon/arena-augments.ts";
 
 // This models the API response from CommunityDragon.
 // API response objects do not include our internal discriminator `type`,
@@ -31,34 +32,39 @@ export async function initArenaAugmentsOnce(): Promise<Record<number, FullAugmen
     return augmentMapCache;
   }
   loadPromise ??= (async () => {
-    const res = await fetch(ARENA_AUGMENTS_URL, { cache: "force-cache" });
-    if (!res.ok) {
-      throw new Error(`Failed to fetch Arena augments: ${res.status.toString()} ${res.statusText}`);
-    }
-    const data = await res.json();
-    const parsed = ApiAugmentsResponseSchema.parse(data);
-    const rarityFromNumber = (n: number): AugmentRarity => {
-      if (n === 1) {
-        return "prismatic";
+    try {
+      const res = await fetch(ARENA_AUGMENTS_URL, { cache: "force-cache" });
+      if (!res.ok) {
+        throw new Error(`Failed to fetch Arena augments: ${res.status.toString()} ${res.statusText}`);
       }
-      if (n === 2) {
-        return "gold";
-      }
-      if (n === 3) {
+      const data = await res.json();
+      const parsed = ApiAugmentsResponseSchema.parse(data);
+      const rarityFromNumber = (n: number): AugmentRarity => {
+        if (n === 1) {
+          return "prismatic";
+        }
+        if (n === 2) {
+          return "gold";
+        }
+        if (n === 3) {
+          return "silver";
+        }
         return "silver";
-      }
-      return "silver";
-    };
-    augmentMapCache = {};
-
-    for (const a of parsed.augments) {
-      augmentMapCache[a.id] = {
-        ...a,
-        rarity: rarityFromNumber(a.rarity),
-        type: "full",
       };
+      augmentMapCache = {};
+
+      for (const a of parsed.augments) {
+        augmentMapCache[a.id] = {
+          ...a,
+          rarity: rarityFromNumber(a.rarity),
+          type: "full",
+        };
+      }
+      return augmentMapCache;
+    } catch (_error) {
+      augmentMapCache = arenaAugmentCache;
+      return augmentMapCache;
     }
-    return augmentMapCache;
   })();
   return loadPromise;
 }

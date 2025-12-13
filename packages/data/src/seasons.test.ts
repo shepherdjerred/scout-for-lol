@@ -8,7 +8,7 @@ import {
   getSeasonChoices,
   getSeasonDates,
   hasSeasonEnded,
-} from "@scout-for-lol/data/seasons.js";
+} from "@scout-for-lol/data/seasons";
 
 describe("seasons", () => {
   describe("SEASONS constant", () => {

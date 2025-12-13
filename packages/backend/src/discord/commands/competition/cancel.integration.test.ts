@@ -1,9 +1,9 @@
 import { afterAll, beforeEach, describe, expect, test } from "bun:test";
-import { createCompetition, getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
-import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.js";
-import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.js";
+import { createCompetition, getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
+import type { CreateCompetitionInput } from "@scout-for-lol/backend/database/competition/queries.ts";
+import { testGuildId, testAccountId, testChannelId } from "@scout-for-lol/backend/testing/test-ids.ts";
 import { type DiscordAccountId, type DiscordGuildId } from "@scout-for-lol/data";
-import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.js";
+import { createTestDatabase, deleteIfExists } from "@scout-for-lol/backend/testing/test-database.ts";
 
 // Create a test database for integration tests
 const { prisma } = createTestDatabase("competition-cancel-test");

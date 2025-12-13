@@ -18,12 +18,15 @@ import {
   type InterfaceDeclaration,
   type PropertySignature,
 } from "ts-morph";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("brand-prisma-types");
 
 // Types that need to be imported
 const BRANDED_TYPES_TO_IMPORT = new Set<string>();
 
 function main() {
-  console.log("🔧 Branding Prisma types with AST transformation...");
+  logger.info("🔧 Branding Prisma types with AST transformation...");
 
   const project = new Project({
     tsConfigFilePath: `${import.meta.dir}/../tsconfig.json`,
@@ -33,7 +36,7 @@ function main() {
   const prismaTypesPath = `${import.meta.dir}/../generated/prisma/client/index.d.ts`;
   const sourceFile = project.addSourceFileAtPath(prismaTypesPath);
 
-  console.log(`📄 Processing: ${prismaTypesPath}`);
+  logger.info(`📄 Processing: ${prismaTypesPath}`);
 
   // Track how many properties we transform
   let transformCount = 0;
@@ -41,7 +44,7 @@ function main() {
   // Find the Prisma namespace
   const prismaNamespace = sourceFile.getModule("Prisma");
   if (!prismaNamespace) {
-    console.error("❌ Could not find Prisma namespace!");
+    logger.error("❌ Could not find Prisma namespace!");
     return;
   }
 
@@ -100,16 +103,16 @@ function main() {
 
   // Debug: Check if file was actually modified
   const wasModified = sourceFile.getImportDeclarations().length > 0 || transformCount > 0;
-  console.log(`\nFile was modified: ${wasModified.toString()}`);
-  console.log(`Import declarations before save: ${sourceFile.getImportDeclarations().length.toString()}`);
+  logger.info(`File was modified: ${wasModified.toString()}`);
+  logger.info(`Import declarations before save: ${sourceFile.getImportDeclarations().length.toString()}`);
 
   // Save the transformed file
   sourceFile.saveSync();
-  console.log("Save completed");
+  logger.info("Save completed");
 
-  console.log(`✅ Transformed ${transformCount.toString()} properties`);
-  console.log(`✅ Added imports: ${Array.from(BRANDED_TYPES_TO_IMPORT).join(", ")}`);
-  console.log("🎉 Prisma types successfully branded!");
+  logger.info(`✅ Transformed ${transformCount.toString()} properties`);
+  logger.info(`✅ Added imports: ${Array.from(BRANDED_TYPES_TO_IMPORT).join(", ")}`);
+  logger.info("🎉 Prisma types successfully branded!");
 }
 
 function transformFieldTypeInContent(
@@ -141,7 +144,7 @@ function transformFieldTypeInContent(
       BRANDED_TYPES_TO_IMPORT.add(brandedType);
       count++;
 
-      console.log(`    ✓ ${modelName}.${fieldName}: ${originalType} → ${newType}`);
+      logger.info(`    ✓ ${modelName}.${fieldName}: ${originalType} → ${newType}`);
     }
 
     match = fieldPattern.exec(content);
@@ -171,7 +174,7 @@ function transformPayloadType(typeAlias: TypeAliasDeclaration): number {
   const payloadName = typeAlias.getName(); // e.g., "$PlayerPayload"
   const modelName = payloadName.replace(/^\$/, "").replace(/Payload$/, ""); // e.g., "Player"
 
-  console.log(`\n  Processing ${modelName}...`);
+  logger.info(`Processing ${modelName}...`);
 
   const typeNode = typeAlias.getTypeNode();
   if (!typeNode || typeNode.getKind() !== SyntaxKind.TypeLiteral) {

@@ -7,17 +7,20 @@ import {
   RegionSchema,
   RiotIdSchema,
 } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/command-wrapper.js";
-import { findPlayerByAliasWithAccounts } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
-import { resolvePuuidFromRiotId } from "@scout-for-lol/backend/discord/commands/admin/utils/riot-api.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/command-wrapper.ts";
+import { findPlayerByAliasWithAccounts } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
+import { resolvePuuidFromRiotId } from "@scout-for-lol/backend/discord/commands/admin/utils/riot-api.ts";
 import {
   buildRiotApiError,
   buildAccountExistsError,
   buildDatabaseError,
   buildSuccessResponse,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
-import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.ts";
+import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("admin-account-add");
 
 const ArgsSchema = z.object({
   riotId: RiotIdSchema,
@@ -68,14 +71,14 @@ export async function executeAccountAdd(interaction: ChatInputCommandInteraction
       });
 
       if (existingAccount) {
-        console.log(`❌ Account already exists for player "${existingAccount.player.alias}"`);
+        logger.info(`❌ Account already exists for player "${existingAccount.player.alias}"`);
         await interaction.reply(
           buildAccountExistsError(`${riotId.game_name}#${riotId.tag_line}`, existingAccount.player.alias, playerAlias),
         );
         return;
       }
 
-      console.log(`💾 Adding account ${riotId.game_name}#${riotId.tag_line} to player "${playerAlias}"`);
+      logger.info(`💾 Adding account ${riotId.game_name}#${riotId.tag_line} to player "${playerAlias}"`);
 
       try {
         const now = new Date();
@@ -104,9 +107,7 @@ export async function executeAccountAdd(interaction: ChatInputCommandInteraction
               region: region,
             },
           },
-          discordAccount: {
-            id: player.discordId ?? undefined,
-          },
+          ...(player.discordId && { discordAccount: { id: DiscordAccountIdSchema.parse(player.discordId) } }),
         };
 
         await backfillLastMatchTime(playerConfigEntry, LeaguePuuidSchema.parse(puuid));
@@ -136,7 +137,7 @@ export async function executeAccountAdd(interaction: ChatInputCommandInteraction
           ),
         );
       } catch (error) {
-        console.error(`❌ Database error during account addition:`, error);
+        logger.error(`❌ Database error during account addition:`, error);
         await interaction.reply(buildDatabaseError("add account", error));
       }
     },
