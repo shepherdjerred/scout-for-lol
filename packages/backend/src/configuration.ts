@@ -45,6 +45,8 @@ export default {
   s3BucketName: getOptionalEnvVar("S3_BUCKET_NAME"),
   openaiApiKey: getOptionalEnvVar("OPENAI_API_KEY"),
   geminiApiKey: getOptionalEnvVar("GEMINI_API_KEY"),
+  elevenLabsApiKey: getOptionalEnvVar("ELEVENLABS_API_KEY"),
+  elevenLabsVoiceId: getOptionalEnvVar("ELEVENLABS_VOICE_ID"),
 };
 
 console.log("✅ Configuration loaded successfully");

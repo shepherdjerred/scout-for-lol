@@ -20,6 +20,7 @@ import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
 import { saveMatchToS3, saveImageToS3, saveSvgToS3 } from "@scout-for-lol/backend/storage/s3.js";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.js";
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.js";
+import { generateReviewAudio } from "@scout-for-lol/backend/league/review/tts.js";
 import { match } from "ts-pattern";
 import {
   logPlayerConfigDebugInfo,
@@ -355,6 +356,24 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
     const aiImageAttachment = new AttachmentBuilder(aiBuffer).setName("ai-review.png");
     files.push(aiImageAttachment);
     console.log(`[generateMatchReport] ✨ Added AI-generated image to message`);
+  }
+
+  // Generate TTS audio for Aaron's reviews only
+  const isAaronInMatch = playersInMatch.some((p) => p.alias === "Aaron");
+  if (reviewText && isAaronInMatch) {
+    try {
+      console.log(`[generateMatchReport] 🎙️ Generating TTS audio for Aaron's review...`);
+      const audioData = await generateReviewAudio(reviewText);
+      if (audioData) {
+        const audioBuffer = Buffer.from(audioData);
+        const audioAttachment = new AttachmentBuilder(audioBuffer).setName("review.mp3");
+        files.push(audioAttachment);
+        console.log(`[generateMatchReport] 🔊 Added TTS audio to message (${audioData.byteLength.toString()} bytes)`);
+      }
+    } catch (error) {
+      console.error(`[generateMatchReport] ⚠️ Error generating TTS audio:`, error);
+      // Continue without audio if TTS fails
+    }
   }
 
   // Generate completion message
