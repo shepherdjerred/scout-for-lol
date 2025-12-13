@@ -76,3 +76,18 @@ export function participantToChampion(p: RawParticipant): Champion {
     damage: p.totalDamageDealtToChampions,
   };
 }
+
+/**
+ * Valid match key pattern: matches/YYYY/MM/DD/{PLATFORM}_{GAME_ID}.json
+ * Platform examples: NA1, EUW1, KR, etc.
+ * Game ID is numeric
+ */
+const VALID_MATCH_KEY_REGEX = /^matches\/\d{4}\/\d{2}\/\d{2}\/[A-Z]+\d*_\d+\.json$/;
+
+/**
+ * Check if an S3 key represents a valid match file
+ * This prevents fetching non-match files (directories, temp files, etc.)
+ */
+export function isValidMatchKey(key: string): boolean {
+  return VALID_MATCH_KEY_REGEX.test(key);
+}

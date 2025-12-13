@@ -6,6 +6,7 @@ import { RawMatchSchema, RawTimelineSchema, type RawMatch, type RawTimeline } fr
 import { getCachedDataAsync, setCachedData } from "./cache.ts";
 import { z } from "zod";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
+import { isValidMatchKey } from "./s3-helpers.ts";
 
 /**
  * Fetch all objects from S3 with pagination
@@ -57,6 +58,10 @@ async function fetchAllS3Objects(
       return [];
     }
     const validatedObj = result.data;
+    // Filter out keys that don't match the valid match file pattern
+    if (!isValidMatchKey(validatedObj.Key)) {
+      return [];
+    }
     return [
       {
         key: validatedObj.Key,
