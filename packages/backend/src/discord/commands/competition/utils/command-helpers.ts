@@ -7,13 +7,16 @@ import {
   type DiscordGuildId,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("utils-command-helpers");
 import {
   replyWithErrorFromException,
   replyWithError,
   replyWithNoLinkedAccount,
-} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.js";
+} from "@scout-for-lol/backend/discord/commands/competition/utils/replies.ts";
 
 /**
  * Extract competition ID from interaction
@@ -58,7 +61,7 @@ export async function fetchLinkedPlayerForUser(
       },
     });
   } catch (error) {
-    console.error(`[${logContext}] Error fetching player for user ${parsedUserId}:`, error);
+    logger.error(`[${logContext}] Error fetching player for user ${parsedUserId}:`, error);
     await replyWithErrorFromException(interaction, error, "fetching player data");
     return null;
   }
@@ -84,7 +87,7 @@ export async function fetchCompetitionWithErrorHandling(
   try {
     competition = await getCompetitionById(prisma, competitionId);
   } catch (error) {
-    console.error(`[${commandName}] Error fetching competition ${competitionId.toString()}:`, error);
+    logger.error(`[${commandName}] Error fetching competition ${competitionId.toString()}:`, error);
     await replyWithErrorFromException(interaction, error, "fetching competition");
     return null;
   }
@@ -169,7 +172,7 @@ export async function checkParticipantLimit(options: {
       },
     });
   } catch (error) {
-    console.error(`[${logContext}] Error counting participants:`, error);
+    logger.error(`[${logContext}] Error counting participants:`, error);
     await replyWithErrorFromException(interaction, error, "checking participant limit");
     return null;
   }

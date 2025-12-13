@@ -1,24 +1,29 @@
 /**
  * S3 match browser for selecting real match data
  */
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { z } from "zod";
 import Fuse, { type FuseResult } from "fuse.js";
 import type { ApiSettings } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
-import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
+import type { CompletedMatch, ArenaMatch, RawMatch, RawTimeline } from "@scout-for-lol/data";
 import {
   listMatchesFromS3,
   fetchMatchFromS3,
-  convertMatchDtoToInternalFormat,
-  extractMatchMetadataFromDto,
+  fetchTimelineFromS3,
   type S3Config,
-  type MatchMetadata,
 } from "@scout-for-lol/frontend/lib/review-tool/s3";
+import {
+  convertRawMatchToInternalFormat,
+  extractMatchMetadataFromRawMatch,
+  type MatchMetadata,
+} from "@scout-for-lol/frontend/lib/review-tool/match-converter";
 import { getCachedDataAsync, setCachedData } from "@scout-for-lol/frontend/lib/review-tool/cache";
-import { MatchFilters } from "./match-filters";
-import { MatchList } from "./match-list";
-import { MatchPagination } from "./match-pagination";
-import { MatchLoadingState } from "./match-loading-state";
+import { MatchFilters } from "./match-filters.tsx";
+import { MatchList } from "./match-list.tsx";
+import { MatchPagination } from "./match-pagination.tsx";
+import { MatchLoadingState } from "./match-loading-state.tsx";
+import { Button } from "./ui/button.tsx";
+import { EmptyState, CloudIcon, SearchIcon } from "./ui/empty-state.tsx";
 
 const ErrorSchema = z.object({ message: z.string() });
 const MatchMetadataArraySchema = z.array(
@@ -35,7 +40,7 @@ const MatchMetadataArraySchema = z.array(
 );
 
 type MatchBrowserProps = {
-  onMatchSelected: (match: CompletedMatch | ArenaMatch) => void;
+  onMatchSelected: (match: CompletedMatch | ArenaMatch, rawMatch: RawMatch, rawTimeline: RawTimeline | null) => void;
   apiSettings: ApiSettings;
 };
 
@@ -66,6 +71,9 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     }
     return null;
   }, [apiSettings]);
+
+  // Track if we've already attempted auto-fetch to avoid duplicate calls
+  const hasAttemptedAutoFetch = useRef(false);
 
   const handleBrowse = useCallback(
     async (forceRefresh = false) => {
@@ -133,9 +141,9 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
           // Fetch batch in parallel
           const batchResults = await Promise.allSettled(
             batch.map(async (matchKey) => {
-              const matchDto = await fetchMatchFromS3(s3Config, matchKey.key);
-              if (matchDto) {
-                return extractMatchMetadataFromDto(matchDto, matchKey.key);
+              const rawMatch = await fetchMatchFromS3(s3Config, matchKey.key);
+              if (rawMatch) {
+                return extractMatchMetadataFromRawMatch(rawMatch, matchKey.key);
               }
               return null;
             }),
@@ -179,6 +187,15 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     [s3Config, abortController],
   );
 
+  // Auto-fetch matches on mount when s3Config is available
+  // eslint-disable-next-line custom-rules/no-use-effect -- ok for now
+  useEffect(() => {
+    if (s3Config && !hasAttemptedAutoFetch.current) {
+      hasAttemptedAutoFetch.current = true;
+      void handleBrowse(false); // Use cache if available
+    }
+  }, [s3Config, handleBrowse]);
+
   const handleSelectMatch = async (metadata: MatchMetadata) => {
     if (!s3Config) {
       return;
@@ -187,10 +204,15 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     setLoading(true);
     setSelectedMetadata(metadata);
     try {
-      const matchDto = await fetchMatchFromS3(s3Config, metadata.key);
-      if (matchDto) {
-        const match = convertMatchDtoToInternalFormat(matchDto, metadata.playerName);
-        onMatchSelected(match);
+      // Fetch match and timeline in parallel
+      const [rawMatch, rawTimeline] = await Promise.all([
+        fetchMatchFromS3(s3Config, metadata.key),
+        fetchTimelineFromS3(s3Config, metadata.key),
+      ]);
+
+      if (rawMatch) {
+        const match = convertRawMatchToInternalFormat(rawMatch, metadata.playerName);
+        onMatchSelected(match, rawMatch, rawTimeline);
       }
     } catch (err) {
       const errorResult = ErrorSchema.safeParse(err);
@@ -254,14 +276,6 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     return result;
   }, [matches, filterQueueType, filterLane, filterPlayer, filterChampion, filterOutcome]);
 
-  // Reset to page 1 when filters change - calculate derived state during render
-  const filterKey = `${filterQueueType}-${filterLane}-${filterPlayer}-${filterChampion}-${filterOutcome}`;
-  const previousFilterKeyRef = useRef(filterKey);
-  if (previousFilterKeyRef.current !== filterKey && currentPage !== 1) {
-    setCurrentPage(1);
-    previousFilterKeyRef.current = filterKey;
-  }
-
   // Calculate pagination
   const totalPages = Math.ceil(filteredMatches.length / pageSize);
   const paginatedMatches = useMemo(() => {
@@ -270,40 +284,48 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
     return filteredMatches.slice(startIdx, endIdx);
   }, [filteredMatches, currentPage, pageSize]);
 
+  // Not configured state
+  if (!s3Config) {
+    return (
+      <div className="p-6">
+        <EmptyState
+          icon={<CloudIcon className="w-16 h-16" />}
+          title="Storage Not Configured"
+          description="Configure your Cloudflare R2 credentials in Settings to browse match data from your storage."
+          action={
+            <div className="text-xs text-surface-400">Settings &rarr; API Configuration &rarr; Cloudflare R2</div>
+          }
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="p-4">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Browse Matches</h3>
-
-      {!s3Config && (
-        <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded text-sm text-yellow-800 dark:text-yellow-200 mb-3">
-          <strong>S3 credentials not configured.</strong> Please configure Cloudflare R2 credentials in API Settings to
-          browse matches.
+    <div className="p-5">
+      {/* Refresh button and filters */}
+      <div className="space-y-4 mb-4">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => {
+              void handleBrowse(true);
+            }}
+            disabled={loading}
+            isLoading={loading && !loadingProgress}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            Refresh
+          </Button>
+          <span className="text-xs text-surface-400">Last 7 days</span>
         </div>
-      )}
-
-      <div className="space-y-3 mb-3">
-        {s3Config && (
-          <div className="space-y-1">
-            <button
-              onClick={() => {
-                void handleBrowse(true);
-              }}
-              disabled={loading}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              {loading ? "Loading..." : "Refresh Matches"}
-            </button>
-            <p className="text-xs text-center text-gray-500 dark:text-gray-400">Loads last 7 days of matches</p>
-          </div>
-        )}
 
         <MatchFilters
           filterQueueType={filterQueueType}
@@ -319,6 +341,7 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
         />
       </div>
 
+      {/* Loading state */}
       <MatchLoadingState
         loading={loading}
         loadingProgress={loadingProgress}
@@ -327,19 +350,39 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
         }}
       />
 
+      {/* Error state */}
       {error && (
-        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded text-sm text-red-800 dark:text-red-200 mb-3">
-          {error}
+        <div className="p-4 rounded-xl bg-defeat-50 border border-defeat-200 text-sm text-defeat-700 mb-4 animate-fade-in">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-defeat-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <div>
+              <p className="font-medium">Error loading matches</p>
+              <p className="text-defeat-600 mt-0.5">{error}</p>
+            </div>
+          </div>
         </div>
       )}
 
+      {/* Match list */}
       {filteredMatches.length > 0 && !loading && (
-        <div className="border border-gray-200 dark:border-gray-700 rounded overflow-hidden">
-          <div className="px-2 py-1.5 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-            <span className="text-xs text-gray-600 dark:text-gray-400">
-              Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredMatches.length)} of{" "}
-              {filteredMatches.length} {filteredMatches.length === 1 ? "result" : "results"}
-              {matches.length !== filteredMatches.length && ` (filtered from ${matches.length.toString()})`}
+        <div className="rounded-xl border border-surface-200 overflow-hidden animate-fade-in">
+          {/* Results header */}
+          <div className="px-4 py-3 bg-surface-50 border-b border-surface-200 flex justify-between items-center">
+            <span className="text-sm text-surface-600">
+              <span className="font-medium text-surface-900">
+                {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredMatches.length)}
+              </span>
+              {" of "}
+              <span className="font-medium text-surface-900">{filteredMatches.length}</span>
+              {matches.length !== filteredMatches.length && (
+                <span className="text-surface-400"> (filtered from {matches.length.toString()})</span>
+              )}
             </span>
             <select
               value={pageSize}
@@ -347,13 +390,14 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
                 setPageSize(Number(e.target.value));
                 setCurrentPage(1);
               }}
-              className="text-xs px-2 py-0.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded"
+              className="select text-xs py-1.5 px-2 w-auto"
             >
-              <option value={25}>25 per page</option>
-              <option value={50}>50 per page</option>
-              <option value={100}>100 per page</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
             </select>
           </div>
+
           <MatchList
             matches={paginatedMatches}
             selectedMetadata={selectedMetadata}
@@ -366,22 +410,53 @@ export function MatchBrowser({ onMatchSelected, apiSettings }: MatchBrowserProps
               void handleSelectMatch(metadata);
             }}
           />
+
           <MatchPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         </div>
       )}
 
+      {/* Empty state - no matches */}
       {matches.length === 0 && !loading && !error && (
-        <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
-          {s3Config
-            ? "No matches found in the last 7 days."
-            : "Configure Cloudflare R2 credentials in API Settings to browse matches."}
-        </div>
+        <EmptyState
+          icon={<SearchIcon className="w-12 h-12" />}
+          title="No Matches Found"
+          description="No matches found in the last 7 days. Try refreshing or check your R2 configuration."
+          action={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                void handleBrowse(true);
+              }}
+            >
+              Refresh Matches
+            </Button>
+          }
+        />
       )}
 
+      {/* Empty state - filters have no results */}
       {matches.length > 0 && filteredMatches.length === 0 && !loading && (
-        <div className="text-center py-6 text-sm text-gray-500 dark:text-gray-400">
-          No matches match the current filters. Try adjusting your filters.
-        </div>
+        <EmptyState
+          icon={<SearchIcon className="w-12 h-12" />}
+          title="No Matches Match Filters"
+          description="Try adjusting your filter criteria to see more results."
+          action={
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setFilterQueueType("all");
+                setFilterLane("all");
+                setFilterPlayer("");
+                setFilterChampion("");
+                setFilterOutcome("all");
+              }}
+            >
+              Clear Filters
+            </Button>
+          }
+        />
       )}
     </div>
   );

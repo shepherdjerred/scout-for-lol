@@ -1,9 +1,8 @@
 import { palette } from "@scout-for-lol/report/assets/colors.ts";
-import type { Rune } from "@scout-for-lol/data";
-import { getRuneInfo, getRuneIconUrl, getRuneTreeForRune } from "@scout-for-lol/report/dataDragon/runes.ts";
+import { getRuneInfo, getRuneTreeForRune, type Rune } from "@scout-for-lol/data";
+import { getRuneIconUrl } from "@scout-for-lol/report/dataDragon/runes.ts";
 
 const keystoneSize = "3.75rem";
-const secondarySize = "2rem";
 
 // TODO(https://github.com/shepherdjerred/scout-for-lol/issues/184): Consider displaying all primary/secondary runes or stat shards for more detail
 export function Runes({ runes }: { runes: Rune[] }) {
@@ -27,39 +26,39 @@ export function Runes({ runes }: { runes: Rune[] }) {
     <div
       style={{
         display: "flex",
-        position: "relative",
-        width: keystoneSize,
-        height: keystoneSize,
+        flexDirection: "column",
+        gap: "0.5rem",
       }}
     >
       {keystoneInfo && (
-        <img
-          src={getRuneIconUrl(keystoneInfo.icon)}
-          alt={keystoneInfo.name}
-          style={{
-            width: keystoneSize,
-            height: keystoneSize,
-            borderRadius: "50%",
-            backgroundColor: palette.blue[5],
-            border: `.1rem solid ${palette.gold.bright}`,
-          }}
-        />
+        <div style={{ width: keystoneSize, height: keystoneSize, display: "flex" }}>
+          <img
+            src={getRuneIconUrl(keystoneInfo.icon)}
+            alt={keystoneInfo.name}
+            style={{
+              width: keystoneSize,
+              height: keystoneSize,
+              borderRadius: "50%",
+              backgroundColor: palette.blue[5],
+              border: `.1rem solid ${palette.gold.bright}`,
+            }}
+          />
+        </div>
       )}
       {secondaryTree && (
-        <img
-          src={getRuneIconUrl(secondaryTree.treeIcon)}
-          alt={secondaryTree.treeName}
-          style={{
-            position: "absolute",
-            bottom: "-0.25rem",
-            right: "-0.25rem",
-            width: secondarySize,
-            height: secondarySize,
-            borderRadius: "50%",
-            backgroundColor: palette.blue[6],
-            border: `.05rem solid ${palette.gold.bright}`,
-          }}
-        />
+        <div style={{ width: keystoneSize, height: keystoneSize, display: "flex" }}>
+          <img
+            src={getRuneIconUrl(secondaryTree.treeIcon)}
+            alt={secondaryTree.treeName}
+            style={{
+              width: keystoneSize,
+              height: keystoneSize,
+              borderRadius: "50%",
+              backgroundColor: palette.blue[6],
+              border: `.1rem solid ${palette.gold.bright}`,
+            }}
+          />
+        </div>
       )}
     </div>
   );

@@ -5,13 +5,16 @@
  */
 
 import { type ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder, Colors } from "discord.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("commands-help");
 
 export const helpCommand = new SlashCommandBuilder()
   .setName("help")
   .setDescription("Get help and view available commands");
 
 export async function executeHelp(interaction: ChatInputCommandInteraction): Promise<void> {
-  console.log("❓ Executing help command");
+  logger.info("❓ Executing help command");
 
   const embed = new EmbedBuilder()
     .setTitle("🤖 Scout for League of Legends - Help")
@@ -89,5 +92,5 @@ export async function executeHelp(interaction: ChatInputCommandInteraction): Pro
     ephemeral: true,
   });
 
-  console.log("✅ Help command completed successfully");
+  logger.info("✅ Help command completed successfully");
 }

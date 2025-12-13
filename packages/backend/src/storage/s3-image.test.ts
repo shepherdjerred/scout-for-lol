@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
 import { z } from "zod";
-import { saveImageToS3 } from "@scout-for-lol/backend/storage/s3.js";
+import { saveImageToS3 } from "@scout-for-lol/backend/storage/s3.ts";
 import { MatchIdSchema } from "@scout-for-lol/data";
 
 // Create S3 mock
@@ -76,7 +76,7 @@ describe("saveImageToS3 - Success Cases", () => {
     expect(command.input.Bucket).toBe("test-bucket");
 
     // Verify return value format
-    expect(result).toMatch(/^s3:\/\/test-bucket\/images\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\.png$/);
+    expect(result).toMatch(/^s3:\/\/test-bucket\/games\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\/report\.png$/);
     expect(result).toContain(matchId);
   });
 
@@ -96,7 +96,7 @@ describe("saveImageToS3 - Success Cases", () => {
     expect(command.input.ContentType).toBe("image/png");
 
     expect(result).toBeDefined();
-    expect(result).toContain("s3://test-bucket/images/");
+    expect(result).toContain("s3://test-bucket/games/");
   });
 
   test("handles flex queue type", async () => {
@@ -297,7 +297,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
 
     // Verify key structure
     const key = command.input.Key;
-    expect(key).toMatch(/^images\/\d{4}\/\d{2}\/\d{2}\/NA1_DATE_TEST\.png$/);
+    expect(key).toMatch(/^games\/\d{4}\/\d{2}\/\d{2}\/NA1_DATE_TEST\/report\.png$/);
 
     // Verify it uses today's date
     const now = new Date();
@@ -305,7 +305,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
     const month = String(now.getUTCMonth() + 1).padStart(2, "0");
     const day = String(now.getUTCDate()).padStart(2, "0");
 
-    expect(key).toContain(`images/${year.toString()}/${month}/${day}/`);
+    expect(key).toContain(`games/${year.toString()}/${month}/${day}/`);
   });
 
   test("uses .png extension", async () => {
@@ -336,7 +336,7 @@ describe("saveImageToS3 - S3 Key Format", () => {
     const result = await saveImageToS3(matchId, imageBuffer, queueType, []);
 
     expect(result).toStartWith("s3://test-bucket/");
-    expect(result).toContain("images/");
+    expect(result).toContain("games/");
     expect(result).toEndWith(".png");
   });
 });

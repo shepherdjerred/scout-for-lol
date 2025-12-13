@@ -1,10 +1,61 @@
 import { describe, expect, test, mock } from "bun:test";
-import { MatchIdSchema, type ArenaMatch, type CompletedMatch } from "@scout-for-lol/data";
+import {
+  MatchIdSchema,
+  type ArenaMatch,
+  type CompletedMatch,
+  type RawMatch,
+  type RawTimeline,
+} from "@scout-for-lol/data";
 
-import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.js";
+import { testAccountId, testPuuid } from "@scout-for-lol/backend/testing/test-ids.ts";
 
 // Test match ID for all tests
 const TEST_MATCH_ID = MatchIdSchema.parse("NA1_1234567890");
+
+// Minimal raw match fixture for testing (function returns early when API keys are not configured)
+// Using `as unknown as RawMatch` since we only need type compatibility, not a valid match
+// eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
+const MINIMAL_RAW_MATCH = {
+  metadata: {
+    matchId: "NA1_1234567890",
+    participants: ["test-puuid"],
+    dataVersion: "2",
+  },
+  info: {
+    gameId: 1234567890,
+    gameCreation: Date.now(),
+    gameDuration: 1800,
+    gameEndTimestamp: Date.now(),
+    gameMode: "CLASSIC",
+    gameName: "test",
+    gameStartTimestamp: Date.now() - 1800000,
+    gameType: "MATCHED_GAME",
+    gameVersion: "14.1.1",
+    mapId: 11,
+    platformId: "NA1",
+    queueId: 420,
+    teams: [],
+    participants: [],
+    endOfGameResult: "GameComplete",
+    tournamentCode: "",
+  },
+} as unknown as RawMatch;
+
+// Minimal raw timeline fixture for testing (function returns early when API keys are not configured)
+// eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
+const MINIMAL_RAW_TIMELINE = {
+  metadata: {
+    matchId: "NA1_1234567890",
+    participants: ["test-puuid"],
+    dataVersion: "2",
+  },
+  info: {
+    frameInterval: 60000,
+    frames: [],
+    gameId: 1234567890,
+    participants: [],
+  },
+} as unknown as RawTimeline;
 
 // Mock the configuration module to prevent API calls
 // Use a factory function to read env vars at runtime so other tests can override
@@ -92,7 +143,7 @@ describe("generateMatchReview", () => {
         },
       } satisfies CompletedMatch;
 
-      const review = await generateMatchReview(match, TEST_MATCH_ID);
+      const review = await generateMatchReview(match, TEST_MATCH_ID, MINIMAL_RAW_MATCH, MINIMAL_RAW_TIMELINE);
 
       expect(review).toBeUndefined();
     });
@@ -182,7 +233,7 @@ describe("generateMatchReview", () => {
         teams: [],
       } satisfies ArenaMatch;
 
-      const review = await generateMatchReview(match, TEST_MATCH_ID);
+      const review = await generateMatchReview(match, TEST_MATCH_ID, MINIMAL_RAW_MATCH, MINIMAL_RAW_TIMELINE);
 
       expect(review).toBeUndefined();
     });

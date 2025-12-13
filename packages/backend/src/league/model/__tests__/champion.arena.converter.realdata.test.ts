@@ -1,9 +1,9 @@
 import { describe, it, expect } from "bun:test";
 import { z } from "zod";
 // Types from @scout-for-lol/data are used by TypeScript for type checking
-import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
+import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.ts";
 
-import type { ParticipantDto } from "@scout-for-lol/data/index";
+import type { RawParticipant } from "@scout-for-lol/data/index";
 
 const currentDir = import.meta.dirname;
 
@@ -12,7 +12,7 @@ const RAW_FILE_PATHS = [
   `${currentDir}/testdata/matches_2025_09_19_NA1_5370986469.json`,
 ];
 
-async function loadParticipants(path: string): Promise<ParticipantDto[]> {
+async function loadParticipants(path: string): Promise<RawParticipant[]> {
   const file = Bun.file(path);
 
   const json = await file.json();

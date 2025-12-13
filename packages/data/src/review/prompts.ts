@@ -7,16 +7,25 @@
  */
 
 import { z } from "zod";
-import type { Lane } from "@scout-for-lol/data/model/lane.js";
+import type { Lane } from "@scout-for-lol/data/model/lane";
+
+/**
+ * Random behavior schema - weighted random prompts
+ */
+export const RandomBehaviorSchema = z.strictObject({
+  prompt: z.string(),
+  weight: z.number().min(0).max(100), // Percentage chance (0-100)
+});
+
+export type RandomBehavior = z.infer<typeof RandomBehaviorSchema>;
 
 /**
  * Personality metadata schema
  */
 export const PersonalityMetadataSchema = z.strictObject({
   name: z.string(),
-  description: z.string(),
-  favoriteChampions: z.array(z.string()),
-  favoriteLanes: z.array(z.string()),
+  randomBehaviors: z.array(RandomBehaviorSchema).optional(),
+  image: z.array(z.string()).optional(),
 });
 
 export type PersonalityMetadata = z.infer<typeof PersonalityMetadataSchema>;
@@ -27,19 +36,12 @@ export type PersonalityMetadata = z.infer<typeof PersonalityMetadataSchema>;
 export type Personality = {
   metadata: PersonalityMetadata;
   instructions: string;
-  filename: string;
+  /**
+   * Style card loaded from analysis/llm-out to help match voice
+   */
+  styleCard: string;
+  filename?: string;
 };
-
-/**
- * Player metadata schema
- */
-export const PlayerMetadataSchema = z.strictObject({
-  description: z.string(),
-  favoriteChampions: z.array(z.string()),
-  favoriteLanes: z.array(z.string()),
-});
-
-export type PlayerMetadata = z.infer<typeof PlayerMetadataSchema>;
 
 /**
  * Lane context mapping (relative paths from prompts directory)
@@ -58,42 +60,110 @@ export const LANE_CONTEXT_MAP: Record<Lane, string> = {
 export const EXCLUDED_PERSONALITY_FILES = new Set(["generic.json"]);
 
 /**
+ * Select 3-6 random behaviors from a list using weighted sampling without replacement.
+ * Higher-weight behaviors are more likely to be selected.
+ *
+ * @param behaviors - Array of behaviors with prompts and weights
+ * @returns The selected behaviors' prompts joined by newlines, or empty string if none available
+ */
+export function selectRandomBehaviors(behaviors: RandomBehavior[] | undefined): string {
+  if (!behaviors || behaviors.length === 0) {
+    return "";
+  }
+
+  // Determine how many behaviors to select (3-6, capped by available)
+  const minCount = 3;
+  const maxCount = 12;
+  const targetCount = minCount + Math.floor(Math.random() * (maxCount - minCount + 1));
+  const count = Math.min(behaviors.length, targetCount);
+
+  // Create a mutable copy for weighted sampling without replacement
+  const remaining = [...behaviors];
+  const selected: string[] = [];
+
+  for (let i = 0; i < count; i++) {
+    // Calculate total weight of remaining behaviors
+    const totalWeight = remaining.reduce((sum, b) => sum + b.weight, 0);
+
+    if (totalWeight <= 0) {
+      break;
+    }
+
+    // Roll based on total remaining weight
+    const roll = Math.random() * totalWeight;
+
+    // Find which behavior was selected
+    let cumulative = 0;
+    let selectedIndex = 0;
+    for (let j = 0; j < remaining.length; j++) {
+      const behavior = remaining[j];
+      if (behavior) {
+        cumulative += behavior.weight;
+        if (roll < cumulative) {
+          selectedIndex = j;
+          break;
+        }
+      }
+    }
+
+    // Add selected behavior and remove from pool
+    const selectedBehavior = remaining[selectedIndex];
+    if (selectedBehavior) {
+      selected.push(selectedBehavior.prompt);
+      remaining.splice(selectedIndex, 1);
+    }
+  }
+
+  return selected.join("\n");
+}
+
+/**
+ * Select 2-3 random image prompts from a personality's image array.
+ * These prompts are used to influence AI-generated image concepts.
+ *
+ * @param imagePrompts - Array of image prompt strings from personality metadata
+ * @returns Array of 2-3 randomly selected prompts, or empty array if no prompts available
+ */
+export function selectRandomImagePrompts(imagePrompts: string[] | undefined): string[] {
+  if (!imagePrompts || imagePrompts.length === 0) {
+    return [];
+  }
+
+  // Determine how many prompts to select (2-3)
+  const count = Math.min(imagePrompts.length, Math.random() < 0.5 ? 2 : 3);
+
+  // Shuffle and take the first `count` items
+  const shuffled = [...imagePrompts].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
+
+/**
  * Replace template variables in the base prompt
  */
 export function replaceTemplateVariables(
   template: string,
   variables: {
     reviewerName: string;
-    reviewerPersonality: string;
-    reviewerFavoriteChampions: string;
-    reviewerFavoriteLanes: string;
     playerName: string;
-    playerPersonality: string;
-    playerFavoriteChampions: string;
-    playerFavoriteLanes: string;
     playerChampion: string;
     playerLane: string;
     opponentChampion: string;
-    laneDescription: string;
-    matchReport: string;
     friendsContext: string;
-    d20Roll: string;
+    randomBehavior: string;
+    matchAnalysis: string;
+    queueContext: string;
+    rankContext: string;
   },
 ): string {
   return template
     .replaceAll("<REVIEWER NAME>", variables.reviewerName)
-    .replaceAll("<REVIEWER PERSONALITY>", variables.reviewerPersonality)
-    .replaceAll("<REVIEWER FAVORITE CHAMPIONS>", variables.reviewerFavoriteChampions)
-    .replaceAll("<REVIEWER FAVORITE LANES>", variables.reviewerFavoriteLanes)
     .replaceAll("<PLAYER NAME>", variables.playerName)
-    .replaceAll("<PLAYER PERSONALITY>", variables.playerPersonality)
-    .replaceAll("<PLAYER FAVORITE CHAMPIONS>", variables.playerFavoriteChampions)
-    .replaceAll("<PLAYER FAVORITE LANES>", variables.playerFavoriteLanes)
     .replaceAll("<PLAYER CHAMPION>", variables.playerChampion)
     .replaceAll("<PLAYER LANE>", variables.playerLane)
     .replaceAll("<OPPONENT CHAMPION>", variables.opponentChampion)
-    .replaceAll("<LANE DESCRIPTION>", variables.laneDescription)
-    .replaceAll("<MATCH REPORT>", variables.matchReport)
     .replaceAll("<FRIENDS CONTEXT>", variables.friendsContext)
-    .replaceAll("<D20 ROLL>", variables.d20Roll);
+    .replaceAll("<RANDOM BEHAVIOR>", variables.randomBehavior)
+    .replaceAll("<MATCH ANALYSIS>", variables.matchAnalysis)
+    .replaceAll("<QUEUE CONTEXT>", variables.queueContext)
+    .replaceAll("<RANK CONTEXT>", variables.rankContext);
 }

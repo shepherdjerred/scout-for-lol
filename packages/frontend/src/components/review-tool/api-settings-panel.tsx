@@ -43,10 +43,10 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
     <div className="space-y-6">
       {/* API Keys */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">API Keys</h3>
+        <h3 className="text-sm font-semibold text-surface-700 mb-3">API Keys</h3>
         <div className="space-y-4">
           <div>
-            <label htmlFor="openai-api-key" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="openai-api-key" className="block text-sm font-medium text-surface-700 mb-1">
               OpenAI API Key
             </label>
             <input
@@ -59,12 +59,12 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   api: { ...config.api, openaiApiKey: e.target.value || undefined },
                 });
               }}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
               placeholder="sk-..."
             />
           </div>
           <div>
-            <label htmlFor="gemini-api-key" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="gemini-api-key" className="block text-sm font-medium text-surface-700 mb-1">
               Gemini API Key
             </label>
             <input
@@ -77,7 +77,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   api: { ...config.api, geminiApiKey: e.target.value || undefined },
                 });
               }}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
               placeholder="AI..."
             />
           </div>
@@ -85,13 +85,11 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
       </div>
 
       {/* S3/R2 Configuration */}
-      <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-          S3 / R2 Configuration (Optional)
-        </h3>
+      <div className="pt-4 border-t border-surface-200">
+        <h3 className="text-sm font-semibold text-surface-700 mb-3">S3 / R2 Configuration (Optional)</h3>
         <div className="space-y-4">
           <div>
-            <label htmlFor="s3-bucket-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="s3-bucket-name" className="block text-sm font-medium text-surface-700 mb-1">
               Bucket Name
             </label>
             <input
@@ -104,15 +102,12 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   api: { ...config.api, s3BucketName: e.target.value || undefined },
                 });
               }}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
               placeholder="my-bucket-name"
             />
           </div>
           <div>
-            <label
-              htmlFor="aws-access-key-id"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
+            <label htmlFor="aws-access-key-id" className="block text-sm font-medium text-surface-700 mb-1">
               Access Key ID
             </label>
             <input
@@ -125,15 +120,12 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   api: { ...config.api, awsAccessKeyId: e.target.value || undefined },
                 });
               }}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
               placeholder="AKIA... or R2 access key"
             />
           </div>
           <div>
-            <label
-              htmlFor="aws-secret-access-key"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
+            <label htmlFor="aws-secret-access-key" className="block text-sm font-medium text-surface-700 mb-1">
               Secret Access Key
             </label>
             <input
@@ -146,12 +138,12 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   api: { ...config.api, awsSecretAccessKey: e.target.value || undefined },
                 });
               }}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
               placeholder="••••••••"
             />
           </div>
           <div>
-            <label htmlFor="s3-endpoint" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="s3-endpoint" className="block text-sm font-medium text-surface-700 mb-1">
               Endpoint URL (for Cloudflare R2)
             </label>
             <input
@@ -164,15 +156,13 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   api: { ...config.api, s3Endpoint: e.target.value || undefined },
                 });
               }}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
               placeholder="https://<account-id>.r2.cloudflarestorage.com"
             />
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Leave empty for AWS S3. For R2, use your account endpoint.
-            </p>
+            <p className="mt-1 text-xs text-surface-500">Leave empty for AWS S3. For R2, use your account endpoint.</p>
           </div>
           <div>
-            <label htmlFor="aws-region" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="aws-region" className="block text-sm font-medium text-surface-700 mb-1">
               Region
             </label>
             <input
@@ -185,25 +175,23 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   api: { ...config.api, awsRegion: e.target.value },
                 });
               }}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-brand-500 focus:border-brand-500 placeholder:text-surface-400"
               placeholder="us-east-1 or auto for R2"
             />
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              For R2, use &quot;auto&quot; or &quot;us-east-1&quot;
-            </p>
+            <p className="mt-1 text-xs text-surface-500">For R2, use &quot;auto&quot; or &quot;us-east-1&quot;</p>
           </div>
         </div>
       </div>
 
       {/* Import/Export */}
-      <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Share API Config</h3>
+      <div className="pt-4 border-t border-surface-200">
+        <h3 className="text-sm font-semibold text-surface-700 mb-3">Share API Config</h3>
 
         {!showImportExport ? (
           <div className="flex gap-2">
             <button
               onClick={handleExport}
-              className="flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
+              className="flex-1 px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium"
             >
               📋 Export (Copy to Clipboard)
             </button>
@@ -225,13 +213,13 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
               }}
               placeholder="Paste config blob here..."
               rows={3}
-              className="w-full px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500 font-mono text-xs placeholder:text-gray-400 dark:placeholder:text-gray-500"
+              className="w-full px-3 py-2 bg-white text-surface-900 border border-surface-300 rounded focus:ring-2 focus:ring-green-500 focus:border-green-500 font-mono text-xs placeholder:text-surface-400"
             />
             <div className="flex gap-2">
               <button
                 onClick={handleImport}
                 disabled={!importInput.trim()}
-                className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
+                className="flex-1 px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-sm disabled:bg-surface-300 disabled:cursor-not-allowed"
               >
                 Import
               </button>
@@ -240,7 +228,7 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
                   setShowImportExport(false);
                   setImportInput("");
                 }}
-                className="flex-1 px-3 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors text-sm"
+                className="flex-1 px-3 py-2 bg-surface-300 text-surface-700 rounded hover:bg-surface-400 transition-colors text-sm"
               >
                 Cancel
               </button>
@@ -248,13 +236,13 @@ export function ApiSettingsPanel({ config, onChange }: ApiSettingsPanelProps) {
           </div>
         )}
 
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+        <p className="text-xs text-surface-500 mt-2">
           Export creates a base64-encoded blob with API keys. Only share with trusted users.
         </p>
       </div>
 
-      <div className="text-xs text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded p-3">
-        ⚠️ API keys are stored in browser IndexedDB and shared across all tabs.
+      <div className="text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded p-3">
+        ⚠️ API keys are stored in browser IndexedDB.
       </div>
     </div>
   );

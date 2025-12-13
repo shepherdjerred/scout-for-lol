@@ -1,17 +1,17 @@
 import { describe, it, expect } from "bun:test";
-import type { ChallengesDto, ParticipantDto, Player, MatchDto } from "@scout-for-lol/data";
+import type { RawChallenges, RawParticipant, Player, RawMatch } from "@scout-for-lol/data";
 import { ArenaMatchSchema, ArenaTeamSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
-import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.js";
-import { toArenaMatch, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.js";
+import { participantToArenaChampion } from "@scout-for-lol/backend/league/model/champion.ts";
+import { toArenaMatch, toArenaSubteams } from "@scout-for-lol/backend/league/model/match.ts";
 
 function makeParticipant(
-  overrides: Partial<ParticipantDto> & {
+  overrides: Partial<RawParticipant> & {
     playerSubteamId: number;
     placement: number;
     puuid: string;
   },
-): ParticipantDto {
-  const base: Partial<ParticipantDto> = {
+): RawParticipant {
+  const base: Partial<RawParticipant> = {
     riotIdGameName: "P#NA1",
     summonerName: "P",
     championName: "Lux",
@@ -53,7 +53,29 @@ function makeParticipant(
     // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
     challenges: {
       damageTakenOnTeamPercentage: 0.2,
-    } satisfies Partial<ChallengesDto> as unknown as ChallengesDto,
+    } satisfies Partial<RawChallenges> as unknown as RawChallenges,
+    perks: {
+      statPerks: {
+        defense: 0,
+        flex: 0,
+        offense: 0,
+      },
+      styles: [
+        {
+          description: "primaryStyle",
+          selections: [
+            { perk: 8112, var1: 0, var2: 0, var3: 0 },
+            { perk: 8126, var1: 0, var2: 0, var3: 0 },
+          ],
+          style: 8100,
+        },
+        {
+          description: "subStyle",
+          selections: [{ perk: 8210, var1: 0, var2: 0, var3: 0 }],
+          style: 8200,
+        },
+      ],
+    },
   };
   // eslint-disable-next-line custom-rules/no-type-assertions -- not worth fully defining the type
   return {
@@ -61,12 +83,12 @@ function makeParticipant(
     totalDamageShieldedOnTeammates: 500,
     ...base,
     ...overrides,
-  } satisfies Partial<ParticipantDto> as unknown as ParticipantDto;
+  } satisfies Partial<RawParticipant> as unknown as RawParticipant;
 }
 
-function makeArenaMatchDto(): MatchDto {
+function makeArenaMatchDto(): RawMatch {
   const longPuuid = (label: string) => (label + "-".repeat(80)).slice(0, 78);
-  const participants: ParticipantDto[] = [];
+  const participants: RawParticipant[] = [];
   for (let sub = 1; sub <= 8; sub++) {
     participants.push(
       makeParticipant({
@@ -111,7 +133,7 @@ function makeArenaMatchDto(): MatchDto {
 }
 
 describe("arena match integration", () => {
-  it("builds valid arena subteams and players from MatchDto", async () => {
+  it("builds valid arena subteams and players from RawMatch", async () => {
     const dto = makeArenaMatchDto();
     const subteams = await toArenaSubteams(dto.info.participants);
     const players = await Promise.all(dto.info.participants.map(participantToArenaChampion));

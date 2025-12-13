@@ -64,6 +64,23 @@ model Account {
   @@unique([serverId, puuid])
 }
 
+model MatchRankHistory {
+  id         Int      @id @default(autoincrement())
+  matchId    String   // Riot match ID
+  puuid      String   // Player PUUID
+  queueType  String   // "solo" or "flex"
+
+  // Rank snapshots (JSON serialized, nullable for unranked)
+  rankBefore String?  // JSON: {tier, division, lp, wins, losses}
+  rankAfter  String?  // JSON: {tier, division, lp, wins, losses}
+
+  capturedAt DateTime // When this was recorded
+
+  @@unique([matchId, puuid, queueType])
+  @@index([puuid, capturedAt])
+  @@index([matchId])
+}
+
 model Competition {
   id               Int                       @id @default(autoincrement())
   serverId         String

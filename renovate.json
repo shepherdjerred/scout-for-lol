@@ -4,5 +4,30 @@
   "extends": ["config:recommended"],
   "minimumReleaseAge": "7 days",
   "reviewers": ["shepherdjerred"],
-  "schedule": ["after 3am on Sunday"]
+  "schedule": ["after 3am on Sunday"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["packages/data/src/data-dragon/assets/version\\.json$"],
+      "matchStrings": ["\"version\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "data-dragon",
+      "datasourceTemplate": "custom.data-dragon"
+    }
+  ],
+  "customDatasources": {
+    "data-dragon": {
+      "defaultRegistryUrlTemplate": "https://ddragon.leagueoflegends.com/api/versions.json",
+      "transformTemplates": ["{\"releases\": $map($, function($v) { {\"version\": $v} })}"]
+    }
+  },
+  "packageRules": [
+    {
+      "matchDepNames": ["data-dragon"],
+      "automerge": false,
+      "commitMessageTopic": "Data Dragon (LoL patch)",
+      "prBodyNotes": [
+        "After merging, run `cd packages/data && bun run scripts/update-data-dragon.ts` to download the new assets."
+      ]
+    }
+  ]
 }

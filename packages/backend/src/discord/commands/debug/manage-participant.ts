@@ -1,21 +1,24 @@
 import type { ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { match } from "ts-pattern";
-import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
+import { CompetitionIdSchema, DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
 import {
   addParticipant,
   removeParticipant,
   getParticipantStatus,
-} from "@scout-for-lol/backend/database/competition/participants.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+} from "@scout-for-lol/backend/database/competition/participants.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("debug-manage-participant");
 
 /**
  * Execute /debug manage-participant command
  */
 export async function executeDebugManageParticipant(interaction: ChatInputCommandInteraction) {
-  console.log("🐛 Executing debug manage-participant command");
+  logger.info("🐛 Executing debug manage-participant command");
 
   // ============================================================================
   // Step 1: Validate command options at boundary
@@ -67,7 +70,7 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
   try {
     competition = await getCompetitionById(prisma, competitionId);
   } catch (error) {
-    console.error(`[Debug Manage Participant] Error fetching competition ${competitionId.toString()}:`, error);
+    logger.error(`[Debug Manage Participant] Error fetching competition ${competitionId.toString()}:`, error);
     await interaction.editReply(`❌ Error fetching competition: ${getErrorMessage(error)}`);
     return;
   }
@@ -90,7 +93,7 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
       },
     });
   } catch (error) {
-    console.error(`[Debug Manage Participant] Error fetching player for user ${targetUser.id}:`, error);
+    logger.error(`[Debug Manage Participant] Error fetching player for user ${targetUser.id}:`, error);
     await interaction.editReply(`❌ Error fetching player data: ${getErrorMessage(error)}`);
     return;
   }
@@ -110,7 +113,7 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
   try {
     participantStatus = await getParticipantStatus(prisma, competitionId, player.id);
   } catch (error) {
-    console.error(`[Debug Manage Participant] Error checking participant status:`, error);
+    logger.error(`[Debug Manage Participant] Error checking participant status:`, error);
     await interaction.editReply(`❌ Error checking participation status: ${getErrorMessage(error)}`);
     return;
   }
@@ -150,7 +153,7 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
           playerId: player.id,
           status: "JOINED",
         });
-        console.log(
+        logger.info(
           `[Debug Manage Participant] Added user ${targetUser.id} to competition ${competitionId.toString()}`,
         );
 
@@ -167,7 +170,7 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
             `Participants: ${participantCount.toString()}/${competition.maxParticipants.toString()}`,
         );
       } catch (error) {
-        console.error(`[Debug Manage Participant] Error adding participant:`, error);
+        logger.error(`[Debug Manage Participant] Error adding participant:`, error);
         await interaction.editReply(`❌ Error adding participant: ${getErrorMessage(error)}`);
       }
     })
@@ -182,7 +185,7 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
       try {
         const validCompetitionId = CompetitionIdSchema.parse(competitionId);
         await removeParticipant(prisma, validCompetitionId, player.id);
-        console.log(
+        logger.info(
           `[Debug Manage Participant] Removed user ${targetUser.id} from competition ${competitionId.toString()}`,
         );
 
@@ -199,7 +202,7 @@ export async function executeDebugManageParticipant(interaction: ChatInputComman
             `Participants: ${participantCount.toString()}/${competition.maxParticipants.toString()}`,
         );
       } catch (error) {
-        console.error(`[Debug Manage Participant] Error removing participant:`, error);
+        logger.error(`[Debug Manage Participant] Error removing participant:`, error);
         await interaction.editReply(`❌ Error removing participant: ${getErrorMessage(error)}`);
       }
     })

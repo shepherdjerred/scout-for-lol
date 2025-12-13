@@ -17,7 +17,7 @@ export const ErrorSchema = z.object({ message: z.string() });
  * try {
  *   await riskyOperation();
  * } catch (error) {
- *   console.error(getErrorMessage(error));
+ *   logger.error(getErrorMessage(error));
  * }
  * ```
  */

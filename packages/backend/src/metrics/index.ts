@@ -1,7 +1,10 @@
 import { Registry, Counter, Gauge, Histogram } from "prom-client";
-import configuration from "@scout-for-lol/backend/configuration.js";
+import configuration from "@scout-for-lol/backend/configuration.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
-console.log("📊 Initializing Prometheus metrics");
+const logger = createLogger("metrics");
+
+logger.info("📊 Initializing Prometheus metrics");
 
 /**
  * Custom Prometheus registry for Scout for LoL metrics
@@ -357,11 +360,11 @@ setInterval(() => {
   updateUptimeMetric();
 }, 10_000);
 
-console.log("✅ Prometheus metrics initialized successfully");
+logger.info("✅ Prometheus metrics initialized successfully");
 
 // Import and initialize usage metrics collection
 // This must be after all metric definitions to avoid circular dependencies
-import "@scout-for-lol/backend/metrics/usage.js";
+import "@scout-for-lol/backend/metrics/usage.ts";
 
 /**
  * Get all metrics as Prometheus-formatted text

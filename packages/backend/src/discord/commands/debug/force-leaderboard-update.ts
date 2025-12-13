@@ -1,13 +1,16 @@
 import type { ChatInputCommandInteraction } from "discord.js";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.js";
-import { runDailyLeaderboardUpdate } from "@scout-for-lol/backend/league/tasks/competition/daily-update.js";
-import { calculateLeaderboard } from "@scout-for-lol/backend/league/competition/leaderboard.js";
-import { generateLeaderboardEmbed } from "@scout-for-lol/backend/discord/embeds/competition.js";
-import { send as sendChannelMessage } from "@scout-for-lol/backend/league/discord/channel.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { getCompetitionById } from "@scout-for-lol/backend/database/competition/queries.ts";
+import { runDailyLeaderboardUpdate } from "@scout-for-lol/backend/league/tasks/competition/daily-update.ts";
+import { calculateLeaderboard } from "@scout-for-lol/backend/league/competition/leaderboard.ts";
+import { generateLeaderboardEmbed } from "@scout-for-lol/backend/discord/embeds/competition.ts";
+import { send as sendChannelMessage } from "@scout-for-lol/backend/league/discord/channel.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("debug-force-leaderboard-update");
 
 export async function executeDebugForceLeaderboardUpdate(interaction: ChatInputCommandInteraction) {
-  console.log("🐛 Executing debug force-leaderboard-update command");
+  logger.info("🐛 Executing debug force-leaderboard-update command");
 
   const competitionId = interaction.options.getInteger("competition-id", false);
 
@@ -17,7 +20,7 @@ export async function executeDebugForceLeaderboardUpdate(interaction: ChatInputC
   try {
     if (competitionId !== null) {
       // Update specific competition
-      console.log(`📊 Running leaderboard update for competition ${competitionId.toString()}`);
+      logger.info(`📊 Running leaderboard update for competition ${competitionId.toString()}`);
 
       const competition = await getCompetitionById(prisma, competitionId);
 
@@ -46,19 +49,19 @@ export async function executeDebugForceLeaderboardUpdate(interaction: ChatInputC
         `✅ Leaderboard updated successfully for competition **${competition.title}** (ID: ${competitionId.toString()})`,
       );
 
-      console.log(`✅ Successfully updated leaderboard for competition ${competitionId.toString()}`);
+      logger.info(`✅ Successfully updated leaderboard for competition ${competitionId.toString()}`);
     } else {
       // Update all active competitions
-      console.log("📊 Running daily leaderboard update for all active competitions");
+      logger.info("📊 Running daily leaderboard update for all active competitions");
 
       await runDailyLeaderboardUpdate();
 
       await interaction.editReply("✅ Daily leaderboard update completed successfully for all active competitions");
 
-      console.log("✅ Successfully ran daily leaderboard update for all competitions");
+      logger.info("✅ Successfully ran daily leaderboard update for all competitions");
     }
   } catch (error) {
-    console.error("❌ Error running leaderboard update:", error);
+    logger.error("❌ Error running leaderboard update:", error);
     await interaction.editReply(`❌ Error: ${error instanceof Error ? error.message : String(error)}`);
   }
 }

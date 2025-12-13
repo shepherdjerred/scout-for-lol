@@ -1,37 +1,73 @@
 /**
  * Results panel showing generated review and metadata
  */
-import { useState, useSyncExternalStore, useMemo } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { z } from "zod";
 import type { ReviewConfig, GenerationResult } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
-import type { CompletedMatch, ArenaMatch } from "@scout-for-lol/data";
+import type { CompletedMatch, ArenaMatch, RawMatch, RawTimeline } from "@scout-for-lol/data";
 import type { CostTracker } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import { calculateCost } from "@scout-for-lol/frontend/lib/review-tool/costs";
 import {
   generateMatchReview,
   type GenerationProgress as GenerationProgressType,
 } from "@scout-for-lol/frontend/lib/review-tool/generator";
-import { CostDisplay } from "./cost-display";
-import { HistoryPanel } from "./history-panel";
-import { getExampleMatch } from "@scout-for-lol/data";
+import { CostDisplay } from "./cost-display.tsx";
+import { HistoryPanel } from "./history-panel.tsx";
 import {
   createPendingEntry,
   saveCompletedEntry,
   updateHistoryRating,
   type HistoryEntry,
 } from "@scout-for-lol/frontend/lib/review-tool/history-manager";
-import { ActiveGenerationsPanel } from "./active-generations-panel";
-import { GenerationProgress } from "./generation-progress";
-import { GenerationConfigDisplay } from "./generation-config-display";
-import { ResultDisplay } from "./result-display";
-import { ResultMetadata } from "./result-metadata";
-import { ResultRating } from "./result-rating";
+import { ActiveGenerationsPanel } from "./active-generations-panel.tsx";
+import { GenerationProgress } from "./generation-progress.tsx";
+import { ResultDisplay } from "./result-display.tsx";
+import { ResultMetadata } from "./result-metadata.tsx";
+import { ResultRating } from "./result-rating.tsx";
+import { PipelineTracesPanel } from "./pipeline-traces-panel.tsx";
+import { MatchAndReviewerInfo } from "./match-reviewer-info.tsx";
 
 const ErrorSchema = z.object({ message: z.string() });
+
+// Global timer for tracking elapsed time - updates every second
+let timerTick = 0;
+const timerSubscribers = new Set<() => void>();
+let timerInterval: ReturnType<typeof setInterval> | null = null;
+
+function startGlobalTimer() {
+  timerInterval ??= setInterval(() => {
+    timerTick += 1;
+    timerSubscribers.forEach((callback) => {
+      callback();
+    });
+  }, 1000);
+}
+
+function stopGlobalTimer() {
+  if (timerInterval !== null && timerSubscribers.size === 0) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function subscribeToTimer(callback: () => void) {
+  timerSubscribers.add(callback);
+  startGlobalTimer();
+  return () => {
+    timerSubscribers.delete(callback);
+    stopGlobalTimer();
+  };
+}
+
+function getTimerSnapshot() {
+  return timerTick;
+}
 
 type ResultsPanelProps = {
   config: ReviewConfig;
   match?: CompletedMatch | ArenaMatch | undefined;
+  rawMatch?: RawMatch | undefined;
+  rawTimeline?: RawTimeline | undefined;
   result?: GenerationResult | undefined;
   costTracker: CostTracker;
   onResultGenerated: (result: GenerationResult) => void;
@@ -41,71 +77,76 @@ type ActiveGeneration = {
   id: string;
   progress?: GenerationProgressType;
   startTime: number;
-  configSnapshot: HistoryEntry["configSnapshot"];
 };
 
-export function ResultsPanel({ config, match, result, costTracker, onResultGenerated }: ResultsPanelProps) {
+export function ResultsPanel(props: ResultsPanelProps) {
+  const { config, match, rawMatch, rawTimeline, result, costTracker, onResultGenerated } = props;
   const [activeGenerations, setActiveGenerations] = useState<Map<string, ActiveGeneration>>(new Map());
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | undefined>();
   const [viewingHistory, setViewingHistory] = useState(false);
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | undefined>();
   const [notes, setNotes] = useState("");
-  // Subscribe to cost update events using useSyncExternalStore
-  function subscribeToCostUpdates(callback: () => void) {
-    window.addEventListener("cost-update", callback);
-    return () => {
-      window.removeEventListener("cost-update", callback);
-    };
-  }
+  const [validationError, setValidationError] = useState<string | null>(null);
 
-  function getCostUpdateSnapshot() {
-    return Date.now();
-  }
+  // Subscribe to global timer - always active but cheap
+  // This triggers a re-render every second, causing elapsed times to update
+  useSyncExternalStore(subscribeToTimer, getTimerSnapshot, getTimerSnapshot);
 
-  useSyncExternalStore(subscribeToCostUpdates, getCostUpdateSnapshot, getCostUpdateSnapshot);
-
-  // Calculate elapsed times during render - recalculates on every render
-  // This is fine since renders happen frequently enough for smooth animation
-  const activeGenerationTimers = useMemo(() => {
-    const now = Date.now();
-    return new Map(Array.from(activeGenerations.entries()).map(([id, gen]) => [id, now - gen.startTime]));
-  }, [activeGenerations]);
+  // Calculate elapsed times only when there are active generations
+  const now = Date.now();
+  const activeGenerationTimers = new Map<string, number>(
+    Array.from(activeGenerations.entries()).map(([id, gen]) => [id, now - gen.startTime]),
+  );
 
   const handleGenerate = async () => {
-    // Use provided match or example match
-    const matchToUse = match ?? getExampleMatch("ranked");
+    // Clear any previous validation error
+    setValidationError(null);
+
+    // match, rawMatch, and rawTimeline are required for review generation
+    if (!match || !rawMatch) {
+      setValidationError("Please select a match first. Browse and click on a match from the list.");
+      return;
+    }
+
+    if (!rawTimeline) {
+      setValidationError("Timeline data is missing for this match. Try selecting a different match.");
+      return;
+    }
 
     // Create entry ID (not persisted yet)
     console.log("[History] Creating entry ID");
     const historyId = createPendingEntry();
     console.log("[History] Created entry ID:", historyId);
 
-    // Build config snapshot
-    const configSnapshot: HistoryEntry["configSnapshot"] = {
-      model: config.textGeneration.model,
-    };
+    // Build config snapshot (for saving to history later)
+    const configSnapshot: HistoryEntry["configSnapshot"] = {};
 
     // Add to active generations
     const newGen: ActiveGeneration = {
       id: historyId,
       startTime: Date.now(),
-      configSnapshot,
     };
     setActiveGenerations((prev) => new Map(prev).set(historyId, newGen));
     setSelectedHistoryId(historyId);
     setViewingHistory(false); // Switch back to current result when generating
 
     try {
-      const generatedResult = await generateMatchReview(matchToUse, config, (p) => {
-        setActiveGenerations((prev) => {
-          const updated = new Map(prev);
-          const gen = updated.get(historyId);
-          if (gen) {
-            gen.progress = p;
-            updated.set(historyId, gen);
-          }
-          return updated;
-        });
+      const generatedResult = await generateMatchReview({
+        match,
+        rawMatch,
+        rawTimeline,
+        config,
+        onProgress: (p) => {
+          setActiveGenerations((prev) => {
+            const updated = new Map(prev);
+            const gen = updated.get(historyId);
+            if (gen) {
+              gen.progress = p;
+              updated.set(historyId, gen);
+            }
+            return updated;
+          });
+        },
       });
 
       // Only update the displayed result if this is the selected generation
@@ -117,11 +158,8 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       if (generatedResult.metadata.selectedPersonality) {
         configSnapshot.personality = generatedResult.metadata.selectedPersonality;
       }
-      if (generatedResult.metadata.selectedArtStyle) {
-        configSnapshot.artStyle = generatedResult.metadata.selectedArtStyle;
-      }
-      if (generatedResult.metadata.selectedArtTheme) {
-        configSnapshot.artTheme = generatedResult.metadata.selectedArtTheme;
+      if (generatedResult.metadata.imageDescription) {
+        configSnapshot.imageDescription = generatedResult.metadata.imageDescription;
       }
 
       // Save completed entry to IndexedDB
@@ -132,14 +170,13 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       // Calculate and track cost
       if (!generatedResult.error) {
         const cost = calculateCost(generatedResult.metadata, config.textGeneration.model, config.imageGeneration.model);
-        costTracker
-          .add(cost)
-          .then(() => {
-            window.dispatchEvent(new Event("cost-update"));
-          })
-          .catch(() => {
+        void (async () => {
+          try {
+            await costTracker.add(cost);
+          } catch {
             // Error handling is done in the cost tracker
-          });
+          }
+        })();
       }
 
       // Trigger history panel refresh via history store
@@ -235,48 +272,110 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
       />
 
       {/* Current/Selected Result */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex justify-between items-center mb-4">
+      <div className="card p-6">
+        <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Generated Review</h2>
-            {viewingHistory && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Viewing from history</p>}
+            <h2 className="text-xl font-semibold text-surface-900">Generated Review</h2>
+            {viewingHistory && (
+              <p className="text-xs text-surface-500 mt-1 flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                Viewing from history
+              </p>
+            )}
             {isViewingActiveGeneration && (
-              <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">Viewing active generation</p>
+              <p className="text-xs text-victory-600 mt-1 flex items-center gap-1">
+                <svg className="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                Generating...
+              </p>
             )}
           </div>
           <button
             onClick={() => {
-              handleGenerate().catch(() => {
-                // Error handling is done in handleGenerate
-              });
+              void (async () => {
+                try {
+                  await handleGenerate();
+                } catch {
+                  // Error handling is done in handleGenerate
+                }
+              })();
             }}
-            className="px-4 py-2 bg-green-600 dark:bg-green-500 text-white rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 bg-black text-white hover:bg-brand-700 text-black font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 active:scale-95"
           >
-            Generate New Review
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Generate Review
           </button>
         </div>
 
         {!match && (
-          <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded text-sm text-yellow-800 dark:text-yellow-200">
-            No match selected. Using example match data.
+          <div className="mb-4 p-4 rounded-xl bg-victory-50 border border-victory-200 text-sm text-victory-800 flex items-center gap-3">
+            <svg className="w-5 h-5 text-victory-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>No match selected. Select a match from the browser to generate a review.</span>
           </div>
         )}
 
-        {/* Generation Configuration Details */}
-        <GenerationConfigDisplay config={config} result={result} />
+        {/* Validation Error Display */}
+        {validationError && (
+          <div className="mb-4 p-4 rounded-xl bg-defeat-50 border border-defeat-200 animate-fade-in">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-defeat-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <div className="flex-1">
+                <div className="font-semibold text-defeat-900 mb-1">Cannot Generate Review</div>
+                <div className="text-sm text-defeat-700">{validationError}</div>
+              </div>
+              <button
+                onClick={() => {
+                  setValidationError(null);
+                }}
+                className="text-defeat-400 hover:text-defeat-600"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Selected Match & Reviewer Info */}
+        <MatchAndReviewerInfo match={match} config={config} />
 
         {/* Generation Progress */}
         {selectedGen?.progress && <GenerationProgress progress={selectedGen.progress} elapsedMs={elapsedMs} />}
 
         {/* Error Display */}
         {result?.error && (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded">
+          <div className="mb-4 p-4 rounded-xl bg-defeat-50 border border-defeat-200 animate-fade-in">
             <div className="flex items-start gap-3">
-              <svg
-                className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
+              <svg className="w-5 h-5 text-defeat-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path
                   fillRule="evenodd"
                   d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -284,8 +383,8 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
                 />
               </svg>
               <div className="flex-1">
-                <div className="font-semibold text-red-900 dark:text-red-200 mb-1">Error</div>
-                <div className="text-sm text-red-800 dark:text-red-300">{result.error}</div>
+                <div className="font-semibold text-defeat-900 mb-1">Generation Failed</div>
+                <div className="text-sm text-defeat-700">{result.error}</div>
               </div>
             </div>
           </div>
@@ -307,7 +406,17 @@ export function ResultsPanel({ config, match, result, costTracker, onResultGener
             )}
 
             {/* Metadata */}
-            <ResultMetadata result={result} cost={cost} />
+            <ResultMetadata result={result} cost={cost} imageModel={config.imageGeneration.model} />
+
+            <div className="mt-4 space-y-2 rounded-xl border border-surface-200/50 bg-white p-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-surface-900">Pipeline traces</div>
+                  <p className="text-xs text-surface-500">Raw prompts, responses, and timings from each stage.</p>
+                </div>
+              </div>
+              <PipelineTracesPanel traces={result.metadata.traces} intermediate={result.metadata.intermediate} />
+            </div>
           </>
         )}
       </div>

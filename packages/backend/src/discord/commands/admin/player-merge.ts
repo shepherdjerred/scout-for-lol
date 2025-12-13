@@ -1,12 +1,15 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("admin-player-merge");
 import {
   validateCommandArgs,
   executeWithTiming,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.ts";
 
 const ArgsSchema = z.object({
   sourceAlias: z.string().min(1).max(100),
@@ -36,7 +39,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
   await executeWithTiming("player-merge", username, async () => {
     // Check if trying to merge with self
     if (sourceAlias === targetAlias) {
-      console.log(`❌ Cannot merge player with itself`);
+      logger.info(`❌ Cannot merge player with itself`);
       await interaction.reply({
         content: `❌ **Invalid merge**\n\nCannot merge a player with itself.`,
         ephemeral: true,
@@ -60,7 +63,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
     });
 
     if (!sourcePlayer) {
-      console.log(`❌ Source player not found: "${sourceAlias}"`);
+      logger.info(`❌ Source player not found: "${sourceAlias}"`);
       await interaction.reply({
         content: `❌ **Source player not found**\n\nNo player with alias "${sourceAlias}" exists in this server.`,
         ephemeral: true,
@@ -84,7 +87,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
     });
 
     if (!targetPlayer) {
-      console.log(`❌ Target player not found: "${targetAlias}"`);
+      logger.info(`❌ Target player not found: "${targetAlias}"`);
       await interaction.reply({
         content: `❌ **Target player not found**\n\nNo player with alias "${targetAlias}" exists in this server.`,
         ephemeral: true,
@@ -92,7 +95,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
       return;
     }
 
-    console.log(
+    logger.info(
       `💾 Merging player "${sourceAlias}" (${sourcePlayer.accounts.length.toString()} accounts, ${sourcePlayer.subscriptions.length.toString()} subscriptions) into "${targetAlias}" (${targetPlayer.accounts.length.toString()} accounts, ${targetPlayer.subscriptions.length.toString()} subscriptions)`,
     );
 
@@ -112,7 +115,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
           },
         });
 
-        console.log(`✅ Moved ${sourcePlayer.accounts.length.toString()} accounts to target player`);
+        logger.info(`✅ Moved ${sourcePlayer.accounts.length.toString()} accounts to target player`);
 
         // 2. Handle subscriptions - keep target's subscriptions, delete source's duplicates
         // Get all unique channel IDs from both players
@@ -126,7 +129,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
           },
         });
 
-        console.log(`✅ Removed ${sourcePlayer.subscriptions.length.toString()} subscriptions from source player`);
+        logger.info(`✅ Removed ${sourcePlayer.subscriptions.length.toString()} subscriptions from source player`);
 
         // Create new subscriptions for channels that were only in source
         const uniqueSourceChannels = Array.from(sourceChannelIds).filter(
@@ -145,7 +148,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
             })),
           });
 
-          console.log(`✅ Added ${uniqueSourceChannels.length.toString()} new subscriptions to target player`);
+          logger.info(`✅ Added ${uniqueSourceChannels.length.toString()} new subscriptions to target player`);
         }
 
         // 3. Handle competition participants
@@ -160,7 +163,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
           },
         });
 
-        console.log(
+        logger.info(
           `✅ Removed ${sourcePlayer.competitionParticipants.length.toString()} competition participants from source player`,
         );
 
@@ -187,22 +190,56 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
             })),
           });
 
-          console.log(
+          logger.info(
             `✅ Added ${uniqueSourceCompetitions.length.toString()} competition participations to target player`,
           );
         }
 
-        // 4. Handle competition snapshots - move all to target player
-        await tx.competitionSnapshot.updateMany({
-          where: {
-            playerId: sourcePlayer.id,
-          },
-          data: {
-            playerId: targetPlayer.id,
-          },
+        // 4. Handle competition snapshots - move non-conflicting ones, delete duplicates
+        // Get all snapshots from both players
+        const sourceSnapshots = await tx.competitionSnapshot.findMany({
+          where: { playerId: sourcePlayer.id },
+          select: { id: true, competitionId: true, snapshotType: true },
+        });
+        const targetSnapshots = await tx.competitionSnapshot.findMany({
+          where: { playerId: targetPlayer.id },
+          select: { competitionId: true, snapshotType: true },
         });
 
-        console.log(`✅ Moved competition snapshots to target player`);
+        // Build a set of target's existing (competitionId, snapshotType) combinations
+        const targetSnapshotKeys = new Set(
+          targetSnapshots.map((s) => `${s.competitionId.toString()}-${s.snapshotType}`),
+        );
+
+        // Separate source snapshots into conflicting and non-conflicting
+        const conflictingIds: number[] = [];
+        const nonConflictingIds: number[] = [];
+
+        for (const snapshot of sourceSnapshots) {
+          const key = `${snapshot.competitionId.toString()}-${snapshot.snapshotType}`;
+          if (targetSnapshotKeys.has(key)) {
+            conflictingIds.push(snapshot.id);
+          } else {
+            nonConflictingIds.push(snapshot.id);
+          }
+        }
+
+        // Delete conflicting snapshots (target's snapshots are the canonical ones)
+        if (conflictingIds.length > 0) {
+          await tx.competitionSnapshot.deleteMany({
+            where: { id: { in: conflictingIds } },
+          });
+          logger.info(`✅ Deleted ${conflictingIds.length.toString()} conflicting competition snapshots`);
+        }
+
+        // Move non-conflicting snapshots to target player
+        if (nonConflictingIds.length > 0) {
+          await tx.competitionSnapshot.updateMany({
+            where: { id: { in: nonConflictingIds } },
+            data: { playerId: targetPlayer.id },
+          });
+          logger.info(`✅ Moved ${nonConflictingIds.length.toString()} competition snapshots to target player`);
+        }
 
         // 5. Delete the source player
         await tx.player.delete({
@@ -211,7 +248,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
           },
         });
 
-        console.log(`✅ Deleted source player "${sourceAlias}"`);
+        logger.info(`✅ Deleted source player "${sourceAlias}"`);
 
         // 6. Update target player's metadata
         await tx.player.update({
@@ -236,7 +273,7 @@ export async function executePlayerMerge(interaction: ChatInputCommandInteractio
         ephemeral: true,
       });
     } catch (error) {
-      console.error(`❌ Database error during player merge:`, error);
+      logger.error(`❌ Database error during player merge:`, error);
       await interaction.reply({
         content: `❌ **Error merging players**\n\nFailed to merge players: ${getErrorMessage(error)}\n\nNo changes were made.`,
         ephemeral: true,

@@ -11,14 +11,14 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
 import type { GetObjectCommandOutput } from "@aws-sdk/client-s3";
 import { mockClient } from "aws-sdk-client-mock";
-import type { MatchDto } from "@scout-for-lol/data";
-import { queryMatchesByDateRange } from "@scout-for-lol/backend/storage/s3-query.js";
+import type { RawMatch } from "@scout-for-lol/data";
+import { queryMatchesByDateRange } from "@scout-for-lol/backend/storage/s3-query.ts";
 
 // Create S3 mock
 const s3Mock = mockClient(S3Client);
 
 // Helper to create a mock match
-function createMockMatch(matchId: string, participantPuuids: string[], gameCreationDate: Date): MatchDto {
+function createMockMatch(matchId: string, participantPuuids: string[], gameCreationDate: Date): RawMatch {
   return {
     metadata: {
       dataVersion: "2",
@@ -51,7 +51,7 @@ function generateMatchKey(matchId: string, date: Date): string {
   const year = date.getUTCFullYear();
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   const day = String(date.getUTCDate()).padStart(2, "0");
-  return `matches/${year.toString()}/${month}/${day}/${matchId}.json`;
+  return `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
 }
 
 // Helper to create a mock GetObjectCommandOutput
@@ -117,7 +117,7 @@ describe("queryMatchesByDateRange - single day", () => {
     const match2 = createMockMatch("TEST_1002", [puuid2, "PUUID-OTHER-2"], date);
     const match3 = createMockMatch("TEST_1003", [puuid1, puuid2], date);
 
-    const prefix = "matches/2025/01/15/";
+    const prefix = "games/2025/01/15/";
 
     // Mock S3 ListObjectsV2
     s3Mock.on(ListObjectsV2Command, { Prefix: prefix }).resolves({
@@ -158,7 +158,7 @@ describe("queryMatchesByDateRange - single day", () => {
     const match2 = createMockMatch("TEST_2002", [otherPuuid, "PUUID-ANOTHER"], date);
     const match3 = createMockMatch("TEST_2003", [targetPuuid, "PUUID-ANOTHER"], date);
 
-    const prefix = "matches/2025/01/15/";
+    const prefix = "games/2025/01/15/";
 
     s3Mock.on(ListObjectsV2Command, { Prefix: prefix }).resolves({
       Contents: [
@@ -191,7 +191,7 @@ describe("queryMatchesByDateRange - single day", () => {
     const date = new Date("2025-01-20T12:00:00Z");
     const puuid = "PUUID-NONEXISTENT";
 
-    const prefix = "matches/2025/01/20/";
+    const prefix = "games/2025/01/20/";
 
     // Mock empty S3 response
     s3Mock.on(ListObjectsV2Command, { Prefix: prefix }).resolves({
@@ -218,15 +218,15 @@ describe("queryMatchesByDateRange - date range", () => {
     const match3 = createMockMatch("TEST_3003", [puuid, "OTHER-3"], date3);
 
     // Mock S3 responses for each day
-    s3Mock.on(ListObjectsV2Command, { Prefix: "matches/2025/01/15/" }).resolves({
+    s3Mock.on(ListObjectsV2Command, { Prefix: "games/2025/01/15/" }).resolves({
       Contents: [{ Key: generateMatchKey("TEST_3001", date1) }],
     });
 
-    s3Mock.on(ListObjectsV2Command, { Prefix: "matches/2025/01/16/" }).resolves({
+    s3Mock.on(ListObjectsV2Command, { Prefix: "games/2025/01/16/" }).resolves({
       Contents: [{ Key: generateMatchKey("TEST_3002", date2) }],
     });
 
-    s3Mock.on(ListObjectsV2Command, { Prefix: "matches/2025/01/17/" }).resolves({
+    s3Mock.on(ListObjectsV2Command, { Prefix: "games/2025/01/17/" }).resolves({
       Contents: [{ Key: generateMatchKey("TEST_3003", date3) }],
     });
 
@@ -260,11 +260,11 @@ describe("queryMatchesByDateRange - date range", () => {
     const match3 = createMockMatch("TEST_4003", [puuid], date3);
 
     // Mock S3 responses - only for days 2 and 3 (we're querying date2 to date3)
-    s3Mock.on(ListObjectsV2Command, { Prefix: "matches/2025/01/16/" }).resolves({
+    s3Mock.on(ListObjectsV2Command, { Prefix: "games/2025/01/16/" }).resolves({
       Contents: [{ Key: generateMatchKey("TEST_4002", date2) }],
     });
 
-    s3Mock.on(ListObjectsV2Command, { Prefix: "matches/2025/01/17/" }).resolves({
+    s3Mock.on(ListObjectsV2Command, { Prefix: "games/2025/01/17/" }).resolves({
       Contents: [{ Key: generateMatchKey("TEST_4003", date3) }],
     });
 
@@ -294,15 +294,15 @@ describe("queryMatchesByDateRange - date range", () => {
     const match2 = createMockMatch("TEST_5002", [puuid], date2);
     const match3 = createMockMatch("TEST_5003", [puuid], date3);
 
-    s3Mock.on(ListObjectsV2Command, { Prefix: "matches/2025/01/31/" }).resolves({
+    s3Mock.on(ListObjectsV2Command, { Prefix: "games/2025/01/31/" }).resolves({
       Contents: [{ Key: generateMatchKey("TEST_5001", date1) }],
     });
 
-    s3Mock.on(ListObjectsV2Command, { Prefix: "matches/2025/02/01/" }).resolves({
+    s3Mock.on(ListObjectsV2Command, { Prefix: "games/2025/02/01/" }).resolves({
       Contents: [{ Key: generateMatchKey("TEST_5002", date2) }],
     });
 
-    s3Mock.on(ListObjectsV2Command, { Prefix: "matches/2025/02/02/" }).resolves({
+    s3Mock.on(ListObjectsV2Command, { Prefix: "games/2025/02/02/" }).resolves({
       Contents: [{ Key: generateMatchKey("TEST_5003", date3) }],
     });
 
@@ -341,7 +341,7 @@ describe("queryMatchesByDateRange - edge cases", () => {
     // Valid match
     const validMatch = createMockMatch("TEST_6001", [puuid], date);
 
-    const prefix = "matches/2025/01/15/";
+    const prefix = "games/2025/01/15/";
 
     s3Mock.on(ListObjectsV2Command, { Prefix: prefix }).resolves({
       Contents: [{ Key: generateMatchKey("TEST_6001", date) }, { Key: generateMatchKey("TEST_6002_INVALID", date) }],
@@ -378,7 +378,7 @@ describe("queryMatchesByDateRange - edge cases", () => {
     // Match with puuid1 only
     const match3 = createMockMatch("TEST_7003", [puuid1, "OTHER-3", "OTHER-4"], date);
 
-    const prefix = "matches/2025/01/15/";
+    const prefix = "games/2025/01/15/";
 
     s3Mock.on(ListObjectsV2Command, { Prefix: prefix }).resolves({
       Contents: [
@@ -413,7 +413,7 @@ describe("queryMatchesByDateRange - edge cases", () => {
 
     const validMatch = createMockMatch("TEST_8001", [puuid], date);
 
-    const prefix = "matches/2025/01/15/";
+    const prefix = "games/2025/01/15/";
 
     s3Mock.on(ListObjectsV2Command, { Prefix: prefix }).resolves({
       Contents: [{ Key: generateMatchKey("TEST_8001", date) }, { Key: generateMatchKey("TEST_8002_ERROR", date) }],
@@ -455,7 +455,7 @@ describe("queryMatchesByDateRange - data verification", () => {
 
     const match = createMockMatch("TEST_9001", [puuid, "OTHER"], date);
 
-    const prefix = "matches/2025/01/15/";
+    const prefix = "games/2025/01/15/";
 
     s3Mock.on(ListObjectsV2Command, { Prefix: prefix }).resolves({
       Contents: [{ Key: generateMatchKey("TEST_9001", date) }],

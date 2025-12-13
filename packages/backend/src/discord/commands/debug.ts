@@ -1,9 +1,12 @@
 import { type ChatInputCommandInteraction, SlashCommandBuilder, AttachmentBuilder, EmbedBuilder } from "discord.js";
 import { formatDistanceToNow } from "date-fns";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import configuration from "@scout-for-lol/backend/configuration";
-import { getAccountsWithState, prisma } from "@scout-for-lol/backend/database/index.js";
-import { calculatePollingInterval, shouldCheckPlayer } from "@scout-for-lol/backend/utils/polling-intervals.js";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data/index";
+import configuration from "@scout-for-lol/backend/configuration.ts";
+import { getAccountsWithState, prisma } from "@scout-for-lol/backend/database/index.ts";
+import { calculatePollingInterval, shouldCheckPlayer } from "@scout-for-lol/backend/utils/polling-intervals.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("commands-debug");
 
 export const debugCommand = new SlashCommandBuilder()
   .setName("debug")
@@ -61,7 +64,7 @@ export const debugCommand = new SlashCommandBuilder()
   );
 
 export async function executeDebugDatabase(interaction: ChatInputCommandInteraction) {
-  console.log("🐛 Executing debug database command");
+  logger.info("🐛 Executing debug database command");
 
   // Get the database file path from configuration
   const databaseUrl = configuration.databaseUrl;
@@ -69,11 +72,11 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
   // Handle file:// URLs and extract the path
   const databasePath = databaseUrl.startsWith("file:") ? databaseUrl.replace(/^file:/, "") : databaseUrl;
 
-  console.log(`📁 Database path: ${databasePath}`);
+  logger.info(`📁 Database path: ${databasePath}`);
 
   // Check if file exists
   if (!(await Bun.file(databasePath).exists())) {
-    console.error(`❌ Database file not found at ${databasePath}`);
+    logger.error(`❌ Database file not found at ${databasePath}`);
     await interaction.reply({
       content: `❌ Database file not found at: \`${databasePath}\``,
       ephemeral: true,
@@ -85,10 +88,10 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
     // Defer reply as file reading might take a moment
     await interaction.deferReply({ ephemeral: true });
 
-    console.log(`📖 Reading database file from ${databasePath}`);
+    logger.info(`📖 Reading database file from ${databasePath}`);
     const file = Bun.file(databasePath);
     const fileSize = file.size;
-    console.log(`✅ Successfully opened database file (${String(fileSize)} bytes)`);
+    logger.info(`✅ Successfully opened database file (${String(fileSize)} bytes)`);
 
     // Read file and convert to Buffer for Discord.js type compatibility
     // Using Bun's Buffer (not Node.js) - Discord.js types require Buffer, not Uint8Array
@@ -101,9 +104,9 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
       files: [attachment],
     });
 
-    console.log(`🎉 Database file uploaded successfully`);
+    logger.info(`🎉 Database file uploaded successfully`);
   } catch (error) {
-    console.error("❌ Error reading or uploading database file:", error);
+    logger.error("❌ Error reading or uploading database file:", error);
     await interaction.editReply({
       content: `❌ Error uploading database file: ${error instanceof Error ? error.message : String(error)}`,
     });
@@ -111,7 +114,7 @@ export async function executeDebugDatabase(interaction: ChatInputCommandInteract
 }
 
 export async function executeDebugPolling(interaction: ChatInputCommandInteraction) {
-  console.log("🐛 Executing debug polling command");
+  logger.info("🐛 Executing debug polling command");
 
   try {
     await interaction.deferReply({ ephemeral: true });
@@ -197,9 +200,9 @@ export async function executeDebugPolling(interaction: ChatInputCommandInteracti
       await interaction.editReply({ content: summary });
     }
 
-    console.log(`✅ Polling debug info sent (${accountsWithState.length.toString()} players)`);
+    logger.info(`✅ Polling debug info sent (${accountsWithState.length.toString()} players)`);
   } catch (error) {
-    console.error("❌ Error in debug polling command:", error);
+    logger.error("❌ Error in debug polling command:", error);
     await interaction.editReply({
       content: `❌ Error getting polling info: ${error instanceof Error ? error.message : String(error)}`,
     });
@@ -207,7 +210,7 @@ export async function executeDebugPolling(interaction: ChatInputCommandInteracti
 }
 
 export async function executeDebugServerInfo(interaction: ChatInputCommandInteraction) {
-  console.log("📊 Executing debug server-info command");
+  logger.info("📊 Executing debug server-info command");
 
   // Defer reply since this might take a moment to gather all data
   await interaction.deferReply({ ephemeral: true });
@@ -222,7 +225,7 @@ export async function executeDebugServerInfo(interaction: ChatInputCommandIntera
       return;
     }
 
-    console.log(`📊 Fetching server info for guild: ${serverId}`);
+    logger.info(`📊 Fetching server info for guild: ${serverId}`);
 
     // Fetch all data in parallel for better performance
     const [players, accounts, subscriptions, competitions, activeCompetitions, permissions] = await Promise.all([
@@ -258,7 +261,7 @@ export async function executeDebugServerInfo(interaction: ChatInputCommandIntera
       }),
     ]);
 
-    console.log(
+    logger.info(
       `📊 Data fetched - Players: ${players.length.toString()}, Accounts: ${accounts.length.toString()}, Subscriptions: ${subscriptions.length.toString()}, Competitions: ${competitions.length.toString()}`,
     );
 
@@ -390,13 +393,13 @@ export async function executeDebugServerInfo(interaction: ChatInputCommandIntera
 
     embeds.push(debugEmbed);
 
-    console.log(`✅ Server info compiled successfully with ${embeds.length.toString()} embeds`);
+    logger.info(`✅ Server info compiled successfully with ${embeds.length.toString()} embeds`);
 
     await interaction.editReply({
       embeds,
     });
   } catch (error) {
-    console.error("❌ Error executing debug server-info command:", error);
+    logger.error("❌ Error executing debug server-info command:", error);
     await interaction.editReply({
       content: `❌ Error fetching server information: ${error instanceof Error ? error.message : String(error)}`,
     });

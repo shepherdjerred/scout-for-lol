@@ -6,7 +6,7 @@
  * - Pricing must be updated manually by checking official sources:
  *   - OpenAI: https://platform.openai.com/pricing
  *   - Gemini: https://ai.google.dev/pricing
- * - Last updated: November 2025
+ * - Last updated: December 2025
  * - Recommended: Check for updates quarterly
  */
 
@@ -30,7 +30,7 @@ export type ModelInfo = {
 /**
  * Comprehensive list of OpenAI models with their capabilities
  * Pricing verified from https://platform.openai.com/pricing
- * Last updated: November 2025
+ * Last updated: December 2025
  */
 export const OPENAI_MODELS: Record<string, ModelInfo> = {
   // GPT-4o Series (Most capable, multimodal)
@@ -213,42 +213,58 @@ export const OPENAI_MODELS: Record<string, ModelInfo> = {
     category: "gpt-3.5",
   },
 
+  // GPT-5 Series (Reasoning models - no temperature/topP support)
   "gpt-5": {
     id: "gpt-5",
     name: "GPT-5",
-    description: "Next-generation GPT model - Most capable, highest quality",
+    description: "🧠 GPT-5 base model • $1.25 input / $10 output per 1M tokens • No temp control",
     capabilities: {
-      supportsTemperature: false, // Unknown, assume restricted for preview models
+      supportsTemperature: false,
       supportsTopP: false,
-      maxTokens: 25000,
-      costPer1MInputTokens: 5.0,
-      costPer1MOutputTokens: 15.0,
+      maxTokens: 400000,
+      costPer1MInputTokens: 1.25,
+      costPer1MOutputTokens: 10.0,
     },
     category: "other",
   },
   "gpt-5-mini": {
     id: "gpt-5-mini",
     name: "GPT-5 Mini",
-    description: "Smaller GPT-5 variant - Balanced performance and cost",
+    description: "💰 Balanced GPT-5 variant • $0.25 input / $2 output per 1M tokens • No temp control",
     capabilities: {
       supportsTemperature: false,
       supportsTopP: false,
-      maxTokens: 16384,
-      costPer1MInputTokens: 1.0,
-      costPer1MOutputTokens: 3.0,
+      maxTokens: 200000,
+      costPer1MInputTokens: 0.25,
+      costPer1MOutputTokens: 2.0,
     },
     category: "other",
   },
   "gpt-5-nano": {
     id: "gpt-5-nano",
     name: "GPT-5 Nano",
-    description: "Lightweight GPT-5 variant - Fastest, most cost-effective",
+    description: "⚡ Fastest, most cost-effective • $0.05 input / $0.40 output per 1M tokens • No temp control",
     capabilities: {
-      supportsTemperature: true,
-      supportsTopP: true,
-      maxTokens: 8192,
-      costPer1MInputTokens: 0.3,
-      costPer1MOutputTokens: 0.9,
+      supportsTemperature: false,
+      supportsTopP: false,
+      maxTokens: 100000,
+      costPer1MInputTokens: 0.05,
+      costPer1MOutputTokens: 0.4,
+    },
+    category: "other",
+  },
+
+  // GPT-5.1 (Latest flagship model - no temperature/topP support)
+  "gpt-5.1": {
+    id: "gpt-5.1",
+    name: "GPT-5.1",
+    description: "🚀 Latest GPT-5.1 • 400k context • $1.25 input / $10 output per 1M tokens • No temp control",
+    capabilities: {
+      supportsTemperature: false,
+      supportsTopP: false,
+      maxTokens: 400000,
+      costPer1MInputTokens: 1.25,
+      costPer1MOutputTokens: 10.0,
     },
     category: "other",
   },
@@ -404,8 +420,6 @@ export type GenerationMetadata = {
   imageGenerated: boolean;
   selectedPersonality?: string | undefined;
   selectedArtStyle?: string | undefined;
-  selectedArtTheme?: string | undefined;
-  selectedSecondArtTheme?: string | undefined;
 };
 
 /**

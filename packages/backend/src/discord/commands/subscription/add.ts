@@ -6,20 +6,23 @@ import {
   DiscordGuildIdSchema,
   RegionSchema,
   RiotIdSchema,
-} from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index";
+} from "@scout-for-lol/data/index";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { fromError } from "zod-validation-error";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("subscription-add");
 import {
   checkSubscriptionLimit,
   checkAccountLimit,
   resolveRiotIdToPuuid,
-} from "@scout-for-lol/backend/discord/commands/subscription/add-helpers.js";
+} from "@scout-for-lol/backend/discord/commands/subscription/add-helpers.ts";
 import {
   buildSubscriptionResponse,
   createSubscriptionRecords,
   handleWelcomeMatch,
   validateSubscriptionArgs,
-} from "@scout-for-lol/backend/discord/commands/subscription/add-helpers-internal.js";
+} from "@scout-for-lol/backend/discord/commands/subscription/add-helpers-internal.ts";
 
 export const ArgsSchema = z.object({
   channel: DiscordChannelIdSchema,
@@ -35,7 +38,7 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
   const userId = DiscordAccountIdSchema.parse(interaction.user.id);
   const username = interaction.user.username;
 
-  console.log(`🔔 Starting subscription process for user ${username} (${userId})`);
+  logger.info(`🔔 Starting subscription process for user ${username} (${userId})`);
 
   const args = validateSubscriptionArgs(interaction, ArgsSchema);
   if (!args) {
@@ -48,6 +51,10 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
   }
 
   const { channel, region, riotId, user, alias, guildId } = args;
+
+  // Defer reply immediately to avoid Discord's 3-second timeout
+  // All subsequent responses must use editReply() instead of reply()
+  await interaction.deferReply({ ephemeral: true });
 
   // Check if player already exists with this alias
   const existingPlayer = await prisma.player.findUnique({
@@ -95,22 +102,21 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
   });
 
   if (existingAccount) {
-    console.log(
+    logger.info(
       `⚠️  Account already exists: ${riotId.game_name}#${riotId.tag_line} (PUUID: ${puuid}) for player "${existingAccount.player.alias}"`,
     );
 
     const subscriptions = existingAccount.player.subscriptions;
     const channelList = subscriptions.map((sub) => `<#${sub.channelId}>`).join(", ");
 
-    await interaction.reply({
+    await interaction.editReply({
       content: `ℹ️ **Account already subscribed**\n\nThe account **${riotId.game_name}#${riotId.tag_line}** is already subscribed as player "${existingAccount.player.alias}".\n\n${subscriptions.length > 0 ? `Currently posting to: ${channelList}` : "No active subscriptions."}`,
-      ephemeral: true,
     });
     return;
   }
 
   const now = new Date();
-  console.log(`💾 Starting database operations for subscription`);
+  logger.info(`💾 Starting database operations for subscription`);
 
   const result = await createSubscriptionRecords({
     args,
@@ -149,28 +155,25 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
           const accountCount = playerAccount.player.accounts.length;
           const accountList = playerAccount.player.accounts.map((acc) => `• ${acc.alias} (${acc.region})`).join("\n");
 
-          await interaction.reply({
+          await interaction.editReply({
             content: `✅ **Account added successfully**\n\nAdded **${riotId.game_name}#${riotId.tag_line}** to player "${playerAccount.player.alias}".\n\nThis player is already subscribed in <#${channel}> and now has ${accountCount.toString()} account${accountCount === 1 ? "" : "s"}:\n${accountList}\n\nMatch updates for all accounts will continue to be posted there.`,
-            ephemeral: true,
           });
         } else {
-          await interaction.reply({
+          await interaction.editReply({
             content: `ℹ️ **Already subscribed**\n\nPlayer "${playerAccount.player.alias}" is already subscribed in <#${channel}>.\n\nMatch updates will continue to be posted there.`,
-            ephemeral: true,
           });
         }
       }
     } else {
-      await interaction.reply({
+      await interaction.editReply({
         content: `Error creating database records: ${result.error}`,
-        ephemeral: true,
       });
     }
     return;
   }
 
   const totalTime = Date.now() - startTime;
-  console.log(`🎉 Subscription completed successfully in ${totalTime.toString()}ms`);
+  logger.info(`🎉 Subscription completed successfully in ${totalTime.toString()}ms`);
 
   const responseMessage = buildSubscriptionResponse({
     riotId,
@@ -179,9 +182,8 @@ export async function executeSubscriptionAdd(interaction: ChatInputCommandIntera
     playerAccount: result.playerAccount,
   });
 
-  await interaction.reply({
+  await interaction.editReply({
     content: responseMessage,
-    ephemeral: true,
   });
 
   handleWelcomeMatch({

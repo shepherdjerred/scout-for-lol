@@ -1,9 +1,9 @@
-import type { MostWinsChampionCriteria, MatchDto } from "@scout-for-lol/data";
+import type { MostWinsChampionCriteria, RawMatch } from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
-} from "@scout-for-lol/backend/league/competition/processors/types.js";
-import { createWinBasedProcessor } from "@scout-for-lol/backend/league/competition/processors/processor-helpers.js";
+} from "@scout-for-lol/backend/league/competition/processors/types.ts";
+import { createWinBasedProcessor } from "@scout-for-lol/backend/league/competition/processors/processor-helpers.ts";
 
 /**
  * Process "Most Wins (Champion)" criteria
@@ -11,7 +11,7 @@ import { createWinBasedProcessor } from "@scout-for-lol/backend/league/competiti
  * Optionally filters by queue type
  */
 export function processMostWinsChampion(
-  matches: MatchDto[],
+  matches: RawMatch[],
   participants: PlayerWithAccounts[],
   criteria: MostWinsChampionCriteria,
 ): LeaderboardEntry[] {

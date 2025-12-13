@@ -1,11 +1,22 @@
-import {
-  PersonalityMetadataSchema,
-  PlayerMetadataSchema,
-  LANE_CONTEXT_MAP,
-  EXCLUDED_PERSONALITY_FILES,
-  type Personality,
-  type PlayerMetadata,
-} from "@scout-for-lol/data";
+import { PersonalityMetadataSchema, type Personality } from "@scout-for-lol/data/index";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+// Static imports for lane context files
+import topLane from "@scout-for-lol/data/src/review/prompts/lanes/top.txt";
+import middleLane from "@scout-for-lol/data/src/review/prompts/lanes/middle.txt";
+import jungleLane from "@scout-for-lol/data/src/review/prompts/lanes/jungle.txt";
+import adcLane from "@scout-for-lol/data/src/review/prompts/lanes/adc.txt";
+import supportLane from "@scout-for-lol/data/src/review/prompts/lanes/support.txt";
+import genericLane from "@scout-for-lol/data/src/review/prompts/lanes/generic.txt";
+
+const logger = createLogger("review-prompts");
+
+/**
+ * In-memory state tracking for balanced reviewer selection.
+ * Tracks how many times each reviewer has been selected to ensure
+ * fair distribution across all available reviewers.
+ */
+const reviewerUsageCount = new Map<string, number>();
 
 // Resolve the prompts directory from the data package
 // import.meta.resolve returns a file:// URL, so we extract the pathname
@@ -18,16 +29,35 @@ function getPromptsDir(): string {
   return url.pathname.replace(/\/src\/index\.ts$/, "/src/review/prompts");
 }
 
+// Resolve the analysis style card directory (packages/analysis/llm-out)
+function getStyleCardsDir(): string {
+  const dataPackageUrl = import.meta.resolve("@scout-for-lol/data");
+  const url = new URL(dataPackageUrl);
+  // Navigate from data/src/index.ts -> packages/data/src/review/prompts/style-cards
+  return url.pathname.replace(/\/src\/index\.ts$/, "/src/review/prompts/style-cards");
+}
+
 const PROMPTS_DIR = getPromptsDir();
+const STYLECARDS_DIR = getStyleCardsDir();
+const EXCLUDED = new Set(["generic.json"]);
 
 /**
- * Load a prompt file from the prompts directory
+ * Allowed personalities for AI review selection.
+ * Only these personalities will be loaded and used.
  */
-export async function loadPromptFile(filename: string): Promise<string> {
-  const filePath = `${PROMPTS_DIR}/${filename}`;
-  const text = await Bun.file(filePath).text();
-  return text.trim();
-}
+const ALLOWED_PERSONALITIES = new Set([
+  "aaron",
+  "brian",
+  "danny",
+  "irfan",
+  "nekoryan",
+  "colin",
+  "edward",
+  "hirza",
+  "long",
+  "richard",
+  "virmel",
+]);
 
 /**
  * Load a personality (both JSON metadata and TXT instructions)
@@ -46,110 +76,161 @@ async function loadPersonality(basename: string): Promise<Personality> {
   const instructionsText = await Bun.file(txtPath).text();
   const instructions = instructionsText.trim();
 
+  // Load a matching style card from analysis/llm-out (required)
+  const normalizedBasename = basename.toLowerCase();
+  const normalizedDisplayName = metadata.name
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  const styleCardCandidates = Array.from(new Set([normalizedBasename, normalizedDisplayName]));
+
+  let styleCard: string | undefined;
+  for (const candidate of styleCardCandidates) {
+    const stylePath = `${STYLECARDS_DIR}/${candidate}_style.json`;
+    const styleFile = Bun.file(stylePath);
+    if (await styleFile.exists()) {
+      styleCard = (await styleFile.text()).trim();
+      break;
+    }
+  }
+
+  if (!styleCard) {
+    throw new Error(
+      `Missing required style card for personality "${basename}". Expected one of: ${styleCardCandidates.map((c) => `${c}_style.json`).join(", ")}`,
+    );
+  }
+
   return {
     metadata,
     instructions,
+    styleCard,
     filename: basename,
   };
 }
 
 /**
- * Get list of personality files from the filesystem
- */
-async function getPersonalityFiles(): Promise<string[]> {
-  const personalitiesDir = `${PROMPTS_DIR}/personalities`;
-
-  // Check if directory exists before scanning by trying to access it
-  // We'll catch the error during glob.scan if it doesn't exist
-
-  const glob = new Bun.Glob("*.json");
-  const files: string[] = [];
-
-  try {
-    for await (const file of glob.scan({ cwd: personalitiesDir })) {
-      if (!EXCLUDED_PERSONALITY_FILES.has(file)) {
-        files.push(file);
-      }
-    }
-  } catch (error) {
-    // Handle case where directory might not be accessible during scan
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.warn(`[getPersonalityFiles] Error scanning personalities directory: ${errorMessage}`);
-    return [];
-  }
-
-  return files;
-}
-
-/**
- * Select a random personality prompt
+ * Select a random personality prompt using balanced pseudo-random selection.
+ * All reviewers with complete data (metadata + instructions + style card) are included.
+ * The algorithm ensures no reviewer is selected too often or too seldom.
  */
 export async function selectRandomPersonality(): Promise<Personality> {
-  const personalityFiles = await getPersonalityFiles();
-  if (personalityFiles.length === 0) {
-    const personalitiesDir = `${PROMPTS_DIR}/personalities`;
-    throw new Error(
-      `No personality files found in ${personalitiesDir}. ` +
-        "Ensure the personalities directory exists and contains .json files.",
-    );
-  }
-  const randomIndex = Math.floor(Math.random() * personalityFiles.length);
-  const selectedFile = personalityFiles[randomIndex];
-  if (!selectedFile) {
-    throw new Error("Failed to select personality file");
-  }
-  // Remove .json extension to get basename
-  const basename = selectedFile.replace(".json", "");
-  return loadPersonality(basename);
+  const personalities = await listValidPersonalities();
+  const selectedPersonality = selectBalancedReviewer(personalities);
+
+  logger.info(
+    `Selected: ${selectedPersonality.filename ?? selectedPersonality.metadata.name}, ` +
+      `usage counts: ${JSON.stringify(Object.fromEntries(reviewerUsageCount))}`,
+  );
+
+  return selectedPersonality;
 }
 
 /**
- * Load player metadata from JSON file
+ * Select a personality using a balanced pseudo-random algorithm.
+ * Prioritizes reviewers who have been selected fewer times to ensure
+ * fair distribution across all available reviewers.
  */
-export async function loadPlayerMetadata(playerAlias: string): Promise<PlayerMetadata> {
-  const playersDir = `${PROMPTS_DIR}/players`;
-
-  // Try to load player-specific file, fall back to generic
-  const playerFile = `${playerAlias.toLowerCase().replace(/\s+/g, "-")}.json`;
-  const filePath = `${playersDir}/${playerFile}`;
-
-  try {
-    const jsonContent = await Bun.file(filePath).text();
-    const parsed: unknown = JSON.parse(jsonContent);
-    return PlayerMetadataSchema.parse(parsed);
-  } catch {
-    // Fall back to generic player metadata
-    const genericPath = `${playersDir}/generic.json`;
-    const genericContent = await Bun.file(genericPath).text();
-    const parsed: unknown = JSON.parse(genericContent);
-    return PlayerMetadataSchema.parse(parsed);
+function selectBalancedReviewer(availablePersonalities: Personality[]): Personality {
+  if (availablePersonalities.length === 0) {
+    throw new Error("No personalities available for selection");
   }
+
+  // Initialize usage counts for new personalities
+  for (const personality of availablePersonalities) {
+    const key = personality.filename ?? personality.metadata.name;
+    if (!reviewerUsageCount.has(key)) {
+      reviewerUsageCount.set(key, 0);
+    }
+  }
+
+  // Find the minimum usage count among available personalities
+  const getUsageCount = (p: Personality) => reviewerUsageCount.get(p.filename ?? p.metadata.name) ?? 0;
+  const minUsage = Math.min(...availablePersonalities.map(getUsageCount));
+
+  // Get all personalities that have the minimum usage count
+  const leastUsedPersonalities = availablePersonalities.filter((p) => getUsageCount(p) === minUsage);
+
+  // Randomly select from the least used personalities
+  const randomIndex = Math.floor(Math.random() * leastUsedPersonalities.length);
+  const selected = leastUsedPersonalities[randomIndex];
+
+  if (!selected) {
+    throw new Error("Failed to select personality from least used pool");
+  }
+
+  // Increment the usage count for the selected personality
+  const key = selected.filename ?? selected.metadata.name;
+  reviewerUsageCount.set(key, (reviewerUsageCount.get(key) ?? 0) + 1);
+
+  return selected;
 }
+
+let cachedPersonalities: Personality[] | null = null;
+
+async function listValidPersonalities(): Promise<Personality[]> {
+  if (cachedPersonalities) {
+    return cachedPersonalities;
+  }
+
+  const personalitiesDir = `${PROMPTS_DIR}/personalities`;
+  const glob = new Bun.Glob("*.json");
+  const basenames: string[] = [];
+  for await (const file of glob.scan(personalitiesDir)) {
+    const name = file.replace(/\.json$/, "");
+    if (!EXCLUDED.has(`${name}.json`) && ALLOWED_PERSONALITIES.has(name)) {
+      basenames.push(name);
+    }
+  }
+
+  const valid: Personality[] = [];
+  const discarded: string[] = [];
+
+  for (const base of basenames) {
+    try {
+      const personality = await loadPersonality(base);
+      valid.push(personality);
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      discarded.push(`${base} (${reason})`);
+    }
+  }
+
+  if (discarded.length > 0) {
+    logger.warn(`[ai-review] Discarded personalities due to incomplete data: ${discarded.join("; ")}`);
+  }
+
+  if (valid.length === 0) {
+    throw new Error("No personalities with complete data (metadata + instructions + style card).");
+  }
+
+  cachedPersonalities = valid;
+  return valid;
+}
+
+/** Lane context map using static imports */
+const LANE_CONTEXTS: Record<string, string> = {
+  top: topLane,
+  middle: middleLane,
+  jungle: jungleLane,
+  adc: adcLane,
+  support: supportLane,
+};
 
 /**
  * Get lane context based on player's lane
  */
-export async function getLaneContext(lane: string | undefined): Promise<{ content: string; filename: string }> {
+export function getLaneContext(lane: string | undefined): { content: string; filename: string } {
   const lowerLane = lane?.toLowerCase();
-  let laneFile: string | undefined = undefined;
+  let filename = "lanes/generic.txt";
+  let content = genericLane;
 
-  // Type-safe lane lookup
-  if (lowerLane) {
-    switch (lowerLane) {
-      case "top":
-      case "middle":
-      case "jungle":
-      case "adc":
-      case "support":
-        laneFile = LANE_CONTEXT_MAP[lowerLane];
-        break;
+  if (lowerLane && lowerLane in LANE_CONTEXTS) {
+    const laneContent = LANE_CONTEXTS[lowerLane];
+    if (laneContent) {
+      content = laneContent;
+      filename = `lanes/${lowerLane}.txt`;
     }
   }
 
-  const filename = laneFile ?? "lanes/generic.txt";
-  const content = await loadPromptFile(filename);
-  return {
-    content,
-    filename,
-  };
+  return { content, filename };
 }

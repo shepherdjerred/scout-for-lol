@@ -1,12 +1,15 @@
 import { type ChatInputCommandInteraction, type InteractionReplyOptions, MessageFlags } from "discord.js";
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
 import type { PrismaClient } from "@scout-for-lol/backend/generated/prisma/client/index.js";
-import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
+import type { PlayerWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("utils-discord-link-helpers");
 import {
   buildDiscordAlreadyLinkedError,
   buildDiscordIdInUseError,
   buildPlayerNotLinkedError,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.ts";
 
 /**
  * Validation result for Discord link operations
@@ -71,13 +74,13 @@ export async function validateDiscordLink(options: {
   });
 
   if (existingPlayer) {
-    console.log(`❌ Discord ID already linked to player "${existingPlayer.alias}"`);
+    logger.info(`❌ Discord ID already linked to player "${existingPlayer.alias}"`);
     return buildValidationErrorResponse(buildDiscordIdInUseError(discordUserId, existingPlayer.alias));
   }
 
   // Check if player already has a Discord ID
   if (player.discordId) {
-    console.log(`⚠️  Player already has Discord ID: ${player.discordId}`);
+    logger.info(`⚠️  Player already has Discord ID: ${player.discordId}`);
     return buildValidationErrorResponse(buildDiscordAlreadyLinkedError(playerAlias, player.discordId));
   }
 
@@ -98,7 +101,7 @@ export function validateDiscordUnlink(
   }
 
   if (!player.discordId) {
-    console.log(`⚠️  Player has no Discord ID to unlink`);
+    logger.info(`⚠️  Player has no Discord ID to unlink`);
     return buildValidationErrorResponse(buildPlayerNotLinkedError(playerAlias));
   }
 
@@ -116,7 +119,7 @@ export async function executeDiscordLinkOperation(
   try {
     await operation();
   } catch (error) {
-    console.error(`❌ Database error during Discord ${operationName}:`, error);
+    logger.error(`❌ Database error during Discord ${operationName}:`, error);
     const { buildDatabaseError } = await import("@scout-for-lol/backend/discord/commands/admin/utils/responses.js");
     await interaction.reply(buildDatabaseError(`${operationName} Discord ID`, error));
   }

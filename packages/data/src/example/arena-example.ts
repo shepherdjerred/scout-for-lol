@@ -6,9 +6,9 @@ import {
   ArenaTeamSchema,
   LeaguePuuidSchema,
 } from "@scout-for-lol/data";
-import { getTeams } from "./arena-teams.js";
-import { createArenaChampion, createArenaMetrics, createTeamSupport } from "./arena-factories.js";
-import { createMasterOfDualityAugment, createCourageAugment } from "./arena-augments.js";
+import { getTeams } from "./arena-teams.ts";
+import { createArenaChampion, createArenaMetrics, createTeamSupport } from "./arena-factories.ts";
+import { createMasterOfDualityAugment, createCourageAugment } from "./arena-augments.ts";
 
 function getMainPlayer() {
   return {
