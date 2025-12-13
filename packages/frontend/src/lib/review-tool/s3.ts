@@ -18,7 +18,7 @@ import { getExampleMatch } from "@scout-for-lol/data";
 import { getCachedDataAsync, setCachedData } from "./cache";
 import { z } from "zod";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
-import { getOutcome, participantToChampion } from "./s3-helpers";
+import { getOutcome, participantToChampion, isValidMatchKey } from "./s3-helpers";
 
 /**
  * Fetch all objects from S3 with pagination
@@ -70,6 +70,10 @@ async function fetchAllS3Objects(
       return [];
     }
     const validatedObj = result.data;
+    // Filter out keys that don't match the valid match file pattern
+    if (!isValidMatchKey(validatedObj.Key)) {
+      return [];
+    }
     return [
       {
         key: validatedObj.Key,
