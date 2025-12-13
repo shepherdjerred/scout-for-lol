@@ -12,11 +12,11 @@ Use proper imports for test utilities vs runtime code:
 ```typescript
 // ✅ CORRECT:
 import { describe, test, expect, beforeEach } from "bun:test";
-import { createCompetition, type CreateCompetitionInput } from "./queries.js";
-import type { Competition } from "./types.js";
+import { createCompetition, type CreateCompetitionInput } from "./queries.ts";
+import type { Competition } from "./types.ts";
 
 // ❌ WRONG:
-import type { createCompetition } from "./queries.js";  // Function used at runtime!
+import type { createCompetition } from "./queries.ts";  // Function used at runtime!
 ```
 
 ## Test Data Patterns

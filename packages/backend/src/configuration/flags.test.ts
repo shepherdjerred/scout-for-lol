@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from "bun:test";
-import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data";
+import { DiscordAccountIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index";
 
 import {
   getLimit,
@@ -10,7 +10,7 @@ import {
   clearFlagOverrides,
   type LimitName,
   type FlagName,
-} from "@scout-for-lol/backend/configuration/flags";
+} from "@scout-for-lol/backend/configuration/flags.ts";
 
 describe("Feature Flags System", () => {
   describe("getLimit", () => {

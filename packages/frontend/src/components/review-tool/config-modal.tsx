@@ -1,11 +1,12 @@
 /**
  * Modal for API configuration settings
  */
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { z } from "zod";
 import type { GlobalConfig } from "@scout-for-lol/frontend/lib/review-tool/config/schema";
-import { ApiSettingsPanel } from "./api-settings-panel";
-import { resetToDefaults, getResetPreview } from "@scout-for-lol/frontend/lib/review-tool/reset-defaults";
+import { ApiSettingsPanel } from "./api-settings-panel.tsx";
+import type { getResetPreview } from "@scout-for-lol/frontend/lib/review-tool/reset-defaults";
+import { resetToDefaults } from "@scout-for-lol/frontend/lib/review-tool/reset-defaults";
 
 const ErrorSchema = z.object({ message: z.string() });
 
@@ -18,28 +19,12 @@ type ConfigModalProps = {
 
 export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: ConfigModalProps) {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [preview, setPreview] = useState<Awaited<ReturnType<typeof getResetPreview>>>({
+  const [preview] = useState<Awaited<ReturnType<typeof getResetPreview>>>({
     configs: 0,
     historyEntries: 0,
     customPersonalities: 0,
     customArtStyles: 0,
-    customArtThemes: 0,
   });
-  const previewLoadedRef = useRef(false);
-
-  // Load preview lazily when modal opens (only once per open session)
-  if (isOpen && !previewLoadedRef.current) {
-    previewLoadedRef.current = true;
-    void (async () => {
-      const previewData = await getResetPreview();
-      setPreview(previewData);
-    })();
-  }
-
-  // Reset preview loaded flag when modal closes
-  if (!isOpen && previewLoadedRef.current) {
-    previewLoadedRef.current = false;
-  }
 
   if (!isOpen) {
     return null;
@@ -89,17 +74,17 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
         <div
           role="dialog"
           aria-modal="true"
-          className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
         >
           {/* Header */}
-          <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+          <div className="sticky top-0 bg-white border-b border-surface-200 px-6 py-4 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">API Configuration</h2>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Settings shared across all tabs</p>
+              <h2 className="text-xl font-bold text-surface-900">API Configuration</h2>
+              <p className="text-sm text-surface-500 mt-1">API keys and external service configuration</p>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              className="text-surface-400 hover:text-surface-600 transition-colors"
               title="Close"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,10 +99,10 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
+          <div className="sticky bottom-0 bg-surface-50 border-t border-surface-200 px-6 py-4 flex justify-between items-center">
             <button
               onClick={handleResetClick}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-defeat-600 text-white rounded-lg hover:bg-defeat-700 transition-colors flex items-center gap-2"
               title="Reset all settings except API keys, cache, and cost data"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,7 +117,7 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
             </button>
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"
             >
               Done
             </button>
@@ -156,15 +141,11 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
             }}
           />
           <div className="flex min-h-full items-center justify-center p-4">
-            <div
-              role="dialog"
-              aria-modal="true"
-              className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full"
-            >
+            <div role="dialog" aria-modal="true" className="relative bg-white rounded-lg shadow-xl max-w-md w-full">
               <div className="p-6">
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0">
-                    <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-10 h-10 text-defeat-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -174,9 +155,9 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Reset to Defaults?</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">This will clear the following data:</p>
-                    <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 mb-3 list-disc list-inside">
+                    <h3 className="text-lg font-semibold text-surface-900 mb-2">Reset to Defaults?</h3>
+                    <p className="text-sm text-surface-600 mb-3">This will clear the following data:</p>
+                    <ul className="text-sm text-surface-600 space-y-1 mb-3 list-disc list-inside">
                       {preview.configs > 0 && (
                         <li>
                           {preview.configs} saved configuration{preview.configs !== 1 ? "s" : ""}
@@ -198,28 +179,20 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
                           {preview.customArtStyles} custom art style{preview.customArtStyles !== 1 ? "s" : ""}
                         </li>
                       )}
-                      {preview.customArtThemes > 0 && (
-                        <li>
-                          {preview.customArtThemes} custom art theme{preview.customArtThemes !== 1 ? "s" : ""}
-                        </li>
-                      )}
-                      {!hasDataToReset && (
-                        <li className="text-gray-400 dark:text-gray-500 italic">No custom data found</li>
-                      )}
+
+                      {!hasDataToReset && <li className="text-surface-400 italic">No custom data found</li>}
                     </ul>
-                    <p className="text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded p-2 mb-3">
+                    <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded p-2 mb-3">
                       ✓ API keys, cache, and cost data will be preserved
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                      This cannot be undone. Continue?
-                    </p>
+                    <p className="text-sm text-surface-600 font-medium">This cannot be undone. Continue?</p>
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 dark:bg-gray-900 px-6 py-4 flex justify-end gap-3 rounded-b-lg">
+              <div className="bg-surface-50 px-6 py-4 flex justify-end gap-3 rounded-b-lg">
                 <button
                   onClick={handleResetCancel}
-                  className="px-4 py-2 bg-gray-300 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-600 transition-colors"
+                  className="px-4 py-2 bg-surface-300 text-surface-700 rounded-lg hover:bg-surface-400 transition-colors"
                 >
                   Cancel
                 </button>
@@ -227,7 +200,7 @@ export function ConfigModal({ isOpen, onClose, globalConfig, onGlobalChange }: C
                   onClick={() => {
                     void handleResetConfirm();
                   }}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="px-4 py-2 bg-defeat-600 text-white rounded-lg hover:bg-defeat-700 transition-colors"
                 >
                   Reset to Defaults
                 </button>

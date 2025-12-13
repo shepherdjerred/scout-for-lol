@@ -13,15 +13,15 @@ export function MatchLoadingState({ loading, loadingProgress, onCancel }: MatchL
   }
 
   return (
-    <div className="text-center py-2 text-sm text-gray-600 dark:text-gray-400">
+    <div className="text-center py-2 text-sm text-surface-600">
       {loadingProgress ? (
         <div className="space-y-2">
           <div>
             Loading matches... {loadingProgress.current}/{loadingProgress.total}
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className="w-full bg-surface-200 rounded-full h-2">
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="bg-brand-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${((loadingProgress.current / loadingProgress.total) * 100).toString()}%` }}
             />
           </div>

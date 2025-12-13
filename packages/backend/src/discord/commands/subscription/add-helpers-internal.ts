@@ -1,11 +1,14 @@
 import type { ChatInputCommandInteraction } from "discord.js";
-import { DiscordAccountIdSchema, LeaguePuuidSchema, RegionSchema, type RiotId } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
-import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.js";
-import { sendWelcomeMatch } from "@scout-for-lol/backend/discord/commands/subscription/welcome-match.js";
-import type { ArgsSchema } from "./add.js";
+import { DiscordAccountIdSchema, LeaguePuuidSchema, RegionSchema, type RiotId } from "@scout-for-lol/data/index";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { backfillLastMatchTime } from "@scout-for-lol/backend/league/api/backfill-match-history.ts";
+import { sendWelcomeMatch } from "@scout-for-lol/backend/discord/commands/subscription/welcome-match.ts";
+import type { ArgsSchema } from "./add.ts";
 import type { z } from "zod";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("subscription-add-helpers-internal");
 
 type ArgsType = z.infer<typeof ArgsSchema>;
 
@@ -25,14 +28,14 @@ export function validateSubscriptionArgs(
       guildId: interaction.guildId,
     });
 
-    console.log(`✅ Command arguments validated successfully`);
-    console.log(
+    logger.info(`✅ Command arguments validated successfully`);
+    logger.info(
       `📋 Args: channel=${args.channel}, region=${args.region}, riotId=${args.riotId.game_name}#${args.riotId.tag_line}, alias=${args.alias}`,
     );
 
     return args;
   } catch (error) {
-    console.error(`❌ Invalid command arguments from ${username}:`, error);
+    logger.error(`❌ Invalid command arguments from ${username}:`, error);
     return null;
   }
 }
@@ -78,7 +81,7 @@ export async function createSubscriptionRecords(params: {
     const isAddingToExistingPlayer = existingPlayer !== null;
 
     // add a new account
-    console.log(`📝 Creating account record for ${alias}`);
+    logger.info(`📝 Creating account record for ${alias}`);
     const account = await prisma.account.create({
       data: {
         alias: alias,
@@ -109,7 +112,7 @@ export async function createSubscriptionRecords(params: {
       },
     });
 
-    console.log(`✅ Account created with ID: ${account.id.toString()}`);
+    logger.info(`✅ Account created with ID: ${account.id.toString()}`);
 
     // Backfill match history to initialize lastMatchTime
     const playerConfigEntry = {
@@ -142,11 +145,11 @@ export async function createSubscriptionRecords(params: {
     });
 
     if (!playerAccount) {
-      console.error(`❌ Failed to find player for account ID: ${account.id.toString()}`);
+      logger.error(`❌ Failed to find player for account ID: ${account.id.toString()}`);
       return { success: false, error: "Error finding player for account" };
     }
 
-    console.log(`📝 Found player record: ${playerAccount.player.alias} (ID: ${playerAccount.player.id.toString()})`);
+    logger.info(`📝 Found player record: ${playerAccount.player.alias} (ID: ${playerAccount.player.id.toString()})`);
 
     // Check if subscription already exists for this player in this channel
     const existingSubscription = await prisma.subscription.findUnique({
@@ -160,7 +163,7 @@ export async function createSubscriptionRecords(params: {
     });
 
     if (existingSubscription) {
-      console.log(`⚠️  Subscription already exists for player ${playerAccount.player.alias} in channel ${channel}`);
+      logger.info(`⚠️  Subscription already exists for player ${playerAccount.player.alias} in channel ${channel}`);
       return {
         success: false,
         error: "SUBSCRIPTION_EXISTS",
@@ -178,11 +181,11 @@ export async function createSubscriptionRecords(params: {
     const isFirstSubscription = existingSubscriptionCount === 0;
 
     if (isFirstSubscription) {
-      console.log(`🎉 This is the first subscription for server ${guildId}`);
+      logger.info(`🎉 This is the first subscription for server ${guildId}`);
     }
 
     // create a new subscription
-    console.log(`📝 Creating subscription for channel ${channel}`);
+    logger.info(`📝 Creating subscription for channel ${channel}`);
     const subscription = await prisma.subscription.create({
       data: {
         channelId: channel,
@@ -195,7 +198,7 @@ export async function createSubscriptionRecords(params: {
     });
 
     const dbTime = Date.now() - dbStartTime;
-    console.log(`✅ Subscription created with ID: ${subscription.id.toString()} (${dbTime.toString()}ms)`);
+    logger.info(`✅ Subscription created with ID: ${subscription.id.toString()} (${dbTime.toString()}ms)`);
 
     return {
       success: true,
@@ -205,7 +208,7 @@ export async function createSubscriptionRecords(params: {
       isFirstSubscription,
     };
   } catch (error) {
-    console.error(`❌ Database error during subscription:`, error);
+    logger.error(`❌ Database error during subscription:`, error);
     return { success: false, error: getErrorMessage(error) };
   }
 }
@@ -251,7 +254,7 @@ export function handleWelcomeMatch(params: {
     return;
   }
 
-  console.log(`🎁 Triggering welcome match for ${riotId.game_name}#${riotId.tag_line}`);
+  logger.info(`🎁 Triggering welcome match for ${riotId.game_name}#${riotId.tag_line}`);
 
   const playerConfigEntry = {
     alias: alias,
@@ -265,8 +268,12 @@ export function handleWelcomeMatch(params: {
   };
 
   // Fire off async task to send welcome match
-  void sendWelcomeMatch(interaction, playerConfigEntry).catch((error) => {
-    console.error(`❌ Error sending welcome match:`, error);
-    // Don't throw - this is a background task
-  });
+  void (async () => {
+    try {
+      await sendWelcomeMatch(interaction, playerConfigEntry);
+    } catch (error) {
+      logger.error(`❌ Error sending welcome match:`, error);
+      // Don't throw - this is a background task
+    }
+  })();
 }

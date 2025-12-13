@@ -1,15 +1,18 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
-import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/command-wrapper.js";
-import { findPlayerByAliasWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.js";
-import { buildPlayerUpdateResponse } from "@scout-for-lol/backend/discord/commands/admin/utils/player-responses.js";
-import { updatePlayerDiscordId } from "@scout-for-lol/backend/discord/commands/admin/utils/player-updates.js";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data/index";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { executeCommand } from "@scout-for-lol/backend/discord/commands/utils/command-wrapper.ts";
+import { findPlayerByAliasWithSubscriptions } from "@scout-for-lol/backend/discord/commands/admin/utils/player-queries.ts";
+import { buildPlayerUpdateResponse } from "@scout-for-lol/backend/discord/commands/admin/utils/player-responses.ts";
+import { updatePlayerDiscordId } from "@scout-for-lol/backend/discord/commands/admin/utils/player-updates.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("admin-player-unlink-discord");
 import {
   validateDiscordUnlink,
   executeDiscordLinkOperation,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/discord-link-helpers.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/discord-link-helpers.ts";
 
 const ArgsSchema = z.object({
   playerAlias: z.string().min(1).max(100),
@@ -50,7 +53,7 @@ export async function executePlayerUnlinkDiscord(interaction: ChatInputCommandIn
         // This should never happen due to validation, but TypeScript needs the check
         return;
       }
-      console.log(`💾 Unlinking Discord ID ${previousDiscordId} from player "${playerAlias}"`);
+      logger.info(`💾 Unlinking Discord ID ${previousDiscordId} from player "${playerAlias}"`);
 
       await executeDiscordLinkOperation(
         interaction,

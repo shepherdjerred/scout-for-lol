@@ -12,7 +12,7 @@ import {
 import { z } from "zod";
 import { differenceInCalendarDays } from "date-fns";
 
-import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
+import { getLimit } from "@scout-for-lol/backend/configuration/flags.ts";
 
 // ============================================================================
 // Constants

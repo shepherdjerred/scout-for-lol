@@ -9,18 +9,26 @@
 import { differenceInMinutes, differenceInHours } from "date-fns";
 
 /**
+ * Maximum number of players to check per polling run.
+ * This prevents API rate limiting when many players become eligible at once.
+ */
+export const MAX_PLAYERS_PER_RUN = 20;
+
+/**
  * Polling interval configuration based on player activity.
  * Intervals scale from 1 minute (very active) to 60 minutes (very inactive)
  */
 export const POLLING_INTERVALS = {
   MIN: 1, // Check every minute for active players (played within last hour)
-  HOUR_6: 5, // Check every 5 minutes after 6 hours without matches
-  HOUR_12: 10, // Check every 10 minutes after 12 hours
-  DAY_1: 15, // Check every 15 minutes after 1 day
-  DAY_3: 20, // Check every 20 minutes after 3 days
-  DAY_7: 30, // Check every 30 minutes after 7 days
-  DAY_14: 45, // Check every 45 minutes after 14 days
-  MAX: 60, // Check every 60 minutes after 30 days (MAX)
+  HOUR_3: 2, // Check every 2 minutes after 3 hours without matches
+  HOUR_6: 3, // Check every 3 minutes after 6 hours
+  HOUR_12: 4, // Check every 4 minutes after 12 hours
+  DAY_1: 5, // Check every 5 minutes after 1 day
+  DAY_3: 10, // Check every 10 minutes after 3 days
+  DAY_7: 20, // Check every 20 minutes after 7 days
+  DAY_14: 30, // Check every 30 minutes after 14 days
+  DAY_30: 45, // Check every 45 minutes after 30 days
+  MAX: 60, // Check every 60 minutes after 30+ days (MAX)
 } as const;
 
 /**
@@ -28,6 +36,7 @@ export const POLLING_INTERVALS = {
  */
 const ACTIVITY_THRESHOLDS = {
   HOUR_1: 1, // hours
+  HOUR_3: 3,
   HOUR_6: 6,
   HOUR_12: 12,
   DAY_1: 24, // hours
@@ -43,12 +52,14 @@ const ACTIVITY_THRESHOLDS = {
  *
  * Scaling strategy:
  * - Within 1 hour: 1 minute
- * - 6 hours: 5 minutes
- * - 12 hours: 10 minutes
- * - 1 day: 15 minutes
- * - 3 days: 20 minutes
- * - 7 days: 30 minutes
- * - 14 days: 45 minutes
+ * - 3 hours: 2 minutes
+ * - 6 hours: 3 minutes
+ * - 12 hours: 4 minutes
+ * - 1 day: 5 minutes
+ * - 3 days: 10 minutes
+ * - 7 days: 20 minutes
+ * - 14 days: 30 minutes
+ * - 30 days: 45 minutes
  * - 30+ days: 60 minutes (max)
  *
  * @param lastMatchTime - When the player was last in a match (game creation time)
@@ -68,6 +79,9 @@ export function calculatePollingInterval(lastMatchTime: Date | undefined, curren
   if (hoursSinceLastMatch < ACTIVITY_THRESHOLDS.HOUR_1) {
     return POLLING_INTERVALS.MIN;
   }
+  if (hoursSinceLastMatch < ACTIVITY_THRESHOLDS.HOUR_3) {
+    return POLLING_INTERVALS.HOUR_3;
+  }
   if (hoursSinceLastMatch < ACTIVITY_THRESHOLDS.HOUR_6) {
     return POLLING_INTERVALS.HOUR_6;
   }
@@ -86,8 +100,11 @@ export function calculatePollingInterval(lastMatchTime: Date | undefined, curren
   if (hoursSinceLastMatch < ACTIVITY_THRESHOLDS.DAY_14) {
     return POLLING_INTERVALS.DAY_14;
   }
+  if (hoursSinceLastMatch < ACTIVITY_THRESHOLDS.DAY_30) {
+    return POLLING_INTERVALS.DAY_30;
+  }
 
-  // Max interval after 30 days of inactivity
+  // Max interval after 30+ days of inactivity
   return POLLING_INTERVALS.MAX;
 }
 

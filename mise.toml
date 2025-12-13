@@ -8,7 +8,12 @@ run = "bun install && (cd packages/backend/ && bun db:generate) && dagger develo
 [tasks.ci]
 run = "dagger call ci --git-sha='HEAD' --version='dev'"
 
+[tasks.generate]
+description = "Generate Prisma client and other generated code"
+run = "cd packages/backend && bun run db:generate"
+
 [tasks.check]
+depends = ["generate"]
 run = [
     "bun run typecheck",
     "bun run lint",

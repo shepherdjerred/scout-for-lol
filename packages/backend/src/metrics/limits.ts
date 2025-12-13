@@ -3,16 +3,19 @@
  * This persists state to Prometheus by querying current database state
  */
 
-import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import {
   serversAtSubscriptionLimit,
   serversApproachingSubscriptionLimit,
   serversAtAccountLimit,
   serversApproachingAccountLimit,
-} from "@scout-for-lol/backend/metrics/index.js";
-import { getLimit } from "@scout-for-lol/backend/configuration/flags.js";
-import { LIMIT_WARNING_THRESHOLD } from "@scout-for-lol/backend/configuration/subscription-limits.js";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data";
+} from "@scout-for-lol/backend/metrics/index.ts";
+import { getLimit } from "@scout-for-lol/backend/configuration/flags.ts";
+import { LIMIT_WARNING_THRESHOLD } from "@scout-for-lol/backend/configuration/subscription-limits.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data/index";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("metrics-limits");
 
 /**
  * Update limit metrics based on current database state
@@ -81,6 +84,6 @@ export async function updateLimitMetrics(): Promise<void> {
     serversAtAccountLimit.set(atAcctLimit);
     serversApproachingAccountLimit.set(approachingAcctLimit);
   } catch (error) {
-    console.error("Failed to update limit metrics:", error);
+    logger.error("Failed to update limit metrics:", error);
   }
 }

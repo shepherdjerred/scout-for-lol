@@ -1,13 +1,17 @@
 import { REST, Routes } from "discord.js";
 import { z } from "zod";
-import configuration from "@scout-for-lol/backend/configuration";
-import { debugCommand } from "@scout-for-lol/backend/discord/commands/debug";
-import { competitionCommand } from "@scout-for-lol/backend/discord/commands/competition/index.js";
-import { adminCommand } from "@scout-for-lol/backend/discord/commands/admin/index.js";
-import { subscriptionCommand } from "@scout-for-lol/backend/discord/commands/subscription/index.js";
-import { helpCommand } from "@scout-for-lol/backend/discord/commands/help.js";
+import * as Sentry from "@sentry/bun";
+import configuration from "@scout-for-lol/backend/configuration.ts";
+import { debugCommand } from "@scout-for-lol/backend/discord/commands/debug.ts";
+import { competitionCommand } from "@scout-for-lol/backend/discord/commands/competition/index.ts";
+import { adminCommand } from "@scout-for-lol/backend/discord/commands/admin/index.ts";
+import { subscriptionCommand } from "@scout-for-lol/backend/discord/commands/subscription/index.ts";
+import { helpCommand } from "@scout-for-lol/backend/discord/commands/help.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
-console.log("🔄 Preparing Discord slash commands for registration");
+const logger = createLogger("discord-rest");
+
+logger.info("🔄 Preparing Discord slash commands for registration");
 
 const commands = [
   subscriptionCommand.toJSON(),
@@ -17,24 +21,24 @@ const commands = [
   helpCommand.toJSON(),
 ];
 
-console.log("📋 Commands to register:");
+logger.info("📋 Commands to register:");
 commands.forEach((command, index) => {
-  console.log(`  ${(index + 1).toString()}. ${command.name}: ${command.description}`);
+  logger.info(`  ${(index + 1).toString()}. ${command.name}: ${command.description}`);
 });
 
-console.log("🔑 Initializing Discord REST client");
+logger.info("🔑 Initializing Discord REST client");
 const rest = new REST().setToken(configuration.discordToken);
 
 void (async () => {
   try {
-    console.log(`🚀 Starting registration of ${commands.length.toString()} application (/) commands`);
-    console.log(`🎯 Target application ID: ${configuration.applicationId}`);
+    logger.info(`🚀 Starting registration of ${commands.length.toString()} application (/) commands`);
+    logger.info(`🎯 Target application ID: ${configuration.applicationId}`);
 
     const startTime = Date.now();
     const data = await rest.put(Routes.applicationCommands(configuration.applicationId), { body: commands });
     const registrationTime = Date.now() - startTime;
 
-    console.log(
+    logger.info(
       `✅ Successfully registered ${commands.length.toString()} application (/) commands in ${registrationTime.toString()}ms`,
     );
 
@@ -42,24 +46,27 @@ void (async () => {
     const CommandSchema = z.object({ name: z.string(), id: z.string() });
     const commandsResult = z.array(CommandSchema).safeParse(data);
     if (commandsResult.success) {
-      console.log("📝 Registered commands details:");
+      logger.info("📝 Registered commands details:");
       commandsResult.data.forEach((command, index) => {
-        console.log(`  ${(index + 1).toString()}. ${command.name} (ID: ${command.id})`);
+        logger.info(`  ${(index + 1).toString()}. ${command.name} (ID: ${command.id})`);
       });
     }
 
-    console.log("🎉 Discord command registration completed successfully");
+    logger.info("🎉 Discord command registration completed successfully");
   } catch (error) {
-    console.error("❌ Failed to register Discord commands:", error);
+    logger.error("❌ Failed to register Discord commands:", error);
+    Sentry.captureException(error, {
+      tags: { source: "discord-command-registration" },
+    });
 
     // Log additional error context
     const ErrorDetailsSchema = z.object({ name: z.string(), message: z.string(), stack: z.string().optional() });
     const errorResult = ErrorDetailsSchema.safeParse(error);
     if (errorResult.success) {
-      console.error("❌ Error name:", errorResult.data.name);
-      console.error("❌ Error message:", errorResult.data.message);
+      logger.error("❌ Error name:", errorResult.data.name);
+      logger.error("❌ Error message:", errorResult.data.message);
       if (errorResult.data.stack) {
-        console.error("❌ Error stack:", errorResult.data.stack);
+        logger.error("❌ Error stack:", errorResult.data.stack);
       }
     }
 
@@ -67,8 +74,8 @@ void (async () => {
     const objectResult = z.object({ status: z.unknown() }).catchall(z.unknown()).safeParse(error);
     if (objectResult.success) {
       const discordError = objectResult.data;
-      console.error("❌ HTTP Status:", discordError.status);
-      console.error("❌ Response body:", discordError["rawError"] ?? discordError["body"]);
+      logger.error("❌ HTTP Status:", discordError.status);
+      logger.error("❌ Response body:", discordError["rawError"] ?? discordError["body"]);
     }
 
     process.exit(1);

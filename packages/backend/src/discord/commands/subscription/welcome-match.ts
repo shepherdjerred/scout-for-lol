@@ -1,11 +1,15 @@
 import { type ChatInputCommandInteraction } from "discord.js";
-import type { PlayerConfigEntry } from "@scout-for-lol/data";
-import { getRecentMatchIds } from "@scout-for-lol/backend/league/api/match-history.js";
+import type { PlayerConfigEntry } from "@scout-for-lol/data/index.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
+import { getRecentMatchIds } from "@scout-for-lol/backend/league/api/match-history.ts";
 import {
   fetchMatchData,
   generateMatchReport,
-} from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+} from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("subscription-welcome-match");
 
 /**
  * Send a welcome message with the player's most recent match report
@@ -21,14 +25,14 @@ export async function sendWelcomeMatch(
 ): Promise<void> {
   const playerAlias = playerConfig.alias;
 
-  console.log(`[WelcomeMatch] 🎉 Fetching welcome match for ${playerAlias}`);
+  logger.info(`[WelcomeMatch] 🎉 Fetching welcome match for ${playerAlias}`);
 
   try {
     // Fetch the most recent match
     const recentMatchIds = await getRecentMatchIds(playerConfig, 1);
 
     if (!recentMatchIds || recentMatchIds.length === 0) {
-      console.log(`[WelcomeMatch] ℹ️  No recent matches found for ${playerAlias}`);
+      logger.info(`[WelcomeMatch] ℹ️  No recent matches found for ${playerAlias}`);
 
       // Send message indicating no matches found
       await interaction.followUp({
@@ -40,7 +44,7 @@ export async function sendWelcomeMatch(
 
     const mostRecentMatchId = recentMatchIds[0];
     if (!mostRecentMatchId) {
-      console.log(`[WelcomeMatch] ℹ️  No match ID available for ${playerAlias}`);
+      logger.info(`[WelcomeMatch] ℹ️  No match ID available for ${playerAlias}`);
       await interaction.followUp({
         content: `Welcome to Scout! No recent matches found for **${playerAlias}**. You'll see reports here when they play their next match.`,
         ephemeral: true,
@@ -48,13 +52,13 @@ export async function sendWelcomeMatch(
       return;
     }
 
-    console.log(`[WelcomeMatch] 📜 Most recent match for ${playerAlias}: ${mostRecentMatchId}`);
+    logger.info(`[WelcomeMatch] 📜 Most recent match for ${playerAlias}: ${mostRecentMatchId}`);
 
     // Fetch the match data
     const matchData = await fetchMatchData(mostRecentMatchId, playerConfig.league.leagueAccount.region);
 
     if (!matchData) {
-      console.log(`[WelcomeMatch] ⚠️  Could not fetch match data for ${mostRecentMatchId}`);
+      logger.info(`[WelcomeMatch] ⚠️  Could not fetch match data for ${mostRecentMatchId}`);
       await interaction.followUp({
         content: `Welcome to Scout! Unable to load the most recent match for **${playerAlias}**. You'll see reports here when they play their next match.`,
         ephemeral: true,
@@ -62,11 +66,24 @@ export async function sendWelcomeMatch(
       return;
     }
 
+    // Get target guild ID for feature flag checks
+    const guildId = interaction.guildId;
+    if (!guildId) {
+      logger.warn(`[WelcomeMatch] ⚠️  No guild ID available for interaction`);
+      await interaction.followUp({
+        content: `Welcome to Scout! Unable to determine server context. You'll see reports here when they play their next match.`,
+        ephemeral: true,
+      });
+      return;
+    }
+
+    const targetGuildIds = [DiscordGuildIdSchema.parse(guildId)];
+
     // Generate the match report
-    const message = await generateMatchReport(matchData, [playerConfig]);
+    const message = await generateMatchReport(matchData, [playerConfig], { targetGuildIds });
 
     if (!message) {
-      console.log(`[WelcomeMatch] ⚠️  No message generated for match ${mostRecentMatchId}`);
+      logger.info(`[WelcomeMatch] ⚠️  No message generated for match ${mostRecentMatchId}`);
       await interaction.followUp({
         content: `Welcome to Scout! Unable to generate a report for the most recent match of **${playerAlias}**. You'll see reports here when they play their next match.`,
         ephemeral: true,
@@ -82,9 +99,9 @@ export async function sendWelcomeMatch(
       ephemeral: true,
     });
 
-    console.log(`[WelcomeMatch] ✅ Successfully sent welcome match for ${playerAlias}`);
+    logger.info(`[WelcomeMatch] ✅ Successfully sent welcome match for ${playerAlias}`);
   } catch (error) {
-    console.error(`[WelcomeMatch] ❌ Error sending welcome match for ${playerAlias}:`, error);
+    logger.error(`[WelcomeMatch] ❌ Error sending welcome match for ${playerAlias}:`, error);
 
     // Send a fallback message if something went wrong
     try {
@@ -94,7 +111,7 @@ export async function sendWelcomeMatch(
       });
     } catch (followUpError) {
       // If even the fallback fails, just log it
-      console.error(`[WelcomeMatch] ❌ Failed to send fallback message:`, followUpError);
+      logger.error(`[WelcomeMatch] ❌ Failed to send fallback message:`, followUpError);
     }
   }
 }

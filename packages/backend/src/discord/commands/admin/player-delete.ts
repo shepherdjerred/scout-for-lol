@@ -1,16 +1,19 @@
 import { type ChatInputCommandInteraction } from "discord.js";
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("admin-player-delete");
 import {
   validateCommandArgs,
   executeWithTiming,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/validation.ts";
 import {
   buildDatabaseError,
   buildSuccessResponse,
   buildPlayerNotFoundError,
-} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.js";
+} from "@scout-for-lol/backend/discord/commands/admin/utils/responses.ts";
 
 const ArgsSchema = z.object({
   alias: z.string().min(1).max(100),
@@ -40,7 +43,7 @@ export async function executePlayerDelete(interaction: ChatInputCommandInteracti
   await executeWithTiming("player-delete", username, async () => {
     // Check confirmation
     if (!confirm) {
-      console.log(`❌ Deletion not confirmed`);
+      logger.info(`❌ Deletion not confirmed`);
       await interaction.reply({
         content: `❌ **Deletion not confirmed**\n\nTo delete a player, you must set the \`confirm\` parameter to \`true\`.\n\n⚠️ **WARNING:** This action cannot be undone!`,
         ephemeral: true,
@@ -73,7 +76,7 @@ export async function executePlayerDelete(interaction: ChatInputCommandInteracti
     });
 
     if (!player) {
-      console.log(`❌ Player not found: "${alias}"`);
+      logger.info(`❌ Player not found: "${alias}"`);
       await interaction.reply(buildPlayerNotFoundError(alias));
       return;
     }
@@ -85,7 +88,7 @@ export async function executePlayerDelete(interaction: ChatInputCommandInteracti
 
     if (activeCompetitions.length > 0) {
       const competitionTitles = activeCompetitions.map((cp) => `• ${cp.competition.title}`).join("\n");
-      console.log(
+      logger.info(
         `⚠️  Player "${alias}" is participating in ${activeCompetitions.length.toString()} active competition(s)`,
       );
       await interaction.reply({
@@ -95,7 +98,7 @@ export async function executePlayerDelete(interaction: ChatInputCommandInteracti
       // We'll still allow deletion but warn the user
     }
 
-    console.log(
+    logger.info(
       `💾 Deleting player "${alias}" (${player.accounts.length.toString()} accounts, ${player.subscriptions.length.toString()} subscriptions, ${player.competitionParticipants.length.toString()} competition participations)`,
     );
 
@@ -109,7 +112,7 @@ export async function executePlayerDelete(interaction: ChatInputCommandInteracti
           },
         });
 
-        console.log(`✅ Deleted ${player.subscriptions.length.toString()} subscriptions`);
+        logger.info(`✅ Deleted ${player.subscriptions.length.toString()} subscriptions`);
 
         // 2. Delete all accounts
         await tx.account.deleteMany({
@@ -118,7 +121,7 @@ export async function executePlayerDelete(interaction: ChatInputCommandInteracti
           },
         });
 
-        console.log(`✅ Deleted ${player.accounts.length.toString()} accounts`);
+        logger.info(`✅ Deleted ${player.accounts.length.toString()} accounts`);
 
         // 3. Delete all competition participants
         await tx.competitionParticipant.deleteMany({
@@ -127,7 +130,7 @@ export async function executePlayerDelete(interaction: ChatInputCommandInteracti
           },
         });
 
-        console.log(`✅ Deleted ${player.competitionParticipants.length.toString()} competition participations`);
+        logger.info(`✅ Deleted ${player.competitionParticipants.length.toString()} competition participations`);
 
         // 4. Delete all competition snapshots
         await tx.competitionSnapshot.deleteMany({
@@ -136,7 +139,7 @@ export async function executePlayerDelete(interaction: ChatInputCommandInteracti
           },
         });
 
-        console.log(`✅ Deleted competition snapshots`);
+        logger.info(`✅ Deleted competition snapshots`);
 
         // 5. Delete the player
         await tx.player.delete({
@@ -145,7 +148,7 @@ export async function executePlayerDelete(interaction: ChatInputCommandInteracti
           },
         });
 
-        console.log(`✅ Deleted player "${alias}"`);
+        logger.info(`✅ Deleted player "${alias}"`);
       });
 
       await interaction.reply(
@@ -155,7 +158,7 @@ export async function executePlayerDelete(interaction: ChatInputCommandInteracti
         ),
       );
     } catch (error) {
-      console.error(`❌ Database error during player deletion:`, error);
+      logger.error(`❌ Database error during player deletion:`, error);
       await interaction.reply(buildDatabaseError("delete player", error));
     }
   });

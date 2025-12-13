@@ -1,7 +1,17 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { CachedLeaderboardSchema, type CachedLeaderboard } from "@scout-for-lol/data";
-import configuration from "@scout-for-lol/backend/configuration.js";
-import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.js";
+import { CachedLeaderboardSchema, type CachedLeaderboard } from "@scout-for-lol/data/index";
+import configuration from "@scout-for-lol/backend/configuration.ts";
+import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
+import * as Sentry from "@sentry/bun";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { z } from "zod";
+
+// Schema for AWS S3 "not found" errors
+const AwsS3NotFoundErrorSchema = z.object({
+  name: z.enum(["NoSuchKey", "NotFound"]),
+});
+
+const logger = createLogger("storage-s3-leaderboard");
 
 // ============================================================================
 // S3 Key Generation
@@ -45,13 +55,13 @@ export async function saveCachedLeaderboard(leaderboard: CachedLeaderboard): Pro
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
-    console.warn(
+    logger.warn(
       `[S3Leaderboard] ⚠️  S3_BUCKET_NAME not configured, skipping cache for competition: ${leaderboard.competitionId.toString()}`,
     );
     return;
   }
 
-  console.log(`[S3Leaderboard] 💾 Caching leaderboard for competition ${leaderboard.competitionId.toString()}`);
+  logger.info(`[S3Leaderboard] 💾 Caching leaderboard for competition ${leaderboard.competitionId.toString()}`);
 
   try {
     const client = new S3Client();
@@ -60,7 +70,7 @@ export async function saveCachedLeaderboard(leaderboard: CachedLeaderboard): Pro
     const currentKey = generateCurrentLeaderboardKey(leaderboard.competitionId);
     const snapshotKey = generateSnapshotLeaderboardKey(leaderboard.competitionId, new Date(leaderboard.calculatedAt));
 
-    console.log(`[S3Leaderboard] 📝 Upload details:`, {
+    logger.info(`[S3Leaderboard] 📝 Upload details:`, {
       bucket,
       currentKey,
       snapshotKey,
@@ -107,13 +117,13 @@ export async function saveCachedLeaderboard(leaderboard: CachedLeaderboard): Pro
     await client.send(snapshotCommand);
 
     const uploadTime = Date.now() - startTime;
-    console.log(
+    logger.info(
       `[S3Leaderboard] ✅ Successfully cached leaderboard for competition ${leaderboard.competitionId.toString()} in ${uploadTime.toString()}ms`,
     );
-    console.log(`[S3Leaderboard] 🔗 Current: s3://${bucket}/${currentKey}`);
-    console.log(`[S3Leaderboard] 🔗 Snapshot: s3://${bucket}/${snapshotKey}`);
+    logger.info(`[S3Leaderboard] 🔗 Current: s3://${bucket}/${currentKey}`);
+    logger.info(`[S3Leaderboard] 🔗 Snapshot: s3://${bucket}/${snapshotKey}`);
   } catch (error) {
-    console.error(
+    logger.error(
       `[S3Leaderboard] ❌ Failed to cache leaderboard for competition ${leaderboard.competitionId.toString()}:`,
       error,
     );
@@ -139,7 +149,7 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
   const bucket = configuration.s3BucketName;
 
   if (!bucket) {
-    console.warn(
+    logger.warn(
       `[S3Leaderboard] ⚠️  S3_BUCKET_NAME not configured, cannot load cache for competition: ${competitionId.toString()}`,
     );
     return null;
@@ -147,7 +157,7 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
 
   const key = generateCurrentLeaderboardKey(competitionId);
 
-  console.log(`[S3Leaderboard] 📥 Loading cached leaderboard for competition ${competitionId.toString()}`);
+  logger.info(`[S3Leaderboard] 📥 Loading cached leaderboard for competition ${competitionId.toString()}`);
 
   try {
     const client = new S3Client();
@@ -159,7 +169,7 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
     const response = await client.send(command);
 
     if (!response.Body) {
-      console.warn(`[S3Leaderboard] No body in response for key: ${key}`);
+      logger.warn(`[S3Leaderboard] No body in response for key: ${key}`);
       return null;
     }
 
@@ -171,40 +181,51 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
     try {
       jsonData = JSON.parse(bodyString);
     } catch (error) {
-      console.error(`[S3Leaderboard] Failed to parse JSON from S3 key ${key}:`, error);
+      logger.error(`[S3Leaderboard] Failed to parse JSON from S3 key ${key}:`, error);
+      Sentry.captureException(error, {
+        tags: { source: "s3-leaderboard-json-parse", competitionId: competitionId.toString() },
+      });
       return null;
     }
 
     // Validate against schema
     const result = CachedLeaderboardSchema.safeParse(jsonData);
     if (!result.success) {
-      console.error(
+      logger.error(
         `[S3Leaderboard] Cached leaderboard failed validation for competition ${competitionId.toString()}:`,
         result.error,
       );
+      Sentry.captureException(result.error, {
+        tags: { source: "s3-leaderboard-validation", competitionId: competitionId.toString() },
+      });
       return null;
     }
 
-    console.log(
+    logger.info(
       `[S3Leaderboard] ✅ Successfully loaded cached leaderboard for competition ${competitionId.toString()}`,
     );
-    console.log(
+    logger.info(
       `[S3Leaderboard] 📊 Cached at: ${result.data.calculatedAt}, Entries: ${result.data.entries.length.toString()}`,
     );
 
     return result.data;
   } catch (error) {
     // Check if it's a NoSuchKey error (file doesn't exist)
-    const errorMessage = getErrorMessage(error);
-    if (errorMessage.includes("NoSuchKey") || errorMessage.includes("NotFound")) {
-      console.log(`[S3Leaderboard] No cached leaderboard found for competition ${competitionId.toString()}`);
+    // AWS SDK errors have the error code in the 'name' property
+    const notFoundResult = AwsS3NotFoundErrorSchema.safeParse(error);
+
+    if (notFoundResult.success) {
+      logger.info(`[S3Leaderboard] No cached leaderboard found for competition ${competitionId.toString()}`);
       return null;
     }
 
-    console.error(
+    logger.error(
       `[S3Leaderboard] ❌ Error loading cached leaderboard for competition ${competitionId.toString()}:`,
       error,
     );
+    Sentry.captureException(error, {
+      tags: { source: "s3-leaderboard-load", competitionId: competitionId.toString() },
+    });
     return null;
   }
 }

@@ -1,7 +1,7 @@
 /**
  * Match list display component
  */
-import type { MatchMetadata } from "@scout-for-lol/frontend/lib/review-tool/s3";
+import type { MatchMetadata } from "@scout-for-lol/frontend/lib/review-tool/match-converter";
 
 type MatchListProps = {
   matches: MatchMetadata[];
@@ -51,27 +51,27 @@ export function MatchList({
               }}
               className={`rounded p-2 transition-colors cursor-pointer ${
                 isSelected
-                  ? "bg-blue-100 dark:bg-blue-900 border-2 border-blue-500 dark:border-blue-400"
-                  : "bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 border-2 border-transparent"
+                  ? "bg-brand-100 border-2 border-brand-500"
+                  : "bg-surface-50 hover:bg-surface-100 border-2 border-transparent"
               }`}
             >
               <div className="flex justify-between items-start mb-1">
                 <div className="flex items-center gap-2">
-                  <div className="text-xs font-medium text-gray-900 dark:text-white">{match.champion}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">({match.lane})</div>
+                  <div className="text-xs font-medium text-surface-900">{match.champion}</div>
+                  <div className="text-xs text-surface-500">({match.lane})</div>
                 </div>
-                {isSelected && <div className="text-xs font-semibold text-blue-600 dark:text-blue-400">✓ Selected</div>}
+                {isSelected && <div className="text-xs font-semibold text-brand-600">✓ Selected</div>}
               </div>
-              <div className="text-xs text-gray-600 dark:text-gray-400 space-y-0.5">
+              <div className="text-xs text-surface-600 space-y-0.5">
                 <div>{match.playerName}</div>
                 <div className="flex justify-between">
                   <span className="capitalize">{match.queueType}</span>
                   <span
                     className={
                       match.outcome.includes("Victory")
-                        ? "text-green-600 dark:text-green-400"
+                        ? "text-green-600"
                         : match.outcome.includes("Defeat")
-                          ? "text-red-600 dark:text-red-400"
+                          ? "text-red-600"
                           : ""
                     }
                   >

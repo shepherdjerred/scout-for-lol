@@ -1,12 +1,8 @@
 import { match as matchPattern } from "ts-pattern";
-import { z } from "zod";
-import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.js";
-import type {
-  ChatCompletionCreateParams,
-  CuratedMatchData,
-  Personality,
-  PlayerMetadata,
-} from "@scout-for-lol/data/review/generator.js";
+import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
+import { selectRandomBehaviors, type Personality } from "@scout-for-lol/data/review/prompts.ts";
+import { wasPromoted, wasDemoted, rankToSimpleString, tierToPercentileString } from "@scout-for-lol/data/model/rank.ts";
+import { lpDiffToString, rankToLeaguePoints } from "@scout-for-lol/data/model/league-points.ts";
 
 /**
  * Extract match data from a match object
@@ -106,9 +102,27 @@ export function getOrdinalSuffix(num: number): string {
  * @param playerIndex - Index of the player being reviewed (to exclude from friends list)
  * @returns A formatted string describing friends in the match, or empty string if none
  */
-export function buildFriendsContext(match: CompletedMatch | ArenaMatch, playerIndex: number): string {
+function buildFriendsContext(match: CompletedMatch | ArenaMatch, playerIndex: number): string {
   const allPlayers = match.players;
+  const totalTrackedPlayers = allPlayers.length;
   const friends = allPlayers.filter((_, index) => index !== playerIndex);
+  const queueType = match.queueType;
+
+  // Handle special flex queue cases
+  if (queueType === "flex") {
+    return buildFlexQueueContext(friends, totalTrackedPlayers);
+  }
+
+  // Handle solo/duo queue case
+  if (queueType === "solo" && totalTrackedPlayers === 2 && friends.length === 1) {
+    const duoPartner = friends[0];
+    if (duoPartner) {
+      const alias = duoPartner.playerConfig.alias;
+      const champion = duoPartner.champion.championName;
+      const lane = "lane" in duoPartner && duoPartner.lane ? ` in ${duoPartner.lane}` : "";
+      return `This is a duo queue game. Their duo partner is ${alias} (playing ${champion}${lane}).`;
+    }
+  }
 
   if (friends.length === 0) {
     return "";
@@ -139,221 +153,211 @@ export function buildFriendsContext(match: CompletedMatch | ArenaMatch, playerIn
 }
 
 /**
- * Log debug information about match players before serialization
+ * Build context for flex queue matches with special messaging based on party size
  */
-function logMatchPlayersBeforeSerialization(match: CompletedMatch): void {
-  console.log(`[debug][buildPromptVariables] Match has ${match.players.length.toString()} player(s)`);
-  for (let i = 0; i < match.players.length; i++) {
-    const playerObj = match.players[i];
-    if (playerObj) {
-      console.log(
-        `[debug][buildPromptVariables] Match.players[${i.toString()}] keys before JSON.stringify:`,
-        Object.keys(playerObj),
-      );
-      if ("puuid" in playerObj) {
-        console.error(
-          `[debug][buildPromptVariables] ⚠️  ERROR: Match.players[${i.toString()}] has puuid field before JSON.stringify!`,
-          playerObj,
-        );
-      }
+function buildFlexQueueContext(
+  friends: { playerConfig: { alias: string }; champion: { championName: string }; lane?: string | undefined }[],
+  totalTrackedPlayers: number,
+): string {
+  const friendDescriptions = friends.map((friend) => {
+    const alias = friend.playerConfig.alias;
+    const champion = friend.champion.championName;
+    const lane = "lane" in friend && friend.lane ? ` in ${friend.lane}` : "";
+    return `${alias} (playing ${champion}${lane})`;
+  });
+
+  // Solo queuing for flex (unusual behavior)
+  if (totalTrackedPlayers === 1) {
+    return "This player queued for flex queue alone, which is unusual. Most people queue flex with friends.";
+  }
+
+  // Full premade team (5 players)
+  if (totalTrackedPlayers === 5) {
+    const lastFriend = friendDescriptions.pop();
+    if (!lastFriend) {
+      return "";
     }
+    if (friendDescriptions.length === 0) {
+      return `This is a full 5-player premade team. Their teammate is ${lastFriend}.`;
+    }
+    return `This is a full 5-player premade team. Their teammates are ${friendDescriptions.join(", ")} and ${lastFriend}.`;
+  }
+
+  // 4 friends (likely 4-stack with 1 random)
+  if (totalTrackedPlayers === 4) {
+    const lastFriend = friendDescriptions.pop();
+    if (!lastFriend) {
+      return "";
+    }
+    if (friendDescriptions.length === 0) {
+      return `This is a 4-player premade group with one random matchmade player. Their teammates are ${lastFriend}.`;
+    }
+    return `This is a 4-player premade group with one random matchmade player. Their teammates are ${friendDescriptions.join(", ")} and ${lastFriend}.`;
+  }
+
+  // Other flex cases (2-3 players)
+  if (friends.length === 0) {
+    return "";
+  }
+
+  if (friends.length === 1 && friendDescriptions[0]) {
+    return `Their friend ${friendDescriptions[0]} was also in this flex queue match.`;
+  }
+
+  const lastFriend = friendDescriptions.pop();
+  if (!lastFriend) {
+    return "";
+  }
+  return `Their friends ${friendDescriptions.join(", ")} and ${lastFriend} were also in this flex queue match.`;
+}
+
+/**
+ * Build queue context text based on the queue type
+ * Provides context about the game mode to help the AI understand the stakes and setting
+ */
+function buildQueueContext(queueType: string | undefined): string {
+  switch (queueType) {
+    case "solo":
+      return "This is a Solo/Duo Ranked game - the most competitive standard queue where players climb the ranked ladder. Games are taken seriously and LP is on the line.";
+    case "flex":
+      return "This is a Flex Ranked game - a ranked queue that allows groups of any size. Generally more relaxed than Solo/Duo but still competitive since LP is on the line.";
+    case "clash":
+      return "This is a CLASH game - a competitive tournament mode where teams sign up in advance and play bracket-style matches. Clash games are typically more serious and strategic than regular games, with coordinated team compositions and communication. The stakes feel higher and players often try harder.";
+    case "aram clash":
+      return "This is an ARAM CLASH game - a competitive ARAM tournament where teams play All Random All Mid in bracket-style matches. Like regular Clash, these games are more competitive and coordinated than normal ARAM games, with players taking the random champion assignments more seriously.";
+    case "arena":
+      return "This is an Arena game - a 2v2v2v2 round-based mode where four teams fight to survive. Players pick augments between rounds and the last team standing wins.";
+    case "aram":
+      return "This is an ARAM game - All Random All Mid on the Howling Abyss. Players get random champions and fight in a single lane. It's a more casual, chaotic mode focused on teamfighting.";
+    case "normal":
+      return "This is a Normal (unranked) game - a casual queue for practicing or playing without ranked pressure.";
+    case undefined:
+    default:
+      return "This is a standard League of Legends game.";
   }
 }
 
 /**
- * Zod schema for player object (record with string keys)
+ * Build rank context describing promotions/demotions for tracked players
+ * @param match - The completed match data
+ * @returns A formatted string describing rank changes, or empty string if none
  */
-const PlayerRecordSchema = z.record(z.string(), z.unknown());
-
-/**
- * Zod schema for parsed JSON structure that may contain players array
- */
-const ParsedJsonWithPlayersSchema = z.union([
-  z.object({
-    players: z.array(PlayerRecordSchema),
-  }),
-  z.object({
-    processedMatch: z.object({
-      players: z.array(PlayerRecordSchema),
-    }),
-  }),
-  z.object({
-    players: z.array(PlayerRecordSchema),
-    processedMatch: z.object({
-      players: z.array(PlayerRecordSchema),
-    }),
-  }),
-  z.record(z.string(), z.unknown()), // Fallback for any other structure
-]);
-
-/**
- * Check if parsed JSON has unexpected puuid fields in players array
- */
-function checkParsedPlayersForPuuid(parsed: unknown): void {
-  const result = ParsedJsonWithPlayersSchema.safeParse(parsed);
-  if (!result.success) {
-    return;
+function buildRankContext(match: CompletedMatch | ArenaMatch): string {
+  // Arena matches don't have rank changes
+  if (match.queueType === "arena") {
+    return "";
   }
 
-  const data = result.data;
-  const PlayersArraySchema = z.array(PlayerRecordSchema);
-  type PlayersArray = z.infer<typeof PlayersArraySchema>;
-  let players: PlayersArray | undefined = undefined;
+  const rankInfo: string[] = [];
 
-  // Check top-level players
-  if ("players" in data && Array.isArray(data.players)) {
-    const playersResult = PlayersArraySchema.safeParse(data.players);
-    if (playersResult.success) {
-      players = playersResult.data;
+  for (const player of match.players) {
+    const rankBefore = player.rankBeforeMatch;
+    const rankAfter = player.rankAfterMatch;
+    const playerName = player.playerConfig.alias;
+
+    if (!rankAfter) {
+      continue;
     }
-  }
-  // Check processedMatch.players
-  else if ("processedMatch" in data && typeof data.processedMatch === "object" && data.processedMatch !== null) {
-    const processedMatchResult = z
-      .object({
-        players: PlayersArraySchema,
-      })
-      .safeParse(data.processedMatch);
-    if (processedMatchResult.success) {
-      players = processedMatchResult.data.players;
+
+    // Add current rank with percentile context
+    const rankStr = rankToSimpleString(rankAfter);
+    const percentileStr = tierToPercentileString(rankAfter.tier);
+    const rankLine = `${playerName} is currently ${rankStr} (${percentileStr} of players).`;
+
+    if (wasPromoted(rankBefore, rankAfter)) {
+      rankInfo.push(`${rankLine} They were PROMOTED after this game!`);
+    } else if (wasDemoted(rankBefore, rankAfter)) {
+      rankInfo.push(`${rankLine} They were DEMOTED after this game.`);
+    } else if (rankBefore) {
+      // Show LP change for non-promotion/demotion games
+      const lpDelta = rankToLeaguePoints(rankAfter) - rankToLeaguePoints(rankBefore);
+      if (lpDelta !== 0) {
+        const lpStr = lpDiffToString(lpDelta);
+        const changeStr = lpDelta > 0 ? `gained ${lpStr.replace(/[+-]/, "")}` : `lost ${lpStr.replace(/[+-]/, "")}`;
+        rankInfo.push(`${rankLine} They ${changeStr}.`);
+      } else {
+        rankInfo.push(rankLine);
+      }
+    } else {
+      rankInfo.push(rankLine);
     }
   }
 
-  if (!players) {
-    return;
+  if (rankInfo.length === 0) {
+    return "";
   }
 
-  for (let i = 0; i < players.length; i++) {
-    const playerObj = players[i];
-    if (playerObj && "puuid" in playerObj) {
-      console.error(
-        `[debug][buildPromptVariables] ⚠️  ERROR: Parsed JSON has puuid in players[${i.toString()}]!`,
-        playerObj,
-      );
-    }
-  }
+  return rankInfo.join(" ");
 }
 
 export function buildPromptVariables(params: {
   matchData: Record<string, string>;
   personality: Personality;
-  playerMetadata: PlayerMetadata;
   laneContext: string;
   match: CompletedMatch | ArenaMatch;
-  curatedData?: CuratedMatchData;
   playerIndex?: number;
+  matchAnalysis?: string;
+  timelineSummary?: string;
 }): {
   reviewerName: string;
-  reviewerPersonality: string;
-  reviewerFavoriteChampions: string;
-  reviewerFavoriteLanes: string;
   playerName: string;
-  playerPersonality: string;
-  playerFavoriteChampions: string;
-  playerFavoriteLanes: string;
   playerChampion: string;
   playerLane: string;
   opponentChampion: string;
   laneDescription: string;
   matchReport: string;
   friendsContext: string;
-  d20Roll: string;
+  randomBehavior: string;
+  matchAnalysis: string;
+  timelineSummary: string;
+  queueContext: string;
+  rankContext: string;
 } {
-  const { matchData, personality, playerMetadata, laneContext, match, curatedData, playerIndex = 0 } = params;
+  const { matchData, personality, laneContext, match, playerIndex = 0, matchAnalysis, timelineSummary } = params;
   const playerName = matchData["playerName"];
   if (!playerName) {
     throw new Error("No player name found");
   }
 
   const reviewerName = personality.metadata.name;
-  const reviewerPersonality = personality.metadata.description;
-  const reviewerFavoriteChampions = JSON.stringify(personality.metadata.favoriteChampions);
-  const reviewerFavoriteLanes = JSON.stringify(personality.metadata.favoriteLanes);
-
-  const playerPersonality = playerMetadata.description;
-  const playerFavoriteChampions = JSON.stringify(playerMetadata.favoriteChampions);
-  const playerFavoriteLanes = JSON.stringify(playerMetadata.favoriteLanes);
 
   const playerChampion = matchData["champion"] ?? "unknown champion";
   const playerLane = matchData["lane"] ?? "unknown lane";
   const opponentChampion = matchData["laneOpponent"] ?? "an unknown opponent";
   const laneDescription = laneContext;
 
-  // Log match structure before serialization
-  console.log(`[debug][buildPromptVariables] About to serialize match to JSON`);
-  if (match.queueType !== "arena") {
-    logMatchPlayersBeforeSerialization(match);
-  }
-
-  const matchReport = curatedData
-    ? JSON.stringify(
-        {
-          processedMatch: match,
-          detailedStats: curatedData,
-        },
-        null,
-        2,
-      )
-    : JSON.stringify(match, null, 2);
-
-  // Check if JSON.stringify added any unexpected fields (it shouldn't, but let's verify)
-  if (match.queueType !== "arena") {
-    try {
-      const parsed: unknown = JSON.parse(matchReport);
-      checkParsedPlayersForPuuid(parsed);
-    } catch (_e) {
-      // Ignore parse errors, just checking structure
-    }
-  }
+  // Minify JSON to save tokens
+  const matchReport = JSON.stringify(match);
 
   const friendsContext = buildFriendsContext(match, playerIndex);
 
-  // Generate random D20 roll (1-20)
-  const d20Roll = (Math.floor(Math.random() * 20) + 1).toString();
+  // Select 3-6 random behaviors based on personality weights
+  const randomBehavior = selectRandomBehaviors(personality.metadata.randomBehaviors);
+  const matchAnalysisText =
+    matchAnalysis && matchAnalysis.trim().length > 0
+      ? matchAnalysis.trim()
+      : "No AI match analysis was generated for this match.";
+  const timelineSummaryText =
+    timelineSummary && timelineSummary.trim().length > 0
+      ? timelineSummary.trim()
+      : "No timeline summary available for this match.";
+
+  const queueContext = buildQueueContext(match.queueType);
+  const rankContext = buildRankContext(match);
 
   return {
     reviewerName,
-    reviewerPersonality,
-    reviewerFavoriteChampions,
-    reviewerFavoriteLanes,
     playerName,
-    playerPersonality,
-    playerFavoriteChampions,
-    playerFavoriteLanes,
     playerChampion,
     playerLane,
     opponentChampion,
     laneDescription,
     matchReport,
     friendsContext,
-    d20Roll,
+    randomBehavior,
+    matchAnalysis: matchAnalysisText,
+    timelineSummary: timelineSummaryText,
+    queueContext,
+    rankContext,
   };
-}
-
-export function createCompletionParams(params: {
-  systemPrompt: string;
-  userPrompt: string;
-  model: string;
-  maxTokens: number;
-  temperature?: number;
-  topP?: number;
-}): ChatCompletionCreateParams {
-  const { systemPrompt, userPrompt, model, maxTokens, temperature, topP } = params;
-  const completionParams: ChatCompletionCreateParams = {
-    model,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    max_completion_tokens: maxTokens,
-  };
-
-  if (temperature !== undefined) {
-    completionParams.temperature = temperature;
-  }
-  if (topP !== undefined) {
-    completionParams.top_p = topP;
-  }
-
-  return completionParams;
 }

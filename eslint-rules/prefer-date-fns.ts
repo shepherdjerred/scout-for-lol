@@ -11,8 +11,15 @@
 
 import type { TSESTree } from "@typescript-eslint/utils";
 import { ESLintUtils } from "@typescript-eslint/utils";
+import { z } from "zod";
 
 const createRule = ESLintUtils.RuleCreator(() => "");
+
+/**
+ * Schema to validate if an unknown value is a TSESTree node (has a type property)
+ * Used for safe AST traversal when iterating over unknown child nodes
+ */
+const AstNodeSchema = z.object({ type: z.string() });
 
 export const preferDateFns = createRule({
   name: "prefer-date-fns",
@@ -237,11 +244,11 @@ function hasDateMutationInBody(body: TSESTree.Statement): boolean {
       if (value && typeof value === "object") {
         if (Array.isArray(value)) {
           for (const item of value) {
-            if (item && typeof item === "object" && "type" in item) {
+            if (AstNodeSchema.safeParse(item).success) {
               traverse(item as TSESTree.Node);
             }
           }
-        } else if ("type" in value) {
+        } else if (AstNodeSchema.safeParse(value).success) {
           traverse(value as TSESTree.Node);
         }
       }
@@ -298,11 +305,11 @@ function containsManualDateMath(body: TSESTree.BlockStatement | undefined): bool
       if (value && typeof value === "object") {
         if (Array.isArray(value)) {
           for (const item of value) {
-            if (item && typeof item === "object" && "type" in item) {
+            if (AstNodeSchema.safeParse(item).success) {
               traverse(item as TSESTree.Node);
             }
           }
-        } else if ("type" in value && value.type) {
+        } else if (AstNodeSchema.safeParse(value).success) {
           traverse(value as TSESTree.Node);
         }
       }

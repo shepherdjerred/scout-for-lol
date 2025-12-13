@@ -1,7 +1,10 @@
 import "dotenv/config";
 import env from "env-var";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
-console.log("🔧 Loading application configuration");
+const logger = createLogger("config");
+
+logger.info("🔧 Loading application configuration");
 
 function getRequiredEnvVar(name: string): string {
   // don't require these when running tests
@@ -10,10 +13,10 @@ function getRequiredEnvVar(name: string): string {
   }
   try {
     const value = env.get(name).required().asString();
-    console.log(`✅ ${name}: configured`);
+    logger.info(`✅ ${name}: configured`);
     return value;
   } catch (error) {
-    console.error(`❌ Missing required environment variable: ${name}`);
+    logger.error(`❌ Missing required environment variable: ${name}`);
     throw error;
   }
 }
@@ -21,13 +24,13 @@ function getRequiredEnvVar(name: string): string {
 function getOptionalEnvVar(name: string, defaultValue?: string): string | undefined {
   const value = env.get(name).asString();
   if (value) {
-    console.log(`✅ ${name}: configured`);
+    logger.info(`✅ ${name}: configured`);
     return value;
   } else if (defaultValue) {
-    console.log(`⚠️  ${name}: using default value (${defaultValue})`);
+    logger.info(`⚠️  ${name}: using default value (${defaultValue})`);
     return defaultValue;
   } else {
-    console.log(`⚠️  ${name}: not configured`);
+    logger.info(`⚠️  ${name}: not configured`);
     return undefined;
   }
 }
@@ -49,4 +52,4 @@ export default {
   elevenLabsVoiceId: getOptionalEnvVar("ELEVENLABS_VOICE_ID"),
 };
 
-console.log("✅ Configuration loaded successfully");
+logger.info("✅ Configuration loaded successfully");

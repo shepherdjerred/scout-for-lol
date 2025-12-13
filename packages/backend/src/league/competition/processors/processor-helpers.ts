@@ -1,21 +1,21 @@
-import type { MatchDto, CompetitionQueueType, ParticipantDto } from "@scout-for-lol/data";
+import type { RawMatch, CompetitionQueueType, RawParticipant } from "@scout-for-lol/data";
 import type {
   LeaderboardEntry,
   PlayerWithAccounts,
-} from "@scout-for-lol/backend/league/competition/processors/types.js";
+} from "@scout-for-lol/backend/league/competition/processors/types.ts";
 import {
   countWinsAndGames,
   buildWinBasedLeaderboard,
-} from "@scout-for-lol/backend/league/competition/processors/generic-win-counter.js";
+} from "@scout-for-lol/backend/league/competition/processors/generic-win-counter.ts";
 
 /**
  * Configuration for creating a win-based processor
  */
 type WinBasedProcessorConfig<T> = {
-  matches: MatchDto[];
+  matches: RawMatch[];
   participants: PlayerWithAccounts[];
   queue: CompetitionQueueType;
-  participantFilter?: (participantData: ParticipantDto) => boolean;
+  participantFilter?: (participantData: RawParticipant) => boolean;
   scoreFn: (wins: number, games: number) => number;
   metadataFn: (wins: number, games: number, criteria: T) => Record<string, unknown>;
   criteria: T;

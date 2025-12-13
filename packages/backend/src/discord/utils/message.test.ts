@@ -3,7 +3,7 @@ import {
   truncateDiscordMessage,
   truncateEmbedFieldValue,
   truncateEmbedDescription,
-} from "@scout-for-lol/backend/discord/utils/message.js";
+} from "@scout-for-lol/backend/discord/utils/message.ts";
 
 describe("truncateDiscordMessage", () => {
   test("does not truncate short messages", () => {

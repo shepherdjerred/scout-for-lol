@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { z } from "zod";
-import { getExampleMatch, type AnyMatch } from "@scout-for-lol/data";
+import { getExampleMatch, type AnyMatch } from "@scout-for-lol/data/index";
 // Import from browser-safe entry point to avoid satori/resvg dependencies
-import { Report } from "@scout-for-lol/report/browser";
+import { Report } from "@scout-for-lol/report/html/report.tsx";
 import { ArenaReport } from "@scout-for-lol/report/html/arena/report";
 const MatchTypeSchema = z.enum(["ranked", "unranked", "aram", "arena"]);
 type MatchType = z.infer<typeof MatchTypeSchema>;

@@ -17,6 +17,12 @@ import { preferDateFns } from "./eslint-rules/prefer-date-fns";
 import { noFunctionOverloads } from "./eslint-rules/no-function-overloads";
 import { noParentImports } from "./eslint-rules/no-parent-imports";
 import { noTypeGuards } from "./eslint-rules/no-type-guards";
+import { preferAsyncAwait } from "./eslint-rules/prefer-async-await";
+import { noDtoNaming } from "./eslint-rules/no-dto-naming";
+import { preferStructuredLogging } from "./eslint-rules/prefer-structured-logging";
+import { requireTsExtensions } from "./eslint-rules/require-ts-extensions";
+import { knipUnused } from "./eslint-rules/knip-unused";
+import { noCodeDuplication } from "./eslint-rules/jscpd-duplication";
 import * as importPlugin from "eslint-plugin-import";
 import * as regexpPlugin from "eslint-plugin-regexp";
 import * as eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
@@ -52,6 +58,12 @@ const customRulesPlugin = {
     "no-function-overloads": noFunctionOverloads,
     "no-parent-imports": noParentImports,
     "no-type-guards": noTypeGuards,
+    "prefer-async-await": preferAsyncAwait,
+    "no-dto-naming": noDtoNaming,
+    "prefer-structured-logging": preferStructuredLogging,
+    "require-ts-extensions": requireTsExtensions,
+    "knip-unused": knipUnused,
+    "no-code-duplication": noCodeDuplication,
   },
 };
 
@@ -70,6 +82,7 @@ export default tseslint.config(
       "**/node_modules/**/*",
       "**/.astro/**/*",
       ".dagger/sdk/**/*",
+      "**/src-tauri/target/**/*",
       "**/*.md",
       "**/*.mdx",
       "**/*.astro",
@@ -82,7 +95,12 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ["eslint.config.ts", "eslint-rules/*.ts"],
+          allowDefaultProject: [
+            "eslint.config.ts",
+            "eslint-rules/*.ts",
+            "eslint-rules/shared/*.ts",
+            "packages/*/tailwind.config.ts",
+          ],
         },
         tsconfigRootDir: dirname(fileURLToPath(import.meta.url)),
         extraFileExtensions: [".astro"],
@@ -121,6 +139,7 @@ export default tseslint.config(
             "./packages/data/tsconfig.json",
             "./packages/report/tsconfig.json",
             "./packages/frontend/tsconfig.json",
+            "./packages/desktop/tsconfig.json",
           ],
         },
         node: {
@@ -242,7 +261,7 @@ export default tseslint.config(
             {
               group: ["twisted/dist/models-dto*"],
               message:
-                "Do not import DTO types from twisted. Use Zod schemas from @scout-for-lol/data instead (e.g., MatchDto, SummonerLeagueDto from @scout-for-lol/data).",
+                "Do not import DTO types from twisted. Use Raw* Zod schemas from @scout-for-lol/data instead (e.g., RawMatch, RawSummonerLeague).",
             },
           ],
         },
@@ -264,6 +283,15 @@ export default tseslint.config(
       "custom-rules/no-function-overloads": "error",
       "custom-rules/no-parent-imports": "error",
       "custom-rules/no-type-guards": "error",
+      "custom-rules/prefer-async-await": "error",
+      "custom-rules/no-dto-naming": "error",
+      "custom-rules/require-ts-extensions": "error",
+      // Project-wide analysis tools (disabled by default - enable manually for analysis)
+      // These run external tools (knip, jscpd) and cache results per lint session
+      "custom-rules/knip-unused": "off",
+      // jscpd-based duplication is useful for IDE visibility, but too noisy to block commits.
+      // We keep it as a warning; the strict duplication gate remains `mise check`'s `duplication-check`.
+      "custom-rules/no-code-duplication": "warn",
     },
   },
   // Dagger index.ts - Dagger module API can have many parameters for external interface
@@ -497,6 +525,19 @@ export default tseslint.config(
           trailingUnderscore: "allow",
         },
         // Constants: UPPER_SNAKE_CASE or camelCase (excluding *Schema variables - handled by custom rule)
+        // Also allow PascalCase for React components created with forwardRef
+        {
+          selector: "variable",
+          modifiers: ["const", "exported"],
+          filter: {
+            regex: "Schema$",
+            match: false,
+          },
+          format: ["camelCase", "UPPER_CASE", "PascalCase"],
+          leadingUnderscore: "allow",
+          trailingUnderscore: "allow",
+        },
+        // Non-exported const: camelCase, UPPER_CASE, or PascalCase (for JSX component variables)
         {
           selector: "variable",
           modifiers: ["const"],
@@ -504,7 +545,7 @@ export default tseslint.config(
             regex: "Schema$",
             match: false,
           },
-          format: ["camelCase", "UPPER_CASE"],
+          format: ["camelCase", "UPPER_CASE", "PascalCase"],
           leadingUnderscore: "allow",
           trailingUnderscore: "allow",
         },
@@ -540,9 +581,24 @@ export default tseslint.config(
   },
   // Config file itself can use relative imports for local eslint rules
   {
-    files: ["eslint.config.ts"],
+    files: ["eslint.config.ts", "eslint-rules/**/*.ts"],
     rules: {
       "no-relative-import-paths/no-relative-import-paths": "off",
+      "custom-rules/require-ts-extensions": "off",
+      // Allow Node.js APIs in eslint-rules (these run in Node.js, not Bun)
+      "no-restricted-imports": "off",
+      "custom-rules/prefer-bun-apis": "off",
+    },
+  },
+  // Prefer structured logging over console in backend
+  {
+    files: ["packages/backend/**/*.ts"],
+    ignores: ["**/*.test.ts", "**/*.integration.test.ts"],
+    plugins: {
+      "custom-rules": customRulesPlugin,
+    },
+    rules: {
+      "custom-rules/prefer-structured-logging": "error",
     },
   },
 );

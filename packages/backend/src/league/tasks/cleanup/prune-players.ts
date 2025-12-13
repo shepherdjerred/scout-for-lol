@@ -5,9 +5,12 @@ import type {
   CompetitionParticipant,
   Account,
 } from "@scout-for-lol/backend/generated/prisma/client/index.js";
-import { prisma } from "@scout-for-lol/backend/database/index.js";
+import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import type { Client } from "discord.js";
 import { groupBy } from "remeda";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("cleanup-prune-players");
 
 type PlayerWithRelations = Player & {
   subscriptions: Subscription[];
@@ -42,12 +45,12 @@ async function notifyServerOwner(
   playerDetails: PruneResult["serverSummaries"][0]["playerDetails"],
 ): Promise<void> {
   if (!discordClient) {
-    console.log(`[PlayerPruning] Discord client not available, skipping notification for server ${serverId}`);
+    logger.info(`[PlayerPruning] Discord client not available, skipping notification for server ${serverId}`);
     return;
   }
 
   try {
-    console.log(`[PlayerPruning] Attempting to notify server ${serverId} owner about pruned players`);
+    logger.info(`[PlayerPruning] Attempting to notify server ${serverId} owner about pruned players`);
 
     // Discord.js fetch methods throw on error rather than returning null
     const guild = await discordClient.guilds.fetch(serverId);
@@ -93,9 +96,9 @@ If you want to track these players again, simply re-subscribe to them using \`/s
 *This is an automated cleanup to keep the database efficient.*`,
     });
 
-    console.log(`[PlayerPruning] ✅ Successfully notified owner of server ${serverId}`);
+    logger.info(`[PlayerPruning] ✅ Successfully notified owner of server ${serverId}`);
   } catch (error) {
-    console.warn(`[PlayerPruning] Failed to notify owner of server ${serverId}:`, error);
+    logger.warn(`[PlayerPruning] Failed to notify owner of server ${serverId}:`, error);
     // Don't throw - notification failure shouldn't break pruning
   }
 }
@@ -121,11 +124,11 @@ export async function pruneOrphanedPlayers(
   discordClient: Client | null = null,
 ): Promise<PruneResult> {
   const startTime = Date.now();
-  console.log("[PlayerPruning] ============================================");
-  console.log("[PlayerPruning] Starting orphaned player pruning");
-  console.log(`[PlayerPruning] Timestamp: ${new Date().toISOString()}`);
-  console.log(`[PlayerPruning] Notify owners: ${notifyOwners ? "YES" : "NO"}`);
-  console.log("[PlayerPruning] ============================================");
+  logger.info("[PlayerPruning] ============================================");
+  logger.info("[PlayerPruning] Starting orphaned player pruning");
+  logger.info(`[PlayerPruning] Timestamp: ${new Date().toISOString()}`);
+  logger.info(`[PlayerPruning] Notify owners: ${notifyOwners ? "YES" : "NO"}`);
+  logger.info("[PlayerPruning] ============================================");
 
   try {
     // Find all players
@@ -137,7 +140,7 @@ export async function pruneOrphanedPlayers(
       },
     });
 
-    console.log(`[PlayerPruning] 📊 Found ${allPlayers.length.toString()} total players in database`);
+    logger.info(`[PlayerPruning] 📊 Found ${allPlayers.length.toString()} total players in database`);
 
     // Filter players that should be pruned
     const orphanedPlayers = allPlayers.filter((player: PlayerWithRelations) => {
@@ -149,13 +152,13 @@ export async function pruneOrphanedPlayers(
       return !hasSubscriptions && !hasActiveCompetitions;
     });
 
-    console.log(`[PlayerPruning] 🔍 Analysis complete:`);
-    console.log(`[PlayerPruning]   - Orphaned players: ${orphanedPlayers.length.toString()}`);
-    console.log(`[PlayerPruning]   - Active players: ${(allPlayers.length - orphanedPlayers.length).toString()}`);
+    logger.info(`[PlayerPruning] 🔍 Analysis complete:`);
+    logger.info(`[PlayerPruning]   - Orphaned players: ${orphanedPlayers.length.toString()}`);
+    logger.info(`[PlayerPruning]   - Active players: ${(allPlayers.length - orphanedPlayers.length).toString()}`);
 
     if (orphanedPlayers.length === 0) {
-      console.log("[PlayerPruning] ✅ No players to prune - database is clean!");
-      console.log("[PlayerPruning] ============================================");
+      logger.info("[PlayerPruning] ✅ No players to prune - database is clean!");
+      logger.info("[PlayerPruning] ============================================");
       return {
         totalPlayersPruned: 0,
         totalAccountsDeleted: 0,
@@ -167,26 +170,26 @@ export async function pruneOrphanedPlayers(
 
     // Group by server for reporting
     const playersByServer = groupBy(orphanedPlayers, (player) => player.serverId);
-    console.log(`[PlayerPruning] 🌐 Players span ${Object.keys(playersByServer).length.toString()} server(s)`);
+    logger.info(`[PlayerPruning] 🌐 Players span ${Object.keys(playersByServer).length.toString()} server(s)`);
 
     // Log detailed information about each player being pruned
-    console.log(`[PlayerPruning] 📋 Detailed player information:`);
+    logger.info(`[PlayerPruning] 📋 Detailed player information:`);
     for (const player of orphanedPlayers) {
       const leftCompetitions = player.competitionParticipants.filter((p) => p.status === "LEFT").length;
       const pendingInvites = player.competitionParticipants.filter((p) => p.status === "INVITED").length;
 
-      console.log(`[PlayerPruning]   ┌─ Player: ${player.alias}`);
-      console.log(`[PlayerPruning]   ├─ ID: ${player.id.toString()}`);
-      console.log(`[PlayerPruning]   ├─ Server: ${player.serverId}`);
-      console.log(`[PlayerPruning]   ├─ Accounts: ${player.accounts.length.toString()}`);
-      console.log(`[PlayerPruning]   ├─ Left competitions: ${leftCompetitions.toString()}`);
-      console.log(`[PlayerPruning]   ├─ Pending invites: ${pendingInvites.toString()}`);
-      console.log(`[PlayerPruning]   ├─ Subscriptions: 0 (none)`);
-      console.log(`[PlayerPruning]   └─ Status: ELIGIBLE FOR PRUNING`);
+      logger.info(`[PlayerPruning]   ┌─ Player: ${player.alias}`);
+      logger.info(`[PlayerPruning]   ├─ ID: ${player.id.toString()}`);
+      logger.info(`[PlayerPruning]   ├─ Server: ${player.serverId}`);
+      logger.info(`[PlayerPruning]   ├─ Accounts: ${player.accounts.length.toString()}`);
+      logger.info(`[PlayerPruning]   ├─ Left competitions: ${leftCompetitions.toString()}`);
+      logger.info(`[PlayerPruning]   ├─ Pending invites: ${pendingInvites.toString()}`);
+      logger.info(`[PlayerPruning]   ├─ Subscriptions: 0 (none)`);
+      logger.info(`[PlayerPruning]   └─ Status: ELIGIBLE FOR PRUNING`);
     }
 
     // Delete orphaned players and their related data
-    console.log(`[PlayerPruning] 🗑️  Starting deletion process...`);
+    logger.info(`[PlayerPruning] 🗑️  Starting deletion process...`);
     const playerIds = orphanedPlayers.map((player: PlayerWithRelations) => player.id);
 
     // Delete in order: accounts first, then competition data, then players
@@ -197,7 +200,7 @@ export async function pruneOrphanedPlayers(
         },
       },
     });
-    console.log(`[PlayerPruning]   ✓ Deleted ${accountsDeleted.count.toString()} accounts`);
+    logger.info(`[PlayerPruning]   ✓ Deleted ${accountsDeleted.count.toString()} accounts`);
 
     const participantsDeleted = await prismaClient.competitionParticipant.deleteMany({
       where: {
@@ -206,7 +209,7 @@ export async function pruneOrphanedPlayers(
         },
       },
     });
-    console.log(`[PlayerPruning]   ✓ Deleted ${participantsDeleted.count.toString()} competition participants`);
+    logger.info(`[PlayerPruning]   ✓ Deleted ${participantsDeleted.count.toString()} competition participants`);
 
     const snapshotsDeleted = await prismaClient.competitionSnapshot.deleteMany({
       where: {
@@ -215,7 +218,7 @@ export async function pruneOrphanedPlayers(
         },
       },
     });
-    console.log(`[PlayerPruning]   ✓ Deleted ${snapshotsDeleted.count.toString()} competition snapshots`);
+    logger.info(`[PlayerPruning]   ✓ Deleted ${snapshotsDeleted.count.toString()} competition snapshots`);
 
     const playersDeleted = await prismaClient.player.deleteMany({
       where: {
@@ -224,7 +227,7 @@ export async function pruneOrphanedPlayers(
         },
       },
     });
-    console.log(`[PlayerPruning]   ✓ Deleted ${playersDeleted.count.toString()} players`);
+    logger.info(`[PlayerPruning]   ✓ Deleted ${playersDeleted.count.toString()} players`);
 
     // Prepare server summaries
     const serverSummaries = Object.entries(playersByServer).map(([serverId, players]) => {
@@ -247,25 +250,25 @@ export async function pruneOrphanedPlayers(
 
     // Notify server owners
     if (notifyOwners && discordClient) {
-      console.log(`[PlayerPruning] 📬 Sending notifications to server owners...`);
+      logger.info(`[PlayerPruning] 📬 Sending notifications to server owners...`);
       for (const summary of serverSummaries) {
         await notifyServerOwner(discordClient, summary.serverId, summary.playerDetails);
       }
     } else if (notifyOwners && !discordClient) {
-      console.warn(`[PlayerPruning] ⚠️  Notifications requested but Discord client not provided`);
+      logger.warn(`[PlayerPruning] ⚠️  Notifications requested but Discord client not provided`);
     }
 
     const duration = Date.now() - startTime;
-    console.log(`[PlayerPruning] ============================================`);
-    console.log(`[PlayerPruning] ✅ PRUNING COMPLETE`);
-    console.log(`[PlayerPruning]   - Duration: ${duration.toString()}ms`);
-    console.log(`[PlayerPruning]   - Players pruned: ${playersDeleted.count.toString()}`);
-    console.log(`[PlayerPruning]   - Accounts deleted: ${accountsDeleted.count.toString()}`);
-    console.log(`[PlayerPruning]   - Participants deleted: ${participantsDeleted.count.toString()}`);
-    console.log(`[PlayerPruning]   - Snapshots deleted: ${snapshotsDeleted.count.toString()}`);
-    console.log(`[PlayerPruning]   - Servers affected: ${serverSummaries.length.toString()}`);
-    console.log(`[PlayerPruning]   - Owners notified: ${notifyOwners ? "YES" : "NO"}`);
-    console.log(`[PlayerPruning] ============================================`);
+    logger.info(`[PlayerPruning] ============================================`);
+    logger.info(`[PlayerPruning] ✅ PRUNING COMPLETE`);
+    logger.info(`[PlayerPruning]   - Duration: ${duration.toString()}ms`);
+    logger.info(`[PlayerPruning]   - Players pruned: ${playersDeleted.count.toString()}`);
+    logger.info(`[PlayerPruning]   - Accounts deleted: ${accountsDeleted.count.toString()}`);
+    logger.info(`[PlayerPruning]   - Participants deleted: ${participantsDeleted.count.toString()}`);
+    logger.info(`[PlayerPruning]   - Snapshots deleted: ${snapshotsDeleted.count.toString()}`);
+    logger.info(`[PlayerPruning]   - Servers affected: ${serverSummaries.length.toString()}`);
+    logger.info(`[PlayerPruning]   - Owners notified: ${notifyOwners ? "YES" : "NO"}`);
+    logger.info(`[PlayerPruning] ============================================`);
 
     return {
       totalPlayersPruned: playersDeleted.count,
@@ -275,7 +278,7 @@ export async function pruneOrphanedPlayers(
       serverSummaries,
     };
   } catch (error) {
-    console.error("[PlayerPruning] ❌ Error pruning orphaned players:", error);
+    logger.error("[PlayerPruning] ❌ Error pruning orphaned players:", error);
     throw error;
   }
 }
@@ -285,19 +288,19 @@ export async function pruneOrphanedPlayers(
  * This function is called by the cron job
  */
 export async function runPlayerPruning(): Promise<void> {
-  console.log("[PlayerPruning] 🚀 Starting scheduled player pruning task");
+  logger.info("[PlayerPruning] 🚀 Starting scheduled player pruning task");
 
   try {
     // Lazy import Discord client to avoid circular dependencies and test issues
     const { client } = await import("../../../discord/client.js");
 
     const result = await pruneOrphanedPlayers(prisma, true, client);
-    console.log(`[PlayerPruning] ✅ Scheduled player pruning complete`);
-    console.log(
+    logger.info(`[PlayerPruning] ✅ Scheduled player pruning complete`);
+    logger.info(
       `[PlayerPruning]   Summary: ${result.totalPlayersPruned.toString()} players, ${result.totalAccountsDeleted.toString()} accounts`,
     );
   } catch (error) {
-    console.error("[PlayerPruning] ❌ Scheduled player pruning failed:", error);
+    logger.error("[PlayerPruning] ❌ Scheduled player pruning failed:", error);
     throw error; // Re-throw so cron job can track failures
   }
 }

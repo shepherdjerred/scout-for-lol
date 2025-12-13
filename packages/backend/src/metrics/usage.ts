@@ -13,7 +13,10 @@ import {
   competitionParticipantsTotal,
   avgPlayersPerServer,
   avgAccountsPerPlayer,
-} from "@scout-for-lol/backend/metrics/index.js";
+} from "@scout-for-lol/backend/metrics/index.ts";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("metrics-usage");
 
 /**
  * Update usage metrics from database
@@ -87,7 +90,7 @@ export async function updateUsageMetrics(): Promise<void> {
       avgAccountsPerPlayer.set(0);
     }
   } catch (error) {
-    console.error("❌ Error updating usage metrics:", error);
+    logger.error("❌ Error updating usage metrics:", error);
     // Don't throw - we don't want metrics collection to crash the app
   }
 }

@@ -1,5 +1,5 @@
 import { type CompletedMatch, DiscordAccountIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
-import { matchToSvg, svgToPng } from "@scout-for-lol/report/html/index.js";
+import { matchToSvg, svgToPng } from "@scout-for-lol/report/html/index.tsx";
 import { test, expect } from "bun:test";
 
 function hashSvg(svg: string): string {
@@ -31,7 +31,16 @@ function createChampion(params: {
     assists: params.assists,
     items: params.items,
     spells: params.spells,
-    runes: [],
+    runes: [
+      // Keystone + 3 primary runes (Dark Harvest + domination tree)
+      { id: 8128, name: "Dark Harvest", description: "Damaging a champion below 50% health deals adaptive damage" },
+      { id: 8126, name: "Cheap Shot", description: "Deal bonus true damage to champions with impaired movement" },
+      { id: 8138, name: "Eyeball Collection", description: "Collect eyeballs for champion takedowns" },
+      { id: 8135, name: "Treasure Hunter", description: "Gain gold for unique champion takedowns" },
+      // 2 secondary runes (from another tree)
+      { id: 8345, name: "Biscuit Delivery", description: "Gain a biscuit every 2 min" },
+      { id: 8347, name: "Cosmic Insight", description: "Gain CDR for summoner spells and items" },
+    ],
     lane: params.lane,
     creepScore: params.creepScore,
     visionScore: params.visionScore,
@@ -659,7 +668,7 @@ test("multiple players with promotion and demotion test", async () => {
     },
   });
 
-  // Third player (mid) - PLACED (no rank before)
+  // Third player (mid) - no rank before (first tracked game in this queue)
   match.players.push({
     playerConfig: {
       alias: "midlaner",

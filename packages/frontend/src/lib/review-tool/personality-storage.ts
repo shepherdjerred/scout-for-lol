@@ -1,9 +1,9 @@
 /**
  * Custom personality storage in IndexedDB
  */
-import type { Personality } from "./config/schema";
-import { PersonalitySchema } from "./config/schema";
-import { STORES, getAllItems, putItem, deleteItem } from "./storage";
+import type { Personality } from "./config/schema.ts";
+import { PersonalitySchema } from "./config/schema.ts";
+import { STORES, getAllItems, putItem, deleteItem } from "./storage.ts";
 
 /**
  * Load custom personalities from IndexedDB
