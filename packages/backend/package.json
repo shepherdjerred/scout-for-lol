@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.890.0",
+    "@google/generative-ai": "^0.24.0",
     "@prisma/client": "^6.0.0",
     "@resvg/resvg-js": "^2.6.2",
     "@scout-for-lol/data": "workspace:*",
@@ -43,6 +44,7 @@
     "prom-client": "^15.1.3",
     "react": "^19.1.1",
     "remeda": "^2.21.2",
+    "openai": "^6.9.1",
     "satori": "^0.18.0",
     "ts-pattern": "^5.7.0",
     "tslog": "^4.10.2",

@@ -61,9 +61,12 @@ function getDB(): Promise<IDBDatabase> {
 }
 
 /**
- * Get a single value from a store
+ * Get a single value from a store.
+ *
+ * Returns `unknown` to enforce runtime validation by callers.
+ * All callers should validate the result with Zod before using it.
  */
-export async function getItem<T>(storeName: string, key: string): Promise<T | null> {
+export async function getItem(storeName: string, key: string): Promise<unknown> {
   try {
     const db = await getDB();
     const transaction = db.transaction([storeName], "readonly");
@@ -73,8 +76,7 @@ export async function getItem<T>(storeName: string, key: string): Promise<T | nu
     if (result === undefined || result === null) {
       return null;
     }
-    // eslint-disable-next-line custom-rules/no-type-assertions -- TODO(https://github.com/shepherdjerred/scout-for-lol/issues/187): fix this
-    return result as T;
+    return result;
   } catch (error) {
     console.warn(`Failed to get item from ${storeName}:`, error);
     return null;

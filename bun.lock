@@ -49,6 +49,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@aws-sdk/client-s3": "^3.890.0",
+        "@google/generative-ai": "^0.24.0",
         "@prisma/client": "^6.0.0",
         "@resvg/resvg-js": "^2.6.2",
         "@scout-for-lol/data": "workspace:*",
@@ -59,6 +60,7 @@
         "discord.js": "^14.18.0",
         "dotenv": "^17.0.1",
         "env-var": "^7.5.0",
+        "openai": "^6.9.1",
         "prisma": "^6.0.0",
         "prom-client": "^15.1.3",
         "react": "^19.1.1",
@@ -139,6 +141,7 @@
         "@astrojs/react": "^4.3.1",
         "@astrojs/tailwind": "^6.0.0",
         "@aws-sdk/client-s3": "^3.728.0",
+        "@google/generative-ai": "^0.24.0",
         "@iconify-json/heroicons": "^1.2.1",
         "@iconify-json/simple-icons": "^1.2.7",
         "@radix-ui/react-dialog": "^1.1.15",
@@ -154,6 +157,7 @@
         "date-fns": "^4.1.0",
         "fuse.js": "^7.1.0",
         "lucide-react": "^0.556.0",
+        "openai": "^6.9.1",
         "react": "^19.1.1",
         "react-dom": "^19.1.1",
         "tailwind-merge": "^3.4.0",
@@ -3013,6 +3017,8 @@
     "@radix-ui/react-visually-hidden/@radix-ui/react-primitive": ["@radix-ui/react-primitive@2.1.3", "", { "dependencies": { "@radix-ui/react-slot": "1.2.3" }, "peerDependencies": { "@types/react": "*", "@types/react-dom": "*", "react": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc", "react-dom": "^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc" }, "optionalPeers": ["@types/react", "@types/react-dom"] }, "sha512-m9gTwRkhy2lvCPe6QJp4d3G1TYEUHn/FzJUtq9MjH46an1wJU+GdoGC5VLof8RX8Ft/DlpshApkhswDLZzHIcQ=="],
 
     "@rollup/pluginutils/estree-walker": ["estree-walker@2.0.2", "", {}, "sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w=="],
+
+    "@scout-for-lol/backend/bun-types": ["bun-types@1.3.4", "", { "dependencies": { "@types/node": "*" } }, "sha512-5ua817+BZPZOlNaRgGBpZJOSAQ9RQ17pkwPD0yR7CfJg+r8DgIILByFifDTa+IPDDxzf5VNhtNlcKqFzDgJvlQ=="],
 
     "@scout-for-lol/data/bun-types": ["bun-types@1.3.4", "", { "dependencies": { "@types/node": "*" } }, "sha512-5ua817+BZPZOlNaRgGBpZJOSAQ9RQ17pkwPD0yR7CfJg+r8DgIILByFifDTa+IPDDxzf5VNhtNlcKqFzDgJvlQ=="],
 
