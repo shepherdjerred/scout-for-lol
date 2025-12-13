@@ -6,7 +6,7 @@ import { RawMatchSchema, RawTimelineSchema, type RawMatch, type RawTimeline } fr
 import { getCachedDataAsync, setCachedData } from "./cache.ts";
 import { z } from "zod";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
-import { isValidMatchKey } from "./s3-helpers";
+import { isValidMatchKey } from "./s3-helpers.ts";
 
 /**
  * Fetch all objects from S3 with pagination
