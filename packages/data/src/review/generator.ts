@@ -227,27 +227,27 @@ export type ChatCompletionCreateParams = {
   top_p?: number;
 };
 
-export const OpenAIChatCompletionChoiceSchema = z.object({
+const OpenAIChatCompletionChoiceSchema = z.object({
   message: z.object({
     content: z.string().nullable(),
   }),
 });
 
-export const OpenAIChatCompletionUsageSchema = z
+const OpenAIChatCompletionUsageSchema = z
   .object({
     prompt_tokens: z.number().optional(),
     completion_tokens: z.number().optional(),
   })
   .loose();
 
-export const OpenAIChatCompletionSchema = z
+const OpenAIChatCompletionSchema = z
   .object({
     choices: z.array(OpenAIChatCompletionChoiceSchema),
     usage: OpenAIChatCompletionUsageSchema.optional(),
   })
   .loose();
 
-export const GeminiImagePartSchema = z
+const GeminiImagePartSchema = z
   .object({
     inlineData: z.object({
       data: z.string(),
@@ -255,7 +255,7 @@ export const GeminiImagePartSchema = z
   })
   .loose();
 
-export const GeminiResponseSchema = z
+const GeminiResponseSchema = z
   .object({
     response: z.object({
       candidates: z.array(

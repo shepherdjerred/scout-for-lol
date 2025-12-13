@@ -49,23 +49,6 @@ export function executeRequest<T = IDBValidKey>(request: IDBRequest<T>): Promise
 }
 
 /**
- * Execute an IndexedDB request that doesn't return a value
- * @deprecated Use executeRequest instead
- */
-export function executeRequestVoid(request: IDBRequest<IDBValidKey> | IDBRequest<undefined>): Promise<void> {
-  return new Promise((resolve, reject) => {
-    request.onerror = () => {
-      const error = request.error;
-      reject(error ?? new Error("IndexedDB operation failed"));
-    };
-
-    request.onsuccess = () => {
-      resolve();
-    };
-  });
-}
-
-/**
  * Get an object store from a transaction
  */
 export function getStore(transaction: IDBTransaction, storeName: string): IDBObjectStore {

@@ -21,8 +21,9 @@ export function getOutcome(participant: ParticipantDto): "Victory" | "Defeat" | 
 
 /**
  * Extract rune details from participant perks
+ * Internal helper used by participantToChampion
  */
-export function extractRunes(p: ParticipantDto): Rune[] {
+function extractRunes(p: ParticipantDto): Rune[] {
   const runes: Rune[] = [];
 
   // Extract primary rune selections

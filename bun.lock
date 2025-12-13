@@ -4,16 +4,6 @@
   "workspaces": {
     "": {
       "name": "scout-for-lol",
-      "dependencies": {
-        "@google/generative-ai": "^0.24.0",
-        "date-fns": "^4.1.0",
-        "openai": "^6.9.1",
-        "react": "^19.1.1",
-        "react-dom": "^19.1.1",
-        "remeda": "^2.21.2",
-        "ts-pattern": "^5.7.0",
-        "zod": "^4.0.0",
-      },
       "devDependencies": {
         "@commitlint/cli": "^20.0.0",
         "@commitlint/config-conventional": "^20.0.0",
@@ -23,8 +13,6 @@
         "@types/bun": "^1.2.18",
         "@types/eslint-plugin-jsx-a11y": "^6.10.1",
         "@types/node": "^24.10.1",
-        "@types/react": "^19.1.13",
-        "@types/react-dom": "^19.1.9",
         "@typescript-eslint/rule-tester": "^8.48.0",
         "@typescript-eslint/utils": "^8.46.0",
         "bun-types": "latest",
@@ -54,8 +42,8 @@
       "version": "0.1.0",
       "dependencies": {
         "@aws-sdk/client-s3": "^3.890.0",
+        "@google/generative-ai": "^0.24.0",
         "@prisma/client": "^6.0.0",
-        "@prisma/client-runtime-utils": "^7.0.0",
         "@resvg/resvg-js": "^2.6.2",
         "@scout-for-lol/data": "workspace:*",
         "@scout-for-lol/report": "workspace:*",
@@ -65,6 +53,7 @@
         "discord.js": "^14.18.0",
         "dotenv": "^17.0.1",
         "env-var": "^7.5.0",
+        "openai": "^6.9.1",
         "prisma": "^6.0.0",
         "prom-client": "^15.1.3",
         "react": "^19.1.1",
@@ -91,6 +80,7 @@
       "name": "@scout-for-lol/data",
       "version": "0.1.0",
       "dependencies": {
+        "@google/generative-ai": "^0.24.0",
         "@scout-for-lol/report": "workspace:*",
         "date-fns": "^4.1.0",
         "remeda": "^2.21.2",
@@ -110,6 +100,7 @@
         "@astrojs/react": "^4.3.1",
         "@astrojs/tailwind": "^6.0.0",
         "@aws-sdk/client-s3": "^3.728.0",
+        "@google/generative-ai": "^0.24.0",
         "@iconify-json/heroicons": "^1.2.1",
         "@iconify-json/simple-icons": "^1.2.7",
         "@scout-for-lol/data": "workspace:*",
@@ -119,6 +110,7 @@
         "astro-icon": "^1.1.1",
         "date-fns": "^4.1.0",
         "fuse.js": "^7.1.0",
+        "openai": "^6.9.1",
         "react": "^19.1.1",
         "react-dom": "^19.1.1",
         "tailwindcss": "^4.0.0",
@@ -668,8 +660,6 @@
     "@pkgr/core": ["@pkgr/core@0.2.9", "", {}, "sha512-QNqXyfVS2wm9hweSYD2O7F0G06uurj9kZ96TRQE5Y9hU7+tgdZwIkbAKc5Ocy1HxEY2kuDQa6cQ1WRs/O5LFKA=="],
 
     "@prisma/client": ["@prisma/client@6.19.0", "", { "peerDependencies": { "prisma": "*", "typescript": ">=5.1.0" }, "optionalPeers": ["prisma", "typescript"] }, "sha512-QXFT+N/bva/QI2qoXmjBzL7D6aliPffIwP+81AdTGq0FXDoLxLkWivGMawG8iM5B9BKfxLIXxfWWAF6wbuJU6g=="],
-
-    "@prisma/client-runtime-utils": ["@prisma/client-runtime-utils@7.0.0", "", {}, "sha512-PAiFgMBPrLSaakBwUpML5NevipuKSL3rtNr8pZ8CZ3OBXo0BFcdeGcBIKw/CxJP6H4GNa4+l5bzJPrk8Iq6tDw=="],
 
     "@prisma/config": ["@prisma/config@6.19.0", "", { "dependencies": { "c12": "3.1.0", "deepmerge-ts": "7.1.5", "effect": "3.18.4", "empathic": "2.0.0" } }, "sha512-zwCayme+NzI/WfrvFEtkFhhOaZb/hI+X8TTjzjJ252VbPxAl2hWHK5NMczmnG9sXck2lsXrxIZuK524E25UNmg=="],
 
@@ -2856,6 +2846,14 @@
     "@oxc-resolver/binding-wasm32-wasi/@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.0.7", "", { "dependencies": { "@emnapi/core": "^1.5.0", "@emnapi/runtime": "^1.5.0", "@tybys/wasm-util": "^0.10.1" } }, "sha512-SeDnOO0Tk7Okiq6DbXmmBODgOAb9dp9gjlphokTUxmt8U3liIP1ZsozBahH69j/RJv+Rfs6IwUKHTgQYJ/HBAw=="],
 
     "@rollup/pluginutils/estree-walker": ["estree-walker@2.0.2", "", {}, "sha512-Rfkk/Mp/DL7JVje3u18FxFujQlTNR2q6QfMSMB7AvCBx91NGj/ba3kCfza0f6dVDbw7YlRf/nDrn7pQrCCyQ/w=="],
+
+    "@scout-for-lol/backend/bun-types": ["bun-types@1.3.4", "", { "dependencies": { "@types/node": "*" } }, "sha512-5ua817+BZPZOlNaRgGBpZJOSAQ9RQ17pkwPD0yR7CfJg+r8DgIILByFifDTa+IPDDxzf5VNhtNlcKqFzDgJvlQ=="],
+
+    "@scout-for-lol/data/bun-types": ["bun-types@1.3.4", "", { "dependencies": { "@types/node": "*" } }, "sha512-5ua817+BZPZOlNaRgGBpZJOSAQ9RQ17pkwPD0yR7CfJg+r8DgIILByFifDTa+IPDDxzf5VNhtNlcKqFzDgJvlQ=="],
+
+    "@scout-for-lol/frontend/bun-types": ["bun-types@1.3.4", "", { "dependencies": { "@types/node": "*" } }, "sha512-5ua817+BZPZOlNaRgGBpZJOSAQ9RQ17pkwPD0yR7CfJg+r8DgIILByFifDTa+IPDDxzf5VNhtNlcKqFzDgJvlQ=="],
+
+    "@scout-for-lol/report/bun-types": ["bun-types@1.3.4", "", { "dependencies": { "@types/node": "*" } }, "sha512-5ua817+BZPZOlNaRgGBpZJOSAQ9RQ17pkwPD0yR7CfJg+r8DgIILByFifDTa+IPDDxzf5VNhtNlcKqFzDgJvlQ=="],
 
     "@sentry/node/minimatch": ["minimatch@9.0.5", "", { "dependencies": { "brace-expansion": "^2.0.1" } }, "sha512-G6T0ZX48xgozx7587koeX9Ys2NYy6Gmv//P89sEte9V9whIapMNF4idKxnW2QtCcLiTWlb/wfCabAtAFWhhBow=="],
 

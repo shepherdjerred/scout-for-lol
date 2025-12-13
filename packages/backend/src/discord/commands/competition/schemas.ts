@@ -67,7 +67,15 @@ export const SeasonArgsSchema = z.object({
 });
 
 /**
- * Season schema for edit command (same as create)
+ * Season schema for edit command.
+ *
+ * NOTE: This is intentionally a separate export (not just a re-export) even though the schema
+ * is identical to SeasonArgsSchema. Having distinct "Create" and "Edit" schema names:
+ * 1. Makes the codebase self-documenting - it's clear which context each schema is used in
+ * 2. Allows future divergence if edit validation needs to differ from create validation
+ * 3. Provides better error messages that reference the correct operation context
+ *
+ * knip flags this as a duplicate export, but the semantic separation is intentional.
  */
 export const SeasonEditArgsSchema = SeasonArgsSchema;
 
@@ -142,7 +150,15 @@ export const HighestWinRateArgsSchema = z.object({
 });
 
 /**
- * Edit variants of criteria schemas (same structure, but used in edit context)
+ * Edit variants of criteria schemas.
+ *
+ * NOTE: These are intentionally separate exports even though the schemas are currently identical
+ * to their "Create" counterparts. This pattern provides:
+ * 1. Self-documenting code - clear which context each schema is used in
+ * 2. Future flexibility - edit validation may need to differ (e.g., allowing partial updates)
+ * 3. Consistent naming - all edit operations use "*EditArgsSchema" naming convention
+ *
+ * knip flags these as duplicate exports, but the semantic separation is intentional.
  */
 export const MostGamesPlayedEditArgsSchema = MostGamesPlayedArgsSchema;
 export const HighestRankEditArgsSchema = HighestRankArgsSchema;

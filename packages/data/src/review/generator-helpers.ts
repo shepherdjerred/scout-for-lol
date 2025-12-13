@@ -106,7 +106,7 @@ export function getOrdinalSuffix(num: number): string {
  * @param playerIndex - Index of the player being reviewed (to exclude from friends list)
  * @returns A formatted string describing friends in the match, or empty string if none
  */
-export function buildFriendsContext(match: CompletedMatch | ArenaMatch, playerIndex: number): string {
+function buildFriendsContext(match: CompletedMatch | ArenaMatch, playerIndex: number): string {
   const allPlayers = match.players;
   const friends = allPlayers.filter((_, index) => index !== playerIndex);
 

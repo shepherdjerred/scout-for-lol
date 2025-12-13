@@ -82,4 +82,3 @@ client.on("guildCreate", (guild) => {
 });
 
 export { client };
-export default client;
