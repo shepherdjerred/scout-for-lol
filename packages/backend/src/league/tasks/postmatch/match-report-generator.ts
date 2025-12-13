@@ -243,6 +243,81 @@ function isAiReviewEnabledForAnyGuild(guildIds: DiscordGuildId[]): boolean {
   return guildIds.some((guildId) => getFlag("ai_reviews_enabled", { server: guildId }));
 }
 
+type AiReviewResult = { text: string | undefined; image: Uint8Array | undefined };
+
+/**
+ * Generate AI review for a match if conditions are met
+ */
+async function generateAiReviewIfEnabled(
+  completedMatch: CompletedMatch,
+  matchId: MatchId,
+  matchData: RawMatch,
+  timelineData: RawTimeline | undefined,
+  playersInMatch: PlayerConfigEntry[],
+  targetGuildIds: DiscordGuildId[],
+): Promise<AiReviewResult> {
+  const aiReviewsEnabled = isAiReviewEnabledForAnyGuild(targetGuildIds);
+  if (!aiReviewsEnabled) {
+    logger.info(
+      `[generateMatchReport] Skipping AI review - feature not enabled for target guilds: ${targetGuildIds.join(", ")}`,
+    );
+    return { text: undefined, image: undefined };
+  }
+
+  const shouldGenerateReview = isRankedQueue(completedMatch.queueType) || hasJerred(playersInMatch);
+  if (!shouldGenerateReview) {
+    logger.info(
+      `[generateMatchReport] Skipping AI review - not a ranked queue and Jerred not in match (queueType: ${completedMatch.queueType ?? "unknown"})`,
+    );
+    return { text: undefined, image: undefined };
+  }
+
+  if (!timelineData) {
+    logger.warn(
+      `[generateMatchReport] Skipping AI review - timeline data required but not available for match ${matchId}`,
+    );
+    return { text: undefined, image: undefined };
+  }
+
+  try {
+    const review = await generateMatchReview(completedMatch, matchId, matchData, timelineData);
+    return { text: review?.text, image: review?.image };
+  } catch (error) {
+    logger.error(`[generateMatchReport] Error generating AI review:`, error);
+    captureError(error, "ai-review-generation", matchId, { queueType: completedMatch.queueType ?? "unknown" });
+    return { text: undefined, image: undefined };
+  }
+}
+
+/**
+ * Generate TTS audio for Aaron's reviews
+ */
+async function generateTtsAudioIfAaron(
+  reviewText: string | undefined,
+  playersInMatch: PlayerConfigEntry[],
+): Promise<Uint8Array | undefined> {
+  if (!reviewText) {
+    return undefined;
+  }
+
+  const isAaronInMatch = playersInMatch.some((p) => p.alias === "Aaron");
+  if (!isAaronInMatch) {
+    return undefined;
+  }
+
+  try {
+    logger.info(`[generateMatchReport] 🎙️ Generating TTS audio for Aaron's review...`);
+    const audioData = await generateReviewAudio(reviewText);
+    if (audioData) {
+      logger.info(`[generateMatchReport] 🔊 Generated TTS audio (${audioData.byteLength.toString()} bytes)`);
+    }
+    return audioData;
+  } catch (error) {
+    logger.error(`[generateMatchReport] ⚠️ Error generating TTS audio:`, error);
+    return undefined;
+  }
+}
+
 /**
  * Process standard match and generate Discord message
  */
@@ -290,41 +365,14 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
   const completedMatch = toMatch(players, matchData, playerRanksMap);
 
   // Generate AI review (text and optional image) - gated by feature flag and queue type
-  let reviewText: string | undefined;
-  let reviewImage: Uint8Array | undefined;
-
-  // Check if AI reviews are enabled for any target guild
-  const aiReviewsEnabled = isAiReviewEnabledForAnyGuild(targetGuildIds);
-  if (!aiReviewsEnabled) {
-    logger.info(
-      `[generateMatchReport] Skipping AI review - feature not enabled for target guilds: ${targetGuildIds.join(", ")}`,
-    );
-  }
-
-  const shouldGenerateReview =
-    aiReviewsEnabled && (isRankedQueue(completedMatch.queueType) || hasJerred(playersInMatch));
-  if (shouldGenerateReview) {
-    if (!timelineData) {
-      logger.warn(
-        `[generateMatchReport] Skipping AI review - timeline data required but not available for match ${matchId}`,
-      );
-    } else {
-      try {
-        const review = await generateMatchReview(completedMatch, matchId, matchData, timelineData);
-        if (review) {
-          reviewText = review.text;
-          reviewImage = review.image;
-        }
-      } catch (error) {
-        logger.error(`[generateMatchReport] Error generating AI review:`, error);
-        captureError(error, "ai-review-generation", matchId, { queueType: completedMatch.queueType ?? "unknown" });
-      }
-    }
-  } else if (aiReviewsEnabled) {
-    logger.info(
-      `[generateMatchReport] Skipping AI review - not a ranked queue and Jerred not in match (queueType: ${completedMatch.queueType ?? "unknown"})`,
-    );
-  }
+  const { text: reviewText, image: reviewImage } = await generateAiReviewIfEnabled(
+    completedMatch,
+    matchId,
+    matchData,
+    timelineData,
+    playersInMatch,
+    targetGuildIds,
+  );
 
   // Create Discord message
   const [matchReportAttachment, matchReportEmbed] = await createMatchImage(completedMatch, matchId);
@@ -334,8 +382,6 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
 
   // Add AI-generated image if available
   if (reviewImage) {
-    // Convert Uint8Array to Buffer for Discord.js type compatibility
-    // Using Bun's Buffer (not Node.js) - Discord.js types require Buffer, not Uint8Array
     const aiBuffer = Buffer.from(reviewImage);
     const aiImageAttachment = new AttachmentBuilder(aiBuffer).setName("ai-review.png");
     files.push(aiImageAttachment);
@@ -343,21 +389,11 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
   }
 
   // Generate TTS audio for Aaron's reviews only
-  const isAaronInMatch = playersInMatch.some((p) => p.alias === "Aaron");
-  if (reviewText && isAaronInMatch) {
-    try {
-      console.log(`[generateMatchReport] 🎙️ Generating TTS audio for Aaron's review...`);
-      const audioData = await generateReviewAudio(reviewText);
-      if (audioData) {
-        const audioBuffer = Buffer.from(audioData);
-        const audioAttachment = new AttachmentBuilder(audioBuffer).setName("review.mp3");
-        files.push(audioAttachment);
-        console.log(`[generateMatchReport] 🔊 Added TTS audio to message (${audioData.byteLength.toString()} bytes)`);
-      }
-    } catch (error) {
-      console.error(`[generateMatchReport] ⚠️ Error generating TTS audio:`, error);
-      // Continue without audio if TTS fails
-    }
+  const audioData = await generateTtsAudioIfAaron(reviewText, playersInMatch);
+  if (audioData) {
+    const audioBuffer = Buffer.from(audioData);
+    const audioAttachment = new AttachmentBuilder(audioBuffer).setName("review.mp3");
+    files.push(audioAttachment);
   }
 
   // Generate completion message

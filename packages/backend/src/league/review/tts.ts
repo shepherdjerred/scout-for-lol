@@ -1,5 +1,8 @@
 import OpenAI from "openai";
 import config from "@scout-for-lol/backend/configuration.js";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+
+const logger = createLogger("tts");
 
 /**
  * Pre-process review text to add ElevenLabs v3 audio tags using GPT-5 mini.
@@ -15,7 +18,7 @@ import config from "@scout-for-lol/backend/configuration.js";
  */
 async function preprocessTextForTTS(reviewText: string): Promise<string> {
   if (!config.openaiApiKey) {
-    console.log("[preprocessTextForTTS] OpenAI API key not configured, returning original text");
+    logger.info("[preprocessTextForTTS] OpenAI API key not configured, returning original text");
     return reviewText;
   }
 
@@ -43,7 +46,7 @@ Guidelines:
 Return ONLY the processed text with tags added. No explanations.`;
 
   try {
-    console.log("[preprocessTextForTTS] Calling GPT-5 mini to add audio tags...");
+    logger.info("[preprocessTextForTTS] Calling GPT-5 mini to add audio tags...");
     const startTime = Date.now();
 
     const response = await client.chat.completions.create({
@@ -57,18 +60,18 @@ Return ONLY the processed text with tags added. No explanations.`;
     });
 
     const duration = Date.now() - startTime;
-    console.log(`[preprocessTextForTTS] GPT-5 mini response received in ${duration.toString()}ms`);
+    logger.info(`[preprocessTextForTTS] GPT-5 mini response received in ${duration.toString()}ms`);
 
     const processedText = response.choices[0]?.message.content;
     if (!processedText) {
-      console.log("[preprocessTextForTTS] No content in response, returning original text");
+      logger.info("[preprocessTextForTTS] No content in response, returning original text");
       return reviewText;
     }
 
-    console.log(`[preprocessTextForTTS] Added audio tags to review text`);
+    logger.info(`[preprocessTextForTTS] Added audio tags to review text`);
     return processedText.trim();
   } catch (error) {
-    console.error("[preprocessTextForTTS] Error preprocessing text:", error);
+    logger.error("[preprocessTextForTTS] Error preprocessing text:", error);
     return reviewText;
   }
 }
@@ -81,19 +84,19 @@ Return ONLY the processed text with tags added. No explanations.`;
  */
 async function generateSpeech(text: string): Promise<Uint8Array | undefined> {
   if (!config.elevenLabsApiKey) {
-    console.log("[generateSpeech] ElevenLabs API key not configured");
+    logger.info("[generateSpeech] ElevenLabs API key not configured");
     return undefined;
   }
 
   if (!config.elevenLabsVoiceId) {
-    console.log("[generateSpeech] ElevenLabs voice ID not configured");
+    logger.info("[generateSpeech] ElevenLabs voice ID not configured");
     return undefined;
   }
 
   const url = `https://api.elevenlabs.io/v1/text-to-speech/${config.elevenLabsVoiceId}`;
 
   try {
-    console.log("[generateSpeech] Calling ElevenLabs v3 API...");
+    logger.info("[generateSpeech] Calling ElevenLabs v3 API...");
     const startTime = Date.now();
 
     const response = await fetch(url, {
@@ -111,19 +114,19 @@ async function generateSpeech(text: string): Promise<Uint8Array | undefined> {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`[generateSpeech] ElevenLabs API error: ${response.status.toString()} - ${errorText}`);
+      logger.error(`[generateSpeech] ElevenLabs API error: ${response.status.toString()} - ${errorText}`);
       return undefined;
     }
 
     const audioBuffer = await response.arrayBuffer();
     const duration = Date.now() - startTime;
-    console.log(
+    logger.info(
       `[generateSpeech] ElevenLabs response received in ${duration.toString()}ms (${audioBuffer.byteLength.toString()} bytes)`,
     );
 
     return new Uint8Array(audioBuffer);
   } catch (error) {
-    console.error("[generateSpeech] Error generating speech:", error);
+    logger.error("[generateSpeech] Error generating speech:", error);
     return undefined;
   }
 }
@@ -142,7 +145,7 @@ async function generateSpeech(text: string): Promise<Uint8Array | undefined> {
 export async function generateReviewAudio(reviewText: string): Promise<Uint8Array | undefined> {
   // Check if ElevenLabs is configured
   if (!config.elevenLabsApiKey || !config.elevenLabsVoiceId) {
-    console.log("[generateReviewAudio] ElevenLabs not configured, skipping TTS generation");
+    logger.info("[generateReviewAudio] ElevenLabs not configured, skipping TTS generation");
     return undefined;
   }
 
@@ -154,12 +157,12 @@ export async function generateReviewAudio(reviewText: string): Promise<Uint8Arra
     const audio = await generateSpeech(processedText);
 
     if (audio) {
-      console.log(`[generateReviewAudio] Successfully generated ${audio.byteLength.toString()} bytes of audio`);
+      logger.info(`[generateReviewAudio] Successfully generated ${audio.byteLength.toString()} bytes of audio`);
     }
 
     return audio;
   } catch (error) {
-    console.error("[generateReviewAudio] Error generating review audio:", error);
+    logger.error("[generateReviewAudio] Error generating review audio:", error);
     return undefined;
   }
 }
