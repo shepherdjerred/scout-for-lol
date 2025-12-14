@@ -55,7 +55,7 @@
     "knip": "^5.70.1",
     "lint-staged": "^16.2.3",
     "markdownlint-cli2": "^0.20.0",
-    "prettier": "3.7.3",
+    "prettier": "3.7.4",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.35.1"
   },
