@@ -1,11 +1,7 @@
 import { z } from "zod";
 import * as Sentry from "@sentry/bun";
-import { api } from "@scout-for-lol/backend/league/api/api.ts";
-import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
-import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import type {
   PlayerConfigEntry,
-  Region,
   MatchId,
   CompletedMatch,
   ArenaMatch,
@@ -15,13 +11,7 @@ import type {
   Rank,
   DiscordGuildId,
 } from "@scout-for-lol/data/index.ts";
-import {
-  parseQueueType,
-  MatchIdSchema,
-  queueTypeToDisplayString,
-  RawMatchSchema,
-  RawTimelineSchema,
-} from "@scout-for-lol/data/index.ts";
+import { parseQueueType, MatchIdSchema, queueTypeToDisplayString } from "@scout-for-lol/data/index.ts";
 import { getFlag } from "@scout-for-lol/backend/configuration/flags.ts";
 import { getPlayer } from "@scout-for-lol/backend/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
@@ -30,8 +20,10 @@ import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
 import { saveMatchToS3, saveImageToS3, saveSvgToS3, saveTimelineToS3 } from "@scout-for-lol/backend/storage/s3.ts";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.ts";
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.ts";
+import { generateReviewAudio } from "@scout-for-lol/backend/league/review/tts.ts";
 import { match } from "ts-pattern";
 import { logErrorDetails } from "./match-report-debug.ts";
+import { fetchMatchTimeline } from "./match-data-fetcher.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { saveMatchRankHistory, getLatestRankBefore } from "@scout-for-lol/backend/league/model/rank-history.ts";
 
@@ -39,95 +31,6 @@ const logger = createLogger("postmatch-match-report-generator");
 
 function captureError(error: unknown, source: string, matchId?: string, extra?: Record<string, string>): void {
   Sentry.captureException(error, { tags: { source, ...(matchId && { matchId }), ...extra } });
-}
-
-/**
- * Fetch match data from Riot API
- *
- * Validates the response against our schema to ensure type safety and catch API changes.
- */
-export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Promise<RawMatch | undefined> {
-  try {
-    const region = mapRegionToEnum(playerRegion);
-    const regionGroup = regionToRegionGroup(region);
-
-    logger.info(`[fetchMatchData] 📥 Fetching match data for ${matchId}`);
-    const response = await api.MatchV5.get(matchId, regionGroup);
-
-    // Validate and parse the API response to ensure it matches our schema
-    try {
-      const validated = RawMatchSchema.parse(response.response);
-      return validated;
-    } catch (parseError) {
-      logger.error(`[fetchMatchData] ❌ Match data validation failed for ${matchId}:`, parseError);
-      logger.error(`[fetchMatchData] This may indicate an API schema change or data corruption`);
-      captureError(parseError, "match-data-validation", matchId);
-      logger.error(`[fetchMatchData] 🔍 Raw API response:`, JSON.stringify(response.response, null, 2));
-      return undefined;
-    }
-  } catch (e) {
-    const result = z.object({ status: z.number() }).safeParse(e);
-    if (result.success) {
-      if (result.data.status === 404) {
-        logger.info(`[fetchMatchData] ℹ️  Match ${matchId} not found (404) - may still be processing`);
-        return undefined;
-      }
-      logger.error(`[fetchMatchData] ❌ HTTP Error ${result.data.status.toString()} for match ${matchId}`);
-      captureError(e, "match-data-fetch", matchId, { httpStatus: result.data.status.toString() });
-    } else {
-      logger.error(`[fetchMatchData] ❌ Error fetching match ${matchId}:`, e);
-      captureError(e, "match-data-fetch", matchId);
-    }
-    return undefined;
-  }
-}
-
-/**
- * Fetch match timeline data from Riot API
- *
- * The timeline provides frame-by-frame game data including:
- * - Participant stats evolution (gold, XP, position)
- * - Game events (kills, item purchases, objectives, etc.)
- *
- * Validates the response against our schema to ensure type safety and catch API changes.
- */
-async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region): Promise<RawTimeline | undefined> {
-  try {
-    const region = mapRegionToEnum(playerRegion);
-    const regionGroup = regionToRegionGroup(region);
-
-    logger.info(`[fetchMatchTimeline] 📥 Fetching timeline data for ${matchId}`);
-
-    // Use the timeline endpoint from the twisted library
-    // The twisted library provides api.MatchV5.timeline() for Match V5 Timeline API
-    const response = await api.MatchV5.timeline(matchId, regionGroup);
-
-    // Validate and parse the API response to ensure it matches our schema
-    try {
-      const validated = RawTimelineSchema.parse(response.response);
-      logger.info(`[fetchMatchTimeline] ✅ Timeline validated with ${validated.info.frames.length.toString()} frames`);
-      return validated;
-    } catch (parseError) {
-      logger.error(`[fetchMatchTimeline] ❌ Timeline data validation failed for ${matchId}:`, parseError);
-      logger.error(`[fetchMatchTimeline] This may indicate an API schema change or data corruption`);
-      captureError(parseError, "timeline-data-validation", matchId);
-      return undefined;
-    }
-  } catch (e) {
-    const result = z.object({ status: z.number() }).safeParse(e);
-    if (result.success) {
-      if (result.data.status === 404) {
-        logger.info(`[fetchMatchTimeline] ℹ️  Timeline ${matchId} not found (404) - may still be processing`);
-        return undefined;
-      }
-      logger.error(`[fetchMatchTimeline] ❌ HTTP Error ${result.data.status.toString()} for timeline ${matchId}`);
-      captureError(e, "timeline-data-fetch", matchId, { httpStatus: result.data.status.toString() });
-    } else {
-      logger.error(`[fetchMatchTimeline] ❌ Error fetching timeline ${matchId}:`, e);
-      captureError(e, "timeline-data-fetch", matchId);
-    }
-    return undefined;
-  }
 }
 
 /** Format a natural language message about who finished the game */
@@ -242,6 +145,84 @@ function isAiReviewEnabledForAnyGuild(guildIds: DiscordGuildId[]): boolean {
   return guildIds.some((guildId) => getFlag("ai_reviews_enabled", { server: guildId }));
 }
 
+type AiReviewResult = { text: string | undefined; image: Uint8Array | undefined };
+
+type AiReviewContext = {
+  completedMatch: CompletedMatch;
+  matchId: MatchId;
+  matchData: RawMatch;
+  timelineData: RawTimeline | undefined;
+  playersInMatch: PlayerConfigEntry[];
+  targetGuildIds: DiscordGuildId[];
+};
+
+/**
+ * Generate AI review for a match if conditions are met
+ */
+async function generateAiReviewIfEnabled(ctx: AiReviewContext): Promise<AiReviewResult> {
+  const { completedMatch, matchId, matchData, timelineData, playersInMatch, targetGuildIds } = ctx;
+  const aiReviewsEnabled = isAiReviewEnabledForAnyGuild(targetGuildIds);
+  if (!aiReviewsEnabled) {
+    logger.info(
+      `[generateMatchReport] Skipping AI review - feature not enabled for target guilds: ${targetGuildIds.join(", ")}`,
+    );
+    return { text: undefined, image: undefined };
+  }
+
+  const shouldGenerateReview = isRankedQueue(completedMatch.queueType) || hasJerred(playersInMatch);
+  if (!shouldGenerateReview) {
+    logger.info(
+      `[generateMatchReport] Skipping AI review - not a ranked queue and Jerred not in match (queueType: ${completedMatch.queueType ?? "unknown"})`,
+    );
+    return { text: undefined, image: undefined };
+  }
+
+  if (!timelineData) {
+    logger.warn(
+      `[generateMatchReport] Skipping AI review - timeline data required but not available for match ${matchId}`,
+    );
+    return { text: undefined, image: undefined };
+  }
+
+  try {
+    const review = await generateMatchReview(completedMatch, matchId, matchData, timelineData);
+    return { text: review?.text, image: review?.image };
+  } catch (error) {
+    logger.error(`[generateMatchReport] Error generating AI review:`, error);
+    captureError(error, "ai-review-generation", matchId, { queueType: completedMatch.queueType ?? "unknown" });
+    return { text: undefined, image: undefined };
+  }
+}
+
+/**
+ * Generate TTS audio for Aaron's reviews
+ */
+async function generateTtsAudioIfAaron(
+  reviewText: string | undefined,
+  playersInMatch: PlayerConfigEntry[],
+): Promise<Uint8Array | undefined> {
+  if (!reviewText) {
+    return undefined;
+  }
+
+  const isAaronInMatch = playersInMatch.some((p) => p.alias === "Aaron");
+  if (!isAaronInMatch) {
+    return undefined;
+  }
+
+  try {
+    logger.info(`[generateMatchReport] 🎙️ Generating TTS audio for Aaron's review...`);
+    const audioData = await generateReviewAudio(reviewText);
+    if (audioData) {
+      logger.info(`[generateMatchReport] 🔊 Generated TTS audio (${audioData.byteLength.toString()} bytes)`);
+    }
+    return audioData;
+  } catch (error) {
+    logger.error(`[generateMatchReport] ⚠️ Error generating TTS audio:`, error);
+    return undefined;
+  }
+}
+
 /**
  * Process standard match and generate Discord message
  */
@@ -289,41 +270,14 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
   const completedMatch = toMatch(players, matchData, playerRanksMap);
 
   // Generate AI review (text and optional image) - gated by feature flag and queue type
-  let reviewText: string | undefined;
-  let reviewImage: Uint8Array | undefined;
-
-  // Check if AI reviews are enabled for any target guild
-  const aiReviewsEnabled = isAiReviewEnabledForAnyGuild(targetGuildIds);
-  if (!aiReviewsEnabled) {
-    logger.info(
-      `[generateMatchReport] Skipping AI review - feature not enabled for target guilds: ${targetGuildIds.join(", ")}`,
-    );
-  }
-
-  const shouldGenerateReview =
-    aiReviewsEnabled && (isRankedQueue(completedMatch.queueType) || hasJerred(playersInMatch));
-  if (shouldGenerateReview) {
-    if (!timelineData) {
-      logger.warn(
-        `[generateMatchReport] Skipping AI review - timeline data required but not available for match ${matchId}`,
-      );
-    } else {
-      try {
-        const review = await generateMatchReview(completedMatch, matchId, matchData, timelineData);
-        if (review) {
-          reviewText = review.text;
-          reviewImage = review.image;
-        }
-      } catch (error) {
-        logger.error(`[generateMatchReport] Error generating AI review:`, error);
-        captureError(error, "ai-review-generation", matchId, { queueType: completedMatch.queueType ?? "unknown" });
-      }
-    }
-  } else if (aiReviewsEnabled) {
-    logger.info(
-      `[generateMatchReport] Skipping AI review - not a ranked queue and Jerred not in match (queueType: ${completedMatch.queueType ?? "unknown"})`,
-    );
-  }
+  const { text: reviewText, image: reviewImage } = await generateAiReviewIfEnabled({
+    completedMatch,
+    matchId,
+    matchData,
+    timelineData,
+    playersInMatch,
+    targetGuildIds,
+  });
 
   // Create Discord message
   const [matchReportAttachment, matchReportEmbed] = await createMatchImage(completedMatch, matchId);
@@ -333,12 +287,18 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
 
   // Add AI-generated image if available
   if (reviewImage) {
-    // Convert Uint8Array to Buffer for Discord.js type compatibility
-    // Using Bun's Buffer (not Node.js) - Discord.js types require Buffer, not Uint8Array
     const aiBuffer = Buffer.from(reviewImage);
     const aiImageAttachment = new AttachmentBuilder(aiBuffer).setName("ai-review.png");
     files.push(aiImageAttachment);
     logger.info(`[generateMatchReport] ✨ Added AI-generated image to message`);
+  }
+
+  // Generate TTS audio for Aaron's reviews only
+  const audioData = await generateTtsAudioIfAaron(reviewText, playersInMatch);
+  if (audioData) {
+    const audioBuffer = Buffer.from(audioData);
+    const audioAttachment = new AttachmentBuilder(audioBuffer).setName("review.mp3");
+    files.push(audioAttachment);
   }
 
   // Generate completion message
