@@ -15,10 +15,8 @@ import {
   calculatePollingInterval,
   MAX_PLAYERS_PER_RUN,
 } from "@scout-for-lol/backend/utils/polling-intervals.ts";
-import {
-  fetchMatchData,
-  generateMatchReport,
-} from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.ts";
+import { generateMatchReport } from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.ts";
+import { fetchMatchData } from "@scout-for-lol/backend/league/tasks/postmatch/match-data-fetcher.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { uniqueBy } from "remeda";

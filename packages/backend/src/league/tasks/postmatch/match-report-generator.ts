@@ -23,12 +23,9 @@ import { generateMatchReview } from "@scout-for-lol/backend/league/review/genera
 import { generateReviewAudio } from "@scout-for-lol/backend/league/review/tts.ts";
 import { match } from "ts-pattern";
 import { logErrorDetails } from "./match-report-debug.ts";
-import { fetchMatchTimeline, fetchMatchData as fetchMatchDataImpl } from "./match-data-fetcher.ts";
+import { fetchMatchTimeline } from "./match-data-fetcher.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { saveMatchRankHistory, getLatestRankBefore } from "@scout-for-lol/backend/league/model/rank-history.ts";
-
-// Re-export fetchMatchData for consumers that import from this module
-export const fetchMatchData = fetchMatchDataImpl;
 
 const logger = createLogger("postmatch-match-report-generator");
 
