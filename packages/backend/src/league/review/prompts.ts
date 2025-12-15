@@ -126,9 +126,9 @@ export async function selectRandomPersonality(): Promise<Personality> {
 }
 
 /**
- * Select a personality using a balanced pseudo-random algorithm.
- * Prioritizes reviewers who have been selected fewer times to ensure
- * fair distribution across all available reviewers.
+ * Select a personality using weighted random selection.
+ * Aaron is strongly preferred (80% of the time), with other personalities
+ * sharing the remaining 20%.
  */
 function selectBalancedReviewer(availablePersonalities: Personality[]): Personality {
   if (availablePersonalities.length === 0) {
@@ -143,19 +143,32 @@ function selectBalancedReviewer(availablePersonalities: Personality[]): Personal
     }
   }
 
-  // Find the minimum usage count among available personalities
-  const getUsageCount = (p: Personality) => reviewerUsageCount.get(p.filename ?? p.metadata.name) ?? 0;
-  const minUsage = Math.min(...availablePersonalities.map(getUsageCount));
+  // Check if Aaron is available
+  const aaron = availablePersonalities.find(
+    (p) => (p.filename ?? p.metadata.name).toLowerCase() === "aaron",
+  );
+  const otherPersonalities = availablePersonalities.filter(
+    (p) => (p.filename ?? p.metadata.name).toLowerCase() !== "aaron",
+  );
 
-  // Get all personalities that have the minimum usage count
-  const leastUsedPersonalities = availablePersonalities.filter((p) => getUsageCount(p) === minUsage);
+  let selected: Personality;
 
-  // Randomly select from the least used personalities
-  const randomIndex = Math.floor(Math.random() * leastUsedPersonalities.length);
-  const selected = leastUsedPersonalities[randomIndex];
-
-  if (!selected) {
-    throw new Error("Failed to select personality from least used pool");
+  // 80% chance to select Aaron if available, otherwise select from others
+  if (aaron && Math.random() < 0.8) {
+    selected = aaron;
+  } else if (otherPersonalities.length > 0) {
+    // Select randomly from other personalities
+    const randomIndex = Math.floor(Math.random() * otherPersonalities.length);
+    const randomPersonality = otherPersonalities[randomIndex];
+    if (!randomPersonality) {
+      throw new Error("Failed to select random personality");
+    }
+    selected = randomPersonality;
+  } else if (aaron) {
+    // Fall back to Aaron if no other personalities
+    selected = aaron;
+  } else {
+    throw new Error("Failed to select personality");
   }
 
   // Increment the usage count for the selected personality
