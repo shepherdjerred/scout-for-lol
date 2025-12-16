@@ -497,12 +497,11 @@ async fn forward_event_to_backend(
         "BaronKill" => {
             let killer = event.get("KillerName").and_then(|v| v.as_str());
             let stolen = event.get("Stolen").and_then(|v| v.as_str()) == Some("True");
-            let team =
-                if player_teams.get(killer.unwrap_or("")) == Some(&local_player_team) {
-                    "ally"
-                } else {
-                    "enemy"
-                };
+            let team = if player_teams.get(killer.unwrap_or("")) == Some(&local_player_team) {
+                "ally"
+            } else {
+                "enemy"
+            };
 
             GameEvent::Objective {
                 objective_type: "baron".to_string(),
@@ -517,12 +516,11 @@ async fn forward_event_to_backend(
         "HeraldKill" => {
             let killer = event.get("KillerName").and_then(|v| v.as_str());
             let stolen = event.get("Stolen").and_then(|v| v.as_str()) == Some("True");
-            let team =
-                if player_teams.get(killer.unwrap_or("")) == Some(&local_player_team) {
-                    "ally"
-                } else {
-                    "enemy"
-                };
+            let team = if player_teams.get(killer.unwrap_or("")) == Some(&local_player_team) {
+                "ally"
+            } else {
+                "enemy"
+            };
 
             GameEvent::Objective {
                 objective_type: "herald".to_string(),
@@ -536,12 +534,11 @@ async fn forward_event_to_backend(
         }
         "TurretKilled" | "FirstBrick" => {
             let killer = event.get("KillerName").and_then(|v| v.as_str());
-            let team =
-                if player_teams.get(killer.unwrap_or("")) == Some(&local_player_team) {
-                    "ally"
-                } else {
-                    "enemy"
-                };
+            let team = if player_teams.get(killer.unwrap_or("")) == Some(&local_player_team) {
+                "ally"
+            } else {
+                "enemy"
+            };
 
             GameEvent::Objective {
                 objective_type: "tower".to_string(),
@@ -555,12 +552,11 @@ async fn forward_event_to_backend(
         }
         "InhibKilled" => {
             let killer = event.get("KillerName").and_then(|v| v.as_str());
-            let team =
-                if player_teams.get(killer.unwrap_or("")) == Some(&local_player_team) {
-                    "ally"
-                } else {
-                    "enemy"
-                };
+            let team = if player_teams.get(killer.unwrap_or("")) == Some(&local_player_team) {
+                "ally"
+            } else {
+                "enemy"
+            };
 
             GameEvent::Objective {
                 objective_type: "inhibitor".to_string(),
