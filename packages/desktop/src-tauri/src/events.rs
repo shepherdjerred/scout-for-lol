@@ -169,9 +169,7 @@ async fn run_event_loop(
                 debug!("Received WebSocket message: {}", text);
 
                 if let Ok(ws_msg) = serde_json::from_str::<LcuWebSocketMessage>(&text) {
-                    if let Err(e) = handle_event(&ws_msg, &backend, &app_handle).await {
-                        warn!("Failed to handle event: {}", e);
-                    }
+                    handle_event(&ws_msg, &backend, &app_handle);
                 }
             }
             Ok(Message::Close(_)) => {
@@ -477,12 +475,11 @@ async fn forward_event_to_backend(
             let killer = event.get("KillerName").and_then(|v| v.as_str());
             let dragon_type = event.get("DragonType").and_then(|v| v.as_str());
             let stolen = event.get("Stolen").and_then(|v| v.as_str()) == Some("True");
-            let team =
-                if player_teams.get(killer.unwrap_or("")).as_deref() == Some(&local_player_team) {
-                    "ally"
-                } else {
-                    "enemy"
-                };
+            let team = if player_teams.get(killer.unwrap_or("")) == Some(&local_player_team) {
+                "ally"
+            } else {
+                "enemy"
+            };
 
             GameEvent::Objective {
                 objective_type: "dragon".to_string(),
@@ -610,24 +607,17 @@ async fn forward_event_to_backend(
     }
 }
 
-async fn handle_event(
+fn handle_event(
     msg: &LcuWebSocketMessage,
-    backend: &BackendClient,
+    _backend: &BackendClient,
     app_handle: &tauri::AppHandle,
-) -> Result<(), String> {
-    match msg.uri.as_str() {
-        uri if uri.contains("/lol-gameflow/v1/gameflow-phase") => {
-            handle_gameflow_event(&msg.data, backend, app_handle)
-        }
-        _ => Ok(()),
+) {
+    if msg.uri.contains("/lol-gameflow/v1/gameflow-phase") {
+        handle_gameflow_event(&msg.data, app_handle);
     }
 }
 
-fn handle_gameflow_event(
-    data: &Value,
-    _backend: &BackendClient,
-    app_handle: &tauri::AppHandle,
-) -> Result<(), String> {
+fn handle_gameflow_event(data: &Value, app_handle: &tauri::AppHandle) {
     if let Some(phase) = data.as_str() {
         match phase {
             "InProgress" => {
@@ -644,7 +634,6 @@ fn handle_gameflow_event(
             }
         }
     }
-    Ok(())
 }
 
 #[cfg(test)]
