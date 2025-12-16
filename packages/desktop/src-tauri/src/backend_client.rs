@@ -355,6 +355,9 @@ mod tests {
 
         let status = client.get_status();
         assert!(status.connected);
-        assert_eq!(status.backend_url, Some("https://api.example.com".to_string()));
+        assert_eq!(
+            status.backend_url,
+            Some("https://api.example.com".to_string())
+        );
     }
 }

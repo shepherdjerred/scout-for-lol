@@ -315,8 +315,12 @@ async fn process_live_game_data(
                         player.get("championName").and_then(|v| v.as_str()),
                         player.get("team").and_then(|v| v.as_str()),
                     ) {
-                        state.player_champions.insert(name.to_string(), champion.to_string());
-                        state.player_teams.insert(name.to_string(), team.to_string());
+                        state
+                            .player_champions
+                            .insert(name.to_string(), champion.to_string());
+                        state
+                            .player_teams
+                            .insert(name.to_string(), team.to_string());
 
                         if Some(name.to_string()) == local_name {
                             state.local_player_team = Some(team.to_string());
@@ -361,9 +365,13 @@ async fn process_live_game_data(
             }
 
             if let Some(event_type) = event.get("EventName").and_then(|v| v.as_str()) {
-                if let Err(e) = forward_event_to_backend(event, event_type, backend, game_state, app_handle).await {
+                if let Err(e) =
+                    forward_event_to_backend(event, event_type, backend, game_state, app_handle)
+                        .await
+                {
                     error!("Failed to forward event to backend: {}", e);
-                    let _ = app_handle.emit("backend-log", format!("❌ Event forward failed: {}", e));
+                    let _ =
+                        app_handle.emit("backend-log", format!("❌ Event forward failed: {}", e));
                 }
             }
         }
@@ -393,12 +401,21 @@ async fn forward_event_to_backend(
     let player_teams = state.player_teams.clone();
     drop(state);
 
-    let game_time = event.get("EventTime").and_then(|v| v.as_f64()).unwrap_or(0.0);
+    let game_time = event
+        .get("EventTime")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.0);
 
     let backend_event = match event_type {
         "ChampionKill" => {
-            let killer = event.get("KillerName").and_then(|v| v.as_str()).unwrap_or("");
-            let victim = event.get("VictimName").and_then(|v| v.as_str()).unwrap_or("");
+            let killer = event
+                .get("KillerName")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            let victim = event
+                .get("VictimName")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
             let killer_team = player_teams.get(killer).cloned().unwrap_or_default();
 
             GameEvent::Kill {
@@ -414,8 +431,14 @@ async fn forward_event_to_backend(
             }
         }
         "FirstBlood" => {
-            let killer = event.get("KillerName").and_then(|v| v.as_str()).unwrap_or("");
-            let victim = event.get("VictimName").and_then(|v| v.as_str()).unwrap_or("");
+            let killer = event
+                .get("KillerName")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            let victim = event
+                .get("VictimName")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
             let killer_team = player_teams.get(killer).cloned().unwrap_or_default();
 
             GameEvent::FirstBlood {
@@ -430,8 +453,14 @@ async fn forward_event_to_backend(
             }
         }
         "Multikill" => {
-            let killer = event.get("KillerName").and_then(|v| v.as_str()).unwrap_or("");
-            let kill_streak = event.get("KillStreak").and_then(|v| v.as_i64()).unwrap_or(2);
+            let killer = event
+                .get("KillerName")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+            let kill_streak = event
+                .get("KillStreak")
+                .and_then(|v| v.as_i64())
+                .unwrap_or(2);
             let killer_team = player_teams.get(killer).cloned().unwrap_or_default();
 
             GameEvent::MultiKill {
@@ -448,11 +477,12 @@ async fn forward_event_to_backend(
             let killer = event.get("KillerName").and_then(|v| v.as_str());
             let dragon_type = event.get("DragonType").and_then(|v| v.as_str());
             let stolen = event.get("Stolen").and_then(|v| v.as_str()) == Some("True");
-            let team = if player_teams.get(killer.unwrap_or("")).as_deref() == Some(&local_player_team) {
-                "ally"
-            } else {
-                "enemy"
-            };
+            let team =
+                if player_teams.get(killer.unwrap_or("")).as_deref() == Some(&local_player_team) {
+                    "ally"
+                } else {
+                    "enemy"
+                };
 
             GameEvent::Objective {
                 objective_type: "dragon".to_string(),
@@ -467,11 +497,12 @@ async fn forward_event_to_backend(
         "BaronKill" => {
             let killer = event.get("KillerName").and_then(|v| v.as_str());
             let stolen = event.get("Stolen").and_then(|v| v.as_str()) == Some("True");
-            let team = if player_teams.get(killer.unwrap_or("")).as_deref() == Some(&local_player_team) {
-                "ally"
-            } else {
-                "enemy"
-            };
+            let team =
+                if player_teams.get(killer.unwrap_or("")).as_deref() == Some(&local_player_team) {
+                    "ally"
+                } else {
+                    "enemy"
+                };
 
             GameEvent::Objective {
                 objective_type: "baron".to_string(),
@@ -486,11 +517,12 @@ async fn forward_event_to_backend(
         "HeraldKill" => {
             let killer = event.get("KillerName").and_then(|v| v.as_str());
             let stolen = event.get("Stolen").and_then(|v| v.as_str()) == Some("True");
-            let team = if player_teams.get(killer.unwrap_or("")).as_deref() == Some(&local_player_team) {
-                "ally"
-            } else {
-                "enemy"
-            };
+            let team =
+                if player_teams.get(killer.unwrap_or("")).as_deref() == Some(&local_player_team) {
+                    "ally"
+                } else {
+                    "enemy"
+                };
 
             GameEvent::Objective {
                 objective_type: "herald".to_string(),
@@ -504,11 +536,12 @@ async fn forward_event_to_backend(
         }
         "TurretKilled" | "FirstBrick" => {
             let killer = event.get("KillerName").and_then(|v| v.as_str());
-            let team = if player_teams.get(killer.unwrap_or("")).as_deref() == Some(&local_player_team) {
-                "ally"
-            } else {
-                "enemy"
-            };
+            let team =
+                if player_teams.get(killer.unwrap_or("")).as_deref() == Some(&local_player_team) {
+                    "ally"
+                } else {
+                    "enemy"
+                };
 
             GameEvent::Objective {
                 objective_type: "tower".to_string(),
@@ -522,11 +555,12 @@ async fn forward_event_to_backend(
         }
         "InhibKilled" => {
             let killer = event.get("KillerName").and_then(|v| v.as_str());
-            let team = if player_teams.get(killer.unwrap_or("")).as_deref() == Some(&local_player_team) {
-                "ally"
-            } else {
-                "enemy"
-            };
+            let team =
+                if player_teams.get(killer.unwrap_or("")).as_deref() == Some(&local_player_team) {
+                    "ally"
+                } else {
+                    "enemy"
+                };
 
             GameEvent::Objective {
                 objective_type: "inhibitor".to_string(),
@@ -539,7 +573,10 @@ async fn forward_event_to_backend(
             }
         }
         "Ace" => {
-            let acing_team = event.get("AcingTeam").and_then(|v| v.as_str()).unwrap_or("");
+            let acing_team = event
+                .get("AcingTeam")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
 
             GameEvent::Ace {
                 acing_team: acing_team.to_string(),
@@ -554,7 +591,10 @@ async fn forward_event_to_backend(
     };
 
     info!("Forwarding {} event to backend", event_type);
-    let _ = app_handle.emit("backend-log", format!("📤 Sending {} to backend...", event_type));
+    let _ = app_handle.emit(
+        "backend-log",
+        format!("📤 Sending {} to backend...", event_type),
+    );
 
     match backend.submit_event(backend_event).await {
         Ok(response) => {

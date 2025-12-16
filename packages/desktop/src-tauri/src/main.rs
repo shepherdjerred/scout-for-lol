@@ -425,15 +425,16 @@ fn main() {
 
             // Load existing config and initialize backend client if configured
             let cfg = config::Config::load(&paths::config_file());
-            let backend_client = if let (Some(token), Some(url)) = (&cfg.api_token, &cfg.backend_url) {
-                Some(BackendClient::new(
-                    token.clone(),
-                    url.clone(),
-                    cfg.client_id.clone(),
-                ))
-            } else {
-                None
-            };
+            let backend_client =
+                if let (Some(token), Some(url)) = (&cfg.api_token, &cfg.backend_url) {
+                    Some(BackendClient::new(
+                        token.clone(),
+                        url.clone(),
+                        cfg.client_id.clone(),
+                    ))
+                } else {
+                    None
+                };
 
             let app_state = AppState {
                 lcu_connection: Arc::new(Mutex::new(None)),
