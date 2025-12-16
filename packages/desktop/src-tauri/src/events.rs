@@ -498,7 +498,7 @@ async fn forward_event_to_backend(
             let killer = event.get("KillerName").and_then(|v| v.as_str());
             let stolen = event.get("Stolen").and_then(|v| v.as_str()) == Some("True");
             let team =
-                if player_teams.get(killer.unwrap_or("")).as_deref() == Some(&local_player_team) {
+                if player_teams.get(killer.unwrap_or("")) == Some(&local_player_team) {
                     "ally"
                 } else {
                     "enemy"
@@ -518,7 +518,7 @@ async fn forward_event_to_backend(
             let killer = event.get("KillerName").and_then(|v| v.as_str());
             let stolen = event.get("Stolen").and_then(|v| v.as_str()) == Some("True");
             let team =
-                if player_teams.get(killer.unwrap_or("")).as_deref() == Some(&local_player_team) {
+                if player_teams.get(killer.unwrap_or("")) == Some(&local_player_team) {
                     "ally"
                 } else {
                     "enemy"
@@ -537,7 +537,7 @@ async fn forward_event_to_backend(
         "TurretKilled" | "FirstBrick" => {
             let killer = event.get("KillerName").and_then(|v| v.as_str());
             let team =
-                if player_teams.get(killer.unwrap_or("")).as_deref() == Some(&local_player_team) {
+                if player_teams.get(killer.unwrap_or("")) == Some(&local_player_team) {
                     "ally"
                 } else {
                     "enemy"
@@ -556,7 +556,7 @@ async fn forward_event_to_backend(
         "InhibKilled" => {
             let killer = event.get("KillerName").and_then(|v| v.as_str());
             let team =
-                if player_teams.get(killer.unwrap_or("")).as_deref() == Some(&local_player_team) {
+                if player_teams.get(killer.unwrap_or("")) == Some(&local_player_team) {
                     "ally"
                 } else {
                     "enemy"
@@ -621,13 +621,13 @@ async fn handle_event(
 ) -> Result<(), String> {
     match msg.uri.as_str() {
         uri if uri.contains("/lol-gameflow/v1/gameflow-phase") => {
-            handle_gameflow_event(&msg.data, backend, app_handle).await
+            handle_gameflow_event(&msg.data, backend, app_handle)
         }
         _ => Ok(()),
     }
 }
 
-async fn handle_gameflow_event(
+fn handle_gameflow_event(
     data: &Value,
     _backend: &BackendClient,
     app_handle: &tauri::AppHandle,
