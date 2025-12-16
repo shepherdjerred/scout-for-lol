@@ -7,7 +7,7 @@ use crate::backend_client::{BackendClient, GameEvent};
 use crate::lcu::LcuConnection;
 use crate::paths;
 use futures_util::{SinkExt, StreamExt};
-use log::{debug, error, info, warn};
+use log::{debug, error, info};
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -95,9 +95,8 @@ pub async fn start_event_monitoring(
     let app_handle_for_polling = app_handle.clone();
 
     let app_handle_for_ws = app_handle.clone();
-    let backend_for_ws = backend_client.clone();
     tokio::spawn(async move {
-        if let Err(e) = run_event_loop(lcu_conn, backend_for_ws, app_handle_for_ws).await {
+        if let Err(e) = run_event_loop(lcu_conn, backend_client, app_handle_for_ws).await {
             error!("Event monitoring WebSocket failed: {}", e);
         }
     });

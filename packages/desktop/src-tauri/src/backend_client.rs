@@ -159,7 +159,7 @@ pub struct EventResponse {
 
 /// tRPC request wrapper
 #[derive(Serialize)]
-struct TrpcRequest<T: Serialize> {
+struct TrpcRequest<T> {
     json: T,
 }
 
@@ -181,8 +181,11 @@ struct TrpcData<T> {
 
 impl BackendClient {
     /// Create a new backend client
+    #[allow(clippy::expect_used)]
     pub fn new(api_token: String, backend_url: String, client_id: String) -> Self {
         Self {
+            // Using expect here is acceptable as failing to create an HTTP client
+            // is an unrecoverable initialization error
             http_client: Client::builder()
                 .timeout(std::time::Duration::from_secs(10))
                 .build()
@@ -245,6 +248,7 @@ impl BackendClient {
     }
 
     /// Send heartbeat to backend
+    #[allow(clippy::items_after_statements)]
     pub async fn heartbeat(&self, in_game: bool, game_id: Option<String>) -> Result<(), String> {
         let config = self.config.lock().await;
         let url = format!("{}/trpc/event.heartbeat", config.backend_url);
