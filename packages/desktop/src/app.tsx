@@ -3,14 +3,12 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { Sidebar } from "./components/layout/sidebar.tsx";
 import { LeagueSection } from "./components/sections/league-section.tsx";
-import { DiscordSection } from "./components/sections/discord-section.tsx";
+import { BackendSection } from "./components/sections/backend-section.tsx";
 import { MonitorSection } from "./components/sections/monitor-section.tsx";
-import { SoundPackSection } from "./components/sections/sound-pack-section.tsx";
 import { DebugPanel } from "./components/sections/debug-panel.tsx";
 import { Alert } from "./components/ui/alert.tsx";
-import type { LcuStatus, DiscordStatus, Config, LogEntry, LogPaths, Section, AvailableSoundPack } from "./types.ts";
+import type { LcuStatus, BackendStatus, Config, LogEntry, LogPaths, Section } from "./types.ts";
 import { getErrorMessage } from "./types.ts";
-import type { SoundPack } from "@scout-for-lol/data";
 
 // eslint-disable-next-line max-lines-per-function -- Main app component, refactoring tracked separately
 export default function App() {
@@ -24,22 +22,15 @@ export default function App() {
     inGame: false,
   });
 
-  const [discordStatus, setDiscordStatus] = useState<DiscordStatus>({
+  const [backendStatus, setBackendStatus] = useState<BackendStatus>({
     connected: false,
-    channelName: null,
-    voiceConnected: false,
-    voiceChannelName: null,
-    activeSoundPack: null,
+    backendUrl: null,
+    lastError: null,
   });
 
   // Form states
-  const [botToken, setBotToken] = useState("");
-  const [channelId, setChannelId] = useState("");
-  const [voiceChannelId, setVoiceChannelId] = useState("");
-  const [soundPack, setSoundPack] = useState("base");
-  const [availableSoundPacks, setAvailableSoundPacks] = useState<AvailableSoundPack[]>([
-    { id: "base", name: "Base Pack (Synth tones)", isBuiltIn: true },
-  ]);
+  const [apiToken, setApiToken] = useState("");
+  const [backendUrl, setBackendUrl] = useState("");
 
   // App states
   const [isMonitoring, setIsMonitoring] = useState(false);
@@ -59,36 +50,11 @@ export default function App() {
       const lcu = await invoke<LcuStatus>("get_lcu_status");
       setLcuStatus(lcu);
 
-      const discord = await invoke<DiscordStatus>("get_discord_status");
-      setDiscordStatus(discord);
+      const backend = await invoke<BackendStatus>("get_backend_status");
+      setBackendStatus(backend);
     } catch (err) {
       console.error("Failed to load status:", err);
     }
-  }, []);
-
-  // Load available sound packs
-  const loadAvailableSoundPacks = useCallback(async () => {
-    const packs: AvailableSoundPack[] = [
-      { id: "base", name: "Base Pack (Synth tones)", isBuiltIn: true },
-    ];
-
-    try {
-      // Load custom sound pack from storage
-      const customPack = await invoke<SoundPack | null>("load_sound_pack");
-      if (customPack) {
-        packs.push({
-          id: customPack.id,
-          name: customPack.name,
-          description: customPack.description ?? undefined,
-          isBuiltIn: false,
-        });
-        addLog("info", `Loaded custom sound pack: ${customPack.name}`);
-      }
-    } catch (err) {
-      console.error("Failed to load custom sound pack:", err);
-    }
-
-    setAvailableSoundPacks(packs);
   }, []);
 
   // Load config on mount
@@ -97,20 +63,14 @@ export default function App() {
     const loadConfig = async () => {
       try {
         const config = await invoke<Config>("load_config");
-        if (config.botToken) {
-          setBotToken(config.botToken);
+        if (config.apiToken) {
+          setApiToken(config.apiToken);
         }
-        if (config.channelId) {
-          setChannelId(config.channelId);
+        if (config.backendUrl) {
+          setBackendUrl(config.backendUrl);
         }
-        if (config.voiceChannelId) {
-          setVoiceChannelId(config.voiceChannelId);
-        }
-        if (config.soundPack) {
-          setSoundPack(config.soundPack);
-        }
-        if (config.botToken || config.channelId || config.voiceChannelId) {
-          addLog("info", "Loaded saved Discord configuration");
+        if (config.apiToken || config.backendUrl) {
+          addLog("info", "Loaded saved backend configuration");
         }
 
         // Fetch log paths for easier debugging
@@ -127,8 +87,7 @@ export default function App() {
     };
 
     void loadConfig();
-    void loadAvailableSoundPacks();
-  }, [loadAvailableSoundPacks]);
+  }, []);
 
   // Load status on mount and setup polling
   // eslint-disable-next-line custom-rules/no-use-effect -- ok for now
@@ -193,65 +152,44 @@ export default function App() {
     }
   };
 
-  const handleConfigureDiscord = async () => {
-    if (!botToken || !channelId) {
-      setError("Please provide both bot token and channel ID");
+  const handleConfigureBackend = async () => {
+    if (!apiToken || !backendUrl) {
+      setError("Please provide both API token and backend URL");
       return;
     }
 
     setError(null);
-    setLoading("Configuring Discord...");
-    addLog("info", `Configuring Discord for channel ${channelId}...`);
+    setLoading("Configuring backend...");
+    addLog("info", `Configuring backend at ${backendUrl}...`);
 
     try {
-      await invoke("configure_discord", {
-        botToken,
-        channelId,
-        voiceChannelId: voiceChannelId || null,
-        soundPack,
-        eventSounds: null,
+      await invoke("configure_backend", {
+        apiToken,
+        backendUrl,
       });
       await loadStatus();
-      addLog("info", "Discord configured successfully");
+      addLog("info", "Backend configured successfully");
     } catch (err) {
       const errorMsg = getErrorMessage(err);
       setError(errorMsg);
-      addLog("error", `Failed to configure Discord: ${errorMsg}`);
+      addLog("error", `Failed to configure backend: ${errorMsg}`);
     } finally {
       setLoading(null);
     }
   };
 
-  const handleJoinVoice = async () => {
+  const handleTestBackendConnection = async () => {
     setError(null);
-    setLoading("Joining voice channel...");
-    addLog("info", "Requesting voice connection...");
+    setLoading("Testing connection...");
+    addLog("info", "Testing backend connection...");
 
     try {
-      await invoke("join_discord_voice", { voiceChannelId: voiceChannelId || null });
-      await loadStatus();
-      addLog("info", "Voice join request sent");
+      await invoke("test_backend_connection");
+      addLog("info", "Backend connection test successful");
     } catch (err) {
       const errorMsg = getErrorMessage(err);
       setError(errorMsg);
-      addLog("error", `Failed to join voice: ${errorMsg}`);
-    } finally {
-      setLoading(null);
-    }
-  };
-
-  const handleTestSound = async () => {
-    setError(null);
-    setLoading("Playing test sound...");
-    addLog("info", "Playing test sound...");
-
-    try {
-      await invoke("play_test_sound");
-      addLog("info", "Test sound requested");
-    } catch (err) {
-      const errorMsg = getErrorMessage(err);
-      setError(errorMsg);
-      addLog("error", `Failed to play test sound: ${errorMsg}`);
+      addLog("error", `Backend connection test failed: ${errorMsg}`);
     } finally {
       setLoading(null);
     }
@@ -317,57 +255,9 @@ export default function App() {
     }
   };
 
-  const handleTestEvents = async () => {
-    setError(null);
-    setLoading("Testing event detection...");
-    addLog("info", "Testing event detection...");
-
-    try {
-      const result = await invoke<{
-        success: boolean;
-        event_count: number;
-        events_found: string[];
-        error_message: string | null;
-        raw_data_keys: string[] | null;
-      }>("test_event_detection");
-
-      if (result.success) {
-        addLog("info", `Found ${String(result.event_count)} events`);
-        if (result.events_found.length > 0) {
-          addLog("info", `Event types: ${result.events_found.join(", ")}`);
-          const killEvents = result.events_found.filter((e) => e.includes("Kill"));
-          if (killEvents.length > 0) {
-            addLog("info", `Kill events found: ${killEvents.join(", ")}`);
-          } else {
-            addLog("warning", "No kill events found in current events");
-          }
-        }
-        if (result.raw_data_keys) {
-          addLog("info", `Available data keys: ${result.raw_data_keys.join(", ")}`);
-        }
-      } else {
-        addLog("error", `Event detection failed: ${result.error_message ?? "Unknown error"}`);
-        if (result.raw_data_keys) {
-          addLog("info", `Available data keys: ${result.raw_data_keys.join(", ")}`);
-        }
-      }
-    } catch (err) {
-      const errorMsg = getErrorMessage(err);
-      setError(errorMsg);
-      addLog("error", `Failed to test events: ${errorMsg}`);
-    } finally {
-      setLoading(null);
-    }
-  };
-
   const handleClearLogs = () => {
     setLogs([]);
   };
-
-  // Stable callback for sound pack save to prevent adapter recreation
-  const handleSoundPackSave = useCallback(() => {
-    void loadAvailableSoundPacks();
-  }, [loadAvailableSoundPacks]);
 
   // Render active section content
   const renderSection = () => {
@@ -381,23 +271,17 @@ export default function App() {
             onDisconnect={() => void handleDisconnectLcu()}
           />
         );
-      case "discord":
+      case "backend":
         return (
-          <DiscordSection
-            discordStatus={discordStatus}
+          <BackendSection
+            backendStatus={backendStatus}
             loading={loading}
-            botToken={botToken}
-            channelId={channelId}
-            voiceChannelId={voiceChannelId}
-            soundPack={soundPack}
-            availableSoundPacks={availableSoundPacks}
-            onBotTokenChange={setBotToken}
-            onChannelIdChange={setChannelId}
-            onVoiceChannelIdChange={setVoiceChannelId}
-            onSoundPackChange={setSoundPack}
-            onConfigure={() => void handleConfigureDiscord()}
-            onJoinVoice={() => void handleJoinVoice()}
-            onTestSound={() => void handleTestSound()}
+            apiToken={apiToken}
+            backendUrl={backendUrl}
+            onApiTokenChange={setApiToken}
+            onBackendUrlChange={setBackendUrl}
+            onConfigure={() => void handleConfigureBackend()}
+            onTestConnection={() => void handleTestBackendConnection()}
           />
         );
       case "monitor":
@@ -406,15 +290,12 @@ export default function App() {
             isMonitoring={isMonitoring}
             loading={loading}
             lcuConnected={lcuStatus.connected}
-            discordConnected={discordStatus.connected}
+            backendConnected={backendStatus.connected}
             inGame={lcuStatus.inGame}
             onStart={() => void handleStartMonitoring()}
             onStop={() => void handleStopMonitoring()}
-            onTest={() => void handleTestEvents()}
           />
         );
-      case "sounds":
-        return <SoundPackSection onSave={handleSoundPackSave} />;
     }
   };
 
@@ -423,8 +304,7 @@ export default function App() {
       {/* Sidebar */}
       <Sidebar
         lcuConnected={lcuStatus.connected}
-        discordConnected={discordStatus.connected}
-        voiceConnected={discordStatus.voiceConnected}
+        backendConnected={backendStatus.connected}
         isMonitoring={isMonitoring}
         activeSection={activeSection}
         onSectionChange={setActiveSection}
@@ -461,7 +341,7 @@ export default function App() {
       {showDebug && (
         <DebugPanel
           lcuStatus={lcuStatus}
-          discordStatus={discordStatus}
+          backendStatus={backendStatus}
           isMonitoring={isMonitoring}
           logs={logs}
           logPaths={logPaths}

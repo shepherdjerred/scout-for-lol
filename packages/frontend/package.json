@@ -13,6 +13,7 @@
     "@scout-for-lol/data": "workspace:*",
     "@scout-for-lol/report": "workspace:*",
     "@tailwindcss/postcss": "^4.1.11",
+    "@trpc/client": "^11.8.0",
     "astro": "^5.0.9",
     "astro-icon": "^1.1.1",
     "class-variance-authority": "^0.7.1",

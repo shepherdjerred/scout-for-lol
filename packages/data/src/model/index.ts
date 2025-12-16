@@ -17,3 +17,4 @@ export * from "./roster.ts";
 export * from "./state.ts";
 export * from "./team.ts";
 export * from "./tier.ts";
+export * from "./voice-notification.ts";
