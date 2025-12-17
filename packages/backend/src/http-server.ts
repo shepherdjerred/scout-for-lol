@@ -78,7 +78,7 @@ const server = Bun.serve({
           router: appRouter,
           createContext: () => createContext(request),
           onError({ error, path }) {
-            logger.error(`tRPC error on ${path}:`, error);
+            logger.error(`tRPC error on ${path ?? "unknown"}:`, error);
             if (error.code !== "UNAUTHORIZED" && error.code !== "NOT_FOUND") {
               Sentry.captureException(error, {
                 tags: { source: "trpc", path },

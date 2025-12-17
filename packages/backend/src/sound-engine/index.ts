@@ -25,7 +25,7 @@ const logger = createLogger("sound-engine");
 /**
  * Context for evaluating sound rules
  */
-export interface EventContext {
+export type EventContext = {
   /** The type of event */
   eventType: EventType;
   /** Killer's summoner name */
@@ -54,19 +54,19 @@ export interface EventContext {
   gameResult?: "victory" | "defeat" | undefined;
   /** Local player's summoner name */
   localPlayerName?: string | undefined;
-}
+};
 
 /**
  * Result of sound selection
  */
-export interface SoundSelection {
+export type SoundSelection = {
   /** The selected sound entry */
   sound: SoundEntry;
   /** Effective volume after master volume applied */
   volume: number;
   /** Name of the rule that matched (if any) */
   ruleName?: string;
-}
+};
 
 /**
  * Select a sound for a given event context
@@ -79,8 +79,8 @@ export function selectSoundForEvent(pack: SoundPack, context: EventContext): Sou
   // Get enabled rules sorted by priority (highest first)
   const sortedRules = pipe(
     pack.rules,
-    filter((rule): rule is SoundRule => rule.enabled),
-    sortBy((rule) => -rule.priority)
+    filter((rule) => rule.enabled),
+    sortBy((rule) => -rule.priority),
   );
 
   // Try each rule in priority order
@@ -89,7 +89,7 @@ export function selectSoundForEvent(pack: SoundPack, context: EventContext): Sou
       const sound = selectFromPool(rule.sounds);
       if (sound) {
         const volume = sound.volume * pack.settings.masterVolume;
-        logger.debug(`Rule '${rule.name}' matched, selected sound '${sound.id}' with volume ${volume}`);
+        logger.debug(`Rule '${rule.name}' matched, selected sound '${sound.id}' with volume ${String(volume)}`);
         return {
           sound,
           volume,
@@ -105,7 +105,7 @@ export function selectSoundForEvent(pack: SoundPack, context: EventContext): Sou
     const sound = selectFromPool(defaultPool);
     if (sound) {
       const volume = sound.volume * pack.settings.masterVolume;
-      logger.debug(`Using default sound '${sound.id}' for ${context.eventType} with volume ${volume}`);
+      logger.debug(`Using default sound '${sound.id}' for ${context.eventType} with volume ${String(volume)}`);
       return {
         sound,
         volume,
