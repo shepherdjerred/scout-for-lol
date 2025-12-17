@@ -59,8 +59,11 @@ function parseSoundPackFromDb(dbPack: {
     name: dbPack.name,
     version: dbPack.version,
     description: dbPack.description,
+    // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns unknown, type assertion needed for parsed database JSON
     settings: JSON.parse(dbPack.settings) as SoundPackSettings,
+    // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns unknown, type assertion needed for parsed database JSON
     defaults: JSON.parse(dbPack.defaults) as DefaultSounds,
+    // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns unknown, type assertion needed for parsed database JSON
     rules: JSON.parse(dbPack.rules) as SoundRule[],
   };
 }
@@ -93,6 +96,7 @@ export const soundPackRouter = router({
    * Get a single sound pack by ID
    */
   get: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input, ctx }) => {
+    // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
     const soundPackId = input.id as SoundPackId;
     const pack = await prisma.soundPack.findFirst({
       where: {
@@ -159,6 +163,7 @@ export const soundPackRouter = router({
       })
     )
     .mutation(async ({ input, ctx }) => {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
       const soundPackId = input.id as SoundPackId;
       const existing = await prisma.soundPack.findFirst({
         where: {
@@ -176,13 +181,27 @@ export const soundPackRouter = router({
 
       const { name, version, description, isPublic, settings, defaults, rules } = input.data;
       const updateData: Record<string, unknown> = {};
-      if (name !== undefined) updateData["name"] = name;
-      if (version !== undefined) updateData["version"] = version;
-      if (description !== undefined) updateData["description"] = description;
-      if (isPublic !== undefined) updateData["isPublic"] = isPublic;
-      if (settings !== undefined) updateData["settings"] = JSON.stringify(settings);
-      if (defaults !== undefined) updateData["defaults"] = JSON.stringify(defaults);
-      if (rules !== undefined) updateData["rules"] = JSON.stringify(rules);
+      if (name !== undefined) {
+        updateData["name"] = name;
+      }
+      if (version !== undefined) {
+        updateData["version"] = version;
+      }
+      if (description !== undefined) {
+        updateData["description"] = description;
+      }
+      if (isPublic !== undefined) {
+        updateData["isPublic"] = isPublic;
+      }
+      if (settings !== undefined) {
+        updateData["settings"] = JSON.stringify(settings);
+      }
+      if (defaults !== undefined) {
+        updateData["defaults"] = JSON.stringify(defaults);
+      }
+      if (rules !== undefined) {
+        updateData["rules"] = JSON.stringify(rules);
+      }
 
       const pack = await prisma.soundPack.update({
         where: { id: soundPackId },
@@ -198,6 +217,7 @@ export const soundPackRouter = router({
    * Delete a sound pack
    */
   delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input, ctx }) => {
+    // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
     const soundPackId = input.id as SoundPackId;
     const existing = await prisma.soundPack.findFirst({
       where: {
@@ -248,6 +268,7 @@ export const soundPackRouter = router({
       })
     )
     .query(async ({ input, ctx }) => {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
       const soundPackId = input.soundPackId as SoundPackId;
       const pack = await prisma.soundPack.findFirst({
         where: {
@@ -316,6 +337,7 @@ export const soundPackRouter = router({
    * Export a sound pack as JSON
    */
   export: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input, ctx }) => {
+    // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
     const soundPackId = input.id as SoundPackId;
     const pack = await prisma.soundPack.findFirst({
       where: {

@@ -200,8 +200,11 @@ function parseSoundPack(dbPack: {
     id: dbPack.id.toString(),
     name: dbPack.name,
     version: "1.0.0",
+    // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns unknown, type assertion needed for parsed database JSON
     settings: JSON.parse(dbPack.settings) as SoundPackSettings,
+    // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns unknown, type assertion needed for parsed database JSON
     defaults: JSON.parse(dbPack.defaults) as DefaultSounds,
+    // eslint-disable-next-line custom-rules/no-type-assertions -- JSON.parse returns unknown, type assertion needed for parsed database JSON
     rules: JSON.parse(dbPack.rules) as SoundRule[],
   };
 }
@@ -294,7 +297,7 @@ export const eventRouter = router({
   heartbeat: desktopClientProcedure
     .input(
       z.object({
-        clientId: z.string().uuid(),
+        clientId: z.uuid(),
         inGame: z.boolean(),
         gameId: z.string().optional(),
       })
@@ -325,7 +328,7 @@ export const eventRouter = router({
   configure: desktopClientProcedure
     .input(
       z.object({
-        clientId: z.string().uuid(),
+        clientId: z.uuid(),
         voiceChannelId: z.string().optional(),
         guildId: z.string().optional(),
         soundPackId: z.number().optional(),
@@ -334,6 +337,7 @@ export const eventRouter = router({
     .mutation(async ({ input, ctx }) => {
       // Verify sound pack access if provided
       if (input.soundPackId) {
+        // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after validation
         const soundPackId = input.soundPackId as SoundPackId;
         const pack = await prisma.soundPack.findFirst({
           where: {
@@ -382,7 +386,7 @@ export const eventRouter = router({
   /**
    * Get desktop client configuration
    */
-  getConfig: desktopClientProcedure.input(z.object({ clientId: z.string().uuid() })).query(async ({ input, ctx }) => {
+  getConfig: desktopClientProcedure.input(z.object({ clientId: z.uuid() })).query(async ({ input, ctx }) => {
     const client = await prisma.desktopClient.findFirst({
       where: {
         clientId: input.clientId,

@@ -55,11 +55,17 @@ const hasApiToken = middleware(async ({ ctx, next }) => {
       message: "Valid API token required",
     });
   }
+  if (!ctx.user) {
+    throw new TRPCError({
+      code: "UNAUTHORIZED",
+      message: "User not found",
+    });
+  }
   return next({
     ctx: {
       ...ctx,
       apiToken: ctx.apiToken,
-      user: ctx.user!,
+      user: ctx.user,
     },
   });
 });

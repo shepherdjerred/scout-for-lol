@@ -140,13 +140,13 @@ export const userRouter = router({
    * Get available Discord voice channels for configuration
    * This requires the bot to be in the guild
    */
-  getVoiceChannels: protectedProcedure.input(z.object({ guildId: z.string() })).query(async ({ input }) => {
+  getVoiceChannels: protectedProcedure.input(z.object({ guildId: z.string() })).query(({ input }) => {
     // This would query Discord API for voice channels
     // For now, return empty - will be implemented with Discord client
     // The desktop app will need to provide guild ID from Discord OAuth
     return {
       guildId: input.guildId,
-      channels: [] as Array<{ id: string; name: string }>,
+      channels: [] as { id: string; name: string }[],
     };
   }),
 });
