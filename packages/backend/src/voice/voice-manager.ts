@@ -74,7 +74,9 @@ export class VoiceManager {
       throw new Error(`Channel ${channelId} is not a voice channel`);
     }
 
-    const voiceChannel = channel as VoiceChannel;
+    // channel.isVoiceBased() ensures this is a voice channel
+    // eslint-disable-next-line custom-rules/no-type-assertions -- Discord.js type narrowing doesn't properly narrow isVoiceBased()
+    const voiceChannel = channel as unknown as VoiceChannel;
 
     // Disconnect existing connection if any
     const existingConnection = getVoiceConnection(guildId);
@@ -97,27 +99,29 @@ export class VoiceManager {
       await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
     } catch (error) {
       connection.destroy();
-      throw new Error(`Failed to connect to voice channel: ${error}`);
+      throw new Error(`Failed to connect to voice channel: ${String(error)}`);
     }
 
     this.connections.set(guildId, connection);
     logger.info(`Joined voice channel ${voiceChannel.name} in guild ${guildId}`);
 
     // Handle disconnections
-    connection.on(VoiceConnectionStatus.Disconnected, async () => {
-      try {
-        // Try to reconnect
-        await Promise.race([
-          entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
-          entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
-        ]);
-      } catch {
-        // Couldn't reconnect, clean up
-        connection.destroy();
-        this.connections.delete(guildId);
-        this.players.delete(guildId);
-        logger.warn(`Voice connection lost for guild ${guildId}`);
-      }
+    connection.on(VoiceConnectionStatus.Disconnected, () => {
+      void (async () => {
+        try {
+          // Try to reconnect
+          await Promise.race([
+            entersState(connection, VoiceConnectionStatus.Signalling, 5_000),
+            entersState(connection, VoiceConnectionStatus.Connecting, 5_000),
+          ]);
+        } catch {
+          // Couldn't reconnect, clean up
+          connection.destroy();
+          this.connections.delete(guildId);
+          this.players.delete(guildId);
+          logger.warn(`Voice connection lost for guild ${guildId}`);
+        }
+      })();
     });
 
     return connection;
@@ -126,7 +130,7 @@ export class VoiceManager {
   /**
    * Play a sound in a guild's voice channel
    */
-  async playSound(guildId: string, source: SoundSource, volume: number = 1.0): Promise<void> {
+  async playSound(guildId: string, source: SoundSource, volume = 1.0): Promise<void> {
     const connection = this.connections.get(guildId);
     if (!connection) {
       throw new Error(`No voice connection for guild ${guildId}`);
@@ -156,6 +160,7 @@ export class VoiceManager {
     player.play(resource);
 
     // Wait for completion or error
+    const audioPlayer = player;
     return new Promise((resolve, reject) => {
       const onIdle = () => {
         cleanup();
@@ -169,12 +174,12 @@ export class VoiceManager {
       };
 
       const cleanup = () => {
-        player!.off(AudioPlayerStatus.Idle, onIdle);
-        player!.off("error", onError);
+        audioPlayer.off(AudioPlayerStatus.Idle, onIdle);
+        audioPlayer.off("error", onError);
       };
 
-      player!.once(AudioPlayerStatus.Idle, onIdle);
-      player!.once("error", onError);
+      audioPlayer.once(AudioPlayerStatus.Idle, onIdle);
+      audioPlayer.once("error", onError);
 
       // Timeout after 60 seconds
       setTimeout(() => {
@@ -187,7 +192,7 @@ export class VoiceManager {
   /**
    * Leave a voice channel
    */
-  async leaveChannel(guildId: string): Promise<void> {
+  leaveChannel(guildId: string): void {
     const connection = this.connections.get(guildId);
     if (connection) {
       connection.destroy();
@@ -200,9 +205,9 @@ export class VoiceManager {
   /**
    * Leave all voice channels
    */
-  async leaveAll(): Promise<void> {
+  leaveAll(): void {
     for (const guildId of this.connections.keys()) {
-      await this.leaveChannel(guildId);
+      this.leaveChannel(guildId);
     }
   }
 

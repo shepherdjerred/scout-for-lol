@@ -6,10 +6,6 @@
 
 import { Readable } from "stream";
 import { S3Client, GetObjectCommand, HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import { spawn } from "child_process";
-import { createReadStream, existsSync, mkdirSync } from "fs";
-import { join } from "path";
-import crypto from "crypto";
 import type { SoundSource } from "@scout-for-lol/data";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
@@ -23,32 +19,34 @@ const downloadingUrls = new Set<string>();
  * Get an audio stream from a sound source
  */
 export async function getAudioStream(source: SoundSource): Promise<Readable> {
-  if (source.type === "file") {
-    // For S3 URLs stored as "file" type with s3:// prefix
-    if (source.path.startsWith("s3://")) {
-      return getS3AudioStream(source.path);
+  switch (source.type) {
+    case "file": {
+      // For S3 URLs stored as "file" type with s3:// prefix
+      if (source.path.startsWith("s3://")) {
+        return getS3AudioStream(source.path);
+      }
+      // Local file (shouldn't happen in production backend)
+      const file = Bun.file(source.path);
+      if (await file.exists()) {
+        // eslint-disable-next-line custom-rules/no-type-assertions -- Bun stream to Node stream conversion requires type coercion
+        return Readable.fromWeb(file.stream() as unknown as Parameters<typeof Readable.fromWeb>[0]);
+      }
+      throw new Error(`File not found: ${source.path}`);
     }
-    // Local file (shouldn't happen in production backend)
-    if (existsSync(source.path)) {
-      return createReadStream(source.path);
+    case "url": {
+      // Check if it's a YouTube URL
+      if (isYouTubeUrl(source.url)) {
+        return getCachedYouTubeAudio(source.url);
+      }
+      // Direct URL - fetch and stream
+      const response = await fetch(source.url);
+      if (!response.ok || !response.body) {
+        throw new Error(`Failed to fetch audio from ${source.url}`);
+      }
+      // eslint-disable-next-line custom-rules/no-type-assertions -- Web stream to Node stream conversion requires type coercion
+      return Readable.fromWeb(response.body as unknown as Parameters<typeof Readable.fromWeb>[0]);
     }
-    throw new Error(`File not found: ${source.path}`);
   }
-
-  if (source.type === "url") {
-    // Check if it's a YouTube URL
-    if (isYouTubeUrl(source.url)) {
-      return getCachedYouTubeAudio(source.url);
-    }
-    // Direct URL - fetch and stream
-    const response = await fetch(source.url);
-    if (!response.ok || !response.body) {
-      throw new Error(`Failed to fetch audio from ${source.url}`);
-    }
-    return Readable.fromWeb(response.body as never);
-  }
-
-  throw new Error(`Unknown sound source type`);
 }
 
 /**
@@ -63,7 +61,8 @@ function isYouTubeUrl(url: string): boolean {
  */
 async function getS3AudioStream(s3Url: string): Promise<Readable> {
   // Parse s3://bucket/key format
-  const match = s3Url.match(/^s3:\/\/([^/]+)\/(.+)$/);
+  const s3UrlPattern = /^s3:\/\/([^/]+)\/(.+)$/;
+  const match = s3UrlPattern.exec(s3Url);
   if (!match) {
     throw new Error(`Invalid S3 URL: ${s3Url}`);
   }
@@ -77,14 +76,17 @@ async function getS3AudioStream(s3Url: string): Promise<Readable> {
     throw new Error(`No body in S3 response for ${s3Url}`);
   }
 
-  return response.Body as Readable;
+  // eslint-disable-next-line custom-rules/no-type-assertions -- AWS SDK returns SdkStream which is compatible with Readable
+  return response.Body as unknown as Readable;
 }
 
 /**
  * Generate S3 key from YouTube URL
  */
 function urlToS3Key(url: string): string {
-  const hash = crypto.createHash("sha256").update(url).digest("hex");
+  const hasher = new Bun.CryptoHasher("sha256");
+  hasher.update(url);
+  const hash = hasher.digest("hex");
   return `youtube-cache/${hash.substring(0, 8)}/${hash}.mp3`;
 }
 
@@ -125,7 +127,8 @@ async function getFromS3Cache(key: string): Promise<Readable> {
       Key: key,
     })
   );
-  return response.Body as Readable;
+  // eslint-disable-next-line custom-rules/no-type-assertions -- AWS SDK returns SdkStream which is compatible with Readable
+  return response.Body as unknown as Readable;
 }
 
 /**
@@ -164,46 +167,44 @@ async function downloadYouTubeAudio(url: string, s3Key: string): Promise<void> {
   try {
     // Use yt-dlp to download audio
     const tempDir = "/tmp/yt-cache";
-    if (!existsSync(tempDir)) mkdirSync(tempDir, { recursive: true });
+    const tempDirFile = Bun.file(tempDir);
+    if (!(await tempDirFile.exists())) {
+      await Bun.write(`${tempDir}/.keep`, "");
+    }
 
-    const tempFile = join(tempDir, `${crypto.randomUUID()}.mp3`);
+    const tempFile = `${tempDir}/${globalThis.crypto.randomUUID()}.mp3`;
 
-    await new Promise<void>((resolve, reject) => {
-      const proc = spawn("yt-dlp", [
-        "-x",
-        "--audio-format",
-        "mp3",
-        "--audio-quality",
-        "0",
-        "-o",
-        tempFile.replace(".mp3", ".%(ext)s"),
-        "--no-playlist",
-        "--max-filesize",
-        "10M",
-        url,
-      ]);
+    const proc = Bun.spawn([
+      "yt-dlp",
+      "-x",
+      "--audio-format",
+      "mp3",
+      "--audio-quality",
+      "0",
+      "-o",
+      tempFile.replace(".mp3", ".%(ext)s"),
+      "--no-playlist",
+      "--max-filesize",
+      "10M",
+      url,
+    ]);
 
-      let stderr = "";
-      proc.stderr?.on("data", (data) => {
-        stderr += data.toString();
-      });
-
-      proc.on("close", (code) => {
-        if (code === 0) resolve();
-        else reject(new Error(`yt-dlp exited with code ${code}: ${stderr}`));
-      });
-      proc.on("error", reject);
-    });
+    const exitCode = await proc.exited;
+    if (exitCode !== 0) {
+      const stderr = await new Response(proc.stderr).text();
+      throw new Error(`yt-dlp exited with code ${String(exitCode)}: ${stderr}`);
+    }
 
     // Upload to S3
     if (configuration.s3BucketName) {
-      const fileStream = createReadStream(tempFile);
+      const file = Bun.file(tempFile);
+      const fileBuffer = await file.arrayBuffer();
       const s3Client = new S3Client({});
       await s3Client.send(
         new PutObjectCommand({
           Bucket: configuration.s3BucketName,
           Key: s3Key,
-          Body: fileStream,
+          Body: Buffer.from(fileBuffer),
           ContentType: "audio/mpeg",
         })
       );
@@ -230,9 +231,13 @@ export async function cacheYouTubeUrl(url: string): Promise<{ cached: boolean; k
   }
 
   // Start download in background
-  downloadYouTubeAudio(url, s3Key).catch((error) => {
-    logger.error(`Failed to cache YouTube URL: ${url}`, error);
-  });
+  void (async () => {
+    try {
+      await downloadYouTubeAudio(url, s3Key);
+    } catch (error) {
+      logger.error(`Failed to cache YouTube URL: ${url}`, error);
+    }
+  })();
 
   return { cached: false, key: s3Key };
 }
