@@ -18,26 +18,26 @@ const logger = createLogger("auth-router");
 const DISCORD_API_BASE = "https://discord.com/api/v10";
 
 /**
- * Discord user response shape
+ * Discord user response schema
  */
-interface DiscordUser {
-  id: string;
-  username: string;
-  discriminator: string;
-  avatar: string | null;
-  email?: string;
-}
+const DiscordUserSchema = z.object({
+  id: z.string(),
+  username: z.string(),
+  discriminator: z.string(),
+  avatar: z.string().nullable(),
+  email: z.string().optional(),
+});
 
 /**
- * Discord OAuth token response shape
+ * Discord OAuth token response schema
  */
-interface DiscordTokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-  refresh_token: string;
-  scope: string;
-}
+const DiscordTokenResponseSchema = z.object({
+  access_token: z.string(),
+  token_type: z.string(),
+  expires_in: z.number(),
+  refresh_token: z.string(),
+  scope: z.string(),
+});
 
 export const authRouter = router({
   /**
@@ -46,7 +46,7 @@ export const authRouter = router({
   getOAuthUrl: publicProcedure
     .input(
       z.object({
-        redirectUri: z.string().url(),
+        redirectUri: z.url(),
         state: z.string().optional(),
       })
     )
@@ -79,7 +79,7 @@ export const authRouter = router({
     .input(
       z.object({
         code: z.string(),
-        redirectUri: z.string().url(),
+        redirectUri: z.url(),
       })
     )
     .mutation(async ({ input }) => {
@@ -107,7 +107,16 @@ export const authRouter = router({
         });
       }
 
-      const tokens = (await tokenResponse.json()) as DiscordTokenResponse;
+      const tokensJson: unknown = await tokenResponse.json();
+      const tokensResult = DiscordTokenResponseSchema.safeParse(tokensJson);
+      if (!tokensResult.success) {
+        logger.error("Invalid Discord token response", { error: tokensResult.error });
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Invalid token response from Discord",
+        });
+      }
+      const tokens = tokensResult.data;
 
       // Get user info from Discord
       const userResponse = await fetch(`${DISCORD_API_BASE}/users/@me`, {
@@ -124,11 +133,22 @@ export const authRouter = router({
         });
       }
 
-      const discordUser = (await userResponse.json()) as DiscordUser;
+      const userJson: unknown = await userResponse.json();
+      const userResult = DiscordUserSchema.safeParse(userJson);
+      if (!userResult.success) {
+        logger.error("Invalid Discord user response", { error: userResult.error });
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Invalid user response from Discord",
+        });
+      }
+      const discordUser = userResult.data;
 
       // Upsert user in database
+      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after Zod validation
+      const discordId = discordUser.id as DiscordAccountId;
       const user = await prisma.user.upsert({
-        where: { discordId: discordUser.id as DiscordAccountId },
+        where: { discordId },
         update: {
           discordUsername: discordUser.username,
           discordAvatar: discordUser.avatar,
@@ -137,7 +157,7 @@ export const authRouter = router({
           tokenExpiresAt: new Date(Date.now() + tokens.expires_in * 1000),
         },
         create: {
-          discordId: discordUser.id as DiscordAccountId,
+          discordId,
           discordUsername: discordUser.username,
           discordAvatar: discordUser.avatar,
           discordAccessToken: tokens.access_token,
@@ -240,6 +260,7 @@ export const authRouter = router({
   revokeApiToken: protectedProcedure
     .input(z.object({ tokenId: z.number() }))
     .mutation(async ({ input, ctx }) => {
+      // eslint-disable-next-line custom-rules/no-type-assertions -- Branded type requires assertion after Zod validation
       const tokenId = input.tokenId as ApiTokenId;
       const token = await prisma.apiToken.findFirst({
         where: {
@@ -268,7 +289,7 @@ export const authRouter = router({
   /**
    * Get current user info
    */
-  me: protectedProcedure.query(async ({ ctx }) => {
+  me: protectedProcedure.query(({ ctx }) => {
     return {
       discordId: ctx.user.discordId,
       username: ctx.user.discordUsername,

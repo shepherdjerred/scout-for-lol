@@ -6,25 +6,26 @@
 
 import { prisma } from "@scout-for-lol/backend/database/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import crypto from "crypto";
 import type { ApiToken, User } from "@scout-for-lol/backend/generated/prisma/client/index.js";
 
 const logger = createLogger("trpc-context");
 
-export interface Context {
+export type Context = {
   /** The authenticated user (from session or API token) */
   user: User | null;
   /** The API token used for authentication (if using token auth) */
   apiToken: ApiToken | null;
   /** Request ID for tracing */
   requestId: string;
-}
+};
 
 /**
  * Hash a token for comparison with stored hash
  */
 function hashToken(token: string): string {
-  return crypto.createHash("sha256").update(token).digest("hex");
+  const hasher = new Bun.CryptoHasher("sha256");
+  hasher.update(token);
+  return hasher.digest("hex");
 }
 
 /**
@@ -41,7 +42,7 @@ function extractBearerToken(authHeader: string | null): string | null {
  * Create context from request
  */
 export async function createContext(request: Request): Promise<Context> {
-  const requestId = crypto.randomUUID();
+  const requestId = globalThis.crypto.randomUUID();
 
   const authHeader = request.headers.get("Authorization");
   const bearerToken = extractBearerToken(authHeader);
@@ -90,7 +91,11 @@ export async function createContext(request: Request): Promise<Context> {
  * Generate a new API token (returns unhashed token - show only once!)
  */
 export function generateApiToken(): { token: string; hash: string } {
-  const token = crypto.randomBytes(32).toString("hex");
+  const bytes = new Uint8Array(32);
+  globalThis.crypto.getRandomValues(bytes);
+  const token = Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
   const hash = hashToken(token);
   return { token, hash };
 }

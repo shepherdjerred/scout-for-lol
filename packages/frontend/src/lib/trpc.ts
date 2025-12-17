@@ -7,7 +7,9 @@
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import type { AppRouter } from "@scout-for-lol/backend/trpc/router/index.ts";
 
-const BACKEND_URL = import.meta.env["PUBLIC_BACKEND_URL"] ?? "http://localhost:3000";
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Astro's import.meta.env returns any for custom env vars
+const envBackendUrl: string | undefined = import.meta.env["PUBLIC_BACKEND_URL"];
+const BACKEND_URL: string = envBackendUrl ?? "http://localhost:3000";
 
 /**
  * Create a tRPC client with optional auth token
@@ -42,7 +44,9 @@ export function getApiClient() {
  * Get the stored session token
  */
 export function getSessionToken(): string | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined") {
+    return null;
+  }
   return localStorage.getItem("scout_session_token");
 }
 
@@ -50,7 +54,9 @@ export function getSessionToken(): string | null {
  * Store a session token
  */
 export function setSessionToken(token: string): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
   localStorage.setItem("scout_session_token", token);
 }
 
@@ -58,7 +64,9 @@ export function setSessionToken(token: string): void {
  * Clear the stored session token
  */
 export function clearSessionToken(): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
   localStorage.removeItem("scout_session_token");
 }
 

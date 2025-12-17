@@ -144,9 +144,10 @@ export const userRouter = router({
     // This would query Discord API for voice channels
     // For now, return empty - will be implemented with Discord client
     // The desktop app will need to provide guild ID from Discord OAuth
+    const channels: { id: string; name: string }[] = [];
     return {
       guildId: input.guildId,
-      channels: [] as { id: string; name: string }[],
+      channels,
     };
   }),
 });

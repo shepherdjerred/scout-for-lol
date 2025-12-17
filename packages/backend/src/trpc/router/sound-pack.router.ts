@@ -312,7 +312,7 @@ export const soundPackRouter = router({
         where: { userId: ctx.user.discordId, name },
       })
     ) {
-      name = `${input.name} (${suffix++})`;
+      name = `${input.name} (${String(suffix++)})`;
     }
 
     const pack = await prisma.soundPack.create({
