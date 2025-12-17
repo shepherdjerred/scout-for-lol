@@ -10,7 +10,6 @@ import { Alert } from "./components/ui/alert.tsx";
 import type { LcuStatus, BackendStatus, Config, LogEntry, LogPaths, Section } from "./types.ts";
 import { getErrorMessage } from "./types.ts";
 
-// eslint-disable-next-line max-lines-per-function -- Main app component, refactoring tracked separately
 export default function App() {
   // Navigation state
   const [activeSection, setActiveSection] = useState<Section>("league");

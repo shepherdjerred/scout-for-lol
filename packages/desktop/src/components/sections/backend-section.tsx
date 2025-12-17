@@ -1,8 +1,19 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../ui/card.tsx";
-import { Button } from "../ui/button.tsx";
-import { Input } from "../ui/input.tsx";
-import { Badge } from "../ui/badge.tsx";
-import type { BackendStatus } from "../../types.ts";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@scout-for-lol/desktop/components/ui/card.tsx";
+import { Button } from "@scout-for-lol/desktop/components/ui/button.tsx";
+import { Input } from "@scout-for-lol/desktop/components/ui/input.tsx";
+import { Badge } from "@scout-for-lol/desktop/components/ui/badge.tsx";
+
+type BackendStatus = {
+  connected: boolean;
+  backendUrl: string | null;
+  lastError: string | null;
+};
 
 type BackendSectionProps = {
   backendStatus: BackendStatus;
@@ -100,7 +111,11 @@ export function BackendSection({
             <Button onClick={onConfigure} disabled={loading !== null || !apiToken || !backendUrl}>
               {loading === "Configuring backend..." ? "Configuring..." : "Save Configuration"}
             </Button>
-            <Button variant="secondary" onClick={onTestConnection} disabled={loading !== null || !backendStatus.connected}>
+            <Button
+              variant="secondary"
+              onClick={onTestConnection}
+              disabled={loading !== null || !backendStatus.connected}
+            >
               {loading === "Testing connection..." ? "Testing..." : "Test Connection"}
             </Button>
           </div>
