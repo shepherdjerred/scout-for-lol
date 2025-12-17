@@ -9,7 +9,7 @@ import {
   updateLastCheckedAt,
 } from "@scout-for-lol/backend/database/index.ts";
 import { MatchIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
-import { send } from "@scout-for-lol/backend/league/discord/channel.ts";
+import { send, ChannelSendError } from "@scout-for-lol/backend/league/discord/channel.ts";
 import {
   shouldCheckPlayer,
   calculatePollingInterval,
@@ -114,6 +114,11 @@ async function processMatch(matchData: RawMatch, trackedPlayers: PlayerConfigEnt
         await send(message, channel);
         logger.info(`[processMatch] ✅ Sent notification to channel ${channel}`);
       } catch (error) {
+        if (error instanceof ChannelSendError && error.isPermissionError) {
+          logger.warn(`[processMatch] ⚠️  Permission error sending to channel ${channel}: ${error.message}`);
+          continue;
+        }
+
         logger.error(`[processMatch] ❌ Failed to send notification to channel ${channel}:`, error);
         Sentry.captureException(error, {
           tags: {
