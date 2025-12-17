@@ -35,6 +35,7 @@ export const RawInfoSchema = z
     gameEndTimestamp: z.number(),
     gameId: z.number(),
     gameMode: z.string(),
+    gameModeMutators: z.array(z.string()).optional(),
     gameName: z.string(),
     gameStartTimestamp: z.number(),
     gameType: z.string(),
