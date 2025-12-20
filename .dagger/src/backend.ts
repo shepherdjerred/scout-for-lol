@@ -191,10 +191,12 @@ type PublishBackendImageWithContainerOptions = {
   image: Container;
   version: string;
   gitSha: string;
-  registryAuth?: {
-    username: string;
-    password: Secret;
-  };
+  registryAuth?:
+    | {
+        username: string;
+        password: Secret;
+      }
+    | undefined;
 };
 
 /**
