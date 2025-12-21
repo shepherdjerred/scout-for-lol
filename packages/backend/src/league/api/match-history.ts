@@ -49,14 +49,18 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
   } catch (e) {
     const result = z.object({ status: z.number() }).safeParse(e);
     if (result.success) {
-      if (result.data.status === 404) {
+      const status = result.data.status;
+      if (status === 404) {
         logger.info(`ℹ️  Player ${playerAlias} has no match history (404)`);
         return undefined;
       }
-      logger.error(`❌ HTTP Error ${result.data.status.toString()} for ${playerAlias}`);
-      Sentry.captureException(e, {
-        tags: { source: "match-history-api", playerAlias, httpStatus: result.data.status.toString() },
-      });
+      logger.error(`❌ HTTP Error ${status.toString()} for ${playerAlias}`);
+      // Skip Sentry for 5xx errors - transient upstream issues we can't fix
+      if (status < 500 || status >= 600) {
+        Sentry.captureException(e, {
+          tags: { source: "match-history-api", playerAlias, httpStatus: status.toString() },
+        });
+      }
     } else {
       logger.error(`❌ Error fetching match history for ${playerAlias}:`, e);
       Sentry.captureException(e, {

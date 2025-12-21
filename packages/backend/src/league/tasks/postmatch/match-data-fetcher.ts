@@ -40,12 +40,16 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
   } catch (e) {
     const result = z.object({ status: z.number() }).safeParse(e);
     if (result.success) {
-      if (result.data.status === 404) {
+      const status = result.data.status;
+      if (status === 404) {
         logger.info(`[fetchMatchData] ℹ️  Match ${matchId} not found (404) - may still be processing`);
         return undefined;
       }
-      logger.error(`[fetchMatchData] ❌ HTTP Error ${result.data.status.toString()} for match ${matchId}`);
-      captureError(e, "match-data-fetch", matchId, { httpStatus: result.data.status.toString() });
+      logger.error(`[fetchMatchData] ❌ HTTP Error ${status.toString()} for match ${matchId}`);
+      // Skip Sentry for 5xx errors - transient upstream issues we can't fix
+      if (status < 500 || status >= 600) {
+        captureError(e, "match-data-fetch", matchId, { httpStatus: status.toString() });
+      }
     } else {
       logger.error(`[fetchMatchData] ❌ Error fetching match ${matchId}:`, e);
       captureError(e, "match-data-fetch", matchId);
@@ -88,12 +92,16 @@ export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region)
   } catch (e) {
     const result = z.object({ status: z.number() }).safeParse(e);
     if (result.success) {
-      if (result.data.status === 404) {
+      const status = result.data.status;
+      if (status === 404) {
         logger.info(`[fetchMatchTimeline] ℹ️  Timeline ${matchId} not found (404) - may still be processing`);
         return undefined;
       }
-      logger.error(`[fetchMatchTimeline] ❌ HTTP Error ${result.data.status.toString()} for timeline ${matchId}`);
-      captureError(e, "timeline-data-fetch", matchId, { httpStatus: result.data.status.toString() });
+      logger.error(`[fetchMatchTimeline] ❌ HTTP Error ${status.toString()} for timeline ${matchId}`);
+      // Skip Sentry for 5xx errors - transient upstream issues we can't fix
+      if (status < 500 || status >= 600) {
+        captureError(e, "timeline-data-fetch", matchId, { httpStatus: status.toString() });
+      }
     } else {
       logger.error(`[fetchMatchTimeline] ❌ Error fetching timeline ${matchId}:`, e);
       captureError(e, "timeline-data-fetch", matchId);
