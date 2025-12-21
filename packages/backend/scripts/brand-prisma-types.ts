@@ -401,6 +401,13 @@ const MODEL_ID_MAP: Record<string, string> = {
   Subscription: "SubscriptionId",
   ServerPermission: "PermissionId",
   GuildPermissionError: "PermissionErrorId",
+  // Voice notification system models
+  // Note: User uses discordId as primary key, so no UserId type needed
+  ApiToken: "ApiTokenId",
+  SoundPack: "SoundPackId",
+  DesktopClient: "DesktopClientId",
+  StoredSound: "StoredSoundId",
+  GameEventLog: "GameEventLogId",
 };
 
 // Field name to branded type mappings
@@ -424,6 +431,8 @@ const FIELD_TYPE_MAP: Record<string, string> = {
   snapshotType: "SnapshotType",
   permission: "PermissionType",
   seasonId: "SeasonId",
+  // Voice notification system - userId is a Discord ID foreign key
+  userId: "DiscordAccountId",
 };
 
 function getBrandedType(propName: string, parentTypeName: string): string | null {

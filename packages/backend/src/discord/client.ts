@@ -8,6 +8,7 @@ import {
   discordLatency,
 } from "@scout-for-lol/backend/metrics/index.ts";
 import { handleGuildCreate } from "@scout-for-lol/backend/discord/events/guild-create.ts";
+import { voiceManager } from "@scout-for-lol/backend/voice/index.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
@@ -16,7 +17,10 @@ const logger = createLogger("discord-client");
 logger.info("🔌 Initializing Discord client");
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildVoiceStates, // Required for voice
+  ],
 });
 
 // Add event listeners for connection status
@@ -65,26 +69,30 @@ try {
   throw error;
 }
 
-client.on("ready", (client) => {
-  logger.info(`✅ Discord bot ready! Logged in as ${client.user.tag}`);
-  logger.info(`🏢 Bot is in ${client.guilds.cache.size.toString()} guilds`);
-  logger.info(`👥 Bot can see ${client.users.cache.size.toString()} users`);
+client.on("ready", (readyClient) => {
+  logger.info(`✅ Discord bot ready! Logged in as ${readyClient.user.tag}`);
+  logger.info(`🏢 Bot is in ${readyClient.guilds.cache.size.toString()} guilds`);
+  logger.info(`👥 Bot can see ${readyClient.users.cache.size.toString()} users`);
 
   // Update connection status metric
   discordConnectionStatus.set(1);
 
   // Update guild and user count metrics
-  discordGuildsGauge.set(client.guilds.cache.size);
-  discordUsersGauge.set(client.users.cache.size);
+  discordGuildsGauge.set(readyClient.guilds.cache.size);
+  discordUsersGauge.set(readyClient.users.cache.size);
+
+  // Initialize voice manager with Discord client
+  voiceManager.setClient(client);
+  logger.info("🔊 Voice manager initialized");
 
   // Update metrics periodically
   setInterval(() => {
-    discordGuildsGauge.set(client.guilds.cache.size);
-    discordUsersGauge.set(client.users.cache.size);
-    discordLatency.set(client.ws.ping);
+    discordGuildsGauge.set(readyClient.guilds.cache.size);
+    discordUsersGauge.set(readyClient.users.cache.size);
+    discordLatency.set(readyClient.ws.ping);
   }, 30_000); // Update every 30 seconds
 
-  handleCommands(client);
+  handleCommands(readyClient);
   logger.info("⚡ Discord command handler initialized");
 });
 

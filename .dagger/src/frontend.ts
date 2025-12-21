@@ -57,16 +57,16 @@ type DeployFrontendOptions = {
 export async function deployFrontend(options: DeployFrontendOptions): Promise<string> {
   const distDir = buildFrontend(options.workspaceSource);
 
-  // Use Node.js container for wrangler (official tool from Cloudflare)
+  // Use Bun container for wrangler
   const deployContainer = dag
     .container()
-    .from("node:lts-slim")
+    .from("oven/bun:latest")
     .withDirectory("/workspace/dist", distDir)
     .withSecretVariable("CLOUDFLARE_ACCOUNT_ID", options.cloudflare.accountId)
     .withSecretVariable("CLOUDFLARE_API_TOKEN", options.cloudflare.apiToken)
     .withExec(["sh", "-c", `echo '🚀 [CI] Deploying frontend to Cloudflare Pages (branch: ${options.branch})...'`])
     .withExec([
-      "npx",
+      "bunx",
       "wrangler@latest",
       "pages",
       "deploy",
