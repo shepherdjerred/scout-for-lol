@@ -1,13 +1,11 @@
 ---
 import AppLayout from "../../../layouts/app/AppLayout.astro";
 
-export const prerender = false;
-
-const { id } = Astro.params;
+const id = Astro.url.searchParams.get("id");
 ---
 
 <AppLayout title="Edit Sound Pack">
-  <div class="p-8" data-pack-id={id}>
+  <div class="p-8" data-pack-id={id ?? ""}>
     <!-- Loading State -->
     <div id="loading-state" class="flex items-center justify-center py-12">
       <svg class="h-8 w-8 animate-spin text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

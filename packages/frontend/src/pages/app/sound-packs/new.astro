@@ -208,7 +208,7 @@ form?.addEventListener("submit", async (e) => {
     });
 
     // Redirect to the new sound pack
-    window.location.href = `/app/sound-packs/${result.dbId}`;
+    window.location.href = `/app/sound-packs/edit?id=${result.dbId}`;
   } catch (error) {
     console.error("Failed to create sound pack:", error);
     showError(error instanceof Error ? error.message : "Failed to create sound pack");
