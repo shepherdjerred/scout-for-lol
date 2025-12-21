@@ -59,7 +59,7 @@
     "zod-validation-error": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "^24.0.0",
+    "@types/node": "^25.0.0",
     "@types/uuid": "^11.0.0",
     "aws-sdk-client-mock": "^4.1.0",
     "bun-types": "latest",
