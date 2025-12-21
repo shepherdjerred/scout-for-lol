@@ -78,11 +78,10 @@ export function participantToChampion(p: RawParticipant): Champion {
 }
 
 /**
- * Valid match key pattern: matches/YYYY/MM/DD/{PLATFORM}_{GAME_ID}.json
- * Platform examples: NA1, EUW1, KR, etc.
- * Game ID is numeric
+ * Valid match key pattern: games/YYYY/MM/DD/{MATCH_ID}/match.json
+ * Match ID examples: NA1_1234567890, EUW1_9876543210_TEST, etc.
  */
-const VALID_MATCH_KEY_REGEX = /^matches\/\d{4}\/\d{2}\/\d{2}\/[A-Z]+\d*_\d+\.json$/;
+const VALID_MATCH_KEY_REGEX = /^games\/\d{4}\/\d{2}\/\d{2}\/[^/]+\/match\.json$/;
 
 /**
  * Check if an S3 key represents a valid match file

@@ -1,5 +1,6 @@
 import type { Container, Directory } from "@dagger.io/dagger";
 import { dag } from "@dagger.io/dagger";
+import { getGitHubContainer } from "@shepherdjerred/dagger-utils/containers";
 
 /**
  * Get a base Bun container
@@ -276,35 +277,5 @@ export function getBunNodeContainer(workspaceSource?: Directory): Container {
   return container;
 }
 
-/**
- * Get a system container (Ubuntu) with basic tools
- * @returns An Ubuntu container with basic tools
- */
-export function getSystemContainer(): Container {
-  return dag.container().from("ubuntu:jammy").withWorkdir("/workspace");
-}
-
-/**
- * Get a container with GitHub CLI installed
- * @returns A container with GitHub CLI for deployment tasks
- */
-export function getGitHubContainer(): Container {
-  const ghVersion = "2.63.2";
-  return dag
-    .container()
-    .from("ubuntu:noble")
-    .withMountedCache("/var/cache/apt", dag.cacheVolume("apt-cache"))
-    .withMountedCache("/var/lib/apt/lists", dag.cacheVolume("apt-lists"))
-    .withExec(["apt", "update"])
-    .withExec(["apt", "install", "-y", "git", "curl"])
-    .withExec([
-      "sh",
-      "-c",
-      `curl -L -o ghcli.deb https://github.com/cli/cli/releases/download/v${ghVersion}/gh_${ghVersion}_linux_amd64.deb`,
-    ])
-    .withExec(["dpkg", "-i", "ghcli.deb"])
-    .withExec(["rm", "ghcli.deb"])
-    .withExec(["git", "config", "--global", "user.name", "scout-for-lol"])
-    .withExec(["git", "config", "--global", "user.email", "github@sjer.red"])
-    .withWorkdir("/workspace");
-}
+// Re-export getGitHubContainer from dagger-utils for convenience
+export { getGitHubContainer };

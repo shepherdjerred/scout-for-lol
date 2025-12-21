@@ -126,15 +126,15 @@ export async function generateMatchReview(
   }
 
   // Get default stage configs and conditionally disable image generation
-  // Generate images only 10% of the time to reduce costs
+  // Generate images only 33% of the time to reduce costs
   const stages = getDefaultStageConfigs();
-  const shouldGenerateImage = Math.random() < 0.1;
+  const shouldGenerateImage = Math.random() < 0.33;
   if (!shouldGenerateImage) {
     stages.imageDescription.enabled = false;
     stages.imageGeneration.enabled = false;
-    logger.info("Image generation disabled for this review (90% probability)");
+    logger.info("Image generation disabled for this review (67% probability)");
   } else {
-    logger.info("Image generation enabled for this review (10% probability)");
+    logger.info("Image generation enabled for this review (33% probability)");
   }
 
   try {
