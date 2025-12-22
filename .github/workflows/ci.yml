@@ -82,45 +82,40 @@ jobs:
           DAGGER_ENGINE_POD_NAME="$(kubectl get pod --selector=name=dagger-dagger-helm-engine --namespace=dagger --output=jsonpath='{.items[0].metadata.name}')"
           echo "_EXPERIMENTAL_DAGGER_RUNNER_HOST=kube-pod://$DAGGER_ENGINE_POD_NAME?namespace=dagger" >> "$GITHUB_ENV"
 
-      - name: Run Dagger CI pipeline with artifacts (prod)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Run Dagger CI pipeline with artifacts
         env:
           GHCR_USERNAME: ${{ github.actor }}
           GHCR_PASSWORD: ${{ github.token }}
           GITHUB_TOKEN: ${{ env.GH_TOKEN }}
-        run: |
-          dagger call ci-with-artifacts \
-            --source=. \
-            --version="1.0.${{ github.run_number }}" \
-            --git-sha="${{ github.sha }}" \
-            --branch="${{ github.ref_name }}" \
-            --ghcr-username="$GHCR_USERNAME" \
-            --ghcr-password=env://GHCR_PASSWORD \
-            --env="prod" \
-            --gh-token=env://GITHUB_TOKEN \
-            --account-id=env://CLOUDFLARE_ACCOUNT_ID \
-            --api-token=env://CLOUDFLARE_API_TOKEN \
-            export --path=./ci-artifacts
-
-      - name: Run Dagger CI pipeline with artifacts (dev)
-        if: github.event_name == 'pull_request'
-        env:
-          GITHUB_TOKEN: ${{ env.GH_TOKEN }}
-          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
           SKIP_DESKTOP_BUILD: ${{ steps.changes.outputs.desktop != 'true' }}
         run: |
-          dagger call ci-with-artifacts \
-            --source=. \
-            --version="dev-${{ github.run_number }}" \
-            --git-sha="${{ github.sha }}" \
-            --branch="$BRANCH_NAME" \
-            --env="dev" \
-            --gh-token=env://GITHUB_TOKEN \
-            --account-id=env://CLOUDFLARE_ACCOUNT_ID \
-            --api-token=env://CLOUDFLARE_API_TOKEN \
-            --pr-number="${{ github.event.pull_request.number }}" \
-            --skip-desktop-build="$SKIP_DESKTOP_BUILD" \
-            export --path=./ci-artifacts
+          ARGS=(
+            --source=.
+            --git-sha="${{ github.sha }}"
+            --gh-token=env://GITHUB_TOKEN
+            --account-id=env://CLOUDFLARE_ACCOUNT_ID
+            --api-token=env://CLOUDFLARE_API_TOKEN
+          )
+
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            ARGS+=(
+              --version="1.0.${{ github.run_number }}"
+              --branch="${{ github.ref_name }}"
+              --env="prod"
+              --ghcr-username="$GHCR_USERNAME"
+              --ghcr-password=env://GHCR_PASSWORD
+            )
+          else
+            ARGS+=(
+              --version="dev-${{ github.run_number }}"
+              --branch="${{ github.head_ref || github.ref_name }}"
+              --env="dev"
+              --pr-number="${{ github.event.pull_request.number }}"
+              --skip-desktop-build="$SKIP_DESKTOP_BUILD"
+            )
+          fi
+
+          dagger call ci-with-artifacts "${ARGS[@]}" export --path=./ci-artifacts
 
       - name: Upload CI artifacts
         if: always()
