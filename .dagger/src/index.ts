@@ -13,7 +13,7 @@ import {
 } from "@scout-for-lol/.dagger/src/backend";
 import { getReportCoverage, getReportTestReport } from "@scout-for-lol/.dagger/src/report";
 import { checkData, getDataCoverage, getDataTestReport } from "@scout-for-lol/.dagger/src/data";
-import { checkFrontend, buildFrontend, deployFrontend } from "@scout-for-lol/.dagger/src/frontend";
+import { checkFrontend, buildFrontend, deployFrontend, publishFrontend } from "@scout-for-lol/.dagger/src/frontend";
 import {
   checkDesktop,
   checkDesktopParallel,
@@ -492,28 +492,33 @@ export class ScoutForLol {
       logWithTimestamp("⏭️ Phase 3: Skipping backend deployment (not prod environment)");
     }
 
-    // Deploy frontend to Cloudflare Pages if credentials provided
-    const shouldDeployFrontend = accountId && apiToken && branch;
-    if (shouldDeployFrontend) {
-      await withTiming("CI frontend deploy phase", async () => {
-        logWithTimestamp(`🚀 Phase 4: Deploying frontend to Cloudflare Pages (branch: ${branch})...`);
-        const project = projectName ?? "scout-for-lol";
-        const deployOutput = await this.deployFrontend(source, branch, gitSha, project, accountId, apiToken);
+    // Publish frontend to GHCR if credentials provided and on main branch
+    const shouldPublishFrontend = ghcrUsername && ghcrPassword && isProd && branch === "main";
+    if (shouldPublishFrontend) {
+      await withTiming("CI frontend publish phase", async () => {
+        logWithTimestamp("🚀 Phase 4: Publishing frontend to GHCR...");
+        const baseImage = "ghcr.io/shepherdjerred/scout-for-lol-frontend";
 
-        // Parse the preview URL from wrangler output
-        const previewUrl = parsePreviewUrl(deployOutput);
-        const displayUrl = previewUrl ?? `https://${branch === "main" ? "" : `${branch}.`}${project}.pages.dev`;
+        // Publish both :latest and :version tags
+        const [latestRef, versionRef] = await Promise.all([
+          publishFrontend({
+            workspaceSource: source,
+            imageName: `${baseImage}:latest`,
+            ghcrUsername,
+            ghcrPassword,
+          }),
+          publishFrontend({
+            workspaceSource: source,
+            imageName: `${baseImage}:${version}`,
+            ghcrUsername,
+            ghcrPassword,
+          }),
+        ]);
 
-        logWithTimestamp(`✅ Frontend deployed to ${displayUrl}`);
-
-        // Post a comment to the PR with the preview URL (only for PRs, not main branch)
-        if (prNumber && ghToken && branch !== "main") {
-          const comment = `## 🚀 Deploy Preview Ready!\n\nA preview of this PR has been deployed to Cloudflare Pages:\n\n**Preview URL:** ${displayUrl}\n\n---\n*Deployed from commit ${gitSha.substring(0, 7)}*`;
-          await postPrComment(prNumber, comment, ghToken);
-        }
+        logWithTimestamp(`✅ Frontend published:\n  - ${latestRef}\n  - ${versionRef}`);
       });
     } else {
-      logWithTimestamp("⏭️ Phase 4: Skipping frontend deployment (no Cloudflare credentials or branch not provided)");
+      logWithTimestamp("⏭️ Phase 4: Skipping frontend publishing (not prod or no GHCR credentials)");
     }
 
     logWithTimestamp("🎉 CI pipeline completed successfully");

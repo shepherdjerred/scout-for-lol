@@ -53,7 +53,7 @@
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3",
     "vite": "^7.0.0",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^6.0.0"
   },
   "description": "Desktop client for Scout for League of Legends live game updates",
   "keywords": [
