@@ -1,6 +1,7 @@
 /* eslint-disable max-lines  -- this file cannot be split up due to Dagger */
 import type { Directory, Secret, Container } from "@dagger.io/dagger";
 import { dag, func, argument, object } from "@dagger.io/dagger";
+import { updateHomelabVersion } from "@shepherdjerred/dagger-utils";
 import {
   buildBackendImage,
   publishBackendImage,
@@ -525,8 +526,8 @@ export class ScoutForLol {
   }
 
   /**
-   * Deploy to the specified stage
-   * @param source The source directory
+   * Deploy to the specified stage by updating homelab version and creating a PR
+   * @param source The source directory (unused but kept for API compatibility)
    * @param version The version to deploy
    * @param stage The stage to deploy to
    * @param ghToken The GitHub token secret
@@ -545,73 +546,19 @@ export class ScoutForLol {
   ): Promise<string> {
     logWithTimestamp(`🚀 Starting deployment to ${stage} stage for version ${version}`);
 
-    const container = await withTiming("GitHub repository setup", () => {
-      logWithTimestamp("📦 Setting up GitHub container...");
-      return Promise.resolve(
-        getGitHubContainer()
-          .withEnvVariable("CACHE_BUST", Date.now().toString())
-          .withExec(["git", "clone", "--branch=main", "https://github.com/shepherdjerred/homelab", "."])
-          .withExec(["git", "remote", "set-url", "origin", "https://github.com/shepherdjerred/homelab"])
-          .withExec(["git", "fetch", "--depth=2"])
-          .withExec(["git", "checkout", "main"])
-          .withExec(["git", "pull", "origin", "main"]),
-      );
-    });
-
-    logWithTimestamp(`📝 Updating version file for ${stage} stage to ${version}`);
-    const updatedContainer = await withTiming("version file update", () => {
-      return Promise.resolve(
-        container
-          // First, check if the file exists and show current content for debugging
-          .withExec(["ls", "-la", "src/cdk8s/src/versions.ts"])
-          .withExec(["cat", "src/cdk8s/src/versions.ts"])
-          // Use a more robust approach with proper file handling
-          .withExec([
-            "sh",
-            "-c",
-            `sed -i 's/"shepherdjerred\\/scout-for-lol\\/${stage}": "[^"]*"/"shepherdjerred\\/scout-for-lol\\/${stage}": "${version}"/g' src/cdk8s/src/versions.ts`,
-          ])
-          // Verify the change was made correctly
-          .withExec(["echo", "=== After update ==="])
-          .withExec(["cat", "src/cdk8s/src/versions.ts"])
-          .withExec(["git", "add", "."])
-          .withExec(["git", "checkout", "-b", `scout/${version}`])
-          .withExec(["git", "commit", "-m", `chore: update scout-for-lol version to ${version}`]),
-      );
-    });
-
-    if (ghToken) {
-      logWithTimestamp("🔐 GitHub token provided, proceeding with PR creation...");
-
-      const result = await withTiming("GitHub PR creation and merge", async () => {
-        logWithTimestamp("🔑 Setting up GitHub authentication...");
-        return await updatedContainer
-          .withSecretVariable("GH_TOKEN", ghToken)
-          .withExec(["gh", "auth", "setup-git"])
-          .withExec(["git", "push", "--set-upstream", "origin", `scout/${version}`])
-          .withExec([
-            "gh",
-            "pr",
-            "create",
-            "--title",
-            `chore: update scout-for-lol version to ${version}`,
-            "--body",
-            `This PR updates the scout-for-lol version to ${version}`,
-            "--base",
-            "main",
-            "--head",
-            `scout/${version}`,
-          ])
-          .withExec(["gh", "pr", "merge", "--auto", "--rebase"])
-          .stdout();
-      });
-
-      logWithTimestamp(`✅ Deployment to ${stage} completed successfully`);
-      return `Deployment to ${stage} completed: ${result}`;
+    if (!ghToken) {
+      logWithTimestamp(`⚠️ No GitHub token provided - deployment to ${stage} skipped`);
+      return `Deployment to ${stage} skipped (no GitHub token provided)`;
     }
 
-    logWithTimestamp(`⚠️ No GitHub token provided - deployment to ${stage} prepared but not executed`);
-    return `Deployment to ${stage} prepared (no GitHub token provided)`;
+    const result = await updateHomelabVersion({
+      ghToken,
+      appName: `scout-for-lol/${stage}`,
+      version,
+    });
+
+    logWithTimestamp(`✅ Deployment to ${stage} completed successfully`);
+    return result;
   }
 
   /**
