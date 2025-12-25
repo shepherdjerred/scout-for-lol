@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mise trust && mise dev",
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}
