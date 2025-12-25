@@ -51,9 +51,6 @@ export default {
   geminiApiKey: getOptionalEnvVar("GEMINI_API_KEY"),
   elevenLabsApiKey: getOptionalEnvVar("ELEVENLABS_API_KEY"),
   elevenLabsVoiceId: getOptionalEnvVar("ELEVENLABS_VOICE_ID"),
-  // Common Denominator weekly update configuration
-  commonDenominatorServerId: getOptionalEnvVar("COMMON_DENOMINATOR_SERVER_ID"),
-  commonDenominatorChannelId: getOptionalEnvVar("COMMON_DENOMINATOR_CHANNEL_ID"),
 };
 
 logger.info("✅ Configuration loaded successfully");

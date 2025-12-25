@@ -1,18 +1,20 @@
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import configuration from "@scout-for-lol/backend/configuration.ts";
+import { MY_SERVER } from "@scout-for-lol/backend/configuration/flags.ts";
 import { send as sendChannelMessage } from "@scout-for-lol/backend/league/discord/channel.ts";
 import {
   type ServerPairingStats,
   type PairingStatsEntry,
   type IndividualPlayerStats,
   DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index";
 import { getServerPlayers } from "./get-server-players.ts";
 import { calculatePairingStats } from "./calculate-pairings.ts";
 import { getCurrentWeekInfo } from "./s3-cache.ts";
 import { subWeeks, startOfISOWeek, endOfISOWeek } from "date-fns";
 import * as Sentry from "@sentry/bun";
+
+// Channel ID for Common Denominator updates
+const COMMON_DENOMINATOR_CHANNEL_ID = DiscordChannelIdSchema.parse("1337631455085334650");
 
 const logger = createLogger("pairing-weekly-update");
 
@@ -114,32 +116,8 @@ function findSurrenderLeader(individualStats: IndividualPlayerStats[]): Individu
  * Run the weekly Common Denominator update
  */
 export async function runWeeklyPairingUpdate(): Promise<void> {
-  const serverIdRaw = configuration.commonDenominatorServerId;
-  const channelIdRaw = configuration.commonDenominatorChannelId;
-
-  if (!serverIdRaw || !channelIdRaw) {
-    logger.info(
-      "[WeeklyPairing] Common Denominator not configured (missing COMMON_DENOMINATOR_SERVER_ID or COMMON_DENOMINATOR_CHANNEL_ID), skipping",
-    );
-    return;
-  }
-
-  // Validate the IDs using Zod schemas
-  const serverIdResult = DiscordGuildIdSchema.safeParse(serverIdRaw);
-  const channelIdResult = DiscordChannelIdSchema.safeParse(channelIdRaw);
-
-  if (!serverIdResult.success) {
-    logger.error(`[WeeklyPairing] Invalid COMMON_DENOMINATOR_SERVER_ID: ${serverIdRaw}`);
-    return;
-  }
-
-  if (!channelIdResult.success) {
-    logger.error(`[WeeklyPairing] Invalid COMMON_DENOMINATOR_CHANNEL_ID: ${channelIdRaw}`);
-    return;
-  }
-
-  const serverId = serverIdResult.data;
-  const channelId = channelIdResult.data;
+  const serverId = MY_SERVER;
+  const channelId = COMMON_DENOMINATOR_CHANNEL_ID;
 
   logger.info(`[WeeklyPairing] Running weekly pairing update for server ${serverId}`);
 
