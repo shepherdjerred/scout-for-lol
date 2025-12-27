@@ -17,12 +17,23 @@ jobs:
   code-review:
     # Only run for PRs authored by shepherdjerred
     if: github.event.pull_request.user.login == 'shepherdjerred'
-    runs-on: ubuntu-latest
+    runs-on: [scout-for-lol-runner-set]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - uses: 1password/load-secrets-action/configure@v2
+        with:
+          connect-host: http://onepassword-connect.1password.svc.cluster.local:8080
+          connect-token: ${{ secrets.OP_CONNECT_TOKEN }}
+
+      - uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/CLAUDE_CODE_OAUTH_TOKEN
 
       - name: Get CLAUDE.md content
         id: claude-md
@@ -38,7 +49,7 @@ jobs:
       - name: Claude Code Review
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ env.CLAUDE_CODE_OAUTH_TOKEN }}
           track_progress: true
           use_sticky_comment: true
           prompt: |
