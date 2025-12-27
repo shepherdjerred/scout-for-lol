@@ -56,7 +56,7 @@ type LimitConfig = {
 export type LimitName = "player_subscriptions" | "accounts" | "competitions_per_owner" | "competitions_per_server";
 
 const ME = DiscordAccountIdSchema.parse("160509172704739328");
-const MY_SERVER = DiscordGuildIdSchema.parse("1337623164146155593");
+export const MY_SERVER = DiscordGuildIdSchema.parse("1337623164146155593");
 
 /**
  * Central registry for all integer limits

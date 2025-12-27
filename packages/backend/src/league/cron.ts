@@ -5,6 +5,7 @@ import { runPlayerPruning } from "@scout-for-lol/backend/league/tasks/cleanup/pr
 import { checkAbandonedGuilds } from "@scout-for-lol/backend/league/tasks/cleanup/abandoned-guilds.ts";
 import { runDataValidation } from "@scout-for-lol/backend/league/tasks/cleanup/validate-data.ts";
 import { refreshMatchTimes } from "@scout-for-lol/backend/league/tasks/maintenance/refresh-match-times.ts";
+import { runWeeklyPairingUpdate } from "@scout-for-lol/backend/league/tasks/pairing/index.ts";
 import { client } from "@scout-for-lol/backend/discord/client.ts";
 import { createCronJob } from "@scout-for-lol/backend/league/cron/helpers.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
@@ -94,10 +95,23 @@ export function startCronJobs() {
     runOnInit: true, // Run on startup to fix any stale data
   });
 
+  // post weekly Common Denominator update every Sunday at 6 PM UTC
+  // Shows pairing win rates and surrender stats for the past month
+  logger.info("📅 Setting up weekly pairing update job (Sunday 6 PM UTC)");
+  createCronJob({
+    schedule: "0 0 18 * * 0", // 6 PM UTC on Sundays
+    jobName: "weekly_pairing_update",
+    task: runWeeklyPairingUpdate,
+    logMessage: "📈 Running weekly Common Denominator update",
+    timezone: "UTC",
+    runOnInit: false, // Don't run on init - prevents startup notifications
+    logTrigger: "Posting weekly pairing win rates and surrender stats",
+  });
+
   logger.info("✅ Cron jobs initialized successfully");
   logger.info(
     "📊 Match history polling (1min), competition lifecycle (15min), data validation (hourly), " +
       "match time refresh (6hr), daily leaderboard (midnight UTC), player pruning (3AM UTC), " +
-      "and abandoned guild cleanup (4AM UTC) cron jobs are now active",
+      "abandoned guild cleanup (4AM UTC), and weekly pairing update (Sunday 6PM UTC) cron jobs are now active",
   );
 }
