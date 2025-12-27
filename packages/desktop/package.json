@@ -25,22 +25,16 @@
     "typecheck": "bunx tsc --noEmit"
   },
   "dependencies": {
-    "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-label": "^2.1.8",
-    "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@scout-for-lol/data": "workspace:*",
     "@scout-for-lol/ui": "workspace:*",
     "@tauri-apps/api": "^2.4.0",
     "@tauri-apps/plugin-dialog": "^2.2.0",
     "@tauri-apps/plugin-fs": "^2.2.0",
-    "@tauri-apps/plugin-shell": "^2.2.2",
-    "@tauri-apps/plugin-updater": "^2.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "date-fns": "^4.1.0",
-    "discord.js": "^14.18.0",
-    "lucide-react": "^0.555.0",
+    "lucide-react": "^0.561.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "tailwind-merge": "^3.4.0",
@@ -49,7 +43,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",
     "@tauri-apps/cli": "^2.4.0",
-    "@types/node": "^24.0.0",
+    "@types/node": "^25.0.0",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.0",
@@ -59,7 +53,7 @@
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3",
     "vite": "^7.0.0",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite-tsconfig-paths": "^6.0.0"
   },
   "description": "Desktop client for Scout for League of Legends live game updates",
   "keywords": [

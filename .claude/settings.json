@@ -2,37 +2,14 @@
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup",
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/install_pkgs.sh"
-          },
-          {
-            "type": "command",
-            "command": "git -C \"$CLAUDE_PROJECT_DIR\" restore packages/backend/generated/"
+            "command": "[ \"$CLAUDE_CODE_REMOTE\" != \"true\" ] && exit 0; command -v mise >/dev/null 2>&1 || curl -fsSL https://mise.run | sh; mise trust && mise dev",
+            "timeout": 60
           }
         ]
       }
-    ]
-  },
-  "permissions": {
-    "allow": [
-      "Bash(bun:*)",
-      "Bash(bunx:*)",
-      "Bash(npx:*)",
-      "Bash(npm:*)",
-      "Bash(git:*)",
-      "Bash(ls:*)",
-      "Bash(cat:*)",
-      "Bash(mkdir:*)",
-      "Bash(rm:*)",
-      "Bash(cp:*)",
-      "Bash(mv:*)",
-      "Bash(pwd)",
-      "Bash(which:*)",
-      "Bash(echo:*)",
-      "Bash(cd:*)"
     ]
   }
 }

@@ -125,6 +125,18 @@ export async function generateMatchReview(
     clientsInput.gemini = geminiClient;
   }
 
+  // Get default stage configs and conditionally disable image generation
+  // Generate images only 33% of the time to reduce costs
+  const stages = getDefaultStageConfigs();
+  const shouldGenerateImage = Math.random() < 0.33;
+  if (!shouldGenerateImage) {
+    stages.imageDescription.enabled = false;
+    stages.imageGeneration.enabled = false;
+    logger.info("Image generation disabled for this review (67% probability)");
+  } else {
+    logger.info("Image generation enabled for this review (33% probability)");
+  }
+
   try {
     pipelineOutput = await generateFullMatchReview({
       match: matchInput,
@@ -136,7 +148,7 @@ export async function generateMatchReview(
         laneContext: laneContextInfo.content,
       },
       clients: clientsInput,
-      stages: getDefaultStageConfigs(),
+      stages,
     });
   } catch (error) {
     logger.error("Pipeline failed:", error);

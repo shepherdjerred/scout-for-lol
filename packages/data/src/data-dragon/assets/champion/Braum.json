@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.23.1",
+  "version": "15.24.1",
   "data": {
     "Braum": {
       "id": "Braum",
@@ -94,7 +94,7 @@
         "difficulty": 3
       },
       "stats": {
-        "hp": 610,
+        "hp": 630,
         "hpperlevel": 112,
         "mp": 311,
         "mpperlevel": 45,

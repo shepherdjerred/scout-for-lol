@@ -4,20 +4,16 @@ export type LcuStatus = {
   inGame: boolean;
 };
 
-export type DiscordStatus = {
+export type BackendStatus = {
   connected: boolean;
-  channelName: string | null;
-  voiceConnected: boolean;
-  voiceChannelName: string | null;
-  activeSoundPack: string | null;
+  backendUrl: string | null;
+  lastError: string | null;
 };
 
 export type Config = {
-  botToken: string | null;
-  channelId: string | null;
-  voiceChannelId: string | null;
-  soundPack: string | null;
-  eventSounds: Record<string, string> | null;
+  clientId: string;
+  apiToken: string | null;
+  backendUrl: string | null;
 };
 
 export type LogEntry = {
@@ -32,14 +28,7 @@ export type LogPaths = {
   startup_log: string;
 };
 
-export type Section = "league" | "discord" | "monitor" | "sounds";
-
-export type AvailableSoundPack = {
-  id: string;
-  name: string;
-  description?: string | undefined;
-  isBuiltIn: boolean;
-};
+export type Section = "league" | "backend" | "monitor";
 
 export function getErrorMessage(error: unknown): string {
   if (typeof error === "string") {

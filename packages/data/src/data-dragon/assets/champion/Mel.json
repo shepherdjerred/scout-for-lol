@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.23.1",
+  "version": "15.24.1",
   "data": {
     "Mel": {
       "id": "Mel",
@@ -28,6 +28,12 @@
           "id": "800001",
           "num": 1,
           "name": "Arcane Councilor Mel",
+          "chromas": true
+        },
+        {
+          "id": "800010",
+          "num": 10,
+          "name": "Prestige Winterblessed Mel",
           "chromas": true
         }
       ],
@@ -181,7 +187,7 @@
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ rootduration }} -> {{ rootdurationNL }}",
-              "{{ baseareadamage*8.000000 }} -> {{ baseareadamagenl*8.000000 }}",
+              "{{ baseareadamage }} -> {{ baseareadamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
@@ -189,8 +195,8 @@
           "maxrank": 5,
           "cooldown": [12, 11.5, 11, 10.5, 10],
           "cooldownBurn": "12/11.5/11/10.5/10",
-          "cost": [50, 55, 60, 65, 70],
-          "costBurn": "50/55/60/65/70",
+          "cost": [50, 60, 70, 80, 90],
+          "costBurn": "50/60/70/80/90",
           "datavalues": {},
           "effect": [
             null,

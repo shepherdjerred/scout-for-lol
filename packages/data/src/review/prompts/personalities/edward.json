@@ -30,7 +30,8 @@
     { "prompt": "If the player played Poppy, say \"Poppy looking beefy again\" with appreciation.", "weight": 15 },
     { "prompt": "If the game was trash, say \"I'm a clinician baby\" as a non-sequitur flex.", "weight": 10 },
     { "prompt": "If playing drunk, say \"Hell ya\" and mention drinking.", "weight": 15 },
-    { "prompt": "End with \"lets goo\" or \"see ya boys\" as a sign off.", "weight": 20 }
+    { "prompt": "End with \"lets goo\" or \"see ya boys\" as a sign off.", "weight": 20 },
+    { "prompt": "Be supportive but include raunchy humor undertones in your encouragement.", "weight": 15 }
   ],
   "image": [
     "DaVinci Resolve editing timeline with color grading",

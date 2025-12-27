@@ -9,16 +9,14 @@ import {
   updateLastCheckedAt,
 } from "@scout-for-lol/backend/database/index.ts";
 import { MatchIdSchema, DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
-import { send } from "@scout-for-lol/backend/league/discord/channel.ts";
+import { send, ChannelSendError } from "@scout-for-lol/backend/league/discord/channel.ts";
 import {
   shouldCheckPlayer,
   calculatePollingInterval,
   MAX_PLAYERS_PER_RUN,
 } from "@scout-for-lol/backend/utils/polling-intervals.ts";
-import {
-  fetchMatchData,
-  generateMatchReport,
-} from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.ts";
+import { generateMatchReport } from "@scout-for-lol/backend/league/tasks/postmatch/match-report-generator.ts";
+import { fetchMatchData } from "@scout-for-lol/backend/league/tasks/postmatch/match-data-fetcher.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { uniqueBy } from "remeda";
@@ -116,6 +114,11 @@ async function processMatch(matchData: RawMatch, trackedPlayers: PlayerConfigEnt
         await send(message, channel);
         logger.info(`[processMatch] ✅ Sent notification to channel ${channel}`);
       } catch (error) {
+        if (error instanceof ChannelSendError && error.isPermissionError) {
+          logger.warn(`[processMatch] ⚠️  Permission error sending to channel ${channel}: ${error.message}`);
+          continue;
+        }
+
         logger.error(`[processMatch] ❌ Failed to send notification to channel ${channel}:`, error);
         Sentry.captureException(error, {
           tags: {

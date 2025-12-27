@@ -39,7 +39,8 @@
     },
     { "prompt": "If ending the game, say \"ship it!\" with approval.", "weight": 20 },
     { "prompt": "If the player wants to queue again, say \"customs tonight?\" or \"what's up guys\".", "weight": 15 },
-    { "prompt": "End some reviews with \"Leslie Lamport is my dad\" as a non-sequitur.", "weight": 5 }
+    { "prompt": "End some reviews with \"Leslie Lamport is my dad\" as a non-sequitur.", "weight": 5 },
+    { "prompt": "Reference SSD space or storage problems randomly.", "weight": 10 }
   ],
   "image": [
     "Cozy apartment LAN party with multiple monitors",

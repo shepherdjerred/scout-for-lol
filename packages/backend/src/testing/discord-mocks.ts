@@ -58,6 +58,7 @@ export function mockUser(overrides: Record<string, unknown> = {}): User {
 
 /**
  * Create a mock Discord GuildMember object
+ * @lintignore
  */
 export function mockGuildMember(overrides: Record<string, unknown> = {}): GuildMember {
   const defaults: Record<string, unknown> = {
@@ -230,6 +231,7 @@ export function mockTextChannel(overrides: Record<string, unknown> = {}): TextCh
 
 /**
  * Create a mock Discord DMChannel object
+ * @lintignore
  */
 export function mockDMChannel(overrides: Record<string, unknown> = {}): DMChannel {
   const defaults: Record<string, unknown> = {
@@ -257,6 +259,7 @@ export function mockDMChannel(overrides: Record<string, unknown> = {}): DMChanne
 
 /**
  * Create a mock Discord Message object
+ * @lintignore
  */
 export function mockMessage(overrides: Record<string, unknown> = {}): Message {
   const defaults: Record<string, unknown> = {
@@ -335,6 +338,7 @@ export function mockClient(overrides: Record<string, unknown> = {}): Client {
 
 /**
  * Create a mock PermissionsBitField object
+ * @lintignore
  */
 export function mockPermissions(permissions: bigint = PermissionFlagsBits.ViewChannel): PermissionsBitField {
   // eslint-disable-next-line custom-rules/no-type-assertions -- ok for Discord test mocks only

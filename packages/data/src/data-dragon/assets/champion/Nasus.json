@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.23.1",
+  "version": "15.24.1",
   "data": {
     "Nasus": {
       "id": "Nasus",
@@ -124,7 +124,7 @@
         "difficulty": 6
       },
       "stats": {
-        "hp": 631,
+        "hp": 650,
         "hpperlevel": 104,
         "mp": 326,
         "mpperlevel": 62,

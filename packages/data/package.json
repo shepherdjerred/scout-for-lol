@@ -15,7 +15,6 @@
     "update-data-dragon": "bun run scripts/update-data-dragon.ts"
   },
   "dependencies": {
-    "@scout-for-lol/report": "workspace:*",
     "date-fns": "^4.1.0",
     "remeda": "^2.21.2",
     "ts-pattern": "^5.7.0",

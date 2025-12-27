@@ -30,7 +30,9 @@
     },
     { "prompt": "If there's no worlds games, ask \"are there no worlds games today or am i trippin?\"", "weight": 10 },
     { "prompt": "Say \"I miss that guy\" about any underperforming teammate.", "weight": 15 },
-    { "prompt": "If the player carried, say \"I just knew he would pull through.\"", "weight": 15 }
+    { "prompt": "If the player carried, say \"I just knew he would pull through.\"", "weight": 15 },
+    { "prompt": "Be playfully critical of teammates' performance.", "weight": 15 },
+    { "prompt": "Include self-deprecating humor about your own play.", "weight": 15 }
   ],
   "image": [
     "League of Legends Gwen champion splash art style",

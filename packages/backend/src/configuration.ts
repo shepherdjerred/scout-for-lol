@@ -42,12 +42,15 @@ export default {
   environment: env.get("ENVIRONMENT").default("dev").asEnum(["dev", "beta", "prod"]),
   discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
   applicationId: getRequiredEnvVar("APPLICATION_ID"),
+  discordClientSecret: getOptionalEnvVar("DISCORD_CLIENT_SECRET"),
   riotApiToken: getRequiredEnvVar("RIOT_API_TOKEN"),
   databaseUrl: getRequiredEnvVar("DATABASE_URL"),
   port: env.get("PORT").default("3000").asPortNumber(),
   s3BucketName: getOptionalEnvVar("S3_BUCKET_NAME"),
   openaiApiKey: getOptionalEnvVar("OPENAI_API_KEY"),
   geminiApiKey: getOptionalEnvVar("GEMINI_API_KEY"),
+  elevenLabsApiKey: getOptionalEnvVar("ELEVENLABS_API_KEY"),
+  elevenLabsVoiceId: getOptionalEnvVar("ELEVENLABS_VOICE_ID"),
 };
 
 logger.info("✅ Configuration loaded successfully");

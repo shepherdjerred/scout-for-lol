@@ -14,17 +14,15 @@ type LcuStatus = {
   inGame: boolean;
 };
 
-type DiscordStatus = {
+type BackendStatus = {
   connected: boolean;
-  channelName: string | null;
-  voiceConnected: boolean;
-  voiceChannelName: string | null;
-  activeSoundPack: string | null;
+  backendUrl: string | null;
+  lastError: string | null;
 };
 
 type DebugPanelProps = {
   lcuStatus: LcuStatus;
-  discordStatus: DiscordStatus;
+  backendStatus: BackendStatus;
   isMonitoring: boolean;
   logs: LogEntry[];
   logPaths?: {
@@ -60,7 +58,7 @@ function getLogColorClass(level: LogEntry["level"]): string {
 
 export function DebugPanel({
   lcuStatus,
-  discordStatus,
+  backendStatus,
   isMonitoring,
   logs,
   logPaths,
@@ -88,12 +86,8 @@ export function DebugPanel({
         <h4 className="mb-5 text-xs font-medium uppercase tracking-wider text-gray-500">Connection Status</h4>
         <div className="grid grid-cols-2 gap-3">
           <StatusItem label="LCU" value={lcuStatus.connected ? "Yes" : "No"} active={lcuStatus.connected} />
-          <StatusItem label="Discord" value={discordStatus.connected ? "Yes" : "No"} active={discordStatus.connected} />
-          <StatusItem
-            label="Voice"
-            value={discordStatus.voiceConnected ? "Yes" : "No"}
-            active={discordStatus.voiceConnected}
-          />
+          <StatusItem label="Backend" value={backendStatus.connected ? "Yes" : "No"} active={backendStatus.connected} />
+          <StatusItem label="In Game" value={lcuStatus.inGame ? "Yes" : "No"} active={lcuStatus.inGame} />
           <StatusItem label="Monitoring" value={isMonitoring ? "Yes" : "No"} active={isMonitoring} />
         </div>
       </div>

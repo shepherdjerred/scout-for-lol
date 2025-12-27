@@ -249,17 +249,6 @@ export function getDefaultStageConfigs(): PipelineStagesConfig {
   };
 }
 
-/**
- * @deprecated Use getDefaultStageConfigs() instead to get fresh random art style per generation
- */
-export const DEFAULT_STAGE_CONFIGS: PipelineStagesConfig = {
-  timelineSummary: DEFAULT_TIMELINE_SUMMARY_STAGE,
-  matchSummary: DEFAULT_MATCH_SUMMARY_STAGE,
-  reviewText: DEFAULT_REVIEW_TEXT_STAGE,
-  imageDescription: DEFAULT_IMAGE_DESCRIPTION_STAGE,
-  imageGeneration: createDefaultImageGenerationStage(),
-};
-
 // ============================================================================
 // Helper Functions
 // ============================================================================

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.23.1",
+  "version": "15.24.1",
   "data": {
     "Smolder": {
       "id": "Smolder",
@@ -28,6 +28,12 @@
           "id": "901001",
           "num": 1,
           "name": "Heavenscale Smolder",
+          "chromas": true
+        },
+        {
+          "id": "901011",
+          "num": 11,
+          "name": "Reindeer Smolder",
           "chromas": true
         }
       ],

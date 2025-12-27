@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.23.1",
+  "version": "15.24.1",
   "data": {
     "Lucian": {
       "id": "Lucian",
@@ -101,6 +101,12 @@
           "num": 62,
           "name": "Masked Justice Lucian",
           "chromas": true
+        },
+        {
+          "id": "236072",
+          "num": 72,
+          "name": "Sunken Shadows Lucian",
+          "chromas": false
         }
       ],
       "lore": "Lucian, a Sentinel of Light, is a grim hunter of wraiths and specters, pursuing them relentlessly and annihilating them with his twin relic pistols. After the specter Thresh slew his wife, Lucian embarked on the path of vengeance—but even with her return to life, his rage is undiminished. Merciless and single-minded, Lucian will stop at nothing to protect the living from the long-dead horrors of the Black Mist.",

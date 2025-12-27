@@ -13,7 +13,7 @@ type MonitorSectionProps = {
   isMonitoring: boolean;
   loading: string | null;
   lcuConnected: boolean;
-  discordConnected: boolean;
+  backendConnected: boolean;
   inGame: boolean;
   onStart: () => void;
   onStop: () => void;
@@ -57,7 +57,7 @@ export function MonitorSection({
   isMonitoring,
   loading,
   lcuConnected,
-  discordConnected,
+  backendConnected,
   inGame,
   onStart,
   onStop,
@@ -66,7 +66,7 @@ export function MonitorSection({
   const isStarting = loading?.includes("Starting") ?? false;
   const isStopping = loading?.includes("Stopping");
   const isTesting = loading?.includes("Testing") ?? loading?.includes("event");
-  const canMonitor = lcuConnected && discordConnected;
+  const canMonitor = lcuConnected && backendConnected;
 
   const monitoringState = getMonitoringState(isStarting, isMonitoring, canMonitor);
   const statusProps = getStatusIndicatorProps(monitoringState);
@@ -93,7 +93,7 @@ export function MonitorSection({
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <PrerequisiteBadge label="League Client" fulfilled={lcuConnected} />
-                <PrerequisiteBadge label="Discord Bot" fulfilled={discordConnected} />
+                <PrerequisiteBadge label="Backend" fulfilled={backendConnected} />
               </div>
             </div>
           </CardContent>

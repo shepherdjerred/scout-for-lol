@@ -10,10 +10,12 @@ Monorepo using **Bun workspaces**:
 
 ```
 packages/
-├── backend/   # Discord bot backend service
-├── data/      # Shared data models and utilities
+├── backend/   # Discord bot backend service (Discord.js, Prisma, twisted)
+├── data/      # Shared data models, schemas, and utilities
 ├── report/    # Report generation components (React + satori)
-└── frontend/  # Web frontend (Astro)
+├── frontend/  # Web frontend (Astro + React + Tailwind)
+├── desktop/   # Desktop app (Tauri + React + Vite)
+└── ui/        # Shared UI components (React)
 ```
 
 ## Core Technologies
@@ -26,8 +28,10 @@ packages/
 | Database      | Prisma ORM                       |
 | Validation    | Zod                              |
 | CI/CD         | Dagger (requires Docker)         |
+| Task Runner   | mise                             |
 | Bot Framework | Discord.js                       |
 | Frontend      | Astro                            |
+| Desktop       | Tauri + Vite                     |
 | Reports       | React + satori + @resvg/resvg-js |
 
 ## Development Commands
@@ -36,13 +40,23 @@ packages/
 
 ```bash
 bun install              # Install all dependencies
-bun run install:all      # Install dependencies across all packages
-bun run typecheck:all    # Type checking across all packages
-bun run lint:all         # Linting across all packages
-bun run format:all       # Formatting across all packages
-bun run test:all         # Testing across all packages
+bun run typecheck        # Type checking across all packages
+bun run lint             # Linting across all packages
+bun run format           # Formatting check across all packages
+bun run test             # Testing across all packages
 bun run generate         # Generate Prisma client and other generated code
 bun run clean            # Clean all node_modules
+bun run knip             # Find unused code/dependencies
+bun run duplication-check # Check for code duplication
+```
+
+### Using mise (Task Runner)
+
+```bash
+mise run dev             # Setup development environment
+mise run check           # Run all checks (typecheck, lint, format, test, knip, duplication-check)
+mise run generate        # Generate Prisma client
+mise run ci              # Run full CI pipeline with Dagger
 ```
 
 ### Backend Package
@@ -55,6 +69,17 @@ bun run db:generate      # Generate Prisma client
 bun run db:push          # Push schema to database
 bun run db:migrate       # Run migrations
 bun run db:studio        # Open Prisma Studio
+```
+
+### Desktop Package
+
+```bash
+cd packages/desktop
+bun run dev              # Start Tauri dev mode
+bun run build            # Build desktop app
+bun run build:macos      # Build for macOS (universal)
+bun run build:linux      # Build for Linux
+bun run build:windows    # Build for Windows
 ```
 
 Each package supports: `dev`, `build`, `test`, `lint`, `format`, `typecheck`
@@ -113,11 +138,12 @@ docker run --rm <image_sha>
 ### Strict Type Safety Rules
 
 - **NEVER use `any`** - Always define proper types
-- **Avoid type assertions (`as`)** - Use type guards instead
+- **Avoid type assertions (`as`)** - Enforced by `custom-rules/no-type-assertions`
 - **Use `unknown` for uncertain types** - Validate with Zod before processing
 - **Prefer advanced types** - Mapped types, conditional types, template literals
 - **Exhaustive pattern matching** - Use `ts-pattern` for complex branching
 - **Strict null checks** - Handle undefined/null explicitly
+- **No type guards** - Enforced by `custom-rules/no-type-guards`, use Zod validation instead
 
 ### Validation Patterns
 
@@ -126,11 +152,6 @@ docker run --rm <image_sha>
 const result = SomeSchema.safeParse(unknownData);
 if (!result.success) {
   throw new Error(fromZodError(result.error).toString());
-}
-
-// Use type guards instead of casting
-function isString(value: unknown): value is string {
-  return typeof value === "string";
 }
 
 // Advanced types for complex scenarios
@@ -144,7 +165,43 @@ type DeepReadonly<T> = {
 - Use `zod-validation-error` for user-friendly error messages
 - Handle errors at appropriate levels
 - Use Result patterns where appropriate
-- Proper async/await error handling
+- Proper async/await error handling (enforced by `custom-rules/prefer-async-await`)
+
+---
+
+## Custom ESLint Rules
+
+The project uses custom ESLint rules in `eslint-rules/`:
+
+| Rule                          | Purpose                                           |
+| ----------------------------- | ------------------------------------------------- |
+| `no-type-assertions`          | Disallow `as` type assertions                     |
+| `no-type-guards`              | Disallow custom type guard functions              |
+| `prefer-zod-validation`       | Enforce Zod for runtime validation                |
+| `prefer-bun-apis`             | Prefer Bun APIs over Node.js equivalents          |
+| `prefer-async-await`          | Disallow .then()/.catch() promise chains          |
+| `prefer-structured-logging`   | Require tslog instead of console.log (backend)   |
+| `zod-schema-naming`           | Enforce *Schema suffix for Zod schemas            |
+| `no-dto-naming`               | Disallow *Dto suffix (use Raw* prefix)            |
+| `require-ts-extensions`       | Require .ts extensions in imports                 |
+| `satori-best-practices`       | Enforce satori rendering requirements (report)   |
+| `prisma-client-disconnect`    | Ensure Prisma clients are disconnected in tests  |
+| `no-re-exports`               | Disallow barrel file re-exports                   |
+| `no-function-overloads`       | Disallow TypeScript function overloads            |
+| `no-parent-imports`           | Disallow `../` imports                            |
+
+---
+
+## Code Quality Limits
+
+Enforced by ESLint:
+
+- **max-lines**: 500 lines per file (1500 for tests)
+- **max-lines-per-function**: 400 lines (200 for tests)
+- **complexity**: 20 max cyclomatic complexity
+- **max-depth**: 4 levels of nesting
+- **max-params**: 4 parameters per function
+- **File naming**: kebab-case enforced by `unicorn/filename-case`
 
 ---
 
@@ -161,6 +218,7 @@ type DeepReadonly<T> = {
 | `twisted`              | Riot Games API client                   |
 | `satori`               | JSX to SVG rendering                    |
 | `@resvg/resvg-js`      | SVG to PNG conversion                   |
+| `tslog`                | Structured logging (backend)            |
 
 ---
 
@@ -180,7 +238,7 @@ Commands live in `packages/backend/src/discord/commands/`. Each command exports:
 try {
   await interaction.reply({ content: "Success!" });
 } catch (error) {
-  console.error("Discord API error:", error);
+  logger.error("Discord API error", { error });
   if (interaction.replied || interaction.deferred) {
     await interaction.followUp({ content: "An error occurred", ephemeral: true });
   } else {
@@ -196,6 +254,7 @@ try {
 - Use embeds for rich content presentation
 - Handle message length limits appropriately
 - Provide clear, user-friendly error messages
+- Use structured logging with tslog (not console.log)
 
 ---
 
@@ -218,8 +277,8 @@ type RawTimeline = z.infer<typeof RawTimelineSchema>;
 type RawSummonerLeague = z.infer<typeof RawSummonerLeagueSchema>;
 
 // Incorrect: *Dto suffix (legacy pattern - do not use)
-type MatchDto = ...;        // ❌ Use RawMatch instead
-type ParticipantDto = ...;  // ❌ Use RawParticipant instead
+type MatchDto = ...;        // Use RawMatch instead
+type ParticipantDto = ...;  // Use RawParticipant instead
 ```
 
 **File naming**: Schema files should use `raw-*.schema.ts` pattern:
@@ -239,10 +298,11 @@ type ParticipantDto = ...;  // ❌ Use RawParticipant instead
 ## Report Generation
 
 - Use the `@scout-for-lol/report` package for match reports
-- Generate reports as images using `satori` (JSX → SVG) and `@resvg/resvg-js` (SVG → PNG)
+- Generate reports as images using `satori` (JSX to SVG) and `@resvg/resvg-js` (SVG to PNG)
 - Optimize image generation performance
 - Handle report generation errors gracefully
 - Lazy load heavy dependencies
+- Follow satori best practices (enforced by `custom-rules/satori-best-practices`)
 
 ---
 
@@ -255,6 +315,7 @@ type ParticipantDto = ...;  // ❌ Use RawParticipant instead
 - Validate database inputs with Zod schemas
 - Use transactions for multi-step operations
 - Handle connection errors and timeouts
+- **Integration tests** - Must disconnect Prisma clients (enforced by `custom-rules/prisma-client-disconnect`)
 
 ---
 
@@ -273,6 +334,9 @@ type ParticipantDto = ...;  // ❌ Use RawParticipant instead
 - **Modular design** - Each package has clear responsibilities
 - **Proper dependency injection** - Avoid global state
 - **Consistent naming** - Use TypeScript naming conventions
+- **No barrel re-exports** - Enforced by `custom-rules/no-re-exports`
+- **No parent imports** - Enforced by `custom-rules/no-parent-imports`
+- **Prefer Bun APIs** - Use Bun.file(), Bun.write(), Bun.spawn() instead of Node.js fs/child_process
 
 ---
 
@@ -282,6 +346,7 @@ type ParticipantDto = ...;  // ❌ Use RawParticipant instead
 - **Integration tests** - Test package interactions
 - **Snapshot testing** - For report generation output
 - **Type testing** - Ensure type safety in complex scenarios
+- **Run tests**: `bun test` in any package or root
 
 ---
 
@@ -292,3 +357,15 @@ type ParticipantDto = ...;  // ❌ Use RawParticipant instead
 - **Caching** - Cache expensive operations appropriately (API responses)
 - **Memory management** - Clean up resources and connections
 - **Bundle optimization** - Use proper bundling strategies
+
+---
+
+## Git Hooks (Husky + lint-staged)
+
+Pre-commit hooks run automatically:
+
+- Prettier formatting on all files
+- Markdownlint on `.md` files
+- Actionlint on GitHub workflow files
+- Per-package: typecheck, ESLint, and relevant tests
+- Rust formatting and Clippy for desktop/src-tauri

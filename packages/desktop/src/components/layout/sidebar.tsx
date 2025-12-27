@@ -1,13 +1,12 @@
-import { Gamepad2, MessageSquare, Activity, Bug, Swords, Volume2 } from "lucide-react";
+import { Gamepad2, Server, Activity, Bug, Swords } from "lucide-react";
 import { cn } from "@scout-for-lol/desktop/lib/utils";
 
 type SidebarProps = {
   lcuConnected: boolean;
-  discordConnected: boolean;
-  voiceConnected: boolean;
+  backendConnected: boolean;
   isMonitoring: boolean;
-  activeSection: "league" | "discord" | "monitor" | "sounds";
-  onSectionChange: (section: "league" | "discord" | "monitor" | "sounds") => void;
+  activeSection: "league" | "backend" | "monitor";
+  onSectionChange: (section: "league" | "backend" | "monitor") => void;
   showDebug: boolean;
   onToggleDebug: () => void;
 };
@@ -48,15 +47,14 @@ function NavItem({ icon, label, active, status, onClick, disabled }: NavItemProp
 
 export function Sidebar({
   lcuConnected,
-  discordConnected,
-  voiceConnected,
+  backendConnected,
   isMonitoring,
   activeSection,
   onSectionChange,
   showDebug,
   onToggleDebug,
 }: SidebarProps) {
-  const canMonitor = lcuConnected && discordConnected;
+  const canMonitor = lcuConnected && backendConnected;
 
   return (
     <aside className="flex h-full w-60 flex-col border-r border-gray-800 bg-gray-900/50">
@@ -83,12 +81,12 @@ export function Sidebar({
           }}
         />
         <NavItem
-          icon={<MessageSquare className="h-5 w-5" />}
-          label="Discord"
-          active={activeSection === "discord"}
-          status={discordConnected ? "connected" : "disconnected"}
+          icon={<Server className="h-5 w-5" />}
+          label="Backend"
+          active={activeSection === "backend"}
+          status={backendConnected ? "connected" : "disconnected"}
           onClick={() => {
-            onSectionChange("discord");
+            onSectionChange("backend");
           }}
         />
         <NavItem
@@ -101,15 +99,6 @@ export function Sidebar({
           }}
           disabled={!canMonitor}
         />
-        <NavItem
-          icon={<Volume2 className="h-5 w-5" />}
-          label="Sound Pack"
-          active={activeSection === "sounds"}
-          status="idle"
-          onClick={() => {
-            onSectionChange("sounds");
-          }}
-        />
       </nav>
 
       {/* Status Summary */}
@@ -117,8 +106,7 @@ export function Sidebar({
         <div className="mb-4 text-xs font-medium uppercase tracking-wider text-gray-500">Status</div>
         <div className="space-y-3">
           <StatusRow label="League" connected={lcuConnected} />
-          <StatusRow label="Discord" connected={discordConnected} />
-          {voiceConnected && <StatusRow label="Voice" connected={true} />}
+          <StatusRow label="Backend" connected={backendConnected} />
         </div>
       </div>
 

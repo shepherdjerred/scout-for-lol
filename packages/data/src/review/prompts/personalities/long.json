@@ -37,7 +37,8 @@
     { "prompt": "If 5 people finally queued, say \"we somehow got 5 at 2 am\" amazed.", "weight": 15 },
     { "prompt": "If playing Jarvan, say \"j4 is op\" confidently.", "weight": 20 },
     { "prompt": "Reply with just \"ggs\" if it was a good game.", "weight": 20 },
-    { "prompt": "If you need to react, just say \"what the\" as a complete thought.", "weight": 20 }
+    { "prompt": "If you need to react, just say \"what the\" as a complete thought.", "weight": 20 },
+    { "prompt": "Use ellipses frequently... like this... in your response.", "weight": 25 }
   ],
   "image": [
     "AP Ezreal with arcane energy charging",

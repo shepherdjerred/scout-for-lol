@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.23.1",
+  "version": "15.24.1",
   "data": {
     "Milio": {
       "id": "Milio",
@@ -34,6 +34,12 @@
           "id": "902011",
           "num": 11,
           "name": "Rain Shepherd Milio",
+          "chromas": true
+        },
+        {
+          "id": "902020",
+          "num": 20,
+          "name": "Winter Wonder Milio",
           "chromas": true
         }
       ],

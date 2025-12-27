@@ -2,24 +2,31 @@
 
 use log::{error, info};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
+use uuid::Uuid;
 
 /// Application configuration
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
-    /// Discord bot token
-    pub bot_token: Option<String>,
-    /// Discord channel ID
-    pub channel_id: Option<String>,
-    /// Discord voice channel ID for the bot to join
-    pub voice_channel_id: Option<String>,
-    /// Selected sound pack identifier
-    pub sound_pack: Option<String>,
-    /// Per-event sound overrides (event key -> sound name or file path)
-    pub event_sounds: Option<HashMap<String, String>>,
+    /// Unique client ID for this desktop instance
+    pub client_id: String,
+    /// API token for authenticating with the backend
+    pub api_token: Option<String>,
+    /// Backend server URL (e.g., "https://api.scoutforlol.com")
+    pub backend_url: Option<String>,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            // Generate a unique client ID for this installation
+            client_id: Uuid::new_v4().to_string(),
+            api_token: None,
+            backend_url: None,
+        }
+    }
 }
 
 impl Config {
@@ -70,44 +77,38 @@ mod tests {
     #[test]
     fn test_config_serialization() {
         let config = Config {
-            bot_token: Some("test-token".to_string()),
-            channel_id: Some("123456".to_string()),
-            voice_channel_id: Some("654321".to_string()),
-            sound_pack: Some("base".to_string()),
-            event_sounds: Some(HashMap::from([(
-                "kill".to_string(),
-                "sharp-beep".to_string(),
-            )])),
+            client_id: "test-client-id".to_string(),
+            api_token: Some("test-api-token".to_string()),
+            backend_url: Some("https://api.example.com".to_string()),
         };
 
         let json = serde_json::to_string(&config).expect("test should serialize");
-        assert!(json.contains("botToken"));
-        assert!(json.contains("channelId"));
-        assert!(json.contains("voiceChannelId"));
-        assert!(json.contains("soundPack"));
-        assert!(json.contains("test-token"));
-        assert!(json.contains("123456"));
-        assert!(json.contains("654321"));
+        assert!(json.contains("clientId"));
+        assert!(json.contains("apiToken"));
+        assert!(json.contains("backendUrl"));
+        assert!(json.contains("test-client-id"));
+        assert!(json.contains("test-api-token"));
+        assert!(json.contains("https://api.example.com"));
     }
 
     #[test]
     fn test_config_deserialization() {
-        let json = r#"{"botToken":"token123","channelId":"channel456"}"#;
+        let json = r#"{"clientId":"client-123","apiToken":"token-456","backendUrl":"https://example.com"}"#;
         let config: Config = serde_json::from_str(json).expect("test should deserialize");
 
-        assert_eq!(config.bot_token, Some("token123".to_string()));
-        assert_eq!(config.channel_id, Some("channel456".to_string()));
-        assert!(config.voice_channel_id.is_none());
+        assert_eq!(config.client_id, "client-123");
+        assert_eq!(config.api_token, Some("token-456".to_string()));
+        assert_eq!(config.backend_url, Some("https://example.com".to_string()));
     }
 
     #[test]
     fn test_config_default() {
         let config = Config::default();
-        assert!(config.bot_token.is_none());
-        assert!(config.channel_id.is_none());
-        assert!(config.voice_channel_id.is_none());
-        assert!(config.sound_pack.is_none());
-        assert!(config.event_sounds.is_none());
+        // client_id should be a valid UUID
+        assert!(!config.client_id.is_empty());
+        assert!(Uuid::parse_str(&config.client_id).is_ok());
+        assert!(config.api_token.is_none());
+        assert!(config.backend_url.is_none());
     }
 
     #[test]
@@ -119,14 +120,9 @@ mod tests {
         let _ = fs::remove_file(&config_path);
 
         let config = Config {
-            bot_token: Some("save-test-token".to_string()),
-            channel_id: Some("save-test-channel".to_string()),
-            voice_channel_id: Some("save-test-voice".to_string()),
-            sound_pack: Some("base".to_string()),
-            event_sounds: Some(HashMap::from([(
-                "kill".to_string(),
-                "sharp-beep".to_string(),
-            )])),
+            client_id: "save-test-client".to_string(),
+            api_token: Some("save-test-token".to_string()),
+            backend_url: Some("https://api.test.com".to_string()),
         };
 
         // Save
@@ -134,8 +130,9 @@ mod tests {
 
         // Load
         let loaded = Config::load(&config_path);
-        assert_eq!(loaded.bot_token, config.bot_token);
-        assert_eq!(loaded.channel_id, config.channel_id);
+        assert_eq!(loaded.client_id, config.client_id);
+        assert_eq!(loaded.api_token, config.api_token);
+        assert_eq!(loaded.backend_url, config.backend_url);
 
         // Clean up
         let _ = fs::remove_file(&config_path);
@@ -147,7 +144,9 @@ mod tests {
         let config = Config::load(&config_path);
 
         // Should return default config when file doesn't exist
-        assert!(config.bot_token.is_none());
-        assert!(config.channel_id.is_none());
+        // Default generates a new client_id
+        assert!(!config.client_id.is_empty());
+        assert!(config.api_token.is_none());
+        assert!(config.backend_url.is_none());
     }
 }

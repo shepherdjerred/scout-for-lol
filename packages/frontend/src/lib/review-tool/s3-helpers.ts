@@ -21,7 +21,7 @@ export function getOutcome(participant: RawParticipant): "Victory" | "Defeat" | 
 /**
  * Extract rune details from participant perks
  */
-export function extractRunes(p: RawParticipant): Rune[] {
+function extractRunes(p: RawParticipant): Rune[] {
   const runes: Rune[] = [];
 
   // Extract primary rune selections
@@ -75,4 +75,18 @@ export function participantToChampion(p: RawParticipant): Champion {
     visionScore: p.visionScore,
     damage: p.totalDamageDealtToChampions,
   };
+}
+
+/**
+ * Valid match key pattern: games/YYYY/MM/DD/{MATCH_ID}/match.json
+ * Match ID examples: NA1_1234567890, EUW1_9876543210_TEST, etc.
+ */
+const VALID_MATCH_KEY_REGEX = /^games\/\d{4}\/\d{2}\/\d{2}\/[^/]+\/match\.json$/;
+
+/**
+ * Check if an S3 key represents a valid match file
+ * This prevents fetching non-match files (directories, temp files, etc.)
+ */
+export function isValidMatchKey(key: string): boolean {
+  return VALID_MATCH_KEY_REGEX.test(key);
 }

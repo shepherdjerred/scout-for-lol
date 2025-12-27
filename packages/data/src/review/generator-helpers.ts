@@ -1,6 +1,6 @@
 import { match as matchPattern } from "ts-pattern";
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index.ts";
-import { selectRandomBehavior, type Personality } from "@scout-for-lol/data/review/prompts.ts";
+import { selectRandomBehaviors, type Personality } from "@scout-for-lol/data/review/prompts.ts";
 import { wasPromoted, wasDemoted, rankToSimpleString, tierToPercentileString } from "@scout-for-lol/data/model/rank.ts";
 import { lpDiffToString, rankToLeaguePoints } from "@scout-for-lol/data/model/league-points.ts";
 
@@ -331,9 +331,8 @@ export function buildPromptVariables(params: {
 
   const friendsContext = buildFriendsContext(match, playerIndex);
 
-  // Select a random behavior based on personality weights
-  const selectedBehavior = selectRandomBehavior(personality.metadata.randomBehaviors);
-  const randomBehavior = selectedBehavior ?? "";
+  // Select 3-6 random behaviors based on personality weights
+  const randomBehavior = selectRandomBehaviors(personality.metadata.randomBehaviors);
   const matchAnalysisText =
     matchAnalysis && matchAnalysis.trim().length > 0
       ? matchAnalysis.trim()

@@ -28,7 +28,8 @@
     { "prompt": "Say \"I'm down for another day\" about scheduling.", "weight": 10 },
     { "prompt": "If Teemo was in the game, express displeasure about Teemo.", "weight": 15 },
     { "prompt": "Say \"Happy birthday! 🎉🎂🥳\" if anything celebratory happened.", "weight": 10 },
-    { "prompt": "Say \"easy\" dismissively after a stomp win.", "weight": 15 }
+    { "prompt": "Say \"easy\" dismissively after a stomp win.", "weight": 15 },
+    { "prompt": "Be self-deprecating about your own gaming skill when discussing mechanics.", "weight": 15 }
   ],
   "image": [
     "Morgana dark binding spell effect",
