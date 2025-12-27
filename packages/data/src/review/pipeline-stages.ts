@@ -7,12 +7,10 @@
 
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index";
 import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema";
-import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema";
 import type { OpenAIClient, ModelConfig, StageTrace, ImageGenerationTrace } from "./pipeline-types.ts";
 import type { Personality } from "./prompts.ts";
 import { replaceTemplateVariables, selectRandomImagePrompts } from "./prompts.ts";
 import { buildPromptVariables, extractMatchData } from "./generator-helpers.ts";
-import { enrichTimelineData } from "./timeline-enricher.ts";
 import { modelSupportsParameter } from "./models.ts";
 import type { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
@@ -152,51 +150,9 @@ async function callOpenAI(params: {
 
 // ============================================================================
 // Stage 1a: Timeline Summary
+// Note: Timeline-related stages are in timeline-stages.ts to keep this file under 500 lines.
+// Import from timeline-stages.ts directly when needed.
 // ============================================================================
-
-/**
- * Stage 1a: Summarize raw timeline data into a narrative
- *
- * Takes raw timeline data from Riot API along with match data for participant
- * context, and generates a narrative summary of how the game unfolded.
- * The timeline is enriched with a participant lookup table for champion/team names.
- */
-export async function generateTimelineSummary(params: {
-  rawTimeline: RawTimeline;
-  rawMatch: RawMatch;
-  laneContext: string;
-  client: OpenAIClient;
-  model: ModelConfig;
-  systemPrompt: string;
-  userPrompt: string;
-}): Promise<{ text: string; trace: StageTrace }> {
-  const {
-    rawTimeline,
-    rawMatch,
-    laneContext,
-    client,
-    model,
-    systemPrompt: systemPromptTemplate,
-    userPrompt: userPromptTemplate,
-  } = params;
-
-  // Enrich timeline with participant lookup table for human-readable names
-  const enrichedData = enrichTimelineData(rawTimeline, rawMatch);
-
-  const systemPrompt = replacePromptVariables(systemPromptTemplate, {
-    LANE_CONTEXT: laneContext,
-  });
-  const userPrompt = replacePromptVariables(userPromptTemplate, {
-    TIMELINE_DATA: minifyJson(enrichedData),
-  });
-
-  return callOpenAI({
-    client,
-    model,
-    systemPrompt,
-    userPrompt,
-  });
-}
 
 // ============================================================================
 // Stage 1b: Match Summary

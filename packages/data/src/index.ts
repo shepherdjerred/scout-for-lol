@@ -22,9 +22,13 @@ export {
 } from "./review/timeline-enricher.ts";
 
 // Pipeline exports
-export { generateFullMatchReview, runStage1Sequential } from "./review/pipeline.ts";
+export { generateFullMatchReview } from "./review/pipeline.ts";
 export {
   generateTimelineSummary,
+  generateTimelineChunkSummary,
+  aggregateTimelineChunks,
+} from "./review/timeline-stages.ts";
+export {
   generateMatchSummary,
   generateReviewTextStage,
   generateImageDescription,
@@ -65,6 +69,7 @@ export type {
   ReviewPipelineInput,
   StageTrace,
   ImageGenerationTrace,
+  TimelineChunkTrace,
   PipelineTraces,
   PipelineIntermediateResults,
   PipelineContext,

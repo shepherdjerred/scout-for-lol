@@ -15,12 +15,16 @@ import { selectRandomStyle } from "@scout-for-lol/data/review/art-styles.ts";
 
 // Import system prompts from TXT files (using ?raw for Vite to return content, not URL)
 import TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1b-timeline-summary.txt?raw";
+import TIMELINE_CHUNK_SYSTEM_PROMPT_RAW from "./prompts/system/1c-timeline-chunk.txt?raw";
+import TIMELINE_AGGREGATE_SYSTEM_PROMPT_RAW from "./prompts/system/1d-timeline-aggregate.txt?raw";
 import MATCH_SUMMARY_SYSTEM_PROMPT_RAW from "./prompts/system/1a-match-summary.txt?raw";
 import REVIEW_TEXT_SYSTEM_PROMPT_RAW from "./prompts/system/2-review-text.txt?raw";
 import IMAGE_DESCRIPTION_SYSTEM_PROMPT_RAW from "./prompts/system/3-image-description.txt?raw";
 
 // Import user prompts from TXT files (using ?raw for Vite to return content, not URL)
 import TIMELINE_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1b-timeline-summary.txt?raw";
+import TIMELINE_CHUNK_USER_PROMPT_RAW from "./prompts/user/1c-timeline-chunk.txt?raw";
+import TIMELINE_AGGREGATE_USER_PROMPT_RAW from "./prompts/user/1d-timeline-aggregate.txt?raw";
 import MATCH_SUMMARY_USER_PROMPT_RAW from "./prompts/user/1a-match-summary.txt?raw";
 import REVIEW_TEXT_USER_PROMPT_RAW from "./prompts/user/2-review-text.txt?raw";
 import IMAGE_DESCRIPTION_USER_PROMPT_RAW from "./prompts/user/3-image-description.txt?raw";
@@ -31,12 +35,28 @@ import IMAGE_GENERATION_USER_PROMPT_RAW from "./prompts/user/4-image-generation.
 // ============================================================================
 
 /**
- * System prompt for Stage 1a: Timeline Summary
+ * System prompt for Stage 1a: Timeline Summary (legacy, full timeline)
  *
  * Summarizes curated timeline data (kills, objectives, towers, gold snapshots)
  * into a concise narrative of how the game unfolded.
  */
 export const TIMELINE_SUMMARY_SYSTEM_PROMPT = TIMELINE_SUMMARY_SYSTEM_PROMPT_RAW.trim();
+
+/**
+ * System prompt for Stage 1a (Chunked): Timeline Chunk Summary
+ *
+ * Summarizes a single chunk of timeline data (typically 10 minutes).
+ * Each chunk is processed independently, then aggregated.
+ */
+export const TIMELINE_CHUNK_SYSTEM_PROMPT = TIMELINE_CHUNK_SYSTEM_PROMPT_RAW.trim();
+
+/**
+ * System prompt for Stage 1a (Aggregation): Timeline Aggregate
+ *
+ * Combines multiple chunk summaries into a cohesive narrative.
+ * Identifies cross-chunk patterns and game flow.
+ */
+export const TIMELINE_AGGREGATE_SYSTEM_PROMPT = TIMELINE_AGGREGATE_SYSTEM_PROMPT_RAW.trim();
 
 /**
  * System prompt for Stage 1b: Match Summary
@@ -68,6 +88,8 @@ export const IMAGE_DESCRIPTION_SYSTEM_PROMPT = IMAGE_DESCRIPTION_SYSTEM_PROMPT_R
 // ============================================================================
 
 export const TIMELINE_SUMMARY_USER_PROMPT = TIMELINE_SUMMARY_USER_PROMPT_RAW.trim();
+export const TIMELINE_CHUNK_USER_PROMPT = TIMELINE_CHUNK_USER_PROMPT_RAW.trim();
+export const TIMELINE_AGGREGATE_USER_PROMPT = TIMELINE_AGGREGATE_USER_PROMPT_RAW.trim();
 export const MATCH_SUMMARY_USER_PROMPT = MATCH_SUMMARY_USER_PROMPT_RAW.trim();
 export const REVIEW_TEXT_USER_PROMPT = REVIEW_TEXT_USER_PROMPT_RAW.trim();
 export const IMAGE_DESCRIPTION_USER_PROMPT = IMAGE_DESCRIPTION_USER_PROMPT_RAW.trim();
@@ -78,7 +100,7 @@ export const IMAGE_GENERATION_USER_PROMPT = IMAGE_GENERATION_USER_PROMPT_RAW.tri
 // ============================================================================
 
 /**
- * Default model config for timeline summary (Stage 1a)
+ * Default model config for timeline summary (Stage 1a - legacy full timeline)
  *
  * Uses gpt-5-mini (200k context) which handles large timeline data well.
  * The full raw timeline from Riot API can be 100k+ tokens (one frame per minute with
@@ -87,6 +109,30 @@ export const IMAGE_GENERATION_USER_PROMPT = IMAGE_GENERATION_USER_PROMPT_RAW.tri
 export const DEFAULT_TIMELINE_SUMMARY_MODEL: ModelConfig = {
   model: "gpt-5-mini",
   maxTokens: 6000,
+  temperature: 0.3,
+};
+
+/**
+ * Default model config for timeline chunk summary (Stage 1a - chunked)
+ *
+ * Uses gpt-5-mini for each 10-minute chunk. Each chunk typically has
+ * ~10 frames and fewer events, keeping tokens well under the limit.
+ */
+export const DEFAULT_TIMELINE_CHUNK_MODEL: ModelConfig = {
+  model: "gpt-5-mini",
+  maxTokens: 2000,
+  temperature: 0.3,
+};
+
+/**
+ * Default model config for timeline aggregation (Stage 1a - aggregation)
+ *
+ * Uses gpt-5-mini to combine chunk summaries into a cohesive narrative.
+ * Input is just text summaries (~500-1000 tokens per chunk).
+ */
+export const DEFAULT_TIMELINE_AGGREGATE_MODEL: ModelConfig = {
+  model: "gpt-5-mini",
+  maxTokens: 4000,
   temperature: 0.3,
 };
 
