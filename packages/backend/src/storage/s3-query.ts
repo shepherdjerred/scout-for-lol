@@ -5,6 +5,9 @@ import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data/index";
 import { eachDayOfInterval, format, startOfDay, endOfDay } from "date-fns";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
+// Timeout for individual S3 operations (30 seconds)
+const S3_REQUEST_TIMEOUT_MS = 30000;
+
 const logger = createLogger("storage-s3-query");
 
 /**
@@ -56,30 +59,47 @@ function processMatchResults(
 }
 
 /**
- * Fetch and parse a match from S3
+ * Fetch and parse a match from S3 with timeout
  */
 async function getMatchFromS3(client: S3Client, bucket: string, key: string): Promise<RawMatch | null> {
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(() => {
+    abortController.abort();
+  }, S3_REQUEST_TIMEOUT_MS);
+
   try {
     const command = new GetObjectCommand({
       Bucket: bucket,
       Key: key,
     });
 
-    const response = await client.send(command);
+    const response = await client.send(command, {
+      abortSignal: abortController.signal,
+    });
 
     if (!response.Body) {
+      clearTimeout(timeoutId);
       logger.warn(`[S3Query] No body in response for key: ${key}`);
       return null;
     }
 
-    // Read the stream to a string
+    // transformToString() should respect the aborted signal from the parent request
     const bodyString = await response.Body.transformToString();
+    clearTimeout(timeoutId);
+
     // Parse and validate the match data with Zod schema for runtime type safety
     const matchData = JSON.parse(bodyString);
     const match = RawMatchSchema.parse(matchData);
 
     return match;
   } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (abortController.signal.aborted) {
+      logger.warn(`[S3Query] Request timeout after ${S3_REQUEST_TIMEOUT_MS.toString()}ms for key: ${key}`);
+      return null;
+    }
+
     logger.warn(`[S3Query] Failed to fetch or parse match from S3 key ${key}: ${getErrorMessage(error)}`);
     return null;
   }
@@ -134,7 +154,9 @@ export async function queryMatchesByDateRange(startDate: Date, endDate: Date, pu
           Prefix: prefix,
         });
 
-        const response = await client.send(listCommand);
+        const response = await client.send(listCommand, {
+          abortSignal: AbortSignal.timeout(S3_REQUEST_TIMEOUT_MS),
+        });
 
         if (!response.Contents || response.Contents.length === 0) {
           logger.info(`[S3Query] No objects found for prefix: ${prefix}`);
