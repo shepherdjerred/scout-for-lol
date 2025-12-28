@@ -30,16 +30,22 @@ import type {
   PipelineClientsInput,
   PipelineProgressCallback,
   PipelineStageName,
+  TimelineChunkTrace,
+  PipelineProgress,
 } from "./pipeline-types.ts";
 import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema";
 import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema";
 import {
-  generateTimelineSummary,
   generateMatchSummary,
   generateReviewTextStage,
   generateImageDescription,
   generateImage,
 } from "./pipeline-stages.ts";
+import {
+  runTimelineSummaryWithChunks,
+  type ProgressReportOptions,
+  type TimelineSummaryResult,
+} from "./timeline-pipeline.ts";
 
 // ============================================================================
 // Progress Tracking
@@ -48,6 +54,8 @@ import {
 /** Stage name to human-readable message */
 const STAGE_MESSAGES: Record<PipelineStageName, string> = {
   "timeline-summary": "Generating timeline summary...",
+  "timeline-chunk": "Processing timeline chunk...",
+  "timeline-aggregate": "Aggregating timeline...",
   "match-summary": "Generating match summary...",
   "review-text": "Generating review...",
   "image-description": "Generating image prompt...",
@@ -76,16 +84,23 @@ function countEnabledStages(stages: PipelineStagesConfig, hasGemini: boolean): n
 function createProgressReporter(
   onProgress: PipelineProgressCallback | undefined,
   totalStages: number,
-): (stage: PipelineStageName) => void {
+): (stage: PipelineStageName, options?: ProgressReportOptions) => void {
   let currentStage = 0;
-  return (stage: PipelineStageName): void => {
+  return (stage: PipelineStageName, options?: ProgressReportOptions): void => {
     currentStage++;
-    onProgress?.({
+    const progress: PipelineProgress = {
       stage,
-      message: STAGE_MESSAGES[stage],
+      message: options?.customMessage ?? STAGE_MESSAGES[stage],
       currentStage,
       totalStages,
-    });
+    };
+    if (options?.chunkIndex !== undefined) {
+      progress.chunkIndex = options.chunkIndex;
+    }
+    if (options?.chunkTotal !== undefined) {
+      progress.chunkTotal = options.chunkTotal;
+    }
+    onProgress?.(progress);
   };
 }
 
@@ -96,6 +111,8 @@ function createProgressReporter(
 type Stage1Result = {
   timelineSummaryText?: string;
   timelineSummaryTrace?: StageTrace;
+  timelineChunkTraces?: TimelineChunkTrace[];
+  timelineChunkSummaries?: string[];
   matchSummaryText?: string;
   matchSummaryTrace?: StageTrace;
 };
@@ -106,6 +123,7 @@ type Stage1Context = {
   traces: Partial<PipelineTraces>;
   rawMatch: RawMatch;
   rawTimeline: RawTimeline;
+  reportProgress: (stage: PipelineStageName, options?: ProgressReportOptions) => void;
 };
 
 type Stage3And4Context = {
@@ -127,22 +145,23 @@ type Stage3And4Result = {
 // Stage 1 Helpers
 // ============================================================================
 
-async function runTimelineSummary(ctx: Stage1Context): Promise<{ text: string; trace: StageTrace } | undefined> {
-  const { input } = ctx;
-  const { match, prompts, clients, stages } = input;
+async function runTimelineSummary(ctx: Stage1Context): Promise<TimelineSummaryResult | undefined> {
+  const { input, reportProgress, rawTimeline, rawMatch } = ctx;
+  const { clients, stages } = input;
 
   if (!stages.timelineSummary.enabled) {
     return undefined;
   }
 
-  return await generateTimelineSummary({
-    rawTimeline: match.rawTimeline,
-    rawMatch: match.raw,
-    laneContext: prompts.laneContext,
+  return runTimelineSummaryWithChunks({
+    rawTimeline,
+    rawMatch,
+    laneContext: input.prompts.laneContext,
     client: clients.openai,
     model: stages.timelineSummary.model,
     systemPrompt: stages.timelineSummary.systemPrompt,
     userPrompt: stages.timelineSummary.userPrompt,
+    reportProgress,
   });
 }
 
@@ -175,6 +194,16 @@ async function runStage1Parallel(ctx: Stage1Context): Promise<Stage1Result> {
     result.timelineSummaryTrace = timelineResult.trace;
     ctx.intermediate.timelineSummaryText = timelineResult.text;
     ctx.traces.timelineSummary = timelineResult.trace;
+
+    // Handle chunked processing results
+    if (timelineResult.chunkTraces !== undefined) {
+      result.timelineChunkTraces = timelineResult.chunkTraces;
+      ctx.traces.timelineChunks = timelineResult.chunkTraces;
+    }
+    if (timelineResult.chunkSummaries !== undefined) {
+      result.timelineChunkSummaries = timelineResult.chunkSummaries;
+      ctx.intermediate.timelineChunkSummaries = timelineResult.chunkSummaries;
+    }
   }
 
   if (matchResult) {
@@ -301,19 +330,18 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
   const reportProgress = createProgressReporter(onProgress, totalStages);
 
   // Stage 1: Parallel Summarization (using raw data)
-  // Report progress for both stages before running (they run in parallel)
+  // Progress is now reported within the stage functions for chunked processing
   const stage1Ctx: Stage1Context = {
     input,
     intermediate,
     traces,
     rawMatch: match.raw,
     rawTimeline: match.rawTimeline,
+    reportProgress,
   };
 
-  // For parallel stages, report the first enabled one
-  if (stages.timelineSummary.enabled) {
-    reportProgress("timeline-summary");
-  } else if (stages.matchSummary.enabled) {
+  // For match summary (runs in parallel with timeline), report progress if timeline is disabled
+  if (!stages.timelineSummary.enabled && stages.matchSummary.enabled) {
     reportProgress("match-summary");
   }
 
@@ -376,6 +404,9 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
   if (traces.timelineSummary !== undefined) {
     finalTraces.timelineSummary = traces.timelineSummary;
   }
+  if (traces.timelineChunks !== undefined) {
+    finalTraces.timelineChunks = traces.timelineChunks;
+  }
   if (traces.matchSummary !== undefined) {
     finalTraces.matchSummary = traces.matchSummary;
   }
@@ -387,76 +418,4 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
   }
 
   return { review: reviewOutput, traces: finalTraces, intermediate, context };
-}
-
-/**
- * Run Stage 1 with proper dependency handling
- *
- * This helper ensures Stage 1b can use the timeline summary if available.
- * It runs 1a first, then 1b with the timeline summary.
- */
-export async function runStage1Sequential(params: { input: ReviewPipelineInput }): Promise<{
-  timelineSummaryText?: string;
-  timelineSummaryTrace?: StageTrace;
-  matchSummaryText?: string;
-  matchSummaryTrace?: StageTrace;
-}> {
-  const { input } = params;
-  const { match, player, prompts, clients, stages } = input;
-
-  let timelineSummaryText: string | undefined;
-  let timelineSummaryTrace: StageTrace | undefined;
-
-  // Stage 1a: Timeline Summary
-  if (stages.timelineSummary.enabled) {
-    const result = await generateTimelineSummary({
-      rawTimeline: match.rawTimeline,
-      rawMatch: match.raw,
-      laneContext: prompts.laneContext,
-      client: clients.openai,
-      model: stages.timelineSummary.model,
-      systemPrompt: stages.timelineSummary.systemPrompt,
-      userPrompt: stages.timelineSummary.userPrompt,
-    });
-    timelineSummaryText = result.text;
-    timelineSummaryTrace = result.trace;
-  }
-
-  let matchSummaryText: string | undefined;
-  let matchSummaryTrace: StageTrace | undefined;
-
-  // Stage 1b: Match Summary
-  if (stages.matchSummary.enabled) {
-    const result = await generateMatchSummary({
-      match: match.processed,
-      rawMatch: match.raw,
-      playerIndex: player.index,
-      client: clients.openai,
-      model: stages.matchSummary.model,
-      systemPrompt: stages.matchSummary.systemPrompt,
-      userPrompt: stages.matchSummary.userPrompt,
-    });
-    matchSummaryText = result.text;
-    matchSummaryTrace = result.trace;
-  }
-
-  const result: {
-    timelineSummaryText?: string;
-    timelineSummaryTrace?: StageTrace;
-    matchSummaryText?: string;
-    matchSummaryTrace?: StageTrace;
-  } = {};
-  if (timelineSummaryText !== undefined) {
-    result.timelineSummaryText = timelineSummaryText;
-  }
-  if (timelineSummaryTrace !== undefined) {
-    result.timelineSummaryTrace = timelineSummaryTrace;
-  }
-  if (matchSummaryText !== undefined) {
-    result.matchSummaryText = matchSummaryText;
-  }
-  if (matchSummaryTrace !== undefined) {
-    result.matchSummaryTrace = matchSummaryTrace;
-  }
-  return result;
 }

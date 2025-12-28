@@ -7,196 +7,19 @@
 
 import type { ArenaMatch, CompletedMatch } from "@scout-for-lol/data/model/index";
 import type { RawMatch } from "@scout-for-lol/data/league/raw-match.schema";
-import type { RawTimeline } from "@scout-for-lol/data/league/raw-timeline.schema";
 import type { OpenAIClient, ModelConfig, StageTrace, ImageGenerationTrace } from "./pipeline-types.ts";
 import type { Personality } from "./prompts.ts";
 import { replaceTemplateVariables, selectRandomImagePrompts } from "./prompts.ts";
 import { buildPromptVariables, extractMatchData } from "./generator-helpers.ts";
-import { enrichTimelineData } from "./timeline-enricher.ts";
-import { modelSupportsParameter } from "./models.ts";
 import type { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
-
-// ============================================================================
-// Utility Functions
-// ============================================================================
-
-/**
- * Minify JSON string to reduce token usage
- */
-function minifyJson(data: unknown): string {
-  return JSON.stringify(data);
-}
-
-/**
- * Extract all variable names from a template using <VARIABLE> syntax
- */
-function extractTemplateVariables(template: string): Set<string> {
-  const regex = /<([A-Z][A-Z0-9_]*)>/g;
-  const variables = new Set<string>();
-  let match;
-  while ((match = regex.exec(template)) !== null) {
-    const varName = match[1];
-    if (varName !== undefined) {
-      variables.add(varName);
-    }
-  }
-  return variables;
-}
-
-/**
- * Replace template variables in a prompt template using <VARIABLE> syntax
- *
- * Validates that:
- * 1. All variables in the template have corresponding replacements
- * 2. All provided replacements are used in the template
- *
- * @throws Error if variables are missing or unused
- */
-function replacePromptVariables(template: string, variables: Record<string, string>): string {
-  const templateVars = extractTemplateVariables(template);
-  const providedVars = new Set(Object.keys(variables));
-
-  // Check for missing variables (in template but not provided)
-  const missingVars = [...templateVars].filter((v) => !providedVars.has(v));
-  if (missingVars.length > 0) {
-    throw new Error(`Missing prompt variables: ${missingVars.join(", ")}`);
-  }
-
-  // Check for unused variables (provided but not in template)
-  const unusedVars = [...providedVars].filter((v) => !templateVars.has(v));
-  if (unusedVars.length > 0) {
-    throw new Error(`Unused prompt variables: ${unusedVars.join(", ")}`);
-  }
-
-  let result = template;
-  for (const [key, value] of Object.entries(variables)) {
-    result = result.replaceAll(`<${key}>`, value);
-  }
-  return result;
-}
-
-/**
- * Make an OpenAI chat completion call and return the trace
- */
-async function callOpenAI(params: {
-  client: OpenAIClient;
-  model: ModelConfig;
-  systemPrompt?: string;
-  userPrompt: string;
-}): Promise<{ text: string; trace: StageTrace }> {
-  const { client, model, systemPrompt, userPrompt } = params;
-
-  const messages: { role: "system" | "user" | "assistant"; content: string }[] = [];
-
-  if (systemPrompt) {
-    messages.push({ role: "system", content: systemPrompt });
-  }
-  messages.push({ role: "user", content: userPrompt });
-
-  const startTime = Date.now();
-
-  // Only include temperature and topP if the model supports them
-  // Some models (like GPT-5 series and O-series) don't support these parameters
-  const supportsTemperature = modelSupportsParameter(model.model, "temperature");
-  const supportsTopP = modelSupportsParameter(model.model, "topP");
-
-  const response = await client.chat.completions.create({
-    model: model.model,
-    messages,
-    max_completion_tokens: model.maxTokens,
-    ...(supportsTemperature && model.temperature !== undefined && { temperature: model.temperature }),
-    ...(supportsTopP && model.topP !== undefined && { top_p: model.topP }),
-  });
-
-  const durationMs = Date.now() - startTime;
-
-  const content = response.choices[0]?.message.content;
-  if (!content || content.trim().length === 0) {
-    const refusal = response.choices[0]?.message.refusal;
-    const finishReason = response.choices[0]?.finish_reason;
-    const details: string[] = [];
-    if (refusal) {
-      details.push(`refusal: ${refusal}`);
-    }
-    if (finishReason) {
-      details.push(`finish_reason: ${finishReason}`);
-    }
-    const detailStr = details.length > 0 ? ` (${details.join(", ")})` : "";
-    throw new Error(`No content returned from OpenAI${detailStr}`);
-  }
-
-  const text = content.trim();
-
-  const trace: StageTrace = {
-    request: {
-      userPrompt,
-    },
-    response: { text },
-    model,
-    durationMs,
-  };
-
-  if (systemPrompt) {
-    trace.request.systemPrompt = systemPrompt;
-  }
-  if (response.usage?.prompt_tokens !== undefined) {
-    trace.tokensPrompt = response.usage.prompt_tokens;
-  }
-  if (response.usage?.completion_tokens !== undefined) {
-    trace.tokensCompletion = response.usage.completion_tokens;
-  }
-
-  return { text, trace };
-}
+import { minifyJson, replacePromptVariables, callOpenAI } from "./pipeline-utils.ts";
 
 // ============================================================================
 // Stage 1a: Timeline Summary
+// Note: Timeline-related stages are in timeline-stages.ts to keep this file under 500 lines.
+// Import from timeline-stages.ts directly when needed.
 // ============================================================================
-
-/**
- * Stage 1a: Summarize raw timeline data into a narrative
- *
- * Takes raw timeline data from Riot API along with match data for participant
- * context, and generates a narrative summary of how the game unfolded.
- * The timeline is enriched with a participant lookup table for champion/team names.
- */
-export async function generateTimelineSummary(params: {
-  rawTimeline: RawTimeline;
-  rawMatch: RawMatch;
-  laneContext: string;
-  client: OpenAIClient;
-  model: ModelConfig;
-  systemPrompt: string;
-  userPrompt: string;
-}): Promise<{ text: string; trace: StageTrace }> {
-  const {
-    rawTimeline,
-    rawMatch,
-    laneContext,
-    client,
-    model,
-    systemPrompt: systemPromptTemplate,
-    userPrompt: userPromptTemplate,
-  } = params;
-
-  // Enrich timeline with participant lookup table for human-readable names
-  const enrichedData = enrichTimelineData(rawTimeline, rawMatch);
-
-  const systemPrompt = replacePromptVariables(systemPromptTemplate, {
-    LANE_CONTEXT: laneContext,
-  });
-  const userPrompt = replacePromptVariables(userPromptTemplate, {
-    TIMELINE_DATA: minifyJson(enrichedData),
-  });
-
-  return callOpenAI({
-    client,
-    model,
-    systemPrompt,
-    userPrompt,
-  });
-}
 
 // ============================================================================
 // Stage 1b: Match Summary

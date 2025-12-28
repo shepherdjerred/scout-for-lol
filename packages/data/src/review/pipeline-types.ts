@@ -209,11 +209,25 @@ export type ImageGenerationTrace = {
 };
 
 /**
+ * Trace for a timeline chunk (individual chunk processing)
+ */
+export type TimelineChunkTrace = {
+  /** Zero-based index of this chunk */
+  chunkIndex: number;
+  /** Time range of this chunk (e.g., "0:00 - 10:00") */
+  timeRange: string;
+  /** The stage trace for this chunk */
+  trace: StageTrace;
+};
+
+/**
  * All pipeline traces
  */
 export type PipelineTraces = {
-  /** Stage 1a trace */
+  /** Stage 1a trace (timeline summary - for chunked processing, this is the aggregate trace) */
   timelineSummary?: StageTrace;
+  /** Stage 1a traces for chunked processing (individual chunk traces) */
+  timelineChunks?: TimelineChunkTrace[];
   /** Stage 1b trace */
   matchSummary?: StageTrace;
   /** Stage 2 trace (always present) */
@@ -232,8 +246,10 @@ export type PipelineTraces = {
  * Intermediate results from the pipeline (for debugging/dev tool)
  */
 export type PipelineIntermediateResults = {
-  /** Text output from Stage 1a */
+  /** Text output from Stage 1a (final aggregated summary) */
   timelineSummaryText?: string;
+  /** Individual chunk summaries from Stage 1a (if chunked processing used) */
+  timelineChunkSummaries?: string[];
   /** Text output from Stage 1b */
   matchSummaryText?: string;
   /** Text output from Stage 3 */
@@ -302,6 +318,8 @@ export type ReviewPipelineOutput = {
  */
 export type PipelineStageName =
   | "timeline-summary"
+  | "timeline-chunk"
+  | "timeline-aggregate"
   | "match-summary"
   | "review-text"
   | "image-description"
@@ -319,6 +337,10 @@ export type PipelineProgress = {
   currentStage: number;
   /** Total number of enabled stages */
   totalStages: number;
+  /** For chunked stages: current chunk index (1-based) */
+  chunkIndex?: number;
+  /** For chunked stages: total number of chunks */
+  chunkTotal?: number;
 };
 
 /**

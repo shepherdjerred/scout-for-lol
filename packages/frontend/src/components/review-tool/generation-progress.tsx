@@ -1,7 +1,7 @@
 /**
  * Generation progress indicator
  *
- * Shows a 5-stage pill progress that matches the active generations panel.
+ * Shows a dynamic pill progress bar that adapts to the number of pipeline stages.
  */
 import type { GenerationProgress as GenerationProgressType } from "@scout-for-lol/frontend/lib/review-tool/generator";
 
@@ -12,7 +12,7 @@ type GenerationProgressProps = {
 
 type StageStatus = "complete" | "active" | "pending";
 
-/** Pill-style progress bar with 5 connected segments */
+/** Pill-style progress bar with connected segments based on total stages */
 function PipelinePillProgress({
   currentStage,
   totalStages,
@@ -22,20 +22,14 @@ function PipelinePillProgress({
   totalStages: number;
   isComplete: boolean;
 }) {
-  const stages = 5;
-
   return (
     <div className="flex gap-1">
-      {Array.from({ length: stages }).map((_, index) => {
+      {Array.from({ length: totalStages }).map((_, index) => {
         let status: StageStatus = "pending";
         if (isComplete || index < currentStage) {
           status = "complete";
         } else if (index === currentStage) {
           status = "active";
-        }
-        // If this stage is beyond totalStages, it's skipped
-        if (index >= totalStages && !isComplete) {
-          status = "pending";
         }
 
         return (
@@ -56,10 +50,16 @@ function PipelinePillProgress({
 }
 
 export function GenerationProgress({ progress, elapsedMs }: GenerationProgressProps) {
-  const { step, message, currentStage, totalStages } = progress;
+  const { step, message, currentStage, totalStages, chunkIndex, chunkTotal } = progress;
 
   const elapsedSeconds = Math.floor(elapsedMs / 1000);
   const isComplete = step === "complete";
+
+  // Build display message with chunk info if applicable
+  let displayMessage = message;
+  if (chunkIndex !== undefined && chunkTotal !== undefined && step === "timeline-chunk") {
+    displayMessage = `Processing timeline (${chunkIndex.toString()}/${chunkTotal.toString()})...`;
+  }
 
   return (
     <div className="mb-4 p-4 bg-brand-50 border border-brand-200 rounded-xl">
@@ -96,7 +96,7 @@ export function GenerationProgress({ progress, elapsedMs }: GenerationProgressPr
               </div>
             )}
             <div className="flex-1">
-              <div className="text-sm font-medium text-brand-900">{isComplete ? "Complete!" : message}</div>
+              <div className="text-sm font-medium text-brand-900">{isComplete ? "Complete!" : displayMessage}</div>
             </div>
           </div>
           <div className="text-sm font-mono text-brand-700">{elapsedSeconds}s</div>
