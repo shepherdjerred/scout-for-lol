@@ -21,6 +21,9 @@ const logger = createLogger("pairing-weekly-update");
 // Minimum games required for a pairing to be included in rankings
 const MIN_GAMES_FOR_RANKING = 3;
 
+// Maximum entries to show in the full leaderboard (Discord has a 4000 char limit)
+const MAX_LEADERBOARD_ENTRIES = 25;
+
 /**
  * Format win rate as percentage string
  */
@@ -86,14 +89,21 @@ function generateMessage(stats: ServerPairingStats): string {
 
   lines.push("");
 
-  // Full leaderboard
+  // Full leaderboard (limited to avoid Discord character limit)
   lines.push("## Full Leaderboard");
-  qualifiedPairings.forEach((entry, index) => {
+  const leaderboardEntries = qualifiedPairings.slice(0, MAX_LEADERBOARD_ENTRIES);
+  leaderboardEntries.forEach((entry, index) => {
     const rank = index + 1;
     lines.push(
       `${rank.toString()}. ${formatPairing(entry)} - ${formatWinRate(entry.winRate)} (W: ${entry.wins.toString()}, L: ${entry.losses.toString()})`,
     );
   });
+
+  // Show count of remaining pairings if there are more
+  const remainingCount = qualifiedPairings.length - MAX_LEADERBOARD_ENTRIES;
+  if (remainingCount > 0) {
+    lines.push(`*...and ${remainingCount.toString()} more pairings*`);
+  }
 
   lines.push("");
   lines.push(
@@ -159,6 +169,23 @@ export async function runWeeklyPairingUpdate(): Promise<void> {
 
     // Generate and send the message
     const message = generateMessage(stats);
+
+    // Log the full message for debugging
+    logger.info("[WeeklyPairing] Generated message:");
+    logger.info(message);
+
+    // Log all qualified pairings to console for debugging
+    const qualifiedPairings = stats.pairings
+      .filter((p) => p.totalGames >= MIN_GAMES_FOR_RANKING && p.players.length >= 2)
+      .sort((a, b) => b.winRate - a.winRate);
+
+    logger.info(`[WeeklyPairing] Full pairings list (${qualifiedPairings.length.toString()} total):`);
+    qualifiedPairings.forEach((entry, index) => {
+      const rank = index + 1;
+      logger.info(
+        `  ${rank.toString()}. ${entry.players.join(" + ")} - ${(entry.winRate * 100).toFixed(1)}% (W: ${entry.wins.toString()}, L: ${entry.losses.toString()})`,
+      );
+    });
 
     logger.info("[WeeklyPairing] Sending message to Discord");
 
