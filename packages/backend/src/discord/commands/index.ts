@@ -37,6 +37,7 @@ import { executePlayerView } from "@scout-for-lol/backend/discord/commands/admin
 import { executeDebugForceLeaderboardUpdate } from "@scout-for-lol/backend/discord/commands/debug/force-leaderboard-update.ts";
 import { executeDebugForceSnapshot } from "@scout-for-lol/backend/discord/commands/debug/force-snapshot.ts";
 import { executeDebugManageParticipant } from "@scout-for-lol/backend/discord/commands/debug/manage-participant.ts";
+import { executeDebugForcePairingUpdate } from "@scout-for-lol/backend/discord/commands/debug/force-pairing-update.ts";
 import { executeSubscriptionAdd } from "@scout-for-lol/backend/discord/commands/subscription/add.ts";
 import { executeSubscriptionDelete } from "@scout-for-lol/backend/discord/commands/subscription/delete.ts";
 import { executeSubscriptionList } from "@scout-for-lol/backend/discord/commands/subscription/list.ts";
@@ -193,6 +194,7 @@ export function handleCommands(client: Client) {
             .with("force-snapshot", async () => executeDebugForceSnapshot(interaction))
             .with("force-leaderboard-update", async () => executeDebugForceLeaderboardUpdate(interaction))
             .with("manage-participant", async () => executeDebugManageParticipant(interaction))
+            .with("force-pairing-update", async () => executeDebugForcePairingUpdate(interaction))
             .otherwise(async () => {
               logger.warn(`⚠️  Unknown debug subcommand: ${subcommandName}`);
               await interaction.reply({

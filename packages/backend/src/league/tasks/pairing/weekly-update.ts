@@ -78,7 +78,7 @@ function generateMessage(stats: ServerPairingStats): string {
   lines.push("## Worst Pairings");
   const bottomPairings = qualifiedPairings.slice(-3).reverse();
   bottomPairings.forEach((entry, index) => {
-    const rank = qualifiedPairings.length - 2 + index;
+    const rank = qualifiedPairings.length - index;
     lines.push(
       `${rank.toString()}. **${formatPairing(entry)}** - ${formatWinRate(entry.winRate)} (${entry.totalGames.toString()} games)`,
     );
@@ -96,7 +96,9 @@ function generateMessage(stats: ServerPairingStats): string {
   });
 
   lines.push("");
-  lines.push(`*Based on ${stats.totalMatchesAnalyzed.toString()} ranked games (Solo/Flex) from the past month*`);
+  lines.push(
+    `*Based on ${stats.totalMatchesAnalyzed.toString()} ranked games (Solo/Flex) from the past month. Pairings require ${MIN_GAMES_FOR_RANKING.toString()}+ games to be ranked.*`,
+  );
 
   return lines.join("\n");
 }

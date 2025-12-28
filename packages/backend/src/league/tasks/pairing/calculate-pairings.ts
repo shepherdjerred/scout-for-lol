@@ -121,7 +121,7 @@ export async function calculatePairingStats(
     if (playerAliases.length === 1) {
       const alias = playerAliases[0];
       if (alias !== undefined) {
-        // This is an individual stat (solo games)
+        // Individual stats for this player (includes all their games, not just solo)
         individualStats.push({
           alias,
           wins: acc.wins,
@@ -203,6 +203,7 @@ function processMatch(
         trackedPlayersInMatch.push({
           alias,
           won: participant.win,
+          // Only track surrenders for losses (not wins where enemy surrendered)
           surrendered: participant.gameEndedInSurrender && !participant.win,
         });
       }
@@ -221,8 +222,14 @@ function processMatch(
   // If they're on different teams, we need to track each combination separately
   const aliasToOutcome = new Map<string, { won: boolean; surrendered: boolean }>();
   for (const player of trackedPlayersInMatch) {
-    // Use the first outcome we see for each alias (should be the same for all accounts)
-    if (!aliasToOutcome.has(player.alias)) {
+    const existing = aliasToOutcome.get(player.alias);
+    if (existing) {
+      // Validate that all accounts for the same player have the same outcome
+      if (existing.won !== player.won) {
+        // Player has multiple accounts with conflicting outcomes (likely custom game)
+        return { filtered: true, reason: `player ${player.alias} has conflicting outcomes` };
+      }
+    } else {
       aliasToOutcome.set(player.alias, { won: player.won, surrendered: player.surrendered });
     }
   }
