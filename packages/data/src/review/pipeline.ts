@@ -112,7 +112,6 @@ type Stage1Result = {
   timelineSummaryText?: string;
   timelineSummaryTrace?: StageTrace;
   timelineChunkTraces?: TimelineChunkTrace[];
-  timelineAggregateTrace?: StageTrace;
   timelineChunkSummaries?: string[];
   matchSummaryText?: string;
   matchSummaryTrace?: StageTrace;
@@ -200,10 +199,6 @@ async function runStage1Parallel(ctx: Stage1Context): Promise<Stage1Result> {
     if (timelineResult.chunkTraces !== undefined) {
       result.timelineChunkTraces = timelineResult.chunkTraces;
       ctx.traces.timelineChunks = timelineResult.chunkTraces;
-    }
-    if (timelineResult.aggregateTrace !== undefined) {
-      result.timelineAggregateTrace = timelineResult.aggregateTrace;
-      ctx.traces.timelineAggregate = timelineResult.aggregateTrace;
     }
     if (timelineResult.chunkSummaries !== undefined) {
       result.timelineChunkSummaries = timelineResult.chunkSummaries;
@@ -411,9 +406,6 @@ export async function generateFullMatchReview(input: ReviewPipelineInput): Promi
   }
   if (traces.timelineChunks !== undefined) {
     finalTraces.timelineChunks = traces.timelineChunks;
-  }
-  if (traces.timelineAggregate !== undefined) {
-    finalTraces.timelineAggregate = traces.timelineAggregate;
   }
   if (traces.matchSummary !== undefined) {
     finalTraces.matchSummary = traces.matchSummary;

@@ -30,7 +30,6 @@ export type TimelineSummaryResult = {
   text: string;
   trace: StageTrace;
   chunkTraces?: TimelineChunkTrace[];
-  aggregateTrace?: StageTrace;
   chunkSummaries?: string[];
 };
 
@@ -78,11 +77,10 @@ export async function runTimelineSummaryWithChunks(
   const chunkTraces: TimelineChunkTrace[] = [];
   const chunkSummaries: string[] = [];
 
-  // Report progress for first chunk
+  // Report progress for chunk processing (all chunks processed in parallel)
   reportProgress("timeline-chunk", {
-    chunkIndex: 1,
     chunkTotal: chunks.length,
-    customMessage: `Processing timeline (1/${chunks.length.toString()})...`,
+    customMessage: `Processing ${chunks.length.toString()} timeline chunks in parallel...`,
   });
 
   const chunkResults = await Promise.all(
@@ -128,7 +126,6 @@ export async function runTimelineSummaryWithChunks(
     text: aggregateResult.text,
     trace: aggregateResult.trace,
     chunkTraces,
-    aggregateTrace: aggregateResult.trace,
     chunkSummaries,
   };
 }

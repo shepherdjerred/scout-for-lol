@@ -224,12 +224,10 @@ export type TimelineChunkTrace = {
  * All pipeline traces
  */
 export type PipelineTraces = {
-  /** Stage 1a trace (legacy: full timeline summary) */
+  /** Stage 1a trace (timeline summary - for chunked processing, this is the aggregate trace) */
   timelineSummary?: StageTrace;
-  /** Stage 1a traces for chunked processing */
+  /** Stage 1a traces for chunked processing (individual chunk traces) */
   timelineChunks?: TimelineChunkTrace[];
-  /** Stage 1a aggregation trace (combines chunk summaries) */
-  timelineAggregate?: StageTrace;
   /** Stage 1b trace */
   matchSummary?: StageTrace;
   /** Stage 2 trace (always present) */

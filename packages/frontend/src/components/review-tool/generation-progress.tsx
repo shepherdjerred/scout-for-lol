@@ -1,7 +1,7 @@
 /**
  * Generation progress indicator
  *
- * Shows a 5-stage pill progress that matches the active generations panel.
+ * Shows a dynamic pill progress bar that adapts to the number of pipeline stages.
  */
 import type { GenerationProgress as GenerationProgressType } from "@scout-for-lol/frontend/lib/review-tool/generator";
 
@@ -12,7 +12,7 @@ type GenerationProgressProps = {
 
 type StageStatus = "complete" | "active" | "pending";
 
-/** Pill-style progress bar with 5 connected segments */
+/** Pill-style progress bar with connected segments based on total stages */
 function PipelinePillProgress({
   currentStage,
   totalStages,
@@ -22,20 +22,14 @@ function PipelinePillProgress({
   totalStages: number;
   isComplete: boolean;
 }) {
-  const stages = 5;
-
   return (
     <div className="flex gap-1">
-      {Array.from({ length: stages }).map((_, index) => {
+      {Array.from({ length: totalStages }).map((_, index) => {
         let status: StageStatus = "pending";
         if (isComplete || index < currentStage) {
           status = "complete";
         } else if (index === currentStage) {
           status = "active";
-        }
-        // If this stage is beyond totalStages, it's skipped
-        if (index >= totalStages && !isComplete) {
-          status = "pending";
         }
 
         return (
