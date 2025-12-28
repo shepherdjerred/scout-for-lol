@@ -61,6 +61,11 @@ export const debugCommand = new SlashCommandBuilder()
       .addUserOption((option) =>
         option.setName("user").setDescription("Discord user to add or remove").setRequired(true),
       ),
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("force-pairing-update")
+      .setDescription("[Dev Only] Force run the weekly Common Denominator pairing update"),
   );
 
 export async function executeDebugDatabase(interaction: ChatInputCommandInteraction) {
