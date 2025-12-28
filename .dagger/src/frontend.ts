@@ -43,48 +43,6 @@ export function buildFrontend(workspaceSource: Directory, preparedWorkspace?: Co
   return container.directory("/workspace/packages/frontend/dist");
 }
 
-type DeployFrontendOptions = {
-  workspaceSource: Directory;
-  branch: string;
-  gitSha: string;
-  cloudflare: {
-    projectName: string;
-    accountId: Secret;
-    apiToken: Secret;
-  };
-};
-
-/**
- * Deploy the frontend to Cloudflare Pages
- * @param options Deployment options including workspace source, branch, git SHA, and Cloudflare credentials
- * @returns Deployment output
- */
-export async function deployFrontend(options: DeployFrontendOptions): Promise<string> {
-  const distDir = buildFrontend(options.workspaceSource);
-
-  // Use Bun container for wrangler
-  const deployContainer = dag
-    .container()
-    .from("oven/bun:latest")
-    .withDirectory("/workspace/dist", distDir)
-    .withSecretVariable("CLOUDFLARE_ACCOUNT_ID", options.cloudflare.accountId)
-    .withSecretVariable("CLOUDFLARE_API_TOKEN", options.cloudflare.apiToken)
-    .withExec(["sh", "-c", `echo '🚀 [CI] Deploying frontend to Cloudflare Pages (branch: ${options.branch})...'`])
-    .withExec([
-      "bunx",
-      "wrangler@latest",
-      "pages",
-      "deploy",
-      "/workspace/dist",
-      `--project-name=${options.cloudflare.projectName}`,
-      `--branch=${options.branch}`,
-      `--commit-hash=${options.gitSha}`,
-    ]);
-
-  const output = await deployContainer.stdout();
-  return output;
-}
-
 /**
  * Build a production container with nginx serving the frontend static files
  * @param workspaceSource The full workspace source directory
