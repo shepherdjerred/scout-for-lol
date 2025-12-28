@@ -1,7 +1,7 @@
 /* eslint-disable max-lines  -- this file cannot be split up due to Dagger */
 import type { Directory, Secret, Container } from "@dagger.io/dagger";
 import { dag, func, argument, object } from "@dagger.io/dagger";
-import { updateHomelabVersion } from "@shepherdjerred/dagger-utils";
+import { updateHomelabVersion } from "@shepherdjerred/dagger-utils/containers";
 import {
   buildBackendImage,
   publishBackendImage,
