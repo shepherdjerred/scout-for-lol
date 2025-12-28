@@ -38,8 +38,6 @@ jobs:
           export-env: true
         env:
           DAGGER_CLOUD_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/DAGGER_CLOUD_TOKEN
-          CLOUDFLARE_ACCOUNT_ID: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/CLOUDFLARE_ACCOUNT_ID
-          CLOUDFLARE_API_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/CLOUDFLARE_API_TOKEN
           GH_TOKEN: op://bic45kuflnwsnxnd67dzcnxjze/5p65mbzr237yyzt2sfnfao3a5a/GH_TOKEN
 
       - name: Extract kubectl version
@@ -93,8 +91,6 @@ jobs:
             --source=.
             --git-sha="${{ github.sha }}"
             --gh-token=env://GITHUB_TOKEN
-            --account-id=env://CLOUDFLARE_ACCOUNT_ID
-            --api-token=env://CLOUDFLARE_API_TOKEN
           )
 
           if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
@@ -110,7 +106,6 @@ jobs:
               --version="dev-${{ github.run_number }}"
               --branch="${{ github.head_ref || github.ref_name }}"
               --env="dev"
-              --pr-number="${{ github.event.pull_request.number }}"
               --skip-desktop-build="$SKIP_DESKTOP_BUILD"
             )
           fi

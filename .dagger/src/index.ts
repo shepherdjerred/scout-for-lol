@@ -13,7 +13,7 @@ import {
 } from "@scout-for-lol/.dagger/src/backend";
 import { getReportCoverage, getReportTestReport } from "@scout-for-lol/.dagger/src/report";
 import { checkData, getDataCoverage, getDataTestReport } from "@scout-for-lol/.dagger/src/data";
-import { checkFrontend, buildFrontend, deployFrontend, publishFrontend } from "@scout-for-lol/.dagger/src/frontend";
+import { checkFrontend, buildFrontend, publishFrontend } from "@scout-for-lol/.dagger/src/frontend";
 import {
   checkDesktop,
   checkDesktopParallel,
@@ -100,31 +100,6 @@ async function withTiming<T>(operation: string, fn: () => Promise<T>): Promise<T
     logWithTimestamp(`❌ ${operation} failed after ${duration.toString()}ms: ${errorMessage}`);
     throw error;
   }
-}
-
-// Helper function to post a comment to a GitHub PR
-async function postPrComment(
-  prNumber: string,
-  comment: string,
-  ghToken: Secret,
-  repo = "shepherdjerred/scout-for-lol",
-): Promise<void> {
-  logWithTimestamp(`📝 Posting comment to PR #${prNumber}...`);
-
-  await getGitHubContainer()
-    .withSecretVariable("GH_TOKEN", ghToken)
-    .withExec(["gh", "pr", "comment", prNumber, "--repo", repo, "--body", comment])
-    .sync();
-
-  logWithTimestamp(`✅ Comment posted to PR #${prNumber}`);
-}
-
-// Helper function to parse preview URL from wrangler output
-function parsePreviewUrl(wranglerOutput: string): string | undefined {
-  // Wrangler outputs lines like: "Deployment complete! Take a peek over at https://..."
-  // Or: "✨ Deployment complete! Take a peek at: https://..."
-  const urlMatch = wranglerOutput.match(/https:\/\/[^\s]+\.pages\.dev/);
-  return urlMatch?.[0];
 }
 
 @object()
@@ -253,10 +228,6 @@ export class ScoutForLol {
    * @param ghcrPassword The GitHub Container Registry password/token (optional)
    * @param env The environment (prod/dev) - determines if images are published
    * @param ghToken The GitHub token for creating deployment PRs (optional)
-   * @param accountId Cloudflare account ID (optional, for frontend deployment)
-   * @param apiToken Cloudflare API token (optional, for frontend deployment)
-   * @param projectName Cloudflare Pages project name (optional, defaults to "scout-for-lol")
-   * @param prNumber The PR number for posting deploy preview comments (optional)
    * @returns A message indicating completion
    */
   @func()
@@ -273,10 +244,6 @@ export class ScoutForLol {
     ghcrPassword?: Secret,
     env?: string,
     ghToken?: Secret,
-    accountId?: Secret,
-    apiToken?: Secret,
-    projectName?: string,
-    prNumber?: string,
     skipDesktopBuild?: string,
   ): Promise<string> {
     const isProd = env === "prod";
@@ -883,48 +850,6 @@ export class ScoutForLol {
   }
 
   /**
-   * Deploy the frontend to Cloudflare Pages
-   * @param source The workspace source directory
-   * @param branch The git branch name
-   * @param gitSha The git commit SHA
-   * @param projectName The Cloudflare Pages project name
-   * @param accountId Cloudflare account ID
-   * @param apiToken Cloudflare API token
-   * @returns Deployment output
-   */
-  @func()
-  async deployFrontend(
-    @argument({
-      ignore: ["**/node_modules", "dist", "build", ".cache", "*.log", ".env*", "!.env.example", ".dagger", "generated"],
-      defaultPath: ".",
-    })
-    source: Directory,
-    @argument() branch: string,
-    @argument() gitSha: string,
-    @argument() projectName: string,
-    accountId: Secret,
-    apiToken: Secret,
-  ): Promise<string> {
-    logWithTimestamp(`🚀 Deploying frontend to Cloudflare Pages (project: ${projectName}, branch: ${branch})`);
-
-    const result = await withTiming("frontend deployment", () =>
-      deployFrontend({
-        workspaceSource: source,
-        branch,
-        gitSha,
-        cloudflare: {
-          projectName,
-          accountId,
-          apiToken,
-        },
-      }),
-    );
-
-    logWithTimestamp("✅ Frontend deployment completed successfully");
-    return `✅ Frontend deployed to Cloudflare Pages (project: ${projectName}, branch: ${branch})\n\n${result}`;
-  }
-
-  /**
    * Check for code duplication across packages
    * @param source The workspace source directory
    * @returns A message indicating completion
@@ -1390,10 +1315,6 @@ export class ScoutForLol {
    * @param ghcrPassword The GitHub Container Registry password/token (optional)
    * @param env The environment (prod/dev)
    * @param ghToken The GitHub token (optional)
-   * @param accountId Cloudflare account ID (optional)
-   * @param apiToken Cloudflare API token (optional)
-   * @param projectName Cloudflare Pages project name (optional)
-   * @param prNumber The PR number (optional)
    * @returns A directory containing CI artifacts (junit.xml, coverage, etc.)
    */
   @func()
@@ -1410,28 +1331,10 @@ export class ScoutForLol {
     ghcrPassword?: Secret,
     env?: string,
     ghToken?: Secret,
-    accountId?: Secret,
-    apiToken?: Secret,
-    projectName?: string,
-    prNumber?: string,
     skipDesktopBuild?: string,
   ): Promise<Directory> {
     // Run the full CI pipeline first
-    await this.ci(
-      source,
-      version,
-      gitSha,
-      branch,
-      ghcrUsername,
-      ghcrPassword,
-      env,
-      ghToken,
-      accountId,
-      apiToken,
-      projectName,
-      prNumber,
-      skipDesktopBuild,
-    );
+    await this.ci(source, version, gitSha, branch, ghcrUsername, ghcrPassword, env, ghToken, skipDesktopBuild);
 
     // After CI passes, collect artifacts
     // Since we just ran CI with the same inputs, Dagger will cache all the setup
