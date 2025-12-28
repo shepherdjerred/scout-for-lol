@@ -102,23 +102,6 @@ async function withTiming<T>(operation: string, fn: () => Promise<T>): Promise<T
   }
 }
 
-// Helper function to post a comment to a GitHub PR
-async function postPrComment(
-  prNumber: string,
-  comment: string,
-  ghToken: Secret,
-  repo = "shepherdjerred/scout-for-lol",
-): Promise<void> {
-  logWithTimestamp(`📝 Posting comment to PR #${prNumber}...`);
-
-  await getGitHubContainer()
-    .withSecretVariable("GH_TOKEN", ghToken)
-    .withExec(["gh", "pr", "comment", prNumber, "--repo", repo, "--body", comment])
-    .sync();
-
-  logWithTimestamp(`✅ Comment posted to PR #${prNumber}`);
-}
-
 @object()
 export class ScoutForLol {
   /**
