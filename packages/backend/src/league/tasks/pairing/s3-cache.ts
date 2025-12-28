@@ -19,11 +19,7 @@ function generateCacheKey(serverId: string, year: number, weekNumber: number): s
  */
 export function isWeekComplete(year: number, weekNumber: number): boolean {
   const now = new Date();
-  // Create a date for the last day of the specified week
-  const weekStart = startOfISOWeek(new Date(year, 0, 1 + (weekNumber - 1) * 7));
-  const weekEnd = endOfISOWeek(weekStart);
-
-  // Week is complete if current time is after the week end
+  const { end: weekEnd } = getWeekDateRange(year, weekNumber);
   return isBefore(weekEnd, now);
 }
 
