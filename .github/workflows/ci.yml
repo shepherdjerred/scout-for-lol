@@ -106,7 +106,6 @@ jobs:
               --version="dev-${{ github.run_number }}"
               --branch="${{ github.head_ref || github.ref_name }}"
               --env="dev"
-              --pr-number="${{ github.event.pull_request.number }}"
               --skip-desktop-build="$SKIP_DESKTOP_BUILD"
             )
           fi
