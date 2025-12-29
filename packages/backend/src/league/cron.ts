@@ -101,7 +101,9 @@ export function startCronJobs() {
   createCronJob({
     schedule: "0 0 18 * * 0", // 6 PM UTC on Sundays
     jobName: "weekly_pairing_update",
-    task: runWeeklyPairingUpdate,
+    task: async () => {
+      await runWeeklyPairingUpdate();
+    },
     logMessage: "📈 Running weekly Common Denominator update",
     timezone: "UTC",
     runOnInit: false, // Don't run on init - prevents startup notifications

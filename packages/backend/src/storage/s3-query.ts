@@ -7,8 +7,49 @@ import { createLogger } from "@scout-for-lol/backend/logger.ts";
 
 // Timeout for individual S3 operations (30 seconds)
 const S3_REQUEST_TIMEOUT_MS = 30000;
+// Timeout specifically for body stream reading (15 seconds)
+const BODY_STREAM_TIMEOUT_MS = 15000;
+// Retry configuration
+const MAX_RETRIES = 3;
+const RETRY_BACKOFF_MS = [1000, 2000, 4000];
 
 const logger = createLogger("storage-s3-query");
+
+/**
+ * Read S3 response body with an independent timeout.
+ * This protects against hung streams that the request-level abort doesn't catch.
+ */
+async function readBodyWithTimeout(
+  body: { transformToString: () => Promise<string> },
+  timeoutMs: number,
+  key: string,
+): Promise<string> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(`Body stream timeout after ${timeoutMs.toString()}ms`));
+    }, timeoutMs);
+  });
+
+  try {
+    logger.debug(`[S3Query] 📖 Reading body stream for ${key}`);
+    const result = await Promise.race([body.transformToString(), timeoutPromise]);
+    logger.debug(`[S3Query] ✅ Body stream read complete for ${key}`);
+    return result;
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
+
+/**
+ * Sleep for a given number of milliseconds
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 /**
  * Generate date prefixes for S3 listing between start and end dates (inclusive)
@@ -59,50 +100,101 @@ function processMatchResults(
 }
 
 /**
- * Fetch and parse a match from S3 with timeout
+ * Check if an error is retryable (network/timeout errors, not parse errors)
+ */
+function isRetryableError(error: unknown): boolean {
+  const message = getErrorMessage(error);
+  return (
+    message.includes("timeout") ||
+    message.includes("Timeout") ||
+    message.includes("ECONNRESET") ||
+    message.includes("ETIMEDOUT") ||
+    message.includes("ENOTFOUND") ||
+    message.includes("socket hang up") ||
+    message.includes("network")
+  );
+}
+
+/**
+ * Fetch and parse a match from S3 with timeout and retry logic
  */
 async function getMatchFromS3(client: S3Client, bucket: string, key: string): Promise<RawMatch | null> {
-  const abortController = new AbortController();
-  const timeoutId = setTimeout(() => {
-    abortController.abort();
-  }, S3_REQUEST_TIMEOUT_MS);
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => {
+      abortController.abort();
+    }, S3_REQUEST_TIMEOUT_MS);
 
-  try {
-    const command = new GetObjectCommand({
-      Bucket: bucket,
-      Key: key,
-    });
+    try {
+      if (attempt > 0) {
+        const backoffMs = RETRY_BACKOFF_MS[attempt - 1] ?? 4000;
+        logger.info(
+          `[S3Query] 🔄 Retry ${attempt.toString()}/${MAX_RETRIES.toString()} for ${key} after ${backoffMs.toString()}ms`,
+        );
+        await sleep(backoffMs);
+      }
 
-    const response = await client.send(command, {
-      abortSignal: abortController.signal,
-    });
+      logger.debug(
+        `[S3Query] 📥 Downloading match ${key} (attempt ${(attempt + 1).toString()}/${(MAX_RETRIES + 1).toString()})`,
+      );
+      const startTime = Date.now();
 
-    if (!response.Body) {
+      const command = new GetObjectCommand({
+        Bucket: bucket,
+        Key: key,
+      });
+
+      const response = await client.send(command, {
+        abortSignal: abortController.signal,
+      });
+
+      if (!response.Body) {
+        clearTimeout(timeoutId);
+        logger.warn(`[S3Query] No body in response for key: ${key}`);
+        return null;
+      }
+
+      // Use body stream timeout to prevent hanging on stream read
+      const bodyString = await readBodyWithTimeout(response.Body, BODY_STREAM_TIMEOUT_MS, key);
       clearTimeout(timeoutId);
-      logger.warn(`[S3Query] No body in response for key: ${key}`);
+
+      const elapsed = Date.now() - startTime;
+      logger.debug(`[S3Query] ✅ Downloaded match ${key} in ${elapsed.toString()}ms`);
+
+      // Parse and validate the match data with Zod schema for runtime type safety
+      const matchData = JSON.parse(bodyString);
+      const match = RawMatchSchema.parse(matchData);
+
+      return match;
+    } catch (error) {
+      clearTimeout(timeoutId);
+
+      const errorMessage = getErrorMessage(error);
+
+      if (abortController.signal.aborted) {
+        logger.warn(`[S3Query] ⏱️ Request timeout after ${S3_REQUEST_TIMEOUT_MS.toString()}ms for key: ${key}`);
+        // Timeout is retryable
+        if (attempt < MAX_RETRIES) {
+          continue;
+        }
+        logger.warn(`[S3Query] ❌ All retries exhausted for ${key} (timeout)`);
+        return null;
+      }
+
+      // Check if error is retryable
+      if (isRetryableError(error) && attempt < MAX_RETRIES) {
+        logger.warn(`[S3Query] ⚠️ Retryable error for ${key}: ${errorMessage}`);
+        continue;
+      }
+
+      // Non-retryable error (parse error, validation error, etc.) - don't retry
+      logger.warn(`[S3Query] ❌ Failed to fetch or parse match ${key}: ${errorMessage}`);
       return null;
     }
-
-    // transformToString() should respect the aborted signal from the parent request
-    const bodyString = await response.Body.transformToString();
-    clearTimeout(timeoutId);
-
-    // Parse and validate the match data with Zod schema for runtime type safety
-    const matchData = JSON.parse(bodyString);
-    const match = RawMatchSchema.parse(matchData);
-
-    return match;
-  } catch (error) {
-    clearTimeout(timeoutId);
-
-    if (abortController.signal.aborted) {
-      logger.warn(`[S3Query] Request timeout after ${S3_REQUEST_TIMEOUT_MS.toString()}ms for key: ${key}`);
-      return null;
-    }
-
-    logger.warn(`[S3Query] Failed to fetch or parse match from S3 key ${key}: ${getErrorMessage(error)}`);
-    return null;
   }
+
+  // Should not reach here, but just in case
+  return null;
 }
 
 /**

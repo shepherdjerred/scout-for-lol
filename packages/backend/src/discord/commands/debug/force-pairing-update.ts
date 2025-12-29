@@ -13,11 +13,15 @@ export async function executeDebugForcePairingUpdate(interaction: ChatInputComma
   try {
     logger.info("📊 Running weekly pairing update (Common Denominator)");
 
-    await runWeeklyPairingUpdate();
+    const result = await runWeeklyPairingUpdate();
 
-    await interaction.editReply("✅ Weekly pairing update (Common Denominator) completed successfully");
-
-    logger.info("✅ Successfully ran weekly pairing update");
+    if (result.success) {
+      await interaction.editReply(`✅ ${result.message}`);
+      logger.info(`✅ Successfully ran weekly pairing update: ${result.message}`);
+    } else {
+      await interaction.editReply(`⚠️ ${result.message}`);
+      logger.warn(`⚠️ Pairing update skipped: ${result.message}`);
+    }
   } catch (error) {
     logger.error("❌ Error running pairing update:", error);
     await interaction.editReply(`❌ Error: ${error instanceof Error ? error.message : String(error)}`);
