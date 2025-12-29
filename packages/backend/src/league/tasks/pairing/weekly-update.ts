@@ -20,7 +20,7 @@ const COMMON_DENOMINATOR_CHANNEL_ID = DiscordChannelIdSchema.parse("133763145508
 const logger = createLogger("pairing-weekly-update");
 
 // Minimum games required for a pairing to be included in rankings
-const MIN_GAMES_FOR_RANKING = 3;
+const MIN_GAMES_FOR_RANKING = 10;
 
 // Maximum entries to show in the full leaderboard (Discord has a 4000 char limit)
 const MAX_LEADERBOARD_ENTRIES = 25;
@@ -61,7 +61,9 @@ function generateMessage(stats: ServerPairingStats): string {
     .sort((a, b) => b.winRate - a.winRate);
 
   if (qualifiedPairings.length === 0) {
-    lines.push("*Not enough games played together to calculate pairings (minimum 3 games required)*");
+    lines.push(
+      `*Not enough games played together to calculate pairings (minimum ${MIN_GAMES_FOR_RANKING.toString()} games required)*`,
+    );
     return lines.join("\n");
   }
 
@@ -85,6 +87,19 @@ function generateMessage(stats: ServerPairingStats): string {
     const rank = qualifiedPairings.length - index;
     lines.push(
       `${rank.toString()}. **${formatPairing(entry)}** - ${formatWinRate(entry.winRate)} (${entry.totalGames.toString()} games)`,
+    );
+  });
+
+  lines.push("");
+
+  // Top 3 pairings with most games
+  lines.push("## Most Games Together");
+  const mostGamesPairings = [...qualifiedPairings].sort((a, b) => b.totalGames - a.totalGames).slice(0, 3);
+  mostGamesPairings.forEach((entry, index) => {
+    const rank = index + 1;
+    const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉";
+    lines.push(
+      `${medal} ${rank.toString()}. **${formatPairing(entry)}** - ${entry.totalGames.toString()} games (${formatWinRate(entry.winRate)})`,
     );
   });
 
