@@ -11,7 +11,12 @@ import type {
   Rank,
   DiscordGuildId,
 } from "@scout-for-lol/data/index.ts";
-import { parseQueueType, MatchIdSchema, queueTypeToDisplayString } from "@scout-for-lol/data/index.ts";
+import {
+  parseQueueType,
+  MatchIdSchema,
+  queueTypeToDisplayString,
+  MIN_GAME_DURATION_SECONDS,
+} from "@scout-for-lol/data/index.ts";
 import { getFlag } from "@scout-for-lol/backend/configuration/flags.ts";
 import { getPlayer } from "@scout-for-lol/backend/league/model/player.ts";
 import type { MessageCreateOptions } from "discord.js";
@@ -173,6 +178,14 @@ async function generateAiReviewIfEnabled(ctx: AiReviewContext): Promise<AiReview
   if (!shouldGenerateReview) {
     logger.info(
       `[generateMatchReport] Skipping AI review - not a ranked queue and Jerred not in match (queueType: ${completedMatch.queueType ?? "unknown"})`,
+    );
+    return { text: undefined, image: undefined };
+  }
+
+  if (completedMatch.durationInSeconds < MIN_GAME_DURATION_SECONDS) {
+    const durationMinutes = (completedMatch.durationInSeconds / 60).toFixed(1);
+    logger.info(
+      `[generateMatchReport] Skipping AI review - game too short (${durationMinutes} min < 15 min)`,
     );
     return { text: undefined, image: undefined };
   }
