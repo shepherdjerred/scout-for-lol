@@ -10,6 +10,7 @@ import {
 import { getServerPlayers } from "./get-server-players.ts";
 import { calculatePairingStats } from "./calculate-pairings.ts";
 import { getCurrentWeekInfo } from "./s3-cache.ts";
+import { startTask, finishTask, isRunning, getTaskInfo } from "./pairing-task-state.ts";
 import { subWeeks, startOfISOWeek, endOfISOWeek } from "date-fns";
 import * as Sentry from "@sentry/bun";
 
@@ -116,10 +117,23 @@ function findSurrenderLeader(individualStats: IndividualPlayerStats[]): Individu
 
 /**
  * Run the weekly Common Denominator update
+ * Returns information about whether the task ran and any error message
  */
-export async function runWeeklyPairingUpdate(): Promise<void> {
+export async function runWeeklyPairingUpdate(): Promise<{ success: boolean; message: string }> {
   const serverId = MY_SERVER;
   const channelId = COMMON_DENOMINATOR_CHANNEL_ID;
+
+  // Check if already running
+  if (isRunning()) {
+    const taskInfo = getTaskInfo();
+    const runningFor = taskInfo.startedAt ? Math.round((Date.now() - taskInfo.startedAt.getTime()) / 1000) : 0;
+    const message = `Pairing update is already running (started ${runningFor.toString()}s ago)`;
+    logger.warn(`[WeeklyPairing] ${message}`);
+    return { success: false, message };
+  }
+
+  // Start the task and get abort signal
+  startTask();
 
   logger.info(`[WeeklyPairing] Running weekly pairing update for server ${serverId}`);
 
@@ -129,7 +143,7 @@ export async function runWeeklyPairingUpdate(): Promise<void> {
 
     if (players.length === 0) {
       logger.warn("[WeeklyPairing] No players found for server, skipping");
-      return;
+      return { success: true, message: "No players found for server" };
     }
 
     logger.info(`[WeeklyPairing] Found ${players.length.toString()} players`);
@@ -171,9 +185,12 @@ export async function runWeeklyPairingUpdate(): Promise<void> {
     );
 
     logger.info("[WeeklyPairing] Successfully posted weekly Common Denominator update");
+    return { success: true, message: `Completed: ${stats.totalMatchesAnalyzed.toString()} matches analyzed` };
   } catch (error) {
     logger.error("[WeeklyPairing] Error running weekly pairing update:", error);
     Sentry.captureException(error, { tags: { source: "weekly-pairing-update", serverId } });
     throw error;
+  } finally {
+    finishTask();
   }
 }
