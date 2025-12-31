@@ -55,3 +55,16 @@ export function createPuuidToAliasMap(players: ServerPlayer[]): Map<string, stri
   }
   return map;
 }
+
+/**
+ * Create a map from alias to Discord ID for mentions
+ */
+export function createAliasToDiscordIdMap(players: ServerPlayer[]): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const player of players) {
+    if (player.discordId) {
+      map.set(player.alias, player.discordId);
+    }
+  }
+  return map;
+}

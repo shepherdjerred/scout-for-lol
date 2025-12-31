@@ -8,9 +8,29 @@ import {
   type PairingStatsEntry,
   type IndividualPlayerStats,
   type ServerPairingStats,
+  type QueueType,
 } from "@scout-for-lol/data/index";
 import type { ServerPlayer } from "./get-server-players.ts";
 import { createPuuidToAliasMap } from "./get-server-players.ts";
+
+/**
+ * Supported game mode categories for pairing stats
+ */
+export type GameModeCategory = "ranked" | "arena" | "aram";
+
+/**
+ * Get the queue types that belong to a game mode category
+ */
+function getQueueTypesForCategory(category: GameModeCategory): QueueType[] {
+  switch (category) {
+    case "ranked":
+      return ["solo", "flex"];
+    case "arena":
+      return ["arena"];
+    case "aram":
+      return ["aram"];
+  }
+}
 
 const logger = createLogger("pairing-calculate");
 
@@ -56,15 +76,25 @@ function createPairingKey(aliases: string[]): string {
 }
 
 /**
+ * Options for calculating pairing stats
+ */
+export type CalculatePairingStatsOptions = {
+  players: ServerPlayer[];
+  startDate: Date;
+  endDate: Date;
+  serverId: string;
+  gameMode?: GameModeCategory;
+};
+
+/**
  * Calculate pairing stats from matches
  */
-export async function calculatePairingStats(
-  players: ServerPlayer[],
-  startDate: Date,
-  endDate: Date,
-  serverId: string,
-): Promise<ServerPairingStats> {
-  logger.info(`[CalculatePairings] Starting calculation for ${players.length.toString()} players`);
+export async function calculatePairingStats(options: CalculatePairingStatsOptions): Promise<ServerPairingStats> {
+  const { players, startDate, endDate, serverId, gameMode = "ranked" } = options;
+  const allowedQueueTypes = getQueueTypesForCategory(gameMode);
+  logger.info(
+    `[CalculatePairings] Starting calculation for ${players.length.toString()} players (${gameMode}: ${allowedQueueTypes.join(", ")})`,
+  );
   logger.info(`[CalculatePairings] Date range: ${startDate.toISOString()} to ${endDate.toISOString()}`);
 
   // Create PUUID to alias map
@@ -87,7 +117,7 @@ export async function calculatePairingStats(
   let totalMatchesAnalyzed = 0;
 
   for (const match of matches) {
-    const result = processMatch(match, puuidToAlias, pairingAccumulators);
+    const result = processMatch(match, puuidToAlias, pairingAccumulators, allowedQueueTypes);
     if (result.filtered) {
       totalMatchesFiltered++;
       logger.debug(`[CalculatePairings] Filtered match ${match.metadata.matchId}: ${result.reason ?? "unknown"}`);
@@ -177,6 +207,7 @@ function processMatch(
   match: RawMatch,
   puuidToAlias: Map<string, string>,
   accumulators: Map<string, PairingAccumulator>,
+  allowedQueueTypes: QueueType[],
 ): { filtered: boolean; reason?: string } {
   // Check game duration (15+ minutes)
   if (match.info.gameDuration < MIN_GAME_DURATION_SECONDS) {
@@ -186,10 +217,10 @@ function processMatch(
     };
   }
 
-  // Check queue type (solo or flex only)
+  // Check queue type against allowed types
   const queueType = parseQueueType(match.info.queueId);
-  if (queueType !== "solo" && queueType !== "flex") {
-    return { filtered: true, reason: `queue type ${queueType ?? "unknown"} not solo/flex` };
+  if (!queueType || !allowedQueueTypes.includes(queueType)) {
+    return { filtered: true, reason: `queue type ${queueType ?? "unknown"} not in ${allowedQueueTypes.join("/")}` };
   }
 
   // Find tracked players in this match
