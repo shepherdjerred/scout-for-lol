@@ -1,4 +1,5 @@
-import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
@@ -71,7 +72,7 @@ export async function loadCachedPairingStats(
   logger.info(`[PairingCache] Attempting to load cache from ${key}`);
 
   try {
-    const client = new S3Client();
+    const client = createS3Client();
     const command = new GetObjectCommand({
       Bucket: bucket,
       Key: key,
@@ -144,7 +145,7 @@ export async function saveCachedPairingStats(
   logger.info(`[PairingCache] Saving cache to ${key}`);
 
   try {
-    const client = new S3Client();
+    const client = createS3Client();
     const body = JSON.stringify(cache, null, 2);
 
     const command = new PutObjectCommand({

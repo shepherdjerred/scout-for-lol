@@ -5,7 +5,8 @@
  */
 
 import { Readable } from "stream";
-import { S3Client, GetObjectCommand, HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand, HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
 import type { SoundSource } from "@scout-for-lol/data";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
@@ -68,7 +69,7 @@ async function getS3AudioStream(s3Url: string): Promise<Readable> {
   }
   const [, bucket, key] = match;
 
-  const s3Client = new S3Client({});
+  const s3Client = createS3Client();
   const command = new GetObjectCommand({ Bucket: bucket, Key: key });
   const response = await s3Client.send(command);
 
@@ -98,7 +99,7 @@ async function isInS3Cache(key: string): Promise<boolean> {
     return false;
   }
 
-  const s3Client = new S3Client({});
+  const s3Client = createS3Client();
   try {
     await s3Client.send(
       new HeadObjectCommand({
@@ -120,7 +121,7 @@ async function getFromS3Cache(key: string): Promise<Readable> {
     throw new Error("S3 bucket not configured");
   }
 
-  const s3Client = new S3Client({});
+  const s3Client = createS3Client();
   const response = await s3Client.send(
     new GetObjectCommand({
       Bucket: configuration.s3BucketName,
@@ -199,7 +200,7 @@ async function downloadYouTubeAudio(url: string, s3Key: string): Promise<void> {
     if (configuration.s3BucketName) {
       const file = Bun.file(tempFile);
       const fileBuffer = await file.arrayBuffer();
-      const s3Client = new S3Client({});
+      const s3Client = createS3Client();
       await s3Client.send(
         new PutObjectCommand({
           Bucket: configuration.s3BucketName,
