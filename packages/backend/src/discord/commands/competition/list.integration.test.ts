@@ -25,6 +25,23 @@ afterAll(async () => {
 // Test Helpers
 // ============================================================================
 
+/** Returns a date N days from now (positive = future, negative = past) */
+function daysFromNow(days: number): Date {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date;
+}
+
+/** Active date range: starts today, ends in 30 days */
+function activeDateRange(): { startDate: Date; endDate: Date } {
+  return { startDate: daysFromNow(0), endDate: daysFromNow(30) };
+}
+
+/** Ended date range: started 60 days ago, ended 30 days ago */
+function endedDateRange(): { startDate: Date; endDate: Date } {
+  return { startDate: daysFromNow(-60), endDate: daysFromNow(-30) };
+}
+
 function createTestCompetitionInput(
   serverId: DiscordGuildId,
   ownerId: DiscordAccountId,
@@ -41,8 +58,7 @@ function createTestCompetitionInput(
     maxParticipants: 50,
     dates: {
       type: "FIXED_DATES",
-      startDate: new Date("2025-01-01"),
-      endDate: new Date("2025-12-31"),
+      ...activeDateRange(),
     },
     criteria: {
       type: "MOST_GAMES_PLAYED",
@@ -149,8 +165,7 @@ describe("Competition List Query", () => {
         title: "Ongoing Comp",
         dates: {
           type: "FIXED_DATES",
-          startDate: new Date("2025-01-01"),
-          endDate: new Date("2025-12-31"),
+          ...activeDateRange(),
         },
       }),
     );
@@ -162,8 +177,7 @@ describe("Competition List Query", () => {
         title: "Ended Comp",
         dates: {
           type: "FIXED_DATES",
-          startDate: new Date("2024-01-01"),
-          endDate: new Date("2024-12-31"),
+          ...endedDateRange(),
         },
       }),
     );
@@ -220,8 +234,7 @@ describe("Competition List Query", () => {
         title: "Owner1 Active",
         dates: {
           type: "FIXED_DATES",
-          startDate: new Date("2025-01-01"),
-          endDate: new Date("2025-12-31"),
+          ...activeDateRange(),
         },
       }),
     );
@@ -233,8 +246,7 @@ describe("Competition List Query", () => {
         title: "Owner1 Ended",
         dates: {
           type: "FIXED_DATES",
-          startDate: new Date("2024-01-01"),
-          endDate: new Date("2024-12-31"),
+          ...endedDateRange(),
         },
       }),
     );
@@ -246,8 +258,7 @@ describe("Competition List Query", () => {
         title: "Owner2 Active",
         dates: {
           type: "FIXED_DATES",
-          startDate: new Date("2025-01-01"),
-          endDate: new Date("2025-12-31"),
+          ...activeDateRange(),
         },
       }),
     );
