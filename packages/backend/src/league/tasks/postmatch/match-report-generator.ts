@@ -107,6 +107,94 @@ function hasJerred(playersInMatch: PlayerConfigEntry[]): boolean {
   return playersInMatch.some((p) => p.alias.toLowerCase() === "jerred");
 }
 
+/** Thresholds for determining exceptional games */
+const EXCEPTIONAL_GAME_THRESHOLDS = {
+  /** KDA ratio considered exceptionally good */
+  highKda: 5,
+  /** Minimum kills required for high KDA to count */
+  minKillsForHighKda: 5,
+  /** Deaths considered exceptionally bad */
+  manyDeaths: 10,
+  /** Game duration in seconds for a fast game (20 min) */
+  fastGameSeconds: 20 * 60,
+  /** Game duration in seconds for a very long game (40 min) */
+  longGameSeconds: 40 * 60,
+};
+
+type ExceptionalGameResult = {
+  isExceptional: boolean;
+  reason: string | undefined;
+};
+
+/**
+ * Calculate KDA ratio, treating 0 deaths as perfect (returns Infinity)
+ */
+function calculateKda(kills: number, deaths: number, assists: number): number {
+  if (deaths === 0) {
+    return Infinity;
+  }
+  return (kills + assists) / deaths;
+}
+
+/**
+ * Check if a game is exceptional enough to warrant an AI review.
+ * Looks for exceptionally good OR exceptionally bad performances.
+ */
+function isExceptionalGame(
+  matchData: RawMatch,
+  playersInMatch: PlayerConfigEntry[],
+  durationInSeconds: number,
+): ExceptionalGameResult {
+  // Get the tracked players' participant data from the raw match
+  const trackedPuuids = new Set(playersInMatch.map((p) => p.league.leagueAccount.puuid));
+  const trackedParticipants = matchData.info.participants.filter((p) => trackedPuuids.has(p.puuid));
+
+  if (trackedParticipants.length === 0) {
+    return { isExceptional: false, reason: undefined };
+  }
+
+  // Check each tracked player for exceptional performance
+  for (const participant of trackedParticipants) {
+    const { kills, deaths, assists, pentaKills, quadraKills, win, gameEndedInEarlySurrender } = participant;
+    const kda = calculateKda(kills, deaths, assists);
+
+    // Exceptionally good conditions
+    if (pentaKills > 0) {
+      return { isExceptional: true, reason: "pentakill" };
+    }
+    if (quadraKills > 0) {
+      return { isExceptional: true, reason: "quadrakill" };
+    }
+    if (deaths === 0 && win && kills >= 3) {
+      return { isExceptional: true, reason: "perfect game (0 deaths with win)" };
+    }
+    if (kda >= EXCEPTIONAL_GAME_THRESHOLDS.highKda && kills >= EXCEPTIONAL_GAME_THRESHOLDS.minKillsForHighKda) {
+      return { isExceptional: true, reason: `high KDA (${kda.toFixed(1)})` };
+    }
+
+    // Exceptionally bad conditions
+    if (deaths >= EXCEPTIONAL_GAME_THRESHOLDS.manyDeaths) {
+      return { isExceptional: true, reason: `many deaths (${deaths.toString()})` };
+    }
+    if (gameEndedInEarlySurrender && !win) {
+      return { isExceptional: true, reason: "early surrender loss" };
+    }
+  }
+
+  // Check game duration extremes
+  if (durationInSeconds < EXCEPTIONAL_GAME_THRESHOLDS.fastGameSeconds) {
+    // Fast game - could be stomp either way
+    const anyTrackedWon = trackedParticipants.some((p) => p.win);
+    const reason = anyTrackedWon ? "fast win (stomp)" : "fast loss (stomped)";
+    return { isExceptional: true, reason };
+  }
+  if (durationInSeconds > EXCEPTIONAL_GAME_THRESHOLDS.longGameSeconds) {
+    return { isExceptional: true, reason: "very long game" };
+  }
+
+  return { isExceptional: false, reason: undefined };
+}
+
 /**
  * Process arena match and generate Discord message
  */
@@ -174,12 +262,26 @@ async function generateAiReviewIfEnabled(ctx: AiReviewContext): Promise<AiReview
     return { text: undefined, image: undefined };
   }
 
-  const shouldGenerateReview = isRankedQueue(completedMatch.queueType) || hasJerred(playersInMatch);
+  // Jerred override for testing - always generate reviews for his games
+  const jerredOverride = hasJerred(playersInMatch);
+
+  // Check if game is exceptional (good or bad performance)
+  const exceptionalResult = isExceptionalGame(matchData, playersInMatch, completedMatch.durationInSeconds);
+
+  // Only generate reviews for ranked games with exceptional performance, or Jerred override
+  const isRanked = isRankedQueue(completedMatch.queueType);
+  const shouldGenerateReview = jerredOverride || (isRanked && exceptionalResult.isExceptional);
+
   if (!shouldGenerateReview) {
-    logger.info(
-      `[generateMatchReport] Skipping AI review - not a ranked queue and Jerred not in match (queueType: ${completedMatch.queueType ?? "unknown"})`,
-    );
+    const reason = !isRanked
+      ? `not a ranked queue (queueType: ${completedMatch.queueType ?? "unknown"})`
+      : "not an exceptional game";
+    logger.info(`[generateMatchReport] Skipping AI review - ${reason}`);
     return { text: undefined, image: undefined };
+  }
+
+  if (exceptionalResult.isExceptional) {
+    logger.info(`[generateMatchReport] Exceptional game detected: ${exceptionalResult.reason ?? "unknown"}`);
   }
 
   if (completedMatch.durationInSeconds < MIN_GAME_DURATION_SECONDS) {
