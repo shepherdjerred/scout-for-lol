@@ -25,7 +25,6 @@ import { matchToSvg, arenaMatchToSvg, svgToPng } from "@scout-for-lol/report";
 import { saveMatchToS3, saveImageToS3, saveSvgToS3, saveTimelineToS3 } from "@scout-for-lol/backend/storage/s3.ts";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.ts";
 import { generateMatchReview } from "@scout-for-lol/backend/league/review/generator.ts";
-import { generateReviewAudio } from "@scout-for-lol/backend/league/review/tts.ts";
 import { match } from "ts-pattern";
 import { logErrorDetails } from "./match-report-debug.ts";
 import { fetchMatchTimeline } from "./match-data-fetcher.ts";
@@ -208,35 +207,6 @@ async function generateAiReviewIfEnabled(ctx: AiReviewContext): Promise<AiReview
 }
 
 /**
- * Generate TTS audio for Aaron's reviews
- */
-async function generateTtsAudioIfAaron(
-  reviewText: string | undefined,
-  playersInMatch: PlayerConfigEntry[],
-): Promise<Uint8Array | undefined> {
-  if (!reviewText) {
-    return undefined;
-  }
-
-  const isAaronInMatch = playersInMatch.some((p) => p.alias === "Aaron");
-  if (!isAaronInMatch) {
-    return undefined;
-  }
-
-  try {
-    logger.info(`[generateMatchReport] 🎙️ Generating TTS audio for Aaron's review...`);
-    const audioData = await generateReviewAudio(reviewText);
-    if (audioData) {
-      logger.info(`[generateMatchReport] 🔊 Generated TTS audio (${audioData.byteLength.toString()} bytes)`);
-    }
-    return audioData;
-  } catch (error) {
-    logger.error(`[generateMatchReport] ⚠️ Error generating TTS audio:`, error);
-    return undefined;
-  }
-}
-
-/**
  * Process standard match and generate Discord message
  */
 async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageCreateOptions> {
@@ -304,14 +274,6 @@ async function processStandardMatch(ctx: StandardMatchContext): Promise<MessageC
     const aiImageAttachment = new AttachmentBuilder(aiBuffer).setName("ai-review.png");
     files.push(aiImageAttachment);
     logger.info(`[generateMatchReport] ✨ Added AI-generated image to message`);
-  }
-
-  // Generate TTS audio for Aaron's reviews only
-  const audioData = await generateTtsAudioIfAaron(reviewText, playersInMatch);
-  if (audioData) {
-    const audioBuffer = Buffer.from(audioData);
-    const audioAttachment = new AttachmentBuilder(audioBuffer).setName("review.mp3");
-    files.push(audioAttachment);
   }
 
   // Generate completion message
