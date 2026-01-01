@@ -224,8 +224,10 @@ function generateAbbreviatedSection(
   // Bottom 3 pairings with @mentions
   lines.push("### Worst Pairings");
   const bottomPairings = qualifiedPairings.slice(-3).reverse();
+  // Start rank = total entries - bottom count + 1, then increment by index
+  const bottomStartRank = qualifiedPairings.length - bottomPairings.length + 1;
   bottomPairings.forEach((entry, index) => {
-    const rank = qualifiedPairings.length - (bottomPairings.length - 1 - index);
+    const rank = bottomStartRank + index;
     lines.push(
       `${rank.toString()}. ${formatPairing(entry, aliasToDiscordId, true)} - ${formatWinRate(entry.winRate)} (${entry.totalGames.toString()} games)`,
     );
