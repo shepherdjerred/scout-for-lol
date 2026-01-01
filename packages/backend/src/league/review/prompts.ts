@@ -126,9 +126,8 @@ export async function selectRandomPersonality(): Promise<Personality> {
 }
 
 /**
- * Select a personality using weighted random selection.
- * Aaron is strongly preferred (80% of the time), with other personalities
- * sharing the remaining 20%.
+ * Select a personality using balanced pseudo-random selection.
+ * All personalities have equal probability of being selected.
  */
 function selectBalancedReviewer(availablePersonalities: Personality[]): Personality {
   if (availablePersonalities.length === 0) {
@@ -143,32 +142,11 @@ function selectBalancedReviewer(availablePersonalities: Personality[]): Personal
     }
   }
 
-  // Check if Aaron is available
-  const aaron = availablePersonalities.find(
-    (p) => (p.filename ?? p.metadata.name).toLowerCase() === "aaron",
-  );
-  const otherPersonalities = availablePersonalities.filter(
-    (p) => (p.filename ?? p.metadata.name).toLowerCase() !== "aaron",
-  );
-
-  let selected: Personality;
-
-  // 80% chance to select Aaron if available, otherwise select from others
-  if (aaron && Math.random() < 0.8) {
-    selected = aaron;
-  } else if (otherPersonalities.length > 0) {
-    // Select randomly from other personalities
-    const randomIndex = Math.floor(Math.random() * otherPersonalities.length);
-    const randomPersonality = otherPersonalities[randomIndex];
-    if (!randomPersonality) {
-      throw new Error("Failed to select random personality");
-    }
-    selected = randomPersonality;
-  } else if (aaron) {
-    // Fall back to Aaron if no other personalities
-    selected = aaron;
-  } else {
-    throw new Error("Failed to select personality");
+  // Select randomly from all personalities with equal probability
+  const randomIndex = Math.floor(Math.random() * availablePersonalities.length);
+  const selected = availablePersonalities[randomIndex];
+  if (!selected) {
+    throw new Error("Failed to select random personality");
   }
 
   // Increment the usage count for the selected personality
