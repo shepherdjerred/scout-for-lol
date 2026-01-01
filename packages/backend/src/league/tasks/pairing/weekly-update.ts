@@ -1,6 +1,7 @@
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { MY_SERVER } from "@scout-for-lol/backend/configuration/flags.ts";
 import { send as sendChannelMessage } from "@scout-for-lol/backend/league/discord/channel.ts";
+import { splitMessageIntoChunks } from "@scout-for-lol/backend/discord/utils/message.ts";
 import {
   type ServerPairingStats,
   type PairingStatsEntry,
@@ -413,13 +414,26 @@ export async function runWeeklyPairingUpdate(): Promise<{ success: boolean; mess
 
     logger.info("[WeeklyPairing] Sending message to Discord");
 
-    await sendChannelMessage(
-      {
-        content: `@everyone\n\n${message}`,
-      },
-      channelId,
-      serverId,
-    );
+    // Split message into chunks if it exceeds Discord's 2000 character limit
+    const fullMessage = `@everyone\n\n${message}`;
+    const messageChunks = splitMessageIntoChunks(fullMessage);
+
+    logger.info(`[WeeklyPairing] Message split into ${messageChunks.length.toString()} chunk(s)`);
+
+    // Send each chunk sequentially to maintain order
+    for (let i = 0; i < messageChunks.length; i++) {
+      const chunk = messageChunks[i];
+      if (chunk) {
+        logger.info(`[WeeklyPairing] Sending chunk ${(i + 1).toString()}/${messageChunks.length.toString()}`);
+        await sendChannelMessage(
+          {
+            content: chunk,
+          },
+          channelId,
+          serverId,
+        );
+      }
+    }
 
     const totalMatches = ranked.totalMatchesAnalyzed + arena.totalMatchesAnalyzed + aram.totalMatchesAnalyzed;
     logger.info("[WeeklyPairing] Successfully posted weekly Common Denominator update");
