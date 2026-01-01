@@ -187,6 +187,16 @@ export const cronJobLastSuccess = new Gauge({
   registers: [registry],
 });
 
+/**
+ * Total number of match history polling runs skipped due to mutex
+ */
+export const matchHistoryPollingSkipsTotal = new Counter({
+  name: "match_history_polling_skips_total",
+  help: "Total number of match history polling runs skipped due to mutex lock",
+  labelNames: ["reason"] as const,
+  registers: [registry],
+});
+
 // =======================
 // Usage & Growth Metrics
 // =======================
