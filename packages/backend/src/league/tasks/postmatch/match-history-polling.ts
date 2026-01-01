@@ -20,8 +20,69 @@ import { fetchMatchData } from "@scout-for-lol/backend/league/tasks/postmatch/ma
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { uniqueBy } from "remeda";
+import { matchHistoryPollingSkipsTotal } from "@scout-for-lol/backend/metrics/index.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
+
+// Mutex to prevent concurrent match history polling runs
+// This prevents race conditions where two cron runs process the same match
+let isPollingInProgress = false;
+let pollingStartTime: number | undefined;
+
+// Timeout after 5 minutes to prevent indefinite lock if a run gets stuck
+const POLLING_TIMEOUT_MS = 5 * 60 * 1000;
+
+/**
+ * Check if polling is currently in progress.
+ * Exposed for testing purposes.
+ */
+export function isMatchHistoryPollingInProgress(): boolean {
+  return isPollingInProgress;
+}
+
+/**
+ * Reset the polling in progress flag.
+ * WARNING: Only use this in tests to reset state between test cases.
+ */
+export function resetPollingState(): void {
+  isPollingInProgress = false;
+  pollingStartTime = undefined;
+}
+
+/**
+ * Check if we should skip this polling run due to concurrent execution.
+ * Returns true if we should skip (another run is in progress and not timed out).
+ * Handles timeout detection and lock reset when a run appears stuck.
+ */
+function shouldSkipPollingRun(): boolean {
+  if (!isPollingInProgress) {
+    return false;
+  }
+
+  const elapsed = pollingStartTime ? Date.now() - pollingStartTime : 0;
+
+  // Check if the lock is stale (stuck for over 5 minutes)
+  if (elapsed > POLLING_TIMEOUT_MS) {
+    logger.error(
+      `⚠️  Polling lock timeout detected after ${Math.round(elapsed / 1000).toString()}s, force-resetting stale lock`,
+    );
+    matchHistoryPollingSkipsTotal.inc({ reason: "timeout_reset" });
+    Sentry.captureMessage("Match history polling lock timeout - force reset", {
+      level: "warning",
+      tags: { source: "match-history-polling" },
+      extra: { elapsedMs: elapsed },
+    });
+    isPollingInProgress = false;
+    pollingStartTime = undefined;
+    return false;
+  }
+
+  logger.info(
+    `⏸️  Match history polling already in progress (${Math.round(elapsed / 1000).toString()}s elapsed), skipping this run`,
+  );
+  matchHistoryPollingSkipsTotal.inc({ reason: "concurrent_run" });
+  return true;
+}
 
 type PlayerWithMatchIds = {
   player: PlayerConfigEntry;
@@ -193,6 +254,14 @@ async function processMatchAndUpdatePlayers(
  * Main function to check for new matches via match history polling
  */
 export async function checkMatchHistory(): Promise<void> {
+  // Prevent concurrent runs to avoid race conditions where two cron runs
+  // could process the same match before lastProcessedMatchId is updated
+  if (shouldSkipPollingRun()) {
+    return;
+  }
+
+  isPollingInProgress = true;
+  pollingStartTime = Date.now();
   logger.info("🔍 Starting match history polling check");
   const startTime = Date.now();
 
@@ -340,5 +409,8 @@ export async function checkMatchHistory(): Promise<void> {
   } catch (error) {
     logger.error("❌ Error in match history check:", error);
     throw error;
+  } finally {
+    isPollingInProgress = false;
+    pollingStartTime = undefined;
   }
 }
