@@ -113,6 +113,10 @@ const EXCEPTIONAL_GAME_THRESHOLDS = {
   highKda: 5,
   /** Minimum kills required for high KDA to count */
   minKillsForHighKda: 5,
+  /** KDA ratio considered exceptionally bad */
+  lowKda: 0.5,
+  /** Minimum deaths required for low KDA to count (to filter out short/uneventful games) */
+  minDeathsForLowKda: 5,
   /** Deaths considered exceptionally bad */
   manyDeaths: 10,
   /** Game duration in seconds for a fast game (20 min) */
@@ -175,6 +179,9 @@ function isExceptionalGame(
     // Exceptionally bad conditions
     if (deaths >= EXCEPTIONAL_GAME_THRESHOLDS.manyDeaths) {
       return { isExceptional: true, reason: `many deaths (${deaths.toString()})` };
+    }
+    if (kda <= EXCEPTIONAL_GAME_THRESHOLDS.lowKda && deaths >= EXCEPTIONAL_GAME_THRESHOLDS.minDeathsForLowKda) {
+      return { isExceptional: true, reason: `very bad KDA (${kda.toFixed(1)})` };
     }
     if (gameEndedInEarlySurrender && !win) {
       return { isExceptional: true, reason: "early surrender loss" };
