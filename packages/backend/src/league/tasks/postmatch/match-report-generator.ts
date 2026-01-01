@@ -123,12 +123,15 @@ const EXCEPTIONAL_GAME_THRESHOLDS = {
   fastGameSeconds: 20 * 60,
   /** Game duration in seconds for a very long game (40 min) */
   longGameSeconds: 40 * 60,
+  /** Minimum kill participation (kills + assists) for perfect game */
+  minParticipationForPerfectGame: 5,
+  /** KDA threshold for determining if player participated in a stomp */
+  stompParticipationKda: 2,
 };
 
-type ExceptionalGameResult = {
-  isExceptional: boolean;
-  reason: string | undefined;
-};
+type ExceptionalGameResult =
+  | { isExceptional: false }
+  | { isExceptional: true; reason: string };
 
 /**
  * Calculate KDA ratio, treating 0 deaths as perfect (returns Infinity)
@@ -154,7 +157,7 @@ function isExceptionalGame(
   const trackedParticipants = matchData.info.participants.filter((p) => trackedPuuids.has(p.puuid));
 
   if (trackedParticipants.length === 0) {
-    return { isExceptional: false, reason: undefined };
+    return { isExceptional: false };
   }
 
   // Check each tracked player for exceptional performance
@@ -169,7 +172,7 @@ function isExceptionalGame(
     if (quadraKills > 0) {
       return { isExceptional: true, reason: "quadrakill" };
     }
-    if (deaths === 0 && win && kills >= 3) {
+    if (deaths === 0 && win && kills + assists >= EXCEPTIONAL_GAME_THRESHOLDS.minParticipationForPerfectGame) {
       return { isExceptional: true, reason: "perfect game (0 deaths with win)" };
     }
     if (kda >= EXCEPTIONAL_GAME_THRESHOLDS.highKda && kills >= EXCEPTIONAL_GAME_THRESHOLDS.minKillsForHighKda) {
@@ -190,16 +193,25 @@ function isExceptionalGame(
 
   // Check game duration extremes
   if (durationInSeconds < EXCEPTIONAL_GAME_THRESHOLDS.fastGameSeconds) {
-    // Fast game - could be stomp either way
-    const anyTrackedWon = trackedParticipants.some((p) => p.win);
-    const reason = anyTrackedWon ? "fast win (stomp)" : "fast loss (stomped)";
-    return { isExceptional: true, reason };
+    // Fast game - only exceptional if the tracked player actually participated in the stomp
+    for (const participant of trackedParticipants) {
+      const { kills, deaths, assists, win } = participant;
+      const kda = calculateKda(kills, deaths, assists);
+      // Good performance in a fast win (participated in stomp)
+      if (win && kda >= EXCEPTIONAL_GAME_THRESHOLDS.stompParticipationKda) {
+        return { isExceptional: true, reason: "fast win (stomp)" };
+      }
+      // Bad performance in a fast loss (got stomped)
+      if (!win && kda < 1) {
+        return { isExceptional: true, reason: "fast loss (stomped)" };
+      }
+    }
   }
   if (durationInSeconds > EXCEPTIONAL_GAME_THRESHOLDS.longGameSeconds) {
     return { isExceptional: true, reason: "very long game" };
   }
 
-  return { isExceptional: false, reason: undefined };
+  return { isExceptional: false };
 }
 
 /**
@@ -287,8 +299,12 @@ async function generateAiReviewIfEnabled(ctx: AiReviewContext): Promise<AiReview
     return { text: undefined, image: undefined };
   }
 
+  // Log why we're generating the review
+  if (jerredOverride) {
+    logger.info(`[generateMatchReport] Generating AI review - Jerred override enabled`);
+  }
   if (exceptionalResult.isExceptional) {
-    logger.info(`[generateMatchReport] Exceptional game detected: ${exceptionalResult.reason ?? "unknown"}`);
+    logger.info(`[generateMatchReport] Exceptional game detected: ${exceptionalResult.reason}`);
   }
 
   if (completedMatch.durationInSeconds < MIN_GAME_DURATION_SECONDS) {
