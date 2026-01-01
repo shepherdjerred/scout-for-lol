@@ -118,13 +118,13 @@ function generateRankedSection(stats: ServerPairingStats, aliasToDiscordId: Map<
   lines.push("## Ranked (Solo/Flex)");
   lines.push("");
 
-  // Find the player(s) who surrender the most - show percentage
+  // Find the player(s) with highest surrender rate (min 10 games) - show percentage and count
   const surrenderLeaders = findSurrenderLeaders(stats.individualStats);
   if (surrenderLeaders.length > 0) {
     const surrenderList = surrenderLeaders
-      .map((p) => `**${p.alias}** (${formatSurrenderRate(p.surrenders, p.totalGames)})`)
+      .map((p) => `**${p.alias}** (${formatSurrenderRate(p.surrenders, p.totalGames)}, ${p.surrenders.toString()} surrenders)`)
       .join(", ");
-    lines.push(`Most Surrenders: ${surrenderList}`);
+    lines.push(`Highest Surrender Rate: ${surrenderList}`);
     lines.push("");
   }
 
@@ -274,15 +274,16 @@ function generateMessage(
 
 /**
  * Find players who surrender the most (sorted by surrender rate, then by count)
+ * Requires minimum games to qualify for ranking
  */
 function findSurrenderLeaders(individualStats: IndividualPlayerStats[]): IndividualPlayerStats[] {
   if (individualStats.length === 0) {
     return [];
   }
 
-  // Filter to players with surrenders and sort by surrender rate (descending)
+  // Filter to players with surrenders, minimum games, and sort by surrender rate (descending)
   const playersWithSurrenders = individualStats
-    .filter((p) => p.surrenders > 0 && p.totalGames > 0)
+    .filter((p) => p.surrenders > 0 && p.totalGames >= MIN_GAMES_FOR_RANKING)
     .map((p) => ({
       ...p,
       surrenderRate: p.surrenders / p.totalGames,
