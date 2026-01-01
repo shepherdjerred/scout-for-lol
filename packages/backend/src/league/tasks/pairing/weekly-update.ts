@@ -7,7 +7,8 @@ import {
   type IndividualPlayerStats,
   DiscordChannelIdSchema,
 } from "@scout-for-lol/data/index";
-import { getServerPlayers } from "./get-server-players.ts";
+import { getServerPlayers, createAliasToDiscordIdMap } from "./get-server-players.ts";
+import type { ServerPlayer } from "./get-server-players.ts";
 import { calculatePairingStats } from "./calculate-pairings.ts";
 import { getCurrentWeekInfo } from "./s3-cache.ts";
 import { startTask, finishTask, isRunning, getTaskInfo } from "./pairing-task-state.ts";
@@ -22,8 +23,8 @@ const logger = createLogger("pairing-weekly-update");
 // Minimum games required for a pairing to be included in rankings
 const MIN_GAMES_FOR_RANKING = 10;
 
-// Maximum entries to show in the full leaderboard (Discord has a 4000 char limit)
-const MAX_LEADERBOARD_ENTRIES = 25;
+// For full leaderboard, show top N and bottom N
+const LEADERBOARD_TOP_BOTTOM_COUNT = 25;
 
 /**
  * Format win rate as percentage string
@@ -33,32 +34,101 @@ function formatWinRate(winRate: number): string {
 }
 
 /**
- * Format pairing for display (e.g., "Alice + Bob")
+ * Get medal emoji for ranking position
  */
-function formatPairing(entry: PairingStatsEntry): string {
-  return entry.players.join(" + ");
+function getMedal(rank: number): string {
+  if (rank === 1) {
+    return "🥇";
+  }
+  if (rank === 2) {
+    return "🥈";
+  }
+  if (rank === 3) {
+    return "🥉";
+  }
+  return "";
 }
 
 /**
- * Generate the Common Denominator message content
+ * Get pairings that meet the minimum games requirement for ranking
  */
-function generateMessage(stats: ServerPairingStats): string {
+function getQualifiedPairings(pairings: PairingStatsEntry[]): PairingStatsEntry[] {
+  return pairings
+    .filter((p) => p.totalGames >= MIN_GAMES_FOR_RANKING && p.players.length >= 2)
+    .sort((a, b) => b.winRate - a.winRate);
+}
+
+type FormatTop3EntryOptions = {
+  entry: PairingStatsEntry;
+  rank: number;
+  aliasToDiscordId: Map<string, string>;
+  useMentions: boolean;
+  showGamesCount: boolean;
+};
+
+/**
+ * Format a top-3 pairing entry line
+ */
+function formatTop3Entry(options: FormatTop3EntryOptions): string {
+  const { entry, rank, aliasToDiscordId, useMentions, showGamesCount } = options;
+  const medal = getMedal(rank);
+  if (showGamesCount) {
+    return `${medal} ${rank.toString()}. ${formatPairing(entry, aliasToDiscordId, useMentions)} - ${formatWinRate(entry.winRate)} (${entry.totalGames.toString()} games)`;
+  }
+  return `${medal} ${rank.toString()}. **${formatPairing(entry, aliasToDiscordId, useMentions)}** - ${entry.totalGames.toString()} games (${formatWinRate(entry.winRate)})`;
+}
+
+/**
+ * Format pairing for display with optional Discord mentions
+ * @param entry - The pairing stats entry
+ * @param aliasToDiscordId - Map of alias to Discord ID for mentions
+ * @param useMentions - Whether to use @mentions (defaults to true)
+ */
+function formatPairing(entry: PairingStatsEntry, aliasToDiscordId: Map<string, string>, useMentions = true): string {
+  const formattedPlayers = [...entry.players].sort().map((alias) => {
+    if (useMentions) {
+      const discordId = aliasToDiscordId.get(alias);
+      if (discordId) {
+        return `<@${discordId}>`;
+      }
+    }
+    return alias;
+  });
+  return formattedPlayers.join(" + ");
+}
+
+/**
+ * Format surrender rate as percentage
+ */
+function formatSurrenderRate(surrenders: number, totalGames: number): string {
+  if (totalGames === 0) {
+    return "0%";
+  }
+  const rate = (surrenders / totalGames) * 100;
+  return `${rate.toFixed(1)}%`;
+}
+
+/**
+ * Generate the ranked (Solo/Flex) section of the message
+ */
+function generateRankedSection(stats: ServerPairingStats, aliasToDiscordId: Map<string, string>): string {
   const lines: string[] = [];
 
-  lines.push("# COMMON DENOMINATOR UPDATE");
+  lines.push("## Ranked (Solo/Flex)");
   lines.push("");
 
-  // Find the player who surrenders the most
-  const surrenderLeader = findSurrenderLeader(stats.individualStats);
-  if (surrenderLeader && surrenderLeader.surrenders > 0) {
-    lines.push(`**${surrenderLeader.alias}** surrenders the most (${surrenderLeader.surrenders.toString()} times)`);
+  // Find the player(s) who surrender the most - show percentage
+  const surrenderLeaders = findSurrenderLeaders(stats.individualStats);
+  if (surrenderLeaders.length > 0) {
+    const surrenderList = surrenderLeaders
+      .map((p) => `**${p.alias}** (${formatSurrenderRate(p.surrenders, p.totalGames)})`)
+      .join(", ");
+    lines.push(`Most Surrenders: ${surrenderList}`);
     lines.push("");
   }
 
   // Get pairings with enough games, sorted by win rate
-  const qualifiedPairings = stats.pairings
-    .filter((p) => p.totalGames >= MIN_GAMES_FOR_RANKING && p.players.length >= 2)
-    .sort((a, b) => b.winRate - a.winRate);
+  const qualifiedPairings = getQualifiedPairings(stats.pairings);
 
   if (qualifiedPairings.length === 0) {
     lines.push(
@@ -67,77 +137,202 @@ function generateMessage(stats: ServerPairingStats): string {
     return lines.join("\n");
   }
 
-  // Top 3 highest win rate pairings
-  lines.push("## Best Pairings");
-  const topPairings = qualifiedPairings.slice(0, 3);
-  topPairings.forEach((entry, index) => {
-    const rank = index + 1;
-    const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉";
-    lines.push(
-      `${medal} ${rank.toString()}. **${formatPairing(entry)}** - ${formatWinRate(entry.winRate)} (${entry.totalGames.toString()} games)`,
-    );
-  });
-
-  lines.push("");
-
-  // Bottom 3 lowest win rate pairings (reversed for worst first)
-  lines.push("## Worst Pairings");
-  const bottomPairings = qualifiedPairings.slice(-3).reverse();
-  bottomPairings.forEach((entry, index) => {
-    const rank = qualifiedPairings.length - index;
-    lines.push(
-      `${rank.toString()}. **${formatPairing(entry)}** - ${formatWinRate(entry.winRate)} (${entry.totalGames.toString()} games)`,
-    );
-  });
-
-  lines.push("");
-
-  // Top 3 pairings with most games
-  lines.push("## Most Games Together");
+  // Most Games Together (top 3)
+  lines.push("### Most Games Together");
   const mostGamesPairings = [...qualifiedPairings].sort((a, b) => b.totalGames - a.totalGames).slice(0, 3);
   mostGamesPairings.forEach((entry, index) => {
     const rank = index + 1;
-    const medal = rank === 1 ? "🥇" : rank === 2 ? "🥈" : "🥉";
-    lines.push(
-      `${medal} ${rank.toString()}. **${formatPairing(entry)}** - ${entry.totalGames.toString()} games (${formatWinRate(entry.winRate)})`,
-    );
+    lines.push(formatTop3Entry({ entry, rank, aliasToDiscordId, useMentions: false, showGamesCount: false }));
   });
 
   lines.push("");
 
-  // Full leaderboard (limited to avoid Discord character limit)
-  lines.push("## Full Leaderboard");
-  const leaderboardEntries = qualifiedPairings.slice(0, MAX_LEADERBOARD_ENTRIES);
-  leaderboardEntries.forEach((entry, index) => {
+  // Full Leaderboard - top 25 and bottom 25
+  lines.push("### Full Leaderboard");
+
+  const topPairings = qualifiedPairings.slice(0, LEADERBOARD_TOP_BOTTOM_COUNT);
+  const bottomPairings = qualifiedPairings.slice(-LEADERBOARD_TOP_BOTTOM_COUNT).reverse();
+
+  // Top entries with @mentions for top 3
+  topPairings.forEach((entry, index) => {
     const rank = index + 1;
+    const useMentions = rank <= 3;
+    const medal = getMedal(rank);
+    const prefix = medal ? `${medal} ` : "";
     lines.push(
-      `${rank.toString()}. ${formatPairing(entry)} - ${formatWinRate(entry.winRate)} (W: ${entry.wins.toString()}, L: ${entry.losses.toString()})`,
+      `${prefix}${rank.toString()}. ${formatPairing(entry, aliasToDiscordId, useMentions)} - ${formatWinRate(entry.winRate)} (W: ${entry.wins.toString()}, L: ${entry.losses.toString()})`,
     );
   });
 
-  // Show count of remaining pairings if there are more
-  const remainingCount = qualifiedPairings.length - MAX_LEADERBOARD_ENTRIES;
-  if (remainingCount > 0) {
-    lines.push(`*...and ${remainingCount.toString()} more pairings*`);
+  // Add separator if there are more pairings between top and bottom
+  const middleCount = qualifiedPairings.length - LEADERBOARD_TOP_BOTTOM_COUNT * 2;
+  if (middleCount > 0) {
+    lines.push(`...${middleCount.toString()} more pairings...`);
+  }
+
+  // Bottom entries (if different from top) with @mentions for bottom 3
+  if (qualifiedPairings.length > LEADERBOARD_TOP_BOTTOM_COUNT) {
+    const bottomStartRank = qualifiedPairings.length - bottomPairings.length + 1;
+    bottomPairings.forEach((entry, index) => {
+      const rank = bottomStartRank + index;
+      const isBottom3 = index >= bottomPairings.length - 3;
+      lines.push(
+        `${rank.toString()}. ${formatPairing(entry, aliasToDiscordId, isBottom3)} - ${formatWinRate(entry.winRate)} (W: ${entry.wins.toString()}, L: ${entry.losses.toString()})`,
+      );
+    });
   }
 
   lines.push("");
   lines.push(
-    `*Based on ${stats.totalMatchesAnalyzed.toString()} ranked games (Solo/Flex) from the past month. Pairings require ${MIN_GAMES_FOR_RANKING.toString()}+ games to be ranked.*`,
+    `*Based on ${stats.totalMatchesAnalyzed.toString()} ranked games from the past month. Pairings require ${MIN_GAMES_FOR_RANKING.toString()}+ games to be ranked.*`,
   );
 
   return lines.join("\n");
 }
 
 /**
- * Find the player who surrenders the most
+ * Generate an abbreviated section for Arena or ARAM (top 3 + bottom 3 only)
  */
-function findSurrenderLeader(individualStats: IndividualPlayerStats[]): IndividualPlayerStats | null {
-  if (individualStats.length === 0) {
-    return null;
+function generateAbbreviatedSection(
+  stats: ServerPairingStats,
+  aliasToDiscordId: Map<string, string>,
+  gameMode: "Arena" | "ARAM",
+): string {
+  const lines: string[] = [];
+
+  lines.push(`## ${gameMode}`);
+  lines.push("");
+
+  // Get pairings with enough games, sorted by win rate
+  const qualifiedPairings = getQualifiedPairings(stats.pairings);
+
+  if (qualifiedPairings.length === 0) {
+    lines.push(`*Not enough games played together (minimum ${MIN_GAMES_FOR_RANKING.toString()} games required)*`);
+    return lines.join("\n");
   }
 
-  return individualStats.reduce((leader, current) => (current.surrenders > leader.surrenders ? current : leader));
+  // Top 3 pairings with @mentions
+  lines.push("### Best Pairings");
+  const topPairings = qualifiedPairings.slice(0, 3);
+  topPairings.forEach((entry, index) => {
+    const rank = index + 1;
+    lines.push(formatTop3Entry({ entry, rank, aliasToDiscordId, useMentions: true, showGamesCount: true }));
+  });
+
+  lines.push("");
+
+  // Bottom 3 pairings with @mentions
+  lines.push("### Worst Pairings");
+  const bottomPairings = qualifiedPairings.slice(-3).reverse();
+  // Start rank = total entries - bottom count + 1, then increment by index
+  const bottomStartRank = qualifiedPairings.length - bottomPairings.length + 1;
+  bottomPairings.forEach((entry, index) => {
+    const rank = bottomStartRank + index;
+    lines.push(
+      `${rank.toString()}. ${formatPairing(entry, aliasToDiscordId, true)} - ${formatWinRate(entry.winRate)} (${entry.totalGames.toString()} games)`,
+    );
+  });
+
+  lines.push("");
+  lines.push(`*Based on ${stats.totalMatchesAnalyzed.toString()} ${gameMode} games from the past month.*`);
+
+  return lines.join("\n");
+}
+
+/**
+ * Generate the full Common Denominator message content
+ */
+function generateMessage(
+  rankedStats: ServerPairingStats,
+  arenaStats: ServerPairingStats,
+  aramStats: ServerPairingStats,
+  aliasToDiscordId: Map<string, string>,
+): string {
+  const lines: string[] = [];
+
+  lines.push("# COMMON DENOMINATOR UPDATE");
+  lines.push("");
+
+  // Add ranked section
+  lines.push(generateRankedSection(rankedStats, aliasToDiscordId));
+  lines.push("");
+
+  // Add Arena section (abbreviated)
+  if (arenaStats.totalMatchesAnalyzed > 0) {
+    lines.push(generateAbbreviatedSection(arenaStats, aliasToDiscordId, "Arena"));
+    lines.push("");
+  }
+
+  // Add ARAM section (abbreviated)
+  if (aramStats.totalMatchesAnalyzed > 0) {
+    lines.push(generateAbbreviatedSection(aramStats, aliasToDiscordId, "ARAM"));
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * Find players who surrender the most (sorted by surrender rate, then by count)
+ */
+function findSurrenderLeaders(individualStats: IndividualPlayerStats[]): IndividualPlayerStats[] {
+  if (individualStats.length === 0) {
+    return [];
+  }
+
+  // Filter to players with surrenders and sort by surrender rate (descending)
+  const playersWithSurrenders = individualStats
+    .filter((p) => p.surrenders > 0 && p.totalGames > 0)
+    .map((p) => ({
+      ...p,
+      surrenderRate: p.surrenders / p.totalGames,
+    }))
+    .sort((a, b) => {
+      // Sort by surrender rate first, then by total surrenders
+      if (b.surrenderRate !== a.surrenderRate) {
+        return b.surrenderRate - a.surrenderRate;
+      }
+      return b.surrenders - a.surrenders;
+    });
+
+  if (playersWithSurrenders.length === 0) {
+    return [];
+  }
+
+  // Get the top surrender rate and return all players with that rate
+  const topRate = playersWithSurrenders[0]?.surrenderRate ?? 0;
+  const leaders = playersWithSurrenders
+    .filter((p) => Math.abs(p.surrenderRate - topRate) < 0.001) // floating point comparison
+    .sort((a, b) => a.alias.localeCompare(b.alias)); // Sort names alphabetically
+
+  return leaders;
+}
+
+/**
+ * Options for calculating stats across all game modes
+ */
+type CalculateAllModeStatsOptions = {
+  players: ServerPlayer[];
+  startDate: Date;
+  endDate: Date;
+  serverId: string;
+};
+
+/**
+ * Calculate stats for all game modes
+ */
+async function calculateAllModeStats(
+  options: CalculateAllModeStatsOptions,
+): Promise<{ ranked: ServerPairingStats; arena: ServerPairingStats; aram: ServerPairingStats }> {
+  const { players, startDate, endDate, serverId } = options;
+
+  // Calculate stats for each game mode in parallel
+  const [ranked, arena, aram] = await Promise.all([
+    calculatePairingStats({ players, startDate, endDate, serverId, gameMode: "ranked" }),
+    calculatePairingStats({ players, startDate, endDate, serverId, gameMode: "arena" }),
+    calculatePairingStats({ players, startDate, endDate, serverId, gameMode: "aram" }),
+  ]);
+
+  return { ranked, arena, aram };
 }
 
 /**
@@ -173,8 +368,10 @@ export async function runWeeklyPairingUpdate(): Promise<{ success: boolean; mess
 
     logger.info(`[WeeklyPairing] Found ${players.length.toString()} players`);
 
+    // Create alias to Discord ID map for mentions
+    const aliasToDiscordId = createAliasToDiscordIdMap(players);
+
     // Calculate stats for the past month (last 4 weeks)
-    // We'll aggregate stats from the past 4 weeks
     const { year: currentYear, weekNumber: currentWeek } = getCurrentWeekInfo();
 
     logger.info(`[WeeklyPairing] Current week: ${currentYear.toString()}-W${currentWeek.toString()}`);
@@ -187,28 +384,26 @@ export async function runWeeklyPairingUpdate(): Promise<{ success: boolean; mess
 
     logger.info(`[WeeklyPairing] Calculating stats from ${startDate.toISOString()} to ${endDate.toISOString()}`);
 
-    // Calculate stats directly for the full period
-    // Note: We use per-week caching for individual weeks if needed, but for the monthly report
-    // we calculate the full period
-    const stats = await calculatePairingStats(players, startDate, endDate, serverId);
+    // Calculate stats for all game modes
+    const { ranked, arena, aram } = await calculateAllModeStats({ players, startDate, endDate, serverId });
 
     logger.info(
-      `[WeeklyPairing] Calculated stats: ${stats.totalMatchesAnalyzed.toString()} matches, ${stats.pairings.length.toString()} pairings`,
+      `[WeeklyPairing] Calculated stats: Ranked=${ranked.totalMatchesAnalyzed.toString()}, Arena=${arena.totalMatchesAnalyzed.toString()}, ARAM=${aram.totalMatchesAnalyzed.toString()} matches`,
     );
 
     // Generate and send the message
-    const message = generateMessage(stats);
+    const message = generateMessage(ranked, arena, aram, aliasToDiscordId);
 
     // Log the full message for debugging
     logger.info("[WeeklyPairing] Generated message:");
     logger.info(message);
 
-    // Log all qualified pairings to console for debugging
-    const qualifiedPairings = stats.pairings
+    // Log all qualified pairings to console for debugging (ranked only)
+    const qualifiedPairings = ranked.pairings
       .filter((p) => p.totalGames >= MIN_GAMES_FOR_RANKING && p.players.length >= 2)
       .sort((a, b) => b.winRate - a.winRate);
 
-    logger.info(`[WeeklyPairing] Full pairings list (${qualifiedPairings.length.toString()} total):`);
+    logger.info(`[WeeklyPairing] Full ranked pairings list (${qualifiedPairings.length.toString()} total):`);
     qualifiedPairings.forEach((entry, index) => {
       const rank = index + 1;
       logger.info(
@@ -226,8 +421,9 @@ export async function runWeeklyPairingUpdate(): Promise<{ success: boolean; mess
       serverId,
     );
 
+    const totalMatches = ranked.totalMatchesAnalyzed + arena.totalMatchesAnalyzed + aram.totalMatchesAnalyzed;
     logger.info("[WeeklyPairing] Successfully posted weekly Common Denominator update");
-    return { success: true, message: `Completed: ${stats.totalMatchesAnalyzed.toString()} matches analyzed` };
+    return { success: true, message: `Completed: ${totalMatches.toString()} matches analyzed across all modes` };
   } catch (error) {
     logger.error("[WeeklyPairing] Error running weekly pairing update:", error);
     Sentry.captureException(error, { tags: { source: "weekly-pairing-update", serverId } });
