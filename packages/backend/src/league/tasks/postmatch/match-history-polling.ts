@@ -23,6 +23,26 @@ import { uniqueBy } from "remeda";
 
 const logger = createLogger("postmatch-match-history-polling");
 
+// Mutex to prevent concurrent match history polling runs
+// This prevents race conditions where two cron runs process the same match
+let isPollingInProgress = false;
+
+/**
+ * Check if polling is currently in progress.
+ * Exposed for testing purposes.
+ */
+export function isMatchHistoryPollingInProgress(): boolean {
+  return isPollingInProgress;
+}
+
+/**
+ * Reset the polling in progress flag.
+ * WARNING: Only use this in tests to reset state between test cases.
+ */
+export function resetPollingState(): void {
+  isPollingInProgress = false;
+}
+
 type PlayerWithMatchIds = {
   player: PlayerConfigEntry;
   matchIds: MatchId[];
@@ -193,6 +213,14 @@ async function processMatchAndUpdatePlayers(
  * Main function to check for new matches via match history polling
  */
 export async function checkMatchHistory(): Promise<void> {
+  // Prevent concurrent runs to avoid race conditions where two cron runs
+  // could process the same match before lastProcessedMatchId is updated
+  if (isPollingInProgress) {
+    logger.info("⏸️  Match history polling already in progress, skipping this run");
+    return;
+  }
+
+  isPollingInProgress = true;
   logger.info("🔍 Starting match history polling check");
   const startTime = Date.now();
 
@@ -340,5 +368,7 @@ export async function checkMatchHistory(): Promise<void> {
   } catch (error) {
     logger.error("❌ Error in match history check:", error);
     throw error;
+  } finally {
+    isPollingInProgress = false;
   }
 }
