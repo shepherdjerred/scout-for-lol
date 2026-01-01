@@ -28,6 +28,7 @@ import { generateMatchReview } from "@scout-for-lol/backend/league/review/genera
 import { match } from "ts-pattern";
 import { logErrorDetails } from "./match-report-debug.ts";
 import { fetchMatchTimeline } from "./match-data-fetcher.ts";
+import { isExceptionalGame } from "./exceptional-game.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { saveMatchRankHistory, getLatestRankBefore } from "@scout-for-lol/backend/league/model/rank-history.ts";
 
@@ -173,12 +174,30 @@ async function generateAiReviewIfEnabled(ctx: AiReviewContext): Promise<AiReview
     return { text: undefined, image: undefined };
   }
 
-  const shouldGenerateReview = isRankedQueue(completedMatch.queueType) || hasJerred(playersInMatch);
+  // Jerred override for testing - always generate reviews for his games
+  const jerredOverride = hasJerred(playersInMatch);
+
+  // Check if game is exceptional (good or bad performance)
+  const exceptionalResult = isExceptionalGame(matchData, playersInMatch, completedMatch.durationInSeconds);
+
+  // Only generate reviews for ranked games with exceptional performance, or Jerred override
+  const isRanked = isRankedQueue(completedMatch.queueType);
+  const shouldGenerateReview = jerredOverride || (isRanked && exceptionalResult.isExceptional);
+
   if (!shouldGenerateReview) {
-    logger.info(
-      `[generateMatchReport] Skipping AI review - not a ranked queue and Jerred not in match (queueType: ${completedMatch.queueType ?? "unknown"})`,
-    );
+    const reason = !isRanked
+      ? `not a ranked queue (queueType: ${completedMatch.queueType ?? "unknown"})`
+      : "not an exceptional game";
+    logger.info(`[generateMatchReport] Skipping AI review - ${reason}`);
     return { text: undefined, image: undefined };
+  }
+
+  // Log why we're generating the review
+  if (jerredOverride) {
+    logger.info(`[generateMatchReport] Generating AI review - Jerred override enabled`);
+  }
+  if (exceptionalResult.isExceptional) {
+    logger.info(`[generateMatchReport] Exceptional game detected: ${exceptionalResult.reason}`);
   }
 
   if (completedMatch.durationInSeconds < MIN_GAME_DURATION_SECONDS) {
