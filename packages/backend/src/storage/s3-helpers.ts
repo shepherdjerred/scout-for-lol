@@ -1,4 +1,5 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
 import { z } from "zod";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
@@ -61,7 +62,7 @@ export async function saveToS3(config: SaveToS3Config): Promise<string | undefin
   logger.info(`[S3Storage] ${logEmoji} ${logMessage}: ${matchId}`);
 
   try {
-    const client = new S3Client();
+    const client = createS3Client();
     const key = generateS3Key(matchId, assetType, extension);
     const StringSchema = z.string();
     const BytesSchema = z.instanceof(Uint8Array);
