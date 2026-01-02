@@ -19,7 +19,8 @@ import {
   type RawTimeline,
   type MatchId,
 } from "@scout-for-lol/data/index";
-import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
+import { ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
+import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
 import { LolApi, Constants } from "twisted";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { toMatch, toArenaMatch } from "@scout-for-lol/backend/league/model/match.ts";
@@ -184,7 +185,7 @@ async function fetchMatchKeysFromS3(daysBack: number): Promise<string[]> {
     throw new Error("S3_BUCKET_NAME not configured");
   }
 
-  const client = new S3Client();
+  const client = createS3Client();
   const endDate = new Date();
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - daysBack);
@@ -228,7 +229,7 @@ async function fetchMatchFromS3(key: string): Promise<RawMatch | null> {
     throw new Error("S3_BUCKET_NAME not configured");
   }
 
-  const client = new S3Client();
+  const client = createS3Client();
 
   try {
     const command = new GetObjectCommand({

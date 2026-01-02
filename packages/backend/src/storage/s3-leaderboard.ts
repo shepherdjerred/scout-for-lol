@@ -1,4 +1,5 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
 import { CachedLeaderboardSchema, type CachedLeaderboard } from "@scout-for-lol/data/index";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
@@ -64,7 +65,7 @@ export async function saveCachedLeaderboard(leaderboard: CachedLeaderboard): Pro
   logger.info(`[S3Leaderboard] 💾 Caching leaderboard for competition ${leaderboard.competitionId.toString()}`);
 
   try {
-    const client = new S3Client();
+    const client = createS3Client();
     const body = JSON.stringify(leaderboard, null, 2);
 
     const currentKey = generateCurrentLeaderboardKey(leaderboard.competitionId);
@@ -160,7 +161,7 @@ export async function loadCachedLeaderboard(competitionId: number): Promise<Cach
   logger.info(`[S3Leaderboard] 📥 Loading cached leaderboard for competition ${competitionId.toString()}`);
 
   try {
-    const client = new S3Client();
+    const client = createS3Client();
     const command = new GetObjectCommand({
       Bucket: bucket,
       Key: key,

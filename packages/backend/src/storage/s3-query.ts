@@ -1,4 +1,5 @@
-import { GetObjectCommand, ListObjectsV2Command, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, ListObjectsV2Command, type S3Client } from "@aws-sdk/client-s3";
+import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data/index";
@@ -221,7 +222,7 @@ export async function queryMatchesByDateRange(startDate: Date, endDate: Date, pu
   logger.info(`[S3Query] 🔍 Querying matches from ${startDate.toISOString()} to ${endDate.toISOString()}`);
   logger.info(`[S3Query] 👥 Filtering for ${puuids.length.toString()} participants`);
 
-  const client = new S3Client();
+  const client = createS3Client();
   const dayPrefixes = generateDatePrefixes(startDate, endDate);
   const matches: RawMatch[] = [];
   let totalObjects = 0;
