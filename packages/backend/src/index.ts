@@ -1,7 +1,6 @@
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
-import { runMigrations } from "@scout-for-lol/backend/database/run-migrations.ts";
 
 const logger = createLogger("app");
 
@@ -10,9 +9,6 @@ logger.info(`📦 Version: ${configuration.version}`);
 logger.info(`🔧 Environment: ${configuration.environment}`);
 logger.info(`🌐 Git SHA: ${configuration.gitSha}`);
 logger.info(`🔌 Port: ${configuration.port.toString()}`);
-
-logger.info("🗄️  Running database migrations");
-await runMigrations();
 
 if (configuration.sentryDsn) {
   logger.info("🔍 Initializing Sentry error tracking");
