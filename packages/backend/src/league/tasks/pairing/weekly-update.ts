@@ -152,7 +152,7 @@ function generateRankedSection(stats: ServerPairingStats, aliasToDiscordId: Map<
   lines.push("### Full Leaderboard");
 
   const topPairings = qualifiedPairings.slice(0, LEADERBOARD_TOP_BOTTOM_COUNT);
-  const bottomPairings = qualifiedPairings.slice(-LEADERBOARD_TOP_BOTTOM_COUNT).reverse();
+  const bottomPairings = qualifiedPairings.slice(-LEADERBOARD_TOP_BOTTOM_COUNT);
 
   // Top entries with @mentions for top 3
   topPairings.forEach((entry, index) => {
