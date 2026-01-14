@@ -61,7 +61,7 @@ export const RawParticipantSchema = z
     item4: z.number(),
     item5: z.number(),
     item6: z.number(),
-    roleBoundItem: z.number(),
+    roleBoundItem: z.number().optional(),
     itemsPurchased: z.number(),
     killingSprees: z.number(),
     kills: z.number(),
