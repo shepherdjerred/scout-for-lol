@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Zaahen": {
       "id": "Zaahen",
@@ -78,12 +78,12 @@
               "{{ q2basedamage }} -> {{ q2basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ healpercent*100.000000 }}% -> {{ healpercentnl*100.000000 }}%",
-              "{{ qcoeff }} -> {{ qcoeffNL }}"
+              "{{ qcoeff*100.000000 }}% -> {{ qcoeffnl*100.000000 }}%"
             ]
           },
           "maxrank": 5,
-          "cooldown": [9, 8, 7, 6, 5],
-          "cooldownBurn": "9/8/7/6/5",
+          "cooldown": [10, 9, 8, 7, 6],
+          "cooldownBurn": "10/9/8/7/6",
           "cost": [25, 25, 25, 25, 25],
           "costBurn": "25",
           "datavalues": {},

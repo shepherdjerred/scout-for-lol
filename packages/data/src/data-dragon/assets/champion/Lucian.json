@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Lucian": {
       "id": "Lucian",
@@ -148,8 +148,8 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 60,
-        "attackdamageperlevel": 2.9,
-        "attackspeedperlevel": 3.3,
+        "attackdamageperlevel": 2.5,
+        "attackspeedperlevel": 2.5,
         "attackspeed": 0.638
       },
       "spells": [
@@ -159,10 +159,9 @@
           "description": "Lucian shoots a bolt of piercing light through a target.",
           "tooltip": "Lucian shoots a bolt of piercing light, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage>.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Attack Damage", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ e2 }}% -> {{ e2NL }}%",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
@@ -175,30 +174,18 @@
           "datavalues": {},
           "effect": [
             null,
-            [85, 115, 145, 175, 205],
-            [60, 75, 90, 105, 120],
-            [1000, 1000, 1000, 1000, 1000],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
             [0.41, 0.41, 0.41, 0.41, 0.41],
-            [100, 100, 100, 100, 100],
+            [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "85/115/145/175/205",
-            "60/75/90/105/120",
-            "1000",
-            "0.41",
-            "100",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "0", "0", "0", "0.41", "0", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

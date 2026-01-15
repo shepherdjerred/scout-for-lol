@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "MissFortune": {
       "id": "MissFortune",
@@ -177,8 +177,8 @@
         "difficulty": 1
       },
       "stats": {
-        "hp": 640,
-        "hpperlevel": 103,
+        "hp": 625,
+        "hpperlevel": 100,
         "mp": 300,
         "mpperlevel": 40,
         "movespeed": 325,
@@ -203,10 +203,10 @@
           "id": "MissFortuneRicochetShot",
           "name": "Double Up",
           "description": "Miss Fortune fires a bullet at an enemy, damaging them and a target behind them. Both strikes can also apply Love Tap.",
-          "tooltip": "Miss Fortune fires a bouncing shot, dealing <physicalDamage>{{ totaldamagetooltip }} physical damage</physicalDamage> to an enemy and to another one behind them. <br /><br />The second shot can critically strike. It always critically strikes if the first shot kills its target. {{ spellmodifierdescriptionappend }}",
+          "tooltip": "Miss Fortune fires a bouncing shot, dealing <physicalDamage>{{ totaldamagetooltip }} physical damage</physicalDamage> to an enemy and to another one behind them. <br /><br />The second shot can critically strike for <physicalDamage>{{ totaldamagecrit }} physical damage</physicalDamage>. It always critically strikes if the first shot kills its target.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage"],
-            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ e2 }} -> {{ e2NL }}"]
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ basedamage }} -> {{ basedamageNL }}"]
           },
           "maxrank": 5,
           "cooldown": [7, 6, 5, 4, 3],
@@ -342,7 +342,7 @@
           "id": "MissFortuneBulletTime",
           "name": "Bullet Time",
           "description": "Miss Fortune channels a barrage of bullets into a cone in front of her, dealing large amounts of damage to enemies. Each wave of Bullet Time can critically strike",
-          "tooltip": "Miss Fortune channels a barrage of bullets, firing {{ totalwaves }} waves over {{ totalchannelduration }} seconds, dealing <physicalDamage>{{ physicaldamageperwave }} physical damage</physicalDamage> per wave (total <physicalDamage>{{ totalphysicaldamage }} physical damage</physicalDamage>).<br /><br />Each wave can critically strike for %i:scaleCrit% <physicalDamage>{{ physicalcritperwave }} physical damage</physicalDamage> (total %i:scaleCrit% <physicalDamage>{{ totalphysicalcritdamage }} physical damage</physicalDamage>).{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Miss Fortune channels a barrage of bullets, firing {{ basewaves }} waves over {{ basechannelduration }} seconds, dealing <physicalDamage>{{ physicaldamageperwave }} physical damage</physicalDamage> per wave (total <physicalDamage>{{ totalphysicaldamage }} physical damage</physicalDamage>).<br /><br />Each wave can critically strike for %i:scaleCrit% <physicalDamage>{{ critdamageperwave }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Bullet Barrages", "Cooldown"],
             "effect": ["{{ basewaves }} -> {{ basewavesNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]

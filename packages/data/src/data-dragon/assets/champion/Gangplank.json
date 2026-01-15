@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Gangplank": {
       "id": "Gangplank",
@@ -147,7 +147,7 @@
           "leveltip": {
             "label": ["Damage", "Plunder Gold", "Plunder Silver Serpents", "@AbilityResourceName@ Cost"],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
+              "{{ spelldamage }} -> {{ spelldamageNL }}",
               "{{ e2 }} -> {{ e2NL }}",
               "{{ e5 }} -> {{ e5NL }}",
               "{{ cost }} -> {{ costNL }}"
@@ -238,7 +238,7 @@
           "id": "GangplankE",
           "name": "Powder Keg",
           "description": "Gangplank uncovers a powder keg at target location. If he attacks it, it explodes, spreading the attack's damage to enemies in the area, slowing them.",
-          "tooltip": "Gangplank places a powder keg that can be attacked by Gangplank and enemy champions for {{ e5 }} seconds. When an enemy destroys it, the keg is defused. When Gangplank destroys it, it explodes, <status>Slowing</status> by {{ finalslowamount }}% for {{ e2 }} seconds and dealing the <physicalDamage>Attack's damage</physicalDamage>, ignoring {{ e0 }}% Armor. Champions take an additional <physicalDamage>{{ e3 }} physical damage</physicalDamage>.<br /><br />Keg health decays every {{ f5 }} seconds. Keg explosions detonate other kegs with overlapping blast zones, but don't deal damage to the same target more than once. Keg explosions triggered by <spellName>Parrrley</spellName> will grant the bonus gold for targets killed.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Gangplank places a powder keg that can be attacked by Gangplank and enemy champions for {{ e5 }} seconds. When an enemy destroys it, the keg is defused. When Gangplank destroys it, it explodes, <status>Slowing</status> by {{ finalslowamount }}% for {{ e2 }} seconds and dealing the <physicalDamage>Attack's damage</physicalDamage>, ignoring {{ e0 }}% Armor. Champions take an additional <physicalDamage>{{ e3 }} physical damage</physicalDamage>.<br /><br />Keg health decays every {{ barreldecaytime }} seconds. Keg explosions detonate other kegs with overlapping blast zones, but don't deal damage to the same target more than once. Keg explosions triggered by <spellName>Parrrley</spellName> will grant the bonus gold for targets killed.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Bonus Damage Against Champions", "Max Charges", "Slow", "Recharge Time"],
             "effect": [
@@ -258,7 +258,7 @@
             null,
             [3, 3, 4, 4, 5],
             [2, 2, 2, 2, 2],
-            [75, 105, 135, 165, 195],
+            [75, 95, 115, 135, 155],
             [40, 50, 60, 70, 80],
             [25, 25, 25, 25, 25],
             [2, 2, 2, 2, 2],
@@ -271,7 +271,7 @@
             null,
             "3/3/4/4/5",
             "2",
-            "75/105/135/165/195",
+            "75/95/115/135/155",
             "40/50/60/70/80",
             "25",
             "2",

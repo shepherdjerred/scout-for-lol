@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Draven": {
       "id": "Draven",
@@ -145,7 +145,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 62,
-        "attackdamageperlevel": 3.6,
+        "attackdamageperlevel": 3,
         "attackspeedperlevel": 2.7,
         "attackspeed": 0.679
       },
@@ -157,7 +157,11 @@
           "tooltip": "Draven readies a <keywordMajor>Spinning Axe</keywordMajor>, causing his next Attack to deal an additional <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and ricochet into the air. If Draven catches it, he readies another <keywordMajor>Spinning Axe</keywordMajor>.<br /><br />Draven can hold two <keywordMajor>Spinning Axes</keywordMajor> at once.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Bonus AD Percentage", "Cooldown"],
-            "effect": ["{{ e5 }} -> {{ e5NL }}", "{{ e2 }}% -> {{ e2NL }}%", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ adscaling }}% -> {{ adscalingNL }}%",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [12, 11, 10, 9, 8],
@@ -167,30 +171,18 @@
           "datavalues": {},
           "effect": [
             null,
-            [100, 100, 100, 100, 100],
-            [75, 85, 95, 105, 115],
-            [30, 35, 40, 45, 50],
+            [0, 0, 0, 0, 0],
+            [75, 75, 75, 75, 75],
+            [0, 0, 0, 0, 0],
             [5.75, 5.75, 5.75, 5.75, 5.75],
-            [40, 45, 50, 55, 60],
+            [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "100",
-            "75/85/95/105/115",
-            "30/35/40/45/50",
-            "5.75",
-            "40/45/50/55/60",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "0", "75", "0", "5.75", "0", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
@@ -213,8 +205,12 @@
           "description": "Draven gains increased Move Speed and Attack Speed. The Move Speed bonus decreases rapidly over its duration. Catching a Spinning Axe will refresh the cooldown of Blood Rush.",
           "tooltip": "Draven becomes Ghosted, gains <speed>{{ e2 }}% Move Speed</speed> decaying over {{ e3 }} seconds and <attackSpeed>{{ e4 }}% Attack Speed</attackSpeed> for {{ e5 }} seconds.<br /><br />When Draven catches a <keywordMajor>Spinning Axe</keywordMajor>, this Ability's Cooldown is refreshed.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Attack Speed", "@AbilityResourceName@ Cost", "Move Speed"],
-            "effect": ["{{ e4 }}% -> {{ e4NL }}%", "{{ cost }} -> {{ costNL }}", "{{ e2 }}% -> {{ e2NL }}%"]
+            "label": ["Move Speed", "Attack Speed", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ movespeed*100.000000 }}% -> {{ movespeednl*100.000000 }}%",
+              "{{ attackspeed*100.000000 }}% -> {{ attackspeednl*100.000000 }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [12, 12, 12, 12, 12],
@@ -224,10 +220,10 @@
           "datavalues": {},
           "effect": [
             null,
-            [4, 5, 6, 7, 8],
+            [0, 0, 0, 0, 0],
             [50, 55, 60, 65, 70],
             [1.5, 1.5, 1.5, 1.5, 1.5],
-            [30, 35, 40, 45, 50],
+            [20, 25, 30, 35, 40],
             [3, 3, 3, 3, 3],
             [-0.062, -0.069, -0.075, -0.081, -0.087],
             [0, 0, 0, 0, 0],
@@ -237,10 +233,10 @@
           ],
           "effectBurn": [
             null,
-            "4/5/6/7/8",
+            "0",
             "50/55/60/65/70",
             "1.5",
-            "30/35/40/45/50",
+            "20/25/30/35/40",
             "3",
             "-0.062/-0.069/-0.075/-0.081/-0.087",
             "0",

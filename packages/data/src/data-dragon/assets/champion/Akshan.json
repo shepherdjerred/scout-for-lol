@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Akshan": {
       "id": "Akshan",
@@ -183,7 +183,7 @@
           "id": "AkshanE",
           "name": "Heroic Swing",
           "description": "Akshan fires a grappling hook into terrain then swings around it, repeatedly firing at the nearest enemy while swinging. He can jump off early or gets knocked off when colliding with champions or terrain.",
-          "tooltip": "<spellActive>First Cast:</spellActive> Akshan fires a grappling hook, attaching to the first terrain hit.<br /><br /><spellActive>Second Cast:</spellActive> Akshan swings around the terrain, repeatedly firing at the nearest enemy for <physicalDamage>{{ asmoddamagetodeal }} physical damage</physicalDamage> per shot.<br /><br /><spellActive>Third Cast:</spellActive> Akshan dives off the rope, firing a final shot.<br /><br />Colliding with an enemy Champion or terrain ends the swing early.<br /><br />Champion takedowns refresh this Ability's Cooldown.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellActive>First Cast:</spellActive> Akshan fires a grappling hook, attaching to the first terrain hit.<br /><br /><spellActive>Second Cast:</spellActive> Akshan swings around the terrain, repeatedly firing at the nearest enemy for <physicalDamage>{{ damagetodeal }} physical damage</physicalDamage> per shot.<br /><br /><spellActive>Third Cast:</spellActive> Akshan dives off the rope, firing a final shot.<br /><br />Colliding with an enemy Champion or terrain ends the swing early.<br /><br />Champion takedowns refresh this Ability's Cooldown.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Cooldown", "Damage"],
             "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ basedamage }} -> {{ basedamageNL }}"]

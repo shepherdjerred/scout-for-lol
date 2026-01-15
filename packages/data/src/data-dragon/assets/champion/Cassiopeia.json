@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Cassiopeia": {
       "id": "Cassiopeia",
@@ -102,7 +102,7 @@
         "hpperlevel": 104,
         "mp": 450,
         "mpperlevel": 40,
-        "movespeed": 328,
+        "movespeed": 335,
         "armor": 18,
         "armorperlevel": 4.7,
         "spellblock": 32,
@@ -311,7 +311,7 @@
       ],
       "passive": {
         "name": "Serpentine Grace",
-        "description": "Cassiopeia gains Move Speed per level, but she cannot purchase Boots items.",
+        "description": "All Move Speed bonuses are more effective on Cassiopeia.",
         "image": {
           "full": "Cassiopeia_Passive.png",
           "sprite": "passive0.png",

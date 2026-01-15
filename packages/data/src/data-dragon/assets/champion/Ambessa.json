@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Ambessa": {
       "id": "Ambessa",
@@ -174,12 +174,8 @@
           "description": "Ambessa whips her twin drakehounds around herself, damaging and slowing nearby enemies. Initiating Drakehound's Step from this ability causes her to strike a second time at the end of its dash.",
           "tooltip": "Ambessa whips her chains around, dealing <physicalDamage>{{ calc_damage_flat }} physical damage</physicalDamage> and <status>Slowing</status> enemies by <status>{{ slow_amount*100 }}%</status>, which decays over {{ slow_duration }} second. Initiating <spellName>Drakehound's Step</spellName> from this Ability will trigger an additional strike.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Cooldown", "Damage", "Attack Damage Ratio"],
-            "effect": [
-              "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ damage_flat_base }} -> {{ damage_flat_baseNL }}",
-              "{{ adratio*100.000000 }}% -> {{ adrationl*100.000000 }}%"
-            ]
+            "label": ["Cooldown", "Damage"],
+            "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ damage_flat_base }} -> {{ damage_flat_baseNL }}"]
           },
           "maxrank": 5,
           "cooldown": [13, 12, 11, 10, 9],

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Ashe": {
       "id": "Ashe",
@@ -176,8 +176,8 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 59,
-        "attackdamageperlevel": 3.45,
-        "attackspeedperlevel": 3.33,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 3,
         "attackspeed": 0.658
       },
       "spells": [

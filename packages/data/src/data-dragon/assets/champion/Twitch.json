@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Twitch": {
       "id": "Twitch",
@@ -147,8 +147,8 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 59,
-        "attackdamageperlevel": 3.1,
-        "attackspeedperlevel": 3.38,
+        "attackdamageperlevel": 3,
+        "attackspeedperlevel": 3,
         "attackspeed": 0.679
       },
       "spells": [
@@ -156,10 +156,13 @@
           "id": "TwitchHideInShadows",
           "name": "Ambush",
           "description": "Twitch becomes Camouflaged for a short duration and gains Move Speed. When leaving Camouflage, Twitch gains Attack Speed for a short duration.<br><br>When an enemy champion with Deadly Venom dies, Ambush's cooldown is reset.",
-          "tooltip": "Twitch <keywordStealth>Camouflages</keywordStealth> and gains <speed>{{ e3 }}% Move Speed</speed> for {{ e2 }} seconds. The Move Speed increases to {{ e3 }}% while near an enemy champion that can't see him. After exiting <keywordStealth>Camouflage</keywordStealth>, Twitch gains <attackSpeed>{{ e1 }}% Attack Speed</attackSpeed> for {{ e6 }} seconds.<br /><br />When an enemy champion dies while afflicted with <keywordMajor>Venom</keywordMajor>, this Ability's Cooldown is refreshed.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Twitch <keywordStealth>Camouflages</keywordStealth> and gains <speed>{{ movespeedmod }}% Move Speed</speed> for {{ stealthduration }} seconds. The Move Speed increases to {{ hiddenspeed }}% while near an enemy champion that can't see him. After exiting <keywordStealth>Camouflage</keywordStealth>, Twitch gains <attackSpeed>{{ attackspeedmod*100 }}% Attack Speed</attackSpeed> for {{ attackspeedduration }} seconds.<br /><br />When an enemy champion dies while afflicted with <keywordMajor>Venom</keywordMajor>, this Ability's Cooldown is refreshed.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Camouflage Duration", "Attack Speed"],
-            "effect": ["{{ e2 }} -> {{ e2NL }}", "{{ e1 }}% -> {{ e1NL }}%"]
+            "effect": [
+              "{{ stealthduration }} -> {{ stealthdurationNL }}",
+              "{{ attackspeedmod*100.000000 }}% -> {{ attackspeedmodnl*100.000000 }}%"
+            ]
           },
           "maxrank": 5,
           "cooldown": [16, 16, 16, 16, 16],
@@ -169,18 +172,18 @@
           "datavalues": {},
           "effect": [
             null,
-            [45, 50, 55, 60, 65],
-            [10, 11, 12, 13, 14],
-            [30, 30, 30, 30, 30],
-            [1, 1, 1, 1, 1],
-            [1, 1, 1, 1, 1],
-            [6, 6, 6, 6, 6],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
             [3, 3, 3, 3, 3],
-            [500, 500, 500, 500, 500],
-            [1000, 1000, 1000, 1000, 1000],
-            [30, 30, 30, 30, 30]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "45/50/55/60/65", "10/11/12/13/14", "30", "1", "1", "6", "3", "500", "1000", "30"],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "3", "0", "0", "0"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

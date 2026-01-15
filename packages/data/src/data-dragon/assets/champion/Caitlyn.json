@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Caitlyn": {
       "id": "Caitlyn",
@@ -235,14 +235,14 @@
           "id": "CaitlynW",
           "name": "Yordle Snap Trap",
           "description": "Caitlyn sets a trap that, when sprung, reveals and immobilizes the enemy champion for 1.5 seconds, granting Caitlyn an empowered Headshot.",
-          "tooltip": "Caitlyn sets a trap that <status>Roots</status> the first champion that steps on it for {{ e6 }} seconds and granting <keywordStealth>True Sight</keywordStealth> of them for 3 seconds. Traps last for {{ e3 }} seconds, and {{ e5 }} traps may be active at once. This Ability has {{ e5 }} charges ({{ ammorechargetime }} second refresh).{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Caitlyn sets a trap that <status>Roots</status> the first champion that steps on it for {{ rootduration }} seconds and granting <keywordStealth>True Sight</keywordStealth> of them for 3 seconds. Traps last for {{ trapduration }} seconds, and {{ maximumtraps }} traps may be active at once. This Ability has {{ maximumcharges }} charges ({{ ammorechargetime }} second refresh).<br /><br />Targets rooted by this Ability take an additional <physicalDamage>{{ headshotbonusdamage }} physical damage</physicalDamage> from <keywordMajor>Headshot</keywordMajor>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Bonus Headshot Damage on Trapped Targets", "Recharge Time", "Maximum Traps", "Trap Duration"],
             "effect": [
-              "{{ e2 }} -> {{ e2NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
               "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}",
-              "{{ e4 }} -> {{ e4NL }}",
-              "{{ e3 }} -> {{ e3NL }}"
+              "{{ maximumtraps }} -> {{ maximumtrapsNL }}",
+              "{{ trapduration }} -> {{ trapdurationNL }}"
             ]
           },
           "maxrank": 5,
@@ -254,29 +254,17 @@
           "effect": [
             null,
             [2, 2, 2, 2, 2],
-            [35, 80, 125, 170, 215],
-            [30, 35, 40, 45, 50],
-            [3, 3, 4, 4, 5],
-            [3, 3, 4, 4, 5],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
             [30, 30, 30, 30, 30],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "2",
-            "35/80/125/170/215",
-            "30/35/40/45/50",
-            "3/3/4/4/5",
-            "3/3/4/4/5",
-            "1.5",
-            "30",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "2", "0", "0", "0", "0", "0", "30", "0", "0", "0"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "2",
@@ -342,7 +330,7 @@
           "id": "CaitlynR",
           "name": "Ace in the Hole",
           "description": "Caitlyn takes time to line up the perfect shot, dealing massive damage to a single target at a huge range. Enemy champions can intercept the bullet for their ally.",
-          "tooltip": "Caitlyn takes a moment to channel and line up the perfect shot, then she fires, dealing <physicalDamage>{{ rtotaldamage }} physical damage</physicalDamage>, but other enemy champions can intercept it. This Ability grants <keywordStealth>True Sight</keywordStealth> of the target during the channel.<br /><br /><rules>Deals up to an additional {{ critchanceamp*100 }}% based on Caitlyn's Critical Strike chance.</rules>{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Caitlyn takes a moment to channel and line up the perfect shot, then she fires, dealing <physicalDamage>{{ rtotaldamage }} physical damage</physicalDamage>, but other enemy champions can intercept it. This Ability grants <keywordStealth>True Sight</keywordStealth> of the target during the channel.<br /><br /><rules>Damage scales with Caitlyn's Critical Strike chance and Critical Strike Damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage"],
             "effect": ["{{ rbasedamage }} -> {{ rbasedamageNL }}"]

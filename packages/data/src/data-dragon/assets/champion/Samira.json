@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Samira": {
       "id": "Samira",
@@ -96,12 +96,8 @@
           "description": "Samira fires a shot or swings her sword, dealing damage. If cast during Wild Rush, strike all enemies in her path upon completion.",
           "tooltip": "Samira fires a shot, dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> to the first enemy hit.<br /><br />If this Ability is cast towards an enemy in melee range, Samira will instead slash with her sword, dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage>. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown", "Total AD Ratio"],
-            "effect": [
-              "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}",
-              "{{ qadratio*100.000000 }}% -> {{ qadrationl*100.000000 }}%"
-            ]
+            "label": ["Damage", "Cooldown"],
+            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
           },
           "maxrank": 5,
           "cooldown": [6, 5, 4, 3, 2],
@@ -237,7 +233,7 @@
           "id": "SamiraR",
           "name": "Inferno Trigger",
           "description": "Samira unleashes a torrent of shots from her weapons, wildly shooting all enemies surrounding her.",
-          "tooltip": "Samira can only use this Ability if her current <keywordMajor>Style</keywordMajor> rating is S. Using this Ability consumes all <keywordMajor>Style</keywordMajor> rating.<br /><br />Samira unleashes a torrent of shots from her weapons, wildly shooting all enemies surrounding her 10 times over 2 seconds, each shot dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> and applying Life Steal at {{ lifestealmod*100 }}% effectiveness. Each shot can also critically strike.<br /><br />{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Samira can only use this Ability if her current <keywordMajor>Style</keywordMajor> rating is S. Using this Ability consumes all <keywordMajor>Style</keywordMajor> rating.<br /><br />Samira unleashes a torrent of shots from her weapons, wildly shooting all enemies surrounding her 10 times over 2 seconds, each shot dealing <physicalDamage>{{ damagecalc }} physical damage</physicalDamage> and applying Life Steal at {{ lifestealmod*100 }}% effectiveness. Each shot can also critically strike.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage"],
             "effect": ["{{ basedamage }} -> {{ basedamageNL }}"]

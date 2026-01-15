@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Zeri": {
       "id": "Zeri",
@@ -148,7 +148,7 @@
           "id": "ZeriW",
           "name": "Ultrashock Laser",
           "description": "Zeri fires an electric pulse that slows and damages the first enemy hit. If the pulse hits a wall it expands into a long range laser.",
-          "tooltip": "Zeri fires an electric pulse that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slows</status> the first enemy hit by {{ slowpercent*100 }}% for {{ slowduration }} seconds.<br /><br />If the pulse hits terrain, it expands into a laser that applies the effects in an area and Critically Strikes champions and monsters.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Zeri fires an electric pulse that deals <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and <status>Slows</status> the first enemy hit by {{ slowpercent*100 }}% for {{ slowduration }} seconds.<br /><br />If the pulse hits terrain, it expands into a laser that applies the effects in an area and Critically Strikes champions and monsters for <physicalDamage>{{ walldamage }} physical damage</physicalDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Slow", "@AbilityResourceName@ Cost", "Cooldown"],
             "effect": [

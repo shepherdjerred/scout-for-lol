@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Morgana": {
       "id": "Morgana",
@@ -118,6 +118,12 @@
           "id": "25080",
           "num": 80,
           "name": "Spirit Blossom Morgana",
+          "chromas": false
+        },
+        {
+          "id": "25081",
+          "num": 81,
+          "name": "Prestige Veiled Lady Morgana",
           "chromas": false
         }
       ],

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Tryndamere": {
       "id": "Tryndamere",
@@ -150,12 +150,11 @@
           "id": "TryndamereQ",
           "name": "Bloodlust",
           "description": "Tryndamere thrives on the thrills of combat, increasing his Attack Damage as he is more and more wounded. He can cast Bloodlust to consume his Fury and heal himself.",
-          "tooltip": "<spellPassive>Passive:</spellPassive> Tryndamere thirsts for blood, gaining <scaleAD>{{ flatad }} Attack Damage</scaleAD> plus <scaleAD>{{ adperonepercentmissinghp }}</scaleAD> per 1% missing Health.<br /><br /><spellActive>Active:</spellActive> Tryndamere consumes his <keywordMajor>Fury</keywordMajor>, restoring <healing>{{ baseheal }} plus {{ healperfury }} Health per Fury</healing>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "<spellPassive>Passive:</spellPassive> Tryndamere thirsts for blood, gaining up to <scaleAD>{{ maximumbonusad }} Attack Damage</scaleAD> based on his missing Health.<br /><br /><spellActive>Active:</spellActive> Tryndamere consumes his <keywordMajor>Fury</keywordMajor>, restoring <healing>{{ baseheal }} plus {{ healperfury }} Health per Fury (max: {{ maximumheal }})</healing>. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Attack Damage", "Attack Damage per Health % Missing", "Healing", "Heal Per Fury"],
+            "label": ["Maximum Damage", "Healing", "Heal Per Fury"],
             "effect": [
-              "{{ flatad }} -> {{ flatadNL }}",
-              "{{ adperonepercentmissinghp }} -> {{ adperonepercentmissinghpNL }}",
+              "{{ maximumbonusad }} -> {{ maximumbonusadNL }}",
               "{{ basehealing }} -> {{ basehealingNL }}",
               "{{ bonushealperfury }} -> {{ bonushealperfuryNL }}"
             ]
@@ -200,7 +199,7 @@
           "id": "TryndamereW",
           "name": "Mocking Shout",
           "description": "Tryndamere lets out an insulting cry, decreasing surrounding champions' Attack Damage. Enemies with their backs turned to Tryndamere also have their Move Speed reduced.",
-          "tooltip": "Tryndamere hurls insults, reducing champions' Attack Damage by {{ adreduction*-1 }} for {{ reductionduration }} seconds. Enemy champions with their backs towards Tryndamere are <status>Slowed</status> by {{ slowpotency*-100 }}% for the same duration.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Tryndamere hurls insults, reducing champions' Attack Damage by {{ adreduction*-1 }} for {{ reductionduration }} seconds and <status>Slowing</status> by {{ slowpotency*-100 }}% while cowering from him for {{ slowduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Physical Damage Reduction", "Slow"],
             "effect": [
@@ -248,7 +247,7 @@
           "id": "TryndamereE",
           "name": "Spinning Slash",
           "description": "Tryndamere slices toward a target unit, dealing damage to enemies in his path.",
-          "tooltip": "Tryndamere spins through his enemies, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and generating <keywordMajor>{{ nonchampfurygain }} Fury</keywordMajor> per enemy hit, increased to <keywordMajor>{{ champfurygain }} Fury</keywordMajor> against enemy champions.<br /><br />This Ability's Cooldown is reduced by {{ nonchampcdrefund }} second when Tryndamere critically strikes, and reduced by {{ champcdrefund }} seconds when critically striking a champion.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Tryndamere spins through his enemies, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> and generating <keywordMajor>{{ nonchampfurygain }} Fury</keywordMajor> per enemy hit, increased to <keywordMajor>{{ champfurygain }} Fury</keywordMajor> against enemy champions.<br /><br />This Ability's Cooldown is reduced by {{ nonchampcdrefund }} seconds when Tryndamere critically strikes, and reduced by {{ champcdrefund }} seconds when critically striking a champion.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
             "effect": ["{{ damage }} -> {{ damageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Rengar": {
       "id": "Rengar",
@@ -120,12 +120,12 @@
           "id": "RengarQ",
           "name": "Savagery",
           "description": "Rengar's next Attack brutally stabs his target for bonus damage.<br><br>Ferocity effect: deals increased damage and grants Attack Speed.",
-          "tooltip": "Rengar's next 2 Attacks gain <attackSpeed>{{ e5 }}% Attack Speed</attackSpeed>. The first Attack critically strikes for <physicalDamage>{{ F4 }} (%i:scaleAD%%i:scaleCrit%) physical damage</physicalDamage>.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> The first Attack critically strikes for <physicalDamage>{{ F5 }} (%i:scaleLevel%%i:scaleAD%%i:scaleCrit%) physical damage</physicalDamage> and grants Rengar <attackSpeed>{{ empoweredqas }} Attack Speed</attackSpeed> for {{ e3 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Rengar's next 2 Attacks gain <attackSpeed>{{ asbonus }}% Attack Speed</attackSpeed>. The first Attack deals <physicalDamage>{{ qdamage }} physical damage</physicalDamage>.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> The first Attack deals <physicalDamage>{{ empoweredqdamage }} physical damage</physicalDamage> and grants Rengar <attackSpeed>{{ empoweredqas }} Attack Speed</attackSpeed> for {{ asduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Total AD Ratio", "Cooldown"],
             "effect": [
-              "{{ e1 }} -> {{ e1NL }}",
-              "{{ e2 }}% -> {{ e2NL }}%",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ baseadratiotooltip }}% -> {{ baseadratiotooltipNL }}%",
               "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
             ]
           },
@@ -137,30 +137,18 @@
           "datavalues": {},
           "effect": [
             null,
-            [30, 60, 90, 120, 150],
-            [100, 105, 110, 115, 120],
-            [5, 5, 5, 5, 5],
-            [5, 5, 5, 5, 5],
-            [40, 40, 40, 40, 40],
-            [3, 3, 3, 3, 3],
-            [0.2, 0.3, 0.4, 0.5, 0.6],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [
-            null,
-            "30/60/90/120/150",
-            "100/105/110/115/120",
-            "5",
-            "5",
-            "40",
-            "3",
-            "0.2/0.3/0.4/0.5/0.6",
-            "0",
-            "0",
-            "0"
-          ],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": "Generates 1 Ferocity",
           "maxammo": "1",
@@ -181,7 +169,7 @@
           "id": "RengarW",
           "name": "Battle Roar",
           "description": "Rengar lets out a battle roar, damaging enemies and healing for some of the recent damage he has taken.<br><br>Ferocity effect: additionally breaks crowd control effects.",
-          "tooltip": "Rengar roars, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies and restoring <healing>{{ damagepercentagehealed }}%</healing> of the damage taken in the last {{ e3 }} seconds as Health.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> Deals <magicDamage>{{ totaldamageempowered }} magic damage</magicDamage> and additionally cleanses Rengar of crowd control.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Rengar roars, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to nearby enemies and restoring <healing>{{ damagepercentagehealed }}%</healing> of the damage taken in the last {{ healingwindow }} seconds as Health.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> Deals <magicDamage>{{ totaldamageempowered }} magic damage</magicDamage> and additionally cleanses Rengar of crowd control.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown"],
             "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"]
@@ -195,17 +183,17 @@
           "effect": [
             null,
             [0, 0, 0, 0, 0],
-            [50, 50, 50, 50, 50],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [1.5, 1.5, 1.5, 1.5, 1.5],
-            [100, 100, 100, 100, 100],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "0", "50", "1.5", "1.5", "100", "0", "0", "0", "0", "0"],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": "Generates 1 Ferocity",
           "maxammo": "1",
@@ -226,7 +214,7 @@
           "id": "RengarE",
           "name": "Bola Strike",
           "description": "Rengar throws a bola, slowing the first target hit for a short duration.<br><br>Ferocity effect: roots the target.",
-          "tooltip": "Rengar throws a bola, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first enemy hit, revealing and <status>Slowing</status> them by {{ e2 }}% for {{ e3 }} seconds.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> Deals <physicalDamage>{{ totalempowereddamage }} physical damage</physicalDamage> and <status>Roots</status> for {{ e4 }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Rengar throws a bola, dealing <physicalDamage>{{ totaldamage }} physical damage</physicalDamage> to the first enemy hit, revealing and <status>Slowing</status> them by {{ slowamount }}% for {{ ccduration }} seconds.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> Deals <physicalDamage>{{ totalempowereddamage }} physical damage</physicalDamage> and <status>Roots</status> for {{ ccduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Slow"],
             "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ slowamount }}% -> {{ slowamountNL }}%"]
@@ -239,10 +227,10 @@
           "datavalues": {},
           "effect": [
             null,
-            [55, 100, 145, 190, 235],
-            [30, 45, 60, 75, 90],
-            [1.75, 1.75, 1.75, 1.75, 1.75],
-            [1.75, 1.75, 1.75, 1.75, 1.75],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
@@ -250,7 +238,7 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "55/100/145/190/235", "30/45/60/75/90", "1.75", "1.75", "0", "0", "0", "0", "0", "0"],
+          "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
           "vars": [],
           "costType": "Generates 1 Ferocity",
           "maxammo": "1",

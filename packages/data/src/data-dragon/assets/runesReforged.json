@@ -408,8 +408,8 @@
             "key": "Demolish",
             "icon": "perk-images/Styles/Resolve/Demolish/Demolish.png",
             "name": "Demolish",
-            "shortDesc": "Charge up a powerful attack against a tower while near it.",
-            "longDesc": "Charge up a powerful attack against a tower over 3s, while within 600 range of it. The charged attack deals 100 (+35% of your max health) bonus physical damage. <br><br>Cooldown: 45s"
+            "shortDesc": "Your third attack against turrets deals HP-based bonus damage.",
+            "longDesc": "Your third attack against towers deals [85 (+28% max Health) Melee || 50 (+20% max Health) Ranged] bonus physical damage.<br><br>Cooldown: 30s"
           },
           {
             "id": 8463,

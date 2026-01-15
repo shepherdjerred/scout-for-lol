@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "15.24.1",
+  "version": "16.1.1",
   "data": {
     "Kayn": {
       "id": "Kayn",
@@ -274,8 +274,12 @@
           "description": "Kayn hides in an enemy's body, dealing massive damage when he bursts out.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Champions damaged by Kayn are marked for 3.15 seconds.<br /><br />Kayn infests a marked enemy, becoming Untargetable. After {{ infestduration }} seconds or after <recast>Recasting</recast>, Kayn bursts out, dealing <physicalDamage>{{ damage }} physical damage</physicalDamage> to the enemy.<br /><br /><keywordMajor>Shadow Assassin:</keywordMajor> Increases this Ability's range, the distance Kayn exits, and refreshes <spellName>The Darkin Scythe's</spellName> Cooldown on exit.<br /><br /><keywordMajor>Darkin Slayer:</keywordMajor> Instead deals <physicalDamage>{{ slayerdamage }} max Health physical damage</physicalDamage> and restores <healing>{{ healvalue }} Health</healing> ({{ slayerhealpercent*100 }}% damage amount).{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Cooldown"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
+            "label": ["Damage", "Damage", "Cooldown"],
+            "effect": [
+              "{{ e1 }} -> {{ e1NL }}",
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}"
+            ]
           },
           "maxrank": 3,
           "cooldown": [120, 100, 80],
@@ -285,18 +289,18 @@
           "datavalues": {},
           "effect": [
             null,
-            [150, 250, 350],
+            [0, 0, 0],
             [0.5, 0.5, 0.5],
             [0, 0, 0],
             [2.5, 2.5, 2.5],
             [300, 300, 300],
-            [15, 15, 15],
-            [13, 13, 13],
-            [70, 70, 70],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
             [750, 750, 750],
             [550, 550, 550]
           ],
-          "effectBurn": [null, "150/250/350", "0.5", "0", "2.5", "300", "15", "13", "70", "750", "550"],
+          "effectBurn": [null, "0", "0.5", "0", "2.5", "300", "0", "0", "0", "750", "550"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
