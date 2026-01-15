@@ -67,6 +67,7 @@ export function toMatch(
         infoPuuids,
         metadataCount: metadataPuuids.length,
         infoCount: infoPuuids.length,
+        mismatchedCounts: metadataPuuids.length !== infoPuuids.length,
         emptyPuuidsInInfo: infoPuuids.filter((p) => p === "").length,
       });
 
@@ -234,6 +235,7 @@ export async function toArenaMatch(players: Player[], rawMatch: RawMatch): Promi
           infoPuuids,
           metadataCount: metadataPuuids.length,
           infoCount: infoPuuids.length,
+          mismatchedCounts: metadataPuuids.length !== infoPuuids.length,
           emptyPuuidsInInfo: infoPuuids.filter((p) => p === "").length,
         });
 
