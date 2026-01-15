@@ -52,8 +52,24 @@ export function toMatch(
 
     const participantRaw = findParticipant(player.config.league.leagueAccount.puuid, rawMatch.info.participants);
     if (participantRaw === undefined) {
-      logger.debug("Player PUUID:", player.config.league.leagueAccount.puuid);
-      logger.debug("Match Participants:", rawMatch.info.participants);
+      const searchingFor = player.config.league.leagueAccount.puuid;
+      const metadataPuuids = rawMatch.metadata.participants;
+      const infoPuuids = rawMatch.info.participants.map((p) => p.puuid);
+
+      logger.error("Participant lookup failed", {
+        searchingFor,
+        playerAlias: player.config.alias,
+        matchId: rawMatch.metadata.matchId,
+        queueId: rawMatch.info.queueId,
+        inMetadata: metadataPuuids.includes(searchingFor),
+        inInfo: infoPuuids.includes(searchingFor),
+        metadataPuuids,
+        infoPuuids,
+        metadataCount: metadataPuuids.length,
+        infoCount: infoPuuids.length,
+        emptyPuuidsInInfo: infoPuuids.filter((p) => p === "").length,
+      });
+
       throw new Error(`participant not found for player ${player.config.alias}`);
     }
 
@@ -203,6 +219,24 @@ export async function toArenaMatch(players: Player[], rawMatch: RawMatch): Promi
 
       const participant = findParticipant(validatedConfig.league.leagueAccount.puuid, rawMatch.info.participants);
       if (participant === undefined) {
+        const searchingFor = validatedConfig.league.leagueAccount.puuid;
+        const metadataPuuids = rawMatch.metadata.participants;
+        const infoPuuids = rawMatch.info.participants.map((p) => p.puuid);
+
+        logger.error("Arena participant lookup failed", {
+          searchingFor,
+          playerAlias: validatedConfig.alias,
+          matchId: rawMatch.metadata.matchId,
+          queueId: rawMatch.info.queueId,
+          inMetadata: metadataPuuids.includes(searchingFor),
+          inInfo: infoPuuids.includes(searchingFor),
+          metadataPuuids,
+          infoPuuids,
+          metadataCount: metadataPuuids.length,
+          infoCount: infoPuuids.length,
+          emptyPuuidsInInfo: infoPuuids.filter((p) => p === "").length,
+        });
+
         throw new Error(`participant not found for player ${validatedConfig.alias}`);
       }
       const subteamId = validateArenaSubteamId(participant);
