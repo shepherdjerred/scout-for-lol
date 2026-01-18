@@ -1,7 +1,7 @@
 /* eslint-disable max-lines  -- this file cannot be split up due to Dagger */
 import type { Directory, Secret, Container } from "@dagger.io/dagger";
 import { dag, func, argument, object } from "@dagger.io/dagger";
-import { updateHomelabVersion } from "@shepherdjerred/dagger-utils/containers";
+import { updateHomelabVersion, syncToS3 } from "@shepherdjerred/dagger-utils/containers";
 import {
   buildBackendImage,
   publishBackendImage,
@@ -13,7 +13,7 @@ import {
 } from "@scout-for-lol/.dagger/src/backend";
 import { getReportCoverage, getReportTestReport } from "@scout-for-lol/.dagger/src/report";
 import { checkData, getDataCoverage, getDataTestReport } from "@scout-for-lol/.dagger/src/data";
-import { checkFrontend, buildFrontend, publishFrontend } from "@scout-for-lol/.dagger/src/frontend";
+import { checkFrontend, buildFrontend } from "@scout-for-lol/.dagger/src/frontend";
 import {
   checkDesktop,
   checkDesktopParallel,
@@ -228,6 +228,8 @@ export class ScoutForLol {
    * @param ghcrPassword The GitHub Container Registry password/token (optional)
    * @param env The environment (prod/dev) - determines if images are published
    * @param ghToken The GitHub token for creating deployment PRs (optional)
+   * @param s3AccessKeyId S3 access key ID (optional, for frontend deployment)
+   * @param s3SecretAccessKey S3 secret access key (optional, for frontend deployment)
    * @returns A message indicating completion
    */
   @func()
@@ -245,6 +247,8 @@ export class ScoutForLol {
     env?: string,
     ghToken?: Secret,
     skipDesktopBuild?: string,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret,
   ): Promise<string> {
     const isProd = env === "prod";
     const shouldSkipDesktopBuild = skipDesktopBuild === "true" && !isProd;
@@ -459,33 +463,28 @@ export class ScoutForLol {
       logWithTimestamp("⏭️ Phase 3: Skipping backend deployment (not prod environment)");
     }
 
-    // Publish frontend to GHCR if credentials provided and on main branch
-    const shouldPublishFrontend = ghcrUsername && ghcrPassword && isProd && branch === "main";
-    if (shouldPublishFrontend) {
-      await withTiming("CI frontend publish phase", async () => {
-        logWithTimestamp("🚀 Phase 4: Publishing frontend to GHCR...");
-        const baseImage = "ghcr.io/shepherdjerred/scout-for-lol-frontend";
+    // Deploy frontend to S3 if credentials provided and on main branch
+    const shouldDeployFrontend = s3AccessKeyId && s3SecretAccessKey && isProd && branch === "main";
+    if (shouldDeployFrontend) {
+      await withTiming("CI frontend deploy phase", async () => {
+        logWithTimestamp("🚀 Phase 4: Deploying frontend to S3...");
 
-        // Publish both :latest and :version tags
-        const [latestRef, versionRef] = await Promise.all([
-          publishFrontend({
-            workspaceSource: source,
-            imageName: `${baseImage}:latest`,
-            ghcrUsername,
-            ghcrPassword,
-          }),
-          publishFrontend({
-            workspaceSource: source,
-            imageName: `${baseImage}:${version}`,
-            ghcrUsername,
-            ghcrPassword,
-          }),
-        ]);
+        const frontendDist = buildFrontend(source);
 
-        logWithTimestamp(`✅ Frontend published:\n  - ${latestRef}\n  - ${versionRef}`);
+        const syncOutput = await syncToS3({
+          sourceDir: frontendDist,
+          bucketName: "scout-frontend",
+          endpointUrl: "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
+          accessKeyId: s3AccessKeyId,
+          secretAccessKey: s3SecretAccessKey,
+          region: "us-east-1",
+          deleteRemoved: true,
+        });
+
+        logWithTimestamp(`✅ Frontend deployed to S3: ${syncOutput}`);
       });
     } else {
-      logWithTimestamp("⏭️ Phase 4: Skipping frontend publishing (not prod or no GHCR credentials)");
+      logWithTimestamp("⏭️ Phase 4: Skipping frontend deployment (not prod or no S3 credentials)");
     }
 
     logWithTimestamp("🎉 CI pipeline completed successfully");
@@ -1332,9 +1331,11 @@ export class ScoutForLol {
     env?: string,
     ghToken?: Secret,
     skipDesktopBuild?: string,
+    s3AccessKeyId?: Secret,
+    s3SecretAccessKey?: Secret,
   ): Promise<Directory> {
     // Run the full CI pipeline first
-    await this.ci(source, version, gitSha, branch, ghcrUsername, ghcrPassword, env, ghToken, skipDesktopBuild);
+    await this.ci(source, version, gitSha, branch, ghcrUsername, ghcrPassword, env, ghToken, skipDesktopBuild, s3AccessKeyId, s3SecretAccessKey);
 
     // After CI passes, collect artifacts
     // Since we just ran CI with the same inputs, Dagger will cache all the setup
