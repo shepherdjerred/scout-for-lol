@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.1.1",
+  "version": "16.2.1",
   "data": {
     "Rammus": {
       "id": "Rammus",
@@ -111,7 +111,7 @@
         "difficulty": 5
       },
       "stats": {
-        "hp": 675,
+        "hp": 645,
         "hpperlevel": 100,
         "mp": 310,
         "mpperlevel": 33,

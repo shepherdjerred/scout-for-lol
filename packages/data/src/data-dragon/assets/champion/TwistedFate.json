@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.1.1",
+  "version": "16.2.1",
   "data": {
     "TwistedFate": {
       "id": "TwistedFate",
@@ -291,7 +291,7 @@
           "description": "Every 4 attacks, Twisted Fate deals bonus damage. In addition, his Attack Speed is increased.",
           "tooltip": "<spellPassive>Passive:</spellPassive> Twisted Fate gains <attackSpeed>{{ attackspeedbonus }}% Attack Speed</attackSpeed> and every 4th Attack deals an additional <magicDamage>{{ bonusdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Damage", "Attack Speed"],
+            "label": ["Bonus Damage:", "Attack Speed"],
             "effect": ["{{ damage }} -> {{ damageNL }}", "{{ attackspeedbonus }}% -> {{ attackspeedbonusNL }}%"]
           },
           "maxrank": 5,

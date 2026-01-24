@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.1.1",
+  "version": "16.2.1",
   "data": {
     "Galio": {
       "id": "Galio",
@@ -76,6 +76,12 @@
           "id": "3028",
           "num": 28,
           "name": "Mythmaker Galio",
+          "chromas": true
+        },
+        {
+          "id": "3040",
+          "num": 40,
+          "name": "Aegis Frame Galio",
           "chromas": true
         }
       ],

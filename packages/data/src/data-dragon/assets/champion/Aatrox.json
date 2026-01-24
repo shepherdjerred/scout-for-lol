@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.1.1",
+  "version": "16.2.1",
   "data": {
     "Aatrox": {
       "id": "Aatrox",
@@ -46,7 +46,7 @@
           "id": "266007",
           "num": 7,
           "name": "Blood Moon Aatrox",
-          "chromas": false
+          "chromas": true
         },
         {
           "id": "266008",

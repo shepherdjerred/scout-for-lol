@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.1.1",
+  "version": "16.2.1",
   "data": {
     "Samira": {
       "id": "Samira",
@@ -52,6 +52,12 @@
           "id": "360033",
           "num": 33,
           "name": "Masque of the Black Rose Samira",
+          "chromas": false
+        },
+        {
+          "id": "360035",
+          "num": 35,
+          "name": "Battle Professor Samira",
           "chromas": false
         }
       ],

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.1.1",
+  "version": "16.2.1",
   "data": {
     "Viego": {
       "id": "Viego",
@@ -59,6 +59,12 @@
           "num": 37,
           "name": "Worlds 2024 Viego",
           "chromas": false
+        },
+        {
+          "id": "234043",
+          "num": 43,
+          "name": "Revenant Reign Viego",
+          "chromas": false
         }
       ],
       "lore": "Once ruler of a long-lost kingdom, Viego perished over a thousand years ago when his attempt to bring his wife back from the dead triggered the magical catastrophe known as the Ruination. Transformed into a powerful, unliving specter tortured by an obsessive longing for his centuries-dead queen, Viego now stands as the Ruined King, controlling the deadly Harrowings as he scours Runeterra for anything that might one day restore her, and destroying all in his path as the Black Mist pours endlessly from his cruel, broken heart.",
@@ -92,7 +98,7 @@
         "critperlevel": 0,
         "attackdamage": 57,
         "attackdamageperlevel": 3.5,
-        "attackspeedperlevel": 2.25,
+        "attackspeedperlevel": 2.75,
         "attackspeed": 0.658
       },
       "spells": [

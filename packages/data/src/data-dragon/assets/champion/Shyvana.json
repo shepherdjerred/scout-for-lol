@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.1.1",
+  "version": "16.2.1",
   "data": {
     "Shyvana": {
       "id": "Shyvana",
@@ -123,7 +123,7 @@
           "description": "Shyvana strikes twice on her next attack and grants herself Attack Speed for her next attacks. Basic attacks reduce the cooldown of Twin Bite by 0.5 seconds.<br><br><font color='#FF3300'>Dragon Form: </font>Twin Bite cleaves all units in front of Shyvana.",
           "tooltip": "Shyvana's next Attack strikes twice, dealing <physicalDamage>{{ firsthitdamagecalc }}</physicalDamage> then <physicalDamage>{{ secondhitdamagecalc }} physical damage</physicalDamage>. Her next 2 Attacks gain<speed> {{ bonusas }}% Attack Speed</speed>.<br /><br />Attacks reduce this Ability's Cooldown by {{ cdreductiononhit }} seconds.<br /><br /><keywordMajor>Dragon Form:</keywordMajor> The empowered Attacks hit all units in front of Shyvana.<br /><br /><rules>This Ability triggers spell effects upon dealing damage.</rules>{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Bonus Damage", "Cooldown", "Attack Speed"],
+            "label": ["Bonus Damage:", "Cooldown", "Attack Speed"],
             "effect": [
               "{{ secondhitdamage*100.000000 }}% -> {{ secondhitdamagenl*100.000000 }}%",
               "{{ cooldown }} -> {{ cooldownNL }}",

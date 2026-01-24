@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.1.1",
+  "version": "16.2.1",
   "data": {
     "Malphite": {
       "id": "Malphite",
@@ -256,14 +256,18 @@
           "description": "Malphite slams the ground, sending out a shockwave that deals magic damage based on his Armor and reduces the Attack Speed of enemies for a short duration.",
           "tooltip": "Malphite slams the ground, dealing <magicDamage>{{ edamagecalc }} magic damage</magicDamage> and reducing <attackSpeed>Attack Speed by {{ asreduction }}%</attackSpeed> for {{ duration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Attack Speed Reduction"],
-            "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ asreduction }}% -> {{ asreductionNL }}%"]
+            "label": ["Damage", "Attack Speed Reduction", "@AbilityResourceName@ Cost"],
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ asreduction }}% -> {{ asreductionNL }}%",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [7, 7, 7, 7, 7],
           "cooldownBurn": "7",
-          "cost": [50, 50, 50, 50, 50],
-          "costBurn": "50",
+          "cost": [50, 55, 60, 65, 70],
+          "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
@@ -305,8 +309,8 @@
             "effect": ["{{ cooldown }} -> {{ cooldownNL }}", "{{ e2 }} -> {{ e2NL }}"]
           },
           "maxrank": 3,
-          "cooldown": [130, 105, 80],
-          "cooldownBurn": "130/105/80",
+          "cooldown": [130, 115, 100],
+          "cooldownBurn": "130/115/100",
           "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},

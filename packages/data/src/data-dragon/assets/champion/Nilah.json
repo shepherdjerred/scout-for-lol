@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.1.1",
+  "version": "16.2.1",
   "data": {
     "Nilah": {
       "id": "Nilah",
@@ -74,7 +74,7 @@
         "critperlevel": 0,
         "attackdamage": 60,
         "attackdamageperlevel": 2,
-        "attackspeedperlevel": 2,
+        "attackspeedperlevel": 1.25,
         "attackspeed": 0.697
       },
       "spells": [

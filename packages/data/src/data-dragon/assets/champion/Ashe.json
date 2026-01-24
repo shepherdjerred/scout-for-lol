@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.1.1",
+  "version": "16.2.1",
   "data": {
     "Ashe": {
       "id": "Ashe",
@@ -176,7 +176,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 59,
-        "attackdamageperlevel": 3,
+        "attackdamageperlevel": 3.5,
         "attackspeedperlevel": 3,
         "attackspeed": 0.658
       },

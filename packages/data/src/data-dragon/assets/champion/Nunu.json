@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.1.1",
+  "version": "16.2.1",
   "data": {
     "Nunu": {
       "id": "Nunu",
@@ -155,8 +155,8 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
-          "cooldownBurn": "12/11/10/9/8",
+          "cooldown": [13, 12, 11, 10, 9],
+          "cooldownBurn": "13/12/11/10/9",
           "cost": [60, 60, 60, 60, 60],
           "costBurn": "60",
           "datavalues": {},
@@ -241,12 +241,12 @@
           "description": "Nunu throws multiple snowballs that damage enemies.  When he's finished, Willump roots any champions or large monsters that were hit by a snowball.",
           "tooltip": "Nunu throws three snowballs, dealing <magicDamage>{{ totalsnowballdamage }} magic damage</magicDamage> per snowball and <status>Slowing</status> enemies hit by all three by {{ slowamount*-100 }}% for {{ slowduration }} second. Nunu can <recast>Recast</recast> this up to twice more.<br /><br />After {{ totalspellduration }} seconds, Nunu <status>Roots</status> all nearby enemies that had been <status>Slowed</status> by the snowballs for {{ rootduration }} seconds and deals an additional <magicDamage>{{ totalrootdamage }} magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Mana Cost", "Movement Slow", "Cooldown"],
+            "label": ["Damage", "Movement Slow", "Cooldown", "Mana Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ cost }} -> {{ costNL }}",
               "{{ slowamount*-100.000000 }}% -> {{ slowamountnl*-100.000000 }}%",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,

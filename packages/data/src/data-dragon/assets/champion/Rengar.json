@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.1.1",
+  "version": "16.2.1",
   "data": {
     "Rengar": {
       "id": "Rengar",
@@ -120,12 +120,12 @@
           "id": "RengarQ",
           "name": "Savagery",
           "description": "Rengar's next Attack brutally stabs his target for bonus damage.<br><br>Ferocity effect: deals increased damage and grants Attack Speed.",
-          "tooltip": "Rengar's next 2 Attacks gain <attackSpeed>{{ asbonus }}% Attack Speed</attackSpeed>. The first Attack deals <physicalDamage>{{ qdamage }} physical damage</physicalDamage>.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> The first Attack deals <physicalDamage>{{ empoweredqdamage }} physical damage</physicalDamage> and grants Rengar <attackSpeed>{{ empoweredqas }} Attack Speed</attackSpeed> for {{ asduration }} seconds.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Rengar's next 2 Attacks gain <attackSpeed>{{ asbonus }}% Attack Speed</attackSpeed>. The first Attack deals <physicalDamage>{{ qtotaldamage }} physical damage</physicalDamage>.<br /><br /><keywordMajor>Max Ferocity:</keywordMajor> The first Attack deals <physicalDamage>{{ empoweredqtotaldamage }} physical damage</physicalDamage> and grants Rengar <attackSpeed>{{ empoweredqas }} Attack Speed</attackSpeed> for {{ asduration }} seconds.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Total AD Ratio", "Cooldown"],
+            "label": ["Damage", "Bonus AD Ratio", "Cooldown"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ baseadratiotooltip }}% -> {{ baseadratiotooltipNL }}%",
+              "{{ baseadratio*100.000000 }}% -> {{ baseadrationl*100.000000 }}%",
               "{{ ammorechargetime }} -> {{ ammorechargetimeNL }}"
             ]
           },
