@@ -8,7 +8,9 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["packages/data/src/data-dragon/assets/version\\.json$"],
+      "managerFilePatterns": [
+        "/packages/data/src/data-dragon/assets/version\\.json$/"
+      ],
       "matchStrings": ["\"version\":\\s*\"(?<currentValue>[^\"]+)\""],
       "depNameTemplate": "data-dragon",
       "datasourceTemplate": "custom.data-dragon"
@@ -17,7 +19,9 @@
   "customDatasources": {
     "data-dragon": {
       "defaultRegistryUrlTemplate": "https://ddragon.leagueoflegends.com/api/versions.json",
-      "transformTemplates": ["{\"releases\": $map($, function($v) { {\"version\": $v} })}"]
+      "transformTemplates": [
+        "{\"releases\": $map($, function($v) { {\"version\": $v} })}"
+      ]
     }
   },
   "packageRules": [
