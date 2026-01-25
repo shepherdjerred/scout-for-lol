@@ -295,19 +295,47 @@ async function downloadRuneImages(runes: RuneTreeData): Promise<number> {
 }
 
 // Schema for CommunityDragon Arena augments API response
-const ArenaAugmentSchema = z.object({
+const ArenaAugmentApiSchema = z.object({
+  id: z.number(),
+  apiName: z.string().optional(),
+  name: z.string(),
+  desc: z.string(),
+  tooltip: z.string(),
   iconLarge: z.string(),
   iconSmall: z.string(),
+  rarity: z.number(), // 1=prismatic, 2=gold, 3=silver
+  dataValues: z.record(z.string(), z.number()).optional(),
+  calculations: z.record(z.string(), z.unknown()).optional(),
 });
 
-const ArenaAugmentsResponseSchema = z.object({
-  augments: z.array(ArenaAugmentSchema),
+const ArenaAugmentsApiResponseSchema = z.object({
+  augments: z.array(ArenaAugmentApiSchema),
 });
 
 const ARENA_AUGMENTS_URL = "https://raw.communitydragon.org/latest/cdragon/arena/en_us.json";
 
-async function collectAugmentIconPaths(): Promise<Set<string>> {
-  console.log("Fetching augment list from CommunityDragon API...");
+function rarityNumberToString(rarity: number): "prismatic" | "gold" | "silver" {
+  if (rarity === 1) return "prismatic";
+  if (rarity === 2) return "gold";
+  return "silver";
+}
+
+interface ArenaAugmentCacheEntry {
+  id: number;
+  apiName?: string | undefined;
+  name: string;
+  desc: string;
+  tooltip: string;
+  iconLarge: string;
+  iconSmall: string;
+  rarity: "prismatic" | "gold" | "silver";
+  dataValues: Record<string, number>;
+  calculations: Record<string, unknown>;
+  type: "full";
+}
+
+async function fetchAndSaveArenaAugments(): Promise<{ iconPaths: Set<string>; count: number }> {
+  console.log("\nFetching Arena augments from CommunityDragon...");
 
   const response = await fetch(ARENA_AUGMENTS_URL);
   if (!response.ok) {
@@ -315,24 +343,44 @@ async function collectAugmentIconPaths(): Promise<Set<string>> {
   }
 
   const data: unknown = await response.json();
-  const parsed = ArenaAugmentsResponseSchema.parse(data);
+  const parsed = ArenaAugmentsApiResponseSchema.parse(data);
 
-  const augmentIconPaths = new Set<string>();
+  // Build the cache format keyed by ID
+  const cache: Record<string, ArenaAugmentCacheEntry> = {};
+  const iconPaths = new Set<string>();
+
   for (const augment of parsed.augments) {
-    augmentIconPaths.add(augment.iconLarge);
-    augmentIconPaths.add(augment.iconSmall);
+    iconPaths.add(augment.iconLarge);
+    iconPaths.add(augment.iconSmall);
+
+    cache[augment.id.toString()] = {
+      id: augment.id,
+      apiName: augment.apiName,
+      name: augment.name,
+      desc: augment.desc,
+      tooltip: augment.tooltip,
+      iconLarge: augment.iconLarge,
+      iconSmall: augment.iconSmall,
+      rarity: rarityNumberToString(augment.rarity),
+      dataValues: augment.dataValues ?? {},
+      calculations: augment.calculations ?? {},
+      type: "full",
+    };
   }
 
-  console.log(`Found ${String(parsed.augments.length)} augments with ${String(augmentIconPaths.size)} icon paths`);
-  return augmentIconPaths;
+  // Write arena-augments.json
+  await Bun.write(`${ASSETS_DIR}/arena-augments.json`, JSON.stringify(cache, null, 2));
+  console.log(`✓ Written arena-augments.json (${String(parsed.augments.length)} augments)`);
+
+  return { iconPaths, count: parsed.augments.length };
 }
 
 async function downloadAugmentImages(): Promise<number> {
   console.log("\nDownloading augment icons from CommunityDragon...");
 
-  const augmentIconPaths = await collectAugmentIconPaths();
+  const { iconPaths } = await fetchAndSaveArenaAugments();
 
-  const augmentImages = Array.from(augmentIconPaths).map((iconPath) => {
+  const augmentImages = Array.from(iconPaths).map((iconPath) => {
     const filename = iconPath.split("/").pop() ?? "unknown.png";
     return {
       url: `${COMMUNITY_DRAGON_URL}/${iconPath}`,
@@ -346,7 +394,7 @@ async function downloadAugmentImages(): Promise<number> {
     console.log(`✓ Downloaded ${String(augmentImages.length)} augment images`);
     return augmentImages.length;
   } else {
-    console.log("  No augment icons found in test data");
+    console.log("  No augment icons found");
     return 0;
   }
 }
@@ -389,10 +437,52 @@ async function main(): Promise<void> {
     console.log(`  - ${String(runeImagesCount)} rune images`);
     console.log(`  - ${String(augmentImagesCount)} augment images`);
     console.log(`  - ${String(championDataCount)} champion data files (abilities/passives)`);
+
+    // Update snapshots that depend on Data Dragon data
+    console.log("\n📸 Updating snapshots...");
+    await updateSnapshots();
+    console.log("✅ Snapshots updated");
   } catch (error) {
     console.error("\n❌ Error updating Data Dragon assets:");
     console.error(error);
     process.exit(1);
+  }
+}
+
+async function updateSnapshots(): Promise<void> {
+  const rootDir = `${import.meta.dir}/../../..`;
+
+  // Snapshots that depend on Data Dragon data
+  const snapshotTests = [
+    // Report package snapshots
+    {
+      cwd: `${rootDir}/packages/report`,
+      tests: [
+        "src/dataDragon/__snapshots__/summoner.test.ts",
+        "src/dataDragon/__snapshots__/version.test.ts",
+        "src/html/arena/__snapshots__/realdata.integration.test.ts",
+      ],
+    },
+    // Backend package snapshots
+    {
+      cwd: `${rootDir}/packages/backend`,
+      tests: ["src/league/model/__tests__/arena.realdata.integration.test.ts"],
+    },
+  ];
+
+  for (const { cwd, tests } of snapshotTests) {
+    for (const testPath of tests) {
+      // Extract the test file path from snapshot path
+      const testFile = testPath.includes("__snapshots__")
+        ? testPath.replace("__snapshots__/", "").replace(".snap", "")
+        : testPath;
+
+      console.log(`  Updating: ${testFile}`);
+      const result = await $`cd ${cwd} && bun test --update-snapshots ${testFile}`.quiet();
+      if (result.exitCode !== 0) {
+        console.warn(`    ⚠ Warning: snapshot update had non-zero exit code for ${testFile}`);
+      }
+    }
   }
 }
 

@@ -1,83 +1,15 @@
-import {
-  AugmentSchema,
-  FullAugmentSchema,
-  type Augment,
-  type AugmentRarity,
-  type FullAugment,
-} from "@scout-for-lol/data";
-import { z } from "zod";
+import { AugmentSchema, type Augment, type FullAugment } from "@scout-for-lol/data";
 import { arenaAugmentCache } from "@scout-for-lol/data/data-dragon/arena-augments.ts";
 
-// This models the API response from CommunityDragon.
-// API response objects do not include our internal discriminator `type`,
-// and provide rarity as a number (r1=prismatic, r2=gold, r3=silver).
-// Parse with an API-specific schema, then normalize to internal shape.
-const ApiAugmentSchema = FullAugmentSchema.omit({
-  type: true,
-  rarity: true,
-}).extend({ rarity: z.number().int() });
-
-const ApiAugmentsResponseSchema = z.strictObject({
-  augments: z.array(ApiAugmentSchema),
-});
-
-// CommunityDragon Arena augments endpoint
-const ARENA_AUGMENTS_URL = "https://raw.communitydragon.org/latest/cdragon/arena/en_us.json" as const;
-
-let augmentMapCache: Record<number, FullAugment> | undefined = undefined;
-let loadPromise: Promise<Record<number, FullAugment>> | undefined = undefined;
-
-export async function initArenaAugmentsOnce(): Promise<Record<number, FullAugment>> {
-  if (augmentMapCache) {
-    return augmentMapCache;
-  }
-  loadPromise ??= (async () => {
-    try {
-      const res = await fetch(ARENA_AUGMENTS_URL, { cache: "force-cache" });
-      if (!res.ok) {
-        throw new Error(`Failed to fetch Arena augments: ${res.status.toString()} ${res.statusText}`);
-      }
-      const data = await res.json();
-      const parsed = ApiAugmentsResponseSchema.parse(data);
-      const rarityFromNumber = (n: number): AugmentRarity => {
-        if (n === 1) {
-          return "prismatic";
-        }
-        if (n === 2) {
-          return "gold";
-        }
-        if (n === 3) {
-          return "silver";
-        }
-        return "silver";
-      };
-      augmentMapCache = {};
-
-      for (const a of parsed.augments) {
-        augmentMapCache[a.id] = {
-          ...a,
-          rarity: rarityFromNumber(a.rarity),
-          type: "full",
-        };
-      }
-      return augmentMapCache;
-    } catch (_error) {
-      augmentMapCache = arenaAugmentCache;
-      return augmentMapCache;
-    }
-  })();
-  return loadPromise;
+// Use the local cached arena augments data.
+// The cache is updated by running `bun run scripts/update-data-dragon.ts` in packages/data.
+// This is consistent with how all other Data Dragon data (items, champions, runes, etc.) is handled.
+function getArenaAugmentMap(): Record<number, FullAugment> {
+  return arenaAugmentCache;
 }
 
-async function getArenaAugmentMap(): Promise<Record<number, FullAugment>> {
-  if (augmentMapCache) {
-    return augmentMapCache;
-  }
-  return initArenaAugmentsOnce();
-}
-
-export async function mapAugmentIdsToUnion(augmentIds: number[]): Promise<Augment[]> {
-  const map = await getArenaAugmentMap();
+export function mapAugmentIdsToUnion(augmentIds: number[]): Augment[] {
+  const map = getArenaAugmentMap();
   const result: Augment[] = [];
   for (const id of augmentIds) {
     const aug = map[id];
