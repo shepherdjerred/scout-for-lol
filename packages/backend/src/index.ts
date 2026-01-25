@@ -30,22 +30,11 @@ import "@scout-for-lol/backend/metrics/index.ts";
 logger.info("🌐 Starting HTTP server for health checks and metrics");
 import { shutdownHttpServer } from "@scout-for-lol/backend/http-server.ts";
 
-// Preload Arena augments once at startup; continue if it fails
-logger.info("🧩 Initializing Arena augments cache");
-await initArenaAugmentsOnce()
-  .then(() => {
-    logger.info("✅ Arena augments cache initialized");
-  })
-  .catch((e: unknown) => {
-    logger.warn("⚠️  Failed to initialize Arena augments cache:", e);
-  });
-
 logger.info("🔌 Starting Discord bot initialization");
 import "@scout-for-lol/backend/discord/index.ts";
 
 logger.info("⏰ Starting cron job scheduler");
 import { startCronJobs } from "@scout-for-lol/backend/league/cron.ts";
-import { initArenaAugmentsOnce } from "@scout-for-lol/backend/league/arena/augment.ts";
 startCronJobs();
 
 logger.info("✅ Backend application startup complete");

@@ -271,7 +271,7 @@ function createMinimalPlayerConfig(puuid: string, name: string): PlayerConfigEnt
 /**
  * Convert a raw Riot API match to our internal format
  */
-async function convertRawMatchToInternalFormat(rawMatch: RawMatch): Promise<CompletedMatch | ArenaMatch> {
+function convertRawMatchToInternalFormat(rawMatch: RawMatch): CompletedMatch | ArenaMatch {
   const queueType = parseQueueType(rawMatch.info.queueId);
 
   // Pick the first participant as our "tracked player"
@@ -293,7 +293,7 @@ async function convertRawMatchToInternalFormat(rawMatch: RawMatch): Promise<Comp
   };
 
   if (queueType === "arena") {
-    return await toArenaMatch([player], rawMatch);
+    return toArenaMatch([player], rawMatch);
   } else {
     return toMatch([player], rawMatch, new Map());
   }
@@ -351,7 +351,7 @@ async function getRandomMatchFromS3(matchType: MatchType, daysBack: number): Pro
 
     if (isMatchingType) {
       logger.info(`📦 Using match from S3: ${key}`);
-      const match = await convertRawMatchToInternalFormat(rawMatch);
+      const match = convertRawMatchToInternalFormat(rawMatch);
       const matchId = MatchIdSchema.parse(rawMatch.metadata.matchId);
       return { match, rawMatch, matchId };
     }

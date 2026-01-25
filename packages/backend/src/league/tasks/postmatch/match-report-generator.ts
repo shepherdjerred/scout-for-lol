@@ -117,7 +117,7 @@ async function processArenaMatch(
   playersInMatch: PlayerConfigEntry[],
 ): Promise<MessageCreateOptions> {
   logger.info(`[generateMatchReport] 🎯 Processing as arena match`);
-  const arenaMatch = await toArenaMatch(players, matchData);
+  const arenaMatch = toArenaMatch(players, matchData);
 
   // Create Discord message for arena
   const [attachment, embed] = await createMatchImage(arenaMatch, matchId);

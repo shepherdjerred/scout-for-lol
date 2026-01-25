@@ -3,10 +3,10 @@ import { participantToChampion } from "@scout-for-lol/data/model/match-helpers";
 import { mapAugmentIdsToUnion } from "@scout-for-lol/backend/league/arena/augment";
 
 // Arena champion conversion with arena-specific fields
-export async function participantToArenaChampion(dto: RawParticipant): Promise<ArenaChampion> {
+export function participantToArenaChampion(dto: RawParticipant): ArenaChampion {
   const baseChampion = participantToChampion(dto);
 
-  const augments = await extractAugments(dto);
+  const augments = extractAugments(dto);
   const arenaMetrics = extractArenaMetrics(dto);
   const teamSupport = extractTeamSupport(dto);
 
@@ -19,7 +19,7 @@ export async function participantToArenaChampion(dto: RawParticipant): Promise<A
 }
 
 // Helpers for arena-specific fields
-async function extractAugments(dto: RawParticipant): Promise<Augment[]> {
+function extractAugments(dto: RawParticipant): Augment[] {
   const ids: number[] = [];
   const augmentFields = [
     dto.playerAugment1,
@@ -37,17 +37,7 @@ async function extractAugments(dto: RawParticipant): Promise<Augment[]> {
   if (ids.length === 0) {
     return [];
   }
-  try {
-    const result = await mapAugmentIdsToUnion(ids);
-    return result;
-  } catch {
-    const result: Augment[] = ids.map((id) => ({
-      id,
-      type: "id" as const,
-    }));
-
-    return result;
-  }
+  return mapAugmentIdsToUnion(ids);
 }
 
 function extractArenaMetrics(dto: RawParticipant) {

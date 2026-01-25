@@ -178,7 +178,7 @@ export function getArenaTeammate(participant: RawParticipant, participants: RawP
   return undefined;
 }
 
-export async function toArenaSubteams(participants: RawParticipant[]): Promise<ArenaTeam[]> {
+export function toArenaSubteams(participants: RawParticipant[]): ArenaTeam[] {
   const grouped = groupArenaTeams(participants);
   const result: ArenaTeam[] = [];
   for (const { subteamId, players } of grouped) {
@@ -189,7 +189,7 @@ export async function toArenaSubteams(participants: RawParticipant[]): Promise<A
         `inconsistent placement for subteam ${subteamId.toString()}: ${placement0.toString()} !== ${placement1.toString()}`,
       );
     }
-    const converted = await Promise.all(players.map((p) => participantToArenaChampion(p)));
+    const converted = players.map((p) => participantToArenaChampion(p));
     result.push({
       teamId: ArenaTeamIdSchema.parse(subteamId),
       players: converted,
@@ -203,62 +203,60 @@ export function getArenaPlacement(participant: RawParticipant) {
   return ArenaParticipantFieldsSchema.parse(participant).placement;
 }
 
-export async function toArenaMatch(players: Player[], rawMatch: RawMatch): Promise<ArenaMatch> {
-  const subteams = await toArenaSubteams(rawMatch.info.participants);
+export function toArenaMatch(players: Player[], rawMatch: RawMatch): ArenaMatch {
+  const subteams = toArenaSubteams(rawMatch.info.participants);
 
   // Build ArenaMatch.players for all tracked players
-  const arenaPlayers = await Promise.all(
-    players.map(async (player) => {
-      // CRITICAL: Validate player.config doesn't have puuid at top level
-      // This ensures no participant data leaks into player config
-      const configValidation = PlayerConfigEntrySchema.safeParse(player.config);
-      if (!configValidation.success) {
-        throw new Error(`Invalid player config for ${player.config.alias}: config has unexpected fields`);
-      }
-      // Use validated config to ensure no extra fields
-      const validatedConfig = configValidation.data;
+  const arenaPlayers = players.map((player) => {
+    // CRITICAL: Validate player.config doesn't have puuid at top level
+    // This ensures no participant data leaks into player config
+    const configValidation = PlayerConfigEntrySchema.safeParse(player.config);
+    if (!configValidation.success) {
+      throw new Error(`Invalid player config for ${player.config.alias}: config has unexpected fields`);
+    }
+    // Use validated config to ensure no extra fields
+    const validatedConfig = configValidation.data;
 
-      const participant = findParticipant(validatedConfig.league.leagueAccount.puuid, rawMatch.info.participants);
-      if (participant === undefined) {
-        const searchingFor = validatedConfig.league.leagueAccount.puuid;
-        const metadataPuuids = rawMatch.metadata.participants;
-        const infoPuuids = rawMatch.info.participants.map((p) => p.puuid);
+    const participant = findParticipant(validatedConfig.league.leagueAccount.puuid, rawMatch.info.participants);
+    if (participant === undefined) {
+      const searchingFor = validatedConfig.league.leagueAccount.puuid;
+      const metadataPuuids = rawMatch.metadata.participants;
+      const infoPuuids = rawMatch.info.participants.map((p) => p.puuid);
 
-        logger.error("Arena participant lookup failed", {
-          searchingFor,
-          playerAlias: validatedConfig.alias,
-          matchId: rawMatch.metadata.matchId,
-          queueId: rawMatch.info.queueId,
-          inMetadata: metadataPuuids.includes(searchingFor),
-          inInfo: infoPuuids.includes(searchingFor),
-          metadataPuuids,
-          infoPuuids,
-          metadataCount: metadataPuuids.length,
-          infoCount: infoPuuids.length,
-          mismatchedCounts: metadataPuuids.length !== infoPuuids.length,
-          emptyPuuidsInInfo: infoPuuids.filter((p) => p === "").length,
-        });
+      logger.error("Arena participant lookup failed", {
+        searchingFor,
+        playerAlias: validatedConfig.alias,
+        matchId: rawMatch.metadata.matchId,
+        queueId: rawMatch.info.queueId,
+        inMetadata: metadataPuuids.includes(searchingFor),
+        inInfo: infoPuuids.includes(searchingFor),
+        metadataPuuids,
+        infoPuuids,
+        metadataCount: metadataPuuids.length,
+        infoCount: infoPuuids.length,
+        mismatchedCounts: metadataPuuids.length !== infoPuuids.length,
+        emptyPuuidsInInfo: infoPuuids.filter((p) => p === "").length,
+      });
 
-        throw new Error(`participant not found for player ${validatedConfig.alias}`);
-      }
-      const subteamId = validateArenaSubteamId(participant);
-      const placement = getArenaPlacement(participant);
-      const champion = await participantToArenaChampion(participant);
-      const teammateRaw = getArenaTeammate(participant, rawMatch.info.participants);
-      if (!teammateRaw) {
-        throw new Error(`arena teammate not found for player ${validatedConfig.alias}`);
-      }
-      const arenaTeammate = await participantToArenaChampion(teammateRaw);
+      throw new Error(`participant not found for player ${validatedConfig.alias}`);
+    }
+    const subteamId = validateArenaSubteamId(participant);
+    const placement = getArenaPlacement(participant);
+    const champion = participantToArenaChampion(participant);
+    const teammateRaw = getArenaTeammate(participant, rawMatch.info.participants);
+    if (!teammateRaw) {
+      throw new Error(`arena teammate not found for player ${validatedConfig.alias}`);
+    }
+    const arenaTeammate = participantToArenaChampion(teammateRaw);
 
-      return {
-        playerConfig: validatedConfig,
-        placement: ArenaPlacementSchema.parse(placement),
-        champion,
-        teamId: ArenaTeamIdSchema.parse(subteamId),
-        teammate: arenaTeammate,
-      };
-    }),
-  );
+    return {
+      playerConfig: validatedConfig,
+      placement: ArenaPlacementSchema.parse(placement),
+      champion,
+      teamId: ArenaTeamIdSchema.parse(subteamId),
+      teammate: arenaTeammate,
+    };
+  });
 
   return {
     durationInSeconds: rawMatch.info.gameDuration,
