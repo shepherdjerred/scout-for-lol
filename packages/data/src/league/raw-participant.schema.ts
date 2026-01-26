@@ -24,7 +24,7 @@ export const RawParticipantSchema = z
     allInPings: z.number(),
     assistMePings: z.number(),
     commandPings: z.number(),
-    retreatPings: z.number(),
+    retreatPings: z.number().optional(),
     visionClearedPings: z.number(),
     consumablesPurchased: z.number(),
     damageDealtToBuildings: z.number(),

@@ -315,12 +315,16 @@ const ArenaAugmentsApiResponseSchema = z.object({
 const ARENA_AUGMENTS_URL = "https://raw.communitydragon.org/latest/cdragon/arena/en_us.json";
 
 function rarityNumberToString(rarity: number): "prismatic" | "gold" | "silver" {
-  if (rarity === 1) return "prismatic";
-  if (rarity === 2) return "gold";
+  if (rarity === 1) {
+    return "prismatic";
+  }
+  if (rarity === 2) {
+    return "gold";
+  }
   return "silver";
 }
 
-interface ArenaAugmentCacheEntry {
+type ArenaAugmentCacheEntry = {
   id: number;
   apiName?: string | undefined;
   name: string;
@@ -332,7 +336,7 @@ interface ArenaAugmentCacheEntry {
   dataValues: Record<string, number>;
   calculations: Record<string, unknown>;
   type: "full";
-}
+};
 
 async function fetchAndSaveArenaAugments(): Promise<{ iconPaths: Set<string>; count: number }> {
   console.log("\nFetching Arena augments from CommunityDragon...");
