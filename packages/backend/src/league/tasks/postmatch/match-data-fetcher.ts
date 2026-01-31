@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z, ZodError } from "zod";
 import * as Sentry from "@sentry/bun";
 import { api } from "@scout-for-lol/backend/league/api/api.ts";
 import { regionToRegionGroup } from "twisted/dist/constants/regions.js";
@@ -6,6 +6,7 @@ import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import type { Region, MatchId, RawMatch, RawTimeline } from "@scout-for-lol/data/index.ts";
 import { RawMatchSchema, RawTimelineSchema } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { saveFailedPayloadToS3 } from "@scout-for-lol/backend/storage/s3-helpers.ts";
 
 const logger = createLogger("match-data-fetcher");
 
@@ -34,7 +35,17 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
       logger.error(`[fetchMatchData] ❌ Match data validation failed for ${matchId}:`, parseError);
       logger.error(`[fetchMatchData] This may indicate an API schema change or data corruption`);
       captureError(parseError, "match-data-validation", matchId);
-      logger.error(`[fetchMatchData] 🔍 Raw API response:`, JSON.stringify(response.response, null, 2));
+
+      // Save failed payload to S3 for debugging
+      if (parseError instanceof ZodError) {
+        await saveFailedPayloadToS3({
+          matchId,
+          assetType: "match",
+          rawPayload: response.response,
+          validationError: parseError,
+        });
+      }
+
       return undefined;
     }
   } catch (e) {
@@ -87,6 +98,17 @@ export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region)
       logger.error(`[fetchMatchTimeline] ❌ Timeline data validation failed for ${matchId}:`, parseError);
       logger.error(`[fetchMatchTimeline] This may indicate an API schema change or data corruption`);
       captureError(parseError, "timeline-data-validation", matchId);
+
+      // Save failed payload to S3 for debugging
+      if (parseError instanceof ZodError) {
+        await saveFailedPayloadToS3({
+          matchId,
+          assetType: "timeline",
+          rawPayload: response.response,
+          validationError: parseError,
+        });
+      }
+
       return undefined;
     }
   } catch (e) {

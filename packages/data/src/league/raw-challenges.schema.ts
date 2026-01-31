@@ -125,7 +125,7 @@ export const RawChallengesSchema = z
     takedownsInEnemyFountain: z.number(),
     teleportTakedowns: z.number().nullish(),
     teamBaronKills: z.number(),
-    teamDamagePercentage: z.number(),
+    teamDamagePercentage: z.number().optional(),
     teamElderDragonKills: z.number(),
     teamRiftHeraldKills: z.number(),
     threeWardsOneSweeperCount: z.number().optional(),

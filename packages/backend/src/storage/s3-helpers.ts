@@ -1,6 +1,6 @@
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { createS3Client } from "@scout-for-lol/backend/storage/s3-client.ts";
-import { z } from "zod";
+import { z, type ZodError } from "zod";
 import configuration from "@scout-for-lol/backend/configuration.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import type { MatchId } from "@scout-for-lol/data/index";
@@ -108,5 +108,75 @@ export async function saveToS3(config: SaveToS3Config): Promise<string | undefin
   } catch (error) {
     logger.error(`[S3Storage] ❌ Failed to save ${errorContext} ${matchId} to S3:`, error);
     throw new Error(`Failed to save ${errorContext} ${matchId} to S3: ${getErrorMessage(error)}`);
+  }
+}
+
+/**
+ * Generate S3 key for failed validation payloads
+ * Stored under failed-validations/{date}/{matchId}/ for easy identification
+ */
+function generateFailedValidationS3Key(matchId: MatchId, assetType: string): string {
+  const now = new Date();
+  const dateStr = format(now, "yyyy/MM/dd");
+  return `failed-validations/${dateStr}/${matchId}/${assetType}.json`;
+}
+
+type SaveFailedPayloadConfig = {
+  matchId: MatchId;
+  assetType: "match" | "timeline";
+  rawPayload: unknown;
+  validationError: ZodError;
+};
+
+/**
+ * Save a failed validation payload to S3 for debugging
+ * Stores the raw API response with metadata about the validation failure
+ */
+export async function saveFailedPayloadToS3(config: SaveFailedPayloadConfig): Promise<void> {
+  const { matchId, assetType, rawPayload, validationError } = config;
+  const bucket = configuration.s3BucketName;
+
+  if (!bucket) {
+    logger.warn(`[S3Storage] ⚠️  S3_BUCKET_NAME not configured, skipping failed payload save for match: ${matchId}`);
+    return;
+  }
+
+  logger.info(`[S3Storage] 💥 Saving failed ${assetType} payload: ${matchId}`);
+
+  try {
+    const client = createS3Client();
+    const key = generateFailedValidationS3Key(matchId, assetType);
+
+    // Extract the first few validation issues for metadata (limited to avoid hitting S3 metadata size limits)
+    const firstIssues = validationError.issues.slice(0, 5).map((issue) => ({
+      path: issue.path.join("."),
+      message: issue.message,
+      code: issue.code,
+    }));
+
+    const body = JSON.stringify(rawPayload, null, 2);
+    const bodyBuffer = new TextEncoder().encode(body);
+
+    const command = new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: bodyBuffer,
+      ContentType: "application/json",
+      Metadata: {
+        matchId: matchId,
+        assetType: assetType,
+        validationStatus: "failed",
+        issueCount: validationError.issues.length.toString(),
+        firstIssuePath: firstIssues[0]?.path ?? "unknown",
+        firstIssueMessage: firstIssues[0]?.message ?? "unknown",
+        uploadedAt: new Date().toISOString(),
+      },
+    });
+
+    await client.send(command);
+    logger.info(`[S3Storage] ✅ Saved failed ${assetType} payload to s3://${bucket}/${key}`);
+  } catch (error) {
+    // Don't throw - this is a best-effort debug save
+    logger.error(`[S3Storage] ❌ Failed to save failed payload for ${matchId}:`, error);
   }
 }
