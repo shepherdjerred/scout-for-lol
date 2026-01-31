@@ -116,6 +116,46 @@ function ChangelogSection({ title, color, items, className = "" }: ChangelogSect
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026 01 31",
+    banner: (
+      <>
+        <strong>Season 2026</strong> data updates and Arena improvements
+      </>
+    ),
+    text: (
+      <>
+        <ChangelogSection
+          title="Season 2026 Support"
+          color="indigo"
+          items={[
+            "Support for new Riot API data structures including role-specific starting items",
+            "Updated champion, item, and rune data for latest patches",
+          ]}
+        />
+        <ChangelogSection
+          title="Arena"
+          color="purple"
+          items={[
+            "Improved arena augment data with complete augment icons",
+            "More reliable augment display in match reports",
+          ]}
+          className="mt-6"
+        />
+        <ChangelogSection
+          title="Bug Fixes"
+          color="green"
+          items={["Improved reliability and stability", "Various performance improvements"]}
+          className="mt-6"
+        />
+      </>
+    ),
+    formatted: {
+      year: 2026,
+      month: 1,
+      day: 31,
+    },
+  },
+  {
     date: "2025 11 30",
     banner: (
       <>

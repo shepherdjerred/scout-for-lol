@@ -8,7 +8,7 @@
 
 Monorepo using **Bun workspaces**:
 
-```
+```text
 packages/
 ├── backend/   # Discord bot backend service (Discord.js, Prisma, twisted)
 ├── data/      # Shared data models, schemas, and utilities
@@ -173,22 +173,53 @@ type DeepReadonly<T> = {
 
 The project uses custom ESLint rules in `eslint-rules/`:
 
-| Rule                          | Purpose                                           |
-| ----------------------------- | ------------------------------------------------- |
-| `no-type-assertions`          | Disallow `as` type assertions                     |
-| `no-type-guards`              | Disallow custom type guard functions              |
-| `prefer-zod-validation`       | Enforce Zod for runtime validation                |
-| `prefer-bun-apis`             | Prefer Bun APIs over Node.js equivalents          |
-| `prefer-async-await`          | Disallow .then()/.catch() promise chains          |
-| `prefer-structured-logging`   | Require tslog instead of console.log (backend)   |
-| `zod-schema-naming`           | Enforce *Schema suffix for Zod schemas            |
-| `no-dto-naming`               | Disallow *Dto suffix (use Raw* prefix)            |
-| `require-ts-extensions`       | Require .ts extensions in imports                 |
-| `satori-best-practices`       | Enforce satori rendering requirements (report)   |
-| `prisma-client-disconnect`    | Ensure Prisma clients are disconnected in tests  |
-| `no-re-exports`               | Disallow barrel file re-exports                   |
-| `no-function-overloads`       | Disallow TypeScript function overloads            |
-| `no-parent-imports`           | Disallow `../` imports                            |
+| Rule                        | Purpose                                         |
+| --------------------------- | ----------------------------------------------- |
+| `no-type-assertions`        | Disallow `as` type assertions                   |
+| `no-type-guards`            | Disallow custom type guard functions            |
+| `prefer-zod-validation`     | Enforce Zod for runtime validation              |
+| `prefer-bun-apis`           | Prefer Bun APIs over Node.js equivalents        |
+| `prefer-async-await`        | Disallow .then()/.catch() promise chains        |
+| `prefer-structured-logging` | Require tslog instead of console.log (backend)  |
+| `zod-schema-naming`         | Enforce \*Schema suffix for Zod schemas         |
+| `no-dto-naming`             | Disallow _Dto suffix (use Raw_ prefix)          |
+| `require-ts-extensions`     | Require .ts extensions in imports               |
+| `satori-best-practices`     | Enforce satori rendering requirements (report)  |
+| `prisma-client-disconnect`  | Ensure Prisma clients are disconnected in tests |
+| `no-re-exports`             | Disallow barrel file re-exports                 |
+| `no-function-overloads`     | Disallow TypeScript function overloads          |
+| `no-parent-imports`         | Disallow `../` imports                          |
+| `no-shadcn-theme-tokens`    | Prevent shadcn tokens in marketing components   |
+
+---
+
+## Color Usage Convention (Frontend)
+
+**Marketing components** (`components/*.astro`, `pages/*.astro`, non-UI TSX):
+
+- Use explicit Tailwind colors: `text-gray-900 dark:text-white`
+- Use `colors.ts` utilities: `iconColors`, `badgeColors`, `gradientColors`
+- **NEVER** use shadcn theme tokens (`text-foreground`, `bg-primary`, etc.)
+- Enforced by ESLint rule `custom-rules/no-shadcn-theme-tokens`
+
+**UI components** (`components/ui/*.tsx`):
+
+- shadcn theme tokens are allowed and expected
+- These components are designed for the theming system
+
+### Standard Color Replacements
+
+| shadcn token              | Explicit Tailwind                      |
+| ------------------------- | -------------------------------------- |
+| `text-foreground`         | `text-gray-900 dark:text-white`        |
+| `text-muted-foreground`   | `text-gray-600 dark:text-gray-300`     |
+| `text-primary-foreground` | `text-white` (on colored bg)           |
+| `text-primary`            | `text-indigo-600 dark:text-indigo-400` |
+| `bg-background`           | `bg-white dark:bg-gray-900`            |
+| `bg-primary`              | `bg-indigo-600` or specific color      |
+| `bg-muted`                | `bg-gray-100 dark:bg-gray-800`         |
+| `bg-card`                 | `bg-white dark:bg-gray-800`            |
+| `border-border`           | `border-gray-200 dark:border-gray-700` |
 
 ---
 
@@ -231,7 +262,7 @@ Commands live in `packages/backend/src/discord/commands/`. Each command exports:
 - `SlashCommandBuilder` - Command definition
 - `execute` function - Command handler
 
-### Error Handling
+### Discord Error Handling
 
 ```typescript
 // Always handle Discord API errors gracefully

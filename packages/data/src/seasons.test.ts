@@ -37,7 +37,7 @@ describe("seasons", () => {
 
   describe("SeasonIdSchema", () => {
     test("should accept valid season IDs", () => {
-      const validIds = ["2025_SEASON_3_ACT_1"] as const;
+      const validIds = ["2025_SEASON_3_ACT_1", "2026_SEASON_1_ACT_1", "2026_SEASON_1_ACT_2"] as const;
       for (const id of validIds) {
         const result = SeasonIdSchema.safeParse(id);
         expect(result.success).toBe(true);

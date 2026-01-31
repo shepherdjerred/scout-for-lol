@@ -8,7 +8,7 @@ import { changelog, formatChangelogDate, renderChangelogToHtml } from "../data/c
 ---
 
 <Layout>
-  <div class="bg-background">
+  <div class="bg-white dark:bg-gray-900">
     <Navbar activePage="whatsnew" />
 
     <Hero
@@ -23,27 +23,27 @@ import { changelog, formatChangelogDate, renderChangelogToHtml } from "../data/c
         <div class="space-y-12">
           {changelog.map((entry, index) => (
             <div
-              class={`pb-12 ${index !== changelog.length - 1 ? "border-b border-border" : ""}`}
+              class={`pb-12 ${index !== changelog.length - 1 ? "border-b border-gray-200 dark:border-gray-700" : ""}`}
             >
               <!-- Date Header -->
               <div class="mb-6">
                 <div class="flex items-center gap-x-3">
-                  <div class="h-3 w-3 rounded-full bg-primary"></div>
-                  <h2 class="text-2xl font-semibold text-foreground">
+                  <div class="h-3 w-3 rounded-full bg-indigo-600 dark:bg-indigo-500"></div>
+                  <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">
                     {formatChangelogDate(entry)}
                   </h2>
                 </div>
               </div>
 
               <!-- Changes List -->
-              <div class="text-muted-foreground prose pl-6 space-y-6" set:html={renderChangelogToHtml(entry.text)} />
+              <div class="text-gray-600 dark:text-gray-300 prose pl-6 space-y-6" set:html={renderChangelogToHtml(entry.text)} />
             </div>
           ))}
         </div>
 
         {changelog.length === 0 && (
           <div class="text-center py-12">
-            <p class="text-muted-foreground">
+            <p class="text-gray-600 dark:text-gray-300">
               No changelog entries found. Check back soon!
             </p>
           </div>

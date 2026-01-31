@@ -8,9 +8,7 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": [
-        "/packages/data/src/data-dragon/assets/version\\.json$/"
-      ],
+      "managerFilePatterns": ["/packages/data/src/data-dragon/assets/version\\.json$/"],
       "matchStrings": ["\"version\":\\s*\"(?<currentValue>[^\"]+)\""],
       "depNameTemplate": "data-dragon",
       "datasourceTemplate": "custom.data-dragon"
@@ -19,18 +17,22 @@
   "customDatasources": {
     "data-dragon": {
       "defaultRegistryUrlTemplate": "https://ddragon.leagueoflegends.com/api/versions.json",
-      "transformTemplates": [
-        "{\"releases\": $map($, function($v) { {\"version\": $v} })}"
-      ]
+      "transformTemplates": ["{\"releases\": $map($, function($v) { {\"version\": $v} })}"]
     }
   },
   "packageRules": [
     {
       "matchDepNames": ["data-dragon"],
       "automerge": false,
+      "schedule": ["at any time"],
+      "commitMessagePrefix": "[MANUAL]",
       "commitMessageTopic": "Data Dragon (LoL patch)",
       "prBodyNotes": [
-        "After merging, run `cd packages/data && bun run scripts/update-data-dragon.ts` to download the new assets."
+        "**Before merging:**",
+        "1. Check out this branch",
+        "2. Run `cd packages/data && bun run update-data-dragon`",
+        "3. Push the downloaded assets to this branch",
+        "4. Merge once CI passes"
       ]
     }
   ]

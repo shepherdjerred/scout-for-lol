@@ -6,8 +6,8 @@ interface Props {
 }
 
 const { command, description, variant = 'light' } = Astro.props;
-const bgClass = variant === 'dark' ? 'bg-card' : 'bg-muted';
-const textClass = variant === 'dark' ? 'text-card-foreground' : 'text-muted-foreground';
+const bgClass = variant === 'dark' ? 'bg-white dark:bg-gray-800' : 'bg-gray-100 dark:bg-gray-800';
+const textClass = variant === 'dark' ? 'text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300';
 ---
 
 <div class={`rounded-md p-4 ${bgClass} ${description ? 'mb-4' : ''}`}>
@@ -16,5 +16,5 @@ const textClass = variant === 'dark' ? 'text-card-foreground' : 'text-muted-fore
   </code>
 </div>
 {description && (
-  <p class="text-xs text-muted-foreground mt-2">{description}</p>
+  <p class="text-xs text-gray-600 dark:text-gray-300 mt-2">{description}</p>
 )}

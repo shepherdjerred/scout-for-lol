@@ -23,6 +23,7 @@ import { preferStructuredLogging } from "./eslint-rules/prefer-structured-loggin
 import { requireTsExtensions } from "./eslint-rules/require-ts-extensions";
 import { knipUnused } from "./eslint-rules/knip-unused";
 import { noCodeDuplication } from "./eslint-rules/jscpd-duplication";
+import { noShadcnThemeTokens } from "./eslint-rules/no-shadcn-theme-tokens";
 import * as importPlugin from "eslint-plugin-import";
 import * as regexpPlugin from "eslint-plugin-regexp";
 import * as eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
@@ -64,6 +65,7 @@ const customRulesPlugin = {
     "require-ts-extensions": requireTsExtensions,
     "knip-unused": knipUnused,
     "no-code-duplication": noCodeDuplication,
+    "no-shadcn-theme-tokens": noShadcnThemeTokens,
   },
 };
 
@@ -599,6 +601,23 @@ export default tseslint.config(
     },
     rules: {
       "custom-rules/prefer-structured-logging": "error",
+    },
+  },
+  // Prevent shadcn theme tokens in frontend marketing components
+  // Marketing components should use explicit Tailwind colors for predictable dark mode behavior
+  {
+    files: ["packages/frontend/src/**/*.tsx", "packages/frontend/src/**/*.ts"],
+    ignores: [
+      "packages/frontend/src/components/ui/**", // shadcn UI components can use theme tokens
+      "packages/frontend/src/components/review-tool/ui/**", // review tool UI components
+      "**/*.test.ts",
+      "**/*.test.tsx",
+    ],
+    plugins: {
+      "custom-rules": customRulesPlugin,
+    },
+    rules: {
+      "custom-rules/no-shadcn-theme-tokens": "error",
     },
   },
 );

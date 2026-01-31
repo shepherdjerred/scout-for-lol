@@ -6,7 +6,6 @@ import Header from "../components/Header.astro";
 import InfoBox from "../components/InfoBox.astro";
 import CommandBox from "../components/CommandBox.astro";
 import FAQItem from "../components/FAQItem.astro";
-import Badge from "../components/Badge.astro";
 ---
 
 <Layout>
@@ -145,7 +144,7 @@ import Badge from "../components/Badge.astro";
 
                 <div>
                   <h4 class="font-medium text-gray-900 dark:text-white mb-2">
-                    /competition edit <Badge text="NEW" color="blue" size="sm" />
+                    /competition edit
                   </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
                     Edit an existing competition. You can always change title, description, and channel. Other settings
@@ -159,7 +158,7 @@ import Badge from "../components/Badge.astro";
 
                 <div>
                   <h4 class="font-medium text-gray-900 dark:text-white mb-2">
-                    /competition list <Badge text="NEW" color="blue" size="sm" />
+                    /competition list
                   </h4>
                   <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
                     View all competitions in your server, with optional filters.
@@ -215,7 +214,7 @@ import Badge from "../components/Badge.astro";
             <!-- Admin Commands -->
             <div class="border border-red-300 dark:border-red-700 rounded-lg p-6 bg-red-50 dark:bg-red-900/20">
               <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                /admin <Badge text="NEW" color="red" size="sm" />
+                /admin
               </h3>
               <p class="text-gray-600 dark:text-gray-300 mb-4">
                 Advanced player and account management commands for server administrators.
@@ -612,13 +611,9 @@ import Badge from "../components/Badge.astro";
                 </div>
 
                 <InfoBox variant="info" title="💡 Pro Tip">
-                  <p class="mb-2">
+                  <p>
                     Competitions automatically track matches for participants in your server.
                     Use seasons to avoid manually setting dates, and edit competitions if you need to make changes!
-                  </p>
-                  <p>
-                    <strong>New in this update:</strong> You can now edit competitions, list all competitions with filters,
-                    and use League seasons instead of fixed dates.
                   </p>
                 </InfoBox>
               </div>

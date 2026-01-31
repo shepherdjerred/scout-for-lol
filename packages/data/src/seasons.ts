@@ -11,7 +11,12 @@ import { isWithinInterval, isAfter } from "date-fns";
 /**
  * Valid season IDs as a Zod enum
  */
-export const SeasonIdSchema = z.enum(["2025_SEASON_3_ACT_1", "2025_SEASON_3_ACT_2"]);
+export const SeasonIdSchema = z.enum([
+  "2025_SEASON_3_ACT_1",
+  "2025_SEASON_3_ACT_2",
+  "2026_SEASON_1_ACT_1",
+  "2026_SEASON_1_ACT_2",
+]);
 
 export type SeasonId = z.infer<typeof SeasonIdSchema>;
 
@@ -37,6 +42,18 @@ export const SEASONS: Record<SeasonId, SeasonData> = {
     displayName: "Worlds 2025",
     startDate: new Date("2025-10-22T00:00:00-07:00"),
     endDate: new Date("2026-01-07T23:59:59-08:00"),
+  },
+  "2026_SEASON_1_ACT_1": {
+    id: "2026_SEASON_1_ACT_1",
+    displayName: "For Demacia (Act 1)",
+    startDate: new Date("2026-01-09T00:00:00-08:00"),
+    endDate: new Date("2026-03-04T23:59:59-08:00"),
+  },
+  "2026_SEASON_1_ACT_2": {
+    id: "2026_SEASON_1_ACT_2",
+    displayName: "For Demacia (Act 2)",
+    startDate: new Date("2026-03-05T00:00:00-08:00"),
+    endDate: new Date("2026-04-30T23:59:59-07:00"),
   },
 };
 
