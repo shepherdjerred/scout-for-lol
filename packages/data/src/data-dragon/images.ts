@@ -1,5 +1,13 @@
 import { latestVersion } from "./version.ts";
 
+const championNameOverrides: Record<string, string> = {
+  FiddleSticks: "Fiddlesticks",
+};
+
+export function normalizeChampionName(championName: string): string {
+  return championNameOverrides[championName] ?? championName;
+}
+
 function getAbsolutePath(relativePath: string): string {
   return new URL(relativePath, import.meta.url).pathname;
 }
@@ -34,9 +42,10 @@ async function loadImageAsBase64(relativePath: string, mimeType: string): Promis
 
 // Validation functions (async, for preloading/checking)
 export async function validateChampionImage(championName: string): Promise<void> {
-  const relativePath = `./assets/img/champion/${championName}.png`;
+  const normalized = normalizeChampionName(championName);
+  const relativePath = `./assets/img/champion/${normalized}.png`;
   const absolutePath = getAbsolutePath(relativePath);
-  await validateImageExists(absolutePath, `Champion image for ${championName}`);
+  await validateImageExists(absolutePath, `Champion image for ${normalized}`);
 }
 
 export async function validateItemImage(itemId: number): Promise<void> {
@@ -67,7 +76,8 @@ export async function validateAugmentIcon(augmentIconPath: string): Promise<void
 
 // URL getters (synchronous, for use in components)
 export function getChampionImageUrl(championName: string): string {
-  return `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${championName}.png`;
+  const normalized = normalizeChampionName(championName);
+  return `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${normalized}.png`;
 }
 
 export function getItemImageUrl(itemId: number): string {
@@ -88,7 +98,8 @@ export function getAugmentIconUrl(augmentIconPath: string): string {
 
 // Base64 getters (async, for Satori/server-side rendering with local cached assets)
 export async function getChampionImageBase64(championName: string): Promise<string> {
-  const relativePath = `./assets/img/champion/${championName}.png`;
+  const normalized = normalizeChampionName(championName);
+  const relativePath = `./assets/img/champion/${normalized}.png`;
   return loadImageAsBase64(relativePath, "image/png");
 }
 

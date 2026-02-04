@@ -49,6 +49,10 @@ test("validates existing item image", async () => {
   await expect(validateItemImage(1001)).resolves.toBeUndefined();
 });
 
+test("validates FiddleSticks with capital S normalizes to Fiddlesticks", async () => {
+  await expect(validateChampionImage("FiddleSticks")).resolves.toBeUndefined();
+});
+
 test("returns CDN URL for champion image", () => {
   const url = getChampionImageUrl("Aatrox");
   expect(url).toStartWith("https://ddragon.leagueoflegends.com/cdn/");

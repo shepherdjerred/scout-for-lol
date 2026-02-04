@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeChampionName } from "./images.ts";
 
 const ChampionSpellSchema = z.object({
   id: z.string(),
@@ -89,16 +90,18 @@ export async function getChampionInfo(championName: string): Promise<
     }
   | undefined
 > {
+  const normalized = normalizeChampionName(championName);
+
   // Check cache first
-  if (championCache.has(championName)) {
-    return championCache.get(championName);
+  if (championCache.has(normalized)) {
+    return championCache.get(normalized);
   }
 
   try {
-    const championFilePath = `${import.meta.dir}/assets/champion/${championName}.json`;
+    const championFilePath = `${import.meta.dir}/assets/champion/${normalized}.json`;
     const fileContent = await Bun.file(championFilePath).text();
     const data = ChampionDataSchema.parse(JSON.parse(fileContent));
-    const championData = data.data[championName];
+    const championData = data.data[normalized];
 
     if (!championData) {
       return undefined;
@@ -114,7 +117,7 @@ export async function getChampionInfo(championName: string): Promise<
     };
 
     // Cache the result
-    championCache.set(championName, result);
+    championCache.set(normalized, result);
 
     return result;
   } catch {
