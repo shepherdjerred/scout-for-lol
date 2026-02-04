@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Trundle": {
       "id": "Trundle",
@@ -99,7 +99,7 @@
         "mpperlevel": 45,
         "movespeed": 350,
         "armor": 37,
-        "armorperlevel": 3.9,
+        "armorperlevel": 4.5,
         "spellblock": 32,
         "spellblockperlevel": 2.05,
         "attackrange": 175,
@@ -110,7 +110,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 68,
-        "attackdamageperlevel": 4,
+        "attackdamageperlevel": 4.5,
         "attackspeedperlevel": 2.9,
         "attackspeed": 0.67
       },

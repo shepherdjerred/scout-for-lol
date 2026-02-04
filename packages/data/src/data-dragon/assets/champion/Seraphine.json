@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Seraphine": {
       "id": "Seraphine",
@@ -82,6 +82,12 @@
           "id": "147050",
           "num": 50,
           "name": "Dumpling Darlings Seraphine",
+          "chromas": true
+        },
+        {
+          "id": "147059",
+          "num": 59,
+          "name": "Firecracker Seraphine",
           "chromas": true
         }
       ],

@@ -177,7 +177,7 @@
             "icon": "perk-images/Styles/Inspiration/CashBack/CashBack2.png",
             "name": "Cash Back",
             "shortDesc": "Get some gold back when you purchase Legendary Items.",
-            "longDesc": "Get 8% Gold back when you purchase Legendary Items."
+            "longDesc": "Get 7.5% Gold back when you purchase Legendary Items."
           }
         ]
       },
@@ -408,7 +408,7 @@
             "key": "Demolish",
             "icon": "perk-images/Styles/Resolve/Demolish/Demolish.png",
             "name": "Demolish",
-            "shortDesc": "Your third attack against turrets deals HP-based bonus damage.",
+            "shortDesc": "Your third attack against turrets deals bonus damage.",
             "longDesc": "Your third attack against towers deals [85 (+28% max Health) Melee || 50 (+20% max Health) Ranged] bonus physical damage.<br><br>Cooldown: 30s"
           },
           {
@@ -517,7 +517,7 @@
             "icon": "perk-images/Styles/Sorcery/PhaseRush/PhaseRush.png",
             "name": "Phase Rush",
             "shortDesc": "Hitting an enemy champion with 3 <b>separate</b> attacks or abilities grants a burst of <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_MS'>MS</lol-uikit-tooltipped-keyword> and Slow Resist. ",
-            "longDesc": "Hitting an enemy champion with 3 attacks or <b>separate</b> abilities within 4s grants <speed>25 - 50% Move Speed</speed> based on level and <status>50% Slow Resistance</status> for 3s. Move Speed is 75% effective for ranged champions.<br>Cooldown: 30s - 10s"
+            "longDesc": "Hitting an enemy champion with 3 attacks or <b>separate</b> abilities within 4s grants <speed>25 - 50% Move Speed</speed> based on level and <status>50% Slow Resistance</status> for 3s. Move Speed is 50% effective for ranged champions.<br>Cooldown: 30s - 10s"
           }
         ]
       },

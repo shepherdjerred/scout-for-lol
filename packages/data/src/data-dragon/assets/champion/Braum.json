@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Braum": {
       "id": "Braum",
@@ -94,7 +94,7 @@
         "difficulty": 3
       },
       "stats": {
-        "hp": 630,
+        "hp": 610,
         "hpperlevel": 112,
         "mp": 311,
         "mpperlevel": 45,
@@ -123,7 +123,11 @@
           "tooltip": "Braum propels freezing ice from his shield, dealing <magicDamage>{{ totaldamage }} magic damage</magicDamage> to the first enemy hit and <status>Slowing</status> them by {{ e2 }}% decaying over {{ e5 }} seconds.<br /><br />Applies a stack of <keywordMajor>Concussive Blows</keywordMajor>. {{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Damage", "Cooldown", "@AbilityResourceName@ Cost"],
-            "effect": ["{{ e1 }} -> {{ e1NL }}", "{{ cooldown }} -> {{ cooldownNL }}", "{{ cost }} -> {{ costNL }}"]
+            "effect": [
+              "{{ basedamage }} -> {{ basedamageNL }}",
+              "{{ cooldown }} -> {{ cooldownNL }}",
+              "{{ cost }} -> {{ costNL }}"
+            ]
           },
           "maxrank": 5,
           "cooldown": [8, 7.5, 7, 6.5, 6],
@@ -133,7 +137,7 @@
           "datavalues": {},
           "effect": [
             null,
-            [75, 125, 175, 225, 275],
+            [75, 120, 165, 210, 255],
             [70, 70, 70, 70, 70],
             [30, 30, 30, 30, 30],
             [0.02, 0.02, 0.02, 0.02, 0.02],
@@ -144,7 +148,7 @@
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0]
           ],
-          "effectBurn": [null, "75/125/175/225/275", "70", "30", "0.02", "2", "1050", "4", "0", "0", "0"],
+          "effectBurn": [null, "75/120/165/210/255", "70", "30", "0.02", "2", "1050", "4", "0", "0", "0"],
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",

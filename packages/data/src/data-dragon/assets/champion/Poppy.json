@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Poppy": {
       "id": "Poppy",
@@ -94,6 +94,12 @@
           "id": "78033",
           "num": 33,
           "name": "Cafe Cuties Poppy",
+          "chromas": true
+        },
+        {
+          "id": "78042",
+          "num": 42,
+          "name": "Firecracker Poppy",
           "chromas": true
         }
       ],

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Briar": {
       "id": "Briar",
@@ -57,12 +57,12 @@
       },
       "stats": {
         "hp": 625,
-        "hpperlevel": 95,
+        "hpperlevel": 100,
         "mp": 0,
         "mpperlevel": 0,
         "movespeed": 340,
         "armor": 30,
-        "armorperlevel": 4.2,
+        "armorperlevel": 4.5,
         "spellblock": 32,
         "spellblockperlevel": 2.05,
         "attackrange": 125,

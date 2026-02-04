@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Mel": {
       "id": "Mel",
@@ -82,10 +82,11 @@
           "id": "MelQ",
           "name": "Radiant Volley",
           "description": "Mel fires a barrage of projectiles that explode around a target location, dealing damage repeatedly to enemies within the area.",
-          "tooltip": "Mel unleashes a barrage of {{ explosioncount }} projectiles that explode in the area around a target location.<br /><br />Each explosion deals <magicDamage>{{ totalexplosiondamage }} magic damage</magicDamage>, adding up to <magicDamage>{{ alldamagehit }} magic damage</magicDamage> total.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Mel unleashes a barrage of {{ explosioncount }} projectiles that explode in the area around a target location.<br /><br />The first explosion hit deals <magicDamage>{{ initialexplosiondamage }} magic damage</magicDamage> and each subsequent explosion deals <magicDamage>{{ totalexplosiondamage }} magic damage</magicDamage>, adding up to <magicDamage>{{ alldamagehit }} magic damage</magicDamage> total.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Explosion Damage", "Explosion Count", "Cooldown", "Mana Cost"],
+            "label": ["Initial Damage", "Explosion Damage", "Explosion Count", "Cooldown", "Mana Cost"],
             "effect": [
+              "{{ initialdamage }} -> {{ initialdamageNL }}",
               "{{ explosiondamage }} -> {{ explosiondamageNL }}",
               "{{ explosioncount }} -> {{ explosioncountNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -95,8 +96,8 @@
           "maxrank": 5,
           "cooldown": [10, 9, 8, 7, 6],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [70, 80, 90, 100, 110],
-          "costBurn": "70/80/90/100/110",
+          "cost": [70, 75, 80, 85, 90],
+          "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
@@ -132,11 +133,12 @@
           "id": "MelW",
           "name": "Rebuttal",
           "description": "Mel forms a barrier around herself that reflects enemy projectiles back at the attacker, prevents her from taking damage, and grants her movement speed.",
-          "tooltip": "Mel forms a barrier around herself that reflects projectiles from enemy champions, prevents her from taking damage, and gives her <speed>{{ movespeed*100 }}% decaying Move Speed</speed> for {{ duration }} second(s).<br /><br />Reflected projectiles deal <magicDamage>{{ damagepercent }} original damage as magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Mel forms a barrier around herself that reflects projectiles from enemy champions, gaining <shield>{{ shieldamount }} Shields</shield> for {{ duration }} seconds and <speed>{{ movespeed*100 }}% decaying Move Speed</speed> for {{ movespeedduration }} seconds.<br /><br />Reflected projectiles deal <magicDamage>{{ damagepercent }} original damage as magic damage</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Reflected Damage", "Cooldown", "Mana Cost"],
+            "label": ["Reflected Damage", "Shield Amount", "Cooldown", "Mana Cost"],
             "effect": [
               "{{ basedamagepercent*100.000000 }}% -> {{ basedamagepercentnl*100.000000 }}%",
+              "{{ baseshieldamount }} -> {{ baseshieldamountNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
@@ -183,18 +185,17 @@
           "description": "Mel fires a radiant orb forward, rooting those at its center while the area around it slows enemies and deals damage over time.",
           "tooltip": "Mel fires a radiating orb, <status>Rooting</status> enemies at its center for {{ rootduration }} seconds and dealing <magicDamage>{{ damage }} magic damage</magicDamage>.<br /><br />The orb builds up a hostile area around it that <status>Slows</status> enemies by {{ areaslowamount*100 }}% and deals <magicDamage>{{ areadamagepersecond }} magic damage per second</magicDamage>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Root Duration", "Damage Per Second", "Cooldown", "@AbilityResourceName@ Cost"],
+            "label": ["Damage", "Damage Per Second", "Cooldown", "Mana Cost"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ rootduration }} -> {{ rootdurationNL }}",
               "{{ baseareadamage }} -> {{ baseareadamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ cost }} -> {{ costNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11.5, 11, 10.5, 10],
-          "cooldownBurn": "12/11.5/11/10.5/10",
+          "cooldown": [11, 10.5, 10, 9.5, 9],
+          "cooldownBurn": "11/10.5/10/9.5/9",
           "cost": [50, 60, 70, 80, 90],
           "costBurn": "50/60/70/80/90",
           "datavalues": {},
@@ -215,8 +216,8 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [1050, 1050, 1050, 1050, 1050],
-          "rangeBurn": "1050",
+          "range": [1000, 1000, 1000, 1000, 1000],
+          "rangeBurn": "1000",
           "image": {
             "full": "MelE.png",
             "sprite": "spell8.png",

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Ashe": {
       "id": "Ashe",
@@ -136,6 +136,12 @@
           "id": "22076",
           "num": 76,
           "name": "Spirit Blossom Ashe",
+          "chromas": true
+        },
+        {
+          "id": "22084",
+          "num": 84,
+          "name": "Firecracker Ashe",
           "chromas": true
         }
       ],

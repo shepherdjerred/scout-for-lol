@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Vi": {
       "id": "Vi",
@@ -125,7 +125,7 @@
       },
       "stats": {
         "hp": 655,
-        "hpperlevel": 99,
+        "hpperlevel": 105,
         "mp": 295,
         "mpperlevel": 65,
         "movespeed": 340,
@@ -141,7 +141,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 63,
-        "attackdamageperlevel": 3,
+        "attackdamageperlevel": 3.5,
         "attackspeedperlevel": 2,
         "attackspeed": 0.644
       },

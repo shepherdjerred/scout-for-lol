@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Volibear": {
       "id": "Volibear",
@@ -233,8 +233,8 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [14, 14, 14, 14, 14],
-          "cooldownBurn": "14",
+          "cooldown": [16, 16, 16, 16, 16],
+          "cooldownBurn": "16",
           "cost": [60, 60, 60, 60, 60],
           "costBurn": "60",
           "datavalues": {},

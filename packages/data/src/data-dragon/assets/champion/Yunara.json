@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Yunara": {
       "id": "Yunara",
@@ -163,7 +163,7 @@
         {
           "id": "YunaraE",
           "name": "Kanmei's Steps | Untouchable Shadow",
-          "description": "Yunara gains decaying Move Speed and becomes Ghosted. While in her Transcendent State she instead dashes in a direction.",
+          "description": "Yunara gains Move Speed and becomes Ghosted. While in her Transcendent State she instead dashes in a direction.",
           "tooltip": "Yunara gains <speed>{{ calc_move_speed }} Move Speed</speed>, increased to <speed>{{ calc_move_speed_enhanced }} Move Speed</speed> when moving toward an enemy champion, for {{ buff_duration }} seconds.<br /><br /><keywordMajor>Transcendent State - Untouchable Shadow</keywordMajor>: Yunara dashes in a direction.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": ["Move Speed", "Max Move Speed"],

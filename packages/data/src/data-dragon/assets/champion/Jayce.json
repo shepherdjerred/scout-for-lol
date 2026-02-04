@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Jayce": {
       "id": "Jayce",
@@ -89,6 +89,12 @@
           "num": 36,
           "name": "Prestige T1 Jayce",
           "chromas": false
+        },
+        {
+          "id": "126038",
+          "num": 38,
+          "name": "Petals of Spring Jayce",
+          "chromas": true
         }
       ],
       "lore": "Jayce Talis is a brilliant inventor who, along with his friend Viktor, made the first great discoveries in the field of hextech. Celebrated across Piltover, he tries to live up to his reputation as \"the Man of Progress,\" but often struggles with the expectations placed upon him. Because of this, Jayce has begun to see the ways in which his invention has furthered the division between Piltover and Zaun—and armed with his hextech hammer, he stands ready to defend tomorrow.",

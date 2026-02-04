@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "AurelionSol": {
       "id": "AurelionSol",
@@ -52,6 +52,12 @@
           "id": "136031",
           "num": 31,
           "name": "Porcelain Protector Aurelion Sol",
+          "chromas": false
+        },
+        {
+          "id": "136038",
+          "num": 38,
+          "name": "Divine Architect Porcelain Aurelion Sol",
           "chromas": false
         }
       ],

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Lillia": {
       "id": "Lillia",
@@ -52,6 +52,12 @@
           "id": "876037",
           "num": 37,
           "name": "Bowling League Lillia",
+          "chromas": true
+        },
+        {
+          "id": "876046",
+          "num": 46,
+          "name": "Petals of Spring Lillia",
           "chromas": true
         }
       ],

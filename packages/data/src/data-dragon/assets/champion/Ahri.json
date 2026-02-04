@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Ahri": {
       "id": "Ahri",
@@ -248,8 +248,8 @@
             "effect": ["{{ basedamage }} -> {{ basedamageNL }}", "{{ cooldown }} -> {{ cooldownNL }}"]
           },
           "maxrank": 5,
-          "cooldown": [10, 9, 8, 7, 6],
-          "cooldownBurn": "10/9/8/7/6",
+          "cooldown": [9, 8, 7, 6, 5],
+          "cooldownBurn": "9/8/7/6/5",
           "cost": [30, 30, 30, 30, 30],
           "costBurn": "30",
           "datavalues": {},

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Belveth": {
       "id": "Belveth",
@@ -57,7 +57,7 @@
       },
       "stats": {
         "hp": 610,
-        "hpperlevel": 99,
+        "hpperlevel": 105,
         "mp": 60,
         "mpperlevel": 0,
         "movespeed": 340,

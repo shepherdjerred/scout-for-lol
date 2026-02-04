@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Draven": {
       "id": "Draven",
@@ -145,7 +145,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 62,
-        "attackdamageperlevel": 3,
+        "attackdamageperlevel": 3.4,
         "attackspeedperlevel": 2.7,
         "attackspeed": 0.679
       },

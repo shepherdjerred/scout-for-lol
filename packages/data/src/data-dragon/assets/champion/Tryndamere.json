@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Tryndamere": {
       "id": "Tryndamere",
@@ -141,7 +141,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 66,
-        "attackdamageperlevel": 4,
+        "attackdamageperlevel": 4.5,
         "attackspeedperlevel": 3.4,
         "attackspeed": 0.67
       },

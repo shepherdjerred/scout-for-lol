@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Ezreal": {
       "id": "Ezreal",
@@ -189,7 +189,7 @@
         "crit": 0,
         "critperlevel": 0,
         "attackdamage": 60,
-        "attackdamageperlevel": 3.25,
+        "attackdamageperlevel": 3.75,
         "attackspeedperlevel": 2.5,
         "attackspeed": 0.625
       },

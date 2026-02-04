@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.2.1",
+  "version": "16.3.1",
   "data": {
     "Heimerdinger": {
       "id": "Heimerdinger",
@@ -100,7 +100,7 @@
       },
       "stats": {
         "hp": 558,
-        "hpperlevel": 101,
+        "hpperlevel": 105,
         "mp": 385,
         "mpperlevel": 20,
         "movespeed": 340,

@@ -293,7 +293,7 @@
     },
     "1111": {
       "name": "Jarvan I's",
-      "description": "<mainText><stats><attention>25%</attention> Attack Speed<br><attention>100</attention> Move Speed<br><attention>10</attention> Ability Haste<br><attention>12</attention> Magic Penetration<br><attention>25</attention> Armor<br><attention>20</attention> Magic Resist<br><attention>30%</attention> Tenacity</stats><br><br><passive>Jarvan One</passive><br>Give you stats and passives from all boots.<br><br><b>Requires Augment: <prismatic>Quest: SneakerHead</prismatic></b></mainText>",
+      "description": "<mainText><stats><attention>25%</attention> Attack Speed<br><attention>100</attention> Move Speed<br><attention>10</attention> Ability Haste<br><attention>12</attention> Magic Penetration<br><attention>25</attention> Armor<br><attention>20</attention> Magic Resist<br><attention>30%</attention> Tenacity</stats><br><br><passive>Jarvan One</passive><br>Gives you stats and passives from all boots.<br><br><b>Requires Augment: <prismatic>Quest: Sneakerhead</prismatic></b></mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 20,
@@ -322,7 +322,7 @@
     },
     "1203": {
       "name": "Support Quest",
-      "description": "<mainText><stats></stats><br><br>Upgrade your <font color = '#DBA12C'>Support Item</font> to complete your quest. Earn points by damaging enemy champions or turrets, or killing minions while near an ally. Earn points much faster in bot Lane!<br><br><font color = '#00FF00'>Rewards</font><br>• Upgraded support item<br>• A dedicated slot for control wards<br>• Discounted control wards</mainText>",
+      "description": "<mainText><stats></stats><br><br>Control wards always go into your role quest slot. Upgrade your <font color = '#DBA12C'>Support Item</font> to complete your quest. Earn points by damaging enemy champions or turrets, or killing minions while near an ally. Earn points much faster in bot Lane!<br><br><font color = '#00FF00'>Rewards</font><br>• Upgraded support item<br>• Discounted control wards</mainText>",
       "plaintext": "",
       "stats": {}
     },
@@ -352,73 +352,13 @@
     },
     "1208": {
       "name": "Support Quest",
-      "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• A new slot for control wards<br>• Discounted control wards</mainText>",
+      "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• Upgraded support item<br>• Discounted control wards</mainText>",
       "plaintext": "",
       "stats": {}
     },
     "1209": {
       "name": "Jungle Quest",
       "description": "<mainText><stats></stats><br><br><font color = '#00FF00'>Rewards</font><br>• Upgraded jungle pet and Smite<br>• Increased gold and XP from large monsters<br>• Bonus movement speed in the jungle</mainText>",
-      "plaintext": "",
-      "stats": {}
-    },
-    "1210": {
-      "name": "",
-      "description": "",
-      "plaintext": "",
-      "stats": {}
-    },
-    "1211": {
-      "name": "",
-      "description": "",
-      "plaintext": "",
-      "stats": {}
-    },
-    "1212": {
-      "name": "",
-      "description": "",
-      "plaintext": "",
-      "stats": {}
-    },
-    "1213": {
-      "name": "",
-      "description": "",
-      "plaintext": "",
-      "stats": {}
-    },
-    "1214": {
-      "name": "",
-      "description": "",
-      "plaintext": "",
-      "stats": {}
-    },
-    "1215": {
-      "name": "",
-      "description": "",
-      "plaintext": "",
-      "stats": {}
-    },
-    "1216": {
-      "name": "",
-      "description": "",
-      "plaintext": "",
-      "stats": {}
-    },
-    "1217": {
-      "name": "",
-      "description": "",
-      "plaintext": "",
-      "stats": {}
-    },
-    "1218": {
-      "name": "",
-      "description": "",
-      "plaintext": "",
-      "stats": {}
-    },
-    "1219": {
-      "name": "",
-      "description": "",
       "plaintext": "",
       "stats": {}
     },
@@ -787,7 +727,7 @@
     },
     "2152": {
       "name": "Elixir of Force",
-      "description": "<mainText><stats></stats><br><br><active>Consume</active><br>Grants 30 Adaptive Force for 60 seconds. </mainText>",
+      "description": "<mainText><stats></stats><br><br><active>Consume</active><br>Grants 25 Adaptive Force for 60 seconds. </mainText>",
       "plaintext": "",
       "stats": {}
     },
@@ -887,10 +827,10 @@
     },
     "2510": {
       "name": "Dusk and Dawn",
-      "description": "<mainText><stats><attention>300</attention> Health<br><attention>70</attention> Ability Power<br><attention>20</attention> Ability Haste<br><attention>25%</attention> Attack Speed</stats><br><br><passive>Spellblade</passive> (0s)<br>After using an Ability, your next Attack deals <magicDamage> bonus magic damage</magicDamage> <OnHit>On-Hit</OnHit> and applies <OnHit>On-Hit</OnHit> effects an additional time.</mainText>",
+      "description": "<mainText><stats><attention>350</attention> Health<br><attention>70</attention> Ability Power<br><attention>20</attention> Ability Haste<br><attention>25%</attention> Attack Speed</stats><br><br><passive>Spellblade</passive> (0s)<br>After using an Ability, your next Attack deals <magicDamage> bonus magic damage</magicDamage> <OnHit>On-Hit</OnHit> and applies <OnHit>On-Hit</OnHit> effects an additional time.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatHPPoolMod": 300,
+        "FlatHPPoolMod": 350,
         "FlatMagicDamageMod": 70,
         "PercentAttackSpeedMod": 0.25
       }
@@ -907,10 +847,10 @@
     },
     "2517": {
       "name": "Endless Hunger",
-      "description": "<mainText><stats><attention>60</attention> Attack Damage<br><attention>5%</attention> Omnivamp<br><attention>20%</attention> Tenacity</stats><br><br><passive>Famine</passive><br>Gain  Ability Haste.<br><br><passive>Feast</passive><br>When a champion that you damaged within 3 seconds dies, gain <omnivamp>15% Omnivamp</omnivamp> for 8 seconds. </mainText>",
+      "description": "<mainText><stats><attention>65</attention> Attack Damage<br><attention>5%</attention> Omnivamp<br><attention>20%</attention> Tenacity</stats><br><br><passive>Famine</passive><br>Gain  Ability Haste.<br><br><passive>Feast</passive><br>When a champion that you damaged within 3 seconds dies, gain <omnivamp>15% Omnivamp</omnivamp> for 8 seconds. </mainText>",
       "plaintext": "",
       "stats": {
-        "FlatPhysicalDamageMod": 60
+        "FlatPhysicalDamageMod": 65
       }
     },
     "2520": {
@@ -951,7 +891,7 @@
     },
     "2525": {
       "name": "Protoplasm Harness",
-      "description": "<mainText><stats><attention>600</attention> Health<br><attention>15</attention> Ability Haste</stats><br><br><passive>Lifeline</passive> (0s)<br>Taking damage that would reduce your Health below 30% causes you to gain <health> maximum Health</health> for 5 seconds, then heal <health> Health</health> over the duration. While regenerating Health, you gain 15% increased Size, 10% Move Speed, and 25% Tenacity. </mainText>",
+      "description": "<mainText><stats><attention>600</attention> Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Lifeline</passive> (0s)<br>Taking damage that would reduce your Health below 30% causes you to gain <health> maximum Health</health> for 5 seconds, then heal <health> Health</health> over the duration. While regenerating Health, you gain 15% increased Size, 10% Move Speed, and 25% Tenacity. </mainText>",
       "plaintext": "",
       "stats": {
         "FlatHPPoolMod": 600
@@ -1444,7 +1384,7 @@
     },
     "3095": {
       "name": "Stormrazor",
-      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>20%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Bolt</passive><br>Your <keyword>Energized Attack</keyword> applies <magicDamage> bonus magic damage</magicDamage> and grants <speed>45% Move Speed</speed> for 1.5s.<br></mainText>",
+      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>20%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Bolt</passive><br>Your <keyword>Energized Attack</keyword> applies <magicDamage> bonus magic damage</magicDamage> and grants <speed>45% Movement Speed</speed> for 1.5 seconds.<br></mainText>",
       "plaintext": "Tremendously empower other Energized effects.",
       "stats": {
         "FlatCritChanceMod": 0.25,
@@ -1454,7 +1394,7 @@
     },
     "3097": {
       "name": "Stormrazor",
-      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>20%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Bolt</passive><br>Your <keyword>Energized Attack</keyword> applies <magicDamage> bonus magic damage</magicDamage> and grants <speed>45% Move Speed</speed> for 1.5s.<br></mainText>",
+      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>20%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Bolt</passive><br>Your <keyword>Energized Attack</keyword> applies <magicDamage> bonus magic damage</magicDamage> and grants <speed>45% Movement Speed</speed> for 1.5 seconds.<br></mainText>",
       "plaintext": "Periodically kill enemy minions to heal and grant gold to a nearby ally",
       "stats": {
         "FlatCritChanceMod": 0.25,
@@ -1968,7 +1908,7 @@
     },
     "3340": {
       "name": "Stealth Ward",
-      "description": "<mainText><stats></stats><br><br><active>Active</active> (<scaleLevel>170 - 90</scaleLevel>s, max 2 charges)<br>Places an <keyword>Invisible</keyword> Stealth Ward that grants vision for <scaleLevel>90-120</scaleLevel> seconds.</mainText>",
+      "description": "<mainText><stats></stats><br><br><active>Active</active> (<scaleLevel>210 - 90</scaleLevel>s, max 2 charges)<br>Places an <keyword>Invisible</keyword> Stealth Ward that grants vision for <scaleLevel>90-120</scaleLevel> seconds.</mainText>",
       "plaintext": "Periodically place a Stealth Ward",
       "stats": {}
     },
@@ -2403,7 +2343,7 @@
     },
     "4017": {
       "name": "Hellfire Hatchet",
-      "description": "<mainText><stats><attention>35</attention> Attack Damage<br><attention>12</attention> Lethality</stats><br><br><passive>Char</passive> (0s)<br>Your next Ability hit <keywordMajor>Burns</keywordMajor> enemies for <scaleAD>% to % current Health physical damage</scaleAD> over 4 seconds, based on how much more <scaleHealth>max Health</scaleHealth> they have than you.<br><br><rules>Bonus damage maximum is reached at 2000 health difference</rules></mainText>",
+      "description": "<mainText><stats><attention>35</attention> Attack Damage<br><attention>12</attention> Lethality</stats><br><br><passive>Char</passive> (0s) per target<br>Your next Ability hit <keywordMajor>Burns</keywordMajor> enemies for <scaleAD> to  current Health physical damage</scaleAD> over 4 seconds, based on how much more <scaleHealth>max Health</scaleHealth> they have than you.<br><br><rules>Bonus damage maximum is reached at 2500 health difference</rules></mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 35
@@ -3855,6 +3795,16 @@
       "stats": {
         "FlatHPPoolMod": 350,
         "FlatArmorMod": 40
+      }
+    },
+    "223069": {
+      "name": "Void Immolation",
+      "description": "<mainText><stats><attention>1000</attention> Health<br><attention>100</attention> Armor<br><attention>80</attention> Magic Resist<br><attention>25</attention> Ability Haste<br><attention>200%</attention> Base Health Regen</stats><br><br><passive>Immolate</passive><br>After taking or dealing damage, deal <magicDamage> magic damage</magicDamage> per second to nearby enemies for 5 seconds. </mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatSpellBlockMod": 80,
+        "FlatHPPoolMod": 1000,
+        "FlatArmorMod": 100
       }
     },
     "223071": {
