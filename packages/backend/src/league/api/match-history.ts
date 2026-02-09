@@ -6,6 +6,7 @@ import { MatchIdSchema } from "@scout-for-lol/data/index";
 import { z } from "zod";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
 
 const logger = createLogger("api-match-history");
 
@@ -25,7 +26,7 @@ export async function getRecentMatchIds(player: PlayerConfigEntry, count = 5): P
     const region = mapRegionToEnum(playerRegion);
     const regionGroup = regionToRegionGroup(region);
 
-    const response = await api.MatchV5.list(playerPuuid, regionGroup, { count });
+    const response = await withTimeout(api.MatchV5.list(playerPuuid, regionGroup, { count }));
 
     const apiTime = Date.now() - startTime;
 

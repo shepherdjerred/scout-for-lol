@@ -11,6 +11,7 @@ import {
 } from "@scout-for-lol/backend/configuration/subscription-limits.ts";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
 
 const logger = createLogger("subscription-add-helpers");
 
@@ -139,7 +140,7 @@ export async function resolveRiotIdToPuuid(
 
     logger.info(`🌐 Using region group: ${regionGroup}`);
 
-    const account = await riotApi.Account.getByRiotId(riotId.game_name, riotId.tag_line, regionGroup);
+    const account = await withTimeout(riotApi.Account.getByRiotId(riotId.game_name, riotId.tag_line, regionGroup));
 
     const apiTime = Date.now() - apiStartTime;
     const puuid = account.response.puuid;

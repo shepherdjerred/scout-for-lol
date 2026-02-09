@@ -29,6 +29,7 @@ import { api } from "@scout-for-lol/backend/league/api/api.ts";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import { getRank } from "@scout-for-lol/backend/league/model/rank.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
 
 const logger = createLogger("competition-leaderboard");
 
@@ -99,7 +100,7 @@ export async function fetchSnapshotData(options: {
         for (const account of participant.accounts) {
           try {
             const region = account.region;
-            const response = await api.League.byPUUID(account.puuid, mapRegionToEnum(region));
+            const response = await withTimeout(api.League.byPUUID(account.puuid, mapRegionToEnum(region)));
 
             // Validate response with Zod schema to ensure proper types
             const validatedResponse = z.array(RawSummonerLeagueSchema).parse(response.response);

@@ -4,6 +4,11 @@ import { api } from "@scout-for-lol/backend/league/api/api";
 import { filter, first, pipe } from "remeda";
 import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region";
 import { z } from "zod";
+import * as Sentry from "@sentry/bun";
+import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
+
+const logger = createLogger("model-rank");
 
 const solo = "RANKED_SOLO_5x5";
 const flex = "RANKED_FLEX_SR";
@@ -38,19 +43,26 @@ export function getRank(entries: RawSummonerLeague[], queue: RankedQueueTypes): 
 }
 
 export async function getRanks(player: PlayerConfigEntry): Promise<Ranks> {
-  const response = await api.League.byPUUID(
-    player.league.leagueAccount.puuid,
-    mapRegionToEnum(player.league.leagueAccount.region),
-  );
+  try {
+    const response = await withTimeout(
+      api.League.byPUUID(player.league.leagueAccount.puuid, mapRegionToEnum(player.league.leagueAccount.region)),
+    );
 
-  const parseResult = z.array(RawSummonerLeagueSchema).safeParse(response.response);
-  if (!parseResult.success) {
-    throw parseResult.error;
+    const parseResult = z.array(RawSummonerLeagueSchema).safeParse(response.response);
+    if (!parseResult.success) {
+      throw parseResult.error;
+    }
+    const validatedResponse = parseResult.data;
+
+    return {
+      solo: getRank(validatedResponse, solo),
+      flex: getRank(validatedResponse, flex),
+    };
+  } catch (error) {
+    logger.error(`Failed to fetch ranks for ${player.alias}:`, error);
+    Sentry.captureException(error, {
+      tags: { source: "rank-fetch", playerAlias: player.alias },
+    });
+    throw error;
   }
-  const validatedResponse = parseResult.data;
-
-  return {
-    solo: getRank(validatedResponse, solo),
-    flex: getRank(validatedResponse, flex),
-  };
 }

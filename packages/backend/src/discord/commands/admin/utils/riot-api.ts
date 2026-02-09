@@ -4,6 +4,7 @@ import { mapRegionToEnum } from "@scout-for-lol/backend/league/model/region.ts";
 import { regionToRegionGroupForAccountAPI } from "twisted/dist/constants/regions.js";
 import { getErrorMessage } from "@scout-for-lol/backend/utils/errors.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
+import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
 
 const logger = createLogger("utils-riot-api");
 
@@ -33,7 +34,7 @@ export async function resolvePuuidFromRiotId(riotId: RiotId, region: Region): Pr
 
     logger.info(`🌐 Using region group: ${regionGroup}`);
 
-    const account = await riotApi.Account.getByRiotId(riotId.game_name, riotId.tag_line, regionGroup);
+    const account = await withTimeout(riotApi.Account.getByRiotId(riotId.game_name, riotId.tag_line, regionGroup));
 
     const lookupTime = Date.now() - apiStartTime;
     const puuid = account.response.puuid;

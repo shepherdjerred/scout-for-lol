@@ -7,6 +7,7 @@ import type { Region, MatchId, RawMatch, RawTimeline } from "@scout-for-lol/data
 import { RawMatchSchema, RawTimelineSchema } from "@scout-for-lol/data/index.ts";
 import { createLogger } from "@scout-for-lol/backend/logger.ts";
 import { saveFailedPayloadToS3 } from "@scout-for-lol/backend/storage/s3-helpers.ts";
+import { withTimeout } from "@scout-for-lol/backend/utils/timeout.ts";
 
 const logger = createLogger("match-data-fetcher");
 
@@ -25,7 +26,7 @@ export async function fetchMatchData(matchId: MatchId, playerRegion: Region): Pr
     const regionGroup = regionToRegionGroup(region);
 
     logger.info(`[fetchMatchData] 📥 Fetching match data for ${matchId}`);
-    const response = await api.MatchV5.get(matchId, regionGroup);
+    const response = await withTimeout(api.MatchV5.get(matchId, regionGroup));
 
     // Validate and parse the API response to ensure it matches our schema
     try {
@@ -87,7 +88,7 @@ export async function fetchMatchTimeline(matchId: MatchId, playerRegion: Region)
 
     // Use the timeline endpoint from the twisted library
     // The twisted library provides api.MatchV5.timeline() for Match V5 Timeline API
-    const response = await api.MatchV5.timeline(matchId, regionGroup);
+    const response = await withTimeout(api.MatchV5.timeline(matchId, regionGroup));
 
     // Validate and parse the API response to ensure it matches our schema
     try {
